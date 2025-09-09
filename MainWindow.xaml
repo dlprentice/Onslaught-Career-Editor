@@ -1,0 +1,169 @@
+<Window x:Class="Onslaught___Career_Editor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Onslaught___Career_Editor"
+        mc:Ignorable="d"
+        Title="Onslaught Career Editor" Height="650" Width="800"
+        Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Title -->
+        <TextBlock Grid.Row="0" 
+                   Text="Onslaught Career Editor" 
+                   FontSize="24" 
+                   FontWeight="Bold"
+                   Margin="0,0,0,20"/>
+        
+        <!-- Input File Selection -->
+        <Grid Grid.Row="1" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock Grid.Column="0" 
+                       Text="Input .bes File:" 
+                       VerticalAlignment="Center"
+                       Margin="0,0,10,0"/>
+            
+            <TextBox Grid.Column="1" 
+                     x:Name="InputFileTextBox" 
+                     IsReadOnly="True"
+                     VerticalAlignment="Center"
+                     Margin="0,0,10,0"/>
+            
+            <Button Grid.Column="2" 
+                    x:Name="BrowseInputButton" 
+                    Content="Browse" 
+                    Click="BrowseInputButton_Click"
+                    Padding="10,5"/>
+        </Grid>
+        
+        <!-- Output File Selection -->
+        <Grid Grid.Row="2" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock Grid.Column="0" 
+                       Text="Output File:" 
+                       VerticalAlignment="Center"
+                       Margin="0,0,10,0"/>
+            
+            <TextBox Grid.Column="1" 
+                     x:Name="OutputFileTextBox" 
+                     IsReadOnly="True"
+                     VerticalAlignment="Center"
+                     Margin="0,0,10,0"/>
+            
+            <Button Grid.Column="2" 
+                    x:Name="BrowseOutputButton" 
+                    Content="Browse" 
+                    Click="BrowseOutputButton_Click"
+                    Padding="10,5"/>
+        </Grid>
+        
+        <!-- Patch Options -->
+        <GroupBox Grid.Row="3" Header="Patch Options" Margin="0,0,0,20">
+            <Grid Margin="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Left Column -->
+                <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,10,0">
+                    <CheckBox x:Name="GodModeCheckBox" Content="Enable God Mode (Invulnerability)" Margin="0,5"/>
+                    <CheckBox x:Name="ObjectivesCheckBox" Content="Enable All Objectives (Required for S/A/B/C grades)" IsChecked="True" Margin="0,5"/>
+                    <CheckBox x:Name="NewGoodiesCheckBox" Content="Mark Goodies as NEW (Instead of OLD)" Margin="0,5"/>
+                </StackPanel>
+                
+                <!-- Right Column -->
+                <StackPanel Grid.Column="1" Grid.Row="0">
+                    <TextBlock Text="Score for S-Rank (Default: 900,000)" Margin="0,5"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="ScoreTextBox" Grid.Column="0" Text="900000" Margin="0,0,5,0"/>
+                        <ComboBox x:Name="RankComboBox" Grid.Column="1" SelectedIndex="0" Width="50">
+                            <ComboBoxItem Content="S"/>
+                            <ComboBoxItem Content="A"/>
+                            <ComboBoxItem Content="B"/>
+                            <ComboBoxItem Content="C"/>
+                            <ComboBoxItem Content="D"/>
+                        </ComboBox>
+                    </Grid>
+                </StackPanel>
+                
+                <!-- Kill Count -->
+                <StackPanel Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Margin="0,10,0,0">
+                    <TextBlock Text="Global Kill Count:" Margin="0,5"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="KillCountSlider" Grid.Column="0" 
+                                Minimum="0" Maximum="1000" Value="100" 
+                                TickFrequency="100" IsSnapToTickEnabled="True"
+                                TickPlacement="BottomRight"/>
+                        <TextBox x:Name="KillCountTextBox" Grid.Column="1" 
+                                 Text="{Binding ElementName=KillCountSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" 
+                                 Width="50" Margin="10,0,0,0"/>
+                    </Grid>
+                </StackPanel>
+                
+                <!-- Tech Slot Management (Placeholder for future extension) -->
+                <StackPanel Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,15,0,0">
+                    <TextBlock Text="Tech Slot Management" FontWeight="Bold"/>
+                    <TextBlock Text="(Extended slot management coming in future version)" 
+                               Foreground="Gray" FontStyle="Italic" Margin="0,5"/>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+        
+        <!-- Patch Button -->
+        <Button Grid.Row="4" 
+                x:Name="PatchButton" 
+                Content="Patch File" 
+                Click="PatchButton_Click"
+                FontWeight="Bold"
+                Padding="15,10"
+                HorizontalAlignment="Center"
+                IsEnabled="False"/>
+        
+        <!-- Status Message -->
+        <Border Grid.Row="5" 
+                BorderBrush="Gray" 
+                BorderThickness="1" 
+                Margin="0,20,0,0"
+                Background="WhiteSmoke">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <TextBlock x:Name="StatusTextBlock" 
+                           Padding="10"
+                           TextWrapping="Wrap"/>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</Window>

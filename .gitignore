@@ -1,0 +1,48 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build artifacts
+bin/
+obj/
+[Bb]uild/
+[Rr]elease*/
+[Dd]ebug*/
+*.cache
+*.pdb
+*.exe
+*.dll
+*.log
+*.tmp
+*.tmp_proj
+*.vspscc
+*_wpftmp*
+
+# NuGet
+*.nupkg
+**/packages/*
+!**/packages/build/
+.nuget/
+project.lock.json
+
+# Rider
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Publish outputs
+*.publishsettings
+PublishProfiles/
+
+# Local backups
+backup.zip
+
+# Exclude reference sources
+Onslaught/
+
