@@ -19,10 +19,8 @@ App.xaml[.cs]           - Application entry
 
 ## Code Style
 
-- `PascalCase` - classes, methods, properties
-- `camelCase` - local variables, parameters
-- `SCREAMING_SNAKE_CASE` - constants
-- Namespace: `Onslaught___Career_Editor` (triple underscore, historical)
+Follow global CLAUDE.md naming conventions (PascalCase, camelCase, SCREAMING_SNAKE_CASE).
+Namespace: `Onslaught___Career_Editor` (triple underscore, historical)
 
 ## Save File Format
 
