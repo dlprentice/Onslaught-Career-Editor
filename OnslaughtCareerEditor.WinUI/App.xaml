@@ -1,0 +1,123 @@
+<Application
+    x:Class="OnslaughtCareerEditor.WinUI.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    RequestedTheme="Dark">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <controls:XamlControlsResources />
+            </ResourceDictionary.MergedDictionaries>
+
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <SolidColorBrush x:Key="ShellPageBrush" Color="#FF10141C" />
+                    <SolidColorBrush x:Key="ShellSurfaceBrush" Color="#FF171C26" />
+                    <SolidColorBrush x:Key="ShellMutedSurfaceBrush" Color="#FF1D2430" />
+                    <SolidColorBrush x:Key="ShellStatusBrush" Color="#FF11161E" />
+                    <SolidColorBrush x:Key="ShellAccentBrush" Color="#FF4E7BFF" />
+                    <SolidColorBrush x:Key="ShellBorderBrush" Color="#FF2B3445" />
+                    <SolidColorBrush x:Key="ShellTextBrush" Color="#FFF4F7FB" />
+                    <SolidColorBrush x:Key="ShellMutedTextBrush" Color="#FFB4BED3" />
+                    <SolidColorBrush x:Key="ShellHeroBrush" Color="#FF173C92" />
+                    <SolidColorBrush x:Key="ShellHeroTextBrush" Color="#FFFFFFFF" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="ShellPageBrush" Color="#FF10141C" />
+                    <SolidColorBrush x:Key="ShellSurfaceBrush" Color="#FF171C26" />
+                    <SolidColorBrush x:Key="ShellMutedSurfaceBrush" Color="#FF1D2430" />
+                    <SolidColorBrush x:Key="ShellStatusBrush" Color="#FF11161E" />
+                    <SolidColorBrush x:Key="ShellAccentBrush" Color="#FF4E7BFF" />
+                    <SolidColorBrush x:Key="ShellBorderBrush" Color="#FF2B3445" />
+                    <SolidColorBrush x:Key="ShellTextBrush" Color="#FFF4F7FB" />
+                    <SolidColorBrush x:Key="ShellMutedTextBrush" Color="#FFB4BED3" />
+                    <SolidColorBrush x:Key="ShellHeroBrush" Color="#FF173C92" />
+                    <SolidColorBrush x:Key="ShellHeroTextBrush" Color="#FFFFFFFF" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="ShellPageBrush" Color="#FFF3F5FA" />
+                    <SolidColorBrush x:Key="ShellSurfaceBrush" Color="#FFFFFFFF" />
+                    <SolidColorBrush x:Key="ShellMutedSurfaceBrush" Color="#FFF5F7FA" />
+                    <SolidColorBrush x:Key="ShellStatusBrush" Color="#FFF0F3F8" />
+                    <SolidColorBrush x:Key="ShellAccentBrush" Color="#FF1248D3" />
+                    <SolidColorBrush x:Key="ShellBorderBrush" Color="#FFE1E6EF" />
+                    <SolidColorBrush x:Key="ShellTextBrush" Color="#FF1D2433" />
+                    <SolidColorBrush x:Key="ShellMutedTextBrush" Color="#FF5C667A" />
+                    <SolidColorBrush x:Key="ShellHeroBrush" Color="#FF20349A" />
+                    <SolidColorBrush x:Key="ShellHeroTextBrush" Color="#FFFFFFFF" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <Style x:Key="SectionCardStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource ShellSurfaceBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource ShellBorderBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="14" />
+                <Setter Property="Padding" Value="16" />
+                <Setter Property="Margin" Value="0,0,0,12" />
+            </Style>
+
+            <Style x:Key="SectionTitleTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="20" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Foreground" Value="{ThemeResource ShellTextBrush}" />
+            </Style>
+
+            <Style x:Key="SectionBodyTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="TextWrapping" Value="WrapWholeWords" />
+                <Setter Property="Foreground" Value="{ThemeResource ShellMutedTextBrush}" />
+            </Style>
+
+            <Style x:Key="HeroActionButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="#1FFFFFFF" />
+                <Setter Property="BorderBrush" Value="#55FFFFFF" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="Foreground" Value="{ThemeResource ShellHeroTextBrush}" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="Padding" Value="16,8" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="MinHeight" Value="40" />
+            </Style>
+
+            <Style x:Key="SubTabButtonBaseStyle" TargetType="Button">
+                <Setter Property="Padding" Value="18,9" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="MinHeight" Value="42" />
+                <Setter Property="CornerRadius" Value="12,12,0,0" />
+                <Setter Property="BorderThickness" Value="1,1,1,0" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="Margin" Value="0" />
+            </Style>
+
+            <Style x:Key="SubTabInactiveButtonStyle"
+                   TargetType="Button"
+                   BasedOn="{StaticResource SubTabButtonBaseStyle}">
+                <Setter Property="Background" Value="#FF1A2230" />
+                <Setter Property="BorderBrush" Value="#FF344055" />
+                <Setter Property="BorderThickness" Value="1,1,1,0" />
+                <Setter Property="Foreground" Value="{ThemeResource ShellMutedTextBrush}" />
+                <Setter Property="Opacity" Value="1" />
+            </Style>
+
+            <Style x:Key="SubTabActiveButtonStyle"
+                   TargetType="Button"
+                   BasedOn="{StaticResource SubTabButtonBaseStyle}">
+                <Setter Property="Background" Value="{ThemeResource ShellSurfaceBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource ShellBorderBrush}" />
+                <Setter Property="Foreground" Value="{ThemeResource ShellTextBrush}" />
+            </Style>
+
+            <Style x:Key="SubTabStripBorderStyle" TargetType="Border">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="{ThemeResource ShellBorderBrush}" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="CornerRadius" Value="0" />
+                <Setter Property="Margin" Value="0" />
+                <Setter Property="Padding" Value="12,0,0,0" />
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

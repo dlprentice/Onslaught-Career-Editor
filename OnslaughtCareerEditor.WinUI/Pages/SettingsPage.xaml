@@ -1,0 +1,94 @@
+<Page
+    x:Class="OnslaughtCareerEditor.WinUI.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <ScrollViewer>
+        <StackPanel Padding="20,18,20,24">
+            <TextBlock Text="Settings"
+                       Style="{StaticResource SectionTitleTextStyle}" />
+            <TextBlock Margin="0,6,0,14"
+                       Text="Point the app at your Battle Engine Aquila install, confirm what save/options files are being detected, and control the media behavior defaults the shell uses."
+                       Style="{StaticResource SectionBodyTextStyle}" />
+
+            <Border Style="{StaticResource SectionCardStyle}">
+                <TextBlock Text="Changes in this page save immediately. Use it to point the app at your Battle Engine Aquila install and to set media behavior defaults."
+                           Style="{StaticResource SectionBodyTextStyle}" />
+            </Border>
+
+            <Border Style="{StaticResource SectionCardStyle}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Game Directory"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="Set the path to your Battle Engine Aquila installation. This is used by the save editors, Binary Patches, and media pages to locate the retail files they operate on."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="GameDirectoryTextBox"
+                                 IsReadOnly="True" />
+                        <Button Grid.Column="1"
+                                Content="Browse..."
+                                Click="BrowseGameDirectoryButton_Click" />
+                        <Button Grid.Column="2"
+                                Content="Auto-Detect"
+                                Click="AutoDetectGameDirectoryButton_Click" />
+                    </Grid>
+                    <TextBlock x:Name="GameDirectoryStatusTextBlock"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource SectionCardStyle}">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Save Files"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="Save files are typically located in the game save directory. The app scans this location for `.bes` and `.bea` files, including `defaultoptions.bea` in the Steam build."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock x:Name="SaveDirectoryTextBlock"
+                               FontWeight="SemiBold" />
+                    <TextBlock x:Name="SaveFileCountTextBlock"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource SectionCardStyle}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Media Playback"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="Control whether audio or video continues playing when you switch pages."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <ToggleSwitch x:Name="AllowBackgroundAudioToggle"
+                                  Header="Allow audio to keep playing when switching pages"
+                                  Toggled="MediaPreferenceChanged" />
+                    <ToggleSwitch x:Name="AllowBackgroundVideoToggle"
+                                  Header="Allow video to keep playing when switching pages"
+                                  Toggled="MediaPreferenceChanged" />
+                    <ToggleSwitch x:Name="PreventOverlapToggle"
+                                  Header="Prevent audio and video from playing at the same time"
+                                  Toggled="MediaPreferenceChanged" />
+                    <TextBlock Text="Note: if overlap prevention is enabled, starting video will stop audio even if background audio is allowed."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Orientation="Horizontal"
+                        Spacing="12">
+                <Button Content="Reload Saved Settings"
+                        Click="ReloadButton_Click" />
+                <TextBlock x:Name="ConfigPathTextBlock"
+                           VerticalAlignment="Center"
+                           Style="{StaticResource SectionBodyTextStyle}" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

@@ -1,0 +1,173 @@
+<Page
+    x:Class="OnslaughtCareerEditor.WinUI.Pages.BinaryPatchesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:OnslaughtCareerEditor.WinUI.Models"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <ScrollViewer>
+        <StackPanel Padding="20,18,20,24">
+            <TextBlock Text="Binary Patches"
+                       Style="{StaticResource SectionTitleTextStyle}" />
+            <TextBlock Margin="0,6,0,14"
+                       Text="Apply curated `BEA.exe` fixes against the installed retail executable. Verification stays explicit, backup and restore stay visible, and details stay in the operation log below."
+                       Style="{StaticResource SectionBodyTextStyle}" />
+
+            <Grid Margin="0,0,0,16"
+                  ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="360" />
+                </Grid.ColumnDefinitions>
+
+                <Border x:Name="PatchSetBorder"
+                        Grid.Column="0"
+                        Style="{StaticResource SectionCardStyle}"
+                        Margin="0">
+                        <StackPanel Spacing="16">
+                            <StackPanel>
+                                <TextBlock Text="Patch set"
+                                           FontSize="16"
+                                           FontWeight="SemiBold" />
+                            <TextBlock Text="Choose the compatibility fixes you want. Patches stay grouped by what they affect, while stable and experimental status remain visible on each item."
+                                       Margin="0,6,0,0"
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                        </StackPanel>
+
+                            <ItemsControl x:Name="PatchGroupsItemsControl">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:BinaryPatchGroupModel">
+                                        <Border BorderBrush="{ThemeResource ShellBorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="12"
+                                                Padding="12"
+                                                Margin="0,0,0,12">
+                                            <StackPanel Spacing="12">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Title}"
+                                                               FontSize="14"
+                                                               FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding Description}"
+                                                               Margin="0,6,0,0"
+                                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                                </StackPanel>
+
+                                                <ItemsControl ItemsSource="{Binding Items}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="models:BinaryPatchItemModel">
+                                                            <CheckBox Checked="PatchCheckBox_Changed"
+                                                                      Unchecked="PatchCheckBox_Changed"
+                                                                      IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                                      HorizontalAlignment="Stretch"
+                                                                      HorizontalContentAlignment="Stretch"
+                                                                      Padding="2,2,0,2"
+                                                                      Margin="0,0,0,10">
+                                                                <StackPanel Spacing="4"
+                                                                            Margin="10,0,0,0">
+                                                                    <TextBlock Text="{Binding DisplayName}"
+                                                                               FontWeight="SemiBold"
+                                                                               TextWrapping="WrapWholeWords" />
+                                                                    <TextBlock Text="{Binding Summary}"
+                                                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                                                    <StackPanel Orientation="Horizontal"
+                                                                                Spacing="12">
+                                                                        <TextBlock Text="{Binding OffsetText}"
+                                                                                   FontSize="12"
+                                                                                   Foreground="{StaticResource ShellMutedTextBrush}" />
+                                                                        <TextBlock Text="{Binding TrackLabel}"
+                                                                                   FontSize="11"
+                                                                                   FontWeight="SemiBold"
+                                                                                   Foreground="{Binding TrackBrush}"
+                                                                                   CharacterSpacing="60"
+                                                                                   Opacity="0.95"
+                                                                                   VerticalAlignment="Center" />
+                                                                    </StackPanel>
+                                                                </StackPanel>
+                                                            </CheckBox>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <Grid Grid.Column="1"
+                      RowSpacing="16"
+                      Height="{Binding ElementName=PatchSetBorder, Path=ActualHeight}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0"
+                            Style="{StaticResource SectionCardStyle}"
+                            Margin="0">
+                        <StackPanel Spacing="14">
+                            <TextBlock Text="Target executable"
+                                       FontSize="16"
+                                       FontWeight="SemiBold" />
+                            <TextBox x:Name="ExePathTextBox"
+                                     Header="BEA.exe path"
+                                     TextChanged="ExePathTextBox_TextChanged"
+                                     PlaceholderText="Select BEA.exe or load it from Settings" />
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Button Content="Browse"
+                                        Click="BrowseButton_Click" />
+                                <Button Content="Use Game Dir"
+                                        Click="UseGameDirButton_Click" />
+                            </StackPanel>
+                            <TextBlock x:Name="SelectionSummaryTextBlock"
+                                       Text="No patches selected."
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="1"
+                            Style="{StaticResource SectionCardStyle}"
+                            Margin="0">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Actions"
+                                       FontSize="16"
+                                       FontWeight="SemiBold" />
+                            <Button x:Name="VerifyButton"
+                                    Content="Verify Selected"
+                                    Style="{StaticResource AccentButtonStyle}"
+                                    Click="VerifyButton_Click" />
+                            <Button x:Name="ApplyButton"
+                                    Content="Apply Selected"
+                                    Click="ApplyButton_Click" />
+                            <Button x:Name="RestoreButton"
+                                    Content="Restore Backup"
+                                    Click="RestoreButton_Click" />
+                            <TextBlock x:Name="WorkflowHintTextBlock"
+                                       Text="Verify is required after any path or selection change."
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+
+            <Border Style="{StaticResource SectionCardStyle}"
+                    Margin="0">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Operation Log"
+                               FontSize="16"
+                               FontWeight="SemiBold" />
+                    <TextBox x:Name="OperationLogTextBox"
+                             AcceptsReturn="True"
+                             IsReadOnly="True"
+                             MinHeight="180"
+                             MaxHeight="260"
+                             TextWrapping="Wrap"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

@@ -1,0 +1,43 @@
+{
+  "strict_mirror": [
+    {
+      "name": "reverse_engineering_markdown",
+      "canonical_root": "reverse-engineering",
+      "mirror_root": "lore-book/reverse-engineering",
+      "glob": "**/*.md",
+      "exclude_prefixes": [
+        "binary-analysis/scratch/"
+      ]
+    }
+  ],
+  "mirror_with_normalization": [
+    {
+      "name": "release_allowlist_profile",
+      "canonical": "roadmap/release-allowlist-profile.md",
+      "mirror": "lore-book/roadmap/release-allowlist-profile.md"
+    },
+    {
+      "name": "release_allowlist_classification",
+      "canonical": "roadmap/release-allowlist-classification.tsv",
+      "mirror": "lore-book/roadmap/release-allowlist-classification.tsv"
+    }
+  ],
+  "curated": [
+    {
+      "path": "lore-book/BOOK.md",
+      "canonical_hint": "roadmap/ROADMAP-INDEX.md"
+    },
+    {
+      "path": "lore-book/Start-Here.md",
+      "canonical_hint": "roadmap/ROADMAP-INDEX.md"
+    },
+    {
+      "path": "lore-book/roadmap/ROADMAP-INDEX.md",
+      "canonical_hint": "source-of-truth in `roadmap/`"
+    },
+    {
+      "path": "lore-book/roadmap/agent-workflow.md",
+      "canonical_hint": "../../CURRENT_CAPABILITIES.md"
+    }
+  ]
+}

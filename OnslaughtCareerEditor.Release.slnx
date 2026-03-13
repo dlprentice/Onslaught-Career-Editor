@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="OnslaughtCareerEditor.AppCore.Tests/OnslaughtCareerEditor.AppCore.Tests.csproj" />
+  <Project Path="OnslaughtCareerEditor.AppCore/OnslaughtCareerEditor.AppCore.csproj" />
+  <Project Path="OnslaughtCareerEditor.Cli/OnslaughtCareerEditor.Cli.csproj" />
+  <Project Path="OnslaughtCareerEditor.UiTests/OnslaughtCareerEditor.UiTests.csproj" />
+  <Project Path="OnslaughtCareerEditor.WinUI/OnslaughtCareerEditor.WinUI.csproj" />
+</Solution>

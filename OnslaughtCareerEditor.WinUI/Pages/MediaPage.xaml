@@ -1,0 +1,517 @@
+<Page
+    x:Class="OnslaughtCareerEditor.WinUI.Pages.MediaPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <Style x:Key="MediaTabButtonBaseStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource SubTabButtonBaseStyle}" />
+        <Style x:Key="MediaInactiveTabButtonStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource SubTabInactiveButtonStyle}" />
+        <Style x:Key="MediaActiveTabButtonStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource SubTabActiveButtonStyle}" />
+    </Page.Resources>
+    <Grid Padding="20,18,20,20"
+          RowSpacing="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0"
+                    Spacing="6">
+            <TextBlock Text="Media"
+                       Style="{StaticResource SectionTitleTextStyle}" />
+            <TextBlock Text="Browse installed music, voice, cutscenes, and briefings from the current game directory. Audio and video now play inline on the page."
+                       Style="{StaticResource SectionBodyTextStyle}" />
+            <StackPanel Visibility="Collapsed">
+                <TextBlock x:Name="MediaSummaryTextBlock"
+                           Text="Loading media library..." />
+                <TextBlock x:Name="MediaGameDirectoryTextBlock"
+                           Text="Game directory not set" />
+            </StackPanel>
+        </StackPanel>
+
+        <Grid Grid.Row="1"
+              RowSpacing="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0"
+                    Style="{StaticResource SubTabStripBorderStyle}">
+                <StackPanel Orientation="Horizontal"
+                            Spacing="8">
+                    <Button x:Name="AudioTabButton"
+                            Content="Audio Library"
+                            Click="AudioTabButton_Click"
+                            Style="{StaticResource MediaInactiveTabButtonStyle}" />
+                    <Button x:Name="VideoTabButton"
+                            Content="Video Player"
+                            Click="VideoTabButton_Click"
+                            Style="{StaticResource MediaInactiveTabButtonStyle}" />
+                </StackPanel>
+            </Border>
+
+            <Grid Grid.Row="1">
+                <Grid x:Name="AudioTabContentGrid"
+                      ColumnSpacing="16"
+                      VerticalAlignment="Stretch"
+                      Visibility="Visible">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="320" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0"
+                            Style="{StaticResource SectionCardStyle}"
+                            Margin="0"
+                            VerticalAlignment="Stretch">
+                        <Grid RowSpacing="12">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0"
+                                        Spacing="8">
+                                <TextBlock Text="Audio library"
+                                           FontSize="18"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="Browse music tracks and voice lines, then double-click a file to start inline playback."
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           MinHeight="56" />
+                                <TextBox x:Name="AudioSearchTextBox"
+                                         PlaceholderText="Search music and voice"
+                                         TextChanged="AudioSearchTextBox_TextChanged" />
+                            </StackPanel>
+
+                            <Border Grid.Row="1"
+                                    BorderBrush="{ThemeResource ShellBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Padding="8">
+                                <TreeView x:Name="AudioTreeView"
+                                          MinHeight="0"
+                                          VerticalAlignment="Stretch"
+                                          SelectionMode="Single"
+                                          ItemInvoked="AudioTreeView_ItemInvoked"
+                                          SelectionChanged="AudioTreeView_SelectionChanged"
+                                          DoubleTapped="AudioTreeView_DoubleTapped" />
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Column="1"
+                          RowSpacing="12"
+                          VerticalAlignment="Stretch">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0"
+                                Background="#FF192B63"
+                                BorderBrush="{ThemeResource ShellBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="16"
+                                MinHeight="360"
+                                VerticalAlignment="Stretch">
+                            <Grid>
+                                <Grid Margin="20,20,20,16">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <Grid x:Name="AudioVisualizerBarsHost"
+                                          Grid.Row="0"
+                                          VerticalAlignment="Stretch"
+                                          HorizontalAlignment="Stretch" />
+
+                                    <TextBlock Grid.Row="1"
+                                               Margin="0,12,0,0"
+                                               HorizontalAlignment="Right"
+                                               Foreground="{ThemeResource ShellMutedTextBrush}"
+                                               Text="Visualizer reacts to the current audio output." />
+                                </Grid>
+
+                                <Border x:Name="AudioVisualizerPlaceholderBorder"
+                                        Background="#28000000"
+                                        CornerRadius="16">
+                                    <StackPanel Width="420"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Spacing="8">
+                                        <TextBlock x:Name="AudioVisualizerStatusTextBlock"
+                                                   FontSize="24"
+                                                   FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center"
+                                                   Text="Select a track" />
+                                        <TextBlock x:Name="AudioVisualizerHintTextBlock"
+                                                   HorizontalAlignment="Center"
+                                                   Text="Choose a track from the library, then press Play or double-click it to begin."
+                                                   TextAlignment="Center"
+                                                   TextWrapping="WrapWholeWords"
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <Grid Grid.Row="1"
+                              ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.15*" />
+                                <ColumnDefinition Width="1.45*" />
+                                <ColumnDefinition Width="1.2*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0"
+                                    Style="{StaticResource SectionCardStyle}"
+                                    Margin="0"
+                                    MinHeight="156">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Now Playing"
+                                               FontSize="16"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock x:Name="AudioNowPlayingTextBlock"
+                                               FontSize="22"
+                                               FontWeight="SemiBold"
+                                               Text="No track selected"
+                                               TextWrapping="WrapWholeWords" />
+                                    <TextBlock x:Name="AudioPathTextBlock"
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               Text="Select a track from the library on the left to start playback."
+                                               TextTrimming="CharacterEllipsis"
+                                               TextWrapping="NoWrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1"
+                                    Style="{StaticResource SectionCardStyle}"
+                                    Margin="0"
+                                    MinHeight="156">
+                                <StackPanel Spacing="10">
+                                    <TextBlock Text="Transport"
+                                               FontSize="16"
+                                               FontWeight="SemiBold" />
+                                    <Grid ColumnSpacing="10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="50" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="50" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="AudioCurrentTimeTextBlock"
+                                                   Text="0:00"
+                                                   VerticalAlignment="Center" />
+                                        <Slider x:Name="AudioProgressSlider"
+                                                Grid.Column="1"
+                                                Minimum="0"
+                                                Maximum="1"
+                                                Value="0"
+                                                ValueChanged="AudioProgressSlider_ValueChanged" />
+                                        <TextBlock x:Name="AudioTotalTimeTextBlock"
+                                                   Grid.Column="2"
+                                                   Text="0:00"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                    <StackPanel Orientation="Horizontal"
+                                                Spacing="8">
+                                        <Button x:Name="AudioPlayButton"
+                                                Content="Play"
+                                                Click="AudioPlayButton_Click"
+                                                IsEnabled="False" />
+                                        <Button x:Name="AudioPauseButton"
+                                                Content="Pause"
+                                                Click="AudioPauseButton_Click"
+                                                IsEnabled="False" />
+                                        <Button x:Name="AudioStopButton"
+                                                Content="Stop"
+                                                Click="AudioStopButton_Click"
+                                                IsEnabled="False" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal"
+                                                Spacing="10"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="Volume"
+                                                   VerticalAlignment="Center" />
+                                        <Slider x:Name="AudioVolumeSlider"
+                                                Width="180"
+                                                Minimum="0"
+                                                Maximum="100"
+                                                ValueChanged="AudioVolumeSlider_ValueChanged" />
+                                        <TextBlock x:Name="AudioVolumeTextBlock"
+                                                   Text="75%"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="2"
+                                    Style="{StaticResource SectionCardStyle}"
+                                    Margin="0"
+                                    MinHeight="156">
+                                <StackPanel Spacing="10">
+                                    <TextBlock Text="Game Directory"
+                                               FontSize="16"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="Audio discovery uses the shared game directory from Settings. Browse here to switch immediately, then reload if files changed."
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               MinHeight="56" />
+                                    <TextBox x:Name="AudioGameDirectoryTextBox"
+                                             IsReadOnly="True"
+                                             Text="{Binding Text, ElementName=MediaGameDirectoryTextBlock}" />
+                                    <StackPanel Orientation="Horizontal"
+                                                Spacing="8">
+                                        <Button Content="Browse Game Directory"
+                                                Click="BrowseGameDirectoryButton_Click" />
+                                        <Button Content="Reload Library"
+                                                Click="ReloadLibraryButton_Click" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Grid>
+
+                <Grid x:Name="VideoTabContentGrid"
+                      ColumnSpacing="16"
+                      VerticalAlignment="Stretch"
+                      Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="320" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0"
+                            Style="{StaticResource SectionCardStyle}"
+                            Margin="0"
+                            VerticalAlignment="Stretch">
+                        <Grid RowSpacing="12">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0"
+                                        Spacing="8">
+                                <TextBlock Text="Video library"
+                                           FontSize="18"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="Browse videos, cutscenes, and briefings, then double-click a file to start inline playback."
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           MinHeight="56" />
+                                <TextBox x:Name="VideoSearchTextBox"
+                                         PlaceholderText="Search videos"
+                                         TextChanged="VideoSearchTextBox_TextChanged" />
+                            </StackPanel>
+
+                            <Border Grid.Row="1"
+                                    BorderBrush="{ThemeResource ShellBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Padding="8">
+                                <TreeView x:Name="VideoTreeView"
+                                          MinHeight="0"
+                                          VerticalAlignment="Stretch"
+                                          SelectionMode="Single"
+                                          ItemInvoked="VideoTreeView_ItemInvoked"
+                                          SelectionChanged="VideoTreeView_SelectionChanged"
+                                          DoubleTapped="VideoTreeView_DoubleTapped" />
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Column="1"
+                          RowSpacing="12"
+                          VerticalAlignment="Stretch">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0"
+                                Background="Black"
+                                BorderBrush="{ThemeResource ShellBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="16"
+                                MinHeight="360"
+                                VerticalAlignment="Stretch">
+                            <Grid>
+                                <Grid Margin="20,20,20,16">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <Grid x:Name="VideoSurfaceHostGrid"
+                                          Grid.Row="0"
+                                          VerticalAlignment="Stretch"
+                                          HorizontalAlignment="Stretch">
+                                        <Image x:Name="InlineVideoImage"
+                                               Stretch="Uniform" />
+                                    </Grid>
+
+                                    <TextBlock Grid.Row="1"
+                                               Margin="0,12,0,0"
+                                               HorizontalAlignment="Right"
+                                               Foreground="{ThemeResource ShellMutedTextBrush}"
+                                               Opacity="0"
+                                               Text="Inline playback uses the current video selection." />
+                                </Grid>
+
+                                <Border x:Name="VideoPlaceholderBorder"
+                                        Background="#E6000000"
+                                        CornerRadius="16">
+                                    <StackPanel Width="460"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Spacing="8">
+                                        <TextBlock x:Name="VideoPlayerStatusTextBlock"
+                                                   FontSize="24"
+                                                   FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center"
+                                                   Text="Select a video" />
+                                        <TextBlock x:Name="VideoPlaceholderBodyTextBlock"
+                                                   HorizontalAlignment="Center"
+                                                   Text="Choose a file from the library, then press Play or double-click it to start inline playback."
+                                                   TextAlignment="Center"
+                                                   TextWrapping="WrapWholeWords"
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <Grid Grid.Row="1"
+                              ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.15*" />
+                                <ColumnDefinition Width="1.45*" />
+                                <ColumnDefinition Width="1.2*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0"
+                                    Style="{StaticResource SectionCardStyle}"
+                                    Margin="0"
+                                    MinHeight="156">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Now Playing"
+                                               FontSize="16"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock x:Name="VideoSelectedTextBlock"
+                                               FontSize="22"
+                                               FontWeight="SemiBold"
+                                               Text="No video selected"
+                                               TextWrapping="WrapWholeWords" />
+                                    <TextBlock x:Name="VideoPathTextBlock"
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               Text="Select a video from the library on the left to start playback or reveal the file in Explorer."
+                                               TextTrimming="CharacterEllipsis"
+                                               TextWrapping="NoWrap" />
+                                    <Button x:Name="RevealVideoButton"
+                                            Content="Reveal File"
+                                            Click="RevealVideoButton_Click"
+                                            IsEnabled="False"
+                                            HorizontalAlignment="Left" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1"
+                                    Style="{StaticResource SectionCardStyle}"
+                                    Margin="0"
+                                    MinHeight="156">
+                                <StackPanel Spacing="10">
+                                    <TextBlock Text="Transport"
+                                               FontSize="16"
+                                               FontWeight="SemiBold" />
+                                    <Grid ColumnSpacing="10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="50" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="50" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="VideoCurrentTimeTextBlock"
+                                                   Text="0:00"
+                                                   VerticalAlignment="Center" />
+                                        <Slider x:Name="VideoProgressSlider"
+                                                Grid.Column="1"
+                                                IsEnabled="False"
+                                                ValueChanged="VideoProgressSlider_ValueChanged" />
+                                        <TextBlock x:Name="VideoTotalTimeTextBlock"
+                                                   Grid.Column="2"
+                                                   Text="0:00"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                    <StackPanel Orientation="Horizontal"
+                                                Spacing="8">
+                                        <Button x:Name="VideoPlayButton"
+                                                Content="Play"
+                                                Click="VideoPlayButton_Click"
+                                                IsEnabled="False" />
+                                        <Button x:Name="VideoPauseButton"
+                                                Content="Pause"
+                                                Click="VideoPauseButton_Click"
+                                                IsEnabled="False" />
+                                        <Button x:Name="VideoStopButton"
+                                                Content="Stop"
+                                                Click="VideoStopButton_Click"
+                                                IsEnabled="False" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal"
+                                                Spacing="10"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="Volume"
+                                                   VerticalAlignment="Center" />
+                                        <Slider x:Name="VideoVolumeSlider"
+                                                Width="180"
+                                                Minimum="0"
+                                                Maximum="100"
+                                                ValueChanged="VideoVolumeSlider_ValueChanged" />
+                                        <TextBlock x:Name="VideoVolumeTextBlock"
+                                                   Text="75%"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="2"
+                                    Style="{StaticResource SectionCardStyle}"
+                                    Margin="0"
+                                    MinHeight="156">
+                                <StackPanel Spacing="10">
+                                    <TextBlock Text="Game Directory"
+                                               FontSize="16"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="Video discovery uses the shared game directory from Settings. Browse here to switch immediately, then reload if files changed."
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               MinHeight="56" />
+                                    <TextBox x:Name="VideoGameDirectoryTextBox"
+                                             IsReadOnly="True"
+                                             Text="{Binding Text, ElementName=MediaGameDirectoryTextBlock}" />
+                                    <StackPanel Orientation="Horizontal"
+                                                Spacing="8">
+                                        <Button Content="Browse Game Directory"
+                                                Click="BrowseGameDirectoryButton_Click" />
+                                        <Button Content="Reload Library"
+                                                Click="ReloadLibraryButton_Click" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</Page>

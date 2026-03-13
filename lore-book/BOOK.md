@@ -1,0 +1,67 @@
+# Onslaught Lore Book
+
+A curated reading order for the Lore Browser. The tree view follows this flow.
+Primary navigation entry: [Start Here](Start-Here.md). Use this page as the full map/reference view.
+Authority note: where source-code notes conflict with retail behavior, retail/Steam `BEA.exe` + real save behavior are authoritative.
+
+- [Start Here](Start-Here.md)
+- Part I — The World of Battle Engine Aquila
+  - [Lore Index](lore/_index.md)
+  - [Game Overview](lore/game-overview.md)
+  - [World Lore](lore/world-lore.md)
+  - [Characters](lore/characters.md)
+  - [Battle Engine Tech](lore/battle-engine-tech.md)
+- Part II — Studio History & Preservation
+  - [Lost Toys - The Studio](lore/lost-toys-history.md)
+  - [Development History](lore/development-history.md)
+  - [The Team](lore/team-roster.md)
+  - [Reception & Legacy](lore/reception-legacy.md)
+  - [Community & Preservation](lore/community-preservation.md)
+  - [Reference Materials](lore/reference-materials.md)
+- Part III — Deep Dives
+  - [Technical Deep Dive](lore/technical-deep-dive.md)
+  - [Cut Content & Easter Eggs](lore/cut-content-secrets.md)
+- Appendices
+  - Technical Appendix
+    - [Appendix Guide](reverse-engineering/RE-INDEX.md)
+    - Save File Format
+      - [Save File Index](reverse-engineering/save-file/_index.md)
+      - [Save Format](reverse-engineering/save-file/save-format.md)
+      - [Struct Layouts](reverse-engineering/save-file/struct-layouts.md)
+      - [Career Graph](reverse-engineering/save-file/career-graph.md)
+      - [Career Links](reverse-engineering/save-file/career-links.md)
+      - [Career Unlock Recipes](reverse-engineering/save-file/career-unlock-recipes.md)
+      - [Grade System](reverse-engineering/save-file/grade-system.md)
+      - [Goodies System](reverse-engineering/save-file/goodies-system.md)
+      - [Kill Tracking](reverse-engineering/save-file/kill-tracking.md)
+    - Game Mechanics
+      - [Game Mechanics Index](reverse-engineering/game-mechanics/_index.md)
+      - [Cheat Codes](reverse-engineering/game-mechanics/cheat-codes.md)
+      - [God Mode](reverse-engineering/game-mechanics/god-mode.md)
+    - Binary Analysis
+      - [Binary Analysis Index](reverse-engineering/binary-analysis/_index.md)
+      - [Functions Index](reverse-engineering/binary-analysis/functions/_index.md)
+      - [Function Coverage State](reverse-engineering/binary-analysis/functions/FUNCTION_COVERAGE_STATE.md)
+      - [Ghidra Reference](reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md)
+      - [Executable Analysis](reverse-engineering/binary-analysis/executable-analysis.md)
+      - [Windowed Mode Analysis](reverse-engineering/binary-analysis/windowed-mode-analysis.md)
+      - [Widescreen Patch Analysis](reverse-engineering/binary-analysis/widescreen-patch-analysis.md)
+    - Game Assets
+      - [Game Assets Index](reverse-engineering/game-assets/_index.md)
+      - [Game Folder Analysis](reverse-engineering/game-assets/game-folder-analysis.md)
+      - [AYA Asset Format](reverse-engineering/game-assets/aya-asset-format.md)
+      - [MSL Scripting](reverse-engineering/game-assets/msl-scripting.md)
+      - [Mission Scripts Index](reverse-engineering/game-assets/mission-scripts-index.md)
+      - [Modding Reference](reverse-engineering/game-assets/modding-reference.md)
+    - Source Code
+      - [Source Code Index](reverse-engineering/source-code/_index.md)
+      - [Core Systems](reverse-engineering/source-code/core/_index.md)
+      - [Gameplay Systems](reverse-engineering/source-code/gameplay/_index.md)
+      - [Frontend Systems](reverse-engineering/source-code/frontend/_index.md)
+      - [I/O Systems](reverse-engineering/source-code/io/_index.md)
+      - [Full Source Parse Refresh](reverse-engineering/source-code/full-source-parse-2026-02-11.md)
+    - Project Meta
+      - [Project Meta Index](reverse-engineering/project-meta/_index.md)
+      - [Attribution](reverse-engineering/project-meta/attribution.md)
+      - [Known Bugs](reverse-engineering/project-meta/known-bugs.md)
+      - [Community Resources](reverse-engineering/project-meta/community-resources.md)

@@ -1,0 +1,73 @@
+<Page
+    x:Class="OnslaughtCareerEditor.WinUI.Pages.AboutPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <ScrollViewer>
+        <StackPanel Padding="20,18,20,24">
+            <TextBlock Text="About Onslaught Toolkit"
+                       Style="{StaticResource SectionTitleTextStyle}" />
+            <TextBlock Margin="0,6,0,14"
+                       Text="Retail-focused save/configuration patching and byte-verified executable patch workflows for Battle Engine Aquila (2003)."
+                       Style="{StaticResource SectionBodyTextStyle}" />
+
+            <Border Style="{StaticResource SectionCardStyle}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Core capabilities"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="- Save Editor: patch `.bes` career progression, goodies, kills, and advanced per-field overrides."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock Text="- Configuration Editor: patch `defaultoptions.bea` for global startup settings and keybind state."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock Text="- Binary Patches: byte-verified stable/experimental `BEA.exe` patch application with backup and restore."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock Text="- Lore + Media: curated preservation notes plus installed game audio/video browsing and playback."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource SectionCardStyle}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Project notes"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="This app targets retail behavior and uses static RE evidence, with Stuart source used as supporting parity guidance where applicable."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock Text="The active shipping direction is WinUI 3 + Windows App SDK with shared C# AppCore logic and a dedicated CLI host."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock Text="Build/runtime docs and release guidance live in the repo roadmap and release-readiness runbooks."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource SectionCardStyle}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Retail behavior notes"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="The retail executable and retail-generated save/options files remain authoritative. The app is designed to patch existing files carefully instead of inventing new ones."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock Text="`defaultoptions.bea` is the boot-time source for keybinds and most global settings, while `.bes` remains the career-progress file the Save Editor targets."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock Text="Executable patch flows stay catalog-driven, byte-verified, and backup-safe so rollback remains visible and deterministic."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource SectionCardStyle}">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Version"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock x:Name="VersionTextBlock"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               Text="Version: -" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

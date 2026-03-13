@@ -1,0 +1,59 @@
+# =============================================================================
+# PUBLIC RELEASE .gitignore
+# =============================================================================
+# Curated public source tree: keep generated artifacts and local machine state
+# out of the branch while preserving reproducible release/build inputs.
+# =============================================================================
+
+# Truly temporary files (regenerated on build)
+*.cache
+*.tmp
+*.tmp_proj
+*_wpftmp*
+*.log
+
+# Python bytecode (regenerated on import)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# IDE local state (user-specific, not needed across machines)
+.vs/
+*.user
+*.suo
+.idea/
+
+# Build output (regenerated on build)
+bin/
+obj/
+release/out/
+release/artifacts/
+
+# Agent orchestration state (session-specific)
+*_state.json
+
+# Accidental nul files (bash/cmd redirect confusion on Windows)
+nul
+
+# Archives/downloads (fetch from source)
+*.zip
+tmpagent-*
+local-rom-input/
+
+# Private-tree heavy/non-shipping working areas (tracked files remain tracked;
+# this only suppresses new scratch additions under these roots)
+game/
+subagents/
+tools/
+
+# Local RE scratch outputs (never commit)
+save-attempts/_tmp_*.bes
+save-attempts/_tmp_*.bea
+
+# Stray root file created with a private-use Unicode glyph name
+/

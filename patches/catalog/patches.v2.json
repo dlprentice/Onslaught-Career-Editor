@@ -1,0 +1,190 @@
+{
+  "catalog_version": "2.0",
+  "generated_at": "2026-03-05 16:08:00 -0500",
+  "binary": "BEA.exe",
+  "patches": [
+    {
+      "id": "resolution_gate",
+      "title": "Allow widescreen resolutions (remove 4:3-only rejection)",
+      "track": "stable",
+      "target_binary_hashes": [],
+      "file_offset": "0x129696",
+      "expected_original_bytes": "CC",
+      "patched_bytes": "00",
+      "purpose": "Neutralize non-4:3 mode rejection in display mode enumeration.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout."
+      ],
+      "side_effects": [
+        "Enables non-4:3 candidates in mode enumeration path.",
+        "Does not by itself force startup window mode."
+      ],
+      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original byte at file offset.",
+      "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
+      "confidence": "high",
+      "evidence_refs": [
+        "reverse-engineering/binary-analysis/widescreen-patch-analysis.md",
+        "patches/README.md",
+        "subagents/depth2/lane06_binary_patch_gap_findings.md"
+      ],
+      "optional": false
+    },
+    {
+      "id": "force_windowed",
+      "title": "Prefer windowed startup (when windowed-capable)",
+      "track": "stable",
+      "target_binary_hashes": [],
+      "file_offset": "0x12A644",
+      "expected_original_bytes": "A1 F0 2D 66 00",
+      "patched_bytes": "B8 01 00 00 00",
+      "purpose": "Force startup path windowed-decision flag true on windowed-capable initialization flow.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Windowed-capable path is available on target runtime setup."
+      ],
+      "side_effects": [
+        "Biases startup toward windowed mode.",
+        "Some environments may still require wrapper/driver companion settings."
+      ],
+      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
+      "confidence": "high",
+      "evidence_refs": [
+        "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
+        "patches/README.md",
+        "subagents/depth2/lane06_binary_patch_gap_findings.md"
+      ],
+      "optional": false
+    },
+    {
+      "id": "extra_graphics_default_on",
+      "title": "Unlock extra graphics features by default (disable cardid gate default)",
+      "track": "stable",
+      "target_binary_hashes": [],
+      "file_offset": "0x0CDD40",
+      "expected_original_bytes": "6A 00",
+      "patched_bytes": "6A 01",
+      "purpose": "Change GEFORCE_FX_POWER tweak registration default from 0 to 1 so extra graphics options are available without cardid.txt vendor/device matches.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout."
+      ],
+      "side_effects": [
+        "Extra graphics feature gate defaults to enabled at startup.",
+        "cardid.txt can still override tweak values if matching vendor/device rules apply."
+      ],
+      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
+      "confidence": "high",
+      "evidence_refs": [
+        "reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md",
+        "patches/README.md"
+      ],
+      "optional": false
+    },
+    {
+      "id": "ignore_cardid_tweak_overrides",
+      "title": "Ignore cardid.txt vendor/device tweak overrides",
+      "track": "stable",
+      "target_binary_hashes": [],
+      "file_offset": "0x12AF3F",
+      "expected_original_bytes": "E8 9C D7 FF FF",
+      "patched_bytes": "90 90 90 90 90",
+      "purpose": "Bypass the startup call that loads and applies cardid.txt tweak overrides, so BEA.exe defaults are used directly.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout."
+      ],
+      "side_effects": [
+        "cardid.txt vendor/device/version tweak overrides are not applied.",
+        "Runtime uses tweak defaults registered in BEA.exe."
+      ],
+      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
+      "confidence": "high",
+      "evidence_refs": [
+        "reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md",
+        "patches/README.md"
+      ],
+      "optional": false
+    },
+    {
+      "id": "version_overlay_use_patched_format_pointer",
+      "title": "Version overlay pointer -> patched format cave",
+      "track": "stable",
+      "target_binary_hashes": [],
+      "file_offset": "0x6416F",
+      "expected_original_bytes": "54 94 62 00",
+      "patched_bytes": "44 A4 5A 00",
+      "purpose": "Redirect bottom-left version overlay format-string pointer to patched-format code cave string.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout."
+      ],
+      "side_effects": [
+        "Version overlay render uses cave-hosted format string.",
+        "Used together with version cave string payload patch."
+      ],
+      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
+      "confidence": "high",
+      "evidence_refs": [
+        "patches/README.md"
+      ],
+      "optional": false
+    },
+    {
+      "id": "version_overlay_patched_format_cave_string",
+      "title": "Version overlay cave format payload (V%1d.%02d - PATCHED)",
+      "track": "stable",
+      "target_binary_hashes": [],
+      "file_offset": "0x1AA444",
+      "expected_original_bytes": "CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC",
+      "patched_bytes": "56 25 31 64 2E 25 30 32 64 20 2D 20 50 41 54 43 48 45 44 00",
+      "purpose": "Install patched version-format string payload in code cave for runtime overlay text.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout."
+      ],
+      "side_effects": [
+        "Bottom-left version overlay displays suffix '- PATCHED' after version digits.",
+        "Used together with version overlay pointer redirect patch."
+      ],
+      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
+      "confidence": "high",
+      "evidence_refs": [
+        "patches/README.md"
+      ],
+      "optional": false
+    },
+    {
+      "id": "skip_auto_toggle",
+      "title": "Bypass one startup fullscreen toggle check",
+      "track": "experimental",
+      "target_binary_hashes": [],
+      "file_offset": "0x12BB97",
+      "expected_original_bytes": "75 20",
+      "patched_bytes": "EB 20",
+      "purpose": "Skip one startup fullscreen-toggle gate when stable patches are insufficient on a target setup.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Use only after stable patches are verified and startup still forces fullscreen."
+      ],
+      "side_effects": [
+        "Alters one startup decision branch only; not a universal fullscreen fix.",
+        "Runtime effect can vary by environment and wrapper stack."
+      ],
+      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
+      "confidence": "medium",
+      "evidence_refs": [
+        "patches/README.md",
+        "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
+        "subagents/depth2/lane06_binary_patch_gap_findings.md"
+      ],
+      "optional": true
+    }
+  ]
+}
