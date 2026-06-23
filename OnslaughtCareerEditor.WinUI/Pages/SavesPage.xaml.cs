@@ -38,8 +38,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             LoadEditorDetectedFiles();
             InitializeConfigurationSurface();
             LoadConfigurationDetectedFiles();
-            int lastSubTab = Math.Clamp(AppConfig.Load().LastSaveSubTab, SaveAnalyzerTabIndex, ConfigurationEditorTabIndex);
-            SelectSavesTab(lastSubTab, persistSelection: false);
+            SelectSavesTab(GetInitialSaveTabIndex(), persistSelection: false);
         }
 
         private void SaveAnalyzerTabButton_Click(object sender, RoutedEventArgs e) => SelectSavesTab(SaveAnalyzerTabIndex);
@@ -47,6 +46,46 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void SaveEditorTabButton_Click(object sender, RoutedEventArgs e) => SelectSavesTab(SaveEditorTabIndex);
 
         private void ConfigurationEditorTabButton_Click(object sender, RoutedEventArgs e) => SelectSavesTab(ConfigurationEditorTabIndex);
+
+        public void NavigateToSubTab(int tabIndex) => SelectSavesTab(tabIndex);
+
+        private void SetAnalyzerInfoBar(string title, string message, InfoBarSeverity severity)
+        {
+            AnalyzerInfoBar.Title = title;
+            AnalyzerInfoBar.Message = message;
+            AnalyzerInfoBar.Severity = severity;
+            AnalyzerInfoBar.Visibility = Visibility.Visible;
+        }
+
+        private void AnalyzeTaskButton_Click(object sender, RoutedEventArgs e)
+        {
+            SelectSavesTab(SaveAnalyzerTabIndex);
+            FilePathTextBox.Focus(FocusState.Programmatic);
+        }
+
+        private void EditSaveTaskButton_Click(object sender, RoutedEventArgs e)
+        {
+            SelectSavesTab(SaveEditorTabIndex);
+            EditorInputFileTextBox.Focus(FocusState.Programmatic);
+        }
+
+        private void ConfigureOptionsTaskButton_Click(object sender, RoutedEventArgs e)
+        {
+            SelectSavesTab(ConfigurationEditorTabIndex);
+            ConfigurationInputFileTextBox.Focus(FocusState.Programmatic);
+        }
+
+        private static int GetInitialSaveTabIndex()
+        {
+            string? testInitialTab = Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_TEST_INITIAL_SAVE_TAB");
+            if (int.TryParse(testInitialTab, out int requestedTab)
+                && requestedTab is >= SaveAnalyzerTabIndex and <= ConfigurationEditorTabIndex)
+            {
+                return requestedTab;
+            }
+
+            return Math.Clamp(AppConfig.Load().LastSaveSubTab, SaveAnalyzerTabIndex, ConfigurationEditorTabIndex);
+        }
 
         private void SelectSavesTab(int tabIndex, bool persistSelection = true)
         {
@@ -70,8 +109,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AppStatusService.SetStatus(_selectedSavesTabIndex switch
             {
                 SaveEditorTabIndex => "Save Editor: patch workflow ready",
-                ConfigurationEditorTabIndex => "Configuration Editor: global options ready",
-                _ => "Saves: analyzer ready"
+                ConfigurationEditorTabIndex => "Game Options: global options ready",
+                _ => "Save Lab: analyzer ready"
             });
         }
 
@@ -82,6 +121,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string? gameDir = AppConfig.Load().GetGameDir();
             _detectedFiles = SaveAnalyzerService.GetDetectedFiles(gameDir);
             DetectedFilesComboBox.ItemsSource = _detectedFiles;
+            DetectedFilesComboBox.PlaceholderText = _detectedFiles.Count == 0
+                ? "No detected files yet"
+                : "Choose a detected file";
             RestoreAnalyzerDetectedFileSelection(selectedPath);
             DetectedFilesStatusTextBlock.Text = _detectedFiles.Count == 0
                 ? "No save or options files were detected. Set the game directory in Settings or browse manually."
@@ -95,7 +137,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             EditorGlobalKillNumberBox.Value = 100;
             EditorGoodiesAsNewToggle.IsOn = false;
             ApplyEditorPreset("QUICK");
-            EditorOutputTextBox.Text = "Select a career save to begin. Use this page for the normal `.bes` patch workflow.";
+            EditorOutputTextBox.Text = "Select a career save to begin. Use this page for the normal .bes patch workflow.";
             UpdateEditorActionState();
         }
 
@@ -106,6 +148,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string? gameDir = AppConfig.Load().GetGameDir();
             _editorDetectedFiles = SaveEditorService.GetDetectedCareerSaves(gameDir);
             EditorDetectedFilesComboBox.ItemsSource = _editorDetectedFiles;
+            EditorDetectedFilesComboBox.PlaceholderText = _editorDetectedFiles.Count == 0
+                ? "No detected career saves yet"
+                : "Choose a career save";
             RestoreEditorDetectedFileSelection(selectedPath);
             EditorDetectedFilesStatusTextBlock.Text = _editorDetectedFiles.Count == 0
                 ? "No .bes career saves were detected. Set the game directory in Settings or browse manually."
@@ -165,7 +210,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (!string.IsNullOrWhiteSpace(path))
             {
                 FilePathTextBox.Text = path;
-                AppStatusService.SetStatus($"Saves: selected {Path.GetFileName(path)}");
+                AppStatusService.SetStatus($"Save Lab: selected {Path.GetFileName(path)}");
                 AnalyzeCurrentFile();
             }
         }
@@ -181,14 +226,14 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (!string.IsNullOrWhiteSpace(path))
             {
                 CompareFilePathTextBox.Text = path;
-                AppStatusService.SetStatus($"Saves: selected compare file {Path.GetFileName(path)}");
+                AppStatusService.SetStatus($"Save Lab: selected compare file {Path.GetFileName(path)}");
             }
         }
 
         private void RefreshDetectedFilesButton_Click(object sender, RoutedEventArgs e)
         {
             LoadDetectedFiles();
-            AppStatusService.SetStatus($"Saves: refreshed detected file list ({_detectedFiles.Count})");
+            AppStatusService.SetStatus($"Save Lab: refreshed detected file list ({_detectedFiles.Count})");
         }
 
         private void DetectedFilesComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -196,7 +241,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (DetectedFilesComboBox.SelectedItem is SaveAnalyzerFileItem selected)
             {
                 FilePathTextBox.Text = selected.Path;
-                AppStatusService.SetStatus($"Saves: selected {selected.Name}");
+                AppStatusService.SetStatus($"Save Lab: selected {selected.Name}");
                 AnalyzeCurrentFile();
             }
         }
@@ -222,10 +267,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string rightPath = (CompareFilePathTextBox.Text ?? string.Empty).Trim();
             if (!File.Exists(leftPath) || !File.Exists(rightPath))
             {
-                AnalyzerInfoBar.Title = "Comparison needs two files";
-                AnalyzerInfoBar.Message = "Choose a valid source file and a valid compare file before running comparison mode.";
-                AnalyzerInfoBar.Severity = InfoBarSeverity.Warning;
-                AppStatusService.SetStatus("Saves: comparison needs both files");
+                SetAnalyzerInfoBar(
+                    "Comparison needs two files",
+                    "Choose a valid source file and a valid compare file before running comparison mode.",
+                    InfoBarSeverity.Warning);
+                AppStatusService.SetStatus("Save Lab: comparison needs both files");
                 UpdateActionState();
                 return;
             }
@@ -254,7 +300,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             FilePathTextBox.Text = string.Empty;
             CompareFilePathTextBox.Text = string.Empty;
             ResetAnalyzerSurface();
-            AppStatusService.SetStatus("Saves: analyzer cleared");
+            AppStatusService.SetStatus("Save Lab: analyzer cleared");
         }
 
         private void CopyReportButton_Click(object sender, RoutedEventArgs e)
@@ -267,7 +313,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             DataPackage package = new();
             package.SetText(ReportTextBox.Text);
             Clipboard.SetContent(package);
-            AppStatusService.SetStatus("Saves: copied analyzer report");
+            AppStatusService.SetStatus("Save Lab: copied analyzer report");
         }
 
         private void AnalyzeCurrentFile()
@@ -275,10 +321,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string filePath = (FilePathTextBox.Text ?? string.Empty).Trim();
             if (!File.Exists(filePath))
             {
-                AnalyzerInfoBar.Title = "Analyzer needs a valid file";
-                AnalyzerInfoBar.Message = "Choose a valid `.bes` or `.bea` path before running analysis.";
-                AnalyzerInfoBar.Severity = InfoBarSeverity.Warning;
-                AppStatusService.SetStatus("Saves: no valid file selected");
+                SetAnalyzerInfoBar(
+                    "Analyzer needs a valid file",
+                    "Choose a valid .bes or .bea path before running analysis.",
+                    InfoBarSeverity.Warning);
+                AppStatusService.SetStatus("Save Lab: no valid file selected");
                 UpdateActionState();
                 return;
             }
@@ -299,6 +346,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void RenderDocument(SaveAnalyzerDocument document)
         {
             _currentDocument = document;
+            AnalyzerEmptyStateBorder.Visibility = Visibility.Collapsed;
+            AnalyzerHeaderGrid.Visibility = Visibility.Visible;
+            AnalyzerHeaderGrid.MaxHeight = double.PositiveInfinity;
+            AnalyzerHeaderGrid.Opacity = 1;
+            AnalyzerMetricsGrid.Visibility = Visibility.Visible;
+            AnalyzerMetricsGrid.MaxHeight = double.PositiveInfinity;
+            AnalyzerMetricsGrid.Opacity = 1;
             AnalyzerTitleTextBlock.Text = document.Title;
             AnalyzerModeTextBlock.Text = document.ModeText;
             SummaryTitleTextBlock.Text = document.SummaryTitle;
@@ -307,11 +361,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PopulateMetricCards(document.Metrics);
             PopulateSummaryTree(document.SummaryNodes);
 
-            AnalyzerInfoBar.Title = document.IsComparisonMode ? "Comparison complete" : "Analysis complete";
-            AnalyzerInfoBar.Message = document.StatusText;
-            AnalyzerInfoBar.Severity = document.ReportText.Contains("ERROR:", StringComparison.OrdinalIgnoreCase)
-                ? InfoBarSeverity.Warning
-                : InfoBarSeverity.Success;
+            SetAnalyzerInfoBar(
+                document.IsComparisonMode ? "Comparison complete" : "Analysis complete",
+                document.StatusText,
+                document.ReportText.Contains("ERROR:", StringComparison.OrdinalIgnoreCase)
+                    ? InfoBarSeverity.Warning
+                    : InfoBarSeverity.Success);
 
             AppStatusService.SetStatus(document.StatusText);
             UpdateActionState();
@@ -320,22 +375,35 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void RenderError(string title, string message)
         {
             _currentDocument = null;
-            AnalyzerInfoBar.Title = title;
-            AnalyzerInfoBar.Message = message;
-            AnalyzerInfoBar.Severity = InfoBarSeverity.Error;
+            AnalyzerEmptyStateBorder.Visibility = Visibility.Collapsed;
+            AnalyzerHeaderGrid.Visibility = Visibility.Collapsed;
+            AnalyzerHeaderGrid.MaxHeight = 0;
+            AnalyzerHeaderGrid.Opacity = 0;
+            AnalyzerMetricsGrid.Visibility = Visibility.Collapsed;
+            AnalyzerMetricsGrid.MaxHeight = 0;
+            AnalyzerMetricsGrid.Opacity = 0;
+            SetAnalyzerInfoBar(title, message, InfoBarSeverity.Error);
             ReportTextBox.Text = message;
             SummaryTreeView.RootNodes.Clear();
             SummaryTreeView.RootNodes.Add(new TreeViewNode { Content = message, IsExpanded = true });
-            AppStatusService.SetStatus($"Saves: {message}");
+            AppStatusService.SetStatus($"Save Lab: {message}");
             UpdateActionState();
         }
 
         private void ResetAnalyzerSurface()
         {
             _currentDocument = null;
-            AnalyzerInfoBar.Title = "Analyzer ready";
-            AnalyzerInfoBar.Message = "Choose a detected or manual file path to inspect save structure, options state, and comparison data.";
-            AnalyzerInfoBar.Severity = InfoBarSeverity.Informational;
+            AnalyzerEmptyStateBorder.Visibility = Visibility.Visible;
+            AnalyzerHeaderGrid.Visibility = Visibility.Collapsed;
+            AnalyzerHeaderGrid.MaxHeight = 0;
+            AnalyzerHeaderGrid.Opacity = 0;
+            AnalyzerMetricsGrid.Visibility = Visibility.Collapsed;
+            AnalyzerMetricsGrid.MaxHeight = 0;
+            AnalyzerMetricsGrid.Opacity = 0;
+            SetAnalyzerInfoBar(
+                "Analyzer ready",
+                "Choose a detected or manual file path to inspect save structure, options state, and comparison data.",
+                InfoBarSeverity.Informational);
             AnalyzerTitleTextBlock.Text = "Save Analyzer";
             AnalyzerModeTextBlock.Text = "Single-file analysis: choose a .bes or .bea file to inspect.";
             SummaryTitleTextBlock.Text = "Analysis Summary";
@@ -533,6 +601,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 EditorInfoBar.Title = "Save patch blocked";
                 EditorInfoBar.Message = advancedError;
                 EditorInfoBar.Severity = InfoBarSeverity.Warning;
+                EditorInfoBar.Visibility = Visibility.Visible;
                 AppStatusService.SetStatus("Save Editor: invalid advanced override");
                 UpdateEditorActionState();
                 return;
@@ -554,13 +623,74 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AppStatusService.SetStatus("Save Editor: patching save...");
 
             PatchResult result = SaveEditorService.PatchSave(request);
-            EditorOutputTextBox.Text = result.Message;
+            string displayMessage = FormatEditorPatchResultForUi(result, request);
+            EditorOutputTextBox.Text = displayMessage;
             EditorCopyOutputButton.IsEnabled = !string.IsNullOrWhiteSpace(result.Message);
             EditorInfoBar.Title = result.Success ? "Save patch complete" : "Save patch blocked";
-            EditorInfoBar.Message = result.Message;
+            EditorInfoBar.Message = displayMessage;
             EditorInfoBar.Severity = result.Success ? InfoBarSeverity.Success : InfoBarSeverity.Warning;
+            EditorInfoBar.Visibility = Visibility.Visible;
             AppStatusService.SetStatus(result.Success ? "Save Editor: patch complete" : "Save Editor: patch failed");
             UpdateEditorActionState();
+        }
+
+        private static string FormatEditorPatchResultForUi(PatchResult result, SavePatchRequest request)
+        {
+            if (result.Success)
+            {
+                string outputName = BuildFileNameSummary(request.OutputPath, "chosen output file");
+                return $"Successfully patched copied save to selected output file.\nOutput file: {outputName}\nThe source save was not modified.";
+            }
+
+            return RedactEditorPatchPaths(result.Message, request);
+        }
+
+        private static string RedactEditorPatchPaths(string message, SavePatchRequest request)
+        {
+            string redacted = message;
+            redacted = ReplacePathWithLabel(redacted, request.InputPath, "selected input save");
+            redacted = ReplacePathWithLabel(redacted, request.OutputPath, "selected output file");
+            return redacted;
+        }
+
+        private static string ReplacePathWithLabel(string message, string? path, string label)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return message;
+            }
+
+            string trimmedPath = path.Trim();
+            message = message.Replace(trimmedPath, label, StringComparison.OrdinalIgnoreCase);
+            try
+            {
+                string fullPath = Path.GetFullPath(trimmedPath);
+                message = message.Replace(fullPath, label, StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                // The raw value may be an invalid path; the direct replacement above is still useful.
+            }
+
+            return message;
+        }
+
+        private static string BuildFileNameSummary(string? path, string fallback)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return fallback;
+            }
+
+            try
+            {
+                string fileName = Path.GetFileName(path.Trim());
+                return string.IsNullOrWhiteSpace(fileName) ? fallback : fileName;
+            }
+            catch
+            {
+                return fallback;
+            }
         }
 
         private void EditorCopyOutputButton_Click(object sender, RoutedEventArgs e)
@@ -709,11 +839,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             else if (missionOverrideCount > 0 && request.PatchNodes != true)
             {
-                EditorSafetyHintTextBlock.Text = "Mission rank overrides require `Patch missions` because the retail patcher applies per-mission ranks through the node pass.";
+                EditorSafetyHintTextBlock.Text = "Mission rank overrides require Patch missions because the retail patcher applies per-mission ranks through the node pass.";
             }
             else if (categoryKillOverrideCount > 0 && request.PatchKills != true)
             {
-                EditorSafetyHintTextBlock.Text = "Category kill overrides require `Patch kill counts` because the retail patcher applies per-category values through the kill pass.";
+                EditorSafetyHintTextBlock.Text = "Category kill overrides require Patch kill counts because the retail patcher applies per-category values through the kill pass.";
             }
             else if (samePath)
             {
@@ -725,7 +855,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             else
             {
-                EditorSafetyHintTextBlock.Text = "Save patching is ready. Mission rank and category-kill overrides are supported here; startup settings and keybind overrides still belong in Configuration Editor.";
+                EditorSafetyHintTextBlock.Text = "Save patching is ready. Mission rank and category-kill overrides are supported here; startup settings and keybind overrides still belong in Game Options.";
             }
 
             EditorPatchButton.IsEnabled =

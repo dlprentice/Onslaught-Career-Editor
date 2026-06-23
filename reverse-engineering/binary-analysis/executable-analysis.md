@@ -70,6 +70,6 @@
 ```
 Stuart's response: *"Sounded like a bad day in the office for someone. Could of been me."*
 
-**Source file debug paths**: See `reverse-engineering/binary-analysis/functions/string-locations-index.md` for the current indexed debug-path strings (counts vary by scan/filtering), and `reverse-engineering/source-code/_index.md` for Stuart-source inventory context.
+**Source file debug paths**: Public candidates summarize source/path findings through `reverse-engineering/public-static-contracts.md` and `reverse-engineering/quick-reference/_index.md`. Private maintainer indexes carry the full string-location/source-inventory tables and are excluded from public candidates.
 
 **PC Version History**: Original 2003 Windows release was bundled with Nvidia cards (date 26/5/03 found in file). The Steam version is a later retail build (console-port lineage) and differs from Stuart's internal PC dev snapshot; the exact lineage between console/retail variants is not fully proven yet.

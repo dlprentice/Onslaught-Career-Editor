@@ -1,8 +1,6 @@
 using System.IO;
-using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media;
 using OnslaughtCareerEditor.WinUI.Helpers;
 using Onslaught___Career_Editor;
 
@@ -25,7 +23,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AppConfig config = AppConfig.Load();
             string? gameDir = config.GetGameDir();
 
-            GameDirectoryTextBox.Text = gameDir ?? string.Empty;
+            RenderGameDirectory(gameDir);
             if (!string.IsNullOrWhiteSpace(gameDir))
             {
                 ValidateGameDirectory(gameDir);
@@ -33,7 +31,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             else
             {
                 GameDirectoryStatusTextBlock.Text = "No game directory set. Click Browse or Auto-Detect.";
-                GameDirectoryStatusTextBlock.Foreground = new SolidColorBrush(Colors.Orange);
+                GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
             }
 
             AllowBackgroundAudioToggle.IsOn = config.AllowBackgroundAudio;
@@ -41,10 +39,21 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PreventOverlapToggle.IsOn = config.PreventAudioVideoOverlap;
 
             UpdateSaveFileInfo(gameDir);
-            ConfigPathTextBlock.Text = $"Config file: {AppConfig.GetConfigPath()}";
+            ConfigPathTextBlock.Text = AppConfig.GetConfigPath();
 
             _isLoadingSettings = false;
             AppStatusService.SetStatus("Settings: loaded shared configuration");
+        }
+
+        private void RenderGameDirectory(string? gameDir)
+        {
+            GameDirectoryTextBox.Text = gameDir ?? string.Empty;
+            GameDirectorySummaryTextBlock.Text = string.IsNullOrWhiteSpace(gameDir)
+                ? "Not configured"
+                : BuildFolderSummary(gameDir, "Configured install");
+            GameDirectoryRoleTextBlock.Text = string.IsNullOrWhiteSpace(gameDir)
+                ? "Choose your installed game folder. The app reads it to create playable copies; it does not edit that folder."
+                : "Read-only source material. Editing and patching workflows use copied files or app-managed working folders.";
         }
 
         private void ValidateGameDirectory(string path)
@@ -52,7 +61,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (!Directory.Exists(path))
             {
                 GameDirectoryStatusTextBlock.Text = "Directory does not exist.";
-                GameDirectoryStatusTextBlock.Foreground = new SolidColorBrush(Colors.OrangeRed);
+                GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Danger();
                 return;
             }
 
@@ -66,12 +75,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 GameDirectoryStatusTextBlock.Text = hasExe
                     ? "Valid game directory detected (with executable)."
                     : "Valid game directory detected.";
-                GameDirectoryStatusTextBlock.Foreground = new SolidColorBrush(Colors.LightGreen);
+                GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Success();
             }
             else
             {
                 GameDirectoryStatusTextBlock.Text = "Warning: this does not look like a full BEA installation yet (missing expected data folders).";
-                GameDirectoryStatusTextBlock.Foreground = new SolidColorBrush(Colors.Orange);
+                GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
             }
         }
 
@@ -93,8 +102,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             string? firstDir = Path.GetDirectoryName(saves[0].Path);
-            SaveDirectoryTextBlock.Text = firstDir ?? "Unknown";
-            SaveFileCountTextBlock.Text = $"Found {saves.Count} save/options file(s).";
+            SaveDirectoryTextBlock.Text = BuildFolderSummary(firstDir, "Detected save folder");
+            SaveFileCountTextBlock.Text = $"Found {saves.Count} save/options file(s). Open Save Lab to inspect or patch copies; full local paths stay out of this summary.";
         }
 
         private async void BrowseGameDirectoryButton_Click(object sender, RoutedEventArgs e)
@@ -125,7 +134,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void SetGameDirectory(string path)
         {
-            GameDirectoryTextBox.Text = path;
+            RenderGameDirectory(path);
             ValidateGameDirectory(path);
 
             if (!Directory.Exists(path))
@@ -174,6 +183,18 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void ReloadButton_Click(object sender, RoutedEventArgs e)
         {
             LoadSettings();
+        }
+
+        private static string BuildFolderSummary(string? path, string fallback)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return fallback;
+            }
+
+            string trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string name = Path.GetFileName(trimmed);
+            return string.IsNullOrWhiteSpace(name) ? fallback : name;
         }
     }
 }

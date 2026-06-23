@@ -55,6 +55,13 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Equal("Mission Briefings / Episode 1", briefing.SectionName);
         }
 
+        [Fact]
+        public void GetMainVideoDisplayName_UsesHumanCatalogNames()
+        {
+            Assert.Equal("Credits Video", MediaCatalogService.GetMainVideoDisplayName("UsTheMovie"));
+            Assert.Equal("UnknownCutscene", MediaCatalogService.GetMainVideoDisplayName("UnknownCutscene"));
+        }
+
         private sealed class TempGameDirectory : IDisposable
         {
             public string RootPath { get; }

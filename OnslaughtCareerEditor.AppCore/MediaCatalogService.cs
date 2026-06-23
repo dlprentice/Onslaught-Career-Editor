@@ -78,6 +78,11 @@ namespace Onslaught___Career_Editor
                    Directory.Exists(Path.Combine(fullPath, "data"));
         }
 
+        public static string GetMainVideoDisplayName(string videoStem)
+        {
+            return MainVideoDescriptions.GetValueOrDefault(videoStem, videoStem);
+        }
+
         private static IReadOnlyList<MediaAudioItem> BuildAudioItems(string gameDirectory)
         {
             List<MediaAudioItem> items = new();
@@ -145,7 +150,7 @@ namespace Onslaught___Career_Editor
                 {
                     items.Add(CreateVideoItem(
                         file,
-                        MainVideoDescriptions.GetValueOrDefault(baseName, baseName),
+                        GetMainVideoDisplayName(baseName),
                         "Main Videos",
                         0));
                 }

@@ -5,13 +5,16 @@
   "patches": [
     {
       "id": "resolution_gate",
-      "title": "Allow widescreen resolutions (remove 4:3-only rejection)",
+      "title": "Let non-4:3 display modes pass enumeration",
       "track": "stable",
-      "target_binary_hashes": [],
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
       "file_offset": "0x129696",
       "expected_original_bytes": "CC",
       "patched_bytes": "00",
-      "purpose": "Neutralize non-4:3 mode rejection in display mode enumeration.",
+      "purpose": "Neutralize one non-4:3 mode rejection gate in display mode enumeration.",
       "preconditions": [
         "Target bytes at offset match expected original or already-patched bytes.",
         "Patch is applied to BEA.exe-compatible retail layout."
@@ -24,17 +27,32 @@
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "high",
       "evidence_refs": [
-        "reverse-engineering/binary-analysis/widescreen-patch-analysis.md",
-        "patches/README.md",
-        "subagents/depth2/lane06_binary_patch_gap_findings.md"
+        "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
+        "patches/README.md"
       ],
-      "optional": false
+      "optional": false,
+      "dependencies": [],
+      "conflicts": [],
+      "exclusive_group": "",
+      "proof_level": "byte_verified_static_and_copied_launch_pair",
+      "selectability": "profile_visible",
+      "preset_eligibility": [
+        "compatibility-copy",
+        "recommended-safe-copy",
+        "enhanced-edition-preview",
+        "custom",
+        "debug-camera-preview"
+      ],
+      "requires_windowed_pair": false
     },
     {
       "id": "force_windowed",
       "title": "Prefer windowed startup (when windowed-capable)",
       "track": "stable",
-      "target_binary_hashes": [],
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
       "file_offset": "0x12A644",
       "expected_original_bytes": "A1 F0 2D 66 00",
       "patched_bytes": "B8 01 00 00 00",
@@ -52,16 +70,31 @@
       "confidence": "high",
       "evidence_refs": [
         "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
-        "patches/README.md",
-        "subagents/depth2/lane06_binary_patch_gap_findings.md"
+        "patches/README.md"
       ],
-      "optional": false
+      "optional": false,
+      "dependencies": [],
+      "conflicts": [],
+      "exclusive_group": "",
+      "proof_level": "byte_verified_static_and_copied_launch_pair",
+      "selectability": "profile_visible",
+      "preset_eligibility": [
+        "compatibility-copy",
+        "recommended-safe-copy",
+        "enhanced-edition-preview",
+        "custom",
+        "debug-camera-preview"
+      ],
+      "requires_windowed_pair": false
     },
     {
       "id": "extra_graphics_default_on",
-      "title": "Unlock extra graphics features by default (disable cardid gate default)",
+      "title": "Default GEFORCE_FX_POWER tweak on",
       "track": "stable",
-      "target_binary_hashes": [],
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
       "file_offset": "0x0CDD40",
       "expected_original_bytes": "6A 00",
       "patched_bytes": "6A 01",
@@ -81,13 +114,27 @@
         "reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md",
         "patches/README.md"
       ],
-      "optional": false
+      "optional": false,
+      "dependencies": [],
+      "conflicts": [],
+      "exclusive_group": "",
+      "proof_level": "byte_verified_static_and_copied_launch_smoke",
+      "selectability": "profile_visible",
+      "preset_eligibility": [
+        "recommended-safe-copy",
+        "enhanced-edition-preview",
+        "custom"
+      ],
+      "requires_windowed_pair": false
     },
     {
       "id": "ignore_cardid_tweak_overrides",
       "title": "Ignore cardid.txt vendor/device tweak overrides",
       "track": "stable",
-      "target_binary_hashes": [],
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
       "file_offset": "0x12AF3F",
       "expected_original_bytes": "E8 9C D7 FF FF",
       "patched_bytes": "90 90 90 90 90",
@@ -98,7 +145,7 @@
       ],
       "side_effects": [
         "cardid.txt vendor/device/version tweak overrides are not applied.",
-        "Runtime uses tweak defaults registered in BEA.exe."
+        "Intended code-path effect is for BEA.exe default tweak values to be used; visible graphics effect and rendering correctness remain separate runtime proof."
       ],
       "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
@@ -107,17 +154,31 @@
         "reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md",
         "patches/README.md"
       ],
-      "optional": false
+      "optional": false,
+      "dependencies": [],
+      "conflicts": [],
+      "exclusive_group": "",
+      "proof_level": "byte_verified_static_and_copied_launch_smoke",
+      "selectability": "profile_visible",
+      "preset_eligibility": [
+        "recommended-safe-copy",
+        "enhanced-edition-preview",
+        "custom"
+      ],
+      "requires_windowed_pair": false
     },
     {
       "id": "version_overlay_use_patched_format_pointer",
-      "title": "Version overlay pointer -> patched format cave",
+      "title": "Install PATCHED version-overlay marker pointer",
       "track": "stable",
-      "target_binary_hashes": [],
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
       "file_offset": "0x6416F",
       "expected_original_bytes": "54 94 62 00",
       "patched_bytes": "44 A4 5A 00",
-      "purpose": "Redirect bottom-left version overlay format-string pointer to patched-format code cave string.",
+      "purpose": "Redirect the bottom-left version overlay format-string pointer to a code-cave string that displayed 'V1.00 - PATCHED' in one copied-game title/menu runtime proof; broader overlay/gameplay paths remain unproven.",
       "preconditions": [
         "Target bytes at offset match expected original or already-patched bytes.",
         "Patch is applied to BEA.exe-compatible retail layout."
@@ -130,15 +191,31 @@
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "high",
       "evidence_refs": [
+        "reverse-engineering/binary-analysis/version-overlay-patch.md",
         "patches/README.md"
       ],
-      "optional": false
+      "optional": true,
+      "dependencies": [
+        "version_overlay_patched_format_cave_string"
+      ],
+      "conflicts": [],
+      "exclusive_group": "",
+      "proof_level": "title_screen_runtime_visual_smoke",
+      "selectability": "optional_visible",
+      "preset_eligibility": [
+        "enhanced-edition-preview",
+        "custom"
+      ],
+      "requires_windowed_pair": false
     },
     {
       "id": "version_overlay_patched_format_cave_string",
       "title": "Version overlay cave format payload (V%1d.%02d - PATCHED)",
       "track": "stable",
-      "target_binary_hashes": [],
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
       "file_offset": "0x1AA444",
       "expected_original_bytes": "CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC",
       "patched_bytes": "56 25 31 64 2E 25 30 32 64 20 2D 20 50 41 54 43 48 45 44 00",
@@ -148,22 +225,208 @@
         "Patch is applied to BEA.exe-compatible retail layout."
       ],
       "side_effects": [
-        "Bottom-left version overlay displays suffix '- PATCHED' after version digits.",
+        "Installs the cave-hosted format string expected to display suffix '- PATCHED' after version digits once the companion pointer redirect is selected.",
         "Used together with version overlay pointer redirect patch."
       ],
       "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "high",
       "evidence_refs": [
+        "reverse-engineering/binary-analysis/version-overlay-patch.md",
         "patches/README.md"
       ],
-      "optional": false
+      "optional": true,
+      "dependencies": [],
+      "conflicts": [],
+      "exclusive_group": "",
+      "proof_level": "companion_payload_byte_verified",
+      "selectability": "hidden_companion",
+      "preset_eligibility": [],
+      "requires_windowed_pair": false
+    },
+    {
+      "id": "frontend_clear_screen_dark_red",
+      "title": "Frontend clear-screen dark red preset",
+      "track": "stable",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x140F88",
+      "expected_original_bytes": "3F 1F 1F 00",
+      "patched_bytes": "1F 1F BF 00",
+      "purpose": "Change the DirectX frontend RenderStart clear-screen color immediate from source-backed dark blue to a dark red preset.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use as an opt-in frontend color mod; select only one frontend clear-screen color preset at a time."
+      ],
+      "side_effects": [
+        "Changes the CDXFrontEnd RenderStart clear-screen color immediate only.",
+        "Does not replace textures, menu art, fonts, HUD colors, or gameplay rendering colors.",
+        "Runtime screenshots remain the visual proof gate for this specific color preset."
+      ],
+      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
+      "confidence": "medium-high",
+      "evidence_refs": [
+        "reverse-engineering/binary-analysis/frontend-clear-screen-color-patch.md",
+        "reverse-engineering/binary-analysis/functions/FrontEnd.cpp/_index.md",
+        "references/Onslaught/DXFrontend.cpp"
+      ],
+      "optional": true,
+      "dependencies": [],
+      "conflicts": [
+        "frontend_clear_screen_dark_green",
+        "frontend_clear_screen_black"
+      ],
+      "exclusive_group": "frontend_clear_screen_color",
+      "proof_level": "title_screen_runtime_visual_smoke",
+      "selectability": "optional_visible",
+      "preset_eligibility": [
+        "enhanced-edition-preview",
+        "custom"
+      ],
+      "requires_windowed_pair": false
+    },
+    {
+      "id": "frontend_clear_screen_dark_green",
+      "title": "Frontend clear-screen dark green preset",
+      "track": "stable",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x140F88",
+      "expected_original_bytes": "3F 1F 1F 00",
+      "patched_bytes": "1F BF 1F 00",
+      "purpose": "Change the DirectX frontend RenderStart clear-screen color immediate from source-backed dark blue to a dark green preset.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use as an opt-in frontend color mod; select only one frontend clear-screen color preset at a time."
+      ],
+      "side_effects": [
+        "Changes the CDXFrontEnd RenderStart clear-screen color immediate only.",
+        "Does not replace textures, menu art, fonts, HUD colors, or gameplay rendering colors.",
+        "Runtime screenshots remain the visual proof gate for this specific color preset."
+      ],
+      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
+      "confidence": "medium",
+      "evidence_refs": [
+        "reverse-engineering/binary-analysis/frontend-clear-screen-color-patch.md",
+        "reverse-engineering/binary-analysis/functions/FrontEnd.cpp/_index.md",
+        "references/Onslaught/DXFrontend.cpp"
+      ],
+      "optional": true,
+      "dependencies": [],
+      "conflicts": [
+        "frontend_clear_screen_dark_red",
+        "frontend_clear_screen_black"
+      ],
+      "exclusive_group": "frontend_clear_screen_color",
+      "proof_level": "title_screen_runtime_visual_smoke",
+      "selectability": "optional_visible",
+      "preset_eligibility": [
+        "custom"
+      ],
+      "requires_windowed_pair": false
+    },
+    {
+      "id": "frontend_clear_screen_black",
+      "title": "Frontend clear-screen black preset",
+      "track": "stable",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x140F88",
+      "expected_original_bytes": "3F 1F 1F 00",
+      "patched_bytes": "00 00 00 00",
+      "purpose": "Change the DirectX frontend RenderStart clear-screen color immediate from source-backed dark blue to black.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use as an opt-in frontend color mod; select only one frontend clear-screen color preset at a time."
+      ],
+      "side_effects": [
+        "Changes the CDXFrontEnd RenderStart clear-screen color immediate only.",
+        "Does not replace textures, menu art, fonts, HUD colors, or gameplay rendering colors.",
+        "Runtime screenshots remain the visual proof gate for this specific color preset."
+      ],
+      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
+      "confidence": "medium",
+      "evidence_refs": [
+        "reverse-engineering/binary-analysis/frontend-clear-screen-color-patch.md",
+        "reverse-engineering/binary-analysis/functions/FrontEnd.cpp/_index.md",
+        "references/Onslaught/DXFrontend.cpp"
+      ],
+      "optional": true,
+      "dependencies": [],
+      "conflicts": [
+        "frontend_clear_screen_dark_red",
+        "frontend_clear_screen_dark_green"
+      ],
+      "exclusive_group": "frontend_clear_screen_color",
+      "proof_level": "title_screen_runtime_visual_smoke",
+      "selectability": "optional_visible",
+      "preset_eligibility": [
+        "custom"
+      ],
+      "requires_windowed_pair": false
+    },
+    {
+      "id": "goodies_gallery_display_unlock",
+      "title": "Goodies gallery display flag override",
+      "track": "stable",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x05D7F4",
+      "expected_original_bytes": "E8 97 7C 00 00 F7 D8 1B C0",
+      "patched_bytes": "83 C4 04 83 C8 FF 90 90 90",
+      "purpose": "Force the CFEPGoodies Process MALLOY-derived display flag path true in the copied executable while preserving the stack for the skipped IsCheatActive(0) call; bounded safe-copy comparison shows the Goodies wall display state changes, while broader selection/model/FMV proof remains separate.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use as an opt-in Goodies wall display mod; broader Goodies selection, model-viewer, FMV, and every-entry behavior remain separate proof."
+      ],
+      "side_effects": [
+        "Forces only the MALLOY-derived Goodies display flag path in CFEPGoodies Process.",
+        "Does not patch save files, award goodies permanently, force the lat\\xEAte/developer Goodies override, or change the career buffer."
+      ],
+      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
+      "confidence": "medium-high",
+      "evidence_refs": [
+        "reverse-engineering/binary-analysis/goodies-gallery-display-unlock-patch.md",
+        "reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__Process.md",
+        "references/Onslaught/FEPGoodies.cpp",
+        "patches/README.md"
+      ],
+      "optional": true,
+      "dependencies": [],
+      "conflicts": [],
+      "exclusive_group": "",
+      "proof_level": "goodies_wall_runtime_visual_smoke",
+      "selectability": "optional_visible",
+      "preset_eligibility": [
+        "enhanced-edition-preview",
+        "custom"
+      ],
+      "requires_windowed_pair": false
     },
     {
       "id": "skip_auto_toggle",
       "title": "Bypass one startup fullscreen toggle check",
       "track": "experimental",
-      "target_binary_hashes": [],
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
       "file_offset": "0x12BB97",
       "expected_original_bytes": "75 20",
       "patched_bytes": "EB 20",
@@ -181,10 +444,941 @@
       "confidence": "medium",
       "evidence_refs": [
         "patches/README.md",
-        "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
-        "subagents/depth2/lane06_binary_patch_gap_findings.md"
+        "reverse-engineering/binary-analysis/windowed-mode-analysis.md"
       ],
-      "optional": true
+      "optional": true,
+      "dependencies": [],
+      "conflicts": [],
+      "exclusive_group": "",
+      "proof_level": "experimental_byte_verified_startup_path",
+      "selectability": "experimental_visible",
+      "preset_eligibility": [
+        "custom"
+      ],
+      "requires_windowed_pair": true
+    },
+    {
+      "id": "pause_o_scan_initializer_experiment",
+      "title": "Experimental: O scan for default pause initializer",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x1144CD",
+      "expected_original_bytes": "01",
+      "patched_bytes": "18",
+      "purpose": "Change the copied executable's default single-binding initializer for BUTTON_PAUSE from DirectInput scan 0x01 to DirectInput scan 0x18, the O key candidate from the source PCController mapping; accepted exact-PID copied-runtime CDB proof covers ordered same-window O-query, BUTTON_PAUSE dispatch, and pause/unpause evidence in one bounded free-camera context.",
+      "preconditions": [
+        "Target byte at offset matches expected original or already-patched byte.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only as an experimental copied-executable pause-key row; broader normal gameplay pause/menu safety and control-feel proof remain separate gates."
+      ],
+      "side_effects": [
+        "Changes only the retail default single-binding initializer row for button 0x38 in the copied executable.",
+        "Does not edit defaultoptions.bea, save files, controller configuration entries, or the installed Steam executable.",
+        "Accepted proof covers ordered same-window copied-profile free-camera pause/unpause evidence; full debugger call-chain causality, normal gameplay pause-menu UX, broad pause/menu safety, long-session safety, and control-feel behavior remain separate proof."
+      ],
+      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original byte at file offset.",
+      "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched; runtime proof checker must show copied byte 0x18, live pause row keyArg 0x18, exact safe-copy PID/path binding, and ordered same-window O-query -> BUTTON_PAUSE dispatch -> pause/unpause evidence in the bounded context.",
+      "confidence": "medium-high",
+      "evidence_refs": [
+        "reverse-engineering/binary-analysis/pause-key-default-row-patch.md",
+        "reverse-engineering/binary-analysis/functions/Controller.cpp/ControlBindings.md",
+        "release/readiness/winui_pause_o_scan_initializer_runtime_2026-06-18.md",
+        "release/readiness/winui_controller_mapping_table_diagnostic_2026-06-18.md",
+        "release/readiness/winui_free_camera_pause_context_diagnostic_2026-06-18.md",
+        "patches/README.md"
+      ],
+      "optional": true,
+      "dependencies": [],
+      "conflicts": [],
+      "exclusive_group": "",
+      "proof_level": "experimental_copied_runtime_cdb_ordered_o_window_proof",
+      "selectability": "experimental_visible",
+      "preset_eligibility": [
+        "custom"
+      ],
+      "requires_windowed_pair": true
+    },
+    {
+      "id": "free_camera_aurore_gate_bypass",
+      "title": "Experimental: bypass Aurore free-camera gate",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x06F83C",
+      "expected_original_bytes": "0F 84 58 02 00 00",
+      "patched_bytes": "90 90 90 90 90 90",
+      "purpose": "NOP the retail-only Aurore inactive branch in CGame::ReceiveButtonAction so the existing BUTTON_TOGGLE_FREE_CAMERA case can fall through to its free-camera toggle path; accepted copied-runtime CDB proof covers scoped F toggle on/off camera-pointer transitions.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use as an experimental copied-executable debug camera mod; broader camera movement/control proof remains a separate behavior gate."
+      ],
+      "side_effects": [
+        "Bypasses only the Aurore cheat gate in the debug button free-camera case.",
+        "Does not prove all camera controls, gameplay safety, pause/menu behavior, or free-camera rendering at runtime.",
+        "Can expose debug-camera behavior during gameplay if the corresponding debug button is reachable."
+      ],
+      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
+      "confidence": "medium",
+      "evidence_refs": [
+        "reverse-engineering/binary-analysis/functions/game.cpp/CGame__ReceiveButtonAction.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "release/readiness/winui_safe_copy_free_camera_toggle_2026-06-18.md",
+        "patches/README.md"
+      ],
+      "optional": true,
+      "dependencies": [],
+      "conflicts": [],
+      "exclusive_group": "",
+      "proof_level": "experimental_copied_runtime_cdb_toggle_proof",
+      "selectability": "experimental_visible",
+      "preset_eligibility": [
+        "custom",
+        "debug-camera-preview"
+      ],
+      "requires_windowed_pair": true
+    },
+    {
+      "id": "free_camera_keyboard_forward_q_cave",
+      "title": "Experimental companion: free-camera Q-forward remap cave",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x1A3A15",
+      "expected_original_bytes": "CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC",
+      "patched_bytes": "8B 44 24 08 83 F8 1F 75 09 B8 26 00 00 00 89 44 24 08 81 EC C0 00 00 00 E9 58 6F E7 FF",
+      "purpose": "Install a copied-executable code-cave body that rewrites free-camera handler button 31 to camera-forward button 38 before continuing the original CControllableCamera::ReceiveButtonAction prologue.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only as the hidden companion payload for the free-camera Q-forward hook."
+      ],
+      "side_effects": [
+        "Installs code in an unused retail .text CC run.",
+        "Does not run unless the companion hook redirects CControllableCamera::ReceiveButtonAction into this cave.",
+        "One Q-forward copied-runtime CDB movement path is proven by the companion hook artifact; broader control feel and visible behavior remain separate proof."
+      ],
+      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
+      "confidence": "medium",
+      "evidence_refs": [
+        "references/Onslaught/Camera.cpp",
+        "references/Onslaught/Controller.h",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "release/readiness/winui_free_camera_q_forward_runtime_2026-06-18.md",
+        "patches/README.md"
+      ],
+      "optional": true,
+      "dependencies": [],
+      "conflicts": [
+        "free_camera_keyboard_backward_q_cave",
+        "free_camera_keyboard_strafe_left_q_cave",
+        "free_camera_keyboard_strafe_right_q_cave",
+        "free_camera_keyboard_yaw_left_q_cave",
+        "free_camera_keyboard_yaw_right_q_cave",
+        "free_camera_keyboard_pitch_up_q_cave",
+        "free_camera_keyboard_pitch_down_q_cave"
+      ],
+      "exclusive_group": "",
+      "proof_level": "experimental_copied_runtime_cdb_q_forward_proof",
+      "selectability": "hidden_companion",
+      "preset_eligibility": [],
+      "requires_windowed_pair": true
+    },
+    {
+      "id": "free_camera_keyboard_forward_q_hook",
+      "title": "Experimental: Q-forward free-camera hook",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x01A980",
+      "expected_original_bytes": "8B 44 24 08 81 EC C0 00 00 00",
+      "patched_bytes": "E9 90 90 18 00 90 90 90 90 90",
+      "purpose": "Redirect the copied executable's CControllableCamera::ReceiveButtonAction entry through a cave that maps Q-bound button 31 to the camera-forward button value 38 before the original camera-control switch.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only with the copied-profile safe runtime path and free-camera gate bypass.",
+        "Accepted copied-runtime CDB proof shows Q-window cave hits, camera-handler rows, and camera-position deltas before any broader control claim."
+      ],
+      "side_effects": [
+        "Changes only the copied executable's free-camera control handler entry path.",
+        "Maps button 31 to camera-forward only while execution is in CControllableCamera::ReceiveButtonAction.",
+        "Does not prove control feel, joystick/analog behavior, gameplay safety, pause/menu behavior, or rebuild parity."
+      ],
+      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
+      "confidence": "medium",
+      "evidence_refs": [
+        "references/Onslaught/Camera.cpp",
+        "references/Onslaught/Controller.h",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "release/readiness/winui_free_camera_q_forward_runtime_2026-06-18.md",
+        "patches/README.md"
+      ],
+      "optional": true,
+      "dependencies": [
+        "free_camera_aurore_gate_bypass",
+        "free_camera_keyboard_forward_q_cave"
+      ],
+      "conflicts": [
+        "free_camera_keyboard_backward_q_hook",
+        "free_camera_keyboard_strafe_left_q_hook",
+        "free_camera_keyboard_strafe_right_q_hook",
+        "free_camera_keyboard_yaw_left_q_hook",
+        "free_camera_keyboard_yaw_right_q_hook",
+        "free_camera_keyboard_pitch_up_q_hook",
+        "free_camera_keyboard_pitch_down_q_hook"
+      ],
+      "exclusive_group": "free_camera_keyboard_q_remap",
+      "proof_level": "experimental_copied_runtime_cdb_q_forward_proof",
+      "selectability": "experimental_visible",
+      "preset_eligibility": [
+        "custom",
+        "debug-camera-preview"
+      ],
+      "requires_windowed_pair": true
+    },
+    {
+      "id": "free_camera_keyboard_backward_q_cave",
+      "title": "Experimental companion: free-camera Q-backward remap cave",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x1A3A15",
+      "expected_original_bytes": "CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC",
+      "patched_bytes": "8B 44 24 08 83 F8 20 75 09 B8 27 00 00 00 89 44 24 08 81 EC C0 00 00 00 E9 58 6F E7 FF",
+      "purpose": "Install a copied-executable code-cave body that rewrites free-camera handler button 32 to camera-backward button 39 before continuing the original CControllableCamera::ReceiveButtonAction prologue.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only as the hidden companion payload for the free-camera Q-backward hook."
+      ],
+      "postconditions": [
+        "Only the copied executable bytes at 0x1A3A15 are changed.",
+        "Restore verifies patched bytes before restoring the original CC padding.",
+        "This row is not selectable by itself; it is added only as a dependency of free_camera_keyboard_backward_q_hook."
+      ],
+      "references": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "release/readiness/winui_free_camera_q_backward_runtime_2026-06-18.md",
+        "patches/README.md"
+      ],
+      "optional": true,
+      "dependencies": [],
+      "conflicts": [
+        "free_camera_keyboard_forward_q_cave",
+        "free_camera_keyboard_strafe_left_q_cave",
+        "free_camera_keyboard_strafe_right_q_cave",
+        "free_camera_keyboard_yaw_left_q_cave",
+        "free_camera_keyboard_yaw_right_q_cave",
+        "free_camera_keyboard_pitch_up_q_cave",
+        "free_camera_keyboard_pitch_down_q_cave"
+      ],
+      "exclusive_group": "",
+      "proof_level": "experimental_copied_runtime_cdb_q_backward_proof",
+      "selectability": "hidden_companion",
+      "preset_eligibility": [],
+      "requires_windowed_pair": true
+    },
+    {
+      "id": "free_camera_keyboard_backward_q_hook",
+      "title": "Experimental: Q-backward free-camera hook",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x01A980",
+      "expected_original_bytes": "8B 44 24 08 81 EC C0 00 00 00",
+      "patched_bytes": "E9 90 90 18 00 90 90 90 90 90",
+      "purpose": "Redirect the copied executable's CControllableCamera::ReceiveButtonAction entry through a cave that maps Q-bound button 32 to the camera-backward button value 39 before the original camera-control switch.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only with the copied-profile safe runtime path and free-camera gate bypass.",
+        "Apply to a copied executable only; never patch the installed Steam executable in place.",
+        "Use as one bounded reverse-movement proof path only. It conflicts with the Q-forward, Q-strafe-left, and Q-strafe-right remaps because these rows patch the same hook and cave bytes."
+      ],
+      "postconditions": [
+        "Only the copied executable bytes at 0x01A980 are changed by this visible row; its hidden companion owns 0x1A3A15.",
+        "Restore verifies patched bytes before restoring the original CControllableCamera::ReceiveButtonAction prologue bytes.",
+        "Runtime proof must show scoped Q input reaching the hook/cave path and producing CDB-observed free-camera position deltas before any claim broadens beyond this one path."
+      ],
+      "references": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "release/readiness/winui_free_camera_q_backward_runtime_2026-06-18.md",
+        "patches/README.md"
+      ],
+      "optional": true,
+      "dependencies": [
+        "free_camera_aurore_gate_bypass",
+        "free_camera_keyboard_backward_q_cave"
+      ],
+      "conflicts": [
+        "free_camera_keyboard_forward_q_hook",
+        "free_camera_keyboard_strafe_left_q_hook",
+        "free_camera_keyboard_strafe_right_q_hook",
+        "free_camera_keyboard_yaw_left_q_hook",
+        "free_camera_keyboard_yaw_right_q_hook",
+        "free_camera_keyboard_pitch_up_q_hook",
+        "free_camera_keyboard_pitch_down_q_hook"
+      ],
+      "exclusive_group": "free_camera_keyboard_q_remap",
+      "proof_level": "experimental_copied_runtime_cdb_q_backward_proof",
+      "selectability": "experimental_visible",
+      "preset_eligibility": [
+        "custom"
+      ],
+      "requires_windowed_pair": true
+    },
+    {
+      "id": "free_camera_keyboard_strafe_left_q_cave",
+      "title": "Experimental companion: free-camera Q-strafe-left remap cave",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x1A3A15",
+      "expected_original_bytes": "CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC",
+      "patched_bytes": "8B 44 24 08 83 F8 1D 75 09 B8 28 00 00 00 89 44 24 08 81 EC C0 00 00 00 E9 58 6F E7 FF",
+      "purpose": "Install a copied-executable code-cave body that rewrites free-camera handler button 29 to camera-strafe-left button 40 before continuing the original CControllableCamera::ReceiveButtonAction prologue.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only as the hidden companion payload for the free-camera Q-strafe-left hook."
+      ],
+      "postconditions": [
+        "Only the copied executable bytes at 0x1A3A15 are changed.",
+        "Restore verifies patched bytes before restoring the original CC padding.",
+        "This row is not selectable by itself; it is added only as a dependency of free_camera_keyboard_strafe_left_q_hook."
+      ],
+      "references": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "release/readiness/winui_free_camera_q_strafe_left_runtime_2026-06-18.md",
+        "patches/README.md"
+      ],
+      "optional": true,
+      "dependencies": [],
+      "conflicts": [
+        "free_camera_keyboard_forward_q_cave",
+        "free_camera_keyboard_backward_q_cave",
+        "free_camera_keyboard_strafe_right_q_cave",
+        "free_camera_keyboard_yaw_left_q_cave",
+        "free_camera_keyboard_yaw_right_q_cave",
+        "free_camera_keyboard_pitch_up_q_cave",
+        "free_camera_keyboard_pitch_down_q_cave"
+      ],
+      "exclusive_group": "",
+      "proof_level": "experimental_copied_runtime_cdb_q_strafe_left_proof",
+      "selectability": "hidden_companion",
+      "preset_eligibility": [],
+      "requires_windowed_pair": true
+    },
+    {
+      "id": "free_camera_keyboard_strafe_left_q_hook",
+      "title": "Experimental: Q-strafe-left free-camera hook",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x01A980",
+      "expected_original_bytes": "8B 44 24 08 81 EC C0 00 00 00",
+      "patched_bytes": "E9 90 90 18 00 90 90 90 90 90",
+      "purpose": "Redirect the copied executable's CControllableCamera::ReceiveButtonAction entry through a cave that maps Q-bound button 29 to the camera-strafe-left button value 40 before the original camera-control switch.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only with the copied-profile safe runtime path and free-camera gate bypass.",
+        "Apply to a copied executable only; never patch the installed Steam executable in place.",
+        "Use as one bounded strafe-left movement proof path only. It conflicts with the Q-forward, Q-backward, and Q-strafe-right remaps because these rows patch the same hook and cave bytes."
+      ],
+      "postconditions": [
+        "Only the copied executable bytes at 0x01A980 are changed by this visible row; its hidden companion owns 0x1A3A15.",
+        "Restore verifies patched bytes before restoring the original CControllableCamera::ReceiveButtonAction prologue bytes.",
+        "Runtime proof must show scoped Q input reaching the hook/cave path and producing CDB-observed free-camera position deltas before any claim broadens beyond this one path."
+      ],
+      "references": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "release/readiness/winui_free_camera_q_strafe_left_runtime_2026-06-18.md",
+        "patches/README.md"
+      ],
+      "optional": true,
+      "dependencies": [
+        "free_camera_aurore_gate_bypass",
+        "free_camera_keyboard_strafe_left_q_cave"
+      ],
+      "conflicts": [
+        "free_camera_keyboard_forward_q_hook",
+        "free_camera_keyboard_backward_q_hook",
+        "free_camera_keyboard_strafe_right_q_hook",
+        "free_camera_keyboard_yaw_left_q_hook",
+        "free_camera_keyboard_yaw_right_q_hook",
+        "free_camera_keyboard_pitch_up_q_hook",
+        "free_camera_keyboard_pitch_down_q_hook"
+      ],
+      "exclusive_group": "free_camera_keyboard_q_remap",
+      "proof_level": "experimental_copied_runtime_cdb_q_strafe_left_proof",
+      "selectability": "experimental_visible",
+      "preset_eligibility": [
+        "custom"
+      ],
+      "requires_windowed_pair": true
+    },
+    {
+      "id": "free_camera_keyboard_strafe_right_q_cave",
+      "title": "Experimental companion: free-camera Q-strafe-right remap cave",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x1A3A15",
+      "expected_original_bytes": "CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC",
+      "patched_bytes": "8B 44 24 08 83 F8 1E 75 09 B8 29 00 00 00 89 44 24 08 81 EC C0 00 00 00 E9 58 6F E7 FF",
+      "purpose": "Install a copied-executable code-cave body that rewrites free-camera handler button 30 to camera-strafe-right button 41 before continuing the original CControllableCamera::ReceiveButtonAction prologue.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only as the hidden companion payload for the free-camera Q-strafe-right hook."
+      ],
+      "postconditions": [
+        "Only the copied executable bytes at 0x1A3A15 are changed.",
+        "Restore verifies patched bytes before restoring the original CC padding.",
+        "This row is not selectable by itself; it is added only as a dependency of free_camera_keyboard_strafe_right_q_hook."
+      ],
+      "references": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "release/readiness/winui_free_camera_q_strafe_right_runtime_2026-06-18.md",
+        "patches/README.md"
+      ],
+      "optional": true,
+      "dependencies": [],
+      "conflicts": [
+        "free_camera_keyboard_forward_q_cave",
+        "free_camera_keyboard_backward_q_cave",
+        "free_camera_keyboard_strafe_left_q_cave",
+        "free_camera_keyboard_yaw_left_q_cave",
+        "free_camera_keyboard_yaw_right_q_cave",
+        "free_camera_keyboard_pitch_up_q_cave",
+        "free_camera_keyboard_pitch_down_q_cave"
+      ],
+      "exclusive_group": "",
+      "proof_level": "experimental_copied_runtime_cdb_q_strafe_right_proof",
+      "selectability": "hidden_companion",
+      "preset_eligibility": [],
+      "requires_windowed_pair": true
+    },
+    {
+      "id": "free_camera_keyboard_strafe_right_q_hook",
+      "title": "Experimental: Q-strafe-right free-camera hook",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x01A980",
+      "expected_original_bytes": "8B 44 24 08 81 EC C0 00 00 00",
+      "patched_bytes": "E9 90 90 18 00 90 90 90 90 90",
+      "purpose": "Redirect the copied executable's CControllableCamera::ReceiveButtonAction entry through a cave that maps Q-bound button 30 to the camera-strafe-right button value 41 before the original camera-control switch.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only with the copied-profile safe runtime path and free-camera gate bypass.",
+        "Apply to a copied executable only; never patch the installed Steam executable in place.",
+        "Use as one bounded strafe-right movement proof path only. It conflicts with the other Q-remap variants because these rows patch the same hook and cave bytes."
+      ],
+      "postconditions": [
+        "Only the copied executable bytes at 0x01A980 are changed by this visible row; its hidden companion owns 0x1A3A15.",
+        "Restore verifies patched bytes before restoring the original CControllableCamera::ReceiveButtonAction prologue bytes.",
+        "Runtime proof must show scoped Q input reaching the hook/cave path and producing CDB-observed free-camera position deltas before any claim broadens beyond this one path."
+      ],
+      "references": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "release/readiness/winui_free_camera_q_strafe_right_runtime_2026-06-18.md",
+        "patches/README.md"
+      ],
+      "optional": true,
+      "dependencies": [
+        "free_camera_aurore_gate_bypass",
+        "free_camera_keyboard_strafe_right_q_cave"
+      ],
+      "conflicts": [
+        "free_camera_keyboard_forward_q_hook",
+        "free_camera_keyboard_backward_q_hook",
+        "free_camera_keyboard_strafe_left_q_hook",
+        "free_camera_keyboard_yaw_left_q_hook",
+        "free_camera_keyboard_yaw_right_q_hook",
+        "free_camera_keyboard_pitch_up_q_hook",
+        "free_camera_keyboard_pitch_down_q_hook"
+      ],
+      "exclusive_group": "free_camera_keyboard_q_remap",
+      "proof_level": "experimental_copied_runtime_cdb_q_strafe_right_proof",
+      "selectability": "experimental_visible",
+      "preset_eligibility": [
+        "custom"
+      ],
+      "requires_windowed_pair": true
+    },
+    {
+      "id": "free_camera_keyboard_yaw_left_q_cave",
+      "title": "Experimental companion: free-camera Q-yaw-left remap cave",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x1A3A15",
+      "expected_original_bytes": "CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC",
+      "patched_bytes": "8B 44 24 08 83 F8 19 75 09 B8 24 00 00 00 89 44 24 08 81 EC C0 00 00 00 E9 58 6F E7 FF",
+      "purpose": "Install a copied-executable cave that remaps config-2 Q-bound look-left button 0x19 to BUTTON_CAMERA_YAW_LEFT 0x24 only while inside the free-camera ReceiveButtonAction hook path.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only as the hidden companion payload for the free-camera Q-yaw-left hook."
+      ],
+      "postconditions": [
+        "Only the copied executable bytes at 0x1A3A15 are changed.",
+        "Restore verifies patched bytes before restoring the original CC padding.",
+        "This row is not selectable by itself; it is added only as a dependency of free_camera_keyboard_yaw_left_q_hook."
+      ],
+      "references": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "release/readiness/winui_free_camera_q_yaw_left_runtime_2026-06-18.md",
+        "patches/README.md"
+      ],
+      "optional": true,
+      "dependencies": [],
+      "conflicts": [
+        "free_camera_keyboard_forward_q_cave",
+        "free_camera_keyboard_backward_q_cave",
+        "free_camera_keyboard_strafe_left_q_cave",
+        "free_camera_keyboard_strafe_right_q_cave",
+        "free_camera_keyboard_yaw_right_q_cave",
+        "free_camera_keyboard_pitch_up_q_cave",
+        "free_camera_keyboard_pitch_down_q_cave"
+      ],
+      "exclusive_group": "",
+      "proof_level": "experimental_copied_runtime_cdb_q_yaw_left_proof",
+      "selectability": "hidden_companion",
+      "preset_eligibility": [],
+      "requires_windowed_pair": true,
+      "side_effects": [
+        "Uses the same code cave bytes as the other mutually exclusive Q remap companions.",
+        "Only one Q remap companion can occupy the cave at a time; selecting the visible yaw-left hook auto-selects this hidden companion."
+      ]
+    },
+    {
+      "id": "free_camera_keyboard_yaw_left_q_hook",
+      "title": "Experimental: Q-yaw-left free-camera hook",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x01A980",
+      "expected_original_bytes": "8B 44 24 08 81 EC C0 00 00 00",
+      "patched_bytes": "E9 90 90 18 00 90 90 90 90 90",
+      "purpose": "Redirect the copied free-camera ReceiveButtonAction entry through the yaw-left Q remap cave so config-2 look-left button 0x19 reaches BUTTON_CAMERA_YAW_LEFT 0x24 after the debug camera is toggled on.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only with the copied-profile safe runtime path and free-camera gate bypass.",
+        "Apply to a copied executable only; never patch the installed Steam executable in place.",
+        "Use as one bounded yaw-left orientation proof path only. It conflicts with the other Q-remap variants because these rows patch the same hook and cave bytes."
+      ],
+      "postconditions": [
+        "Only the copied executable bytes at 0x01A980 are changed by the visible hook row.",
+        "The hidden yaw-left cave companion is selected automatically and byte-verified.",
+        "Restore verifies patched bytes before restoring the original ReceiveButtonAction prologue bytes."
+      ],
+      "references": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "release/readiness/winui_free_camera_q_yaw_left_runtime_2026-06-18.md",
+        "patches/README.md"
+      ],
+      "optional": true,
+      "dependencies": [
+        "free_camera_aurore_gate_bypass",
+        "free_camera_keyboard_yaw_left_q_cave"
+      ],
+      "conflicts": [
+        "free_camera_keyboard_forward_q_hook",
+        "free_camera_keyboard_backward_q_hook",
+        "free_camera_keyboard_strafe_left_q_hook",
+        "free_camera_keyboard_strafe_right_q_hook",
+        "free_camera_keyboard_yaw_right_q_hook",
+        "free_camera_keyboard_pitch_up_q_hook",
+        "free_camera_keyboard_pitch_down_q_hook"
+      ],
+      "exclusive_group": "free_camera_keyboard_q_remap",
+      "proof_level": "experimental_copied_runtime_cdb_q_yaw_left_proof",
+      "selectability": "experimental_visible",
+      "preset_eligibility": [
+        "custom"
+      ],
+      "requires_windowed_pair": true,
+      "side_effects": [
+        "Mutually exclusive with the other Q remap hooks because all patch the same ReceiveButtonAction entry bytes.",
+        "This does not prove full free-camera controls, pitch, pause/menu safety, control feel, gameplay safety, render parity, or long-session behavior."
+      ]
+    },
+    {
+      "id": "free_camera_keyboard_yaw_right_q_cave",
+      "title": "Experimental companion: free-camera Q-yaw-right remap cave",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x1A3A15",
+      "expected_original_bytes": "CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC",
+      "patched_bytes": "8B 44 24 08 83 F8 1B 75 09 B8 25 00 00 00 89 44 24 08 81 EC C0 00 00 00 E9 58 6F E7 FF",
+      "purpose": "Install a copied-executable code-cave body that rewrites free-camera handler button 27 to camera-yaw-right button 37 before continuing the original CControllableCamera::ReceiveButtonAction prologue.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only as the hidden companion payload for the free-camera Q-yaw-right hook."
+      ],
+      "postconditions": [
+        "Only the copied executable bytes at 0x1A3A15 are changed.",
+        "Restore verifies patched bytes before restoring the original CC padding.",
+        "This row is not selectable by itself; it is added only as a dependency of free_camera_keyboard_yaw_right_q_hook."
+      ],
+      "references": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "release/readiness/winui_free_camera_q_yaw_right_runtime_2026-06-18.md",
+        "patches/README.md"
+      ],
+      "optional": true,
+      "dependencies": [],
+      "conflicts": [
+        "free_camera_keyboard_forward_q_cave",
+        "free_camera_keyboard_backward_q_cave",
+        "free_camera_keyboard_strafe_left_q_cave",
+        "free_camera_keyboard_strafe_right_q_cave",
+        "free_camera_keyboard_yaw_left_q_cave",
+        "free_camera_keyboard_pitch_up_q_cave",
+        "free_camera_keyboard_pitch_down_q_cave"
+      ],
+      "exclusive_group": "",
+      "proof_level": "experimental_copied_runtime_cdb_q_yaw_right_proof",
+      "selectability": "hidden_companion",
+      "preset_eligibility": [],
+      "requires_windowed_pair": true
+    },
+    {
+      "id": "free_camera_keyboard_yaw_right_q_hook",
+      "title": "Experimental: Q-yaw-right free-camera hook",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x01A980",
+      "expected_original_bytes": "8B 44 24 08 81 EC C0 00 00 00",
+      "patched_bytes": "E9 90 90 18 00 90 90 90 90 90",
+      "purpose": "Redirect the copied executable's CControllableCamera::ReceiveButtonAction entry through a cave that maps Q-bound button 27 to the camera-yaw-right button value 37 before the original camera-control switch.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only with the copied-profile safe runtime path and free-camera gate bypass.",
+        "Apply to a copied executable only; never patch the installed Steam executable in place.",
+        "Use as one bounded yaw-right orientation proof path only. It conflicts with the other Q-remap variants because these rows patch the same hook and cave bytes."
+      ],
+      "postconditions": [
+        "Only the copied executable bytes at 0x01A980 are changed by this visible row; its hidden companion owns 0x1A3A15.",
+        "Restore verifies patched bytes before restoring the original CControllableCamera::ReceiveButtonAction prologue bytes.",
+        "Runtime proof must show scoped Q input reaching the hook/cave path and producing CDB-observed free-camera orientation deltas before any claim broadens beyond this one path."
+      ],
+      "references": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "release/readiness/winui_free_camera_q_yaw_right_runtime_2026-06-18.md",
+        "patches/README.md"
+      ],
+      "optional": true,
+      "dependencies": [
+        "free_camera_aurore_gate_bypass",
+        "free_camera_keyboard_yaw_right_q_cave"
+      ],
+      "conflicts": [
+        "free_camera_keyboard_forward_q_hook",
+        "free_camera_keyboard_backward_q_hook",
+        "free_camera_keyboard_strafe_left_q_hook",
+        "free_camera_keyboard_strafe_right_q_hook",
+        "free_camera_keyboard_yaw_left_q_hook",
+        "free_camera_keyboard_pitch_up_q_hook",
+        "free_camera_keyboard_pitch_down_q_hook"
+      ],
+      "exclusive_group": "free_camera_keyboard_q_remap",
+      "proof_level": "experimental_copied_runtime_cdb_q_yaw_right_proof",
+      "selectability": "experimental_visible",
+      "preset_eligibility": [
+        "custom"
+      ],
+      "requires_windowed_pair": true
+    },
+    {
+      "id": "free_camera_keyboard_pitch_up_q_cave",
+      "title": "Experimental companion: free-camera Q-pitch-up remap cave",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x1A3A15",
+      "expected_original_bytes": "CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC",
+      "patched_bytes": "8B 44 24 08 83 F8 1A 75 09 B8 22 00 00 00 89 44 24 08 81 EC C0 00 00 00 E9 58 6F E7 FF",
+      "purpose": "Install a copied-executable code-cave body that rewrites free-camera handler button 26 to BUTTON_CAMERA_PITCH_UP button 34 before continuing the original CControllableCamera::ReceiveButtonAction prologue.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only as the hidden companion payload for the free_camera_keyboard_pitch_up_q_hook visible row."
+      ],
+      "postconditions": [
+        "Only the copied executable bytes at 0x1A3A15 are changed.",
+        "Restore verifies patched bytes before restoring the original CC padding.",
+        "This row is not selectable by itself; it is added only as a dependency of free_camera_keyboard_pitch_up_q_hook."
+      ],
+      "references": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "patches/README.md",
+        "release/readiness/winui_free_camera_q_pitch_up_runtime_2026-06-18.md"
+      ],
+      "optional": true,
+      "dependencies": [],
+      "conflicts": [
+        "free_camera_keyboard_forward_q_cave",
+        "free_camera_keyboard_backward_q_cave",
+        "free_camera_keyboard_strafe_left_q_cave",
+        "free_camera_keyboard_strafe_right_q_cave",
+        "free_camera_keyboard_yaw_left_q_cave",
+        "free_camera_keyboard_yaw_right_q_cave",
+        "free_camera_keyboard_pitch_down_q_cave"
+      ],
+      "exclusive_group": "",
+      "proof_level": "experimental_copied_runtime_cdb_q_pitch_up_proof",
+      "selectability": "hidden_companion",
+      "preset_eligibility": [],
+      "requires_windowed_pair": true,
+      "side_effects": [
+        "Uses the same code-cave address as the other mutually exclusive Q-key free-camera remap companions.",
+        "Only one Q-key remap companion can occupy the cave at a time; selecting the visible pitch-up hook auto-selects this hidden companion."
+      ]
+    },
+    {
+      "id": "free_camera_keyboard_pitch_up_q_hook",
+      "title": "Experimental: Q-pitch-up free-camera hook",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x01A980",
+      "expected_original_bytes": "8B 44 24 08 81 EC C0 00 00 00",
+      "patched_bytes": "E9 90 90 18 00 90 90 90 90 90",
+      "purpose": "Redirect the copied executable's CControllableCamera::ReceiveButtonAction entry through a cave that maps the Q-key-bound config-2 look-up button 0x1a to BUTTON_CAMERA_PITCH_UP 0x22 before the original camera-control switch.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only with the copied-profile safe runtime path and free-camera gate bypass.",
+        "Apply to a copied executable only; never patch the installed Steam executable in place.",
+        "Use as one bounded pitch-up orientation proof path only. It conflicts with the other Q-key remap variants because these rows patch the same hook and cave bytes."
+      ],
+      "postconditions": [
+        "Only the copied executable bytes at 0x01A980 are changed by this visible row; its hidden companion owns 0x1A3A15.",
+        "Restore verifies patched bytes before restoring the original CControllableCamera::ReceiveButtonAction prologue bytes.",
+        "Runtime proof must show scoped Q-key input reaching the hook/cave path and producing CDB-observed free-camera orientation deltas before any claim broadens beyond this pitch-up path."
+      ],
+      "references": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "patches/README.md",
+        "release/readiness/winui_free_camera_q_pitch_up_runtime_2026-06-18.md"
+      ],
+      "optional": true,
+      "dependencies": [
+        "free_camera_aurore_gate_bypass",
+        "free_camera_keyboard_pitch_up_q_cave"
+      ],
+      "conflicts": [
+        "free_camera_keyboard_forward_q_hook",
+        "free_camera_keyboard_backward_q_hook",
+        "free_camera_keyboard_strafe_left_q_hook",
+        "free_camera_keyboard_strafe_right_q_hook",
+        "free_camera_keyboard_yaw_left_q_hook",
+        "free_camera_keyboard_yaw_right_q_hook",
+        "free_camera_keyboard_pitch_down_q_hook"
+      ],
+      "exclusive_group": "free_camera_keyboard_q_remap",
+      "proof_level": "experimental_copied_runtime_cdb_q_pitch_up_proof",
+      "selectability": "experimental_visible",
+      "preset_eligibility": [
+        "custom"
+      ],
+      "requires_windowed_pair": true,
+      "side_effects": [
+        "Mutually exclusive with the other Q-key remap hooks because all patch the same ReceiveButtonAction entry bytes.",
+        "This does not prove full free-camera controls, joystick/analog coverage, pause/menu safety, control feel, gameplay safety, render parity, online/netcode, rebuild parity, or long-session behavior."
+      ]
+    },
+    {
+      "id": "free_camera_keyboard_pitch_down_q_cave",
+      "title": "Experimental companion: free-camera Q-pitch-down remap cave",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x1A3A15",
+      "expected_original_bytes": "CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC",
+      "patched_bytes": "8B 44 24 08 83 F8 1C 75 09 B8 23 00 00 00 89 44 24 08 81 EC C0 00 00 00 E9 58 6F E7 FF",
+      "purpose": "Install a copied-executable code-cave body that rewrites free-camera handler button 28 to BUTTON_CAMERA_PITCH_DOWN button 35 before continuing the original CControllableCamera::ReceiveButtonAction prologue.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only as the hidden companion payload for the free_camera_keyboard_pitch_down_q_hook visible row."
+      ],
+      "postconditions": [
+        "Only the copied executable bytes at 0x1A3A15 are changed.",
+        "Restore verifies patched bytes before restoring the original CC padding.",
+        "This row is not selectable by itself; it is added only as a dependency of free_camera_keyboard_pitch_down_q_hook."
+      ],
+      "references": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "patches/README.md",
+        "release/readiness/winui_free_camera_q_pitch_down_runtime_2026-06-18.md"
+      ],
+      "optional": true,
+      "dependencies": [],
+      "conflicts": [
+        "free_camera_keyboard_forward_q_cave",
+        "free_camera_keyboard_backward_q_cave",
+        "free_camera_keyboard_strafe_left_q_cave",
+        "free_camera_keyboard_strafe_right_q_cave",
+        "free_camera_keyboard_yaw_left_q_cave",
+        "free_camera_keyboard_yaw_right_q_cave",
+        "free_camera_keyboard_pitch_up_q_cave"
+      ],
+      "exclusive_group": "",
+      "proof_level": "experimental_copied_runtime_cdb_q_pitch_down_proof",
+      "selectability": "hidden_companion",
+      "preset_eligibility": [],
+      "requires_windowed_pair": true,
+      "side_effects": [
+        "Uses the same code-cave address as the other mutually exclusive Q-key free-camera remap companions.",
+        "Only one Q-key remap companion can occupy the cave at a time; selecting the visible pitch-down hook auto-selects this hidden companion."
+      ]
+    },
+    {
+      "id": "free_camera_keyboard_pitch_down_q_hook",
+      "title": "Experimental: Q-pitch-down free-camera hook",
+      "track": "experimental",
+      "target_binary_hashes": [
+        "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+      ],
+      "target_binary_size": 2506752,
+      "file_offset": "0x01A980",
+      "expected_original_bytes": "8B 44 24 08 81 EC C0 00 00 00",
+      "patched_bytes": "E9 90 90 18 00 90 90 90 90 90",
+      "purpose": "Redirect the copied executable's CControllableCamera::ReceiveButtonAction entry through a cave that maps the Q-key-bound config-2 look-down button 0x1c to BUTTON_CAMERA_PITCH_DOWN 0x23 before the original camera-control switch.",
+      "preconditions": [
+        "Target bytes at offset match expected original or already-patched bytes.",
+        "Patch is applied to BEA.exe-compatible retail layout.",
+        "Use only with the copied-profile safe runtime path and free-camera gate bypass.",
+        "Apply to a copied executable only; never patch the installed Steam executable in place.",
+        "Use as one bounded pitch-down orientation proof path only. It conflicts with the other Q-key remap variants because these rows patch the same hook and cave bytes."
+      ],
+      "postconditions": [
+        "Only the copied executable bytes at 0x01A980 are changed by this visible row; its hidden companion owns 0x1A3A15.",
+        "Restore verifies patched bytes before restoring the original CControllableCamera::ReceiveButtonAction prologue bytes.",
+        "Runtime proof must show scoped Q-key input reaching the hook/cave path and producing CDB-observed free-camera orientation deltas before any claim broadens beyond this pitch-down path."
+      ],
+      "references": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "patches/README.md",
+        "release/readiness/winui_free_camera_q_pitch_down_runtime_2026-06-18.md"
+      ],
+      "optional": true,
+      "dependencies": [
+        "free_camera_aurore_gate_bypass",
+        "free_camera_keyboard_pitch_down_q_cave"
+      ],
+      "conflicts": [
+        "free_camera_keyboard_forward_q_hook",
+        "free_camera_keyboard_backward_q_hook",
+        "free_camera_keyboard_strafe_left_q_hook",
+        "free_camera_keyboard_strafe_right_q_hook",
+        "free_camera_keyboard_yaw_left_q_hook",
+        "free_camera_keyboard_yaw_right_q_hook",
+        "free_camera_keyboard_pitch_up_q_hook"
+      ],
+      "exclusive_group": "free_camera_keyboard_q_remap",
+      "proof_level": "experimental_copied_runtime_cdb_q_pitch_down_proof",
+      "selectability": "experimental_visible",
+      "preset_eligibility": [
+        "custom"
+      ],
+      "requires_windowed_pair": true,
+      "side_effects": [
+        "Mutually exclusive with the other Q-key remap hooks because all patch the same ReceiveButtonAction entry bytes.",
+        "This does not prove full free-camera controls, joystick/analog coverage, pause/menu safety, control feel, gameplay safety, render parity, online/netcode, rebuild parity, or long-session behavior."
+      ]
     }
   ]
 }

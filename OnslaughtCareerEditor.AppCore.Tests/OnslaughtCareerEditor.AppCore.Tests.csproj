@@ -20,4 +20,8 @@
     <ProjectReference Include="..\OnslaughtCareerEditor.AppCore\OnslaughtCareerEditor.AppCore.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\patches\catalog\patches.v2.json" Link="patches\catalog\patches.v2.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,642 @@
+<Page
+    x:Class="OnslaughtCareerEditor.WinUI.Pages.AssetLibraryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid Padding="20,18,20,24"
+          RowSpacing="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0"
+                    Spacing="6">
+            <TextBlock Text="Asset Library"
+                       Style="{StaticResource SectionTitleTextStyle}" />
+            <TextBlock Text="Open a generated local asset catalog to browse extracted textures and meshes without bundling private game files."
+                       Style="{StaticResource SectionBodyTextStyle}" />
+        </StackPanel>
+
+        <Border x:Name="CatalogLoadCardBorder"
+                Grid.Row="1"
+                Style="{StaticResource SectionCardStyle}">
+            <Grid RowSpacing="10"
+                  ColumnSpacing="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Load generated catalog"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock x:Name="CatalogStatusTextBlock"
+                               AutomationProperties.AutomationId="AssetCatalogStatus"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               Text="No catalog loaded yet. Generate one with the asset export tool, then choose the catalog folder here." />
+                </StackPanel>
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            Spacing="8">
+                    <Button x:Name="ChangeCatalogButton"
+                            AutomationProperties.AutomationId="AssetChangeCatalogButton"
+                            Content="Change catalog"
+                            HorizontalAlignment="Left"
+                            Visibility="Collapsed"
+                            Click="ChangeCatalogButton_Click" />
+                    <Expander x:Name="CatalogPathDetailsExpander"
+                              Header="Path details"
+                              IsExpanded="False">
+                        <TextBlock x:Name="CatalogFullPathTextBlock"
+                                   AutomationProperties.AutomationId="AssetCatalogFullPath"
+                                   FontFamily="Consolas"
+                                   FontSize="12"
+                                   MaxWidth="420"
+                                   TextWrapping="WrapWholeWords" />
+                    </Expander>
+                </StackPanel>
+                <Grid x:Name="CatalogInputGrid"
+                      Grid.Row="1"
+                      Grid.ColumnSpan="2"
+                      ColumnSpacing="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="CatalogPathTextBox"
+                             Grid.Column="0"
+                             AutomationProperties.AutomationId="AssetCatalogPathTextBox"
+                             PlaceholderText="Choose a catalog.json file or asset export folder" />
+                    <Button Grid.Column="1"
+                            AutomationProperties.AutomationId="AssetBrowseCatalogButton"
+                            Content="Browse"
+                            Click="BrowseCatalogButton_Click" />
+                    <Button Grid.Column="2"
+                            x:Name="LoadCatalogButton"
+                            AutomationProperties.AutomationId="AssetLoadCatalogButton"
+                            Content="Load catalog"
+                            Style="{StaticResource PrimaryActionButtonStyle}"
+                            Click="LoadCatalogButton_Click" />
+                </Grid>
+                <StackPanel x:Name="GoodieSaveStatePanel"
+                            Grid.Row="2"
+                            Grid.ColumnSpan="2"
+                            Visibility="Collapsed"
+                            Spacing="8">
+                    <StackPanel Spacing="3">
+                        <TextBlock Text="Save state for Goodies"
+                                   FontSize="16"
+                                   FontWeight="SemiBold" />
+                        <TextBlock x:Name="GoodieSaveStateStatusTextBlock"
+                                   AutomationProperties.AutomationId="AssetGoodieSaveStateStatus"
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   Text="Optional: load a copied .bes save to show locked, newly unlocked, and viewed Goodies states." />
+                    </StackPanel>
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="GoodieSaveStatePathTextBox"
+                                 Grid.Column="0"
+                                 AutomationProperties.AutomationId="AssetGoodieSaveStatePathTextBox"
+                                 PlaceholderText="Choose a copied .bes save for Goodies state" />
+                        <Button Grid.Column="1"
+                                AutomationProperties.AutomationId="AssetBrowseGoodieSaveStateButton"
+                                Content="Browse"
+                                Click="BrowseGoodieSaveStateButton_Click" />
+                        <Button Grid.Column="2"
+                                AutomationProperties.AutomationId="AssetLoadGoodieSaveStateButton"
+                                Content="Load state"
+                                Click="LoadGoodieSaveStateButton_Click" />
+                        <Button Grid.Column="3"
+                                AutomationProperties.AutomationId="AssetClearGoodieSaveStateButton"
+                                Content="Clear"
+                                Click="ClearGoodieSaveStateButton_Click" />
+                    </Grid>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2"
+              ColumnSpacing="14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.05*" />
+                <ColumnDefinition Width="1.25*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0"
+                    Style="{StaticResource SectionCardStyle}">
+                <Grid RowSpacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0"
+                                Spacing="4">
+                        <TextBlock Text="Catalog browser"
+                                   FontSize="18"
+                                   FontWeight="SemiBold" />
+                        <TextBlock x:Name="CatalogSummaryTextBlock"
+                                   AutomationProperties.AutomationId="AssetCatalogSummary"
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   Text="Load a catalog to see textures, meshes, and goodies." />
+                        <TextBlock x:Name="CatalogCoverageTextBlock"
+                                   AutomationProperties.AutomationId="AssetCatalogCoverageSummary"
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   Text="Coverage summary appears after a generated catalog loads."
+                                   TextWrapping="WrapWholeWords" />
+                        <TextBlock x:Name="CatalogProvenanceTextBlock"
+                                   AutomationProperties.AutomationId="AssetCatalogProvenanceSummary"
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   Text="Catalog provenance appears after a generated catalog loads."
+                                   TextWrapping="WrapWholeWords" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                        <Button x:Name="TexturesTabButton"
+                                AutomationProperties.AutomationId="AssetTexturesTabButton"
+                                Content="Textures"
+                                Style="{StaticResource SubTabActiveButtonStyle}"
+                                Click="TexturesTabButton_Click" />
+                        <Button x:Name="MeshesTabButton"
+                                AutomationProperties.AutomationId="AssetMeshesTabButton"
+                                Content="Meshes"
+                                Style="{StaticResource SubTabInactiveButtonStyle}"
+                                Click="MeshesTabButton_Click" />
+                        <Button x:Name="EmbeddedMeshesTabButton"
+                                AutomationProperties.AutomationId="AssetEmbeddedMeshesTabButton"
+                                Content="Embedded"
+                                Style="{StaticResource SubTabInactiveButtonStyle}"
+                                Click="EmbeddedMeshesTabButton_Click" />
+                        <Button x:Name="GoodiesTabButton"
+                                AutomationProperties.AutomationId="AssetGoodiesTabButton"
+                                Content="Goodies"
+                                Style="{StaticResource SubTabInactiveButtonStyle}"
+                                Click="GoodiesTabButton_Click" />
+                    </StackPanel>
+
+                    <Grid Grid.Row="2"
+                          RowSpacing="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <TextBox x:Name="AssetSearchBox"
+                                 AutomationProperties.AutomationId="AssetSearchBox"
+                                 PlaceholderText="Search current asset list"
+                                 TextChanged="AssetSearchBox_TextChanged" />
+                        <StackPanel x:Name="GoodieFilterPanel"
+                                    Grid.Row="1"
+                                    Spacing="6"
+                                    Visibility="Collapsed">
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Disabled">
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="8">
+                                    <Button x:Name="GoodiesAllFilterButton"
+                                            AutomationProperties.AutomationId="AssetGoodiesAllFilterButton"
+                                            Content="All"
+                                            Style="{StaticResource SubTabActiveButtonStyle}"
+                                            Click="GoodiesAllFilterButton_Click" />
+                                    <Button x:Name="GoodiesWallFilterButton"
+                                            AutomationProperties.AutomationId="AssetGoodiesWallFilterButton"
+                                            Content="Wall"
+                                            Style="{StaticResource SubTabInactiveButtonStyle}"
+                                            Click="GoodiesWallFilterButton_Click" />
+                                    <Button x:Name="GoodiesHiddenFilterButton"
+                                            AutomationProperties.AutomationId="AssetGoodiesHiddenFilterButton"
+                                            Content="Hidden"
+                                            Style="{StaticResource SubTabInactiveButtonStyle}"
+                                            Click="GoodiesHiddenFilterButton_Click" />
+                                    <Button x:Name="GoodiesModelsFilterButton"
+                                            AutomationProperties.AutomationId="AssetGoodiesModelsFilterButton"
+                                            Content="Models"
+                                            Style="{StaticResource SubTabInactiveButtonStyle}"
+                                            Click="GoodiesModelsFilterButton_Click" />
+                                    <Button x:Name="GoodiesArtworkFilterButton"
+                                            AutomationProperties.AutomationId="AssetGoodiesArtworkFilterButton"
+                                            Content="Artwork"
+                                            Style="{StaticResource SubTabInactiveButtonStyle}"
+                                            Click="GoodiesArtworkFilterButton_Click" />
+                                    <Button x:Name="GoodiesVideosFilterButton"
+                                            AutomationProperties.AutomationId="AssetGoodiesVideosFilterButton"
+                                            Content="Videos"
+                                            Style="{StaticResource SubTabInactiveButtonStyle}"
+                                            Click="GoodiesVideosFilterButton_Click" />
+                                </StackPanel>
+                            </ScrollViewer>
+                            <TextBlock x:Name="GoodiesFilterStatusTextBlock"
+                                       AutomationProperties.AutomationId="AssetGoodiesFilterStatus"
+                                       Style="{StaticResource SectionBodyTextStyle}"
+                                       Text="Goodies filters use static catalog links; runtime wall proof is separate."
+                                       TextWrapping="WrapWholeWords" />
+                        </StackPanel>
+                        <ListView x:Name="AssetItemsListView"
+                                  Grid.Row="2"
+                                  AutomationProperties.AutomationId="AssetItemsList"
+                                  AutomationProperties.Name="Asset list"
+                                  SelectionChanged="AssetItemsListView_SelectionChanged">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Padding="4,8"
+                                                Spacing="2">
+                                        <TextBlock Text="{Binding DisplayName}"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding ExportFileName}"
+                                                   FontSize="12"
+                                                   Foreground="{ThemeResource ShellMutedTextBrush}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Style="{StaticResource SectionCardStyle}">
+                <ScrollViewer AutomationProperties.AutomationId="AssetPreviewScrollViewer"
+                              AutomationProperties.Name="Asset preview details">
+                    <StackPanel Spacing="12">
+                        <TextBlock x:Name="SelectedAssetTitleTextBlock"
+                                   AutomationProperties.AutomationId="AssetSelectedTitle"
+                                   FontSize="22"
+                                   FontWeight="SemiBold"
+                                   Text="Choose an asset" />
+                        <TextBlock x:Name="SelectedAssetSummaryTextBlock"
+                                   AutomationProperties.AutomationId="AssetSelectedSummary"
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   Text="Pick a texture or mesh to review local export status." />
+                        <TextBlock x:Name="ModelMetadataInlineTextBlock"
+                                   AutomationProperties.AutomationId="AssetModelMetadataInline"
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   FontWeight="SemiBold"
+                                   Visibility="Collapsed"
+                                   Text="Model facts appear here when a local FBX export is selected." />
+                        <TextBlock x:Name="PreviewTitleTextBlock"
+                                   AutomationProperties.AutomationId="AssetPreviewTitle"
+                                   Text="Texture preview"
+                                   FontSize="18"
+                                   FontWeight="SemiBold" />
+                        <StackPanel x:Name="ModelViewControlsPanel"
+                                    Orientation="Horizontal"
+                                    Spacing="8"
+                                    Visibility="Collapsed">
+                            <TextBlock Text="Model view"
+                                       VerticalAlignment="Center"
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                            <Button x:Name="ModelViewFrontButton"
+                                    AutomationProperties.AutomationId="AssetModelViewFrontButton"
+                                    Content="Front"
+                                    Click="ModelViewFrontButton_Click" />
+                            <Button x:Name="ModelViewSideButton"
+                                    AutomationProperties.AutomationId="AssetModelViewSideButton"
+                                    Content="Side"
+                                    Click="ModelViewSideButton_Click" />
+                            <Button x:Name="ModelViewTopButton"
+                                    AutomationProperties.AutomationId="AssetModelViewTopButton"
+                                    Content="Top"
+                                    Click="ModelViewTopButton_Click" />
+                            <Button x:Name="ModelViewIsoButton"
+                                    AutomationProperties.AutomationId="AssetModelViewIsoButton"
+                                    Content="Iso"
+                                    Click="ModelViewIsoButton_Click" />
+                        </StackPanel>
+                        <TextBlock x:Name="ModelWireframeStatusTextBlock"
+                                   AutomationProperties.AutomationId="AssetModelWireframeStatus"
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   Visibility="Collapsed"
+                                   Text="Wireframe preview status appears here for assistive technology." />
+                        <Border x:Name="ModelWireframePreviewPanel"
+                                AutomationProperties.AutomationId="AssetModelWireframePanel"
+                                Background="{ThemeResource ShellStatusBrush}"
+                                BorderBrush="{ThemeResource ShellBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="10"
+                                MinHeight="128"
+                                Visibility="Collapsed">
+                            <Grid>
+                                <Canvas x:Name="ModelWireframeCanvas"
+                                        AutomationProperties.AutomationId="AssetModelWireframeCanvas"
+                                        Width="360"
+                                        Height="190" />
+                                <TextBlock x:Name="ModelWireframeEmptyTextBlock"
+                                           AutomationProperties.AutomationId="AssetModelWireframeEmpty"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           Text="Wireframe preview appears when vertex and polygon index data are readable." />
+                            </Grid>
+                        </Border>
+                        <TextBlock x:Name="ModelWireframeNoteTextBlock"
+                                   Text="Wireframe is a lightweight geometry check, not final material or animation rendering."
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   Visibility="Collapsed" />
+                        <Border x:Name="TexturePreviewPanel"
+                                Background="{ThemeResource TexturePreviewNeutralBrush}"
+                                BorderBrush="{ThemeResource ShellBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="12"
+                                MinHeight="240">
+                            <Grid>
+                                <Image x:Name="TexturePreviewImage"
+                                       AutomationProperties.AutomationId="AssetTexturePreviewImage"
+                                       Stretch="Uniform" />
+                                <TextBlock x:Name="TexturePreviewEmptyTextBlock"
+                                           AutomationProperties.AutomationId="AssetTexturePreviewEmpty"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Text="Texture preview appears here when the selected export is available."
+                                           Style="{StaticResource SectionBodyTextStyle}" />
+                            </Grid>
+                        </Border>
+                        <StackPanel x:Name="GoodieFactsPanel"
+                                    AutomationProperties.AutomationId="AssetGoodieFactsPanel"
+                                    Spacing="6"
+                                    Visibility="Collapsed">
+                            <TextBlock Text="Goodie facts"
+                                       FontSize="16"
+                                       FontWeight="SemiBold" />
+                            <Grid ColumnSpacing="14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="State"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock x:Name="GoodieFactStateTextBlock"
+                                               AutomationProperties.AutomationId="AssetGoodieFactState"
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               TextWrapping="WrapWholeWords" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Wall"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock x:Name="GoodieFactWallTextBlock"
+                                               AutomationProperties.AutomationId="AssetGoodieFactWall"
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               TextWrapping="WrapWholeWords" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Unlock"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock x:Name="GoodieFactUnlockTextBlock"
+                                               AutomationProperties.AutomationId="AssetGoodieFactUnlock"
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               TextWrapping="WrapWholeWords" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="3">
+                                    <TextBlock Text="Reward"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock x:Name="GoodieFactRewardTextBlock"
+                                               AutomationProperties.AutomationId="AssetGoodieFactReward"
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               TextWrapping="WrapWholeWords" />
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock x:Name="GoodieFactEvidenceTextBlock"
+                                       AutomationProperties.AutomationId="AssetGoodieFactEvidence"
+                                       Style="{StaticResource SectionBodyTextStyle}"
+                                       TextWrapping="WrapWholeWords" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="8">
+                            <Button x:Name="OpenExportButton"
+                                    AutomationProperties.AutomationId="AssetOpenExportButton"
+                                    Content="Open export"
+                                    IsEnabled="False"
+                                    Click="OpenExportButton_Click" />
+                            <Button x:Name="OpenInMediaButton"
+                                    AutomationProperties.AutomationId="AssetOpenInMediaButton"
+                                    Content="Open in Media"
+                                    IsEnabled="False"
+                                    Visibility="Collapsed"
+                                    Click="OpenInMediaButton_Click" />
+                            <Button x:Name="CopyExportPathButton"
+                                    AutomationProperties.AutomationId="AssetCopyExportPathButton"
+                                    Content="Copy path"
+                                    IsEnabled="False"
+                                    Click="CopyExportPathButton_Click" />
+                        </StackPanel>
+                        <StackPanel x:Name="TexturePreviewBackgroundPanel"
+                                    Orientation="Horizontal"
+                                    Spacing="8"
+                                    Visibility="Collapsed">
+                            <TextBlock Text="Preview background"
+                                       VerticalAlignment="Center"
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                            <Button x:Name="TexturePreviewNeutralButton"
+                                    AutomationProperties.AutomationId="TexturePreviewNeutralButton"
+                                    Content="Neutral"
+                                    Click="TexturePreviewNeutralButton_Click" />
+                            <Button x:Name="TexturePreviewLightButton"
+                                    AutomationProperties.AutomationId="TexturePreviewLightButton"
+                                    Content="Light"
+                                    Click="TexturePreviewLightButton_Click" />
+                            <Button x:Name="TexturePreviewDarkButton"
+                                    AutomationProperties.AutomationId="TexturePreviewDarkButton"
+                                    Content="Dark"
+                                    Click="TexturePreviewDarkButton_Click" />
+                        </StackPanel>
+                        <TextBlock x:Name="TexturePreviewCanvasNoteTextBlock"
+                                   AutomationProperties.AutomationId="TexturePreviewCanvasNote"
+                                   Text="Texture shown on a neutral canvas so dark or transparent game textures are easier to inspect."
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   Visibility="Collapsed" />
+                        <Border x:Name="ModelMetadataPanel"
+                                AutomationProperties.AutomationId="AssetModelMetadataPanel"
+                                Background="{ThemeResource ShellMutedSurfaceBrush}"
+                                BorderBrush="{ThemeResource ShellBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="14"
+                                Visibility="Collapsed">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Model facts"
+                                           FontSize="16"
+                                           FontWeight="SemiBold" />
+                                <TextBlock x:Name="ModelMetadataStatusTextBlock"
+                                           AutomationProperties.AutomationId="AssetModelMetadataStatus"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           Text="Choose a model export to inspect local FBX metadata." />
+                                <Grid ColumnSpacing="10"
+                                      RowSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <StackPanel Grid.Row="0"
+                                                Grid.Column="0">
+                                        <TextBlock Text="Format"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock x:Name="ModelFormatTextBlock"
+                                                   AutomationProperties.AutomationId="AssetModelFormat"
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="0"
+                                                Grid.Column="1">
+                                        <TextBlock Text="File size"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock x:Name="ModelSizeTextBlock"
+                                                   AutomationProperties.AutomationId="AssetModelSize"
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1"
+                                                Grid.Column="0">
+                                        <TextBlock Text="Vertices"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock x:Name="ModelVertexCountTextBlock"
+                                                   AutomationProperties.AutomationId="AssetModelVertexCount"
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1"
+                                                Grid.Column="1">
+                                        <TextBlock Text="Polygon index entries"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock x:Name="ModelPolygonIndexCountTextBlock"
+                                                   AutomationProperties.AutomationId="AssetModelPolygonIndexCount"
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="2"
+                                                Grid.Column="0">
+                                        <TextBlock Text="Geometry nodes"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock x:Name="ModelGeometryCountTextBlock"
+                                                   AutomationProperties.AutomationId="AssetModelGeometryCount"
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="2"
+                                                Grid.Column="1">
+                                        <TextBlock Text="Materials / textures"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock x:Name="ModelMaterialCountTextBlock"
+                                                   AutomationProperties.AutomationId="AssetModelMaterialCount"
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="3"
+                                                Grid.Column="0"
+                                                Grid.ColumnSpan="2">
+                                        <TextBlock Text="UV mapping"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock x:Name="ModelUvCountTextBlock"
+                                                   AutomationProperties.AutomationId="AssetModelUvCount"
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="4"
+                                                Grid.Column="0"
+                                                Grid.ColumnSpan="2">
+                                        <TextBlock Text="Material assignment"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock x:Name="ModelMaterialLayerCountTextBlock"
+                                                   AutomationProperties.AutomationId="AssetModelMaterialLayerCount"
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="5"
+                                                Grid.Column="0"
+                                                Grid.ColumnSpan="2">
+                                        <TextBlock Text="Texture-material links"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock x:Name="ModelConnectionCountTextBlock"
+                                                   AutomationProperties.AutomationId="AssetModelConnectionCount"
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                    </StackPanel>
+                                </Grid>
+                                <TextBlock x:Name="ModelTextureLinksTextBlock"
+                                           AutomationProperties.AutomationId="AssetModelTextureLinks"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords"
+                                           Text="Catalog and sidecar texture links appear here when an FBX export references extracted textures." />
+                                <TextBlock x:Name="ModelPackagePlanTextBlock"
+                                           AutomationProperties.AutomationId="AssetModelPackagePlan"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords"
+                                           Text="Material package plan appears here when a model export is selected." />
+                                <TextBlock x:Name="MaterialPackageOutputStatusTextBlock"
+                                           AutomationProperties.AutomationId="AssetMaterialPackageOutputStatus"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords"
+                                           Text="Material package output appears here after a catalog loads." />
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="8">
+                                    <Button x:Name="PrepareMaterialPackageButton"
+                                            AutomationProperties.AutomationId="AssetPrepareMaterialPackageButton"
+                                            Content="Prepare package"
+                                            IsEnabled="False"
+                                            Click="PrepareMaterialPackageButton_Click" />
+                                    <Button x:Name="OpenMaterialPackageButton"
+                                            AutomationProperties.AutomationId="AssetOpenMaterialPackageButton"
+                                            Content="Open package"
+                                            IsEnabled="False"
+                                            Click="OpenMaterialPackageButton_Click" />
+                                    <Button x:Name="CopyMaterialPackagePathButton"
+                                            AutomationProperties.AutomationId="AssetCopyMaterialPackagePathButton"
+                                            Content="Copy package path"
+                                            IsEnabled="False"
+                                            Click="CopyMaterialPackagePathButton_Click" />
+                                </StackPanel>
+                                <Button x:Name="ViewLinkedTextureButton"
+                                        AutomationProperties.AutomationId="AssetViewLinkedTextureButton"
+                                        Content="View linked texture"
+                                        IsEnabled="False"
+                                        Visibility="Collapsed"
+                                        Click="ViewLinkedTextureButton_Click" />
+                            </StackPanel>
+                        </Border>
+                        <Expander Header="Path details"
+                                  IsExpanded="False">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Local export path"
+                                           FontWeight="SemiBold" />
+                                <TextBlock x:Name="SelectedExportPathTextBlock"
+                                           AutomationProperties.AutomationId="AssetSelectedExportPath"
+                                           FontFamily="Consolas"
+                                           FontSize="12"
+                                           TextWrapping="WrapWholeWords" />
+                                <TextBlock Text="Catalog id"
+                                           FontWeight="SemiBold" />
+                                <TextBlock x:Name="SelectedCatalogIdTextBlock"
+                                           AutomationProperties.AutomationId="AssetSelectedCatalogId"
+                                           FontFamily="Consolas"
+                                           FontSize="12"
+                                           TextWrapping="WrapWholeWords" />
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>

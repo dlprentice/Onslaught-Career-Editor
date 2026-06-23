@@ -1,0 +1,60 @@
+.echo === local-multiplayer level854 fire handoff observer ===
+vertarget
+lm m BEA
+.echo FIRE_HANDOFF_HOOK_TARGET name=CGame__Render address=0x0046e460 category=p1p2-render-graph
+bp /1 0046e460 ".printf \"FIRE_HANDOFF_HIT name=CGame__Render this=%p players=%d level=%d horizSplit=%d p0=%p p1=%p cam0=%p cam1=%p world=%p\n\", @ecx, poi(@ecx+0x29c), poi(@ecx+0x2a0), by(@ecx+0x38), poi(@ecx+0x2a4), poi(@ecx+0x2a8), poi(@ecx+0x2c4), poi(@ecx+0x2c8), poi(0x00855090); g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CController__SendButtonAction address=0x0042e4d0 category=input-dispatch
+bp 0042e4d0 ".if (poi(@esp+4)==0x12) { .printf \"FIRE_HANDOFF_HIT name=CController__SendButtonAction controller=%p button=%d analogRaw=%08x inputDevice=%08x controllerConfig=%08x target=%p\n\", @ecx, poi(@esp+4), poi(@esp+8), poi(@ecx+0x16c), poi(@ecx+0x174), poi(poi(@ecx+4)) }; g"
+bp 0042e4d0 ".if (poi(@esp+4)==0x13) { .printf \"FIRE_HANDOFF_HIT name=CController__SendButtonAction controller=%p button=%d analogRaw=%08x inputDevice=%08x controllerConfig=%08x target=%p\n\", @ecx, poi(@esp+4), poi(@esp+8), poi(@ecx+0x16c), poi(@ecx+0x174), poi(poi(@ecx+4)) }; g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CPlayer__ReceiveButtonAction address=0x004d3110 category=input-dispatch
+bp 004d3110 ".if (poi(@esp+8)==0x12) { .printf \"FIRE_HANDOFF_HIT name=CPlayer__ReceiveButtonAction player=%p fromController=%p button=%d analogRaw=%08x gameP0=%p gameP1=%p be=%p state098=%08x state260=%08x\n\", @ecx, poi(@esp+4), poi(@esp+8), poi(@esp+0x0c), poi(0x008a9d3c), poi(0x008a9d40), poi(@ecx+0x1c), poi(poi(@ecx+0x1c)+0x98), poi(poi(@ecx+0x1c)+0x260) }; g"
+bp 004d3110 ".if (poi(@esp+8)==0x13) { .printf \"FIRE_HANDOFF_HIT name=CPlayer__ReceiveButtonAction player=%p fromController=%p button=%d analogRaw=%08x gameP0=%p gameP1=%p be=%p state098=%08x state260=%08x\n\", @ecx, poi(@esp+4), poi(@esp+8), poi(@esp+0x0c), poi(0x008a9d3c), poi(0x008a9d40), poi(@ecx+0x1c), poi(poi(@ecx+0x1c)+0x98), poi(poi(@ecx+0x1c)+0x260) }; g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CBattleEngineWalkerPart__FireWeapon address=0x00413cc0 category=walkerpart-fire-entry
+bp 00413cc0 ".printf \"FIRE_HANDOFF_HIT name=CBattleEngineWalkerPart__FireWeapon this=%p\n\", @ecx; g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CBattleEngineWalkerPart__GetCurrentWeapon address=0x00414030 category=walkerpart-current-weapon
+bp 00414030 ".printf \"FIRE_HANDOFF_HIT name=CBattleEngineWalkerPart__GetCurrentWeapon this=%p\n\", @ecx; g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CBattleEngineWalkerPart__WeaponFired address=0x004140d0 category=walkerpart-fired-bookkeeping
+bp 004140d0 ".printf \"FIRE_HANDOFF_HIT name=CBattleEngineWalkerPart__WeaponFired this=%p weapon=%p\n\", @ecx, poi(@esp+4); g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CBattleEngineWalkerPart__CanWeaponFire address=0x00414630 category=walkerpart-fire-predicate
+bp 00414630 ".printf \"FIRE_HANDOFF_HIT name=CBattleEngineWalkerPart__CanWeaponFire this=%p weapon=%p\n\", @ecx, poi(@esp+4); g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CBattleEngineJetPart__WeaponFired address=0x00412050 category=jetpart-fired-bookkeeping
+bp 00412050 ".printf \"FIRE_HANDOFF_HIT name=CBattleEngineJetPart__WeaponFired this=%p weapon=%p\n\", @ecx, poi(@esp+4); g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CWeapon__HandleFireBurstEvent address=0x00506930 category=weapon-burst-event
+bp 00506930 ".printf \"FIRE_HANDOFF_HIT name=CWeapon__HandleFireBurstEvent this=%p eventRecord=%p eventHeadRaw=%08x\n\", @ecx, poi(@esp+4), poi(poi(@esp+4)); g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CWeapon__DoesTargetMaskMatchDistanceProfile address=0x005061f0 category=weapon-target-profile
+bp 005061f0 ".printf \"FIRE_HANDOFF_HIT name=CWeapon__DoesTargetMaskMatchDistanceProfile this=%p target=%p\n\", @ecx, poi(@esp+4); g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CWeapon__AdvanceChargeProgressIfAnySlotAssigned address=0x005068f0 category=weapon-charge-progress
+bp 005068f0 ".printf \"FIRE_HANDOFF_HIT name=CWeapon__AdvanceChargeProgressIfAnySlotAssigned this=%p\n\", @ecx; g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=ProjectileBurst__SpawnFromCurrentPreset address=0x005069f0 category=projectile-burst-current-preset
+bp 005069f0 ".printf \"FIRE_HANDOFF_HIT name=ProjectileBurst__SpawnFromCurrentPreset burstContext=%p\n\", @ecx; g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=ProjectileBurst__SpawnFromPercentBucketFallback address=0x00506010 category=projectile-burst-fallback
+bp 00506010 ".printf \"FIRE_HANDOFF_HIT name=ProjectileBurst__SpawnFromPercentBucketFallback burstContext=%p\n\", @ecx; g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=ProjectileBurstPreset__GetListEntryIdByIndex address=0x005078b0 category=projectile-burst-preset-index
+bp 005078b0 ".printf \"FIRE_HANDOFF_HIT name=ProjectileBurstPreset__GetListEntryIdByIndex this=%p index=%p\n\", @ecx, poi(@esp+4); g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CBattleEngine__UpdateAutoTargetSetAndFireProjectiles address=0x00406560 category=battleengine-projectile-updater
+bp 00406560 ".printf \"FIRE_HANDOFF_HIT name=CBattleEngine__UpdateAutoTargetSetAndFireProjectiles this=%p\n\", @ecx; g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CBattleEngine__AddProjectile address=0x00406fc0 category=battleengine-projectile-add
+bp 00406fc0 ".printf \"FIRE_HANDOFF_HIT name=CBattleEngine__AddProjectile this=%p arg0=%p arg1=%p arg2=%p\n\", @ecx, poi(@esp+4), poi(@esp+8), poi(@esp+0x0c); g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=OID__CreateObject address=0x004bf090 category=oid-shell-factory
+bp 004bf090 ".if (poi(@esp+4)==0x15) { .printf \"FIRE_HANDOFF_HIT name=OID__CreateObject objectId=%08x\n\", poi(@esp+4) }; g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CShell__Constructor address=0x004df4c0 category=shell-materialization
+bp 004df4c0 ".printf \"FIRE_HANDOFF_HIT name=CShell__Constructor this=%p\n\", @ecx; g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CShell__CopyResourceNameToInlineBuffer address=0x004df530 category=shell-materialization
+bp 004df530 ".printf \"FIRE_HANDOFF_HIT name=CShell__CopyResourceNameToInlineBuffer this=%p resource=%p\n\", @ecx, poi(@esp+4); g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CShell__Init address=0x004df550 category=shell-materialization
+bp 004df550 ".printf \"FIRE_HANDOFF_HIT name=CShell__Init this=%p init=%p\n\", @ecx, poi(@esp+4); g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CWorldPhysicsManager__CreateProjectile address=0x0050f7a0 category=projectile-factory
+bp 0050f7a0 ".printf \"FIRE_HANDOFF_HIT name=CWorldPhysicsManager__CreateProjectile roundDefinition=%p\n\", poi(@esp+4); g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CRound__ctor address=0x004d81e0 category=round-projectile-factory
+bp 004d81e0 ".printf \"FIRE_HANDOFF_HIT name=CRound__ctor this=%p init=%p\n\", @ecx, poi(@esp+4); g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CRound__Init address=0x004d8410 category=round-projectile-factory
+bp 004d8410 ".printf \"FIRE_HANDOFF_HIT name=CRound__Init this=%p init=%p\n\", @ecx, poi(@esp+4); g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CRound__SelectBestTargetReaderAndSyncAimState address=0x004dac90 category=round-targeting
+bp 004dac90 ".printf \"FIRE_HANDOFF_HIT name=CRound__SelectBestTargetReaderAndSyncAimState this=%p\n\", @ecx; g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CRound__UpdateRoundAndTriggerLaunchEffect address=0x004d9ef0 category=round-projectile-factory
+bp 004d9ef0 ".printf \"FIRE_HANDOFF_HIT name=CRound__UpdateRoundAndTriggerLaunchEffect this=%p\n\", @ecx; g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CRound__SpawnConfiguredProjectile address=0x004db150 category=round-projectile-spawn
+bp 004db150 ".printf \"FIRE_HANDOFF_HIT name=CRound__SpawnConfiguredProjectile round=%p arg=%p\n\", @ecx, poi(@esp+4); g"
+.echo FIRE_HANDOFF_HOOK_TARGET name=CRound__ArmProjectileAndSpawnTrailEffect address=0x004db630 category=round-projectile-arm-trail
+bp 004db630 ".printf \"FIRE_HANDOFF_HIT name=CRound__ArmProjectileAndSpawnTrailEffect round=%p projectile=%p\n\", @ecx, poi(@esp+4); g"
+g

@@ -43,6 +43,19 @@ namespace Onslaught___Career_Editor
     }
 
     /// <summary>
+    /// Raw per-slot Goodies state from the true dword view of CCareer::mGoodies.
+    /// </summary>
+    public sealed class GoodieStateDetail
+    {
+        public int Index { get; set; }
+        public int FileOffset { get; set; }
+        public uint RawState { get; set; }
+        public string StateLabel { get; set; } = "";
+        public bool IsDisplayable { get; set; }
+        public bool IsUnlocked { get; set; }
+    }
+
+    /// <summary>
     /// Results from analyzing a .bes save file
     /// </summary>
     public class SaveAnalysis
@@ -103,6 +116,7 @@ namespace Onslaught___Career_Editor
         public int GoodiesInstructions { get; set; }
         public int GoodiesOther { get; set; }
         public int GoodiesReserved { get; set; }
+        public List<GoodieStateDetail> GoodieStates { get; set; } = new();
 
         // Kill counts
         public int[] KillCounts { get; set; } = new int[5];
@@ -282,6 +296,7 @@ namespace Onslaught___Career_Editor
         public bool? VibrationP2Override { get; set; } = null;
         public uint? ControllerConfigP1Override { get; set; } = null;
         public uint? ControllerConfigP2Override { get; set; } = null;
+        public float? OptionsMouseSensitivityOverride { get; set; } = null;
 
         // Options entries + tail snapshot (control bindings + global options snapshot).
         // NOTE (Steam build): Loading a career .bes save (CCareer::Load(flag=1)) does NOT apply these
@@ -380,8 +395,8 @@ namespace Onslaught___Career_Editor
                 // In true dword view, mCareerInProgress is at 0x248A (CCareer offset 0x2488).
                 // The save works without setting mCareerInProgress.
 
-                // NOTE: God mode patching removed (Dec 2025) - none of the encodings worked
-                // See reverse-engineering/game-mechanics/god-mode.md for details on tested values
+                // NOTE: Save-file god mode patching remains intentionally unsupported.
+                // Steam evidence shows god mode is runtime-cheat/menu gated; do not imply a .bes flag can force it.
 
                 // --- nodes (selective patching) ---
                 if (PatchNodes)
@@ -453,8 +468,72 @@ namespace Onslaught___Career_Editor
                 // --- Options entry overrides (keybind edits) ---
                 ApplyOptionsEntryOverrides(buf);
 
+                // --- Options tail scalar overrides (boot-time global option values) ---
+                ApplyOptionsTailOverrides(buf);
+
                 File.WriteAllBytes(outputPath, buf);
                 return PatchResult.Ok($"Successfully patched: {outputPath}");
+            }
+            catch (Exception ex)
+            {
+                return PatchResult.Fail(ex.Message);
+            }
+        }
+
+        public static PatchResult PatchGoodieStates(string inputPath, string outputPath, IReadOnlyDictionary<int, uint>? statesByIndex)
+        {
+            try
+            {
+                if (statesByIndex is null || statesByIndex.Count == 0)
+                {
+                    return PatchResult.Fail("Choose at least one Goodie state override.");
+                }
+
+                inputPath = inputPath?.Trim() ?? string.Empty;
+                outputPath = outputPath?.Trim() ?? string.Empty;
+                if (inputPath.Length == 0 || outputPath.Length == 0)
+                {
+                    return PatchResult.Fail("Select both input and output files before patching.");
+                }
+
+                if (string.Equals(Path.GetFullPath(inputPath), Path.GetFullPath(outputPath), StringComparison.OrdinalIgnoreCase))
+                {
+                    return PatchResult.Fail("Refusing to patch in place. Please choose a different output path.");
+                }
+
+                foreach (var (index, state) in statesByIndex)
+                {
+                    if (index < 0 || index >= GOODIE_DISPLAYABLE_COUNT)
+                    {
+                        return PatchResult.Fail($"Goodie overrides must target a displayable Goodie index from 0 to {GOODIE_DISPLAYABLE_COUNT - 1}. Got {index}.");
+                    }
+
+                    if (state > GOODIE_OLD)
+                    {
+                        return PatchResult.Fail($"Goodie state for index {index} must be 0, 1, 2, or 3.");
+                    }
+                }
+
+                byte[] buf = File.ReadAllBytes(inputPath);
+                if (buf.Length != EXPECTED_FILE_SIZE)
+                {
+                    return PatchResult.Fail($"Invalid .bes file. Expected {EXPECTED_FILE_SIZE} bytes, got {buf.Length}. This may not be a valid Battle Engine Aquila career save file.");
+                }
+
+                ushort versionWord = BinaryPrimitives.ReadUInt16LittleEndian(buf.AsSpan(0, 2));
+                if (versionWord != VERSION_WORD)
+                {
+                    uint headerDword = ReadUInt32(buf, 0x0000);
+                    return PatchResult.Fail($"Invalid .bes version word. Expected 0x{VERSION_WORD:X4}, got 0x{versionWord:X4} (header dword view 0x{headerDword:X8}).");
+                }
+
+                foreach (var (index, state) in statesByIndex)
+                {
+                    WriteUInt32(buf, GOODIE_BASE + index * 4, state);
+                }
+
+                File.WriteAllBytes(outputPath, buf);
+                return PatchResult.Ok($"Patched {statesByIndex.Count} Goodie state override(s): {outputPath}");
             }
             catch (Exception ex)
             {
@@ -591,6 +670,20 @@ namespace Onslaught___Career_Editor
 
             // Force "Custom" scheme when patching bindings so the two slots map consistently to the in-game columns.
             BinaryPrimitives.WriteUInt16LittleEndian(buf.AsSpan(tailStart + 0x08, 2), 0);
+        }
+
+        private void ApplyOptionsTailOverrides(byte[] buf)
+        {
+            if (!OptionsMouseSensitivityOverride.HasValue)
+                return;
+
+            float v = OptionsMouseSensitivityOverride.Value;
+            if (float.IsNaN(v) || float.IsInfinity(v))
+                throw new ArgumentException("Mouse sensitivity must be a finite float.");
+
+            v = Math.Clamp(v, 0.1f, 5.0f);
+            var (_entryCount, tailStart, _entriesSize, _tailSize) = ComputeOptionsLayout(buf.Length);
+            WriteFloat32(buf, tailStart + 0x04, v);
         }
 
         private static readonly Dictionary<string, (uint Vk, uint Scan)> KEY_NAME_MAP = new(StringComparer.OrdinalIgnoreCase)
@@ -870,10 +963,9 @@ namespace Onslaught___Career_Editor
                 WriteUInt32(buf, CONTROLLER_CONFIG_P2, ControllerConfigP2Override.Value);
         }
 
-        // NOTE: SetGodMode method removed (Dec 2025)
-        // God mode patching doesn't work in console port. Tested encodings:
-        // - 0x00010000 (TRUE32), 0x01000000, 0x00000001, 0xFFFFFFFF
-        // None had any effect. Likely disabled at runtime or stripped from console port.
+        // NOTE: SetGodMode method removed (Dec 2025).
+        // Save-file god mode patching remains intentionally unsupported.
+        // Steam evidence shows god mode is runtime-cheat/menu gated; do not imply a .bes flag can force it.
 
         /// <summary>
         /// Set global kill counts for all 5 categories (legacy method for backward compatibility)
@@ -979,6 +1071,18 @@ namespace Onslaught___Career_Editor
             if (floatVal == 0) return "E";  // 0.0f = E-rank (verified Dec 10, 2025)
             if (floatVal < 0) return "NONE";  // -1.0f = unlocked, no grade shown (verified Dec 10, 2025)
             return $"? ({floatVal:F2})";
+        }
+
+        private static string DecodeGoodieStateLabel(uint state)
+        {
+            return state switch
+            {
+                0 => "Locked",
+                GOODIE_INSTRUCTIONS => "Instructions",
+                GOODIE_NEW => "New",
+                GOODIE_OLD => "Old",
+                _ => "Other"
+            };
         }
 
         /// <summary>
@@ -1207,13 +1311,33 @@ namespace Onslaught___Career_Editor
                 // Goodie analysis
                 for (int g = 0; g < GOODIE_COUNT; g++)
                 {
+                    int off = GOODIE_BASE + g * 4;
+                    uint val = ReadUInt32(buf, off);
                     if (g >= GOODIE_DISPLAYABLE_COUNT)
                     {
                         analysis.GoodiesReserved++;
+                        analysis.GoodieStates.Add(new GoodieStateDetail
+                        {
+                            Index = g,
+                            FileOffset = off,
+                            RawState = val,
+                            StateLabel = "Reserved",
+                            IsDisplayable = false,
+                            IsUnlocked = false
+                        });
                         continue;
                     }
-                    int off = GOODIE_BASE + g * 4;
-                    uint val = ReadUInt32(buf, off);
+
+                    analysis.GoodieStates.Add(new GoodieStateDetail
+                    {
+                        Index = g,
+                        FileOffset = off,
+                        RawState = val,
+                        StateLabel = DecodeGoodieStateLabel(val),
+                        IsDisplayable = true,
+                        IsUnlocked = val == GOODIE_NEW || val == GOODIE_OLD
+                    });
+
                     if (val == 0)
                         analysis.GoodiesLocked++;
                     else if (val == GOODIE_INSTRUCTIONS)
@@ -1752,6 +1876,28 @@ namespace Onslaught___Career_Editor
             sb.AppendLine($"  Locked:    {analysis.GoodiesLocked}");
             if (analysis.GoodiesReserved > 0)
                 sb.AppendLine($"  Reserved:  {analysis.GoodiesReserved}");
+            if (verbose && analysis.GoodieStates.Count > 0)
+            {
+                IReadOnlyList<GoodieStateDetail> activeRows = analysis.GoodieStates
+                    .Where(static state => state.IsDisplayable && state.RawState != 0)
+                    .Take(40)
+                    .ToArray();
+
+                if (activeRows.Count > 0)
+                {
+                    sb.AppendLine("  Active displayable slots:");
+                    foreach (GoodieStateDetail state in activeRows)
+                    {
+                        sb.AppendLine($"    Goodie {state.Index:000}: {state.StateLabel} (raw=0x{state.RawState:X8}, offset=0x{state.FileOffset:X4})");
+                    }
+
+                    int remaining = analysis.GoodieStates.Count(static state => state.IsDisplayable && state.RawState != 0) - activeRows.Count;
+                    if (remaining > 0)
+                    {
+                        sb.AppendLine($"    ... {remaining} more active displayable slots");
+                    }
+                }
+            }
             sb.AppendLine();
 
             // Kill counts

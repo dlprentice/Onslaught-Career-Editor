@@ -27,7 +27,7 @@
                                FontSize="22"
                                FontWeight="Bold"
                                Foreground="{ThemeResource ShellHeroTextBrush}" />
-                    <TextBlock Text="Retail save editing, global configuration patching, byte-verified executable fixes, and curated preservation notes."
+                    <TextBlock Text="Your toolkit for safe save editing, game settings, media, lore, and copied-game mods."
                                Margin="0,4,0,0"
                                FontSize="12"
                                Foreground="{ThemeResource ShellHeroTextBrush}"
@@ -35,10 +35,12 @@
                                TextWrapping="WrapWholeWords" />
                 </StackPanel>
 
-                <Button x:Name="LaunchGameButton"
+                <Button x:Name="ReviewSetupButton"
                         Grid.Column="1"
-                        Content="Launch Game"
-                        Click="LaunchGameButton_Click"
+                        AutomationProperties.AutomationId="ReviewSetupButton"
+                        AccessKey="R"
+                        Content="Review Setup"
+                        Click="ReviewSetupButton_Click"
                         VerticalAlignment="Center"
                         Style="{StaticResource HeroActionButtonStyle}" />
             </Grid>
@@ -55,12 +57,46 @@
                         PaneDisplayMode="Top"
                         SelectionChanged="ShellNavigationView_SelectionChanged">
             <NavigationView.MenuItems>
-                <NavigationViewItem x:Name="SavesNavigationItem" Content="Saves" Tag="saves" />
-                <NavigationViewItem x:Name="MediaNavigationItem" Content="Media" Tag="media" />
-                <NavigationViewItem x:Name="LoreNavigationItem" Content="Lore" Tag="lore" />
-                <NavigationViewItem x:Name="BinaryNavigationItem" Content="Binary Patches" Tag="binary" />
-                <NavigationViewItem x:Name="SettingsNavigationItem" Content="Settings" Tag="settings" />
-                <NavigationViewItem x:Name="AboutNavigationItem" Content="About" Tag="about" />
+                <NavigationViewItem x:Name="HomeNavigationItem"
+                                    AutomationProperties.AutomationId="HomeNavigationItem"
+                                    AccessKey="H"
+                                    Content="Home"
+                                    Tag="home" />
+                <NavigationViewItem x:Name="SavesNavigationItem"
+                                    AutomationProperties.AutomationId="SavesNavigationItem"
+                                    AccessKey="S"
+                                    Content="Save Lab"
+                                    Tag="saves" />
+                <NavigationViewItem x:Name="MediaNavigationItem"
+                                    AutomationProperties.AutomationId="MediaNavigationItem"
+                                    AccessKey="M"
+                                    Content="Media"
+                                    Tag="media" />
+                <NavigationViewItem x:Name="AssetLibraryNavigationItem"
+                                    AutomationProperties.AutomationId="AssetLibraryNavigationItem"
+                                    AccessKey="A"
+                                    Content="Asset Library"
+                                    Tag="assets" />
+                <NavigationViewItem x:Name="LoreNavigationItem"
+                                    AutomationProperties.AutomationId="LoreNavigationItem"
+                                    AccessKey="L"
+                                    Content="Lore"
+                                    Tag="lore" />
+                <NavigationViewItem x:Name="BinaryNavigationItem"
+                                    AutomationProperties.AutomationId="BinaryNavigationItem"
+                                    AccessKey="W"
+                                    Content="Windowed &amp; Mods"
+                                    Tag="binary" />
+                <NavigationViewItem x:Name="SettingsNavigationItem"
+                                    AutomationProperties.AutomationId="SettingsNavigationItem"
+                                    AccessKey="T"
+                                    Content="Settings"
+                                    Tag="settings" />
+                <NavigationViewItem x:Name="AboutNavigationItem"
+                                    AutomationProperties.AutomationId="AboutNavigationItem"
+                                    AccessKey="B"
+                                    Content="About"
+                                    Tag="about" />
             </NavigationView.MenuItems>
             <Frame x:Name="ContentFrame" />
         </NavigationView>
@@ -77,6 +113,8 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Name="StatusTextBlock"
                            Grid.Column="0"
+                           AutomationProperties.Name="Application status"
+                           AutomationProperties.LiveSetting="Polite"
                            FontSize="12"
                            FontWeight="SemiBold"
                            Foreground="{ThemeResource ShellTextBrush}"

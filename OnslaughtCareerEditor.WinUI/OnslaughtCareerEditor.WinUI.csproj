@@ -17,16 +17,34 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LibVLCSharp" Version="3.9.6" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3179.45" />
-    <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="LibVLCSharp" Version="3.9.7.1" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.0.1" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3912.50" />
+    <PackageReference Include="NAudio" Version="2.3.0" />
     <PackageReference Include="NAudio.Vorbis" Version="1.5.0" />
-    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.21" />
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.23.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\OnslaughtCareerEditor.AppCore\OnslaughtCareerEditor.AppCore.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\patches\catalog\patches.v2.json" Link="patches\catalog\patches.v2.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Target Name="CopyWinUIPriToPublishDirectory" AfterTargets="Publish" Condition="'$(PublishDir)' != ''">
+    <ItemGroup>
+      <_WinUIAppPri Include="$(TargetDir)$(AssemblyName).pri" Condition="Exists('$(TargetDir)$(AssemblyName).pri')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_WinUIAppPri)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CopyWinUINoticesToPublishDirectory" AfterTargets="Publish" Condition="'$(PublishDir)' != ''">
+    <PropertyGroup>
+      <_WinUINoticeSource>$(MSBuildProjectDirectory)\..\release\readiness\THIRD_PARTY_NOTICES.winui-draft.md</_WinUINoticeSource>
+    </PropertyGroup>
+    <Copy SourceFiles="$(_WinUINoticeSource)" DestinationFiles="$(PublishDir)THIRD_PARTY_NOTICES.md" Condition="Exists('$(_WinUINoticeSource)')" SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>

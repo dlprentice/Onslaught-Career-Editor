@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "winui-original-binary-level854-fire-damage-outcome.v1",
+  "status": "complete public-safe level-854 P1/P2 fire-to-damage/outcome observer diagnostic; same-window fire handoff, fire-to-burst pointer chain, round-collision, and unit-damage surfaces were observed, but wait/no-input damage activity prevents damage or runtime outcome promotion; no online, matchmaking, native BEA netcode, damage causality, outcome, kill, or active P3/P4 gameplay proof",
+  "date": "2026-06-19",
+  "proofScope": "level854-fire-to-damage-outcome-observer-not-online-proof",
+  "runtimeProfile": "original-binary-copied-local-splitscreen",
+  "runtimeEvidence": {
+    "safeCopyLaunchLevel": 854,
+    "controllerConfiguration": 1,
+    "newBeaLaunchCount": 1,
+    "cdbAttachCount": 1,
+    "boundedCaptureCount": 10,
+    "visualCaptureCount": 10,
+    "exactPidCdbObserverProven": true,
+    "renderPlayers": 2,
+    "renderLevel": 854,
+    "horizontalSplit": true,
+    "p1p2PointersDistinct": true,
+    "sourceHashesUnchanged": true,
+    "managedStopClean": true
+  },
+  "fireDamageOutcome": {
+    "copiedDefaultOptionsFireWeaponQe": true,
+    "controlOptionsProofLever": "copied-defaultoptions-weapon-fire-qe",
+    "sourceExpectedFireButton": 18,
+    "observedRuntimeFireButton": 19,
+    "button18DispatchCount": 0,
+    "button19DispatchCount": 3,
+    "button18RuntimeDispatchObserved": false,
+    "button19RuntimeDispatchObserved": true,
+    "inputWindowCount": 7,
+    "stimulusWindowCount": 3,
+    "waitControlWindowCount": 4,
+    "sameWindowFireHandoffWindowCount": 3,
+    "sameWindowFireBurstPointerChainWindowCount": 2,
+    "sameWindowDamageSurfaceWindowCount": 1,
+    "sameWindowUnitApplyDamageWindowCount": 1,
+    "sameWindowOutcomeSurfaceWindowCount": 0,
+    "waitWindowFireButtonDispatchCount": 0,
+    "waitWindowDamageHitCount": 27,
+    "waitWindowOutcomeHitCount": 0,
+    "fireHitCount": 426,
+    "projectileHitCount": 3243,
+    "damageHitCount": 151,
+    "unitApplyDamageHitCount": 61,
+    "roundCollisionHitCount": 90,
+    "outcomeHitCount": 0,
+    "damageProof": false,
+    "runtimeOutcomeProof": false,
+    "fireToDamageOutcomePromotion": false
+  },
+  "observerSurface": {
+    "hookTargetCount": 22,
+    "expectedHookTargetCount": 22,
+    "modeRuntimeProofSlicesAdded": 0,
+    "coOpVersusModeRuntimeProofSlicesAdded": 0,
+    "currentRuntimeModeClassification": "unclassified-local-multiplayer"
+  },
+  "slotBoundary": {
+    "acceptedOriginalBinaryGameplaySlots": [
+      "P1",
+      "P2"
+    ],
+    "metadataOnlySlots": [
+      "P3",
+      "P4"
+    ],
+    "rejectedGameplayRouteSlots": [
+      "P3",
+      "P4"
+    ],
+    "maxOriginalBinaryActiveSlotsProven": 2,
+    "slotCapacity": 4,
+    "nPlayerOriginalBinaryRuntimeProof": 0,
+    "activeP3P4OriginalBinaryGameplayProof": false,
+    "beyondTwoPlayersRequiresNewProofClass": true
+  },
+  "nonClaims": {
+    "baseOnlineMultiplayerReady": false,
+    "secondPhysicalHostProof": false,
+    "multiHostLanProof": false,
+    "publicMatchmakingProof": false,
+    "nativeBeaNetcodeProof": false,
+    "coOpModeRuntimeProof": false,
+    "versusModeRuntimeProof": false,
+    "teamVersusRuntimeProof": false,
+    "spectatorAdminRuntimeProof": false,
+    "moreThanTwoOriginalBinaryRuntimeProof": false,
+    "activeP3P4OriginalBinaryGameplayProof": false,
+    "runtimeOutcomeProof": false,
+    "damageProof": false,
+    "killProof": false,
+    "roundProjectileCausalityProof": false,
+    "safeToPatchMPlayersAbove2": false,
+    "deterministicSyncProof": false,
+    "rollbackProof": false,
+    "antiCheatProof": false,
+    "rebuildParityProof": false,
+    "noNoticeableDifferenceProof": false
+  },
+  "releaseBoundary": {
+    "privateProofReleaseExcludedByPolicy": true,
+    "rawPrivateProofPathPublished": false,
+    "rawPrivateArtifactContentPublished": false,
+    "absolutePrivatePathPublished": false,
+    "rawRuntimePointerPublishedInPublicDocs": false,
+    "rawRuntimePidPublishedInPublicDocs": false,
+    "rawCdbLogPathPublishedInPublicDocs": false,
+    "releaseIncludedPrivateArtifact": false
+  },
+  "claimBoundary": "This proves one copied original-binary level-854/config-1 P1/P2 local split-screen fire-to-damage/outcome observer diagnostic. It materialized Fire weapon Q/E in the copied defaultoptions.bea, attached CDB to the exact managed safe-copy process, sent repeated Q/E stimulus plus wait/no-input controls, and observed same-window runtime button 19 fire handoff, fire-to-burst pointer-chain, round-collision, and CUnit__ApplyDamage surfaces. The run does not promote damage proof because wait/no-input windows also contained damage activity: waitWindowDamageHitCount=27 and damageProof=false. It records zero outcome hits, so runtimeOutcomeProof=false and fireToDamageOutcomePromotion=false remain the accepted boundary. This is not base online multiplayer, not second-host LAN, not public matchmaking, not native BEA netcode, not active P3/P4 gameplay, not more-than-two-player proof, not deterministic sync, not rollback, not anti-cheat, and not rebuild/no-noticeable-difference parity."
+}

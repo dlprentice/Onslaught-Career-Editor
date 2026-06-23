@@ -16,6 +16,13 @@ namespace Onslaught___Career_Editor
         private static readonly string ConfigDirName = "OnslaughtCareerEditor";
         private static readonly string LegacyConfigDirName = "onslaught-career-editor";
         private static readonly string ConfigFileName = "config.json";
+        private const int MinRecentFiles = 1;
+        private const int MaxRecentFilesLimit = 50;
+
+        public const int MinWindowWidth = 900;
+        public const int MinWindowHeight = 600;
+        public const int MaxWindowWidth = 2200;
+        public const int MaxWindowHeight = 1400;
 
         /// <summary>
         /// Default Steam installation paths to check for Battle Engine Aquila
@@ -52,19 +59,22 @@ namespace Onslaught___Career_Editor
         public int MaxRecentFiles { get; set; } = 10;
 
         [JsonPropertyName("windowWidth")]
-        public int WindowWidth { get; set; } = 900;
+        public int WindowWidth { get; set; } = 1100;
 
         [JsonPropertyName("windowHeight")]
-        public int WindowHeight { get; set; } = 600;
+        public int WindowHeight { get; set; } = 720;
 
         [JsonPropertyName("lastTab")]
-        public int LastTab { get; set; } = 0;
+        public int LastTab { get; set; } = -1;
 
         [JsonPropertyName("lastSaveSubTab")]
         public int LastSaveSubTab { get; set; } = 0;
 
         [JsonPropertyName("lastMediaSubTab")]
         public int LastMediaSubTab { get; set; } = 0;
+
+        [JsonPropertyName("assetCatalogPath")]
+        public string? AssetCatalogPath { get; set; }
 
         [JsonPropertyName("allowBackgroundAudio")]
         public bool AllowBackgroundAudio { get; set; } = true;
@@ -81,7 +91,7 @@ namespace Onslaught___Career_Editor
         /// </summary>
         public static string GetConfigDir()
         {
-            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string appData = GetConfigRoot();
             string configDir = Path.Combine(appData, ConfigDirName);
             Directory.CreateDirectory(configDir); // Ensure it exists
             return configDir;
@@ -100,9 +110,17 @@ namespace Onslaught___Career_Editor
         /// </summary>
         public static string GetLegacyConfigPath()
         {
-            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string appData = GetConfigRoot();
             string legacyDir = Path.Combine(appData, LegacyConfigDirName);
             return Path.Combine(legacyDir, ConfigFileName);
+        }
+
+        private static string GetConfigRoot()
+        {
+            string? overrideRoot = Environment.GetEnvironmentVariable("ONSLAUGHT_APP_CONFIG_ROOT");
+            return string.IsNullOrWhiteSpace(overrideRoot)
+                ? Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)
+                : Path.GetFullPath(overrideRoot);
         }
 
         /// <summary>
@@ -131,6 +149,7 @@ namespace Onslaught___Career_Editor
                     var config = JsonSerializer.Deserialize<AppConfig>(json);
                     if (config != null)
                     {
+                        config.NormalizeForUse();
                         if (loadPath == legacyPath && !File.Exists(configPath))
                         {
                             config.Save();
@@ -159,6 +178,7 @@ namespace Onslaught___Career_Editor
         {
             try
             {
+                NormalizeForUse();
                 string configPath = GetConfigPath();
                 var options = new JsonSerializerOptions
                 {
@@ -205,6 +225,7 @@ namespace Onslaught___Career_Editor
         /// </summary>
         public void AddRecentFile(string path)
         {
+            NormalizeForUse();
             // Remove if already exists (to move to front)
             RecentFiles.Remove(path);
             RecentFiles.Insert(0, path);
@@ -216,6 +237,19 @@ namespace Onslaught___Career_Editor
             }
 
             Save();
+        }
+
+        private void NormalizeForUse()
+        {
+            RecentFiles ??= new List<string>();
+            MaxRecentFiles = Math.Clamp(MaxRecentFiles, MinRecentFiles, MaxRecentFilesLimit);
+            WindowWidth = Math.Clamp(WindowWidth, MinWindowWidth, MaxWindowWidth);
+            WindowHeight = Math.Clamp(WindowHeight, MinWindowHeight, MaxWindowHeight);
+
+            if (RecentFiles.Count > MaxRecentFiles)
+            {
+                RecentFiles = RecentFiles.GetRange(0, MaxRecentFiles);
+            }
         }
 
         /// <summary>

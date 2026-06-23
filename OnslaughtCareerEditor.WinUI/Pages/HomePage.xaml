@@ -1,0 +1,200 @@
+<Page
+    x:Class="OnslaughtCareerEditor.WinUI.Pages.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <ScrollViewer AutomationProperties.AutomationId="HomePageScrollViewer"
+                  AutomationProperties.Name="Home page tasks">
+        <StackPanel Padding="20,18,20,24"
+                    Spacing="14">
+            <StackPanel Spacing="6">
+                <TextBlock Text="Start Here"
+                           AutomationProperties.AutomationId="HomePageTitle"
+                           Style="{StaticResource SectionTitleTextStyle}" />
+                <TextBlock Text="Choose the task you want to work on. File-changing workflows are copy-first, and the configured game install is treated as source material."
+                           AutomationProperties.AutomationId="HomePagePurpose"
+                           Style="{StaticResource SectionBodyTextStyle}" />
+            </StackPanel>
+
+            <Grid ColumnSpacing="16"
+                  RowSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.25*" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0"
+                        Grid.Column="0"
+                        Style="{StaticResource SectionCardStyle}"
+                        Margin="0">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Edit saves and options"
+                                   FontSize="22"
+                                   FontWeight="SemiBold" />
+                        <TextBlock Text="Inspect existing .bes career saves and defaultoptions.bea snapshots, then write patched copies while preserving unknown regions."
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="10">
+                            <Button Content="Open Save Lab"
+                                    AutomationProperties.AutomationId="HomeOpenSaveLabButton"
+                                    AutomationProperties.Name="Open Save Lab"
+                                    Tag="saves"
+                                    Style="{StaticResource PrimaryActionButtonStyle}"
+                                    Click="NavigateButton_Click" />
+                            <Button Content="Game Options"
+                                    AutomationProperties.AutomationId="HomeOpenConfigurationEditorButton"
+                                    AutomationProperties.Name="Open Game Options"
+                                    Click="OpenConfigurationEditorButton_Click" />
+                            <Button Content="Review Settings"
+                                    AutomationProperties.AutomationId="HomeReviewSettingsButton"
+                                    AutomationProperties.Name="Review Settings"
+                                    Tag="settings"
+                                    Click="NavigateButton_Click" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Row="0"
+                        Grid.Column="1"
+                        Style="{StaticResource SectionCardStyle}"
+                        Margin="0">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Setup"
+                                   FontSize="18"
+                                   FontWeight="SemiBold" />
+                        <TextBlock x:Name="SetupStatusTextBlock"
+                                   AutomationProperties.AutomationId="HomeSetupStatus"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <TextBlock Text="Windowed &amp; Mods creates a safe game copy, patches only that copy, and plays only that copy without changing the Steam/game install."
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                    </StackPanel>
+                </Border>
+
+                <Grid Grid.Row="1"
+                      Grid.ColumnSpan="2"
+                      ColumnSpacing="16"
+                      RowSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0"
+                            Grid.Column="0"
+                            Style="{StaticResource SectionCardStyle}"
+                            Margin="0">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Browse media"
+                                       FontSize="18"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="Preview installed audio and video in the Windows app."
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                            <Button Content="Open Media"
+                                    AutomationProperties.AutomationId="HomeOpenMediaButton"
+                                    AutomationProperties.Name="Open Media"
+                                    Tag="media"
+                                    Click="NavigateButton_Click" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="0"
+                            Grid.Column="1"
+                            Style="{StaticResource SectionCardStyle}"
+                            Margin="0">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Read lore"
+                                       FontSize="18"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="Open the curated preservation library and roadmap mirrors."
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                            <Button Content="Open Lore"
+                                    AutomationProperties.AutomationId="HomeOpenLoreButton"
+                                    AutomationProperties.Name="Open Lore"
+                                    Tag="lore"
+                                    Click="NavigateButton_Click" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="0"
+                            Grid.Column="2"
+                            Style="{StaticResource SectionCardStyle}"
+                            Margin="0">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Try patches and mods"
+                                       FontSize="18"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="Create a playable copied game, choose windowed or graphics patches, set launch modifiers, and stage one music replacement inside that copied folder."
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                            <Button Content="Open Windowed &amp; Mods"
+                                    AutomationProperties.AutomationId="HomeOpenPatchBenchButton"
+                                    AutomationProperties.Name="Open Windowed and Mods"
+                                    Tag="binary"
+                                    Click="NavigateButton_Click" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="1"
+                            Grid.Column="0"
+                            Style="{StaticResource SectionCardStyle}"
+                            Margin="0">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Browse extracted assets"
+                                       FontSize="18"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="Open a generated asset catalog to review textures, mesh exports, and local extraction status."
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                            <Button Content="Open Asset Library"
+                                    AutomationProperties.AutomationId="HomeOpenAssetLibraryButton"
+                                    AutomationProperties.Name="Open Asset Library"
+                                    Tag="assets"
+                                    Click="NavigateButton_Click" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="1"
+                            Grid.Column="1"
+                            Style="{StaticResource SectionCardStyle}"
+                            Margin="0">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Current release posture"
+                                       FontSize="18"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="WinUI is the primary app lane. Electron, WPF, and the old Python GUI/CLI remain archived reference surfaces."
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="1"
+                            Grid.Column="2"
+                            Style="{StaticResource SectionCardStyle}"
+                            Margin="0">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Project notes"
+                                       FontSize="18"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="See the About page for capabilities, retail behavior notes, and release guidance pointers."
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                            <Button Content="Open About"
+                                    AutomationProperties.AutomationId="HomeOpenAboutButton"
+                                    AutomationProperties.Name="Open About"
+                                    Tag="about"
+                                    Click="NavigateButton_Click" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

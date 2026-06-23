@@ -25,7 +25,7 @@
         <Style x:Key="SavesMetricCardStyle"
                TargetType="Border"
                BasedOn="{StaticResource SavesSectionCardStyle}">
-            <Setter Property="Background" Value="#FF141B29" />
+            <Setter Property="Background" Value="{ThemeResource ShellMetricSurfaceBrush}" />
             <Setter Property="Padding" Value="14" />
         </Style>
     </Page.Resources>
@@ -35,38 +35,94 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0"
                     Margin="0,0,0,14"
                     Spacing="6">
-            <TextBlock Text="Saves"
+            <TextBlock Text="Save Lab"
                        Style="{StaticResource SectionTitleTextStyle}" />
-            <TextBlock Text="Inspect `.bes` career saves and `.bea` global options snapshots, then patch the workflow you need without disturbing retail-backed unknown regions."
+            <TextBlock Text="Inspect your career saves and options files, then make safe edits. The app preserves everything it does not change and writes patches to a separate file."
                        Style="{StaticResource SectionBodyTextStyle}" />
         </StackPanel>
 
         <Border Grid.Row="1"
+                Style="{StaticResource SavesSectionCardStyle}"
+                Margin="0,0,0,12">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="1. Inspect a file"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="Start here when you want to understand a save or options snapshot before making any change."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <Button AutomationProperties.AutomationId="AnalyzeTaskButton"
+                            Content="Analyze a save"
+                            HorizontalAlignment="Left"
+                            Style="{StaticResource AccentButtonStyle}"
+                            Click="AnalyzeTaskButton_Click" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1"
+                            Spacing="8">
+                    <TextBlock Text="2. Edit a copied save"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="Use the normal career-save workflow for unlocks, ranks, goodies, and kill counts."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <Button AutomationProperties.AutomationId="EditSaveTaskButton"
+                            Content="Open save editor"
+                            HorizontalAlignment="Left"
+                            Click="EditSaveTaskButton_Click" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2"
+                            Spacing="8">
+                    <TextBlock Text="3. Edit game options"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="Edit startup settings, audio levels, and controller bindings from defaultoptions.bea, separate from career progress in .bes saves."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <Button AutomationProperties.AutomationId="ConfigureOptionsTaskButton"
+                            AutomationProperties.Name="Open Game Options"
+                            Content="Open Game Options"
+                            HorizontalAlignment="Left"
+                            Click="ConfigureOptionsTaskButton_Click" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="2"
                 Style="{StaticResource SubTabStripBorderStyle}">
             <StackPanel Orientation="Horizontal"
                         Spacing="8">
                 <Button x:Name="SaveAnalyzerTabButton"
+                        AutomationProperties.AutomationId="SaveAnalyzerTabButton"
                         Content="Save Analyzer"
                         Click="SaveAnalyzerTabButton_Click"
                         Style="{StaticResource SavesInactiveTabButtonStyle}" />
                 <Button x:Name="SaveEditorTabButton"
+                        AutomationProperties.AutomationId="SaveEditorTabButton"
                         Content="Save Editor"
                         Click="SaveEditorTabButton_Click"
                         Style="{StaticResource SavesInactiveTabButtonStyle}" />
                 <Button x:Name="ConfigurationEditorTabButton"
-                        Content="Configuration Editor"
+                        AutomationProperties.AutomationId="ConfigurationEditorTabButton"
+                        Content="Game Options"
                         Click="ConfigurationEditorTabButton_Click"
                         Style="{StaticResource SavesInactiveTabButtonStyle}" />
             </StackPanel>
         </Border>
 
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="3">
             <Grid x:Name="SaveAnalyzerTabContentGrid"
                   Visibility="Visible">
                 <Grid ColumnSpacing="0"
@@ -93,10 +149,12 @@
                             <TextBlock Text="Pick from detected save and options files, or refresh after changing the game directory in Settings."
                                        Style="{StaticResource SectionBodyTextStyle}" />
                             <ComboBox x:Name="DetectedFilesComboBox"
+                                      AutomationProperties.AutomationId="SaveAnalyzerDetectedFilesComboBox"
                                       PlaceholderText="No detected files yet"
                                       DisplayMemberPath="DisplayName"
                                       SelectionChanged="DetectedFilesComboBox_SelectionChanged" />
                             <Button x:Name="RefreshDetectedFilesButton"
+                                    AutomationProperties.AutomationId="SaveAnalyzerRefreshDetectedFilesButton"
                                     Content="Refresh detected files"
                                     Click="RefreshDetectedFilesButton_Click" />
                             <TextBlock x:Name="DetectedFilesStatusTextBlock"
@@ -106,6 +164,8 @@
 
                     <ScrollViewer Grid.Row="1"
                                   Grid.Column="0"
+                                  AutomationProperties.AutomationId="SaveAnalyzerResultsScrollViewer"
+                                  AutomationProperties.Name="Save analyzer results"
                                   Margin="0,12,0,0"
                                   VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled">
@@ -116,6 +176,7 @@
                                                FontSize="18"
                                                FontWeight="SemiBold" />
                                     <TextBox x:Name="FilePathTextBox"
+                                             AutomationProperties.AutomationId="SaveAnalyzerFilePath"
                                              Header="Input file"
                                              TextChanged="FilePathTextBox_TextChanged" />
                                     <Grid ColumnSpacing="8">
@@ -124,8 +185,11 @@
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
                                         <Button Content="Browse"
+                                                AutomationProperties.AutomationId="SaveAnalyzerBrowseInputButton"
+                                                AutomationProperties.Name="Browse input file"
                                                 Click="BrowseFileButton_Click" />
                                         <Button x:Name="AnalyzeButton"
+                                                AutomationProperties.AutomationId="SaveAnalyzerAnalyzeButton"
                                                 Grid.Column="1"
                                                 Content="Analyze / Reload"
                                                 Style="{StaticResource AccentButtonStyle}"
@@ -140,14 +204,16 @@
                                                FontSize="16"
                                                FontWeight="SemiBold" />
                                     <ToggleSwitch x:Name="VerboseToggle"
+                                                  AutomationProperties.AutomationId="SaveAnalyzerVerboseToggle"
                                                   Header="Verbose output"
                                                   OffContent="Summary report"
                                                   OnContent="Nodes and bindings"
                                                   Toggled="DisplayOption_Toggled" />
                                     <ToggleSwitch x:Name="DumpMysteryToggle"
-                                                  Header="Reserved-byte dump"
+                                                  AutomationProperties.AutomationId="SaveAnalyzerReservedBytesToggle"
+                                                  Header="Advanced byte details"
                                                   OffContent="Keep compact"
-                                                  OnContent="Show reserved-byte details"
+                                                  OnContent="Show troubleshooting details"
                                                   Toggled="DisplayOption_Toggled" />
                                 </StackPanel>
                             </Border>
@@ -158,6 +224,7 @@
                                                FontSize="16"
                                                FontWeight="SemiBold" />
                                     <TextBox x:Name="CompareFilePathTextBox"
+                                             AutomationProperties.AutomationId="SaveAnalyzerCompareFilePath"
                                              Header="Compare against"
                                              TextChanged="CompareFilePathTextBox_TextChanged" />
                                     <Grid ColumnSpacing="8">
@@ -166,8 +233,11 @@
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
                                         <Button Content="Browse"
+                                                AutomationProperties.AutomationId="SaveAnalyzerBrowseCompareButton"
+                                                AutomationProperties.Name="Browse compare file"
                                                 Click="BrowseCompareFileButton_Click" />
                                         <Button x:Name="CompareButton"
+                                                AutomationProperties.AutomationId="SaveAnalyzerCompareButton"
                                                 Grid.Column="1"
                                                 Content="Compare files"
                                                 Click="CompareButton_Click" />
@@ -182,10 +252,13 @@
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <TextBlock x:Name="SummaryTitleTextBlock"
+                                               AutomationProperties.AutomationId="SaveAnalyzerSummaryTitle"
                                                Text="Analysis summary"
                                                FontSize="16"
                                                FontWeight="SemiBold" />
                                     <controls:TreeView x:Name="SummaryTreeView"
+                                                       AutomationProperties.AutomationId="SaveAnalyzerSummaryTree"
+                                                       AutomationProperties.Name="Analysis summary tree"
                                                        Grid.Row="1"
                                                        MinHeight="180"
                                                        MaxHeight="280">
@@ -209,28 +282,43 @@
                             BorderThickness="0,1,0,1"
                             CornerRadius="0" />
 
-                    <controls:InfoBar x:Name="AnalyzerInfoBar"
-                                      Grid.Row="0"
-                                      Grid.Column="2"
-                                      Visibility="Collapsed"
-                                      IsOpen="True"
-                                      IsClosable="False"
-                                      Severity="Informational"
-                                      Title="Analyzer ready"
-                                      Message="Choose a detected or manual file path to inspect save structure, options state, and comparison data." />
-
                     <Border Grid.Row="0"
                             Grid.Column="2"
                             Style="{StaticResource SavesSectionCardStyle}"
                             CornerRadius="0,14,14,0"
                             BorderThickness="0,1,1,1">
                         <StackPanel Spacing="10">
-                            <Grid ColumnSpacing="10">
+                            <controls:InfoBar x:Name="AnalyzerInfoBar"
+                                              AutomationProperties.AutomationId="SaveAnalyzerStatusInfo"
+                                              Visibility="Visible"
+                                              IsOpen="True"
+                                              IsClosable="False"
+                                              Severity="Informational"
+                                              Title="Analyzer ready"
+                                              Message="Choose a detected or manual file path to inspect save structure, options state, and comparison data." />
+
+                            <Border x:Name="AnalyzerEmptyStateBorder"
+                                    Style="{StaticResource SavesMetricCardStyle}">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Choose a file to see save facts"
+                                               FontSize="18"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="Pick a detected save or options file on the left. The analyzer will replace this prompt with file kind, mission, goodie, kill, and tech-slot summaries."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Grid x:Name="AnalyzerHeaderGrid"
+                                  Visibility="Collapsed"
+                                  MaxHeight="0"
+                                  Opacity="0"
+                                  ColumnSpacing="10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Spacing="2">
                                     <TextBlock x:Name="AnalyzerTitleTextBlock"
+                                               AutomationProperties.AutomationId="SaveAnalyzerDocumentTitle"
                                                Text="Save Analyzer"
                                                FontSize="18"
                                                FontWeight="SemiBold" />
@@ -241,7 +329,11 @@
                                 </StackPanel>
                             </Grid>
 
-                            <Grid ColumnSpacing="10">
+                            <Grid x:Name="AnalyzerMetricsGrid"
+                                  Visibility="Collapsed"
+                                  MaxHeight="0"
+                                  Opacity="0"
+                                  ColumnSpacing="10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
@@ -254,7 +346,11 @@
                                         Style="{StaticResource SavesMetricCardStyle}">
                                     <StackPanel Spacing="4">
                                         <TextBlock x:Name="Metric1LabelTextBlock" Text="File Kind" FontSize="12" Foreground="{ThemeResource ShellMutedTextBrush}" />
-                                        <TextBlock x:Name="Metric1ValueTextBlock" Text="--" FontSize="22" FontWeight="SemiBold" />
+                                        <TextBlock x:Name="Metric1ValueTextBlock"
+                                                   AutomationProperties.AutomationId="SaveAnalyzerFileKindMetric"
+                                                   Text="--"
+                                                   FontSize="22"
+                                                   FontWeight="SemiBold" />
                                         <TextBlock x:Name="Metric1DetailTextBlock" Style="{StaticResource SectionBodyTextStyle}" />
                                     </StackPanel>
                                 </Border>
@@ -316,17 +412,21 @@
                                             Orientation="Horizontal"
                                             Spacing="8">
                                     <Button x:Name="CopyReportButton"
+                                            AutomationProperties.AutomationId="SaveAnalyzerCopyReportButton"
                                             Content="Copy report"
                                             Click="CopyReportButton_Click"
                                             IsEnabled="False" />
                                     <Button Content="Clear"
+                                            AutomationProperties.AutomationId="SaveAnalyzerClearReportButton"
                                             Click="ClearButton_Click" />
                                 </StackPanel>
                             </Grid>
                             <TextBox x:Name="ReportTextBox"
+                                     AutomationProperties.AutomationId="SaveAnalyzerReport"
                                      Grid.Row="1"
                                      IsReadOnly="True"
                                      AcceptsReturn="True"
+                                     PlaceholderText="Analysis report appears here after you choose a save or options file."
                                      TextWrapping="NoWrap"
                                      FontFamily="Consolas"
                                      FontSize="12"
@@ -340,15 +440,18 @@
 
             <Grid x:Name="SaveEditorTabContentGrid"
                   Visibility="Collapsed">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ScrollViewer AutomationProperties.AutomationId="SaveEditorScrollViewer"
+                              AutomationProperties.Name="Save editor workflow"
+                              VerticalScrollBarVisibility="Auto">
                     <StackPanel Spacing="12">
                         <controls:InfoBar x:Name="EditorInfoBar"
+                                          AutomationProperties.AutomationId="SaveEditorResultInfo"
                                           Visibility="Collapsed"
                                           IsOpen="True"
                                           IsClosable="False"
                                           Severity="Informational"
                                           Title="Save editor common path"
-                                          Message="Patch career progression, goodies, links, mission ranks, and kill counts here. Startup settings and keybind overrides stay in Configuration Editor." />
+                                          Message="Edit career progress, goodies, mission ranks, and kills here. Startup settings, audio levels, and controls are in Game Options." />
 
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
@@ -362,9 +465,10 @@
                                     <TextBlock Text="File selection"
                                                FontSize="18"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Text="Work against `.bes` career saves only. `defaultoptions.bea` remains in Configuration Editor because it controls the boot-time global settings snapshot."
+                                    <TextBlock Text="Work against .bes career saves only. defaultoptions.bea is handled in Game Options because it controls startup settings."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <ComboBox x:Name="EditorDetectedFilesComboBox"
+                                              AutomationProperties.AutomationId="SaveEditorDetectedFiles"
                                               Header="Detected career saves"
                                               PlaceholderText="No detected career saves yet"
                                               DisplayMemberPath="DisplayName"
@@ -372,12 +476,15 @@
                                     <TextBlock x:Name="EditorDetectedFilesStatusTextBlock"
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <Button Content="Refresh detected saves"
+                                            AutomationProperties.AutomationId="SaveEditorRefreshDetectedSavesButton"
                                             Click="RefreshEditorDetectedFilesButton_Click"
                                             HorizontalAlignment="Left" />
                                     <TextBox x:Name="EditorInputFileTextBox"
+                                             AutomationProperties.AutomationId="SaveEditorInputFile"
                                              Header="Input save"
                                              TextChanged="EditorPathTextBox_TextChanged" />
                                     <TextBox x:Name="EditorOutputFileTextBox"
+                                             AutomationProperties.AutomationId="SaveEditorOutputFile"
                                              Header="Output save"
                                              TextChanged="EditorPathTextBox_TextChanged" />
                                     <Grid ColumnSpacing="8">
@@ -386,9 +493,11 @@
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
                                         <Button Grid.Column="0"
+                                                AutomationProperties.AutomationId="SaveEditorBrowseInputButton"
                                                 Content="Browse input"
                                                 Click="BrowseEditorInputButton_Click" />
                                         <Button Grid.Column="1"
+                                                AutomationProperties.AutomationId="SaveEditorBrowseOutputButton"
                                                 Content="Browse output"
                                                 Click="BrowseEditorOutputButton_Click" />
                                     </Grid>
@@ -404,6 +513,7 @@
                                     <TextBlock Text="Set the broad patch behavior here first. Advanced mission and per-category overrides stay below."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <ComboBox x:Name="EditorPatchPresetComboBox"
+                                              AutomationProperties.AutomationId="SaveEditorPatchPresetComboBox"
                                               Header="Patch preset"
                                               SelectionChanged="EditorPatchPresetComboBox_SelectionChanged">
                                         <ComboBoxItem Content="Quick Unlock" Tag="QUICK" />
@@ -411,6 +521,7 @@
                                         <ComboBoxItem Content="Custom" Tag="CUSTOM" />
                                     </ComboBox>
                                     <ComboBox x:Name="EditorRankComboBox"
+                                              AutomationProperties.AutomationId="SaveEditorRankComboBox"
                                               Header="Mission rank baseline"
                                               SelectionChanged="EditorQuickSettingSelectionChanged">
                                         <ComboBoxItem Content="S" Tag="S" />
@@ -422,11 +533,13 @@
                                         <ComboBoxItem Content="No Grade" Tag="NONE" />
                                     </ComboBox>
                                     <ToggleSwitch x:Name="EditorGoodiesAsNewToggle"
+                                                  AutomationProperties.AutomationId="SaveEditorGoodiesAsNewToggle"
                                                   Header="Mark goodies as NEW"
                                                   OnContent="Gold NEW"
                                                   OffContent="Blue OLD"
                                                   Toggled="EditorQuickSettingToggled" />
                                     <controls:NumberBox x:Name="EditorGlobalKillNumberBox"
+                                                        AutomationProperties.AutomationId="SaveEditorGlobalKillNumberBox"
                                                         Header="Default kill value for checked kill patching"
                                                         Minimum="0"
                                                         Maximum="16777215"
@@ -459,25 +572,30 @@
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <CheckBox x:Name="EditorPatchNodesCheckBox"
+                                              AutomationProperties.AutomationId="SaveEditorPatchNodesCheckBox"
                                               Content="Patch missions"
                                               Checked="EditorPatchSectionCheckBox_Changed"
                                               Unchecked="EditorPatchSectionCheckBox_Changed" />
                                     <CheckBox x:Name="EditorPatchLinksCheckBox"
+                                              AutomationProperties.AutomationId="SaveEditorPatchLinksCheckBox"
                                               Grid.Column="1"
                                               Content="Patch links"
                                               Checked="EditorPatchSectionCheckBox_Changed"
                                               Unchecked="EditorPatchSectionCheckBox_Changed" />
                                     <CheckBox x:Name="EditorPatchGoodiesCheckBox"
+                                              AutomationProperties.AutomationId="SaveEditorPatchGoodiesCheckBox"
                                               Grid.Column="2"
                                               Content="Patch goodies"
                                               Checked="EditorPatchSectionCheckBox_Changed"
                                               Unchecked="EditorPatchSectionCheckBox_Changed" />
                                     <CheckBox x:Name="EditorPatchKillsCheckBox"
+                                              AutomationProperties.AutomationId="SaveEditorPatchKillsCheckBox"
                                               Grid.Row="1"
                                               Content="Patch kill counts"
                                               Checked="EditorPatchSectionCheckBox_Changed"
                                               Unchecked="EditorPatchSectionCheckBox_Changed" />
                                     <CheckBox x:Name="EditorKillsOnlyCheckBox"
+                                              AutomationProperties.AutomationId="SaveEditorKillsOnlyCheckBox"
                                               Grid.Row="1"
                                               Grid.Column="1"
                                               Content="Kills only"
@@ -509,15 +627,17 @@
                                                        FontSize="16"
                                                        FontWeight="SemiBold" />
                                             <Button Grid.Column="1"
+                                                    AutomationProperties.AutomationId="SaveEditorSetAllRanksDefaultButton"
                                                     Content="Set all to default"
                                                     Margin="8,0,0,0"
                                                     Click="EditorSetMissionRanksToDefaultButton_Click" />
                                             <Button Grid.Column="2"
+                                                    AutomationProperties.AutomationId="SaveEditorClearMissionRanksButton"
                                                     Content="Clear"
                                                     Margin="8,0,0,0"
                                                     Click="EditorClearMissionRanksButton_Click" />
                                         </Grid>
-                                        <TextBlock Text="Leave a row on Keep to use the default rank above. These overrides still run through the node patch pass, so `Patch missions` must stay enabled."
+                                        <TextBlock Text="Leave a row on Keep to use the default rank above. These overrides still run through the node patch pass, so Patch missions must stay enabled."
                                                    Style="{StaticResource SectionBodyTextStyle}" />
                                         <ItemsControl x:Name="EditorMissionRanksListView">
                                             <ItemsControl.ItemTemplate>
@@ -544,6 +664,7 @@
                                                                        VerticalAlignment="Center"
                                                                        Style="{StaticResource SectionBodyTextStyle}" />
                                                             <ComboBox Grid.Column="3"
+                                                                      AutomationProperties.Name="{Binding MissionLabel}"
                                                                       ItemsSource="{Binding RankChoices}"
                                                                       SelectedItem="{Binding SelectedRank, Mode=TwoWay}"
                                                                       SelectionChanged="EditorMissionRankOverrideComboBox_SelectionChanged" />
@@ -587,12 +708,14 @@
                                                                        VerticalAlignment="Center"
                                                                        HorizontalAlignment="Center" />
                                                             <CheckBox Grid.Column="2"
+                                                                      AutomationProperties.Name="{Binding CategoryName}"
                                                                       Content="Write"
                                                                       IsChecked="{Binding OverrideEnabled, Mode=TwoWay}"
                                                                       VerticalAlignment="Center"
                                                                       Checked="EditorCategoryKillOverrideCheckBox_Changed"
                                                                       Unchecked="EditorCategoryKillOverrideCheckBox_Changed" />
                                                             <controls:NumberBox Grid.Column="3"
+                                                                                AutomationProperties.Name="{Binding CategoryName}"
                                                                                 Header="Override value"
                                                                                 Value="{Binding OverrideValue, Mode=TwoWay}"
                                                                                 SpinButtonPlacementMode="Inline"
@@ -624,12 +747,15 @@
                                                FontSize="18"
                                                FontWeight="SemiBold" />
                                     <TextBlock x:Name="EditorPendingChangesTextBlock"
+                                               AutomationProperties.AutomationId="SaveEditorPendingChanges"
                                                Style="{StaticResource SectionBodyTextStyle}"
                                                Text="No pending save changes selected yet." />
                                     <TextBlock x:Name="EditorSafetyHintTextBlock"
+                                               AutomationProperties.AutomationId="SaveEditorSafetyHint"
                                                Style="{StaticResource SectionBodyTextStyle}"
-                                               Text="Choose at least one section and a valid `.bes` input/output pair to enable patching." />
+                                               Text="Choose at least one section and a valid .bes input/output pair to enable patching." />
                                     <Button x:Name="EditorPatchButton"
+                                            AutomationProperties.AutomationId="SaveEditorPatchButton"
                                             Content="Patch Save"
                                             Style="{StaticResource AccentButtonStyle}"
                                             Click="EditorPatchButton_Click"
@@ -651,11 +777,14 @@
                                                    FontWeight="SemiBold" />
                                         <Button Grid.Column="1"
                                                 x:Name="EditorCopyOutputButton"
+                                                AutomationProperties.AutomationId="SaveEditorCopyOutputButton"
                                                 Content="Copy"
                                                 Click="EditorCopyOutputButton_Click"
                                                 IsEnabled="False" />
                                     </Grid>
                                     <TextBox x:Name="EditorOutputTextBox"
+                                             AutomationProperties.AutomationId="SaveEditorOutputLog"
+                                             AutomationProperties.Name="Save editor output log"
                                              IsReadOnly="True"
                                              AcceptsReturn="True"
                                              TextWrapping="Wrap"
@@ -670,15 +799,18 @@
 
             <Grid x:Name="ConfigurationEditorTabContentGrid"
                   Visibility="Collapsed">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ScrollViewer AutomationProperties.AutomationId="ConfigurationEditorScrollViewer"
+                              AutomationProperties.Name="Game options workflow"
+                              VerticalScrollBarVisibility="Auto">
                     <StackPanel Spacing="12">
                         <controls:InfoBar x:Name="ConfigurationInfoBar"
-                                          Visibility="Collapsed"
+                                          AutomationProperties.AutomationId="ConfigurationStatusInfo"
+                                          Visibility="Visible"
                                           IsOpen="True"
                                           IsClosable="False"
                                           Severity="Informational"
-                                          Title="Global options editor"
-                                          Message="Patch the authoritative boot-time `.bea` / `defaultoptions.bea` workflow here. Career progress stays disabled on purpose." />
+                                          Title="Game options"
+                                          Message="Edit startup options, audio levels, and controls from a .bea options file. Career progress stays in Save Editor." />
 
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
@@ -692,9 +824,10 @@
                                     <TextBlock Text="File selection"
                                                FontSize="18"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Text="Target boot-time global options snapshots here. In-place `.bea` patching is allowed and creates a timestamped `.bak` first."
+                                    <TextBlock Text="Target boot-time global options snapshots here. Patches write to a separate .bea output file so the selected source stays unchanged."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <ComboBox x:Name="ConfigurationDetectedFilesComboBox"
+                                              AutomationProperties.AutomationId="ConfigurationDetectedFilesComboBox"
                                               Header="Detected options files"
                                               PlaceholderText="No detected options files yet"
                                               DisplayMemberPath="DisplayName"
@@ -702,12 +835,15 @@
                                     <TextBlock x:Name="ConfigurationDetectedFilesStatusTextBlock"
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <Button Content="Refresh detected options"
+                                            AutomationProperties.AutomationId="ConfigurationRefreshDetectedOptionsButton"
                                             Click="RefreshConfigurationDetectedFilesButton_Click"
                                             HorizontalAlignment="Left" />
                                     <TextBox x:Name="ConfigurationInputFileTextBox"
+                                             AutomationProperties.AutomationId="ConfigurationInputFile"
                                              Header="Input options file"
                                              TextChanged="ConfigurationPathTextBox_TextChanged" />
                                     <TextBox x:Name="ConfigurationOutputFileTextBox"
+                                             AutomationProperties.AutomationId="ConfigurationOutputFile"
                                              Header="Output options file"
                                              TextChanged="ConfigurationPathTextBox_TextChanged" />
                                     <Grid ColumnSpacing="8">
@@ -716,9 +852,11 @@
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
                                         <Button Grid.Column="0"
+                                                AutomationProperties.AutomationId="ConfigurationBrowseInputButton"
                                                 Content="Browse input"
                                                 Click="BrowseConfigurationInputButton_Click" />
                                         <Button Grid.Column="1"
+                                                AutomationProperties.AutomationId="ConfigurationBrowseOutputButton"
                                                 Content="Browse output"
                                                 Click="BrowseConfigurationOutputButton_Click" />
                                     </Grid>
@@ -754,11 +892,13 @@
                                                FontSize="18"
                                                FontWeight="SemiBold" />
                                     <ToggleSwitch x:Name="ConfigurationOverrideSoundVolumeToggle"
+                                                  AutomationProperties.AutomationId="ConfigurationOverrideSoundVolumeToggle"
                                                   Header="Override sound volume"
                                                   OffContent="Preserve"
                                                   OnContent="Write value"
                                                   Toggled="ConfigurationOverrideToggle_Toggled" />
                                     <controls:NumberBox x:Name="ConfigurationSoundVolumeNumberBox"
+                                                        AutomationProperties.AutomationId="ConfigurationSoundVolumeNumberBox"
                                                         Header="Sound volume"
                                                         Minimum="0"
                                                         Maximum="1"
@@ -766,11 +906,13 @@
                                                         SpinButtonPlacementMode="Inline"
                                                         ValueChanged="ConfigurationNumberBox_ValueChanged" />
                                     <ToggleSwitch x:Name="ConfigurationOverrideMusicVolumeToggle"
+                                                  AutomationProperties.AutomationId="ConfigurationOverrideMusicVolumeToggle"
                                                   Header="Override music volume"
                                                   OffContent="Preserve"
                                                   OnContent="Write value"
                                                   Toggled="ConfigurationOverrideToggle_Toggled" />
                                     <controls:NumberBox x:Name="ConfigurationMusicVolumeNumberBox"
+                                                        AutomationProperties.AutomationId="ConfigurationMusicVolumeNumberBox"
                                                         Header="Music volume"
                                                         Minimum="0"
                                                         Maximum="1"
@@ -799,6 +941,7 @@
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
                                         <ComboBox x:Name="ConfigurationInvertWalkerP1ComboBox"
+                                                  AutomationProperties.AutomationId="ConfigurationInvertWalkerP1ComboBox"
                                                   Header="Invert Y Walker (P1)"
                                                   SelectionChanged="ConfigurationOptionSelectionChanged">
                                             <ComboBoxItem Content="Keep" Tag="KEEP" />
@@ -806,6 +949,7 @@
                                             <ComboBoxItem Content="Off" Tag="OFF" />
                                         </ComboBox>
                                         <ComboBox x:Name="ConfigurationInvertWalkerP2ComboBox"
+                                                  AutomationProperties.AutomationId="ConfigurationInvertWalkerP2ComboBox"
                                                   Grid.Column="1"
                                                   Header="Invert Y Walker (P2)"
                                                   SelectionChanged="ConfigurationOptionSelectionChanged">
@@ -814,6 +958,7 @@
                                             <ComboBoxItem Content="Off" Tag="OFF" />
                                         </ComboBox>
                                         <ComboBox x:Name="ConfigurationInvertFlightP1ComboBox"
+                                                  AutomationProperties.AutomationId="ConfigurationInvertFlightP1ComboBox"
                                                   Grid.Row="1"
                                                   Header="Invert Y Flight (P1)"
                                                   SelectionChanged="ConfigurationOptionSelectionChanged">
@@ -822,6 +967,7 @@
                                             <ComboBoxItem Content="Off" Tag="OFF" />
                                         </ComboBox>
                                         <ComboBox x:Name="ConfigurationInvertFlightP2ComboBox"
+                                                  AutomationProperties.AutomationId="ConfigurationInvertFlightP2ComboBox"
                                                   Grid.Row="1"
                                                   Grid.Column="1"
                                                   Header="Invert Y Flight (P2)"
@@ -831,6 +977,7 @@
                                             <ComboBoxItem Content="Off" Tag="OFF" />
                                         </ComboBox>
                                         <ComboBox x:Name="ConfigurationVibrationP1ComboBox"
+                                                  AutomationProperties.AutomationId="ConfigurationVibrationP1ComboBox"
                                                   Grid.Row="2"
                                                   Header="Vibration (P1)"
                                                   SelectionChanged="ConfigurationOptionSelectionChanged">
@@ -839,6 +986,7 @@
                                             <ComboBoxItem Content="Off" Tag="OFF" />
                                         </ComboBox>
                                         <ComboBox x:Name="ConfigurationVibrationP2ComboBox"
+                                                  AutomationProperties.AutomationId="ConfigurationVibrationP2ComboBox"
                                                   Grid.Row="2"
                                                   Grid.Column="1"
                                                   Header="Vibration (P2)"
@@ -848,10 +996,12 @@
                                             <ComboBoxItem Content="Off" Tag="OFF" />
                                         </ComboBox>
                                         <TextBox x:Name="ConfigurationControllerConfigP1TextBox"
+                                                 AutomationProperties.AutomationId="ConfigurationControllerConfigP1"
                                                  Grid.Row="3"
                                                  Header="Controller config (P1)"
                                                  TextChanged="ConfigurationControllerConfigTextBox_TextChanged" />
                                         <TextBox x:Name="ConfigurationControllerConfigP2TextBox"
+                                                 AutomationProperties.AutomationId="ConfigurationControllerConfigP2"
                                                  Grid.Row="3"
                                                  Grid.Column="1"
                                                  Header="Controller config (P2)"
@@ -866,9 +1016,10 @@
                                 <TextBlock Text="Copy settings from another file"
                                            FontSize="18"
                                            FontWeight="SemiBold" />
-                                <TextBlock Text="Use this when you want to transplant bindings or the raw options tail from another `.bes` or `.bea`."
+                                <TextBlock Text="Use this when you want to transplant bindings or the advanced options block from another .bes or .bea."
                                            Style="{StaticResource SectionBodyTextStyle}" />
                                 <TextBox x:Name="ConfigurationCopySourceTextBox"
+                                         AutomationProperties.AutomationId="ConfigurationCopySourceTextBox"
                                          Header="Copy source (.bes or .bea)"
                                          TextChanged="ConfigurationCopySourceTextBox_TextChanged" />
                                 <Grid ColumnSpacing="8">
@@ -877,19 +1028,23 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <Button Grid.Column="0"
+                                            AutomationProperties.AutomationId="ConfigurationBrowseCopySourceButton"
                                             Content="Browse source"
                                             Click="BrowseConfigurationCopySourceButton_Click" />
                                     <Button Grid.Column="1"
+                                            AutomationProperties.AutomationId="ConfigurationClearCopySourceButton"
                                             Content="Clear source"
                                             Click="ClearConfigurationCopySourceButton_Click" />
                                 </Grid>
                                 <StackPanel Orientation="Horizontal"
                                             Spacing="20">
                                     <CheckBox x:Name="ConfigurationCopyOptionsEntriesCheckBox"
+                                              AutomationProperties.AutomationId="ConfigurationCopyOptionsEntriesCheckBox"
                                               Content="Copy options entries (bindings)"
                                               Checked="ConfigurationOverrideToggle_Toggled"
                                               Unchecked="ConfigurationOverrideToggle_Toggled" />
                                     <CheckBox x:Name="ConfigurationCopyOptionsTailCheckBox"
+                                              AutomationProperties.AutomationId="ConfigurationCopyOptionsTailCheckBox"
                                               Content="Copy options tail snapshot"
                                               Checked="ConfigurationOverrideToggle_Toggled"
                                               Unchecked="ConfigurationOverrideToggle_Toggled" />
@@ -903,7 +1058,7 @@
                                     <TextBlock Text="Advanced keybind overrides"
                                                FontSize="18"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Text="Keep the keybind override grid in the main page flow so it behaves like the rest of the configuration workspace instead of disappearing behind a dropdown."
+                                    <TextBlock Text="Load current bindings, edit Player 1 and Player 2 overrides, or copy bindings from another options file."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                 </StackPanel>
 
@@ -914,18 +1069,18 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Keybind overrides"
-                                                   FontSize="18"
-                                                   FontWeight="SemiBold" />
                                         <Button Grid.Column="1"
+                                                AutomationProperties.AutomationId="ConfigurationLoadKeybindsFromInputButton"
                                                 Content="Load input"
                                                 Margin="8,0,0,0"
                                                 Click="LoadConfigurationKeybindsFromInputButton_Click" />
                                         <Button Grid.Column="2"
+                                                AutomationProperties.AutomationId="ConfigurationLoadKeybindsFromCopySourceButton"
                                                 Content="Load copy source"
                                                 Margin="8,0,0,0"
                                                 Click="LoadConfigurationKeybindsFromCopySourceButton_Click" />
                                         <Button Grid.Column="3"
+                                                AutomationProperties.AutomationId="ConfigurationClearKeybindsButton"
                                                 Content="Clear"
                                                 Margin="8,0,0,0"
                                                 Click="ClearConfigurationKeybindsButton_Click" />
@@ -933,8 +1088,10 @@
                                     <TextBlock x:Name="ConfigurationKeybindHintTextBlock"
                                                Style="{StaticResource SectionBodyTextStyle}"
                                                TextWrapping="WrapWholeWords" />
-                                    <ListView x:Name="ConfigurationKeybindListView"
-                                              SelectionMode="None"
+                                     <ListView x:Name="ConfigurationKeybindListView"
+                                               AutomationProperties.AutomationId="ConfigurationKeybindListView"
+                                               AutomationProperties.Name="Controller binding overrides"
+                                               SelectionMode="None"
                                               IsItemClickEnabled="False"
                                               MinHeight="360"
                                               MaxHeight="460">
@@ -969,14 +1126,16 @@
                                                                            Style="{StaticResource SectionBodyTextStyle}" />
                                                             </StackPanel>
                                                         </StackPanel>
-                                                        <TextBox Grid.Column="1"
-                                                                 Header="Player 1 override"
-                                                                 Text="{Binding Player1Token, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                 TextChanged="ConfigurationKeybindTextBox_TextChanged" />
-                                                        <TextBox Grid.Column="2"
-                                                                 Header="Player 2 override"
-                                                                 Text="{Binding Player2Token, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                 TextChanged="ConfigurationKeybindTextBox_TextChanged" />
+                                                         <TextBox Grid.Column="1"
+                                                                  AutomationProperties.Name="{Binding Player1AccessibleName}"
+                                                                  Header="Player 1 override"
+                                                                  Text="{Binding Player1Token, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                  TextChanged="ConfigurationKeybindTextBox_TextChanged" />
+                                                         <TextBox Grid.Column="2"
+                                                                  AutomationProperties.Name="{Binding Player2AccessibleName}"
+                                                                  Header="Player 2 override"
+                                                                  Text="{Binding Player2Token, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                  TextChanged="ConfigurationKeybindTextBox_TextChanged" />
                                                     </Grid>
                                                 </Border>
                                             </DataTemplate>
@@ -1000,9 +1159,11 @@
                                     <TextBlock x:Name="ConfigurationPendingChangesTextBlock"
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <TextBlock x:Name="ConfigurationSafetyHintTextBlock"
+                                               AutomationProperties.AutomationId="ConfigurationSafetyHint"
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <Button x:Name="ConfigurationPatchButton"
-                                            Content="Patch Configuration"
+                                            AutomationProperties.AutomationId="ConfigurationPatchButton"
+                                            Content="Patch Game Options"
                                             Style="{StaticResource AccentButtonStyle}"
                                             Click="ConfigurationPatchButton_Click"
                                             HorizontalAlignment="Left"
@@ -1023,11 +1184,14 @@
                                                    FontWeight="SemiBold" />
                                         <Button Grid.Column="1"
                                                 x:Name="ConfigurationCopyOutputButton"
+                                                AutomationProperties.AutomationId="ConfigurationCopyOutputButton"
                                                 Content="Copy"
                                                 Click="ConfigurationCopyOutputButton_Click"
                                                 IsEnabled="False" />
                                     </Grid>
                                     <TextBox x:Name="ConfigurationOutputTextBox"
+                                             AutomationProperties.AutomationId="ConfigurationOutputLog"
+                                             AutomationProperties.Name="Game options output log"
                                              IsReadOnly="True"
                                              AcceptsReturn="True"
                                              TextWrapping="Wrap"

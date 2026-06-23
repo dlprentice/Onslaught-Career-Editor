@@ -62,20 +62,26 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <TextBox x:Name="SearchTextBox"
+                                             AutomationProperties.AutomationId="LoreSearchBox"
+                                             AutomationProperties.Name="Search lore documents"
                                              PlaceholderText="Search documents"
                                              TextChanged="SearchTextBox_TextChanged" />
                                     <Button Grid.Column="1"
+                                            AutomationProperties.AutomationId="LoreRefreshButton"
                                             Content="Refresh"
                                             Click="RefreshButton_Click" />
                                 </Grid>
                             </StackPanel>
 
                             <TextBlock x:Name="PaneStateTextBlock"
+                                       AutomationProperties.AutomationId="LoreLibraryStatus"
                                        Grid.Row="1"
                                        Style="{StaticResource SectionBodyTextStyle}"
                                        Text="Library unavailable." />
 
                             <TreeView x:Name="DocumentTree"
+                                      AutomationProperties.AutomationId="LoreDocumentTree"
+                                      AutomationProperties.Name="Lore document library"
                                       Grid.Row="2"
                                       Background="Transparent"
                                       SelectionMode="Single"
@@ -89,6 +95,7 @@
             <Grid RowSpacing="12">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
@@ -96,12 +103,13 @@
                         Style="{StaticResource SectionCardStyle}"
                         Margin="0,0,0,12"
                         Padding="6,0">
-                    <CommandBar Background="Transparent"
-                                DefaultLabelPosition="Right"
-                                HorizontalAlignment="Left"
-                                IsDynamicOverflowEnabled="False">
+                        <CommandBar Background="Transparent"
+                                    DefaultLabelPosition="Right"
+                                    HorizontalAlignment="Left"
+                                    IsDynamicOverflowEnabled="False">
                         <CommandBar.PrimaryCommands>
                             <AppBarButton x:Name="BackButton"
+                                          AutomationProperties.AutomationId="LoreBackButton"
                                           Label="Back"
                                           Click="BackButton_Click">
                                 <AppBarButton.Icon>
@@ -109,6 +117,7 @@
                                 </AppBarButton.Icon>
                             </AppBarButton>
                             <AppBarButton x:Name="ForwardButton"
+                                          AutomationProperties.AutomationId="LoreForwardButton"
                                           Label="Forward"
                                           Click="ForwardButton_Click">
                                 <AppBarButton.Icon>
@@ -116,6 +125,7 @@
                                 </AppBarButton.Icon>
                             </AppBarButton>
                             <AppBarButton x:Name="HomeButton"
+                                          AutomationProperties.AutomationId="LoreHomeButton"
                                           Label="Home"
                                           Click="HomeButton_Click">
                                 <AppBarButton.Icon>
@@ -123,6 +133,7 @@
                                 </AppBarButton.Icon>
                             </AppBarButton>
                             <AppBarButton x:Name="ToggleLibraryButton"
+                                          AutomationProperties.AutomationId="LoreToggleLibraryButton"
                                           Label="Hide Library"
                                           Click="ToggleLibraryButton_Click">
                                 <AppBarButton.Icon>
@@ -131,6 +142,7 @@
                             </AppBarButton>
                             <AppBarSeparator />
                             <AppBarButton x:Name="OpenExternalButton"
+                                          AutomationProperties.AutomationId="LoreOpenExternalButton"
                                           Label="Open External"
                                           Click="OpenExternalButton_Click">
                                 <AppBarButton.Icon>
@@ -144,30 +156,36 @@
                 <Border Grid.Row="1"
                         Style="{StaticResource SectionCardStyle}"
                         Margin="0,0,0,12"
-                        Padding="16"
-                        Visibility="Collapsed">
+                        Padding="16">
                     <StackPanel Spacing="4">
                         <TextBlock x:Name="CurrentDocumentTextBlock"
+                                   AutomationProperties.AutomationId="LoreCurrentDocumentTitle"
                                    FontSize="22"
                                    FontWeight="SemiBold"
                                    Text="Select a document" />
                         <TextBlock x:Name="CurrentPathTextBlock"
+                                   AutomationProperties.AutomationId="LoreCurrentDocumentSummary"
                                    Style="{StaticResource SectionBodyTextStyle}"
                                    Text="The in-app lore reader will stay on this page while you browse." />
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Row="1"
+                <Border Grid.Row="2"
+                        AutomationProperties.AutomationId="LoreReaderPanel"
+                        AutomationProperties.Name="Lore document reader"
                         Background="{StaticResource ShellSurfaceBrush}"
                         BorderBrush="{StaticResource ShellBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="16">
                     <Grid>
                         <controls:WebView2 x:Name="ContentWebView"
+                                           AutomationProperties.AutomationId="LoreContentWebView"
+                                           AutomationProperties.Name="Rendered lore document"
                                            NavigationStarting="ContentWebView_NavigationStarting"
                                            NavigationCompleted="ContentWebView_NavigationCompleted" />
 
                         <Border x:Name="ReaderPlaceholderBorder"
+                                AutomationProperties.AutomationId="LoreReaderPlaceholder"
                                 Background="{StaticResource ShellSurfaceBrush}"
                                 CornerRadius="16">
                             <StackPanel Width="420"
@@ -175,10 +193,12 @@
                                         VerticalAlignment="Center"
                                         Spacing="8">
                                 <TextBlock x:Name="ReaderPlaceholderTitleTextBlock"
+                                           AutomationProperties.AutomationId="LoreReaderPlaceholderTitle"
                                            FontSize="24"
                                            FontWeight="SemiBold"
                                            Text="Loading lore library..." />
                                 <TextBlock x:Name="ReaderPlaceholderBodyTextBlock"
+                                           AutomationProperties.AutomationId="LoreReaderPlaceholderBody"
                                            Style="{StaticResource SectionBodyTextStyle}"
                                            Text="The embedded reader will appear here once the library is ready." />
                             </StackPanel>

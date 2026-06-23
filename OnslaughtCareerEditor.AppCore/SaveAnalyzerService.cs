@@ -39,6 +39,7 @@ namespace Onslaught___Career_Editor
         public string ReportText { get; init; } = string.Empty;
         public IReadOnlyList<SaveAnalyzerMetric> Metrics { get; init; } = Array.Empty<SaveAnalyzerMetric>();
         public IReadOnlyList<SaveAnalyzerTreeNode> SummaryNodes { get; init; } = Array.Empty<SaveAnalyzerTreeNode>();
+        public IReadOnlyList<GoodieStateDetail> GoodieStates { get; init; } = Array.Empty<GoodieStateDetail>();
     }
 
     public static class SaveAnalyzerService
@@ -131,7 +132,10 @@ namespace Onslaught___Career_Editor
                     : $"Save Analyzer: Invalid file - {analysis.ErrorMessage}",
                 ReportText = BesFilePatcher.FormatAnalysisReport(analysis, verbose, dumpMystery),
                 Metrics = metrics,
-                SummaryNodes = BuildAnalysisSummaryNodes(analysis)
+                SummaryNodes = BuildAnalysisSummaryNodes(analysis),
+                GoodieStates = analysis.GoodieStates
+                    .Where(static state => state.IsDisplayable)
+                    .ToArray()
             };
         }
 
@@ -270,6 +274,11 @@ namespace Onslaught___Career_Editor
                 goodiesChildren.Add(Node($"OLD (blue): {analysis.GoodiesOld}", Array.Empty<string>()));
             }
 
+            if (analysis.GoodiesInstructions > 0)
+            {
+                goodiesChildren.Add(Node($"Instructions: {analysis.GoodiesInstructions}", Array.Empty<string>()));
+            }
+
             if (analysis.GoodiesLocked > 0)
             {
                 goodiesChildren.Add(Node($"Locked: {analysis.GoodiesLocked}", Array.Empty<string>()));
@@ -278,6 +287,13 @@ namespace Onslaught___Career_Editor
             if (analysis.GoodiesOther > 0)
             {
                 goodiesChildren.Add(Node($"Other: {analysis.GoodiesOther}", Array.Empty<string>()));
+            }
+
+            foreach (GoodieStateDetail state in analysis.GoodieStates
+                .Where(static state => state.IsDisplayable && state.RawState != 0)
+                .Take(8))
+            {
+                goodiesChildren.Add(Node($"Goodie {state.Index:000}: {state.StateLabel}", Array.Empty<string>()));
             }
 
             int unlockedGoodies = analysis.GoodiesNew + analysis.GoodiesOld;

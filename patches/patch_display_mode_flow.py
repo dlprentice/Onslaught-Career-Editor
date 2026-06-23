@@ -54,18 +54,21 @@ Experimental optional patch:
    - This is intentionally optional because behavior can vary by environment.
 
 Usage:
-  python3 patches/patch_display_mode_flow.py --verify
-  python3 patches/patch_display_mode_flow.py --apply
-  python3 patches/patch_display_mode_flow.py --apply --resolution-only
-  python3 patches/patch_display_mode_flow.py --apply --windowed-only
-  python3 patches/patch_display_mode_flow.py --apply --skip-auto-toggle
-  python3 patches/patch_display_mode_flow.py --restore
-  python3 patches/patch_display_mode_flow.py --path "C:\\path\\to\\BEA.exe" --apply
+  python3 patches/patch_display_mode_flow.py --path "C:\\safe-copy\\BEA.exe" --verify
+  python3 patches/patch_display_mode_flow.py --path "C:\\safe-copy\\BEA.exe" --allowed-root "C:\\safe-copy" --apply
+  python3 patches/patch_display_mode_flow.py --path "C:\\safe-copy\\BEA.exe" --allowed-root "C:\\safe-copy" --apply --resolution-only
+  python3 patches/patch_display_mode_flow.py --path "C:\\safe-copy\\BEA.exe" --allowed-root "C:\\safe-copy" --apply --windowed-only
+  python3 patches/patch_display_mode_flow.py --path "C:\\safe-copy\\BEA.exe" --allowed-root "C:\\safe-copy" --apply --version-overlay
+  python3 patches/patch_display_mode_flow.py --path "C:\\safe-copy\\BEA.exe" --allowed-root "C:\\safe-copy" --apply --skip-auto-toggle
+  python3 patches/patch_display_mode_flow.py --path "C:\\safe-copy\\BEA.exe" --allowed-root "C:\\safe-copy" --restore
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
+import os
 import shutil
 import sys
 from dataclasses import dataclass
@@ -73,8 +76,29 @@ from pathlib import Path
 from typing import Iterable
 
 
-DEFAULT_EXE = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Battle Engine Aquila\BEA.exe")
 BACKUP_SUFFIX = ".original.backup"
+BACKUP_HASH_SUFFIX = ".sha256"
+PROFILE_MANIFEST_NAME = "onslaught-profile-manifest.json"
+PROFILE_SCHEMA_VERSION = "winui-copied-game-profile.v1"
+FILE_ATTRIBUTE_REPARSE_POINT = 0x400
+REQUIRED_PROFILE_ENTRIES = {
+    "BEA.exe",
+    "data",
+    "defaultoptions.bea",
+    "binkw32.dll",
+    "ogg.dll",
+    "vorbis.dll",
+    "zlib.dll",
+}
+PATCH_KEY_BY_OFFSET = {
+    0x129696: "resolution_gate",
+    0x12A644: "force_windowed",
+    0x0CDD40: "extra_graphics_default_on",
+    0x12AF3F: "ignore_cardid_tweak_overrides",
+    0x6416F: "version_overlay_use_patched_format_pointer",
+    0x1AA444: "version_overlay_patched_format_cave_string",
+    0x12BB97: "skip_auto_toggle",
+}
 
 
 @dataclass(frozen=True)
@@ -135,7 +159,7 @@ OPTIONAL_PATCH = PatchSpec(
 
 
 def active_patches(
-    include_optional: bool, resolution_only: bool, windowed_only: bool
+    include_optional: bool, resolution_only: bool, windowed_only: bool, version_overlay: bool
 ) -> list[PatchSpec]:
     if resolution_only and windowed_only:
         raise ValueError("Cannot combine --resolution-only and --windowed-only")
@@ -148,12 +172,227 @@ def active_patches(
     else:
         patches = list(BASE_PATCHES[:4])
 
-    # Auto companion: if any patch is selected, watermark overlay as patched.
-    patches.extend(BASE_PATCHES[4:6])
+    # Version overlay is an explicit diagnostic marker, not a companion for every patch.
+    if version_overlay:
+        patches.extend(BASE_PATCHES[4:6])
 
     if include_optional:
         patches.append(OPTIONAL_PATCH)
     return patches
+
+
+def protected_roots() -> list[Path]:
+    roots: list[Path] = []
+    for key in ("ProgramFiles", "ProgramFiles(x86)"):
+        raw = os.environ.get(key)
+        if raw:
+            roots.append(Path(raw).resolve())
+    return roots
+
+
+def has_known_installed_game_shape(path: Path) -> bool:
+    parts = [part.lower() for part in path.resolve().parts]
+    for index in range(0, len(parts) - 2):
+        if (
+            parts[index] == "steamapps"
+            and parts[index + 1] == "common"
+            and parts[index + 2] == "battle engine aquila"
+        ):
+            return True
+    return False
+
+
+def is_reparse_point(path: Path) -> bool:
+    try:
+        attributes = getattr(os.lstat(path), "st_file_attributes", 0)
+    except FileNotFoundError:
+        return False
+    return bool(attributes & FILE_ATTRIBUTE_REPARSE_POINT) or path.is_symlink()
+
+
+def reject_reparse_ancestors(path: Path, stop_root: Path) -> None:
+    current = path if path.exists() else path.parent
+    while True:
+        if current.exists() and is_reparse_point(current):
+            raise ValueError(f"refusing to mutate through a reparse point: {current}")
+        if current == stop_root:
+            return
+        if current.parent == current:
+            return
+        current = current.parent
+
+
+def reject_hardlinked_file(path: Path) -> None:
+    link_count = getattr(os.stat(path), "st_nlink", 1)
+    if link_count > 1:
+        raise ValueError(f"refusing to mutate hardlinked target: {path}")
+
+
+def sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def write_backup_hash(backup_path: Path) -> None:
+    Path(str(backup_path) + BACKUP_HASH_SUFFIX).write_text(sha256_bytes(backup_path.read_bytes()), encoding="utf-8")
+
+
+def required_patch_keys(specs: Iterable[PatchSpec]) -> set[str]:
+    keys: set[str] = set()
+    for spec in specs:
+        key = PATCH_KEY_BY_OFFSET.get(spec.file_offset)
+        if key:
+            keys.add(key)
+    return keys
+
+
+def validate_generated_profile_manifest(
+    root: Path, exe_path: Path, expected_patch_keys: set[str] | None = None
+) -> None:
+    manifest_path = root / PROFILE_MANIFEST_NAME
+    if not manifest_path.is_file():
+        raise ValueError(f"mutating modes require generated playable copied game manifest: {manifest_path}")
+
+    reject_reparse_ancestors(manifest_path, root)
+    if is_reparse_point(manifest_path):
+        raise ValueError(f"refusing to trust reparse-point manifest: {manifest_path}")
+
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"generated playable copied game manifest is not valid JSON: {manifest_path}") from exc
+
+    if manifest.get("schemaVersion") != PROFILE_SCHEMA_VERSION:
+        raise ValueError("generated playable copied game manifest has an unsupported schema")
+    if manifest.get("mutation") is not True:
+        raise ValueError("generated playable copied game manifest must be a mutation=true profile")
+    if not isinstance(manifest.get("generatedAt"), str) or not manifest["generatedAt"].strip():
+        raise ValueError("generated playable copied game manifest is missing generatedAt")
+    if manifest.get("targetGameRoot") != ".":
+        raise ValueError("generated playable copied game manifest targetGameRoot must be '.'")
+
+    manifest_exe = manifest.get("executablePath")
+    if not isinstance(manifest_exe, str) or not manifest_exe.strip():
+        raise ValueError("generated playable copied game manifest is missing executablePath")
+
+    resolved_manifest_exe = (root / manifest_exe).resolve()
+    if resolved_manifest_exe != exe_path:
+        raise ValueError("generated playable copied game manifest executablePath does not match target BEA.exe")
+
+    manifest_size = manifest.get("executableSize")
+    if not isinstance(manifest_size, int) or manifest_size != exe_path.stat().st_size:
+        raise ValueError("generated playable copied game manifest executableSize does not match target BEA.exe")
+
+    manifest_hash = manifest.get("executableSha256")
+    if not isinstance(manifest_hash, str) or manifest_hash.lower() != sha256_bytes(exe_path.read_bytes()).lower():
+        raise ValueError("generated playable copied game manifest executableSha256 does not match target BEA.exe")
+
+    entries = manifest.get("entries")
+    if not isinstance(entries, list):
+        raise ValueError("generated playable copied game manifest is missing entries")
+    entry_names = {entry.get("name") for entry in entries if isinstance(entry, dict)}
+    missing_entries = sorted(REQUIRED_PROFILE_ENTRIES - entry_names)
+    if missing_entries:
+        raise ValueError(
+            "generated playable copied game manifest is missing required copied entries: "
+            + ", ".join(missing_entries)
+        )
+
+    patch_result = manifest.get("patchResult")
+    if not isinstance(patch_result, dict) or patch_result.get("success") is not True:
+        raise ValueError("generated playable copied game manifest does not record a successful patch state")
+    patch_keys = patch_result.get("patchKeys")
+    if not isinstance(patch_keys, list) or not all(isinstance(key, str) for key in patch_keys):
+        raise ValueError("generated playable copied game manifest is missing patchResult.patchKeys")
+    if expected_patch_keys:
+        missing_keys = sorted(expected_patch_keys - set(patch_keys))
+        if missing_keys:
+            raise ValueError(
+                "generated playable copied game manifest does not list selected patch keys: "
+                + ", ".join(missing_keys)
+            )
+
+
+def validate_backup_snapshot(backup_path: Path, specs: Iterable[PatchSpec]) -> None:
+    hash_path = Path(str(backup_path) + BACKUP_HASH_SUFFIX)
+    if not hash_path.is_file():
+        raise ValueError("backup hash sidecar is missing; refusing to trust backup snapshot")
+
+    backup_bytes = backup_path.read_bytes()
+    expected_hash = hash_path.read_text(encoding="utf-8").strip()
+    actual_hash = sha256_bytes(backup_bytes)
+    if expected_hash.lower() != actual_hash.lower():
+        raise ValueError("backup hash sidecar does not match backup snapshot")
+
+    data = bytearray(backup_bytes)
+    for spec in specs:
+        cur = read_bytes(data, spec.file_offset, len(spec.original))
+        if cur != spec.original:
+            raise ValueError(f"backup snapshot does not contain original bytes for {spec.name}")
+
+
+def ensure_safe_target(
+    exe_path: Path,
+    allowed_root: Path | None,
+    mutating: bool,
+    expected_patch_keys: set[str] | None = None,
+) -> Path:
+    if mutating and allowed_root is None:
+        raise ValueError("mutating modes require --allowed-root pointing at an app-owned copied-target workspace")
+
+    resolved = exe_path.resolve(strict=True)
+    if resolved.name.lower() != "bea.exe":
+        raise ValueError(f"target must be BEA.exe, got: {resolved.name}")
+    if not resolved.exists():
+        raise FileNotFoundError(resolved)
+
+    for root in protected_roots():
+        try:
+            resolved.relative_to(root)
+        except ValueError:
+            continue
+        raise ValueError(
+            "refusing to patch an executable under Program Files; "
+            "prepare a safe copied game folder or app-owned artifact root first"
+        )
+    if has_known_installed_game_shape(resolved):
+        raise ValueError(
+            "refusing to patch an executable under a steamapps/common/Battle Engine Aquila install root; "
+            "prepare a playable copied game folder or app-owned artifact root first"
+        )
+
+    if mutating:
+        assert allowed_root is not None
+        root = allowed_root.resolve(strict=True)
+        try:
+            resolved.relative_to(root)
+        except ValueError as exc:
+            raise ValueError("mutating modes require target BEA.exe to be under --allowed-root") from exc
+        for protected in protected_roots():
+            try:
+                root.relative_to(protected)
+            except ValueError:
+                continue
+            raise ValueError("refusing to use a Program Files directory as --allowed-root")
+        if has_known_installed_game_shape(root):
+            raise ValueError("refusing to use a steamapps/common/Battle Engine Aquila install root as --allowed-root")
+        backup_path = Path(str(resolved) + BACKUP_SUFFIX).resolve()
+        try:
+            backup_path.relative_to(root)
+        except ValueError as exc:
+            raise ValueError("backup path must stay under --allowed-root") from exc
+        reject_reparse_ancestors(root, root)
+        reject_reparse_ancestors(resolved, root)
+        if is_reparse_point(resolved):
+            raise ValueError(f"refusing to mutate reparse-point target: {resolved}")
+        reject_hardlinked_file(resolved)
+        if backup_path.exists():
+            reject_reparse_ancestors(backup_path, root)
+            if is_reparse_point(backup_path):
+                raise ValueError(f"refusing to trust reparse-point backup: {backup_path}")
+            reject_hardlinked_file(backup_path)
+        validate_generated_profile_manifest(root, resolved, expected_patch_keys)
+
+    return resolved
 
 
 def read_bytes(data: bytearray, offset: int, length: int) -> bytes:
@@ -199,8 +438,10 @@ def apply(exe_path: Path, specs: list[PatchSpec]) -> bool:
     backup_path = Path(str(exe_path) + BACKUP_SUFFIX)
     if not backup_path.exists():
         shutil.copy2(exe_path, backup_path)
+        write_backup_hash(backup_path)
         print(f"\nCreated backup: {backup_path}")
     else:
+        validate_backup_snapshot(backup_path, specs)
         print(f"\nBackup exists: {backup_path}")
 
     for spec in specs:
@@ -213,6 +454,11 @@ def apply(exe_path: Path, specs: list[PatchSpec]) -> bool:
             )
 
     exe_path.write_bytes(data)
+    read_back = bytearray(exe_path.read_bytes())
+    _, all_patched_after_write = check_specs(read_back, specs)
+    if not all_patched_after_write:
+        print("\n[ERR] On-disk patch verification did not match selected patched bytes.")
+        return False
     print("\nPatch apply complete.")
     return True
 
@@ -222,7 +468,35 @@ def restore(exe_path: Path) -> bool:
     if not backup_path.exists():
         print(f"[ERR] Backup not found: {backup_path}")
         return False
+    all_specs = [*BASE_PATCHES, OPTIONAL_PATCH]
+    try:
+        validate_backup_snapshot(backup_path, all_specs)
+    except ValueError as exc:
+        print(f"[ERR] Restore aborted: {exc}")
+        return False
+
+    data = bytearray(exe_path.read_bytes())
+    has_patched_bytes = False
+    all_known_state = True
+    for spec in all_specs:
+        cur = read_bytes(data, spec.file_offset, len(spec.original))
+        if cur == spec.patched:
+            has_patched_bytes = True
+        elif cur != spec.original:
+            print(f"[ERR] {spec.name}: unexpected bytes at 0x{spec.file_offset:X}")
+            all_known_state = False
+
+    if not all_known_state:
+        print("[ERR] Restore aborted: current target does not contain verified known patched bytes.")
+        return False
+    if not has_patched_bytes and exe_path.read_bytes() == backup_path.read_bytes():
+        print("No changes needed. Target already matches the verified backup snapshot.")
+        return True
+
     shutil.copy2(backup_path, exe_path)
+    if exe_path.read_bytes() != backup_path.read_bytes():
+        print("[ERR] Restore failed: on-disk verification did not match backup.")
+        return False
     print(f"Restored from backup: {backup_path}")
     return True
 
@@ -238,7 +512,8 @@ def verify(exe_path: Path, specs: list[PatchSpec]) -> bool:
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Patch BEA.exe display mode behavior")
-    p.add_argument("--path", type=Path, default=DEFAULT_EXE, help="Target BEA.exe path")
+    p.add_argument("--path", type=Path, required=True, help="Target copied BEA.exe path")
+    p.add_argument("--allowed-root", type=Path, help="Required for apply/restore; app-owned root containing the copied target")
     mode = p.add_mutually_exclusive_group(required=True)
     mode.add_argument("--apply", action="store_true", help="Apply selected patches")
     mode.add_argument("--restore", action="store_true", help="Restore backup")
@@ -247,6 +522,11 @@ def parse_args() -> argparse.Namespace:
         "--skip-auto-toggle",
         action="store_true",
         help="Include optional patch to skip startup ToggleFullscreen gate",
+    )
+    p.add_argument(
+        "--version-overlay",
+        action="store_true",
+        help="Include explicit diagnostic PATCHED marker in the bottom-left version overlay",
     )
     p.add_argument(
         "--resolution-only",
@@ -263,18 +543,24 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    exe_path: Path = args.path
-    if not exe_path.exists():
-        print(f"[ERR] File not found: {exe_path}")
-        return 1
-
     try:
         specs = active_patches(
             include_optional=args.skip_auto_toggle,
             resolution_only=args.resolution_only,
             windowed_only=args.windowed_only,
+            version_overlay=args.version_overlay,
         )
     except ValueError as e:
+        print(f"[ERR] {e}")
+        return 1
+    try:
+        exe_path = ensure_safe_target(
+            args.path,
+            args.allowed_root,
+            mutating=args.apply or args.restore,
+            expected_patch_keys=required_patch_keys(specs) if args.apply else None,
+        )
+    except Exception as e:
         print(f"[ERR] {e}")
         return 1
     print(f"Target: {exe_path}")

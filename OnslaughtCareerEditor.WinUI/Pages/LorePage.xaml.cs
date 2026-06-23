@@ -26,6 +26,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private string? _currentAnchor;
         private bool _hasLoaded;
         private bool _isLoading;
+        private bool _isDocumentLoading;
         private bool _isWebViewReady;
         private bool _suppressHistory;
         private bool _suppressTreeSelection;
@@ -283,6 +284,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             CurrentDocumentTextBlock.Text = ResolveDocumentTitle(fullPath, rendered.Title);
             CurrentPathTextBlock.Text = ResolveDisplayPath(fullPath);
+            ToolTipService.SetToolTip(CurrentPathTextBlock, fullPath);
 
             ReaderPlaceholderBorder.Visibility = Visibility.Collapsed;
             ContentWebView.Visibility = Visibility.Visible;
@@ -397,14 +399,24 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 return;
             }
 
+            if (_isDocumentLoading)
+            {
+                return;
+            }
+
             try
             {
+                _isDocumentLoading = true;
                 await LoadDocumentAsync(node.FilePath, anchor: null, addToHistory: true);
             }
             catch (Exception ex)
             {
                 ShowReaderPlaceholder("Could not load document", ex.Message);
                 AppStatusService.SetStatus("Lore: load failed");
+            }
+            finally
+            {
+                _isDocumentLoading = false;
             }
         }
 
@@ -566,6 +578,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             ReaderPlaceholderBorder.Visibility = Visibility.Collapsed;
             ContentWebView.Visibility = Visibility.Visible;
+            if (!string.IsNullOrWhiteSpace(_currentSourcePath))
+            {
+                AppStatusService.SetStatus($"Lore: loaded {CurrentDocumentTextBlock.Text}");
+            }
         }
 
         private async void CoreWebView2_NewWindowRequested(CoreWebView2 sender, CoreWebView2NewWindowRequestedEventArgs args)
@@ -674,19 +690,19 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private string ResolveDisplayPath(string fullPath)
         {
-            if (_index == null)
+            string fileName = Path.GetFileName(fullPath);
+            if (_index == null || string.IsNullOrWhiteSpace(fileName))
             {
-                return fullPath;
+                return "Reading from the curated lore library.";
             }
 
-            try
+            if (_documentLookup.TryGetValue(fullPath, out LoreDocument? document) &&
+                !string.IsNullOrWhiteSpace(document.RelativePath))
             {
-                return Path.GetRelativePath(_index.ProjectRoot, fullPath).Replace('\\', '/');
+                return $"Reading {fileName} from the curated lore library.";
             }
-            catch
-            {
-                return fullPath;
-            }
+
+            return $"Reading {fileName}.";
         }
 
         private static string BuildNodeKey(LoreTreeItem item, string? parentKey, int index)

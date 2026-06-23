@@ -9,7 +9,7 @@ namespace OnslaughtCareerEditor.UiTests;
 public class CliReadOnlyAndOptionsSafetyTests
 {
     private static string RepoRoot => TestFixturePaths.RepoRoot;
-    private static string GoldSavePath => TestFixturePaths.GoldSavePath;
+    private static string GoldSavePath => TestFixturePaths.RequireGoldSavePath();
 
     [Test]
     public void CliReadOnly_AnalyzeMode_SucceedsWithExpectedMarkers()

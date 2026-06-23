@@ -5,27 +5,32 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    AutomationProperties.AutomationId="AboutPageRoot"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    <ScrollViewer>
+    <ScrollViewer AutomationProperties.AutomationId="AboutPageScrollViewer"
+                  AutomationProperties.Name="About page content">
         <StackPanel Padding="20,18,20,24">
             <TextBlock Text="About Onslaught Toolkit"
+                       AutomationProperties.AutomationId="AboutPageTitle"
                        Style="{StaticResource SectionTitleTextStyle}" />
             <TextBlock Margin="0,6,0,14"
-                       Text="Retail-focused save/configuration patching and byte-verified executable patch workflows for Battle Engine Aquila (2003)."
+                       AutomationProperties.AutomationId="AboutProductSummary"
+                       Text="Primary Windows app for Battle Engine Aquila save editing, global options, media/lore browsing, and playable copied-game patching."
                        Style="{StaticResource SectionBodyTextStyle}" />
 
             <Border Style="{StaticResource SectionCardStyle}">
                 <StackPanel Spacing="10">
                     <TextBlock Text="Core capabilities"
+                               AutomationProperties.AutomationId="AboutCoreCapabilitiesTitle"
                                FontSize="18"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="- Save Editor: patch `.bes` career progression, goodies, kills, and advanced per-field overrides."
+                    <TextBlock Text="- Save Lab: inspect .bes career saves, patch copied outputs, and preserve unknown regions."
                                Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="- Configuration Editor: patch `defaultoptions.bea` for global startup settings and keybind state."
+                    <TextBlock Text="- Game Options: patch defaultoptions.bea for startup settings and keybind state."
                                Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="- Binary Patches: byte-verified stable/experimental `BEA.exe` patch application with backup and restore."
+                    <TextBlock Text="- Windowed &amp; Mods: create a playable copied game folder, patch only that copy, launch that copy, and keep advanced BEA.exe-only patching separate."
                                Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="- Lore + Media: curated preservation notes plus installed game audio/video browsing and playback."
+                    <TextBlock Text="- Media + Asset Library + Lore: installed audio/video playback, local generated asset catalog browsing, and curated preservation notes."
                                Style="{StaticResource SectionBodyTextStyle}" />
                 </StackPanel>
             </Border>
@@ -33,11 +38,13 @@
             <Border Style="{StaticResource SectionCardStyle}">
                 <StackPanel Spacing="10">
                     <TextBlock Text="Project notes"
+                               AutomationProperties.AutomationId="AboutProjectNotesTitle"
                                FontSize="18"
                                FontWeight="SemiBold" />
                     <TextBlock Text="This app targets retail behavior and uses static RE evidence, with Stuart source used as supporting parity guidance where applicable."
                                Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="The active shipping direction is WinUI 3 + Windows App SDK with shared C# AppCore logic and a dedicated CLI host."
+                    <TextBlock Text="This WinUI app is the primary user-facing Windows product lane. Maintainer infrastructure and historical app references remain separate from this user app."
+                               AutomationProperties.AutomationId="AboutProductLaneNote"
                                Style="{StaticResource SectionBodyTextStyle}" />
                     <TextBlock Text="Build/runtime docs and release guidance live in the repo roadmap and release-readiness runbooks."
                                Style="{StaticResource SectionBodyTextStyle}" />
@@ -47,13 +54,14 @@
             <Border Style="{StaticResource SectionCardStyle}">
                 <StackPanel Spacing="10">
                     <TextBlock Text="Retail behavior notes"
+                               AutomationProperties.AutomationId="AboutRetailBehaviorTitle"
                                FontSize="18"
                                FontWeight="SemiBold" />
                     <TextBlock Text="The retail executable and retail-generated save/options files remain authoritative. The app is designed to patch existing files carefully instead of inventing new ones."
                                Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="`defaultoptions.bea` is the boot-time source for keybinds and most global settings, while `.bes` remains the career-progress file the Save Editor targets."
+                    <TextBlock Text="defaultoptions.bea is the boot-time source for keybinds and most global settings, while .bes remains the career-progress file the Save Editor targets."
                                Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="Executable patch flows stay catalog-driven, byte-verified, and backup-safe so rollback remains visible and deterministic."
+                    <TextBlock Text="Executable patch flows stay catalog-driven, verified, and backup-guarded. Normal launchable work uses a playable copied game folder; advanced BEA.exe-only patching remains separate."
                                Style="{StaticResource SectionBodyTextStyle}" />
                 </StackPanel>
             </Border>
@@ -64,6 +72,7 @@
                                FontSize="18"
                                FontWeight="SemiBold" />
                     <TextBlock x:Name="VersionTextBlock"
+                               AutomationProperties.AutomationId="AboutVersionText"
                                Style="{StaticResource SectionBodyTextStyle}"
                                Text="Version: -" />
                 </StackPanel>

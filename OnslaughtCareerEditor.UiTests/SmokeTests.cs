@@ -14,6 +14,7 @@ public class SmokeTests
 {
     [Test]
     [Category("LegacyWpf")]
+    [Explicit("Legacy WPF reference smoke; not part of the default WinUI/AppCore gate.")]
     [Apartment(ApartmentState.STA)]
     public void MainWindow_LaunchesAndShowsCoreChrome()
     {

@@ -1,0 +1,30 @@
+{
+  "name": "onslaught-toolkit-public-source",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Public-safe WinUI-first source validation scripts for Onslaught Toolkit.",
+  "packageManager": "npm@11.12.1",
+  "scripts": {
+    "dev": "dotnet run --project .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj",
+    "build": "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo",
+    "build:winui": "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo",
+    "build:cli": "dotnet build .\\OnslaughtCareerEditor.Cli\\OnslaughtCareerEditor.Cli.csproj --nologo",
+    "build:host": "dotnet build .\\OnslaughtCareerEditor.AppCore.Host\\OnslaughtCareerEditor.AppCore.Host.csproj --nologo",
+    "build:release": "dotnet build .\\OnslaughtCareerEditor.Release.slnx --nologo",
+    "test:appcore": "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo",
+    "test:winui": "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName!~LegacyWpf\"",
+    "test:winui-primary-lane": "py -3 -B tools\\winui_primary_lane_validation.py",
+    "test:winui-safe-copy-preflight": "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~GameProfilePreflightServiceTests\" && dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench|FullyQualifiedName~WinUiAccessibilityAuditTests.PrimaryShellAndLongWorkflowControls\" && npm run test:runtime-profile-helper-safety",
+    "test:runtime-profile-helper-safety": "py -3 -B tools\\prepare_game_profile_test.py",
+    "test:winui-patch-catalog-accounting": "py -3 -B tools\\winui_patch_catalog_accounting_check.py --check",
+    "test:winui-patch-engine-safety": "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~BinaryPatchRegressionTests\" && npm run test:winui-patch-catalog-accounting",
+    "test:winui-msix-candidate-probe": "py -3 -B tools\\winui_msix_candidate_probe.py --check",
+    "test:winui-installer-preflight": "py -3 -B tools\\winui_installer_preflight.py --check",
+    "test:doc-commands": "py -3 -B tools\\public_package_doc_command_check.py --self-test && py -3 -B tools\\public_package_doc_command_check.py",
+    "test:md-links": "py -3 -B tools\\md_link_check.py --scope all --out-dir subagents\\md-link-check",
+    "test:public-allowlist": "py -3 -B tools\\public_allowlist_safety_check.py --self-test && py -3 -B tools\\public_allowlist_safety_check.py",
+    "test:public-candidate-inventory": "py -3 -B tools\\public_candidate_inventory_check.py --self-test && py -3 -B tools\\public_candidate_inventory_check.py --candidate-root .",
+    "test:repo-hygiene": "py -3 -B tools\\repo_text_hygiene_check_test.py && py -3 -B tools\\repo_text_hygiene_check.py && py -3 -B tools\\repo_line_endings_check_test.py && py -3 -B tools\\repo_line_endings_check.py",
+    "test:winui-notices": "dotnet restore .\\OnslaughtCareerEditor.WinUI.slnx --nologo && dotnet restore .\\OnslaughtCareerEditor.Release.slnx --nologo && py -3 -B tools\\generate_winui_third_party_notices.py --check"
+  }
+}

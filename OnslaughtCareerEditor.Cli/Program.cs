@@ -6,6 +6,8 @@ using System.CommandLine.Invocation;
 using System.IO;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Onslaught___Career_Editor
 {
@@ -15,6 +17,31 @@ namespace Onslaught___Career_Editor
     public static class Program
     {
         private const string AppCliName = "onslaught-career-editor";
+        private const string AssetMaterialImportManifestSchemaVersion = "appcore-asset-material-import-manifest.v1";
+        private const string AssetMaterialImportDryRunPlanSchemaVersion = "appcore-asset-material-import-dry-run-plan.v1";
+        private const string AssetMaterialImportPackagePlanSchemaVersion = "appcore-asset-material-import-package-plan.v1";
+        private const string AssetMaterialImportPackageMaterializationSchemaVersion = "appcore-asset-material-import-package-materialization.v1";
+        private const string AssetMaterialPackageInspectionSchemaVersion = "appcore-asset-material-package-inspection.v1";
+        private const string AssetMaterialPackageWorkOrderSchemaVersion = "appcore-asset-material-package-work-order.v1";
+        private const string AssetMaterialPackageWorkOrderSidecarValidationSchemaVersion = "appcore-asset-material-package-work-order-sidecar-validation.v1";
+        private const string AssetMaterialPackageImporterBatchSchemaVersion = "appcore-asset-material-package-importer-batch.v1";
+        private const string AssetMaterialPackageImporterDryRunSchemaVersion = "appcore-asset-material-package-importer-dry-run.v1";
+        private const string AssetMaterialPackageImporterDryRunSidecarValidationSchemaVersion = "appcore-asset-material-package-importer-dry-run-sidecar-validation.v1";
+        private const string AssetMaterialPackageImporterInputMaterializationSchemaVersion = "appcore-asset-material-package-importer-input-materialization.v1";
+        private const string AssetMaterialPackageImporterInputPlanSchemaVersion = "appcore-asset-material-package-importer-input-plan.v1";
+        private const string AssetMaterialPackageRebuildPreviewMaterializationSchemaVersion = "appcore-asset-material-package-rebuild-preview-materialization.v1";
+        private const string AssetMaterialPackageRebuildSceneMaterializationSchemaVersion = "appcore-asset-material-package-rebuild-scene-materialization.v1";
+        private const string AssetMaterialPackageRebuildMeshMaterializationSchemaVersion = "appcore-asset-material-package-rebuild-mesh-materialization.v1";
+        private const string AssetMaterialPackageRebuildMeshImportSchemaVersion = "appcore-asset-material-package-rebuild-mesh-import.v1";
+        private const string PrivateAssetOutputArmPhrase = "MATERIALIZE ASSET MATERIAL PACKAGE";
+
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true,
+            WriteIndented = true
+        };
 
         // Win32 console attachment for CLI output
         [DllImport("kernel32.dll")]
@@ -75,6 +102,11 @@ namespace Onslaught___Career_Editor
             var showReservedGoodiesOption = new Option<bool>(
                 "--show-reserved-goodies",
                 "With --list-goodies: include reserved slots (233-299).");
+
+            var setGoodieStateOption = new Option<string[]>(
+                "--set-goodie-state",
+                "Targeted Goodie state override for copied-save proof setup (format: INDEX:STATE; state 0/1/2/3 or locked/instructions/new/old).")
+            { AllowMultipleArgumentsPerToken = true };
 
             var newOption = new Option<bool>(
                 "--new",
@@ -276,6 +308,86 @@ namespace Onslaught___Career_Editor
                 "--show-config",
                 "Show current configuration");
 
+            var assetMaterialImportManifestOption = new Option<string?>(
+                "--asset-material-import-manifest",
+                "Emit a read-only, public-safe material import manifest from a generated asset catalog path or directory.");
+
+            var assetMaterialImportDryRunPlanOption = new Option<string?>(
+                "--asset-material-import-dry-run-plan",
+                "Emit a read-only, public-safe material import dry-run plan from a generated asset catalog path or directory.");
+
+            var assetMaterialImportPackagePlanOption = new Option<string?>(
+                "--asset-material-import-package-plan",
+                "Emit a read-only, public-safe material import package plan from a generated asset catalog path or directory.");
+
+            var assetMaterialImportPackageMaterializeOption = new Option<string?>(
+                "--asset-material-import-package-materialize",
+                "Copy ready model and texture package files from a generated asset catalog into an app-owned output root.");
+
+            var assetMaterialPackageInspectOption = new Option<string?>(
+                "--asset-material-package-inspect",
+                "Inspect a materialized asset material package output folder and validate its manifest/payload files.");
+
+            var assetMaterialPackageWorkOrderOption = new Option<string?>(
+                "--asset-material-package-work-order",
+                "Emit a read-only importer/rebuild work order from a materialized asset material package output folder.");
+
+            var assetMaterialPackageWorkOrderSidecarValidateOption = new Option<string?>(
+                "--asset-material-package-work-order-sidecar-validate",
+                "Validate the saved material package work-order sidecar against the current package manifest and payload files.");
+
+            var assetMaterialPackageImporterBatchOption = new Option<string?>(
+                "--asset-material-package-importer-batch",
+                "Emit flat package-relative importer/rebuild batch tasks from a validated material package work-order sidecar.");
+
+            var assetMaterialPackageImporterDryRunOption = new Option<string?>(
+                "--asset-material-package-importer-dry-run",
+                "Emit package-relative importer dry-run adapter rows from a validated material package importer batch.");
+
+            var assetMaterialPackageImporterDryRunSidecarValidateOption = new Option<string?>(
+                "--asset-material-package-importer-dry-run-sidecar-validate",
+                "Validate the saved material package importer dry-run sidecar against the current package work-order and payload files.");
+
+            var assetMaterialPackageImporterInputMaterializeOption = new Option<string?>(
+                "--asset-material-package-importer-input-materialize",
+                "Stage validated package-local model/texture payloads into an importer-input tree for future importer/rebuild tooling. Defaults to preflight unless the private-output arm phrase is supplied.");
+
+            var assetMaterialPackageImporterInputPlanOption = new Option<string?>(
+                "--asset-material-package-importer-input-plan",
+                "Build a read-only importer/rebuild consumer plan from package-local importer-input files.");
+
+            var assetMaterialPackageRebuildPreviewMaterializeOption = new Option<string?>(
+                "--asset-material-package-rebuild-preview-materialize",
+                "Write deterministic OBJ wireframe preview files and binding sidecars from staged package-local importer-input files. Defaults to preflight unless the private-output arm phrase is supplied.");
+
+            var assetMaterialPackageRebuildSceneMaterializeOption = new Option<string?>(
+                "--asset-material-package-rebuild-scene-materialize",
+                "Write deterministic package-relative scene/mesh/material contract JSON from staged importer-input and rebuild-preview files. Defaults to preflight unless the private-output arm phrase is supplied.");
+
+            var assetMaterialPackageRebuildMeshMaterializeOption = new Option<string?>(
+                "--asset-material-package-rebuild-mesh-materialize",
+                "Write deterministic package-relative OBJ/MTL mesh outputs from existing rebuild-scene contracts and staged FBX data. Defaults to preflight unless the private-output arm phrase is supplied.");
+
+            var assetMaterialPackageRebuildMeshImportMaterializeOption = new Option<string?>(
+                "--asset-material-package-rebuild-mesh-import-materialize",
+                "Validate generated package-relative OBJ/MTL rebuild mesh outputs as importer-consumable data. Defaults to preflight unless the private-output arm phrase is supplied.");
+
+            var assetMaterialPackageOutputOption = new Option<string?>(
+                "--asset-material-package-output",
+                "Output directory for --asset-material-import-package-materialize.");
+
+            var assetMaterialPackagePreflightOption = new Option<bool>(
+                "--asset-material-package-preflight",
+                "Preflight material package output without copying asset bytes. This is the default unless the exact arm phrase is supplied.");
+
+            var armPrivateAssetOutputOption = new Option<string?>(
+                "--arm-private-asset-output",
+                "Exact arm phrase required to copy private asset bytes: MATERIALIZE ASSET MATERIAL PACKAGE.");
+
+            var failOnUnresolvedMaterialBindingsOption = new Option<bool>(
+                "--fail-on-unresolved-material-bindings",
+                "With material-import outputs: return a non-zero exit code if texture bindings remain unresolved; package plans also fail when model exports or metadata are not package-ready.");
+
             // Build root command
             var rootCommand = new RootCommand("Onslaught Toolkit - Battle Engine Aquila save/options editor")
             {
@@ -287,6 +399,7 @@ namespace Onslaught___Career_Editor
                 compareOption,
                 listGoodiesOption,
                 showReservedGoodiesOption,
+                setGoodieStateOption,
                 newOption,
                 killsOption,
                 rankOption,
@@ -333,7 +446,27 @@ namespace Onslaught___Career_Editor
                 bindSpecialOption,
                 listSavesOption,
                 setGameDirOption,
-                showConfigOption
+                showConfigOption,
+                assetMaterialImportManifestOption,
+                assetMaterialImportDryRunPlanOption,
+                assetMaterialImportPackagePlanOption,
+                assetMaterialImportPackageMaterializeOption,
+                assetMaterialPackageInspectOption,
+                assetMaterialPackageWorkOrderOption,
+                assetMaterialPackageWorkOrderSidecarValidateOption,
+                assetMaterialPackageImporterBatchOption,
+                assetMaterialPackageImporterDryRunOption,
+                assetMaterialPackageImporterDryRunSidecarValidateOption,
+                assetMaterialPackageImporterInputMaterializeOption,
+                assetMaterialPackageImporterInputPlanOption,
+                assetMaterialPackageRebuildPreviewMaterializeOption,
+                assetMaterialPackageRebuildSceneMaterializeOption,
+                assetMaterialPackageRebuildMeshMaterializeOption,
+                assetMaterialPackageRebuildMeshImportMaterializeOption,
+                assetMaterialPackageOutputOption,
+                assetMaterialPackagePreflightOption,
+                armPrivateAssetOutputOption,
+                failOnUnresolvedMaterialBindingsOption
             };
             rootCommand.Name = AppCliName;
 
@@ -348,6 +481,7 @@ namespace Onslaught___Career_Editor
                 var compare = context.ParseResult.GetValueForOption(compareOption);
                 var listGoodies = context.ParseResult.GetValueForOption(listGoodiesOption);
                 var showReservedGoodies = context.ParseResult.GetValueForOption(showReservedGoodiesOption);
+                var setGoodieStates = context.ParseResult.GetValueForOption(setGoodieStateOption);
                 var useNew = context.ParseResult.GetValueForOption(newOption);
                 var kills = context.ParseResult.GetValueForOption(killsOption);
                 var rank = context.ParseResult.GetValueForOption(rankOption);
@@ -395,11 +529,152 @@ namespace Onslaught___Career_Editor
                 var listSaves = context.ParseResult.GetValueForOption(listSavesOption);
                 var setGameDir = context.ParseResult.GetValueForOption(setGameDirOption);
                 var showConfig = context.ParseResult.GetValueForOption(showConfigOption);
+                var assetMaterialImportManifest = context.ParseResult.GetValueForOption(assetMaterialImportManifestOption);
+                var assetMaterialImportDryRunPlan = context.ParseResult.GetValueForOption(assetMaterialImportDryRunPlanOption);
+                var assetMaterialImportPackagePlan = context.ParseResult.GetValueForOption(assetMaterialImportPackagePlanOption);
+                var assetMaterialImportPackageMaterialize = context.ParseResult.GetValueForOption(assetMaterialImportPackageMaterializeOption);
+                var assetMaterialPackageInspect = context.ParseResult.GetValueForOption(assetMaterialPackageInspectOption);
+                var assetMaterialPackageWorkOrder = context.ParseResult.GetValueForOption(assetMaterialPackageWorkOrderOption);
+                var assetMaterialPackageWorkOrderSidecarValidate = context.ParseResult.GetValueForOption(assetMaterialPackageWorkOrderSidecarValidateOption);
+                var assetMaterialPackageImporterBatch = context.ParseResult.GetValueForOption(assetMaterialPackageImporterBatchOption);
+                var assetMaterialPackageImporterDryRun = context.ParseResult.GetValueForOption(assetMaterialPackageImporterDryRunOption);
+                var assetMaterialPackageImporterDryRunSidecarValidate = context.ParseResult.GetValueForOption(assetMaterialPackageImporterDryRunSidecarValidateOption);
+                var assetMaterialPackageImporterInputMaterialize = context.ParseResult.GetValueForOption(assetMaterialPackageImporterInputMaterializeOption);
+                var assetMaterialPackageImporterInputPlan = context.ParseResult.GetValueForOption(assetMaterialPackageImporterInputPlanOption);
+                var assetMaterialPackageRebuildPreviewMaterialize = context.ParseResult.GetValueForOption(assetMaterialPackageRebuildPreviewMaterializeOption);
+                var assetMaterialPackageRebuildSceneMaterialize = context.ParseResult.GetValueForOption(assetMaterialPackageRebuildSceneMaterializeOption);
+                var assetMaterialPackageRebuildMeshMaterialize = context.ParseResult.GetValueForOption(assetMaterialPackageRebuildMeshMaterializeOption);
+                var assetMaterialPackageRebuildMeshImportMaterialize = context.ParseResult.GetValueForOption(assetMaterialPackageRebuildMeshImportMaterializeOption);
+                var assetMaterialPackageOutput = context.ParseResult.GetValueForOption(assetMaterialPackageOutputOption);
+                var assetMaterialPackagePreflight = context.ParseResult.GetValueForOption(assetMaterialPackagePreflightOption);
+                var armPrivateAssetOutput = context.ParseResult.GetValueForOption(armPrivateAssetOutputOption);
+                var failOnUnresolvedMaterialBindings = context.ParseResult.GetValueForOption(failOnUnresolvedMaterialBindingsOption);
 
                 // Handle config commands first (don't require input file)
                 if (listSaves || setGameDir != null || showConfig)
                 {
                     context.ExitCode = HandleConfigCommands(listSaves, setGameDir, showConfig);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(assetMaterialImportManifest))
+                {
+                    context.ExitCode = HandleAssetMaterialImportManifest(
+                        assetMaterialImportManifest,
+                        failOnUnresolvedMaterialBindings);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(assetMaterialImportDryRunPlan))
+                {
+                    context.ExitCode = HandleAssetMaterialImportDryRunPlan(
+                        assetMaterialImportDryRunPlan,
+                        failOnUnresolvedMaterialBindings);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(assetMaterialImportPackagePlan))
+                {
+                    context.ExitCode = HandleAssetMaterialImportPackagePlan(
+                        assetMaterialImportPackagePlan,
+                        failOnUnresolvedMaterialBindings);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(assetMaterialPackageInspect))
+                {
+                    context.ExitCode = HandleAssetMaterialPackageInspection(assetMaterialPackageInspect);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(assetMaterialPackageWorkOrder))
+                {
+                    context.ExitCode = HandleAssetMaterialPackageWorkOrder(assetMaterialPackageWorkOrder);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(assetMaterialPackageWorkOrderSidecarValidate))
+                {
+                    context.ExitCode = HandleAssetMaterialPackageWorkOrderSidecarValidation(assetMaterialPackageWorkOrderSidecarValidate);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(assetMaterialPackageImporterBatch))
+                {
+                    context.ExitCode = HandleAssetMaterialPackageImporterBatch(assetMaterialPackageImporterBatch);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(assetMaterialPackageImporterDryRun))
+                {
+                    context.ExitCode = HandleAssetMaterialPackageImporterDryRun(assetMaterialPackageImporterDryRun);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(assetMaterialPackageImporterDryRunSidecarValidate))
+                {
+                    context.ExitCode = HandleAssetMaterialPackageImporterDryRunSidecarValidate(assetMaterialPackageImporterDryRunSidecarValidate);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(assetMaterialPackageImporterInputMaterialize))
+                {
+                    context.ExitCode = HandleAssetMaterialPackageImporterInputMaterialization(
+                        assetMaterialPackageImporterInputMaterialize,
+                        assetMaterialPackagePreflight,
+                        armPrivateAssetOutput);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(assetMaterialPackageImporterInputPlan))
+                {
+                    context.ExitCode = HandleAssetMaterialPackageImporterInputPlan(assetMaterialPackageImporterInputPlan);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(assetMaterialPackageRebuildPreviewMaterialize))
+                {
+                    context.ExitCode = HandleAssetMaterialPackageRebuildPreviewMaterialization(
+                        assetMaterialPackageRebuildPreviewMaterialize,
+                        assetMaterialPackagePreflight,
+                        armPrivateAssetOutput);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(assetMaterialPackageRebuildSceneMaterialize))
+                {
+                    context.ExitCode = HandleAssetMaterialPackageRebuildSceneMaterialization(
+                        assetMaterialPackageRebuildSceneMaterialize,
+                        assetMaterialPackagePreflight,
+                        armPrivateAssetOutput);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(assetMaterialPackageRebuildMeshMaterialize))
+                {
+                    context.ExitCode = HandleAssetMaterialPackageRebuildMeshMaterialization(
+                        assetMaterialPackageRebuildMeshMaterialize,
+                        assetMaterialPackagePreflight,
+                        armPrivateAssetOutput);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(assetMaterialPackageRebuildMeshImportMaterialize))
+                {
+                    context.ExitCode = HandleAssetMaterialPackageRebuildMeshImportMaterialization(
+                        assetMaterialPackageRebuildMeshImportMaterialize,
+                        assetMaterialPackagePreflight,
+                        armPrivateAssetOutput);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(assetMaterialImportPackageMaterialize))
+                {
+                    context.ExitCode = HandleAssetMaterialImportPackageMaterialization(
+                        assetMaterialImportPackageMaterialize,
+                        assetMaterialPackageOutput,
+                        assetMaterialPackagePreflight,
+                        armPrivateAssetOutput);
                     return;
                 }
 
@@ -422,7 +697,7 @@ namespace Onslaught___Career_Editor
 
 	                // Execute CLI logic
 		                int exitCode = ExecuteCli(
-		                    input, output, analyze, verbose, dumpMystery, compare, listGoodies, showReservedGoodies, useNew,
+		                    input, output, analyze, verbose, dumpMystery, compare, listGoodies, showReservedGoodies, setGoodieStates, useNew,
                     kills, rank, killsOnly,
                     noNodes, noLinks, noGoodies, noKills,
                     allowCareerSectionsOnOptionsFile,
@@ -455,6 +730,7 @@ namespace Onslaught___Career_Editor
 	            FileInfo? compare,
 	            bool listGoodies,
 	            bool showReservedGoodies,
+                string[]? setGoodieStates,
 	            bool useNew,
 	            int? kills,
 	            string? rank,
@@ -572,6 +848,8 @@ namespace Onslaught___Career_Editor
                 return PrintGoodieList(input.FullName, showReservedGoodies);
             }
 
+            bool hasTargetedGoodieStates = setGoodieStates != null && setGoodieStates.Length > 0;
+
             // Patch mode - requires output file
             if (output == null)
             {
@@ -594,6 +872,60 @@ namespace Onslaught___Career_Editor
             {
                 Console.Error.WriteLine($"Error: Unable to canonicalize input/output paths: {ex.Message}");
                 return 1;
+            }
+
+            if (hasTargetedGoodieStates)
+            {
+                if (HasBroadPatchOptions(
+                    useNew,
+                    kills,
+                    rank,
+                    killsOnly,
+                    noNodes,
+                    noLinks,
+                    noGoodies,
+                    noKills,
+                    allowCareerSectionsOnOptionsFile,
+                    levelRanks,
+                    aircraftKills,
+                    vehicleKills,
+                    emplacementKills,
+                    infantryKills,
+                    mechKills,
+                    soundVolume,
+                    musicVolume,
+                    invertWalkerP1,
+                    invertWalkerP2,
+                    invertFlightP1,
+                    invertFlightP2,
+                    vibrationP1,
+                    vibrationP2,
+                    controllerConfigP1,
+                    controllerConfigP2,
+                    experimentalPendingExtraGoodies,
+                    copyOptionsFrom,
+                    noCopyOptionsEntries,
+                    noCopyOptionsTail,
+                    keybindOverrides))
+                {
+                    Console.Error.WriteLine("Error: --set-goodie-state is a narrow copied-save proof setup mode. Do not combine it with broad patch, settings, options, kill, rank, or keybind overrides.");
+                    return 1;
+                }
+
+                if (!TryParseGoodieStateOverrides(setGoodieStates, out Dictionary<int, uint> overrides, out string error))
+                {
+                    Console.Error.WriteLine($"Error: {error}");
+                    return 1;
+                }
+
+                PatchResult result = BesFilePatcher.PatchGoodieStates(input.FullName, output.FullName, overrides);
+                Console.WriteLine(result.Message);
+                if (result.Success)
+                {
+                    Console.WriteLine("Targeted Goodie state setup used true-view offsets and wrote only requested Goodie slots.");
+                }
+
+                return result.Success ? 0 : 1;
             }
 
             // Validate rank if specified
@@ -923,8 +1255,8 @@ namespace Onslaught___Career_Editor
                 if (saves.Count == 0)
                 {
                     Console.WriteLine("No .bes/.bea save/options files found.");
-                    return 0;
-                }
+            return 0;
+        }
 
                 Console.WriteLine($"Found {saves.Count} save file(s):");
                 Console.WriteLine();
@@ -950,6 +1282,668 @@ namespace Onslaught___Career_Editor
 
 	            return 0;
 	        }
+
+        private static int HandleAssetMaterialImportManifest(
+            string catalogPathOrDirectory,
+            bool failOnUnresolvedMaterialBindings)
+        {
+            string? catalogFilePath = AssetCatalogService.ResolveCatalogFilePath(catalogPathOrDirectory);
+            if (catalogFilePath is null)
+            {
+                Console.Error.WriteLine("Error: Generated asset catalog was not found at the supplied path or directory.");
+                return 1;
+            }
+
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogFilePath);
+            AssetMaterialImportManifest manifest = new AssetMaterialImportManifestService().Build(snapshot);
+            var payload = new
+            {
+                schemaVersion = AssetMaterialImportManifestSchemaVersion,
+                generatedAt = DateTimeOffset.UtcNow,
+                command = "asset-material-import-manifest",
+                mutation = false,
+                input = new
+                {
+                    catalogFileName = Path.GetFileName(catalogFilePath),
+                    failOnUnresolvedMaterialBindings
+                },
+                catalog = new
+                {
+                    totalCatalogEntries = snapshot.Summary.TotalCatalogEntries,
+                    textureRows = snapshot.Summary.TextureCount,
+                    looseMeshRows = snapshot.Summary.LooseMeshCount,
+                    embeddedMeshRows = snapshot.Summary.EmbeddedMeshCount
+                },
+                materialImportManifest = manifest,
+                gate = new
+                {
+                    passed = manifest.UnresolvedTextureBindingRows == 0,
+                    unresolvedTextureBindingRows = manifest.UnresolvedTextureBindingRows,
+                    failOnUnresolvedMaterialBindings
+                },
+                artifact = new
+                {
+                    kind = "read-only",
+                    mutation = false,
+                    schemaVersion = AssetMaterialImportManifestSchemaVersion,
+                    note = "Read-only material-import manifest payload. It contains sanitized catalog IDs, labels, and file names only; full local paths and private asset payloads are intentionally omitted."
+                }
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
+            return failOnUnresolvedMaterialBindings && manifest.UnresolvedTextureBindingRows > 0 ? 1 : 0;
+        }
+
+        private static int HandleAssetMaterialImportDryRunPlan(
+            string catalogPathOrDirectory,
+            bool failOnUnresolvedMaterialBindings)
+        {
+            string? catalogFilePath = AssetCatalogService.ResolveCatalogFilePath(catalogPathOrDirectory);
+            if (catalogFilePath is null)
+            {
+                Console.Error.WriteLine("Error: Generated asset catalog was not found at the supplied path or directory.");
+                return 1;
+            }
+
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogFilePath);
+            AssetMaterialImportManifest manifest = new AssetMaterialImportManifestService().Build(snapshot);
+            AssetMaterialImportDryRunPlan dryRunPlan = new AssetMaterialImportDryRunPlanService().Build(manifest);
+            var payload = new
+            {
+                schemaVersion = AssetMaterialImportDryRunPlanSchemaVersion,
+                generatedAt = DateTimeOffset.UtcNow,
+                command = "asset-material-import-dry-run-plan",
+                mutation = false,
+                input = new
+                {
+                    catalogFileName = Path.GetFileName(catalogFilePath),
+                    failOnUnresolvedMaterialBindings
+                },
+                catalog = new
+                {
+                    totalCatalogEntries = snapshot.Summary.TotalCatalogEntries,
+                    textureRows = snapshot.Summary.TextureCount,
+                    looseMeshRows = snapshot.Summary.LooseMeshCount,
+                    embeddedMeshRows = snapshot.Summary.EmbeddedMeshCount
+                },
+                materialImportDryRunPlan = dryRunPlan,
+                gate = new
+                {
+                    passed = dryRunPlan.UnresolvedTextureOperations == 0,
+                    unresolvedTextureOperations = dryRunPlan.UnresolvedTextureOperations,
+                    blockedModelOperations = dryRunPlan.BlockedModelOperations,
+                    failOnUnresolvedMaterialBindings
+                },
+                artifact = new
+                {
+                    kind = "read-only",
+                    mutation = false,
+                    schemaVersion = AssetMaterialImportDryRunPlanSchemaVersion,
+                    note = "Read-only material-import dry-run plan. It emits deterministic relative operations only; no asset bytes are copied and no full local paths are included."
+                }
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
+            return failOnUnresolvedMaterialBindings && dryRunPlan.UnresolvedTextureOperations > 0 ? 1 : 0;
+        }
+
+        private static int HandleAssetMaterialImportPackagePlan(
+            string catalogPathOrDirectory,
+            bool failOnUnresolvedMaterialBindings)
+        {
+            string? catalogFilePath = AssetCatalogService.ResolveCatalogFilePath(catalogPathOrDirectory);
+            if (catalogFilePath is null)
+            {
+                Console.Error.WriteLine("Error: Generated asset catalog was not found at the supplied path or directory.");
+                return 1;
+            }
+
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogFilePath);
+            AssetMaterialImportManifest manifest = new AssetMaterialImportManifestService().Build(snapshot);
+            AssetMaterialImportPackagePlan packagePlan = new AssetMaterialImportPackagePlanService().Build(manifest);
+            var payload = new
+            {
+                schemaVersion = AssetMaterialImportPackagePlanSchemaVersion,
+                generatedAt = DateTimeOffset.UtcNow,
+                command = "asset-material-import-package-plan",
+                mutation = false,
+                input = new
+                {
+                    catalogFileName = Path.GetFileName(catalogFilePath),
+                    failOnUnresolvedMaterialBindings
+                },
+                catalog = new
+                {
+                    totalCatalogEntries = snapshot.Summary.TotalCatalogEntries,
+                    textureRows = snapshot.Summary.TextureCount,
+                    looseMeshRows = snapshot.Summary.LooseMeshCount,
+                    embeddedMeshRows = snapshot.Summary.EmbeddedMeshCount
+                },
+                materialImportPackagePlan = packagePlan,
+                gate = new
+                {
+                    passed = packagePlan.UnresolvedTextureReferences == 0 && packagePlan.BlockedPackageModelOperations == 0,
+                    unresolvedTextureReferences = packagePlan.UnresolvedTextureReferences,
+                    blockedPackageModelOperations = packagePlan.BlockedPackageModelOperations,
+                    failOnUnresolvedMaterialBindings
+                },
+                artifact = new
+                {
+                    kind = "read-only",
+                    mutation = false,
+                    schemaVersion = AssetMaterialImportPackagePlanSchemaVersion,
+                    note = "Read-only material-import package plan. It emits deterministic package-relative file entries only; no asset bytes are copied and no full local paths are included."
+                }
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
+            return failOnUnresolvedMaterialBindings &&
+                   (packagePlan.UnresolvedTextureReferences > 0 || packagePlan.BlockedPackageModelOperations > 0)
+                ? 1
+                : 0;
+        }
+
+        private static int HandleAssetMaterialImportPackageMaterialization(
+            string catalogPathOrDirectory,
+            string? outputDirectory,
+            bool explicitPreflight,
+            string? armPrivateAssetOutput)
+        {
+            if (string.IsNullOrWhiteSpace(outputDirectory))
+            {
+                Console.Error.WriteLine("Error: --asset-material-package-output is required for package materialization.");
+                return 1;
+            }
+
+            bool executeCopy = !explicitPreflight && !string.IsNullOrWhiteSpace(armPrivateAssetOutput);
+            if (executeCopy && !string.Equals(armPrivateAssetOutput, PrivateAssetOutputArmPhrase, StringComparison.Ordinal))
+            {
+                Console.Error.WriteLine("Error: Refusing to copy private asset bytes: --arm-private-asset-output must exactly match MATERIALIZE ASSET MATERIAL PACKAGE.");
+                return 1;
+            }
+
+            string? catalogFilePath = AssetCatalogService.ResolveCatalogFilePath(catalogPathOrDirectory);
+            if (catalogFilePath is null)
+            {
+                Console.Error.WriteLine("Error: Generated asset catalog was not found at the supplied path or directory.");
+                return 1;
+            }
+
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogFilePath);
+            AssetMaterialImportPackageMaterializationService service = new();
+            AssetMaterialImportPackageMaterializationResult result = executeCopy
+                ? service.Materialize(snapshot, outputDirectory)
+                : service.Preflight(snapshot, outputDirectory);
+            var payload = new
+            {
+                schemaVersion = AssetMaterialImportPackageMaterializationSchemaVersion,
+                generatedAt = DateTimeOffset.UtcNow,
+                command = "asset-material-import-package-materialize",
+                mode = executeCopy ? "copy" : "preflight",
+                mutation = executeCopy,
+                input = new
+                {
+                    catalogFileName = Path.GetFileName(catalogFilePath),
+                    outputRootName = BuildOutputRootName(outputDirectory),
+                    explicitPreflight,
+                    armedPrivateAssetOutput = executeCopy
+                },
+                catalog = new
+                {
+                    totalCatalogEntries = snapshot.Summary.TotalCatalogEntries,
+                    textureRows = snapshot.Summary.TextureCount,
+                    looseMeshRows = snapshot.Summary.LooseMeshCount,
+                    embeddedMeshRows = snapshot.Summary.EmbeddedMeshCount
+                },
+                materialImportPackageMaterialization = result,
+                artifact = new
+                {
+                    kind = "app-owned-private-output",
+                    mutation = executeCopy,
+                    originalGameMutation = false,
+                    schemaVersion = AssetMaterialImportPackageMaterializationSchemaVersion,
+                    note = executeCopy
+                        ? "Copies ready model and texture exports into the supplied output root using package-relative destinations; no installed game files or original executable bytes are modified, and raw source paths are omitted from this JSON."
+                        : "Preflights ready model and texture package output using package-relative destinations only; no asset bytes are copied, no output root is created, and raw source paths are omitted from this JSON."
+                }
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
+            return result.Completed ? 0 : 1;
+        }
+
+        private static int HandleAssetMaterialPackageInspection(string packageRoot)
+        {
+            AssetMaterialImportPackageInspectionResult inspection =
+                new AssetMaterialImportPackageInspectionService().Inspect(packageRoot);
+            var payload = new
+            {
+                schemaVersion = AssetMaterialPackageInspectionSchemaVersion,
+                generatedAt = DateTimeOffset.UtcNow,
+                command = "asset-material-package-inspect",
+                mutation = false,
+                input = new
+                {
+                    packageRootName = BuildOutputRootName(packageRoot)
+                },
+                materialPackageInspection = inspection,
+                artifact = new
+                {
+                    kind = "read-only",
+                    mutation = false,
+                    schemaVersion = AssetMaterialPackageInspectionSchemaVersion,
+                    note = "Read-only material package inspection. Validates the package manifest and package-relative payload files; raw local paths are omitted from this JSON."
+                }
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
+            return inspection.Completed ? 0 : 1;
+        }
+
+        private static int HandleAssetMaterialPackageWorkOrder(string packageRoot)
+        {
+            AssetMaterialImportPackageWorkOrderResult workOrder =
+                new AssetMaterialImportPackageWorkOrderService().Build(packageRoot);
+            var payload = new
+            {
+                schemaVersion = AssetMaterialPackageWorkOrderSchemaVersion,
+                generatedAt = DateTimeOffset.UtcNow,
+                command = "asset-material-package-work-order",
+                mutation = false,
+                input = new
+                {
+                    packageRootName = BuildOutputRootName(packageRoot)
+                },
+                materialPackageWorkOrder = workOrder,
+                artifact = new
+                {
+                    kind = "read-only",
+                    mutation = false,
+                    schemaVersion = AssetMaterialPackageWorkOrderSchemaVersion,
+                    note = "Read-only material package work order. Converts a validated package manifest into package-relative importer/rebuild tasks; raw local paths are omitted from this JSON."
+                }
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
+            return workOrder.Completed ? 0 : 1;
+        }
+
+        private static int HandleAssetMaterialPackageWorkOrderSidecarValidation(string packageRoot)
+        {
+            AssetMaterialImportPackageWorkOrderSidecarValidationResult validation =
+                new AssetMaterialImportPackageWorkOrderService().ValidateSidecar(packageRoot);
+            var payload = new
+            {
+                schemaVersion = AssetMaterialPackageWorkOrderSidecarValidationSchemaVersion,
+                generatedAt = DateTimeOffset.UtcNow,
+                command = "asset-material-package-work-order-sidecar-validate",
+                mutation = false,
+                input = new
+                {
+                    packageRootName = BuildOutputRootName(packageRoot)
+                },
+                materialPackageWorkOrderSidecarValidation = validation,
+                artifact = new
+                {
+                    kind = "read-only",
+                    mutation = false,
+                    schemaVersion = AssetMaterialPackageWorkOrderSidecarValidationSchemaVersion,
+                    note = "Read-only material package work-order sidecar validation. Reads the saved sidecar and rejects stale or path-leaking importer/rebuild tasks by comparing them with a fresh package-relative work-order build."
+                }
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
+            return validation.Completed ? 0 : 1;
+        }
+
+        private static int HandleAssetMaterialPackageImporterBatch(string packageRoot)
+        {
+            AssetMaterialImportPackageImporterBatchResult batch =
+                new AssetMaterialImportPackageImporterBatchService().Build(packageRoot);
+            var payload = new
+            {
+                schemaVersion = AssetMaterialPackageImporterBatchSchemaVersion,
+                generatedAt = DateTimeOffset.UtcNow,
+                command = "asset-material-package-importer-batch",
+                mutation = false,
+                input = new
+                {
+                    packageRootName = BuildOutputRootName(packageRoot)
+                },
+                materialPackageImporterBatch = batch,
+                artifact = new
+                {
+                    kind = "read-only",
+                    mutation = false,
+                    schemaVersion = AssetMaterialPackageImporterBatchSchemaVersion,
+                    note = "Read-only material package importer batch. Consumes only a validated package work-order sidecar and emits flat package-relative model/texture task rows for future importer/rebuild tooling."
+                }
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
+            return batch.Completed ? 0 : 1;
+        }
+
+        private static int HandleAssetMaterialPackageImporterDryRun(string packageRoot)
+        {
+            AssetMaterialImportPackageImporterDryRunResult dryRun =
+                new AssetMaterialImportPackageImporterDryRunService().Build(packageRoot);
+            var payload = new
+            {
+                schemaVersion = AssetMaterialPackageImporterDryRunSchemaVersion,
+                generatedAt = DateTimeOffset.UtcNow,
+                command = "asset-material-package-importer-dry-run",
+                mutation = false,
+                input = new
+                {
+                    packageRootName = BuildOutputRootName(packageRoot)
+                },
+                materialPackageImporterDryRun = dryRun,
+                artifact = new
+                {
+                    kind = "read-only",
+                    mutation = false,
+                    schemaVersion = AssetMaterialPackageImporterDryRunSchemaVersion,
+                    note = "Read-only material package importer dry-run. Consumes a validated importer batch and emits package-relative adapter rows for future importer/rebuild tooling."
+                }
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
+            return dryRun.Completed ? 0 : 1;
+        }
+
+        private static int HandleAssetMaterialPackageImporterDryRunSidecarValidate(string packageRoot)
+        {
+            AssetMaterialImportPackageImporterDryRunSidecarValidationResult validation =
+                new AssetMaterialImportPackageImporterDryRunService().ValidateSidecar(packageRoot);
+            var payload = new
+            {
+                schemaVersion = AssetMaterialPackageImporterDryRunSidecarValidationSchemaVersion,
+                generatedAt = DateTimeOffset.UtcNow,
+                command = "asset-material-package-importer-dry-run-sidecar-validate",
+                mutation = false,
+                input = new
+                {
+                    packageRootName = BuildOutputRootName(packageRoot)
+                },
+                materialPackageImporterDryRunSidecarValidation = validation,
+                artifact = new
+                {
+                    kind = "read-only",
+                    mutation = false,
+                    schemaVersion = AssetMaterialPackageImporterDryRunSidecarValidationSchemaVersion,
+                    note = "Read-only material package importer dry-run sidecar validation. Reads the saved adapter sidecar and rejects stale or path-leaking importer/rebuild rows by comparing them with a fresh package-relative importer dry-run build."
+                }
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
+            return validation.Completed ? 0 : 1;
+        }
+
+        private static int HandleAssetMaterialPackageImporterInputMaterialization(
+            string packageRoot,
+            bool explicitPreflight,
+            string? armPrivateAssetOutput)
+        {
+            bool executeCopy = !explicitPreflight && !string.IsNullOrWhiteSpace(armPrivateAssetOutput);
+            if (executeCopy && !string.Equals(armPrivateAssetOutput, PrivateAssetOutputArmPhrase, StringComparison.Ordinal))
+            {
+                Console.Error.WriteLine("Error: Refusing to stage private asset bytes: --arm-private-asset-output must exactly match MATERIALIZE ASSET MATERIAL PACKAGE.");
+                return 1;
+            }
+
+            AssetMaterialImportPackageImporterInputService service = new();
+            AssetMaterialImportPackageImporterInputMaterializationResult result = executeCopy
+                ? service.Materialize(packageRoot)
+                : service.Preflight(packageRoot);
+            var payload = new
+            {
+                schemaVersion = AssetMaterialPackageImporterInputMaterializationSchemaVersion,
+                generatedAt = DateTimeOffset.UtcNow,
+                command = "asset-material-package-importer-input-materialize",
+                mode = executeCopy ? "copy" : "preflight",
+                mutation = executeCopy,
+                input = new
+                {
+                    packageRootName = BuildOutputRootName(packageRoot),
+                    explicitPreflight,
+                    armedPrivateAssetOutput = executeCopy
+                },
+                materialPackageImporterInputMaterialization = result,
+                artifact = new
+                {
+                    kind = executeCopy ? "app-owned-materialization" : "preflight",
+                    mutation = executeCopy,
+                    originalGameMutation = false,
+                    schemaVersion = AssetMaterialPackageImporterInputMaterializationSchemaVersion,
+                    note = executeCopy
+                        ? "Copies validated package-local model/texture payloads into importer-input using package-relative adapter paths; no installed game files or original executable bytes are modified."
+                        : "Preflights importer-input staging from a validated package-local dry-run sidecar; no files are copied and no original game files are touched."
+                }
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
+            return result.Completed ? 0 : 1;
+        }
+
+        private static int HandleAssetMaterialPackageImporterInputPlan(string packageRoot)
+        {
+            AssetMaterialImportPackageImporterInputPlanResult plan =
+                new AssetMaterialImportPackageImporterInputPlanService().Build(packageRoot);
+            var payload = new
+            {
+                schemaVersion = AssetMaterialPackageImporterInputPlanSchemaVersion,
+                generatedAt = DateTimeOffset.UtcNow,
+                command = "asset-material-package-importer-input-plan",
+                mutation = false,
+                input = new
+                {
+                    packageRootName = BuildOutputRootName(packageRoot)
+                },
+                materialPackageImporterInputPlan = plan,
+                artifact = new
+                {
+                    kind = "read-only",
+                    mutation = false,
+                    schemaVersion = AssetMaterialPackageImporterInputPlanSchemaVersion,
+                    note = "Builds a read-only importer/rebuild consumer plan from package-local importer-input files. It validates staged FBX/PNG readability and emits model-import and texture-bind jobs without running an importer, renderer, game executable, or Godot."
+                }
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
+            return plan.Completed ? 0 : 1;
+        }
+
+        private static int HandleAssetMaterialPackageRebuildPreviewMaterialization(
+            string packageRoot,
+            bool explicitPreflight,
+            string? armPrivateAssetOutput)
+        {
+            bool executeWrite = !explicitPreflight && !string.IsNullOrWhiteSpace(armPrivateAssetOutput);
+            if (executeWrite && !string.Equals(armPrivateAssetOutput, PrivateAssetOutputArmPhrase, StringComparison.Ordinal))
+            {
+                Console.Error.WriteLine("Error: Refusing to write rebuild preview outputs: --arm-private-asset-output must exactly match MATERIALIZE ASSET MATERIAL PACKAGE.");
+                return 1;
+            }
+
+            AssetMaterialImportPackageRebuildPreviewService service = new();
+            AssetMaterialImportPackageRebuildPreviewResult result = executeWrite
+                ? service.Materialize(packageRoot)
+                : service.Preflight(packageRoot);
+            var payload = new
+            {
+                schemaVersion = AssetMaterialPackageRebuildPreviewMaterializationSchemaVersion,
+                generatedAt = DateTimeOffset.UtcNow,
+                command = "asset-material-package-rebuild-preview-materialize",
+                mode = executeWrite ? "write" : "preflight",
+                mutation = executeWrite,
+                input = new
+                {
+                    packageRootName = BuildOutputRootName(packageRoot),
+                    explicitPreflight,
+                    armedPrivateAssetOutput = executeWrite
+                },
+                materialPackageRebuildPreview = result,
+                artifact = new
+                {
+                    kind = executeWrite ? "app-owned-rebuild-preview" : "preflight",
+                    mutation = executeWrite,
+                    originalGameMutation = false,
+                    schemaVersion = AssetMaterialPackageRebuildPreviewMaterializationSchemaVersion,
+                    note = executeWrite
+                        ? "Writes deterministic OBJ wireframe preview files and binding sidecars from staged importer-input files under the app-owned package output. It does not launch the game, run a renderer, execute Godot, or claim rebuild parity."
+                        : "Preflights deterministic OBJ wireframe preview and binding sidecar output from staged importer-input files. No files are written and no original game files are touched."
+                }
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
+            return result.Completed ? 0 : 1;
+        }
+
+        private static int HandleAssetMaterialPackageRebuildSceneMaterialization(
+            string packageRoot,
+            bool explicitPreflight,
+            string? armPrivateAssetOutput)
+        {
+            bool executeWrite = !explicitPreflight && !string.IsNullOrWhiteSpace(armPrivateAssetOutput);
+            if (executeWrite && !string.Equals(armPrivateAssetOutput, PrivateAssetOutputArmPhrase, StringComparison.Ordinal))
+            {
+                Console.Error.WriteLine("Error: Refusing to write rebuild scene contract outputs: --arm-private-asset-output must exactly match MATERIALIZE ASSET MATERIAL PACKAGE.");
+                return 1;
+            }
+
+            AssetMaterialImportPackageRebuildSceneService service = new();
+            AssetMaterialImportPackageRebuildSceneResult result = executeWrite
+                ? service.Materialize(packageRoot)
+                : service.Preflight(packageRoot);
+            var payload = new
+            {
+                schemaVersion = AssetMaterialPackageRebuildSceneMaterializationSchemaVersion,
+                generatedAt = DateTimeOffset.UtcNow,
+                command = "asset-material-package-rebuild-scene-materialize",
+                mode = executeWrite ? "write" : "preflight",
+                mutation = executeWrite,
+                input = new
+                {
+                    packageRootName = BuildOutputRootName(packageRoot),
+                    explicitPreflight,
+                    armedPrivateAssetOutput = executeWrite
+                },
+                materialPackageRebuildScene = result,
+                artifact = new
+                {
+                    kind = executeWrite ? "app-owned-rebuild-scene-contract" : "preflight",
+                    mutation = executeWrite,
+                    originalGameMutation = false,
+                    schemaVersion = AssetMaterialPackageRebuildSceneMaterializationSchemaVersion,
+                    note = executeWrite
+                        ? "Writes deterministic package-relative scene/mesh/material contract JSON from staged importer-input and rebuild-preview files. It does not launch the game, run a renderer, execute Godot, convert full meshes, or claim rebuild parity."
+                        : "Preflights package-relative scene/mesh/material contract output from staged importer-input and rebuild-preview files. No files are written and no original game files are touched."
+                }
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
+            return result.Completed ? 0 : 1;
+        }
+
+        private static int HandleAssetMaterialPackageRebuildMeshMaterialization(
+            string packageRoot,
+            bool explicitPreflight,
+            string? armPrivateAssetOutput)
+        {
+            bool executeWrite = !explicitPreflight && !string.IsNullOrWhiteSpace(armPrivateAssetOutput);
+            if (executeWrite && !string.Equals(armPrivateAssetOutput, PrivateAssetOutputArmPhrase, StringComparison.Ordinal))
+            {
+                Console.Error.WriteLine("Error: Refusing to write rebuild mesh outputs: --arm-private-asset-output must exactly match MATERIALIZE ASSET MATERIAL PACKAGE.");
+                return 1;
+            }
+
+            AssetMaterialImportPackageRebuildMeshService service = new();
+            AssetMaterialImportPackageRebuildMeshResult result = executeWrite
+                ? service.Materialize(packageRoot)
+                : service.Preflight(packageRoot);
+            var payload = new
+            {
+                schemaVersion = AssetMaterialPackageRebuildMeshMaterializationSchemaVersion,
+                generatedAt = DateTimeOffset.UtcNow,
+                command = "asset-material-package-rebuild-mesh-materialize",
+                mode = executeWrite ? "write" : "preflight",
+                mutation = executeWrite,
+                input = new
+                {
+                    packageRootName = BuildOutputRootName(packageRoot),
+                    explicitPreflight,
+                    armedPrivateAssetOutput = executeWrite
+                },
+                materialPackageRebuildMesh = result,
+                artifact = new
+                {
+                    kind = executeWrite ? "app-owned-rebuild-mesh" : "preflight",
+                    mutation = executeWrite,
+                    originalGameMutation = false,
+                    schemaVersion = AssetMaterialPackageRebuildMeshMaterializationSchemaVersion,
+                    note = executeWrite
+                        ? "Writes deterministic package-relative OBJ/MTL mesh outputs from existing rebuild-scene contracts and staged FBX data. It does not launch the game, run a renderer, execute Godot, animate meshes, or claim rebuild parity."
+                        : "Preflights package-relative OBJ/MTL mesh output from existing rebuild-scene contracts and staged FBX data. No files are written and no original game files are touched."
+                }
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
+            return result.Completed ? 0 : 1;
+        }
+
+        private static int HandleAssetMaterialPackageRebuildMeshImportMaterialization(
+            string packageRoot,
+            bool explicitPreflight,
+            string? armPrivateAssetOutput)
+        {
+            bool executeWrite = !explicitPreflight && !string.IsNullOrWhiteSpace(armPrivateAssetOutput);
+            if (executeWrite && !string.Equals(armPrivateAssetOutput, PrivateAssetOutputArmPhrase, StringComparison.Ordinal))
+            {
+                Console.Error.WriteLine("Error: Refusing to write rebuild mesh import contract: --arm-private-asset-output must exactly match MATERIALIZE ASSET MATERIAL PACKAGE.");
+                return 1;
+            }
+
+            AssetMaterialImportPackageRebuildMeshImportService service = new();
+            AssetMaterialImportPackageRebuildMeshImportResult result = executeWrite
+                ? service.Materialize(packageRoot)
+                : service.Preflight(packageRoot);
+            var payload = new
+            {
+                schemaVersion = AssetMaterialPackageRebuildMeshImportSchemaVersion,
+                generatedAt = DateTimeOffset.UtcNow,
+                command = "asset-material-package-rebuild-mesh-import-materialize",
+                mode = executeWrite ? "write" : "preflight",
+                mutation = executeWrite,
+                input = new
+                {
+                    packageRootName = BuildOutputRootName(packageRoot),
+                    explicitPreflight,
+                    armedPrivateAssetOutput = executeWrite
+                },
+                materialPackageRebuildMeshImport = result,
+                artifact = new
+                {
+                    kind = executeWrite ? "app-owned-rebuild-mesh-import-contract" : "preflight",
+                    mutation = executeWrite,
+                    originalGameMutation = false,
+                    schemaVersion = AssetMaterialPackageRebuildMeshImportSchemaVersion,
+                    note = executeWrite
+                        ? "Writes a deterministic package-relative import validation manifest after parsing the generated OBJ/MTL rebuild mesh outputs and validating mesh counts, material references, and staged texture paths. It does not launch the game, run a renderer, execute Godot, or claim rebuild parity."
+                        : "Preflights generated OBJ/MTL rebuild mesh outputs as importer-consumable package-local data. No files are written and no original game files are touched."
+                }
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
+            return result.Completed ? 0 : 1;
+        }
+
+        private static string BuildOutputRootName(string outputRoot)
+        {
+            string fullPath = Path.GetFullPath(outputRoot)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return Path.GetFileName(fullPath);
+        }
 
 	        private static int PrintGoodieList(string inputPath, bool showReservedGoodies)
 	        {
@@ -1055,8 +2049,139 @@ namespace Onslaught___Career_Editor
 	            {
 	                Console.Error.WriteLine($"Error: {ex.Message}");
 	                return 1;
-	            }
-	        }
+            }
+        }
+
+        private static bool HasBroadPatchOptions(
+            bool useNew,
+            int? kills,
+            string? rank,
+            bool killsOnly,
+            bool noNodes,
+            bool noLinks,
+            bool noGoodies,
+            bool noKills,
+            bool allowCareerSectionsOnOptionsFile,
+            string[]? levelRanks,
+            int? aircraftKills,
+            int? vehicleKills,
+            int? emplacementKills,
+            int? infantryKills,
+            int? mechKills,
+            double? soundVolume,
+            double? musicVolume,
+            string? invertWalkerP1,
+            string? invertWalkerP2,
+            string? invertFlightP1,
+            string? invertFlightP2,
+            string? vibrationP1,
+            string? vibrationP2,
+            uint? controllerConfigP1,
+            uint? controllerConfigP2,
+            int? experimentalPendingExtraGoodies,
+            FileInfo? copyOptionsFrom,
+            bool noCopyOptionsEntries,
+            bool noCopyOptionsTail,
+            Dictionary<int, BesFilePatcher.OptionsEntryOverride>? keybindOverrides)
+        {
+            return useNew ||
+                   kills.HasValue ||
+                   !string.IsNullOrWhiteSpace(rank) ||
+                   killsOnly ||
+                   noNodes ||
+                   noLinks ||
+                   noGoodies ||
+                   noKills ||
+                   allowCareerSectionsOnOptionsFile ||
+                   (levelRanks != null && levelRanks.Length > 0) ||
+                   aircraftKills.HasValue ||
+                   vehicleKills.HasValue ||
+                   emplacementKills.HasValue ||
+                   infantryKills.HasValue ||
+                   mechKills.HasValue ||
+                   soundVolume.HasValue ||
+                   musicVolume.HasValue ||
+                   !string.IsNullOrWhiteSpace(invertWalkerP1) ||
+                   !string.IsNullOrWhiteSpace(invertWalkerP2) ||
+                   !string.IsNullOrWhiteSpace(invertFlightP1) ||
+                   !string.IsNullOrWhiteSpace(invertFlightP2) ||
+                   !string.IsNullOrWhiteSpace(vibrationP1) ||
+                   !string.IsNullOrWhiteSpace(vibrationP2) ||
+                   controllerConfigP1.HasValue ||
+                   controllerConfigP2.HasValue ||
+                   experimentalPendingExtraGoodies.HasValue ||
+                   copyOptionsFrom != null ||
+                   noCopyOptionsEntries ||
+                   noCopyOptionsTail ||
+                   (keybindOverrides != null && keybindOverrides.Count > 0);
+        }
+
+        private static bool TryParseGoodieStateOverrides(
+            string[]? entries,
+            out Dictionary<int, uint> overrides,
+            out string error)
+        {
+            overrides = new Dictionary<int, uint>();
+            error = string.Empty;
+
+            if (entries == null || entries.Length == 0)
+            {
+                error = "Choose at least one --set-goodie-state INDEX:STATE override.";
+                return false;
+            }
+
+            foreach (string rawEntry in entries)
+            {
+                string entry = rawEntry.Trim();
+                string[] parts = entry.Split(':', 2, StringSplitOptions.TrimEntries);
+                if (parts.Length != 2 ||
+                    !int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int index))
+                {
+                    error = $"Invalid --set-goodie-state entry '{entry}'. Expected INDEX:STATE, for example 71:new.";
+                    return false;
+                }
+
+                if (!TryParseGoodieState(parts[1], out uint state))
+                {
+                    error = $"Invalid Goodie state '{parts[1]}' for index {index}. Use 0, 1, 2, 3, locked, instructions, new, or old.";
+                    return false;
+                }
+
+                overrides[index] = state;
+            }
+
+            return true;
+        }
+
+        private static bool TryParseGoodieState(string rawState, out uint state)
+        {
+            string normalized = rawState.Trim().ToLowerInvariant();
+            switch (normalized)
+            {
+                case "0":
+                case "locked":
+                case "none":
+                    state = 0;
+                    return true;
+                case "1":
+                case "instructions":
+                case "instruction":
+                    state = 1;
+                    return true;
+                case "2":
+                case "new":
+                    state = 2;
+                    return true;
+                case "3":
+                case "old":
+                case "viewed":
+                    state = 3;
+                    return true;
+                default:
+                    state = 0;
+                    return false;
+            }
+        }
 
         private static bool? ParseTriBool(string? value, string optionName)
         {

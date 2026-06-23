@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "onslaught-public-export-provenance.v1",
+  "sourceCommit": "7a765ef52a5e96e156ccd4be4f4e21cd6b50c81e",
+  "exportedAtUtc": "2026-06-23T23:15:58Z",
+  "exportCommandTemplate": "py -3 tools/export_curated_release_tree.py --dest <public-candidate-dir> --force-clean",
+  "sourceTreeStatus": "clean",
+  "allowlistFile": "release/readiness/public_candidate_allowlist.tsv",
+  "allowlistSha256": "cf587b2636808bdc0fc5d61358cf116b2f8b5894f331d8ab7dc8552801fff13a",
+  "exportScriptSha256": "80ad78627cb7191908dab97c6abd633020d5194d7d7ce9aca990bbb11b07a3a7",
+  "publicPayloadFileCount": 408,
+  "materializedPublicFileCount": 15,
+  "generatedFileCount": 2,
+  "finalInventoryRequirement": "Run npm run test:public-candidate-inventory on a fresh export before install/build/test output is created."
+}

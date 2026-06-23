@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Page.Resources>
@@ -50,10 +51,12 @@
                 <StackPanel Orientation="Horizontal"
                             Spacing="8">
                     <Button x:Name="AudioTabButton"
+                            AutomationProperties.AutomationId="MediaAudioTabButton"
                             Content="Audio Library"
                             Click="AudioTabButton_Click"
                             Style="{StaticResource MediaInactiveTabButtonStyle}" />
                     <Button x:Name="VideoTabButton"
+                            AutomationProperties.AutomationId="MediaVideoTabButton"
                             Content="Video Player"
                             Click="VideoTabButton_Click"
                             Style="{StaticResource MediaInactiveTabButtonStyle}" />
@@ -89,6 +92,7 @@
                                            Style="{StaticResource SectionBodyTextStyle}"
                                            MinHeight="56" />
                                 <TextBox x:Name="AudioSearchTextBox"
+                                         AutomationProperties.AutomationId="MediaAudioSearchBox"
                                          PlaceholderText="Search music and voice"
                                          TextChanged="AudioSearchTextBox_TextChanged" />
                             </StackPanel>
@@ -99,6 +103,8 @@
                                     CornerRadius="12"
                                     Padding="8">
                                 <TreeView x:Name="AudioTreeView"
+                                          AutomationProperties.AutomationId="MediaAudioTreeView"
+                                          AutomationProperties.Name="Audio library"
                                           MinHeight="0"
                                           VerticalAlignment="Stretch"
                                           SelectionMode="Single"
@@ -118,7 +124,7 @@
                         </Grid.RowDefinitions>
 
                         <Border Grid.Row="0"
-                                Background="#FF192B63"
+                                Background="{ThemeResource MediaVisualizerSurfaceBrush}"
                                 BorderBrush="{ThemeResource ShellBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="16"
@@ -144,12 +150,13 @@
                                 </Grid>
 
                                 <Border x:Name="AudioVisualizerPlaceholderBorder"
-                                        Background="#28000000"
+                                        Background="{ThemeResource MediaOverlaySoftBrush}"
                                         CornerRadius="16">
                                     <StackPanel Width="420"
                                                 HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                Spacing="8">
+                                                VerticalAlignment="Top"
+                                                Margin="0,10,0,0"
+                                                Spacing="4">
                                         <TextBlock x:Name="AudioVisualizerStatusTextBlock"
                                                    FontSize="24"
                                                    FontWeight="SemiBold"
@@ -157,6 +164,9 @@
                                                    Text="Select a track" />
                                         <TextBlock x:Name="AudioVisualizerHintTextBlock"
                                                    HorizontalAlignment="Center"
+                                                   FontSize="12"
+                                                   MaxLines="1"
+                                                   TextTrimming="CharacterEllipsis"
                                                    Text="Choose a track from the library, then press Play or double-click it to begin."
                                                    TextAlignment="Center"
                                                    TextWrapping="WrapWholeWords"
@@ -171,7 +181,6 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="1.15*" />
                                 <ColumnDefinition Width="1.45*" />
-                                <ColumnDefinition Width="1.2*" />
                             </Grid.ColumnDefinitions>
 
                             <Border Grid.Column="0"
@@ -183,11 +192,13 @@
                                                FontSize="16"
                                                FontWeight="SemiBold" />
                                     <TextBlock x:Name="AudioNowPlayingTextBlock"
+                                               AutomationProperties.AutomationId="MediaAudioNowPlaying"
                                                FontSize="22"
                                                FontWeight="SemiBold"
                                                Text="No track selected"
                                                TextWrapping="WrapWholeWords" />
                                     <TextBlock x:Name="AudioPathTextBlock"
+                                               AutomationProperties.AutomationId="MediaAudioSourceSummary"
                                                Style="{StaticResource SectionBodyTextStyle}"
                                                Text="Select a track from the library on the left to start playback."
                                                TextTrimming="CharacterEllipsis"
@@ -210,15 +221,19 @@
                                             <ColumnDefinition Width="50" />
                                         </Grid.ColumnDefinitions>
                                         <TextBlock x:Name="AudioCurrentTimeTextBlock"
+                                                   AutomationProperties.AutomationId="MediaAudioCurrentTime"
                                                    Text="0:00"
                                                    VerticalAlignment="Center" />
                                         <Slider x:Name="AudioProgressSlider"
+                                                AutomationProperties.AutomationId="MediaAudioProgress"
+                                                AutomationProperties.Name="Audio progress"
                                                 Grid.Column="1"
                                                 Minimum="0"
                                                 Maximum="1"
                                                 Value="0"
                                                 ValueChanged="AudioProgressSlider_ValueChanged" />
                                         <TextBlock x:Name="AudioTotalTimeTextBlock"
+                                                   AutomationProperties.AutomationId="MediaAudioTotalTime"
                                                    Grid.Column="2"
                                                    Text="0:00"
                                                    HorizontalAlignment="Right"
@@ -227,14 +242,17 @@
                                     <StackPanel Orientation="Horizontal"
                                                 Spacing="8">
                                         <Button x:Name="AudioPlayButton"
+                                                AutomationProperties.AutomationId="MediaAudioPlayButton"
                                                 Content="Play"
                                                 Click="AudioPlayButton_Click"
                                                 IsEnabled="False" />
                                         <Button x:Name="AudioPauseButton"
+                                                AutomationProperties.AutomationId="MediaAudioPauseButton"
                                                 Content="Pause"
                                                 Click="AudioPauseButton_Click"
                                                 IsEnabled="False" />
                                         <Button x:Name="AudioStopButton"
+                                                AutomationProperties.AutomationId="MediaAudioStopButton"
                                                 Content="Stop"
                                                 Click="AudioStopButton_Click"
                                                 IsEnabled="False" />
@@ -245,6 +263,8 @@
                                         <TextBlock Text="Volume"
                                                    VerticalAlignment="Center" />
                                         <Slider x:Name="AudioVolumeSlider"
+                                                AutomationProperties.AutomationId="MediaAudioVolumeSlider"
+                                                AutomationProperties.Name="Audio volume"
                                                 Width="180"
                                                 Minimum="0"
                                                 Maximum="100"
@@ -261,20 +281,41 @@
                                     Margin="0"
                                     MinHeight="156">
                                 <StackPanel Spacing="10">
-                                    <TextBlock Text="Game Directory"
+                                    <TextBlock Text="Source folder"
                                                FontSize="16"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Text="Audio discovery uses the shared game directory from Settings. Browse here to switch immediately, then reload if files changed."
+                                    <TextBlock Text="Audio discovery uses the configured install as read-only source material. Browse here to switch immediately, then reload if files changed."
                                                Style="{StaticResource SectionBodyTextStyle}"
                                                MinHeight="56" />
-                                    <TextBox x:Name="AudioGameDirectoryTextBox"
-                                             IsReadOnly="True"
-                                             Text="{Binding Text, ElementName=MediaGameDirectoryTextBlock}" />
+                                    <Border Background="{ThemeResource ShellSurfaceBrush}"
+                                            BorderBrush="{ThemeResource ShellBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="10"
+                                            Padding="10">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock x:Name="AudioGameDirectorySummaryTextBlock"
+                                                       AutomationProperties.AutomationId="MediaAudioGameDirectorySummary"
+                                                       Text="Checking setup"
+                                                       FontSize="18"
+                                                       FontWeight="SemiBold" />
+                                            <TextBlock x:Name="AudioGameDirectoryStatusTextBlock"
+                                                       Text="Media will scan from the configured read-only install."
+                                                       Style="{StaticResource SectionBodyTextStyle}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <controls:Expander Header="Path details"
+                                                       IsExpanded="False">
+                                        <TextBlock x:Name="AudioGameDirectoryPathTextBlock"
+                                                   TextWrapping="WrapWholeWords"
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                    </controls:Expander>
                                     <StackPanel Orientation="Horizontal"
                                                 Spacing="8">
                                         <Button Content="Browse Game Directory"
+                                                AutomationProperties.AutomationId="MediaAudioBrowseGameDirectoryButton"
                                                 Click="BrowseGameDirectoryButton_Click" />
                                         <Button Content="Reload Library"
+                                                AutomationProperties.AutomationId="MediaAudioReloadLibraryButton"
                                                 Click="ReloadLibraryButton_Click" />
                                     </StackPanel>
                                 </StackPanel>
@@ -311,6 +352,7 @@
                                            Style="{StaticResource SectionBodyTextStyle}"
                                            MinHeight="56" />
                                 <TextBox x:Name="VideoSearchTextBox"
+                                         AutomationProperties.AutomationId="MediaVideoSearchBox"
                                          PlaceholderText="Search videos"
                                          TextChanged="VideoSearchTextBox_TextChanged" />
                             </StackPanel>
@@ -321,6 +363,8 @@
                                     CornerRadius="12"
                                     Padding="8">
                                 <TreeView x:Name="VideoTreeView"
+                                          AutomationProperties.AutomationId="MediaVideoTreeView"
+                                          AutomationProperties.Name="Video library"
                                           MinHeight="0"
                                           VerticalAlignment="Stretch"
                                           SelectionMode="Single"
@@ -370,19 +414,25 @@
                                 </Grid>
 
                                 <Border x:Name="VideoPlaceholderBorder"
-                                        Background="#E6000000"
+                                        Background="{ThemeResource MediaOverlayStrongBrush}"
                                         CornerRadius="16">
                                     <StackPanel Width="460"
                                                 HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                Spacing="8">
+                                                VerticalAlignment="Top"
+                                                Margin="0,10,0,0"
+                                                Spacing="4">
                                         <TextBlock x:Name="VideoPlayerStatusTextBlock"
+                                                   AutomationProperties.AutomationId="MediaVideoPlayerStatus"
                                                    FontSize="24"
                                                    FontWeight="SemiBold"
                                                    HorizontalAlignment="Center"
                                                    Text="Select a video" />
                                         <TextBlock x:Name="VideoPlaceholderBodyTextBlock"
+                                                   AutomationProperties.AutomationId="MediaVideoPlayerHint"
                                                    HorizontalAlignment="Center"
+                                                   FontSize="12"
+                                                   MaxLines="1"
+                                                   TextTrimming="CharacterEllipsis"
                                                    Text="Choose a file from the library, then press Play or double-click it to start inline playback."
                                                    TextAlignment="Center"
                                                    TextWrapping="WrapWholeWords"
@@ -409,20 +459,61 @@
                                                FontSize="16"
                                                FontWeight="SemiBold" />
                                     <TextBlock x:Name="VideoSelectedTextBlock"
+                                               AutomationProperties.AutomationId="MediaVideoSelected"
                                                FontSize="22"
                                                FontWeight="SemiBold"
                                                Text="No video selected"
                                                TextWrapping="WrapWholeWords" />
                                     <TextBlock x:Name="VideoPathTextBlock"
+                                               AutomationProperties.AutomationId="MediaVideoSourceSummary"
                                                Style="{StaticResource SectionBodyTextStyle}"
                                                Text="Select a video from the library on the left to start playback or reveal the file in Explorer."
                                                TextTrimming="CharacterEllipsis"
                                                TextWrapping="NoWrap" />
                                     <Button x:Name="RevealVideoButton"
+                                            AutomationProperties.AutomationId="MediaRevealVideoButton"
                                             Content="Reveal File"
                                             Click="RevealVideoButton_Click"
                                             IsEnabled="False"
                                             HorizontalAlignment="Left" />
+                                    <controls:Expander Header="Source folder"
+                                                       IsExpanded="False">
+                                        <StackPanel Spacing="10">
+                                            <TextBlock Text="Video discovery uses the configured install as read-only source material. Browse here to switch immediately, then reload if files changed."
+                                                       Style="{StaticResource SectionBodyTextStyle}" />
+                                            <Border Background="{ThemeResource ShellSurfaceBrush}"
+                                                    BorderBrush="{ThemeResource ShellBorderBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="10"
+                                                    Padding="10">
+                                                <StackPanel Spacing="4">
+                                                    <TextBlock x:Name="VideoGameDirectorySummaryTextBlock"
+                                                               AutomationProperties.AutomationId="MediaVideoGameDirectorySummary"
+                                                               Text="Checking setup"
+                                                               FontSize="18"
+                                                               FontWeight="SemiBold" />
+                                                    <TextBlock x:Name="VideoGameDirectoryStatusTextBlock"
+                                                               Text="Media will scan from the configured read-only install."
+                                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                                </StackPanel>
+                                            </Border>
+                                            <controls:Expander Header="Path details"
+                                                               IsExpanded="False">
+                                                <TextBlock x:Name="VideoGameDirectoryPathTextBlock"
+                                                           TextWrapping="WrapWholeWords"
+                                                           Style="{StaticResource SectionBodyTextStyle}" />
+                                            </controls:Expander>
+                                            <StackPanel Orientation="Horizontal"
+                                                        Spacing="8">
+                                                <Button Content="Browse Game Directory"
+                                                        AutomationProperties.AutomationId="MediaVideoBrowseGameDirectoryButton"
+                                                        Click="BrowseGameDirectoryButton_Click" />
+                                                <Button Content="Reload Library"
+                                                        AutomationProperties.AutomationId="MediaVideoReloadLibraryButton"
+                                                        Click="ReloadLibraryButton_Click" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </controls:Expander>
                                 </StackPanel>
                             </Border>
 
@@ -441,13 +532,17 @@
                                             <ColumnDefinition Width="50" />
                                         </Grid.ColumnDefinitions>
                                         <TextBlock x:Name="VideoCurrentTimeTextBlock"
+                                                   AutomationProperties.AutomationId="MediaVideoCurrentTime"
                                                    Text="0:00"
                                                    VerticalAlignment="Center" />
                                         <Slider x:Name="VideoProgressSlider"
+                                                AutomationProperties.AutomationId="MediaVideoProgress"
+                                                AutomationProperties.Name="Video progress"
                                                 Grid.Column="1"
                                                 IsEnabled="False"
                                                 ValueChanged="VideoProgressSlider_ValueChanged" />
                                         <TextBlock x:Name="VideoTotalTimeTextBlock"
+                                                   AutomationProperties.AutomationId="MediaVideoTotalTime"
                                                    Grid.Column="2"
                                                    Text="0:00"
                                                    HorizontalAlignment="Right"
@@ -456,14 +551,17 @@
                                     <StackPanel Orientation="Horizontal"
                                                 Spacing="8">
                                         <Button x:Name="VideoPlayButton"
+                                                AutomationProperties.AutomationId="MediaVideoPlayButton"
                                                 Content="Play"
                                                 Click="VideoPlayButton_Click"
                                                 IsEnabled="False" />
                                         <Button x:Name="VideoPauseButton"
+                                                AutomationProperties.AutomationId="MediaVideoPauseButton"
                                                 Content="Pause"
                                                 Click="VideoPauseButton_Click"
                                                 IsEnabled="False" />
                                         <Button x:Name="VideoStopButton"
+                                                AutomationProperties.AutomationId="MediaVideoStopButton"
                                                 Content="Stop"
                                                 Click="VideoStopButton_Click"
                                                 IsEnabled="False" />
@@ -474,6 +572,8 @@
                                         <TextBlock Text="Volume"
                                                    VerticalAlignment="Center" />
                                         <Slider x:Name="VideoVolumeSlider"
+                                                AutomationProperties.AutomationId="MediaVideoVolumeSlider"
+                                                AutomationProperties.Name="Video volume"
                                                 Width="180"
                                                 Minimum="0"
                                                 Maximum="100"
@@ -485,29 +585,6 @@
                                 </StackPanel>
                             </Border>
 
-                            <Border Grid.Column="2"
-                                    Style="{StaticResource SectionCardStyle}"
-                                    Margin="0"
-                                    MinHeight="156">
-                                <StackPanel Spacing="10">
-                                    <TextBlock Text="Game Directory"
-                                               FontSize="16"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock Text="Video discovery uses the shared game directory from Settings. Browse here to switch immediately, then reload if files changed."
-                                               Style="{StaticResource SectionBodyTextStyle}"
-                                               MinHeight="56" />
-                                    <TextBox x:Name="VideoGameDirectoryTextBox"
-                                             IsReadOnly="True"
-                                             Text="{Binding Text, ElementName=MediaGameDirectoryTextBlock}" />
-                                    <StackPanel Orientation="Horizontal"
-                                                Spacing="8">
-                                        <Button Content="Browse Game Directory"
-                                                Click="BrowseGameDirectoryButton_Click" />
-                                        <Button Content="Reload Library"
-                                                Click="ReloadLibraryButton_Click" />
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
                         </Grid>
                     </Grid>
                 </Grid>

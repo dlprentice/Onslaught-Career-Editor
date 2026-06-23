@@ -77,6 +77,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private bool _isUpdatingVideoSlider;
         private bool _hasLoaded;
         private bool _isLoading;
+        private MediaVideoItem? _pendingVideoHandoffSelection;
         private int _selectedMediaTabIndex;
         private int _videoFrameRenderQueued;
 
@@ -112,10 +113,21 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AudioVolumeTextBlock.Text = $"{(int)AudioVolumeSlider.Value}%";
             VideoVolumeTextBlock.Text = $"{(int)VideoVolumeSlider.Value}%";
 
-            int lastSubTab = AppConfig.Load().LastMediaSubTab;
-            SelectMediaTab(lastSubTab, persistSelection: false);
+            SelectMediaTab(GetInitialMediaTabIndex(), persistSelection: false);
             UpdateAudioControlsState();
             UpdateVideoControlsState();
+        }
+
+        private static int GetInitialMediaTabIndex()
+        {
+            string? testInitialTab = Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_TEST_INITIAL_MEDIA_TAB");
+            if (int.TryParse(testInitialTab, out int requestedTab) &&
+                requestedTab is >= AudioTabIndex and <= VideoTabIndex)
+            {
+                return requestedTab;
+            }
+
+            return Math.Clamp(AppConfig.Load().LastMediaSubTab, AudioTabIndex, VideoTabIndex);
         }
 
         private async void MediaPage_Loaded(object sender, RoutedEventArgs e)
@@ -127,6 +139,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 await LoadMediaCatalogAsync();
             }
 
+            ApplyPendingVideoHandoff();
             RefreshPlaybackState();
             ApplyMediaPolicyNow(AppConfig.Load());
         }
@@ -185,6 +198,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 AppConfig config = AppConfig.Load();
                 string? gameDirectory = config.GetGameDir() ?? AppConfig.DetectGameDirectory();
+                SetMediaDirectoryDisplay(gameDirectory, "Scanning the configured read-only install for audio and video.");
                 if (string.IsNullOrWhiteSpace(gameDirectory) || !MediaCatalogService.LooksLikeGameDirectory(gameDirectory))
                 {
                     _snapshot = MediaCatalogSnapshot.Empty;
@@ -192,6 +206,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     ResetLibraryState();
                     MediaSummaryTextBlock.Text = "Game directory not set";
                     MediaGameDirectoryTextBlock.Text = "Set the game directory in Settings or browse here.";
+                    SetMediaDirectoryDisplay(gameDirectory, "Set the game directory in Settings or browse here before loading media.");
                     AppStatusService.SetStatus("Media: game directory not configured");
                     return;
                 }
@@ -208,6 +223,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
                 MediaGameDirectoryTextBlock.Text = _snapshot.GameDirectory;
                 MediaSummaryTextBlock.Text = $"{_snapshot.AudioItems.Count} audio items, {_snapshot.VideoItems.Count} videos";
+                SetMediaDirectoryDisplay(
+                    _snapshot.GameDirectory,
+                    $"{_snapshot.AudioItems.Count} audio items and {_snapshot.VideoItems.Count} videos ready.");
 
                 ApplyAudioFilter();
                 ApplyVideoFilter();
@@ -221,6 +239,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 ResetLibraryState();
                 MediaSummaryTextBlock.Text = "Media load failed";
                 MediaGameDirectoryTextBlock.Text = ex.Message;
+                SetMediaDirectoryDisplay(null, "Media loading failed. Check the selected install folder and try again.");
                 AppStatusService.SetStatus("Media: load failed");
             }
             finally
@@ -239,6 +258,23 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             SetSelectedVideo(null);
             StopAudioPlayback();
             StopVideoPlayback();
+        }
+
+        private void SetMediaDirectoryDisplay(string? fullPath, string status)
+        {
+            string summary = string.IsNullOrWhiteSpace(fullPath)
+                ? "Not configured"
+                : BuildFolderSummary(fullPath, "Configured install");
+            string detail = string.IsNullOrWhiteSpace(fullPath)
+                ? "No install path selected."
+                : fullPath;
+
+            AudioGameDirectorySummaryTextBlock.Text = summary;
+            VideoGameDirectorySummaryTextBlock.Text = summary;
+            AudioGameDirectoryStatusTextBlock.Text = status;
+            VideoGameDirectoryStatusTextBlock.Text = status;
+            AudioGameDirectoryPathTextBlock.Text = detail;
+            VideoGameDirectoryPathTextBlock.Text = detail;
         }
 
         private void RefreshPlaybackState()
@@ -805,9 +841,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                items = items.Where(item =>
-                    item.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    item.SectionName.Contains(search, StringComparison.OrdinalIgnoreCase));
+                items = items.Where(item => VideoMatchesSearch(item, search));
             }
 
             List<MediaVideoItem> filtered = items.ToList();
@@ -854,7 +888,117 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             else if (_selectedVideo != null)
             {
-                SetSelectedVideo(null);
+                if (!VideoMatchesSearch(_selectedVideo, search))
+                {
+                    SetSelectedVideo(null);
+                }
+            }
+        }
+
+        private void ApplyPendingVideoHandoff()
+        {
+            MediaHandoffRequest? request = MediaHandoffService.ConsumeVideoRequest();
+            if (request == null)
+            {
+                return;
+            }
+
+            SelectMediaTab(VideoTabIndex);
+            VideoSearchTextBox.Text = request.SearchText;
+            ApplyVideoFilter();
+            MediaVideoItem? match = FindFirstVideoResult(request.SearchText) ?? TryResolveVideoHandoffFromInstall(request.SearchText);
+            if (match != null)
+            {
+                _pendingVideoHandoffSelection = match;
+                SelectVideoTreeNode(match);
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    SelectVideoTreeNode(match);
+                    SetSelectedVideo(match);
+                    _pendingVideoHandoffSelection = null;
+                    AppStatusService.SetStatus($"Media: selected {request.DisplayLabel}");
+                });
+                return;
+            }
+
+            AppStatusService.SetStatus($"Media: could not find {request.DisplayLabel}");
+        }
+
+        private MediaVideoItem? TryResolveVideoHandoffFromInstall(string search)
+        {
+            if (string.IsNullOrWhiteSpace(search))
+            {
+                return null;
+            }
+
+            AppConfig config = AppConfig.Load();
+            string? gameDirectory = config.GetGameDir() ?? AppConfig.DetectGameDirectory();
+            if (!MediaCatalogService.LooksLikeGameDirectory(gameDirectory))
+            {
+                return null;
+            }
+
+            string videoDirectory = Path.Combine(Path.GetFullPath(gameDirectory!), "data", "video");
+            if (!Directory.Exists(videoDirectory))
+            {
+                return null;
+            }
+
+            string searchStem = Path.GetFileNameWithoutExtension(search);
+            string? file = Directory.EnumerateFiles(videoDirectory, "*.vid", SearchOption.AllDirectories)
+                .FirstOrDefault(path => string.Equals(Path.GetFileNameWithoutExtension(path), searchStem, StringComparison.OrdinalIgnoreCase));
+            if (string.IsNullOrWhiteSpace(file))
+            {
+                return null;
+            }
+
+            FileInfo info = new(file);
+            return new MediaVideoItem(
+                MediaCatalogService.GetMainVideoDisplayName(Path.GetFileNameWithoutExtension(file)),
+                file,
+                "Main Videos",
+                0,
+                FormatMediaFileSize(info.Exists ? info.Length : 0));
+        }
+
+        private MediaVideoItem? FindFirstVideoResult(string search)
+        {
+            IEnumerable<MediaVideoItem> items = _snapshot.VideoItems;
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                items = items.Where(item => VideoMatchesSearch(item, search));
+            }
+
+            return items
+                .OrderBy(static item => item.SectionSortOrder)
+                .ThenBy(static item => item.SectionName, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(static item => item.Name, StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault();
+        }
+
+        private static bool VideoMatchesSearch(MediaVideoItem item, string search)
+        {
+            return string.IsNullOrWhiteSpace(search) ||
+                   item.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                   item.SectionName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                   Path.GetFileNameWithoutExtension(item.FilePath).Contains(search, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void SelectVideoTreeNode(MediaVideoItem item)
+        {
+            string selectedPath = NormalizeMediaPath(item.FilePath);
+            foreach (TreeViewNode rootNode in VideoTreeView.RootNodes)
+            {
+                rootNode.IsExpanded = true;
+                foreach (TreeViewNode childNode in rootNode.Children)
+                {
+                    if (TryGetTreeTag(childNode)?.FilePath is string nodePath &&
+                        string.Equals(nodePath, selectedPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        VideoTreeView.SelectedNode = childNode;
+                        return;
+                    }
+                }
             }
         }
 
@@ -886,6 +1030,49 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private static string NormalizeMediaPath(string filePath)
         {
             return Path.GetFullPath(filePath);
+        }
+
+        private static string BuildFolderSummary(string? path, string fallback)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return fallback;
+            }
+
+            string trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string name = Path.GetFileName(trimmed);
+            return string.IsNullOrWhiteSpace(name) ? fallback : name;
+        }
+
+        private static string BuildAudioSelectionSummary(MediaAudioItem item)
+        {
+            string suffix = string.IsNullOrWhiteSpace(item.DurationLabel) ? string.Empty : $" • {item.DurationLabel}";
+            return $"{item.GroupName} • {Path.GetFileName(item.FilePath)}{suffix}";
+        }
+
+        private static string BuildVideoSelectionSummary(MediaVideoItem item)
+        {
+            string suffix = string.IsNullOrWhiteSpace(item.SizeText) ? string.Empty : $" • {item.SizeText}";
+            return $"{item.SectionName} • {Path.GetFileName(item.FilePath)}{suffix}";
+        }
+
+        private static string FormatMediaFileSize(long bytes)
+        {
+            if (bytes <= 0)
+            {
+                return string.Empty;
+            }
+
+            string[] sizes = ["B", "KB", "MB", "GB"];
+            double length = bytes;
+            int order = 0;
+            while (length >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                length /= 1024;
+            }
+
+            return $"{length:0.#} {sizes[order]}";
         }
 
         private static MediaTreeNodeTag? TryGetTreeTag(object? item)
@@ -926,7 +1113,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             _selectedAudio = item;
             AudioNowPlayingTextBlock.Text = item?.Name ?? "No track selected";
-            AudioPathTextBlock.Text = item?.FilePath ?? "Select a track from the left to start playback.";
+            AudioPathTextBlock.Text = item == null
+                ? "Select a track from the left to start playback."
+                : BuildAudioSelectionSummary(item);
             UpdateAudioControlsState();
             UpdateAudioVisualizerState();
         }
@@ -935,7 +1124,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             _selectedVideo = item;
             VideoSelectedTextBlock.Text = item?.Name ?? "No video selected";
-            VideoPathTextBlock.Text = item?.FilePath ?? "Select a video from the left to start playback or reveal the file in Explorer.";
+            VideoPathTextBlock.Text = item == null
+                ? "Select a video from the left to start playback or reveal the file in Explorer."
+                : BuildVideoSelectionSummary(item);
             UpdateVideoControlsState();
             UpdateVideoSurfaceState();
         }
@@ -1306,12 +1497,21 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (TryGetVideoItem(sender.SelectedNode, out MediaVideoItem? item) && item != null)
             {
+                _pendingVideoHandoffSelection = null;
                 SetSelectedVideo(item);
                 AppStatusService.SetStatus($"Media: selected {item.Name}");
             }
+            else if (_pendingVideoHandoffSelection != null)
+            {
+                return;
+            }
+            else if (sender.SelectedNode == null)
+            {
+                return;
+            }
             else
             {
-                SetSelectedVideo(null);
+                return;
             }
         }
 

@@ -1,0 +1,359 @@
+{
+  "schema_version": "safe-copy-profiles.v1",
+  "generated_at": "2026-06-18",
+  "profiles": [
+    {
+      "id": "compatibility-copy",
+      "display_name": "Compatibility Copy",
+      "description": "Windowed startup and non-4:3 display-mode acceptance only.",
+      "patch_keys": [
+        "resolution_gate",
+        "force_windowed"
+      ],
+      "is_selectable": true,
+      "proof_status": "Byte-verified safe-copy compatibility baseline.",
+      "default_controller_configuration": null,
+      "default_persist_controller_config_in_options": false,
+      "default_sharpen_mouse_look": false,
+      "modules": [
+        {
+          "id": "windowed-compatibility",
+          "display_name": "Windowed compatibility",
+          "category": "Executable patch rows",
+          "proof_status": "Byte-verified copied-executable compatibility baseline.",
+          "claim_boundary": "Allows the safe copy to prefer windowed startup and accept non-4:3 display-mode candidates; does not prove aspect-ratio gameplay parity.",
+          "patch_keys": [
+            "resolution_gate",
+            "force_windowed"
+          ],
+          "launch_arguments": [],
+          "copied_options_edits": [],
+          "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
+          "evidence_refs": [
+            "patches/README.md",
+            "release/readiness/winui_safe_copy_live_runtime_smoke_2026-06-17.md",
+            "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
+            "reverse-engineering/binary-analysis/windowed-mode-analysis.md"
+          ],
+          "non_claims": [
+            "No widescreen field-of-view parity.",
+            "No all-machine windowing guarantee.",
+            "No installed-game mutation."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recommended-safe-copy",
+      "display_name": "Windowed + Graphics Defaults",
+      "description": "Compatibility Copy plus the graphics-default rows that have copied-game launch proof.",
+      "patch_keys": [
+        "resolution_gate",
+        "force_windowed",
+        "extra_graphics_default_on",
+        "ignore_cardid_tweak_overrides"
+      ],
+      "is_selectable": true,
+      "proof_status": "Byte-verified rows with copied-game launch proof; visible graphics parity remains unproven.",
+      "default_controller_configuration": null,
+      "default_persist_controller_config_in_options": false,
+      "default_sharpen_mouse_look": false,
+      "modules": [
+        {
+          "id": "windowed-compatibility",
+          "display_name": "Windowed compatibility",
+          "category": "Executable patch rows",
+          "proof_status": "Byte-verified copied-executable compatibility baseline.",
+          "claim_boundary": "Allows the safe copy to prefer windowed startup and accept non-4:3 display-mode candidates; does not prove aspect-ratio gameplay parity.",
+          "patch_keys": [
+            "resolution_gate",
+            "force_windowed"
+          ],
+          "launch_arguments": [],
+          "copied_options_edits": [],
+          "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
+          "evidence_refs": [
+            "patches/README.md",
+            "release/readiness/winui_safe_copy_live_runtime_smoke_2026-06-17.md",
+            "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
+            "reverse-engineering/binary-analysis/windowed-mode-analysis.md"
+          ],
+          "non_claims": [
+            "No widescreen field-of-view parity.",
+            "No all-machine windowing guarantee.",
+            "No installed-game mutation."
+          ]
+        },
+        {
+          "id": "graphics-defaults",
+          "display_name": "Graphics default rows",
+          "category": "Executable patch rows",
+          "proof_status": "Byte-verified rows with copied-game launch proof; visible graphics parity remains unproven.",
+          "claim_boundary": "Requests modern/default graphics behavior in the safe copy; does not prove rendering quality or no-noticeable-difference parity.",
+          "patch_keys": [
+            "extra_graphics_default_on",
+            "ignore_cardid_tweak_overrides"
+          ],
+          "launch_arguments": [],
+          "copied_options_edits": [],
+          "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; cardid.txt/source files are not rewritten.",
+          "evidence_refs": [
+            "patches/README.md",
+            "release/readiness/winui_modern_graphics_live_runtime_smoke_2026-06-17.md",
+            "reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md"
+          ],
+          "non_claims": [
+            "No proven visible graphics improvement.",
+            "No rendering correctness or no-noticeable-difference parity.",
+            "No GPU/driver compatibility guarantee."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "enhanced-edition-preview",
+      "display_name": "Enhanced Profile Preview",
+      "description": "Preview profile that layers the compatibility baseline, graphics defaults, PATCHED title marker, red frontend clear-screen color, and bounded Goodies-wall display override.",
+      "patch_keys": [
+        "resolution_gate",
+        "force_windowed",
+        "extra_graphics_default_on",
+        "ignore_cardid_tweak_overrides",
+        "version_overlay_use_patched_format_pointer",
+        "frontend_clear_screen_dark_red",
+        "goodies_gallery_display_unlock"
+      ],
+      "is_selectable": true,
+      "proof_status": "Proof-bounded preset over reversible rows with accepted combined safe-copy launch/capture/source-safety proof; not a full overhaul, online mode, control-feel fix, or gameplay parity claim.",
+      "default_controller_configuration": 1,
+      "default_persist_controller_config_in_options": true,
+      "default_sharpen_mouse_look": true,
+      "modules": [
+        {
+          "id": "windowed-compatibility",
+          "display_name": "Windowed compatibility",
+          "category": "Executable patch rows",
+          "proof_status": "Byte-verified copied-executable compatibility baseline.",
+          "claim_boundary": "Allows the safe copy to prefer windowed startup and accept non-4:3 display-mode candidates; does not prove aspect-ratio gameplay parity.",
+          "patch_keys": [
+            "resolution_gate",
+            "force_windowed"
+          ],
+          "launch_arguments": [],
+          "copied_options_edits": [],
+          "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
+          "evidence_refs": [
+            "patches/README.md",
+            "release/readiness/winui_safe_copy_live_runtime_smoke_2026-06-17.md",
+            "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
+            "reverse-engineering/binary-analysis/windowed-mode-analysis.md"
+          ],
+          "non_claims": [
+            "No widescreen field-of-view parity.",
+            "No all-machine windowing guarantee.",
+            "No installed-game mutation."
+          ]
+        },
+        {
+          "id": "graphics-defaults",
+          "display_name": "Graphics default rows",
+          "category": "Executable patch rows",
+          "proof_status": "Byte-verified rows with copied-game launch proof; visible graphics parity remains unproven.",
+          "claim_boundary": "Requests modern/default graphics behavior in the safe copy; does not prove rendering quality or no-noticeable-difference parity.",
+          "patch_keys": [
+            "extra_graphics_default_on",
+            "ignore_cardid_tweak_overrides"
+          ],
+          "launch_arguments": [],
+          "copied_options_edits": [],
+          "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; cardid.txt/source files are not rewritten.",
+          "evidence_refs": [
+            "patches/README.md",
+            "release/readiness/winui_modern_graphics_live_runtime_smoke_2026-06-17.md",
+            "reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md"
+          ],
+          "non_claims": [
+            "No proven visible graphics improvement.",
+            "No rendering correctness or no-noticeable-difference parity.",
+            "No GPU/driver compatibility guarantee."
+          ]
+        },
+        {
+          "id": "title-marker",
+          "display_name": "PATCHED title marker",
+          "category": "Executable patch rows",
+          "proof_status": "One copied-game title/menu frame showed the V1.00 - PATCHED marker.",
+          "claim_boundary": "Marks the safe copy as modded in one proven title/menu path; does not prove every overlay path or gameplay visibility.",
+          "patch_keys": [
+            "version_overlay_use_patched_format_pointer"
+          ],
+          "launch_arguments": [],
+          "copied_options_edits": [],
+          "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the cave string is only written inside the copied executable.",
+          "evidence_refs": [
+            "patches/README.md",
+            "release/readiness/winui_version_overlay_runtime_smoke_2026-06-17.md",
+            "reverse-engineering/binary-analysis/version-overlay-patch.md"
+          ],
+          "non_claims": [
+            "No every-overlay-path proof.",
+            "No gameplay overlay visibility proof.",
+            "No long-session marker proof."
+          ]
+        },
+        {
+          "id": "frontend-red-margins",
+          "display_name": "Red frontend margins",
+          "category": "Executable patch rows",
+          "proof_status": "Copied-game proof covers title-screen red margins plus one navigated Goodies-menu red-family margin run.",
+          "claim_boundary": "Changes one frontend clear-screen immediate in the safe copy; does not prove every menu state, whole-menu theming, HUD colors, or gameplay colors.",
+          "patch_keys": [
+            "frontend_clear_screen_dark_red"
+          ],
+          "launch_arguments": [],
+          "copied_options_edits": [],
+          "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; no art, texture, save, or installed-game files are rewritten.",
+          "evidence_refs": [
+            "patches/README.md",
+            "release/readiness/winui_frontend_clear_screen_color_patch_2026-06-16.md",
+            "reverse-engineering/binary-analysis/frontend-clear-screen-color-patch.md"
+          ],
+          "non_claims": [
+            "No whole-menu theme replacement.",
+            "No HUD or gameplay color change.",
+            "No every-frontend-state visual proof."
+          ]
+        },
+        {
+          "id": "goodies-display-preview",
+          "display_name": "Goodies display preview",
+          "category": "Executable patch rows",
+          "proof_status": "Two Goodies-wall comparisons changed display state, and one Tatiana page was captured.",
+          "claim_boundary": "Forces the bounded Goodies-wall display-state path in the safe copy; does not edit saves, permanently award Goodies, or prove model/FMV playback.",
+          "patch_keys": [
+            "goodies_gallery_display_unlock"
+          ],
+          "launch_arguments": [],
+          "copied_options_edits": [],
+          "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; copied and source saves are not modified.",
+          "evidence_refs": [
+            "patches/README.md",
+            "release/readiness/winui_goodies_gallery_display_unlock_2026-06-17.md",
+            "reverse-engineering/binary-analysis/goodies-gallery-display-unlock-patch.md"
+          ],
+          "non_claims": [
+            "No permanent Goodies awards.",
+            "No save-file edit.",
+            "No model-viewer or FMV playback proof.",
+            "No every-entry Goodies coverage."
+          ]
+        },
+        {
+          "id": "copied-options-control-defaults",
+          "display_name": "Copied control defaults",
+          "category": "Copied defaultoptions.bea edits",
+          "proof_status": "Manifest/read-back proof only; runtime control feel remains unproven.",
+          "claim_boundary": "Persists controller config 1 and a test mouse-look sensitivity in the copied defaultoptions.bea only; does not prove improved feel, deadzones, look curves, camera behavior, or movement changes.",
+          "patch_keys": [],
+          "launch_arguments": [],
+          "copied_options_edits": [
+            "controllerConfiguration=1",
+            "mouseLookSensitivity=2.25"
+          ],
+          "restore_strategy": "Restore the copied defaultoptions.bea backup or recreate the safe copy; the installed defaultoptions.bea is never rewritten.",
+          "evidence_refs": [
+            "release/readiness/winui_safe_copy_control_options_2026-06-17.md",
+            "roadmap/mod-patch-runtime-rebuild-register.md",
+            "reverse-engineering/save-file/save-format.md"
+          ],
+          "non_claims": [
+            "No improved control-feel proof.",
+            "No deadzone or look-curve byte patch.",
+            "No physical gamepad runtime proof."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "debug-camera-preview",
+      "display_name": "Debug Camera Preview",
+      "description": "Experimental safe-copy profile for the bounded free-camera toggle plus one Q-forward movement path.",
+      "patch_keys": [
+        "resolution_gate",
+        "force_windowed",
+        "free_camera_aurore_gate_bypass",
+        "free_camera_keyboard_forward_q_hook"
+      ],
+      "is_selectable": true,
+      "proof_status": "Experimental copied-runtime CDB proofs for the toggle and one Q-forward movement path; not a full free-camera mode, gameplay safety proof, or camera-control overhaul.",
+      "default_controller_configuration": null,
+      "default_persist_controller_config_in_options": false,
+      "default_sharpen_mouse_look": false,
+      "modules": [
+        {
+          "id": "windowed-compatibility",
+          "display_name": "Windowed compatibility",
+          "category": "Executable patch rows",
+          "proof_status": "Byte-verified copied-executable compatibility baseline.",
+          "claim_boundary": "Allows the safe copy to prefer windowed startup and accept non-4:3 display-mode candidates; does not prove aspect-ratio gameplay parity.",
+          "patch_keys": [
+            "resolution_gate",
+            "force_windowed"
+          ],
+          "launch_arguments": [],
+          "copied_options_edits": [],
+          "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
+          "evidence_refs": [
+            "patches/README.md",
+            "release/readiness/winui_safe_copy_live_runtime_smoke_2026-06-17.md",
+            "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
+            "reverse-engineering/binary-analysis/windowed-mode-analysis.md"
+          ],
+          "non_claims": [
+            "No widescreen field-of-view parity.",
+            "No all-machine windowing guarantee.",
+            "No installed-game mutation."
+          ]
+        },
+        {
+          "id": "debug-camera-q-forward",
+          "display_name": "Debug camera Q-forward path",
+          "category": "Experimental executable patch rows",
+          "proof_status": "Accepted copied-runtime CDB proofs cover the Aurore gate bypass and one Q-forward free-camera movement path.",
+          "claim_boundary": "Selects the free-camera debug toggle gate bypass and one Q-forward remap path for the safe copy; does not create a full camera control scheme or prove gameplay safety.",
+          "patch_keys": [
+            "free_camera_aurore_gate_bypass",
+            "free_camera_keyboard_forward_q_hook"
+          ],
+          "launch_arguments": [],
+          "copied_options_edits": [],
+          "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
+          "evidence_refs": [
+            "patches/README.md",
+            "release/readiness/winui_safe_copy_free_camera_toggle_2026-06-18.md",
+            "release/readiness/winui_free_camera_q_forward_runtime_2026-06-18.md",
+            "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md"
+          ],
+          "non_claims": [
+            "No full free-camera control scheme proof.",
+            "No joystick or analog camera proof.",
+            "No gameplay safety or long-session proof.",
+            "No render parity or rebuild parity proof."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "custom",
+      "display_name": "Custom",
+      "description": "Manual visible-row selection; safe copies still add the required windowed compatibility pair.",
+      "patch_keys": [],
+      "is_selectable": true,
+      "proof_status": "Manual selection surface; each row keeps its own proof boundary.",
+      "default_controller_configuration": null,
+      "default_persist_controller_config_in_options": false,
+      "default_sharpen_mouse_look": false,
+      "modules": []
+    }
+  ]
+}

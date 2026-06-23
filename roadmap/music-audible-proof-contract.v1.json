@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "music-audible-proof-contract.v1",
+  "checkerScope": "public-audible-proof-contract-not-audio-capture-revalidation",
+  "scope": "safe-copy-music-audible-output-acceptance-boundary",
+  "generatedAt": "2026-06-22",
+  "currentAcceptedEvidence": {
+    "safeCopyStaging": true,
+    "sourceMusicUnchanged": true,
+    "copiedTargetMatchesReplacement": true,
+    "restoreManifest": true,
+    "level100SelectionDecodeProofs": 2,
+    "namedPresetSelectionDecodeProof": "use-bea02-for-bea04",
+    "audioLoopbackBackendPreflight": true,
+    "audioLoopbackCalibrationNonSilent": true,
+    "twoRunHarnessAcceptanceChecker": true,
+    "sourceAudioReferenceFingerprint": true,
+    "captureSourceCorrelationAdapter": true,
+    "runtimeAudibleOutputProof": false
+  },
+  "minimumAudibleProof": {
+    "artifactSchema": "winui-safe-copy-music-audible-output-proof.v1",
+    "sourceSafety": [
+      "installedHashUnchanged",
+      "overrideHashUnchanged",
+      "sourceTargetHashUnchanged",
+      "sourceReplacementHashUnchanged",
+      "noPreexistingBea",
+      "noBeaAfterStop"
+    ],
+    "safeCopyInputs": [
+      "resolution_gate",
+      "force_windowed",
+      "no -nomusic launch argument",
+      "no -nosound launch argument",
+      "targetNowMatchesReplacement",
+      "backupMatchesOriginal"
+    ],
+    "runtimeSelectionDecode": [
+      "CGame__PlayMusicForCurrentLevel observed for the intended level",
+      "CMusic__PlaySelection observed for the intended selection",
+      "PCPlatform__KickAsyncMusicStreamRead path matches the staged target",
+      "COggFileRead__OpenFileAndPrimeDecoder path matches the staged target",
+      "COggFileRead__ReadDecodedPcm positive request observed"
+    ],
+    "audioCapture": [
+      "bounded loopback or equivalent output-capture artifact",
+      "capture starts before the expected music kick and ends after decode begins",
+      "capture duration is positive and reported in milliseconds",
+      "sample rate and channel count are reported",
+      "non-silent signal observed in the expected window",
+      "positive staged run differs from a clean same-level baseline",
+      "mute-control run with -nomusic or -nosound is not accepted as audible output"
+    ],
+    "comparisonControls": [
+      "same level and launch arguments except the tested music mutation",
+      "same safe-copy patch set except the tested music mutation",
+      "same audio endpoint and format between compared runs",
+      "clean baseline and staged positive both have CDB selection/decode evidence",
+      "positive audio window is time-correlated with the CDB selection/decode window"
+    ],
+    "negativeControls": [
+      "ambient no-BEA output-control stays below non-silent threshold",
+      "mute-control run with -nomusic or -nosound stays below non-silent threshold",
+      "negative controls are not accepted as audible-output proof"
+    ],
+    "sourceAudioCorrelation": [
+      "deterministic decoded-source fingerprints exist for BEA_04 target and BEA_02 replacement",
+      "source reference fingerprints differ by at least the accepted source margin",
+      "capture-to-source adapter emits the harness-compatible sourceAudioCorrelation object without raw audio or private paths",
+      "clean baseline correlates to original BEA_04 source audio more than replacement BEA_02",
+      "staged positive correlates to replacement BEA_02 source audio more than original BEA_04",
+      "RMS or peak-only difference is not sufficient"
+    ]
+  },
+  "nonClaims": [
+    "not current audible playback proof",
+    "not a new BEA launch",
+    "not a new CDB attach",
+    "not private audio artifact revalidation",
+    "not arbitrary external OGG compatibility",
+    "not all music cues",
+    "not loop behavior proof",
+    "not volume behavior proof",
+    "not mixing or crossfade proof",
+    "not gameplay parity",
+    "not rebuild parity",
+    "not no-noticeable-difference parity"
+  ],
+  "nextExecutableProof": {
+    "recommendedPreset": "use-bea02-for-bea04",
+    "recommendedLevel": 100,
+    "recommendedComparison": "clean BEA_04 level-100 baseline versus BEA_02-over-BEA_04 staged positive",
+    "blockedBy": "requires a live two-run artifact with ambient/mute controls and accepted sanitized capture-to-source-audio correlation before any audible claim"
+  }
+}

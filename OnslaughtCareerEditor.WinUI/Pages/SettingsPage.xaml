@@ -4,9 +4,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    <ScrollViewer>
+    <ScrollViewer AutomationProperties.AutomationId="SettingsPageScrollViewer"
+                  AutomationProperties.Name="Settings page content">
         <StackPanel Padding="20,18,20,24">
             <TextBlock Text="Settings"
                        Style="{StaticResource SectionTitleTextStyle}" />
@@ -24,38 +26,72 @@
                     <TextBlock Text="Game Directory"
                                FontSize="18"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="Set the path to your Battle Engine Aquila installation. This is used by the save editors, Binary Patches, and media pages to locate the retail files they operate on."
+                    <TextBlock Text="Choose your installed game folder as read-only source material. The app reads it for saves, media, and safe game copies; it does not edit that folder. Windowed &amp; Mods prepares an app-owned safe game copy from this source."
                                Style="{StaticResource SectionBodyTextStyle}" />
-                    <Grid ColumnSpacing="10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                    <TextBlock Text="Advanced BEA.exe-only patching is separate from the safe game copy workflow."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <Border Background="{ThemeResource ShellSurfaceBrush}"
+                            BorderBrush="{ThemeResource ShellBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="14">
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Configured install"
+                                           Style="{StaticResource SectionBodyTextStyle}" />
+                                <TextBlock x:Name="GameDirectorySummaryTextBlock"
+                                           AutomationProperties.AutomationId="SettingsGameDirectorySummary"
+                                           Text="Not configured"
+                                           FontSize="22"
+                                           FontWeight="SemiBold" />
+                                <TextBlock x:Name="GameDirectoryRoleTextBlock"
+                                           AutomationProperties.AutomationId="SettingsGameDirectoryRole"
+                                          Text="Choose your install folder as read-only source material to enable saves, media, and playable copied-game workflows."
+                                           Style="{StaticResource SectionBodyTextStyle}" />
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    AutomationProperties.AutomationId="SettingsBrowseGameDirectoryButton"
+                                    Content="Browse..."
+                                    VerticalAlignment="Center"
+                                    Click="BrowseGameDirectoryButton_Click" />
+                            <Button Grid.Column="2"
+                                    AutomationProperties.AutomationId="SettingsAutoDetectGameDirectoryButton"
+                                    Content="Auto-Detect"
+                                    VerticalAlignment="Center"
+                                    Click="AutoDetectGameDirectoryButton_Click" />
+                        </Grid>
+                    </Border>
+                    <controls:Expander Header="Path details"
+                                       AutomationProperties.AutomationId="SettingsGameDirectoryPathDetails"
+                                       IsExpanded="False">
                         <TextBox x:Name="GameDirectoryTextBox"
+                                 AutomationProperties.AutomationId="SettingsGameDirectoryPathTextBox"
+                                 Header="Full install path"
                                  IsReadOnly="True" />
-                        <Button Grid.Column="1"
-                                Content="Browse..."
-                                Click="BrowseGameDirectoryButton_Click" />
-                        <Button Grid.Column="2"
-                                Content="Auto-Detect"
-                                Click="AutoDetectGameDirectoryButton_Click" />
-                    </Grid>
+                    </controls:Expander>
                     <TextBlock x:Name="GameDirectoryStatusTextBlock"
+                               AutomationProperties.AutomationId="SettingsGameDirectoryStatus"
                                Style="{StaticResource SectionBodyTextStyle}" />
                 </StackPanel>
             </Border>
 
             <Border Style="{StaticResource SectionCardStyle}">
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Save Files"
+                    <TextBlock Text="Detected save files (read-only)"
                                FontSize="18"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="Save files are typically located in the game save directory. The app scans this location for `.bes` and `.bea` files, including `defaultoptions.bea` in the Steam build."
+                    <TextBlock Text="This summary only confirms what the install scan found. Inspect or patch copies in Save Lab; nothing here writes to your saves."
                                Style="{StaticResource SectionBodyTextStyle}" />
                     <TextBlock x:Name="SaveDirectoryTextBlock"
+                               AutomationProperties.AutomationId="SettingsSaveDirectorySummary"
                                FontWeight="SemiBold" />
                     <TextBlock x:Name="SaveFileCountTextBlock"
+                               AutomationProperties.AutomationId="SettingsSaveFileCount"
                                Style="{StaticResource SectionBodyTextStyle}" />
                 </StackPanel>
             </Border>
@@ -68,12 +104,15 @@
                     <TextBlock Text="Control whether audio or video continues playing when you switch pages."
                                Style="{StaticResource SectionBodyTextStyle}" />
                     <ToggleSwitch x:Name="AllowBackgroundAudioToggle"
+                                  AutomationProperties.AutomationId="SettingsAllowBackgroundAudioToggle"
                                   Header="Allow audio to keep playing when switching pages"
                                   Toggled="MediaPreferenceChanged" />
                     <ToggleSwitch x:Name="AllowBackgroundVideoToggle"
+                                  AutomationProperties.AutomationId="SettingsAllowBackgroundVideoToggle"
                                   Header="Allow video to keep playing when switching pages"
                                   Toggled="MediaPreferenceChanged" />
                     <ToggleSwitch x:Name="PreventOverlapToggle"
+                                  AutomationProperties.AutomationId="SettingsPreventOverlapToggle"
                                   Header="Prevent audio and video from playing at the same time"
                                   Toggled="MediaPreferenceChanged" />
                     <TextBlock Text="Note: if overlap prevention is enabled, starting video will stop audio even if background audio is allowed."
@@ -81,13 +120,17 @@
                 </StackPanel>
             </Border>
 
-            <StackPanel Orientation="Horizontal"
-                        Spacing="12">
-                <Button Content="Reload Saved Settings"
+            <StackPanel Spacing="12">
+                <Button AutomationProperties.AutomationId="SettingsReloadButton"
+                        Content="Reload Saved Settings"
                         Click="ReloadButton_Click" />
-                <TextBlock x:Name="ConfigPathTextBlock"
-                           VerticalAlignment="Center"
-                           Style="{StaticResource SectionBodyTextStyle}" />
+                <controls:Expander Header="Settings file details"
+                                   AutomationProperties.AutomationId="SettingsFileDetails"
+                                   IsExpanded="False">
+                    <TextBlock x:Name="ConfigPathTextBlock"
+                               AutomationProperties.AutomationId="SettingsConfigPath"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                </controls:Expander>
             </StackPanel>
         </StackPanel>
     </ScrollViewer>

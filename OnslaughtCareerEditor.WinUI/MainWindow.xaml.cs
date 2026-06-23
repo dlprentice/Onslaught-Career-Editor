@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
+using Microsoft.UI;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using OnslaughtCareerEditor.WinUI.Pages;
 using Onslaught___Career_Editor;
+using Windows.Graphics;
+using WinRT.Interop;
 
 namespace OnslaughtCareerEditor.WinUI
 {
@@ -14,15 +17,20 @@ namespace OnslaughtCareerEditor.WinUI
         private readonly Dictionary<string, NavigationViewItem> _itemByTag;
         private readonly Dictionary<string, Type> _pageByTag;
         private readonly Dictionary<Type, object> _pageCache = new();
+        private readonly AppWindow? _appWindow;
 
         public MainWindow()
         {
             InitializeComponent();
+            _appWindow = TryGetAppWindow();
+            ApplySavedWindowSize();
 
             _itemByTag = new Dictionary<string, NavigationViewItem>(StringComparer.OrdinalIgnoreCase)
             {
+                ["home"] = HomeNavigationItem,
                 ["saves"] = SavesNavigationItem,
                 ["media"] = MediaNavigationItem,
+                ["assets"] = AssetLibraryNavigationItem,
                 ["lore"] = LoreNavigationItem,
                 ["binary"] = BinaryNavigationItem,
                 ["settings"] = SettingsNavigationItem,
@@ -31,8 +39,10 @@ namespace OnslaughtCareerEditor.WinUI
 
             _pageByTag = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
             {
+                ["home"] = typeof(HomePage),
                 ["saves"] = typeof(SavesPage),
                 ["media"] = typeof(MediaPage),
+                ["assets"] = typeof(AssetLibraryPage),
                 ["lore"] = typeof(LorePage),
                 ["binary"] = typeof(BinaryPatchesPage),
                 ["settings"] = typeof(SettingsPage),
@@ -40,6 +50,7 @@ namespace OnslaughtCareerEditor.WinUI
             };
 
             AppStatusService.StatusChanged += HandleStatusChanged;
+            Closed += MainWindow_Closed;
             RefreshFooter();
             NavigateToTag(GetInitialTag());
         }
@@ -48,15 +59,24 @@ namespace OnslaughtCareerEditor.WinUI
         {
             AppConfig config = AppConfig.Load();
             string? gameDir = config.GetGameDir();
-            GameDirectoryTextBlock.Text = string.IsNullOrWhiteSpace(gameDir) ? "Not set" : gameDir;
-            StatusTextBlock.Text = AppStatusService.CurrentStatus;
-            string? exePath = ResolveGameExecutablePath(gameDir);
-            LaunchGameButton.IsEnabled = !string.IsNullOrWhiteSpace(exePath);
+            GameDirectoryTextBlock.Text = BuildGameDirectoryLabel(gameDir);
             ToolTipService.SetToolTip(
-                LaunchGameButton,
-                string.IsNullOrWhiteSpace(exePath)
-                    ? "Set a valid Battle Engine Aquila game directory in Settings to launch BEA.exe."
-                    : $"Launch {Path.GetFileName(exePath)} from the configured game directory.");
+                GameDirectoryTextBlock,
+                string.IsNullOrWhiteSpace(gameDir) ? "Set the game directory in Settings." : gameDir);
+            StatusTextBlock.Text = AppStatusService.CurrentStatus;
+            ToolTipService.SetToolTip(
+                ReviewSetupButton,
+                string.IsNullOrWhiteSpace(gameDir)
+                    ? "Open Settings to choose the Battle Engine Aquila install used as read-only source material."
+                    : "Open Settings to review the configured install and safe app-owned workspace behavior.");
+        }
+
+        public void MaximizeForUserWorkspace()
+        {
+            if (_appWindow?.Presenter is OverlappedPresenter presenter)
+            {
+                presenter.Maximize();
+            }
         }
 
         private void HandleStatusChanged(string status)
@@ -66,6 +86,12 @@ namespace OnslaughtCareerEditor.WinUI
 
         private string GetInitialTag()
         {
+            string? testInitialTag = Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_TEST_INITIAL_TAG");
+            if (!string.IsNullOrWhiteSpace(testInitialTag) && _pageByTag.ContainsKey(testInitialTag))
+            {
+                return testInitialTag;
+            }
+
             int lastTab = AppConfig.Load().LastTab;
             return lastTab switch
             {
@@ -74,7 +100,8 @@ namespace OnslaughtCareerEditor.WinUI
                 3 => "binary",
                 4 => "settings",
                 5 => "about",
-                _ => "saves",
+                6 => "assets",
+                _ => "home",
             };
         }
 
@@ -86,7 +113,7 @@ namespace OnslaughtCareerEditor.WinUI
             }
         }
 
-        private void NavigateToTag(string tag)
+        public void NavigateToTag(string tag, int? saveSubTab = null)
         {
             if (!_pageByTag.TryGetValue(tag, out Type? pageType) ||
                 !_itemByTag.TryGetValue(tag, out NavigationViewItem? navItem))
@@ -97,10 +124,17 @@ namespace OnslaughtCareerEditor.WinUI
             ShellNavigationView.SelectedItem = navItem;
             ContentFrame.Content = GetOrCreatePage(pageType);
 
+            if (saveSubTab is int tabIndex && ContentFrame.Content is SavesPage savesPage)
+            {
+                savesPage.NavigateToSubTab(tabIndex);
+            }
+
             AppConfig config = AppConfig.Load();
             config.LastTab = tag switch
             {
+                "home" => -1,
                 "media" => 1,
+                "assets" => 6,
                 "lore" => 2,
                 "binary" => 3,
                 "settings" => 4,
@@ -122,51 +156,66 @@ namespace OnslaughtCareerEditor.WinUI
             return page;
         }
 
-        private static string? ResolveGameExecutablePath(string? gameDir)
+        private AppWindow? TryGetAppWindow()
         {
-            if (string.IsNullOrWhiteSpace(gameDir) || !Directory.Exists(gameDir))
+            try
+            {
+                IntPtr handle = WindowNative.GetWindowHandle(this);
+                WindowId windowId = Win32Interop.GetWindowIdFromWindow(handle);
+                return AppWindow.GetFromWindowId(windowId);
+            }
+            catch
             {
                 return null;
             }
-
-            string upper = Path.Combine(gameDir, "BEA.exe");
-            if (File.Exists(upper))
-            {
-                return upper;
-            }
-
-            string lower = Path.Combine(gameDir, "bea.exe");
-            return File.Exists(lower) ? lower : null;
         }
 
-        private void LaunchGameButton_Click(object sender, RoutedEventArgs e)
+        private void ApplySavedWindowSize()
         {
-            string? gameDir = AppConfig.Load().GetGameDir();
-            string? exePath = ResolveGameExecutablePath(gameDir);
-            if (string.IsNullOrWhiteSpace(exePath))
+            if (_appWindow is null)
             {
-                AppStatusService.SetStatus("Launch Game: configure a valid BEA.exe path in Settings first");
-                RefreshFooter();
                 return;
             }
 
-            try
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = exePath,
-                    WorkingDirectory = Path.GetDirectoryName(exePath) ?? gameDir ?? string.Empty,
-                    UseShellExecute = true
-                });
+            AppConfig config = AppConfig.Load();
+            int width = Math.Clamp(config.WindowWidth, AppConfig.MinWindowWidth, AppConfig.MaxWindowWidth);
+            int height = Math.Clamp(config.WindowHeight, AppConfig.MinWindowHeight, AppConfig.MaxWindowHeight);
+            _appWindow.Resize(new SizeInt32(width, height));
+        }
 
-                AppStatusService.SetStatus("Launch Game: started BEA.exe");
-                RefreshFooter();
-            }
-            catch (Exception ex)
+        private void MainWindow_Closed(object sender, WindowEventArgs args)
+        {
+            App.SafeGameCopyProcesses.StopAll();
+
+            if (_appWindow is null)
             {
-                AppStatusService.SetStatus($"Launch Game: failed to start BEA.exe ({ex.Message})");
-                RefreshFooter();
+                return;
             }
+
+            SizeInt32 size = _appWindow.Size;
+            AppConfig config = AppConfig.Load();
+            config.WindowWidth = Math.Clamp(size.Width, AppConfig.MinWindowWidth, AppConfig.MaxWindowWidth);
+            config.WindowHeight = Math.Clamp(size.Height, AppConfig.MinWindowHeight, AppConfig.MaxWindowHeight);
+            config.Save();
+        }
+
+        private static string BuildGameDirectoryLabel(string? gameDir)
+        {
+            if (string.IsNullOrWhiteSpace(gameDir))
+            {
+                return "Not set";
+            }
+
+            string trimmed = gameDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string folderName = Path.GetFileName(trimmed);
+            return string.IsNullOrWhiteSpace(folderName) ? "Configured" : folderName;
+        }
+
+        private void ReviewSetupButton_Click(object sender, RoutedEventArgs e)
+        {
+            NavigateToTag("settings");
+            AppStatusService.SetStatus("Settings: review the read-only game install and app-owned working-copy behavior");
+            RefreshFooter();
         }
     }
 }

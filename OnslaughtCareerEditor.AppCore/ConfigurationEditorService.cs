@@ -25,6 +25,8 @@ namespace Onslaught___Career_Editor
         public uint? MirrorKeyboardDeviceCode { get; init; }
         public string CurrentPlayer1Token { get; init; } = string.Empty;
         public string CurrentPlayer2Token { get; init; } = string.Empty;
+        public string Player1AccessibleName => BuildOverrideAccessibleName("Player 1");
+        public string Player2AccessibleName => BuildOverrideAccessibleName("Player 2");
 
         public string Player1Token
         {
@@ -58,6 +60,16 @@ namespace Onslaught___Career_Editor
                 Player1Token = Player1Token,
                 Player2Token = Player2Token
             };
+        }
+
+        private string BuildOverrideAccessibleName(string playerLabel)
+        {
+            if (!string.IsNullOrWhiteSpace(GroupLabel))
+            {
+                return $"{playerLabel} override for {GroupLabel} {ActionLabel}";
+            }
+
+            return $"{playerLabel} override for {ActionLabel}";
         }
 
         private void SetField(ref string field, string value, [CallerMemberName] string? propertyName = null)
@@ -109,6 +121,7 @@ namespace Onslaught___Career_Editor
         public bool? VibrationP2Override { get; init; }
         public uint? ControllerConfigP1Override { get; init; }
         public uint? ControllerConfigP2Override { get; init; }
+        public float? MouseSensitivityOverride { get; init; }
         public string? CopyOptionsFromPath { get; init; }
         public bool CopyOptionsEntries { get; init; }
         public bool CopyOptionsTail { get; init; }
@@ -158,7 +171,7 @@ namespace Onslaught___Career_Editor
         {
             if (!SaveEditorService.IsOptionsLikeFilePath(filePath))
             {
-                throw new InvalidDataException("Configuration mode requires a .bea options file (typically defaultoptions.bea).");
+                throw new InvalidDataException("Game Options requires a .bea options file (typically defaultoptions.bea).");
             }
 
             SaveAnalysis analysis = BesFilePatcher.AnalyzeSave(filePath);
@@ -210,7 +223,8 @@ namespace Onslaught___Career_Editor
                 request.InvertWalkerP1Override.HasValue || request.InvertWalkerP2Override.HasValue ||
                 request.InvertFlightP1Override.HasValue || request.InvertFlightP2Override.HasValue ||
                 request.VibrationP1Override.HasValue || request.VibrationP2Override.HasValue ||
-                request.ControllerConfigP1Override.HasValue || request.ControllerConfigP2Override.HasValue)
+                request.ControllerConfigP1Override.HasValue || request.ControllerConfigP2Override.HasValue ||
+                request.MouseSensitivityOverride.HasValue)
             {
                 parts.Add("settings overrides");
             }
@@ -251,6 +265,7 @@ namespace Onslaught___Career_Editor
                    request.VibrationP2Override.HasValue ||
                    request.ControllerConfigP1Override.HasValue ||
                    request.ControllerConfigP2Override.HasValue ||
+                   request.MouseSensitivityOverride.HasValue ||
                    request.CopyOptionsEntries ||
                    request.CopyOptionsTail ||
                    CountKeybindOverrideRows(request.KeybindRows) > 0;
@@ -279,12 +294,17 @@ namespace Onslaught___Career_Editor
             string outputPath = request.OutputPath?.Trim() ?? string.Empty;
             if (inputPath.Length == 0 || outputPath.Length == 0)
             {
-                return PatchResult.Fail("Select both input and output .bea paths before patching configuration.");
+                return PatchResult.Fail("Select both input and output .bea paths before patching game options.");
             }
 
             if (!SaveEditorService.IsOptionsLikeFilePath(inputPath) || !SaveEditorService.IsOptionsLikeFilePath(outputPath))
             {
-                return PatchResult.Fail("Configuration mode requires .bea/defaultoptions.bea input and output paths.");
+                return PatchResult.Fail("Game Options requires .bea/defaultoptions.bea input and output paths.");
+            }
+
+            if (AreSamePaths(inputPath, outputPath))
+            {
+                return PatchResult.Fail("Output file must be different from input file. In-place options patching is blocked.");
             }
 
             if (!File.Exists(inputPath))
@@ -299,7 +319,7 @@ namespace Onslaught___Career_Editor
 
             if (!HasPendingChanges(request))
             {
-                return PatchResult.Fail("Choose at least one configuration override, copied setting, or keybind change to enable patching.");
+                return PatchResult.Fail("Choose at least one game options override, copied setting, or keybind change to enable patching.");
             }
 
             IReadOnlyList<string> keybindErrors = ValidateKeybindRows(request.KeybindRows);
@@ -325,45 +345,14 @@ namespace Onslaught___Career_Editor
                 VibrationP2Override = request.VibrationP2Override,
                 ControllerConfigP1Override = request.ControllerConfigP1Override,
                 ControllerConfigP2Override = request.ControllerConfigP2Override,
+                OptionsMouseSensitivityOverride = request.MouseSensitivityOverride,
                 CopyOptionsFromPath = NormalizeOptionalPath(request.CopyOptionsFromPath),
                 CopyOptionsEntries = request.CopyOptionsEntries,
                 CopyOptionsTail = request.CopyOptionsTail,
                 OptionsEntryOverrides = keybindOverrides
             };
 
-            bool inPlacePatch = AreSamePaths(inputPath, outputPath);
-            if (!inPlacePatch)
-            {
-                return patcher.PatchFile(inputPath, outputPath);
-            }
-
-            string tempOutput = Path.Combine(
-                Path.GetDirectoryName(outputPath) ?? string.Empty,
-                Path.GetFileName(outputPath) + ".tmp." + Guid.NewGuid().ToString("N"));
-
-            PatchResult result = patcher.PatchFile(inputPath, tempOutput);
-            if (!result.Success)
-            {
-                TryDeleteTemp(tempOutput);
-                return result;
-            }
-
-            try
-            {
-                string backupPath = BuildTimestampedBackupPath(outputPath);
-                File.Copy(outputPath, backupPath, overwrite: false);
-                File.Copy(tempOutput, outputPath, overwrite: true);
-                File.Delete(tempOutput);
-                return PatchResult.Ok(
-                    $"Successfully patched configuration in place:\n{outputPath}\n\nBackup created:\n{backupPath}");
-            }
-            catch (Exception ex)
-            {
-                return PatchResult.Fail(
-                    "Patched output was created, but in-place replace failed.\n" +
-                    $"Temp patched file: {tempOutput}\n" +
-                    $"Error: {ex.Message}");
-            }
+            return patcher.PatchFile(inputPath, outputPath);
         }
 
         public static void LoadOverridesFromSnapshot(IReadOnlyList<ConfigurationKeybindRow> rows)
@@ -801,26 +790,5 @@ namespace Onslaught___Career_Editor
             }
         }
 
-        private static string BuildTimestampedBackupPath(string path)
-        {
-            string directory = Path.GetDirectoryName(path) ?? string.Empty;
-            string fileName = Path.GetFileName(path);
-            string timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
-            return Path.Combine(directory, $"{fileName}.{timestamp}.bak");
-        }
-
-        private static void TryDeleteTemp(string path)
-        {
-            try
-            {
-                if (File.Exists(path))
-                {
-                    File.Delete(path);
-                }
-            }
-            catch
-            {
-            }
-        }
     }
 }
