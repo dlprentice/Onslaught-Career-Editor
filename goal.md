@@ -6,32 +6,38 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Close WinUI music UTC sidecar timestamp normalization, then investigate the
-staged-positive capture-source correlation mismatch from the latest 60-second
-private raw bundle.
+Finish the public-primary full migration/readiness pass so the public checkout
+is the normal day-to-day repo for project-owned work, not a sparse export.
 
-This slice starts after the public-primary migration hardening closeout at
-`e4ca5904 Repo: align public-primary proof boundaries`. The public checkout
-`C:\Users\david\source\Onslaught-Career-Editor` is the day-to-day source of
-truth for project-owned work. The former private checkout is no longer the
-normal working source.
+This slice starts after the music timestamp/proof-boundary closeout at
+`e10db436 Runtime: accept UTC music proof sidecar timestamps`.
 
-This slice starts after the public-primary boundary clarification closeout at
-`ea6e8dcd State: close public-primary boundary clarification`.
+The operator direction is an aggressive private-to-public pivot: migrate and
+track useful project material from the former private checkout when it is
+source, docs, tools, tests, RE notes, wave notes, state batons, agent reports,
+readiness notes, compact proof summaries, or other non-secret/non-payload text
+that helps contributors and agents continue the work. The public repo should
+feel complete, collaboration-ready, and usable as the working base.
 
-The executable target is the next bounded music/mod runtime proof step:
+The only local/ignored overlay classes for this slice are hard payloads and
+machine-only outputs: actual game executables/DLLs/archives/media, extracted
+asset payloads, arbitrary save/options payloads other than the tracked immutable
+fixture, copied runtime profiles, raw screenshots/frame dumps, raw CDB logs,
+bulky generated proof captures, full Ghidra databases/backups, secrets,
+`.env*`, local config, runtime caches, and build/test/package outputs.
 
-- fix the first-party UTC timestamp-shape blocker in the music proof
-  materializer/builder chain;
-- replay the latest private 60-second raw bundle through the fixed
-  capture-source correlation builder without relaunching BEA;
-- record the exact next fail-closed proof boundary if source correlation still
-  does not accept;
-- keep all bulky raw runtime outputs in ignored/external local proof roots;
-- materialize a public-safe result only through the tracked materializer and
-  final checker;
-- keep `runtimeAudibleOutputProof=false` until a complete private raw bundle
-  passes materializer and final-checker acceptance.
+Executable target:
+
+- run the private-vs-public migration inventory from a clean public `main`;
+- use Codex normal/adversarial consults for migration completeness, public
+  wording, hard-payload risk, and contributor readiness;
+- promote any remaining safe private-only project material into public;
+- tighten docs/checkers only where they still imply a sparse/sanitized export
+  rather than a public-primary working repo;
+- keep hard payloads ignored/local and represented by hashes, schemas, docs,
+  compact proof summaries, and reproducible tools;
+- validate with migration, payload-safety, docs/release, hygiene, and state
+  gates, then commit/push the green public-main closeout.
 
 ## Current Truth
 
@@ -98,6 +104,8 @@ The executable target is the next bounded music/mod runtime proof step:
   required `0.150000`, target `0.862302`, replacement `0.700409`). No
   capture-source sidecar was emitted and `runtimeAudibleOutputProof=false`
   remains current truth.
+- The UTC timestamp normalization/source-root regression slice is closed and
+  pushed at `e10db436 Runtime: accept UTC music proof sidecar timestamps`.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof both exist.
@@ -105,26 +113,36 @@ The executable target is the next bounded music/mod runtime proof step:
 
 ## Latest Closed Slice
 
-Public-primary migration and proof-boundary hardening closed at
-`e4ca5904 Repo: align public-primary proof boundaries`; follow-up source
-boundary clarification closed at
-`ea6e8dcd State: close public-primary boundary clarification`.
+Music UTC timestamp/proof-boundary normalization closed at
+`e10db436 Runtime: accept UTC music proof sidecar timestamps`. The public repo is
+clean and aligned at that commit before this migration/readiness slice begins.
 
 Closed-slice validation:
 
 ```powershell
-npm run test:public-primary-migration-inventory
-npm run test:hard-payload-safety
-npm run test:public-primary-migration-inventory
+npm run test:winui-safe-copy-music-cgame-caller-diagnostic
+npm run test:winui-safe-copy-music-cdb-timeline-sidecar
+npm run test:winui-safe-copy-music-audible-output-materializer
+npm run test:winui-safe-copy-music-audible-output-two-run-harness
+npm run test:winui-safe-copy-music-audible-output-live-bundle-executor
+npm run test:winui-safe-copy-music-timestamped-cdb-log-producer
+npm run test:winui-safe-copy-music-source-music-safety-sidecar
+npm run test:winui-safe-copy-music-ambient-no-bea-census
+npm run test:winui-safe-copy-music-source-audio-correlation
+npm run test:winui-safe-copy-music-capture-source-correlation
+npm run test:winui-safe-copy-music-capture-source-correlation-builder
+npm run test:winui-safe-copy-music-audible-output-live-bundle-gate
+npm run test:winui-safe-copy-music-audible-output-contract
 python tools\docsync_check.py
-py -3 tools\release_profile_snapshot.py --check
-py -3 tools\release_curated_manifest.py --check
+npm run test:hard-payload-safety
 npm run test:doc-commands
 npm run test:md-links
 npm run test:public-allowlist
+py -3 tools\release_profile_snapshot.py --check
+py -3 tools\release_curated_manifest.py --check
 npm run test:repo-hygiene
 py -3 -c "import json; [json.load(open(p, encoding='utf-8')) for p in ['developer_agent_state.json','documentation_agent_state.json']] ; print('state json ok')"
-git diff --cached --check
+git diff --check
 ```
 
 Final pushed-state verification:
@@ -141,22 +159,14 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 Required before any commit/push:
 
 ```powershell
-npm run test:winui-safe-copy-music-cgame-caller-diagnostic
-npm run test:winui-safe-copy-music-cdb-timeline-sidecar
-npm run test:winui-safe-copy-music-audible-output-materializer
-npm run test:winui-safe-copy-music-audible-output-two-run-harness
-npm run test:winui-safe-copy-music-audible-output-live-bundle-executor
-npm run test:winui-safe-copy-music-timestamped-cdb-log-producer
-npm run test:winui-safe-copy-music-source-music-safety-sidecar
-npm run test:winui-safe-copy-music-ambient-no-bea-census
-npm run test:winui-safe-copy-music-source-audio-correlation
-npm run test:winui-safe-copy-music-capture-source-correlation
-npm run test:winui-safe-copy-music-capture-source-correlation-builder
-npm run test:winui-safe-copy-music-audible-output-live-bundle-gate
-npm run test:winui-safe-copy-music-audible-output-contract
+npm run test:public-primary-migration-inventory
 npm run test:hard-payload-safety
+python tools\docsync_check.py
 npm run test:doc-commands
 npm run test:md-links
+npm run test:public-allowlist
+py -3 tools\release_profile_snapshot.py --check
+py -3 tools\release_curated_manifest.py --check
 npm run test:repo-hygiene
 ```
 
@@ -170,16 +180,18 @@ Also required:
 
 ## Next Executable Work
 
-1. Validate and commit the UTC timestamp normalization plus source-root
-   regression coverage.
-2. Investigate why the staged-positive capture from the 60-second bundle still
-   correlates more strongly to original `BEA_04` than replacement `BEA_02`.
-3. Decide from evidence whether the next fix belongs in staging verification,
-   audio capture timing, source-correlation windowing, or the live music preset.
-4. Preserve `runtimeAudibleOutputProof=false` until a generated private raw
-   bundle passes the materializer and final checker.
-5. Update docs/state/evidence, validate, commit/push the green slice, then
-   continue with patch/mod/runtime or online proof work from the public repo.
+1. Wait for the current Codex consults to return and fold in their path-grounded
+   migration/readiness findings.
+2. Run the private-vs-public inventory and inspect every remaining private-only
+   class that is not obviously hard payload, secret, build output, or bulky raw
+   proof output.
+3. Promote safe private-only project material into public and adjust docs/checks
+   if they still imply the public repo is a sparse candidate instead of the
+   working repo.
+4. Validate, commit/push the public-primary migration/readiness closeout.
+5. Resume patch/mod/runtime proof work from the public repo; preserve
+   `runtimeAudibleOutputProof=false` until a generated private raw bundle passes
+   the materializer and final checker.
 
 ## Stop Conditions
 

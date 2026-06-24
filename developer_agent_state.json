@@ -1,12 +1,12 @@
 {
   "lastUpdated": "2026-06-24",
   "branch": "main",
-  "currentFocus": "Music UTC sidecar timestamp normalization is implemented; latest 60-second bundle now fails at staged-positive source-correlation mismatch.",
+  "currentFocus": "Public-primary full migration/readiness pass is active; music UTC sidecar timestamp slice is closed and pushed.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainCommit": "ea6e8dcd",
-    "publicMainStatus": "clean_aligned_before_current_music_timestamp_slice",
+    "publicMainCommit": "e10db436",
+    "publicMainStatus": "clean_aligned_before_public_primary_full_migration_readiness_slice",
     "policy": "track source/docs/tools/tests/RE notes/wave notes/state batons/agent reports/readiness notes/compact proof summaries; keep hard payloads local/ignored"
   },
   "publicPrimaryMigration": {
@@ -30,9 +30,9 @@
     ]
   },
   "activeSlice": {
-    "name": "winui-safe-copy-music-audible-output-proof-lane",
-    "goal": "close UTC timestamp normalization for private audio sidecars, then investigate why staged-positive capture-source correlation still prefers the original track",
-    "claimBoundary": "runtimeAudibleOutputProof remains false until a complete private raw bundle passes the materializer and final checker",
+    "name": "public-primary-full-migration-readiness",
+    "goal": "finish aggressive private-to-public project-material migration/readiness so public main is the normal day-to-day collaboration repo",
+    "claimBoundary": "track source/docs/tools/tests/RE notes/wave notes/state batons/agent reports/readiness notes/compact proof summaries; keep hard payloads/secrets/bulky raw runtime outputs ignored/local",
     "latestFindings": [
       "music-audible-live-20260624-181120 failed before proof acceptance because source-safety sidecar did not receive --source-root; executor command shape is fixed and tested",
       "music-audible-live-20260624-181538 reached clean/staged CDB music-selection provenance but failed capture-source correlation because 30-second WAV captures ended with zero samples before decode; executor now defaults/requires 60000ms for armed live attempts",
@@ -95,12 +95,14 @@
       "no BEA.exe/cdb.exe process before closeout"
     ],
     "pendingForActiveSlice": [
-      "broad docs/repo/hard-payload closeout gates for current timestamp-normalization slice",
-      "source-correlation mismatch investigation after green closeout"
+      "Codex normal/adversarial migration/readiness consult results",
+      "private-vs-public inventory inspection for any remaining safe private-only project material",
+      "migration/readiness docs/checker updates after inventory and consult synthesis"
     ]
   },
   "nextSteps": [
-    "Finish broad validation and commit/push the UTC timestamp/source-root-regression slice.",
-    "Investigate whether the staged-positive source-correlation mismatch is caused by staging verification, capture timing/windowing, source fingerprinting, or preset choice; preserve runtimeAudibleOutputProof=false."
+    "Synthesize Codex consult findings and run the public-primary migration inventory from a clean public main.",
+    "Promote any remaining safe private-only project material; preserve hard payloads, secrets, full Ghidra databases/backups, and bulky raw runtime outputs as ignored/local overlays.",
+    "Validate migration/readiness gates, commit/push, then resume patch/mod/runtime proof work from public main."
   ]
 }
