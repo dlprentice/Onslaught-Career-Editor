@@ -91,12 +91,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         public BinaryPatchesPage()
         {
-            InitializeComponent();
-            PatchBenchMusicTargetFileName.Text = "BEA_01(Master).ogg";
-            PatchBenchAdminLevelPresetComboBox.SelectedIndex = NoAdminLevelPresetIndex;
-            PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex = 0;
-            PatchBenchMouseSensitivityPresetComboBox.SelectedIndex = DefaultMouseSensitivityPresetIndex;
-            PatchBenchCreateMusicSwapPresetComboBox.SelectedIndex = NoCreateMusicSwapPresetIndex;
             IReadOnlyList<string> defaultProfileKeys = BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.CompatibilityProfileId);
 
             _allPatchItems = BinaryPatchPlanBuilder.GetVisibleSpecs()
@@ -107,6 +101,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 .ToList();
             _patchGroups = BuildPatchGroups(_allPatchItems);
 
+            InitializeComponent();
+            PatchBenchMusicTargetFileName.Text = "BEA_01(Master).ogg";
+            PatchBenchAdminLevelPresetComboBox.SelectedIndex = NoAdminLevelPresetIndex;
+            PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex = 0;
+            PatchBenchMouseSensitivityPresetComboBox.SelectedIndex = DefaultMouseSensitivityPresetIndex;
+            PatchBenchCreateMusicSwapPresetComboBox.SelectedIndex = NoCreateMusicSwapPresetIndex;
             PatchGroupsItemsControl.ItemsSource = _patchGroups;
 
             OperationLogTextBox.Text =
@@ -532,6 +532,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchSafeCopySourceStatus.Text = BuildSafeCopySourceStatus(sourcePath);
             WorkingCopySummaryTextBlock.Text = BuildWorkingCopySummary(exePath);
             PatchBenchSelectedProfileStatus.Text = BuildSelectedProfileStatus(visibleSelectedKeys);
+            PatchBenchSelectedProfileDetails.Text = BuildSelectedProfileDetails(visibleSelectedKeys);
 
             SelectionSummaryTextBlock.Text = hasSelected
                 ? BuildSelectionSummary(visibleSelectedKeys)
@@ -2056,7 +2057,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             if (SetEquals(selectedKeys, enhancedPreviewKeys))
             {
-                return "Selected profile: Enhanced Profile Preview. Adds visible safe-copy mods and copied control defaults; not a full overhaul, online mode, or control-feel fix.";
+                return "Selected profile: Enhanced Profile Preview. Patch rows match visible safe-copy mods; copied-options controls come from the current controls below. Not a full overhaul, online mode, or control-feel fix.";
             }
 
             if (SetEquals(selectedKeys, debugCameraPreviewKeys))
@@ -2070,6 +2071,102 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             return $"Selected profile: manual patch selection with {selectedKeys.Count} visible row(s). Create safe copy will add required compatibility and these selected rows.";
+        }
+
+        private static string BuildSelectedProfileDetails(IReadOnlyCollection<string> selectedKeys)
+        {
+            if (selectedKeys.Count == 0)
+            {
+                return "Selected safe-copy preset details: Compatibility-only safe copy. Modules: required windowed compatibility rows are applied during safe-copy creation. Evidence and limits: open row details for exact offsets, checks, and unproven boundaries. Restore: recreate the safe copy, restore the copied BEA.exe.original.backup, or restore copied defaultoptions.bea backup when options were written. Limits: No Host/Join or online multiplayer. No installed-game mutation.";
+            }
+
+            string? profileId = MatchSelectableSafeCopyProfileId(selectedKeys);
+            if (string.IsNullOrWhiteSpace(profileId))
+            {
+                return $"Selected safe-copy preset details: Manual patch selection. Modules: {selectedKeys.Count} visible row(s). Evidence and limits: open row details for exact offsets, checks, and unproven boundaries. Restore: restore copied BEA.exe.original.backup, restore copied defaultoptions.bea backup when options were written, or recreate the safe copy. Limits: No Host/Join or online multiplayer. No installed-game mutation.";
+            }
+
+            SafeCopyProfilePreset preset = BinaryPatchPlanBuilder.GetSafeCopyProfilePreset(profileId);
+            bool isEnhancedPreview = string.Equals(profileId, BinaryPatchPlanBuilder.EnhancedPreviewProfileId, StringComparison.OrdinalIgnoreCase);
+            var builder = new StringBuilder();
+            builder.AppendLine($"Selected safe-copy preset details: {preset.DisplayName}.");
+            builder.AppendLine(FormatSafeCopyProfileModules(preset, isEnhancedPreview));
+            builder.AppendLine(FormatSafeCopyProfileEvidence(preset));
+            builder.AppendLine(FormatSafeCopyProfileRestore(preset));
+            builder.Append(FormatSafeCopyProfileLimits(preset));
+            return builder.ToString();
+        }
+
+        private static string FormatSafeCopyProfileModules(SafeCopyProfilePreset preset, bool isEnhancedPreview)
+        {
+            string[] names = preset.Modules
+                .Select(module => FormatSafeCopyProfileModuleName(module))
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            string prefix = isEnhancedPreview
+                ? "Patch rows match Enhanced Profile Preview; copied-options controls come from the current controls below. Control defaults apply only while P1/P2 config 1, mouse sensitivity 2.25, and invert settings still match the preset. Modules: "
+                : "Modules: ";
+            return names.Length == 0
+                ? $"{prefix}none listed; use row details for selected patch evidence."
+                : $"{prefix}{string.Join("; ", names)}.";
+        }
+
+        private static string FormatSafeCopyProfileModuleName(SafeCopyProfileModule module)
+        {
+            return string.Equals(module.Id, "copied-options-control-defaults", StringComparison.OrdinalIgnoreCase)
+                ? "Copied-options controls (current UI selections; preset defaults only if unchanged)"
+                : module.DisplayName;
+        }
+
+        private static string FormatSafeCopyProfileEvidence(SafeCopyProfilePreset preset)
+        {
+            string[] refs = preset.Modules
+                .SelectMany(module => module.EvidenceRefs)
+                .Where(reference => !string.IsNullOrWhiteSpace(reference))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(4)
+                .ToArray();
+
+            return refs.Length == 0
+                ? "Evidence: no catalog refs listed; use row details before treating this preset as proven."
+                : $"Evidence: {string.Join("; ", refs)}.";
+        }
+
+        private static string FormatSafeCopyProfileRestore(SafeCopyProfilePreset preset)
+        {
+            string[] restoreStrategies = preset.Modules
+                .Select(module => module.RestoreStrategy)
+                .Where(strategy => !string.IsNullOrWhiteSpace(strategy))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(4)
+                .ToArray();
+
+            return restoreStrategies.Length == 0
+                ? "Restore: restore copied BEA.exe.original.backup, restore copied defaultoptions.bea backup when options were written, or recreate the safe copy."
+                : $"Restore: {string.Join("; ", restoreStrategies)}.";
+        }
+
+        private static string FormatSafeCopyProfileLimits(SafeCopyProfilePreset preset)
+        {
+            var limits = preset.Modules
+                .SelectMany(module => module.NonClaims)
+                .Where(nonClaim => !string.IsNullOrWhiteSpace(nonClaim))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            AddLimitIfMissing(limits, "No Host/Join or online multiplayer.");
+            AddLimitIfMissing(limits, "No installed-game mutation.");
+
+            return $"Limits: {string.Join(" ", limits.Take(8))}";
+        }
+
+        private static void AddLimitIfMissing(List<string> limits, string requiredLimit)
+        {
+            if (!limits.Any(limit => string.Equals(limit.Trim(), requiredLimit, StringComparison.OrdinalIgnoreCase)))
+            {
+                limits.Add(requiredLimit);
+            }
         }
 
         private static string BuildWorkingCopySummary(string path)
@@ -2106,7 +2203,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             IReadOnlyList<string> enhancedPreviewKeys = BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.EnhancedPreviewProfileId);
             if (SetEquals(selectedKeys, enhancedPreviewKeys))
             {
-                return BuildPatchDestinationSummary("Enhanced Profile Preview selected. It adds visible safe-copy mods and copied control defaults, not a full overhaul or online mode. It pre-fills copied-options controls for config 1 and mouse sensitivity 2.25; the manifest records the current controls when you create the safe copy.");
+                return BuildPatchDestinationSummary("Enhanced Profile Preview selected. Patch rows match visible safe-copy mods, not a full overhaul or online mode. It pre-fills copied-options controls for config 1 and mouse sensitivity 2.25; the control-options manifest records current controls only when options are written.");
             }
 
             IReadOnlyList<string> debugCameraPreviewKeys = BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.DebugCameraPreviewProfileId);

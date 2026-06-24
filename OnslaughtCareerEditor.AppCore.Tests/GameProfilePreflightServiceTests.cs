@@ -61,9 +61,11 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Contains(receipt.Lines, line => line.Label == "Savegames" && line.Value.Contains("copied into this safe copy only", StringComparison.Ordinal));
             Assert.Contains(receipt.IncludedChanges, change => change.Contains("Windowed compatibility", StringComparison.Ordinal));
             Assert.Contains(receipt.IncludedChanges, change => change.Contains("Red frontend margins", StringComparison.Ordinal));
-            Assert.Contains(receipt.IncludedChanges, change => change.Contains("Copied control defaults", StringComparison.Ordinal));
+            Assert.DoesNotContain(receipt.IncludedChanges, change => change.Contains("Copied control defaults", StringComparison.Ordinal));
+            Assert.Contains(receipt.IncludedChanges, change => change.Contains("no control-options manifest was written", StringComparison.Ordinal));
             Assert.Contains(receipt.StillNotIncluded, item => item.Contains("No Host/Join or online multiplayer", StringComparison.Ordinal));
             Assert.Contains(receipt.StillNotIncluded, item => item.Contains("No installed-game mutation", StringComparison.Ordinal));
+            Assert.Contains(receipt.StillNotIncluded, item => item.Contains("No fixed Enhanced copied-control-default claim", StringComparison.Ordinal));
             Assert.DoesNotContain(receipt.StillNotIncluded, item => item.Contains("online ready", StringComparison.OrdinalIgnoreCase));
             Assert.DoesNotContain(receipt.Lines, line => line.Value.Contains(@"C:\Users", StringComparison.OrdinalIgnoreCase));
             Assert.DoesNotContain(receipt.Lines, line => line.Value.Contains("AppData", StringComparison.OrdinalIgnoreCase));
@@ -74,6 +76,78 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.DoesNotContain(@"X:\AppOwnedProfiles", receiptText, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain(@"C:\Source", receiptText, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain(@"C:\Target", receiptText, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void BuildPrepareReceipt_OnlyListsEnhancedControlDefaultsWhenAppliedOptionsMatchPreset()
+        {
+            SafeCopyProfilePreset preset = BinaryPatchPlanBuilder.GetSafeCopyProfilePreset(BinaryPatchPlanBuilder.EnhancedPreviewProfileId);
+            string[] enhancedKeys = BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(preset.Id).ToArray();
+            var result = new GameProfilePrepareResult(
+                GameProfilePreflightService.SchemaVersion,
+                DateTimeOffset.UnixEpoch,
+                Mutation: true,
+                SourceGameRoot: "selected-game-root",
+                TargetGameRoot: @"X:\AppOwnedProfiles\safe-game-copy-test",
+                ExecutablePath: @"X:\AppOwnedProfiles\safe-game-copy-test\BEA.exe",
+                Entries: new[]
+                {
+                    new GameProfileCopiedEntry("BEA.exe", @"C:\Source\BEA.exe", @"C:\Target\BEA.exe", Directory: false),
+                },
+                PatchResult: new GameProfilePatchResult(
+                    Requested: true,
+                    Success: true,
+                    PatchKeys: enhancedKeys,
+                    Message: "Selected patch bytes verified on disk."),
+                LaunchPlan: new GameProfileLaunchPlan(
+                    ExecutablePath: @"C:\Target\BEA.exe",
+                    WorkingDirectory: @"C:\Target",
+                    Arguments: Array.Empty<string>(),
+                    CommandPreview: "\"BEA.exe\""),
+                ProfilePresetId: preset.Id,
+                ProfilePresetDisplayName: preset.DisplayName,
+                ProfilePresetProofStatus: preset.ProofStatus,
+                ProfileDefaultControllerConfiguration: preset.DefaultControllerConfiguration,
+                ProfileDefaultPersistControllerConfigInOptions: preset.DefaultPersistControllerConfigInOptions,
+                ProfileDefaultSharpenMouseLook: preset.DefaultSharpenMouseLook,
+                ProfilePresetModules: preset.Modules,
+                MusicSwapResult: null,
+                ManifestPath: @"C:\Target\onslaught-profile-manifest.json");
+            var matchingControls = new GameProfileControlOptionsResult(
+                OptionsPath: @"X:\AppOwnedProfiles\safe-game-copy-test\defaultoptions.bea",
+                MouseSensitivity: GameProfileControlOptionsService.SharperMouseLookSensitivity,
+                ControllerConfigP1: 1,
+                ControllerConfigP2: 1,
+                InvertWalkerP1: false,
+                InvertWalkerP2: false,
+                InvertFlightP1: false,
+                InvertFlightP2: false,
+                HashBefore: new string('a', 64),
+                HashAfter: new string('b', 64),
+                ChangedRanges: Array.Empty<GameProfileControlOptionsChangeRange>(),
+                Backups: Array.Empty<GameProfileControlOptionsBackup>(),
+                ManifestPath: @"X:\AppOwnedProfiles\safe-game-copy-test\onslaught-control-options-manifest.json",
+                ProofStatus: GameProfileControlOptionsService.ProofStatusOptionsByteMaterializedOnly,
+                Message: "Control options materialized.");
+            var customControls = matchingControls with
+            {
+                MouseSensitivity = GameProfileControlOptionsService.FastMouseLookSensitivity,
+            };
+
+            GameProfilePrepareReceipt matchingReceipt = GameProfilePreflightService.BuildPrepareReceipt(
+                result,
+                copiedSavegames: false,
+                matchingControls);
+            GameProfilePrepareReceipt customReceipt = GameProfilePreflightService.BuildPrepareReceipt(
+                result,
+                copiedSavegames: false,
+                customControls);
+
+            Assert.Contains(matchingReceipt.IncludedChanges, change => change.Contains("Copied control defaults", StringComparison.Ordinal));
+            Assert.DoesNotContain(matchingReceipt.IncludedChanges, change => change.Contains("custom control-options manifest", StringComparison.Ordinal));
+            Assert.DoesNotContain(customReceipt.IncludedChanges, change => change.Contains("Copied control defaults", StringComparison.Ordinal));
+            Assert.Contains(customReceipt.IncludedChanges, change => change.Contains("custom control-options manifest", StringComparison.Ordinal));
+            Assert.Contains(customReceipt.StillNotIncluded, item => item.Contains("No fixed Enhanced copied-control-default claim", StringComparison.Ordinal));
         }
 
         [Fact]

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "onslaught-public-export-provenance.v1",
-  "sourceCommit": "7a765ef52a5e96e156ccd4be4f4e21cd6b50c81e",
-  "exportedAtUtc": "2026-06-23T23:15:58Z",
+  "sourceCommit": "d46073c93882b95b593fe07190f4a911c5f8e47f",
+  "exportedAtUtc": "2026-06-24T03:42:39Z",
   "exportCommandTemplate": "py -3 tools/export_curated_release_tree.py --dest <public-candidate-dir> --force-clean",
   "sourceTreeStatus": "clean",
   "allowlistFile": "release/readiness/public_candidate_allowlist.tsv",

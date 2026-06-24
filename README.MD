@@ -10,6 +10,17 @@ current internal accounting.
 
 For the current feature surface, navigation order, Save Lab workflows, static-RE posture, and lane gates, see **[CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md)**.
 
+## Download
+
+Downloadable app builds are published on the
+[GitHub Releases](https://github.com/dlprentice/Onslaught-Career-Editor/releases)
+page as unsigned portable Windows x64 ZIP assets with SHA-256 checksum sidecars.
+Extract the full ZIP and run `OnslaughtCareerEditor.WinUI.exe`.
+
+The ZIP release does not include Battle Engine Aquila game files, saves, media,
+or private proof material. Use your own retail/Steam install; patching workflows
+operate on copied files and safe game copies.
+
 For contributor setup, local validation expectations, public/private boundaries, and PR-ready change rules, see **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
 For a concise handoff checklist for outside developers and agent reviewers, see
@@ -21,10 +32,10 @@ For private-data, asset-leak, copied-executable safety, and future online-sessio
 maintainer-approved collaborator branch. Private `main` is not a public PR base
 unless access is explicitly granted. Public candidate gates live in
 [PUBLIC_SIGNOFF_COMMANDS.md](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md).
-Validated public candidate does not mean published release; public repo push,
-binary publication, signing, and installer release require explicit maintainer
-authorization. Signed installer-grade MSIX trust/install remains a future proof,
-not a current release claim.
+Validated public candidate does not itself mean a GitHub Release has been
+published. Portable ZIP publication, source pushes, signing, installer release,
+and announcement are separate maintainer actions. Signed installer-grade MSIX
+trust/install remains a future proof, not a current release claim.
 
 Electron, the old Python GUI/CLI app, and WPF are archived/reference app
 surfaces in the private maintainer tree. They remain in private git for

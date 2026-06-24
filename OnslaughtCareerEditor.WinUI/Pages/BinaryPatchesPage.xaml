@@ -94,11 +94,11 @@
                                FontWeight="SemiBold" />
                     <TextBlock x:Name="PatchBenchOnlinePrepSummary"
                                AutomationProperties.AutomationId="PatchBenchOnlinePrepSummary"
-                               Text="Local split-screen is available in a safe copy."
+                               Text="Local split-screen launch preset is available for testing in a safe copy."
                                Style="{StaticResource SectionBodyTextStyle}" />
                     <TextBlock x:Name="PatchBenchOnlinePrepBoundary"
                                AutomationProperties.AutomationId="PatchBenchOnlinePrepBoundary"
-                               Text="Online play is not available in this release. Local split-screen in a safe copy is the only multiplayer workflow here."
+                               Text="Online play is not available in this release. The preset only fills a copied-game launch setup; it is not Host/Join, online play, or gameplay proof."
                                Style="{StaticResource SectionBodyTextStyle}" />
                     <Button x:Name="PatchBenchOnlinePrepLocalProbeButton"
                             AutomationProperties.AutomationId="PatchBenchOnlinePrepLocalProbeButton"
@@ -151,7 +151,7 @@
                                                FontWeight="SemiBold" />
                                     <TextBlock Text="Profiles are presets for normal play and testing. The app still verifies every selected row before creating or launching the safe copy."
                                                Style="{StaticResource SectionBodyTextStyle}" />
-                                    <TextBlock Text="Enhanced Profile Preview combines the windowed setup, graphics defaults, PATCHED title marker, red menu background, Goodies preview, and copied control defaults."
+                                    <TextBlock Text="Enhanced Profile Preview combines the windowed setup, graphics defaults, PATCHED title marker, red menu background, Goodies preview, and copied-options control starting values."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <TextBlock Text="Debug Camera Preview selects only the bounded free-camera toggle plus one Q-forward remap path."
                                                Style="{StaticResource SectionBodyTextStyle}" />
@@ -176,7 +176,7 @@
                                     </Border>
                                     <TextBlock Text="Fullscreen fallback, netcode, and in-game toggle menus are not part of any preset yet."
                                                Style="{StaticResource SectionBodyTextStyle}" />
-                                    <TextBlock Text="Create safe copy records the exact selected rows and control options into the safe-copy manifest. Your installed game stays unchanged."
+                                    <TextBlock Text="Create safe copy records the selected rows in the safe-copy receipt and profile manifest. Control-options details are recorded only when an options manifest is written. Your installed game stays unchanged."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <Border Background="{ThemeResource ShellSurfaceBrush}"
                                             BorderBrush="{ThemeResource ShellBorderBrush}"
@@ -189,6 +189,16 @@
                                                    Text="Selected profile: Compatibility Copy. This is the safest default."
                                                    TextWrapping="WrapWholeWords" />
                                     </Border>
+                                    <Expander x:Name="PatchBenchSelectedProfileDetailsExpander"
+                                              AutomationProperties.AutomationId="PatchBenchSelectedProfileDetailsExpander"
+                                              AutomationProperties.Name="Preset details and proof limits"
+                                              Header="Preset details and proof limits">
+                                        <TextBlock x:Name="PatchBenchSelectedProfileDetails"
+                                                   AutomationProperties.AutomationId="PatchBenchSelectedProfileDetails"
+                                                   AutomationProperties.Name="Selected safe-copy preset details"
+                                                   Text="Selected safe-copy preset details: modules, evidence, restore path, and limits update with the selected profile."
+                                                   TextWrapping="WrapWholeWords" />
+                                    </Expander>
                                     <Grid ColumnSpacing="8"
                                           RowSpacing="8">
                                         <Grid.ColumnDefinitions>
@@ -376,35 +386,40 @@
                                                 <ItemsControl ItemsSource="{Binding Items}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate x:DataType="models:BinaryPatchItemModel">
-                                                            <CheckBox Checked="PatchCheckBox_Changed"
-                                                                      AutomationProperties.Name="{Binding DisplayName}"
-                                                                      AutomationProperties.HelpText="{Binding AccessibilityHelpText}"
-                                                                      Unchecked="PatchCheckBox_Changed"
-                                                                      IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                                                      HorizontalAlignment="Stretch"
-                                                                      HorizontalContentAlignment="Stretch"
-                                                                      Padding="2,2,0,2"
-                                                                      Margin="0,0,0,10">
-                                                                <StackPanel Spacing="4"
-                                                                            Margin="10,0,0,0">
-                                                                    <TextBlock Text="{Binding DisplayName}"
-                                                                               FontWeight="SemiBold"
-                                                                               TextWrapping="WrapWholeWords" />
-                                                                    <TextBlock Text="{Binding Summary}"
-                                                                               Style="{StaticResource SectionBodyTextStyle}" />
-                                                                    <TextBlock Text="{Binding UserFacingStatus}"
-                                                                               FontSize="12"
-                                                                               TextWrapping="WrapWholeWords"
-                                                                               Foreground="{StaticResource ShellMutedTextBrush}" />
-                                                                    <TextBlock Text="{Binding TrackLabel}"
-                                                                               FontSize="11"
-                                                                               FontWeight="SemiBold"
-                                                                               Foreground="{Binding TrackBrush}"
-                                                                               CharacterSpacing="60"
-                                                                               Opacity="0.95" />
-                                                                     <Expander Header="Details and limits"
-                                                                               Margin="0,2,0,0">
-                                                                        <StackPanel Spacing="8">
+                                                            <StackPanel Spacing="4"
+                                                                        Margin="0,0,0,10">
+                                                                <CheckBox Checked="PatchCheckBox_Changed"
+                                                                          AutomationProperties.Name="{Binding DisplayName}"
+                                                                          AutomationProperties.HelpText="{Binding AccessibilityHelpText}"
+                                                                          Unchecked="PatchCheckBox_Changed"
+                                                                          IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                                          HorizontalAlignment="Stretch"
+                                                                          HorizontalContentAlignment="Stretch"
+                                                                          Padding="2,2,0,2"
+                                                                          Margin="0">
+                                                                    <StackPanel Spacing="4"
+                                                                                Margin="10,0,0,0">
+                                                                        <TextBlock Text="{Binding DisplayName}"
+                                                                                   FontWeight="SemiBold"
+                                                                                   TextWrapping="WrapWholeWords" />
+                                                                        <TextBlock Text="{Binding Summary}"
+                                                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                                                        <TextBlock Text="{Binding UserFacingStatus}"
+                                                                                   FontSize="12"
+                                                                                   TextWrapping="WrapWholeWords"
+                                                                                   Foreground="{StaticResource ShellMutedTextBrush}" />
+                                                                        <TextBlock Text="{Binding TrackLabel}"
+                                                                                   FontSize="11"
+                                                                                   FontWeight="SemiBold"
+                                                                                   Foreground="{Binding TrackBrush}"
+                                                                                   CharacterSpacing="60"
+                                                                                   Opacity="0.95" />
+                                                                    </StackPanel>
+                                                                </CheckBox>
+                                                                <Expander Header="{Binding DetailsHeader}"
+                                                                          AutomationProperties.Name="{Binding DetailsHeader}"
+                                                                          Margin="36,0,0,0">
+                                                                    <StackPanel Spacing="8">
                                                                             <StackPanel Spacing="2">
                                                                                 <TextBlock Text="What should change"
                                                                                            FontSize="12"
@@ -447,10 +462,9 @@
                                                                             <TextBlock Text="{Binding Spec.Key}"
                                                                                        FontSize="12"
                                                                                        Foreground="{StaticResource ShellMutedTextBrush}" />
-                                                                        </StackPanel>
-                                                                    </Expander>
-                                                                </StackPanel>
-                                                            </CheckBox>
+                                                                    </StackPanel>
+                                                                </Expander>
+                                                            </StackPanel>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>

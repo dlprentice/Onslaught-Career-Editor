@@ -1320,6 +1320,20 @@ public class BinaryPatchRegressionTests
         Assert.That(presets[BinaryPatchPlanBuilder.CustomProfileId].DefaultPersistControllerConfigInOptions, Is.False);
         Assert.That(presets[BinaryPatchPlanBuilder.CustomProfileId].DefaultSharpenMouseLook, Is.False);
 
+        foreach (SafeCopyProfilePreset preset in presets.Values.Where(preset =>
+            preset.IsSelectable &&
+            !string.Equals(preset.Id, BinaryPatchPlanBuilder.CustomProfileId, StringComparison.OrdinalIgnoreCase)))
+        {
+            Assert.That(preset.Modules, Is.Not.Empty, $"{preset.Id} should explain what the profile includes before safe-copy creation.");
+            Assert.That(preset.Modules, Has.All.Matches<SafeCopyProfileModule>(module =>
+                !string.IsNullOrWhiteSpace(module.DisplayName) &&
+                !string.IsNullOrWhiteSpace(module.ProofStatus) &&
+                !string.IsNullOrWhiteSpace(module.ClaimBoundary) &&
+                !string.IsNullOrWhiteSpace(module.RestoreStrategy) &&
+                module.EvidenceRefs.Count > 0 &&
+                module.NonClaims.Count > 0), $"{preset.Id} modules should carry evidence, restore, and non-claim copy for the WinUI preset details surface.");
+        }
+
         SafeCopyProfilePreset enhancedPreset = presets[BinaryPatchPlanBuilder.EnhancedPreviewProfileId];
         Assert.That(enhancedPreset.DisplayName, Is.EqualTo("Enhanced Profile Preview"));
         Assert.That(enhancedPreset.IsSelectable, Is.True);

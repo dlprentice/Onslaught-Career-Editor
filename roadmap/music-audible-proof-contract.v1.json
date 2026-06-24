@@ -3,6 +3,7 @@
   "checkerScope": "public-audible-proof-contract-not-audio-capture-revalidation",
   "scope": "safe-copy-music-audible-output-acceptance-boundary",
   "generatedAt": "2026-06-22",
+  "updatedAt": "2026-06-23",
   "currentAcceptedEvidence": {
     "safeCopyStaging": true,
     "sourceMusicUnchanged": true,
@@ -13,6 +14,7 @@
     "audioLoopbackBackendPreflight": true,
     "audioLoopbackCalibrationNonSilent": true,
     "twoRunHarnessAcceptanceChecker": true,
+    "trustedRawArtifactMaterializer": true,
     "sourceAudioReferenceFingerprint": true,
     "captureSourceCorrelationAdapter": true,
     "runtimeAudibleOutputProof": false
@@ -45,18 +47,31 @@
     "audioCapture": [
       "bounded loopback or equivalent output-capture artifact",
       "capture starts before the expected music kick and ends after decode begins",
+      "capture start/end UTC timestamps are reported and compared against the CDB decode window",
       "capture duration is positive and reported in milliseconds",
       "sample rate and channel count are reported",
-      "non-silent signal observed in the expected window",
+      "sanitized audio endpoint alias/fingerprint is reported without raw device identifiers",
+      "clean baseline and staged positive both observe non-silent signal in the expected window",
       "positive staged run differs from a clean same-level baseline",
       "mute-control run with -nomusic or -nosound is not accepted as audible output"
     ],
     "comparisonControls": [
       "same level and launch arguments except the tested music mutation",
       "same safe-copy patch set except the tested music mutation",
-      "same audio endpoint and format between compared runs",
+      "same sanitized audio endpoint and format between clean/staged/ambient/mute runs",
       "clean baseline and staged positive both have CDB selection/decode evidence",
-      "positive audio window is time-correlated with the CDB selection/decode window"
+      "clean baseline and staged positive audio windows are time-correlated with the CDB selection/decode windows"
+    ],
+    "materialization": [
+      "final proof is generated from explicit private raw artifact paths, not accepted as a hand-authored summary",
+      "clean/staged timestamped CDB decode timeline sidecars are bound to live artifact, raw live CDB log SHA-256, and timestamped CDB evidence log SHA-256 values",
+      "ambient/clean/staged/mute audio JSON summaries are bound to existing raw WAV artifacts by outputJson path, outputWav path, helper-authored rawWavSha256, raw WAV byte count, and independently rederived WAV sample statistics before sanitized output is written",
+      "clean/mute source music safety sidecars provide source target/replacement hash unchanged facts when non-staged live artifacts omit source music hash rows",
+      "ambient no-BEA process census is required before accepting the ambient negative control and must cover the ambient capture window while binding to ambient audio JSON and raw WAV SHA-256 values",
+      "capture-to-source correlation adapter sidecar is bound to clean/staged audio JSON and raw WAV SHA-256 values",
+      "raw loopback device identifiers, raw WAV paths, raw JSON paths, CDB paths, copied-game paths, source paths, and local proof roots are stripped from the sanitized proof",
+      "materialized output must stay inside the private raw input bundle",
+      "materialized output is immediately revalidated with the two-run harness checker"
     ],
     "negativeControls": [
       "ambient no-BEA output-control stays below non-silent threshold",
@@ -67,6 +82,7 @@
       "deterministic decoded-source fingerprints exist for BEA_04 target and BEA_02 replacement",
       "source reference fingerprints differ by at least the accepted source margin",
       "capture-to-source adapter emits the harness-compatible sourceAudioCorrelation object without raw audio or private paths",
+      "capture-to-source adapter binds to the clean/staged audio JSON and raw WAV hashes used by the materializer",
       "clean baseline correlates to original BEA_04 source audio more than replacement BEA_02",
       "staged positive correlates to replacement BEA_02 source audio more than original BEA_04",
       "RMS or peak-only difference is not sufficient"
@@ -90,6 +106,6 @@
     "recommendedPreset": "use-bea02-for-bea04",
     "recommendedLevel": 100,
     "recommendedComparison": "clean BEA_04 level-100 baseline versus BEA_02-over-BEA_04 staged positive",
-    "blockedBy": "requires a live two-run artifact with ambient/mute controls and accepted sanitized capture-to-source-audio correlation before any audible claim"
+    "blockedBy": "requires a private live two-run bundle with timestamped CDB decode timeline sidecars, source music safety sidecars, ambient no-BEA census, ambient/mute controls, and accepted sanitized capture-to-source-audio correlation accepted by the materializer plus final checker before any audible claim"
   }
 }

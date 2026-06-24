@@ -5,7 +5,19 @@ Last updated: 2026-06-23
 
 This file describes the current source-release and public-safety posture. The repo is WinUI-first for the user-facing Windows product. Electron, WPF, and the old Python GUI/CLI parity app are archived/reference surfaces.
 
-Contributor setup, local validation expectations, and public/private contribution boundaries are in [CONTRIBUTING.md](CONTRIBUTING.md). Private-data and vulnerability reporting guidance is in [SECURITY.md](SECURITY.md). Public candidate sign-off commands are in [PUBLIC_SIGNOFF_COMMANDS.md](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md), and the public candidate agent guide is [public_AGENTS.md](release/readiness/public_AGENTS.md). These guides are part of the curated public-source candidate. A validated public-source candidate is not a published release; public repo push, binary publication, signing, installer release, and announcement require separate explicit maintainer authorization.
+Contributor setup, local validation expectations, and public/private contribution boundaries are in [CONTRIBUTING.md](CONTRIBUTING.md). Private-data and vulnerability reporting guidance is in [SECURITY.md](SECURITY.md). Public candidate sign-off commands are in [PUBLIC_SIGNOFF_COMMANDS.md](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md), and the public candidate agent guide is [public_AGENTS.md](release/readiness/public_AGENTS.md). These guides are part of the curated public-source candidate. A validated public-source candidate is not automatically a GitHub Release; portable ZIP publication, source pushes, signing, installer release, and announcement are separate maintainer actions.
+
+## Downloadable App Releases
+
+Current downloadable app releases use an unsigned portable Windows x64 ZIP
+attached to GitHub Releases with a SHA-256 checksum sidecar. Extract the full
+ZIP and run `OnslaughtCareerEditor.WinUI.exe`.
+
+The ZIP release does not include Battle Engine Aquila game files, saves, media,
+or private proof material. Users provide their own retail/Steam installation,
+and mutating workflows operate on copied files or safe game copies. This is not
+an MSIX, installer, Store package, signed release, or SmartScreen/reputation
+claim.
 
 ## Shipping Direction
 

@@ -1,10 +1,13 @@
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Threading;
 using FlaUI.Core;
 using FlaUI.Core.AutomationElements;
+using FlaUI.Core.Input;
 using FlaUI.Core.Tools;
+using FlaUI.Core.WindowsAPI;
 using FlaUI.UIA3;
 using NUnit.Framework;
 
@@ -30,11 +33,10 @@ public class WinUiHomeNavigationSmokeTests
         WaitForText(session.Window, "Start Here", TimeSpan.FromSeconds(20));
         AutomationElement homeButton = FindByAutomationId(session.Window, homeButtonAutomationId);
         ScrollIntoView(homeButton);
-        homeButton.AsButton().Invoke();
-
-        bool destinationReady = Retry.WhileFalse(
-            () => TryFindByAutomationId(session.Window, destinationAutomationId) is not null,
-            TimeSpan.FromSeconds(15)).Success;
+        bool destinationReady = ActivateAndWait(
+            session.Window,
+            homeButton,
+            () => TryFindByAutomationId(session.Window, destinationAutomationId) is not null);
         Assert.That(destinationReady, Is.True, $"Expected destination marker {destinationAutomationId} after clicking {homeButtonAutomationId}.");
     }
 
@@ -50,13 +52,13 @@ public class WinUiHomeNavigationSmokeTests
         WaitForText(window, "Start Here", TimeSpan.FromSeconds(20));
         AutomationElement deepLinkButton = FindByAutomationId(window, "HomeOpenConfigurationEditorButton");
         ScrollIntoView(deepLinkButton);
-        deepLinkButton.AsButton().Invoke();
 
-        bool configurationReady = Retry.WhileFalse(
+        bool configurationReady = ActivateAndWait(
+            window,
+            deepLinkButton,
             () => TryFindByAutomationId(window, "ConfigurationInputFile") is not null
                 && TryFindByAutomationId(window, "ConfigurationEditorScrollViewer") is not null
-                && TryFindByAutomationId(window, "ConfigurationStatusInfo") is not null,
-            TimeSpan.FromSeconds(15)).Success;
+                && TryFindByAutomationId(window, "ConfigurationStatusInfo") is not null);
         Assert.That(configurationReady, Is.True, "Expected Game Options inputs after Home deep-link.");
 
         bool analyzerHidden = Retry.WhileFalse(
@@ -155,6 +157,67 @@ public class WinUiHomeNavigationSmokeTests
         {
             // Best-effort positioning only.
         }
+    }
+
+    private static bool ActivateAndWait(Window window, AutomationElement element, Func<bool> isReady)
+    {
+        window.Focus();
+        Thread.Sleep(200);
+
+        try
+        {
+            if (element.Patterns.Invoke.IsSupported)
+            {
+                element.Patterns.Invoke.Pattern.Invoke();
+                if (WaitUntilReady(isReady))
+                {
+                    return true;
+                }
+            }
+        }
+        catch (MissingMethodException)
+        {
+            // Some packaged WinUI/FlaUI invoke-provider paths throw here even though the button is clickable.
+        }
+
+        try
+        {
+            element.Focus();
+            Keyboard.Press(VirtualKeyShort.RETURN);
+            if (WaitUntilReady(isReady))
+            {
+                return true;
+            }
+        }
+        catch
+        {
+            // Fall back to pointer activation below.
+        }
+
+        try
+        {
+            if (element.TryGetClickablePoint(out Point clickablePoint))
+            {
+                Mouse.Click(clickablePoint, MouseButton.Left);
+                if (WaitUntilReady(isReady))
+                {
+                    return true;
+                }
+            }
+        }
+        catch
+        {
+            // Fall back to the element center below.
+        }
+
+        Rectangle bounds = element.BoundingRectangle;
+        Mouse.Click(new Point(bounds.Left + bounds.Width / 2, bounds.Top + bounds.Height / 2), MouseButton.Left);
+        return WaitUntilReady(isReady);
+    }
+
+    private static bool WaitUntilReady(Func<bool> isReady)
+    {
+        return Retry.WhileFalse(isReady, TimeSpan.FromSeconds(15)).Success;
     }
 
     private static AutomationElement? TryFindByAutomationId(Window window, string automationId)

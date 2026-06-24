@@ -341,15 +341,29 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("Compatibility Copy"));
         Assert.That(pageXaml, Does.Contain("Windowed + Graphics Defaults"));
         Assert.That(pageXaml, Does.Contain("Enhanced Profile Preview"));
-        Assert.That(pageXaml, Does.Contain("Enhanced Profile Preview combines the windowed setup, graphics defaults, PATCHED title marker, red menu background, Goodies preview, and copied control defaults."));
+        Assert.That(pageXaml, Does.Contain("Enhanced Profile Preview combines the windowed setup, graphics defaults, PATCHED title marker, red menu background, Goodies preview, and copied-options control starting values."));
         Assert.That(pageXaml, Does.Contain("Debug Camera Preview selects only the bounded free-camera toggle plus one Q-forward remap path."));
         Assert.That(pageXaml, Does.Contain("PatchBenchDebugCameraProofMatrixStatus"));
         Assert.That(pageXaml, Does.Contain("Debug Camera Preview only selects Q-forward. Seven other Q remap rows are manual/custom-only and mutually exclusive; their accepted CDB movement/orientation proofs are tracked for future work."));
         Assert.That(pageXaml, Does.Contain("Experimental camera controls may be unstable."));
         Assert.That(pageXaml, Does.Contain("It does not prove full camera controls or gameplay safety."));
         Assert.That(pageXaml, Does.Contain("Fullscreen fallback, netcode, and in-game toggle menus are not part of any preset yet."));
-        Assert.That(pageXaml, Does.Contain("Create safe copy records the exact selected rows and control options into the safe-copy manifest"));
+        Assert.That(pageXaml, Does.Contain("Create safe copy records the selected rows in the safe-copy receipt and profile manifest. Control-options details are recorded only when an options manifest is written."));
         Assert.That(pageXaml, Does.Contain("PatchBenchSelectedProfileStatus"));
+        Assert.That(pageXaml, Does.Contain("PatchBenchSelectedProfileDetailsExpander"));
+        Assert.That(pageXaml, Does.Contain("Preset details and proof limits"));
+        Assert.That(pageXaml, Does.Contain("PatchBenchSelectedProfileDetails"));
+        Assert.That(pageXaml, Does.Contain("Selected safe-copy preset details"));
+        Assert.That(code, Does.Contain("PatchBenchSelectedProfileDetails.Text = BuildSelectedProfileDetails(visibleSelectedKeys)"));
+        Assert.That(code, Does.Contain("FormatSafeCopyProfileModules"));
+        Assert.That(code, Does.Contain("FormatSafeCopyProfileModuleName"));
+        Assert.That(code, Does.Contain("FormatSafeCopyProfileEvidence"));
+        Assert.That(code, Does.Contain("FormatSafeCopyProfileRestore"));
+        Assert.That(code, Does.Contain("FormatSafeCopyProfileLimits"));
+        Assert.That(code, Does.Contain("Patch rows match Enhanced Profile Preview; copied-options controls come from the current controls below."));
+        Assert.That(code, Does.Contain("Copied-options controls (current UI selections; preset defaults only if unchanged)"));
+        Assert.That(code, Does.Not.Contain("Modules: Copied control defaults"));
+        Assert.That(code, Does.Contain("No Host/Join or online multiplayer."));
         Assert.That(pageXaml, Does.Contain("Selected profile: Compatibility Copy. This is the safest default."));
         Assert.That(pageXaml, Does.Contain("PatchBenchEnhancedPreviewProfileButton"));
         Assert.That(pageXaml, Does.Contain("Click=\"EnhancedPreviewPresetButton_Click\""));
@@ -419,9 +433,16 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("Available changes include windowed startup, wider display-mode support, graphics defaults, menu color presets, music swaps, Goodies preview, title marker, launch options, control-option presets, and experimental camera/control rows."));
         Assert.That(pageXaml, Does.Contain("Open Details and limits on any row"));
         Assert.That(pageXaml, Does.Contain("Details and limits"));
+        string[] patchRowCheckBoxBlocks = Regex.Matches(pageXaml, "<CheckBox\\b[\\s\\S]*?</CheckBox>")
+            .Select(match => match.Value)
+            .Where(block => block.Contains("Details and limits", StringComparison.Ordinal))
+            .ToArray();
+        Assert.That(patchRowCheckBoxBlocks, Is.Empty, "Patch-row proof expanders should be siblings of the checkbox target, not nested inside it.");
         Assert.That(pageXaml, Does.Contain("What should change"));
         Assert.That(pageXaml, Does.Contain("What was checked"));
         Assert.That(pageXaml, Does.Contain("Not proven yet"));
+        Assert.That(pageXaml, Does.Contain("Header=\"{Binding DetailsHeader}\""));
+        Assert.That(pageXaml, Does.Contain("AutomationProperties.Name=\"{Binding DetailsHeader}\""));
         Assert.That(pageXaml, Does.Contain("Proof note"));
         Assert.That(pageXaml, Does.Contain("ExpectedVisibleResult"));
         Assert.That(pageXaml, Does.Contain("VerifiedProof"));
@@ -484,7 +505,8 @@ public class WinUiProductLaneTests
         Assert.That(itemModel, Does.Contain("public string UserFacingStatus"));
         Assert.That(pageXaml, Does.Contain("Text=\"{Binding UserFacingStatus}\""));
         Assert.That(itemModel, Does.Not.Contain("Checked: {ProofStatus}"));
-        Assert.That(itemModel, Does.Contain("Open Details and limits for technical evidence and remaining limits"));
+        Assert.That(itemModel, Does.Contain("Use the adjacent Details and limits expander for technical evidence and remaining limits"));
+        Assert.That(itemModel, Does.Contain("public string DetailsHeader => $\"Details and limits for {DisplayName}\";"));
         Assert.That(itemModel, Does.Contain("SAFE COPY REQUIRED"));
         Assert.That(itemModel, Does.Contain("VISIBLE MARKER"));
         Assert.That(itemModel, Does.Contain("MENU COLOR CHECK"));
@@ -614,9 +636,9 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("PatchBenchOnlineReadinessStatusPanel"));
         Assert.That(pageXaml, Does.Contain("PatchBenchOnlinePrepCard"));
         Assert.That(pageXaml, Does.Contain("Online multiplayer is not ready"));
-        Assert.That(pageXaml, Does.Contain("Local split-screen is available in a safe copy."));
+        Assert.That(pageXaml, Does.Contain("Local split-screen launch preset is available for testing in a safe copy."));
         Assert.That(pageXaml, Does.Contain("Online play is not available in this release."));
-        Assert.That(pageXaml, Does.Contain("Local split-screen in a safe copy is the only multiplayer workflow here."));
+        Assert.That(pageXaml, Does.Contain("The preset only fills a copied-game launch setup; it is not Host/Join, online play, or gameplay proof."));
         Assert.That(pageXaml, Does.Contain("PatchBenchOnlinePrepLocalProbeButton"));
         Assert.That(pageXaml, Does.Contain("Use local split-screen launch preset"));
         Assert.That(pageXaml, Does.Contain("PatchBenchOnlinePrepActionStatus"));
@@ -956,7 +978,7 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("createMusicSwapPreset="));
         Assert.That(code, Does.Contain("GetSelectedCreateMusicSwapPresetId"));
         Assert.That(code, Does.Contain("MatchSelectableSafeCopyProfileId"));
-        Assert.That(code, Does.Contain("Enhanced Profile Preview selected. It adds visible safe-copy mods and copied control defaults"));
+        Assert.That(code, Does.Contain("Enhanced Profile Preview selected. Patch rows match visible safe-copy mods"));
         Assert.That(code, Does.Contain("pre-fills copied-options controls for config 1 and mouse sensitivity 2.25"));
         Assert.That(code, Does.Contain("\"extra_graphics_default_on\", \"ignore_cardid_tweak_overrides\""));
         Assert.That(code, Does.Contain("UI & Diagnostics"));

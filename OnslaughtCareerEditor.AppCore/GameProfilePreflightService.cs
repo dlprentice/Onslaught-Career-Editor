@@ -310,7 +310,7 @@ namespace Onslaught___Career_Editor
 
             string[] includedChanges = result.ProfilePresetModules.Count > 0
                 ? result.ProfilePresetModules
-                    .Select(module => $"{module.DisplayName}: {module.ClaimBoundary}")
+                    .Select(module => BuildReceiptIncludedChange(result, module, controlOptionsResult))
                     .ToArray()
                 : result.PatchResult.PatchKeys
                     .Select(key => $"Patch row: {key}")
@@ -324,6 +324,11 @@ namespace Onslaught___Career_Editor
             AddReceiptLimit(stillNotIncluded, "No Host/Join or online multiplayer.");
             AddReceiptLimit(stillNotIncluded, "No installed-game mutation.");
             AddReceiptLimit(stillNotIncluded, "No no-noticeable-difference parity claim.");
+            if (HasCopiedControlDefaultsModule(result) &&
+                !ControlOptionsMatchProfileDefaults(result, controlOptionsResult))
+            {
+                AddReceiptLimit(stillNotIncluded, "No fixed Enhanced copied-control-default claim unless the applied control manifest matches the preset defaults.");
+            }
             if (result.MusicSwapResult is not null &&
                 result.LaunchPlan.Arguments.Any(argument => string.Equals(argument, "-nomusic", StringComparison.OrdinalIgnoreCase)))
             {
@@ -335,6 +340,60 @@ namespace Onslaught___Career_Editor
                 lines,
                 includedChanges,
                 stillNotIncluded);
+        }
+
+        private static string BuildReceiptIncludedChange(
+            GameProfilePrepareResult result,
+            SafeCopyProfileModule module,
+            GameProfileControlOptionsResult? controlOptionsResult)
+        {
+            if (!string.Equals(module.Id, "copied-options-control-defaults", StringComparison.OrdinalIgnoreCase))
+            {
+                return $"{module.DisplayName}: {module.ClaimBoundary}";
+            }
+
+            if (ControlOptionsMatchProfileDefaults(result, controlOptionsResult))
+            {
+                return $"{module.DisplayName}: {module.ClaimBoundary}";
+            }
+
+            if (controlOptionsResult is null)
+            {
+                return "Copied control options: no control-options manifest was written for this safe copy; current controls remain unchanged.";
+            }
+
+            return
+                "Copied control options: custom control-options manifest written from current UI selections " +
+                $"(P1/P2 config {controlOptionsResult.ControllerConfigP1}/{controlOptionsResult.ControllerConfigP2}, " +
+                $"mouse sensitivity {controlOptionsResult.MouseSensitivity:0.###}); not fixed Enhanced defaults.";
+        }
+
+        private static bool HasCopiedControlDefaultsModule(GameProfilePrepareResult result)
+        {
+            return result.ProfilePresetModules.Any(module =>
+                string.Equals(module.Id, "copied-options-control-defaults", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static bool ControlOptionsMatchProfileDefaults(
+            GameProfilePrepareResult result,
+            GameProfileControlOptionsResult? controlOptionsResult)
+        {
+            if (controlOptionsResult is null)
+            {
+                return false;
+            }
+
+            bool controllerConfigMatches = !result.ProfileDefaultControllerConfiguration.HasValue ||
+                (controlOptionsResult.ControllerConfigP1 == result.ProfileDefaultControllerConfiguration.Value &&
+                 controlOptionsResult.ControllerConfigP2 == result.ProfileDefaultControllerConfiguration.Value);
+            bool mouseLookMatches = !result.ProfileDefaultSharpenMouseLook ||
+                Math.Abs(controlOptionsResult.MouseSensitivity - GameProfileControlOptionsService.SharperMouseLookSensitivity) < 0.0001f;
+            bool invertMatches = !controlOptionsResult.InvertWalkerP1 &&
+                !controlOptionsResult.InvertWalkerP2 &&
+                !controlOptionsResult.InvertFlightP1 &&
+                !controlOptionsResult.InvertFlightP2;
+
+            return controllerConfigMatches && mouseLookMatches && invertMatches;
         }
 
         private static GameProfileLaunchPlan BuildLaunchPlanCore(string gameRoot, IReadOnlyList<string> arguments)

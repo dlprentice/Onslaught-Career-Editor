@@ -224,7 +224,9 @@ namespace OnslaughtCareerEditor.WinUI.Models
         };
 
         public string AccessibilityHelpText =>
-            $"{DisplayName}. {Summary} {UserFacingStatus} Safe copy only. Open Details and limits for technical evidence and remaining limits.";
+            $"{DisplayName}. {Summary} {UserFacingStatus} Safe copy only. Use the adjacent Details and limits expander for technical evidence and remaining limits.";
+
+        public string DetailsHeader => $"Details and limits for {DisplayName}";
 
         public string Summary { get; }
 
