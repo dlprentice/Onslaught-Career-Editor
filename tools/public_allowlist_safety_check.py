@@ -295,6 +295,28 @@ PUBLIC_EVIDENCE_FIELD_PATTERNS = (
     ),
 )
 
+PUBLIC_PATCH_SURFACE_PRIVATE_REF_PREFIXES = (
+    "CURRENT_CAPABILITIES.md",
+    "OnslaughtCareerEditor.AppCore/",
+    "OnslaughtCareerEditor.AppCore.Tests/",
+    "OnslaughtCareerEditor.WinUI/",
+    "OnslaughtCareerEditor.UiTests/",
+    "patches/README.md",
+    "patches/catalog/",
+    "release/readiness/public_CURRENT_CAPABILITIES.txt",
+    "release/readiness/public_mod_patch_runtime_rebuild_register.txt",
+    "release/readiness/public_lore_book_mod_patch_runtime_rebuild_register.txt",
+    "release/readiness/public_package.json",
+    "roadmap/mod-patch-runtime-rebuild-register.md",
+    "lore-book/roadmap/mod-patch-runtime-rebuild-register.md",
+)
+PUBLIC_PATCH_SURFACE_PRIVATE_REF_PATTERNS = (
+    ("private-readiness-note-reference", re.compile(r"release/readiness/" + r"winui_[A-Za-z0-9._-]+\.md", re.IGNORECASE)),
+    ("private-readiness-label-reference", re.compile(r"\bReadiness:\s*" + r"winui_[A-Za-z0-9._-]+\.md", re.IGNORECASE)),
+    ("historical-private-binary-name", re.compile(r"\b(?:" + r"BEA_" + r"Widescreen\.exe|BEA\.exe\.gzf" + r")\b", re.IGNORECASE)),
+    ("historical-private-binary-section", re.compile(r"\b" + r"Historical " + r"private binaries" + r"\b", re.IGNORECASE)),
+)
+
 
 def normalize_path(path: str) -> str:
     return path.replace("\\", "/").strip()
@@ -370,6 +392,15 @@ def find_text_payload_errors(path: str, text: str, require_private_text_guard: b
                 break
         if should_scan_concrete_subagent_roots(path):
             errors.extend(find_concrete_subagent_root_errors(path, candidate_text))
+        if should_scan_public_patch_surface_private_refs(path):
+            for label, pattern in PUBLIC_PATCH_SURFACE_PRIVATE_REF_PATTERNS:
+                match = pattern.search(candidate_text)
+                if match:
+                    snippet = match.group(0)
+                    if len(snippet) > 120:
+                        snippet = snippet[:117] + "..."
+                    errors.append(f"{label} in {path}: {snippet}")
+                    break
         if is_public_evidence_field_candidate(path):
             for label, pattern in PUBLIC_EVIDENCE_FIELD_PATTERNS:
                 match = pattern.search(candidate_text)
@@ -424,6 +455,10 @@ def should_scan_concrete_subagent_roots(path: str) -> bool:
     if path in CONCRETE_SUBAGENT_SCAN_EXEMPT_PATHS:
         return False
     return path.startswith(CONCRETE_SUBAGENT_SCAN_PREFIXES)
+
+
+def should_scan_public_patch_surface_private_refs(path: str) -> bool:
+    return path.startswith(PUBLIC_PATCH_SURFACE_PRIVATE_REF_PREFIXES)
 
 
 def find_concrete_subagent_root_errors(path: str, text: str) -> list[str]:

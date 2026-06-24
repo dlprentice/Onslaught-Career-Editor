@@ -485,9 +485,7 @@
       "evidence_refs": [
         "reverse-engineering/binary-analysis/pause-key-default-row-patch.md",
         "reverse-engineering/binary-analysis/functions/Controller.cpp/ControlBindings.md",
-        "release/readiness/winui_pause_o_scan_initializer_runtime_2026-06-18.md",
-        "release/readiness/winui_controller_mapping_table_diagnostic_2026-06-18.md",
-        "release/readiness/winui_free_camera_pause_context_diagnostic_2026-06-18.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
         "patches/README.md"
       ],
       "optional": true,
@@ -529,7 +527,7 @@
       "evidence_refs": [
         "reverse-engineering/binary-analysis/functions/game.cpp/CGame__ReceiveButtonAction.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "release/readiness/winui_safe_copy_free_camera_toggle_2026-06-18.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
         "patches/README.md"
       ],
       "optional": true,
@@ -573,7 +571,7 @@
         "references/Onslaught/Camera.cpp",
         "references/Onslaught/Controller.h",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "release/readiness/winui_free_camera_q_forward_runtime_2026-06-18.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
         "patches/README.md"
       ],
       "optional": true,
@@ -623,7 +621,7 @@
         "references/Onslaught/Camera.cpp",
         "references/Onslaught/Controller.h",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "release/readiness/winui_free_camera_q_forward_runtime_2026-06-18.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
         "patches/README.md"
       ],
       "optional": true,
@@ -676,7 +674,7 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "release/readiness/winui_free_camera_q_backward_runtime_2026-06-18.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
         "patches/README.md"
       ],
       "optional": true,
@@ -725,7 +723,7 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "release/readiness/winui_free_camera_q_backward_runtime_2026-06-18.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
         "patches/README.md"
       ],
       "optional": true,
@@ -777,7 +775,7 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "release/readiness/winui_free_camera_q_strafe_left_runtime_2026-06-18.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
         "patches/README.md"
       ],
       "optional": true,
@@ -826,7 +824,7 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "release/readiness/winui_free_camera_q_strafe_left_runtime_2026-06-18.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
         "patches/README.md"
       ],
       "optional": true,
@@ -878,7 +876,7 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "release/readiness/winui_free_camera_q_strafe_right_runtime_2026-06-18.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
         "patches/README.md"
       ],
       "optional": true,
@@ -927,7 +925,7 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "release/readiness/winui_free_camera_q_strafe_right_runtime_2026-06-18.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
         "patches/README.md"
       ],
       "optional": true,
@@ -979,7 +977,7 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "release/readiness/winui_free_camera_q_yaw_left_runtime_2026-06-18.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
         "patches/README.md"
       ],
       "optional": true,
@@ -1032,7 +1030,7 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "release/readiness/winui_free_camera_q_yaw_left_runtime_2026-06-18.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
         "patches/README.md"
       ],
       "optional": true,
@@ -1088,7 +1086,7 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "release/readiness/winui_free_camera_q_yaw_right_runtime_2026-06-18.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
         "patches/README.md"
       ],
       "optional": true,
@@ -1137,7 +1135,7 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "release/readiness/winui_free_camera_q_yaw_right_runtime_2026-06-18.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
         "patches/README.md"
       ],
       "optional": true,
@@ -1190,7 +1188,7 @@
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_q_pitch_up_runtime_2026-06-18.md"
+        "roadmap/mod-patch-runtime-rebuild-register.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -1243,7 +1241,7 @@
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_q_pitch_up_runtime_2026-06-18.md"
+        "roadmap/mod-patch-runtime-rebuild-register.md"
       ],
       "optional": true,
       "dependencies": [
@@ -1299,7 +1297,7 @@
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_q_pitch_down_runtime_2026-06-18.md"
+        "roadmap/mod-patch-runtime-rebuild-register.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -1352,7 +1350,7 @@
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_q_pitch_down_runtime_2026-06-18.md"
+        "roadmap/mod-patch-runtime-rebuild-register.md"
       ],
       "optional": true,
       "dependencies": [

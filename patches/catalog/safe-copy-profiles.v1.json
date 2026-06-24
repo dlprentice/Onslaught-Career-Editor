@@ -31,8 +31,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
           "evidence_refs": [
             "patches/README.md",
-            "release/readiness/winui_safe_copy_live_runtime_smoke_2026-06-17.md",
-            "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
+            "roadmap/mod-patch-runtime-rebuild-register.md",
             "reverse-engineering/binary-analysis/windowed-mode-analysis.md"
           ],
           "non_claims": [
@@ -74,8 +73,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
           "evidence_refs": [
             "patches/README.md",
-            "release/readiness/winui_safe_copy_live_runtime_smoke_2026-06-17.md",
-            "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
+            "roadmap/mod-patch-runtime-rebuild-register.md",
             "reverse-engineering/binary-analysis/windowed-mode-analysis.md"
           ],
           "non_claims": [
@@ -99,7 +97,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; cardid.txt/source files are not rewritten.",
           "evidence_refs": [
             "patches/README.md",
-            "release/readiness/winui_modern_graphics_live_runtime_smoke_2026-06-17.md",
+            "roadmap/mod-patch-runtime-rebuild-register.md",
             "reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md"
           ],
           "non_claims": [
@@ -144,8 +142,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
           "evidence_refs": [
             "patches/README.md",
-            "release/readiness/winui_safe_copy_live_runtime_smoke_2026-06-17.md",
-            "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
+            "roadmap/mod-patch-runtime-rebuild-register.md",
             "reverse-engineering/binary-analysis/windowed-mode-analysis.md"
           ],
           "non_claims": [
@@ -169,7 +166,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; cardid.txt/source files are not rewritten.",
           "evidence_refs": [
             "patches/README.md",
-            "release/readiness/winui_modern_graphics_live_runtime_smoke_2026-06-17.md",
+            "roadmap/mod-patch-runtime-rebuild-register.md",
             "reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md"
           ],
           "non_claims": [
@@ -192,7 +189,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the cave string is only written inside the copied executable.",
           "evidence_refs": [
             "patches/README.md",
-            "release/readiness/winui_version_overlay_runtime_smoke_2026-06-17.md",
+            "roadmap/mod-patch-runtime-rebuild-register.md",
             "reverse-engineering/binary-analysis/version-overlay-patch.md"
           ],
           "non_claims": [
@@ -215,7 +212,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; no art, texture, save, or installed-game files are rewritten.",
           "evidence_refs": [
             "patches/README.md",
-            "release/readiness/winui_frontend_clear_screen_color_patch_2026-06-16.md",
+            "roadmap/mod-patch-runtime-rebuild-register.md",
             "reverse-engineering/binary-analysis/frontend-clear-screen-color-patch.md"
           ],
           "non_claims": [
@@ -238,7 +235,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; copied and source saves are not modified.",
           "evidence_refs": [
             "patches/README.md",
-            "release/readiness/winui_goodies_gallery_display_unlock_2026-06-17.md",
+            "roadmap/mod-patch-runtime-rebuild-register.md",
             "reverse-engineering/binary-analysis/goodies-gallery-display-unlock-patch.md"
           ],
           "non_claims": [
@@ -262,7 +259,6 @@
           ],
           "restore_strategy": "Restore the copied defaultoptions.bea backup or recreate the safe copy; the installed defaultoptions.bea is never rewritten.",
           "evidence_refs": [
-            "release/readiness/winui_safe_copy_control_options_2026-06-17.md",
             "roadmap/mod-patch-runtime-rebuild-register.md",
             "reverse-engineering/save-file/save-format.md"
           ],
@@ -305,8 +301,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
           "evidence_refs": [
             "patches/README.md",
-            "release/readiness/winui_safe_copy_live_runtime_smoke_2026-06-17.md",
-            "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
+            "roadmap/mod-patch-runtime-rebuild-register.md",
             "reverse-engineering/binary-analysis/windowed-mode-analysis.md"
           ],
           "non_claims": [
@@ -330,8 +325,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
           "evidence_refs": [
             "patches/README.md",
-            "release/readiness/winui_safe_copy_free_camera_toggle_2026-06-18.md",
-            "release/readiness/winui_free_camera_q_forward_runtime_2026-06-18.md",
+            "roadmap/mod-patch-runtime-rebuild-register.md",
             "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md"
           ],
           "non_claims": [

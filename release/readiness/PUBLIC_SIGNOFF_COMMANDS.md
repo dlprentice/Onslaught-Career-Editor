@@ -99,11 +99,6 @@ uninstall-after-install, binary packaging, and installer-grade release are not
 public sign-off gates. Do not claim a binary or installer release from source
 candidate validation alone.
 
-When maintainers publish a downloadable app release, the current supported shape
-is an unsigned portable Windows x64 ZIP plus SHA-256 checksum sidecar attached
-to GitHub Releases. It is not an installer, signed MSIX, Store package, or
-SmartScreen/reputation claim.
-
 ## Maintainer-Only Export Gates
 
 The private source repo owns curated-manifest generation, release profile

@@ -31,6 +31,7 @@
 
   <ItemGroup>
     <Content Include="..\patches\catalog\patches.v2.json" Link="patches\catalog\patches.v2.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\patches\catalog\safe-copy-profiles.v1.json" Link="patches\catalog\safe-copy-profiles.v1.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <Target Name="CopyWinUIPriToPublishDirectory" AfterTargets="Publish" Condition="'$(PublishDir)' != ''">

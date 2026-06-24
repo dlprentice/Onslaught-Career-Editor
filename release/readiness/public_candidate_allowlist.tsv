@@ -6,7 +6,7 @@ path	class	reason	release_posture
 .github/PULL_REQUEST_TEMPLATE.md	R0_ALLOW	default	allow_with_normal_review
 COLLABORATION.md	R0_ALLOW	default	allow_with_normal_review
 CONTRIBUTING.md	R0_ALLOW	default	allow_with_normal_review
-CURRENT_CAPABILITIES.md	R0_ALLOW	default	allow_with_normal_review
+CURRENT_CAPABILITIES.md	R0_ALLOW	materialized-public-template:release/readiness/public_CURRENT_CAPABILITIES.txt	allow_with_normal_review
 LICENSE	R0_ALLOW	default	allow_with_normal_review
 OnslaughtCareerEditor.AppCore.Host/OnslaughtCareerEditor.AppCore.Host.csproj	R0_ALLOW	default	allow_with_normal_review
 OnslaughtCareerEditor.AppCore.Host/Program.cs	R0_ALLOW	default	allow_with_normal_review
@@ -146,7 +146,7 @@ lore-book/lore/reference-materials.md	R0_ALLOW	default	allow_with_normal_review
 lore-book/lore/team-roster.md	R0_ALLOW	default	allow_with_normal_review
 lore-book/lore/technical-deep-dive.md	R0_ALLOW	default	allow_with_normal_review
 lore-book/lore/world-lore.md	R0_ALLOW	default	allow_with_normal_review
-lore-book/roadmap/mod-patch-runtime-rebuild-register.md	R0_ALLOW	default	allow_with_normal_review
+lore-book/roadmap/mod-patch-runtime-rebuild-register.md	R0_ALLOW	materialized-public-template:release/readiness/public_lore_book_mod_patch_runtime_rebuild_register.txt	allow_with_normal_review
 lore/LORE-INDEX.md	R0_ALLOW	default	allow_with_normal_review
 lore/_index.md	R0_ALLOW	default	allow_with_normal_review
 lore/battle-engine-tech.md	R0_ALLOW	default	allow_with_normal_review
@@ -374,7 +374,7 @@ reverse-engineering/quick-reference/source-files.md	R0_ALLOW	default	allow_with_
 reverse-engineering/quick-reference/source-hierarchy.md	R0_ALLOW	default	allow_with_normal_review
 reverse-engineering/quick-reference/source-key-functions.md	R0_ALLOW	default	allow_with_normal_review
 roadmap/ROADMAP-INDEX.md	R0_ALLOW	default	allow_with_normal_review
-roadmap/mod-patch-runtime-rebuild-register.md	R0_ALLOW	default	allow_with_normal_review
+roadmap/mod-patch-runtime-rebuild-register.md	R0_ALLOW	materialized-public-template:release/readiness/public_mod_patch_runtime_rebuild_register.txt	allow_with_normal_review
 roadmap/music-audible-proof-contract.v1.json	R0_ALLOW	default	allow_with_normal_review
 roadmap/original-binary-online-level854-fire-damage-outcome.v1.json	R0_ALLOW	default	allow_with_normal_review
 roadmap/original-binary-online-level854-fire-handoff.v1.json	R0_ALLOW	default	allow_with_normal_review

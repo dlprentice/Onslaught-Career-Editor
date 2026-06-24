@@ -1,16 +1,18 @@
 # Current Capabilities
 
 Status: public-safe capability summary
-Last updated: 2026-06-23
+Last updated: 2026-06-24
 
 This public summary describes what outside contributors can rely on in a
 sanitized public candidate. The private maintainer tree contains deeper static
 reverse-engineering ledgers, runtime proof notes, and local evidence records
 that are intentionally not public payload.
 
-A validated public candidate is not a published release. Public repo push,
-binary publication, signing, installer release, and announcement require
-separate explicit maintainer authorization.
+Public-source validation and downloadable release publication are separate
+steps. The current downloadable app shape is an unsigned portable Windows x64
+ZIP attached to GitHub Releases with a SHA-256 checksum sidecar. Signed
+installer-grade MSIX, Store, SmartScreen/reputation, and trusted install remain
+future proof, not current release claims.
 
 ## Product Surface
 
@@ -21,6 +23,13 @@ separate explicit maintainer authorization.
 - Current patch catalog accounting: 29 total rows; 20 visible options (9 stable, 11 experimental); 9 hidden companions.
 - Windowed & Mods supports safe-copy patch planning, copied executable workflows,
   and a local split-screen launch preset for safe copies.
+- Windowed & Mods shows sanitized safe-copy profile catalog provenance beside
+  the selected preset, and packaged WinUI output includes both
+  `patches/catalog/patches.v2.json` and
+  `patches/catalog/safe-copy-profiles.v1.json`.
+- Downloadable app releases are portable ZIPs. They include the WinUI app and
+  third-party notices, not Battle Engine Aquila game files, saves, media, or
+  private proof material.
 - Online multiplayer is not available yet. Host/Join controls stay hidden or
   disabled and are never advertised as player-ready.
 - Python under `tools/` is validation, release-policy, asset/RE, and lab

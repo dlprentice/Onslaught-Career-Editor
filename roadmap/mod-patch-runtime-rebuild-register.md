@@ -1,7 +1,7 @@
 # Mod, Patch, Runtime, And Rebuild Register
 
 Status: public-safe summary
-Last updated: 2026-06-23
+Last updated: 2026-06-24
 
 This public register summarizes the current player-facing and contributor-facing
 state. The private maintainer tree contains deeper runtime ledgers, debugger
@@ -14,6 +14,10 @@ intentionally excluded from public candidates.
   only. The installed Steam folder and original `BEA.exe` remain read-only.
 - Current patch catalog accounting: 29 total rows; 20 visible options
   (9 stable, 11 experimental); 9 hidden companions.
+- The packaged WinUI app includes both `patches/catalog/patches.v2.json` and
+  `patches/catalog/safe-copy-profiles.v1.json`, and the Windowed & Mods preset
+  card shows sanitized profile catalog source/schema/hash-prefix metadata
+  without exposing local loader paths.
 - Public-safe patch catalog accounting:
 
 | Track | Current value | Public meaning |

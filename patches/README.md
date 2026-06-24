@@ -262,12 +262,9 @@ For FULL dev mode behavior, a runtime trainer would be needed to set `g_bAllChea
 
 Other versions (retail CD, GOG) may have different offsets.
 
-### Historical private binaries (not public payload, not patch targets)
+### Public Target Boundary
 
-| File | MD5 | SHA256 | Notes |
-|------|-----|--------|-------|
-| `BEA_Widescreen.exe` | `b2025e385b8da8d19656b538e1268fc4` | `67994e5f5f418cca2ed253ab643112ac3a82ea1647e8172027eb9c9cc7b37f61` | Historical private specimen; excluded from public candidates; offsets may differ. |
-| `BEA.exe.gzf` | n/a | n/a | Historical private Ghidra packed database; excluded from public candidates and not an executable. |
+Only the canonical clean Steam retail executable specimen above is a supported public patch target. Historical private specimens, Ghidra databases, runtime proof artifacts, and local operator binaries are intentionally omitted from public releases and are not patch targets.
 
 ## Safety
 

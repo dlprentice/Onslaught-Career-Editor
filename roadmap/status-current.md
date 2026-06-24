@@ -1,7 +1,7 @@
 # Current Status
 
 Status: active
-Last updated: 2026-06-22
+Last updated: 2026-06-24
 
 ## Development Focus
 
@@ -43,6 +43,7 @@ Repo cleanup and archive decisions are tracked in `roadmap/repo-structure-and-ar
 - Current WinUI visual QA refresh captures Home, Save Lab, Media, Asset Library, Lore, Windowed & Mods, Settings, and About from the native desktop app and records a public-safe screenshot review.
 - Maximized scrolled-section WinUI visual smoke captures lower workflow regions for Home, Save Lab, Asset Library, Windowed & Mods, Settings, and About.
 - Windowed & Mods creates app-owned playable copied game folders and separated BEA.exe-only technical copies before verifying, applying, restoring, launching, stopping, or staging copied-game music. The original `BEA.exe` remains read-only source material.
+- Windowed & Mods now shows sanitized safe-copy profile catalog source/schema/hash-prefix metadata beside the selected preset, and packaged WinUI output includes `patches/catalog/safe-copy-profiles.v1.json` beside `patches.v2.json` so the app can load tracked safe-copy profiles after extraction. This is UI/accounting and package-content clarity only; it does not add a BEA launch, byte patch, Host/Join enablement, online proof, music audible-output proof, or installed-game mutation.
 - Windowed & Mods/runtime proof is the active post-static lane. Current public proof accounting lives in `roadmap/mod-patch-runtime-rebuild-register.md`; detailed online feasibility ledgers remain private until rewritten as public summaries.
 - Windowed & Mods now includes the bounded `Debug Camera Preview` safe-copy profile for copied executable testing. It combines resolution/windowed/free-camera/Q-forward patch rows on the copied target only; it is a debug/control profile, not a player-ready camera system or online proof.
 - Second-host readiness/run-kit artifact intake now fails closed for oversized local JSON, missing/non-false proof keys, nested truthy Host/Join/online overclaims, private/sensitive strings, unsupported statuses, out-of-range counters, and ready-to-run prerequisite mismatches. Host/Join remains disabled until accepted distinct-endpoint command-source and source-bound copied-runtime causality proofs exist.

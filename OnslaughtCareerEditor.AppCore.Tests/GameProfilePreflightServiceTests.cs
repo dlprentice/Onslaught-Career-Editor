@@ -506,7 +506,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     module.CopiedOptionsEdits.Contains("mouseLookSensitivity=2.25") &&
                     module.ClaimBoundary.Contains("does not prove improved feel", StringComparison.OrdinalIgnoreCase) &&
                     module.RestoreStrategy.Contains("copied defaultoptions.bea backup", StringComparison.OrdinalIgnoreCase) &&
-                    module.EvidenceRefs.Contains("release/readiness/winui_safe_copy_control_options_2026-06-17.md") &&
+                    module.EvidenceRefs.Contains("roadmap/mod-patch-runtime-rebuild-register.md") &&
                     module.NonClaims.Contains("No improved control-feel proof."));
                 Assert.All(result.ProfilePresetModules, module =>
                 {
@@ -562,7 +562,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     new[] { "controllerConfiguration=1", "mouseLookSensitivity=2.25" },
                     copiedControlModule.GetProperty("copiedOptionsEdits").EnumerateArray().Select(element => element.GetString()!).ToArray());
                 Assert.Contains(
-                    "release/readiness/winui_safe_copy_control_options_2026-06-17.md",
+                    "roadmap/mod-patch-runtime-rebuild-register.md",
                     copiedControlModule.GetProperty("evidenceRefs").EnumerateArray().Select(element => element.GetString()!).ToArray());
                 Assert.Contains(
                     "No improved control-feel proof.",
@@ -656,7 +656,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 SafeCopyProfileModule debugCameraModule = result.ProfilePresetModules.Single(module => module.Id == "debug-camera-q-forward");
                 Assert.Equal(new[] { "free_camera_aurore_gate_bypass", "free_camera_keyboard_forward_q_hook" }, debugCameraModule.PatchKeys);
                 Assert.Contains("Q-forward", debugCameraModule.ClaimBoundary, StringComparison.OrdinalIgnoreCase);
-                Assert.Contains("release/readiness/winui_free_camera_q_forward_runtime_2026-06-18.md", debugCameraModule.EvidenceRefs);
+                Assert.Contains("roadmap/mod-patch-runtime-rebuild-register.md", debugCameraModule.EvidenceRefs);
                 Assert.Contains("No full free-camera control scheme proof.", debugCameraModule.NonClaims);
                 Assert.DoesNotContain("free_camera_keyboard_backward_q_hook", debugCameraVisibleKeys);
                 Assert.DoesNotContain("pause_o_scan_initializer_experiment", debugCameraVisibleKeys);

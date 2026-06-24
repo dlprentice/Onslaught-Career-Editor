@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: public-safe capability summary
-Last updated: 2026-06-23
+Last updated: 2026-06-24
 
 This public summary describes what outside contributors can rely on in a
 sanitized public candidate. The private maintainer tree contains deeper static
@@ -23,6 +23,10 @@ future proof, not current release claims.
 - Current patch catalog accounting: 29 total rows; 20 visible options (9 stable, 11 experimental); 9 hidden companions.
 - Windowed & Mods supports safe-copy patch planning, copied executable workflows,
   and a local split-screen launch preset for safe copies.
+- Windowed & Mods shows sanitized safe-copy profile catalog provenance beside
+  the selected preset, and packaged WinUI output includes both
+  `patches/catalog/patches.v2.json` and
+  `patches/catalog/safe-copy-profiles.v1.json`.
 - Downloadable app releases are portable ZIPs. They include the WinUI app and
   third-party notices, not Battle Engine Aquila game files, saves, media, or
   private proof material.

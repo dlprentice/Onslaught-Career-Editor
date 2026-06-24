@@ -114,7 +114,7 @@ namespace Onslaught___Career_Editor
                 new[]
                 {
                     "patches/README.md",
-                    "release/readiness/winui_safe_copy_live_runtime_smoke_2026-06-17.md",
+                    "roadmap/mod-patch-runtime-rebuild-register.md",
                     "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
                     "reverse-engineering/binary-analysis/widescreen-patch-analysis.md",
                 },
@@ -143,7 +143,7 @@ namespace Onslaught___Career_Editor
                         new[]
                         {
                             "patches/README.md",
-                            "release/readiness/winui_modern_graphics_live_runtime_smoke_2026-06-17.md",
+                            "roadmap/mod-patch-runtime-rebuild-register.md",
                             "reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md",
                         },
                         new[]
@@ -172,7 +172,7 @@ namespace Onslaught___Career_Editor
                         new[]
                         {
                             "patches/README.md",
-                            "release/readiness/winui_version_overlay_runtime_smoke_2026-06-17.md",
+                            "roadmap/mod-patch-runtime-rebuild-register.md",
                             "reverse-engineering/binary-analysis/version-overlay-patch.md",
                         },
                         new[]
@@ -194,7 +194,7 @@ namespace Onslaught___Career_Editor
                         new[]
                         {
                             "patches/README.md",
-                            "release/readiness/winui_frontend_clear_screen_color_patch_2026-06-16.md",
+                            "roadmap/mod-patch-runtime-rebuild-register.md",
                             "reverse-engineering/binary-analysis/frontend-clear-screen-color-patch.md",
                         },
                         new[]
@@ -216,7 +216,7 @@ namespace Onslaught___Career_Editor
                         new[]
                         {
                             "patches/README.md",
-                            "release/readiness/winui_goodies_gallery_display_unlock_2026-06-17.md",
+                            "roadmap/mod-patch-runtime-rebuild-register.md",
                             "reverse-engineering/binary-analysis/goodies-gallery-display-unlock-patch.md",
                         },
                         new[]
@@ -238,7 +238,6 @@ namespace Onslaught___Career_Editor
                         "Restore the copied defaultoptions.bea backup or recreate the safe copy; the installed defaultoptions.bea is never rewritten.",
                         new[]
                         {
-                            "release/readiness/winui_safe_copy_control_options_2026-06-17.md",
                             "roadmap/mod-patch-runtime-rebuild-register.md",
                             "reverse-engineering/save-file/save-format.md",
                         },
@@ -268,8 +267,7 @@ namespace Onslaught___Career_Editor
                         new[]
                         {
                             "patches/README.md",
-                            "release/readiness/winui_safe_copy_free_camera_toggle_2026-06-18.md",
-                            "release/readiness/winui_free_camera_q_forward_runtime_2026-06-18.md",
+                            "roadmap/mod-patch-runtime-rebuild-register.md",
                             "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
                         },
                         new[]

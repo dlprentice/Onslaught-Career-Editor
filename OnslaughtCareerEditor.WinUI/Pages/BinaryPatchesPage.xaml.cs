@@ -532,6 +532,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchSafeCopySourceStatus.Text = BuildSafeCopySourceStatus(sourcePath);
             WorkingCopySummaryTextBlock.Text = BuildWorkingCopySummary(exePath);
             PatchBenchSelectedProfileStatus.Text = BuildSelectedProfileStatus(visibleSelectedKeys);
+            PatchBenchProfileCatalogStatus.Text = BuildSafeCopyProfileCatalogStatus();
             PatchBenchSelectedProfileDetails.Text = BuildSelectedProfileDetails(visibleSelectedKeys);
 
             SelectionSummaryTextBlock.Text = hasSelected
@@ -2071,6 +2072,22 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             return $"Selected profile: manual patch selection with {selectedKeys.Count} visible row(s). Create safe copy will add required compatibility and these selected rows.";
+        }
+
+        private static string BuildSafeCopyProfileCatalogStatus()
+        {
+            string version = string.IsNullOrWhiteSpace(BinaryPatchPlanBuilder.SafeCopyProfileCatalogVersion)
+                ? "unknown schema"
+                : BinaryPatchPlanBuilder.SafeCopyProfileCatalogVersion;
+            string hash = BinaryPatchPlanBuilder.SafeCopyProfileCatalogSha256;
+            string hashSummary = string.IsNullOrWhiteSpace(hash)
+                ? "no catalog hash"
+                : $"catalog SHA-256 {hash[..Math.Min(12, hash.Length)]}";
+            string source = BinaryPatchPlanBuilder.UsingFallbackSafeCopyProfileCatalog
+                ? "fallback built-in presets are active"
+                : "tracked profile catalog is active";
+
+            return $"Profile catalog and preset source: {source}; {version}; {hashSummary}. Every profile still expands into byte-verified rows before safe-copy creation.";
         }
 
         private static string BuildSelectedProfileDetails(IReadOnlyCollection<string> selectedKeys)

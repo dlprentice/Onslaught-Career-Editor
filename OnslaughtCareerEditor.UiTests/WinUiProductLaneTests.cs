@@ -231,6 +231,8 @@ public class WinUiProductLaneTests
 
         Assert.That(project, Does.Contain("..\\patches\\catalog\\patches.v2.json"));
         Assert.That(project, Does.Contain("Link=\"patches\\catalog\\patches.v2.json\""));
+        Assert.That(project, Does.Contain("..\\patches\\catalog\\safe-copy-profiles.v1.json"));
+        Assert.That(project, Does.Contain("Link=\"patches\\catalog\\safe-copy-profiles.v1.json\""));
         Assert.That(project, Does.Contain("CopyToOutputDirectory=\"PreserveNewest\""));
     }
 
@@ -350,11 +352,18 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("Fullscreen fallback, netcode, and in-game toggle menus are not part of any preset yet."));
         Assert.That(pageXaml, Does.Contain("Create safe copy records the selected rows in the safe-copy receipt and profile manifest. Control-options details are recorded only when an options manifest is written."));
         Assert.That(pageXaml, Does.Contain("PatchBenchSelectedProfileStatus"));
+        Assert.That(pageXaml, Does.Contain("PatchBenchProfileCatalogStatus"));
+        Assert.That(pageXaml, Does.Contain("Profile catalog and preset source"));
         Assert.That(pageXaml, Does.Contain("PatchBenchSelectedProfileDetailsExpander"));
         Assert.That(pageXaml, Does.Contain("Preset details and proof limits"));
         Assert.That(pageXaml, Does.Contain("PatchBenchSelectedProfileDetails"));
         Assert.That(pageXaml, Does.Contain("Selected safe-copy preset details"));
         Assert.That(code, Does.Contain("PatchBenchSelectedProfileDetails.Text = BuildSelectedProfileDetails(visibleSelectedKeys)"));
+        Assert.That(code, Does.Contain("PatchBenchProfileCatalogStatus.Text = BuildSafeCopyProfileCatalogStatus()"));
+        Assert.That(code, Does.Contain("BinaryPatchPlanBuilder.SafeCopyProfileCatalogVersion"));
+        Assert.That(code, Does.Contain("BinaryPatchPlanBuilder.SafeCopyProfileCatalogSha256"));
+        Assert.That(code, Does.Contain("BinaryPatchPlanBuilder.UsingFallbackSafeCopyProfileCatalog"));
+        Assert.That(code, Does.Not.Contain("PatchBenchProfileCatalogStatus.Text = BinaryPatchPlanBuilder.SafeCopyProfileCatalogStatus"));
         Assert.That(code, Does.Contain("FormatSafeCopyProfileModules"));
         Assert.That(code, Does.Contain("FormatSafeCopyProfileModuleName"));
         Assert.That(code, Does.Contain("FormatSafeCopyProfileEvidence"));
@@ -482,7 +491,7 @@ public class WinUiProductLaneTests
         Assert.That(itemModel, Does.Contain("Model/FMV playback and every-entry browsing remain unproven"));
         Assert.That(itemModel, Does.Contain("Two baseline-vs-patched Goodies-wall comparisons changed display state; one selected Tatiana page was captured."));
         Assert.That(itemModel, Does.Contain("Model/FMV playback, every-entry browsing, save persistence, and permanent unlocks."));
-        Assert.That(itemModel, Does.Contain("Readiness: winui_goodies_gallery_display_unlock_2026-06-17.md"));
+        Assert.That(itemModel, Does.Contain("Public proof: Goodies display patch contract."));
         Assert.That(itemModel, Does.Contain("free_camera_aurore_gate_bypass"));
         Assert.That(itemModel, Does.Contain("Experimental free-camera gate byte change"));
         Assert.That(itemModel, Does.Contain("Full camera behavior remains unproven"));
@@ -490,7 +499,7 @@ public class WinUiProductLaneTests
         Assert.That(itemModel, Does.Contain("Experimental O-key pause test"));
         Assert.That(itemModel, Does.Contain("bounded free-camera run recorded O-query, BUTTON_PAUSE dispatch, and pause/unpause evidence"));
         Assert.That(itemModel, Does.Contain("level-100 proof separately observed ordered O-query, BUTTON_PAUSE dispatch, CGame__Pause, pause-menu init, and Enter resume"));
-        Assert.That(itemModel, Does.Contain("Readiness: winui_pause_o_scan_initializer_runtime_2026-06-18.md"));
+        Assert.That(itemModel, Does.Contain("Public diagnostic: control mapping contract."));
         Assert.That(itemModel, Does.Contain("\"pause_o_scan_initializer_experiment\" => \"Controls & Pause\""));
         Assert.That(itemModel, Does.Contain("\"pause_o_scan_initializer_experiment\" => \"EXPERIMENTAL PAUSE TEST\""));
         Assert.That(itemModel, Does.Contain("\"free_camera_keyboard_yaw_left_q_hook\" => \"Debug Camera Mods\""));
@@ -501,7 +510,7 @@ public class WinUiProductLaneTests
         Assert.That(itemModel, Does.Contain("\"free_camera_keyboard_yaw_right_q_hook\" => \"EXPERIMENTAL CAMERA TEST\""));
         Assert.That(itemModel, Does.Contain("\"free_camera_keyboard_pitch_up_q_hook\" => \"EXPERIMENTAL CAMERA TEST\""));
         Assert.That(itemModel, Does.Contain("\"free_camera_keyboard_pitch_down_q_hook\" => \"EXPERIMENTAL CAMERA TEST\""));
-        Assert.That(itemModel, Does.Contain("Readiness: winui_frontend_clear_screen_color_patch_2026-06-16.md"));
+        Assert.That(itemModel, Does.Contain("Public proof: frontend color patch contract."));
         Assert.That(itemModel, Does.Contain("public string UserFacingStatus"));
         Assert.That(pageXaml, Does.Contain("Text=\"{Binding UserFacingStatus}\""));
         Assert.That(itemModel, Does.Not.Contain("Checked: {ProofStatus}"));
