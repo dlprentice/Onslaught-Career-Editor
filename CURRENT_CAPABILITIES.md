@@ -23,10 +23,27 @@ The producer set includes `tools/winui_safe_copy_music_ambient_no_bea_census.py`
 `tools/winui_safe_copy_music_capture_source_correlation_builder.py`. Actual
 ambient, clean, staged, mute, CDB timeline, source-safety, audio, and
 capture-correlation sidecars are still required in a future private live
-bundle. This is proof-gate infrastructure only;
-`runtimeAudibleOutputProof` remains false and there is no BEA launch, CDB
-attach, audio capture, all-cue proof, gameplay parity proof, online proof, or
-rebuild parity proof.
+bundle. This producer/gate infrastructure alone is proof-gate infrastructure
+only; `runtimeAudibleOutputProof` remains false and there is no accepted
+complete raw bundle, audio capture acceptance, all-cue proof, gameplay parity
+proof, online proof, or rebuild parity proof.
+
+Music CGame caller diagnostic status: a 2026-06-24 copied-runtime diagnostic
+did launch a safe copied `BEA.exe` and attach CDB for one bounded level-100
+observation. It classified the observed `CMusic__PlaySelection` row as
+`restart-loop-direct-level100-music-selection-observed`: the wrapper-entry row
+for `CGame__PlayMusicForCurrentLevel` was still absent, but the runtime reached
+the direct restart-loop music-selection call return address `0x0046e0bf`. This
+narrows the previous materializer failure to contract/attach-timing provenance;
+it is not audible-output, volume, loop, all-cue, gameplay, online, rebuild, or
+no-noticeable-difference proof.
+
+Music materializer contract status: the trusted materializer/timeline/final
+checker now carries explicit `musicSelectionProvenance` values and accepts only
+`cgame-wrapper` or `cgame-restart-loop-direct` when the timestamped CDB log and
+timeline sidecar agree. This is a proof-contract correction so the restart-loop
+direct selector path can be represented in a future complete raw bundle. It is
+not itself a live accepted audible-output bundle.
 
 Windowed & Mods now shows the safe-copy profile catalog source beside the
 selected preset details. The row reports whether the tracked profile catalog or

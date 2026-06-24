@@ -108,7 +108,20 @@ def validate_runtime_evidence(run: dict[str, Any], role: str) -> dict[str, Any]:
     require(bool_at(cdb, "exactPidCdbObserver"), f"{role} must use exact-PID CDB evidence.")
     require(int_at(cdb, "levelId") == LEVEL_ID, f"{role} CDB level must be {LEVEL_ID}.")
     require(int_at(cdb, "selectionId") == SELECTION_ID, f"{role} CDB selection must be {SELECTION_ID}.")
-    require(bool_at(cdb, "playMusicForCurrentLevelObserved"), f"{role} must observe CGame music selection.")
+    provenance = str(cdb.get("musicSelectionProvenance") or "")
+    if not provenance and bool_at(cdb, "playMusicForCurrentLevelObserved"):
+        provenance = "cgame-wrapper"
+    require(
+        provenance in {"cgame-wrapper", "cgame-restart-loop-direct"},
+        f"{role} must include accepted CGame music-selection provenance.",
+    )
+    if provenance == "cgame-wrapper":
+        require(bool_at(cdb, "playMusicForCurrentLevelObserved"), f"{role} must observe the CGame music wrapper.")
+    if provenance == "cgame-restart-loop-direct":
+        require(
+            bool_at(cdb, "restartLoopDirectMusicSelectionObserved"),
+            f"{role} must observe the restart-loop direct music-selection call.",
+        )
     require(bool_at(cdb, "playSelectionObserved"), f"{role} must observe CMusic selection.")
     require(bool_at(cdb, "asyncKickPathMatched"), f"{role} must observe async music kick path.")
     require(bool_at(cdb, "oggOpenPathMatched"), f"{role} must observe Ogg open path.")
@@ -119,6 +132,7 @@ def validate_runtime_evidence(run: dict[str, Any], role: str) -> dict[str, Any]:
     return {
         "levelId": cdb["levelId"],
         "selectionId": cdb["selectionId"],
+        "musicSelectionProvenance": provenance,
         "decodeWindowStartUtc": cdb["decodeWindowStartUtc"],
         "decodeWindowEndUtc": cdb["decodeWindowEndUtc"],
         "decodeWindowStartAt": decode_start,
@@ -376,7 +390,9 @@ def _cdb(include_decode: bool) -> dict[str, Any]:
         "exactPidCdbObserver": True,
         "levelId": LEVEL_ID,
         "selectionId": SELECTION_ID,
+        "musicSelectionProvenance": "cgame-wrapper",
         "playMusicForCurrentLevelObserved": include_decode,
+        "restartLoopDirectMusicSelectionObserved": False,
         "playSelectionObserved": include_decode,
         "asyncKickPathMatched": include_decode,
         "oggOpenPathMatched": include_decode,

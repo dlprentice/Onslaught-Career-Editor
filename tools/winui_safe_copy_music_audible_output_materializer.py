@@ -39,6 +39,10 @@ SELECTION_ID = 2
 BASE_PATCH_KEYS = {"force_windowed", "resolution_gate"}
 UTC_PREFIX_RE = re.compile(r"^\s*(?:\[)?(?P<ts>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)(?:\])?\s+")
 FLOAT_EPSILON = 0.000001
+MUSIC_PROVENANCE_WRAPPER = "cgame-wrapper"
+MUSIC_PROVENANCE_RESTART_LOOP_DIRECT = "cgame-restart-loop-direct"
+ACCEPTED_MUSIC_PROVENANCE = {MUSIC_PROVENANCE_WRAPPER, MUSIC_PROVENANCE_RESTART_LOOP_DIRECT}
+C_GAME_RESTART_LOOP_DIRECT_MUSIC_RETURN = 0x0046E0BF
 
 RAW_OUTPUT_KEYS = {
     "device",
@@ -234,6 +238,7 @@ def parse_cdb_log(log_path: Path) -> dict[str, Any]:
     require(log_path.is_file(), f"CDB log not found: {log_path}")
     game_music: list[str] = []
     play_selection: list[str] = []
+    restart_loop_direct_rows: list[dict[str, int]] = []
     kick_paths: list[str] = []
     open_paths: list[str] = []
     decode_requests: list[int] = []
@@ -246,6 +251,28 @@ def parse_cdb_log(log_path: Path) -> dict[str, Any]:
         if match := re.search(r"CMusic__PlaySelection entry .*? selection=(-?\d+) ", line, re.IGNORECASE):
             play_selection.append(match.group(1))
             append_timestamp(row_times, line, "PlaySelection")
+        if match := re.search(
+            r"CMusic__PlaySelection(?: entry|Caller).*? caller=([0-9a-fA-F]+).*? "
+            r"globalLevel=(-?\d+) .*? selection=(-?\d+) ",
+            line,
+            re.IGNORECASE,
+        ):
+            caller = int(match.group(1), 16)
+            global_level = int(match.group(2))
+            selection = int(match.group(3))
+            if (
+                caller == C_GAME_RESTART_LOOP_DIRECT_MUSIC_RETURN
+                and global_level == LEVEL_ID
+                and selection == SELECTION_ID
+            ):
+                restart_loop_direct_rows.append(
+                    {
+                        "caller": caller,
+                        "globalLevel": global_level,
+                        "selection": selection,
+                    }
+                )
+                append_timestamp(row_times, line, "RestartLoopDirectMusicSelection")
         if match := re.search(r"PCPlatform__KickAsyncMusicStreamRead path=(.*?\.ogg|<[^>]+>)", line, re.IGNORECASE):
             kick_paths.append(match.group(1))
             append_timestamp(row_times, line, "KickAsyncMusicStreamRead")
@@ -258,7 +285,12 @@ def parse_cdb_log(log_path: Path) -> dict[str, Any]:
             require(parsed is not None, "CDB decoded PCM row is not timestamped.")
             row_times.append(parsed)
             decode_times.append(parsed)
-    require(any(int(value) == LEVEL_ID for value in game_music), "CDB log missing expected CGame level row.")
+    wrapper_observed = any(int(value) == LEVEL_ID for value in game_music)
+    restart_loop_direct_observed = bool(restart_loop_direct_rows)
+    require(
+        wrapper_observed or restart_loop_direct_observed,
+        "CDB log missing accepted CGame music-selection provenance.",
+    )
     require(any(int(value) == SELECTION_ID for value in play_selection), "CDB log missing expected CMusic selection row.")
     require(any(path_mentions_target(path) for path in kick_paths), "CDB log missing expected async kick target path.")
     require(any(path_mentions_target(path) for path in open_paths), "CDB log missing expected Ogg open target path.")
@@ -268,6 +300,13 @@ def parse_cdb_log(log_path: Path) -> dict[str, Any]:
     return {
         "gameMusicRows": len(game_music),
         "playSelectionRows": len(play_selection),
+        "restartLoopDirectRows": len(restart_loop_direct_rows),
+        "musicSelectionProvenance": (
+            MUSIC_PROVENANCE_WRAPPER if wrapper_observed else MUSIC_PROVENANCE_RESTART_LOOP_DIRECT
+        ),
+        "playMusicForCurrentLevelObserved": wrapper_observed,
+        "restartLoopDirectMusicSelectionObserved": restart_loop_direct_observed,
+        "restartLoopDirectMusicReturn": f"0x{C_GAME_RESTART_LOOP_DIRECT_MUSIC_RETURN:08x}",
         "asyncKickRows": len(kick_paths),
         "oggOpenRows": len(open_paths),
         "oggReadRows": len(decode_requests),
@@ -314,13 +353,27 @@ def validate_timeline(timeline_path: Path, live_path: Path, live: dict[str, Any]
     parsed = parse_cdb_log(parsed_log_path)
     for key in {
         "exactPidCdbObserver",
-        "playMusicForCurrentLevelObserved",
         "playSelectionObserved",
         "asyncKickPathMatched",
         "oggOpenPathMatched",
         "decodedPcmPositiveRequestObserved",
     }:
         require(bool_at(timeline, key), f"{role} timeline missing {key}.")
+    provenance = str(timeline.get("musicSelectionProvenance") or "")
+    if not provenance and bool_at(timeline, "playMusicForCurrentLevelObserved"):
+        provenance = MUSIC_PROVENANCE_WRAPPER
+    require(provenance in ACCEPTED_MUSIC_PROVENANCE, f"{role} timeline music-selection provenance is not accepted.")
+    if provenance == MUSIC_PROVENANCE_WRAPPER:
+        require(bool_at(timeline, "playMusicForCurrentLevelObserved"), f"{role} wrapper provenance requires CGame wrapper observation.")
+    if provenance == MUSIC_PROVENANCE_RESTART_LOOP_DIRECT:
+        require(
+            bool_at(timeline, "restartLoopDirectMusicSelectionObserved"),
+            f"{role} restart-loop direct provenance requires the direct-call observation.",
+        )
+    require(
+        provenance == parsed["musicSelectionProvenance"],
+        f"{role} timeline provenance does not match timestamped CDB log.",
+    )
     require(int_at(timeline, "levelId") == LEVEL_ID, f"{role} timeline level mismatch.")
     require(int_at(timeline, "selectionId") == SELECTION_ID, f"{role} timeline selection mismatch.")
     decode_start = utc_at(timeline, "decodeWindowStartUtc")
@@ -334,7 +387,9 @@ def validate_timeline(timeline_path: Path, live_path: Path, live: dict[str, Any]
         "exactPidCdbObserver": True,
         "levelId": LEVEL_ID,
         "selectionId": SELECTION_ID,
-        "playMusicForCurrentLevelObserved": True,
+        "musicSelectionProvenance": provenance,
+        "playMusicForCurrentLevelObserved": bool(provenance == MUSIC_PROVENANCE_WRAPPER),
+        "restartLoopDirectMusicSelectionObserved": bool(provenance == MUSIC_PROVENANCE_RESTART_LOOP_DIRECT),
         "playSelectionObserved": True,
         "asyncKickPathMatched": True,
         "oggOpenPathMatched": True,

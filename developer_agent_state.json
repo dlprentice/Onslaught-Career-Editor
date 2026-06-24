@@ -1,9 +1,9 @@
 {
   "lastUpdated": "2026-06-24",
   "branch": "main",
-  "currentFocus": "Close public-primary migration inventory and repo-readiness from the public repo.",
+  "currentFocus": "Public-primary full-migration hardening is validated; public repo remains the working source of truth.",
   "publicPrimaryMigration": {
-    "status": "validated_pending_commit_push",
+    "status": "closed_validated",
     "targetPublicRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
     "policy": "track source/docs/tools/tests/RE notes/wave notes/state batons/agent reports/readiness notes/compact proof summaries; keep hard payloads local/ignored",
@@ -11,16 +11,18 @@
     "readinessNote": "release/readiness/public_primary_full_migration_inventory_2026-06-24.md",
     "acceptedInventory": {
       "privateTrackedPaths": 24839,
-      "publicTrackedPaths": 19264,
-      "allowedPrivateOnlyHardPayloadOrScratchPaths": 5584
+      "publicTrackedPaths": 19294,
+      "allowedPrivateOnlyHardPayloadOrScratchPaths": 5557
     },
     "materialRestored": [
       "references/Onslaught gitlink at 792545b996365f383781c666d145ea6cbda83f3a",
       "references/AYAResourceExtractor gitlink at 6f3df296201ecc62bc09c39f7a93d8a4fb2f1638",
       "archive/electron-workbench/packages/ui/src/components/media/MediaDetails.tsx",
       "archive/electron-workbench/packages/ui/src/components/media/MediaSection.tsx",
-      "tests_shared/fixtures/gold_career_save.bin"
+      "tests_shared/fixtures/gold_career_save.bin",
+      "27 text RE scratch exports under reverse-engineering/binary-analysis/scratch/deep_semantic_tail_2026-02-27"
     ],
+    "hardening": "tools/public_primary_migration_inventory.py now treats missing private RE scratch text as missing project material and allows only payload-like scratch outputs as private-only scratch",
     "hardPayloadsKeptOut": [
       "game/media payload roots",
       "copied executables/DLLs",
@@ -33,8 +35,25 @@
   },
   "runtimeTruth": {
     "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable",
-    "musicAudibleOutputProof": "runtimeAudibleOutputProof=false; latest consults point to likely CDB attach timing miss for the missing CGame__PlayMusicForCurrentLevel row",
+    "musicAudibleOutputProof": "runtimeAudibleOutputProof=false; CGame caller diagnostic observed restart-loop direct level-100 music-selection provenance but no audible-output acceptance",
+    "musicCGameCallerDiagnostic": {
+      "status": "accepted_bounded_diagnostic",
+      "artifact": "music-cgame-diagnostic-20260624-131246/live-safe-copy-runtime-smoke.json",
+      "classification": "restart-loop-direct-level100-music-selection-observed",
+      "gameMusicRows": 0,
+      "level100SelectionRows": 1,
+      "restartLoopDirectRows": 1,
+      "directReturnAddress": "0x0046e0bf",
+      "runtimeAudibleOutputProof": false,
+      "readinessNote": "release/readiness/winui_music_cgame_caller_diagnostic_2026-06-24.md"
+    },
     "originalInstallRule": "installed Steam folder and original BEA.exe remain read-only"
+  },
+  "activeSlice": {
+    "name": "public-primary-full-migration-hardening",
+    "goal": "make the public repo the primary working repo for project-owned material while keeping hard payloads as ignored local overlays",
+    "repo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
+    "claimBoundary": "track source/docs/tools/RE/state/proof summaries/text scratch; keep game files, copied exes, arbitrary saves, media payloads, raw logs, full Ghidra DBs, secrets, and build output out of git"
   },
   "staticProgress": {
     "functionQuality": "6411/6411 = 100.00%",
@@ -44,25 +63,27 @@
   },
   "validation": {
     "passed": [
-      "py -3 tools\\public_primary_migration_inventory.py --self-test",
-      "py -3 tools\\public_primary_migration_inventory.py --check --private-root C:\\Users\\david\\source\\Onslaught-Career-Editor-private --require-private-root",
       "npm run test:public-primary-migration-inventory",
       "npm run test:hard-payload-safety",
       "npm run test:doc-commands",
       "npm run test:md-links",
       "npm run test:repo-hygiene",
-      "py -3 tools\\release_profile_snapshot.py --check",
-      "py -3 tools\\release_curated_manifest.py --check",
+      "py -3 -m py_compile tools\\winui_safe_copy_music_cgame_caller_diagnostic_check.py",
+      "npm run test:winui-safe-copy-music-cgame-caller-diagnostic",
+      "py -3 tools\\winui_safe_copy_music_cgame_caller_diagnostic_check.py <accepted-local-ignored-artifact>",
+      "CDB observer command validation",
+      "npm run test:winui-safe-copy-music-cdb-timeline-sidecar",
+      "npm run test:winui-safe-copy-music-audible-output-materializer",
+      "npm run test:winui-safe-copy-music-audible-output-two-run-harness",
       "state JSON parse",
-      "git diff --cached --check"
+      "git diff --check",
+      "git diff --cached --check",
+      "no BEA.exe/cdb.exe process after closeout"
     ],
-    "pending": [
-      "commit/push"
-    ]
+    "pending": []
   },
   "nextSteps": [
-    "Run public-primary migration validation gates.",
-    "Commit and push the green public migration slice.",
-    "Then return to the music-runtime CDB attach timing diagnostic from the public repo."
+    "Commit/push the green public-primary migration hardening pass if authorized.",
+    "Then return to patch/mod/runtime work from the public repo only."
   ]
 }

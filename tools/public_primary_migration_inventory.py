@@ -71,7 +71,9 @@ def is_allowed_private_only(path: str) -> tuple[bool, str]:
     if path in {"BEA.exe.gzf", "BEA_Widescreen.exe"}:
         return True, "top-level executable/archive payload"
     if path.startswith("reverse-engineering/binary-analysis/scratch/"):
-        return True, "volatile RE scratch output"
+        if Path(path).suffix.lower() in {".bes", ".fbx", ".png"}:
+            return True, "volatile RE scratch payload output"
+        return False, ""
     if path.startswith("lore-book/reverse-engineering/binary-analysis/scratch/"):
         return True, "volatile mirrored RE scratch output"
     return False, ""
@@ -126,7 +128,8 @@ def run_self_test() -> int:
         "game/BEA.exe": True,
         "media/flash/battle_engine_aquila.swf": True,
         "save-attempts/foo.bes": True,
-        "reverse-engineering/binary-analysis/scratch/probe/out/file.c": True,
+        "reverse-engineering/binary-analysis/scratch/probe/out/file.c": False,
+        "reverse-engineering/binary-analysis/scratch/probe/out/file.png": True,
         "tools/missing_checker.py": False,
         "roadmap/missing.md": False,
     }

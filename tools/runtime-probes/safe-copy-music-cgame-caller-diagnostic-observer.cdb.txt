@@ -1,0 +1,13 @@
+.echo === safe-copy music CGame caller diagnostic observer ===
+vertarget
+lm m BEA
+u 0046dc00 L18
+u 0046dc30 L12
+u 004bb8c0 L20
+.echo MUSIC_CGAME_DIAG_PROBE_ARMED
+bp /1 0046dc00 ".printf \"CGame__PlayMusicForCurrentLevel this=%p level=%d raw=%08x\n\", @ecx, poi(@ecx+0x30), poi(@ecx+0x30); g"
+bp /1 004bb8c0 ".printf \"CMusic__PlaySelectionCaller this=%p caller=%p globalGame=%p globalLevel=%d globalRaw=%08x selection=%d fade=%d playing=%d head=%p current=%p\n\", @ecx, poi(@esp), 0x008a9a98, poi(0x008a9a98+0x30), poi(0x008a9a98+0x30), poi(@esp+4), poi(@esp+8), by(@ecx+0x8), poi(@ecx+0xc), poi(@ecx+0x10); g"
+bp /1 00528540 ".printf \"PCPlatform__KickAsyncMusicStreamRead path=%ma\n\", poi(@esp+4); g"
+bp /1 005246a0 ".printf \"COggFileRead__OpenFileAndPrimeDecoder this=%p path=%ma\n\", @ecx, poi(@esp+4); g"
+bp /1 00524710 ".printf \"COggFileRead__ReadDecodedPcm this=%p request=%u out=%p outBytes=%p\n\", @ecx, poi(@esp+4), poi(@esp+8), poi(@esp+0x0c); g"
+g

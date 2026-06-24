@@ -38,7 +38,19 @@ def log_text() -> str:
     return "\n".join(
         [
             "2026-06-22T00:00:01.100Z CGame__PlayMusicForCurrentLevel this=008a9a98 level=100 raw=00000064",
-            "2026-06-22T00:00:01.200Z CMusic__PlaySelection entry this=00889a48 selection=2 fade=0 playing=0 head=04400000 current=00000000",
+            "2026-06-22T00:00:01.200Z CMusic__PlaySelection entry this=00889a48 caller=0046dc2c globalGame=008a9a98 globalLevel=100 globalRaw=00000064 selection=2 fade=0 playing=0 head=04400000 current=00000000",
+            r"2026-06-22T00:00:01.300Z CMusic__PlaySelectionResolved this=00889a48 selection=2 selected=04400300 path=data\music\BEA_04(Master).ogg playing=0 fadeArg=0 current=00000000 pending=00000000 mode=0",
+            r"2026-06-22T00:00:01.400Z PCPlatform__KickAsyncMusicStreamRead path=data\music\BEA_04(Master).ogg",
+            r"2026-06-22T00:00:01.500Z COggFileRead__OpenFileAndPrimeDecoder this=0440a000 path=data\music\BEA_04(Master).ogg",
+            "2026-06-22T00:00:01.600Z COggFileRead__ReadDecodedPcm this=0440a000 request=4096 out=04500000 outBytes=0019f4b0",
+        ]
+    )
+
+
+def restart_loop_direct_log_text() -> str:
+    return "\n".join(
+        [
+            "2026-06-22T00:00:01.200Z CMusic__PlaySelection entry this=00889a48 caller=0046e0bf globalGame=008a9a98 globalLevel=100 globalRaw=00000064 selection=2 fade=0 playing=0 head=04400000 current=00000000",
             r"2026-06-22T00:00:01.300Z CMusic__PlaySelectionResolved this=00889a48 selection=2 selected=04400300 path=data\music\BEA_04(Master).ogg playing=0 fadeArg=0 current=00000000 pending=00000000 mode=0",
             r"2026-06-22T00:00:01.400Z PCPlatform__KickAsyncMusicStreamRead path=data\music\BEA_04(Master).ogg",
             r"2026-06-22T00:00:01.500Z COggFileRead__OpenFileAndPrimeDecoder this=0440a000 path=data\music\BEA_04(Master).ogg",
@@ -203,7 +215,15 @@ def write_audio_json(
     )
 
 
-def timeline_payload(live_path: Path, log_path: Path, *, role: str) -> dict[str, Any]:
+def timeline_payload(
+    live_path: Path,
+    log_path: Path,
+    *,
+    role: str,
+    provenance: str = "cgame-wrapper",
+) -> dict[str, Any]:
+    wrapper_provenance = provenance == "cgame-wrapper"
+    restart_direct_provenance = provenance == "cgame-restart-loop-direct"
     return {
         "schemaVersion": "winui-safe-copy-music-cdb-decode-timeline.v1",
         "role": role,
@@ -214,7 +234,9 @@ def timeline_payload(live_path: Path, log_path: Path, *, role: str) -> dict[str,
         "exactPidCdbObserver": True,
         "levelId": LEVEL_ID,
         "selectionId": SELECTION_ID,
-        "playMusicForCurrentLevelObserved": True,
+        "musicSelectionProvenance": provenance,
+        "playMusicForCurrentLevelObserved": wrapper_provenance,
+        "restartLoopDirectMusicSelectionObserved": restart_direct_provenance,
         "playSelectionObserved": True,
         "asyncKickPathMatched": True,
         "oggOpenPathMatched": True,
@@ -369,6 +391,62 @@ class MusicAudibleOutputMaterializerTests(unittest.TestCase):
             proof = self.materialize(paths)
 
             self.assertTrue(final_check.validate_artifact(proof)["runtimeAudibleOutputProof"])
+
+    def test_materializes_with_restart_loop_direct_music_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = self.build_fixture(Path(temp_dir))
+            clean_live = json.loads(paths["clean_live"].read_text(encoding="utf-8"))
+            clean_log = Path(clean_live["cdbObserver"]["logPath"])
+            clean_log.write_text(restart_loop_direct_log_text(), encoding="utf-8")
+            paths["clean_timeline"] = write_json(
+                paths["clean_timeline"],
+                timeline_payload(
+                    paths["clean_live"],
+                    clean_log,
+                    role="cleanBaseline",
+                    provenance="cgame-restart-loop-direct",
+                ),
+            )
+
+            staged_live = json.loads(paths["staged_live"].read_text(encoding="utf-8"))
+            staged_log = Path(staged_live["cdbObserver"]["logPath"])
+            staged_log.write_text(restart_loop_direct_log_text(), encoding="utf-8")
+            paths["staged_timeline"] = write_json(
+                paths["staged_timeline"],
+                timeline_payload(
+                    paths["staged_live"],
+                    staged_log,
+                    role="stagedPositive",
+                    provenance="cgame-restart-loop-direct",
+                ),
+            )
+
+            proof = self.materialize(paths)
+            summary = final_check.validate_artifact(proof)
+
+            self.assertTrue(summary["runtimeAudibleOutputProof"])
+            clean_cdb = proof["runs"]["cleanBaseline"]["cdbSelectionDecode"]
+            self.assertEqual(clean_cdb["musicSelectionProvenance"], "cgame-restart-loop-direct")
+            self.assertFalse(clean_cdb["playMusicForCurrentLevelObserved"])
+            self.assertTrue(clean_cdb["restartLoopDirectMusicSelectionObserved"])
+
+    def test_rejects_restart_loop_direct_provenance_without_matching_log(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = self.build_fixture(Path(temp_dir))
+            clean_live = json.loads(paths["clean_live"].read_text(encoding="utf-8"))
+            clean_log = Path(clean_live["cdbObserver"]["logPath"])
+            paths["clean_timeline"] = write_json(
+                paths["clean_timeline"],
+                timeline_payload(
+                    paths["clean_live"],
+                    clean_log,
+                    role="cleanBaseline",
+                    provenance="cgame-restart-loop-direct",
+                ),
+            )
+
+            with self.assertRaises(materializer.MaterializerError):
+                self.materialize(paths)
 
     def test_rejects_missing_timestamped_cdb_timeline(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -128,9 +128,21 @@ producer because the required `CGame__PlayMusicForCurrentLevel level=100` row
 was still absent. It recorded `failureProcessCleanup.matchedProcessCount=0`,
 and the post-run process census found no `BEA.exe` or `cdb.exe`.
 `runtimeAudibleOutputProof=false` remains current truth.
+A follow-up caller diagnostic
+(`winui_music_cgame_caller_diagnostic_2026-06-24.md`) accepted one bounded
+level-100 copied-runtime observation with classification
+`restart-loop-direct-level100-music-selection-observed`: the wrapper-entry row
+was still absent, but `CMusic__PlaySelection` was reached from return address
+`0x0046e0bf`, the direct restart-loop music-selection call site inside
+`CGame__RestartLoopRunLevel`. This narrows the prior failure to materializer
+contract/attach-timing provenance, not proof that level-100 music selection did
+not occur. It still leaves `runtimeAudibleOutputProof=false`.
 
-Next step: investigate why the early observer still misses the
-`CGame__PlayMusicForCurrentLevel level=100` row while lower-level music/decode
-rows are visible, then make another private live attempt only when preflight is
-clean. Accept an audible-output claim only if the materializer and final checker
-pass against the generated private raw bundle.
+The materializer/timeline/final-checker contract now carries explicit
+`musicSelectionProvenance` values and accepts only `cgame-wrapper` or
+`cgame-restart-loop-direct` when the timestamped CDB log and timeline sidecar
+agree. This lets a future complete raw bundle represent the observed
+restart-loop direct selector path without pretending the wrapper-entry row was
+seen. Accept an audible-output claim only if the materializer and final checker
+pass against a generated private raw bundle with audio, source-safety,
+capture-correlation, process-cleanup, and provenance evidence intact.

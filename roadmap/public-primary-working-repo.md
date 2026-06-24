@@ -74,12 +74,21 @@ Accepted inventory:
 | Measure | Count |
 | --- | ---: |
 | Former private tracked paths | 24,839 |
-| Public tracked paths after this migration pass | 19,263 |
-| Accepted private-only hard-payload/scratch paths | 5,584 |
+| Public tracked paths after this migration pass | 19,294 |
+| Accepted private-only hard-payload/scratch paths | 5,557 |
 
 This pass restored the reference submodule gitlinks, two archived Electron media
 source files that were accidentally ignored by an unanchored `media/` rule, and
 the single tracked `gold_career_save.bin` regression fixture. The remaining
 private-only tracked delta is limited to `game/**`, `media/**`,
 `save-attempts/**`, temporary save/options payloads, top-level executable/archive
-payloads, and volatile RE scratch outputs.
+payloads, and payload-like volatile RE scratch outputs. A follow-up hardening
+pass promoted 27 private-only text RE scratch exports (`.c` / `.tsv`) from
+`reverse-engineering/binary-analysis/scratch/deep_semantic_tail_2026-02-27/**`
+and tightened the inventory guard so missing private RE scratch text is no
+longer silently accepted.
+
+Tracked `tools/runtime-probes/*.cdb.txt` files are debugger command scripts used
+by reproducible local probes. They are not raw captured CDB logs. Raw logs,
+frames, copied executables, copied game folders, and full proof bundles still
+belong in ignored local overlays such as `local-proofs/`.
