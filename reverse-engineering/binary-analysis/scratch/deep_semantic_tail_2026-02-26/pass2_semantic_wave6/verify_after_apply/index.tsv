@@ -1,0 +1,6 @@
+address	name	signature	status
+0x0040bfd0	CBattleEngine__StartDieProcess	int __fastcall CBattleEngine__StartDieProcess(int param_1)	OK
+0x00409f70	CBattleEngine__ChangeWeapon	void __fastcall CBattleEngine__ChangeWeapon(int param_1)	OK
+0x00497140	CUnitAI__CacheNamedCollisionCylinders	void __thiscall CUnitAI__CacheNamedCollisionCylinders(void * this, int param_1, int param_2)	OK
+0x004a5500	CMesh__MapStateNameToId	void __stdcall CMesh__MapStateNameToId(void * param_1, int param_2)	OK
+0x004a5670	CMesh__OptimizeTextures	void __fastcall CMesh__OptimizeTextures(void * param_1)	OK

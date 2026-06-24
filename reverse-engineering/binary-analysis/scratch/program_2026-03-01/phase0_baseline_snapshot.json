@@ -1,0 +1,44 @@
+{
+  "snapshot_time": "2026-03-01 01:08:18 -0500",
+  "phase": "phase0-preflight",
+  "coverage_metrics": {
+    "Total function objects": "5861",
+    "Unnamed `FUN_` objects": "0",
+    "Named function objects": "5861",
+    "Named coverage": "100.00%",
+    "Weak-name objects": "0",
+    "Strong semantic symbols": "5861",
+    "Strong semantic coverage": "100.00%",
+    "Helper-placeholder symbols (`__Helper_`)": "0"
+  },
+  "helper_placeholder_source": "reverse-engineering/binary-analysis/functions/FUNCTION_COVERAGE_STATE.md",
+  "state_file_counts": {
+    "documentation_agent_state.json": {
+      "last_updated": "2026-03-01 00:46:19 -0500",
+      "focus": "Static RE closeout docs: widescreen diff full attribution, capture-menu corroboration, and archive hygiene parity.",
+      "next_steps_count": 50,
+      "completed_like_count": 207
+    },
+    "developer_agent_state.json": {
+      "last_updated": "2026-03-01 00:46:19 -0500",
+      "focus": "RE implementation/doc hardening for display pipeline: widescreen diff attribution closure and capture/menu behavior evidence sync.",
+      "next_steps_count": 53,
+      "completed_like_count": 281
+    },
+    "re_orchestrator_state.json": {
+      "last_updated": "2026-03-01 00:46:19 -0500",
+      "focus": "Static RE closeout program: docs/index/state hygiene plus deep ownership/type/behavior validation starting with display/windowing paths.",
+      "next_steps_count": 123,
+      "completed_like_count": 375
+    }
+  },
+  "mutation_tracking_counters": {
+    "ledger_rows": 642,
+    "attempt_rows": 19892,
+    "completed": 641,
+    "pending": 1
+  },
+  "pending_addresses": [
+    "0x004ac6b0"
+  ]
+}

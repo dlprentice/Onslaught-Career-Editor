@@ -1,0 +1,21 @@
+address	name	signature	status
+0x00560cc3	CDXTexture__ProbeFeatureModuloGate	int CDXTexture__ProbeFeatureModuloGate(void)	OK
+0x005623c7	CRT__UnlockHeap9_SbHeapMsizePath	void CRT__UnlockHeap9_SbHeapMsizePath(void)	OK
+0x00562442	CRT__UnlockHeap9_DeferredMsizePath	void CRT__UnlockHeap9_DeferredMsizePath(void)	OK
+0x00563ad3	CRT__FpuTransDispatch2_ClearStatusAndHandle	void CRT__FpuTransDispatch2_ClearStatusAndHandle(void)	OK
+0x00563ada	CRT__FpuIntDispatch2_Handle	void CRT__FpuIntDispatch2_Handle(void)	OK
+0x00564486	CRT__FmodReduceCore	int __cdecl CRT__FmodReduceCore(int param_1, uint param_2, int param_3)	OK
+0x0056468c	CRT__FmodCore	double CRT__FmodCore(void)	OK
+0x00564ba5	CRT__UnhandledExceptionFilterDispatch	int __stdcall CRT__UnhandledExceptionFilterDispatch(void * param_1)	OK
+0x00564fdf	CRT__FlushOrCloseAllFileHandles	int __cdecl CRT__FlushOrCloseAllFileHandles(int param_1)	OK
+0x0056585a	CRT__ReadIntAndAdvance8	int __cdecl CRT__ReadIntAndAdvance8(void * param_1)	OK
+0x0056611f	CRT__ReadMainModulePeVersionBytes	void __cdecl CRT__ReadMainModulePeVersionBytes(void * param_1)	OK
+0x00567ed0	CRT__SystemTimeToUnixTimestampLocal	int CRT__SystemTimeToUnixTimestampLocal(void)	OK
+0x00568667	CRT__PowSpecialCaseCore	int __cdecl CRT__PowSpecialCaseCore(int param_1, int param_2, double param_3, void * param_4)	OK
+0x00568797	CRT__PowClassifyIntegralExponent	int __thiscall CRT__PowClassifyIntegralExponent(void * this, int param_1, double param_2)	OK
+0x005687fc	CRT__InitializeFileDescriptorTable	void CRT__InitializeFileDescriptorTable(void)	OK
+0x00568a51	CRT__UnlockHeap9_SbAllocPath	void CRT__UnlockHeap9_SbAllocPath(void)	OK
+0x00568ada	CRT__UnlockHeap9_DeferredAllocPath	void CRT__UnlockHeap9_DeferredAllocPath(void)	OK
+0x00568c4e	CRT__StructuredExceptionFilterDispatch	int __cdecl CRT__StructuredExceptionFilterDispatch(int param_1, void * param_2)	OK
+0x005696e9	CRT__AreHigherMaskBitsClear	int __cdecl CRT__AreHigherMaskBitsClear(int param_1, int param_2)	OK
+0x00569732	CRT__PropagateMaskCarryBackward	void __cdecl CRT__PropagateMaskCarryBackward(int param_1, int param_2)	OK

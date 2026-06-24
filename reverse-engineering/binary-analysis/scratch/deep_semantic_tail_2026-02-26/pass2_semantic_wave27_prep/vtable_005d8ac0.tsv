@@ -1,0 +1,49 @@
+slot	entry_addr	ptr	ptr_name	ptr_signature
+0	005d8ac0	004fdd60	<none>	<none>
+1	005d8ac4	004fcf00	CUnit__Unk_004fcf00	void __fastcall CUnit__Unk_004fcf00(int param_1)
+2	005d8ac8	00405930	CControllerDefinition__VFunc_03_00405930	int __thiscall CControllerDefinition__VFunc_03_00405930(void * this)
+3	005d8acc	004081c0	CMonitor__Unk_004081c0	void __fastcall CMonitor__Unk_004081c0(void * param_1)
+4	005d8ad0	00401f70	<none>	<none>
+5	005d8ad4	0040c750	<none>	<none>
+6	005d8ad8	00408150	CUnit__Unk_00408150	void __fastcall CUnit__Unk_00408150(void * param_1)
+7	005d8adc	0040c720	CGeneralVolume__ResetAndSetActiveReader	void __thiscall CGeneralVolume__ResetAndSetActiveReader(void * this, int param_1, void * param_2)
+8	005d8ae0	00405db0	VFuncSlot_12_00405db0	void VFuncSlot_12_00405db0(void)
+9	005d8ae4	00405dc0	<none>	<none>
+10	005d8ae8	00405dd0	<none>	<none>
+11	005d8aec	004fc080	CUnitAI__Helper_004fc080	int __fastcall CUnitAI__Helper_004fc080(void * param_1)
+12	005d8af0	0040c990	<none>	<none>
+13	005d8af4	00405de0	<none>	<none>
+14	005d8af8	004fa4b0	CUnit__Unk_004fa4b0	int CUnit__Unk_004fa4b0(void)
+15	005d8afc	00406040	CDXCompass__Helper_00406040	double __fastcall CDXCompass__Helper_00406040(int param_1)
+16	005d8b00	0040e8e0	CUnit__Unk_0040e8e0	double __fastcall CUnit__Unk_0040e8e0(int param_1)
+17	005d8b04	0040e910	CUnit__Unk_0040e910	double __fastcall CUnit__Unk_0040e910(void * param_1)
+18	005d8b08	004071b0	<none>	<none>
+19	005d8b0c	00405e10	<none>	<none>
+20	005d8b10	00405e20	<none>	<none>
+21	005d8b14	004fc000	CUnit__Unk_004fc000	int __fastcall CUnit__Unk_004fc000(int param_1)
+22	005d8b18	00405f20	<none>	<none>
+23	005d8b1c	004fbcb0	CUnit__Unk_004fbcb0	int __fastcall CUnit__Unk_004fbcb0(void * param_1)
+24	005d8b20	004fc170	CUnitAI__Helper_004fc170	void __fastcall CUnitAI__Helper_004fc170(int param_1)
+25	005d8b24	004fc4e0	CUnit__UpdateTransform	undefined CUnit__UpdateTransform(void)
+26	005d8b28	004014a0	<none>	<none>
+27	005d8b2c	004fd4d0	CCannon__Helper_004fd4d0	void __thiscall CCannon__Helper_004fd4d0(void * this, void * param_1, int param_2)
+28	005d8b30	00405f50	<none>	<none>
+29	005d8b34	004fb270	<none>	<none>
+30	005d8b38	00459990	CFrontEndPage__DeActiveNotification	void __cdecl CFrontEndPage__DeActiveNotification(void * this)
+31	005d8b3c	00405e60	<none>	<none>
+32	005d8b40	004f9260	<none>	<none>
+33	005d8b44	004f9490	CExplosionInitThing__ctor_like_004f9490	void __fastcall CExplosionInitThing__ctor_like_004f9490(int param_1)
+34	005d8b48	004014a0	<none>	<none>
+35	005d8b4c	004fda90	<none>	<none>
+36	005d8b50	004fdc10	CFrontEndPage__Init_ReturnTrue	int CFrontEndPage__Init_ReturnTrue(void)
+37	005d8b54	004fdd00	<none>	<none>
+38	005d8b58	0040a560	<none>	<none>
+39	005d8b5c	0040dc30	<none>	<none>
+40	005d8b60	0040dc60	<none>	<none>
+41	005d8b64	0040e7d0	<none>	<none>
+42	005d8b68	004014a0	<none>	<none>
+43	005d8b6c	004bfc60	<none>	<none>
+44	005d8b70	004fe540	CUnitAI__Helper_004fe540	void __thiscall CUnitAI__Helper_004fe540(void * this, void * param_1, float param_2)
+45	005d8b74	004014a0	<none>	<none>
+46	005d8b78	00405e70	<none>	<none>
+47	005d8b7c	00405e80	<none>	<none>

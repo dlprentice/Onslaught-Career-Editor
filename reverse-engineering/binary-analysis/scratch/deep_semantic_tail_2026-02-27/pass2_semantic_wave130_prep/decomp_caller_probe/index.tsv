@@ -1,0 +1,3 @@
+address	name	signature	status
+0x004a5b70	CMesh__Load	undefined CMesh__Load(void)	OK
+0x004b0800	CMeshPart__Unk_004b0800	void __thiscall CMeshPart__Unk_004b0800(void * this, void * param_1, float param_2, float param_3, float param_4)	OK

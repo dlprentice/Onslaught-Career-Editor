@@ -1,0 +1,5 @@
+address	name	signature	status
+0x00403ba0	CThing__Unk_00403ba0	void __thiscall CThing__Unk_00403ba0(void * this, void * param_1, int param_2, int param_3)	OK
+0x00403bf0	CThing__Unk_00403bf0	void __thiscall CThing__Unk_00403bf0(void * this, void * param_1, int param_2, int param_3)	OK
+0x00417540	CThing__Unk_00417540	void __thiscall CThing__Unk_00417540(void * this, void * param_1, int param_2)	OK
+0x004176c0	CThing__Unk_004176c0	void __thiscall CThing__Unk_004176c0(void * this, int param_1, int param_2)	OK

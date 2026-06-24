@@ -1,0 +1,9 @@
+address	name	signature	status
+0x0044e020	<none>	<none>	MISSING
+0x0044e1c0	<none>	<none>	MISSING
+0x0044e200	<none>	<none>	MISSING
+0x0044e2c0	CMonitor__Unk_0044e2c0	int __fastcall CMonitor__Unk_0044e2c0(void * param_1)	OK
+0x0047d3b0	CMonitor__Unk_0047d3b0	int __fastcall CMonitor__Unk_0047d3b0(void * param_1)	OK
+0x0047d420	CUnitAI__Unk_0047d420	void __fastcall CUnitAI__Unk_0047d420(void * param_1)	OK
+0x0047d460	<none>	<none>	MISSING
+0x0047d490	<none>	<none>	MISSING

@@ -1,0 +1,4 @@
+address	name	signature	status
+0x005b86c0	CFastVB__Unk_005b86c0	int CFastVB__Unk_005b86c0(void)	OK
+0x005b8ca0	CFastVB__Unk_005b8ca0	uint CFastVB__Unk_005b8ca0(void)	OK
+0x005a9a5f	CFastVB__Helper_005a9a5f	void __stdcall CFastVB__Helper_005a9a5f(void * param_1, void * param_2)	OK

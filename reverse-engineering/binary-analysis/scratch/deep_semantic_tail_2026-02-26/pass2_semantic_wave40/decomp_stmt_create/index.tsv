@@ -1,0 +1,5 @@
+address	name	signature	status
+0x0042f8f0	<none>	<none>	MISSING
+0x0042fa80	CWeaponModeStatement__Create	void __cdecl CWeaponModeStatement__Create(void * param_1)	OK
+0x0042ffa0	CRoundStatement__Create	void __cdecl CRoundStatement__Create(void * param_1)	OK
+0x005102a0	CWorldPhysicsManager__InitializeLists	undefined CWorldPhysicsManager__InitializeLists(void)	OK

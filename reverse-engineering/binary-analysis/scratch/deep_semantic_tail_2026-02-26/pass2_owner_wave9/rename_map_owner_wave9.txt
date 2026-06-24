@@ -1,0 +1,6 @@
+0x00402010 CUnitAI__Helper_00402010
+0x00409e60 CGeneralVolume_Unk_00409e60__Helper_00409e60
+0x0040d5f0 CBattleEngine__Helper_0040d5f0
+0x004c10c0 CEngine__Helper_004c10c0
+0x004fd140 CUnitAI__Helper_004fd140
+0x0057d32e CDXTexture__Helper_0057d32e

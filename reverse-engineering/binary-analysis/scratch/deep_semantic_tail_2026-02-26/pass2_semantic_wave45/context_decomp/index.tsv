@@ -1,0 +1,9 @@
+address	name	signature	status
+0x004429a0	CDestructableSegment__Unk_004429a0	void __fastcall CDestructableSegment__Unk_004429a0(void * param_1)	OK
+0x00442a80	CDestructableSegment__Unk_00442a80	void __fastcall CDestructableSegment__Unk_00442a80(int param_1)	OK
+0x00442ac0	CDestructableSegment__Unk_00442ac0	void __thiscall CDestructableSegment__Unk_00442ac0(void * this, int param_1, int param_2)	OK
+0x00442b20	CDestroyableSegment__VFunc_08_00442b20	void __fastcall CDestroyableSegment__VFunc_08_00442b20(void * param_1)	OK
+0x00443780	CDestroyableSwapSegment__VFunc_03_00443780	void __thiscall CDestroyableSwapSegment__VFunc_03_00443780(void * this, void * param_1, float param_2)	OK
+0x004443f0	CDestroyableSegment__Unk_004443f0	void __fastcall CDestroyableSegment__Unk_004443f0(int param_1)	OK
+0x00444480	<none>	<none>	MISSING
+0x00442c00	<none>	<none>	MISSING

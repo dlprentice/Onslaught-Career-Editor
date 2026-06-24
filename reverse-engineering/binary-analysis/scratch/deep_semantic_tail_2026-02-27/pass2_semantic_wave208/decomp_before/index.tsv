@@ -1,0 +1,107 @@
+address	name	signature	status
+0x00402010	CUnit__Helper_00402010	void __fastcall CUnit__Helper_00402010(int param_1)	OK
+0x00402020	CGeneralVolume__Helper_00402020	void __fastcall CGeneralVolume__Helper_00402020(int param_1)	OK
+0x004062d0	CSquadNormal__Helper_004062d0	void __thiscall CSquadNormal__Helper_004062d0(void * this, void * param_1, float param_2, float param_3, float param_4)	OK
+0x004097a0	CUnit__Helper_004097a0	void __thiscall CUnit__Helper_004097a0(void * this, void * param_1, void * param_2)	OK
+0x00409950	CMonitor__Helper_00409950	void __fastcall CMonitor__Helper_00409950(void * param_1)	OK
+0x00409e60	CGeneralVolume__Helper_00409e60	double __stdcall CGeneralVolume__Helper_00409e60(float param_1)	OK
+0x0040acc0	CBattleEngine__Helper_0040acc0	int __thiscall CBattleEngine__Helper_0040acc0(void * this, void * param_1, void * param_2, int param_3, int param_4)	OK
+0x0040b6d0	CBattleEngine__Helper_0040b6d0	void __thiscall CBattleEngine__Helper_0040b6d0(void * this, void * param_1, void * param_2)	OK
+0x0040d1a0	CMonitor__Helper_0040d1a0	double __fastcall CMonitor__Helper_0040d1a0(void * param_1)	OK
+0x0040d2c0	CSquadNormal__Helper_0040d2c0	void __thiscall CSquadNormal__Helper_0040d2c0(void * this, void * param_1, void * param_2, void * param_3)	OK
+0x0040ef20	CMonitor__Helper_0040ef20	void __fastcall CMonitor__Helper_0040ef20(int param_1)	OK
+0x00410210	CBattleEngine__Helper_00410210	void * __thiscall CBattleEngine__Helper_00410210(void * this, void * param_1, int param_2)	OK
+0x00423910	CMeshPart__Helper_00423910	uint __fastcall CMeshPart__Helper_00423910(uint param_1)	OK
+0x00423960	CMeshPart__Helper_00423960	bool __thiscall CMeshPart__Helper_00423960(void * this, int param_1, int param_2, int param_3, int param_4)	OK
+0x004239b0	CWorld__Helper_004239b0	int __fastcall CWorld__Helper_004239b0(int param_1)	OK
+0x004247a0	CGeneralVolume__Helper_004247a0	void __thiscall CGeneralVolume__Helper_004247a0(void * this, int param_1, float param_2)	OK
+0x00424920	CGeneralVolume__Helper_00424920	void __fastcall CGeneralVolume__Helper_00424920(int param_1)	OK
+0x00424990	CGeneralVolume__Helper_00424990	void __fastcall CGeneralVolume__Helper_00424990(int param_1)	OK
+0x00428b50	CUnit__Helper_00428b50	void __thiscall CUnit__Helper_00428b50(void * this, int param_1, void * param_2, int param_3)	OK
+0x004416e0	CUnit__Helper_004416e0	void __fastcall CUnit__Helper_004416e0(int param_1)	OK
+0x00441b10	CGame__Helper_00441b10	void __cdecl CGame__Helper_00441b10(void * param_1, int param_2)	OK
+0x00441e40	CGame__Helper_00441e40	void __fastcall CGame__Helper_00441e40(void * param_1)	OK
+0x00441e50	CGame__Helper_00441e50	void __fastcall CGame__Helper_00441e50(void * param_1)	OK
+0x0044c720	CSquadNormal__Helper_0044c720	int __thiscall CSquadNormal__Helper_0044c720(void * this, int param_1, int param_2)	OK
+0x0044c810	CSquadNormal__Helper_0044c810	void __thiscall CSquadNormal__Helper_0044c810(void * this, int param_1, void * param_2)	OK
+0x0044eab0	CFEPMultiplayerStart__Helper_0044eab0	int __cdecl CFEPMultiplayerStart__Helper_0044eab0(int param_1)	OK
+0x0044eb30	CFEPMultiplayerStart__Helper_0044eb30	void __cdecl CFEPMultiplayerStart__Helper_0044eb30(int param_1)	OK
+0x0044ecf0	CFEPMultiplayerStart__Helper_0044ecf0	int CFEPMultiplayerStart__Helper_0044ecf0(void)	OK
+0x0044ed40	CFEPMultiplayerStart__Helper_0044ed40	int __cdecl CFEPMultiplayerStart__Helper_0044ed40(int param_1)	OK
+0x0044eea0	CFEPMultiplayerStart__Helper_0044eea0	int __cdecl CFEPMultiplayerStart__Helper_0044eea0(int param_1)	OK
+0x00450460	CFEPMultiplayerStart__Helper_00450460	void __cdecl CFEPMultiplayerStart__Helper_00450460(float param_1, float param_2, float param_3, uint param_4)	OK
+0x00452fd0	CFEPMultiplayerStart__Helper_00452fd0	void __stdcall CFEPMultiplayerStart__Helper_00452fd0(float param_1)	OK
+0x004530b0	CFEPMultiplayerStart__Helper_004530b0	void __stdcall CFEPMultiplayerStart__Helper_004530b0(float param_1, float param_2, float param_3, int param_4)	OK
+0x00465640	CLTShell__Helper_00465640	int CLTShell__Helper_00465640(void)	OK
+0x0046b950	CFEPMultiplayerStart__Helper_0046b950	void __thiscall CFEPMultiplayerStart__Helper_0046b950(void * this, int param_1, void * param_2)	OK
+0x0046bab0	CFEPMultiplayerStart__Helper_0046bab0	void __thiscall CFEPMultiplayerStart__Helper_0046bab0(void * this, int param_1, int param_2)	OK
+0x0046bc20	CFEPMultiplayerStart__Helper_0046bc20	void __fastcall CFEPMultiplayerStart__Helper_0046bc20(int param_1)	OK
+0x00477cb0	CSquadNormal__Helper_00477cb0	int * __stdcall CSquadNormal__Helper_00477cb0(void * param_1)	OK
+0x004780f0	CWorld__Helper_004780f0	int CWorld__Helper_004780f0(void)	OK
+0x0047ea20	CWorld__Helper_0047ea20	uint __fastcall CWorld__Helper_0047ea20(int param_1, uint param_2, uint param_3)	OK
+0x0047ec60	CMonitor__Helper_0047ec60	float * __fastcall CMonitor__Helper_0047ec60(int param_1, void * param_2, void * param_3)	OK
+0x00490e30	CGame__Helper_00490e30	void __fastcall CGame__Helper_00490e30(int param_1)	OK
+0x00490f10	CGame__Helper_00490f10	int __fastcall CGame__Helper_00490f10(int param_1)	OK
+0x00490f50	CWorld__Helper_00490f50	int __thiscall CWorld__Helper_00490f50(void * this, int param_1, int param_2, int param_3, int param_4)	OK
+0x00494b00	CMeshPart__Helper_00494b00	bool __cdecl CMeshPart__Helper_00494b00(int param_1)	OK
+0x00494b50	CMeshPart__Helper_00494b50	bool CMeshPart__Helper_00494b50(void)	OK
+0x004950f0	CMeshPart__Helper_004950f0	int __cdecl CMeshPart__Helper_004950f0(int param_1)	OK
+0x004957d0	CMeshPart__Helper_004957d0	int __cdecl CMeshPart__Helper_004957d0(int param_1)	OK
+0x00496250	CMeshPart__Helper_00496250	bool __cdecl CMeshPart__Helper_00496250(int param_1)	OK
+0x00496270	CMeshPart__Helper_00496270	bool CMeshPart__Helper_00496270(void)	OK
+0x004968f0	CMeshPart__Helper_004968f0	bool __cdecl CMeshPart__Helper_004968f0(int param_1)	OK
+0x00496910	CMeshPart__Helper_00496910	int __cdecl CMeshPart__Helper_00496910(int param_1)	OK
+0x00496f60	CMeshPart__Helper_00496f60	bool __cdecl CMeshPart__Helper_00496f60(int param_1)	OK
+0x0049c250	CMeshPart__Helper_0049c250	bool __cdecl CMeshPart__Helper_0049c250(int param_1)	OK
+0x0049c2d0	CMeshPart__Helper_0049c2d0	bool CMeshPart__Helper_0049c2d0(void)	OK
+0x0049f600	CMeshPart__Helper_0049f600	bool __cdecl CMeshPart__Helper_0049f600(int param_1)	OK
+0x0049f670	CMeshPart__Helper_0049f670	int __cdecl CMeshPart__Helper_0049f670(int param_1)	OK
+0x004a25c0	CLTShell__Helper_004a25c0	void __fastcall CLTShell__Helper_004a25c0(int param_1)	OK
+0x004a52d0	CLTShell__Helper_004a52d0	void CLTShell__Helper_004a52d0(void)	OK
+0x004aa3f0	CMeshPart__Helper_004aa3f0	void __thiscall CMeshPart__Helper_004aa3f0(void * this, void * param_1, void * param_2)	OK
+0x004bc8d0	CWorld__Helper_004bc8d0	void CWorld__Helper_004bc8d0(void)	OK
+0x004cb0b0	CUnit__Helper_004cb0b0	void __thiscall CUnit__Helper_004cb0b0(void * this, int param_1, int param_2)	OK
+0x004e1260	CMonitor__Helper_004e1260	void __thiscall CMonitor__Helper_004e1260(void * this, int param_1, int param_2, float param_3, float param_4, int param_5)	OK
+0x004e1800	CMonitor__Helper_004e1800	void __thiscall CMonitor__Helper_004e1800(void * this, int param_1, void * param_2, int param_3)	OK
+0x004e1880	CMonitor__Helper_004e1880	int * __thiscall CMonitor__Helper_004e1880(void * this, int param_1, void * param_2, int param_3)	OK
+0x004e1ab0	CMonitor__Helper_004e1ab0	int __thiscall CMonitor__Helper_004e1ab0(void * this, int param_1, int param_2, int param_3)	OK
+0x004e43d0	CUnit__Helper_004e43d0	int __fastcall CUnit__Helper_004e43d0(int param_1)	OK
+0x004e4420	CUnit__Helper_004e4420	bool __fastcall CUnit__Helper_004e4420(int param_1)	OK
+0x004e4480	CSquadNormal__Helper_004e4480	int __thiscall CSquadNormal__Helper_004e4480(void * this, int param_1, int param_2)	OK
+0x004e47e0	CGame__Helper_004e47e0	int * __thiscall CGame__Helper_004e47e0(void * this, int param_1, int param_2)	OK
+0x004e49f0	CGame__Helper_004e49f0	int __fastcall CGame__Helper_004e49f0(int param_1)	OK
+0x004e6680	CSquadNormal__Helper_004e6680	int __thiscall CSquadNormal__Helper_004e6680(void * this, int param_1, int param_2)	OK
+0x004e97e0	CSquadNormal__Helper_004e97e0	int __thiscall CSquadNormal__Helper_004e97e0(void * this, void * param_1, void * param_2)	OK
+0x004f2a30	CLTShell__Helper_004f2a30	void CLTShell__Helper_004f2a30(void)	OK
+0x004f39b0	CUnit__Helper_004f39b0	void __thiscall CUnit__Helper_004f39b0(void * this, int param_1, void * param_2)	OK
+0x004f99b0	CGame__Helper_004f99b0	void __fastcall CGame__Helper_004f99b0(int param_1)	OK
+0x004fb3d0	CSquadNormal__Helper_004fb3d0	int __thiscall CSquadNormal__Helper_004fb3d0(void * this, int param_1, void * param_2)	OK
+0x004fb780	CSquadNormal__Helper_004fb780	int CSquadNormal__Helper_004fb780(void)	OK
+0x004fb7e0	CSquadNormal__Helper_004fb7e0	int CSquadNormal__Helper_004fb7e0(void)	OK
+0x004fb840	CSquadNormal__Helper_004fb840	void __thiscall CSquadNormal__Helper_004fb840(void * this, void * param_1, int param_2)	OK
+0x004fd3d0	CBattleEngine__Helper_004fd3d0	int __thiscall CBattleEngine__Helper_004fd3d0(void * this, int param_1, int param_2)	OK
+0x004fd570	CSquadNormal__Helper_004fd570	int __fastcall CSquadNormal__Helper_004fd570(int param_1)	OK
+0x004fe500	CSquadNormal__Helper_004fe500	void __thiscall CSquadNormal__Helper_004fe500(void * this, void * param_1, void * param_2)	OK
+0x004ffdd0	CSquadNormal__Helper_004ffdd0	void __thiscall CSquadNormal__Helper_004ffdd0(void * this, int param_1, void * param_2, int param_3)	OK
+0x00501450	CLTShell__Helper_00501450	void CLTShell__Helper_00501450(void)	OK
+0x00501730	CLTShell__Helper_00501730	void CLTShell__Helper_00501730(void)	OK
+0x00506010	CGeneralVolume__Helper_00506010	int __fastcall CGeneralVolume__Helper_00506010(void * param_1)	OK
+0x005061f0	CBattleEngine__Helper_005061f0	bool __thiscall CBattleEngine__Helper_005061f0(void * this, int param_1, int param_2)	OK
+0x00506350	CBattleEngine__Helper_00506350	int __fastcall CBattleEngine__Helper_00506350(int param_1)	OK
+0x00506440	CBattleEngine__Helper_00506440	double __fastcall CBattleEngine__Helper_00506440(int param_1)	OK
+0x00506530	CBattleEngine__Helper_00506530	int __fastcall CBattleEngine__Helper_00506530(int param_1)	OK
+0x00506620	CBattleEngine__Helper_00506620	double __fastcall CBattleEngine__Helper_00506620(int param_1)	OK
+0x00506710	CBattleEngine__Helper_00506710	double __fastcall CBattleEngine__Helper_00506710(int param_1)	OK
+0x00506800	CBattleEngine__Helper_00506800	double __fastcall CBattleEngine__Helper_00506800(int param_1)	OK
+0x005096a0	CUnit__Helper_005096a0	double __thiscall CUnit__Helper_005096a0(void * this, void * param_1, float param_2, float param_3, float param_4)	OK
+0x005099a0	CUnit__Helper_005099a0	double __thiscall CUnit__Helper_005099a0(void * this, void * param_1, float param_2, float param_3, float param_4)	OK
+0x00509c80	CBattleEngine__Helper_00509c80	double __thiscall CBattleEngine__Helper_00509c80(void * this, int param_1, int param_2, float param_3, float param_4)	OK
+0x00509f70	CUnit__Helper_00509f70	int __fastcall CUnit__Helper_00509f70(int param_1)	OK
+0x0050a0b0	CSquadNormal__Helper_0050a0b0	uint __thiscall CSquadNormal__Helper_0050a0b0(void * this, int param_1, int param_2)	OK
+0x0050a0d0	CUnit__Helper_0050a0d0	uint __thiscall CUnit__Helper_0050a0d0(void * this, int param_1, uint param_2)	OK
+0x0050a290	CUnit__Helper_0050a290	int __fastcall CUnit__Helper_0050a290(int param_1)	OK
+0x00511510	CUnit__Helper_00511510	int __cdecl CUnit__Helper_00511510(int param_1)	OK
+0x00527960	CFEPMultiplayerStart__Helper_00527960	void __thiscall CFEPMultiplayerStart__Helper_00527960(void * this, int param_1, int param_2)	OK
+0x0053d3a0	CLTShell__Helper_0053d3a0	void __fastcall CLTShell__Helper_0053d3a0(int param_1)	OK
+0x005492d0	CLTShell__Helper_005492d0	void __fastcall CLTShell__Helper_005492d0(int param_1)	OK
+0x00549310	CLTShell__Helper_00549310	void CLTShell__Helper_00549310(void)	OK

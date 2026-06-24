@@ -1,0 +1,12 @@
+address	name	signature	status
+0x004e0b30	CSoundManager__PlaySample	int CSoundManager__PlaySample(void)	OK
+0x004e0f70	CSoundManager__StopSoundEvent	void __stdcall CSoundManager__StopSoundEvent(void * param_1)	OK
+0x004e1040	CSoundManager__SortEventList	void __fastcall CSoundManager__SortEventList(int param_1)	OK
+0x004e1130	CSoundManager__KillSamplesForThing	void __thiscall CSoundManager__KillSamplesForThing(void * this, int param_1, void * param_2)	OK
+0x004e1190	CSoundManager__KillSample	void __thiscall CSoundManager__KillSample(void * this, int param_1, void * param_2, int param_3)	OK
+0x004e12b0	CSoundManager__KillAllSamples	void __fastcall CSoundManager__KillAllSamples(int param_1)	OK
+0x004e1300	CSoundManager__PauseAllSamples	void __fastcall CSoundManager__PauseAllSamples(int param_1)	OK
+0x004e1330	CSoundManager__UnPauseAllSamples	void __fastcall CSoundManager__UnPauseAllSamples(int param_1)	OK
+0x004e1360	CSoundManager__UpdateSoundPosition	void __stdcall CSoundManager__UpdateSoundPosition(void * param_1, int param_2)	OK
+0x004e18d0	CSoundManager__SetPitch	void __thiscall CSoundManager__SetPitch(void * this, int param_1, int param_2, int param_3, float param_4)	OK
+0x004e2360	CSoundManager__GetDebugMenuText	void __thiscall CSoundManager__GetDebugMenuText(void * this, int param_1, int param_2, void * param_3)	OK

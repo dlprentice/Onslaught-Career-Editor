@@ -1,0 +1,21 @@
+slot	entry_addr	ptr	ptr_name	ptr_signature
+0	005e10dc	004fdd60	<none>	<none>
+1	005e10e0	004fcf00	CUnit__Unk_004fcf00	void __fastcall CUnit__Unk_004fcf00(int param_1)
+2	005e10e4	00405930	CControllerDefinition__VFunc_03_00405930	int __thiscall CControllerDefinition__VFunc_03_00405930(void * this)
+3	005e10e8	004f4920	<none>	<none>
+4	005e10ec	0047c8b0	<none>	<none>
+5	005e10f0	00402000	CUnitAI__Helper_00402000	void __fastcall CUnitAI__Helper_00402000(int param_1)
+6	005e10f4	00402010	CUnit__Unk_00402010	void __fastcall CUnit__Unk_00402010(int param_1)
+7	005e10f8	00402020	CGeneralVolume__Helper_00402020	void __fastcall CGeneralVolume__Helper_00402020(int param_1)
+8	005e10fc	0049fdb0	CComponent__Unk_0049fdb0	void __fastcall CComponent__Unk_0049fdb0(int param_1)
+9	005e1100	00405dc0	<none>	<none>
+10	005e1104	00405dd0	<none>	<none>
+11	005e1108	004fc080	CUnitAI__Helper_004fc080	int __fastcall CUnitAI__Helper_004fc080(void * param_1)
+12	005e110c	004fc3c0	<none>	<none>
+13	005e1110	00405de0	<none>	<none>
+14	005e1114	004fa4b0	CUnit__Unk_004fa4b0	int CUnit__Unk_004fa4b0(void)
+15	005e1118	004f9a10	<none>	<none>
+16	005e111c	004175c0	<none>	<none>
+17	005e1120	004175d0	<none>	<none>
+18	005e1124	004175e0	<none>	<none>
+19	005e1128	00405e10	<none>	<none>

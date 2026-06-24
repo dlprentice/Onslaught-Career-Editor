@@ -1,0 +1,3 @@
+address	name	signature	status
+0x00411630	CMonitor__IntegrateMovementAgainstTerrain	void __fastcall CMonitor__IntegrateMovementAgainstTerrain(int param_1)	OK
+0x00411aa0	CMonitor__ComputeTerrainVelocityScalar	double __fastcall CMonitor__ComputeTerrainVelocityScalar(int param_1)	OK

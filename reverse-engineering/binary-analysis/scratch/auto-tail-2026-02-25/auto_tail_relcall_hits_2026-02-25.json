@@ -1,0 +1,8 @@
+{
+  "range_start": "0x00400000",
+  "range_length": 2555904,
+  "auto_count": 88,
+  "autos_with_rel_call_or_jmp_hits": 0,
+  "total_hits": 0,
+  "hits": {}
+}

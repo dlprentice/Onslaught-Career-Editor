@@ -1,0 +1,133 @@
+{
+  "schemaVersion": "winui-original-binary-multiplayer-outcome-semantics-matrix.v1",
+  "scope": "original-binary-p1p2-multiplayer-outcome-semantics-matrix-not-runtime-proof",
+  "status": "complete public-safe static candidate matrix; no runtime outcome, co-op, versus, online, matchmaking, native BEA netcode, or active P3/P4 gameplay proof",
+  "date": "2026-06-19",
+  "proofClass": "static-candidate-matrix-not-runtime-outcome-proof",
+  "currentRuntimeBaseline": {
+    "sourceProof": "roadmap/original-binary-online-level850-mode-semantics-observer.v1.json",
+    "baselineLevelId": 850,
+    "modeSemanticsObserverProven": true,
+    "unforcedTransitionHitCount": 0,
+    "forcedWinDeathRespawn": false,
+    "currentRuntimeModeClassification": "unclassified-local-multiplayer"
+  },
+  "candidateLevels": [
+    {
+      "levelId": 851,
+      "directory": "level851",
+      "eventRows": 6,
+      "objectiveIds": 0,
+      "levelWonLooseScriptRows": 0,
+      "levelLostLooseScriptRows": 0,
+      "runtimeSelectionRank": 3,
+      "candidateReason": "multiplayer-range level with no loose LevelWon/LevelLost rows; requires CGame outcome-path observation rather than IScript LevelWon/LevelLost proof"
+    },
+    {
+      "levelId": 854,
+      "directory": "level854",
+      "eventRows": 2,
+      "objectiveIds": 0,
+      "levelWonLooseScriptRows": 0,
+      "levelLostLooseScriptRows": 0,
+      "runtimeSelectionRank": 1,
+      "candidateReason": "smallest high-signal destroyed-player candidate; expected to stress CGame multiplayer winner/death/lives paths without loose LevelWon/LevelLost script rows"
+    },
+    {
+      "levelId": 855,
+      "directory": "level855",
+      "eventRows": 4,
+      "objectiveIds": 0,
+      "levelWonLooseScriptRows": 0,
+      "levelLostLooseScriptRows": 0,
+      "runtimeSelectionRank": 2,
+      "candidateReason": "nearby multiplayer-range candidate with no loose LevelWon/LevelLost rows; useful CGame outcome-path follow-up if level 854 is inconclusive"
+    },
+    {
+      "levelId": 860,
+      "directory": "level860",
+      "eventRows": 12,
+      "objectiveIds": 0,
+      "levelWonLooseScriptRows": 0,
+      "levelLostLooseScriptRows": 0,
+      "runtimeSelectionRank": 4,
+      "candidateReason": "larger multiplayer-range candidate; useful broader CGame outcome-path follow-up after the smaller destroyed-player candidates"
+    }
+  ],
+  "selectedRuntimeCandidate": {
+    "levelId": 854,
+    "directory": "level854",
+    "selectionReason": "level854 has only two loose event rows, zero loose LevelWon/LevelLost rows, and is the smallest candidate for CGame multiplayer outcome-path observation; expected runtime proof should watch CGame__MPDeclarePlayerWon, CGame__DeclarePlayerDead, CGame__RespawnPlayer, and CGame__GetPlayerLives before any mode classification is upgraded",
+    "expectedRuntimeProofClass": "copied-original-binary-p1p2-level854-outcome-observer",
+    "runtimeProofCreatedByThisMatrix": false
+  },
+  "requiredRuntimeHookTargets": {
+    "CGame__MPDeclarePlayerWon": "0x0046f360",
+    "CGame__MPDeclareGameDrawn": "0x0046f3e0",
+    "CGame__DeclarePlayerDead": "0x0046f550",
+    "CGame__RespawnPlayer": "0x00470120",
+    "CGame__GetPlayerLives": "0x004725f0",
+    "CGame__DeclareLevelWon": "0x0046f2f0",
+    "CGame__DeclareLevelLost": "0x0046f430",
+    "IScript__LevelWon": "0x005381e0",
+    "IScript__LevelLost": "0x005381a0",
+    "IScript__LevelLostString": "0x005381c0"
+  },
+  "staticAnchors": {
+    "missionEventIndex": "reverse-engineering/game-assets/mission-events-index.md rows for 851, 854, 855, and 860 all carry zero loose LevelWon and zero loose LevelLost rows",
+    "sourceOutcomeSemantics": "reverse-engineering/source-code/gameplay/game-system.md records versus out-of-lives routing to MPDeclarePlayerWon and co-op out-of-lives routing to DeclareLevelLost",
+    "retailOutcomeAddresses": "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md records CGame__MPDeclarePlayerWon at 0x0046f360, CGame__DeclarePlayerDead at 0x0046f550, CGame__RespawnPlayer at 0x00470120, CGame__DeclareLevelWon at 0x0046f2f0, and CGame__DeclareLevelLost at 0x0046f430"
+  },
+  "runtimeProofBoundary": {
+    "runtimeProofCreatedByThisMatrix": false,
+    "modeRuntimeProofSlicesAdded": 0,
+    "coOpVersusModeRuntimeProofSlicesAdded": 0,
+    "newBeaLaunchCount": 0,
+    "cdbAttachCount": 0,
+    "nPlayerOriginalBinaryRuntimeProof": 0,
+    "baseOnlineMultiplayerReady": false,
+    "secondPhysicalHostProof": false,
+    "multiHostLanProof": false,
+    "publicMatchmakingProof": false,
+    "nativeBeaNetcodeProof": false,
+    "coOpModeRuntimeProof": false,
+    "versusModeRuntimeProof": false,
+    "teamVersusRuntimeProof": false,
+    "spectatorAdminRuntimeProof": false,
+    "activeP3P4OriginalBinaryGameplayProof": false,
+    "safeToPatchMPlayersAbove2": false,
+    "deterministicSyncProof": false,
+    "rollbackProof": false,
+    "antiCheatProof": false,
+    "rebuildParityProof": false,
+    "noNoticeableDifferenceProof": false
+  },
+  "nextRuntimeProofRequirements": [
+    "Launch a copied clean-specimen BEA.exe only from an app-owned proof root",
+    "Attach CDB to the exact managed copied BEA process",
+    "Use foreground, unoccluded visual captures and require managed stop success",
+    "Require source hashes unchanged for installed BEA.exe, clean override BEA.exe, saves, and options",
+    "Record hits or non-hits for CGame__MPDeclarePlayerWon, CGame__DeclarePlayerDead, CGame__RespawnPlayer, CGame__GetPlayerLives, CGame__DeclareLevelWon, CGame__DeclareLevelLost, and IScript outcome thunks",
+    "Keep the proof classified as P1/P2 local copied-runtime outcome observation until second-host and online transport evidence exists"
+  ],
+  "nonClaims": {
+    "runtimeOutcomeProof": false,
+    "coOpModeRuntimeProof": false,
+    "versusModeRuntimeProof": false,
+    "teamVersusRuntimeProof": false,
+    "spectatorAdminRuntimeProof": false,
+    "baseOnlineMultiplayerReady": false,
+    "secondPhysicalHostProof": false,
+    "multiHostLanProof": false,
+    "publicMatchmakingProof": false,
+    "nativeBeaNetcodeProof": false,
+    "activeP3P4OriginalBinaryGameplayProof": false,
+    "moreThanTwoOriginalBinaryRuntimeProof": false,
+    "deterministicSyncProof": false,
+    "rollbackProof": false,
+    "antiCheatProof": false,
+    "rebuildParityProof": false,
+    "noNoticeableDifferenceProof": false
+  },
+  "claimBoundary": "This is a public-safe static matrix selecting level 854 as the first P1/P2 copied-runtime multiplayer outcome-semantics candidate. It does not launch BEA, attach CDB, prove outcome transitions, prove co-op, prove versus, prove online play, prove matchmaking, prove native BEA netcode, prove active P3/P4 gameplay, or prove rebuild/no-noticeable-difference parity."
+}

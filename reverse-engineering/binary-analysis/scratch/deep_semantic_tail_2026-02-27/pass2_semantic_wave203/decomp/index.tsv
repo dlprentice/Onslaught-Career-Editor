@@ -1,0 +1,39 @@
+address	name	signature	status
+0x00402000	CUnitAI__Helper_00402000	void __fastcall CUnitAI__Helper_00402000(int param_1)	OK
+0x00403760	CUnitAI__Helper_00403760	void __fastcall CUnitAI__Helper_00403760(void * param_1)	OK
+0x00407060	CEngine__Helper_00407060	void __thiscall CEngine__Helper_00407060(void * this, int param_1, int param_2)	OK
+0x0040c2e0	CEngine__Helper_0040c2e0	int __thiscall CEngine__Helper_0040c2e0(void * this, int param_1, int param_2)	OK
+0x0040c340	CEngine__Helper_0040c340	void __thiscall CEngine__Helper_0040c340(void * this, void * param_1, int param_2)	OK
+0x0040d0f0	CEngine__Helper_0040d0f0	int __fastcall CEngine__Helper_0040d0f0(int param_1)	OK
+0x0040f110	CEngine__Helper_0040f110	void __fastcall CEngine__Helper_0040f110(int param_1)	OK
+0x00412050	CEngine__Helper_00412050	int __thiscall CEngine__Helper_00412050(void * this, void * param_1, int param_2)	OK
+0x004140d0	CEngine__Helper_004140d0	int __thiscall CEngine__Helper_004140d0(void * this, void * param_1, int param_2)	OK
+0x00447d50	CUnitAI__Helper_00447d50	int __fastcall CUnitAI__Helper_00447d50(void * param_1)	OK
+0x0044a610	CEngine__Helper_0044a610	void __thiscall CEngine__Helper_0044a610(void * this, int param_1, int param_2, int param_3, int param_4)	OK
+0x00477ba0	CUnitAI__Helper_00477ba0	void CUnitAI__Helper_00477ba0(void)	OK
+0x00480ed0	CUnitAI__Helper_00480ed0	void __thiscall CUnitAI__Helper_00480ed0(void * this, void * param_1, void * param_2)	OK
+0x00482210	CUnitAI__Helper_00482210	int CUnitAI__Helper_00482210(void)	OK
+0x00490220	CEngine__Helper_00490220	void __fastcall CEngine__Helper_00490220(int param_1)	OK
+0x00490280	CEngine__Helper_00490280	int __fastcall CEngine__Helper_00490280(int param_1)	OK
+0x004902b0	CEngine__Helper_004902b0	int CEngine__Helper_004902b0(void)	OK
+0x004bd5c0	CEngine__Helper_004bd5c0	void __cdecl CEngine__Helper_004bd5c0(int param_1, int param_2, int param_3, int param_4, int param_5)	OK
+0x004c78d0	CEngine__Helper_004c78d0	double __fastcall CEngine__Helper_004c78d0(void * param_1)	OK
+0x004c7950	CEngine__Helper_004c7950	double __thiscall CEngine__Helper_004c7950(void * this, void * param_1, float param_2, float param_3, float param_4)	OK
+0x004daba0	CEngine__Helper_004daba0	int __fastcall CEngine__Helper_004daba0(int param_1)	OK
+0x004df530	CEngine__Helper_004df530	void __thiscall CEngine__Helper_004df530(void * this, int param_1, void * param_2)	OK
+0x004eba30	CEngine__Helper_004eba30	void __stdcall CEngine__Helper_004eba30(int param_1)	OK
+0x004f2b40	CUnitAI__Helper_004f2b40	void CUnitAI__Helper_004f2b40(void)	OK
+0x004f3ac0	CUnitAI__Helper_004f3ac0	void __thiscall CUnitAI__Helper_004f3ac0(void * this, int param_1, void * param_2)	OK
+0x004fc080	CUnitAI__Helper_004fc080	int __fastcall CUnitAI__Helper_004fc080(void * param_1)	OK
+0x004fc170	CUnitAI__Helper_004fc170	void __fastcall CUnitAI__Helper_004fc170(int param_1)	OK
+0x004fce40	CUnitAI__Helper_004fce40	int CUnitAI__Helper_004fce40(void)	OK
+0x004fcec0	CUnitAI__Helper_004fcec0	int CUnitAI__Helper_004fcec0(void)	OK
+0x004fd7e0	CUnitAI__Helper_004fd7e0	int __fastcall CUnitAI__Helper_004fd7e0(int param_1)	OK
+0x004fda10	CUnitAI__Helper_004fda10	int __fastcall CUnitAI__Helper_004fda10(int param_1)	OK
+0x004fde10	CUnitAI__Helper_004fde10	int __fastcall CUnitAI__Helper_004fde10(int param_1)	OK
+0x004fdeb0	CUnitAI__Helper_004fdeb0	int __fastcall CUnitAI__Helper_004fdeb0(void * param_1)	OK
+0x004fe540	CUnitAI__Helper_004fe540	void __thiscall CUnitAI__Helper_004fe540(void * this, void * param_1, float param_2)	OK
+0x0055e64e	CUnitAI__Helper_0055e64e	void __cdecl CUnitAI__Helper_0055e64e(void * param_1, void * param_2)	OK
+0x0055eb00	CUnitAI__Helper_0055eb00	short * __cdecl CUnitAI__Helper_0055eb00(void * param_1, void * param_2, int param_3)	OK
+0x0055f807	CEngine__Helper_0055f807	int __cdecl CEngine__Helper_0055f807(void * param_1, void * param_2, uint param_3)	OK
+0x0055f8a1	CEngine__Helper_0055f8a1	int __cdecl CEngine__Helper_0055f8a1(void * param_1, void * param_2)	OK

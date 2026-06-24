@@ -1,0 +1,3 @@
+0x00453970 CControllerDefinition__InitDefaults
+0x004539b0 CControllerDefinition__scalar_deleting_dtor
+0x004539d0 CControllerDefinition__dtor

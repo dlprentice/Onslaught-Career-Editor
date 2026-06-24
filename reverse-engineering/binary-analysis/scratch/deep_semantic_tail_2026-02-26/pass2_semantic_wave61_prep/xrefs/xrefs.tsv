@@ -1,0 +1,13 @@
+target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
+005833a6	CDXTexture__Unk_005833a6	005ea03c	<none>	<no_function>	DATA
+005834ef	CDXTexture__Unk_005834ef	005ea04c	<none>	<no_function>	DATA
+00583670	CDXTexture__Unk_00583670	005ea060	<none>	<no_function>	DATA
+005837b7	CDXTexture__Unk_005837b7	005ea070	<none>	<no_function>	DATA
+00583a94	CTexture__Unk_00583a94	005ea0a0	<none>	<no_function>	DATA
+00583ba4	CTexture__Unk_00583ba4	005ea0b0	<none>	<no_function>	DATA
+00583c8e	CTexture__Unk_00583c8e	005ea0c0	<none>	<no_function>	DATA
+00583d89	CTexture__Unk_00583d89	005ea0d0	<none>	<no_function>	DATA
+00583eb3	CTexture__Unk_00583eb3	005ea0e0	<none>	<no_function>	DATA
+00583fe5	CTexture__Unk_00583fe5	005ea0f0	<none>	<no_function>	DATA
+00584535	CTexture__Unk_00584535	005ea130	<none>	<no_function>	DATA
+0058463a	CTexture__Unk_0058463a	005ea150	<none>	<no_function>	DATA

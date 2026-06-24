@@ -1,0 +1,3 @@
+address	status	name	signature	note
+00429280	created	FUN_00429280	undefined FUN_00429280(void)	disassemble+create succeeded
+0048ac80	created	FUN_0048ac80	undefined FUN_0048ac80(void)	disassemble+create succeeded

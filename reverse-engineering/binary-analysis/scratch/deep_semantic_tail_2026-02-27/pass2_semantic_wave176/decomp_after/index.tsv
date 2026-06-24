@@ -1,0 +1,21 @@
+address	name	signature	status
+0x00426fd0	OID__AllocObject_DefaultTag_00662b2c	void __cdecl OID__AllocObject_DefaultTag_00662b2c(int param_1)	OK
+0x00574577	CFastVB__ReturnInputInt	int __fastcall CFastVB__ReturnInputInt(int param_1)	OK
+0x00574662	CDXTexture__ConvertSurfaceWithActiveProfile	int CDXTexture__ConvertSurfaceWithActiveProfile(void)	OK
+0x0057473b	CDXTexture__NormalizeTextureConversionParams	int CDXTexture__NormalizeTextureConversionParams(void)	OK
+0x00574da5	CDXTexture__ConvertSurfaceRegionWithActiveProfile	int CDXTexture__ConvertSurfaceRegionWithActiveProfile(void)	OK
+0x00575d2d	CFastVB__DispatchIndirect_00656f30	void CFastVB__DispatchIndirect_00656f30(void)	OK
+0x00575d51	CFastVB__DispatchIndirect_00656f54	void CFastVB__DispatchIndirect_00656f54(void)	OK
+0x00575d75	CFastVB__DispatchIndirect_00656f44	void CFastVB__DispatchIndirect_00656f44(void)	OK
+0x0057618b	CFastVB__DispatchIndirect_00656f48	void CFastVB__DispatchIndirect_00656f48(void)	OK
+0x00579b39	CDXTexture__LookupNamedFormatDescriptor	int __stdcall CDXTexture__LookupNamedFormatDescriptor(void * param_1, uint param_2, void * param_3)	OK
+0x00579bd5	CDXTexture__SetD3D9DebugMute	void __stdcall CDXTexture__SetD3D9DebugMute(int param_1)	OK
+0x0057cc7b	Math__FloorFloatToDouble	double __stdcall Math__FloorFloatToDouble(float param_1)	OK
+0x0057cc8e	CFastVB__ClearTripleDword	void __fastcall CFastVB__ClearTripleDword(void * param_1)	OK
+0x0057cca4	CFastVB__BuildResampleKernelBuckets	int * __stdcall CFastVB__BuildResampleKernelBuckets(uint param_1, int param_2, int param_3)	OK
+0x0057cf60	CDXTexture__CopyDxtBlockRegion	int __fastcall CDXTexture__CopyDxtBlockRegion(void * param_1)	OK
+0x0057d216	CFastVB__DispatchMmxKernel_00657974	void __fastcall CFastVB__DispatchMmxKernel_00657974(void * param_1)	OK
+0x0057d4ad	CFastVB__DispatchMmxKernel_00657978	void __fastcall CFastVB__DispatchMmxKernel_00657978(void * param_1)	OK
+0x0057d9f1	CFastVB__Downsample2x1_R5G6B5	int __fastcall CFastVB__Downsample2x1_R5G6B5(void * param_1)	OK
+0x0057db30	CFastVB__Downsample2x1_L8	int __fastcall CFastVB__Downsample2x1_L8(void * param_1)	OK
+0x0057dbcb	CFastVB__Downsample2x1_A1R5G5B5	int __fastcall CFastVB__Downsample2x1_A1R5G5B5(void * param_1)	OK

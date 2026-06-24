@@ -1,0 +1,3 @@
+address	status	name	signature	note
+004ac6b0	failed			createFunction returned null after disassemble
+004acde0	created	FUN_004acde0	undefined FUN_004acde0(void)	disassemble+create succeeded

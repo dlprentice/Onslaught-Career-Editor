@@ -1,0 +1,2 @@
+0x004f3a50 CCSPersistentThing__scalar_deleting_dtor
+0x004f3a70 CCSPersistentThing__dtor

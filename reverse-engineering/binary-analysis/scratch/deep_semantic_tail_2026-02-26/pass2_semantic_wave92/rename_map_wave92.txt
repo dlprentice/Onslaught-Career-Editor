@@ -1,0 +1,5 @@
+0x0055f506 CRT__FReadCore
+0x0055f5ee Win32__FindFirstFileWithMeta
+0x0055f6bb Win32__FindNextFileWithMeta
+0x0055fe26 CRT__LockRouteByAddress
+0x0055fe55 CRT__LockRouteByIndex

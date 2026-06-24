@@ -1,0 +1,148 @@
+# Name Style Mixing Audit (source :: vs ghidra __)
+
+Heuristic: file contains both "::" and "__" within 6 lines (likely same mapping context: function docs, indexes, GHIDRA references).
+
+## Files With Mixed Naming In Close Proximity
+
+- `reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md`
+- `reverse-engineering/binary-analysis/MCP-MUTATION-BACKLOG.md`
+- `reverse-engineering/binary-analysis/functions/AirUnit.cpp/CAirUnit__Init.md`
+- `reverse-engineering/binary-analysis/functions/BSpline.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Init.md`
+- `reverse-engineering/binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md`
+- `reverse-engineering/binary-analysis/functions/Camera.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/Career.cpp/CCareerNode__Init.md`
+- `reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetGradeFromRanking.md`
+- `reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Init.md`
+- `reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__IsNodeBitSet.md`
+- `reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Load.md`
+- `reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Save.md`
+- `reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__SaveWithFlag.md`
+- `reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__SetSlotBit.md`
+- `reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__UpdateGoodies.md`
+- `reverse-engineering/binary-analysis/functions/Carrier.cpp/CCarrier__Init.md`
+- `reverse-engineering/binary-analysis/functions/Controller.cpp/CController__GetToControl.md`
+- `reverse-engineering/binary-analysis/functions/Controller.cpp/CController__InactivityMeansQuitGame.md`
+- `reverse-engineering/binary-analysis/functions/Controller.cpp/ControlBindings.md`
+- `reverse-engineering/binary-analysis/functions/Controller.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/DXCompass.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/DXFont.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/DXFrontEndVideo.cpp.md`
+- `reverse-engineering/binary-analysis/functions/DXImposter.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/DXMemBuffer.cpp.md`
+- `reverse-engineering/binary-analysis/functions/DXTrees.cpp.md`
+- `reverse-engineering/binary-analysis/functions/DiveBomber.cpp/CDiveBomber__SelectTarget.md`
+- `reverse-engineering/binary-analysis/functions/EventFunction.cpp.md`
+- `reverse-engineering/binary-analysis/functions/FEPBEConfig.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/FEPDebriefing.cpp/CFEPDebriefing__Initialize.md`
+- `reverse-engineering/binary-analysis/functions/FEPDirectory.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__Initialize.md`
+- `reverse-engineering/binary-analysis/functions/FEPLoadGame.cpp/CFEPLoadGame__DoLoad.md`
+- `reverse-engineering/binary-analysis/functions/FEPLoadGame.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/IsCheatActive.md`
+- `reverse-engineering/binary-analysis/functions/FastVB.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Process.md`
+- `reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md`
+- `reverse-engineering/binary-analysis/functions/HeightField.cpp/CHeightField__Load.md`
+- `reverse-engineering/binary-analysis/functions/Infantry.cpp/CInfantry__Init.md`
+- `reverse-engineering/binary-analysis/functions/Mech.cpp/CMech__InitCockpit.md`
+- `reverse-engineering/binary-analysis/functions/Mech.cpp/CMech__InitLegMotion.md`
+- `reverse-engineering/binary-analysis/functions/Mech.cpp/CMech__InitTargeting.md`
+- `reverse-engineering/binary-analysis/functions/Mech.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/MeshCollisionVolume.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/PauseMenu.cpp/PauseMenu__Init.md`
+- `reverse-engineering/binary-analysis/functions/Plane.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__GetSysTimeFloat.md`
+- `reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__Process.md`
+- `reverse-engineering/binary-analysis/functions/Platform.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__GotoPanView.md`
+- `reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__ctor.md`
+- `reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__dtor.md`
+- `reverse-engineering/binary-analysis/functions/PolyBucket.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/ResourceAccumulator.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/Script.cpp/CScript__GetSlotBit.md`
+- `reverse-engineering/binary-analysis/functions/Script.cpp/CScript__SetSlotBit.md`
+- `reverse-engineering/binary-analysis/functions/ScriptEventNB.cpp.md`
+- `reverse-engineering/binary-analysis/functions/Sentinel.cpp.md`
+- `reverse-engineering/binary-analysis/functions/SoundManager.cpp/CSoundManager__UpdateStatus.md`
+- `reverse-engineering/binary-analysis/functions/SphereTrigger.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/Symtab.cpp.md`
+- `reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__ApplyDamage.md`
+- `reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__Init.md`
+- `reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__TriggerEffect.md`
+- `reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md`
+- `reverse-engineering/binary-analysis/functions/World.cpp/CWorld__LoadWorld.md`
+- `reverse-engineering/binary-analysis/functions/chunker.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/engine.cpp/CDXEngine__PreRender.md`
+- `reverse-engineering/binary-analysis/functions/engine.cpp/CEngine__UpdatePos.md`
+- `reverse-engineering/binary-analysis/functions/flexarray.cpp.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__DeclareLevelLost.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__DeclareLevelWon.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__DeclarePlayerDead.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__FillOutEndLevelData.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__GetCamera.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__GetController.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__HandleEvent.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__Init.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__InitRestartLoop.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__LoadLevel.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__LoadResources.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__MPDeclareGameDrawn.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__MPDeclarePlayerWon.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__MainLoop.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__Pause.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__PostLoadProcess.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__ReceiveButtonAction.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__Render.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__RespawnPlayer.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__RestartLoopRunLevel.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__RunIntroFMV.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__RunLevel.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__RunOutroFMV.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__SetCamera.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__SetCurrentCamera.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__ShutdownRestartLoop.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__StartPlayingState.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleDebugSquadBackward.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleDebugSquadForward.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleDebugUnitBackward.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleDebugUnitForward.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleFreeCameraOn.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__UnPause.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/CGame__Update.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/con_dumptextures.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/con_lose.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/con_map.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/con_navmapoff.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/con_navmapon.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/con_remotecameraoff.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/con_remotecameraon.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/con_resetmemsizes.md`
+- `reverse-engineering/binary-analysis/functions/game.cpp/con_win.md`
+- `reverse-engineering/binary-analysis/functions/imageloader.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/landscapeib.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/ltshell.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/monitor.h/_index.md`
+- `reverse-engineering/binary-analysis/functions/scheduledevent.cpp/CScheduledEvent__Set.md`
+- `reverse-engineering/binary-analysis/functions/scheduledevent.cpp/CScheduledEvent__dtor.md`
+- `reverse-engineering/binary-analysis/functions/scheduledevent.cpp/_index.md`
+- `reverse-engineering/binary-analysis/functions/text.cpp/CText__Ctor.md`
+- `reverse-engineering/binary-analysis/functions/text.cpp/CText__FreeBuffer.md`
+- `reverse-engineering/binary-analysis/functions/text.cpp/CText__GetLanguageName.md`
+- `reverse-engineering/binary-analysis/functions/text.cpp/CText__GetStringById.md`
+- `reverse-engineering/binary-analysis/functions/text.cpp/CText__ResetCoreFields.md`
+- `reverse-engineering/binary-analysis/functions/tgaloader.cpp/_index.md`
+- `reverse-engineering/binary-analysis/semantic-audit-2026-02-12.md`
+- `reverse-engineering/binary-analysis/semantic-audit-online-2026-02-12.md`
+
+## Suggested Consistent Formatting
+
+Use explicit fields wherever mapping is presented (GHIDRA-REFERENCE, function indexes, per-function docs):
+
+- `Binary name`: `Class__Method` (Ghidra symbol)
+- `Source name`: `Class::Method` (Stuart source / reference)
+- `Source ref`: `references/Onslaught/<file>.cpp:<line>` when known
+- `Address`: `0x########` (optional but usually present)
+
+For indexes/tables, consider columns: `Address | Binary name | Source name | Source ref | Notes`.
+For per-function pages, keep the top block consistent and avoid mixing styles in the same label.

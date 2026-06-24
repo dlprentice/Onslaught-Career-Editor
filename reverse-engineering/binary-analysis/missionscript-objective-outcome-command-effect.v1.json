@@ -1,0 +1,211 @@
+{
+  "schemaVersion": "missionscript-objective-outcome-command-effect.v1",
+  "status": "PASS",
+  "source": {
+    "evidenceWaves": [
+      "Wave580",
+      "Wave585",
+      "Wave903",
+      "Wave1049"
+    ],
+    "runtimeExecution": false,
+    "ghidraMutation": false,
+    "schemaPurpose": "static objective/outcome command-effect bridge mapping for clean-room planning, not runtime proof"
+  },
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+  },
+  "evidenceCounts": {
+    "wave580MetadataRows": 6,
+    "wave580TagRows": 6,
+    "wave580XrefRows": 6,
+    "wave580InstructionRows": 5454,
+    "wave580DecompileRows": 6,
+    "wave580VtableRows": 36,
+    "wave585MetadataRows": 5,
+    "wave585TagRows": 5,
+    "wave585XrefRows": 5,
+    "wave585InstructionRows": 1845,
+    "wave585DecompileRows": 5,
+    "wave1049MetadataRows": 10,
+    "wave1049XrefRows": 13,
+    "wave1049InstructionRows": 761,
+    "wave1049DecompileRows": 10,
+    "wave1049ContextMetadataRows": 12,
+    "wave1049ContextXrefRows": 23,
+    "wave1049ContextInstructionRows": 6129,
+    "wave1049ContextDecompileRows": 12
+  },
+  "descriptorSlots": {
+    "LevelLost": {
+      "index": 7,
+      "recordAddress": "0x0064d010",
+      "observedNameSymbol": "s_LevelLost_0064f9c8",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_LevelLost_0064f9c8"
+    },
+    "LevelWon": {
+      "index": 8,
+      "recordAddress": "0x0064d050",
+      "observedNameSymbol": "s_LevelWon_0064f9bc",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_LevelWon_0064f9bc"
+    },
+    "PrimaryObjectiveComplete": {
+      "index": 82,
+      "recordAddress": "0x0064e2d0",
+      "observedNameSymbol": "s_PrimaryObjectiveComplete_0064f5ec",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_PrimaryObjectiveComplete_0064f5ec"
+    },
+    "SecondaryObjectiveComplete": {
+      "index": 83,
+      "recordAddress": "0x0064e310",
+      "observedNameSymbol": "s_SecondaryObjectiveComplete_0064f5d0",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_SecondaryObjectiveComplete_0064f5d0"
+    },
+    "PrimaryObjectiveFailed": {
+      "index": 86,
+      "recordAddress": "0x0064e3d0",
+      "observedNameSymbol": "s_PrimaryObjectiveFailed_0064f5a4",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_PrimaryObjectiveFailed_0064f5a4"
+    },
+    "SecondaryObjectiveFailed": {
+      "index": 87,
+      "recordAddress": "0x0064e410",
+      "observedNameSymbol": "s_SecondaryObjectiveFailed_0064f588",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_SecondaryObjectiveFailed_0064f588"
+    },
+    "LevelLostString": {
+      "index": 105,
+      "recordAddress": "0x0064e890",
+      "observedNameSymbol": "s_LevelLostString_0064f478",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_LevelLostString_0064f478"
+    }
+  },
+  "missionEventCorpus": {
+    "source": "reverse-engineering/game-assets/mission-events-index.md",
+    "levelRows": 95,
+    "events": 795,
+    "objectiveIds": 36,
+    "primaryComplete": 115,
+    "secondaryComplete": 42,
+    "objectiveComplete": 0,
+    "primaryFailed": 102,
+    "levelWon": 79,
+    "levelLost": 13,
+    "nonzeroOutcomeRows": 62,
+    "boundary": "loose MSL corpus event/objective/outcome counts only; live loose-MSL loading and packed-vs-loose script selection remain unproven"
+  },
+  "missionMessageCorpus": {
+    "source": "reverse-engineering/game-assets/mission-message-usage.md",
+    "levelRows": 67,
+    "playCharMessage": 1365,
+    "addHelpMessage": 7,
+    "levelLostFamily": 110,
+    "levelWonFamily": 71,
+    "nonzeroOutcomeRows": 64,
+    "boundary": "message/outcome call-family corpus counts only; voice/audio/HUD output and mission outcomes remain unproven"
+  },
+  "objectiveHandlers": [
+    {
+      "command": "PrimaryObjectiveComplete",
+      "address": "0x005343e0",
+      "name": "IScript__PrimaryObjectiveComplete",
+      "objectiveKind": "primary",
+      "stateValue": 1,
+      "textStorage": "DAT_008a9ae0 + index*8",
+      "stateStorage": "DAT_008a9adc + index*8"
+    },
+    {
+      "command": "SecondaryObjectiveComplete",
+      "address": "0x00534410",
+      "name": "IScript__SecondaryObjectiveComplete",
+      "objectiveKind": "secondary",
+      "stateValue": 1,
+      "textStorage": "DAT_008a9b30 + index*8",
+      "stateStorage": "DAT_008a9b2c + index*8"
+    },
+    {
+      "command": "PrimaryObjectiveFailed",
+      "address": "0x00534440",
+      "name": "IScript__PrimaryObjectiveFailed",
+      "objectiveKind": "primary",
+      "stateValue": 2,
+      "textStorage": "DAT_008a9ae0 + index*8",
+      "stateStorage": "DAT_008a9adc + index*8"
+    },
+    {
+      "command": "SecondaryObjectiveFailed",
+      "address": "0x00534470",
+      "name": "IScript__SecondaryObjectiveFailed",
+      "objectiveKind": "secondary",
+      "stateValue": 2,
+      "textStorage": "DAT_008a9b30 + index*8",
+      "stateStorage": "DAT_008a9b2c + index*8"
+    }
+  ],
+  "outcomeHandlers": [
+    {
+      "command": "LevelLost",
+      "address": "0x005381a0",
+      "name": "IScript__LevelLost",
+      "bridge": "CGame__DeclareLevelLost(&DAT_008a9a98,0,0)"
+    },
+    {
+      "command": "LevelLostString",
+      "address": "0x005381c0",
+      "name": "IScript__LevelLostString",
+      "bridge": "CGame__DeclareLevelLost(&DAT_008a9a98,message_id,0)"
+    },
+    {
+      "command": "LevelWon",
+      "address": "0x005381e0",
+      "name": "IScript__LevelWon",
+      "bridge": "CGame__DeclareLevelWon(&DAT_008a9a98)"
+    }
+  ],
+  "bridgeContext": {
+    "gameSnapshot": "0x0046d470 CGame__FillOutEndLevelData copies objective/slot/end-level summary state into END_LEVEL_DATA context",
+    "winTransition": "0x0046f2f0 CGame__DeclareLevelWon marks the game's level-won transition path",
+    "lossTransition": "0x0046f430 CGame__DeclareLevelLost records loss reason/player_died flag and marks the level-lost transition path",
+    "careerUpdate": "0x0041bd00 CCareer__Update consumes END_LEVEL_DATA on won-level paths and calls CCareer__ReCalcLinks",
+    "secondaryObjectivePredicate": "0x004496e0 CEndLevelData__IsAllSecondaryObjectivesComplete scans secondary objective status slots",
+    "claimBoundary": "static call/field-role bridge only; runtime mission outcomes and exact layouts remain unproven"
+  },
+  "claims": [
+    "The static objective handlers map Primary/Secondary Objective Complete/Failed commands to text-id and state writes in primary/secondary CGame objective arrays.",
+    "The static outcome handlers map LevelWon, LevelLost, and LevelLostString descriptor names through IScript handlers into CGame level-result transition helpers.",
+    "The loose MSL indexes provide reproducible event/message corpus counts while remaining separate from live script-loading and runtime outcome proof."
+  ],
+  "notClaimed": [
+    "runtime MissionScript execution",
+    "runtime command effects",
+    "runtime objective UI behavior",
+    "runtime level outcome behavior",
+    "runtime save behavior",
+    "runtime career progression",
+    "live loose-MSL loading",
+    "packed-vs-loose script selection",
+    "exact command descriptor layout",
+    "exact arity",
+    "exact argument type schema",
+    "exact CGame layout",
+    "exact CCareer layout",
+    "exact END_LEVEL_DATA layout",
+    "BEA patching behavior",
+    "visual QA",
+    "Godot parity",
+    "rebuild parity",
+    "no-noticeable-difference parity"
+  ]
+}

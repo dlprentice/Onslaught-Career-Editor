@@ -1,0 +1,6 @@
+address	name	signature	status
+0x00444f20	CUnitAI__CanUseIndexedSegmentEntry	bool __thiscall CUnitAI__CanUseIndexedSegmentEntry(void * this, int param_1, int param_2)	OK
+0x0044cd20	CUnitAI__DecayEngagementMetricAndMaybeTriggerVFunc200	void __thiscall CUnitAI__DecayEngagementMetricAndMaybeTriggerVFunc200(void * this, void * param_1, float param_2)	OK
+0x00444620	CExplosionInitThing__SetChildStateAndRefreshSegmentMetric	void __thiscall CExplosionInitThing__SetChildStateAndRefreshSegmentMetric(void * this, int param_1, int param_2)	OK
+0x004691c0	CFrontEnd__ReleaseParticleHudWaypointResources	void __fastcall CFrontEnd__ReleaseParticleHudWaypointResources(int param_1)	OK
+0x00440b70	CUnitAI__ResetPrimaryAndTailSentinels	void __fastcall CUnitAI__ResetPrimaryAndTailSentinels(void * param_1)	OK

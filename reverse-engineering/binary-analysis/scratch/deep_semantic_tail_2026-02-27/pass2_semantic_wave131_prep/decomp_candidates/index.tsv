@@ -1,0 +1,7 @@
+address	name	signature	status
+0x004b0d00	CMeshPart__Unk_004b0d00	int CMeshPart__Unk_004b0d00(void)	OK
+0x004bc2e0	CExplosionInitThing__Unk_004bc2e0	int CExplosionInitThing__Unk_004bc2e0(void)	OK
+0x004bc510	CExplosionInitThing__Unk_004bc510	int __thiscall CExplosionInitThing__Unk_004bc510(void * this, int param_1, uint param_2, int param_3, uint param_4, float param_5)	OK
+0x004be1d0	CExplosionInitThing__Unk_004be1d0	int CExplosionInitThing__Unk_004be1d0(void)	OK
+0x004beea0	CExplosionInitThing__Unk_004beea0	void __thiscall CExplosionInitThing__Unk_004beea0(void * this, int param_1, void * param_2)	OK
+0x004bed30	CExplosionInitThing__Unk_004bed30	void __cdecl CExplosionInitThing__Unk_004bed30(void * param_1, void * param_2)	OK

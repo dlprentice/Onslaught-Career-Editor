@@ -1,0 +1,49 @@
+/* address: 0x00583ba4 */
+/* name: CTexture__PackTexels_Dither_L16 */
+/* signature: void __thiscall CTexture__PackTexels_Dither_L16(void * this, void * param_1, uint param_2, uint param_3, int param_4) */
+
+
+/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+
+void __thiscall
+CTexture__PackTexels_Dither_L16(void *this,void *param_1,uint param_2,uint param_3,int param_4)
+
+{
+  int iVar1;
+  float *pfVar2;
+  undefined2 *puVar3;
+  uint uVar4;
+  int unaff_EDI;
+  int iVar5;
+  undefined2 in_FPUControlWord;
+  undefined4 local_c;
+
+  iVar5 = 0;
+  if (*(int *)((int)this + 0x1050) != 0) {
+    param_3 = CFastVB__Helper_00581279(this,param_3,unaff_EDI);
+  }
+  if (*(int *)((int)this + 0x10) != 0) {
+    param_3 = CDXTexture__Helper_00581e8c(this,param_3,unaff_EDI);
+  }
+  puVar3 = (undefined2 *)
+           (*(int *)((int)this + 0x1058) * (int)param_1 + *(int *)((int)this + 0x105c) * param_2 +
+           *(int *)((int)this + 0x20));
+  iVar1 = *(int *)((int)this + 0x34);
+  local_c = CONCAT22(local_c._2_2_,in_FPUControlWord);
+  uVar4 = 0;
+  DAT_009d0c58 = local_c;
+  if (*(int *)((int)this + 0x1060) != 0) {
+    do {
+      pfVar2 = (float *)(param_3 + iVar5);
+      *puVar3 = (short)(int)ROUND(*(float *)(iVar1 + ((param_2 & 3) + ((uint)param_1 & 3) * 8) * 4 +
+                                            (uVar4 & 3) * 4) +
+                                  (*pfVar2 * _DAT_005e72dc +
+                                  pfVar2[1] * _DAT_005e72e0 + pfVar2[2] * _DAT_005e72e4) *
+                                  _DAT_005e9f18);
+      puVar3 = puVar3 + 1;
+      uVar4 = uVar4 + 1;
+      iVar5 = iVar5 + 0x10;
+    } while (uVar4 < *(uint *)((int)this + 0x1060));
+  }
+  return;
+}

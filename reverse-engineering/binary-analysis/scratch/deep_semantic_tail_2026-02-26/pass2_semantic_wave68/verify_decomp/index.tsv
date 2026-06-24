@@ -1,0 +1,6 @@
+address	name	signature	status
+0x00580120	CFastVB__RunDualProfileConversionStage	int __fastcall CFastVB__RunDualProfileConversionStage(void * param_1)	OK
+0x0058070e	CFastVB__InitDualTexelConversionPipeline	int __thiscall CFastVB__InitDualTexelConversionPipeline(void * this, void * param_1, int param_2, int param_3, uint param_4)	OK
+0x005809de	CFastVB__ShutdownActiveProfile	int __fastcall CFastVB__ShutdownActiveProfile(void * param_1)	OK
+0x00580eef	CFastVB__ShutdownActiveProfile_Thunk	int __fastcall CFastVB__ShutdownActiveProfile_Thunk(void * param_1)	OK
+0x00581d49	CDXTexture__ProbeTexelProfileSample	void __fastcall CDXTexture__ProbeTexelProfileSample(void * param_1)	OK

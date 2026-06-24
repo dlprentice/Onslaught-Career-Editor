@@ -1,0 +1,56 @@
+address	name	signature	status
+0x00572e40	CTexture__Unk_00572e40	void __fastcall CTexture__Unk_00572e40(int param_1)	OK
+0x005738e0	CTexture__Unk_005738e0	void __thiscall CTexture__Unk_005738e0(void * this, int param_1, void * param_2, void * param_3)	OK
+0x00573cc0	CTexture__Unk_00573cc0	void __stdcall CTexture__Unk_00573cc0(void * param_1)	OK
+0x00573d80	CTexture__Unk_00573d80	int CTexture__Unk_00573d80(void)	OK
+0x00574080	CTexture__Unk_00574080	void __cdecl CTexture__Unk_00574080(void * param_1)	OK
+0x005740a0	CTexture__Unk_005740a0	void __thiscall CTexture__Unk_005740a0(void * this, int param_1, void * param_2)	OK
+0x00574100	CTexture__Unk_00574100	void __stdcall CTexture__Unk_00574100(int param_1, int param_2)	OK
+0x00574120	CTexture__Unk_00574120	void __fastcall CTexture__Unk_00574120(void * param_1)	OK
+0x00574180	CTexture__Unk_00574180	void __fastcall CTexture__Unk_00574180(void * param_1)	OK
+0x00575b1d	CTexture__Unk_00575b1d	int CTexture__Unk_00575b1d(void)	OK
+0x00575b47	CTexture__Unk_00575b47	int CTexture__Unk_00575b47(void)	OK
+0x00575bd5	CTexture__Unk_00575bd5	int CTexture__Unk_00575bd5(void)	OK
+0x00575bff	CTexture__Unk_00575bff	int CTexture__Unk_00575bff(void)	OK
+0x00575cdd	CDXTexture__Unk_00575cdd	int CDXTexture__Unk_00575cdd(void)	OK
+0x00575d20	CDXTexture__Unk_00575d20	void CDXTexture__Unk_00575d20(void)	OK
+0x00575d44	CDXTexture__Unk_00575d44	void CDXTexture__Unk_00575d44(void)	OK
+0x00575d68	CMeshCollisionVolume__Unk_00575d68	void CMeshCollisionVolume__Unk_00575d68(void)	OK
+0x00575d8c	CDXTexture__Unk_00575d8c	void CDXTexture__Unk_00575d8c(void)	OK
+0x00575e77	CTexture__Unk_00575e77	int CTexture__Unk_00575e77(void)	OK
+0x00575ea1	CTexture__Unk_00575ea1	int CTexture__Unk_00575ea1(void)	OK
+0x00575f72	CTexture__Unk_00575f72	int CTexture__Unk_00575f72(void)	OK
+0x00575fa1	CTexture__Unk_00575fa1	int CTexture__Unk_00575fa1(void)	OK
+0x00575ffe	CTexture__Unk_00575ffe	void CTexture__Unk_00575ffe(void)	OK
+0x00576167	CTexture__Unk_00576167	void CTexture__Unk_00576167(void)	OK
+0x00576178	CTexture__Unk_00576178	void CTexture__Unk_00576178(void)	OK
+0x0057617e	CDXTexture__Unk_0057617e	void CDXTexture__Unk_0057617e(void)	OK
+0x005761f7	CDXTexture__Unk_005761f7	void CDXTexture__Unk_005761f7(void)	OK
+0x00576286	CDXTexture__Unk_00576286	void CDXTexture__Unk_00576286(void)	OK
+0x00576404	CTexture__Unk_00576404	int CTexture__Unk_00576404(void)	OK
+0x005764d5	CTexture__Unk_005764d5	int CTexture__Unk_005764d5(void)	OK
+0x005764ff	CTexture__Unk_005764ff	int CTexture__Unk_005764ff(void)	OK
+0x005765f2	CTexture__Unk_005765f2	int CTexture__Unk_005765f2(void)	OK
+0x00576621	CTexture__Unk_00576621	int CTexture__Unk_00576621(void)	OK
+0x00577239	CDXTexture__Unk_00577239	void __stdcall CDXTexture__Unk_00577239(int param_1, int param_2, int param_3, int param_4)	OK
+0x005772c9	CDXTexture__Unk_005772c9	void __stdcall CDXTexture__Unk_005772c9(int param_1, int param_2)	OK
+0x005772e5	CDXTexture__Unk_005772e5	void __stdcall CDXTexture__Unk_005772e5(void * param_1, float param_2)	OK
+0x0057735f	CDXTexture__Unk_0057735f	void __stdcall CDXTexture__Unk_0057735f(int param_1, int param_2)	OK
+0x0057737b	CDXTexture__Unk_0057737b	void __stdcall CDXTexture__Unk_0057737b(void * param_1, float param_2)	OK
+0x005773f6	CDXTexture__Unk_005773f6	void __stdcall CDXTexture__Unk_005773f6(int param_1, int param_2)	OK
+0x00577412	CDXTexture__Unk_00577412	void __stdcall CDXTexture__Unk_00577412(void * param_1, float param_2)	OK
+0x0057748e	CTexture__Unk_0057748e	void __stdcall CTexture__Unk_0057748e(int param_1, int param_2, int param_3)	OK
+0x005774ae	CTexture__Unk_005774ae	void __stdcall CTexture__Unk_005774ae(void * param_1, void * param_2, float param_3)	OK
+0x005776a5	CTexture__Unk_005776a5	void __stdcall CTexture__Unk_005776a5(int param_1, int param_2, int param_3, int param_4)	OK
+0x00577a38	CTexture__Unk_00577a38	void __stdcall CTexture__Unk_00577a38(int param_1, int param_2, int param_3, int param_4)	OK
+0x00577b17	CTexture__Unk_00577b17	void CTexture__Unk_00577b17(void)	OK
+0x00577b24	CTexture__Unk_00577b24	void CTexture__Unk_00577b24(void)	OK
+0x00577c83	CTexture__Unk_00577c83	void CTexture__Unk_00577c83(void)	OK
+0x00577c90	CTexture__Unk_00577c90	void CTexture__Unk_00577c90(void)	OK
+0x00577d47	CTexture__Unk_00577d47	void CTexture__Unk_00577d47(void)	OK
+0x00577d54	CTexture__Unk_00577d47	void CTexture__Unk_00577d47(void)	OK
+0x00577dd5	CDXTexture__Unk_00577dd5	void CDXTexture__Unk_00577dd5(void)	OK
+0x00577de2	CDXTexture__Unk_00577de2	void CDXTexture__Unk_00577de2(void)	OK
+0x00577e80	CDXTexture__Unk_00577e80	void __stdcall CDXTexture__Unk_00577e80(int param_1, int param_2, int param_3, int param_4)	OK
+0x00577f8d	CTexture__Unk_00577f8d	int CTexture__Unk_00577f8d(void)	OK
+0x00577fb7	CTexture__Unk_00577fb7	int __stdcall CTexture__Unk_00577fb7(int param_1, int param_2, int param_3, int param_4, int param_5, float param_6)	OK

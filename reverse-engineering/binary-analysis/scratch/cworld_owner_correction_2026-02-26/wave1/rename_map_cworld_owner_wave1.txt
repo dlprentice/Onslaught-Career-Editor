@@ -1,0 +1,2 @@
+0x0050b030 OID__Helper_0050b030
+0x0050d760 CExplosionInitThing__Helper_0050d760

@@ -1,0 +1,3 @@
+0x00501ba0 CVertexShader__GetVertexDeclarationToken
+0x00501cd0 CVertexShader__ApplyRenderStateShaderConstants
+0x00502920 CVertexShader__ApplyCustomRenderStateShaderConstants

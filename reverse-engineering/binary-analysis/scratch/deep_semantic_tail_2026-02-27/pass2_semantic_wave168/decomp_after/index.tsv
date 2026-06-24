@@ -1,0 +1,21 @@
+address	name	signature	status
+0x00569256	CRT__ReportRuntimeErrorIfCriticalMode	void CRT__ReportRuntimeErrorIfCriticalMode(void)	OK
+0x00569432	CRT__FatalRuntimeErrorAndExit	void CRT__FatalRuntimeErrorAndExit(void)	OK
+0x00569788	CRT__BitMaskClearFromIndexWithCarry	int __cdecl CRT__BitMaskClearFromIndexWithCarry(int param_1, int param_2)	OK
+0x00569814	CRT__Copy3DWords	void __cdecl CRT__Copy3DWords(int param_1, void * param_2)	OK
+0x0056982f	CRT__Zero3DWords	void __cdecl CRT__Zero3DWords(void * param_1)	OK
+0x0056983b	CRT__Are3DWordsZero	int __cdecl CRT__Are3DWordsZero(void * param_1)	OK
+0x00569f35	CRT__MultiByteToWideChar_ThreadSafe	int __cdecl CRT__MultiByteToWideChar_ThreadSafe(int param_1, int param_2, int param_3)	OK
+0x00569f92	CRT__MultiByteToWideChar_SingleToken	uint __cdecl CRT__MultiByteToWideChar_SingleToken(int param_1, void * param_2, uint param_3)	OK
+0x0056a0b1	CRT__IsCharTypeMask0x80	uint __thiscall CRT__IsCharTypeMask0x80(void * this, void * param_1, int param_2)	OK
+0x0056a0de	CRT__IsCharTypeMask0x08	uint __thiscall CRT__IsCharTypeMask0x08(void * this, void * param_1, int param_2)	OK
+0x0056a15f	CRT__UngetCharToStream	uint __cdecl CRT__UngetCharToStream(uint param_1, void * param_2)	OK
+0x0056a7e7	CRT__ValidatePathAttributesForOpen	int __cdecl CRT__ValidatePathAttributesForOpen(int param_1, int param_2)	OK
+0x0056b212	CRT__GetOsFileHandleByIndex	int __cdecl CRT__GetOsFileHandleByIndex(uint param_1)	OK
+0x0056b254	CRT__LockFileHandleByIndex	void __cdecl CRT__LockFileHandleByIndex(uint param_1)	OK
+0x0056b2b3	CRT__UnlockFileHandleByIndex	void __cdecl CRT__UnlockFileHandleByIndex(uint param_1)	OK
+0x0056b2d5	CRT__CommitFileHandle	int __cdecl CRT__CommitFileHandle(uint param_1)	OK
+0x0056b368	CRT__WriteWideCharToStreamWithConversion	uint __cdecl CRT__WriteWideCharToStreamWithConversion(uint param_1, void * param_2)	OK
+0x0056c05c	CRT__NoOp_ReturnZero_0056c05c	int CRT__NoOp_ReturnZero_0056c05c(void)	OK
+0x0056c684	CRT__ValidateCodePageAgainstLocale	uint __stdcall CRT__ValidateCodePageAgainstLocale(int param_1)	OK
+0x0056c998	CRT__StrToLongWithBaseAndLocaleCType	int CRT__StrToLongWithBaseAndLocaleCType(void)	OK

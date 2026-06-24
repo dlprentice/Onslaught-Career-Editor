@@ -1,0 +1,4 @@
+address	name	signature	status
+0x00404210	CAtmospheric__Unk_00404210	void __fastcall CAtmospheric__Unk_00404210(void * param_1)	OK
+0x00404790	CAtmospheric__Unk_00404790	void __fastcall CAtmospheric__Unk_00404790(int param_1)	OK
+0x004048c0	CAtmospheric__Unk_004048c0	double __fastcall CAtmospheric__Unk_004048c0(int param_1)	OK

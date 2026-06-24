@@ -1,0 +1,13 @@
+address	old_name	inferred_owner	new_name	xref_count	top_counts
+0x00449ef0	CEngine__Unk_00449ef0	CFrontEnd	CFrontEnd__Helper_00449ef0	3	CFrontEnd:2;CDXEngine:1
+0x0044a0c0	CEngine__Unk_0044a0c0	CDXMeshVB	CDXMeshVB__Helper_0044a0c0	14	CDXMeshVB:2;CDXTexture:1;CSphere:1
+0x004bd440	CEngine__Unk_004bd440	CWorld	CWorld__Helper_004bd440	6	CWorld:3
+0x004bdf70	CEngine__Unk_004bdf70	CWorld	CWorld__Helper_004bdf70	82	CWorld:52
+0x004ffdd0	CEngine__Unk_004ffdd0	CSquadNormal	CSquadNormal__Helper_004ffdd0	9	CSquadNormal:2;CUnit:1
+0x00501310	CEngine__Unk_00501310	CDXEngine	CDXEngine__Helper_00501310	16	CDXEngine:4;CDXBitmapFont:2;CScreenFx:2;DXParticleTexture:2;CDXShadows:1
+0x00506010	CEngine__Unk_00506010	CGeneralVolume	CGeneralVolume__Helper_00506010	10	CGeneralVolume:3;CSentinel:1;CUnitAI:1
+0x005096a0	CEngine__Unk_005096a0	CUnit	CUnit__Helper_005096a0	5	CUnit:3;CBattleEngine:1;CSquadNormal:1
+0x005099a0	CEngine__Unk_005099a0	CUnit	CUnit__Helper_005099a0	8	CUnit:3;CBattleEngine:2;CSquadNormal:1
+0x00509f70	CEngine__Unk_00509f70	CUnit	CUnit__Helper_00509f70	8	CUnit:3;CBattleEngine:1;CSentinel:1;CUnitAI:1
+0x00528af0	CEngine__Unk_00528af0	CDXTexture	CDXTexture__Helper_00528af0	14	CDXTexture:12;CVBufTexture:1
+0x0053f010	CEngine__Unk_0053f010	CCutscene	CCutscene__Helper_0053f010	4	CCutscene:3;CGame:1

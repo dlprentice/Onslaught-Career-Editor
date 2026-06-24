@@ -1,0 +1,17 @@
+/* address: 0x004e1910 */
+/* name: CBattleEngine__FindSoundEventByNameIfEnabled */
+/* signature: int __thiscall CBattleEngine__FindSoundEventByNameIfEnabled(void * this, int param_1, int param_2, int param_3) */
+
+
+int __thiscall
+CBattleEngine__FindSoundEventByNameIfEnabled(void *this,int param_1,int param_2,int param_3)
+
+{
+  char *pcVar1;
+
+  if (*(char *)((int)this + 4) == '\0') {
+    return 0;
+  }
+  pcVar1 = CSoundManager__Helper_004e2a90((void *)param_1,param_2);
+  return (int)pcVar1;
+}

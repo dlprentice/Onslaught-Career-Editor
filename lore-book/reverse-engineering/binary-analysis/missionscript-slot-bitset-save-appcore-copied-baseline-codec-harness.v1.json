@@ -1,0 +1,142 @@
+{
+  "schemaVersion": "missionscript-slot-bitset-save-appcore-copied-baseline-codec-harness.v1",
+  "status": "PASS",
+  "slotBitsetSaveAppCoreCopiedBaselineCodecHarnessStatus": "missionscript-slot-bitset-save-appcore-copied-baseline-codec-harness-complete-appcore-copied-real-baseline-byte-preservation-not-runtime-proof",
+  "previousSlice": "MissionScript Slot Bitset/Save Clean-Room Codec Interface Proof",
+  "selectedNextSlice": "MissionScript Slot Bitset/Save Runtime-Proof Readiness Gate Plan",
+  "selectedFixtureFamily": "slot-bitset-save",
+  "selectedFixturePath": "slot-bitset-save-core-handler-and-career-bridge",
+  "implementation": {
+    "toolProjectPath": "tools/MissionScriptSlotBitsetSaveHarness/MissionScriptSlotBitsetSaveHarness.csproj",
+    "appCoreCodecPath": "OnslaughtCareerEditor.AppCore/MissionScriptSlotBitsetSaveCodec.cs",
+    "interfaceKind": "AppCore codec applied by proof-only copied-baseline harness",
+    "appCoreCodecUsed": true,
+    "manualSlotDwordWriteInHarness": false,
+    "appCoreCodecFileIo": false,
+    "harnessFileIo": true,
+    "productUiWired": false,
+    "sourceBaselineRead": true,
+    "privateArtifactMaterialized": true
+  },
+  "privateEvidence": {
+    "privateEvidenceRootPublic": false,
+    "sourcePathsPublic": false,
+    "sourceHashesPublic": false,
+    "artifactPathsPublic": false,
+    "artifactHashesPublic": false,
+    "rawBeforeAfterDwordsPublic": false,
+    "copiedRealBaselineClass": "validated copied real career .bes baseline from prior ignored evidence",
+    "copiedArtifactCount": 5,
+    "copyBeforeWrite": true,
+    "sourceAndOutputPathsDistinct": true,
+    "sourceToNewBaselineDiffCount": 0,
+    "sourceUnchanged": true
+  },
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackupClass": "verified-static-backup-redacted"
+  },
+  "container": {
+    "expectedSize": 10004,
+    "expectedSizeHex": "0x2714",
+    "versionWord": "0x4BD1",
+    "trueViewRule": "file_offset = 0x0002 + career_offset",
+    "fileSizePreserved": true,
+    "versionWordPreserved": true
+  },
+  "slotWrite": {
+    "slots": [
+      61,
+      62
+    ],
+    "dwordIndex": 1,
+    "allowedDwordRange": "0x240E-0x2411",
+    "allowedDwordXorMask": "0x60000000",
+    "slot61Mask": "0x20000000",
+    "slot62Mask": "0x40000000",
+    "comparisonMode": "little-endian dword XOR mask subset, not single-byte expectation",
+    "observedDwordXorMask": "0x60000000",
+    "baselineSelectedMaskInitiallyClear": true,
+    "baselineToSetChangedOffsets": [
+      "0x2411"
+    ],
+    "baselineToSetChangedOffsetCount": 1,
+    "expectedChangedOffsets": [
+      "0x2411"
+    ],
+    "unexpectedDiffCount": 0,
+    "legacyTrapHitCount": 0,
+    "setChangedTargetBits": true,
+    "preservedNonTargetBitsInDword": true,
+    "slot61AfterSet": true,
+    "slot62AfterSet": true,
+    "slot61AfterClear": false,
+    "slot62AfterClear": false
+  },
+  "noOpAndRoundTrip": {
+    "baselineToNoopDiffCount": 0,
+    "setToIdempotentDiffCount": 0,
+    "setToClearChangedOffsets": [
+      "0x2411"
+    ],
+    "setToClearDiffCount": 1,
+    "setToClearDwordXorMask": "0x60000000",
+    "clearToBaselineDiffCount": 0
+  },
+  "preservation": {
+    "killCountersAndPreSlotTail": true,
+    "slotDword0": true,
+    "remainingSlotDwordsAfterTarget": true,
+    "postSlotFieldsThroughPreOptions": true,
+    "optionsEntries": true,
+    "optionsTail": true
+  },
+  "negativeGuards": {
+    "saveSynthesis": false,
+    "installedGameMutation": false,
+    "originalExecutableMutation": false,
+    "defaultoptionsMutation": false,
+    "runtimeExecution": false,
+    "beLaunch": false,
+    "ghidraMutation": false,
+    "executablePatching": false,
+    "godotWork": false,
+    "productUiWired": false,
+    "legacyAlignedViewTrapOffsets": [
+      "0x23A4",
+      "0x22D4",
+      "0x240C"
+    ],
+    "legacyTrapHitCount": 0
+  },
+  "claimBoundary": {
+    "proves": [
+      "the proof-only C# harness applies the AppCore MissionScript slot bitset/save codec to a copied real career baseline",
+      "the AppCore codec set/readback path changes slots 61 and 62 through the true-view target dword range 0x240E-0x2411",
+      "the observed little-endian dword XOR mask for the set operation remains 0x60000000",
+      "the copied baseline, no-op, idempotent set, clear roundtrip, non-target ranges, options entries, options tail, and legacy trap offsets match the byte-preservation contract"
+    ],
+    "doesNotProve": [
+      "runtime MissionScript execution",
+      "runtime command effects",
+      "runtime slot persistence",
+      "runtime save/load behavior",
+      "runtime defaultoptions behavior",
+      "tutorial progression",
+      "live loose-MSL loading",
+      "packed-resource script selection",
+      "installed game mutation",
+      "product UI behavior",
+      "Ghidra mutation",
+      "executable patching",
+      "Godot parity",
+      "rebuild implementation",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  }
+}

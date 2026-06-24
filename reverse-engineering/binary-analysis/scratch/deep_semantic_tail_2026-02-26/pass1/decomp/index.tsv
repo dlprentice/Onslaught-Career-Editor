@@ -1,0 +1,39 @@
+address	name	signature	status
+0x00402220	CAirGuide__Unk_00402220	void __fastcall CAirGuide__Unk_00402220(void * param_1)	OK
+0x0049fdb0	CComponent__Unk_0049fdb0	void __fastcall CComponent__Unk_0049fdb0(int param_1)	OK
+0x00431020	CComponentStatement__Unk_00431020	int __fastcall CComponentStatement__Unk_00431020(int param_1)	OK
+0x0043ed20	CCutscene__Unk_0043ed20	void * __thiscall CCutscene__Unk_0043ed20(void * this, void * param_1, int param_2)	OK
+0x00540c30	CDXFrontEnd__Unk_00540c30	void CDXFrontEnd__Unk_00540c30(void)	OK
+0x00544fb0	CDXLandscape__Unk_00544fb0	void CDXLandscape__Unk_00544fb0(void)	OK
+0x004b7ab0	CDropship__Unk_004b7ab0	int __thiscall CDropship__Unk_004b7ab0(void * this, int param_1, void * param_2)	OK
+0x00456830	CFEPDebriefing__Unk_00456830	int __fastcall CFEPDebriefing__Unk_00456830(int param_1)	OK
+0x00464bc0	CFEPSaveGame__Unk_00464bc0	void __stdcall CFEPSaveGame__Unk_00464bc0(int param_1, int param_2)	OK
+0x0043e630	CFlexArray__Unk_0043e630	void __cdecl CFlexArray__Unk_0043e630(int param_1, int param_2)	OK
+0x00472a10	CGameInterface__Unk_00472a10	void __fastcall CGameInterface__Unk_00472a10(int param_1)	OK
+0x0047eb00	CHeightField__Unk_0047eb00	int __fastcall CHeightField__Unk_0047eb00(int param_1, uint param_2, uint param_3)	OK
+0x00401b50	CMCMine__Unk_00401b50	double __fastcall CMCMine__Unk_00401b50(void * param_1)	OK
+0x00491da0	CMapWho__Unk_00491da0	int __stdcall CMapWho__Unk_00491da0(void * param_1)	OK
+0x004a0b30	CMechGuide__Unk_004a0b30	void __fastcall CMechGuide__Unk_004a0b30(void * param_1)	OK
+0x004b6f70	CMessage__Unk_004b6f70	void __thiscall CMessage__Unk_004b6f70(void * this, int param_1, void * param_2, int param_3, int param_4)	OK
+0x004cac80	CPDSelector__Unk_004cac80	void __cdecl CPDSelector__Unk_004cac80(float param_1, float param_2)	OK
+0x00437fe0	CPhysicsScriptStatements__Unk_00437fe0	void __thiscall CPhysicsScriptStatements__Unk_00437fe0(void * this, int param_1, void * param_2)	OK
+0x005042f0	CResourceAccumulator__Unk_005042f0	void __cdecl CResourceAccumulator__Unk_005042f0(void * param_1)	OK
+0x004d8370	CRound__Unk_004d8370	void __fastcall CRound__Unk_004d8370(void * param_1)	OK
+0x004e5c30	CSPtrSet__Unk_004e5c30	int __thiscall CSPtrSet__Unk_004e5c30(void * this, void * param_1, int param_2)	OK
+0x004306b0	CSpawnerStatement__Unk_004306b0	int __fastcall CSpawnerStatement__Unk_004306b0(int param_1)	OK
+0x00482590	CSphere__Unk_00482590	void __fastcall CSphere__Unk_00482590(int param_1)	OK
+0x004f5b80	CTokenArchive__Unk_004f5b80	void __thiscall CTokenArchive__Unk_004f5b80(void * this, int param_1, int param_2, int param_3, void * param_4)	OK
+0x004f6430	CTree__Unk_004f6430	int __fastcall CTree__Unk_004f6430(int param_1)	OK
+0x004f7ab0	CUMTexture__Unk_004f7ab0	void __thiscall CUMTexture__Unk_004f7ab0(void * this, void * param_1, int param_2, int param_3, int param_4)	OK
+0x00420cd0	CCareer__Unk_00420cd0	int __thiscall CCareer__Unk_00420cd0(void * this, int param_1, int param_2)	OK
+0x00420d10	CCareer__Unk_00420d10	void __thiscall CCareer__Unk_00420d10(void * this, void * param_1, void * param_2)	OK
+0x0042d7a0	CController__Unk_0042d7a0	void CController__Unk_0042d7a0(void)	OK
+0x0042e3d0	CController__Unk_0042e3d0	double __thiscall CController__Unk_0042e3d0(void * this, void * param_1, int param_2, int param_3)	OK
+0x00413b90	CCylinder__Unk_00413b90	void __fastcall CCylinder__Unk_00413b90(int param_1)	OK
+0x00423510	CCylinder__Unk_00423510	void __fastcall CCylinder__Unk_00423510(int param_1)	OK
+0x004661d0	CFEPMultiplayerStart__Unk_004661d0	void __fastcall CFEPMultiplayerStart__Unk_004661d0(int param_1)	OK
+0x004d20a0	CFEPMultiplayerStart__Unk_004d20a0	void __fastcall CFEPMultiplayerStart__Unk_004d20a0(void * param_1)	OK
+0x004c7900	CRocket__Unk_004c7900	void __fastcall CRocket__Unk_004c7900(void * param_1)	OK
+0x004cdd70	CRocket__Unk_004cdd70	void __fastcall CRocket__Unk_004cdd70(void * param_1)	OK
+0x004027c0	VFuncSlot_00_004026e0__Unk_004027c0	void __fastcall VFuncSlot_00_004026e0__Unk_004027c0(int param_1)	OK
+0x004028e0	VFuncSlot_00_004026e0__Unk_004028e0	void __fastcall VFuncSlot_00_004026e0__Unk_004028e0(int param_1)	OK

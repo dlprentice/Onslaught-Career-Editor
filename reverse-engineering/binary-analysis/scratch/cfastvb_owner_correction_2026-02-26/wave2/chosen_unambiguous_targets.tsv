@@ -1,0 +1,5 @@
+address	old_name	inferred_owner	new_name	xref_count	top_counts
+0x00578555	CFastVB__Unk_00578555	CTexture	CTexture__Helper_00578555	3	CTexture:2
+0x00580850	CFastVB__Unk_00580850	CDXTexture	CDXTexture__Helper_00580850	3	CDXTexture:2
+0x0058092d	CFastVB__Unk_0058092d	CDXTexture	CDXTexture__Helper_0058092d	2	CDXTexture:2
+0x005960c1	CFastVB__Unk_005960c1	CDXTexture	CDXTexture__Helper_005960c1	5	CDXTexture:4

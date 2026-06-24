@@ -1,0 +1,554 @@
+[
+  {
+    "address": "0x00414cb0",
+    "name": "CExplosionInitThing__Unk_00414cb0",
+    "xref_count": 1,
+    "owners": [
+      "CExplosionInitThing"
+    ],
+    "owner_counts": [
+      [
+        "CExplosionInitThing",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": false
+  },
+  {
+    "address": "0x00444620",
+    "name": "CExplosionInitThing__Unk_00444620",
+    "xref_count": 0,
+    "owners": [],
+    "owner_counts": [],
+    "unambiguous_non_cexplosion": false
+  },
+  {
+    "address": "0x00447d50",
+    "name": "CExplosionInitThing__Unk_00447d50",
+    "xref_count": 3,
+    "owners": [
+      "CUnitAI"
+    ],
+    "owner_counts": [
+      [
+        "CUnitAI",
+        3
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x0044a6e0",
+    "name": "CExplosionInitThing__Unk_0044a6e0",
+    "xref_count": 1,
+    "owners": [
+      "CResourceAccumulator"
+    ],
+    "owner_counts": [
+      [
+        "CResourceAccumulator",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x0044adb0",
+    "name": "CExplosionInitThing__Unk_0044adb0",
+    "xref_count": 7,
+    "owners": [
+      "CActor",
+      "CMonitor",
+      "CUnit",
+      "FrontendUpdate_CheatChecks",
+      "OID_Unk_005078f0"
+    ],
+    "owner_counts": [
+      [
+        "CActor",
+        2
+      ],
+      [
+        "CUnit",
+        2
+      ],
+      [
+        "FrontendUpdate_CheatChecks",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": false
+  },
+  {
+    "address": "0x0044d560",
+    "name": "CExplosionInitThing__Unk_0044d560",
+    "xref_count": 1,
+    "owners": [
+      "CFrontEnd"
+    ],
+    "owner_counts": [
+      [
+        "CFrontEnd",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x0046baf0",
+    "name": "CExplosionInitThing__Unk_0046baf0",
+    "xref_count": 5,
+    "owners": [
+      "CFEPMultiplayerStart",
+      "CFEPWingmen"
+    ],
+    "owner_counts": [
+      [
+        "CFEPWingmen",
+        3
+      ],
+      [
+        "CFEPMultiplayerStart",
+        2
+      ]
+    ],
+    "unambiguous_non_cexplosion": false
+  },
+  {
+    "address": "0x00477ba0",
+    "name": "CExplosionInitThing__Unk_00477ba0",
+    "xref_count": 6,
+    "owners": [
+      "CUnitAI"
+    ],
+    "owner_counts": [
+      [
+        "CUnitAI",
+        6
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x00479770",
+    "name": "CExplosionInitThing__Unk_00479770",
+    "xref_count": 1,
+    "owners": [
+      "CMeshCollisionVolume"
+    ],
+    "owner_counts": [
+      [
+        "CMeshCollisionVolume",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x00479db0",
+    "name": "CExplosionInitThing__Unk_00479db0",
+    "xref_count": 0,
+    "owners": [],
+    "owner_counts": [],
+    "unambiguous_non_cexplosion": false
+  },
+  {
+    "address": "0x0047a160",
+    "name": "CExplosionInitThing__Unk_0047a160",
+    "xref_count": 0,
+    "owners": [],
+    "owner_counts": [],
+    "unambiguous_non_cexplosion": false
+  },
+  {
+    "address": "0x004804c0",
+    "name": "CExplosionInitThing__Unk_004804c0",
+    "xref_count": 0,
+    "owners": [],
+    "owner_counts": [],
+    "unambiguous_non_cexplosion": false
+  },
+  {
+    "address": "0x00480ed0",
+    "name": "CExplosionInitThing__Unk_00480ed0",
+    "xref_count": 6,
+    "owners": [
+      "CUnitAI"
+    ],
+    "owner_counts": [
+      [
+        "CUnitAI",
+        6
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x00482210",
+    "name": "CExplosionInitThing__Unk_00482210",
+    "xref_count": 3,
+    "owners": [
+      "CUnitAI"
+    ],
+    "owner_counts": [
+      [
+        "CUnitAI",
+        3
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x004879e0",
+    "name": "CExplosionInitThing__Unk_004879e0",
+    "xref_count": 1,
+    "owners": [
+      "CExplosionInitThing"
+    ],
+    "owner_counts": [
+      [
+        "CExplosionInitThing",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": false
+  },
+  {
+    "address": "0x00487bc0",
+    "name": "CExplosionInitThing__Unk_00487bc0",
+    "xref_count": 1,
+    "owners": [
+      "CDXEngine"
+    ],
+    "owner_counts": [
+      [
+        "CDXEngine",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x00487d10",
+    "name": "CExplosionInitThing__Unk_00487d10",
+    "xref_count": 1,
+    "owners": [
+      "CDXEngine"
+    ],
+    "owner_counts": [
+      [
+        "CDXEngine",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x00488ea0",
+    "name": "CExplosionInitThing__Unk_00488ea0",
+    "xref_count": 1,
+    "owners": [
+      "CCollisionSeekingInfantryBloke"
+    ],
+    "owner_counts": [
+      [
+        "CCollisionSeekingInfantryBloke",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x0048ddd0",
+    "name": "CExplosionInitThing__Unk_0048ddd0",
+    "xref_count": 1,
+    "owners": [
+      "CParticleSet"
+    ],
+    "owner_counts": [
+      [
+        "CParticleSet",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x0048ff90",
+    "name": "CExplosionInitThing__Unk_0048ff90",
+    "xref_count": 2,
+    "owners": [
+      "CPauseMenu",
+      "CUnitAI"
+    ],
+    "owner_counts": [
+      [
+        "CUnitAI",
+        1
+      ],
+      [
+        "CPauseMenu",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": false
+  },
+  {
+    "address": "0x004968f0",
+    "name": "CExplosionInitThing__Unk_004968f0",
+    "xref_count": 1,
+    "owners": [
+      "CMeshPart"
+    ],
+    "owner_counts": [
+      [
+        "CMeshPart",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x0049c250",
+    "name": "CExplosionInitThing__Unk_0049c250",
+    "xref_count": 6,
+    "owners": [
+      "CMeshPart"
+    ],
+    "owner_counts": [
+      [
+        "CMeshPart",
+        6
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x004adf90",
+    "name": "CExplosionInitThing__Unk_004adf90",
+    "xref_count": 6,
+    "owners": [
+      "CMesh"
+    ],
+    "owner_counts": [
+      [
+        "CMesh",
+        6
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x004b6260",
+    "name": "CExplosionInitThing__Unk_004b6260",
+    "xref_count": 1,
+    "owners": [
+      "CSphere"
+    ],
+    "owner_counts": [
+      [
+        "CSphere",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x004b82a0",
+    "name": "CExplosionInitThing__Unk_004b82a0",
+    "xref_count": 1,
+    "owners": [
+      "CMessageLog"
+    ],
+    "owner_counts": [
+      [
+        "CMessageLog",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x004bc2e0",
+    "name": "CExplosionInitThing__Unk_004bc2e0",
+    "xref_count": 2,
+    "owners": [
+      "CMechGuide",
+      "CSquadNormal"
+    ],
+    "owner_counts": [
+      [
+        "CMechGuide",
+        1
+      ],
+      [
+        "CSquadNormal",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": false
+  },
+  {
+    "address": "0x004bc510",
+    "name": "CExplosionInitThing__Unk_004bc510",
+    "xref_count": 3,
+    "owners": [
+      "CExplosionInitThing"
+    ],
+    "owner_counts": [
+      [
+        "CExplosionInitThing",
+        3
+      ]
+    ],
+    "unambiguous_non_cexplosion": false
+  },
+  {
+    "address": "0x004bcbf0",
+    "name": "CExplosionInitThing__Unk_004bcbf0",
+    "xref_count": 1,
+    "owners": [
+      "CWorld"
+    ],
+    "owner_counts": [
+      [
+        "CWorld",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x004bd5c0",
+    "name": "CExplosionInitThing__Unk_004bd5c0",
+    "xref_count": 2,
+    "owners": [
+      "CEngine"
+    ],
+    "owner_counts": [
+      [
+        "CEngine",
+        2
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x004bdff0",
+    "name": "CExplosionInitThing__Unk_004bdff0",
+    "xref_count": 3,
+    "owners": [
+      "CWorld"
+    ],
+    "owner_counts": [
+      [
+        "CWorld",
+        3
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x004be1d0",
+    "name": "CExplosionInitThing__Unk_004be1d0",
+    "xref_count": 1,
+    "owners": [
+      "CExplosionInitThing"
+    ],
+    "owner_counts": [
+      [
+        "CExplosionInitThing",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": false
+  },
+  {
+    "address": "0x004bed30",
+    "name": "CExplosionInitThing__Unk_004bed30",
+    "xref_count": 1,
+    "owners": [
+      "CExplosionInitThing"
+    ],
+    "owner_counts": [
+      [
+        "CExplosionInitThing",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": false
+  },
+  {
+    "address": "0x004beea0",
+    "name": "CExplosionInitThing__Unk_004beea0",
+    "xref_count": 1,
+    "owners": [
+      "CExplosionInitThing"
+    ],
+    "owner_counts": [
+      [
+        "CExplosionInitThing",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": false
+  },
+  {
+    "address": "0x004bff40",
+    "name": "CExplosionInitThing__Unk_004bff40",
+    "xref_count": 1,
+    "owners": [
+      "CSphereTrigger"
+    ],
+    "owner_counts": [
+      [
+        "CSphereTrigger",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x004c7950",
+    "name": "CExplosionInitThing__Unk_004c7950",
+    "xref_count": 1,
+    "owners": [
+      "CEngine"
+    ],
+    "owner_counts": [
+      [
+        "CEngine",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": true
+  },
+  {
+    "address": "0x004c7db0",
+    "name": "CExplosionInitThing__Unk_004c7db0",
+    "xref_count": 2,
+    "owners": [
+      "CEngine",
+      "CPDSimpleSprite"
+    ],
+    "owner_counts": [
+      [
+        "CPDSimpleSprite",
+        1
+      ],
+      [
+        "CEngine",
+        1
+      ]
+    ],
+    "unambiguous_non_cexplosion": false
+  },
+  {
+    "address": "0x004d1f90",
+    "name": "CExplosionInitThing__Unk_004d1f90",
+    "xref_count": 0,
+    "owners": [],
+    "owner_counts": [],
+    "unambiguous_non_cexplosion": false
+  }
+]

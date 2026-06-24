@@ -1,0 +1,21 @@
+address	name	signature	status
+0x0058c7a4	CTexture__Helper_0058c7a4	int __thiscall CTexture__Helper_0058c7a4(void * this, int param_1, void * param_2, void * param_3)	OK
+0x0058c893	CTexture__Helper_0058c893	void __cdecl CTexture__Helper_0058c893(void * param_1, int param_2, int param_3, int param_4)	OK
+0x0058c95c	CTexture__Helper_0058c95c	int __cdecl CTexture__Helper_0058c95c(void * param_1, int param_2, int param_3)	OK
+0x0058cc00	CTexture__Helper_0058cc00	int __fastcall CTexture__Helper_0058cc00(void * param_1)	OK
+0x0058cd30	CTexture__Helper_0058cd30	int __thiscall CTexture__Helper_0058cd30(void * this, void * param_1, void * param_2, void * param_3)	OK
+0x0058cdd5	CTexture__Helper_0058cdd5	int __thiscall CTexture__Helper_0058cdd5(void * this, int param_1, void * param_2, void * param_3)	OK
+0x0058ce51	CTexture__Helper_0058ce51	int __thiscall CTexture__Helper_0058ce51(void * this, void * param_1, void * param_2, void * param_3)	OK
+0x0058cef2	CTexture__Helper_0058cef2	int __thiscall CTexture__Helper_0058cef2(void * this, int param_1, void * param_2, void * param_3)	OK
+0x0058d6b4	CTexture__Helper_0058d6b4	uint __stdcall CTexture__Helper_0058d6b4(void * param_1)	OK
+0x0058d6f0	CTexture__Helper_0058d6f0	int __thiscall CTexture__Helper_0058d6f0(void * this, int param_1, int param_2)	OK
+0x0058d747	CTexture__Helper_0058d747	void __fastcall CTexture__Helper_0058d747(void * param_1)	OK
+0x0058d763	CTexture__Helper_0058d763	void __cdecl CTexture__Helper_0058d763(void * param_1, void * param_2)	OK
+0x0058d821	CTexture__Helper_0058d821	int CTexture__Helper_0058d821(void)	OK
+0x0058d88d	CTexture__Helper_0058d88d	int __thiscall CTexture__Helper_0058d88d(void * this, void * param_1, int param_2)	OK
+0x0058d8c2	CTexture__Helper_0058d8c2	uint __thiscall CTexture__Helper_0058d8c2(void * this, int param_1, void * param_2)	OK
+0x0058e256	CTexture__Helper_0058e256	uint __thiscall CTexture__Helper_0058e256(void * this, void * param_1, int param_2)	OK
+0x0058e309	CTexture__Helper_0058e309	uint __thiscall CTexture__Helper_0058e309(void * this, void * param_1, int param_2)	OK
+0x0058e3c3	CTexture__Helper_0058e3c3	int __thiscall CTexture__Helper_0058e3c3(void * this, int param_1, int param_2)	OK
+0x0058e413	CTexture__Helper_0058e413	int __thiscall CTexture__Helper_0058e413(void * this, int param_1, int param_2)	OK
+0x0058e491	CTexture__Helper_0058e491	int __thiscall CTexture__Helper_0058e491(void * this, int param_1, int param_2)	OK

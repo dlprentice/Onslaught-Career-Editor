@@ -1,0 +1,40 @@
+address	name	signature	status
+0x004a52d0	CMesh__ClearOut	void CMesh__ClearOut(void)	OK
+0x004f2a30	CTexture__ClearOut	void CTexture__ClearOut(void)	OK
+0x00501450	CVBufTexture__ClearOut	void CVBufTexture__ClearOut(void)	OK
+0x00501730	CVertexShader__ClearOut	void CVertexShader__ClearOut(void)	OK
+0x005492d0	CDXMemoryManager__CalcAndShowDeltas	void __fastcall CDXMemoryManager__CalcAndShowDeltas(int param_1)	OK
+0x00549310	CDXMemoryManager__LogDebugStats	void CDXMemoryManager__LogDebugStats(void)	OK
+0x0047ea20	CWorld__GetHeightSamplePacked16	uint __fastcall CWorld__GetHeightSamplePacked16(int param_1, uint param_2, uint param_3)	OK
+0x00490f50	CWorld__CanLoadMapSection	int __thiscall CWorld__CanLoadMapSection(void * this, int param_1, int param_2, int param_3, int param_4)	OK
+0x004bc8d0	CWorld__ClearOccupancyBitsUsingHeightBands	void CWorld__ClearOccupancyBitsUsingHeightBands(void)	OK
+0x00490e30	CGame__BuildCellMinMaxHeightTable	void __fastcall CGame__BuildCellMinMaxHeightTable(int param_1)	OK
+0x00490f10	CGame__InitMapLoadStateFlags	int __fastcall CGame__InitMapLoadStateFlags(int param_1)	OK
+0x004e49f0	CGame__IsSpawnAreaClearWithinRadius	int __fastcall CGame__IsSpawnAreaClearWithinRadius(int param_1)	OK
+0x004e47e0	CGame__CreateRespawnBattleEngineAndEffect	int * __thiscall CGame__CreateRespawnBattleEngineAndEffect(void * this, int param_1, int param_2)	OK
+0x004f99b0	CGame__PlayRespawnVoiceCueIfAvailable	void __fastcall CGame__PlayRespawnVoiceCueIfAvailable(int param_1)	OK
+0x0044eab0	CFEPMultiplayerStart__GetConfigIdByIndex	int __cdecl CFEPMultiplayerStart__GetConfigIdByIndex(int param_1)	OK
+0x0044ecf0	CFEPMultiplayerStart__GetConfigCount	int CFEPMultiplayerStart__GetConfigCount(void)	OK
+0x0044eb30	CFEPMultiplayerStart__SetConfigDescriptionByIndex	void __cdecl CFEPMultiplayerStart__SetConfigDescriptionByIndex(int param_1)	OK
+0x00450460	CFEPMultiplayerStart__RenderConfigPipRow	void __cdecl CFEPMultiplayerStart__RenderConfigPipRow(float param_1, float param_2, float param_3, uint param_4)	OK
+0x00452fd0	CFEPMultiplayerStart__RenderSelectionBrackets	void __stdcall CFEPMultiplayerStart__RenderSelectionBrackets(float param_1)	OK
+0x004530b0	CFEPMultiplayerStart__RenderSelectionMarker	void __stdcall CFEPMultiplayerStart__RenderSelectionMarker(float param_1, float param_2, float param_3, int param_4)	OK
+0x0046b950	CFEPMultiplayerStart__LoadPreviewMeshFromConfig	void __thiscall CFEPMultiplayerStart__LoadPreviewMeshFromConfig(void * this, int param_1, void * param_2)	OK
+0x0046bab0	CFEPMultiplayerStart__SetPreviewAnimationByName	void __thiscall CFEPMultiplayerStart__SetPreviewAnimationByName(void * this, int param_1, int param_2)	OK
+0x0046bc20	CFEPMultiplayerStart__StopPreviewAnimation	void __fastcall CFEPMultiplayerStart__StopPreviewAnimation(int param_1)	OK
+0x00527960	CFEPMultiplayerStart__SetCurrentSelection	void __thiscall CFEPMultiplayerStart__SetCurrentSelection(void * this, int param_1, int param_2)	OK
+0x004e1800	CMonitor__StopSoundEventByOwnerAndName	void __thiscall CMonitor__StopSoundEventByOwnerAndName(void * this, int param_1, void * param_2, int param_3)	OK
+0x004e1880	CMonitor__FindSoundEventByOwnerAndName	int * __thiscall CMonitor__FindSoundEventByOwnerAndName(void * this, int param_1, void * param_2, int param_3)	OK
+0x004e1ab0	CMonitor__HasAnySoundEventForReaderChain	int __thiscall CMonitor__HasAnySoundEventForReaderChain(void * this, int param_1, int param_2, int param_3)	OK
+0x0040ef20	CMonitor__SpawnGroundOrAirImpactEffect	void __fastcall CMonitor__SpawnGroundOrAirImpactEffect(int param_1)	OK
+0x0040d1a0	CMonitor__ComputeVectorLengthOrZero	double __fastcall CMonitor__ComputeVectorLengthOrZero(void * param_1)	OK
+0x00410210	CBattleEngine__InitTargetSetBucketState	void * __thiscall CBattleEngine__InitTargetSetBucketState(void * this, void * param_1, int param_2)	OK
+0x005061f0	CBattleEngine__DoesTargetMaskMatchProfileByDistance	bool __thiscall CBattleEngine__DoesTargetMaskMatchProfileByDistance(void * this, int param_1, int param_2)	OK
+0x00506350	CBattleEngine__GetProfileField90ByDistance	int __fastcall CBattleEngine__GetProfileField90ByDistance(int param_1)	OK
+0x00506440	CBattleEngine__GetProfileField94ByDistance	double __fastcall CBattleEngine__GetProfileField94ByDistance(int param_1)	OK
+0x00506530	CBattleEngine__GetProfileFieldA8ByDistance	int __fastcall CBattleEngine__GetProfileFieldA8ByDistance(int param_1)	OK
+0x00506620	CBattleEngine__GetProfileField98ByDistance	double __fastcall CBattleEngine__GetProfileField98ByDistance(int param_1)	OK
+0x00506710	CBattleEngine__GetProfileField9CByDistance	double __fastcall CBattleEngine__GetProfileField9CByDistance(int param_1)	OK
+0x00506800	CBattleEngine__GetProfileFieldA0ByDistance	double __fastcall CBattleEngine__GetProfileFieldA0ByDistance(int param_1)	OK
+0x00509c80	CBattleEngine__ComputeProjectileMetricFromTargetProfile	double __thiscall CBattleEngine__ComputeProjectileMetricFromTargetProfile(void * this, int param_1, int param_2, float param_3, float param_4)	OK
+0x004fd3d0	CBattleEngine__IsWeaponModeCompatibleWithMountState	int __thiscall CBattleEngine__IsWeaponModeCompatibleWithMountState(void * this, int param_1, int param_2)	OK

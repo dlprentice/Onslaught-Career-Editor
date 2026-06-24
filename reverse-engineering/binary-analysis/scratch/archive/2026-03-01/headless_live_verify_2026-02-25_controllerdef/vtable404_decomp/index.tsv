@@ -1,0 +1,17 @@
+address	name	signature	status
+0x004539b0	CControllerDefinition__scalar_deleting_dtor	void * __thiscall CControllerDefinition__scalar_deleting_dtor(void * this, int flags)	OK
+0x00453ac0	CControllerDefinition__VFunc_01_00453ac0	undefined CControllerDefinition__VFunc_01_00453ac0(void)	OK
+0x004a3190	<none>	<none>	MISSING
+0x00405930	<none>	<none>	MISSING
+0x00453ad0	CControllerDefinition__VFunc_04_00453ad0	undefined CControllerDefinition__VFunc_04_00453ad0(void)	OK
+0x00456610	CControllerDefinition__VFunc_05_00456610	undefined CControllerDefinition__VFunc_05_00456610(void)	OK
+0x00456620	CControllerDefinition__VFunc_06_00456620	undefined CControllerDefinition__VFunc_06_00456620(void)	OK
+0x005019c0	VFuncSlot_09_005019c0	int VFuncSlot_09_005019c0(void)	OK
+0x00456630	CControllerDefinition__VFunc_08_00456630	undefined CControllerDefinition__VFunc_08_00456630(void)	OK
+0x00453a80	<none>	<none>	MISSING
+0x00453a80	<none>	<none>	MISSING
+0x00459990	CFrontEndPage__DeActiveNotification	void __cdecl CFrontEndPage__DeActiveNotification(void * this)	OK
+0x00456640	CControllerDefinition__VFunc_12_00456640	undefined CControllerDefinition__VFunc_12_00456640(void)	OK
+0x00459990	CFrontEndPage__DeActiveNotification	void __cdecl CFrontEndPage__DeActiveNotification(void * this)	OK
+0x00613540	<none>	<none>	MISSING
+0x00453a90	<none>	<none>	MISSING

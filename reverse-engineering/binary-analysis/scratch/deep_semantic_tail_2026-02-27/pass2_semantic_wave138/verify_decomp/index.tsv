@@ -1,0 +1,8 @@
+address	name	signature	status
+0x00509e90	CEngine__ResolvePresetByPercentBucketFallback	int __fastcall CEngine__ResolvePresetByPercentBucketFallback(int param_1)	OK
+0x0050a080	CEngine__CanProceedByTargetRangeGate	int __fastcall CEngine__CanProceedByTargetRangeGate(int param_1)	OK
+0x00511bc0	CVBufTexture__FindListEntryByPair	int * __thiscall CVBufTexture__FindListEntryByPair(void * this, int param_1, int param_2, int param_3)	OK
+0x00511c10	CVBufTexture__SetNameListIndexOrMinusOne	void __thiscall CVBufTexture__SetNameListIndexOrMinusOne(void * this, int param_1, void * param_2)	OK
+0x005230e0	CVBufTexture__FindListEntryByGlobalId89D94C	int * __fastcall CVBufTexture__FindListEntryByGlobalId89D94C(int param_1)	OK
+0x00523b30	CVBufTexture__DestroyGlobalHudHandle89BD98	void CVBufTexture__DestroyGlobalHudHandle89BD98(void)	OK
+0x00528b00	CEngine__InvokeCallbackIfStateMinusOne	void __thiscall CEngine__InvokeCallbackIfStateMinusOne(void * this, void * param_1, int param_2)	OK

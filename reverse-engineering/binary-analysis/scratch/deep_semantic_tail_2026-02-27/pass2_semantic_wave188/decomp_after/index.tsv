@@ -1,0 +1,21 @@
+address	name	signature	status
+0x005768fe	CFastVB__DispatchIndirect_00656f3c	void CFastVB__DispatchIndirect_00656f3c(void)	OK
+0x005775bd	CFastVB__DispatchIndirect_00656fc8	void CFastVB__DispatchIndirect_00656fc8(void)	OK
+0x00577ea4	Math__InterpolateVec4ByRatio_Dispatch_00577ea4	void __stdcall Math__InterpolateVec4ByRatio_Dispatch_00577ea4(int param_1, int param_2, int param_3, int param_4)	OK
+0x005780e3	CDXTexture__DispatchPtr00656f84_WithInit_005780e3	void CDXTexture__DispatchPtr00656f84_WithInit_005780e3(void)	OK
+0x00578555	Math__TransformVec2ByMatrix4x4	void __stdcall Math__TransformVec2ByMatrix4x4(void * param_1, void * param_2, void * param_3)	OK
+0x00579d33	CDXTexture__InitSurfaceFormatInfoFromDescriptor	int __thiscall CDXTexture__InitSurfaceFormatInfoFromDescriptor(void * this, void * param_1, void * param_2)	OK
+0x0058210e	CTexture__PostProcessDecodedTexels_GammaOrSquare	void __thiscall CTexture__PostProcessDecodedTexels_GammaOrSquare(void * this, int param_1, uint param_2)	OK
+0x00588855	CDXTexture__CloseMappedFileContext	int __fastcall CDXTexture__CloseMappedFileContext(void * param_1)	OK
+0x0058926b	CFastVB__InitDispatchTableByCpuFeature	int __stdcall CFastVB__InitDispatchTableByCpuFeature(int param_1)	OK
+0x0058939b	CTexture__IncludeNodeDtor	void * __thiscall CTexture__IncludeNodeDtor(void * this, void * param_1, int param_2)	OK
+0x005893b7	CTexture__IncludeNodeCtor	void __thiscall CTexture__IncludeNodeCtor(void * this, void * param_1, int param_2, int param_3)	OK
+0x00589405	CTexture__PreprocessorContextCtor	int __fastcall CTexture__PreprocessorContextCtor(int param_1)	OK
+0x0058948d	CTexture__IncludeContextDtor	void * __thiscall CTexture__IncludeContextDtor(void * this, void * param_1, int param_2)	OK
+0x005896a1	CTexture__IncludeFileChainDtor	void * __thiscall CTexture__IncludeFileChainDtor(void * this, void * param_1, int param_2)	OK
+0x005896bd	CTexture__DirectiveParserContextCtor	int __fastcall CTexture__DirectiveParserContextCtor(int param_1)	OK
+0x00589762	CTexture__DirectiveParserContextDtor	void __fastcall CTexture__DirectiveParserContextDtor(int param_1)	OK
+0x00589802	CTexture__PushPreprocessorStateNode	int __thiscall CTexture__PushPreprocessorStateNode(void * this, int param_1, int param_2)	OK
+0x00589846	CTexture__GetCurrentSourceLocation	int __thiscall CTexture__GetCurrentSourceLocation(void * this, int param_1, void * param_2, void * param_3)	OK
+0x0058986b	CTexture__GetActiveIncludeRange	int __thiscall CTexture__GetActiveIncludeRange(void * this, int param_1, void * param_2, void * param_3)	OK
+0x005898a4	CTexture__MapLexTokenToPreprocessorToken	int __fastcall CTexture__MapLexTokenToPreprocessorToken(int param_1)	OK

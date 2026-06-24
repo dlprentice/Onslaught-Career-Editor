@@ -1,0 +1,50 @@
+/* address: 0x0057d4db */
+/* name: CDXTexture__Average2x2Block_RGB565 */
+/* signature: int __fastcall CDXTexture__Average2x2Block_RGB565(void * param_1) */
+
+
+int __fastcall CDXTexture__Average2x2Block_RGB565(void *param_1)
+
+{
+  ushort uVar1;
+  ushort uVar2;
+  ushort uVar3;
+  ushort uVar4;
+  ushort *puVar5;
+  int iVar6;
+  int iVar7;
+  ushort *puVar8;
+  ushort *puVar9;
+  ushort *puVar10;
+  ushort *puVar11;
+  ushort *puVar12;
+
+  puVar5 = *(ushort **)(*(int *)((int)param_1 + 4) + 0x20);
+  iVar6 = *(int *)param_1;
+  iVar7 = *(int *)(iVar6 + 0x1058);
+  puVar8 = *(ushort **)(iVar6 + 0x20);
+  puVar11 = (ushort *)(*(int *)(iVar6 + 0x1064) * iVar7 + (int)puVar8);
+  for (; puVar8 < puVar11; puVar8 = puVar8 + iVar7) {
+    iVar6 = *(int *)(iVar6 + 0x1060);
+    puVar12 = (ushort *)(iVar7 + (int)puVar8);
+    puVar9 = puVar5;
+    for (puVar10 = puVar8; puVar10 < puVar8 + iVar6; puVar10 = puVar10 + 2) {
+      uVar1 = *puVar10;
+      uVar2 = puVar10[1];
+      uVar3 = puVar12[1];
+      uVar4 = *puVar12;
+      *puVar9 = ((ushort)((uint)(uVar3 & 0xf81f) + (uint)(uVar1 & 0xf81f) + (uint)(uVar4 & 0xf81f) +
+                          0x1002 + (uint)(uVar2 & 0xf81f) >> 2) ^
+                (ushort)((uVar2 & 0xffff07e0) + 0x40 +
+                         (uVar3 & 0xffff07e0) + (uVar1 & 0xffff07e0) + (uVar4 & 0xffff07e0) >> 2)) &
+                0x7e0 ^ (ushort)((uVar3 & 0xf81f) + (uVar1 & 0xf81f) + (uVar4 & 0xf81f) + 0x1002 +
+                                 (uVar2 & 0xf81f) >> 2);
+      puVar12 = puVar12 + 2;
+      puVar9 = puVar9 + 1;
+    }
+    puVar5 = (ushort *)((int)puVar5 + *(int *)(*(int *)((int)param_1 + 4) + 0x1058));
+    iVar6 = *(int *)param_1;
+    iVar7 = *(int *)(iVar6 + 0x1058);
+  }
+  return 0;
+}

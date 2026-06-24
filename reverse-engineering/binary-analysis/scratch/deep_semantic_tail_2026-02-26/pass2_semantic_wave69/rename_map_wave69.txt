@@ -1,0 +1,3 @@
+0x0058864a CDXTexture__InitMappedFileContext
+0x0058865c CDXTexture__OpenMappedFileReadOnly
+0x00588cc6 CDXTexture__ProjectPointToPlaneAndScale

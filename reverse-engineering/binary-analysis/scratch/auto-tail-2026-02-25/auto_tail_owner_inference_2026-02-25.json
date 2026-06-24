@@ -1,0 +1,222 @@
+{
+  "autos": 20,
+  "rows": [
+    {
+      "addr": "00407140",
+      "callers": [
+        "VFuncSlot_02_004d8dc0",
+        "CEngine__Unk_004daab0",
+        "CUnit__Unk_004dab50"
+      ],
+      "prefixes": [
+        "CEngine",
+        "CUnit"
+      ],
+      "uniq_prefixes": [
+        "CEngine",
+        "CUnit"
+      ],
+      "call_count": 6
+    },
+    {
+      "addr": "004097a0",
+      "callers": [
+        "CMonitor__Unk_004081c0",
+        "VFuncSlot_10_00442f60",
+        "CComponent__Unk_0049fdb0",
+        "CParticleDescriptor__Update",
+        "CExplosionInitThing__ctor_like_004d9f30",
+        "CExplosionInitThing__ctor_like_004d9f30",
+        "CTree__UpdateFallingTree",
+        "CUnit__Unk_004fa8d0",
+        "CUnit__Unk_004fa8d0",
+        "CUnit__Unk_004fbcb0",
+        "CEngine__Unk_005069f0",
+        "CEngine__Unk_005069f0"
+      ],
+      "prefixes": [
+        "CMonitor",
+        "CComponent",
+        "CParticleDescriptor",
+        "CExplosionInitThing",
+        "CExplosionInitThing",
+        "CTree",
+        "CUnit",
+        "CUnit",
+        "CUnit",
+        "CEngine",
+        "CEngine"
+      ],
+      "uniq_prefixes": [
+        "CComponent",
+        "CEngine",
+        "CExplosionInitThing",
+        "CMonitor",
+        "CParticleDescriptor",
+        "CTree",
+        "CUnit"
+      ],
+      "call_count": 18
+    },
+    {
+      "addr": "0040d4d0",
+      "callers": [],
+      "prefixes": [],
+      "uniq_prefixes": [],
+      "call_count": 1
+    },
+    {
+      "addr": "0040d660",
+      "callers": [
+        "CDXCompass__Render",
+        "CDXCompass__Render",
+        "CUnitAI__Unk_00484c50",
+        "CUnitAI__Unk_00484c50",
+        "CUnitAI__Unk_004858d0",
+        "CEngine__Unk_0053cd30"
+      ],
+      "prefixes": [
+        "CDXCompass",
+        "CDXCompass",
+        "CUnitAI",
+        "CUnitAI",
+        "CUnitAI",
+        "CEngine"
+      ],
+      "uniq_prefixes": [
+        "CDXCompass",
+        "CEngine",
+        "CUnitAI"
+      ],
+      "call_count": 6
+    },
+    {
+      "addr": "0040dfb0",
+      "callers": [
+        "CUnit__Unk_00408150",
+        "CGeneralVolume__Unk_0040bfd0"
+      ],
+      "prefixes": [
+        "CUnit",
+        "CGeneralVolume"
+      ],
+      "uniq_prefixes": [
+        "CGeneralVolume",
+        "CUnit"
+      ],
+      "call_count": 3
+    },
+    {
+      "addr": "0040e860",
+      "callers": [],
+      "prefixes": [],
+      "uniq_prefixes": [],
+      "call_count": 1
+    },
+    {
+      "addr": "0040ef20",
+      "callers": [
+        "CMonitor__Unk_004081c0",
+        "OID_Unk_005078f0__Wrapper_00410c50"
+      ],
+      "prefixes": [
+        "CMonitor"
+      ],
+      "uniq_prefixes": [
+        "CMonitor"
+      ],
+      "call_count": 2
+    },
+    {
+      "addr": "00410310",
+      "callers": [],
+      "prefixes": [],
+      "uniq_prefixes": [],
+      "call_count": 2
+    },
+    {
+      "addr": "00410490",
+      "callers": [],
+      "prefixes": [],
+      "uniq_prefixes": [],
+      "call_count": 1
+    },
+    {
+      "addr": "00410740",
+      "callers": [],
+      "prefixes": [],
+      "uniq_prefixes": [],
+      "call_count": 1
+    },
+    {
+      "addr": "004109d0",
+      "callers": [],
+      "prefixes": [],
+      "uniq_prefixes": [],
+      "call_count": 1
+    },
+    {
+      "addr": "004114d0",
+      "callers": [],
+      "prefixes": [],
+      "uniq_prefixes": [],
+      "call_count": 2
+    },
+    {
+      "addr": "004127a0",
+      "callers": [],
+      "prefixes": [],
+      "uniq_prefixes": [],
+      "call_count": 1
+    },
+    {
+      "addr": "00412d80",
+      "callers": [],
+      "prefixes": [],
+      "uniq_prefixes": [],
+      "call_count": 1
+    },
+    {
+      "addr": "00412f70",
+      "callers": [],
+      "prefixes": [],
+      "uniq_prefixes": [],
+      "call_count": 1
+    },
+    {
+      "addr": "00413160",
+      "callers": [],
+      "prefixes": [],
+      "uniq_prefixes": [],
+      "call_count": 1
+    },
+    {
+      "addr": "00413360",
+      "callers": [],
+      "prefixes": [],
+      "uniq_prefixes": [],
+      "call_count": 1
+    },
+    {
+      "addr": "004135e0",
+      "callers": [],
+      "prefixes": [],
+      "uniq_prefixes": [],
+      "call_count": 1
+    },
+    {
+      "addr": "00414970",
+      "callers": [],
+      "prefixes": [],
+      "uniq_prefixes": [],
+      "call_count": 1
+    },
+    {
+      "addr": "00414a40",
+      "callers": [],
+      "prefixes": [],
+      "uniq_prefixes": [],
+      "call_count": 1
+    }
+  ]
+}

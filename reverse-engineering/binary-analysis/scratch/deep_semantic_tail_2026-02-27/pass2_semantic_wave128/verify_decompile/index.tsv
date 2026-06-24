@@ -1,0 +1,6 @@
+address	name	signature	status
+0x0048ff90	CMessageBox__ActivateWithFadeStep_0p1	void __fastcall CMessageBox__ActivateWithFadeStep_0p1(int param_1)	OK
+0x004b7300	CMessageBox__scalar_deleting_dtor	void * __thiscall CMessageBox__scalar_deleting_dtor(void * this, void * param_1, int param_2)	OK
+0x004b7ea0	CMessageBox__StartVoiceOrFallbackTextReveal	void __fastcall CMessageBox__StartVoiceOrFallbackTextReveal(void * param_1)	OK
+0x004b8020	CMessageBox__AdvanceRevealAndScheduleNextTick	void __fastcall CMessageBox__AdvanceRevealAndScheduleNextTick(void * param_1)	OK
+0x004b8800	CMessageBox__StopVoicePlaybackIfNotInCutscene	void __fastcall CMessageBox__StopVoicePlaybackIfNotInCutscene(int param_1)	OK

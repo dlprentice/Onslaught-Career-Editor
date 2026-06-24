@@ -1,0 +1,25 @@
+address	name	signature	status
+0x00596386	CDXTexture__UnpackRgb565ToRgbaFloat	void __fastcall CDXTexture__UnpackRgb565ToRgbaFloat(uint param_1)	OK
+0x005963d2	CDXTexture__NormalizeColorBlockByAlpha	int __fastcall CDXTexture__NormalizeColorBlockByAlpha(void * param_1)	OK
+0x0059764a	CDXTexture__DecodeDxt1ColorBlockToRgba	int __stdcall CDXTexture__DecodeDxt1ColorBlockToRgba(void * param_1, void * param_2)	OK
+0x005987b2	CTexture__AppendNodeAtTail_Link0c	int __stdcall CTexture__AppendNodeAtTail_Link0c(int param_1, int param_2)	OK
+0x0059881b	CTexture__IsFormatChainCompatible	int __thiscall CTexture__IsFormatChainCompatible(void * this, void * param_1, int param_2)	OK
+0x005989c3	CTexture__NodeType8_InitDefaults	void __fastcall CTexture__NodeType8_InitDefaults(void * param_1)	OK
+0x005989db	CTexture__NodeType8_InitFromDescriptor	void __thiscall CTexture__NodeType8_InitFromDescriptor(void * this, void * param_1, void * param_2)	OK
+0x00598e5d	CDXTexture__CompareNodePayloadWithOptionalChild	int __thiscall CDXTexture__CompareNodePayloadWithOptionalChild(void * this, void * param_1, int param_2)	OK
+0x00598f22	CDXTexture__Dtor_ReleaseNodePayload_DeleteOnFlag	void * __thiscall CDXTexture__Dtor_ReleaseNodePayload_DeleteOnFlag(void * this, void * param_1, int param_2)	OK
+0x00598f3e	CDXTexture__Dtor_NodePayload_DeleteOnFlag	int __thiscall CDXTexture__Dtor_NodePayload_DeleteOnFlag(void * this, void * param_1, int param_2)	OK
+0x00598fc0	CTexture__Dtor_ReleaseNodePayload_DeleteOnFlag	void * __thiscall CTexture__Dtor_ReleaseNodePayload_DeleteOnFlag(void * this, void * param_1, int param_2)	OK
+0x00598fdc	CTexture__InitOwnedNodeList	void __thiscall CTexture__InitOwnedNodeList(void * this, void * param_1, int param_2)	OK
+0x00598ff4	CTexture__FreeOwnedNodeListAndPayloads	void __fastcall CTexture__FreeOwnedNodeListAndPayloads(int param_1)	OK
+0x0059993c	CTexture__NodeType12_Ctor	int __fastcall CTexture__NodeType12_Ctor(void * param_1)	OK
+0x00599a3c	CTexture__NodeType12_Dtor_DeleteOnFlag	void * __thiscall CTexture__NodeType12_Dtor_DeleteOnFlag(void * this, void * param_1, int param_2)	OK
+0x00599a58	CTexture__NodeType12_ScalarDeletingDtor	void * __thiscall CTexture__NodeType12_ScalarDeletingDtor(void * this, void * param_1, int param_2)	OK
+0x0059b510	CDXTexture__ValidateJpegFrameAndBuildScanLayout	void CDXTexture__ValidateJpegFrameAndBuildScanLayout(void)	OK
+0x0059ba20	CDXTexture__DecodeState_ResetCallbackContext	void __stdcall CDXTexture__DecodeState_ResetCallbackContext(void * param_1)	OK
+0x0059ba90	CDXTexture__DecodeState_CreateCallbackContext	void __stdcall CDXTexture__DecodeState_CreateCallbackContext(int param_1)	OK
+0x0059bae0	CDXTexture__AllocFromBank_SplitBlock	int __stdcall CDXTexture__AllocFromBank_SplitBlock(void * param_1, int param_2, uint param_3)	OK
+0x0059bc10	CDXTexture__AllocLinearBlockAndTrack	int __stdcall CDXTexture__AllocLinearBlockAndTrack(void * param_1, int param_2, uint param_3)	OK
+0x0059bcc0	CDXTexture__AllocRowPointerTableAndRows	int __stdcall CDXTexture__AllocRowPointerTableAndRows(void * param_1, int param_2, uint param_3, uint param_4)	OK
+0x0059bd60	CDXTexture__AllocMcuRowPointerTableAndRows	int __stdcall CDXTexture__AllocMcuRowPointerTableAndRows(void * param_1, int param_2, int param_3, uint param_4)	OK
+0x0059be00	CDXTexture__CreateDecodeJobDescriptor	int CDXTexture__CreateDecodeJobDescriptor(void)	OK

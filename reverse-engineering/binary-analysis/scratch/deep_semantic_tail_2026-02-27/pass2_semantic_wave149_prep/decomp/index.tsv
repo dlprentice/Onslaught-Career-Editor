@@ -1,0 +1,21 @@
+address	name	signature	status
+0x004fb670	CUnit__Unk_004fb670	int __thiscall CUnit__Unk_004fb670(void * this, int param_1, int param_2)	OK
+0x004fbcb0	CUnit__Unk_004fbcb0	int __fastcall CUnit__Unk_004fbcb0(void * param_1)	OK
+0x004fc000	CUnit__Unk_004fc000	int __fastcall CUnit__Unk_004fc000(int param_1)	OK
+0x004fc220	CUnit__Unk_004fc220	void __fastcall CUnit__Unk_004fc220(void * param_1)	OK
+0x004fc6e0	CUnit__Unk_004fc6e0	int CUnit__Unk_004fc6e0(void)	OK
+0x004fcdc0	CUnit__Unk_004fcdc0	void __thiscall CUnit__Unk_004fcdc0(void * this, int param_1, uint param_2)	OK
+0x004fce80	CUnit__Unk_004fce80	int CUnit__Unk_004fce80(void)	OK
+0x004fcf00	CUnit__Unk_004fcf00	void __fastcall CUnit__Unk_004fcf00(int param_1)	OK
+0x004fcfa0	CUnit__Unk_004fcfa0	void __fastcall CUnit__Unk_004fcfa0(int param_1)	OK
+0x004fcfe0	CUnit__Unk_004fcfe0	void __fastcall CUnit__Unk_004fcfe0(int param_1)	OK
+0x004fd040	CUnit__Unk_004fd040	void __fastcall CUnit__Unk_004fd040(void * param_1)	OK
+0x004fd5b0	CUnit__Unk_004fd5b0	int __stdcall CUnit__Unk_004fd5b0(int param_1)	OK
+0x004fd7a0	CUnit__Unk_004fd7a0	int __fastcall CUnit__Unk_004fd7a0(int param_1)	OK
+0x004fd830	CUnit__Unk_004fd830	void __thiscall CUnit__Unk_004fd830(void * this, void * param_1, int param_2)	OK
+0x004fd910	CUnit__Unk_004fd910	void __thiscall CUnit__Unk_004fd910(void * this, int param_1, void * param_2)	OK
+0x004fda20	CUnit__Unk_004fda20	void __thiscall CUnit__Unk_004fda20(void * this, int param_1, int param_2)	OK
+0x004fdad0	CUnit__Unk_004fdad0	void __thiscall CUnit__Unk_004fdad0(void * this, void * param_1, int param_2)	OK
+0x004fdc20	CUnit__Unk_004fdc20	void __fastcall CUnit__Unk_004fdc20(int param_1)	OK
+0x004fdcb0	CUnit__Unk_004fdcb0	void __thiscall CUnit__Unk_004fdcb0(void * this, int param_1, int param_2)	OK
+0x004fde30	CUnit__Unk_004fde30	void __fastcall CUnit__Unk_004fde30(void * param_1)	OK

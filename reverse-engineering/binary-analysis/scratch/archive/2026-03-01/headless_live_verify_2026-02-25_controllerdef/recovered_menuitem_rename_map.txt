@@ -1,0 +1,9 @@
+0x00453a50 CMenuItem__VFunc_01_00453a50
+0x00453a60 CMenuItem__VFunc_03_00453a60
+0x00453a70 CMenuItem__VFunc_06_00453a70
+0x00453a80 CMenuItem__VFunc_09_00453a80
+0x00453a90 CMenuItem__scalar_deleting_dtor
+0x00405930 CControllerDefinition__VFunc_03_00405930
+0x004a3140 CMenuItem__Clone
+0x004a3190 CMenuItem__GetText
+0x004a3420 CMenuItem__GetTextWidth

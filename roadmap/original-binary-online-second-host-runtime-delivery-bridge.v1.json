@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "winui-original-binary-second-host-runtime-delivery-bridge.v1",
+  "bridgeScope": "second-host-command-source-to-runtime-delivery-bridge-not-player-ready-online",
+  "status": "adapter-ready-no-accepted-live-second-host-runtime-delivery-proof",
+  "validator": {
+    "script": "tools/winui_safe_copy_online_second_host_runtime_delivery_bridge_check.py",
+    "packageScript": "test:winui-original-binary-second-host-runtime-delivery-bridge",
+    "builder": "tools/build_winui_original_binary_second_host_runtime_delivery_bridge_bundle.py",
+    "validatesPrivateProofSchema": "winui-original-binary-second-host-runtime-delivery-bridge.v1"
+  },
+  "requiredInputs": {
+    "secondHostCommandSourceProofSchema": "winui-original-binary-second-host-command-source.v1",
+    "runtimeExecutorProofSchema": "winui-original-binary-host-authority-runtime-executor.v1",
+    "acceptedCommandId": "second-host-p2-forward-0001",
+    "wouldForwardToPrivateLanCommandId": "private-lan-p2-forward-0001",
+    "requiresUpstreamPrivateLanProofHashMatch": true,
+    "requiresHostAuthorityPrivateRemoteClientProofBinding": true,
+    "acceptedOriginalBinaryGameplaySlots": [
+      "P1",
+      "P2"
+    ],
+    "metadataOnlySlots": [
+      "P3",
+      "P4"
+    ]
+  },
+  "currentEvidence": {
+    "adapterReady": true,
+    "acceptedLiveSecondHostCommandSourceProof": false,
+    "acceptedLiveSecondHostRuntimeDeliveryProof": false,
+    "runtimeDrivenBySecondHostCommandSource": false,
+    "hostJoinControlsMayBeEnabled": false,
+    "baseOnlineMultiplayerReady": false,
+    "multiHostLanPlayProof": false,
+    "publicMatchmakingProof": false,
+    "nativeBeaNetcodeProof": false,
+    "activeP3P4OriginalBinaryGameplayProof": false
+  },
+  "releaseBoundary": {
+    "privateProofReleaseExcludedByPolicy": true,
+    "rawPrivateProofPathPublished": false,
+    "rawPrivateArtifactContentPublished": false,
+    "absolutePrivatePathPublished": false,
+    "rawRuntimePointerPublished": false,
+    "rawRuntimePidPublished": false,
+    "rawCdbLogPathPublished": false,
+    "releaseIncludedPrivateArtifact": false
+  },
+  "nextRequiredProof": {
+    "id": "host-runtime-delivery-from-source-bound-distinct-command-source",
+    "description": "Run a checker-accepted second-host/private-LAN command-source proof whose upstream private-LAN proof hash matches the host-authority private remote-client proof, then prove the copied BEA host runtime was driven from that accepted source with mapped P2 sequence, host-helper receipt, and exact-PID CDB evidence.",
+    "requiredBeforeHostJoinEnablement": true
+  }
+}

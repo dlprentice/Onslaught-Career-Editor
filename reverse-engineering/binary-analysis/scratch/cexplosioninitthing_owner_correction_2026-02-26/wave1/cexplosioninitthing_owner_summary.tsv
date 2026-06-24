@@ -1,0 +1,17 @@
+address	old_name	inferred_owner	xref_count	top_counts
+0x00414cb0	CExplosionInitThing__Unk_00414cb0		1	CDXEngine:1
+0x00444620	CExplosionInitThing__Unk_00444620		0
+0x0044adb0	CExplosionInitThing__Unk_0044adb0		6	CActor:2;CUnit:2;CMonitor:1;OID_Unk_005078f0:1
+0x0046baf0	CExplosionInitThing__Unk_0046baf0	CFEPWingmen	5	CFEPWingmen:3;CFEPMultiplayerStart:2
+0x00479db0	CExplosionInitThing__Unk_00479db0		0
+0x0047a160	CExplosionInitThing__Unk_0047a160		0
+0x004804c0	CExplosionInitThing__Unk_004804c0		0
+0x004879e0	CExplosionInitThing__Unk_004879e0		1	CDXEngine:1
+0x0048ff90	CExplosionInitThing__Unk_0048ff90		2	CDXEngine:1;CPauseMenu:1
+0x004bc2e0	CExplosionInitThing__Unk_004bc2e0		2	CMechGuide:1;CSquadNormal:1
+0x004bc510	CExplosionInitThing__Unk_004bc510		0
+0x004be1d0	CExplosionInitThing__Unk_004be1d0		0
+0x004bed30	CExplosionInitThing__Unk_004bed30		0
+0x004beea0	CExplosionInitThing__Unk_004beea0		0
+0x004c7db0	CExplosionInitThing__Unk_004c7db0	CPDSimpleSprite	2	CPDSimpleSprite:2
+0x004d1f90	CExplosionInitThing__Unk_004d1f90		0

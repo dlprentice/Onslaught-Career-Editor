@@ -1,0 +1,24 @@
+address	name	signature	status
+0x0040c2e0	CEngine__Helper_0040c2e0	int __thiscall CEngine__Helper_0040c2e0(void * this, int param_1, int param_2)	OK
+0x00411bf0	CEngine_Unk_0050a080__Wrapper_00411bf0	void __fastcall CEngine_Unk_0050a080__Wrapper_00411bf0(void * param_1)	OK
+0x00412050	CEngine__Helper_00412050	int __thiscall CEngine__Helper_00412050(void * this, void * param_1, int param_2)	OK
+0x00413cf0	CGeneralVolume__UpdateCurrentEntryProgressAndRefresh	void __fastcall CGeneralVolume__UpdateCurrentEntryProgressAndRefresh(int param_1)	OK
+0x004140d0	CEngine__Helper_004140d0	int __thiscall CEngine__Helper_004140d0(void * this, void * param_1, int param_2)	OK
+0x00428cf0	CUnitAI__ForwardCommandToAttachedNodeThenDispatch	void __thiscall CUnitAI__ForwardCommandToAttachedNodeThenDispatch(void * this, int param_1, int param_2)	OK
+0x00445f40	CUnitAI__UpdateDoorWingEngagement_MidRange	double __fastcall CUnitAI__UpdateDoorWingEngagement_MidRange(void * param_1)	OK
+0x00447a40	CUnitAI__SetDoorWingState2AndClampYawDelta	void __fastcall CUnitAI__SetDoorWingState2AndClampYawDelta(int param_1)	OK
+0x00447bb0	CUnitAI__GetOrGenerateCachedAnchorPoint	void __thiscall CUnitAI__GetOrGenerateCachedAnchorPoint(void * this, int param_1, void * param_2)	OK
+0x004691c0	CFrontEnd__ReleaseParticleHudWaypointResources	void __fastcall CFrontEnd__ReleaseParticleHudWaypointResources(int param_1)	OK
+0x00476fe0	CVBufTexture__Helper_00476fe0	void CVBufTexture__Helper_00476fe0(void)	OK
+0x00478510	CMeshCollisionVolume__TestSweptSphereAgainstTriangleCore	int CMeshCollisionVolume__TestSweptSphereAgainstTriangleCore(void)	OK
+0x00479200	Geometry__SelectClosestPointOnTriangleEdges	void __cdecl Geometry__SelectClosestPointOnTriangleEdges(void * param_1, void * param_2, void * param_3, void * param_4, void * param_5)	OK
+0x00480a30	CCollisionSeekingRound__Helper_00480a30	void __thiscall CCollisionSeekingRound__Helper_00480a30(void * this, int param_1, int param_2)	OK
+0x00480c90	CHLCollisionDetector__HandleCollisionEnter	void __thiscall CHLCollisionDetector__HandleCollisionEnter(void * this, int param_1, void * param_2)	OK
+0x00480db0	CHLCollisionDetector__HandleCollisionExit	void __thiscall CHLCollisionDetector__HandleCollisionExit(void * this, int param_1, void * param_2)	OK
+0x00480e10	CCollisionSeekingRound__Helper_00480e10	void __thiscall CCollisionSeekingRound__Helper_00480e10(void * this, int param_1, void * param_2)	OK
+0x00481060	CHLCollisionDetector__ProcessMapWhoCollisionSweep	void __thiscall CHLCollisionDetector__ProcessMapWhoCollisionSweep(void * this, void * param_1, void * param_2, void * param_3)	OK
+0x004bc3e0	CWorld__Helper_004bc3e0	void __cdecl CWorld__Helper_004bc3e0(void * param_1)	OK
+0x004bc480	CWorld__Helper_004bc480	void __cdecl CWorld__Helper_004bc480(void * param_1)	OK
+0x004c5d50	CPDSimpleSprite__Helper_004c5d50	void __fastcall CPDSimpleSprite__Helper_004c5d50(uint param_1)	OK
+0x004db150	CEngine__SpawnConfiguredProjectile	void __fastcall CEngine__SpawnConfiguredProjectile(int param_1)	OK
+0x005069f0	CEngine__SpawnProjectileBurstFromCurrentPreset	int __fastcall CEngine__SpawnProjectileBurstFromCurrentPreset(void * param_1)	OK

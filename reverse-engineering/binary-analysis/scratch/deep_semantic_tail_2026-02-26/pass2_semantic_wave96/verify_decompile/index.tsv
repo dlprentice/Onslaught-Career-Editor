@@ -1,0 +1,6 @@
+address	name	signature	status
+0x0055d6a0	CRT__SehPopExceptionFrameAndJump	void __stdcall CRT__SehPopExceptionFrameAndJump(void * param_1)	OK
+0x0055d6db	CRT__SehLockUnlockAndJump	void __stdcall CRT__SehLockUnlockAndJump(int param_1, void * param_2)	OK
+0x0055d6e2	CRT__SehRtlUnwindAndRestoreFrame	void __stdcall CRT__SehRtlUnwindAndRestoreFrame(int param_1, int param_2)	OK
+0x0055d767	CRT__SehInvokeCallSettingFrame12	int CRT__SehInvokeCallSettingFrame12(void)	OK
+0x0055d7bb	CRT__SehCallback_Call_005602d2	void __cdecl CRT__SehCallback_Call_005602d2(int param_1, int param_2, int param_3)	OK

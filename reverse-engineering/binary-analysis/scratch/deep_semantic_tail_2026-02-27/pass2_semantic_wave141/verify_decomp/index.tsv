@@ -1,0 +1,8 @@
+address	name	signature	status
+0x005343e0	IScript__PrimaryObjectiveComplete	void __stdcall IScript__PrimaryObjectiveComplete(void * param_1)	OK
+0x00534410	IScript__SecondaryObjectiveComplete	void __stdcall IScript__SecondaryObjectiveComplete(void * param_1)	OK
+0x00534440	IScript__PrimaryObjectiveFailed	void __stdcall IScript__PrimaryObjectiveFailed(void * param_1)	OK
+0x00534470	IScript__SecondaryObjectiveFailed	void __stdcall IScript__SecondaryObjectiveFailed(void * param_1)	OK
+0x00535350	CVM__DestroyAndClearStack	void __fastcall CVM__DestroyAndClearStack(void * param_1)	OK
+0x00535fa0	IScript__Attack	void __thiscall IScript__Attack(void * this, int param_1, void * param_2)	OK
+0x00536ca0	IScript__TriggerHitEffect	void __thiscall IScript__TriggerHitEffect(void * this, int param_1, void * param_2)	OK

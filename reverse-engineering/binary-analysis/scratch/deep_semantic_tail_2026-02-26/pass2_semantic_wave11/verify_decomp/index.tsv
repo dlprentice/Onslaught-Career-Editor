@@ -1,0 +1,4 @@
+address	name	signature	status
+0x005016b0	InitShaderCapabilityFlagsAndCVar	void InitShaderCapabilityFlagsAndCVar(void)	OK
+0x00527da0	CVBufTexture__MarkAccepted	void __fastcall CVBufTexture__MarkAccepted(int param_1)	OK
+0x00549570	CMeshRenderer__RenderMeshCore	void CMeshRenderer__RenderMeshCore(void)	OK

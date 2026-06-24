@@ -1,0 +1,12 @@
+address	old_name	new_name	evidence
+0x005768f1	CFastVB__Unk_005768f1	CFastVB__DispatchIndirect_00656f3c	Guard call then indirect jump/call through DAT_00656f3c.
+0x00576b3a	CFastVB__Unk_00576b3a	CFastVB__DispatchIndirect_00656fc4	Guard call then indirect jump/call through DAT_00656fc4.
+0x00576dfd	CFastVB__Unk_00576dfd	CFastVB__DispatchIndirect_00656f78	Guard call then indirect jump/call through DAT_00656f78.
+0x005771af	CFastVB__Unk_005771af	CFastVB__DispatchIndirect_00656fb4	Guard call then indirect call through DAT_00656fb4 with 4 forwarded args.
+0x005775b0	CFastVB__Unk_005775b0	CFastVB__DispatchIndirect_00656fc8	Guard call then indirect jump/call through DAT_00656fc8.
+0x005776d3	CFastVB__Unk_005776d3	CFastVB__DispatchIndirect_00656fcc	Guard call then indirect jump/call through DAT_00656fcc.
+0x005776e4	CFastVB__Unk_005776e4	CFastVB__DispatchIndirect_00656fd4_ReturnInt	Guard call then indirect call through DAT_00656fd4 returning int.
+0x0057798e	CFastVB__Unk_0057798e	CFastVB__DispatchIndirect_00656fa4	Guard call then indirect call through DAT_00656fa4 with 3 forwarded args.
+0x00577a0a	CFastVB__Unk_00577a0a	CFastVB__DispatchIndirect_00656f94	Guard call then indirect call through DAT_00656f94 with 4 forwarded args.
+0x005784a9	CFastVB__Unk_005784a9	CFastVB__DispatchIndirect_00657044	Guard call then indirect jump/call through DAT_00657044.
+0x00579184	CFastVB__Unk_00579184	CFastVB__NormalizeQuaternionCopy	Computes quaternion length^2, zeroes near-zero input, otherwise scales to unit length and copies to destination.

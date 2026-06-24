@@ -1,0 +1,13 @@
+address	name	signature	status
+0x0056611f	CDXTexture__Unk_0056611f	void __cdecl CDXTexture__Unk_0056611f(void * param_1)	OK
+0x0056614c	CDXTexture__Unk_0056614c	int CDXTexture__Unk_0056614c(void)	OK
+0x00566294	CDXTexture__Unk_00566294	int __cdecl CDXTexture__Unk_00566294(int param_1)	OK
+0x005662f1	CDXTexture__Unk_005662f1	int __cdecl CDXTexture__Unk_005662f1(int param_1)	OK
+0x00566339	CDXTexture__Unk_00566339	uint __cdecl CDXTexture__Unk_00566339(int param_1)	OK
+0x0056bdc9	CDXTexture__Unk_0056bdc9	void __cdecl CDXTexture__Unk_0056bdc9(int param_1)	OK
+0x0056cbb4	CTexture__Unk_0056cbb4	void CTexture__Unk_0056cbb4(void)	OK
+0x0056cbe2	CTexture__Unk_0056cbe2	void CTexture__Unk_0056cbe2(void)	OK
+0x0056aff4	CDXTexture__Unk_0056aff4	int CDXTexture__Unk_0056aff4(void)	OK
+0x0056b117	CDXTexture__Unk_0056b117	int __cdecl CDXTexture__Unk_0056b117(uint param_1, int param_2)	OK
+0x0056b193	CDXTexture__Unk_0056b193	int __cdecl CDXTexture__Unk_0056b193(uint param_1)	OK
+0x00569449	CDXTexture__Unk_00569449	uint __cdecl CDXTexture__Unk_00569449(uint param_1, uint param_2)	OK

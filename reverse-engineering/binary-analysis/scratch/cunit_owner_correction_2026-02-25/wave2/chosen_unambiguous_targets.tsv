@@ -1,0 +1,5 @@
+address	old_name	inferred_owner	xref_count	top_counts
+0x004e6640	CUnit__Unk_004e6640	CThing	1	CThing:1
+0x004f0200	CUnit__Unk_004f0200	CLTShell	2	CLTShell:2
+0x004f2a30	CUnit__Unk_004f2a30	CLTShell	1	CLTShell:1
+0x004f74b0	CUnit__Unk_004f74b0	CDXBattleLine	1	CDXBattleLine:1

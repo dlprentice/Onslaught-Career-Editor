@@ -1,0 +1,105 @@
+<UserControl x:Class="Onslaught___Career_Editor.Views.GoodieViewerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="500" d:DesignWidth="900">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <GroupBox Grid.Row="0" Header="Source File" Margin="0,0,0,8">
+            <StackPanel Margin="8">
+                <Grid Margin="0,0,0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <ComboBox x:Name="SaveFilesComboBox"
+                              Grid.Column="0"
+                              MinWidth="360"
+                              Margin="0,0,8,0"
+                              SelectionChanged="SaveFilesComboBox_SelectionChanged"
+                              ToolTip="Detected .bes/.bea files from configured game directories"/>
+
+                    <Button Grid.Column="1"
+                            Content="Refresh"
+                            Margin="0,0,8,0"
+                            Padding="12,4"
+                            Click="RefreshSaveFiles_Click"/>
+
+                    <Button Grid.Column="2"
+                            Content="Browse..."
+                            Padding="12,4"
+                            Click="BrowseButton_Click"/>
+                </Grid>
+
+                <TextBox x:Name="FilePathTextBox"
+                         IsReadOnly="True"
+                         ToolTip="Active file path"/>
+            </StackPanel>
+        </GroupBox>
+
+        <GroupBox Grid.Row="1" Header="Filters" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal" Margin="8,6">
+                <TextBlock Text="State:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <ComboBox x:Name="StateFilterComboBox"
+                          Width="180"
+                          Margin="0,0,12,0"
+                          SelectionChanged="StateFilterComboBox_SelectionChanged">
+                    <ComboBoxItem Content="All"/>
+                    <ComboBoxItem Content="NEW"/>
+                    <ComboBoxItem Content="OLD"/>
+                    <ComboBoxItem Content="LOCKED"/>
+                    <ComboBoxItem Content="INSTRUCTIONS"/>
+                    <ComboBoxItem Content="OTHER"/>
+                    <ComboBoxItem Content="RESERVED"/>
+                </ComboBox>
+
+                <CheckBox x:Name="ShowReservedCheckBox"
+                          Content="Show reserved slots (233-299)"
+                          IsChecked="True"
+                          VerticalAlignment="Center"
+                          Margin="0,0,12,0"
+                          Checked="ShowReservedCheckBox_Changed"
+                          Unchecked="ShowReservedCheckBox_Changed"/>
+
+                <Button x:Name="ReloadButton"
+                        Content="Reload"
+                        Padding="12,4"
+                        Click="ReloadButton_Click"/>
+            </StackPanel>
+        </GroupBox>
+
+        <DataGrid x:Name="GoodiesDataGrid"
+                  Grid.Row="2"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  Margin="0,0,0,8"
+                  AlternatingRowBackground="{StaticResource PageBackgroundBrush}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="70"/>
+                <DataGridTextColumn Header="Offset" Binding="{Binding FileOffset}" Width="100"/>
+                <DataGridTextColumn Header="State" Binding="{Binding State}" Width="130"/>
+                <DataGridTextColumn Header="Raw" Binding="{Binding RawValue}" Width="120"/>
+                <DataGridTextColumn Header="Scope" Binding="{Binding Scope}" Width="120"/>
+                <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <TextBlock x:Name="SummaryTextBlock"
+                   Grid.Row="3"
+                   Text="Load a .bes/.bea file to inspect goodie states."
+                   TextWrapping="Wrap"
+                   FontSize="12"/>
+    </Grid>
+</UserControl>

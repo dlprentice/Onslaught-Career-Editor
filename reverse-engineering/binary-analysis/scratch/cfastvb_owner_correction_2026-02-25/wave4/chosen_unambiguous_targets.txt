@@ -1,0 +1,2 @@
+0x00574476	CFastVB__Unk_00574476	CDXTexture	2	CDXTexture:2
+0x0059c650	CFastVB__Unk_0059c650	CTexture	5	<no_function>:3;CTexture:2

@@ -1,0 +1,2 @@
+0x00480e10	CUnitAI__Unk_00480e10	CCollisionSeekingRound
+0x0049bd50	CUnitAI__Unk_0049bd50	CMCMech

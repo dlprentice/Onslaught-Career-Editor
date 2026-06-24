@@ -1,0 +1,23 @@
+address	name	signature	status
+0x0056235d	CRT__MsizeByPointer	int __cdecl CRT__MsizeByPointer(int param_1)	OK
+0x00562537	CRT__RaiseFloatingPointException	int CRT__RaiseFloatingPointException(void)	OK
+0x00564d79	CRT__AcquireFileStreamSlot	int CRT__AcquireFileStreamSlot(void)	OK
+0x00564e41	CRT__CloseFd	int __cdecl CRT__CloseFd(uint param_1)	OK
+0x00564e9e	CRT__CloseFd_NoLock	int __cdecl CRT__CloseFd_NoLock(uint param_1)	OK
+0x0056586a	CRT__SetLocale	int __cdecl CRT__SetLocale(int param_1, void * param_2)	OK
+0x00565ab0	CRT__SetLocaleCategory	int __cdecl CRT__SetLocaleCategory(int param_1, int param_2)	OK
+0x00565bcb	CRT__BuildCompositeLocaleString	int CRT__BuildCompositeLocaleString(void)	OK
+0x00565c84	CRT__ResolveLocaleNameAndMetadata	int __cdecl CRT__ResolveLocaleNameAndMetadata(void * param_1, void * param_2, void * param_3, void * param_4)	OK
+0x0056668d	CRT__SbHeapAllocBlock	int * __cdecl CRT__SbHeapAllocBlock(void * param_1)	OK
+0x00566996	CRT__SbHeapGrowRegionTable	int CRT__SbHeapGrowRegionTable(void)	OK
+0x00566a47	CRT__SbHeapCommitRegion	int __cdecl CRT__SbHeapCommitRegion(int param_1)	OK
+0x00566e38	CRT__SbHeapCreateRegionPool	int CRT__SbHeapCreateRegionPool(void)	OK
+0x005670eb	CRT__SbHeapReleasePageBlock	void __cdecl CRT__SbHeapReleasePageBlock(int param_1, int param_2, void * param_3)	OK
+0x00567130	CRT__SbHeapAllocDeferredBlock	int * __cdecl CRT__SbHeapAllocDeferredBlock(uint param_1)	OK
+0x0056756a	CRT__WriteFdTextMode_NoLock	int __cdecl CRT__WriteFdTextMode_NoLock(int param_1, void * param_2, uint param_3)	OK
+0x00567bfb	CRT__ReadFdTextMode_NoLock	int __cdecl CRT__ReadFdTextMode_NoLock(uint param_1, void * param_2, void * param_3)	OK
+0x00568b76	CRT__LseekFd	int __cdecl CRT__LseekFd(uint param_1, int param_2, int param_3)	OK
+0x00568bdb	CRT__LseekFd_NoLock	int __cdecl CRT__LseekFd_NoLock(uint param_1, int param_2, int param_3)	OK
+0x00568dc6	CRT__ParseCommandLineToken	int CRT__ParseCommandLineToken(void)	OK
+0x00568e1e	CRT__BuildEnvironTable	void CRT__BuildEnvironTable(void)	OK
+0x00568ed7	CRT__BuildArgvTable	void CRT__BuildArgvTable(void)	OK

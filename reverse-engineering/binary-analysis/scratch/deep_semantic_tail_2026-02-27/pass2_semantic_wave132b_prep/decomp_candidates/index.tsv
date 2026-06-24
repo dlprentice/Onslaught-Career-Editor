@@ -1,0 +1,6 @@
+address	name	signature	status
+0x0044adb0	CExplosionInitThing__Unk_0044adb0	float * __thiscall CExplosionInitThing__Unk_0044adb0(void * this, void * param_1, int param_2)	OK
+0x00451a40	CUnitAI__Unk_00451a40	int * __fastcall CUnitAI__Unk_00451a40(int param_1)	OK
+0x00479f30	CUnitAI__Unk_00479f30	double __fastcall CUnitAI__Unk_00479f30(void * param_1)	OK
+0x0047a0b0	CUnitAI__Unk_0047a0b0	double __fastcall CUnitAI__Unk_0047a0b0(int param_1)	OK
+0x0047bf60	CUnitAI__Unk_0047bf60	void __fastcall CUnitAI__Unk_0047bf60(void * param_1)	OK

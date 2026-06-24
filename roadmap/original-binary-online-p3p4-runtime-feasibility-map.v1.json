@@ -1,0 +1,233 @@
+{
+  "schemaVersion": "winui-original-binary-online-p3p4-runtime-feasibility-map.v1",
+  "status": "complete public-safe P3/P4 blast-radius map; no BEA launch or runtime proof",
+  "date": "2026-06-19",
+  "scope": "original-binary-online-p3p4-runtime-feasibility-map",
+  "purpose": "Turn the current beyond-two-player guard into an actionable map of the original-binary systems that must be proven or changed before any active P3/P4 gameplay attempt.",
+  "proofBoundary": {
+    "mapProofClass": "static-blast-radius-map-not-runtime-proof",
+    "p3p4FeasibilityScope": "static-blast-radius-not-runtime-proof",
+    "newBeaLaunchCount": 0,
+    "cdbAttachCount": 0,
+    "ghidraMutationCount": 0,
+    "maxOriginalBinaryActiveSlotsProven": 2,
+    "maxRuntimePlayerSlotsProven": 2,
+    "maxRetailPlayersProven": 2,
+    "retailViewpointsProven": 2,
+    "nPlayerOriginalBinaryRuntimeProof": 0,
+    "moreThanTwoOriginalBinaryRuntimeProofSlices": 0,
+    "acceptedOriginalBinaryGameplaySlots": [
+      "P1",
+      "P2"
+    ],
+    "metadataOnlySlots": [
+      "P3",
+      "P4"
+    ],
+    "rejectedGameplayRouteSlots": [
+      "P3",
+      "P4"
+    ],
+    "p3p4GameplayInputRejected": true,
+    "moreThanTwoOriginalBinaryRuntimeProof": false,
+    "activeP3P4OriginalBinaryGameplayProof": false,
+    "sourceOnlyMaxPlayersIsRuntimeProof": false,
+    "quadSplitBranchIsRuntimeProof": false,
+    "mapCompleteForRuntimeAttempt": false,
+    "safeToPatchMPlayersAbove2": false,
+    "beyondTwoPlayersRequiresNewProofClass": true,
+    "absenceOfCurrentProofIsNotProofOfPermanentAbsence": true,
+    "permanentImpossibilityClaim": false
+  },
+  "sourceStaticAnchors": {
+    "capacityDeclaration": "references/Onslaught/game.h:22 defines MAX_PLAYERS 4 and game.h:306-308 stores mPlayer/mController/mCurrentCamera arrays at MAX_PLAYERS capacity",
+    "currentPlayerCountGate": "references/Onslaught/game.cpp:705-708 sets mPlayers to 2 when WORLD.IsMultiplayer() is true, otherwise 1",
+    "controllerAssignmentTrap": "references/Onslaught/game.cpp:723-728 assigns player 0 from FRONTEND and then comments 'I don't support more than 2 players.' with ASSERT(i == 1)",
+    "engineViewpointCeiling": "references/Onslaught/engine.h:16 defines VIEWPOINTS 2; engine.h:70,93-94 stores mCamera/mViewport/mPlayer by VIEWPOINTS",
+    "latentQuadSplitBranch": "references/Onslaught/game.cpp:1793-1816 contains a 3/4-player quad-split branch with SetViewpoint(2/3), but this is not proof that retail runtime reaches it safely",
+    "reconnectTwoSlotShape": "references/Onslaught/game.cpp:1827-1828 renders RECONNECT_INTERFACE[0] and [1] only; game.cpp:1886-1892 gates unpause on players/controllers 0 and 1",
+    "livesRespawnTwoSlotShape": "references/Onslaught/game.h:300 stores mPlayer1Lives,mPlayer2Lives; game.cpp:3106-3162 and 3227-3234 switch on player 0/1 lives/respawn only",
+    "frontendControllerShape": "references/Onslaught/FrontEnd.cpp:444-448 returns player0 controller port; game.cpp:728 uses FEPMultiplayerStart.GetPlayer1ControllerPort for the second player",
+    "runtimeRetailAnchors": [
+      "0x004725d0 CGame__IsMultiplayer",
+      "0x0050d7d0 CWorld__IsMultiplayerMode",
+      "0x00528b50 CEngine__SetNumViewpoints",
+      "0x0044a020 CEngine__SetViewpoint",
+      "0x004d3110 CPlayer__ReceiveButtonActionState"
+    ]
+  },
+  "blastRadiusRows": [
+    {
+      "id": "source-max-players-capacity",
+      "area": "CGame storage capacity",
+      "anchors": [
+        "references/Onslaught/game.h:22",
+        "references/Onslaught/game.h:306-308",
+        "references/Onslaught/game.cpp:320-326"
+      ],
+      "finding": "The source has four-slot game-side arrays for players, controllers, and current cameras.",
+      "risk": "Capacity is not activation. This cannot raise the proven original-binary runtime player count above two.",
+      "evidenceClass": "source-static",
+      "supportsOriginalBinaryRuntimeProof": false,
+      "runtimeProofStatus": "unproven",
+      "beforeRuntimeAttempt": "Verify retail layouts and all users of these arrays for P3/P4-safe indexing."
+    },
+    {
+      "id": "current-mplayers-gate",
+      "area": "Runtime player-count selection",
+      "anchors": [
+        "references/Onslaught/game.cpp:705-708",
+        "references/Onslaught/game.cpp:4011-4014"
+      ],
+      "finding": "Current source setup derives multiplayer from WORLD/level state and assigns mPlayers=2, not 3 or 4.",
+      "risk": "A naive patch that only forces mPlayers above two would enter paths not proven safe in the retail binary.",
+      "evidenceClass": "source-static",
+      "supportsOriginalBinaryRuntimeProof": false,
+      "runtimeProofStatus": "unproven",
+      "beforeRuntimeAttempt": "Find or create a retail-safe player-count authority path and prove all downstream allocations/routes."
+    },
+    {
+      "id": "controller-assignment-p1-p2-trap",
+      "area": "Controller ownership",
+      "anchors": [
+        "references/Onslaught/game.cpp:723-728",
+        "references/Onslaught/FrontEnd.cpp:444-448"
+      ],
+      "finding": "The setup path has explicit player-0/player-1 controller selection and an assert/comment against more than two players.",
+      "risk": "P3/P4 input routing cannot be inferred from session metadata or MAX_PLAYERS.",
+      "evidenceClass": "source-static",
+      "supportsOriginalBinaryRuntimeProof": false,
+      "runtimeProofStatus": "unproven",
+      "beforeRuntimeAttempt": "Map retail controller construction, frontend selection, options binding, and CPlayer input dispatch for P3/P4."
+    },
+    {
+      "id": "engine-viewpoints-two",
+      "area": "Renderer/viewpoint storage",
+      "anchors": [
+        "references/Onslaught/engine.h:16",
+        "references/Onslaught/engine.h:70",
+        "references/Onslaught/engine.h:93-94",
+        "references/Onslaught/game.cpp:1747-1816"
+      ],
+      "finding": "Game render code contains latent SetViewpoint(2/3) calls, but CEngine source storage is declared with VIEWPOINTS=2.",
+      "risk": "Quad-split source code alone may overrun or alias retail engine viewpoint storage if activated blindly.",
+      "evidenceClass": "source-static",
+      "supportsOriginalBinaryRuntimeProof": false,
+      "runtimeProofStatus": "unproven",
+      "beforeRuntimeAttempt": "Prove retail CEngine storage/callsites can hold more than two viewpoints or design a non-splitscreen P3/P4 representation."
+    },
+    {
+      "id": "reconnect-interface-two",
+      "area": "Controller disconnect/reconnect UI",
+      "anchors": [
+        "references/Onslaught/game.cpp:1827-1828",
+        "references/Onslaught/game.cpp:1886-1892",
+        "references/Onslaught/Controller.cpp:472-478"
+      ],
+      "finding": "Reconnect handling is visibly shaped around interface slots 0 and 1.",
+      "risk": "P3/P4 controller loss/reconnect behavior would be undefined without additional mapping or replacement UX.",
+      "evidenceClass": "source-static",
+      "supportsOriginalBinaryRuntimeProof": false,
+      "runtimeProofStatus": "unproven",
+      "beforeRuntimeAttempt": "Define and prove P3/P4 disconnect policy, including whether extra slots are gameplay, spectator, or remote-only."
+    },
+    {
+      "id": "lives-respawn-results-two",
+      "area": "Deaths, respawn, and results",
+      "anchors": [
+        "references/Onslaught/game.h:300",
+        "references/Onslaught/game.cpp:2505-2551",
+        "references/Onslaught/game.cpp:3106-3162",
+        "references/Onslaught/game.cpp:3227-3234",
+        "references/Onslaught/game.cpp:4024-4040"
+      ],
+      "finding": "Lives and respawn/result logic are P1/P2-shaped in source.",
+      "risk": "Co-op/versus semantics cannot be scaled by transport alone; P3/P4 deaths and win/loss rules need proof or redesign.",
+      "evidenceClass": "source-static",
+      "supportsOriginalBinaryRuntimeProof": false,
+      "runtimeProofStatus": "unproven",
+      "beforeRuntimeAttempt": "Map retail death/respawn/win paths and decide whether P3/P4 are active players, spectators, or external clients."
+    },
+    {
+      "id": "input-flush-loop-by-mplayers",
+      "area": "Per-frame controller flushing",
+      "anchors": [
+        "references/Onslaught/game.cpp:1921-1927",
+        "references/Onslaught/game.cpp:1935-1939"
+      ],
+      "finding": "Per-frame controller flush loops scale with mPlayers.",
+      "risk": "This is an enabler only after player count, controller allocation, and engine storage are proven safe.",
+      "evidenceClass": "source-static",
+      "supportsOriginalBinaryRuntimeProof": false,
+      "runtimeProofStatus": "unproven",
+      "beforeRuntimeAttempt": "Use exact-PID CDB to prove P3/P4 CController and CPlayer receive paths before any gameplay claim."
+    },
+    {
+      "id": "gameplay-systems-multiplayer-branches",
+      "area": "Gameplay systems that branch on multiplayer",
+      "anchors": [
+        "references/Onslaught/BattleEngine.cpp:538",
+        "references/Onslaught/BattleEngine.cpp:2246",
+        "references/Onslaught/BattleEngine.cpp:3084",
+        "references/Onslaught/Camera.cpp:854",
+        "references/Onslaught/DXEngine.cpp:691"
+      ],
+      "finding": "Several gameplay/render/camera paths alter behavior for multiplayer generally, not for an arbitrary player count.",
+      "risk": "P3/P4 may inherit two-player assumptions in camera, render LOD, target/audio/HUD behavior, and collision/display tuning.",
+      "evidenceClass": "source-static",
+      "supportsOriginalBinaryRuntimeProof": false,
+      "runtimeProofStatus": "unproven",
+      "beforeRuntimeAttempt": "Audit retail multiplayer branches for exact dependence on mPlayers, viewpoint index, player pointer, and controller slot."
+    }
+  ],
+  "hardBlockersBeforeP3P4Runtime": [
+    "Retail CEngine viewpoint storage is not proven above two viewpoints.",
+    "Current player-count setup does not produce mPlayers=3 or mPlayers=4.",
+    "Controller assignment has explicit P1/P2 logic and an assert/comment against more than two players.",
+    "Reconnect UI and controller-disconnect policy are P1/P2-shaped.",
+    "Lives, respawn, and result flows are P1/P2-shaped.",
+    "P3/P4 CPlayer__ReceiveButtonActionState rows have not been observed in copied retail runtime.",
+    "No visible or state proof exists for more than two active original-binary players.",
+    "No co-op/versus/team/spectator runtime mode semantics are proven for more than two active original-binary slots."
+  ],
+  "runtimeAttemptPrerequisites": [
+    "fresh retail Ghidra/decompile/xref evidence for mPlayers assignment and all direct users before any patch proposal",
+    "retail layout proof for CGame player/controller/camera arrays and CEngine viewpoint storage",
+    "exact-PID CDB proof of P3/P4 controller allocation and routing, if attempting runtime activation",
+    "exact-PID CDB proof of P3/P4 CPlayer__ReceiveButtonActionState rows",
+    "P1/P2 regression proof after any P3/P4-oriented change",
+    "visual or state proof for more than two active viewpoints or a documented non-splitscreen representation",
+    "death/respawn/result policy proof for the intended mode family",
+    "public-safe docs/checkers that keep same-host, second-host, matchmaking, and native-netcode claims separate"
+  ],
+  "requiredNewProofClassForP3P4": [
+    "fresh retail static map for mPlayers, player/controller/camera arrays, CEngine viewpoint storage, HUD/layout, frontend selection, result/death/respawn flows, and render loops",
+    "retail Ghidra/decompile/xref evidence that any patched or rebuilt original-binary profile can safely allocate and route more than two active players",
+    "copied-runtime exact-PID CDB evidence for P3/P4 controller dispatch and CPlayer__ReceiveButtonActionState rows",
+    "copied-runtime visual or state evidence for more than two active viewpoints or an intentional non-splitscreen P3/P4 representation",
+    "explicit regression that P1/P2 behavior remains intact",
+    "updated mode proof for co-op, free-for-all, team-versus, or spectator/admin semantics before any mode claim"
+  ],
+  "nextProofLadder": [
+    "same-host session-control proof for join-ticket lifetime/replay/reconnect/spectator-admin metadata",
+    "real second-host private command-source proof when a separate physical/private host is available",
+    "retail Ghidra P3/P4 blast-radius deep dive for CEngine/CGame/controller/result paths before any runtime activation",
+    "only after those gates, copied-runtime P3/P4 allocation/input observation in an app-owned safe copy"
+  ],
+  "nonClaims": {
+    "moreThanTwoOriginalBinaryRuntimeProof": false,
+    "activeP3P4OriginalBinaryGameplayProof": false,
+    "coOpModeRuntimeProof": false,
+    "versusModeRuntimeProof": false,
+    "teamVersusRuntimeProof": false,
+    "multiHostLanProof": false,
+    "secondPhysicalHostProof": false,
+    "publicMatchmakingProof": false,
+    "nativeBeaNetcodeProof": false,
+    "deterministicSyncProof": false,
+    "rollbackProof": false,
+    "antiCheatProof": false,
+    "rebuildParityProof": false,
+    "noNoticeableDifferenceProof": false
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-02-25",
+  "purpose": "post-deadlock resume map for final Auto tail",
+  "remaining_auto_count": 9,
+  "entries": [
+    {
+      "addr": "0x004114d0",
+      "target_name": "CGeneralVolume__Unk_004114d0"
+    },
+    {
+      "addr": "0x004127a0",
+      "target_name": "CGeneralVolume__Unk_004127a0"
+    },
+    {
+      "addr": "0x00412d80",
+      "target_name": "CGeneralVolume__Unk_00412d80"
+    },
+    {
+      "addr": "0x00412f70",
+      "target_name": "CGeneralVolume__Unk_00412f70"
+    },
+    {
+      "addr": "0x00413160",
+      "target_name": "CGeneralVolume__Unk_00413160"
+    },
+    {
+      "addr": "0x00413360",
+      "target_name": "CGeneralVolume__Unk_00413360"
+    },
+    {
+      "addr": "0x004135e0",
+      "target_name": "CGeneralVolume__Unk_004135e0"
+    },
+    {
+      "addr": "0x00414970",
+      "target_name": "CGeneralVolume__Unk_00414970"
+    },
+    {
+      "addr": "0x00414a40",
+      "target_name": "CGeneralVolume__Unk_00414a40"
+    }
+  ],
+  "note": "Manual-first for this tranche: user UI rename + save, agent read-back only."
+}

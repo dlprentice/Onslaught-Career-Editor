@@ -1,0 +1,9 @@
+address	name	signature	status
+0x0040f2f0	CBattleEngine__GetWeaponProfileByIndex	int __cdecl CBattleEngine__GetWeaponProfileByIndex(int param_1)	OK
+0x00414cb0	CExplosionInitThing__PopulateBattleLinePoints	void __fastcall CExplosionInitThing__PopulateBattleLinePoints(int param_1)	OK
+0x00440eb0	CDamage__InsertCellEntry	int CDamage__InsertCellEntry(void)	OK
+0x00440f80	CDamage__RemoveCellEntryByCoords	void __thiscall CDamage__RemoveCellEntryByCoords(void * this, int param_1, int param_2, int param_3, int param_4)	OK
+0x004879e0	CExplosionInitThing__AccumulateOverlayMarkerFromViewpoint	void __thiscall CExplosionInitThing__AccumulateOverlayMarkerFromViewpoint(void * this, void * param_1, int param_2, float param_3)	OK
+0x004a17b0	CMemoryManager__UnlinkAndReleaseMutex	void __fastcall CMemoryManager__UnlinkAndReleaseMutex(void * param_1)	OK
+0x004b93f0	CMessageLog__Render	void __fastcall CMessageLog__Render(void * param_1)	OK
+0x0055e902	CDXEngine__InsertionSortGeneric	void __cdecl CDXEngine__InsertionSortGeneric(uint param_1, uint param_2, int param_3, void * param_4)	OK

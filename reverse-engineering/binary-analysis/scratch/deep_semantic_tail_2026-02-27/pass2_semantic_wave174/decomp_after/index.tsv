@@ -1,0 +1,21 @@
+address	name	signature	status
+0x00569ad5	CRT__BuildRoundedMantissaDigits	void __cdecl CRT__BuildRoundedMantissaDigits(void * param_1, int param_2, int param_3)	OK
+0x00569b4c	CRT__ConvertLongDoubleToDecimalRecord	int * __cdecl CRT__ConvertLongDoubleToDecimalRecord(int param_1, int param_2, void * param_3, void * param_4)	OK
+0x00569ba8	CRT__NormalizeLongDouble80MantissaExp	void __cdecl CRT__NormalizeLongDouble80MantissaExp(void * param_1, void * param_2)	OK
+0x0056f280	CFastVB__CountWordElements	int __fastcall CFastVB__CountWordElements(int param_1)	OK
+0x0056f2a0	CFastVB__InsertWordSpanFilled	void __thiscall CFastVB__InsertWordSpanFilled(void * this, int param_1, void * param_2, uint param_3, void * param_4)	OK
+0x0056f4b0	CFastVB__CopyWordRangeToBufferAndAdvanceEnd	void __thiscall CFastVB__CopyWordRangeToBufferAndAdvanceEnd(void * this, int param_1, void * param_2, void * param_3)	OK
+0x0056f500	CFastVB__InitWordSpanHeader	void __fastcall CFastVB__InitWordSpanHeader(void * param_1)	OK
+0x0056f540	CFastVB__FindEdgeRecord	int __cdecl CFastVB__FindEdgeRecord(int param_1, int param_2, int param_3)	OK
+0x0056f580	CFastVB__ResolveOppositeAdjacencyRecord	int __cdecl CFastVB__ResolveOppositeAdjacencyRecord(int param_1, int param_2, int param_3, int param_4)	OK
+0x0056f5c0	CFastVB__ContainsTriangleTriplet	uint __stdcall CFastVB__ContainsTriangleTriplet(void * param_1, int param_2)	OK
+0x0056f620	CFastVB__BuildTriangleAdjacency	void __thiscall CFastVB__BuildTriangleAdjacency(void * this, int param_1, uint param_2, int param_3, uint param_4)	OK
+0x0056fce0	CFastVB__SelectTriangleWithMaxOpenEdges	uint __stdcall CFastVB__SelectTriangleWithMaxOpenEdges(int param_1, int param_2)	OK
+0x0056fdc0	CFastVB__SelectNextStripTriangle	int __thiscall CFastVB__SelectNextStripTriangle(void * this, int param_1, int param_2, int param_3)	OK
+0x0056fe70	CFastVB__AreTriangleVertexSetsEquivalent	int __cdecl CFastVB__AreTriangleVertexSetsEquivalent(void * param_1, void * param_2)	OK
+0x0056fec0	CFastVB__GetSharedVerticesBetweenTriangles	void __cdecl CFastVB__GetSharedVerticesBetweenTriangles(void * param_1, void * param_2, void * param_3, void * param_4)	OK
+0x00570000	CFastVB__BuildTriangleStripFromSeedRecord	void __thiscall CFastVB__BuildTriangleStripFromSeedRecord(void * this, void * param_1, int param_2)	OK
+0x00570870	CFastVB__StampRecordOwnerFields	void __thiscall CFastVB__StampRecordOwnerFields(void * this, int param_1, int param_2)	OK
+0x00571060	CFastVB__IsEven	bool __stdcall CFastVB__IsEven(uint param_1)	OK
+0x00571080	CFastVB__IsDirectedEdgeInTriangle	bool __stdcall CFastVB__IsDirectedEdgeInTriangle(void * param_1, int param_2, int param_3)	OK
+0x005710d0	CFastVB__EmitTriangleStripIndexBuffer	void __stdcall CFastVB__EmitTriangleStripIndexBuffer(int param_1, int param_2, int param_3, void * param_4)	OK

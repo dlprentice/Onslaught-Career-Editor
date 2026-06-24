@@ -1,0 +1,2 @@
+address	old_name	expected_new_name	actual_name	status
+0x0055ed50	CTexture__Unk_0055ed50	CDXTexture__Helper_0055ed50	CDXTexture__Helper_0055ed50	OK

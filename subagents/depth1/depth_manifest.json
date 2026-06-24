@@ -1,0 +1,45 @@
+{
+  "depth": 1,
+  "completed_at": "2026-03-04 15:33:02 -0500",
+  "expected_files": [
+    "lane01_csharp_app_inventory.md",
+    "lane02_python_app_inventory.md",
+    "lane03_test_coverage_inventory.md",
+    "lane04_binary_patch_inventory.md",
+    "lane05_reverse_engineering_docs_inventory.md",
+    "lane06_lorebook_mirror_inventory.md",
+    "lane07_roadmap_process_inventory.md",
+    "lane08_skill_alignment_inventory.md",
+    "lane09_release_risk_inventory.md",
+    "lane10_reference_submodule_inventory.md"
+  ],
+  "missing_files": [],
+  "state_file_hashes_pre": {
+    "developer_agent_state.json": "0321b3d94daa70c33716bfd1844c4ff80b44a99df3d4c4d05f307e25e1a4f1ae",
+    "documentation_agent_state.json": "676f332e616cd50959b7cb21a87943ecd6f50cd890de4d43c1bbf1f5105ee5e1",
+    "re_orchestrator_state.json": "ec3d5e0355a66f4ae0f2d13b412009f913d447705e600cabae6ecdac43117f5d"
+  },
+  "state_file_hashes_post": {
+    "developer_agent_state.json": "0321b3d94daa70c33716bfd1844c4ff80b44a99df3d4c4d05f307e25e1a4f1ae",
+    "documentation_agent_state.json": "676f332e616cd50959b7cb21a87943ecd6f50cd890de4d43c1bbf1f5105ee5e1",
+    "re_orchestrator_state.json": "ec3d5e0355a66f4ae0f2d13b412009f913d447705e600cabae6ecdac43117f5d"
+  },
+  "state_files_unchanged": true,
+  "notes": [
+    "All depth1 reports written by subagents under subagents/depth1."
+  ],
+  "file_checksums_sha256": {
+    "lane01_csharp_app_inventory.md": "dc93722c118bb13baa51347b28ca5eec61bb424bf88c9817fb40b12f0b078fe4",
+    "lane02_python_app_inventory.md": "2d520e786feea64dea8a27a6123c330f8d7f0fe17713f1fded673797b8289e84",
+    "lane03_test_coverage_inventory.md": "3513ac0a2837a2ef0464cf153eacc304e73f12edd2adae7f5d616c0ac31b1850",
+    "lane04_binary_patch_inventory.md": "a7322c00654cd95608ddc39f59023d15f6d3c10f6f392abfd0c105b3585ff33a",
+    "lane05_reverse_engineering_docs_inventory.md": "382bbec0c48203f76040bec345f97c78a5fe69bea29707d8f51c5a6c90ea0350",
+    "lane06_lorebook_mirror_inventory.md": "e89a7dd2f38970d2ce0567fd76ab42dac164f97d0808a97e0c6aab931e7336c4",
+    "lane07_roadmap_process_inventory.md": "df03e72fdc102aaf4eb52a976f10ac2ef92d7b481e15fe63e77ca01b403eb436",
+    "lane08_skill_alignment_inventory.md": "6eed18fcf7d21cb4fdd8e19a8480b4d4a29f4f7541f301861f3a7d70f5e84d19",
+    "lane09_release_risk_inventory.md": "8da6bf084fe3ea275d3dc5dfcbe126dd9814ffb9a4b22b5db4a6d5083b482e8a",
+    "lane10_reference_submodule_inventory.md": "ac2d895124d5f2b82820af364efbb1c6222d65c64eb823bd2fbdae24e239bfe6",
+    "repo_inventory.tsv": "2209cf7041e328ff68d6ad9d4f4914d45adadc2ca8e7d55597b2f53438f546f3"
+  },
+  "checksum_generated_at": "2026-03-04 23:46:20 "
+}

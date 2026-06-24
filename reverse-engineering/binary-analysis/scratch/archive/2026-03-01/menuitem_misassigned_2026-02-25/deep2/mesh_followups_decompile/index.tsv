@@ -1,0 +1,4 @@
+address	name	signature	status
+0x004ab360	CMesh__OptimizeParts	undefined CMesh__OptimizeParts(void)	OK
+0x004bae70	CExplosionInitThing__Unk_004bae70	int __cdecl CExplosionInitThing__Unk_004bae70(int param_1)	OK
+0x004bb210	CUnitAI__Unk_004bb210	bool __cdecl CUnitAI__Unk_004bb210(int param_1)	OK

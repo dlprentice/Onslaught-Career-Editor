@@ -1,0 +1,14 @@
+address	name	signature	status
+0x004114d0	CGeneralVolume__Unk_004114d0	double __fastcall CGeneralVolume__Unk_004114d0(int param_1)	OK
+0x004127a0	CGeneralVolume__Unk_004127a0	void __thiscall CGeneralVolume__Unk_004127a0(void * this, void * param_1, void * param_2)	OK
+0x00412d80	CGeneralVolume__Unk_00412d80	void __thiscall CGeneralVolume__Unk_00412d80(void * this, int param_1, float param_2)	OK
+0x00412f70	CGeneralVolume__Unk_00412f70	void __thiscall CGeneralVolume__Unk_00412f70(void * this, int param_1, float param_2)	OK
+0x00413160	CGeneralVolume__Unk_00413160	void __thiscall CGeneralVolume__Unk_00413160(void * this, int param_1, float param_2)	OK
+0x00413360	CGeneralVolume__Unk_00413360	void __thiscall CGeneralVolume__Unk_00413360(void * this, int param_1, float param_2)	OK
+0x004135d0	CGeneralVolume__Unk_004135d0	bool __fastcall CGeneralVolume__Unk_004135d0(int param_1)	OK
+0x004135e0	CGeneralVolume__Unk_004135e0	void __fastcall CGeneralVolume__Unk_004135e0(int param_1)	OK
+0x00413eb0	CGeneralVolume__Unk_00413eb0	void __fastcall CGeneralVolume__Unk_00413eb0(void * param_1)	OK
+0x00414030	CGeneralVolume__Unk_00414030	int __fastcall CGeneralVolume__Unk_00414030(void * param_1)	OK
+0x004145d0	CGeneralVolume__Unk_004145d0	int __fastcall CGeneralVolume__Unk_004145d0(void * param_1)	OK
+0x00414970	CGeneralVolume__Unk_00414970	void __thiscall CGeneralVolume__Unk_00414970(void * this, void * param_1, void * param_2)	OK
+0x00414a40	CGeneralVolume__Unk_00414a40	void __thiscall CGeneralVolume__Unk_00414a40(void * this, void * param_1, void * param_2)	OK

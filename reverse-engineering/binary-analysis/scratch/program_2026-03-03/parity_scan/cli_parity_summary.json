@@ -1,0 +1,62 @@
+[
+  {
+    "scenario": "career_default_unlock",
+    "cs_code": 1,
+    "py_code": 0,
+    "cs_ok": false,
+    "py_ok": true,
+    "byte_equal": false,
+    "cs_stderr": "Could not execute because the specified command or file was not found.\n",
+    "py_stderr": "",
+    "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+    "py_stdout_tail": "rrrr.bes\nOutput: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_scan/career_default_unlock.python.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     400\n  Goodies style:  OLD (blue)\n  Patch nodes:    Yes\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_scan/career_default_unlock.python.out\n  Patched: Nodes (S-rank), Links, Goodies (OLD), Kills (400 each)\n"
+  },
+  {
+    "scenario": "career_kills_only_custom",
+    "cs_code": 1,
+    "py_code": 0,
+    "cs_ok": false,
+    "py_ok": true,
+    "byte_equal": false,
+    "cs_stderr": "Could not execute because the specified command or file was not found.\n",
+    "py_stderr": "",
+    "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+    "py_stdout_tail": "(blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    Yes\n  Per-category kills:\n    Aircraft:     25\n    Vehicles:     201\n    Emplacements: 51\n    Infantry:     160\n    Mechs:        40\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_scan/career_kills_only_custom.python.out\n  Patched: Kills (custom per-category)\n  Skipped: Nodes, Links, Goodies\n  Kill counts (default: 100):\n    Aircraft: 25 *\n    Vehicles: 201 *\n    Emplacements: 51 *\n    Infantry: 160 *\n    Mechs: 40 *\n"
+  },
+  {
+    "scenario": "career_partial_rank_and_bindings",
+    "cs_code": 1,
+    "py_code": 0,
+    "cs_ok": false,
+    "py_ok": true,
+    "byte_equal": false,
+    "cs_stderr": "Could not execute because the specified command or file was not found.\n",
+    "py_stderr": "",
+    "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+    "py_stdout_tail": " E\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    Yes\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Level overrides: 3 levels\n  Invert Y (Walker) (P1): On\n  Invert Y (Walker) (P2): Off\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_scan/career_partial_rank_and_bindings.python.out\n  Patched: Nodes (E + 3 overrides), Links, Goodies (OLD), Kills (100 each), Career settings, Keybind overrides (2 entries)\n"
+  },
+  {
+    "scenario": "options_settings_only",
+    "cs_code": 1,
+    "py_code": 0,
+    "cs_ok": false,
+    "py_ok": true,
+    "byte_equal": false,
+    "cs_stderr": "Could not execute because the specified command or file was not found.\n",
+    "py_stderr": "",
+    "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+    "py_stdout_tail": "figuration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Sound volume:   0.310\n  Music volume:   0.770\n  Invert Y (Flight) (P1): Off\n  Invert Y (Flight) (P2): On\n  Vibration (P1): On\n  Vibration (P2): Off\n  Ctrl cfg (P1):  2\n  Ctrl cfg (P2):  3\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_scan/options_settings_only.python.out\n  Patched: Career settings\n  Skipped: Nodes, Links, Goodies, Kills\n"
+  },
+  {
+    "scenario": "options_copy_entries_only",
+    "cs_code": 1,
+    "py_code": 0,
+    "cs_ok": false,
+    "py_ok": true,
+    "byte_equal": false,
+    "cs_stderr": "Could not execute because the specified command or file was not found.\n",
+    "py_stderr": "",
+    "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+    "py_stdout_tail": " OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Copy options from: /mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes\n    - entries: Yes\n    - tail:    No\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_scan/options_copy_entries_only.python.out\n  Patched: Options copy (entries), Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
+  }
+]

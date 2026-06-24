@@ -1,0 +1,25 @@
+address	name	signature	status
+0x005acac0	CDXTexture__BuildJpegHuffmanDecodeTable	void __stdcall CDXTexture__BuildJpegHuffmanDecodeTable(void * param_1, int param_2, int param_3, void * param_4)	OK
+0x005aceb0	CDXTexture__DecodeHuffmanSymbolFromBitstream	uint __stdcall CDXTexture__DecodeHuffmanSymbolFromBitstream(int param_1, int param_2, int param_3, int param_4, int param_5)	OK
+0x005acf90	CDXTexture__FinalizeScanBitstreamState	int CDXTexture__FinalizeScanBitstreamState(void)	OK
+0x005aefa0	CDXTexture__ConvertYccBlocksToRgb_Sse	void __fastcall CDXTexture__ConvertYccBlocksToRgb_Sse(int param_1, int param_2, int param_3, void * param_4)	OK
+0x005b10b0	CDXTexture__InitColorTransformLuts	void CDXTexture__InitColorTransformLuts(void)	OK
+0x005b1400	CDXTexture__ConvertYccScanlinePairToRgb_Scalar	void __fastcall CDXTexture__ConvertYccScanlinePairToRgb_Scalar(int param_1, int param_2, void * param_3)	OK
+0x005b1630	CDXTexture__ConvertYccScanlinePairToRgb_Sse	void __fastcall CDXTexture__ConvertYccScanlinePairToRgb_Sse(int param_1, int param_2, void * param_3)	OK
+0x005b1c00	CDXTexture__AllocAligned16	void __stdcall CDXTexture__AllocAligned16(int param_1, int param_2)	OK
+0x005b1c50	CDXTexture__GetBufferTailAvailable	int __stdcall CDXTexture__GetBufferTailAvailable(int param_1, int param_2, int param_3, int param_4)	OK
+0x005b1d50	CDXTexture__InitHostIoCallbacks	void __stdcall CDXTexture__InitHostIoCallbacks(void * param_1, void * param_2)	OK
+0x005b1da0	CDXTexture__GetDefaultDecodeBudgetBytes	int CDXTexture__GetDefaultDecodeBudgetBytes(void)	OK
+0x005b25e0	CDXTexture__CloseAsyncDecodeHandles	int __stdcall CDXTexture__CloseAsyncDecodeHandles(void * param_1, int param_2)	OK
+0x005b3170	CDXTexture__BuildJpegHuffmanEncodeTable	void __stdcall CDXTexture__BuildJpegHuffmanEncodeTable(void * param_1, int param_2, int param_3, void * param_4)	OK
+0x005b3920	CDXTexture__EncodeMcuBlocksForScan	int __stdcall CDXTexture__EncodeMcuBlocksForScan(void * param_1, int param_2)	OK
+0x005b39d0	CDXTexture__BuildCanonicalHuffmanCodes	void __stdcall CDXTexture__BuildCanonicalHuffmanCodes(void * param_1, void * param_2, int param_3)	OK
+0x005b3fd0	CDXTexture__FlushEntropyBitWriter	void CDXTexture__FlushEntropyBitWriter(void)	OK
+0x005b4080	CDXTexture__EmitRestartMarkerAndReset	void __stdcall CDXTexture__EmitRestartMarkerAndReset(int param_1)	OK
+0x005b44c0	CDXTexture__WriteEncodedBlockWithRestartControl	int __stdcall CDXTexture__WriteEncodedBlockWithRestartControl(int param_1, int param_2)	OK
+0x005b6500	CDXTexture__UpsampleHorizontal_Average2_Scalar	void __fastcall CDXTexture__UpsampleHorizontal_Average2_Scalar(void * param_1, int param_2, int param_3)	OK
+0x005b65a0	CDXTexture__UpsampleHorizontal_Average2_Sse	void __fastcall CDXTexture__UpsampleHorizontal_Average2_Sse(int param_1, int param_2, int param_3, int param_4)	OK
+0x005b6650	CDXTexture__UpsampleBilinear2x2_Scalar	void __fastcall CDXTexture__UpsampleBilinear2x2_Scalar(void * param_1, int param_2, int param_3)	OK
+0x005b6720	CDXTexture__UpsampleBilinear2x2_Sse	void __fastcall CDXTexture__UpsampleBilinear2x2_Sse(int param_1, int param_2, int param_3, int param_4)	OK
+0x005b6c30	CDXTexture__UpsampleDispatchHorizontal	void __stdcall CDXTexture__UpsampleDispatchHorizontal(void * param_1, int param_2, void * param_3, int param_4)	OK
+0x005b6c90	CDXTexture__UpsampleDispatchBilinear	void __stdcall CDXTexture__UpsampleDispatchBilinear(void * param_1, int param_2, void * param_3, int param_4)	OK

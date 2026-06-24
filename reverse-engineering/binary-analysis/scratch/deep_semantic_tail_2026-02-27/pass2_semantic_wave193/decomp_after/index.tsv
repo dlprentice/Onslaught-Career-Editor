@@ -1,0 +1,21 @@
+address	name	signature	status
+0x00599161	CTexture__ComputeDebugChunkDwordCount	int __fastcall CTexture__ComputeDebugChunkDwordCount(int param_1)	OK
+0x0059916d	CTexture__SerializeDebugChunkSymbolRecords	int __thiscall CTexture__SerializeDebugChunkSymbolRecords(void * this, void * param_1, void * param_2, void * param_3)	OK
+0x0059930d	CTexture__ValidateConstantRegisterDeclarationType	int __thiscall CTexture__ValidateConstantRegisterDeclarationType(void * this, void * param_1, void * param_2, void * param_3, void * param_4)	OK
+0x005997e1	CTexture__NodeType12_Ctor_DeleteOnFlag	int CTexture__NodeType12_Ctor_DeleteOnFlag(void)	OK
+0x00599831	CTexture__NodeType12_Dtor_DeleteOnFlag_Body	void __fastcall CTexture__NodeType12_Dtor_DeleteOnFlag_Body(void * param_1)	OK
+0x0059996f	CTexture__NodeType12_Ctor_ScalarDeletingDtor	int CTexture__NodeType12_Ctor_ScalarDeletingDtor(void)	OK
+0x005999b5	CTexture__NodeType12_ScalarDeletingDtor_Body	void __fastcall CTexture__NodeType12_ScalarDeletingDtor_Body(void * param_1)	OK
+0x0059aec0	CTexture__CanUseCompactDecodePath	int __fastcall CTexture__CanUseCompactDecodePath(int param_1, int param_2)	OK
+0x0059af40	CTexture__ComputeDecodeBlockGeometry	void __stdcall CTexture__ComputeDecodeBlockGeometry(void * param_1)	OK
+0x0059b150	CTexture__InitDecodeLookupScratchTables	void CTexture__InitDecodeLookupScratchTables(void)	OK
+0x0059b1d0	CTexture__InitializeDecodePipelineFromHeader	void CTexture__InitializeDecodePipelineFromHeader(void)	OK
+0x0059b370	CTexture__RunDecodeDispatchStage	void __stdcall CTexture__RunDecodeDispatchStage(void * param_1)	OK
+0x0059b4d0	CTexture__CreateDecodeDispatchContext	void __stdcall CTexture__CreateDecodeDispatchContext(int param_1)	OK
+0x0059b6f0	CTexture__BuildComponentPlaneLayoutTables	uint CTexture__BuildComponentPlaneLayoutTables(void)	OK
+0x0059b880	CTexture__EnsureComponentDecodeScratchBlocks	void CTexture__EnsureComponentDecodeScratchBlocks(void)	OK
+0x0059c630	CTexture__AllocJpegQuantTableDescriptor	void __stdcall CTexture__AllocJpegQuantTableDescriptor(int param_1)	OK
+0x0059c650	CTexture__AllocJpegHuffmanTableDescriptor	void __stdcall CTexture__AllocJpegHuffmanTableDescriptor(int param_1)	OK
+0x0059c7cc	CDXTexture__InflateInitStateFromHeader	int __stdcall CDXTexture__InflateInitStateFromHeader(int param_1, int param_2, void * param_3, int param_4)	OK
+0x0059cd4b	CDXTexture__ReadChunkBytesAndUpdateCrc	void __stdcall CDXTexture__ReadChunkBytesAndUpdateCrc(void * param_1, int param_2, int param_3)	OK
+0x0059dad9	CDXTexture__ParsePngChunk_sRGB	void __stdcall CDXTexture__ParsePngChunk_sRGB(void * param_1, int param_2, uint param_3)	OK

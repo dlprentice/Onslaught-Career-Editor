@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-03-04 23:45:42 ",
+  "inputs": [
+    "subagents/depth1/*",
+    "subagents/depth2/*",
+    "subagents/depth3/lane10_master_fix_queue.tsv",
+    "subagents/depth4/lane*.md",
+    "release/readiness/*",
+    "patches/catalog/patches.v2.json"
+  ],
+  "outputs": [
+    {
+      "path": "subagents/final-synthesis/executive_findings.md",
+      "sha256": "b3764d942e3efd50517e243a08879090e966514f9fa9e47eab9c8c9b2212802e"
+    },
+    {
+      "path": "subagents/final-synthesis/app_fix_plan.md",
+      "sha256": "9d3372e585fd360036f3d8a34a9d26e37de63ef2c1791ae5e29c5c06e51a3cc9"
+    },
+    {
+      "path": "subagents/final-synthesis/docs_fix_plan.md",
+      "sha256": "652c922d88868bab7b2d280580ed97c9a8e711b7904381be85b7996fef660b15"
+    },
+    {
+      "path": "subagents/final-synthesis/binary_patch_expansion_plan.md",
+      "sha256": "7d7bb97e34f156887cb776a07b1cc2d26f24aaa70bc27f05ea8b19faa6b66bed"
+    }
+  ]
+}

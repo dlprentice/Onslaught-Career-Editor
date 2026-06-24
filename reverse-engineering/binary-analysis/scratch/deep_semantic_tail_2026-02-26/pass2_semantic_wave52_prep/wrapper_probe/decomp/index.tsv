@@ -1,0 +1,5 @@
+address	name	signature	status
+0x0048a4c0	CInfantryGuide__VFunc_01_0048a4c0	void * __thiscall CInfantryGuide__VFunc_01_0048a4c0(void * this, void * param_1, int param_2)	OK
+0x0048ac80	<none>	<none>	MISSING
+0x004fd040	CUnit__Unk_004fd040	void __fastcall CUnit__Unk_004fd040(void * param_1)	OK
+0x004fd140	CUnit__Helper_004fd140	int __fastcall CUnit__Helper_004fd140(int param_1)	OK

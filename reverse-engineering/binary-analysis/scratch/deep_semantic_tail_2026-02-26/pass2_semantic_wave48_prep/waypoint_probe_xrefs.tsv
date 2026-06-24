@@ -1,0 +1,15 @@
+target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
+004e66d0	CWaypoint__Unk_004e66d0	005defe8	<none>	<no_function>	DATA
+004e66d0	CWaypoint__Unk_004e66d0	004e9a52	<none>	<no_function>	UNCONDITIONAL_CALL
+004e66d0	CWaypoint__Unk_004e66d0	004eaa6f	<none>	<no_function>	UNCONDITIONAL_CALL
+004f7cd0	CWaypoint__Unk_004f7cd0	0053f7da	0053f7d0	CWaypoint_Unk_004f7cd0__Wrapper_0053f7d0	UNCONDITIONAL_CALL
+004f7cd0	CWaypoint__Unk_004f7cd0	0045818e	00458100	CFEPDevelopment__EnumerateWorldFiles	UNCONDITIONAL_CALL
+004ffe00	CWaypoint__Unk_004ffe00	0048a1a1	<none>	<no_function>	UNCONDITIONAL_CALL
+004ffe00	CWaypoint__Unk_004ffe00	004a07f8	<none>	<no_function>	UNCONDITIONAL_CALL
+004ffe00	CWaypoint__Unk_004ffe00	004df2be	<none>	<no_function>	UNCONDITIONAL_CALL
+004ffe00	CWaypoint__Unk_004ffe00	004f1778	<none>	<no_function>	UNCONDITIONAL_CALL
+00501360	CWaypoint__Unk_00501360	00469292	004691c0	CUnitAI__Unk_004691c0	UNCONDITIONAL_CALL
+00501360	CWaypoint__Unk_00501360	0046ca18	<none>	<no_function>	UNCONDITIONAL_CALL
+00505ab0	CWaypointManager__Unk_00505ab0	0050aee2	0050ada0	CWorld__ShutdownAndClear	UNCONDITIONAL_CALL
+0057d446	CWaypointManager__Unk_0057d446	0057d23c	0057d216	CFastVB__Helper_0057d216	COMPUTED_CALL
+0057d446	CWaypointManager__Unk_0057d446	00657974	<none>	<no_function>	DATA

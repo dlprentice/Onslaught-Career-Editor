@@ -1,0 +1,26 @@
+address	name	signature	status
+0x0040acc0	CBattleEngine__SelectBestAimTargetAndMaybeQueueEvent	int __thiscall CBattleEngine__SelectBestAimTargetAndMaybeQueueEvent(void * this, void * param_1, void * param_2, int param_3, int param_4)	OK
+0x0040d320	CMCBuggy__MultiplyMat34Basis	void __thiscall CMCBuggy__MultiplyMat34Basis(void * this, void * param_1, void * param_2, void * param_3)	OK
+0x00440ad0	CWaterRenderSystem__BuildGridIndexBuffer	void __stdcall CWaterRenderSystem__BuildGridIndexBuffer(void * param_1, int param_2, int param_3, int param_4)	OK
+0x00441b10	CGame__SetGlobalSelectionSnapshot	void __cdecl CGame__SetGlobalSelectionSnapshot(void * param_1, int param_2)	OK
+0x00442890	CDestroyableSegment__SumActiveValueRecursive	double __fastcall CDestroyableSegment__SumActiveValueRecursive(void * param_1)	OK
+0x00449ef0	CFrontEnd__BuildCameraBasisFromYaw	void __stdcall CFrontEnd__BuildCameraBasisFromYaw(void * param_1)	OK
+0x0044c440	CFearGrid__RebuildOccupancyAndScheduleTick	void __fastcall CFearGrid__RebuildOccupancyAndScheduleTick(void * param_1)	OK
+0x0044d560	CFrontEnd__UpdateFadeStateMachineAlpha	void __fastcall CFrontEnd__UpdateFadeStateMachineAlpha(int param_1)	OK
+0x00465c10	CDXBitmapFont__BuildGlyphRemapTables	void CDXBitmapFont__BuildGlyphRemapTables(void)	OK
+0x0046baf0	CFEPWingmen__UpdateSpinnerTransformAndPulse	void __fastcall CFEPWingmen__UpdateSpinnerTransformAndPulse(int param_1)	OK
+0x0047eff0	CLandscapeTexture__BlitTileRegionWithLightingMask	int CLandscapeTexture__BlitTileRegionWithLightingMask(void)	OK
+0x004a25c0	CLTShell__ValidateAndRollHeapDeltas	void __fastcall CLTShell__ValidateAndRollHeapDeltas(int param_1)	OK
+0x004aa500	CRTMesh__GetMaterialNameAndIdByIndex	void __thiscall CRTMesh__GetMaterialNameAndIdByIndex(void * this, int param_1, int param_2, void * param_3, void * param_4)	OK
+0x004b5e80	CSphere__RenderPartsWithOrientation	int CSphere__RenderPartsWithOrientation(void)	OK
+0x004b6cd0	COggLoader__InitReadAndWaitThread	void COggLoader__InitReadAndWaitThread(void)	OK
+0x004c0370	CParticleDescriptor__PushCurrentToHistoryAndSetNow	void __thiscall CParticleDescriptor__PushCurrentToHistoryAndSetNow(void * this, int param_1, void * param_2)	OK
+0x004c10c0	CPDSimpleSprite__EvaluateExpressionRecursive	double __thiscall CPDSimpleSprite__EvaluateExpressionRecursive(void * this, void * param_1, float param_2, int param_3)	OK
+0x004d3b10	CPolyBucket__AABBIntersectsSegment2D	int CPolyBucket__AABBIntersectsSegment2D(void)	OK
+0x004d6e00	CRepairPadAI__IsCompatibleDockCandidate	int __thiscall CRepairPadAI__IsCompatibleDockCandidate(void * this, int param_1, int param_2)	OK
+0x004daff0	CFearGrid__LookupFearWeightByArchetype	double __fastcall CFearGrid__LookupFearWeightByArchetype(int param_1)	OK
+0x004e1260	CMonitor__UpdateTrackedValueAndDirection	void __thiscall CMonitor__UpdateTrackedValueAndDirection(void * this, int param_1, int param_2, float param_3, float param_4, int param_5)	OK
+0x004f0ba0	CMCTentacle__ComputeWorldAnchor	void __thiscall CMCTentacle__ComputeWorldAnchor(void * this, int param_1, void * param_2)	OK
+0x004f8140	CActor__BuildOrientationFromEuler	void __thiscall CActor__BuildOrientationFromEuler(void * this, void * param_1, int param_2, int param_3, int param_4)	OK
+0x004fde70	CWarspite__TransitionToUndeploying	void __fastcall CWarspite__TransitionToUndeploying(void * param_1)	OK
+0x0055e3ea	CPDSimpleSprite__FpuDispatchStub	void CPDSimpleSprite__FpuDispatchStub(void)	OK

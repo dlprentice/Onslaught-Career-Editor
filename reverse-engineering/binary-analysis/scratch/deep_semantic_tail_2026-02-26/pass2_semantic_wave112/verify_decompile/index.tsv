@@ -1,0 +1,6 @@
+address	name	signature	status
+0x004015e0	CUnit__IntegrateVelocityAndResolveGroundCollision	void __fastcall CUnit__IntegrateVelocityAndResolveGroundCollision(void * param_1)	OK
+0x00403690	CUnit__ReleaseAllAttachedParticleNodes	int __fastcall CUnit__ReleaseAllAttachedParticleNodes(int param_1)	OK
+0x00408150	CUnit__ProcessStateSwapAndDeathChecks	void __fastcall CUnit__ProcessStateSwapAndDeathChecks(void * param_1)	OK
+0x004102a0	CBattleEngine__DestroySPtrSetElementsAndClear	void __fastcall CBattleEngine__DestroySPtrSetElementsAndClear(void * param_1)	OK
+0x004318c0	CUnitAI__ComputeRecursiveNodeSize_NodeTreeC	int __fastcall CUnitAI__ComputeRecursiveNodeSize_NodeTreeC(int param_1)	OK

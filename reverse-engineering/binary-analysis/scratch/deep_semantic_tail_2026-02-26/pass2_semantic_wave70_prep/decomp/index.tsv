@@ -1,0 +1,11 @@
+address	name	signature	status
+0x005888bc	CFastVB__Unk_005888bc	int CFastVB__Unk_005888bc(void)	OK
+0x005890f1	CDXTexture__Unk_005890f1	int __fastcall CDXTexture__Unk_005890f1(int param_1, int param_2)	OK
+0x00589116	CDXTexture__Unk_00589116	int CDXTexture__Unk_00589116(void)	OK
+0x00589367	CFastVB__Unk_00589367	void __fastcall CFastVB__Unk_00589367(int param_1)	OK
+0x005893d1	CDXTexture__Unk_005893d1	void __fastcall CDXTexture__Unk_005893d1(int param_1)	OK
+0x005893e9	CDXTexture__Unk_005893e9	void * __thiscall CDXTexture__Unk_005893e9(void * this, void * param_1, int param_2)	OK
+0x00589438	CDXTexture__Unk_00589438	void __fastcall CDXTexture__Unk_00589438(int param_1)	OK
+0x00589689	CFastVB__Unk_00589689	void __fastcall CFastVB__Unk_00589689(int param_1)	OK
+0x00589cab	CTexture__Unk_00589cab	int __fastcall CTexture__Unk_00589cab(int param_1)	OK
+0x00589e73	CTexture__Unk_00589e73	int __fastcall CTexture__Unk_00589e73(int param_1)	OK

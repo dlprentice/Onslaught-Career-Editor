@@ -1,0 +1,29 @@
+address	old_name	inferred_owner	xref_count	top_counts
+0x00465f00	CMeshCollisionVolume__Unk_00465f00	CVBufTexture	6	CVBufTexture:5;CDXFont:1
+0x004ac000	CMeshCollisionVolume__Unk_004ac000		1	CMeshCollisionVolume:1
+0x004ac140	CMeshCollisionVolume__Unk_004ac140		0
+0x004ac4a0	CMeshCollisionVolume__Unk_004ac4a0		0
+0x004acf30	CMeshCollisionVolume__Unk_004acf30		0
+0x0055f085	CMeshCollisionVolume__Unk_0055f085		42	CDXTexture:20;CTexture:20;type_info:1;CMemoryManager:1
+0x0055f0ef	CMeshCollisionVolume__Unk_0055f0ef		1	CMeshCollisionVolume:1
+0x0055f147	CMeshCollisionVolume__Unk_0055f147		1	CMeshCollisionVolume:1
+0x00569814	CMeshCollisionVolume__Unk_00569814	CDXTexture	2	CDXTexture:2
+0x0056982f	CMeshCollisionVolume__Unk_0056982f	CDXTexture	3	CDXTexture:3
+0x00573630	CMeshCollisionVolume__Unk_00573630		1	CFastVB:1
+0x005736a0	CMeshCollisionVolume__Unk_005736a0		1	CFastVB:1
+0x00575d51	CMeshCollisionVolume__Unk_00575d51	CFastVB	2	CFastVB:2
+0x00575d68	CMeshCollisionVolume__Unk_00575d68		2	CMeshCollisionVolume:2
+0x00575d75	CMeshCollisionVolume__Unk_00575d68	CFastVB	2	CFastVB:2
+0x0057c7a4	CMeshCollisionVolume__Unk_0057c7a4		1	CTexture:1
+0x0057ca3a	CMeshCollisionVolume__Unk_0057ca3a		1	CDXTexture:1
+0x0058546f	CMeshCollisionVolume__Unk_0058546f		0
+0x005894a9	CMeshCollisionVolume__Unk_005894a9		1	CTexture:1
+0x00589650	CMeshCollisionVolume__Unk_00589650		1	CTexture:1
+0x00591340	CMeshCollisionVolume__Unk_00591340		1	CDXTexture:1
+0x00598749	CMeshCollisionVolume__Unk_00598749		2	CTexture:1;CDXTexture:1
+0x00599ffd	CMeshCollisionVolume__Unk_00599ffd	CFastVB	2	CFastVB:2
+0x0059d47a	CMeshCollisionVolume__Unk_0059d47a	CDXTexture	2	CDXTexture:2
+0x0059d614	CMeshCollisionVolume__Unk_0059d614	CDXTexture	14	CDXTexture:8;CTexture:6
+0x005a4d98	CMeshCollisionVolume__Unk_005a4d98	CFastVB	7	CFastVB:7
+0x005ab4d0	CMeshCollisionVolume__Unk_005ab4d0		0
+0x005b3ec0	CMeshCollisionVolume__Unk_005b3ec0	CDXTexture	5	CDXTexture:5

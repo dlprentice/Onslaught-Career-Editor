@@ -1,0 +1,3 @@
+address	old_name	inferred_owner	new_name	xref_count	top_counts
+0x0046baf0	CExplosionInitThing__Unk_0046baf0	CFEPWingmen	CFEPWingmen__Helper_0046baf0	5	CFEPWingmen:3;CFEPMultiplayerStart:2
+0x004c7db0	CExplosionInitThing__Unk_004c7db0	CPDSimpleSprite	CPDSimpleSprite__Helper_004c7db0	2	CPDSimpleSprite:2

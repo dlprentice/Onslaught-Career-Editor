@@ -1,0 +1,27 @@
+{
+  "run_id": "repo_parse_20260304_152436",
+  "created_at": "2026-03-04 15:24:36 -0500",
+  "max_concurrency": 10,
+  "depth_limit": 4,
+  "max_agents_total": 40,
+  "workspace_root": "subagents",
+  "state_file_hashes_pre_depth1": {
+    "developer_agent_state.json": "0321b3d94daa70c33716bfd1844c4ff80b44a99df3d4c4d05f307e25e1a4f1ae",
+    "documentation_agent_state.json": "676f332e616cd50959b7cb21a87943ecd6f50cd890de4d43c1bbf1f5105ee5e1",
+    "re_orchestrator_state.json": "ec3d5e0355a66f4ae0f2d13b412009f913d447705e600cabae6ecdac43117f5d"
+  },
+  "notes": [
+    "Subagents must only write under subagents/**",
+    "Subagents must not modify state files",
+    "Main agent owns all state-file updates"
+  ],
+  "completion_artifacts": {
+    "depth1_inventory": "subagents/depth1/repo_inventory.tsv",
+    "depth2_contradictions": "subagents/depth2/contradictions.tsv",
+    "depth2_high_risk": "subagents/depth2/high_risk_findings.tsv",
+    "depth3_fix_queue": "subagents/depth3/fix_queue.tsv",
+    "depth4_closure_packet": "subagents/depth4/closure_packet.md",
+    "final_synthesis_manifest": "subagents/final-synthesis/synthesis_manifest.json"
+  },
+  "completion_updated_at": "2026-03-04 23:46:20 "
+}

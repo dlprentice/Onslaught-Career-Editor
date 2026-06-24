@@ -1,0 +1,13 @@
+address	name	signature
+0x004e6ff0	CSquadNormal__Unk_004e6ff0	void __thiscall CSquadNormal__Unk_004e6ff0(void * this, int param_1, void * param_2)
+0x004e7110	CSquadNormal__Unk_004e7110	int __thiscall CSquadNormal__Unk_004e7110(void * this, void * param_1, void * param_2)
+0x004e7cf0	CSquadNormal__Unk_004e7cf0	int __fastcall CSquadNormal__Unk_004e7cf0(int param_1)
+0x004e7f40	CSquadNormal__Unk_004e7f40	int __fastcall CSquadNormal__Unk_004e7f40(int param_1)
+0x004e8100	CSquadNormal__Unk_004e8100	void __fastcall CSquadNormal__Unk_004e8100(void * param_1)
+0x004e81d0	CSquadNormal__Unk_004e81d0	int __fastcall CSquadNormal__Unk_004e81d0(void * param_1)
+0x004e83b0	CSquadNormal__Unk_004e83b0	void __thiscall CSquadNormal__Unk_004e83b0(void * this, void * param_1, float param_2)
+0x004e84e0	CSquadNormal__Unk_004e84e0	int __fastcall CSquadNormal__Unk_004e84e0(int param_1)
+0x004e8730	CSquadNormal__Unk_004e8730	void __fastcall CSquadNormal__Unk_004e8730(void * param_1)
+0x004e8930	CSquadNormal__Unk_004e8930	void __fastcall CSquadNormal__Unk_004e8930(void * param_1)
+0x004e8dd0	CSquadNormal__Unk_004e8dd0	int __fastcall CSquadNormal__Unk_004e8dd0(void * param_1)
+0x004e8f80	CSquadNormal__Unk_004e8f80	void __thiscall CSquadNormal__Unk_004e8f80(void * this, void * param_1, int param_2)

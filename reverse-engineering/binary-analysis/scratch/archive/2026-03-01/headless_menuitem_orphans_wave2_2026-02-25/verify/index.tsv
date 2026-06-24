@@ -1,0 +1,10 @@
+address	name	signature	status
+0x004a37c0	CMenuItem__RenderValueBar	void __thiscall CMenuItem__RenderValueBar(void * this, float x, float y, int interactive)	OK
+0x004a3be0	CMenuItemDropdown__RenderOrQueueDeferred	void __thiscall CMenuItemDropdown__RenderOrQueueDeferred(void * this, float x, float y, int interactive)	OK
+0x004a40e0	CMenuItemDropdown__IsExpanded	byte __thiscall CMenuItemDropdown__IsExpanded(void * this)	OK
+0x004a4110	CMenuItemDropdown__ButtonPressed	void __thiscall CMenuItemDropdown__ButtonPressed(void * this, int from_controller, int button)	OK
+0x004a4290	CMenuItemSlider__ButtonPressed	void __thiscall CMenuItemSlider__ButtonPressed(void * this, int from_controller, int button)	OK
+0x004a42f0	CMenuItemDropdown__HasPendingSelectionChange	bool __thiscall CMenuItemDropdown__HasPendingSelectionChange(void * this)	OK
+0x004a4310	CMenuItemSlider__Render	void __thiscall CMenuItemSlider__Render(void * this, float x, float y, int alpha)	OK
+0x004a43a0	CMenuItem__ButtonPressed	void __thiscall CMenuItem__ButtonPressed(void * this, int from_controller, int button)	OK
+0x004a4450	CMenuItem__GetWidth	int __thiscall CMenuItem__GetWidth(void * this)	OK

@@ -1,0 +1,2 @@
+0x0044c720 CSquadNormal__Helper_0044c720
+0x0047ce80 CCannon__Helper_0047ce80

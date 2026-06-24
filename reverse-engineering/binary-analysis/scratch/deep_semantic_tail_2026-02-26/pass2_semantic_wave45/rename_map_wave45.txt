@@ -1,0 +1,3 @@
+0x004429a0 CDestructableSegment__DispatchChildDestructionEvents
+0x00442a80 CDestructableSegment__SetSubtreeActiveFlagRecursive
+0x00442ac0 CDestructableSegment__PropagateDamageToChildren

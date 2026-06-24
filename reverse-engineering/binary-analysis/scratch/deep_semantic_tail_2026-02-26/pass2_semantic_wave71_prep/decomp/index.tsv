@@ -1,0 +1,6 @@
+address	name	signature	status
+0x005888bc	CFastVB__Unk_005888bc	int CFastVB__Unk_005888bc(void)	OK
+0x0058b3c7	CTexture__Unk_0058b3c7	void __thiscall CTexture__Unk_0058b3c7(void * this, void * param_1, uint param_2, uint param_3)	OK
+0x0058b812	CTexture__Unk_0058b812	int CTexture__Unk_0058b812(void)	OK
+0x0058bd25	CTexture__Unk_0058bd25	int CTexture__Unk_0058bd25(void)	OK
+0x0058bd87	CTexture__Unk_0058bd87	uint __thiscall CTexture__Unk_0058bd87(void * this, int param_1, void * param_2)	OK

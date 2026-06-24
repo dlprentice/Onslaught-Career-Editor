@@ -1,0 +1,9 @@
+address	old_name	inferred_owner	new_name	xref_count	top_counts
+0x004a52d0	CMesh__Unk_004a52d0	CLTShell	CLTShell__Helper_004a52d0	3	CLTShell:2;CMesh:1
+0x004aa3f0	CMesh__Unk_004aa3f0	CMeshPart	CMeshPart__Helper_004aa3f0	6	CMeshPart:4;CMesh:1;CSoundManager:1
+0x004aa4e0	CMesh__Unk_004aa4e0	CRTMesh	CRTMesh__Helper_004aa4e0	5	CRTMesh:4;CMesh:1
+0x004aa500	CMesh__Unk_004aa500	CRTMesh	CRTMesh__Helper_004aa500	2	CRTMesh:2
+0x004aa680	CMesh__Unk_004aa680	CMCMech	CMCMech__Helper_004aa680	4	CMCMech:2;CMCBuggy:1;CCutscene:1
+0x004aa6b0	CMesh__Unk_004aa6b0	CDestructableSegmentsController	CDestructableSegmentsController__Helper_004aa6b0	11	CDestructableSegmentsController:6;CMeshPart:3;CSphere:1;CDestroyableSegment:1
+0x004aa820	CMesh__Unk_004aa820	CMCMech	CMCMech__Helper_004aa820	17	CMCMech:9;CMCBuggy:5;CDestructableSegmentsController:1;CUnit:1
+0x004aa8a0	CMesh__Unk_004aa8a0	CDestroyableSegment	CDestroyableSegment__Helper_004aa8a0	6	CDestroyableSegment:4

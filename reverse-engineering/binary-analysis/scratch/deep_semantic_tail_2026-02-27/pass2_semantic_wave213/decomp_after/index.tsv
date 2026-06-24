@@ -1,0 +1,121 @@
+address	name	signature	status
+0x00403650	CMeshRenderer__Helper_00403650	void __thiscall CMeshRenderer__Helper_00403650(void * this, void * param_1, void * param_2)	OK
+0x004048f0	CMesh__Helper_004048f0	int __cdecl CMesh__Helper_004048f0(int param_1)	OK
+0x00409950	CMonitor__Helper_00409950	void __fastcall CMonitor__Helper_00409950(void * param_1)	OK
+0x00409e60	CGeneralVolume__Helper_00409e60	double __stdcall CGeneralVolume__Helper_00409e60(float param_1)	OK
+0x0040acc0	CBattleEngine__Helper_0040acc0	int __thiscall CBattleEngine__Helper_0040acc0(void * this, void * param_1, void * param_2, int param_3, int param_4)	OK
+0x0040b6d0	CBattleEngine__Helper_0040b6d0	void __thiscall CBattleEngine__Helper_0040b6d0(void * this, void * param_1, void * param_2)	OK
+0x0040c5b0	CRepairPadAI__Helper_0040c5b0	int __fastcall CRepairPadAI__Helper_0040c5b0(int param_1)	OK
+0x0040c5e0	CRepairPadAI__Helper_0040c5e0	int __fastcall CRepairPadAI__Helper_0040c5e0(int param_1)	OK
+0x0040d320	CMCBuggy__Helper_0040d320	void __thiscall CMCBuggy__Helper_0040d320(void * this, void * param_1, void * param_2, void * param_3)	OK
+0x0041ad10	CMCTentacle__Helper_0041ad10	void __thiscall CMCTentacle__Helper_0041ad10(void * this, void * param_1, void * param_2)	OK
+0x00423680	PCPlatform__InitTimerFromPerfCounter	void __thiscall PCPlatform__InitTimerFromPerfCounter(void * this, int param_1, float param_2)	OK
+0x004239b0	CWorld__Helper_004239b0	int __fastcall CWorld__Helper_004239b0(int param_1)	OK
+0x00424920	CGeneralVolume__BeginFlyToWalkTransition	void __fastcall CGeneralVolume__BeginFlyToWalkTransition(int param_1)	OK
+0x00424990	CGeneralVolume__BeginWalkToFlyTransition	void __fastcall CGeneralVolume__BeginWalkToFlyTransition(int param_1)	OK
+0x004404f0	CThing__Helper_004404f0	void __thiscall CThing__Helper_004404f0(void * this, void * param_1, void * param_2)	OK
+0x00440ad0	CWaterRenderSystem__Helper_00440ad0	void __stdcall CWaterRenderSystem__Helper_00440ad0(void * param_1, int param_2, int param_3, int param_4)	OK
+0x00441730	CLIParams__Helper_00441730	void __thiscall CLIParams__Helper_00441730(void * this, int param_1, int param_2)	OK
+0x00441b10	CGame__Helper_00441b10	void __cdecl CGame__Helper_00441b10(void * param_1, int param_2)	OK
+0x00441e20	CDXFrontEndVideo__Helper_00441e20	void __fastcall CDXFrontEndVideo__Helper_00441e20(void * param_1)	OK
+0x00441e30	CDXFrontEndVideo__Helper_00441e30	int __fastcall CDXFrontEndVideo__Helper_00441e30(void * param_1)	OK
+0x00441e40	CGame__Helper_00441e40	void __fastcall CGame__Helper_00441e40(void * param_1)	OK
+0x00442890	CDestroyableSegment__Helper_00442890	double __fastcall CDestroyableSegment__Helper_00442890(void * param_1)	OK
+0x00444960	CDestroyableSegmentComponent__Helper_00444960	void __fastcall CDestroyableSegmentComponent__Helper_00444960(void * param_1)	OK
+0x00445010	CMCBuggy__Helper_00445010	double __thiscall CMCBuggy__Helper_00445010(void * this, int param_1, int param_2)	OK
+0x00449560	CMine__Helper_00449560	int CMine__Helper_00449560(void)	OK
+0x00449ef0	CFrontEnd__Helper_00449ef0	void __stdcall CFrontEnd__Helper_00449ef0(void * param_1)	OK
+0x0044a110	CCutscene__Helper_0044a110	void __stdcall CCutscene__Helper_0044a110(int param_1, int param_2)	OK
+0x0044ae20	CPauseMenu__Helper_0044ae20	int __thiscall CPauseMenu__Helper_0044ae20(void * this, void * param_1, int param_2, void * param_3)	OK
+0x0044c440	CFearGrid__Helper_0044c440	void __fastcall CFearGrid__Helper_0044c440(void * param_1)	OK
+0x0044d560	CFrontEnd__Helper_0044d560	void __fastcall CFrontEnd__Helper_0044d560(int param_1)	OK
+0x0044ed40	CFEPMultiplayerStart__Helper_0044ed40	int __cdecl CFEPMultiplayerStart__Helper_0044ed40(int param_1)	OK
+0x0044eea0	CFEPMultiplayerStart__Helper_0044eea0	int __cdecl CFEPMultiplayerStart__Helper_0044eea0(int param_1)	OK
+0x00465640	CLTShell__InvokeWithLoadingTransitionGate	int CLTShell__InvokeWithLoadingTransitionGate(void)	OK
+0x00465a20	CFEPLanguageTest__WrapWideTextToFixedLines	int __stdcall CFEPLanguageTest__WrapWideTextToFixedLines(void * param_1, void * param_2, float param_3)	OK
+0x00465c10	CDXBitmapFont__Helper_00465c10	void CDXBitmapFont__Helper_00465c10(void)	OK
+0x00465dd0	CFEPVirtualKeyboard__Helper_00465dd0	bool __thiscall CFEPVirtualKeyboard__Helper_00465dd0(void * this, void * param_1, int param_2)	OK
+0x00465f00	CVBufTexture__Helper_00465f00	int CVBufTexture__Helper_00465f00(void)	OK
+0x0046baf0	CFEPWingmen__Helper_0046baf0	void __fastcall CFEPWingmen__Helper_0046baf0(int param_1)	OK
+0x004780f0	CWorld__Helper_004780f0	int CWorld__Helper_004780f0(void)	OK
+0x0047c970	CCannon__Helper_0047c970	void __fastcall CCannon__Helper_0047c970(void * param_1)	OK
+0x0047ce80	CCannon__MarkDestroyedAndResetState	int __fastcall CCannon__MarkDestroyedAndResetState(int param_1)	OK
+0x0047eb80	CStaticShadows__Helper_0047eb80	double __fastcall CStaticShadows__Helper_0047eb80(int param_1, void * param_2)	OK
+0x0047ec60	CMonitor__Helper_0047ec60	float * __fastcall CMonitor__Helper_0047ec60(int param_1, void * param_2, void * param_3)	OK
+0x0047eff0	CLandscapeTexture__Helper_0047eff0	int CLandscapeTexture__Helper_0047eff0(void)	OK
+0x00488ea0	CCollisionSeekingInfantryBloke__ShutdownAndDestroy	void __fastcall CCollisionSeekingInfantryBloke__ShutdownAndDestroy(int param_1)	OK
+0x00490a40	CStaticShadows__TraceSegmentAgainstHeightfield	int __thiscall CStaticShadows__TraceSegmentAgainstHeightfield(void * this, int param_1, int param_2, void * param_3, int param_4)	OK
+0x004a25c0	CLTShell__Helper_004a25c0	void __fastcall CLTShell__Helper_004a25c0(int param_1)	OK
+0x004aa4e0	CRTMesh__Helper_004aa4e0	int __fastcall CRTMesh__Helper_004aa4e0(int param_1)	OK
+0x004aa500	CRTMesh__Helper_004aa500	void __thiscall CRTMesh__Helper_004aa500(void * this, int param_1, int param_2, void * param_3, void * param_4)	OK
+0x004aa6b0	CDestructableSegmentsController__Helper_004aa6b0	char * __fastcall CDestructableSegmentsController__Helper_004aa6b0(int param_1)	OK
+0x004aa8a0	CDestroyableSegment__Helper_004aa8a0	int __thiscall CDestroyableSegment__Helper_004aa8a0(void * this, int param_1, void * param_2)	OK
+0x004adf80	CMesh__Helper_004adf80	void __fastcall CMesh__Helper_004adf80(int param_1)	OK
+0x004b0cd0	CMesh__Helper_004b0cd0	int __fastcall CMesh__Helper_004b0cd0(int param_1)	OK
+0x004b5e80	CSphere__Helper_004b5e80	int CSphere__Helper_004b5e80(void)	OK
+0x004b6cd0	COggLoader__Helper_004b6cd0	void COggLoader__Helper_004b6cd0(void)	OK
+0x004b7ca0	IScript__InsertSortedAndTryAdvancePortrait	void __thiscall IScript__InsertSortedAndTryAdvancePortrait(void * this, int param_1, void * param_2)	OK
+0x004b82a0	CMessageLog__Helper_004b82a0	int __thiscall CMessageLog__Helper_004b82a0(void * this, int param_1, int param_2)	OK
+0x004bfe70	CWaypoint__Helper_004bfe70	void __fastcall CWaypoint__Helper_004bfe70(int param_1)	OK
+0x004bfed0	CSpawnerThing__Helper_004bfed0	void __fastcall CSpawnerThing__Helper_004bfed0(int param_1)	OK
+0x004bff40	CSphereTrigger__Helper_004bff40	void __fastcall CSphereTrigger__Helper_004bff40(int param_1)	OK
+0x004bffa0	CWingmanStart__Helper_004bffa0	void __fastcall CWingmanStart__Helper_004bffa0(int param_1)	OK
+0x004c0000	CEscapePod__Helper_004c0000	void __fastcall CEscapePod__Helper_004c0000(void * param_1)	OK
+0x004c0370	CParticleDescriptor__Helper_004c0370	void __thiscall CParticleDescriptor__Helper_004c0370(void * this, int param_1, void * param_2)	OK
+0x004c0450	CParticleDescriptor__Helper_004c0450	void __thiscall CParticleDescriptor__Helper_004c0450(void * this, int param_1, void * param_2)	OK
+0x004c0510	CParticleManager__Helper_004c0510	void __thiscall CParticleManager__Helper_004c0510(void * this, int param_1, void * param_2)	OK
+0x004c10c0	CPDSimpleSprite__Helper_004c10c0	double __thiscall CPDSimpleSprite__Helper_004c10c0(void * this, void * param_1, float param_2, int param_3)	OK
+0x004cb040	CWorldPhysicsManager__Helper_004cb040	void __fastcall CWorldPhysicsManager__Helper_004cb040(void * param_1)	OK
+0x004cd7a0	CWorldPhysicsManager__Helper_004cd7a0	int __thiscall CWorldPhysicsManager__Helper_004cd7a0(void * this, void * param_1, void * param_2)	OK
+0x004cdba0	CParticleManager__Helper_004cdba0	void __thiscall CParticleManager__Helper_004cdba0(void * this, int param_1, int param_2)	OK
+0x004d05c0	CMenuItemRange__Helper_004d05c0	int __fastcall CMenuItemRange__Helper_004d05c0(int param_1)	OK
+0x004d3b10	CPolyBucket__Helper_004d3b10	int CPolyBucket__Helper_004d3b10(void)	OK
+0x004d6e00	CRepairPadAI__Helper_004d6e00	int __thiscall CRepairPadAI__Helper_004d6e00(void * this, int param_1, int param_2)	OK
+0x004dac90	CRound__Helper_004dac90	void __thiscall CRound__Helper_004dac90(void * this, void * param_1, void * param_2)	OK
+0x004daff0	CFearGrid__Helper_004daff0	double __fastcall CFearGrid__Helper_004daff0(int param_1)	OK
+0x004e1260	CMonitor__Helper_004e1260	void __thiscall CMonitor__Helper_004e1260(void * this, int param_1, int param_2, float param_3, float param_4, int param_5)	OK
+0x004e5850	CCareerNode__ClonePtrSetFromSource	int __thiscall CCareerNode__ClonePtrSetFromSource(void * this, void * param_1, void * param_2)	OK
+0x004f0ba0	CMCTentacle__Helper_004f0ba0	void __thiscall CMCTentacle__Helper_004f0ba0(void * this, int param_1, void * param_2)	OK
+0x004f2790	CDXSurf__Helper_004f2790	void __fastcall CDXSurf__Helper_004f2790(int param_1)	OK
+0x004f27e0	CHud__Helper_004f27e0	void __fastcall CHud__Helper_004f27e0(int param_1)	OK
+0x004f3c80	CAtmospheric__Helper_004f3c80	double __thiscall CAtmospheric__Helper_004f3c80(void * this, int param_1, int param_2, int param_3)	OK
+0x004f4530	CGillMHead__Helper_004f4530	int __thiscall CGillMHead__Helper_004f4530(void * this, int param_1, int param_2)	OK
+0x004f4560	CGillMHead__Helper_004f4560	void __thiscall CGillMHead__Helper_004f4560(void * this, void * param_1, int param_2, int param_3, int param_4)	OK
+0x004f5b70	CParticleDescriptor__Helper_004f5b70	void __thiscall CParticleDescriptor__Helper_004f5b70(void * this, int param_1, int param_2, int param_3)	OK
+0x004f8140	CActor__Helper_004f8140	void __thiscall CActor__Helper_004f8140(void * this, void * param_1, int param_2, int param_3, int param_4)	OK
+0x004f9a60	CDestroyableSegment__RemoveLinkedSegmentAndRelease	void __thiscall CDestroyableSegment__RemoveLinkedSegmentAndRelease(void * this, int param_1, void * param_2)	OK
+0x004fbc90	CWarspite__Helper_004fbc90	double __fastcall CWarspite__Helper_004fbc90(int param_1)	OK
+0x004fc3a0	CSpawnerThng__Helper_004fc3a0	void __thiscall CSpawnerThng__Helper_004fc3a0(void * this, int param_1, float param_2)	OK
+0x004fcc30	CThing__Helper_004fcc30	void __thiscall CThing__Helper_004fcc30(void * this, void * param_1, int param_2, void * param_3)	OK
+0x004fd8d0	CDestructableSegmentsController__Helper_004fd8d0	int * __thiscall CDestructableSegmentsController__Helper_004fd8d0(void * this, int param_1, int param_2)	OK
+0x004fde70	CWarspite__Helper_004fde70	void __fastcall CWarspite__Helper_004fde70(void * param_1)	OK
+0x0050efa0	CBomber__Helper_0050efa0	void __fastcall CBomber__Helper_0050efa0(int param_1)	OK
+0x0050f440	CAirUnit__Helper_0050f440	void __fastcall CAirUnit__Helper_0050f440(int param_1)	OK
+0x0050f680	CSpawnerThng__Helper_0050f680	int __cdecl CSpawnerThng__Helper_0050f680(int param_1)	OK
+0x005113f0	CWeaponRound__Helper_005113f0	void __thiscall CWeaponRound__Helper_005113f0(void * this, int param_1, int param_2)	OK
+0x005214d0	CFEPVirtualKeyboard__Helper_005214d0	int __fastcall CFEPVirtualKeyboard__Helper_005214d0(int param_1)	OK
+0x005234d0	PlatformInput__Helper_005234d0	void __cdecl PlatformInput__Helper_005234d0(int param_1)	OK
+0x00527cc0	CWaterRenderSystem__Helper_00527cc0	int __thiscall CWaterRenderSystem__Helper_00527cc0(void * this, int param_1, int param_2)	OK
+0x00527de0	CWaterRenderSystem__Helper_00527de0	void __fastcall CWaterRenderSystem__Helper_00527de0(int param_1)	OK
+0x00527e00	CWaterRenderSystem__Helper_00527e00	uint __fastcall CWaterRenderSystem__Helper_00527e00(int param_1)	OK
+0x0053bd60	CHud__ResetCompassAndHudCounters	int __fastcall CHud__ResetCompassAndHudCounters(int param_1)	OK
+0x0053d3a0	CLTShell__Helper_0053d3a0	void __fastcall CLTShell__Helper_0053d3a0(int param_1)	OK
+0x0053d760	CThing__RenderDebugVolumeOverlay	void __stdcall CThing__RenderDebugVolumeOverlay(void * param_1, void * param_2, void * param_3, void * param_4)	OK
+0x0053f010	CCutscene__Helper_0053f010	void __thiscall CCutscene__Helper_0053f010(void * this, int param_1, int param_2, int param_3)	OK
+0x0055e14f	CLIParams__Helper_0055e14f	void __cdecl CLIParams__Helper_0055e14f(void * param_1, int param_2)	OK
+0x0055e1c4	CConsole__Helper_0055e1c4	double __cdecl CConsole__Helper_0055e1c4(void * param_1)	OK
+0x0055e3ea	CPDSimpleSprite__Helper_0055e3ea	void CPDSimpleSprite__Helper_0055e3ea(void)	OK
+0x0055f2a7	CDropship__Helper_0055f2a7	short * __cdecl CDropship__Helper_0055f2a7(void * param_1, void * param_2)	OK
+0x0055f380	CStaticShadows__Helper_0055f380	void CStaticShadows__Helper_0055f380(void)	OK
+0x0055f39d	CStaticShadows__Helper_0055f39d	double __cdecl CStaticShadows__Helper_0055f39d(int param_1, uint param_2)	OK
+0x0055f44b	CTokenArchive__Helper_0055f44b	uint __cdecl CTokenArchive__Helper_0055f44b(int param_1, uint param_2, uint param_3, int param_4, void * param_5)	OK
+0x00562c99	CRT__NoOp_00562c99	void CRT__NoOp_00562c99(void)	OK
+0x0056961e	CMCBuggy__Helper_0056961e	uint __thiscall CMCBuggy__Helper_0056961e(void * this, void * param_1, uint param_2)	OK
+0x0056c05c	CRT__NoOp_ReturnZero_0056c05c	int CRT__NoOp_ReturnZero_0056c05c(void)	OK
+0x0056e170	CMCBuggy__StrnICmpWithLocaleLock	int __cdecl CMCBuggy__StrnICmpWithLocaleLock(void * param_1, void * param_2, void * param_3)	OK
+0x005766a5	CVertexShader__Helper_005766a5	void CVertexShader__Helper_005766a5(void)	OK
+0x00576b47	CVertexShader__Helper_00576b47	void CVertexShader__Helper_00576b47(void)	OK
+0x00576e0a	CVertexShader__Helper_00576e0a	void CVertexShader__Helper_00576e0a(void)	OK
+0x00579a9a	CVertexShader__CompileScriptWithDirectiveParser	int CVertexShader__CompileScriptWithDirectiveParser(void)	OK
+0x0057d0ee	CWaypointManager__Helper_0057d0ee	int CWaypointManager__Helper_0057d0ee(void)	OK
+0x0057d32e	CWaypointManager__Helper_0057d32e	int CWaypointManager__Helper_0057d32e(void)	OK

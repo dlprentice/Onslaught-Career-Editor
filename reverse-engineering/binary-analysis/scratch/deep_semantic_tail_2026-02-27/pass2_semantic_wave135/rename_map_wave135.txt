@@ -1,0 +1,5 @@
+0x00512470 PlatformInput__ClearTransientKeyStateTable
+0x00512630 Platform__HandleDeviceLostAndRestore
+0x00512fc0 PlatformInput__ClearAllKeyStateTables
+0x00523bc0 Input__DispatchClickInRect
+0x00523d40 Input__GetCursorStateInRectAndConsume

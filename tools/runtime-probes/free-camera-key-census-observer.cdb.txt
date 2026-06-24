@@ -1,0 +1,18 @@
+.echo === safe-copy free-camera key census observer ===
+vertarget
+lm m BEA
+u 00514850 L30
+u 00513a90 L30
+u 00515980 L30
+u 0042e4d0 L40
+u 0041a980 L80
+u 0046fb00 L40
+u 0046fae0 L20
+bp 00514850 ".printf \"FreeCameraKeyCensus__GetKeyOnce controller=%p arg4=%08x arg8=%08x gamePause=%d\nFreeCameraKeyCensus__KeyBytes onceVkO=%02x onceScanO=%02x onceVkF=%02x onceScanF=%02x onceVkQ=%02x onceScanQ=%02x onVkO=%02x onScanO=%02x onVkF=%02x onScanF=%02x onVkQ=%02x onScanQ=%02x state3VkO=%02x state3ScanO=%02x state3VkF=%02x state3ScanF=%02x state3VkQ=%02x state3ScanQ=%02x\n\", @ecx, poi(@esp+4), poi(@esp+8), poi(0x008a9ac4), by(0x00888de3), by(0x00888dac), by(0x00888dda), by(0x00888db5), by(0x00888de5), by(0x00888da4), by(0x00888ce3), by(0x00888cac), by(0x00888cda), by(0x00888cb5), by(0x00888ce5), by(0x00888ca4), by(0x00888ee3), by(0x00888eac), by(0x00888eda), by(0x00888eb5), by(0x00888ee5), by(0x00888ea4); g"
+bp 00513a90 ".printf \"FreeCameraKeyCensus__GetKeyOnceCore input=%p key=%08x onceByteBefore=%02x gamePause=%d\n\", @ecx, poi(@esp+4), by(@ecx+0x331e4+poi(@esp+4)), poi(0x008a9ac4); g"
+bp 00515980 ".printf \"FreeCameraKeyCensus__ConsumeKeyOnce key=%08x globalOnceBefore=%02x gamePause=%d\n\", poi(@esp+4), by(0x00888d94+poi(@esp+4)), poi(0x008a9ac4); g"
+bp 0042e4d0 ".printf \"FreeCameraKeyCensus__SendButtonAction controller=%p button=%d rawButton=%08x analogRaw=%08x gamePause=%d inputDevice=%08x controllerConfig=%08x target=%p targetVtable=%p\n\", @ecx, poi(@esp+4), poi(@esp+4), poi(@esp+8), poi(0x008a9ac4), poi(@ecx+0x16c), poi(@ecx+0x174), poi(poi(@ecx+4)), poi(poi(poi(@ecx+4))); g"
+bp 0041a980 ".printf \"FreeCameraKeyCensus__CameraReceive targetIController=%p camera=%p button=%d rawButton=%08x analogRaw=%08x gamePause=%d\n\", @ecx, @ecx-4, poi(@esp+8), poi(@esp+8), poi(@esp+0x0c), poi(0x008a9ac4); g"
+bp 0046fb00 ".printf \"FreeCameraKeyCensus__Pause game=%p pauseBefore=%d togglePauseMenu=%d fromController=%p free0=%d free1=%d pauseMenu=%p\n\", @ecx, poi(@ecx+0x2c), poi(@esp+4), poi(@esp+8), poi(@ecx+0x9d0), poi(@ecx+0x9d4), poi(@ecx+0x2f4); g"
+bp 0046fae0 ".printf \"FreeCameraKeyCensus__UnPause game=%p pauseBefore=%d free0=%d free1=%d pauseMenu=%p\n\", @ecx, poi(@ecx+0x2c), poi(@ecx+0x9d0), poi(@ecx+0x9d4), poi(@ecx+0x2f4); g"
+g

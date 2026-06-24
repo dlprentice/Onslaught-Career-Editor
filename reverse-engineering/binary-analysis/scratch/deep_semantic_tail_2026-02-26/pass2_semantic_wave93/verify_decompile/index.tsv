@@ -1,0 +1,6 @@
+address	name	signature	status
+0x0055f2e8	CRT__WcsCmp	int __cdecl CRT__WcsCmp(void * param_1, void * param_2)	OK
+0x0055f783	Win32__FindCloseWithErrno	int __cdecl Win32__FindCloseWithErrno(int param_1)	OK
+0x0055fe78	CRT__UnlockRouteByAddress	void __cdecl CRT__UnlockRouteByAddress(uint param_1)	OK
+0x0055fea7	CRT__UnlockRouteByIndex	void __cdecl CRT__UnlockRouteByIndex(int param_1, int param_2)	OK
+0x0055feec	CRT__FTellAdjusted	int __cdecl CRT__FTellAdjusted(void * param_1)	OK

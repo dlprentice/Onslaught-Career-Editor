@@ -1,0 +1,50 @@
+address	old_name	inferred_owner	xref_count	top_counts
+0x00407940	CGeneralVolume__Unk_00407940		2	CEngine:1
+0x00409e60	CGeneralVolume__Unk_00409e60		5	CMonitor:1
+0x00409e80	CGeneralVolume__Unk_00409e80		2	CCockpit:1
+0x00409e90	CGeneralVolume__Unk_00409e90		1
+0x00409ec0	CGeneralVolume__Unk_00409ec0		1
+0x00409ef0	CGeneralVolume__Unk_00409ef0		1
+0x00409f20	CGeneralVolume__Unk_00409f20		1
+0x00409f70	CGeneralVolume__Unk_00409f70		1
+0x0040ac50	CGeneralVolume__Unk_0040ac50		1
+0x0040b660	CGeneralVolume__Unk_0040b660		1	CMonitor:1
+0x0040bfd0	CGeneralVolume__Unk_0040bfd0		1
+0x0040c570	CGeneralVolume__Unk_0040c570		1	IScript:1
+0x0040c720	CGeneralVolume__Unk_0040c720		1
+0x0040d4d0	CGeneralVolume__Unk_0040d4d0		1
+0x0040d5f0	CGeneralVolume__Unk_0040d5f0		3
+0x0040dfb0	CGeneralVolume__Unk_0040dfb0		3	CUnit:1
+0x0040e860	CGeneralVolume__Unk_0040e860		1
+0x00410310	CGeneralVolume__Unk_00410310		2
+0x00410490	CGeneralVolume__Unk_00410490		1
+0x00410740	CGeneralVolume__Unk_00410740		1
+0x004109d0	CGeneralVolume__Unk_004109d0		1
+0x004114d0	CGeneralVolume__Unk_004114d0		2
+0x00411b70	CGeneralVolume__Unk_00411b70		1	CMonitor:1
+0x004121b0	CGeneralVolume__Unk_004121b0		1	CExplosionInitThing:1
+0x004122b0	CGeneralVolume__Unk_004122b0		1	CExplosionInitThing:1
+0x00412310	CGeneralVolume__Unk_00412310		1	CExplosionInitThing:1
+0x00412370	CGeneralVolume__Unk_00412370		1	CExplosionInitThing:1
+0x00412480	CGeneralVolume__Unk_00412480		1
+0x004124d0	CGeneralVolume__Unk_004124d0		1
+0x004127a0	CGeneralVolume__Unk_004127a0		1
+0x00412d80	CGeneralVolume__Unk_00412d80		1
+0x00412f70	CGeneralVolume__Unk_00412f70		1
+0x00413160	CGeneralVolume__Unk_00413160		1
+0x00413360	CGeneralVolume__Unk_00413360		1
+0x004135d0	CGeneralVolume__Unk_004135d0		2	CMonitor:1
+0x004135e0	CGeneralVolume__Unk_004135e0		1
+0x00413cc0	CGeneralVolume__Unk_00413cc0		1
+0x00413cf0	CGeneralVolume__Unk_00413cf0		1
+0x00413eb0	CGeneralVolume__Unk_00413eb0		3
+0x00414030	CGeneralVolume__Unk_00414030		28	CBattleEngine:2;CMonitor:2;CCockpit:1;CEngine:1;CExplosionInitThing:1
+0x00414410	CGeneralVolume__Unk_00414410		1	CExplosionInitThing:1
+0x00414470	CGeneralVolume__Unk_00414470		1	CExplosionInitThing:1
+0x004144c0	CGeneralVolume__Unk_004144c0		1	CExplosionInitThing:1
+0x00414520	CGeneralVolume__Unk_00414520		1	CExplosionInitThing:1
+0x004145a0	CGeneralVolume__Unk_004145a0		1	CExplosionInitThing:1
+0x004145d0	CGeneralVolume__Unk_004145d0		1
+0x004145f0	CGeneralVolume__Unk_004145f0		1
+0x00414970	CGeneralVolume__Unk_00414970		1
+0x00414a40	CGeneralVolume__Unk_00414a40		1

@@ -1,0 +1,6 @@
+0x004a53f0	CMesh__StatusLoadingMeshResources	1	0
+0x004a5970	CMesh__LoadByNameWithStatus	1	0
+0x004aa940	CMesh__GetRandomVertexWeightedByPartArea	1	0
+0x004a50b0	CMesh__FreeResourcesAndUnlink	1	0
+0x004a51f0	CMeshPart__FreeResources	1	0
+0x00411500	CMonitor__ApplyHostileEnvironmentPenalty	1	0

@@ -1,0 +1,189 @@
+{
+  "schemaVersion": "missionscript-level100-tutorial-copied-profile-runtime-observation-boundary.v1",
+  "status": "PASS",
+  "source": {
+    "runtimeExecution": false,
+    "copiedProfileCreated": false,
+    "beLaunch": false,
+    "executablePatch": false,
+    "screenshotCapture": false,
+    "nativeInput": false,
+    "debuggerAttachment": false,
+    "godotWork": false,
+    "rawDialogueIncluded": false,
+    "privatePathsIncluded": false,
+    "schemaPurpose": "planning-only copied-profile runtime observation boundary for a later explicitly armed Level100 proof"
+  },
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+  },
+  "upstreamProofs": [
+    "missionscript-level100-tutorial-runtime-harness-boundary-proof-plan.md",
+    "missionscript-level100-tutorial-runtime-harness-boundary.v1.json",
+    "missionscript-level100-tutorial-static-walkthrough-proof-plan.md",
+    "missionscript-level100-tutorial-text-speaker-resolution-proof-plan.md",
+    "missionscript-packed-vs-loose-script-selection-proof-plan.md",
+    "missionscript-iscript-static-contract.md",
+    "missionscript-event-object-code-lifecycle-proof.md"
+  ],
+  "selectedMission": {
+    "mission": "level100",
+    "entryScript": "LevelScript.msl",
+    "fileCount": 25,
+    "extraScriptCount": 24,
+    "totalMslLines": 1469
+  },
+  "copiedProfileEnvelope": {
+    "requiredManifests": [
+      "copied profile manifest",
+      "specimen hash and byte-check report",
+      "launch command manifest",
+      "source-selection observation log",
+      "bounded event/message/HUD/object observation checklist",
+      "private artifact inventory",
+      "public-safe result summary"
+    ],
+    "expectedCleanSha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+    "publicPrivateBoundary": "public summaries may include sanitized counts and hashes only; private paths, screenshots, frames, copied saves, copied executables, copied resources, logs, debugger transcripts, and raw media stay private"
+  },
+  "observationChecklist": {
+    "sourceSelection": {
+      "staticAnchors": [
+        "0x00539dc0",
+        "0x00539ca0",
+        "this+0x20",
+        "this+0x124",
+        "CDXMemBuffer__InitFromFile"
+      ],
+      "artifact": "source-selection observation log",
+      "boundary": "no live source-selection claim until observed in a copied-profile proof"
+    },
+    "eventIngress": {
+      "uniqueEventNames": 26,
+      "handlers": 34,
+      "postEventCallsites": 41,
+      "mismatch": "Destroyed Friendly Building versus Friendly Building Destroyed",
+      "artifact": "event observation checklist rows",
+      "boundary": "do not claim all events fire"
+    },
+    "messageTextSpeaker": {
+      "playCharMessageRows": 45,
+      "messageTokens": 43,
+      "addHelpMessageTokens": 6,
+      "speakers": [
+        "P_TATIANA",
+        "P_KRAMER",
+        "P_TECHNICIAN"
+      ],
+      "resolvedStaticTokens": "68/68",
+      "missingReferences": 0,
+      "artifact": "message/text/speaker observation rows",
+      "boundary": "do not claim full audio, localization, or message display behavior"
+    },
+    "hudDisplay": {
+      "hudParts": [
+        "HUD_BATTLE_LINE_MAP",
+        "HUD_COMPASS",
+        "HUD_CURRENT_WEAPON",
+        "HUD_ENERGY_BAR",
+        "HUD_HEALTH_BAR",
+        "HUD_RADAR"
+      ],
+      "highlightHudPart": 7,
+      "unhighlightHudPart": 7,
+      "artifact": "HUD observation rows",
+      "boundary": "visual parity remains separate"
+    },
+    "objectSpawn": {
+      "getThingRefRaw": 18,
+      "getThingRefUnique": 15,
+      "spawnThingRows": 20,
+      "spawnFamilies": [
+        "Target Drone",
+        "Air Trainer",
+        "Target Tank",
+        "Target Truck"
+      ],
+      "artifact": "object/spawn observation rows",
+      "boundary": "do not claim exact object identity or spawn behavior layout"
+    },
+    "slotObjective": {
+      "getSlot": 4,
+      "setSlotSave": 4,
+      "objectiveTokens": [
+        "_100_OBJECTIVE_1",
+        "_100_OBJECTIVE_2",
+        "_100_OBJECTIVE_3",
+        "_100_OBJECTIVE_4"
+      ],
+      "lossToken": "LOSE_TUTORIAL_BROKE",
+      "artifact": "slot/objective observation rows",
+      "boundary": "save/defaultoptions behavior remains separate"
+    }
+  },
+  "launchArmBoundary": [
+    "copied profile manifest",
+    "specimen hash and byte-check report",
+    "launch command manifest",
+    "explicit operator-safe copied-profile target",
+    "no installed-game mutation assertion",
+    "private artifact root",
+    "stop conditions accepted before running"
+  ],
+  "forbiddenDuringThisSlice": [
+    "create a copied profile",
+    "launch BEA",
+    "patch any executable",
+    "capture screenshots or frames",
+    "drive native input",
+    "attach a debugger",
+    "load a live mission",
+    "mutate the installed Steam game",
+    "start Godot work",
+    "claim runtime behavior"
+  ],
+  "stopConditions": [
+    "installed game or original executable would be touched",
+    "copied specimen hash does not match the expected clean hash",
+    "launch command requires a patch before a patch proof exists",
+    "runtime source selection is ambiguous",
+    "selected event/message/HUD/object observation cannot be tied to the static checklist",
+    "Destroyed Friendly Building / Friendly Building Destroyed mismatch blocks interpretation",
+    "native input, debugger attachment, screenshots, frames, or patching are needed before a later proof explicitly arms them",
+    "private data would leak into public docs",
+    "Godot/rebuild work is required to make the claim"
+  ],
+  "claims": [
+    "The Level100 runtime-harness boundary is specific enough to define copied-profile runtime observation manifests and checklists.",
+    "The later runtime observation proof has a bounded artifact contract, observation checklist, launch arm boundary, public/private separation, and stop conditions.",
+    "Runtime MissionScript, source-selection, text/audio, HUD, object, patch, visual, Godot, rebuild, and no-noticeable-difference claims remain separate."
+  ],
+  "notClaimed": [
+    "runtime MissionScript execution",
+    "runtime command effects",
+    "runtime event outcomes",
+    "live loose-MSL loading",
+    "packed-vs-loose script selection",
+    "runtime Level100 mission outcome",
+    "runtime objective UI",
+    "runtime message or audio output",
+    "runtime HUD flashing",
+    "runtime object identity",
+    "runtime SpawnThing behavior",
+    "runtime GetThingRef lookup behavior",
+    "BEA launch behavior",
+    "BEA patching behavior",
+    "screenshot/capture proof",
+    "native input behavior",
+    "debugger observation behavior",
+    "Godot parity",
+    "rebuild parity",
+    "no-noticeable-difference parity"
+  ],
+  "nextStaticSlice": "MissionScript Level100 Tutorial Copied-Profile Runtime Observation Artifact Manifest Proof Plan"
+}

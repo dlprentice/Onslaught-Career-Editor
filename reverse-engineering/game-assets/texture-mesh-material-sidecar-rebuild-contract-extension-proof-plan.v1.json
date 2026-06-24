@@ -1,0 +1,271 @@
+{
+  "schemaVersion": "texture-mesh-material-sidecar-rebuild-contract-extension-proof-plan.v1",
+  "status": "PASS",
+  "contractExtensionStatus": "texture-mesh-material-sidecar-rebuild-contract-extension-complete-static-contract-extension-not-runtime-proof",
+  "selectedNextSlice": "Texture / Mesh Material Sidecar Rebuild Fixture Matrix Proof Plan",
+  "selectedNextScope": "texture-mesh-material-sidecar-rebuild-fixture-matrix-proof-plan",
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "staticAccountingSource": "static-reaudit-measurement-register.md",
+    "latestGhidraBackupClass": "verified-static-backup-redacted"
+  },
+  "sourceEvidence": {
+    "sourceProofCount": 5,
+    "textureMeshAssetBridgeProofPlan": {
+      "doc": "reverse-engineering/game-assets/texture-mesh-asset-bridge-proof-plan.md",
+      "role": "original post-static texture/resource/decode plus mesh asset bridge plan"
+    },
+    "textureMeshCopiedCorpusProof": {
+      "doc": "reverse-engineering/game-assets/texture-mesh-asset-bridge-copied-corpus-proof.md",
+      "archiveRows": 301,
+      "goodieArchiveRows": 232,
+      "topLevelChunks": {
+        "TEXT": 18857,
+        "MESH": 3492,
+        "GDIE": 232,
+        "LVLR": 301,
+        "TARG": 301,
+        "AYAD": 301
+      },
+      "packedRefs": {
+        "textTextures": "601/601",
+        "referenceMeshes": "209/209",
+        "gdieTextures": "206/206",
+        "gdieMeshes": "42/42"
+      },
+      "exportLanes": {
+        "looseTextures": {
+          "rows": 847,
+          "succeeded": 847,
+          "failed": 0,
+          "skipped": 0
+        },
+        "looseMeshes": {
+          "rows": 213,
+          "succeeded": 213,
+          "failed": 0,
+          "skipped": 0
+        },
+        "embeddedMeshes": {
+          "rows": 139,
+          "succeeded": 139,
+          "failed": 0,
+          "skipped": 0
+        }
+      },
+      "catalogRows": 4050
+    },
+    "textureMeshMaterialSidecarLedgerProof": {
+      "doc": "reverse-engineering/game-assets/texture-mesh-material-sidecar-ledger-proof.md",
+      "ledgerSchema": "asset-material-sidecar-ledger.v1",
+      "copiedCorpusFileCount": 8574,
+      "copiedCorpusByteCount": 250335133,
+      "modelRowsWithTextureRefs": "352/352",
+      "modelTextureReferenceInstances": 1268,
+      "uniqueModelTextureRefs": 213,
+      "meshTextureSidecarFiles": 213,
+      "uniqueTextureRefsWithExactSidecarName": 212,
+      "uniqueTextureRefsWithSidecarStemOnly": 1,
+      "modelRowsWithAllTextureRefsCatalogMapped": "352/352",
+      "missingSidecarRows": 0,
+      "uniqueTextureRefsMissingSidecar": 0,
+      "uniqueTextureRefsMissingCatalogRows": 0,
+      "uniqueTextureRefsAmbiguousInCatalog": 1,
+      "looseRows": 213,
+      "looseTextureRefInstances": 602,
+      "looseUniqueTextureRefs": 213,
+      "embeddedRows": 139,
+      "embeddedTextureRefInstances": 666,
+      "embeddedUniqueTextureRefs": 28,
+      "embeddedUniqueOutputFiles": 107,
+      "embeddedDuplicateOutputGroups": 28,
+      "embeddedDuplicateOutputRows": 32
+    },
+    "meshResourceRenderStaticContract": {
+      "doc": "reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md",
+      "modelMaterialTextureBindingRows": "352/352",
+      "modelTextureSidecarRefsCovered": "213/213"
+    },
+    "textureResourceDecodeStaticContract": {
+      "doc": "reverse-engineering/binary-analysis/texture-resource-decode-static-contract.md",
+      "wave1163Rows": 17,
+      "wave1163XrefRows": 68,
+      "wave1163InstructionRows": 2779,
+      "boundary": "JPEG Huffman separate from inflate Huffman"
+    }
+  },
+  "contractVocabulary": {
+    "termCount": 14,
+    "terms": [
+      "model row",
+      "row family",
+      "model texture reference instance",
+      "unique model texture ref",
+      "mesh texture sidecar file",
+      "exact filename match",
+      "stem-only match",
+      "catalog-mapped ref",
+      "catalog-missing ref",
+      "missing sidecar ref",
+      "ambiguous catalog ref",
+      "duplicate-output group",
+      "duplicate row",
+      "unique output file"
+    ]
+  },
+  "rebuildContract": {
+    "modelRowsWithTextureRefs": "352/352",
+    "rowFamilies": {
+      "loose": {
+        "rows": 213,
+        "textureRefInstances": 602,
+        "uniqueTextureRefs": 213,
+        "uniqueOutputFiles": 213,
+        "duplicateOutputGroups": 0,
+        "duplicateRows": 0
+      },
+      "embedded": {
+        "rows": 139,
+        "textureRefInstances": 666,
+        "uniqueTextureRefs": 28,
+        "uniqueOutputFiles": 107,
+        "duplicateOutputGroups": 28,
+        "duplicateRows": 32
+      }
+    },
+    "sidecarCoverage": {
+      "uniqueModelTextureRefs": 213,
+      "meshTextureSidecarFiles": 213,
+      "exactFilenameMatches": 212,
+      "stemOnlyMatches": 1,
+      "missingSidecarRefs": 0
+    },
+    "catalogCoverage": {
+      "catalogRows": 4050,
+      "modelRowsWithAllTextureRefsCatalogMapped": "352/352",
+      "catalogMissingRefs": 0,
+      "ambiguousCatalogRefs": 1
+    },
+    "contractRules": [
+      "row coverage and unique output-file coverage are separate dimensions",
+      "sidecar coverage is a normalized texture reference linkage claim, not material visual correctness",
+      "catalog coverage is texture-row linkage, not runtime parser behavior",
+      "ambiguous catalog refs and stem-only matches remain explicit named boundaries"
+    ]
+  },
+  "guardSummary": {
+    "falseGuards": {
+      "runtimeExecution": false,
+      "beLaunch": false,
+      "newLaunch": false,
+      "screenshotCapture": false,
+      "privateFrameReviewPerformed": false,
+      "rowObservation": false,
+      "sourceSelectionObserved": false,
+      "sourceSelectionProven": false,
+      "nativeInput": false,
+      "debuggerAttachment": false,
+      "godotWork": false,
+      "ghidraMutation": false,
+      "executablePatching": false,
+      "productUiWired": false,
+      "rebuildImplementation": false,
+      "runtimeTextureParserBehaviorProven": false,
+      "runtimeTexturePixelsProven": false,
+      "runtimeJpegInflateDecodeFidelityProven": false,
+      "runtimeMeshLoadingProven": false,
+      "runtimeMeshSkinningProven": false,
+      "runtimeAnimationBehaviorProven": false,
+      "runtimeCollisionBehaviorProven": false,
+      "runtimeDirect3DUploadProven": false,
+      "runtimeGpuBehaviorProven": false,
+      "nativeTextured3DRenderingProven": false,
+      "materialVisualCorrectnessProven": false,
+      "materialShaderParityProven": false,
+      "visualQaComplete": false,
+      "cleanRoomRendererImplemented": false,
+      "assetFormatCompletenessProven": false,
+      "exactMeshTextureLayoutsProven": false,
+      "runtimeResourceArchiveParserProven": false,
+      "runtimeSidecarMaterialLoadProven": false,
+      "runtimeObjectIdentityProven": false,
+      "runtimeWorldLoadingProven": false,
+      "rebuildParityProven": false,
+      "noNoticeableDifferenceParityProven": false,
+      "privateAssetPublication": false,
+      "publicPrivateProofLeak": false
+    },
+    "zeroCounters": {
+      "runtimeObservationRows": 0,
+      "textureRuntimeEvidenceRows": 0,
+      "meshRuntimeEvidenceRows": 0,
+      "materialRuntimeEvidenceRows": 0,
+      "materialVisualReviewRows": 0,
+      "screenshotRows": 0,
+      "privateFrameRowsObserved": 0,
+      "rowObservationRows": 0,
+      "sourceObservedRows": 0,
+      "newLaunchRows": 0,
+      "captureRows": 0,
+      "ocrRows": 0,
+      "rawDialogueRows": 0,
+      "ghidraMutationRows": 0,
+      "executablePatchRows": 0,
+      "productUiRows": 0,
+      "godotRows": 0,
+      "rebuildImplementationRows": 0,
+      "runtimeTexturePixelRows": 0,
+      "runtimeMeshRenderRows": 0,
+      "runtimeMaterialRows": 0,
+      "runtimeCollisionRows": 0,
+      "cleanRoomRendererRows": 0,
+      "runtimeResourceArchiveParserRows": 0,
+      "runtimeSidecarMaterialLoadRows": 0,
+      "beProcessesAfterSelection": 0,
+      "publicAbsolutePathLeakCount": 0,
+      "publicSha256ValueLeakCount": 0,
+      "publicWindowIdentifierLeakCount": 0,
+      "publicProcessIdentifierLeakCount": 0,
+      "privatePathLeakCount": 0,
+      "rawArtifactLeakCount": 0,
+      "privateAssetLeakCount": 0
+    },
+    "contractFalseGuardCount": 39,
+    "contractZeroCounterCount": 33,
+    "publicLeakCheck": "PASS"
+  },
+  "claimBoundary": {
+    "proves": [
+      "the texture/mesh material sidecar ledger has a stable public-safe rebuild-facing vocabulary",
+      "the copied-corpus material sidecar counts are bound to explicit mesh, texture, sidecar, catalog, duplicate-output, and ambiguous-ref terms",
+      "the next static child lane can build a fixture matrix without runtime, Godot, Ghidra mutation, or renderer implementation"
+    ],
+    "doesNotProve": [
+      "runtime resource archive parser behavior",
+      "runtime texture parser behavior",
+      "runtime texture pixels",
+      "JPEG/inflate decode fidelity",
+      "runtime mesh loading or skinning",
+      "Direct3D upload or GPU behavior",
+      "native textured 3D rendering",
+      "material visual correctness",
+      "material or shader parity",
+      "asset format completeness",
+      "Godot parity",
+      "rebuild implementation",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  },
+  "stopConditions": [
+    "if the material sidecar ledger no longer validates with its focused probe",
+    "if source copied-corpus or sidecar counts conflict with the public docs",
+    "if the fixture matrix would need private paths, raw assets, raw hashes, or operator-only evidence",
+    "if the next child would require runtime launch, screenshot capture, private-frame review, Ghidra mutation, Godot work, or renderer implementation",
+    "if row coverage and unique output-file coverage cannot remain separate"
+  ]
+}

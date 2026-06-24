@@ -1,0 +1,21 @@
+address	name	signature	status
+0x0056c060	CTexture__Helper_0056c060	int __cdecl CTexture__Helper_0056c060(void * param_1, void * param_2)	OK
+0x0056c0a0	CTexture__Helper_0056c0a0	int __cdecl CTexture__Helper_0056c0a0(void * param_1, void * param_2)	OK
+0x0056c0da	CTexture__Helper_0056c0da	int __cdecl CTexture__Helper_0056c0da(void * param_1, void * param_2, int param_3)	OK
+0x0056c257	CTexture__Helper_0056c257	void __cdecl CTexture__Helper_0056c257(int param_1, int param_2, void * param_3)	OK
+0x0056c2af	CTexture__Helper_0056c2af	void CTexture__Helper_0056c2af(void)	OK
+0x0056c336	CTexture__Helper_0056c336	uint __stdcall CTexture__Helper_0056c336(int param_1)	OK
+0x0056c53a	CTexture__Helper_0056c53a	void CTexture__Helper_0056c53a(void)	OK
+0x0056c590	CTexture__Helper_0056c590	uint __stdcall CTexture__Helper_0056c590(int param_1)	OK
+0x0056c64d	CTexture__Helper_0056c64d	void CTexture__Helper_0056c64d(void)	OK
+0x0056c7a9	CTexture__Helper_0056c7a9	int __cdecl CTexture__Helper_0056c7a9(int param_1, int param_2)	OK
+0x0056c927	CTexture__Helper_0056c927	int __cdecl CTexture__Helper_0056c927(void * param_1)	OK
+0x0056c960	CTexture__Helper_0056c960	int __cdecl CTexture__Helper_0056c960(void * param_1)	OK
+0x0056d21c	CTexture__Helper_0056d21c	void __cdecl CTexture__Helper_0056d21c(int param_1)	OK
+0x0056d22d	CTexture__Helper_0056d22d	int __cdecl CTexture__Helper_0056d22d(int param_1, uint param_2, int param_3)	OK
+0x0056d525	CTexture__Helper_0056d525	void __cdecl CTexture__Helper_0056d525(void * param_1)	OK
+0x0056d553	CTexture__Helper_0056d553	void __cdecl CTexture__Helper_0056d553(void * param_1)	OK
+0x0056d580	CTexture__Helper_0056d580	void __cdecl CTexture__Helper_0056d580(void * param_1, int param_2, void * param_3)	OK
+0x0056d647	CTexture__Helper_0056d647	int CTexture__Helper_0056d647(void)	OK
+0x0056ddc2	CTexture__Helper_0056ddc2	int __cdecl CTexture__Helper_0056ddc2(int param_1, int param_2, int param_3, void * param_4)	OK
+0x0056defa	CTexture__Helper_0056defa	int CTexture__Helper_0056defa(void)	OK

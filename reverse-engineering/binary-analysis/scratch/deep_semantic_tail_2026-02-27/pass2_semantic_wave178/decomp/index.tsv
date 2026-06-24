@@ -1,0 +1,21 @@
+address	name	signature	status
+0x00585a5f	CFastVB__Helper_00585a5f	int __thiscall CFastVB__Helper_00585a5f(void * this, void * param_1, int param_2)	OK
+0x00585b19	CFastVB__Helper_00585b19	int __thiscall CFastVB__Helper_00585b19(void * this, void * param_1, int param_2)	OK
+0x00585d6b	CFastVB__Helper_00585d6b	int __thiscall CFastVB__Helper_00585d6b(void * this, void * param_1, int param_2)	OK
+0x00585d87	CFastVB__Helper_00585d87	int __thiscall CFastVB__Helper_00585d87(void * this, void * param_1, int param_2)	OK
+0x00585e83	CFastVB__Helper_00585e83	int __thiscall CFastVB__Helper_00585e83(void * this, void * param_1, int param_2)	OK
+0x00585f6b	CFastVB__Helper_00585f6b	int __thiscall CFastVB__Helper_00585f6b(void * this, void * param_1, int param_2)	OK
+0x00585f87	CFastVB__Helper_00585f87	int __thiscall CFastVB__Helper_00585f87(void * this, void * param_1, int param_2)	OK
+0x0058609e	CFastVB__Helper_0058609e	int __thiscall CFastVB__Helper_0058609e(void * this, void * param_1, int param_2)	OK
+0x00586198	CFastVB__Helper_00586198	int __thiscall CFastVB__Helper_00586198(void * this, void * param_1, int param_2)	OK
+0x005862cd	CFastVB__Helper_005862cd	int __thiscall CFastVB__Helper_005862cd(void * this, void * param_1, int param_2)	OK
+0x0058641c	CFastVB__Helper_0058641c	int __thiscall CFastVB__Helper_0058641c(void * this, void * param_1, int param_2)	OK
+0x00586519	CFastVB__Helper_00586519	int __thiscall CFastVB__Helper_00586519(void * this, void * param_1, int param_2)	OK
+0x00586535	CFastVB__Helper_00586535	int __thiscall CFastVB__Helper_00586535(void * this, void * param_1, int param_2)	OK
+0x00586551	CFastVB__Helper_00586551	int __thiscall CFastVB__Helper_00586551(void * this, void * param_1, int param_2)	OK
+0x005865ed	CFastVB__Helper_005865ed	int __thiscall CFastVB__Helper_005865ed(void * this, void * param_1, int param_2)	OK
+0x005867d2	CFastVB__Helper_005867d2	int __thiscall CFastVB__Helper_005867d2(void * this, void * param_1, int param_2)	OK
+0x00586978	CFastVB__Helper_00586978	int __thiscall CFastVB__Helper_00586978(void * this, void * param_1, int param_2)	OK
+0x00586a55	CFastVB__Helper_00586a55	int __thiscall CFastVB__Helper_00586a55(void * this, void * param_1, int param_2)	OK
+0x00586a71	CFastVB__Helper_00586a71	int __thiscall CFastVB__Helper_00586a71(void * this, void * param_1, int param_2)	OK
+0x00586b63	CFastVB__Helper_00586b63	int __thiscall CFastVB__Helper_00586b63(void * this, void * param_1, int param_2)	OK

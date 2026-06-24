@@ -1,0 +1,238 @@
+{
+  "schemaVersion": "missionscript-message-audio-command-effect.v1",
+  "status": "PASS",
+  "source": {
+    "evidenceWaves": [
+      "Wave584",
+      "Wave903",
+      "Wave1015",
+      "Wave1074"
+    ],
+    "runtimeExecution": false,
+    "ghidraMutation": false,
+    "schemaPurpose": "static message/audio command descriptor, handler-body, queue-context, and loose-corpus bridge mapping for clean-room planning"
+  },
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+  },
+  "evidenceCounts": {
+    "wave584MetadataRows": 11,
+    "wave584TagRows": 11,
+    "wave584XrefRows": 11,
+    "wave584InstructionRows": 4059,
+    "wave584DecompileRows": 11,
+    "wave584VtableRows": 64,
+    "wave1015MetadataRows": 7,
+    "wave1015TagRows": 7,
+    "wave1015XrefRows": 14,
+    "wave1015InstructionRows": 195,
+    "wave1015DecompileRows": 7,
+    "wave1015ContextMetadataRows": 17,
+    "wave1015ContextXrefRows": 549,
+    "wave1015ContextInstructionRows": 548,
+    "wave1015ContextDecompileRows": 17,
+    "wave1074MetadataRows": 1,
+    "wave1074TagRows": 1,
+    "wave1074XrefRows": 1,
+    "wave1074InstructionRows": 13,
+    "wave1074DecompileRows": 1
+  },
+  "descriptorRecords": {
+    "PlaySample": {
+      "index": 9,
+      "recordAddress": "0x0064d090",
+      "observedNameSymbol": "s_PlaySample_0064f9b0",
+      "rawEntryValue": "IScript__LevelWon",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_PlaySample_0064f9b0"
+    },
+    "PrintText": {
+      "index": 15,
+      "recordAddress": "0x0064d210",
+      "observedNameSymbol": "s_PrintText_0064f984",
+      "rawEntryValue": "&LAB_00535d50",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_PrintText_0064f984"
+    },
+    "AddMessage": {
+      "index": 16,
+      "recordAddress": "0x0064d250",
+      "observedNameSymbol": "s_AddMessage_0064f978",
+      "rawEntryValue": "&LAB_00537c40",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_AddMessage_0064f978"
+    },
+    "PlayCharMessage": {
+      "index": 27,
+      "recordAddress": "0x0064d510",
+      "observedNameSymbol": "s_PlayCharMessage_0064f8ec",
+      "rawEntryValue": "&LAB_00535890",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_PlayCharMessage_0064f8ec"
+    },
+    "HighlightHudPart": {
+      "index": 33,
+      "recordAddress": "0x0064d690",
+      "observedNameSymbol": "s_HighlightHudPart_0064f89c",
+      "rawEntryValue": "&LAB_00535d70",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_HighlightHudPart_0064f89c"
+    },
+    "UnHighlightHudPart": {
+      "index": 34,
+      "recordAddress": "0x0064d6d0",
+      "observedNameSymbol": "s_UnHighlightHudPart_0064f888",
+      "rawEntryValue": "&LAB_00535e60",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_UnHighlightHudPart_0064f888"
+    },
+    "PlayCharMessageWait": {
+      "index": 35,
+      "recordAddress": "0x0064d710",
+      "observedNameSymbol": "s_PlayCharMessageWait_0064f874",
+      "rawEntryValue": "&LAB_00535e80",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_PlayCharMessageWait_0064f874"
+    },
+    "PlayPCharMessage": {
+      "index": 89,
+      "recordAddress": "0x0064e490",
+      "observedNameSymbol": "s_PlayPCharMessage_0064f568",
+      "rawEntryValue": "&LAB_00534680",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_PlayPCharMessage_0064f568"
+    },
+    "PlayPCharMessageWait": {
+      "index": 90,
+      "recordAddress": "0x0064e4d0",
+      "observedNameSymbol": "s_PlayPCharMessageWait_0064f550",
+      "rawEntryValue": "IScript__PlaySoundWithPriority",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_PlayPCharMessageWait_0064f550"
+    },
+    "SwitchMessagesOn": {
+      "index": 111,
+      "recordAddress": "0x0064ea10",
+      "observedNameSymbol": "s_SwitchMessagesOn_0064f404",
+      "rawEntryValue": "&LAB_005359d0",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_SwitchMessagesOn_0064f404"
+    },
+    "SwitchMessagesOff": {
+      "index": 112,
+      "recordAddress": "0x0064ea50",
+      "observedNameSymbol": "s_SwitchMessagesOff_0064f3f0",
+      "rawEntryValue": "&LAB_005342c0",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_SwitchMessagesOff_0064f3f0"
+    },
+    "AddHelpMessage": {
+      "index": 117,
+      "recordAddress": "0x0064eb90",
+      "observedNameSymbol": "s_AddHelpMessage_0064f390",
+      "rawEntryValue": "IScript__GetThingTypeName",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_AddHelpMessage_0064f390"
+    }
+  },
+  "missionMessageSummary": {
+    "source": "reverse-engineering/game-assets/mission-message-usage.md",
+    "levelRows": 67,
+    "playCharMessage": 1365,
+    "addHelpMessage": 7,
+    "levelLostFamily": 110,
+    "levelWonFamily": 71,
+    "boundary": "loose MSL message-family counts only; runtime voice/audio/HUD output and mission outcomes remain unproven"
+  },
+  "missionMessageCallsites": {
+    "source": [
+      "reverse-engineering/game-assets/mission-message-usage-callsites-1.md",
+      "reverse-engineering/game-assets/mission-message-usage-callsites-2.md"
+    ],
+    "detailedRows": 1553,
+    "byCommand": {
+      "AddHelpMessage": 7,
+      "LevelLost": 110,
+      "LevelWon": 71,
+      "PlayCharMessage": 1365
+    },
+    "speakerCount": 11,
+    "uniqueTokenCount": 499,
+    "boundary": "callsite inventory only; command execution, text lookup, audio playback, and HUD display remain unproven"
+  },
+  "messageQueueHandlers": [
+    {
+      "address": "0x00537410",
+      "name": "IScript__PlaySound",
+      "summary": "default text id plus float payload enqueue a CMessage when DAT_008a9d84 is present"
+    },
+    {
+      "address": "0x00537500",
+      "name": "IScript__PlaySoundWithCallback",
+      "summary": "two text ids plus float payload enqueue a CMessage and optionally retain an active-reader target"
+    },
+    {
+      "address": "0x005375f0",
+      "name": "IScript__PlaySoundWithFade",
+      "summary": "fade/tracking object plus event 0x7d1 setup before the same message queue handoff"
+    },
+    {
+      "address": "0x005377e0",
+      "name": "IScript__PlaySoundWithPriority",
+      "summary": "two text ids, float payload, and priority enqueue the message through CMessageBox"
+    },
+    {
+      "address": "0x005378e0",
+      "name": "IScript__PlaySoundWithFadeAndPriority",
+      "summary": "fade event setup and priority message enqueue combined"
+    }
+  ],
+  "consoleTextHandler": {
+    "address": "0x00537c40",
+    "name": "IScript__PrintText",
+    "descriptorEvidence": "s_PrintText_0064f984 / 0x0064d220 plus Wave1074 boundary recovery around 0x00537c40",
+    "bodyEvidence": "reads script_args[0], calls CText__GetStringById, then CConsole__Printf with format 0x0064fda4 \"%w\""
+  },
+  "messageBoxContext": [
+    "CMessage__ctor_base",
+    "CMessageBox__InsertQueuedMessageSortedAndMaybeAdvance",
+    "CMessageBox__StartVoiceOrFallbackTextReveal",
+    "CMessageBox__AdvanceRevealAndScheduleNextTick",
+    "CMessageBox__StopVoicePlaybackIfNotInCutscene",
+    "CMessageBox__RenderOverlay"
+  ],
+  "fieldMappingBoundary": "Descriptor names and raw entry values are preserved as static evidence, but this schema does not prove the exact descriptor field layout or one-to-one command-handler mapping for every row.",
+  "claims": [
+    "The static descriptor table contains the selected message/audio/HUD-adjacent command names and record addresses.",
+    "The saved Wave584 IScript__PlaySound* bodies show static message/audio request handoff into CMessage and CMessageBox queue helpers.",
+    "Wave1074 recovers the PrintText static console/text boundary.",
+    "Wave1015 and MessageBox owner docs preserve the queued CMessage/CMessageBox lifecycle context used by the IScript message/audio bodies.",
+    "The loose MSL message corpus gives reproducible PlayCharMessage/AddHelpMessage/LevelLost/LevelWon family counts for clean-room planning."
+  ],
+  "notClaimed": [
+    "runtime MissionScript execution",
+    "runtime command effects",
+    "runtime message display",
+    "runtime voice playback",
+    "runtime audio playback",
+    "runtime HUD output",
+    "runtime queue ordering",
+    "live loose-MSL loading",
+    "packed-vs-loose script selection",
+    "exact command descriptor layout",
+    "exact command arity",
+    "exact argument type schema",
+    "exact CMessage layout",
+    "exact CMessageBox layout",
+    "BEA patching behavior",
+    "visual QA",
+    "Godot parity",
+    "rebuild parity",
+    "no-noticeable-difference parity"
+  ]
+}

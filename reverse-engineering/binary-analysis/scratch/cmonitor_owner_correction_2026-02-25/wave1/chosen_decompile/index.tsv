@@ -1,0 +1,13 @@
+address	name	signature	status
+0x00407060	CMonitor__Unk_00407060	void __thiscall CMonitor__Unk_00407060(void * this, int param_1, int param_2)	OK
+0x0040dc90	CMonitor__Unk_0040dc90	void __fastcall CMonitor__Unk_0040dc90(int param_1)	OK
+0x00410210	CMonitor__Unk_00410210	void * __thiscall CMonitor__Unk_00410210(void * this, void * param_1, int param_2)	OK
+0x00412050	CMonitor__Unk_00412050	int __thiscall CMonitor__Unk_00412050(void * this, void * param_1, int param_2)	OK
+0x00412520	CMonitor__Unk_00412520	int __fastcall CMonitor__Unk_00412520(void * param_1)	OK
+0x00412bc0	CMonitor__Unk_00412bc0	void * __thiscall CMonitor__Unk_00412bc0(void * this, void * param_1, int param_2)	OK
+0x004140d0	CMonitor__Unk_004140d0	int __thiscall CMonitor__Unk_004140d0(void * this, void * param_1, int param_2)	OK
+0x00414610	CMonitor__Unk_00414610	int __fastcall CMonitor__Unk_00414610(void * param_1)	OK
+0x00452db0	CMonitor__Unk_00452db0	void CMonitor__Unk_00452db0(void)	OK
+0x00472e50	CMonitor__Unk_00472e50	int CMonitor__Unk_00472e50(void)	OK
+0x00490220	CMonitor__Unk_00490220	void __fastcall CMonitor__Unk_00490220(int param_1)	OK
+0x00490780	CMonitor__Unk_00490780	void __thiscall CMonitor__Unk_00490780(void * this, int param_1, int param_2)	OK

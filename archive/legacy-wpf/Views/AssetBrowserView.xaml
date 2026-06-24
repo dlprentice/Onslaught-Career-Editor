@@ -1,0 +1,172 @@
+<UserControl x:Class="Onslaught___Career_Editor.Views.AssetBrowserView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="500" d:DesignWidth="900">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <GroupBox Grid.Row="0" Header="Root Directory" Margin="0,0,0,8">
+            <Grid Margin="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox x:Name="RootDirTextBox"
+                         Grid.Column="0"
+                         IsReadOnly="True"
+                         Margin="0,0,8,0"
+                         ToolTip="Current asset root directory"/>
+
+                <Button Grid.Column="1"
+                        Content="Use Config"
+                        Margin="0,0,8,0"
+                        Padding="12,4"
+                        Click="UseConfigButton_Click"/>
+
+                <Button Grid.Column="2"
+                        Content="Browse..."
+                        Margin="0,0,8,0"
+                        Padding="12,4"
+                        Click="BrowseRootButton_Click"/>
+
+                <Button Grid.Column="3"
+                        Content="Rescan"
+                        Margin="0,0,8,0"
+                        Padding="12,4"
+                        Click="RescanButton_Click"/>
+
+                <Button Grid.Column="4"
+                        Content="Use Extractor Output"
+                        Margin="0,0,8,0"
+                        Padding="12,4"
+                        Click="UseExtractorOutputButton_Click"/>
+
+                <Button Grid.Column="5"
+                        Content="Open AYA Repo"
+                        Margin="0,0,8,0"
+                        Padding="12,4"
+                        Click="OpenAyaRepoButton_Click"/>
+
+                <Button Grid.Column="6"
+                        Content="Launch Extractor"
+                        Padding="12,4"
+                        Click="LaunchAyaExtractorButton_Click"/>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Grid.Row="1" Header="Filters" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal" Margin="8,6">
+                <TextBlock Text="Category:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <ComboBox x:Name="CategoryFilterComboBox"
+                          Width="180"
+                          Margin="0,0,12,0"
+                          SelectionChanged="CategoryFilterComboBox_SelectionChanged">
+                    <ComboBoxItem Content="All"/>
+                    <ComboBoxItem Content="AYA Archives"/>
+                    <ComboBoxItem Content="Video"/>
+                    <ComboBoxItem Content="Audio"/>
+                    <ComboBoxItem Content="Saves/Options"/>
+                    <ComboBoxItem Content="Text/Data"/>
+                    <ComboBoxItem Content="Other"/>
+                </ComboBox>
+
+                <TextBlock Text="Search:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBox x:Name="SearchTextBox"
+                         Width="320"
+                         TextChanged="SearchTextBox_TextChanged"
+                         ToolTip="Filter by relative file path"/>
+
+                <Button x:Name="OpenContainingButton"
+                        Content="Open Containing Folder"
+                        Margin="12,0,0,0"
+                        Padding="12,4"
+                        Click="OpenContainingButton_Click"/>
+
+                <Button x:Name="OpenSelectedButton"
+                        Content="Open Selected"
+                        Margin="8,0,0,0"
+                        Padding="12,4"
+                        Click="OpenSelectedButton_Click"/>
+
+                <Button x:Name="ExtractSelectedAyaButton"
+                        Content="Extract Selected AYA"
+                        Margin="8,0,0,0"
+                        Padding="12,4"
+                        Click="ExtractSelectedAyaButton_Click"/>
+            </StackPanel>
+        </GroupBox>
+
+        <DataGrid x:Name="AssetsDataGrid"
+                  Grid.Row="2"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  AlternatingRowBackground="{StaticResource PageBackgroundBrush}"
+                  SelectionChanged="AssetsDataGrid_SelectionChanged"
+                  Margin="0,0,0,8">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Relative Path" Binding="{Binding RelativePath}" Width="*"/>
+                <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="140"/>
+                <DataGridTextColumn Header="Size" Binding="{Binding SizeDisplay}" Width="110"/>
+                <DataGridTextColumn Header="Modified" Binding="{Binding ModifiedDisplay}" Width="150"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <TextBlock x:Name="SummaryTextBlock"
+                   Grid.Row="3"
+                   Text="Set a root directory to browse assets."
+                   Margin="0,0,0,4"
+                   TextWrapping="Wrap"
+                   FontSize="12"/>
+
+        <GroupBox Grid.Row="4" Header="Preview" Margin="0,0,0,6">
+            <Grid Margin="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="320"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0"
+                        BorderBrush="#C9D1D9"
+                        BorderThickness="1"
+                        Background="{StaticResource SurfaceMutedBrush}"
+                        Height="220"
+                        Margin="0,0,10,0">
+                    <Image x:Name="PreviewImage"
+                           Stretch="Uniform"/>
+                </Border>
+
+                <TextBox x:Name="PreviewTextBox"
+                         Grid.Column="1"
+                         IsReadOnly="True"
+                         BorderThickness="0"
+                         Background="Transparent"
+                         TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto"/>
+            </Grid>
+        </GroupBox>
+
+        <TextBlock x:Name="DetailsTextBlock"
+                   Grid.Row="5"
+                   Text=""
+                   TextWrapping="Wrap"
+                   FontSize="12"/>
+    </Grid>
+</UserControl>

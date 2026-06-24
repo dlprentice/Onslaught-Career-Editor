@@ -1,0 +1,6 @@
+address	name	signature	status
+0x0048f210	CLandscapeVB__RebuildHeightGridVertexBuffer	void __fastcall CLandscapeVB__RebuildHeightGridVertexBuffer(int param_1)	OK
+0x004804c0	CExplosionInitThing__ApplyHBConfigField	void __thiscall CExplosionInitThing__ApplyHBConfigField(void * this, int param_1, void * param_2)	OK
+0x0047cea0	CUnitAI__ClearLinkedThingFlagsAndResetCounter	void __fastcall CUnitAI__ClearLinkedThingFlagsAndResetCounter(int param_1)	OK
+0x0047fb00	CUnitAI__QueueMessageWithTimestamp	void __thiscall CUnitAI__QueueMessageWithTimestamp(void * this, void * param_1, int param_2)	OK
+0x00490900	Vec3__SubtractInPlace	void __thiscall Vec3__SubtractInPlace(void * this, void * param_1, void * param_2)	OK

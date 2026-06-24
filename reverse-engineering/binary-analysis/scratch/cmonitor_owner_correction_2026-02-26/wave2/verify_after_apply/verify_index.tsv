@@ -1,0 +1,3 @@
+address	expected_name	observed_name	status
+0x004097a0	CUnit__Helper_004097a0	CUnit__Helper_004097a0	ok
+0x0040f110	CEngine__Helper_0040f110	CEngine__Helper_0040f110	ok

@@ -1,0 +1,4 @@
+0x005b3440 CFastVB__JpegEntropy_EncodeBlockZigZagHuffman
+0x005b35b0 CFastVB__JpegEntropy_WriteMarkerAndResetDcPredictors
+0x005b86c0 CFastVB__FastAcosApprox_Scalar
+0x005b8ca0 CFastVB__FastTrigPairApprox_Scalar

@@ -1,0 +1,6 @@
+0x004081c0 CMonitor__Process
+0x00407a50 CMonitor__UpdateCameraVectorsAndInput
+0x0040de40 CMonitor__HandleTargetStateChangeAndHudPrompt
+0x0040e940 CMonitor__UpdateTrackedList_59C
+0x0040eb50 CMonitor__FlushTrackedList_1D4
+0x0040ebf0 CMonitor__UpdateTrackedList_620

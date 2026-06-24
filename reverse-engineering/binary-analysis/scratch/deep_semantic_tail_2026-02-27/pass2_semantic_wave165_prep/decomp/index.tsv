@@ -1,0 +1,27 @@
+address	name	signature	status
+0x00528af0	CDXTexture__Helper_00528af0	bool __fastcall CDXTexture__Helper_00528af0(int param_1)	OK
+0x0055d6d4	CDXTexture__Helper_0055d6d4	void __stdcall CDXTexture__Helper_0055d6d4(int param_1, void * param_2)	OK
+0x0055d7e0	CDXTexture__Helper_0055d7e0	int CDXTexture__Helper_0055d7e0(void)	OK
+0x0055d896	CDXTexture__Helper_0055d896	int __cdecl CDXTexture__Helper_0055d896(int param_1, int param_2, int param_3)	OK
+0x0055d90b	CDXTexture__Helper_0055d90b	int __cdecl CDXTexture__Helper_0055d90b(int param_1, int param_2, int param_3, void * param_4, void * param_5)	OK
+0x0055de6f	CDXTexture__Helper_0055de6f	void CDXTexture__Helper_0055de6f(void)	OK
+0x0055de78	CDXTexture__Helper_0055de78	void CDXTexture__Helper_0055de78(void)	OK
+0x0055def0	CDXTexture__Helper_0055def0	void CDXTexture__Helper_0055def0(void)	OK
+0x0055ed50	CDXTexture__Helper_0055ed50	int __cdecl CDXTexture__Helper_0055ed50(void * param_1, void * param_2, uint param_3)	OK
+0x00560520	CDXTexture__Helper_00560520	int CDXTexture__Helper_00560520(void)	OK
+0x005605ca	CDXTexture__Helper_005605ca	int __cdecl CDXTexture__Helper_005605ca(void * param_1, void * param_2, void * param_3)	OK
+0x00560740	CDXTexture__Helper_00560740	int __cdecl CDXTexture__Helper_00560740(void * param_1, void * param_2, void * param_3)	OK
+0x0056080d	CDXTexture__Helper_0056080d	void CDXTexture__Helper_0056080d(void)	OK
+0x00560885	CDXTexture__Helper_00560885	void __cdecl CDXTexture__Helper_00560885(int param_1, int param_2, void * param_3, void * param_4)	OK
+0x00560a49	CDXTexture__Helper_00560a49	void __cdecl CDXTexture__Helper_00560a49(int param_1)	OK
+0x00560ab0	CDXTexture__Helper_00560ab0	int __cdecl CDXTexture__Helper_00560ab0(int param_1, void * param_2)	OK
+0x00561179	CDXTexture__Helper_00561179	void __cdecl CDXTexture__Helper_00561179(int param_1)	OK
+0x0056162e	CDXTexture__Helper_0056162e	void CDXTexture__Helper_0056162e(void)	OK
+0x00561679	CDXTexture__Helper_00561679	void __fastcall CDXTexture__Helper_00561679(int param_1, int param_2)	OK
+0x0056171c	CDXTexture__Helper_0056171c	uint __cdecl CDXTexture__Helper_0056171c(uint param_1, void * param_2)	OK
+0x00561834	CDXTexture__Helper_00561834	int __cdecl CDXTexture__Helper_00561834(int param_1, void * param_2, void * param_3)	OK
+0x00561f75	CDXTexture__Helper_00561f75	void __cdecl CDXTexture__Helper_00561f75(uint param_1, void * param_2, void * param_3)	OK
+0x00561faa	CDXTexture__Helper_00561faa	void __cdecl CDXTexture__Helper_00561faa(uint param_1, int param_2, void * param_3, void * param_4)	OK
+0x00561fdb	CDXTexture__Helper_00561fdb	void __cdecl CDXTexture__Helper_00561fdb(void * param_1, int param_2, void * param_3, void * param_4)	OK
+0x0056202e	CDXTexture__Helper_0056202e	int __cdecl CDXTexture__Helper_0056202e(void * param_1, uint param_2)	OK
+0x005627ea	CDXTexture__Helper_005627ea	bool __cdecl CDXTexture__Helper_005627ea(uint param_1, void * param_2, uint param_3)	OK

@@ -1,0 +1,618 @@
+{
+  "schemaVersion": "missionscript-goodie-state-save-command-effect-fixture-proof-plan.v1",
+  "status": "PASS",
+  "missionScriptGoodieStateSaveCommandEffectFixtureProofPlanStatus": "missionscript-goodie-state-save-command-effect-fixture-proof-plan-complete-static-offset-state-fixture-plan-not-runtime-proof",
+  "previousSlice": "MissionScript Vector/Range Command-Effect Deterministic Helper Fixture Proof Plan",
+  "selectedNextSlice": "MissionScript Goodie State / Save Copied-Baseline Byte-Diff Fixture Proof Plan",
+  "selectedFixtureFamily": "goodie-state-save",
+  "selectedFixturePath": "goodie-state-save-index-state-byte-preservation",
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackupClass": "verified-static-backup-redacted"
+  },
+  "fixtureAccounting": {
+    "sourceProofCount": 6,
+    "selectedFixtureFamily": "goodie-state-save",
+    "selectedFixturePath": "goodie-state-save-index-state-byte-preservation",
+    "fixtureFamilyCount": 5,
+    "plannedGoodieFixtureCaseCount": 43,
+    "descriptorBoundaryCaseCount": 5,
+    "scriptIndexOffsetCaseCount": 12,
+    "stateValueCaseCount": 4,
+    "corpusBoundaryCaseCount": 9,
+    "appCoreCopiedSaveSafetyCaseCount": 13,
+    "descriptorRecordCount": 3,
+    "uniqueDescriptorIndexCount": 3,
+    "descriptorIndices": [
+      84,
+      118,
+      119
+    ],
+    "handlerReadbackCount": 2,
+    "handlerAnchorCount": 2,
+    "wave579MetadataRows": 6,
+    "wave579TagRows": 6,
+    "wave579XrefRows": 6,
+    "wave579InstructionRows": 1326,
+    "wave579DecompileRows": 6,
+    "wave579VtableRows": 24,
+    "goodieStorageEntryCount": 300,
+    "displayableGoodieCount": 233,
+    "reservedPreserveEntryCount": 67,
+    "trueViewGoodieBase": "0x1F46",
+    "knownScriptGoodieCallIndexCount": 6,
+    "looseGoodieStateCallCount": 32,
+    "zeroTargetScriptIndexCount": 3,
+    "addScoreCorpusCallCount": 15,
+    "copiedFileProofExpectedSize": 10004,
+    "copiedFileProofVersionWord": "0x4BD1",
+    "falseGuardCount": 41,
+    "zeroCounterCount": 31,
+    "publicLeakCheck": "PASS"
+  },
+  "sourceEvidence": {
+    "previousVectorRangeFixture": {
+      "schema": "reverse-engineering/binary-analysis/missionscript-vector-range-deterministic-helper-fixture-proof-plan.v1.json",
+      "status": "missionscript-vector-range-deterministic-helper-fixture-proof-plan-complete-pure-helper-fixture-not-runtime-proof",
+      "selectedNextSlice": "MissionScript Goodie State / Save Command-Effect Fixture Proof Plan"
+    },
+    "goodieStaticProof": {
+      "schema": "reverse-engineering/binary-analysis/missionscript-goodie-state-command-effect.v1.json",
+      "proof": "reverse-engineering/binary-analysis/missionscript-goodie-state-command-effect-static-proof.md",
+      "descriptorRecords": {
+        "AddScore": {
+          "index": 84,
+          "recordAddress": "0x0064e350",
+          "observedNameSymbol": "s_AddScore_0064f5c4",
+          "rawEntryValue": "IScript__Unk_00534410",
+          "nameStatus": "observed-symbol",
+          "expectedSymbol": "s_AddScore_0064f5c4",
+          "aliasBoundary": "0x00534410 IScript__SecondaryObjectiveComplete"
+        },
+        "SetGoodieState": {
+          "index": 118,
+          "recordAddress": "0x0064ebd0",
+          "observedNameSymbol": "s_SetGoodieState_0064f380",
+          "rawEntryValue": "&LAB_00533b30",
+          "nameStatus": "observed-symbol",
+          "expectedSymbol": "s_SetGoodieState_0064f380"
+        },
+        "GetGoodieState": {
+          "index": 119,
+          "recordAddress": "0x0064ec10",
+          "observedNameSymbol": "s_GetGoodieState_0064f370",
+          "rawEntryValue": "IScript__SetGoodieState",
+          "nameStatus": "observed-symbol",
+          "expectedSymbol": "s_GetGoodieState_0064f370"
+        }
+      },
+      "handlerReadback": [
+        {
+          "command": "SetGoodieState",
+          "address": "0x00533a70",
+          "name": "IScript__SetGoodieState",
+          "signature": "void __stdcall IScript__SetGoodieState(void * script_args, void * unused_state, void * out_result)",
+          "summary": "reads a 1-based script Goodie index and state, then writes g_Career_mGoodies[index-1]"
+        },
+        {
+          "command": "GetGoodieState",
+          "address": "0x00533aa0",
+          "name": "IScript__GetGoodieState",
+          "signature": "void __stdcall IScript__GetGoodieState(void * script_args, void * unused_state, void * out_result)",
+          "summary": "allocates an 8-byte integer result, reads g_Career_mGoodies[index-1], installs vtable 0x005e4af8, and writes out_result"
+        }
+      ],
+      "saveMapping": {
+        "careerGlobal": "0x00660620",
+        "goodieArraySymbol": "g_Career_mGoodies",
+        "goodieArrayAddress": "0x00662564",
+        "entryCount": 300,
+        "displayableEntries": "0-232",
+        "reservedPreserveEntries": "233-299",
+        "trueViewFileBase": "0x1F46",
+        "scriptIndexing": "1-based; script index N maps to save Goodie index N-1",
+        "fileOffsetFormula": "0x1F46 + (script_index - 1) * 4",
+        "stateValues": {
+          "0": "GS_UNKNOWN",
+          "1": "GS_INSTRUCTIONS",
+          "2": "GS_NEW",
+          "3": "GS_OLD"
+        },
+        "zeroIndexBoundary": "script index 0 would underflow before g_Career_mGoodies[0]"
+      },
+      "addScoreBoundary": {
+        "descriptorIndex": 84,
+        "descriptorRecord": "0x0064e350",
+        "observedNameSymbol": "s_AddScore_0064f5c4",
+        "rawEntryValue": "IScript__Unk_00534410",
+        "conflictingCurrentObjectiveName": "0x00534410 IScript__SecondaryObjectiveComplete",
+        "status": "descriptor/name context only in this proof",
+        "whyDeferred": "existing docs expose AddScore as an MSL command and descriptor row, but this slice does not promote a saved handler-body bridge for AddScore; the raw entry is preserved as an alias-boundary conflict with current objective/outcome evidence"
+      }
+    },
+    "playerStateScoreStaticProof": {
+      "schema": "reverse-engineering/binary-analysis/missionscript-player-state-score-command-effect.v1.json",
+      "addScoreDirectNonCommentCalls": 15,
+      "addScoreAliasBoundary": "descriptor-row/raw-entry static evidence only; handler-body semantics, exact descriptor layout, runtime command effects, and exact player-state layout remain unproven"
+    },
+    "rollup": {
+      "schema": "reverse-engineering/binary-analysis/missionscript-command-effect-rebuild-interface-rollup.v1.json",
+      "goodieStateFamilyPresent": true,
+      "goodieStateSaveInterfacePresent": true
+    },
+    "saveDocs": {
+      "goodiesSystem": "reverse-engineering/save-file/goodies-system.md",
+      "saveFormat": "reverse-engineering/save-file/save-format.md",
+      "quickReference": "reverse-engineering/quick-reference/save-goodies.md"
+    },
+    "copiedFileProofAndAppCore": {
+      "copiedFileProof": "reverse-engineering/binary-analysis/save-options-controller-byte-preservation-copied-file.v1.json",
+      "appCorePatcher": "OnslaughtCareerEditor.AppCore/BesFilePatcher.cs",
+      "appCoreTests": "OnslaughtCareerEditor.AppCore.Tests/SaveAnalyzerServiceTests.cs",
+      "expectedSize": 10004,
+      "versionWord": "0x4BD1",
+      "appCoreWritesTrueViewOffsets": true,
+      "appCoreRejectsInPlaceOutput": true,
+      "appCoreRejectsReservedGoodieSlots": true,
+      "appCoreRejectsInvalidGoodieStates": true
+    }
+  },
+  "descriptorBoundaryCases": [
+    {
+      "id": "descriptor-set-goodie-state",
+      "kind": "descriptor",
+      "command": "SetGoodieState",
+      "descriptorIndex": 118,
+      "recordAddress": "0x0064ebd0",
+      "rawEntryValue": "&LAB_00533b30"
+    },
+    {
+      "id": "descriptor-get-goodie-state",
+      "kind": "descriptor",
+      "command": "GetGoodieState",
+      "descriptorIndex": 119,
+      "recordAddress": "0x0064ec10",
+      "rawEntryValue": "IScript__SetGoodieState"
+    },
+    {
+      "id": "descriptor-add-score-alias-boundary",
+      "kind": "alias-boundary",
+      "command": "AddScore",
+      "descriptorIndex": 84,
+      "recordAddress": "0x0064e350",
+      "rawEntryValue": "IScript__Unk_00534410",
+      "aliasBoundary": "0x00534410 IScript__SecondaryObjectiveComplete",
+      "handlerBodyClaimed": false
+    },
+    {
+      "id": "handler-set-goodie-state",
+      "kind": "handler",
+      "command": "SetGoodieState",
+      "address": "0x00533a70",
+      "name": "IScript__SetGoodieState",
+      "summary": "reads a 1-based script Goodie index and state, then writes g_Career_mGoodies[index-1]"
+    },
+    {
+      "id": "handler-get-goodie-state",
+      "kind": "handler",
+      "command": "GetGoodieState",
+      "address": "0x00533aa0",
+      "name": "IScript__GetGoodieState",
+      "summary": "allocates an 8-byte integer result, reads g_Career_mGoodies[index-1], installs vtable 0x005e4af8, and writes out_result"
+    }
+  ],
+  "scriptIndexOffsetCases": [
+    {
+      "scriptIndex": 1,
+      "saveGoodieIndex": 0,
+      "fileOffset": "0x1F46",
+      "fixtureRole": "first-displayable-goodie",
+      "validStorageIndex": true,
+      "displayableInCleanRoomFixture": true,
+      "reservedPreserveInCleanRoomFixture": false,
+      "cleanRoomFixtureRejects": false,
+      "retailRejectionProven": null
+    },
+    {
+      "scriptIndex": 51,
+      "saveGoodieIndex": 50,
+      "fileOffset": "0x200E",
+      "fixtureRole": "known-script-call-displayable",
+      "validStorageIndex": true,
+      "displayableInCleanRoomFixture": true,
+      "reservedPreserveInCleanRoomFixture": false,
+      "cleanRoomFixtureRejects": false,
+      "retailRejectionProven": null
+    },
+    {
+      "scriptIndex": 53,
+      "saveGoodieIndex": 52,
+      "fileOffset": "0x2016",
+      "fixtureRole": "known-script-call-displayable",
+      "validStorageIndex": true,
+      "displayableInCleanRoomFixture": true,
+      "reservedPreserveInCleanRoomFixture": false,
+      "cleanRoomFixtureRejects": false,
+      "retailRejectionProven": null
+    },
+    {
+      "scriptIndex": 68,
+      "saveGoodieIndex": 67,
+      "fileOffset": "0x2052",
+      "fixtureRole": "known-script-call-race-displayable",
+      "validStorageIndex": true,
+      "displayableInCleanRoomFixture": true,
+      "reservedPreserveInCleanRoomFixture": false,
+      "cleanRoomFixtureRejects": false,
+      "retailRejectionProven": null
+    },
+    {
+      "scriptIndex": 69,
+      "saveGoodieIndex": 68,
+      "fileOffset": "0x2056",
+      "fixtureRole": "known-script-call-race-displayable",
+      "validStorageIndex": true,
+      "displayableInCleanRoomFixture": true,
+      "reservedPreserveInCleanRoomFixture": false,
+      "cleanRoomFixtureRejects": false,
+      "retailRejectionProven": null
+    },
+    {
+      "scriptIndex": 70,
+      "saveGoodieIndex": 69,
+      "fileOffset": "0x205A",
+      "fixtureRole": "known-script-call-race-displayable",
+      "validStorageIndex": true,
+      "displayableInCleanRoomFixture": true,
+      "reservedPreserveInCleanRoomFixture": false,
+      "cleanRoomFixtureRejects": false,
+      "retailRejectionProven": null
+    },
+    {
+      "scriptIndex": 71,
+      "saveGoodieIndex": 70,
+      "fileOffset": "0x205E",
+      "fixtureRole": "known-script-call-race-displayable",
+      "validStorageIndex": true,
+      "displayableInCleanRoomFixture": true,
+      "reservedPreserveInCleanRoomFixture": false,
+      "cleanRoomFixtureRejects": false,
+      "retailRejectionProven": null
+    },
+    {
+      "scriptIndex": 233,
+      "saveGoodieIndex": 232,
+      "fileOffset": "0x22E6",
+      "fixtureRole": "last-displayable-goodie",
+      "validStorageIndex": true,
+      "displayableInCleanRoomFixture": true,
+      "reservedPreserveInCleanRoomFixture": false,
+      "cleanRoomFixtureRejects": false,
+      "retailRejectionProven": null
+    },
+    {
+      "scriptIndex": 234,
+      "saveGoodieIndex": 233,
+      "fileOffset": "0x22EA",
+      "fixtureRole": "first-reserved-preserve-goodie",
+      "validStorageIndex": true,
+      "displayableInCleanRoomFixture": false,
+      "reservedPreserveInCleanRoomFixture": true,
+      "cleanRoomFixtureRejects": false,
+      "retailRejectionProven": null
+    },
+    {
+      "scriptIndex": 300,
+      "saveGoodieIndex": 299,
+      "fileOffset": "0x23F2",
+      "fixtureRole": "last-reserved-preserve-goodie",
+      "validStorageIndex": true,
+      "displayableInCleanRoomFixture": false,
+      "reservedPreserveInCleanRoomFixture": true,
+      "cleanRoomFixtureRejects": false,
+      "retailRejectionProven": null
+    },
+    {
+      "scriptIndex": 0,
+      "saveGoodieIndex": -1,
+      "fileOffset": "0x1F42",
+      "fixtureRole": "invalid-underflow-guard",
+      "validStorageIndex": false,
+      "displayableInCleanRoomFixture": false,
+      "reservedPreserveInCleanRoomFixture": false,
+      "cleanRoomFixtureRejects": true,
+      "retailRejectionProven": false
+    },
+    {
+      "scriptIndex": 301,
+      "saveGoodieIndex": 300,
+      "fileOffset": "0x23F6",
+      "fixtureRole": "invalid-overflow-kill-counter-overlap-guard",
+      "validStorageIndex": false,
+      "displayableInCleanRoomFixture": false,
+      "reservedPreserveInCleanRoomFixture": false,
+      "cleanRoomFixtureRejects": true,
+      "retailRejectionProven": false
+    }
+  ],
+  "stateValueCases": [
+    {
+      "rawState": 0,
+      "enumName": "GS_UNKNOWN",
+      "appCoreLabel": "Locked",
+      "cleanRoomFixtureAccepts": true
+    },
+    {
+      "rawState": 1,
+      "enumName": "GS_INSTRUCTIONS",
+      "appCoreLabel": "Instructions",
+      "cleanRoomFixtureAccepts": true
+    },
+    {
+      "rawState": 2,
+      "enumName": "GS_NEW",
+      "appCoreLabel": "New",
+      "cleanRoomFixtureAccepts": true
+    },
+    {
+      "rawState": 3,
+      "enumName": "GS_OLD",
+      "appCoreLabel": "Old",
+      "cleanRoomFixtureAccepts": true
+    }
+  ],
+  "corpusBoundaryCases": [
+    {
+      "scriptIndex": 51,
+      "saveGoodieIndex": 50,
+      "corpusBoundary": "present-known-call",
+      "countsTowardLooseGoodieStateCallTotal": true
+    },
+    {
+      "scriptIndex": 53,
+      "saveGoodieIndex": 52,
+      "corpusBoundary": "present-known-call",
+      "countsTowardLooseGoodieStateCallTotal": true
+    },
+    {
+      "scriptIndex": 68,
+      "saveGoodieIndex": 67,
+      "corpusBoundary": "present-known-race-call",
+      "countsTowardLooseGoodieStateCallTotal": true
+    },
+    {
+      "scriptIndex": 69,
+      "saveGoodieIndex": 68,
+      "corpusBoundary": "present-known-race-call",
+      "countsTowardLooseGoodieStateCallTotal": true
+    },
+    {
+      "scriptIndex": 70,
+      "saveGoodieIndex": 69,
+      "corpusBoundary": "present-known-race-call",
+      "countsTowardLooseGoodieStateCallTotal": true
+    },
+    {
+      "scriptIndex": 71,
+      "saveGoodieIndex": 70,
+      "corpusBoundary": "present-known-race-call",
+      "countsTowardLooseGoodieStateCallTotal": true
+    },
+    {
+      "scriptIndex": 72,
+      "saveGoodieIndex": 71,
+      "corpusBoundary": "zero-call-hidden-wall-gap-guard",
+      "countsTowardLooseGoodieStateCallTotal": false
+    },
+    {
+      "scriptIndex": 73,
+      "saveGoodieIndex": 72,
+      "corpusBoundary": "zero-call-hidden-wall-gap-guard",
+      "countsTowardLooseGoodieStateCallTotal": false
+    },
+    {
+      "scriptIndex": 74,
+      "saveGoodieIndex": 73,
+      "corpusBoundary": "zero-call-hidden-wall-gap-guard",
+      "countsTowardLooseGoodieStateCallTotal": false
+    }
+  ],
+  "appCoreCopiedSaveSafetyCases": [
+    {
+      "id": "copied-bes-validation",
+      "plannedForNextSlice": true,
+      "requiresCopiedRealBaseline": true
+    },
+    {
+      "id": "copied-defaultoptions-validation",
+      "plannedForNextSlice": true,
+      "requiresCopiedRealBaseline": true
+    },
+    {
+      "id": "no-op-preservation",
+      "plannedForNextSlice": true,
+      "requiresCopiedRealBaseline": true
+    },
+    {
+      "id": "analyze-save-300-goodie-rows",
+      "plannedForNextSlice": true,
+      "requiresCopiedRealBaseline": false
+    },
+    {
+      "id": "scripted-single-write-through-true-view-offset",
+      "plannedForNextSlice": true,
+      "requiresCopiedRealBaseline": true
+    },
+    {
+      "id": "scripted-multi-write-through-true-view-offsets",
+      "plannedForNextSlice": true,
+      "requiresCopiedRealBaseline": true
+    },
+    {
+      "id": "displayable-boundary-232-accepted",
+      "plannedForNextSlice": true,
+      "requiresCopiedRealBaseline": false
+    },
+    {
+      "id": "reserved-233-through-299-preserved",
+      "plannedForNextSlice": true,
+      "requiresCopiedRealBaseline": false
+    },
+    {
+      "id": "reserved-write-rejected",
+      "plannedForNextSlice": true,
+      "requiresCopiedRealBaseline": false
+    },
+    {
+      "id": "invalid-state-rejected",
+      "plannedForNextSlice": true,
+      "requiresCopiedRealBaseline": false
+    },
+    {
+      "id": "wrong-size-rejected",
+      "plannedForNextSlice": true,
+      "requiresCopiedRealBaseline": false
+    },
+    {
+      "id": "wrong-version-rejected",
+      "plannedForNextSlice": true,
+      "requiresCopiedRealBaseline": false
+    },
+    {
+      "id": "in-place-write-rejected",
+      "plannedForNextSlice": true,
+      "requiresCopiedRealBaseline": false
+    }
+  ],
+  "futureCopiedBaselineGate": {
+    "selectedNextSlice": "MissionScript Goodie State / Save Copied-Baseline Byte-Diff Fixture Proof Plan",
+    "requiresCopiedRealBesBaseline": true,
+    "requiresCopiedRealDefaultOptionsBaseline": true,
+    "expectedSize": 10004,
+    "versionWord": "0x4BD1",
+    "copyBeforeWrite": true,
+    "sourceAndOutputPathsDistinct": true,
+    "sourceBaselinesUnchanged": true,
+    "reservedGoodiesUnchangedUnlessExplicitFutureSliceArmsThem": true,
+    "synthesizedSaveBuffersAreNotAcceptedAsAuthority": true,
+    "publicSchemaMustOmitSourcePathsHashesAndRawBytes": true
+  },
+  "guardSummary": {
+    "falseGuards": {
+      "programFilesInputUsed": false,
+      "installedGameMutation": false,
+      "originalExecutableMutation": false,
+      "copiedFileMutation": false,
+      "sourceBaselineRead": false,
+      "privateArtifactMaterialized": false,
+      "saveSynthesis": false,
+      "liveLooseMslLoading": false,
+      "packedResourceScriptSelectionProven": false,
+      "runtimeExecution": false,
+      "runtimeMissionScriptExecutionProven": false,
+      "runtimeCommandEffectsProven": false,
+      "runtimeGoodieStateMutationProven": false,
+      "runtimeSaveBehaviorProven": false,
+      "runtimeGoodiesWallBehaviorProven": false,
+      "runtimeScoreBehaviorProven": false,
+      "runtimeDefaultOptionsProof": false,
+      "runtimeGoodies71To73ReachabilityProven": false,
+      "hiddenGoodiesUnreachableProven": false,
+      "beLaunch": false,
+      "newLaunch": false,
+      "screenshotCapture": false,
+      "privateFrameReviewPerformed": false,
+      "rowObservation": false,
+      "sourceSelectionObserved": false,
+      "nativeInput": false,
+      "debuggerAttachment": false,
+      "godotWork": false,
+      "ghidraMutation": false,
+      "executablePatching": false,
+      "productUiWired": false,
+      "rebuildImplementation": false,
+      "exactCommandDescriptorLayoutProven": false,
+      "exactCommandArityProven": false,
+      "exactArgumentTypeSchemaProven": false,
+      "exactCCareerLayoutProven": false,
+      "exactSourceBodyIdentityProven": false,
+      "addScoreHandlerBodyProven": false,
+      "beaPatchingBehaviorProven": false,
+      "rebuildParityProven": false,
+      "noNoticeableDifferenceParityProven": false
+    },
+    "zeroCounters": {
+      "runtimeObservationRows": 0,
+      "missionScriptRuntimeEvidenceRows": 0,
+      "runtimeCommandEffectRows": 0,
+      "runtimeGoodieStateRows": 0,
+      "runtimeGoodieMutationRows": 0,
+      "runtimeSaveRows": 0,
+      "runtimeDefaultOptionsRows": 0,
+      "runtimeGoodiesWallRows": 0,
+      "runtimeScoreRows": 0,
+      "runtimeGoodies71To73Rows": 0,
+      "privateFrameRowsObserved": 0,
+      "rowObservationRows": 0,
+      "sourceObservedRows": 0,
+      "sourceRuntimeObservationRows": 0,
+      "sourceRowStatusChangedCount": 0,
+      "newLaunchRows": 0,
+      "captureRows": 0,
+      "ocrRows": 0,
+      "rawDialogueRows": 0,
+      "ghidraMutationRows": 0,
+      "executablePatchRows": 0,
+      "copiedFileMutationRows": 0,
+      "sourceBaselineReadRows": 0,
+      "privateArtifactRows": 0,
+      "productUiRows": 0,
+      "godotProjectRows": 0,
+      "rebuildImplementationRows": 0,
+      "beProcessesAfterFixture": 0,
+      "publicAbsolutePathLeakCount": 0,
+      "publicSha256ValueLeakCount": 0,
+      "rawSaveByteLeakCount": 0
+    }
+  },
+  "claimBoundary": {
+    "proves": [
+      "public-safe static/codec fixture plan for Goodie command descriptors",
+      "handler anchors for SetGoodieState and GetGoodieState",
+      "one-based script-index to true-view save-offset mapping for selected boundary cases",
+      "state enum vocabulary 0..3",
+      "corpus presence/absence guard for known Goodie-state script indices and 72..74",
+      "copied-save AppCore safety gates required before byte-diff proof"
+    ],
+    "doesNotProve": [
+      "runtime MissionScript execution",
+      "runtime command effects",
+      "runtime Goodie state mutation",
+      "runtime save behavior",
+      "runtime defaultoptions behavior",
+      "runtime Goodies wall behavior",
+      "runtime score behavior",
+      "AddScore handler-body semantics",
+      "hidden Goodies unreachable",
+      "Goodies 71-73 runtime reachability",
+      "exact descriptor layout",
+      "exact command arity",
+      "exact argument type schema",
+      "exact CCareer layout",
+      "source-selection observation",
+      "private-frame review",
+      "visual QA",
+      "Godot parity",
+      "Ghidra mutation",
+      "executable patching",
+      "product UI behavior",
+      "rebuild implementation",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  }
+}

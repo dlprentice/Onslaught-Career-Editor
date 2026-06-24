@@ -1,0 +1,2 @@
+address	name	signature	status
+0x0046fae0	CGame__UnPause	void __fastcall CGame__UnPause(void * this)	OK

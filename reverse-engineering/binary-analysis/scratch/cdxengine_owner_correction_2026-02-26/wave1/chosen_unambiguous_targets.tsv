@@ -1,0 +1,6 @@
+address	old_name	inferred_owner	new_name	xref_count	top_counts
+0x0053d760	CDXEngine__Unk_0053d760	CThing	CThing__Helper_0053d760	10	CThing:2;CMapWho:1;CMeshRenderer:1
+0x00540840	CDXEngine__Unk_00540840	PCPlatform	PCPlatform__Helper_00540840	4	PCPlatform:4
+0x00544770	CDXEngine__Unk_00544770	CDXLandscape	CDXLandscape__Helper_00544770	4	CDXLandscape:4
+0x005492d0	CDXEngine__Unk_005492d0	CLTShell	CLTShell__Helper_005492d0	3	CLTShell:3
+0x00549310	CDXEngine__Unk_00549310	CLTShell	CLTShell__Helper_00549310	6	CLTShell:6

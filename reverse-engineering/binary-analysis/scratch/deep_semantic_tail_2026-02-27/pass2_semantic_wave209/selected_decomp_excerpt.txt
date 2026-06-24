@@ -1,0 +1,1061 @@
+===== 00423870_CResourceAccumulator__Helper_00423870.c =====
+/* address: 0x00423870 */
+/* name: CResourceAccumulator__Helper_00423870 */
+/* signature: void __thiscall CResourceAccumulator__Helper_00423870(void * this, void * param_1, int param_2) */
+
+
+void __thiscall CResourceAccumulator__Helper_00423870(void *this,void *param_1,int param_2)
+
+{
+  void *obj;
+
+  *(undefined4 *)this = 0;
+  *(undefined4 *)((int)this + 8) = 0;
+  if ((*(int *)((int)this + 0xc) != 0) && (obj = *(void **)((int)this + 4), obj != (void *)0x0)) {
+    CChunker__Destructor();
+    OID__FreeObject(obj);
+    *(undefined4 *)((int)this + 4) = 0;
+  }
+  *(undefined4 *)((int)this + 0xc) = 0;
+  *(void **)((int)this + 4) = param_1;
+  return;
+}
+
+===== 0044a1f0_CResourceAccumulator__Helper_0044a1f0.c =====
+/* address: 0x0044a1f0 */
+/* name: CResourceAccumulator__Helper_0044a1f0 */
+/* signature: void __thiscall CResourceAccumulator__Helper_0044a1f0(void * this, int param_1, int param_2) */
+
+
+void __thiscall CResourceAccumulator__Helper_0044a1f0(void *this,int param_1,int param_2)
+
+{
+  CMapTex__LoadMixerTextureSet(param_1,6,0x100);
+  CMapTex__CopyFromOther(*(undefined4 *)((int)this + 0x49c));
+  CMapTex__CopyFromOther(*(int *)((int)this + 0x49c) + 0x4c);
+  CMapTex__CopyFromOther(*(int *)((int)this + 0x49c) + 0x98);
+  CMapTex__CopyFromOther(*(int *)((int)this + 0x49c) + 0xe4);
+  CMapTex__CopyFromOther(*(int *)((int)this + 0x49c) + 0x130);
+  CMapTex__CopyFromOther(*(int *)((int)this + 0x49c) + 0x17c);
+  return;
+}
+
+===== 0044a2a0_CResourceAccumulator__Helper_0044a2a0.c =====
+/* address: 0x0044a2a0 */
+/* name: CResourceAccumulator__Helper_0044a2a0 */
+/* signature: void __stdcall CResourceAccumulator__Helper_0044a2a0(int param_1) */
+
+
+void CResourceAccumulator__Helper_0044a2a0(int param_1)
+
+{
+  int in_ECX;
+  void *unaff_retaddr;
+
+  CDXEngine__InitKempyCubeResources(*(void **)(in_ECX + 0x498),(void *)param_1,unaff_retaddr);
+  return;
+}
+
+===== 0044a2c0_CResourceAccumulator__Helper_0044a2c0.c =====
+/* address: 0x0044a2c0 */
+/* name: CResourceAccumulator__Helper_0044a2c0 */
+/* signature: void __fastcall CResourceAccumulator__Helper_0044a2c0(int param_1, void * param_2) */
+
+
+void __fastcall CResourceAccumulator__Helper_0044a2c0(int param_1,void *param_2)
+
+{
+  CWaterRenderSystem__ReloadTextures(*(void **)(param_1 + 0x14),param_2);
+  return;
+}
+
+===== 0044a6e0_CResourceAccumulator__Helper_0044a6e0.c =====
+/* address: 0x0044a6e0 */
+/* name: CResourceAccumulator__Helper_0044a6e0 */
+/* signature: void __stdcall CResourceAccumulator__Helper_0044a6e0(void * param_1) */
+
+
+void CResourceAccumulator__Helper_0044a6e0(void *param_1)
+
+{
+  void *this;
+  void *unaff_ESI;
+  int iVar1;
+
+  this = param_1;
+  CMeshPart__Helper_00423910((uint)param_1);
+  CMeshPart__Helper_00423960(this,(int)&param_1,4,1,(int)unaff_ESI);
+  iVar1 = 0;
+  if (0 < (int)param_1) {
+    do {
+      CMapTex__Deserialize(this,iVar1);
+      iVar1 = iVar1 + 1;
+    } while (iVar1 < (int)param_1);
+  }
+  CResourceAccumulator__Helper_00491060(&DAT_006fadc8,(int)this,unaff_ESI);
+  return;
+}
+
+===== 00491060_CResourceAccumulator__Helper_00491060.c =====
+/* address: 0x00491060 */
+/* name: CResourceAccumulator__Helper_00491060 */
+/* signature: void __thiscall CResourceAccumulator__Helper_00491060(void * this, int param_1, void * param_2) */
+
+
+void __thiscall CResourceAccumulator__Helper_00491060(void *this,int param_1,void *param_2)
+
+{
+  undefined4 extraout_EAX;
+  undefined4 extraout_EDX;
+  void *extraout_EDX_00;
+  int unaff_EDI;
+  undefined4 local_24;
+  char local_20 [32];
+
+  CConsole__Status(&DAT_00663498,s_Deserializing_map_0062da84);
+  CMeshPart__Helper_00423910(param_1);
+  CMeshPart__Helper_00423960((void *)param_1,(int)&local_24,4,1,unaff_EDI);
+  sprintf(local_20,s_Deserializing_map__d_0062da6c);
+  DebugTrace(local_20);
+  *(undefined4 *)((int)this + 0x93dc) = local_24;
+  *(undefined4 *)((int)this + 0x93e4) = 1;
+  *(undefined4 *)((int)this + 0x93e0) = 1;
+  CHeightField__Load(param_1);
+  CMixerMap__Init(param_1);
+  CResourceAccumulator__Helper_0044a2a0
+            (CONCAT31((int3)((uint)extraout_EDX >> 8),*(undefined1 *)((int)this + 0x1090)));
+  CFrontEndPage__Process_NoOp
+            ((void *)CONCAT31((int3)((uint)extraout_EAX >> 8),*(undefined1 *)((int)this + 0x1091)),
+             unaff_EDI);
+  CResourceAccumulator__Helper_0044a1f0(&DAT_0089c9a0,(uint)*(byte *)((int)this + 0x1030),unaff_EDI)
+  ;
+  CResourceAccumulator__Helper_0048dec0();
+  CResourceAccumulator__Helper_0044a2c0(0x89c9a0,extraout_EDX_00);
+  CConsole__StatusDone(&DAT_00663498,s_Deserializing_map_0062da84,'\x01');
+  return;
+}
+
+===== 0048dec0_CResourceAccumulator__Helper_0048dec0.c =====
+/* address: 0x0048dec0 */
+/* name: CResourceAccumulator__Helper_0048dec0 */
+/* signature: void CResourceAccumulator__Helper_0048dec0(void) */
+
+
+/* WARNING: Unknown calling convention -- yet parameter storage is locked */
+
+void CResourceAccumulator__Helper_0048dec0(void)
+
+{
+  char local_18 [24];
+
+  sprintf(local_18,s_mixers_detail__2d_tga_0062d80c);
+  if (DAT_00662dd4 != 0) {
+    DAT_0067a7d0 = CTexture__FindTexture(local_18,5,0,-1,1,1);
+    return;
+  }
+  DAT_0067a7d0 = CTexture__FindTexture(local_18,0,0,-1,1,1);
+  return;
+}
+
+===== 0042d7d0_CFrontEnd__Helper_0042d7d0.c =====
+/* address: 0x0042d7d0 */
+/* name: CFrontEnd__Helper_0042d7d0 */
+/* signature: void __cdecl CFrontEnd__Helper_0042d7d0(int param_1) */
+
+
+/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+
+void __cdecl CFrontEnd__Helper_0042d7d0(int param_1)
+
+{
+  float fVar1;
+
+  if (DAT_0066e94c != (char)param_1) {
+    if (DAT_006630cc == 0) {
+      fVar1 = PLATFORM__GetSysTimeFloat();
+      _DAT_0066e948 = fVar1 - _DAT_0066e948;
+    }
+    DAT_0066e94c = (char)param_1;
+  }
+  return;
+}
+
+===== 0044d6f0_CFrontEnd__Helper_0044d6f0.c =====
+/* address: 0x0044d6f0 */
+/* name: CFrontEnd__Helper_0044d6f0 */
+/* signature: void __fastcall CFrontEnd__Helper_0044d6f0(void * param_1) */
+
+
+/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+
+void __fastcall CFrontEnd__Helper_0044d6f0(void *param_1)
+
+{
+  float fVar1;
+  float fVar2;
+  float fVar3;
+  float fVar4;
+  float fVar5;
+  uint uVar6;
+  uint uVar7;
+  short *psVar8;
+  void *pvVar9;
+  int iVar10;
+  int *piVar11;
+  int local_20;
+  short *local_14;
+  int local_8;
+  int local_4;
+
+  if (*(int *)((int)param_1 + 0x1f8c) == 0) {
+    return;
+  }
+  fVar2 = *(float *)((int)param_1 + 0xc) * _DAT_005d85ec;
+  fVar3 = *(float *)((int)param_1 + 4) - fVar2;
+  fVar2 = fVar2 + *(float *)((int)param_1 + 4);
+  fVar4 = *(float *)((int)param_1 + 0x10) * _DAT_005d85ec;
+  fVar5 = *(float *)((int)param_1 + 8) - fVar4;
+  fVar1 = *(float *)((int)param_1 + 8);
+  DAT_009c68ac = 0;
+  DAT_009c690d = 1;
+  if (*(int *)param_1 != 0) {
+    CFrontEnd__DrawPanel();
+    iVar10 = *(int *)((int)param_1 + 0x1f98);
+    if ((((iVar10 == 1) || (iVar10 == 3)) || (iVar10 == 4)) &&
+       (uVar6 = Input__GetClickStateInRect(fVar3,fVar5,fVar2,fVar4 + fVar1), (char)uVar6 != '\0')) {
+      CFrontEnd__Helper_0044dd60(param_1,0x2c,0x3f800000);
+    }
+    CFrontEnd__DrawBox();
+  }
+  local_20 = 0;
+  if (0 < *(int *)((int)param_1 + 0x1f64)) {
+    local_14 = (short *)((int)param_1 + 0x1c);
+    do {
+      CDXFont__GetTextExtent(*(void **)((int)param_1 + 0x1f5c),local_14,&local_8);
+      CDXEngine__DrawTextScaledWithShadow();
+      local_20 = local_20 + 1;
+      local_14 = local_14 + 100;
+    } while (local_20 < *(int *)((int)param_1 + 0x1f64));
+  }
+  if (*(int *)((int)param_1 + 0x1f90) != 0) {
+    CFrontEnd__DrawBarGraph();
+    return;
+  }
+  iVar10 = *(int *)((int)param_1 + 0x1f98);
+  if (iVar10 != 1) {
+    if (iVar10 == 2) {
+      piVar11 = &local_8;
+      psVar8 = CFEPSaveGame__Helper_0046a2a0(0x1c - (uint)(*(int *)((int)param_1 + 0x1fa0) != 0));
+      pvVar9 = CPlatform__Font(&DAT_0088a0a8,0);
+      CDXFont__GetTextExtent(pvVar9,psVar8,piVar11);
+      CFrontEnd__DrawPanel();
+      iVar10 = 0;
+      uVar6 = 1;
+      do {
+        fVar1 = (float)(int)(uVar6 * local_4) +
+                (float)(*(int *)((int)param_1 + 0x1f60) * *(int *)((int)param_1 + 0x1f64)) + fVar5 +
+                _DAT_005d8c44;
+        uVar7 = Input__GetCursorStateInRectAndConsume(fVar3,fVar1,fVar2,(float)local_4 + fVar1);
+        if ((char)uVar7 != '\0') {
+          *(int *)((int)param_1 + 0x1fa0) = iVar10;
+          break;
+        }
+        uVar7 = Input__GetClickStateInRect(fVar3,fVar1,fVar2,(float)local_4 + fVar1);
+        if ((char)uVar7 != '\0') {
+          CFrontEnd__PlaySound(1);
+          *(int *)((int)param_1 + 0x1fa0) = iVar10;
+          *(int *)((int)param_1 + 0x1fa4) = iVar10;
+          *(undefined4 *)((int)param_1 + 0x1f7c) = 0;
+          *(undefined4 *)((int)param_1 + 0x1f80) = 2;
+          *(undefined4 *)((int)param_1 + 0x1fa8) = 0xfffffffe;
+          break;
+        }
+        iVar10 = iVar10 + 1;
+        uVar6 = uVar6 - 1;
+      } while (uVar6 < 0x80000000);
+      piVar11 = &local_8;
+      psVar8 = CFEPSaveGame__Helper_0046a2a0(0x1b);
+      pvVar9 = CPlatform__Font(&DAT_0088a0a8,0);
+      CDXFont__GetTextExtent(pvVar9,psVar8,piVar11);
+      CFEPSaveGame__Helper_0046a2a0(0x1b);
+      CPlatform__Font(&DAT_0088a0a8,0);
+      CDXEngine__DrawTextScaledWithShadow();
+      piVar11 = &local_8;
+      psVar8 = CFEPSaveGame__Helper_0046a2a0(0x1c);
+      pvVar9 = CPlatform__Font(&DAT_0088a0a8,0);
+      CDXFont__GetTextExtent(pvVar9,psVar8,piVar11);
+      CFEPSaveGame__Helper_0046a2a0(0x1c);
+      goto LAB_0044dd3a;
+    }
+    if (iVar10 != 3) {
+      return;
+    }
+  }
+  piVar11 = &local_8;
+  psVar8 = CFEPSaveGame__Helper_0046a2a0(0x1d);
+  pvVar9 = CPlatform__Font(&DAT_0088a0a8,0);
+  CDXFont__GetTextExtent(pvVar9,psVar8,piVar11);
+  CFrontEnd__DrawPanel();
+  CFEPSaveGame__Helper_0046a2a0(0x1d);
+LAB_0044dd3a:
+  CPlatform__Font(&DAT_0088a0a8,0);
+  CDXEngine__DrawTextScaledWithShadow();
+  return;
+}
+
+===== 0044dd60_CFrontEnd__Helper_0044dd60.c =====
+/* address: 0x0044dd60 */
+/* name: CFrontEnd__Helper_0044dd60 */
+/* signature: void __thiscall CFrontEnd__Helper_0044dd60(void * this, int param_1, int param_2) */
+
+
+void __thiscall CFrontEnd__Helper_0044dd60(void *this,int param_1,int param_2)
+
+{
+  if ((*(int *)((int)this + 0x1f80) == 1) && (*(int *)((int)this + 0x1f8c) != 0)) {
+    switch(*(undefined4 *)((int)this + 0x1f98)) {
+    case 1:
+      if (param_1 == 0x2c) {
+        CFrontEnd__PlaySound(1);
+        if (*(int *)((int)this + 0x1fa8) != -2) {
+          CFrontEnd__SetPage(&DAT_0089d758,*(int *)((int)this + 0x1fa8),*(int *)((int)this + 0x1fac)
+                            );
+        }
+LAB_0044ddd4:
+        *(undefined4 *)((int)this + 0x1f7c) = 0;
+        *(undefined4 *)((int)this + 0x1f80) = 2;
+        *(undefined4 *)((int)this + 0x1fa8) = 0xfffffffe;
+        return;
+      }
+      break;
+    case 2:
+      if (param_1 == 0x2a) {
+        CFrontEnd__PlaySound(0);
+        if (*(int *)((int)this + 0x1fa0) != 1) {
+          *(undefined4 *)((int)this + 0x1fa0) = 1;
+        }
+      }
+      else if (param_1 == 0x2b) {
+        CFrontEnd__PlaySound(0);
+        if (*(int *)((int)this + 0x1fa0) != 0) {
+          *(undefined4 *)((int)this + 0x1fa0) = 0;
+          return;
+        }
+      }
+      else if (param_1 == 0x2c) {
+        CFrontEnd__PlaySound(1);
+        *(undefined4 *)((int)this + 0x1fa4) = *(undefined4 *)((int)this + 0x1fa0);
+        goto LAB_0044ddd4;
+      }
+      break;
+    case 3:
+    case 4:
+      if (param_1 == 0x2c) {
+        CFrontEnd__PlaySound(1);
+        if (*(int *)((int)this + 0x1fa8) != -2) {
+          CFrontEnd__SetPage(&DAT_0089d758,*(int *)((int)this + 0x1fa8),*(int *)((int)this + 0x1fac)
+                            );
+        }
+        *(undefined4 *)((int)this + 0x1fa4) = 1;
+        goto LAB_0044ddd4;
+      }
+    }
+  }
+  return;
+}
+
+===== 00527c50_CFrontEnd__Helper_00527c50.c =====
+/* address: 0x00527c50 */
+/* name: CFrontEnd__Helper_00527c50 */
+/* signature: int __thiscall CFrontEnd__Helper_00527c50(void * this, int param_1, void * param_2) */
+
+
+int __thiscall CFrontEnd__Helper_00527c50(void *this,int param_1,void *param_2)
+
+{
+  uint in_EAX;
+  undefined4 extraout_EAX;
+
+  if (*(int *)((int)this + 8) == 1) {
+    *(undefined4 *)((int)this + 8) = 2;
+  }
+  else if (*(int *)((int)this + 8) == 3) {
+    CController__RelinquishControl((void *)param_1);
+    *(undefined4 *)((int)this + 8) = 0;
+    return CONCAT31((int3)((uint)extraout_EAX >> 8),1);
+  }
+  return in_EAX & 0xffffff00;
+}
+
+===== 0044c1c0_CMesh__Helper_0044c1c0.c =====
+/* address: 0x0044c1c0 */
+/* name: CMesh__Helper_0044c1c0 */
+/* signature: void __thiscall CMesh__Helper_0044c1c0(void * this, void * param_1, int param_2) */
+
+
+void __thiscall CMesh__Helper_0044c1c0(void *this,void *param_1,int param_2)
+
+{
+  DXMemBuffer__ReadBytes(&param_1,4);
+  *(void **)this = param_1;
+  DXMemBuffer__ReadBytes(&param_1,4);
+  *(void **)((int)this + 4) = param_1;
+  DXMemBuffer__ReadBytes(&param_1,4);
+  *(void **)((int)this + 8) = param_1;
+  return;
+}
+
+===== 0044c210_CMesh__Helper_0044c210.c =====
+/* address: 0x0044c210 */
+/* name: CMesh__Helper_0044c210 */
+/* signature: void __thiscall CMesh__Helper_0044c210(void * this, void * param_1, int param_2) */
+
+
+void __thiscall CMesh__Helper_0044c210(void *this,void *param_1,int param_2)
+
+{
+  DXMemBuffer__ReadBytes(&param_1,4);
+  *(void **)this = param_1;
+  DXMemBuffer__ReadBytes(&param_1,4);
+  *(void **)((int)this + 4) = param_1;
+  DXMemBuffer__ReadBytes(&param_1,4);
+  *(void **)((int)this + 8) = param_1;
+  DXMemBuffer__ReadBytes(&param_1,4);
+  *(void **)((int)this + 0x10) = param_1;
+  DXMemBuffer__ReadBytes(&param_1,4);
+  *(void **)((int)this + 0x14) = param_1;
+  DXMemBuffer__ReadBytes(&param_1,4);
+  *(void **)((int)this + 0x18) = param_1;
+  DXMemBuffer__ReadBytes(&param_1,4);
+  *(void **)((int)this + 0x20) = param_1;
+  DXMemBuffer__ReadBytes(&param_1,4);
+  *(void **)((int)this + 0x24) = param_1;
+  DXMemBuffer__ReadBytes(&param_1,4);
+  *(void **)((int)this + 0x28) = param_1;
+  return;
+}
+
+===== 004ae080_CMesh__Helper_004ae080.c =====
+/* address: 0x004ae080 */
+/* name: CMesh__Helper_004ae080 */
+/* signature: void __fastcall CMesh__Helper_004ae080(void * param_1) */
+
+
+void __fastcall CMesh__Helper_004ae080(void *param_1)
+
+{
+  *(undefined4 *)param_1 = 0;
+  CMeshPart__SetVertexCount(1);
+  **(undefined4 **)((int)param_1 + 0x10) = 0;
+  **(undefined4 **)((int)param_1 + 0x14) = 0;
+  **(undefined4 **)((int)param_1 + 0x18) = 0x3f800000;
+  **(undefined4 **)((int)param_1 + 0x1c) = 0x3f800000;
+  **(undefined4 **)((int)param_1 + 0xc) = 0x3f800000;
+  *(undefined4 *)((int)param_1 + 0x20) = 0x3f800000;
+  *(undefined4 *)((int)param_1 + 4) = 0;
+  return;
+}
+
+===== 004ae0d0_CMesh__Helper_004ae0d0.c =====
+/* address: 0x004ae0d0 */
+/* name: CMesh__Helper_004ae0d0 */
+/* signature: void __fastcall CMesh__Helper_004ae0d0(void * param_1) */
+
+
+void __fastcall CMesh__Helper_004ae0d0(void *param_1)
+
+{
+  undefined4 uVar1;
+
+  uVar1 = CVBufTexture__GetOrCreate(*(undefined4 *)param_1,0);
+  *(undefined4 *)((int)param_1 + 4) = uVar1;
+  CVBufTexture__SetVBFormat(0x152,8,0x24,4,1);
+  CVBufTexture__SetIBFormat(0x65,8,2,1);
+  return;
+}
+
+===== 004adf90_CMesh__Helper_004adf90.c =====
+/* address: 0x004adf90 */
+/* name: CMesh__Helper_004adf90 */
+/* signature: void __fastcall CMesh__Helper_004adf90(void * param_1) */
+
+
+void __fastcall CMesh__Helper_004adf90(void *param_1)
+
+{
+  if (*(int *)((int)param_1 + 8) != 0) {
+    if (*(void **)((int)param_1 + 0xc) != (void *)0x0) {
+      OID__FreeObject(*(void **)((int)param_1 + 0xc));
+      *(undefined4 *)((int)param_1 + 0xc) = 0;
+    }
+    *(undefined4 *)((int)param_1 + 0x10) = 0;
+    *(undefined4 *)((int)param_1 + 0x14) = 0;
+    *(undefined4 *)((int)param_1 + 0x18) = 0;
+    *(undefined4 *)((int)param_1 + 0x1c) = 0;
+    *(undefined4 *)((int)param_1 + 8) = 0;
+  }
+  if (*(int *)param_1 != 0) {
+    CHud__Helper_004f27e0(*(int *)param_1 + 8);
+    *(undefined4 *)param_1 = 0;
+  }
+  if (*(int *)((int)param_1 + 4) != 0) {
+    CDXEngine__DecrementResourceRefCount(*(int *)((int)param_1 + 4));
+    *(undefined4 *)((int)param_1 + 4) = 0;
+  }
+  return;
+}
+
+===== 004b25d0_CMesh__Helper_004b25d0.c =====
+/* address: 0x004b25d0 */
+/* name: CMesh__Helper_004b25d0 */
+/* signature: void __thiscall CMesh__Helper_004b25d0(void * this, int param_1, void * param_2) */
+
+
+/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+
+void __thiscall CMesh__Helper_004b25d0(void *this,int param_1,void *param_2)
+
+{
+  float fVar1;
+  int iVar2;
+  float *pfVar3;
+  short *local_1c;
+  short *local_18;
+  short *local_14;
+  float local_10;
+  float local_c;
+  float local_8;
+  undefined4 local_4;
+
+  local_10 = 0.0;
+  local_c = 0.0;
+  local_8 = 0.0;
+  if (*(int *)((int)this + 0x100) == 0) {
+    CConsole__Printf(&DAT_0066f580,s_FATAL_ERROR__can_t_get_ranom_ver_0062ffa8);
+    *(float *)param_1 = local_10;
+    *(float *)(param_1 + 4) = local_c;
+    *(float *)(param_1 + 8) = local_8;
+    *(undefined4 *)(param_1 + 0xc) = local_4;
+    return;
+  }
+  iVar2 = CPolyBucket__GetRandomTriangle(&local_1c);
+  if (iVar2 == 1) {
+    iVar2 = Random__NextLCGAbs(DAT_008a9d9c);
+    iVar2 = iVar2 % 3;
+    if (iVar2 == 0) {
+      iVar2 = *(int *)((int)this + 0x100);
+      pfVar3 = (float *)(iVar2 + 0x40);
+      local_10 = (float)(int)*local_1c * *(float *)(iVar2 + 0x50) * _DAT_005d8618 + *pfVar3;
+      local_c = (float)(int)local_1c[1] * *(float *)(iVar2 + 0x50) * _DAT_005d8618 +
+                *(float *)(iVar2 + 0x44);
+      fVar1 = (float)(int)local_1c[2];
+    }
+    else if (iVar2 == 1) {
+      iVar2 = *(int *)((int)this + 0x100);
+      pfVar3 = (float *)(iVar2 + 0x40);
+      local_10 = (float)(int)*local_18 * *(float *)(iVar2 + 0x50) * _DAT_005d8618 + *pfVar3;
+      local_c = (float)(int)local_18[1] * *(float *)(iVar2 + 0x50) * _DAT_005d8618 +
+                *(float *)(iVar2 + 0x44);
+      fVar1 = (float)(int)local_18[2];
+    }
+    else {
+      if (iVar2 != 2) goto LAB_004b276f;
+      iVar2 = *(int *)((int)this + 0x100);
+      pfVar3 = (float *)(iVar2 + 0x40);
+      local_10 = (float)(int)*local_14 * *(float *)(iVar2 + 0x50) * _DAT_005d8618 + *pfVar3;
+      local_c = (float)(int)local_14[1] * *(float *)(iVar2 + 0x50) * _DAT_005d8618 +
+                *(float *)(iVar2 + 0x44);
+      fVar1 = (float)(int)local_14[2];
+    }
+    local_8 = fVar1 * pfVar3[4] * _DAT_005d8618 + pfVar3[2];
+  }
+LAB_004b276f:
+  *(float *)param_1 = local_10;
+  *(float *)(param_1 + 4) = local_c;
+  *(float *)(param_1 + 8) = local_8;
+  *(undefined4 *)(param_1 + 0xc) = local_4;
+  return;
+}
+
+===== 0048f180_CDXLandscape__Helper_0048f180.c =====
+/* address: 0x0048f180 */
+/* name: CDXLandscape__Helper_0048f180 */
+/* signature: void __fastcall CDXLandscape__Helper_0048f180(int param_1) */
+
+
+void __fastcall CDXLandscape__Helper_0048f180(int param_1)
+
+{
+  uint uVar1;
+  uint uVar2;
+  undefined4 *puVar3;
+
+  *(undefined4 *)(param_1 + 0x2c) = 1;
+  if (*(undefined4 **)(param_1 + 0x40) != (undefined4 *)0x0) {
+    uVar1 = *(int *)(param_1 + 0x44) << 1;
+    puVar3 = *(undefined4 **)(param_1 + 0x40);
+    for (uVar2 = uVar1 >> 2; uVar2 != 0; uVar2 = uVar2 - 1) {
+      *puVar3 = 0xffffffff;
+      puVar3 = puVar3 + 1;
+    }
+    for (uVar1 = uVar1 & 3; uVar1 != 0; uVar1 = uVar1 - 1) {
+      *(undefined1 *)puVar3 = 0xff;
+      puVar3 = (undefined4 *)((int)puVar3 + 1);
+    }
+    return;
+  }
+  CLandscapeTexture__UpdateTileRange(0,0,0x3f,0x3f);
+  return;
+}
+
+===== 0048f2f0_CDXLandscape__Helper_0048f2f0.c =====
+/* address: 0x0048f2f0 */
+/* name: CDXLandscape__Helper_0048f2f0 */
+/* signature: int CDXLandscape__Helper_0048f2f0(void) */
+
+
+/* WARNING: Unknown calling convention -- yet parameter storage is locked */
+
+int CDXLandscape__Helper_0048f2f0(void)
+
+{
+  int extraout_EAX;
+  int in_ECX;
+  undefined4 in_stack_00000004;
+  undefined4 in_stack_00000008;
+  undefined4 in_stack_0000000c;
+  undefined4 in_stack_00000010;
+
+  *(undefined4 *)(in_ECX + 0x4c) = in_stack_00000010;
+  *(undefined4 *)(in_ECX + 0x2c) = in_stack_00000004;
+  *(undefined4 *)(in_ECX + 0x30) = in_stack_00000008;
+  *(undefined4 *)(in_ECX + 0x34) = in_stack_0000000c;
+  CLandscapeVB__RebuildHeightGridVertexBuffer(in_ECX);
+  return extraout_EAX;
+}
+
+===== 00544770_CDXLandscape__Helper_00544770.c =====
+/* address: 0x00544770 */
+/* name: CDXLandscape__Helper_00544770 */
+/* signature: void __fastcall CDXLandscape__Helper_00544770(void * param_1) */
+
+
+void __fastcall CDXLandscape__Helper_00544770(void *param_1)
+
+{
+  int iVar1;
+
+  if (*(undefined4 **)param_1 != (undefined4 *)0x0) {
+    (**(code **)**(undefined4 **)param_1)(3);
+    *(undefined4 *)param_1 = 0;
+  }
+  iVar1 = *(int *)((int)param_1 + 8);
+  if (iVar1 != 0) {
+    CDXLandscape__Helper_0055db0a(iVar1,0xc,*(int *)(iVar1 + -4),CDXLandscape__Helper_005447d0);
+    OID__FreeObject((void *)(iVar1 + -4));
+    *(undefined4 *)((int)param_1 + 8) = 0;
+  }
+  if (*(void **)((int)param_1 + 4) != (void *)0x0) {
+    OID__FreeObject(*(void **)((int)param_1 + 4));
+    *(undefined4 *)((int)param_1 + 4) = 0;
+  }
+  return;
+}
+
+===== 005447d0_CDXLandscape__Helper_005447d0.c =====
+/* address: 0x005447d0 */
+/* name: CDXLandscape__Helper_005447d0 */
+/* signature: void __fastcall CDXLandscape__Helper_005447d0(void * param_1) */
+
+
+void __fastcall CDXLandscape__Helper_005447d0(void *param_1)
+
+{
+  OID__FreeObject(*(void **)param_1);
+  return;
+}
+
+===== 0055db0a_CDXLandscape__Helper_0055db0a.c =====
+/* address: 0x0055db0a */
+/* name: CDXLandscape__Helper_0055db0a */
+/* signature: void __stdcall CDXLandscape__Helper_0055db0a(int param_1, int param_2, int param_3, void * param_4) */
+
+
+void CDXLandscape__Helper_0055db0a(int param_1,int param_2,int param_3,void *param_4)
+
+{
+  void *local_14;
+  undefined1 *puStack_10;
+  undefined *puStack_c;
+  undefined4 local_8;
+
+  puStack_c = &DAT_005e5aa8;
+  puStack_10 = &LAB_0056127c;
+  local_14 = ExceptionList;
+  local_8 = 0;
+  ExceptionList = &local_14;
+  while( true ) {
+    param_3 = param_3 + -1;
+    if (param_3 < 0) break;
+    (*param_4)();
+  }
+  local_8 = 0xffffffff;
+  CRT__EhVectorDestructorIterator_IfNoException();
+  ExceptionList = local_14;
+  return;
+}
+
+===== 004e2b30_CSoundManager__Helper_004e2b30.c =====
+/* address: 0x004e2b30 */
+/* name: CSoundManager__Helper_004e2b30 */
+/* signature: void __fastcall CSoundManager__Helper_004e2b30(void * param_1) */
+
+
+void __fastcall CSoundManager__Helper_004e2b30(void *param_1)
+
+{
+  void *pvVar1;
+  void *local_c;
+  undefined1 *puStack_8;
+  undefined4 local_4;
+
+  puStack_8 = &LAB_005d4c58;
+  local_c = ExceptionList;
+  pvVar1 = *(void **)((int)param_1 + 0x70);
+  local_4 = 0;
+  ExceptionList = &local_c;
+  if (pvVar1 != (void *)0x0) {
+    ExceptionList = &local_c;
+    CSoundManager__Helper_00442380(pvVar1);
+    OID__FreeObject(pvVar1);
+    *(undefined4 *)((int)param_1 + 0x70) = 0;
+  }
+  local_4 = 0xffffffff;
+  if ((*(int *)param_1 != 0) && (pvVar1 = *(void **)(*(int *)param_1 + 4), pvVar1 != (void *)0x0)) {
+    CSPtrSet__Remove(pvVar1,param_1);
+  }
+  ExceptionList = local_c;
+  return;
+}
+
+===== 0055e2a6_CSoundManager__Helper_0055e2a6.c =====
+/* address: 0x0055e2a6 */
+/* name: CSoundManager__Helper_0055e2a6 */
+/* signature: void __cdecl CSoundManager__Helper_0055e2a6(void * param_1) */
+
+
+void __cdecl CSoundManager__Helper_0055e2a6(void *param_1)
+
+{
+  CRT__ParseDecimalIntA(param_1);
+  return;
+}
+
+===== 004422d0_CSoundManager__Helper_004422d0.c =====
+/* address: 0x004422d0 */
+/* name: CSoundManager__Helper_004422d0 */
+/* signature: int __fastcall CSoundManager__Helper_004422d0(void * param_1) */
+
+
+int __fastcall CSoundManager__Helper_004422d0(void *param_1)
+
+{
+  char cVar1;
+  int iVar2;
+  uint uVar3;
+  uint uVar4;
+  undefined4 *puVar5;
+  char *pcVar6;
+  undefined4 *puVar7;
+  char *pcVar8;
+
+  *(void **)param_1 = DAT_0066ffb0;
+  DAT_0066ffb0 = param_1;
+  *(undefined4 *)((int)param_1 + 4) = 0;
+  *(undefined4 *)((int)param_1 + 8) = 0;
+  *(undefined4 *)((int)param_1 + 0xc) = 0;
+  *(undefined4 *)((int)param_1 + 0x84) = 0x3f000000;
+  *(undefined4 *)((int)param_1 + 0x88) = 0x3f000000;
+  *(undefined4 *)((int)param_1 + 0x8c) = 0x3f000000;
+  puVar5 = &DAT_0066ff80;
+  puVar7 = (undefined4 *)((int)param_1 + 0x14);
+  for (iVar2 = 0xc; iVar2 != 0; iVar2 = iVar2 + -1) {
+    *puVar7 = *puVar5;
+    puVar5 = puVar5 + 1;
+    puVar7 = puVar7 + 1;
+  }
+  *(undefined4 *)((int)param_1 + 0x94) = 0xffffffff;
+  *(undefined4 *)((int)param_1 + 0x44) = DAT_0066ffb8;
+  *(undefined4 *)((int)param_1 + 0x48) = DAT_0066ffbc;
+  *(undefined4 *)((int)param_1 + 0x4c) = DAT_0066ffc0;
+  *(undefined4 *)((int)param_1 + 0x50) = DAT_0066ffc4;
+  puVar5 = &DAT_0066ff80;
+  puVar7 = (undefined4 *)((int)param_1 + 0x54);
+  for (iVar2 = 0xc; iVar2 != 0; iVar2 = iVar2 + -1) {
+    *puVar7 = *puVar5;
+    puVar5 = puVar5 + 1;
+    puVar7 = puVar7 + 1;
+  }
+  uVar3 = 0xffffffff;
+  pcVar6 = &DAT_00662b2c;
+  do {
+    pcVar8 = pcVar6;
+    if (uVar3 == 0) break;
+    uVar3 = uVar3 - 1;
+    pcVar8 = pcVar6 + 1;
+    cVar1 = *pcVar6;
+    pcVar6 = pcVar8;
+  } while (cVar1 != '\0');
+  uVar3 = ~uVar3;
+  pcVar6 = pcVar8 + -uVar3;
+  pcVar8 = (char *)((int)param_1 + 0x98);
+  for (uVar4 = uVar3 >> 2; uVar4 != 0; uVar4 = uVar4 - 1) {
+    *(undefined4 *)pcVar8 = *(undefined4 *)pcVar6;
+    pcVar6 = pcVar6 + 4;
+    pcVar8 = pcVar8 + 4;
+  }
+  for (uVar3 = uVar3 & 3; uVar3 != 0; uVar3 = uVar3 - 1) {
+    *pcVar8 = *pcVar6;
+    pcVar6 = pcVar6 + 1;
+    pcVar8 = pcVar8 + 1;
+  }
+  return (int)param_1;
+}
+
+===== 00442380_CSoundManager__Helper_00442380.c =====
+/* address: 0x00442380 */
+/* name: CSoundManager__Helper_00442380 */
+/* signature: void __fastcall CSoundManager__Helper_00442380(void * param_1) */
+
+
+void __fastcall CSoundManager__Helper_00442380(void *param_1)
+
+{
+  int *piVar1;
+  int *piVar2;
+
+  piVar2 = DAT_0066ffb0;
+  if (DAT_0066ffb0 == param_1) {
+    DAT_0066ffb0 = (int *)*(undefined4 *)param_1;
+    return;
+  }
+  do {
+    piVar1 = piVar2;
+    if (piVar1 == (int *)0x0) break;
+    piVar2 = (int *)*piVar1;
+  } while ((int *)*piVar1 != param_1);
+  *piVar1 = *(int *)param_1;
+  return;
+}
+
+===== 0057511b_Platform__Helper_0057511b.c =====
+/* address: 0x0057511b */
+/* name: Platform__Helper_0057511b */
+/* signature: int Platform__Helper_0057511b(void) */
+
+
+/* WARNING: Unknown calling convention -- yet parameter storage is locked */
+
+int Platform__Helper_0057511b(void)
+
+{
+  int iVar1;
+  void *extraout_EDX;
+  void *extraout_EDX_00;
+  void *pvVar2;
+  int unaff_ESI;
+  void *in_stack_00000010;
+  undefined1 local_14 [16];
+
+  CDXTexture__InitMappedFileContext(local_14);
+  iVar1 = CDXTexture__OpenMappedFileReadOnly(local_14,in_stack_00000010,0,unaff_ESI);
+  pvVar2 = extraout_EDX;
+  if (-1 < iVar1) {
+    iVar1 = CDXTexture__DecodeMemoryAndUploadWithRect();
+    pvVar2 = extraout_EDX_00;
+  }
+  CDXTexture__CloseHandleIfValid(local_14,pvVar2);
+  return iVar1;
+}
+
+===== 00574645_Platform__Helper_00574645.c =====
+/* address: 0x00574645 */
+/* name: Platform__Helper_00574645 */
+/* signature: void __stdcall Platform__Helper_00574645(void * param_1, void * param_2, void * param_3, void * param_4, void * param_5) */
+
+
+void Platform__Helper_00574645
+               (void *param_1,void *param_2,void *param_3,void *param_4,void *param_5)
+
+{
+  CDXTexture__LoadAndUploadMappedTexture_0057457a(param_1,param_2,param_4,param_5,(void *)0x0);
+  return;
+}
+
+===== 00441b80_Platform__Helper_00441b80.c =====
+/* address: 0x00441b80 */
+/* name: Platform__Helper_00441b80 */
+/* signature: void Platform__Helper_00441b80(void) */
+
+
+/* WARNING: Unknown calling convention -- yet parameter storage is locked */
+
+void Platform__Helper_00441b80(void)
+
+{
+  int iVar1;
+  int extraout_EAX;
+  int extraout_EAX_00;
+  int extraout_EAX_01;
+  void *pvVar2;
+  int *piVar3;
+  int *piVar4;
+  int *piVar5;
+  int *piStack_148;
+  int iStack_144;
+  undefined4 uStack_140;
+  undefined1 *puStack_118;
+  undefined1 local_108 [4];
+  char local_104 [260];
+
+  if (DAT_0066ff74 != '\0') {
+    puStack_118 = DAT_0066ff78;
+    sprintf(local_104,s__s_04d_dds_00628554);
+    puStack_118 = local_108;
+    pvVar2 = (void *)(-(uint)(DAT_0066eb84 != -1) & 0x66eb80);
+    iVar1 = (**(code **)(*DAT_00888a50 + 0x48))();
+    if (iVar1 < 0) {
+      CConsole__Printf(&DAT_0066eb90,s_Screen_dump__Couldn_t_get_back_b_00628528);
+      return;
+    }
+    if (DAT_0066ff75 == '\0') {
+      uStack_140 = 0x441c18;
+      Platform__Helper_00574645(&puStack_118,(void *)0x4,(void *)0x0,(void *)0x0,pvVar2);
+      iVar1 = extraout_EAX;
+    }
+    else {
+      sprintf((char *)&puStack_118,s__s_04d_bmp_0062851c);
+      uStack_140 = 0x441c54;
+      Platform__Helper_00574645(&puStack_118,(void *)0x0,(void *)0x0,(void *)0x0,pvVar2);
+      iVar1 = extraout_EAX_00;
+    }
+    if (iVar1 < 0) {
+      CConsole__Printf(&DAT_0066eb90,s_Screen_dump__Couldn_t_save_raw_s_006284f0);
+      return;
+    }
+    if (DAT_0066ff75 == '\0') {
+      uStack_140 = 1;
+      iStack_144 = 0x100;
+      piStack_148 = (int *)0x100;
+      iVar1 = (**(code **)(*DAT_00888a50 + 0x5c))(DAT_00888a50);
+      if ((iVar1 < 0) &&
+         (iVar1 = (**(code **)(*DAT_00888a50 + 0x5c))
+                            (DAT_00888a50,0x80,0x80,1,0,0x17,2,&piStack_148,0), iVar1 < 0)) {
+        CConsole__Printf(&DAT_0066eb90,s_Screen_dump__Couldn_t_write__s_006284d0);
+        return;
+      }
+      piVar5 = &iStack_144;
+      piVar4 = (int *)0x0;
+      piVar3 = piStack_148;
+      iVar1 = (**(code **)(*piStack_148 + 0x48))();
+      if (iVar1 < 0) {
+        CConsole__Printf(&DAT_0066eb90,s_Screen_dump__Couldn_t_get_surfac_006284a4);
+        (**(code **)(*piVar4 + 8))(piVar4);
+        return;
+      }
+      iVar1 = Platform__Helper_0057511b();
+      if (iVar1 < 0) {
+        CConsole__Printf(&DAT_0066eb90,s_Screen_dump__Couldn_t_reload__s_00628484);
+        (**(code **)(*piVar5 + 8))(piVar5);
+        (**(code **)(*piVar3 + 8))(piVar3);
+        return;
+      }
+      Platform__Helper_00574645(&piStack_148,(void *)0x4,piVar5,(void *)0x0,(void *)0x0);
+      if (extraout_EAX_01 < 0) {
+        CConsole__Printf(&DAT_0066eb90,s_Screen_dump__Couldn_t_save_small_00628454);
+        (**(code **)(*piVar5 + 8))(piVar5);
+        (**(code **)(*piVar3 + 8))(piVar3);
+        return;
+      }
+      (**(code **)(*piVar5 + 8))(piVar5);
+      (**(code **)(*piVar3 + 8))(piVar3);
+    }
+    CConsole__Printf(&DAT_0066eb90,s_Screen_dump__saved__s__fullsize__00628430);
+    DAT_0066ff78 = DAT_0066ff78 + 1;
+    DAT_0066ff74 = '\0';
+  }
+  return;
+}
+
+===== 00472e50_CVBufTexture__Helper_00472e50.c =====
+/* address: 0x00472e50 */
+/* name: CVBufTexture__Helper_00472e50 */
+/* signature: int CVBufTexture__Helper_00472e50(void) */
+
+
+/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+/* WARNING: Unknown calling convention -- yet parameter storage is locked */
+
+int CVBufTexture__Helper_00472e50(void)
+
+{
+  int *tex;
+  int extraout_EAX;
+  int in_ECX;
+  float in_stack_00000004;
+  float in_stack_00000008;
+  float in_stack_0000000c;
+  float in_stack_00000010;
+  float in_stack_00000014;
+
+  tex = *(int **)(in_ECX + 8);
+  if (tex == (int *)0x0) {
+    if ((DAT_0089ce84 == (int *)0x0) &&
+       (DAT_0089ce84 = CTexture__FindTexture(s_meshtex_default_tga_00625498,0,0,-1,1,1),
+       DAT_0089ce84 == (int *)0x0)) {
+      return 0;
+    }
+    in_stack_00000014 = -1.7014118e+38;
+    tex = DAT_0089ce84;
+  }
+  CVBufTexture__DrawSpriteEx
+            (in_stack_00000004,in_stack_00000008,0.001,tex,4,0,1.0,0.0,in_stack_00000014,
+             in_stack_0000000c / (float)tex[0x2b],in_stack_00000010 / (float)(int)(short)tex[0x2c],
+             0.0,_DAT_005d8568 / in_stack_0000000c + _DAT_005d8568,0.0,
+             _DAT_005d8568 / in_stack_00000010 + _DAT_005d8568);
+  return extraout_EAX;
+}
+
+===== 0053f040_CVBufTexture__Helper_0053f040.c =====
+/* address: 0x0053f040 */
+/* name: CVBufTexture__Helper_0053f040 */
+/* signature: void __stdcall CVBufTexture__Helper_0053f040(int param_1) */
+
+
+void CVBufTexture__Helper_0053f040(int param_1)
+
+{
+  if ((char)param_1 != '\0') {
+    D3DStateCache__ForceSlotMode4or5(0);
+    return;
+  }
+  D3DStateCache__SetStateCached(0,1,4);
+  return;
+}
+
+===== 0057600b_CVBufTexture__Helper_0057600b.c =====
+/* address: 0x0057600b */
+/* name: CVBufTexture__Helper_0057600b */
+/* signature: void CVBufTexture__Helper_0057600b(void) */
+
+
+/* WARNING: Unknown calling convention -- yet parameter storage is locked */
+
+void CVBufTexture__Helper_0057600b(void)
+
+{
+                    /* WARNING: Could not recover jumptable at 0x0057600b. Too many branches */
+                    /* WARNING: Treating indirect jump as call */
+  (*(code *)PTR_CTexture__DispatchPtr00656f34_WithInit_00656f34)();
+  return;
+}

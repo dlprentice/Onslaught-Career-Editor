@@ -1,0 +1,4 @@
+address	name	signature	status
+0x0047a8b0	CGillMHead__TryTransitionIdleToOpen	int __fastcall CGillMHead__TryTransitionIdleToOpen(int param_1)	OK
+0x0047a900	CGillMHead__AdvanceOpenAttackCloseState	int __fastcall CGillMHead__AdvanceOpenAttackCloseState(int param_1)	OK
+0x004d10b0	CGillMHead__ResetAnimationStateAndPauseLatch	void __thiscall CGillMHead__ResetAnimationStateAndPauseLatch(void * this, int param_1, int param_2)	OK

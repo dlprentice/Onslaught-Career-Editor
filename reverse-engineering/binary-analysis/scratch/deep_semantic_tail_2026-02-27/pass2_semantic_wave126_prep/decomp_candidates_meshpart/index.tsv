@@ -1,0 +1,12 @@
+address	name	signature	status
+0x004aea50	CMeshPart__Unk_004aea50	void __fastcall CMeshPart__Unk_004aea50(int param_1)	OK
+0x004aede0	CMeshPart__Unk_004aede0	int CMeshPart__Unk_004aede0(void)	OK
+0x004af110	CMeshPart__Unk_004af110	int CMeshPart__Unk_004af110(void)	OK
+0x004b0800	CMeshPart__Unk_004b0800	void __thiscall CMeshPart__Unk_004b0800(void * this, void * param_1, float param_2, float param_3, float param_4)	OK
+0x004b0c00	CMeshPart__Unk_004b0c00	void __thiscall CMeshPart__Unk_004b0c00(void * this, int param_1, void * param_2)	OK
+0x004b0c20	CMeshPart__Unk_004b0c20	void __thiscall CMeshPart__Unk_004b0c20(void * this, int param_1, void * param_2)	OK
+0x004b0c40	CMeshPart__Unk_004b0c40	int __thiscall CMeshPart__Unk_004b0c40(void * this, int param_1, float param_2, float param_3, float param_4)	OK
+0x004b0d00	CMeshPart__Unk_004b0d00	int CMeshPart__Unk_004b0d00(void)	OK
+0x004b1d30	CMeshPart__Unk_004b1d30	void __fastcall CMeshPart__Unk_004b1d30(int param_1)	OK
+0x004b1eb0	CMeshPart__Unk_004b1eb0	void __thiscall CMeshPart__Unk_004b1eb0(void * this, int param_1, int param_2)	OK
+0x004b24d0	CMeshPart__Unk_004b24d0	int __thiscall CMeshPart__Unk_004b24d0(void * this, int param_1, float param_2, float param_3, void * param_4, void * param_5)	OK

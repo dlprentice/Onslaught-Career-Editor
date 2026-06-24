@@ -1,0 +1,17 @@
+slot	entry_addr	ptr	ptr_name	ptr_signature
+0	005dc520	004a3610	CMenuItem__ScalarDestructor	undefined CMenuItem__ScalarDestructor(void)
+1	005dc524	004a43a0	CMenuItem__ButtonPressed	void __thiscall CMenuItem__ButtonPressed(void * this, int from_controller, int button)
+2	005dc528	004a3190	CMenuItem__GetText	short * __thiscall CMenuItem__GetText(void * this)
+3	005dc52c	00453a60	CMenuItem__VFunc_03_00453a60	int __thiscall CMenuItem__VFunc_03_00453a60(void * this)
+4	005dc530	004a37c0	CMenuItem__RenderValueBar	void __thiscall CMenuItem__RenderValueBar(void * this, float x, float y, int interactive)
+5	005dc534	004a4450	CMenuItem__GetWidth	int __thiscall CMenuItem__GetWidth(void * this)
+6	005dc538	00453a70	CMenuItem__VFunc_06_00453a70	int __thiscall CMenuItem__VFunc_06_00453a70(void * this)
+7	005dc53c	004a3450	CMenuItem__Clone	undefined CMenuItem__Clone(void)
+8	005dc540	00453a80	CMenuItem__VFunc_09_00453a80	byte __thiscall CMenuItem__VFunc_09_00453a80(void * this)
+9	005dc544	00453a80	CMenuItem__VFunc_09_00453a80	byte __thiscall CMenuItem__VFunc_09_00453a80(void * this)
+10	005dc548	00453a80	CMenuItem__VFunc_09_00453a80	byte __thiscall CMenuItem__VFunc_09_00453a80(void * this)
+11	005dc54c	00459990	CFrontEndPage__DeActiveNotification	void __cdecl CFrontEndPage__DeActiveNotification(void * this)
+12	005dc550	00459990	CFrontEndPage__DeActiveNotification	void __cdecl CFrontEndPage__DeActiveNotification(void * this)
+13	005dc554	004a4480	<none>	<none>
+14	005dc558	00459990	CFrontEndPage__DeActiveNotification	void __cdecl CFrontEndPage__DeActiveNotification(void * this)
+15	005dc55c	00459990	CFrontEndPage__DeActiveNotification	void __cdecl CFrontEndPage__DeActiveNotification(void * this)

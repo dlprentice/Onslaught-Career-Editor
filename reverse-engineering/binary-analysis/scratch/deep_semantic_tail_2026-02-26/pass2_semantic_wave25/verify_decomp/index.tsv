@@ -1,0 +1,9 @@
+address	name	signature	status
+0x0040b660	CGeneralVolume__GetWrappedDeltaSigned	double __cdecl CGeneralVolume__GetWrappedDeltaSigned(float param_1, float param_2)	OK
+0x0040c720	CGeneralVolume__ResetAndSetActiveReader	void __thiscall CGeneralVolume__ResetAndSetActiveReader(void * this, int param_1, void * param_2)	OK
+0x0040e840	CMonitor__ToggleAttachedObjectFlag300	void __fastcall CMonitor__ToggleAttachedObjectFlag300(int param_1)	OK
+0x00409880	CMonitor__GetLastValidRangeStep100	int __fastcall CMonitor__GetLastValidRangeStep100(int param_1)	OK
+0x0040dcb0	CCockpit__SetFlag58C_Enabled	void __fastcall CCockpit__SetFlag58C_Enabled(int param_1)	OK
+0x00409e80	CGeneralVolume__SetParam2CC_ToOne	void __fastcall CGeneralVolume__SetParam2CC_ToOne(int param_1)	OK
+0x00409e90	CGeneralVolume__SetParam2CC_ToOne_IfCurrentState1	void __fastcall CGeneralVolume__SetParam2CC_ToOne_IfCurrentState1(void * param_1)	OK
+0x00409ec0	CGeneralVolume__SetParam2CC_ToPoint4_IfCurrentState1	void __fastcall CGeneralVolume__SetParam2CC_ToPoint4_IfCurrentState1(void * param_1)	OK

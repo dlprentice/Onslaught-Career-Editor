@@ -1,0 +1,17 @@
+slot	entry_addr	ptr	ptr_name	ptr_signature
+0	005dc5c4	004d0490	VFuncSlot_00_004d0490	void * __thiscall VFuncSlot_00_004d0490(void * this, void * param_1, int param_2)
+1	005dc5c8	004a4110	<none>	<none>
+2	005dc5cc	004a3190	CMenuItem__GetText	short * __thiscall CMenuItem__GetText(void * this)
+3	005dc5d0	00453a60	CMenuItem__VFunc_03_00453a60	int __thiscall CMenuItem__VFunc_03_00453a60(void * this)
+4	005dc5d4	004a3be0	<none>	<none>
+5	005dc5d8	004a3420	CMenuItem__GetTextWidth	int __thiscall CMenuItem__GetTextWidth(void * this)
+6	005dc5dc	00453a70	CMenuItem__VFunc_06_00453a70	int __thiscall CMenuItem__VFunc_06_00453a70(void * this)
+7	005dc5e0	004a3140	CMenuItem__Clone	void * __thiscall CMenuItem__Clone(void * this)
+8	005dc5e4	004a40e0	<none>	<none>
+9	005dc5e8	004a40e0	<none>	<none>
+10	005dc5ec	004a42f0	<none>	<none>
+11	005dc5f0	004a40f0	CMenuItemDropdown__CommitSelection	undefined CMenuItemDropdown__CommitSelection(void)
+12	005dc5f4	004a3b50	CMenuItemDropdown__UpdateSelection	undefined CMenuItemDropdown__UpdateSelection(void)
+13	005dc5f8	00459990	CFrontEndPage__DeActiveNotification	void __cdecl CFrontEndPage__DeActiveNotification(void * this)
+14	005dc5fc	0055df1f	<none>	<none>
+15	005dc600	0055df1f	<none>	<none>

@@ -1,0 +1,5 @@
+address	name	signature	status
+0x0052ff30	CEngine__Unk_0052ff30	void CEngine__Unk_0052ff30(void)	OK
+0x004cde60	PauseMenu__Init	void __thiscall PauseMenu__Init(void * this)	OK
+0x004539b0	CControllerDefinition__scalar_deleting_dtor	void * __thiscall CControllerDefinition__scalar_deleting_dtor(void * this, int flags)	OK
+0x00458ce0	CFEPDevelopment__ResolveActiveStorageDevice	void __fastcall CFEPDevelopment__ResolveActiveStorageDevice(void * this, int force_refresh)	OK

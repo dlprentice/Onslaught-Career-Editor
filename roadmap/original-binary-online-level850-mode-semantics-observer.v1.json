@@ -1,0 +1,126 @@
+{
+  "schemaVersion": "winui-original-binary-level850-mode-semantics-observer.v1",
+  "status": "complete public-safe level-850 P1/P2 mode-semantics observer; no co-op, versus, online, matchmaking, native BEA netcode, or active P3/P4 gameplay proof",
+  "date": "2026-06-19",
+  "observerScope": "level850-p1p2-mode-semantics-observer-not-coop-versus-proof",
+  "runtimeProfile": "original-binary-copied-local-splitscreen",
+  "runtimeEvidence": {
+    "safeCopyLaunchLevel": 850,
+    "controllerConfiguration": 1,
+    "newBeaLaunchCount": 1,
+    "cdbAttachCount": 1,
+    "boundedCaptureCount": 2,
+    "visualCaptureCount": 2,
+    "exactPidCdbObserverProven": true,
+    "renderPlayers": 2,
+    "renderLevel": 850,
+    "horizontalSplit": true,
+    "p1p2PointersDistinct": true,
+    "sourceHashesUnchanged": true,
+    "managedStopClean": true
+  },
+  "modeSemanticsSurface": {
+    "modeSemanticsObserverProven": true,
+    "hookTargetCount": 21,
+    "expectedHookTargetCount": 21,
+    "hookTargets": [
+      "CGame__IsMultiplayer",
+      "CWorld__IsMultiplayerMode",
+      "CGame__Render",
+      "CGame__GetPlayerLives",
+      "CGame__DeclarePlayerDead",
+      "CGame__RespawnPlayer",
+      "CGame__MPDeclarePlayerWon",
+      "CGame__MPDeclareGameDrawn",
+      "CGame__DeclareLevelWon",
+      "CGame__DeclareLevelLost",
+      "CGame__FillOutEndLevelData",
+      "CGame__GetNumPrimaryObjectives",
+      "CGame__GetNumSecondaryObjectives",
+      "CEndLevelData__IsAllSecondaryObjectivesComplete",
+      "IScript__PrimaryObjectiveComplete",
+      "IScript__SecondaryObjectiveComplete",
+      "IScript__PrimaryObjectiveFailed",
+      "IScript__SecondaryObjectiveFailed",
+      "IScript__LevelLost",
+      "IScript__LevelLostString",
+      "IScript__LevelWon"
+    ],
+    "unforcedTransitionTargets": [
+      "CGame__DeclarePlayerDead",
+      "CGame__RespawnPlayer",
+      "CGame__MPDeclarePlayerWon",
+      "CGame__MPDeclareGameDrawn",
+      "CGame__DeclareLevelWon",
+      "CGame__DeclareLevelLost",
+      "IScript__LevelLost",
+      "IScript__LevelLostString",
+      "IScript__LevelWon"
+    ],
+    "objectiveSurfaceTargets": [
+      "CGame__FillOutEndLevelData",
+      "CGame__GetNumPrimaryObjectives",
+      "CGame__GetNumSecondaryObjectives",
+      "CEndLevelData__IsAllSecondaryObjectivesComplete",
+      "IScript__PrimaryObjectiveComplete",
+      "IScript__SecondaryObjectiveComplete",
+      "IScript__PrimaryObjectiveFailed",
+      "IScript__SecondaryObjectiveFailed"
+    ],
+    "objectiveSurfaceHitCount": 1,
+    "unforcedTransitionHitCount": 0,
+    "forcedWinDeathRespawn": false,
+    "modeRuntimeProofSlicesAdded": 0,
+    "coOpVersusModeRuntimeProofSlicesAdded": 0,
+    "currentRuntimeModeClassification": "unclassified-local-multiplayer"
+  },
+  "slotBoundary": {
+    "acceptedOriginalBinaryGameplaySlots": [
+      "P1",
+      "P2"
+    ],
+    "metadataOnlySlots": [
+      "P3",
+      "P4"
+    ],
+    "rejectedGameplayRouteSlots": [
+      "P3",
+      "P4"
+    ],
+    "maxOriginalBinaryActiveSlotsProven": 2,
+    "slotCapacity": 4,
+    "nPlayerOriginalBinaryRuntimeProof": 0,
+    "activeP3P4OriginalBinaryGameplayProof": false,
+    "beyondTwoPlayersRequiresNewProofClass": true
+  },
+  "nonClaims": {
+    "baseOnlineMultiplayerReady": false,
+    "secondPhysicalHostProof": false,
+    "multiHostLanProof": false,
+    "publicMatchmakingProof": false,
+    "nativeBeaNetcodeProof": false,
+    "coOpModeRuntimeProof": false,
+    "versusModeRuntimeProof": false,
+    "teamVersusRuntimeProof": false,
+    "spectatorAdminRuntimeProof": false,
+    "moreThanTwoOriginalBinaryRuntimeProof": false,
+    "activeP3P4OriginalBinaryGameplayProof": false,
+    "safeToPatchMPlayersAbove2": false,
+    "deterministicSyncProof": false,
+    "rollbackProof": false,
+    "antiCheatProof": false,
+    "rebuildParityProof": false,
+    "noNoticeableDifferenceProof": false
+  },
+  "releaseBoundary": {
+    "privateProofReleaseExcludedByPolicy": true,
+    "rawPrivateProofPathPublished": false,
+    "rawPrivateArtifactContentPublished": false,
+    "absolutePrivatePathPublished": false,
+    "rawRuntimePointerPublishedInPublicDocs": false,
+    "rawRuntimePidPublishedInPublicDocs": false,
+    "rawCdbLogPathPublishedInPublicDocs": false,
+    "releaseIncludedPrivateArtifact": false
+  },
+  "claimBoundary": "This proves a copied original-binary level-850/config-1 P1/P2 local split-screen mode-semantics observer surface. It observed the two-player render graph and installed/read hook targets for objective, win/loss, death, lives, and respawn paths. It does not force or prove win, death, respawn, co-op, versus, team-versus, spectator/admin, second-host LAN, public matchmaking, native BEA netcode, active P3/P4 gameplay, deterministic sync, rebuild parity, or no-noticeable-difference online parity."
+}

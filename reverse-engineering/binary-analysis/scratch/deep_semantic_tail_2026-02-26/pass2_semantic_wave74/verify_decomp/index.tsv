@@ -1,0 +1,9 @@
+address	name	signature	status
+0x0056a1cd	CRT__ParseFloatTextToLongDouble	int CRT__ParseFloatTextToLongDouble(void)	OK
+0x0056a69e	CRT__GetStringTypeACompat	int CRT__GetStringTypeACompat(void)	OK
+0x0056be17	CRT__InitCTypeTablesFromCodePage	int CRT__InitCTypeTablesFromCodePage(void)	OK
+0x0056ce69	CRT__IsInDst_WrapperLocked	int __cdecl CRT__IsInDst_WrapperLocked(int param_1)	OK
+0x0056ce8a	CRT__IsInDst	bool __cdecl CRT__IsInDst(void * param_1)	OK
+0x0056d036	CRT__ComputeDstTransitionDayMillis	int CRT__ComputeDstTransitionDayMillis(void)	OK
+0x0056d8da	CRT__LongDoubleMultiply10Byte	void __cdecl CRT__LongDoubleMultiply10Byte(void * param_1, void * param_2)	OK
+0x0056dafa	CRT__LongDoubleScaleByPowerOf10	void __cdecl CRT__LongDoubleScaleByPowerOf10(void * param_1, uint param_2, int param_3)	OK

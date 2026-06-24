@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "winui-original-binary-second-host-runtime-executor.v1",
+  "runtimeExecutorScope": "second-host-command-source-to-fresh-copied-runtime-executor-not-player-ready-online",
+  "status": "builder-ready-no-accepted-live-second-host-runtime-delivery-proof",
+  "validator": {
+    "script": "tools/winui_safe_copy_online_second_host_runtime_executor_check.py",
+    "packageScript": "test:winui-original-binary-second-host-runtime-executor",
+    "builder": "tools/build_winui_original_binary_second_host_runtime_executor_bundle.py",
+    "validatesPrivateProofSchema": "winui-original-binary-second-host-runtime-executor.v1"
+  },
+  "requiredInputs": {
+    "secondHostCommandSourceProofSchema": "winui-original-binary-second-host-command-source.v1",
+    "hostAuthorityProofSchema": "winui-original-binary-host-authority-two-client-smoke.v1",
+    "runtimeExecutorProofSchema": "winui-original-binary-host-authority-runtime-executor.v1",
+    "acceptedCommandId": "second-host-p2-forward-0001",
+    "wouldForwardToPrivateLanCommandId": "private-lan-p2-forward-0001",
+    "requiresAcceptedCommandTranscriptBinding": true,
+    "requiresLocalSourceSafetyPreflightForLiveRuntime": true,
+    "requiresUpstreamPrivateLanProofHashMatch": true,
+    "requiresBridgeProofSameBundleOwnership": true,
+    "requiresInvitationLifecycleHashBinding": true,
+    "requiresMappedP2SequenceReceipt": true,
+    "requiresHostHelperReceiptBoundToMappedP2Sequence": true,
+    "acceptedOriginalBinaryGameplaySlots": [
+      "P1",
+      "P2"
+    ],
+    "metadataOnlySlots": [
+      "P3",
+      "P4"
+    ]
+  },
+  "livePromotionBlockers": {
+    "requiresSecondHostSessionSecurityHardening": true,
+    "requiredSecondHostSecurityHardeningFlags": [
+      "badHmacLiveRejected",
+      "replayNonceLiveRejected",
+      "timestampWindowLiveEnforced",
+      "sequenceOrderLiveEnforced",
+      "pinnedIdentityLiveEnforced",
+      "compatibilityKeyLiveEnforced",
+      "metadataSlotGameplayLiveRejected",
+      "preSessionCommandLiveRejected",
+      "directInputBypassLiveRejected",
+      "unknownFieldLiveRejected"
+    ],
+    "requiresSourceBindingEvidence": true,
+    "requiresAcceptedCommandTranscriptHashBinding": true,
+    "requiresInvitationLifecycleHashBinding": true,
+    "requiresLocalSourceSafetyPreflightForLiveRuntime": true,
+    "requiresUpstreamPrivateLanProofHashMatch": true,
+    "requiresBridgeProofSameBundleOwnership": true,
+    "requiresDirectSecondHostRuntimeCausalityReceipt": true,
+    "requiresMatchingSessionCompatibilityKeyBeforeLivePromotion": true,
+    "requiresSecondHostIdentitySourceSafetyAndAuthorizationHashes": true,
+    "requiresFreshCopiedRuntimeExecutor": true,
+    "requiresExactPidCdbEvidence": true,
+    "requiresHostHelperInputBoundToSecondHostCommandSource": true,
+    "requiresMappedP2SequenceReceipt": true
+  },
+  "currentEvidence": {
+    "runtimeExecutorBuilderReady": true,
+    "acceptedLiveSecondHostRuntimeDeliveryProof": false,
+    "runtimeDrivenBySecondHostCommandSource": false,
+    "hostJoinControlsMayBeEnabled": false,
+    "baseOnlineMultiplayerReady": false,
+    "multiHostLanPlayProof": false,
+    "publicMatchmakingProof": false,
+    "nativeBeaNetcodeProof": false,
+    "activeP3P4OriginalBinaryGameplayProof": false
+  },
+  "releaseBoundary": {
+    "privateProofReleaseExcludedByPolicy": true,
+    "rawPrivateProofPathPublished": false,
+    "rawPrivateArtifactContentPublished": false,
+    "absolutePrivatePathPublished": false,
+    "rawRuntimePointerPublished": false,
+    "rawRuntimePidPublished": false,
+    "rawCdbLogPathPublished": false,
+    "releaseIncludedPrivateArtifact": false
+  },
+  "nextRequiredProof": {
+    "id": "host-runtime-delivery-from-source-bound-distinct-command-source",
+    "description": "Before live second-host runtime delivery can be accepted, the second-host command-source proof, host-authority proof, bridge proof, and copied-runtime executor proof must be source-bound by artifact hashes, accepted command payload hash, session compatibility key, clean specimen hash, upstream private-LAN proof hash, identity/source-safety/authorization/invitation-lifecycle hashes, relay-plan hash, same-bundle bridge ownership, and a direct second-host-runtime causality receipt.",
+    "requiredBeforeAcceptedLiveRuntimeDelivery": true
+  }
+}

@@ -1,0 +1,28 @@
+.echo === safe-copy pause O-scan initializer observer ===
+vertarget
+lm m BEA
+u 00514210 L80
+u 0042db40 L80
+u 0042e4d0 L40
+u 00514850 L30
+u 00513a90 L30
+u 00515980 L30
+u 0041a980 L80
+u 0046fb00 L40
+u 0046fae0 L20
+u 004d06e0 L30
+u 004d0ff0 L30
+u 00472d50 L40
+dd 005144cd L1
+dd 008892dc L220
+bp 00514850 ".if ((poi(@esp+4)==0x18) | (poi(@esp+4)==0x4f) | (poi(@esp+8)==0x18) | (poi(@esp+8)==0x4f)) { .printf \"PauseOScan__GetKeyOnce controller=%p arg4=%08x arg8=%08x onceVkO=%02x onceScanO=%02x onVkO=%02x onScanO=%02x state3VkO=%02x state3ScanO=%02x gamePause=%d\n\", @ecx, poi(@esp+4), poi(@esp+8), by(0x00888de3), by(0x00888dac), by(0x00888ce3), by(0x00888cac), by(0x00888ee3), by(0x00888eac), poi(0x008a9ac4) }; g"
+bp 00513a90 ".if ((poi(@esp+4)==0x18) | (poi(@esp+4)==0x4f)) { .printf \"PauseOScan__GetKeyOnceCore input=%p key=%08x onceByteBefore=%02x gamePause=%d\n\", @ecx, poi(@esp+4), by(@ecx+0x331e4+poi(@esp+4)), poi(0x008a9ac4) }; g"
+bp 00515980 ".if ((poi(@esp+4)==0x18) | (poi(@esp+4)==0x4f)) { .printf \"PauseOScan__ConsumeKeyOnce key=%08x globalOnceBefore=%02x gamePause=%d\n\", poi(@esp+4), by(0x00888d94+poi(@esp+4)), poi(0x008a9ac4) }; g"
+bp 0042e4d0 ".if (poi(@esp+4)==0x38) { .printf \"PauseOScan__SendButtonAction controller=%p button=%d rawButton=%08x analogRaw=%08x gamePause=%d inputDevice=%08x controllerConfig=%08x target=%p targetVtable=%p\n\", @ecx, poi(@esp+4), poi(@esp+4), poi(@esp+8), poi(0x008a9ac4), poi(@ecx+0x16c), poi(@ecx+0x174), poi(poi(@ecx+4)), poi(poi(poi(@ecx+4))) }; g"
+bp 0041a980 ".if (poi(@esp+8)==0x38) { .printf \"PauseOScan__CameraReceive targetIController=%p camera=%p button=%d rawButton=%08x analogRaw=%08x gamePause=%d\n\", @ecx, @ecx-4, poi(@esp+8), poi(@esp+8), poi(@esp+0x0c), poi(0x008a9ac4) }; g"
+bp 0046fb00 ".printf \"PauseOScan__Pause game=%p pauseBefore=%d togglePauseMenu=%d fromController=%p free0=%d free1=%d pauseMenu=%p\n\", @ecx, poi(@ecx+0x2c), poi(@esp+4), poi(@esp+8), poi(@ecx+0x9d0), poi(@ecx+0x9d4), poi(@ecx+0x2f4); g"
+bp 0046fae0 ".printf \"PauseOScan__UnPause game=%p pauseBefore=%d free0=%d free1=%d pauseMenu=%p\n\", @ecx, poi(@ecx+0x2c), poi(@ecx+0x9d0), poi(@ecx+0x9d4), poi(@ecx+0x2f4); g"
+bp 004d06e0 ".printf \"PauseOScan__PauseMenuResumePersist pauseMenu=%p gamePause=%d free0=%d free1=%d\n\", @ecx, poi(0x008a9ac4), poi(0x008aa468), poi(0x008aa46c); g"
+bp 004d0ff0 ".printf \"PauseOScan__PauseMenuInit pauseMenu=%p activateControl=%d gamePause=%d free0=%d free1=%d\n\", @ecx, poi(@esp+4), poi(0x008a9ac4), poi(0x008aa468), poi(0x008aa46c); g"
+bp 00472d50 ".printf \"PauseOScan__GameInterfaceMenuInput gameInterface=%p controlContext=%p buttonId=%d buttonContext=%d gamePause=%d free0=%d free1=%d\n\", @ecx, poi(@esp+4), poi(@esp+8), poi(@esp+0x0c), poi(0x008a9ac4), poi(0x008aa468), poi(0x008aa46c); g"
+g

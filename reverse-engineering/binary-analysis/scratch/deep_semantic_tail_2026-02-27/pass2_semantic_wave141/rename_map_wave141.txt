@@ -1,0 +1,7 @@
+0x005343e0 IScript__PrimaryObjectiveComplete
+0x00534410 IScript__SecondaryObjectiveComplete
+0x00534440 IScript__PrimaryObjectiveFailed
+0x00534470 IScript__SecondaryObjectiveFailed
+0x00535350 CVM__DestroyAndClearStack
+0x00535fa0 IScript__Attack
+0x00536ca0 IScript__TriggerHitEffect

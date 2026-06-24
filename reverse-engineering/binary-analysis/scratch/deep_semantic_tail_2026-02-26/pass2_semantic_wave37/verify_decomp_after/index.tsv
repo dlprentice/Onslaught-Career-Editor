@@ -1,0 +1,5 @@
+address	name	signature	status
+0x00403ba0	CThing__Hit_TriggerDieOnDamageMaskA	void __thiscall CThing__Hit_TriggerDieOnDamageMaskA(void * this, void * param_1, int param_2, int param_3)	OK
+0x00403bf0	CThing__Hit_TriggerDieOnDamageMaskB	void __thiscall CThing__Hit_TriggerDieOnDamageMaskB(void * this, void * param_1, int param_2, int param_3)	OK
+0x00417540	CThing__RenderAndUpdateStaticShadow	void __thiscall CThing__RenderAndUpdateStaticShadow(void * this, void * param_1, int param_2)	OK
+0x004176c0	CThing__InitRenderThingFromInitMeshName	void __thiscall CThing__InitRenderThingFromInitMeshName(void * this, int param_1, int param_2)	OK

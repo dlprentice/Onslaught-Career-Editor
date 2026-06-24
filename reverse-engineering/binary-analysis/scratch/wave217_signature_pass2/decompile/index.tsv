@@ -1,0 +1,17 @@
+address	name	signature	status
+0x004adf80	CMesh__ClearField08	void __thiscall CMesh__ClearField08(void * this)	OK
+0x004f27e0	CHud__DecrementCounter9C	void __thiscall CHud__DecrementCounter9C(void * this)	OK
+0x004cb040	CWorldPhysicsManager__PushNodeGlobalList	void __cdecl CWorldPhysicsManager__PushNodeGlobalList(void * node)	OK
+0x00527de0	CWaterRenderSystem__ResetAndMarkSourceFlag	void __cdecl CWaterRenderSystem__ResetAndMarkSourceFlag(void * source_ctx)	OK
+0x004d05c0	CMenuItemRange__IsBindingActive	int __thiscall CMenuItemRange__IsBindingActive(void * this)	OK
+0x004aa4e0	CRTMesh__SumSubtreeField1C	int __thiscall CRTMesh__SumSubtreeField1C(void * this)	OK
+0x004b0cd0	CMesh__SelectModeSpecificPtr	void * __thiscall CMesh__SelectModeSpecificPtr(void * this)	OK
+0x0040c5b0	CRepairPadAI__IsWithinRepairBounds	int __thiscall CRepairPadAI__IsWithinRepairBounds(void * this)	OK
+0x0040c5e0	CRepairPadAI__HasAnySlotBelowThreshold	int __thiscall CRepairPadAI__HasAnySlotBelowThreshold(void * this)	OK
+0x00449560	CMine__AssignVec3AndReturnThis	void * __thiscall CMine__AssignVec3AndReturnThis(void * this, int x_bits, int y_bits, int z_bits)	OK
+0x00465f00	CVBufTexture__GetGlobalEnableByte	int __cdecl CVBufTexture__GetGlobalEnableByte(void)	OK
+0x004780f0	CWorld__InvokeVtable14WithTempBuffers	int __thiscall CWorld__InvokeVtable14WithTempBuffers(void * this)	OK
+0x00465c10	CDXBitmapFont__BuildGlyphRemapTables	void __cdecl CDXBitmapFont__BuildGlyphRemapTables(void)	OK
+0x004b6cd0	COggLoader__InitReadAndWaitThread	void __thiscall COggLoader__InitReadAndWaitThread(void * this)	OK
+0x004fde70	CWarspite__TransitionToUndeploying	void __thiscall CWarspite__TransitionToUndeploying(void * this)	OK
+0x0055e3ea	CPDSimpleSprite__FpuDispatchStub	void __cdecl CPDSimpleSprite__FpuDispatchStub(void)	OK

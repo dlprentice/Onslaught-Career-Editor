@@ -1,0 +1,6 @@
+address	name	signature	status
+0x004ae110	CMeshPart__StartTriangleBucketSearch	int __thiscall CMeshPart__StartTriangleBucketSearch(void * this, int param_1, int param_2, int param_3, void * param_4)	OK
+0x004ae1a0	CMeshPart__GetNextTriangleFromBucketSearch	int __thiscall CMeshPart__GetNextTriangleFromBucketSearch(void * this, int param_1, void * param_2)	OK
+0x004ae220	CMeshPart__StartLineTriangleBucketSearch	int __thiscall CMeshPart__StartLineTriangleBucketSearch(void * this, int param_1, int param_2, int param_3, void * param_4)	OK
+0x004ae430	CMeshPart__GetNextLineTriangleFromBucketSearch	int __thiscall CMeshPart__GetNextLineTriangleFromBucketSearch(void * this, int param_1, void * param_2, int param_3)	OK
+0x004ae640	CMeshPart__FreeOwnedResourcePointers_004ae640	void __fastcall CMeshPart__FreeOwnedResourcePointers_004ae640(int param_1)	OK

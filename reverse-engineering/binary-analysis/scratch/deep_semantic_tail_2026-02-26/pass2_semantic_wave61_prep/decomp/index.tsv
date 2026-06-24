@@ -1,0 +1,13 @@
+address	name	signature	status
+0x005833a6	CDXTexture__Unk_005833a6	void __thiscall CDXTexture__Unk_005833a6(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x005834ef	CDXTexture__Unk_005834ef	void __thiscall CDXTexture__Unk_005834ef(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00583670	CDXTexture__Unk_00583670	void __thiscall CDXTexture__Unk_00583670(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x005837b7	CDXTexture__Unk_005837b7	void __thiscall CDXTexture__Unk_005837b7(void * this, void * param_1, uint param_2, float param_3, uint param_4)	OK
+0x00583a94	CTexture__Unk_00583a94	void __thiscall CTexture__Unk_00583a94(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00583ba4	CTexture__Unk_00583ba4	void __thiscall CTexture__Unk_00583ba4(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00583c8e	CTexture__Unk_00583c8e	void __thiscall CTexture__Unk_00583c8e(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00583d89	CTexture__Unk_00583d89	void __thiscall CTexture__Unk_00583d89(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00583eb3	CTexture__Unk_00583eb3	void __thiscall CTexture__Unk_00583eb3(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00583fe5	CTexture__Unk_00583fe5	void __thiscall CTexture__Unk_00583fe5(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00584535	CTexture__Unk_00584535	void __thiscall CTexture__Unk_00584535(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x0058463a	CTexture__Unk_0058463a	void __thiscall CTexture__Unk_0058463a(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK

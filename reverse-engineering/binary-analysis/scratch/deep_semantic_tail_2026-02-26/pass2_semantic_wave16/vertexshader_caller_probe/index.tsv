@@ -1,0 +1,4 @@
+address	name	signature	status
+0x00513e20	CEngine__SetShaderObject	void __thiscall CEngine__SetShaderObject(void * this, void * shader_obj)	OK
+0x0054c920	CDXMeshVB__BuildSkeletalVB	undefined CDXMeshVB__BuildSkeletalVB(void)	OK
+0x00550d50	CDXEngine__ApplyPendingRenderState	void __thiscall CDXEngine__ApplyPendingRenderState(void * this, char force_raw)	OK

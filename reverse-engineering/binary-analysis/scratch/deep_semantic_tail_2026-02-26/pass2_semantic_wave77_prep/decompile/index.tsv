@@ -1,0 +1,11 @@
+address	name	signature	status
+0x00582244	CFastVB__Unk_00582244	void __thiscall CFastVB__Unk_00582244(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00582355	CFastVB__Unk_00582355	void __thiscall CFastVB__Unk_00582355(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x0058249e	CFastVB__Unk_0058249e	void __thiscall CFastVB__Unk_0058249e(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x005825c3	CFastVB__Unk_005825c3	void __thiscall CFastVB__Unk_005825c3(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x005826e8	CFastVB__Unk_005826e8	void __thiscall CFastVB__Unk_005826e8(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x0058280d	CFastVB__Unk_0058280d	void __thiscall CFastVB__Unk_0058280d(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00582950	CFastVB__Unk_00582950	void __thiscall CFastVB__Unk_00582950(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00583891	CFastVB__Unk_00583891	void __thiscall CFastVB__Unk_00583891(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00583979	CFastVB__Unk_00583979	void __thiscall CFastVB__Unk_00583979(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x005888bc	CFastVB__Unk_005888bc	int CFastVB__Unk_005888bc(void)	OK

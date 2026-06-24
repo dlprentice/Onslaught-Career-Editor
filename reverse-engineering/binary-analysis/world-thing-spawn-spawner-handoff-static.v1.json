@@ -1,0 +1,200 @@
+{
+  "schemaVersion": "world-thing-spawn-spawner-handoff-static.v1",
+  "status": "PASS",
+  "source": {
+    "copiedCorpusSchemaPath": "reverse-engineering/game-assets/world-thing-spawn-copied-corpus-schema.v1.json",
+    "missionThingUsagePath": "reverse-engineering/game-assets/mission-thing-usage.md",
+    "copiedAppOwnedInputOnly": true,
+    "programFilesInputUsed": false,
+    "runtimeExecution": false,
+    "ghidraMutation": false
+  },
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+  },
+  "selectedFamily": {
+    "name": "training-target-spawn-family",
+    "call": "SpawnThing",
+    "levels": [
+      "22",
+      "100"
+    ],
+    "directories": [
+      "level022",
+      "level100"
+    ],
+    "thingLabels": [
+      "Air Trainer",
+      "Target Drone",
+      "Target Tank",
+      "Target Truck"
+    ],
+    "spawners": [
+      "SpawnerA",
+      "SpawnerB"
+    ],
+    "rawRows": 34,
+    "uniqueObjectReferenceRows": 6,
+    "uniqueThingLabels": 4,
+    "uniqueFileThingSpawnerRows": 8
+  },
+  "corpusCarryForward": {
+    "rawDetailedCallRows": {
+      "GetThingRef": 574,
+      "SpawnThing": 70,
+      "total": 644
+    },
+    "uniqueObjectReferenceRows": {
+      "GetThingRef": 418,
+      "SpawnThing": 18,
+      "total": 436
+    },
+    "uniqueSpawnPreservingSpawnerRows": {
+      "GetThingRef": 418,
+      "SpawnThing": 29,
+      "total": 447
+    }
+  },
+  "handoffLayers": [
+    {
+      "id": "corpus-command-family",
+      "anchors": [
+        "world-thing-spawn-copied-corpus-schema.v1.json",
+        "mission-thing-usage.md",
+        "training-target-spawn-family",
+        "Target Drone",
+        "Target Tank",
+        "Target Truck",
+        "Air Trainer",
+        "SpawnerA",
+        "SpawnerB"
+      ],
+      "staticContract": "Preserve level, directory, file, thing, spawner, casing, and duplicate-call counts for the selected SpawnThing family."
+    },
+    {
+      "id": "missionscript-command-descriptor",
+      "anchors": [
+        "IScript__SpawnThing",
+        "IScript__GetThingRef",
+        "CThingPtrDataType",
+        "ScriptCommandRegistry__InitBuiltins",
+        "0x0064ce50",
+        "0x0064f210"
+      ],
+      "staticContract": "Tie the selected corpus command family to the saved MissionScript command registry and thing-pointer datatype surface without claiming runtime dispatch."
+    },
+    {
+      "id": "bytecode-preload",
+      "anchors": [
+        "0x005392a0 CScriptObjectCode__CollectSpawnThings",
+        "opcode 0x18",
+        "CWorldMeshList__Add"
+      ],
+      "staticContract": "Record the static SpawnThing pre-scan path that adds mesh/world dependencies before any live script execution proof."
+    },
+    {
+      "id": "world-load-mesh-dependency",
+      "anchors": [
+        "0x0050b9c0 CWorld__LoadWorld",
+        "0x0050ac70 CWorld__LoadScriptEvents",
+        "0x0050d9e0 CWorldMeshList__Add",
+        "DAT_00855358",
+        "DAT_008553fc +0xb0"
+      ],
+      "staticContract": "Map the world-load and mesh-list dependency surface needed before object-reference or spawn runtime proof."
+    },
+    {
+      "id": "world-factory-init",
+      "anchors": [
+        "0x0050dcb0 CWorld__SpawnInitialThings",
+        "0x0050df80 CWorldPhysicsManager__CreateThingByType",
+        "0x0048c650 InitThing__CreateThingByType",
+        "0x0040e280 CInitThing__LoadFromMemBuffer",
+        "CThing__InitRenderThingFromInitMeshName"
+      ],
+      "staticContract": "Map the static thing-definition and init-object factory path without claiming exact object layout or runtime creation."
+    },
+    {
+      "id": "spawner-gate-wave",
+      "anchors": [
+        "0x004e3010 CSpawnerThng__Init",
+        "0x004e36c0 CSpawnerThng__FindSpawnerByName",
+        "0x004e3c60 CSpawnerThng__DoSpawn",
+        "0x004e3f90 CSpawnerThng__ProcessSpawnWave",
+        "0x0050f680 CSpawnerThng__IsSpawnTypeAllowed",
+        "0x0050f970 CWorldPhysicsManager__CreateSpawner",
+        "0x00511440 CWorldPhysicsManager__IsSpawnerThingTypeAllowedByName",
+        "0x005115b0 CWorldPhysicsManager__MapGunOrSpawnerTagToIndex",
+        "0x00511ad0 CWorldPhysicsManager__AddSpawnerByName",
+        "DAT_008553f4"
+      ],
+      "staticContract": "Map the spawner name/tag/type-gate shell required for selected SpawnThing handoff proof."
+    },
+    {
+      "id": "unit-world-add-cooldown",
+      "anchors": [
+        "CUnit__VFunc08_InitAndAddToWorld",
+        "CWorld__AddUnitToOccupancyGridAndRebuildShadows_Thunk",
+        "0x004fc3a0 CUnit__SetSpawnCooldownState3"
+      ],
+      "staticContract": "Record the Unit/BattleEngine spawn-add and post-spawn cooldown handoff anchors without claiming runtime activation."
+    },
+    {
+      "id": "mesh-resource-render-boundary",
+      "anchors": [
+        "CThing__InitRenderThingFromInitMeshName",
+        "mesh-resource-render-static-contract.md",
+        "texture-resource-decode-static-contract.md"
+      ],
+      "staticContract": "Preserve the render/resource dependency boundary for rebuild planning without claiming visual output or GPU parity."
+    }
+  ],
+  "fieldRoleEvidence": {
+    "CSpawnerThng+0x0468": "spawner name string role",
+    "CSpawnerThng+0x007c": "parent or owner role",
+    "CSpawnerThng+0x0080": "next spawn time role",
+    "CSpawnerThng+0x0090": "batch size role",
+    "CSpawnerThng+0x0094": "total count role",
+    "CSpawnerThng+0x0098": "current wave count role",
+    "CSpawnerThng+0x009c": "current batch count role",
+    "CSpawnerThng+0x00a0": "infinite spawn flag role",
+    "CSpawnerThng+0x00a4": "active flag role",
+    "CSpawnerThng+0x00b0": "spawn mode role",
+    "CUnit+0x0168": "spawn cooldown state role",
+    "CUnit+0x016c": "spawn cooldown timestamp role"
+  },
+  "claims": [
+    "The selected training-target SpawnThing copied-corpus family has a bounded static handoff map from loose corpus rows to MissionScript descriptor/datatype anchors, bytecode pre-scan, world load/mesh dependencies, spawner gates, world factory/init, Unit world-add/cooldown, and mesh/resource boundaries.",
+    "The proof preserves raw, unique object-reference, and spawner-preserving corpus count vocabulary from the copied-corpus schema.",
+    "Field-role offsets are preserved as static roles only, not final C++ layouts."
+  ],
+  "notClaimed": [
+    "runtime SpawnThing behavior",
+    "runtime GetThingRef behavior",
+    "runtime MissionScript execution",
+    "runtime object identity",
+    "runtime object lookup by name",
+    "runtime world loading",
+    "runtime spawner behavior",
+    "runtime Unit/BattleEngine spawn behavior",
+    "runtime AI activation",
+    "runtime collision",
+    "runtime damage",
+    "runtime HUD/message/audio output",
+    "live loose-MSL loading",
+    "packed-resource script selection",
+    "exact descriptor layout",
+    "exact VM/object-code/world/thing/spawner/Unit layouts",
+    "exact source-body identity",
+    "BEA patching behavior",
+    "visual QA",
+    "Godot parity",
+    "rebuild parity",
+    "no-noticeable-difference parity"
+  ]
+}

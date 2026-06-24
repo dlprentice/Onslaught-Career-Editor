@@ -1,0 +1,4 @@
+address	name	signature	status
+0x004d20a0	CFEPMultiplayerStart__Unk_004d20a0	void __fastcall CFEPMultiplayerStart__Unk_004d20a0(void * param_1)	OK
+0x00403730	CFEPMultiplayerStart__Helper_00403730	void __fastcall CFEPMultiplayerStart__Helper_00403730(void * param_1)	OK
+0x004fd230	CExplosionInitThing__ctor_like_004fd230	void __fastcall CExplosionInitThing__ctor_like_004fd230(void * param_1)	OK

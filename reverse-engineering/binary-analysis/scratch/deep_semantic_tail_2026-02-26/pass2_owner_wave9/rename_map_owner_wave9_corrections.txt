@@ -1,0 +1,5 @@
+0x00402010 CUnit__Helper_00402010
+0x00409e60 CGeneralVolume__Helper_00409e60
+0x004c10c0 CPDSimpleSprite__Helper_004c10c0
+0x004fd140 CUnit__Helper_004fd140
+0x0057d32e CWaypointManager__Helper_0057d32e

@@ -1,0 +1,188 @@
+address	old_name	inferred_owner	xref_count	top_counts
+0x0055d731	CTexture__Unk_0055d731		512
+0x0055def0	CTexture__Unk_0055def0	CDXTexture	40	CDXTexture:9;CDXEngine:3;CMemoryManager:2;CLTShell:1;CLIParams:1
+0x0055dfe7	CTexture__Unk_0055dfe7	CDXEngine	98	CDXEngine:31;CPolyBucket:6;CMCMech:5;CFEPLevelSelect:4;OID:4
+0x0055e64e	CTexture__Unk_0055e64e	CUnitAI	67	CUnitAI:15;CDXEngine:13;CFEPSaveGame:8;ControlsUI:4;CFEPLoadGame:3
+0x0055eb3d	CTexture__Unk_0055eb3d		15	CWorld:4;CDXEngine:4;CEngine:4;CSquadNormal:2
+0x0055ec4a	CTexture__Unk_0055ec4a		1
+0x0055ed50	CTexture__Unk_0055ed50		10	CDXTexture:2;CFastVB:2;CMemoryManager:1;CVBufTexture:1
+0x0055f2e8	CTexture__Unk_0055f2e8		3	CDropship:1;CFEPOptions:1;CFEPVirtualKeyboard:1
+0x0055f783	CTexture__Unk_0055f783		5
+0x00560b2c	CTexture__Unk_00560b2c		1
+0x00560b80	CTexture__Unk_00560b80		2
+0x00561150	CTexture__Unk_00561150		1
+0x00561179	CTexture__Unk_00561179	CDXTexture	39	CDXTexture:15;CFastVB:4;CMeshCollisionVolume:2;CEngine:2;CMCBuggy:1
+0x0056171c	CTexture__Unk_0056171c	CDXTexture	10	CDXTexture:4;ControlsUI:2;CFastVB:1
+0x00564486	CTexture__Unk_00564486		2
+0x0056468c	CTexture__Unk_0056468c		1
+0x00564ba5	CTexture__Unk_00564ba5		2
+0x00564f7a	CTexture__Unk_00564f7a	CDXTexture	5	CDXTexture:2;CFastVB:1
+0x00564fdf	CTexture__Unk_00564fdf		0
+0x0056585a	CTexture__Unk_0056585a		2	CDXTexture:1;ControlsUI:1
+0x0056586a	CTexture__Unk_0056586a		3
+0x00565ab0	CTexture__Unk_00565ab0		3
+0x00565bcb	CTexture__Unk_00565bcb		2
+0x00565c84	CTexture__Unk_00565c84		2
+0x00566364	CTexture__Unk_00566364	CDXTexture	3	CDXTexture:2;CMeshCollisionVolume:1
+0x0056668d	CTexture__Unk_0056668d		3	CDXTexture:1
+0x00566996	CTexture__Unk_00566996		1
+0x00566a47	CTexture__Unk_00566a47		1
+0x00566e38	CTexture__Unk_00566e38		2	CDXTexture:1
+0x00567094	CTexture__Unk_00567094	CDXTexture	3	CDXTexture:2;CMeshCollisionVolume:1
+0x00567130	CTexture__Unk_00567130		3	CDXTexture:1
+0x00567b96	CTexture__Unk_00567b96	CFastVB	2	CFastVB:2
+0x00567bfb	CTexture__Unk_00567bfb		2	CDXTexture:1
+0x00567de0	CTexture__Unk_00567de0	CDXTexture	27	CDXTexture:10;CFastVB:4
+0x00567ed0	CTexture__Unk_00567ed0		1
+0x00568dc6	CTexture__Unk_00568dc6		1
+0x0056941a	CTexture__Unk_0056941a		2	CDXTexture:1
+0x00569a65	CTexture__Unk_00569a65		1
+0x00569a7b	CTexture__Unk_00569a7b		1
+0x00569aa8	CTexture__Unk_00569aa8		1
+0x0056a106	CTexture__Unk_0056a106		1
+0x0056a1cd	CTexture__Unk_0056a1cd		3	CFastVB:1
+0x0056a69e	CTexture__Unk_0056a69e		3	CFastVB:1
+0x0056b4f2	CTexture__Unk_0056b4f2		0
+0x0056be17	CTexture__Unk_0056be17		1
+0x0056cbb4	CTexture__Unk_0056cbb4		1
+0x0056cbe2	CTexture__Unk_0056cbe2		1
+0x0056ce69	CTexture__Unk_0056ce69		1
+0x0056ce8a	CTexture__Unk_0056ce8a		1
+0x0056d036	CTexture__Unk_0056d036		4
+0x0056d8da	CTexture__Unk_0056d8da		2
+0x0056dafa	CTexture__Unk_0056dafa		2
+0x0056eb50	CTexture__Unk_0056eb50	CDXMeshVB	3	CDXMeshVB:2;CLandscapeIB:1
+0x0056eb60	CTexture__Unk_0056eb60	CDXMeshVB	3	CDXMeshVB:2;CLandscapeIB:1
+0x00572e40	CTexture__Unk_00572e40		1
+0x005738e0	CTexture__Unk_005738e0		2
+0x00573cc0	CTexture__Unk_00573cc0		3
+0x00573d80	CTexture__Unk_00573d80		1
+0x00574080	CTexture__Unk_00574080		1
+0x005740a0	CTexture__Unk_005740a0		2
+0x00574100	CTexture__Unk_00574100		1
+0x00574120	CTexture__Unk_00574120		1
+0x00574180	CTexture__Unk_00574180		2
+0x00574577	CTexture__Unk_00574577	CFastVB	30	CFastVB:28
+0x00575b1d	CTexture__Unk_00575b1d		2
+0x00575b47	CTexture__Unk_00575b47		1
+0x00575bd5	CTexture__Unk_00575bd5		2
+0x00575bff	CTexture__Unk_00575bff		1
+0x00575e77	CTexture__Unk_00575e77		2
+0x00575ea1	CTexture__Unk_00575ea1		1
+0x00575f72	CTexture__Unk_00575f72		2
+0x00575fa1	CTexture__Unk_00575fa1		1
+0x00575ffe	CTexture__Unk_00575ffe		3	CFastVB:1
+0x00576167	CTexture__Unk_00576167		2
+0x00576178	CTexture__Unk_00576178		2	CDXTexture:1;CFastVB:1
+0x00576404	CTexture__Unk_00576404		1
+0x005764d5	CTexture__Unk_005764d5		2
+0x005764ff	CTexture__Unk_005764ff		1
+0x005765f2	CTexture__Unk_005765f2		2
+0x00576621	CTexture__Unk_00576621		1
+0x0057748e	CTexture__Unk_0057748e		2
+0x005774ae	CTexture__Unk_005774ae		1
+0x005776a5	CTexture__Unk_005776a5		2
+0x00577a38	CTexture__Unk_00577a38		1
+0x00577b17	CTexture__Unk_00577b17		2
+0x00577b24	CTexture__Unk_00577b24		6
+0x00577c83	CTexture__Unk_00577c83		2
+0x00577c90	CTexture__Unk_00577c90		2
+0x00577d47	CTexture__Unk_00577d47		2
+0x00577d54	CTexture__Unk_00577d47		4
+0x00577f8d	CTexture__Unk_00577f8d		2
+0x00577fb7	CTexture__Unk_00577fb7		1
+0x0057800e	CTexture__Unk_0057800e		1
+0x0057804e	CTexture__Unk_0057804e		1
+0x005783d9	CTexture__Unk_005783d9		1
+0x005785c0	CTexture__Unk_005785c0		1
+0x00578643	CTexture__Unk_00578643		1
+0x00578dad	CTexture__Unk_00578dad		1
+0x0057923a	CTexture__Unk_0057923a		1
+0x00579273	CTexture__Unk_00579273		1
+0x00579527	CTexture__Unk_00579527		1
+0x00579601	CTexture__Unk_00579601		1
+0x00579a9a	CTexture__Unk_00579a9a	CVertexShader	4	CVertexShader:2;CEngine:1
+0x00579b39	CTexture__Unk_00579b39		7	CMeshCollisionVolume:2;CFastVB:2;CDXTexture:1
+0x00579bd5	CTexture__Unk_00579bd5	CFastVB	16	CFastVB:14;CDXTexture:2
+0x00581263	CTexture__Unk_00581263	CFastVB	3	CFastVB:2;CDXTexture:1
+0x00581279	CTexture__Unk_00581279	CFastVB	37	CFastVB:13;CDXTexture:10
+0x00582a99	CTexture__Unk_00582a99		1
+0x00582bbe	CTexture__Unk_00582bbe		1
+0x00582c8a	CTexture__Unk_00582c8a		1
+0x00582dd3	CTexture__Unk_00582dd3		1
+0x00583a94	CTexture__Unk_00583a94		1
+0x00583ba4	CTexture__Unk_00583ba4		1
+0x00583c8e	CTexture__Unk_00583c8e		1
+0x00583d89	CTexture__Unk_00583d89		1
+0x00583eb3	CTexture__Unk_00583eb3		1
+0x00583fe5	CTexture__Unk_00583fe5		1
+0x00584535	CTexture__Unk_00584535		1
+0x0058463a	CTexture__Unk_0058463a		1
+0x00584a4c	CTexture__Unk_00584a4c		1
+0x00584b5f	CTexture__Unk_00584b5f		1
+0x00584c04	CTexture__Unk_00584c04		1
+0x00584cc3	CTexture__Unk_00584cc3		1
+0x0058579b	CTexture__Unk_0058579b		1
+0x0058586b	CTexture__Unk_0058586b		1
+0x00585cb0	CTexture__Unk_00585cb0		1
+0x005860ba	CTexture__Unk_005860ba		1
+0x00586438	CTexture__Unk_00586438		1
+0x0058686f	CTexture__Unk_0058686f		1
+0x005869b0	CTexture__Unk_005869b0		1
+0x005876ab	CTexture__Unk_005876ab		6
+0x00587af0	CTexture__Unk_00587af0		6
+0x00588896	CTexture__Unk_00588896	CDXTexture	4	CDXTexture:2;Platform:1;CMeshCollisionVolume:1
+0x00589cab	CTexture__Unk_00589cab		1
+0x00589e73	CTexture__Unk_00589e73		1
+0x0058b3c7	CTexture__Unk_0058b3c7		1
+0x0058b812	CTexture__Unk_0058b812		1
+0x0058bd25	CTexture__Unk_0058bd25		1
+0x0058bd87	CTexture__Unk_0058bd87		2
+0x0058c2b9	CTexture__Unk_0058c2b9		2	CFastVB:1
+0x0058c3fe	CTexture__Unk_0058c3fe		7
+0x0058c457	CTexture__Unk_0058c457		1
+0x0058c5d3	CTexture__Unk_0058c5d3		2
+0x0058c652	CTexture__Unk_0058c652		1
+0x0058d18b	CTexture__Unk_0058d18b		1
+0x0058d1ca	CTexture__Unk_0058d1ca		1
+0x0058d2ad	CTexture__Unk_0058d2ad		25
+0x0058d419	CTexture__Unk_0058d419		1
+0x0058eefb	CTexture__Unk_0058eefb		1
+0x0058f1e0	CTexture__Unk_0058f1e0		2	CDXTexture:1
+0x0058f577	CTexture__Unk_0058f577		2
+0x0058f66f	CTexture__Unk_0058f66f		1
+0x0059020b	CTexture__Unk_0059020b		1
+0x005907d9	CTexture__Unk_005907d9		1
+0x00590c4a	CTexture__Unk_00590c4a		1
+0x00590cc2	CTexture__Unk_00590cc2		1
+0x00591460	CTexture__Unk_00591460		2
+0x005919e0	CTexture__Unk_005919e0		1
+0x00591cb0	CTexture__Unk_00591cb0		1
+0x00592d45	CTexture__Unk_00592d45	CDXTexture	34	CDXTexture:28;CFastVB:1;CMeshCollisionVolume:1
+0x00592d63	CTexture__Unk_00592d63	CDXTexture	21	CDXTexture:10;CMeshCollisionVolume:1
+0x00592d7a	CTexture__Unk_00592d7a		3	CMeshCollisionVolume:1
+0x00594ff9	CTexture__Unk_00594ff9		1
+0x00595030	CTexture__Unk_00595030		1
+0x0059764a	CTexture__Unk_0059764a		3	CFastVB:1
+0x005987b2	CTexture__Unk_005987b2		1
+0x0059881b	CTexture__Unk_0059881b		1
+0x005989c3	CTexture__Unk_005989c3		1
+0x005989db	CTexture__Unk_005989db		13
+0x00598fc0	CTexture__Unk_00598fc0		1
+0x00598fdc	CTexture__Unk_00598fdc		2
+0x00598ff4	CTexture__Unk_00598ff4		2
+0x00599a3c	CTexture__Unk_00599a3c		1
+0x00599a58	CTexture__Unk_00599a58		1
+0x0059c070	CTexture__Unk_0059c070		2
+0x0059c110	CTexture__Unk_0059c110		2
+0x0059c6b0	CTexture__Unk_0059c6b0		9
+0x0059cdbe	CTexture__Unk_0059cdbe		1
+0x005ab14b	CTexture__Unk_005ab14b		2	CDXTexture:1
+0x005ab620	CTexture__Unk_005ab620		1
+0x005ab700	CTexture__Unk_005ab700		1
+0x005acac0	CTexture__Unk_005acac0		4
+0x005aceb0	CTexture__Unk_005aceb0		6
+0x005acf90	CTexture__Unk_005acf90		1
+0x005b1400	CTexture__Unk_005b1400		1
+0x005b3920	CTexture__Unk_005b3920		1
+0x005b39d0	CTexture__Unk_005b39d0		3

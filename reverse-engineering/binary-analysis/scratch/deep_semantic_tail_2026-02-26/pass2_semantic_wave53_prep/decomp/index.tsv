@@ -1,0 +1,5 @@
+address	name	signature	status
+0x00429280	FUN_00429280	undefined FUN_00429280(void)	OK
+0x0048ac80	FUN_0048ac80	undefined FUN_0048ac80(void)	OK
+0x00428bc0	CFrontEndPage__Unk_00428bc0	double __fastcall CFrontEndPage__Unk_00428bc0(int param_1)	OK
+0x0048ace0	CInfantryGuide__SelectNearestTargetReader	void __fastcall CInfantryGuide__SelectNearestTargetReader(int param_1)	OK

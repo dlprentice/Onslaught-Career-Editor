@@ -1,0 +1,10 @@
+target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
+005dda68	<no_function>	<none>	<none>	<none>	<none>
+005e0054	<no_function>	<none>	<none>	<none>	<none>
+00657974	<no_function>	0057d23c	0057d216	CFastVB__Helper_0057d216	READ
+00657974	<no_function>	0057d457	0057d446	CWaypointManager__Unk_0057d446	WRITE
+00657974	<no_function>	0057d463	0057d446	CWaypointManager__Unk_0057d446	WRITE
+00657974	<no_function>	0057d478	0057d446	CWaypointManager__Unk_0057d446	INDIRECTION
+00657974	<no_function>	0057d48f	0057d47e	CDXTexture__Helper_0057d47e	WRITE
+00657974	<no_function>	0057d496	0057d47e	CDXTexture__Helper_0057d47e	WRITE
+006570f4	<no_function>	<none>	<none>	<none>	<none>

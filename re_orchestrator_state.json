@@ -1,0 +1,17 @@
+{
+  "lastUpdated": "2026-06-24",
+  "currentFocus": "No new Ghidra/static mutation; public-primary repo migration only.",
+  "staticClosure": {
+    "functionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "activeCurrentRisk": "1179/1179 = 100.00%",
+    "wave1220CloseoutProbe": "tools/static_reaudit_final_closeout_wave1220.py",
+    "measurementFrontDoor": "reverse-engineering/binary-analysis/static-reaudit-measurement-register.md",
+    "latestGhidraReviewBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+  },
+  "migrationImpact": "RE docs, scratch text exports, wave notes, function indexes, static maps, and proof summaries are staged into public repo; no Ghidra project DB, executable bytes, or Ghidra mutation added.",
+  "nextSteps": [
+    "After public-primary migration commit/push, continue RE/runtime/product work from public repo.",
+    "Use G:\\GhidraBackups for any future backup-producing Ghidra wave while G: is attached."
+  ]
+}

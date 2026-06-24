@@ -1,0 +1,7 @@
+address	name	signature	status
+0x005b4ae0	CTexture__Helper_005b4ae0	void __stdcall CTexture__Helper_005b4ae0(int param_1)	OK
+0x005b7770	CTexture__Helper_005b7770	void CTexture__Helper_005b7770(void)	OK
+0x005b81d0	CTexture__Helper_005b81d0	void __stdcall CTexture__Helper_005b81d0(void * param_1, void * param_2, void * param_3)	OK
+0x005d075f	CTexture__Helper_005d075f	int __cdecl CTexture__Helper_005d075f(void * param_1, int param_2, void * param_3)	OK
+0x005d0c7f	CTexture__Helper_005d0c7f	int CTexture__Helper_005d0c7f(void)	OK
+0x005d0eb8	CTexture__Helper_005d0eb8	uint __cdecl CTexture__Helper_005d0eb8(int param_1, int param_2)	OK

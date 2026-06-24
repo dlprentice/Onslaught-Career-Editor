@@ -1,0 +1,47 @@
+address	name	signature	status
+0x00406040	CDXCompass__GetTrackedPositionX	double __fastcall CDXCompass__GetTrackedPositionX(int param_1)	OK
+0x0040c630	CDXCompass__GetTrackedPositionY	double __fastcall CDXCompass__GetTrackedPositionY(int param_1)	OK
+0x004821b0	CDXCompass__ApplyRenderStateModulate	void CDXCompass__ApplyRenderStateModulate(void)	OK
+0x004821e0	CDXCompass__ApplyRenderStateAdditive	void CDXCompass__ApplyRenderStateAdditive(void)	OK
+0x004f99f0	CDXCompass__GetSubtreeHealthOrFallbackValue	double __fastcall CDXCompass__GetSubtreeHealthOrFallbackValue(int param_1)	OK
+0x0048de90	CDXLandscape__ClearPendingHudMarkerHandle	int __fastcall CDXLandscape__ClearPendingHudMarkerHandle(int param_1)	OK
+0x0048dea0	CDXLandscape__ReleasePendingHudMarker	void CDXLandscape__ReleasePendingHudMarker(void)	OK
+0x00512cc0	CDXLandscape__UnlinkNodeFromPrimaryAndSecondaryLists	uint __stdcall CDXLandscape__UnlinkNodeFromPrimaryAndSecondaryLists(uint param_1)	OK
+0x00527d20	CDXLandscape__ValidateDeviceAndUpdateValidSoFar	int __fastcall CDXLandscape__ValidateDeviceAndUpdateValidSoFar(int param_1)	OK
+0x0044a0c0	CDXMeshVB__GetGlobalZeroDouble	double CDXMeshVB__GetGlobalZeroDouble(void)	OK
+0x0056eb50	CDXMeshVB__SetTriangleStripDebugFlag	void __cdecl CDXMeshVB__SetTriangleStripDebugFlag(int param_1)	OK
+0x0056eb60	CDXMeshVB__SetEmitDegenerateFlag	void __cdecl CDXMeshVB__SetEmitDegenerateFlag(int param_1)	OK
+0x0056eb70	CDXMeshVB__SetWordIndexModeFlag	void __cdecl CDXMeshVB__SetWordIndexModeFlag(int param_1)	OK
+0x0056eb80	CDXMeshVB__SetBatchSplitThreshold	void __cdecl CDXMeshVB__SetBatchSplitThreshold(int param_1)	OK
+0x0056eb90	CDXMeshVB__BuildStripBatchesAndEmitIndexBuffer	void __cdecl CDXMeshVB__BuildStripBatchesAndEmitIndexBuffer(void * param_1, uint param_2, void * param_3, void * param_4)	OK
+0x00480a30	CCollisionSeekingRound__ScanNeighborSectorsAndDispatchCollisions	void __thiscall CCollisionSeekingRound__ScanNeighborSectorsAndDispatchCollisions(void * this, int param_1, int param_2)	OK
+0x00480e10	CCollisionSeekingRound__TraverseQuadNodeAndDispatchCollisions	void __thiscall CCollisionSeekingRound__TraverseQuadNodeAndDispatchCollisions(void * this, int param_1, void * param_2)	OK
+0x00491d80	CCollisionSeekingRound__IterSetHeadFromMapWhoEntry	void __thiscall CCollisionSeekingRound__IterSetHeadFromMapWhoEntry(void * this, void * param_1, int param_2)	OK
+0x00491d90	CCollisionSeekingRound__IterPopNextEntry	int __fastcall CCollisionSeekingRound__IterPopNextEntry(void * param_1)	OK
+0x004d8a70	CCollisionSeekingRound__ShutdownMonitorAndDestruct	void __fastcall CCollisionSeekingRound__ShutdownMonitorAndDestruct(int param_1)	OK
+0x004f3d10	CCollisionSeekingRound__GetCollisionComponentOrNull	int __fastcall CCollisionSeekingRound__GetCollisionComponentOrNull(int param_1)	OK
+0x00495ed0	CMCMech__ScaleMat34ByScalar	void __thiscall CMCMech__ScaleMat34ByScalar(void * this, void * param_1, void * param_2, float param_3)	OK
+0x0049bd50	CMCMech__UpdateBoneHierarchyRecursive	void CMCMech__UpdateBoneHierarchyRecursive(void)	OK
+0x004aa680	CMCMech__FindSlotByPartId	int __thiscall CMCMech__FindSlotByPartId(void * this, int param_1, int param_2)	OK
+0x004aa820	CMCMech__FindSlotValueByNameAndOwner	int __thiscall CMCMech__FindSlotValueByNameAndOwner(void * this, int param_1, void * param_2, int param_3)	OK
+0x004b0fb0	CMCMech__BuildInterpolatedPoseAndAnchor	int CMCMech__BuildInterpolatedPoseAndAnchor(void)	OK
+0x0046b1e0	CFEPSaveGame__GetAsciiFallbackTextByToken	void __cdecl CFEPSaveGame__GetAsciiFallbackTextByToken(int param_1)	OK
+0x0046a2a0	CFEPSaveGame__GetLocalizedOrFallbackTextByToken	short * __cdecl CFEPSaveGame__GetLocalizedOrFallbackTextByToken(int param_1)	OK
+0x0044d390	CFEPSaveGame__InitDialogAndLayoutState	int CFEPSaveGame__InitDialogAndLayoutState(void)	OK
+0x005d04ec	CFEPSaveGame__WideStrCaseInsensitiveCompare	int __cdecl CFEPSaveGame__WideStrCaseInsensitiveCompare(void * param_1, void * param_2)	OK
+0x005d0a2a	CFEPSaveGame__WideCharToLowerCompat	uint __cdecl CFEPSaveGame__WideCharToLowerCompat(uint param_1)	OK
+0x004f7c70	CD3DApplication__CopyToRotatingTempBuffer	int __cdecl CD3DApplication__CopyToRotatingTempBuffer(void * param_1)	OK
+0x005286e0	CD3DApplication__LoadCardIdAndApplyVendorTweaks	void __cdecl CD3DApplication__LoadCardIdAndApplyVendorTweaks(void * param_1)	OK
+0x0052cd20	CD3DApplication__PerfTimerCommand	double __stdcall CD3DApplication__PerfTimerCommand(int param_1)	OK
+0x0055fc5d	CD3DApplication__ReadLineFromStreamLocked	char * __cdecl CD3DApplication__ReadLineFromStreamLocked(void * param_1, int param_2, void * param_3)	OK
+0x00562013	ControlsUI__ReadIntAndAdvance	int __cdecl ControlsUI__ReadIntAndAdvance(void * param_1)	OK
+0x005657d0	ControlsUI__WriteWideCharAndCount	void __cdecl ControlsUI__WriteWideCharAndCount(int param_1, int param_2, void * param_3)	OK
+0x005657f0	ControlsUI__WriteRepeatedWideChar	void __cdecl ControlsUI__WriteRepeatedWideChar(int param_1, int param_2, int param_3, void * param_4)	OK
+0x0055e624	ControlsUI__WideStrCat	void __cdecl ControlsUI__WideStrCat(void * param_1, void * param_2)	OK
+0x0055e598	ControlsUI__FormatWideStringSafe	int __cdecl ControlsUI__FormatWideStringSafe(void * param_1, int param_2)	OK
+0x00565083	ControlsUI__FormatWideStringCore	int __cdecl ControlsUI__FormatWideStringCore(int param_1, void * param_2, void * param_3)	OK
+0x00569cb8	ControlsUI__AbortInvalidParameter	void ControlsUI__AbortInvalidParameter(void)	OK
+0x004c78b0	CPDSimpleSprite__ScaleVec3InPlace	void __thiscall CPDSimpleSprite__ScaleVec3InPlace(void * this, void * param_1, float param_2)	OK
+0x004c7db0	CPDSimpleSprite__InitNoiseTableOnce	void CPDSimpleSprite__InitNoiseTableOnce(void)	OK
+0x004c5c50	CPDSimpleSprite__BuildUvAtlasBuckets	void __fastcall CPDSimpleSprite__BuildUvAtlasBuckets(float param_1)	OK
+0x004c5d50	CPDSimpleSprite__ProcessAndRenderSpriteList	void __fastcall CPDSimpleSprite__ProcessAndRenderSpriteList(uint param_1)	OK

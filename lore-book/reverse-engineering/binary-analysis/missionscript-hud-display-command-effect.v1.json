@@ -1,0 +1,235 @@
+{
+  "schemaVersion": "missionscript-hud-display-command-effect.v1",
+  "status": "PASS",
+  "source": {
+    "evidenceWaves": [
+      "Wave584",
+      "Wave903",
+      "Wave1073",
+      "Wave1158",
+      "Wave1216",
+      "Wave1219"
+    ],
+    "runtimeExecution": false,
+    "ghidraMutation": false,
+    "schemaPurpose": "static MissionScript HUD/display descriptor, loose-corpus, HUD-contract, and world-text context bridge for clean-room planning"
+  },
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+  },
+  "descriptorRecords": {
+    "HighlightHudPart": {
+      "index": 33,
+      "recordAddress": "0x0064d690",
+      "observedNameSymbol": "s_HighlightHudPart_0064f89c",
+      "rawEntryValue": "&LAB_00535d70",
+      "nonzeroRawShape": {
+        "+0x14": "1",
+        "+0x1c": "1",
+        "+0x38": "1"
+      },
+      "boundary": "descriptor-row/raw-entry static evidence only; handler-body semantics, exact descriptor layout, exact arity, runtime HUD behavior, and runtime variable display remain unproven"
+    },
+    "UnHighlightHudPart": {
+      "index": 34,
+      "recordAddress": "0x0064d6d0",
+      "observedNameSymbol": "s_UnHighlightHudPart_0064f888",
+      "rawEntryValue": "&LAB_00535e60",
+      "nonzeroRawShape": {
+        "+0x14": "1",
+        "+0x1c": "1",
+        "+0x38": "1"
+      },
+      "boundary": "descriptor-row/raw-entry static evidence only; handler-body semantics, exact descriptor layout, exact arity, runtime HUD behavior, and runtime variable display remain unproven"
+    },
+    "InitVariable": {
+      "index": 75,
+      "recordAddress": "0x0064e110",
+      "observedNameSymbol": "s_InitVariable_0064f654",
+      "rawEntryValue": "&LAB_00536210",
+      "nonzeroRawShape": {
+        "+0x14": "2",
+        "+0x1c": "1",
+        "+0x20": "1",
+        "+0x38": "2"
+      },
+      "boundary": "descriptor-row/raw-entry static evidence only; handler-body semantics, exact descriptor layout, exact arity, runtime HUD behavior, and runtime variable display remain unproven"
+    },
+    "SetVariable": {
+      "index": 76,
+      "recordAddress": "0x0064e150",
+      "observedNameSymbol": "s_SetVariable_0064f648",
+      "rawEntryValue": "&LAB_00536230",
+      "nonzeroRawShape": {
+        "+0x14": "3",
+        "+0x1c": "1",
+        "+0x20": "2",
+        "+0x24": "2",
+        "+0x38": "2"
+      },
+      "boundary": "descriptor-row/raw-entry static evidence only; handler-body semantics, exact descriptor layout, exact arity, runtime HUD behavior, and runtime variable display remain unproven"
+    },
+    "ShutdownVariable": {
+      "index": 77,
+      "recordAddress": "0x0064e190",
+      "observedNameSymbol": "s_ShutdownVariable_0064f634",
+      "rawEntryValue": "&LAB_00536260",
+      "nonzeroRawShape": {
+        "+0x14": "1",
+        "+0x1c": "1",
+        "+0x38": "2"
+      },
+      "boundary": "descriptor-row/raw-entry static evidence only; handler-body semantics, exact descriptor layout, exact arity, runtime HUD behavior, and runtime variable display remain unproven"
+    }
+  },
+  "hudConstants": {
+    "HUD_HEALTH_BAR": 0,
+    "HUD_ENERGY_BAR": 1,
+    "HUD_COMPASS": 2,
+    "HUD_BATTLE_LINE_MAP": 3,
+    "HUD_RADAR": 4,
+    "HUD_CURRENT_WEAPON": 5
+  },
+  "variableTypes": {
+    "VARIABLE_NUMBER": 1,
+    "VARIABLE_NUMBER_AND_THRESHOLD": 2,
+    "VARIABLE_TIMER": 3,
+    "VARIABLE_PERCENTAGE": 4,
+    "VARIABLE_PERCENTAGE_AND_THRESHOLD": 5,
+    "VARIABLE_TIME": 6
+  },
+  "looseMslUsage": {
+    "source": "game/data/MissionScripts/**/*.msl",
+    "directNonCommentCounts": {
+      "HighlightHudPart": {
+        "calls": 13,
+        "files": 2,
+        "sampleRows": [
+          "game\\data\\MissionScripts\\level022\\Level22Script.msl:30:HighlightHudPart(HUD_COMPASS);",
+          "game\\data\\MissionScripts\\level022\\Level22Script.msl:36:HighlightHudPart(HUD_ENERGY_BAR);",
+          "game\\data\\MissionScripts\\level022\\Level22Script.msl:42:HighlightHudPart(HUD_HEALTH_BAR);",
+          "game\\data\\MissionScripts\\level022\\Level22Script.msl:48:HighlightHudPart(HUD_RADAR);",
+          "game\\data\\MissionScripts\\level022\\Level22Script.msl:54:HighlightHudPart(HUD_BATTLE_LINE_MAP);",
+          "game\\data\\MissionScripts\\level022\\Level22Script.msl:60:HighlightHudPart(HUD_CURRENT_WEAPON);",
+          "game\\data\\MissionScripts\\level100\\LevelScript.msl:57:HighlightHudPart(HUD_COMPASS);",
+          "game\\data\\MissionScripts\\level100\\LevelScript.msl:62:HighlightHudPart(HUD_RADAR);"
+        ]
+      },
+      "UnHighlightHudPart": {
+        "calls": 13,
+        "files": 2,
+        "sampleRows": [
+          "game\\data\\MissionScripts\\level022\\Level22Script.msl:32:UnHighlightHudPart(HUD_COMPASS);",
+          "game\\data\\MissionScripts\\level022\\Level22Script.msl:38:UnHighlightHudPart(HUD_ENERGY_BAR);",
+          "game\\data\\MissionScripts\\level022\\Level22Script.msl:44:UnHighlightHudPart(HUD_HEALTH_BAR);",
+          "game\\data\\MissionScripts\\level022\\Level22Script.msl:50:UnHighlightHudPart(HUD_RADAR);",
+          "game\\data\\MissionScripts\\level022\\Level22Script.msl:56:UnHighlightHudPart(HUD_BATTLE_LINE_MAP);",
+          "game\\data\\MissionScripts\\level022\\Level22Script.msl:62:UnHighlightHudPart(HUD_CURRENT_WEAPON);",
+          "game\\data\\MissionScripts\\level100\\LevelScript.msl:59:UnHighlightHudPart(HUD_COMPASS);",
+          "game\\data\\MissionScripts\\level100\\LevelScript.msl:64:UnHighlightHudPart(HUD_RADAR);"
+        ]
+      },
+      "InitVariable": {
+        "calls": 77,
+        "files": 41,
+        "sampleRows": [
+          "game\\data\\MissionScripts\\level211\\LevelScript.msl:37:InitVariable(_400_BOMBERS, VARIABLE_NUMBER);",
+          "game\\data\\MissionScripts\\level211\\Setup.msl:51:InitVariable(_211_FIREBASE, VARIABLE_NUMBER_AND_THRESHOLD);",
+          "game\\data\\MissionScripts\\level212\\LevelScript.msl:37:InitVariable(_400_BOMBERS, VARIABLE_NUMBER);",
+          "game\\data\\MissionScripts\\level212\\Setup.msl:51:InitVariable(_211_FIREBASE, VARIABLE_NUMBER_AND_THRESHOLD);",
+          "game\\data\\MissionScripts\\level221\\Attacker.msl:42:InitVariable(_221_GUNS, VARIABLE_NUMBER);",
+          "game\\data\\MissionScripts\\level221\\ReinforcementMonitor.msl:28:InitVariable(_221_AIR_SUPPORT, VARIABLE_TIMER);",
+          "game\\data\\MissionScripts\\level222\\Attacker.msl:42:InitVariable(_221_GUNS, VARIABLE_NUMBER);",
+          "game\\data\\MissionScripts\\level222\\ReinforcementMonitor.msl:28:InitVariable(_221_AIR_SUPPORT, VARIABLE_TIMER);"
+        ]
+      },
+      "SetVariable": {
+        "calls": 146,
+        "files": 45,
+        "sampleRows": [
+          "game\\data\\MissionScripts\\level211\\LevelScript.msl:38:SetVariable(_400_BOMBERS, numAirstrikeUnits, 0);",
+          "game\\data\\MissionScripts\\level211\\LevelScript.msl:110:SetVariable(_400_BOMBERS, numAirstrikeUnits, 0);",
+          "game\\data\\MissionScripts\\level211\\Setup.msl:52:SetVariable(_211_FIREBASE, NumBuildings, 0);",
+          "game\\data\\MissionScripts\\level211\\Setup.msl:66:SetVariable(_211_FIREBASE, NumBuildings, 0);",
+          "game\\data\\MissionScripts\\level211\\Setup.msl:72:SetVariable(_211_FIREBASE, NumBuildings, 0);",
+          "game\\data\\MissionScripts\\level211\\Setup.msl:78:SetVariable(_211_FIREBASE, NumBuildings, 0);",
+          "game\\data\\MissionScripts\\level211\\Setup.msl:84:SetVariable(_211_FIREBASE, NumBuildings, 0);",
+          "game\\data\\MissionScripts\\level212\\LevelScript.msl:38:SetVariable(_400_BOMBERS, numAirstrikeUnits, 0);"
+        ]
+      },
+      "ShutdownVariable": {
+        "calls": 26,
+        "files": 18,
+        "sampleRows": [
+          "game\\data\\MissionScripts\\level211\\LevelScript.msl:115:ShutdownVariable(_400_BOMBERS);",
+          "game\\data\\MissionScripts\\level212\\LevelScript.msl:116:ShutdownVariable(_400_BOMBERS);",
+          "game\\data\\MissionScripts\\level221\\Attacker.msl:35:ShutdownVariable(_221_GUNS);",
+          "game\\data\\MissionScripts\\level221\\LevelScript.msl:70:ShutdownVariable(_221_GUNS);",
+          "game\\data\\MissionScripts\\level221\\ReinforcementMonitor.msl:31:ShutdownVariable(_221_AIR_SUPPORT);",
+          "game\\data\\MissionScripts\\level222\\Attacker.msl:35:ShutdownVariable(_221_GUNS);",
+          "game\\data\\MissionScripts\\level222\\LevelScript.msl:70:ShutdownVariable(_221_GUNS);",
+          "game\\data\\MissionScripts\\level222\\ReinforcementMonitor.msl:31:ShutdownVariable(_221_AIR_SUPPORT);"
+        ]
+      }
+    },
+    "boundary": "private loose-MSL scan only; command-token usage rows are static corpus context and do not prove live loose-MSL loading, packed-resource selection, runtime HUD behavior, or runtime variable display"
+  },
+  "hudStaticBridge": {
+    "contract": "hud-frontend-overlay-static-contract.md",
+    "anchors": [
+      "CHud__SetHudComponent",
+      "CHud__RenderOverlayForViewpoint",
+      "CHud__RenderBattleline",
+      "CHud__RenderActiveHudComponentPass",
+      "CHud__RenderTacticalRadarContacts",
+      "CHud__RenderObjectiveStatusPanel",
+      "CHudComponent__RenderPass",
+      "this+0x1fc active HUD component slot",
+      "this+0x200 pending HUD component slot"
+    ],
+    "boundary": "HUD component/render anchors are static planning context only; no static call path from the five descriptor raw entries into CHud render/component functions is claimed here"
+  },
+  "worldTextBridge": {
+    "ownerDoc": "functions/World.cpp/_index.md",
+    "anchors": [
+      "CWorld__PushWorldTextSlot",
+      "CWorld__UpdateWorldTextSlotTiming",
+      "CWorld__ClearWorldTextSlot",
+      "CWorld__GetWorldTextSlotTimerValue",
+      "DAT_00855090"
+    ],
+    "boundary": "world-text helpers are adjacent static display context for variable-style commands; this schema does not prove the raw descriptor entries dispatch to those helpers or prove runtime display behavior"
+  },
+  "claims": [
+    "The five selected command descriptor rows exist in the completed descriptor schema.",
+    "The selected command names occur in the loose MissionScripts corpus with exact command-token counts.",
+    "Public MSL docs expose HUD part constants and variable display command forms.",
+    "HUD/frontend and CWorld world-text static contracts provide rebuild-planning context for later scoped runtime proof."
+  ],
+  "notClaimed": [
+    "runtime MissionScript execution",
+    "runtime HUD behavior",
+    "visible HUD flashing",
+    "runtime variable display",
+    "message overlay behavior",
+    "render ordering",
+    "live loose-MSL loading",
+    "packed-vs-loose script selection",
+    "handler-body semantics for the five raw entries",
+    "static call path from the five raw entries into CHud functions",
+    "exact command descriptor layout",
+    "exact command arity",
+    "exact datatype layout",
+    "exact HUD layout",
+    "BEA patching behavior",
+    "visual QA",
+    "Godot parity",
+    "rebuild parity",
+    "no-noticeable-difference parity"
+  ]
+}

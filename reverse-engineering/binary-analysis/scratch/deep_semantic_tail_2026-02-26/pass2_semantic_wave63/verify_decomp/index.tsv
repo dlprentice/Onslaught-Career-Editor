@@ -1,0 +1,13 @@
+address	name	signature	status
+0x00584c04	CTexture__UnpackTexels_Bgra8ToFloat4	void __thiscall CTexture__UnpackTexels_Bgra8ToFloat4(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00584cc3	CTexture__UnpackTexels_Bgr8ToFloat4_AlphaOne	void __thiscall CTexture__UnpackTexels_Bgr8ToFloat4_AlphaOne(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00584d78	CFastVB__UnpackTexels_Bits565ToFloat4	void __thiscall CFastVB__UnpackTexels_Bits565ToFloat4(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00584e32	CFastVB__UnpackTexels_Bits555ToFloat4_AlphaOne	void __thiscall CFastVB__UnpackTexels_Bits555ToFloat4_AlphaOne(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00584ee9	CFastVB__UnpackTexels_Bits1555ToFloat4	void __thiscall CFastVB__UnpackTexels_Bits1555ToFloat4(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00584fae	CFastVB__UnpackTexels_Bits4444ToFloat4	void __thiscall CFastVB__UnpackTexels_Bits4444ToFloat4(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00585072	CFastVB__UnpackTexels_Bits2_10_10_10_ToFloat4	void __thiscall CFastVB__UnpackTexels_Bits2_10_10_10_ToFloat4(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00585161	CFastVB__UnpackTexels_Bits8888ToFloat4	void __thiscall CFastVB__UnpackTexels_Bits8888ToFloat4(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00585220	CFastVB__UnpackTexels_Bits888ToFloat4_AlphaOne	void __thiscall CFastVB__UnpackTexels_Bits888ToFloat4_AlphaOne(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x005852d5	CFastVB__UnpackTexels_Bits16_16_ToFloat4_RG	void __thiscall CFastVB__UnpackTexels_Bits16_16_ToFloat4_RG(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00585380	CFastVB__UnpackTexels_Bits2_10_10_10_ToFloat4_Alt	void __thiscall CFastVB__UnpackTexels_Bits2_10_10_10_ToFloat4_Alt(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x0058546f	CMeshCollisionVolume__UnpackTexels_Bits16_16_16_16_ToFloat4	void __thiscall CMeshCollisionVolume__UnpackTexels_Bits16_16_16_16_ToFloat4(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK

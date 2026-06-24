@@ -1,0 +1,8 @@
+address	name	signature	status
+0x0050f130	CGroundAttackAircraft__Destructor_VFunc01	void __fastcall CGroundAttackAircraft__Destructor_VFunc01(int param_1)	OK
+0x0050f1a0	CInfantryUnit__Destructor_VFunc01	void CInfantryUnit__Destructor_VFunc01(void)	OK
+0x0050f1f0	CDropship__Destructor_VFunc01	void __fastcall CDropship__Destructor_VFunc01(int param_1)	OK
+0x0050f260	CPlane__Destructor_VFunc01	void __fastcall CPlane__Destructor_VFunc01(int param_1)	OK
+0x0050f2d0	CDiveBomber__Destructor_VFunc01	void __fastcall CDiveBomber__Destructor_VFunc01(int param_1)	OK
+0x0050f340	CCarver__Destructor_VFunc01	void __fastcall CCarver__Destructor_VFunc01(int param_1)	OK
+0x0050f3b0	CFenrir__Destructor_VFunc01	void __fastcall CFenrir__Destructor_VFunc01(int param_1)	OK

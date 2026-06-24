@@ -1,0 +1,13 @@
+address	name	signature	status
+0x00585576	CDXTexture__UnpackTexels_Bits332ToFloat4	void __thiscall CDXTexture__UnpackTexels_Bits332ToFloat4(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x0058562d	CDXTexture__UnpackTexels_A8ToFloat4_ZeroRGB	void __thiscall CDXTexture__UnpackTexels_A8ToFloat4_ZeroRGB(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x005856b8	CDXTexture__UnpackTexels_Bits332A8ToFloat4	void __thiscall CDXTexture__UnpackTexels_Bits332A8ToFloat4(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x0058579b	CTexture__UnpackTexels_Bits444ToFloat4_AlphaOne	void __thiscall CTexture__UnpackTexels_Bits444ToFloat4_AlphaOne(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x0058586b	CTexture__UnpackTexels_PaletteIndexA8ToFloat4	void __thiscall CTexture__UnpackTexels_PaletteIndexA8ToFloat4(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x005859d8	CFastVB__UnpackTexels_L8ToFloat4	void __thiscall CFastVB__UnpackTexels_L8ToFloat4(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00585a7b	CFastVB__UnpackTexels_L8A8ToFloat4	void __thiscall CFastVB__UnpackTexels_L8A8ToFloat4(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00585b35	CFastVB__UnpackTexels_A4L4ToFloat4	void __thiscall CFastVB__UnpackTexels_A4L4ToFloat4(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00585c0b	CFastVB__UnpackTexels_L16ToFloat4	void __thiscall CFastVB__UnpackTexels_L16ToFloat4(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00585cb0	CTexture__UnpackTexels_Signed8_8_ToFloat4_RG	void __thiscall CTexture__UnpackTexels_Signed8_8_ToFloat4_RG(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00585da3	CDXTexture__UnpackTexels_Signed5_5_A6_ToFloat4	void __thiscall CDXTexture__UnpackTexels_Signed5_5_A6_ToFloat4(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00585e9f	CDXTexture__UnpackTexels_Signed8_8_A8_ToFloat4_RG	void __thiscall CDXTexture__UnpackTexels_Signed8_8_A8_ToFloat4_RG(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK

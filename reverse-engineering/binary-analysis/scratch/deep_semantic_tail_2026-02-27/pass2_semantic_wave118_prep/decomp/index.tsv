@@ -1,0 +1,11 @@
+address	name	signature	status
+0x00444f20	CUnitAI__Unk_00444f20	bool __thiscall CUnitAI__Unk_00444f20(void * this, int param_1, int param_2)	OK
+0x0044cd20	CUnitAI__Unk_0044cd20	void __thiscall CUnitAI__Unk_0044cd20(void * this, void * param_1, float param_2)	OK
+0x0044d1f0	CUnitAI__Unk_0044d1f0	void __fastcall CUnitAI__Unk_0044d1f0(void * param_1)	OK
+0x0044d210	CUnitAI__Unk_0044d210	void __thiscall CUnitAI__Unk_0044d210(void * this, int param_1, int param_2)	OK
+0x00452ce0	CUnitAI__Unk_00452ce0	void __stdcall CUnitAI__Unk_00452ce0(float param_1, int param_2, float param_3, float param_4)	OK
+0x00440b70	CUnitAI__Unk_00440b70	void __fastcall CUnitAI__Unk_00440b70(void * param_1)	OK
+0x00444620	CExplosionInitThing__Unk_00444620	void __thiscall CExplosionInitThing__Unk_00444620(void * this, int param_1, int param_2)	OK
+0x004691c0	CUnitAI__Unk_004691c0	void __fastcall CUnitAI__Unk_004691c0(int param_1)	OK
+0x00469390	CUnitAI__Unk_00469390	int __cdecl CUnitAI__Unk_00469390(void * param_1, void * param_2, void * param_3, void * param_4, void * param_5)	OK
+0x00469550	CUnitAI__Unk_00469550	void __cdecl CUnitAI__Unk_00469550(int param_1)	OK

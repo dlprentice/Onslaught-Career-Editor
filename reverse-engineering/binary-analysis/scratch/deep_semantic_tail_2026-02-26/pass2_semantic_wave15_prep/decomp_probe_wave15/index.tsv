@@ -1,0 +1,9 @@
+address	name	signature	status
+0x0044a6b0	CUnitAI__Unk_0044a6b0	int CUnitAI__Unk_0044a6b0(void)	OK
+0x00512040	CVBufTexture__Unk_00512040	int CVBufTexture__Unk_00512040(void)	OK
+0x00512ca0	CVBufTexture__Unk_00512ca0	void __stdcall CVBufTexture__Unk_00512ca0(int param_1)	OK
+0x005428d0	CDXEngine__Unk_005428d0	int CDXEngine__Unk_005428d0(void)	OK
+0x00542990	CDXEngine__Unk_00542990	void CDXEngine__Unk_00542990(void)	OK
+0x00542a30	CDXEngine__Unk_00542a30	void __fastcall CDXEngine__Unk_00542a30(int param_1)	OK
+0x00542f90	CDXEngine__Unk_00542f90	int CDXEngine__Unk_00542f90(void)	OK
+0x005438c0	CDXEngine__Unk_005438c0	void CDXEngine__Unk_005438c0(void)	OK

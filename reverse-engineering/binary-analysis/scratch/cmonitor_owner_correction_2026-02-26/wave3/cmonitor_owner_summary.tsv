@@ -1,0 +1,26 @@
+address	old_name	inferred_owner	xref_count	top_counts
+0x00407140	CMonitor__Unk_00407140		6	CEngine:1;CRound:1
+0x00407a50	CMonitor__Unk_00407a50		1	CMonitor:1
+0x004081c0	CMonitor__Unk_004081c0		1
+0x00409880	CMonitor__Unk_00409880		1	CMonitor:1
+0x0040dce0	CMonitor__Unk_0040dce0		2	CMonitor:1
+0x0040de40	CMonitor__Unk_0040de40		1	CMonitor:1
+0x0040e840	CMonitor__Unk_0040e840		1
+0x0040e940	CMonitor__Unk_0040e940		1	CMonitor:1
+0x0040eb50	CMonitor__Unk_0040eb50		1	CMonitor:1
+0x0040ebf0	CMonitor__Unk_0040ebf0		1	CMonitor:1
+0x00411500	CMonitor__Unk_00411500		1	OID_Unk_005078f0:1
+0x00411630	CMonitor__Unk_00411630		1	OID_Unk_005078f0:1
+0x00411aa0	CMonitor__Unk_00411aa0		1	OID_Unk_005078f0:1
+0x00412000	CMonitor__Unk_00412000		3	CMonitor:3
+0x00412900	CMonitor__Unk_00412900		1	CMonitor:1
+0x004136e0	CMonitor__Unk_004136e0		1
+0x00413760	CMonitor__Unk_00413760		2	CMonitor:2
+0x00413a70	CMonitor__Unk_00413a70		2	CMonitor:2
+0x00414010	CMonitor__Unk_00414010		3	CMonitor:3
+0x0044e2c0	CMonitor__Unk_0044e2c0		1
+0x00469400	CMonitor__Unk_00469400		10	CMenuItem:3;CFEPMain:3;CMenuItemDropdown:1;CFEPDirectory:1;CFEPLevelSelect:1
+0x0047d3b0	CMonitor__Unk_0047d3b0		1
+0x004a1270	CMonitor__Unk_004a1270		1
+0x004ef120	CMonitor__Unk_004ef120		1
+0x005078f0	CMonitor__Unk_005078f0		2	OID_Unk_005078f0:1;CMonitor:1

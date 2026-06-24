@@ -1,0 +1,21 @@
+address	name	signature	status
+0x00441490	CDXEngine__Helper_00441490	void __cdecl CDXEngine__Helper_00441490(float param_1, float param_2, float param_3)	OK
+0x00441ea0	CDXEngine__Helper_00441ea0	void __fastcall CDXEngine__Helper_00441ea0(void * param_1)	OK
+0x0044a2d0	CDXEngine__Helper_0044a2d0	void CDXEngine__Helper_0044a2d0(void)	OK
+0x0044a5f0	CDXEngine__Helper_0044a5f0	int CDXEngine__Helper_0044a5f0(void)	OK
+0x0044a640	CDXEngine__Helper_0044a640	void __stdcall CDXEngine__Helper_0044a640(int param_1)	OK
+0x0044a650	CDXEngine__Helper_0044a650	void CDXEngine__Helper_0044a650(void)	OK
+0x004659a0	CDXEngine__Helper_004659a0	int CDXEngine__Helper_004659a0(void)	OK
+0x00472b40	CDXEngine__Helper_00472b40	void __thiscall CDXEngine__Helper_00472b40(void * this, int param_1, void * param_2)	OK
+0x00472f10	CDXEngine__Helper_00472f10	void __fastcall CDXEngine__Helper_00472f10(void * param_1)	OK
+0x00481400	CDXEngine__Helper_00481400	int __fastcall CDXEngine__Helper_00481400(int param_1)	OK
+0x00482050	CDXEngine__Helper_00482050	void __fastcall CDXEngine__Helper_00482050(int param_1)	OK
+0x00487bc0	CDXEngine__Helper_00487bc0	void __fastcall CDXEngine__Helper_00487bc0(int param_1)	OK
+0x00487d10	CDXEngine__Helper_00487d10	void __thiscall CDXEngine__Helper_00487d10(void * this, void * param_1, void * param_2)	OK
+0x00488090	CDXEngine__Helper_00488090	void __fastcall CDXEngine__Helper_00488090(int param_1)	OK
+0x0048de30	CDXEngine__Helper_0048de30	void __cdecl CDXEngine__Helper_0048de30(void * param_1)	OK
+0x0048f620	CDXEngine__Helper_0048f620	void CDXEngine__Helper_0048f620(void)	OK
+0x004903a0	CDXEngine__Helper_004903a0	void __thiscall CDXEngine__Helper_004903a0(void * this, int param_1, int param_2, int param_3)	OK
+0x004905f0	CDXEngine__Helper_004905f0	void __fastcall CDXEngine__Helper_004905f0(int param_1)	OK
+0x00490780	CDXEngine__Helper_00490780	void __thiscall CDXEngine__Helper_00490780(void * this, int param_1, int param_2)	OK
+0x004a1390	CDXEngine__Helper_004a1390	int __fastcall CDXEngine__Helper_004a1390(int param_1)	OK

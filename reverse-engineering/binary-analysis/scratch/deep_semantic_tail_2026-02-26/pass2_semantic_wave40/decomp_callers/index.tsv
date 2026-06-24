@@ -1,0 +1,3 @@
+address	name	signature	status
+0x004e3f90	CSpawnerThng__ProcessSpawnWave	undefined CSpawnerThng__ProcessSpawnWave(void)	OK
+0x00442b20	CDestroyableSegment__VFunc_08_00442b20	void __fastcall CDestroyableSegment__VFunc_08_00442b20(void * param_1)	OK

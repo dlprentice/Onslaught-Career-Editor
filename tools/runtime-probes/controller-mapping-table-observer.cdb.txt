@@ -1,0 +1,8 @@
+.echo === safe-copy controller mapping table observer ===
+vertarget
+lm m BEA
+u 0042db40 L80
+u 0042e3d0 L50
+dd 008892d8 L90
+dd 008892dc L220
+g

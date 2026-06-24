@@ -1,0 +1,11 @@
+address	name	signature	status
+0x00586bb7	CFastVB__Unk_00586bb7	int __fastcall CFastVB__Unk_00586bb7(int param_1)	OK
+0x0058735a	CFastVB__Unk_0058735a	void __thiscall CFastVB__Unk_0058735a(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x005873f8	CFastVB__Unk_005873f8	void __thiscall CFastVB__Unk_005873f8(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x005876ab	CTexture__Unk_005876ab	void __thiscall CTexture__Unk_005876ab(void * this, void * param_1, uint param_2, int param_3, void * param_4)	OK
+0x00587af0	CTexture__Unk_00587af0	void __thiscall CTexture__Unk_00587af0(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00587daf	CFastVB__Unk_00587daf	void __fastcall CFastVB__Unk_00587daf(void * param_1)	OK
+0x00587dee	CFastVB__Unk_00587dee	int __thiscall CFastVB__Unk_00587dee(void * this, void * param_1, void * param_2)	OK
+0x00587e06	CFastVB__Unk_00587e06	int __thiscall CFastVB__Unk_00587e06(void * this, void * param_1, void * param_2)	OK
+0x00587e66	CFastVB__Unk_00587e66	void * __thiscall CFastVB__Unk_00587e66(void * this, void * param_1, int param_2)	OK
+0x00587e82	CFastVB__Unk_00587e82	int * __stdcall CFastVB__Unk_00587e82(void * param_1)	OK

@@ -1,0 +1,6 @@
+address	name	signature	status
+0x00480c90	CHLCollisionDetector__HandleCollisionEnter	void __thiscall CHLCollisionDetector__HandleCollisionEnter(void * this, int param_1, void * param_2)	OK
+0x00480db0	CHLCollisionDetector__HandleCollisionExit	void __thiscall CHLCollisionDetector__HandleCollisionExit(void * this, int param_1, void * param_2)	OK
+0x00481060	CHLCollisionDetector__ProcessMapWhoCollisionSweep	void __thiscall CHLCollisionDetector__ProcessMapWhoCollisionSweep(void * this, void * param_1, void * param_2, void * param_3)	OK
+0x00489de0	CUnitAI__PromoteDieAnimationToDeadVariant	int __fastcall CUnitAI__PromoteDieAnimationToDeadVariant(void * param_1)	OK
+0x00489ef0	CUnitAI__ForceDeadForwardAndResetDeathState	void __fastcall CUnitAI__ForceDeadForwardAndResetDeathState(void * param_1)	OK

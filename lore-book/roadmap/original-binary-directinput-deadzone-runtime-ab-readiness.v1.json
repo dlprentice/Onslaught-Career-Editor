@@ -1,0 +1,88 @@
+{
+  "schema": "winui-directinput-deadzone-runtime-ab-readiness.v1",
+  "date": "2026-06-23",
+  "scope": "directinput-deadzone-runtime-a-b-readiness-not-runtime-proof",
+  "candidate": {
+    "id": "platform_input_directinput_deadzone_0x96",
+    "functionName": "PlatformInput__InitDirectInput",
+    "functionVa": "0x00513120",
+    "instructionVa": "0x00513167",
+    "instructionFileOffset": "0x113167",
+    "immediateVa": "0x0051316D",
+    "immediateFileOffset": "0x11316D",
+    "baselineImmediateValue": "0x96",
+    "baselineInstructionBytes": "C7 85 E0 30 03 00 96 00 00 00",
+    "byteExportProof": "winui-directinput-deadzone-byte-export.v1"
+  },
+  "currentReadiness": {
+    "status": "blocked_no_present_gamepad",
+    "latestLocalPreflightDate": "2026-06-23",
+    "presentGamepadCandidateCount": 0,
+    "registryGamepadCandidateCount": 0,
+    "pnpDeviceCountObserved": 246,
+    "joystickRegistryRowCountObserved": 37,
+    "hardwarePresenceIsOnlyPrecondition": true
+  },
+  "requiredBeforeAnyPatchRow": [
+    "fresh clean-specimen byte export still matches 0x00513167 / 0x113167",
+    "copied-executable A/B byte verification under app-owned proof root",
+    "restore verification before and after any attempted alternate immediate",
+    "physical gamepad or equivalent DirectInput runtime device present on the host",
+    "exact managed copied BEA PID and CDB attachment",
+    "DirectInput poll/accessor rows at 0x00513370 PlatformInput__PollPadState and CPCController joy accessors",
+    "zero keyboard SendInput/keybd_event/PostMessage positive-stimulus counters for the DirectInput stimulus window",
+    "no-input negative control",
+    "downstream CController__SendButtonAction and CPlayer__ReceiveButtonActionState evidence",
+    "per-configuration regression across controller configs 1-4"
+  ],
+  "proofPlan": [
+    {
+      "id": "baseline-a",
+      "description": "Run copied clean baseline with the current 0x96 immediate, physical DirectInput/gamepad input, no keyboard stimulus, CDB rows, downstream state rows, and a no-input negative control."
+    },
+    {
+      "id": "candidate-b",
+      "description": "Run a copied executable with one byte-verified alternate immediate only after restore and source-safety checks pass; compare DirectInput/accessor/state evidence against baseline."
+    },
+    {
+      "id": "restore",
+      "description": "Restore copied executable bytes and verify the 0x96 instruction bytes before any further run or user-facing row consideration."
+    }
+  ],
+  "claimBooleans": {
+    "addsPatchRow": false,
+    "visiblePatchRowAdded": false,
+    "runtimeAbProof": false,
+    "runtimeProof": false,
+    "improvedControlFeelProof": false,
+    "physicalGamepadProof": false,
+    "directInputRuntimeProof": false,
+    "copiedExecutablePatchProof": false,
+    "wallClockLatencyProof": false,
+    "trueOnlineMultiplayerProof": false,
+    "activeP3P4OriginalBinaryGameplayProof": false,
+    "rebuildParityProof": false,
+    "noNoticeableDifferenceProof": false,
+    "installedGameMutation": false,
+    "originalExecutableMutation": false
+  },
+  "nonClaims": [
+    "not a Patch Bench row",
+    "not a player-facing deadzone option",
+    "not runtime DirectInput proof",
+    "not physical gamepad proof",
+    "not improved control-feel proof",
+    "not proof that 0x96 causes floaty controls",
+    "not proof that lowering the immediate improves controls",
+    "not online multiplayer proof",
+    "not rebuild parity proof"
+  ],
+  "evidenceRefs": [
+    "roadmap/original-binary-control-feel-candidate-map.v1.json",
+    "release/readiness/winui_directinput_deadzone_byte_export_2026-06-19.md",
+    "tools/winui_directinput_deadzone_byte_export_check.py",
+    "tools/winui_safe_copy_local_multiplayer_gamepad_readiness.py",
+    "release/readiness/winui_directinput_deadzone_runtime_ab_readiness_2026-06-23.md"
+  ],
+  "claimBoundary": "This contract makes the next DirectInput deadzone A/B proof gate explicit. It records the current workstation as blocked by no present gamepad candidate and keeps all patch-row, runtime, physical-gamepad, improved-feel, online, rebuild, and no-noticeable-difference claims false."
+}

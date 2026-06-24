@@ -1,0 +1,6 @@
+address	name	signature	status
+0x00447ac0	CUnitAI__PlayWingFoldedAnimationAndSetState3	void __fastcall CUnitAI__PlayWingFoldedAnimationAndSetState3(void * param_1)	OK
+0x00447b10	CUnitAI__PlayWingUnfoldedAnimationAndSetState5	void __fastcall CUnitAI__PlayWingUnfoldedAnimationAndSetState5(void * param_1)	OK
+0x00447b60	CUnitAI__HasReachedCachedAnchorPoint	int __fastcall CUnitAI__HasReachedCachedAnchorPoint(int param_1)	OK
+0x00447bb0	CUnitAI__GetOrGenerateCachedAnchorPoint	void __thiscall CUnitAI__GetOrGenerateCachedAnchorPoint(void * this, int param_1, void * param_2)	OK
+0x00447fa0	CUnitAI__AdvanceDoorWingAnimationState	int __fastcall CUnitAI__AdvanceDoorWingAnimationState(void * param_1)	OK

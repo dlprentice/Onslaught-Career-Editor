@@ -1,0 +1,17 @@
+file	issue	severity	fix_action	status
+reverse-engineering/binary-analysis/functions/_index.md	Legacy statistics block stale (`~5700/874/153`)	critical	Replace with current canonical coverage/corpus snapshot and link to coverage-state docs	completed
+reverse-engineering/binary-analysis/functions/FUNCTION_COVERAGE_STATE.md	Stale Stuart corpus counters (`159/1067`)	critical	Update to parsed current values (`158/1059`)	completed
+reverse-engineering/binary-analysis/functions/function_coverage_master.json	Stale Stuart corpus counters (`159/1067`)	critical	Update JSON corpus counters (`158/1059`) and timestamp	completed
+reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md	Internal metric contradiction (`5861` vs `~5700`)	critical	Update bottom stats table to current values and historical note	completed
+reverse-engineering/binary-analysis/README.md	Reference line still says 196 debug paths as current	medium	Mark `string-locations-index` as historical snapshot; point live metrics to coverage state	completed
+reverse-engineering/binary-analysis/functions/string-locations-index.md	Historic totals presented as current	medium	Label section as historical Phase-1 snapshot	completed
+reverse-engineering/binary-analysis/ghydra-mcp-runbook.md	Current Known Gaps contains resolved targets	critical	Rewrite to live unresolved gaps only	completed
+MCP_LIMITATIONS.md	Outdated FE ownership wording at `0x0051bfa0`	high	Correct to `CFEPLanguageTest` ownership	completed
+reverse-engineering/binary-analysis/widescreen-patch-analysis.md	Windowed/JZ wording and region grouping drift	high	Correct JZ semantics and split region-12 vs region13-28 grouping	completed
+reverse-engineering/binary-analysis/capture-menu-behavior.md	Missing command-level mapping for visible menu entries	high	Add explicit command table and no-op reasons	completed
+lore-book/reverse-engineering/binary-analysis/functions/Platform.cpp/*	Missing wrapper mirror docs	high	Mirror missing `PLATFORM__BeginScene.md`, `PLATFORM__EndScene.md`, `PLATFORM__ClearScreen.md`	completed
+lore-book/reverse-engineering/binary-analysis/functions/FEPLevelSelect.cpp/_index.md	Stale unresolved helper wording	medium	Sync from canonical index	completed
+lore-book/reverse-engineering/binary-analysis/functions/DXImposter.cpp/_index.md	Stale unknown names	medium	Sync from canonical index	completed
+lore-book/reverse-engineering/binary-analysis/functions/DestructableSegmentsController.cpp/_index.md	Missing recovered-function tranche	medium	Sync from canonical index	completed
+AGENTS.md	Headless/handshake wording ambiguity	medium	Clarify mode, probe rules, and autonomous throughput wording	completed
+reverse-engineering/source-code/source-file-inventory.md	Priority list drift vs root Stuart requirements doc	medium	Align priority section with root requirements list	completed

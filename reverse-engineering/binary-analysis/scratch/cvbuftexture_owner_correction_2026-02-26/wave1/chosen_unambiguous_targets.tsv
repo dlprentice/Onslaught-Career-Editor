@@ -1,0 +1,15 @@
+address	old_name	inferred_owner	new_name	xref_count	top_counts
+0x0050a0e0	CVBufTexture__Unk_0050a0e0	OID	OID__Helper_0050a0e0	2	OID:2
+0x0050a290	CVBufTexture__Unk_0050a290	CUnit	CUnit__Helper_0050a290	3	CUnit:2
+0x00511db0	CVBufTexture__Unk_00511db0	CWorldPhysicsManager	CWorldPhysicsManager__Helper_00511db0	2	CWorldPhysicsManager:2
+0x00512cc0	CVBufTexture__Unk_00512cc0	CDXLandscape	CDXLandscape__Helper_00512cc0	11	CDXLandscape:2;CDXMeshVB:1;CDXShadows:1;CDXSurf:1;CDXTrees:1
+0x005234d0	CVBufTexture__Unk_005234d0	PlatformInput	PlatformInput__Helper_005234d0	2	PlatformInput:2
+0x00523a70	CVBufTexture__Unk_00523a70	CDXEngine	CDXEngine__Helper_00523a70	5	CDXEngine:2;CEngine:1;CFrontEnd:1;CMessageLog:1
+0x00523b50	CVBufTexture__Unk_00523b50	CDXEngine	CDXEngine__Helper_00523b50	4	CDXEngine:2;CUnitAI:1;ControlsUI:1
+0x00527960	CVBufTexture__Unk_00527960	CFEPMultiplayerStart	CFEPMultiplayerStart__Helper_00527960	2	CFEPMultiplayerStart:2
+0x00527990	CVBufTexture__Unk_00527990	CGame	CGame__Helper_00527990	4	CGame:2;CFEPMultiplayerStart:1;CFrontEnd:1
+0x00527c50	CVBufTexture__Unk_00527c50	CFrontEnd	CFrontEnd__Helper_00527c50	3	CFrontEnd:2;CGame:1
+0x00527cc0	CVBufTexture__Unk_00527cc0	CWaterRenderSystem	CWaterRenderSystem__Helper_00527cc0	13	CWaterRenderSystem:4;CDXBattleLine:3;CDXLandscape:3;CDXMeshVB:2;CDXSurf:1
+0x00527d20	CVBufTexture__Unk_00527d20	CDXLandscape	CDXLandscape__Helper_00527d20	12	CDXLandscape:4;CDXBattleLine:3;CDXMeshVB:2;CDXSurf:2;CWaterRenderSystem:1
+0x00527dd0	CVBufTexture__Unk_00527dd0	CDXEngine	CDXEngine__Helper_00527dd0	9	CDXEngine:4;CDXLandscape:2;CWaterRenderSystem:2;CRenderQueue:1
+0x0052cd20	CVBufTexture__Unk_0052cd20	CD3DApplication	CD3DApplication__Helper_0052cd20	11	CD3DApplication:7

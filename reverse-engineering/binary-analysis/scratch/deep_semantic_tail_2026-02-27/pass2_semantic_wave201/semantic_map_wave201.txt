@@ -1,0 +1,20 @@
+0x004a1570 CDXEngine__PushLandscapeCellToFreeListIfInRange :: verifies cell pointer is inside engine-owned landscape cell range then pushes node onto free-list head (`this+0x8c4`).
+0x004a2190 CDXEngine__RenderLandscapeAllocatorStats :: prints used/free/total allocator diagnostics and per-bucket byte/block totals; sorts and renders 129 stat rows.
+0x004b5250 CDXEngine__NormalizeCycleScalar :: wraps scalar into cyclic range by repeatedly adding/subtracting cycle span constants.
+0x004b52a0 Math__AbsDoubleFromSignedFloat :: returns absolute value (double) for signed float input.
+0x004b52c0 CDXEngine__PackVec3AndDepthToSortKey :: rounds vec components plus depth term and packs them into a 32-bit sort key.
+0x004b82b0 CDXEngine__RenderBattleLinePulseSprites :: random-seeded pulse sprite rendering helper used by battleline/influence overlay path.
+0x004b8850 CDXEngine__RenderMessageBoxOverlay :: updates message-box alpha/position transitions, word-wraps text, and renders shadowed message lines.
+0x004d1710 CDXEngine__SetGlobalTintColorOpaque :: sets global render tint/color register and forces opaque alpha (0xFF).
+0x00501310 CDXEngine__DecrementResourceRefCount :: decrements per-object countdown/refcount at offset `+0x60`.
+0x00501540 CDXEngine__ResizeLargestIdleVertexBuffer :: scans idle VBufTexture chain and resizes the largest over-provisioned vertex buffer.
+0x00523a70 CDXEngine__RenderMouseCursorSprite :: lazy-loads cursor texture (fallback default) and renders mouse sprite at global cursor coords.
+0x00523b50 CDXEngine__GetCursorStateInRect :: returns hover state for cursor-in-rect when mouse input gate is active.
+0x00527dd0 CDXEngine__GetRenderQueueSortKeyAt0C :: returns dword sort key at offset `+0x0c` from render item.
+0x0053bb50 CDXEngine__RenderOptionalFullscreenEffectPass :: conditional effect/overlay pass toggling render state and invoking effect object callbacks.
+0x0054d530 CMeshRenderer__RenderMeshWithLayerPasses :: core mesh-layer rendering helper (base pass + layer masks + optional water/overlay subpasses) used by `CMeshRenderer__RenderMeshCore`.
+0x0055dfe7 CRT__RoundDoubleWithFpuChecks :: CRT-style round helper handling NaN/Inf/domain and FPU exception/control-word behavior.
+0x0055e7ae Sort__QuickSortGeneric :: generic quicksort with insertion-sort fallback and caller-supplied comparator.
+0x0055e950 Memory__SwapByteRange :: bytewise swap routine used by sort partitioning.
+0x0055feca CRT__FTellWithRouteLock :: thread-safe `ftell` wrapper using CRT lock/unlock routing.
+0x00576161 CFastVB__DispatchIndirectByGlobalTable :: indirect jump-table dispatch wrapper used by mesh/texture fastvb mapping paths.

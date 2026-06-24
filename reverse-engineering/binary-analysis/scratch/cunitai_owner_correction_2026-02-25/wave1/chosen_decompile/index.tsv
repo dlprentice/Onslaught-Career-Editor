@@ -1,0 +1,41 @@
+address	name	signature	status
+0x00416280	CUnitAI__Unk_00416280	void __fastcall CUnitAI__Unk_00416280(void * param_1)	OK
+0x00423650	CUnitAI__Unk_00423650	float * __fastcall CUnitAI__Unk_00423650(void * param_1)	OK
+0x00423680	CUnitAI__Unk_00423680	void __thiscall CUnitAI__Unk_00423680(void * this, int param_1, float param_2)	OK
+0x00423720	CUnitAI__Unk_00423720	void __fastcall CUnitAI__Unk_00423720(void * param_1)	OK
+0x00423870	CUnitAI__Unk_00423870	void __thiscall CUnitAI__Unk_00423870(void * this, void * param_1, int param_2)	OK
+0x004247a0	CUnitAI__Unk_004247a0	void __thiscall CUnitAI__Unk_004247a0(void * this, int param_1, float param_2)	OK
+0x00424920	CUnitAI__Unk_00424920	void __fastcall CUnitAI__Unk_00424920(int param_1)	OK
+0x00424990	CUnitAI__Unk_00424990	void __fastcall CUnitAI__Unk_00424990(int param_1)	OK
+0x00428b50	CUnitAI__Unk_00428b50	void __thiscall CUnitAI__Unk_00428b50(void * this, int param_1, void * param_2, int param_3)	OK
+0x00428cb0	CUnitAI__Unk_00428cb0	void __fastcall CUnitAI__Unk_00428cb0(void * param_1)	OK
+0x004309e0	CUnitAI__Unk_004309e0	void __cdecl CUnitAI__Unk_004309e0(void * param_1)	OK
+0x00430e60	CUnitAI__Unk_00430e60	void __cdecl CUnitAI__Unk_00430e60(void * param_1)	OK
+0x00431350	CUnitAI__Unk_00431350	void __cdecl CUnitAI__Unk_00431350(void * param_1)	OK
+0x004317a0	CUnitAI__Unk_004317a0	void __cdecl CUnitAI__Unk_004317a0(void * param_1)	OK
+0x0043aea0	CUnitAI__Unk_0043aea0	void __thiscall CUnitAI__Unk_0043aea0(void * this, int param_1, void * param_2)	OK
+0x0043af10	CUnitAI__Unk_0043af10	void __thiscall CUnitAI__Unk_0043af10(void * this, int param_1, void * param_2)	OK
+0x00440ad0	CUnitAI__Unk_00440ad0	void __stdcall CUnitAI__Unk_00440ad0(void * param_1, int param_2, int param_3, int param_4)	OK
+0x00441490	CUnitAI__Unk_00441490	void __cdecl CUnitAI__Unk_00441490(float param_1, float param_2, float param_3)	OK
+0x004416e0	CUnitAI__Unk_004416e0	void __fastcall CUnitAI__Unk_004416e0(int param_1)	OK
+0x00441730	CUnitAI__Unk_00441730	void __thiscall CUnitAI__Unk_00441730(void * this, int param_1, int param_2)	OK
+0x004419e0	CUnitAI__Unk_004419e0	void __fastcall CUnitAI__Unk_004419e0(int param_1)	OK
+0x00441b80	CUnitAI__Unk_00441b80	void CUnitAI__Unk_00441b80(void)	OK
+0x00441e20	CUnitAI__Unk_00441e20	void __fastcall CUnitAI__Unk_00441e20(void * param_1)	OK
+0x00441e30	CUnitAI__Unk_00441e30	int __fastcall CUnitAI__Unk_00441e30(void * param_1)	OK
+0x00441e40	CUnitAI__Unk_00441e40	void __fastcall CUnitAI__Unk_00441e40(void * param_1)	OK
+0x00441e50	CUnitAI__Unk_00441e50	void __fastcall CUnitAI__Unk_00441e50(void * param_1)	OK
+0x00441ea0	CUnitAI__Unk_00441ea0	void __fastcall CUnitAI__Unk_00441ea0(void * param_1)	OK
+0x004422d0	CUnitAI__Unk_004422d0	int __fastcall CUnitAI__Unk_004422d0(void * param_1)	OK
+0x00444960	CUnitAI__Unk_00444960	void __fastcall CUnitAI__Unk_00444960(void * param_1)	OK
+0x00445010	CUnitAI__Unk_00445010	double __thiscall CUnitAI__Unk_00445010(void * this, int param_1, int param_2)	OK
+0x00445460	CUnitAI__Unk_00445460	void __fastcall CUnitAI__Unk_00445460(void * param_1)	OK
+0x00449560	CUnitAI__Unk_00449560	int CUnitAI__Unk_00449560(void)	OK
+0x0044a2d0	CUnitAI__Unk_0044a2d0	void CUnitAI__Unk_0044a2d0(void)	OK
+0x0044a610	CUnitAI__Unk_0044a610	void __thiscall CUnitAI__Unk_0044a610(void * this, int param_1, int param_2, int param_3, int param_4)	OK
+0x0044a640	CUnitAI__Unk_0044a640	void __stdcall CUnitAI__Unk_0044a640(int param_1)	OK
+0x0044ae20	CUnitAI__Unk_0044ae20	int __thiscall CUnitAI__Unk_0044ae20(void * this, void * param_1, int param_2, void * param_3)	OK
+0x0044c210	CUnitAI__Unk_0044c210	void __thiscall CUnitAI__Unk_0044c210(void * this, void * param_1, int param_2)	OK
+0x0044c440	CUnitAI__Unk_0044c440	void __fastcall CUnitAI__Unk_0044c440(void * param_1)	OK
+0x0044c780	CUnitAI__Unk_0044c780	int __thiscall CUnitAI__Unk_0044c780(void * this, int param_1, float param_2, float param_3, float param_4)	OK
+0x0044c810	CUnitAI__Unk_0044c810	void __thiscall CUnitAI__Unk_0044c810(void * this, int param_1, void * param_2)	OK

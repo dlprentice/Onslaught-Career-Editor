@@ -1,12 +1,15 @@
 # AGENTS.md
 
-Status: public-safe contributor agent guide
-Last updated: 2026-06-22
+Status: public-primary contributor agent guide
+Last updated: 2026-06-24
 
-This file is the public-candidate agent guide for Onslaught Toolkit. It is
-materialized as root `AGENTS.md` when `tools/export_curated_release_tree.py`
-builds a sanitized public candidate. The private root `AGENTS.md` is a
-maintainer/operator contract and is intentionally not public payload.
+This file is the public-primary agent guide for Onslaught Toolkit. Treat this
+checkout as the normal collaboration and day-to-day working repo. Raw project
+history and working material are allowed here when useful: RE docs, wave notes,
+state batons, agent reports, readiness docs, proof summaries, checkers, and
+tooling. Ignored local overlays are reserved for hard payloads such as actual
+game files, copied executables, private media/input files, full Ghidra databases
+or backups, secrets, build output, and bulky generated runtime captures.
 
 ## Current Direction
 
@@ -14,22 +17,21 @@ maintainer/operator contract and is intentionally not public payload.
 - `OnslaughtCareerEditor.AppCore` holds shared correctness logic for saves,
   options, patch planning, media/catalog support, and safe-copy workflows.
 - `OnslaughtCareerEditor.Cli` is a C# support CLI.
-- Python under `tools/` is a curated public subset for repo tooling,
-  validation, asset/RE support, and release-policy support. It is not a
-  product GUI lane, and many private maintainer proof helpers are intentionally
-  absent from public candidates.
+- Python under `tools/` supports repo tooling, validation, asset/RE support,
+  and local lab workflows. It is not a product GUI lane.
 - Electron, WPF, and the old Python GUI/CLI are archived/reference lanes only.
-- Static reverse-engineering docs are public-safe research/spec material.
-  Runtime proof, private game assets, copied executables, screenshots, saves,
-  and local proof bundles are not public payload.
+- Static reverse-engineering docs, runtime proof summaries, state batons, and
+  agent reports are tracked project material unless they embed actual game
+  payloads or secrets.
 
 ## First Rules
 
 - Read `README.MD`, `CONTRIBUTING.md`, `SECURITY.md`, and
   `COLLABORATION.md` before making changes.
 - Keep changes narrow and path-scoped.
-- Do not add game binaries, extracted assets, saves, screenshots, local proof
-  bundles, private paths, credentials, or state files.
+- Do not add game binaries, extracted assets, copied executables, local save
+  payloads, screenshots/frame dumps, raw CDB logs, full Ghidra databases,
+  credentials, or `.env*` files.
 - Do not patch or mutate an installed Battle Engine Aquila folder or original
   `BEA.exe`. App workflows must operate on copied targets only.
 - Do not synthesize `.bes` saves from scratch; use real baselines and preserve
@@ -40,6 +42,8 @@ maintainer/operator contract and is intentionally not public payload.
   do not add hosted validation or workflow automation.
 - Public docs must separate proven features from plans, runtime experiments,
   online/multiplayer research, and rebuild aspirations.
+- Read [LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md) before adding or moving
+  game/Ghidra/proof material.
 
 ## Product Lanes
 
@@ -49,25 +53,24 @@ maintainer/operator contract and is intentionally not public payload.
 | Shared core | Active support | `OnslaughtCareerEditor.AppCore/` |
 | C# CLI | Active support | `OnslaughtCareerEditor.Cli/` |
 | Tests | Active | `OnslaughtCareerEditor.AppCore.Tests/`, `OnslaughtCareerEditor.UiTests/` |
-| Tooling | Active support | curated `tools/` subset |
-| Reverse-engineering docs | Public-safe specs/research | `reverse-engineering/RE-INDEX.md`, `reverse-engineering/quick-reference/`, `roadmap/ROADMAP-INDEX.md` |
-| Archived apps | Reference only | `archive/` is excluded from public candidates |
+| Tooling | Active support | `tools/` |
+| Reverse-engineering docs | Specs/research/proof summaries | `reverse-engineering/RE-INDEX.md`, `reverse-engineering/quick-reference/`, `roadmap/ROADMAP-INDEX.md` |
+| Archived apps | Reference only | `archive/` |
 
 ## Setup
 
 From repo root:
 
 ```powershell
-npm run test:public-candidate-inventory
+npm run test:hard-payload-safety
 npm install
 dotnet build .\OnslaughtCareerEditor.WinUI.slnx --nologo
 npm run dev
 ```
 
-Use the public candidate `package.json` for contributor commands. The private
-source repo has many maintainer-only npm scripts that are not public gates.
-Public-source validation also requires Python 3 through the Windows `py`
-launcher because public docs/release/tooling checks use `py -3`.
+Use this repo's `package.json` for contributor commands. Validation also
+requires Python 3 through the Windows `py` launcher because docs/release/tooling
+checks use `py -3`.
 
 ## Common Local Gates
 
@@ -90,33 +93,27 @@ npm run test:winui-notices
 ```
 <!-- public-package-commands:end -->
 
-Private maintainers run the private release profile and curated-manifest gates
-before export. Public agents should not require those private manifest files in
-the public candidate.
-Run `npm run test:public-candidate-inventory` only on a fresh exported payload
-before install/build/test outputs are created.
-Before trusting a shared public candidate, verify `EXPORT_PROVENANCE.json` is
-present and then run `npm run test:public-candidate-inventory` on a clean tree.
+Run `npm run test:hard-payload-safety` before pushing boundary-sensitive work.
+It checks for tracked hard payloads and obvious secrets; it is not meant to hide
+normal RE notes, state batons, agent reports, or proof summaries.
 
 Run .NET build/test commands serially. UI Automation and visual claims require
 native WinUI checks; browser or fixture success is not native runtime proof.
-Public candidates include a curated, link-closed RE/lore/roadmap documentation
-surface. Private proof forests, raw wave evidence, backup paths, runtime
-artifacts, and operator-only docs remain excluded unless they are rewritten as
-bounded public summaries.
+The public repo should contain the useful source/docs/tools/RE/runtime-proof
+surface, not only a tiny release export. Full Ghidra databases, copied runtime
+outputs, raw frame dumps, and secrets remain ignored local overlays.
 
-## Public/Private Boundary
+## Public / Local Overlay Boundary
 
-Public source candidates are manifest-driven. Do not assume that a private
-working tree is public-shaped.
+This public checkout is the normal working repo. Local lab material can be kept
+inside ignored overlay folders so tools and agents can use it without publishing
+it.
 
-Public candidates must exclude:
+Keep out of git:
 
-- `game/**`, private `media/**`, `save-attempts/**`, `subagents/**`, `.codex/**`
-- repo state files such as `developer_agent_state.json`
-- private runtime evidence, local proof bundles, screenshots, frame captures,
-  copied executable bytes, raw saves, extracted assets, secrets, and operator
-  directives
+- `game/**`, private media/input payloads, copied executable bytes, raw saves,
+  extracted assets, full Ghidra project databases/backups, secrets, `.env*`,
+  build/test output, screenshots, frame captures, and raw CDB logs
 
 Use `SECURITY.md` for private-data reporting and `README.RELEASE.md` /
 `PUBLIC_SIGNOFF_COMMANDS.md` for release-safety posture.
@@ -155,8 +152,8 @@ Before asking for review:
 
 - Describe the change and affected paths plainly.
 - Name the local gates you ran.
-- Confirm no private assets, saves, screenshots, proof bundles, secrets, or
-  state files were added.
+- Confirm no game assets, copied executables, save payloads, screenshots/frame
+  dumps, raw CDB logs, secrets, or credential material were added.
 - Confirm installed game files and original `BEA.exe` were not mutated.
 - Keep archived app changes out of scope unless the task explicitly targets an
   archive.

@@ -1,0 +1,17 @@
+slot	entry_addr	ptr	ptr_name	ptr_signature
+0	005dc664	004a4e60	CMenuItemRangeVariant__ScalarDestructor	undefined CMenuItemRangeVariant__ScalarDestructor(void)
+1	005dc668	004a4d20	CMenuItemRange__HandleKeyPress	undefined CMenuItemRange__HandleKeyPress(void)
+2	005dc66c	004a4cd0	CMenuItemRange__ProcessInput	undefined CMenuItemRange__ProcessInput(void)
+3	005dc670	00401480	<none>	<none>
+4	005dc674	bf63d70a	<none>	<none>
+5	005dc678	47ae147b	<none>	<none>
+6	005dc67c	3f847ae1	<none>	<none>
+7	005dc680	3eaaaaab	<none>	<none>
+8	005dc684	006150a8	<none>	<none>
+9	005dc688	004b6d90	COggLoader__VFunc_00_004b6d90	void __fastcall COggLoader__VFunc_00_004b6d90(int param_1)
+10	005dc68c	00615008	<none>	<none>
+11	005dc690	004b6df0	COggLoader__VFunc_00_004b6df0	int __thiscall COggLoader__VFunc_00_004b6df0(void * this, int param_1, int param_2)
+12	005dc694	005246a0	VFuncSlot_01_005246a0	int __thiscall VFuncSlot_01_005246a0(void * this, void * param_1, void * param_2)
+13	005dc698	00524710	<none>	<none>
+14	005dc69c	00524770	VFuncSlot_03_00524770	int __fastcall VFuncSlot_03_00524770(int param_1)
+15	005dc6a0	00524800	<none>	<none>

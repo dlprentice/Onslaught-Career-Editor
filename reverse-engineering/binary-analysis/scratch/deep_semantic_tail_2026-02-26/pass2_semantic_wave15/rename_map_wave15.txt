@@ -1,0 +1,6 @@
+0x00512ca0 CShaderBase__Init
+0x005428d0 CDXImposter__InitGlobals
+0x00542990 CDXImposter__ShutdownAll
+0x00542a30 CDXImposter__InitEntry
+0x00542f90 CDXImposter__BuildQuadGeometry
+0x005438c0 CDXImposter__RenderAll

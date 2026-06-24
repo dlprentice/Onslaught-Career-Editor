@@ -1,0 +1,6 @@
+address	name	signature	status
+0x00591050	CFastVB__ReleaseOwnedObjectAndReset	void __stdcall CFastVB__ReleaseOwnedObjectAndReset(int param_1)	OK
+0x00592b00	CFastVB__ParserContext_Shutdown	void __stdcall CFastVB__ParserContext_Shutdown(void * param_1)	OK
+0x00592c50	CFastVB__ParserContext_Init	void __stdcall CFastVB__ParserContext_Init(void * param_1)	OK
+0x00599258	CFastVB__ComputeNodeSpanAndStride	int __stdcall CFastVB__ComputeNodeSpanAndStride(int param_1, void * param_2, void * param_3)	OK
+0x00599878	CFastVB__CloneNodeTreeWithAddRef	int __fastcall CFastVB__CloneNodeTreeWithAddRef(int param_1)	OK

@@ -1,0 +1,13 @@
+address	name	signature	status
+0x0055f085	CMeshCollisionVolume__Unk_0055f085	void __cdecl CMeshCollisionVolume__Unk_0055f085(int param_1)	OK
+0x0055f0ef	CMeshCollisionVolume__Unk_0055f0ef	void CMeshCollisionVolume__Unk_0055f0ef(void)	OK
+0x0055f147	CMeshCollisionVolume__Unk_0055f147	void CMeshCollisionVolume__Unk_0055f147(void)	OK
+0x00575d68	CMeshCollisionVolume__Unk_00575d68	void CMeshCollisionVolume__Unk_00575d68(void)	OK
+0x0057c7a4	CMeshCollisionVolume__Unk_0057c7a4	int __thiscall CMeshCollisionVolume__Unk_0057c7a4(void * this, void * param_1, int param_2, int param_3, int param_4)	OK
+0x0058546f	CMeshCollisionVolume__Unk_0058546f	void __thiscall CMeshCollisionVolume__Unk_0058546f(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x005894a9	CMeshCollisionVolume__Unk_005894a9	int CMeshCollisionVolume__Unk_005894a9(void)	OK
+0x00589650	CMeshCollisionVolume__Unk_00589650	int CMeshCollisionVolume__Unk_00589650(void)	OK
+0x00591340	CMeshCollisionVolume__Unk_00591340	int __stdcall CMeshCollisionVolume__Unk_00591340(void * param_1, int param_2)	OK
+0x00598749	CMeshCollisionVolume__Unk_00598749	bool __thiscall CMeshCollisionVolume__Unk_00598749(void * this, int param_1, int param_2)	OK
+0x005ab4d0	CMeshCollisionVolume__Unk_005ab4d0	void __fastcall CMeshCollisionVolume__Unk_005ab4d0(int param_1)	OK
+0x0057ca6a	CDXTexture__Unk_0057ca6a	int CDXTexture__Unk_0057ca6a(void)	OK

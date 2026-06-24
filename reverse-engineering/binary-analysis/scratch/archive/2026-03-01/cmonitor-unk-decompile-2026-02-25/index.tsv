@@ -1,0 +1,40 @@
+address	name	signature	status
+0x00407060	CMonitor__Unk_00407060	void __thiscall CMonitor__Unk_00407060(void * this, int param_1, int param_2)	OK
+0x00407140	CMonitor__Unk_00407140	void __thiscall CMonitor__Unk_00407140(void * this, int param_1, int param_2)	OK
+0x00407a50	CMonitor__Unk_00407a50	void __fastcall CMonitor__Unk_00407a50(void * param_1)	OK
+0x004081c0	CMonitor__Unk_004081c0	void __fastcall CMonitor__Unk_004081c0(void * param_1)	OK
+0x004097a0	CMonitor__Unk_004097a0	void __thiscall CMonitor__Unk_004097a0(void * this, void * param_1, void * param_2)	OK
+0x00409880	CMonitor__Unk_00409880	int __fastcall CMonitor__Unk_00409880(int param_1)	OK
+0x0040dc90	CMonitor__Unk_0040dc90	void __fastcall CMonitor__Unk_0040dc90(int param_1)	OK
+0x0040dce0	CMonitor__Unk_0040dce0	void __fastcall CMonitor__Unk_0040dce0(int param_1)	OK
+0x0040de40	CMonitor__Unk_0040de40	void __fastcall CMonitor__Unk_0040de40(void * param_1)	OK
+0x0040e840	CMonitor__Unk_0040e840	void __fastcall CMonitor__Unk_0040e840(int param_1)	OK
+0x0040e940	CMonitor__Unk_0040e940	void __fastcall CMonitor__Unk_0040e940(void * param_1)	OK
+0x0040eb50	CMonitor__Unk_0040eb50	void __fastcall CMonitor__Unk_0040eb50(int param_1)	OK
+0x0040ebf0	CMonitor__Unk_0040ebf0	void __fastcall CMonitor__Unk_0040ebf0(void * param_1)	OK
+0x0040f110	CMonitor__Unk_0040f110	void __fastcall CMonitor__Unk_0040f110(int param_1)	OK
+0x00410210	CMonitor__Unk_00410210	void * __thiscall CMonitor__Unk_00410210(void * this, void * param_1, int param_2)	OK
+0x00411500	CMonitor__Unk_00411500	void __fastcall CMonitor__Unk_00411500(int param_1)	OK
+0x00411630	CMonitor__Unk_00411630	void __fastcall CMonitor__Unk_00411630(int param_1)	OK
+0x00411aa0	CMonitor__Unk_00411aa0	double __fastcall CMonitor__Unk_00411aa0(int param_1)	OK
+0x00412000	CMonitor__Unk_00412000	void __fastcall CMonitor__Unk_00412000(void * param_1)	OK
+0x00412050	CMonitor__Unk_00412050	int __thiscall CMonitor__Unk_00412050(void * this, void * param_1, int param_2)	OK
+0x00412520	CMonitor__Unk_00412520	int __fastcall CMonitor__Unk_00412520(void * param_1)	OK
+0x00412900	CMonitor__Unk_00412900	int __fastcall CMonitor__Unk_00412900(int param_1)	OK
+0x00412bc0	CMonitor__Unk_00412bc0	void * __thiscall CMonitor__Unk_00412bc0(void * this, void * param_1, int param_2)	OK
+0x004136e0	CMonitor__Unk_004136e0	void __thiscall CMonitor__Unk_004136e0(void * this, int param_1, float param_2)	OK
+0x00413760	CMonitor__Unk_00413760	void __fastcall CMonitor__Unk_00413760(void * param_1)	OK
+0x00413a70	CMonitor__Unk_00413a70	int __fastcall CMonitor__Unk_00413a70(int param_1)	OK
+0x00414010	CMonitor__Unk_00414010	void CMonitor__Unk_00414010(void)	OK
+0x004140d0	CMonitor__Unk_004140d0	int __thiscall CMonitor__Unk_004140d0(void * this, void * param_1, int param_2)	OK
+0x00414610	CMonitor__Unk_00414610	int __fastcall CMonitor__Unk_00414610(void * param_1)	OK
+0x0044e2c0	CMonitor__Unk_0044e2c0	int __fastcall CMonitor__Unk_0044e2c0(void * param_1)	OK
+0x00452db0	CMonitor__Unk_00452db0	void CMonitor__Unk_00452db0(void)	OK
+0x00469400	CMonitor__Unk_00469400	uint __cdecl CMonitor__Unk_00469400(int param_1, int param_2, int param_3, int param_4)	OK
+0x00472e50	CMonitor__Unk_00472e50	int CMonitor__Unk_00472e50(void)	OK
+0x0047d3b0	CMonitor__Unk_0047d3b0	int __fastcall CMonitor__Unk_0047d3b0(void * param_1)	OK
+0x00490220	CMonitor__Unk_00490220	void __fastcall CMonitor__Unk_00490220(int param_1)	OK
+0x00490780	CMonitor__Unk_00490780	void __thiscall CMonitor__Unk_00490780(void * this, int param_1, int param_2)	OK
+0x004a1270	CMonitor__Unk_004a1270	void __fastcall CMonitor__Unk_004a1270(int param_1)	OK
+0x004ef120	CMonitor__Unk_004ef120	void __fastcall CMonitor__Unk_004ef120(int param_1)	OK
+0x005078f0	CMonitor__Unk_005078f0	void __thiscall CMonitor__Unk_005078f0(void * this, int param_1, int param_2)	OK

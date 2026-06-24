@@ -1,0 +1,25 @@
+slot	entry_addr	ptr	ptr_name	ptr_signature
+0	005e2f10	004f44a0	CThing__AddTrail	undefined CThing__AddTrail(void)
+1	005e2f14	00403a90	<none>	<none>
+2	005e2f18	004f45e0	CExplosionInitThing__Helper_004f45e0	void __stdcall CExplosionInitThing__Helper_004f45e0(void * param_1)
+3	005e2f1c	004fdd60	<none>	<none>
+4	005e2f20	00459990	CFrontEndPage__DeActiveNotification	void __cdecl CFrontEndPage__DeActiveNotification(void * this)
+5	005e2f24	00405930	CControllerDefinition__VFunc_03_00405930	int __thiscall CControllerDefinition__VFunc_03_00405930(void * this)
+6	005e2f28	004162e0	<none>	<none>
+7	005e2f2c	00401f70	<none>	<none>
+8	005e2f30	004d20a0	CFEPMultiplayerStart__Unk_004d20a0	void __fastcall CFEPMultiplayerStart__Unk_004d20a0(void * param_1)
+9	005e2f34	0047bf60	CUnitAI__Unk_0047bf60	void __fastcall CUnitAI__Unk_0047bf60(void * param_1)
+10	005e2f38	00402020	CGeneralVolume__Helper_00402020	void __fastcall CGeneralVolume__Helper_00402020(int param_1)
+11	005e2f3c	00405db0	VFuncSlot_12_00405db0	void VFuncSlot_12_00405db0(void)
+12	005e2f40	00405dc0	<none>	<none>
+13	005e2f44	00405dd0	<none>	<none>
+14	005e2f48	004fc080	CUnitAI__Helper_004fc080	int __fastcall CUnitAI__Helper_004fc080(void * param_1)
+15	005e2f4c	004fc3c0	<none>	<none>
+16	005e2f50	00405de0	<none>	<none>
+17	005e2f54	004fa4b0	CUnit__Unk_004fa4b0	int CUnit__Unk_004fa4b0(void)
+18	005e2f58	004f9a10	<none>	<none>
+19	005e2f5c	004175c0	<none>	<none>
+20	005e2f60	004175d0	<none>	<none>
+21	005e2f64	004175e0	<none>	<none>
+22	005e2f68	00405e10	<none>	<none>
+23	005e2f6c	00405e20	<none>	<none>

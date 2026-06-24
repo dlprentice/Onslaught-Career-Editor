@@ -1,0 +1,7 @@
+address	name	signature	status
+0x004e66d0	CWaypoint__Unk_004e66d0	void __stdcall CWaypoint__Unk_004e66d0(void * param_1)	OK
+0x004f7cd0	CWaypoint__Unk_004f7cd0	int __cdecl CWaypoint__Unk_004f7cd0(void * param_1)	OK
+0x004ffe00	CWaypoint__Unk_004ffe00	void __fastcall CWaypoint__Unk_004ffe00(int param_1)	OK
+0x00501360	CWaypoint__Unk_00501360	void CWaypoint__Unk_00501360(void)	OK
+0x00505ab0	CWaypointManager__Unk_00505ab0	void CWaypointManager__Unk_00505ab0(void)	OK
+0x0057d446	CWaypointManager__Unk_0057d446	void CWaypointManager__Unk_0057d446(void)	OK

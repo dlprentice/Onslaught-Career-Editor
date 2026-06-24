@@ -1,0 +1,371 @@
+address	name	xref_count	owners	top_counts	unambiguous_non_cfastvb
+0x0055d90b	CFastVB__Unk_0055d90b	2	CDXTexture,CFastVB	CDXTexture:1;CFastVB:1	false
+0x0055db0a	CFastVB__Unk_0055db0a	49	CAnimal,CBattleEngine,CCockpit,CDXEngine,CDXLandscape,CDXMeshVB,CDXPatchManager,CDXSurf,CDebris,CEscapePod,CEventManager,CFEPDebriefing,CFEPMultiplayerStart,CFastVB_Unk_0055db0a,CFeature,CInfluenceMap,CLandscapeIB,CMapWho,CMesh,CMissile,CMixerMap,CParticleManager,CRenderQueue,CRocket,CShell,CStaticShadows,CTexture,CUnit,CWeapon	CDXLandscape:2;CDXMeshVB:2;CEventManager:2;CMixerMap:2;CRenderQueue:2;CRocket:2;CAnimal:1;CBattleEngine:1	false
+0x0055db72	CFastVB__Unk_0055db72	1	CFastVB	CFastVB:1	false
+0x0055de6f	CFastVB__Unk_0055de6f	2	CDXTexture	CDXTexture:2	true
+0x0055de78	CFastVB__Unk_0055de78	2	CDXTexture	CDXTexture:2	true
+0x0055e14f	CFastVB__Unk_0055e14f	24	CConsole,CD3DApplication,CLIParams,CTokenArchive,con_map	CLIParams:6;CD3DApplication:4;CConsole:3;CTokenArchive:3;con_map:1	false
+0x0055e183	CFastVB__Unk_0055e183	24	CGame,CLIParams,CTexture,CWorldPhysicsManager	CTexture:21;CGame:1;CLIParams:1;CWorldPhysicsManager:1	false
+0x0055e1c4	CFastVB__Unk_0055e1c4	7	CConsole,CTexture	CConsole:6;CTexture:1	false
+0x0055e21b	CFastVB__Unk_0055e21b	5	CFastVB,CTexture	CTexture:3;CFastVB:1	false
+0x0055e2a6	CFastVB__Unk_0055e2a6	20	CConsole,CDXTexture,CFastVB,CMCBuggy,CMCMech,CMCTentacle,CMeshPart,CSoundManager,CTexture,con_map	CSoundManager:5;CFastVB:3;CMCMech:3;CTexture:2;CConsole:1;CDXTexture:1;CMCBuggy:1;CMCTentacle:1	false
+0x0055e45f	CFastVB__Unk_0055e45f	1	fopen	fopen:1	false
+0x0055e673	CFastVB__Unk_0055e673	4	CFastVB,CTexture	CFastVB:2;CTexture:1	false
+0x0055f506	CFastVB__Unk_0055f506	1	fread	fread:1	false
+0x0055f5ee	CFastVB__Unk_0055f5ee	3	EnumerateSaveFiles_1,EnumerateSaveFiles_2,EnumerateSaveFiles_Main	EnumerateSaveFiles_1:1;EnumerateSaveFiles_2:1;EnumerateSaveFiles_Main:1	false
+0x0055f6bb	CFastVB__Unk_0055f6bb	12	EnumerateSaveFiles_1,EnumerateSaveFiles_2,EnumerateSaveFiles_Main	EnumerateSaveFiles_1:4;EnumerateSaveFiles_2:4;EnumerateSaveFiles_Main:4	false
+0x0055fe26	CFastVB__Unk_0055fe26	7	CDXTexture,fclose,fprintf,fread,fwrite	CDXTexture:3;fclose:1;fprintf:1;fread:1;fwrite:1	false
+0x0055fe55	CFastVB__Unk_0055fe55	3	CDXTexture,CFastVB,CTexture	CDXTexture:1;CFastVB:1;CTexture:1	false
+0x00560520	CFastVB__Unk_00560520	1	CDXTexture	CDXTexture:1	true
+0x005605ca	CFastVB__Unk_005605ca	1	CDXTexture	CDXTexture:1	true
+0x00560e28	CFastVB__Unk_00560e28	1			false
+0x00560e89	CFastVB__Unk_00560e89	2	CFastVB	CFastVB:2	false
+0x00560f4b	CFastVB__Unk_00560f4b	1			false
+0x00560fa0	CFastVB__Unk_00560fa0	2	CFastVB	CFastVB:2	false
+0x00561047	CFastVB__Unk_00561047	1			false
+0x00561679	CFastVB__Unk_00561679	1	CDXTexture	CDXTexture:1	true
+0x00561834	CFastVB__Unk_00561834	6	CDXTexture,CFastVB,fprintf,sprintf,vsprintf	CDXTexture:2;CFastVB:1;fprintf:1;sprintf:1;vsprintf:1	false
+0x00561f75	CFastVB__Unk_00561f75	4	CFastVB	CFastVB:4	false
+0x00561faa	CFastVB__Unk_00561faa	3	CFastVB	CFastVB:3	false
+0x00561fdb	CFastVB__Unk_00561fdb	3	CFastVB	CFastVB:3	false
+0x00562ab1	CFastVB__Unk_00562ab1	1	CTexture	CTexture:1	true
+0x00562b15	CFastVB__Unk_00562b15	2	CFastVB	CFastVB:2	false
+0x00562b3e	CFastVB__Unk_00562b3e	3	CDXTexture,CTexture	CTexture:2;CDXTexture:1	false
+0x00562b98	CFastVB__Unk_00562b98	1	CTexture	CTexture:1	true
+0x00562c59	CFastVB__Unk_00562c59	1	CDXTexture	CDXTexture:1	true
+0x00562c67	CFastVB__Unk_00562c67	1	CDXTexture	CDXTexture:1	true
+0x00562c76	CFastVB__Unk_00562c76	11	CDXTexture,CTexture	CTexture:8;CDXTexture:3	false
+0x00563951	CFastVB__Unk_00563951	30	CDXTexture,CFastVB,CTexture	CDXTexture:14;CFastVB:10;CTexture:6	false
+0x00565d9c	CFastVB__Unk_00565d9c	4	CFastVB,CTexture	CFastVB:2;CTexture:2	false
+0x00565dc1	CFastVB__Unk_00565dc1	1	CTexture	CTexture:1	true
+0x00565e8d	CFastVB__Unk_00565e8d	1	CTexture	CTexture:1	true
+0x00565ee0	CFastVB__Unk_00565ee0	8	CDXTexture	CDXTexture:8	true
+0x00566104	CFastVB__Unk_00566104	5	CDXTexture,CTexture	CTexture:3;CDXTexture:1	false
+0x00568d8c	CFastVB__Unk_00568d8c	1	CDXTexture	CDXTexture:1	true
+0x00569788	CFastVB__Unk_00569788	2	CDXTexture	CDXTexture:2	true
+0x0056983b	CFastVB__Unk_0056983b	1	CDXTexture	CDXTexture:1	true
+0x00569f35	CFastVB__Unk_00569f35	3	CDXTexture	CDXTexture:3	true
+0x00569f92	CFastVB__Unk_00569f92	1	CFastVB	CFastVB:1	false
+0x0056a05b	CFastVB__Unk_0056a05b	8	CFastVB,CTexture	CFastVB:4;CTexture:4	false
+0x0056a089	CFastVB__Unk_0056a089	18	CDXTexture,CFastVB,CTexture	CTexture:11;CFastVB:4;CDXTexture:3	false
+0x0056a0b1	CFastVB__Unk_0056a0b1	4	CDXTexture	CDXTexture:4	true
+0x0056a0de	CFastVB__Unk_0056a0de	6	CDXTexture	CDXTexture:6	true
+0x0056bba5	CFastVB__Unk_0056bba5	2	CFastVB	CFastVB:1	false
+0x0056bca7	CFastVB__Unk_0056bca7	1			false
+0x0056c998	CFastVB__Unk_0056c998	2	CFastVB	CFastVB:1	false
+0x0056cb9d	CFastVB__Unk_0056cb9d	1	CDXTexture	CDXTexture:1	true
+0x0056d525	CFastVB__Unk_0056d525	9	CFastVB,CTexture	CFastVB:8;CTexture:1	false
+0x0056d553	CFastVB__Unk_0056d553	2	CFastVB,CTexture	CFastVB:1;CTexture:1	false
+0x0056d580	CFastVB__Unk_0056d580	1	CTexture	CTexture:1	true
+0x0056d647	CFastVB__Unk_0056d647	1	CTexture	CTexture:1	true
+0x0056e462	CFastVB__Unk_0056e462	3	CDXTexture	CDXTexture:3	true
+0x0056eb70	CFastVB__Unk_0056eb70	3	CDXMeshVB,CLandscapeIB	CDXMeshVB:2;CLandscapeIB:1	false
+0x0056eb80	CFastVB__Unk_0056eb80	3	CDXMeshVB,CLandscapeIB	CDXMeshVB:2;CLandscapeIB:1	false
+0x0056eb90	CFastVB__Unk_0056eb90	3	CDXMeshVB,CLandscapeIB	CDXMeshVB:2;CLandscapeIB:1	false
+0x0056f260	CFastVB__Unk_0056f260	23	CDXTexture,CTexture	CTexture:8;CDXTexture:1	false
+0x0056f520	CFastVB__Unk_0056f520	2	CFastVB	CFastVB:1	false
+0x00573310	CFastVB__Unk_00573310	11	CDXTexture,CTexture	CTexture:9;CDXTexture:2	false
+0x00573330	CFastVB__Unk_00573330	2	CTexture	CTexture:2	true
+0x00573340	CFastVB__Unk_00573340	1	CTexture	CTexture:1	true
+0x00573560	CFastVB__Unk_00573560	1	CTexture	CTexture:1	true
+0x00573ff0	CFastVB__Unk_00573ff0	9	CDXTexture,CTexture	CTexture:5;CDXTexture:4	false
+0x00574020	CFastVB__Unk_00574020	2	CFastVB	CFastVB:2	false
+0x00574270	CFastVB__Unk_00574270	8	CFastVB,CMeshCollisionVolume,CTexture	CFastVB:3;CTexture:3;CMeshCollisionVolume:2	false
+0x00574296	CFastVB__Unk_00574296	2	CFastVB	CFastVB:2	false
+0x0057430b	CFastVB__Unk_0057430b	1	CMeshCollisionVolume	CMeshCollisionVolume:1	true
+0x0057437a	CFastVB__Unk_0057437a	2	CFastVB,CTexture	CFastVB:1;CTexture:1	false
+0x00574476	CFastVB__Unk_00574476	2	CDXTexture,CFastVB	CDXTexture:1;CFastVB:1	false
+0x0057516c	CFastVB__Unk_0057516c	1	CFastVB	CFastVB:1	false
+0x005758e6	CFastVB__Unk_005758e6	2	CDXTexture,CFastVB	CDXTexture:1;CFastVB:1	false
+0x00575923	CFastVB__Unk_00575923	2	CDXTexture	CDXTexture:2	true
+0x00575986	CFastVB__Unk_00575986	13	CDXTexture,CFastVB,CTexture	CDXTexture:4;CTexture:2;CFastVB:1	false
+0x005759b6	CFastVB__Unk_005759b6	2	CFastVB	CFastVB:2	false
+0x005759c3	CFastVB__Unk_005759c3	3	CDXTexture	CDXTexture:3	true
+0x005759c9	CFastVB__Unk_005759c9	2			false
+0x00575a58	CFastVB__Unk_00575a58	3	CFastVB	CFastVB:2	false
+0x00575a65	CFastVB__Unk_00575a65	3	CDXTexture,CFastVB	CDXTexture:2;CFastVB:1	false
+0x00575a6b	CFastVB__Unk_00575a6b	2	CTexture	CTexture:1	true
+0x00575cae	CFastVB__Unk_00575cae	2	CFastVB	CFastVB:1	false
+0x00575dc9	CFastVB__Unk_00575dc9	1			false
+0x0057600b	CFastVB__Unk_0057600b	7	CVBufTexture,CVertexShader	CVBufTexture:5;CVertexShader:2	false
+0x0057609c	CFastVB__Unk_0057609c	1	CFastVB	CFastVB:1	false
+0x00576154	CFastVB__Unk_00576154	3	CFastVB	CFastVB:2	false
+0x00576161	CFastVB__Unk_00576154	8	CDXEngine,CDXTexture,CFastVB,CTexture	CDXEngine:4;CFastVB:2;CDXTexture:1;CTexture:1	false
+0x00576698	CFastVB__Unk_00576698	2	CFastVB	CFastVB:2	false
+0x005766a5	CFastVB__Unk_005766a5	4	CVertexShader	CVertexShader:4	true
+0x0057674a	CFastVB__Unk_0057674a	1	CFastVB	CFastVB:1	false
+0x005768f1	CFastVB__Unk_005768f1	2	CFastVB	CFastVB:2	false
+0x005768fe	CFastVB__Unk_005768fe	34	CAtmosphericsProfile,CDXEngine,CDXTexture,CFastVB,CTexture,CVBufTexture,CVertexShader	CTexture:9;CVertexShader:9;CDXTexture:5;CFastVB:5;CDXEngine:3;CVBufTexture:2;CAtmosphericsProfile:1	false
+0x00576b3a	CFastVB__Unk_00576b3a	2	CFastVB	CFastVB:2	false
+0x00576b47	CFastVB__Unk_00576b3a	11	CAtmosphericsProfile,CTexture,CVBufTexture,CVertexShader	CVertexShader:6;CAtmosphericsProfile:2;CTexture:2;CVBufTexture:1	false
+0x00576dfd	CFastVB__Unk_00576dfd	2	CFastVB	CFastVB:2	false
+0x00576e0a	CFastVB__Unk_00576e0a	11	CDXEngine,CFastVB,CTexture,CVertexShader	CVertexShader:6;CDXEngine:3;CFastVB:1;CTexture:1	false
+0x005771af	CFastVB__Unk_005771af	2	CFastVB	CFastVB:1	false
+0x005775b0	CFastVB__Unk_005775b0	2	CFastVB	CFastVB:2	false
+0x005775bd	CFastVB__Unk_005775bd	4	CFastVB,CTexture	CTexture:3;CFastVB:1	false
+0x005776d3	CFastVB__Unk_005776d3	2	CFastVB	CFastVB:1	false
+0x005776e4	CFastVB__Unk_005776e4	2	CFastVB	CFastVB:1	false
+0x0057770b	CFastVB__Unk_0057770b	1			false
+0x0057798e	CFastVB__Unk_0057798e	2	CFastVB	CFastVB:1	false
+0x005779ae	CFastVB__Unk_005779ae	1			false
+0x00577a0a	CFastVB__Unk_00577a0a	3	CFastVB,CTexture	CFastVB:1;CTexture:1	false
+0x005784a9	CFastVB__Unk_005784a9	1	CFastVB	CFastVB:1	false
+0x00578555	CFastVB__Unk_00578555	3	CFastVB	CFastVB:2	false
+0x00578f53	CFastVB__Unk_00578f53	1			false
+0x00579184	CFastVB__Unk_00579184	1			false
+0x00579cbe	CFastVB__Unk_00579cbe	6	CDXTexture,CFastVB,CTexture	CFastVB:4;CDXTexture:1;CTexture:1	false
+0x00579d17	CFastVB__Unk_00579d17	2	CDXTexture	CDXTexture:2	true
+0x0057bf1f	CFastVB__Unk_0057bf1f	1	CDXTexture	CDXTexture:1	true
+0x0057d4db	CFastVB__Unk_0057d4db	1	CDXTexture	CDXTexture:1	true
+0x0057d62b	CFastVB__Unk_0057d62b	1	CDXTexture	CDXTexture:1	true
+0x0057d74f	CFastVB__Unk_0057d74f	1	CDXTexture	CDXTexture:1	true
+0x0057e200	CFastVB__Unk_0057e200	1	CFastVB	CFastVB:1	false
+0x0057e2de	CFastVB__Unk_0057e2de	1	CFastVB	CFastVB:1	false
+0x0057fa5c	CFastVB__Unk_0057fa5c	1	CFastVB	CFastVB:1	false
+0x00580120	CFastVB__Unk_00580120	1	CFastVB	CFastVB:1	false
+0x0058070e	CFastVB__Unk_0058070e	3	CMeshCollisionVolume,CTexture	CTexture:2;CMeshCollisionVolume:1	false
+0x0058083d	CFastVB__Unk_0058083d	3	CDXTexture,CTexture	CTexture:2;CDXTexture:1	false
+0x00580850	CFastVB__Unk_00580850	3	CFastVB	CFastVB:3	false
+0x0058092d	CFastVB__Unk_0058092d	2	CFastVB	CFastVB:2	false
+0x005809de	CFastVB__Unk_005809de	2	CDXTexture,CFastVB	CDXTexture:1;CFastVB:1	false
+0x00580a00	CFastVB__Unk_0058092d	3	CDXTexture,CTexture	CTexture:2;CDXTexture:1	false
+0x00580a05	CFastVB__Unk_00580a05	4	CDXTexture,CFastVB,CTexture	CTexture:2;CDXTexture:1;CFastVB:1	false
+0x00580eef	CFastVB__Unk_005809de	2	CDXTexture,CTexture	CDXTexture:1;CTexture:1	false
+0x00581e8c	CFastVB__Unk_00581e8c	42	CDXTexture,CFastVB,CTexture	CDXTexture:15;CTexture:14;CFastVB:13	false
+0x0058210e	CFastVB__Unk_0058210e	41	CDXTexture,CFastVB,CMeshCollisionVolume,CTexture	CFastVB:17;CTexture:11;CDXTexture:9;CMeshCollisionVolume:1	false
+0x00582244	CFastVB__Unk_00582244	1			false
+0x00582355	CFastVB__Unk_00582355	1			false
+0x0058249e	CFastVB__Unk_0058249e	1			false
+0x005825c3	CFastVB__Unk_005825c3	1			false
+0x005826e8	CFastVB__Unk_005826e8	1			false
+0x0058280d	CFastVB__Unk_0058280d	1			false
+0x00582950	CFastVB__Unk_00582950	1			false
+0x00583891	CFastVB__Unk_00583891	1			false
+0x00583979	CFastVB__Unk_00583979	1			false
+0x00584144	CFastVB__Unk_00584144	1			false
+0x0058423f	CFastVB__Unk_0058423f	1			false
+0x0058439e	CFastVB__Unk_0058439e	1			false
+0x00584d78	CFastVB__Unk_00584d78	1			false
+0x00584e32	CFastVB__Unk_00584e32	1			false
+0x00584ee9	CFastVB__Unk_00584ee9	1			false
+0x00584fae	CFastVB__Unk_00584fae	1			false
+0x00585072	CFastVB__Unk_00585072	1			false
+0x00585161	CFastVB__Unk_00585161	1			false
+0x00585220	CFastVB__Unk_00585220	1			false
+0x005852d5	CFastVB__Unk_005852d5	1			false
+0x00585380	CFastVB__Unk_00585380	1			false
+0x00585908	CFastVB__Unk_00585908	1	CFastVB	CFastVB:1	false
+0x00585924	CFastVB__Unk_00585924	1	CFastVB	CFastVB:1	false
+0x005859bc	CFastVB__Unk_005859bc	1	CFastVB	CFastVB:1	false
+0x005859d8	CFastVB__Unk_005859d8	1			false
+0x00585a7b	CFastVB__Unk_00585a7b	1			false
+0x00585b35	CFastVB__Unk_00585b35	1			false
+0x00585bef	CFastVB__Unk_00585bef	1	CFastVB	CFastVB:1	false
+0x00585c0b	CFastVB__Unk_00585c0b	2			false
+0x00585c94	CFastVB__Unk_00585c94	1	CFastVB	CFastVB:1	false
+0x00585fa3	CFastVB__Unk_00585fa3	1			false
+0x0058617c	CFastVB__Unk_0058617c	1	CFastVB	CFastVB:1	false
+0x005862e9	CFastVB__Unk_005862e9	1	CFastVB	CFastVB:1	false
+0x0058669a	CFastVB__Unk_0058669a	1	CFastVB	CFastVB:1	false
+0x005866b6	CFastVB__Unk_005866b6	1	CFastVB	CFastVB:1	false
+0x005866d2	CFastVB__Unk_005866d2	1			false
+0x0058675f	CFastVB__Unk_0058675f	1	CFastVB	CFastVB:1	false
+0x005868d1	CFastVB__Unk_005868d1	1			false
+0x00586994	CFastVB__Unk_00586994	1	CFastVB	CFastVB:1	false
+0x00586bb7	CFastVB__Unk_00586bb7	2	CDXTexture,CFastVB	CDXTexture:1;CFastVB:1	false
+0x00586ec7	CFastVB__Unk_00586ec7	1	CFastVB	CFastVB:1	false
+0x0058735a	CFastVB__Unk_0058735a	5			false
+0x005873f8	CFastVB__Unk_005873f8	5			false
+0x00587daf	CFastVB__Unk_00587daf	1			false
+0x00587dee	CFastVB__Unk_00587dee	1	CFastVB	CFastVB:1	false
+0x00587e06	CFastVB__Unk_00587e06	1	CFastVB	CFastVB:1	false
+0x00587e66	CFastVB__Unk_00587e66	6			false
+0x00587e82	CFastVB__Unk_00587e82	2	CFastVB	CFastVB:2	false
+0x0058877d	CFastVB__Unk_0058877d	1	CMeshCollisionVolume	CMeshCollisionVolume:1	true
+0x00588855	CFastVB__Unk_00588855	1	CTexture	CTexture:1	true
+0x005888a1	CFastVB__Unk_005888a1	1	CDXTexture	CDXTexture:1	true
+0x005888ae	CFastVB__Unk_005888ae	1	CDXTexture	CDXTexture:1	true
+0x005888bc	CFastVB__Unk_005888bc	1			false
+0x0058920c	CFastVB__Unk_0058920c	1	CDXTexture	CDXTexture:1	true
+0x0058926b	CFastVB__Unk_0058926b	61	CDXTexture,CFastVB,CMeshCollisionVolume,CTexture	CFastVB:17;CTexture:16;CDXTexture:13;CMeshCollisionVolume:1	false
+0x00589367	CFastVB__Unk_00589367	2	CDXTexture,CFastVB	CDXTexture:1;CFastVB:1	false
+0x00589689	CFastVB__Unk_00589689	2	CFastVB	CFastVB:2	false
+0x005896a1	CFastVB__Unk_005896a1	2	CDXTexture,CFastVB	CDXTexture:1;CFastVB:1	false
+0x005896bd	CFastVB__Unk_005896bd	1	CTexture	CTexture:1	true
+0x00589762	CFastVB__Unk_00589762	1	CTexture	CTexture:1	true
+0x00589802	CFastVB__Unk_00589802	1	CTexture	CTexture:1	true
+0x00589bd6	CFastVB__Unk_00589bd6	3	CTexture	CTexture:3	true
+0x00589c82	CFastVB__Unk_00589c82	1	CTexture	CTexture:1	true
+0x0058a58d	CFastVB__Unk_0058a58d	5	CFastVB	CFastVB:5	false
+0x0058a60a	CFastVB__Unk_0058a60a	5	CFastVB,CTexture	CTexture:4;CFastVB:1	false
+0x0058a67b	CFastVB__Unk_0058a67b	2	CFastVB	CFastVB:2	false
+0x0058a6e0	CFastVB__Unk_0058a6e0	1	CTexture	CTexture:1	true
+0x0058a713	CFastVB__Unk_0058a713	2	CFastVB,CTexture	CFastVB:1;CTexture:1	false
+0x0058a981	CFastVB__Unk_0058a981	1	CTexture	CTexture:1	true
+0x0058a9ef	CFastVB__Unk_0058a9ef	1	CTexture	CTexture:1	true
+0x0058aa69	CFastVB__Unk_0058aa69	1	CTexture	CTexture:1	true
+0x0058aacf	CFastVB__Unk_0058aacf	1	CTexture	CTexture:1	true
+0x0058b1a0	CFastVB__Unk_0058b1a0	1	CTexture	CTexture:1	true
+0x0058c178	CFastVB__Unk_0058c178	2	CDXTexture,CFastVB	CDXTexture:1;CFastVB:1	false
+0x0058c30f	CFastVB__Unk_0058c30f	1	CTexture	CTexture:1	true
+0x0058c378	CFastVB__Unk_0058c378	2	CTexture	CTexture:2	true
+0x0058c37c	CFastVB__Unk_0058c37c	4	CDXTexture,CFastVB	CFastVB:3;CDXTexture:1	false
+0x0058c75e	CFastVB__Unk_0058c75e	1	CTexture	CTexture:1	true
+0x0058c7a4	CFastVB__Unk_0058c7a4	1	CTexture	CTexture:1	true
+0x0058c82b	CFastVB__Unk_0058c82b	1	CDXTexture	CDXTexture:1	true
+0x0058c893	CFastVB__Unk_0058c893	62	CDXTexture,CFastVB,CMeshCollisionVolume,CTexture	CFastVB:25;CDXTexture:22;CTexture:13;CMeshCollisionVolume:2	false
+0x0058d088	CFastVB__Unk_0058d088	1	CTexture	CTexture:1	true
+0x0058d6b4	CFastVB__Unk_0058d6b4	2	CDXTexture,CFastVB	CDXTexture:1;CFastVB:1	false
+0x0058d6f0	CFastVB__Unk_0058d6f0	3	CFastVB	CFastVB:3	false
+0x0058d722	CFastVB__Unk_0058d722	3	CDXTexture	CDXTexture:3	true
+0x0058d747	CFastVB__Unk_0058d747	1	CTexture	CTexture:1	true
+0x0058d763	CFastVB__Unk_0058d763	2	CTexture	CTexture:2	true
+0x0058d821	CFastVB__Unk_0058d821	1	CTexture	CTexture:1	true
+0x0058d88d	CFastVB__Unk_0058d88d	4	CFastVB	CFastVB:4	false
+0x0058d8c2	CFastVB__Unk_0058d8c2	1	CFastVB	CFastVB:1	false
+0x0058e256	CFastVB__Unk_0058e256	1	CFastVB	CFastVB:1	false
+0x0058f219	CFastVB__Unk_0058f219	1	CTexture	CTexture:1	true
+0x0058f305	CFastVB__Unk_0058f305	1	CTexture	CTexture:1	true
+0x0058f34c	CFastVB__Unk_0058f34c	1	CTexture	CTexture:1	true
+0x0058f593	CFastVB__Unk_0058f593	3	CTexture	CTexture:3	true
+0x0058fb70	CFastVB__Unk_0058fb70	1	CTexture	CTexture:1	true
+0x0058fb8b	CFastVB__Unk_0058fb8b	1	CTexture	CTexture:1	true
+0x0058fbc5	CFastVB__Unk_0058fbc5	1	CTexture	CTexture:1	true
+0x00590da0	CFastVB__Unk_00590da0	2	CTexture	CTexture:2	true
+0x00590e10	CFastVB__Unk_00590e10	2	CDXTexture	CDXTexture:2	true
+0x00591050	CFastVB__Unk_0059c610	2	CDXTexture,CTexture	CDXTexture:1;CTexture:1	false
+0x00591060	CFastVB__Unk_00591060	1	CDXTexture	CDXTexture:1	true
+0x005913b0	CFastVB__Unk_005913b0	1			false
+0x00591720	CFastVB__Unk_00591720	1			false
+0x00592380	CFastVB__Unk_00592380	3	CTexture	CTexture:2	true
+0x00592420	CFastVB__Unk_00592420	3	CTexture	CTexture:2	true
+0x00592530	CFastVB__Unk_00592530	1			false
+0x00592b00	CFastVB__Unk_00592b00	1	CFastVB	CFastVB:1	false
+0x00592c50	CFastVB__Unk_00592c50	2	CDXTexture,CTexture	CDXTexture:1;CTexture:1	false
+0x00592d29	CFastVB__Unk_00592d29	1	CTexture	CTexture:1	true
+0x00593024	CFastVB__Unk_00593024	1	CDXTexture	CDXTexture:1	true
+0x00593043	CFastVB__Unk_00593043	1	CDXTexture	CDXTexture:1	true
+0x005935d9	CFastVB__Unk_005935d9	1	CDXTexture	CDXTexture:1	true
+0x005935f2	CFastVB__Unk_005935f2	1	CDXTexture	CDXTexture:1	true
+0x0059361e	CFastVB__Unk_0059361e	1	CDXTexture	CDXTexture:1	true
+0x0059364c	CFastVB__Unk_0059364c	1	CDXTexture	CDXTexture:1	true
+0x00593812	CFastVB__Unk_00593812	1	CDXTexture	CDXTexture:1	true
+0x00593861	CFastVB__Unk_00593861	1	CFastVB	CFastVB:1	false
+0x00593890	CFastVB__Unk_00593890	1	CFastVB	CFastVB:1	false
+0x00593989	CFastVB__Unk_00593989	2	CDXTexture	CDXTexture:2	true
+0x005942da	CFastVB__Unk_005942da	1	CFastVB	CFastVB:1	false
+0x00594945	CFastVB__Unk_00594945	1	CFastVB	CFastVB:1	false
+0x00594c48	CFastVB__Unk_00594c48	1	CMeshCollisionVolume	CMeshCollisionVolume:1	true
+0x00594d5c	CFastVB__Unk_00594d5c	1	CFastVB	CFastVB:1	false
+0x00595079	CFastVB__Unk_00595079	6	CDXTexture,CFastVB,CTexture	CDXTexture:2;CFastVB:2;CTexture:2	false
+0x005950a2	CFastVB__Unk_005950a2	2	CDXTexture,CTexture	CDXTexture:1;CTexture:1	false
+0x005950e0	CFastVB__Unk_005950e0	3	CDXTexture,CTexture	CTexture:2;CDXTexture:1	false
+0x005951e9	CFastVB__Unk_005951e9	1	CDXTexture	CDXTexture:1	true
+0x00595220	CFastVB__Unk_00595220	1	CTexture	CTexture:1	true
+0x005952e0	CFastVB__Unk_005952e0	1	CFastVB	CFastVB:1	false
+0x00595350	CFastVB__Unk_00595350	1	CTexture	CTexture:1	true
+0x00595430	CFastVB__Unk_00595430	1	CTexture	CTexture:1	true
+0x005954a0	CFastVB__Unk_005954a0	1	CTexture	CTexture:1	true
+0x00595550	CFastVB__Unk_00595550	2	CFastVB	CFastVB:2	false
+0x00595820	CFastVB__Unk_00595820	4	CFastVB	CFastVB:4	false
+0x005958e0	CFastVB__Unk_005958e0	1	CFastVB	CFastVB:1	false
+0x00595c10	CFastVB__Unk_00595c10	1	CFastVB	CFastVB:1	false
+0x00595da0	CFastVB__Unk_00595da0	1	CTexture	CTexture:1	true
+0x005960c1	CFastVB__Unk_005960c1	5	CDXTexture,CFastVB	CFastVB:4;CDXTexture:1	false
+0x00596106	CFastVB__Unk_00596106	1	CDXTexture	CDXTexture:1	true
+0x00596589	CFastVB__Unk_00596589	1	CFastVB	CFastVB:1	false
+0x005968a4	CFastVB__Unk_005968a4	1	CFastVB	CFastVB:1	false
+0x00596e23	CFastVB__Unk_00596e23	3	CFastVB	CFastVB:3	false
+0x0059778a	CFastVB__Unk_0059778a	2	CTexture	CTexture:1	true
+0x0059780d	CFastVB__Unk_0059780d	2	CTexture	CTexture:1	true
+0x00597949	CFastVB__Unk_00597949	1	CTexture	CTexture:1	true
+0x00597a61	CFastVB__Unk_00597a61	2	CFastVB,CTexture	CFastVB:1;CTexture:1	false
+0x00597b87	CFastVB__Unk_00597b87	2	CFastVB,CTexture	CFastVB:1;CTexture:1	false
+0x00598056	CFastVB__Unk_00598056	1	CTexture	CTexture:1	true
+0x0059808a	CFastVB__Unk_0059808a	1	CTexture	CTexture:1	true
+0x00598474	CFastVB__Unk_00598474	1	CFastVB	CFastVB:1	false
+0x005987f4	CFastVB__Unk_005987f4	4	CFastVB,CTexture	CFastVB:3;CTexture:1	false
+0x00598873	CFastVB__Unk_00598873	1			false
+0x005988f5	CFastVB__Unk_005988f5	1			false
+0x00598a56	CFastVB__Unk_00598a56	5	CFastVB,CTexture	CFastVB:2;CTexture:2	false
+0x00598b48	CFastVB__Unk_00598b48	2	CFastVB	CFastVB:1	false
+0x00598b81	CFastVB__Unk_00598b81	1	CFastVB	CFastVB:1	false
+0x00598d6b	CFastVB__Unk_00598d6b	1			false
+0x00598f60	CFastVB__Unk_00598f60	1			false
+0x00598f82	CFastVB__Unk_00598f82	1			false
+0x00598fa4	CFastVB__Unk_00598fa4	1			false
+0x00599161	CFastVB__Unk_00599161	2	CDXTexture,CTexture	CDXTexture:1;CTexture:1	false
+0x0059916d	CFastVB__Unk_0059916d	2	CDXTexture,CTexture	CDXTexture:1;CTexture:1	false
+0x00599258	CFastVB__Unk_00599258	4	CFastVB	CFastVB:4	false
+0x0059930d	CFastVB__Unk_0059930d	1	CFastVB	CFastVB:1	false
+0x00599406	CFastVB__Unk_00599406	1	CFastVB	CFastVB:1	false
+0x005994c4	CFastVB__Unk_005994c4	1	CDXTexture	CDXTexture:1	true
+0x005997a5	CFastVB__Unk_005997a5	1	CFastVB	CFastVB:1	false
+0x005997e1	CFastVB__Unk_005997e1	1	CFastVB	CFastVB:1	false
+0x00599831	CFastVB__Unk_00599831	1	CTexture	CTexture:1	true
+0x00599878	CFastVB__Unk_00599878	1			false
+0x00599b13	CFastVB__Unk_00599b13	4	CDXTexture,CFastVB	CDXTexture:3;CFastVB:1	false
+0x00599b69	CFastVB__Unk_00599b69	2	CFastVB	CFastVB:2	false
+0x0059a21f	CFastVB__Unk_0059a21f	3	CFastVB	CFastVB:3	false
+0x0059a54d	CFastVB__Unk_0059a54d	1	CFastVB	CFastVB:1	false
+0x0059a71a	CFastVB__Unk_0059a71a	2	CFastVB	CFastVB:2	false
+0x0059b4d0	CFastVB__Unk_0059b4d0	1	CTexture	CTexture:1	true
+0x0059b880	CFastVB__Unk_0059b880	1	CTexture	CTexture:1	true
+0x0059c610	CFastVB__Unk_0059c610	2	CFastVB	CFastVB:2	false
+0x0059c630	CFastVB__Unk_0059c630	2	CFastVB,CTexture	CFastVB:1;CTexture:1	false
+0x0059c650	CFastVB__Unk_0059c650	5	CFastVB,CTexture	CFastVB:1;CTexture:1	false
+0x0059c700	CFastVB__Unk_0059c700	1			false
+0x0059ce20	CFastVB__Unk_0059ce20	4	CFastVB	CFastVB:4	false
+0x0059d036	CFastVB__Unk_0059d036	1	CFastVB	CFastVB:1	false
+0x0059d301	CFastVB__Unk_0059d301	1	CFastVB	CFastVB:1	false
+0x0059dad9	CFastVB__Unk_0059dad9	1	CTexture	CTexture:1	true
+0x0059dbbb	CFastVB__Unk_0059dbbb	1	CTexture	CTexture:1	true
+0x0059dd5c	CFastVB__Unk_0059dd5c	1	CTexture	CTexture:1	true
+0x0059dda2	CFastVB__Unk_0059dda2	2	CFastVB	CFastVB:2	false
+0x0059dfb2	CFastVB__Unk_0059dfb2	2	CDXTexture,CTexture	CDXTexture:1;CTexture:1	false
+0x0059ebf0	CFastVB__Unk_0059ebf0	1	CTexture	CTexture:1	true
+0x0059ef60	CFastVB__Unk_0059ef60	1	CDXTexture	CDXTexture:1	true
+0x0059f050	CFastVB__Unk_0059f050	1	CDXTexture	CDXTexture:1	true
+0x0059f110	CFastVB__Unk_0059f110	1	CDXTexture	CDXTexture:1	true
+0x0059f5b3	CFastVB__Unk_0059f5b3	1	CTexture	CTexture:1	true
+0x0059f6dd	CFastVB__Unk_0059f6dd	14	CDXTexture,CFastVB,CTexture	CDXTexture:9;CTexture:4;CFastVB:1	false
+0x005a0b22	CFastVB__Unk_005a0b22	1	CTexture	CTexture:1	true
+0x005a0df6	CFastVB__Unk_005a0df6	1	CTexture	CTexture:1	true
+0x005a0eb6	CFastVB__Unk_005a0eb6	2	CTexture	CTexture:2	true
+0x005a0f50	CFastVB__Unk_005a0f50	2	CTexture	CTexture:2	true
+0x005a1002	CFastVB__Unk_005a1002	2	CTexture	CTexture:2	true
+0x005a1087	CFastVB__Unk_005a1087	2	CTexture	CTexture:2	true
+0x005a1279	CFastVB__Unk_005a1279	2	CTexture	CTexture:2	true
+0x005a1a8e	CFastVB__Unk_005a1a8e	1	CTexture	CTexture:1	true
+0x005a266d	CFastVB__Unk_005a266d	1	CTexture	CTexture:1	true
+0x005a289e	CFastVB__Unk_005a289e	1	CFastVB	CFastVB:1	false
+0x005a298f	CFastVB__Unk_005a298f	1	CTexture	CTexture:1	true
+0x005a2a61	CFastVB__Unk_005a2a61	8	CDXTexture,CTexture	CTexture:7;CDXTexture:1	false
+0x005a2b2d	CFastVB__Unk_005a2b2d	2	CTexture	CTexture:2	true
+0x005a2e29	CFastVB__Unk_005a2e29	1	CTexture	CTexture:1	true
+0x005a38c0	CFastVB__Unk_005a38c0	1	CFastVB	CFastVB:1	false
+0x005a47f2	CFastVB__Unk_005a47f2	1	CFastVB	CFastVB:1	false
+0x005a7617	CFastVB__Unk_005a7617	1	CFastVB	CFastVB:1	false
+0x005a7cf0	CFastVB__Unk_005a7cf0	1	CFastVB	CFastVB:1	false
+0x005a7e09	CFastVB__Unk_005a7e09	1	CFastVB	CFastVB:1	false
+0x005aa0cc	CFastVB__Unk_005aa0cc	1	CFastVB	CFastVB:1	false
+0x005aa2f2	CFastVB__Unk_005aa2f2	1	CFastVB	CFastVB:1	false
+0x005ad590	CFastVB__Unk_005ad590	4			false
+0x005b1db0	CFastVB__Unk_005b1db0	4	CDXTexture,CTexture	CDXTexture:3;CTexture:1	false
+0x005b3440	CFastVB__Unk_005b3440	1			false
+0x005b35b0	CFastVB__Unk_005b35b0	1			false
+0x005b3840	CFastVB__Unk_005b3840	1	CTexture	CTexture:1	true
+0x005b61e0	CFastVB__Unk_005b61e0	1	CDXTexture	CDXTexture:1	true
+0x005b7580	CFastVB__Unk_005b7580	1	CDXTexture	CDXTexture:1	true
+0x005b7770	CFastVB__Unk_005b7770	1	CTexture	CTexture:1	true
+0x005b83b9	CFastVB__Unk_005b83b9	1	CDXTexture	CDXTexture:1	true
+0x005b85c0	CFastVB__Unk_005b85c0	1	CMeshCollisionVolume	CMeshCollisionVolume:1	true
+0x005b86c0	CFastVB__Unk_005b86c0	6	CDXTexture,CFastVB,CTexture	CTexture:4;CDXTexture:1;CFastVB:1	false
+0x005b8ca0	CFastVB__Unk_005b8ca0	14	CFastVB,CTexture	CFastVB:4;CTexture:3	false
+0x005bcfa0	CFastVB__Unk_005bcfa0	2	CDXTexture	CDXTexture:2	true
+0x005bcfd3	CFastVB__Unk_005bcfd3	1	CDXTexture	CDXTexture:1	true
+0x005bda2d	CFastVB__Unk_005bda2d	1	CDXTexture	CDXTexture:1	true
+0x005bda5e	CFastVB__Unk_005bda5e	7	CDXTexture,CFastVB	CFastVB:4;CDXTexture:3	false
+0x005be628	CFastVB__Unk_005be628	21	CD3DApplication,CDXFrontEndVideo,CDXLandscape,CDXShadows,CDXTexture,CEngine,CVBufTexture,CVertexShader	CVBufTexture:6;CEngine:3;CD3DApplication:2;CDXLandscape:2;CDXTexture:2;CDXFrontEndVideo:1;CDXShadows:1;CVertexShader:1	false
+0x005d0e88	CFastVB__Unk_005d0e88	1	CDXTexture	CDXTexture:1	true
+0x005d0eb8	CFastVB__Unk_005d0eb8	1	CTexture	CTexture:1	true

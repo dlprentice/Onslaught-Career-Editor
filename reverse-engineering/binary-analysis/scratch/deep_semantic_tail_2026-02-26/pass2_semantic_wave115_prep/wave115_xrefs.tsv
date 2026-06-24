@@ -1,0 +1,6 @@
+target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
+00447ac0	CUnitAI__Unk_00447ac0	005e1fb4	<none>	<no_function>	DATA
+00447b10	CUnitAI__Unk_00447b10	005e1fb8	<none>	<no_function>	DATA
+00447b60	CUnitAI__Unk_00447b60	0044866d	<none>	<no_function>	UNCONDITIONAL_CALL
+00447bb0	CUnitAI__Unk_00447bb0	00448690	<none>	<no_function>	UNCONDITIONAL_CALL
+00447fa0	CUnitAI__Unk_00447fa0	005e1ec4	<none>	<no_function>	DATA

@@ -1,0 +1,7 @@
+address	old_name	new_name	top_owner	top_owner_count	owner_counter
+0x00402010	CUnit__Unk_00402010	CUnitAI__Helper_00402010	CUnitAI	2	CEngine:1; CUnit:2; CUnitAI:2
+0x00409e60	CGeneralVolume__Unk_00409e60	CGeneralVolume_Unk_00409e60__Helper_00409e60	CGeneralVolume_Unk_00409e60	2	CGeneralVolume:2; CGeneralVolume_Unk_00409e60:2; CMonitor:1
+0x0040d5f0	CGeneralVolume__Unk_0040d5f0	CBattleEngine__Helper_0040d5f0	CBattleEngine	3	CBattleEngine:3
+0x004c10c0	CPDSimpleSprite__Unk_004c10c0	CEngine__Helper_004c10c0	CEngine	30	CEngine:30; CPDSimpleSprite:56
+0x004fd140	CUnit__Unk_004fd140	CUnitAI__Helper_004fd140	CUnitAI	2	CCannon:1; CInfluenceMap:1; CUnit:2; CUnitAI:2
+0x0057d32e	CWaypointManager__Unk_0057d32e	CDXTexture__Helper_0057d32e	CDXTexture	2	CDXTexture:2; CWaypointManager:2

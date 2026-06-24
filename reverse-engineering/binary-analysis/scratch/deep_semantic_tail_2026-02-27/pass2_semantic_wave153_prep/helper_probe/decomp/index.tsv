@@ -1,0 +1,14 @@
+address	name	signature	status
+0x00577ea4	CTexture__Helper_00577ea4	void __stdcall CTexture__Helper_00577ea4(int param_1, int param_2, int param_3, int param_4)	OK
+0x00575986	CDXTexture__Helper_00575986	int __stdcall CDXTexture__Helper_00575986(float param_1, float param_2)	OK
+0x00577267	CDXEngine__Helper_00577267	void __stdcall CDXEngine__Helper_00577267(int param_1, int param_2, int param_3, int param_4)	OK
+0x00575d2d	CFastVB__Helper_00575d2d	void CFastVB__Helper_00575d2d(void)	OK
+0x00575d51	CFastVB__Helper_00575d51	void CFastVB__Helper_00575d51(void)	OK
+0x00575d75	CFastVB__Helper_00575d75	void CFastVB__Helper_00575d75(void)	OK
+0x00575d99	CTexture__Helper_00575d99	void CTexture__Helper_00575d99(void)	OK
+0x0057600b	CVBufTexture__Helper_0057600b	void CVBufTexture__Helper_0057600b(void)	OK
+0x0057618b	CFastVB__Helper_0057618b	void CFastVB__Helper_0057618b(void)	OK
+0x00576297	CDXEngine__Helper_00576297	void CDXEngine__Helper_00576297(void)	OK
+0x0057923a	CTexture__Unk_0057923a	int __stdcall CTexture__Unk_0057923a(int param_1, int param_2, int param_3, int param_4)	OK
+0x00578bad	CDXTexture__Unk_00578bad	void CDXTexture__Unk_00578bad(void)	OK
+0x00578f53	CFastVB__ApplyOptionalTransformPasses	void CFastVB__ApplyOptionalTransformPasses(void)	OK

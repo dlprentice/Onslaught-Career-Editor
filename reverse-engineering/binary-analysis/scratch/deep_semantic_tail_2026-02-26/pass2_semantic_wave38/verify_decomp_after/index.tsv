@@ -1,0 +1,3 @@
+address	name	signature	status
+0x004f3a50	CCSPersistentThing__scalar_deleting_dtor	void * __thiscall CCSPersistentThing__scalar_deleting_dtor(void * this, void * param_1, int param_2)	OK
+0x004f3a70	CCSPersistentThing__dtor	void __fastcall CCSPersistentThing__dtor(int param_1)	OK

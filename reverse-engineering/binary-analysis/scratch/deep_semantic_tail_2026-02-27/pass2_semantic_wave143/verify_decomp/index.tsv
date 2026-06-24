@@ -1,0 +1,9 @@
+address	name	signature	status
+0x0057d446	CWaypointManager__InitMmxDispatchAndRun	void CWaypointManager__InitMmxDispatchAndRun(void)	OK
+0x004d38c0	CInfluenceMap__TryUnitCleanupAndReturnTrue	int CInfluenceMap__TryUnitCleanupAndReturnTrue(void)	OK
+0x0053c510	CVBufTexture__UpdateDynamicOverlayTexture	void __thiscall CVBufTexture__UpdateDynamicOverlayTexture(void * this, int param_1, int param_2)	OK
+0x0057770b	CFastVB__BuildTransformMatrixWithOffsets	int CFastVB__BuildTransformMatrixWithOffsets(void)	OK
+0x005779ae	CFastVB__BuildAxisAngleQuaternion	float * __stdcall CFastVB__BuildAxisAngleQuaternion(void * param_1, int param_2, float param_3)	OK
+0x00578f53	CFastVB__ApplyOptionalTransformPasses	void CFastVB__ApplyOptionalTransformPasses(void)	OK
+0x0057e200	CFastVB__BlendEqualDimensionVolumeData	int __fastcall CFastVB__BlendEqualDimensionVolumeData(void * param_1)	OK
+0x0057e2de	CFastVB__BlendClampedVolumeData	int __fastcall CFastVB__BlendClampedVolumeData(void * param_1)	OK

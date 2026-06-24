@@ -1,0 +1,21 @@
+address	name	signature	status
+0x00574b9d	CDXTexture__CopyOrUploadSurfaceRegionWithFallback	int CDXTexture__CopyOrUploadSurfaceRegionWithFallback(void)	OK
+0x0057516c	CDXTexture__DecodeMemoryToTextureObject	int CDXTexture__DecodeMemoryToTextureObject(void)	OK
+0x005758e6	CDXTexture__DecodeMappedMemoryEntry	void CDXTexture__DecodeMappedMemoryEntry(void)	OK
+0x00575923	CDXTexture__DecodeMappedFileToTexture	int __stdcall CDXTexture__DecodeMappedFileToTexture(void * param_1, void * param_2)	OK
+0x005759c3	CDXTexture__PackTexels_DispatchIndirect_005759c3	void CDXTexture__PackTexels_DispatchIndirect_005759c3(void)	OK
+0x00575a65	CDXTexture__UnpackTexels_DispatchIndirect_00575a65	void CDXTexture__UnpackTexels_DispatchIndirect_00575a65(void)	OK
+0x00579ca5	CDXTexture__InitSurfaceNodeZeroed	void __fastcall CDXTexture__InitSurfaceNodeZeroed(void * param_1)	OK
+0x00579cbe	CDXTexture__FreeSurfaceNodeTree	void __fastcall CDXTexture__FreeSurfaceNodeTree(int param_1)	OK
+0x00579d17	CDXTexture__SurfaceNode_scalar_deleting_dtor	void * __thiscall CDXTexture__SurfaceNode_scalar_deleting_dtor(void * this, void * param_1, int param_2)	OK
+0x0057bf1f	CDXTexture__BuildDdsSurfaceNodeTree	int __thiscall CDXTexture__BuildDdsSurfaceNodeTree(void * this, void * param_1, void * param_2, void * param_3)	OK
+0x0057d47e	CDXTexture__InitMmxDispatchAndRun	void CDXTexture__InitMmxDispatchAndRun(void)	OK
+0x00581e8c	CDXTexture__NormalizeAndCopyVec4Array	int __thiscall CDXTexture__NormalizeAndCopyVec4Array(void * this, int param_1, int param_2)	OK
+0x005961d0	CDXTexture__MultiplyMatrix4x4_InPlaceSafe	void __stdcall CDXTexture__MultiplyMatrix4x4_InPlaceSafe(void * param_1, void * param_2, void * param_3)	OK
+0x005962b3	CDXTexture__MultiplyMatrix4x4_Safe	void __stdcall CDXTexture__MultiplyMatrix4x4_Safe(void * param_1, void * param_2, void * param_3)	OK
+0x0059902a	CDXTexture__RegisterSerializedChunk	int CDXTexture__RegisterSerializedChunk(void)	OK
+0x00599406	CDXTexture__SerializeFloatGridChunk	int __stdcall CDXTexture__SerializeFloatGridChunk(void * param_1, void * param_2, void * param_3, void * param_4)	OK
+0x005994c4	CDXTexture__ProcessTextureChunkAndEmitBindings	int CDXTexture__ProcessTextureChunkAndEmitBindings(void)	OK
+0x0059b920	CDXTexture__DecodeState_RunPostFrameCallbacks	void __stdcall CDXTexture__DecodeState_RunPostFrameCallbacks(int param_1)	OK
+0x0059b960	CDXTexture__DecodeState_AdvanceFrame	int __stdcall CDXTexture__DecodeState_AdvanceFrame(void * param_1)	OK
+0x0059be70	CDXTexture__AllocDecodeBlockAndLink	int CDXTexture__AllocDecodeBlockAndLink(void)	OK

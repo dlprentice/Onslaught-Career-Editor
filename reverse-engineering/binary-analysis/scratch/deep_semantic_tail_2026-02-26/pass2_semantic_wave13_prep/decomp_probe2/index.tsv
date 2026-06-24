@@ -1,0 +1,6 @@
+address	name	signature	status
+0x004693d0	CFEPMain__Helper_004693d0	uint __cdecl CFEPMain__Helper_004693d0(int param_1, int param_2, int param_3, int param_4)	OK
+0x00523cc0	CVBufTexture__Unk_00523cc0	uint __cdecl CVBufTexture__Unk_00523cc0(float param_1, float param_2, float param_3, float param_4)	OK
+0x004e2c50	CUnit__Unk_004e2c50	void __fastcall CUnit__Unk_004e2c50(void * param_1)	OK
+0x004fd380	CUnit__Unk_004fd380	int __fastcall CUnit__Unk_004fd380(int param_1)	OK
+0x0044dea0	CUnitAI__Unk_0044dea0	int __fastcall CUnitAI__Unk_0044dea0(int param_1)	OK

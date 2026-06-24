@@ -1,0 +1,238 @@
+{
+  "schemaVersion": "static-to-proof-next-safe-slice-selection-refresh.v1",
+  "status": "PASS",
+  "selectionRefreshStatus": "static-to-proof-next-safe-slice-selection-refresh-complete-vector-range-deterministic-helper-fixture-selected",
+  "previousSlice": "Save / Options Byte-Preservation AppCore Fixture Matrix Proof",
+  "selectedChildLane": "MissionScript Vector/Range Command-Effect Deterministic Helper Fixture Proof Plan",
+  "selectedChildScope": "missionscript-vector-range-deterministic-helper-fixture-proof-plan",
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "staticAccountingSource": "static-reaudit-measurement-register.md",
+    "latestGhidraBackupClass": "verified-static-backup-redacted"
+  },
+  "selectionAccounting": {
+    "consultCount": 2,
+    "candidateCount": 4,
+    "selectedCandidateRank": 1,
+    "selectedSourceProofCount": 4,
+    "completedSlotSaveChainCount": 8,
+    "selectionFalseGuardCount": 31,
+    "selectionZeroCounterCount": 26,
+    "publicLeakCheck": "PASS"
+  },
+  "sourceEvidence": {
+    "previousMatrix": {
+      "path": "reverse-engineering/binary-analysis/save-options-byte-preservation-appcore-fixture-matrix-proof.md",
+      "schema": "reverse-engineering/binary-analysis/save-options-byte-preservation-appcore-fixture-matrix.v1.json",
+      "statusToken": "save-options-byte-preservation-appcore-fixture-matrix-complete-copied-real-baseline-services-not-runtime-proof",
+      "fixtureFamilyCount": 8,
+      "appCoreFixtureCaseCount": 36,
+      "runtimeExecution": false,
+      "beLaunch": false,
+      "godotWork": false,
+      "rebuildImplementation": false
+    },
+    "priorFixtureSelection": {
+      "path": "reverse-engineering/binary-analysis/missionscript-command-effect-fixture-selection.md",
+      "schema": "reverse-engineering/binary-analysis/missionscript-command-effect-fixture-selection.v1.json",
+      "candidateFamilyCount": 9,
+      "alreadySelectedFamily": "slot-bitset-save",
+      "alreadySelectedFollowThrough": [
+        "MissionScript Slot Bitset/Save Rebuild Fixture Proof Plan",
+        "MissionScript Slot Bitset/Save Deterministic Codec Proof Plan",
+        "MissionScript Slot Bitset/Save Copied-File Byte-Diff Proof",
+        "MissionScript Slot Bitset/Save Clean-Room Codec Interface Proof",
+        "MissionScript Slot Bitset/Save AppCore Copied-Baseline Codec Harness Proof",
+        "MissionScript Slot Bitset/Save Runtime-Proof Readiness Gate",
+        "MissionScript Slot Bitset/Save AppCore Boundary-Slot Corpus Proof",
+        "MissionScript Slot Bitset/Save AppCore Copied-Baseline Boundary Corpus Harness Proof"
+      ],
+      "deferredRankForVectorRange": 2
+    },
+    "vectorRangeStaticProof": {
+      "path": "reverse-engineering/binary-analysis/missionscript-vector-range-command-effect-static-proof.md",
+      "schema": "reverse-engineering/binary-analysis/missionscript-vector-range-command-effect.v1.json",
+      "descriptorRecordCount": 9,
+      "vectorHandlerCount": 5,
+      "wave581InstructionRows": 3545,
+      "wave581VtableRows": 24,
+      "directNonCommentLooseMslRows": 0,
+      "floatVtable": "0x005e4ea4",
+      "boolVtable": "0x005e4d50",
+      "vectorGetterSlot": "+0x44",
+      "floatGetterSlot": "+0x34",
+      "componentOffsets": ["+0", "+4", "+8"],
+      "handlers": [
+        "0x005345d0 IScript__GetVectorLength",
+        "0x005347b0 IScript__CheckValueInRange",
+        "0x00534b80 IScript__GetVectorX",
+        "0x00534c10 IScript__GetVectorY",
+        "0x00534ca0 IScript__GetVectorZ"
+      ]
+    },
+    "commandEffectRollup": {
+      "path": "reverse-engineering/binary-analysis/missionscript-command-effect-rebuild-interface-rollup.md",
+      "schema": "reverse-engineering/binary-analysis/missionscript-command-effect-rebuild-interface-rollup.v1.json",
+      "commandFamilyCount": 9,
+      "descriptorRecordCount": 52,
+      "uniqueDescriptorTokenCount": 48
+    }
+  },
+  "candidateRanking": [
+    {
+      "rank": 1,
+      "lane": "MissionScript Vector/Range Command-Effect Deterministic Helper Fixture Proof Plan",
+      "decision": "selected",
+      "rationale": "Safest new non-runtime implementation-facing fixture: pure static/math helper behavior, five finite handlers, deterministic vector/component/range semantics, zero direct non-comment loose-MSL rows, and no copied-save, UI, private-frame, patch, Godot, or runtime dependency."
+    },
+    {
+      "rank": 2,
+      "lane": "MissionScript Goodie State / Save Command-Effect Fixture Proof Plan",
+      "decision": "deferred",
+      "rationale": "Useful save-adjacent family, but it risks Goodies wall, save/load, and AddScore alias-boundary overclaiming before the pure helper lane is exhausted."
+    },
+    {
+      "rank": 3,
+      "lane": "MissionScript Cutscene Pan-Camera / Position Fixture Proof Plan",
+      "decision": "deferred",
+      "rationale": "Useful later, but it couples quickly to camera switching, GetThingRef(\"Fenrir\"), visible output, cutscene playback, and runtime object identity."
+    },
+    {
+      "rank": 4,
+      "lane": "PhysicsScript Parser/Rebuild Contract Extension Proof Plan",
+      "decision": "deferred",
+      "rationale": "Valuable parser work, but lower immediate value than advancing the already-ranked MissionScript command-effect fixture queue with a pure helper lane."
+    }
+  ],
+  "futureEvidenceRequirements": [
+    {
+      "row": "deterministic-vector-length",
+      "requirement": "Define public deterministic vectors for length behavior using sqrt(x*x+y*y+z*z).",
+      "boundary": "Pure helper fixture only; not runtime MissionScript execution."
+    },
+    {
+      "row": "deterministic-range",
+      "requirement": "Define ascending and descending range cases for the observed in-range comparison shape.",
+      "boundary": "Pure helper fixture only; not runtime command effects."
+    },
+    {
+      "row": "component-extractors",
+      "requirement": "Define X/Y/Z component extraction fixtures from component offsets +0, +4, and +8.",
+      "boundary": "Pure helper fixture only; not exact vector layout proof."
+    },
+    {
+      "row": "descriptor-boundary",
+      "requirement": "Preserve raw descriptor rows as context only, especially placeholder or conflicting observed name symbols.",
+      "boundary": "No exact descriptor layout, arity, or argument schema claim."
+    },
+    {
+      "row": "runtime-stop",
+      "requirement": "Stop if the proof needs live MissionScript execution, BEA launch, frame review, private output, native input, debugger attachment, Godot, Ghidra mutation, executable patching, or rebuild implementation.",
+      "boundary": "Defer instead of broadening."
+    }
+  ],
+  "guardSummary": {
+    "falseGuards": {
+      "runtimeExecution": false,
+      "beLaunch": false,
+      "newLaunch": false,
+      "screenshotCapture": false,
+      "privateFrameReviewPerformed": false,
+      "rowObservation": false,
+      "exactTextOcrPerformed": false,
+      "rawDialoguePublished": false,
+      "visibleTextExcerptPublished": false,
+      "sourceSelectionObserved": false,
+      "nativeInput": false,
+      "debuggerAttachment": false,
+      "godotWork": false,
+      "ghidraMutation": false,
+      "executablePatching": false,
+      "productUiWired": false,
+      "rebuildImplementation": false,
+      "runtimeMissionScriptExecutionProven": false,
+      "runtimeCommandEffectsProven": false,
+      "runtimeVectorRangeBehaviorProven": false,
+      "liveLooseMslLoading": false,
+      "packedResourceScriptSelectionProven": false,
+      "exactCommandDescriptorLayoutProven": false,
+      "exactCommandArityProven": false,
+      "exactArgumentTypeSchemaProven": false,
+      "exactDatatypeLayoutProven": false,
+      "exactVectorLayoutProven": false,
+      "runtimeSaveLoadProof": false,
+      "runtimeDefaultOptionsProof": false,
+      "rebuildParityProven": false,
+      "noNoticeableDifferenceParityProven": false
+    },
+    "zeroCounters": {
+      "runtimeObservationRows": 0,
+      "missionScriptRuntimeEvidenceRows": 0,
+      "runtimeCommandEffectRows": 0,
+      "runtimeVectorRangeRows": 0,
+      "privateFrameRowsObserved": 0,
+      "rowObservationRows": 0,
+      "sourceObservedRows": 0,
+      "sourceRuntimeObservationRows": 0,
+      "sourceRowStatusChangedCount": 0,
+      "newLaunchRows": 0,
+      "captureRows": 0,
+      "ocrRows": 0,
+      "rawDialogueRows": 0,
+      "ghidraMutationRows": 0,
+      "executablePatchRows": 0,
+      "productUiRows": 0,
+      "godotRows": 0,
+      "rebuildImplementationRows": 0,
+      "beProcessesAfterSelection": 0,
+      "publicAbsolutePathLeakCount": 0,
+      "publicSha256ValueLeakCount": 0,
+      "publicWindowIdentifierLeakCount": 0,
+      "publicProcessIdentifierLeakCount": 0,
+      "privatePathLeakCount": 0,
+      "rawArtifactLeakCount": 0,
+      "rawDialogueLeakCount": 0
+    }
+  },
+  "stopConditions": [
+    "BEA launch or process observation",
+    "screenshot/frame capture, OCR, row observation, raw dialogue publication, or private-frame review",
+    "runtime MissionScript execution, runtime command effects, live loose-MSL loading, or packed-resource script selection",
+    "native input, debugger attachment, executable patching, Ghidra mutation, product UI wiring, or Godot project work",
+    "exact descriptor/datatype/vector layout, exact arity, exact argument schema, rebuild implementation, rebuild parity, or no-noticeable-difference parity"
+  ],
+  "claimBoundary": {
+    "proves": [
+      "the post-matrix next-safe-slice refresh completed without reusing the stale Level100-parented selection artifact",
+      "the completed slot/save and save/options chains are accounted for as already completed rather than reselected",
+      "the selected next child lane is a static, public-safe, deterministic MissionScript vector/range helper fixture plan"
+    ],
+    "doesNotProve": [
+      "runtime MissionScript execution",
+      "runtime command effects",
+      "runtime vector behavior",
+      "runtime range behavior",
+      "live loose-MSL loading",
+      "packed-resource script selection",
+      "exact descriptor layout",
+      "exact command arity",
+      "exact argument type schema",
+      "exact datatype layout",
+      "exact vector layout",
+      "source-selection observation",
+      "private-frame review",
+      "visual QA",
+      "Godot parity",
+      "Ghidra mutation",
+      "executable patching behavior",
+      "product UI behavior",
+      "rebuild implementation",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  }
+}

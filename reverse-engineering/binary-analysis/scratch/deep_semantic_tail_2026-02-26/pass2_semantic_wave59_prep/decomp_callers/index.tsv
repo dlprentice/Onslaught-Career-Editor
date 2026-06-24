@@ -1,0 +1,7 @@
+address	name	signature	status
+0x00589cab	CTexture__Unk_00589cab	int __fastcall CTexture__Unk_00589cab(int param_1)	OK
+0x0058bd25	CTexture__Unk_0058bd25	int CTexture__Unk_0058bd25(void)	OK
+0x0057af0a	CDXTexture__Unk_0057af0a	int __stdcall CDXTexture__Unk_0057af0a(int param_1, int param_2)	OK
+0x0059881b	CTexture__Unk_0059881b	int __thiscall CTexture__Unk_0059881b(void * this, void * param_1, int param_2)	OK
+0x00598e5d	CDXTexture__Unk_00598e5d	int __thiscall CDXTexture__Unk_00598e5d(void * this, void * param_1, int param_2)	OK
+0x0058c396	CMeshCollisionVolume__Helper_0058c396	int CMeshCollisionVolume__Helper_0058c396(void)	OK

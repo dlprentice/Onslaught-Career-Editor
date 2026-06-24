@@ -1,0 +1,453 @@
+{
+  "schemaVersion": "missionscript-vm-datatype-opcode-schema.v1",
+  "status": "PASS",
+  "source": {
+    "evidenceWaves": [
+      "Wave573",
+      "Wave574",
+      "Wave575",
+      "Wave587",
+      "Wave1189"
+    ],
+    "runtimeExecution": false,
+    "ghidraMutation": false,
+    "schemaPurpose": "static clean-room interpreter planning, not runtime proof"
+  },
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+  },
+  "evidenceCounts": {
+    "wave573MetadataRows": 14,
+    "wave574MetadataRows": 15,
+    "wave574DispatchSlotRows": 112,
+    "wave575MetadataRows": 12,
+    "wave575DatatypeVtableRows": 384,
+    "wave587MetadataRows": 22,
+    "wave587VtableRows": 64,
+    "wave1189MetadataRows": 7
+  },
+  "opcodeFactory": {
+    "function": "0x0052d3d0 CAsmInstruction__SpawnFromOpcode",
+    "serializedOpcodeRange": "0x00..0x1a",
+    "declaredOpcodeCases": 27,
+    "instructionAllocationBytes": 12,
+    "attributeRead": "second dword from bytecode_reader stored at instruction+0x04",
+    "unknownOpcodeBehavior": "prints fatal unknown-instruction diagnostic and returns null",
+    "provenExecutorCases": 19,
+    "unpromotedCases": 8
+  },
+  "opcodeCases": [
+    {
+      "opcode": 0,
+      "label": "NOOP_0",
+      "vtable": "0x005e4d40",
+      "executor": "SharedVFunc__NoOp_Ret0C",
+      "executorAddress": "0x00453ac0",
+      "status": "observed-shared-noop"
+    },
+    {
+      "opcode": 1,
+      "label": "PLUS",
+      "vtable": "0x005e4d30",
+      "executor": "CInstructionOP_PLUS__VFunc_00_0052e180",
+      "executorAddress": "0x0052e180",
+      "datatypeSlot": "+0x04",
+      "stackEffect": "pop2-dispatch-push1"
+    },
+    {
+      "opcode": 2,
+      "label": "MINUS",
+      "vtable": "0x005e4d20",
+      "executor": "CInstructionOP_MINUS__VFunc_00_0052e1d0",
+      "executorAddress": "0x0052e1d0",
+      "datatypeSlot": "+0x08",
+      "stackEffect": "pop2-dispatch-push1"
+    },
+    {
+      "opcode": 3,
+      "label": "MULTIPLY",
+      "vtable": "0x005e4d10",
+      "executor": "CInstructionOP_MULTIPLY__VFunc_00_0052e220",
+      "executorAddress": "0x0052e220",
+      "datatypeSlot": "+0x0c",
+      "stackEffect": "pop2-dispatch-push1"
+    },
+    {
+      "opcode": 4,
+      "label": "DIVIDE",
+      "vtable": "0x005e4d00",
+      "executor": "CInstructionOP_DIVIDE__VFunc_00_0052e270",
+      "executorAddress": "0x0052e270",
+      "datatypeSlot": "+0x10",
+      "stackEffect": "pop2-dispatch-push1"
+    },
+    {
+      "opcode": 5,
+      "label": "PUSH",
+      "vtable": "0x005e4cf0",
+      "executor": "CInstructionOP_PUSH__VFunc_00_0052e2c0",
+      "executorAddress": "0x0052e2c0",
+      "stackEffect": "push attribute datatype"
+    },
+    {
+      "opcode": 6,
+      "label": "UNPROMOTED_06",
+      "vtable": "0x005e4ce0",
+      "executor": null,
+      "status": "vtable-pointer-observed-no-function-at-pointer"
+    },
+    {
+      "opcode": 7,
+      "label": "OR",
+      "vtable": "0x005e4cd0",
+      "executor": "CAsmInstruction__ExecuteOr",
+      "executorAddress": "0x0052e4d0",
+      "stackEffect": "pop2-bool-or-push1"
+    },
+    {
+      "opcode": 8,
+      "label": "AND",
+      "vtable": "0x005e4cc0",
+      "executor": "CAsmInstruction__ExecuteAnd",
+      "executorAddress": "0x0052e580",
+      "stackEffect": "pop2-bool-and-push1"
+    },
+    {
+      "opcode": 9,
+      "label": "GREATER_THAN",
+      "vtable": "0x005e4cb0",
+      "executor": "CAsmInstruction__ExecuteGreaterThan",
+      "executorAddress": "0x0052e630",
+      "datatypeSlot": "+0x24",
+      "stackEffect": "pop2-compare-push-bool"
+    },
+    {
+      "opcode": 10,
+      "label": "LESS_THAN",
+      "vtable": "0x005e4ca0",
+      "executor": "CAsmInstruction__ExecuteLessThan",
+      "executorAddress": "0x0052e6d0",
+      "datatypeSlot": "+0x20",
+      "stackEffect": "pop2-compare-push-bool"
+    },
+    {
+      "opcode": 11,
+      "label": "GREATER_OR_EQUAL",
+      "vtable": "0x005e4c90",
+      "executor": "CAsmInstruction__ExecuteGreaterOrEqual",
+      "executorAddress": "0x0052e770",
+      "datatypeSlot": "+0x2c",
+      "stackEffect": "pop2-compare-push-bool"
+    },
+    {
+      "opcode": 12,
+      "label": "LESS_OR_EQUAL",
+      "vtable": "0x005e4c80",
+      "executor": "CAsmInstruction__ExecuteLessOrEqual",
+      "executorAddress": "0x0052e810",
+      "datatypeSlot": "+0x28",
+      "stackEffect": "pop2-compare-push-bool"
+    },
+    {
+      "opcode": 13,
+      "label": "NOOP_0D",
+      "vtable": "0x005e4c70",
+      "executor": "SharedVFunc__NoOp_Ret0C",
+      "executorAddress": "0x00453ac0",
+      "status": "observed-shared-noop"
+    },
+    {
+      "opcode": 14,
+      "label": "UNPROMOTED_0E",
+      "vtable": "0x005e4c60",
+      "executor": null,
+      "status": "vtable-pointer-observed-no-function-at-pointer"
+    },
+    {
+      "opcode": 15,
+      "label": "CMP",
+      "vtable": "0x005e4c50",
+      "executor": "CInstructionOP_CMP__VFunc_00_0052e330",
+      "executorAddress": "0x0052e330",
+      "datatypeSlot": "+0x18",
+      "stackEffect": "peek2-set-script_state+0x218"
+    },
+    {
+      "opcode": 16,
+      "label": "COMPARE_EQUAL",
+      "vtable": "0x005e4c40",
+      "executor": "CAsmInstruction__ExecuteCompareEqual",
+      "executorAddress": "0x0052e380",
+      "datatypeSlot": "+0x18",
+      "stackEffect": "pop2-compare-push-bool"
+    },
+    {
+      "opcode": 17,
+      "label": "COMPARE_NOT_EQUAL",
+      "vtable": "0x005e4c30",
+      "executor": "CAsmInstruction__ExecuteCompareNotEqual",
+      "executorAddress": "0x0052e8b0",
+      "datatypeSlot": "+0x1c",
+      "stackEffect": "pop2-compare-push-bool"
+    },
+    {
+      "opcode": 18,
+      "label": "UNPROMOTED_12",
+      "vtable": "0x005e4c20",
+      "executor": null,
+      "status": "vtable-pointer-observed-no-function-at-pointer"
+    },
+    {
+      "opcode": 19,
+      "label": "JMPFALSE",
+      "vtable": "0x005e4c10",
+      "executor": "CInstructionOP_JMPFALSE__VFunc_00_0052e950",
+      "executorAddress": "0x0052e950",
+      "stackEffect": "pop1-branch-if-false"
+    },
+    {
+      "opcode": 20,
+      "label": "UNPROMOTED_14",
+      "vtable": "0x005e4c00",
+      "executor": null,
+      "status": "vtable-pointer-observed-no-function-at-pointer"
+    },
+    {
+      "opcode": 21,
+      "label": "UNPROMOTED_15",
+      "vtable": "0x005e4bf0",
+      "executor": null,
+      "status": "vtable-pointer-observed-no-function-at-pointer"
+    },
+    {
+      "opcode": 22,
+      "label": "UNPROMOTED_16",
+      "vtable": "0x005e4be0",
+      "executor": null,
+      "status": "vtable-pointer-observed-no-function-at-pointer"
+    },
+    {
+      "opcode": 23,
+      "label": "POP_OR_STOP",
+      "vtable": "0x005e4bd0",
+      "executor": "CAsmInstruction__ExecutePop",
+      "executorAddress": "0x0052e0f0",
+      "stackEffect": "pop1-set-ip/status; VM loop also treats opcode 0x17 as stop candidate"
+    },
+    {
+      "opcode": 24,
+      "label": "CALL",
+      "vtable": "0x005e4bc0",
+      "executor": "CAsmInstruction__ExecuteCall",
+      "executorAddress": "0x0052ea40",
+      "stackEffect": "pop arguments-dispatch-descriptor-push result"
+    },
+    {
+      "opcode": 25,
+      "label": "UNPROMOTED_19",
+      "vtable": "0x005e4bb0",
+      "executor": null,
+      "status": "vtable-pointer-observed-no-function-at-pointer"
+    },
+    {
+      "opcode": 26,
+      "label": "UNPROMOTED_1A",
+      "vtable": "0x005e4ba0",
+      "executor": null,
+      "status": "vtable-pointer-observed-no-function-at-pointer"
+    }
+  ],
+  "datatypeFactory": {
+    "function": "0x0052ec60 CDataType__CreateFromType",
+    "serializedTypeRange": "1..6",
+    "declaredTypeCases": 6,
+    "unknownTypeBehavior": "prints fatal unknown-data-type diagnostic and returns null"
+  },
+  "datatypeCases": [
+    {
+      "typeId": 1,
+      "label": "int",
+      "className": "CIntDataType",
+      "vtable": "0x005e4af8",
+      "sizeBytes": 8,
+      "payloadReads": [
+        "+0x04 dword"
+      ],
+      "observedValueGetterSlot": "+0x30"
+    },
+    {
+      "typeId": 2,
+      "label": "float",
+      "className": "CFloatDataType",
+      "vtable": "0x005e4ea4",
+      "sizeBytes": 8,
+      "payloadReads": [
+        "+0x04 dword/float"
+      ],
+      "observedValueGetterSlot": "+0x34"
+    },
+    {
+      "typeId": 3,
+      "label": "string",
+      "className": "CStringDataType",
+      "vtable": "0x005e4e4c",
+      "sizeBytes": 8,
+      "payloadReads": [
+        "length dword",
+        "heap string copy plus NUL"
+      ],
+      "observedValueGetterSlot": "+0x38"
+    },
+    {
+      "typeId": 4,
+      "label": "bool",
+      "className": "CBoolDataType",
+      "vtable": "0x005e4d50",
+      "sizeBytes": 8,
+      "payloadReads": [
+        "+0x04 dword/byte-like bool"
+      ],
+      "observedValueGetterSlot": "+0x3c"
+    },
+    {
+      "typeId": 5,
+      "label": "thing-ptr",
+      "className": "CThingPtrDataType",
+      "vtable": "0x005e4df8",
+      "sizeBytes": 8,
+      "payloadReads": [
+        "serialized token read into local; stored pointer zeroed"
+      ],
+      "observedValueGetterSlot": "+0x40",
+      "openBoundary": "exact serialized thing-pointer token semantics remain unproven"
+    },
+    {
+      "typeId": 6,
+      "label": "position",
+      "className": "CPositionDataType",
+      "vtable": "0x005e4da4",
+      "sizeBytes": 20,
+      "payloadReads": [
+        "+0x04 float",
+        "+0x08 float",
+        "+0x0c float"
+      ],
+      "observedValueGetterSlot": "+0x44",
+      "openBoundary": "+0x10 field role remains unproven"
+    }
+  ],
+  "vmRunLoop": {
+    "function": "0x00539b00 CScriptObjectCode__Run",
+    "dispatchShape": "instruction vtable slot 0 called with runtime_state, runtime_state+0x0c data stack, and script_object_code+0x58 context argument",
+    "opcodeGetterShape": "instruction vtable slot +0x08 returns opcode for loop stop checks",
+    "stopOpcode": "0x17 when call-depth at runtime_state+0x224 is <= 0",
+    "instructionLimit": 10000,
+    "stateOffsets": [
+      {
+        "owner": "runtime_state",
+        "offset": "+0x08",
+        "role": "active script/object-code context pointer source"
+      },
+      {
+        "owner": "runtime_state",
+        "offset": "+0x0c",
+        "role": "data-stack base passed to opcode executors"
+      },
+      {
+        "owner": "runtime_state",
+        "offset": "+0x20c",
+        "role": "data-stack count"
+      },
+      {
+        "owner": "runtime_state",
+        "offset": "+0x210",
+        "role": "running/recursive-run guard"
+      },
+      {
+        "owner": "runtime_state",
+        "offset": "+0x214",
+        "role": "instruction pointer"
+      },
+      {
+        "owner": "runtime_state",
+        "offset": "+0x218",
+        "role": "flags field modified by CMP"
+      },
+      {
+        "owner": "runtime_state",
+        "offset": "+0x21c",
+        "role": "expected/saved stack size checked at run end"
+      },
+      {
+        "owner": "runtime_state",
+        "offset": "+0x220",
+        "role": "abort flag set by instruction-limit path"
+      },
+      {
+        "owner": "runtime_state",
+        "offset": "+0x224",
+        "role": "call-depth / stop gating counter"
+      },
+      {
+        "owner": "script_object_code",
+        "offset": "+0x04",
+        "role": "instruction pointer array source in Run"
+      },
+      {
+        "owner": "script_object_code",
+        "offset": "+0x58",
+        "role": "context argument passed to opcode executor slot 0"
+      },
+      {
+        "owner": "script_object_code",
+        "offset": "+0x60",
+        "role": "debug trace flag checked by Run"
+      },
+      {
+        "owner": "script_object_code",
+        "offset": "+0x68",
+        "role": "IScript back-pointer written by IScript constructor"
+      }
+    ]
+  },
+  "callDescriptorBridge": {
+    "function": "0x0052ea40 CAsmInstruction__ExecuteCall",
+    "descriptorTable": "0x0064ce50",
+    "descriptorStrideBytes": 64,
+    "schemaDependency": "missionscript-command-descriptor-schema.v1.json",
+    "instructionFields": [
+      "this+0x04 low byte indexes the descriptor table",
+      "this+0x04 high bits participate in return-value expectation checks",
+      "this+0x05 carries the observed argument count"
+    ],
+    "scratchArray": "0x0089c300 argument scratch array",
+    "notClaimed": "exact descriptor field layout, exact arity, and runtime command effects"
+  },
+  "claims": [
+    "The saved opcode factory has 27 serialized opcode cases, 0x00 through 0x1a.",
+    "The saved datatype factory has 6 serialized datatype cases, 1 through 6.",
+    "The saved VM run loop dispatches instruction vtable slot 0 and observes opcode 0x17 as the stop candidate when call depth is not positive.",
+    "The saved CALL executor bridges opcode execution to the 0x0064ce50 command descriptor table and the 0x0089c300 scratch argument array."
+  ],
+  "notClaimed": [
+    "runtime MissionScript execution",
+    "runtime command effects",
+    "runtime opcode behavior",
+    "exact VM layout",
+    "exact datatype layout",
+    "exact opcode layout",
+    "exact instruction object layout",
+    "exact descriptor field layout",
+    "exact source identity",
+    "BEA patching behavior",
+    "visual QA",
+    "Godot parity",
+    "rebuild parity",
+    "no-noticeable-difference parity"
+  ]
+}

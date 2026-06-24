@@ -1,0 +1,6 @@
+0x0055e21b	CFastVB__Unk_0055e21b	CTexture
+0x00561834	CFastVB__Unk_00561834	CDXTexture
+0x00573ff0	CFastVB__Unk_00573ff0	CTexture
+0x00575a65	CFastVB__Unk_00575a65	CDXTexture
+0x005775bd	CFastVB__Unk_005775bd	CTexture
+0x005987f4	CFastVB__Unk_005987f4	CTexture

@@ -11,11 +11,12 @@ Save and options editing writes to a separate output file and refuses in-place p
 
 ## What To Report Privately
 
-Use the private maintainer channel provided with your private-repo access or
-collaboration invitation for any suspected issue involving:
+Use the maintainer channel provided with your collaboration invitation for any
+suspected issue involving:
 
 - leaked secrets, tokens, credentials, local user paths, or machine identifiers
-- bundled or pasted Battle Engine Aquila executable bytes, media, manuals, saves, screenshots, frame captures, extracted assets, or private runtime proof
+- bundled or pasted Battle Engine Aquila executable bytes, media, manuals,
+  saves, screenshots, frame captures, extracted assets, or raw runtime proof
 - unsafe mutation of the installed Steam game folder or original `BEA.exe`
 - copied-profile patching that can escape the app-owned safe-copy folder
 - launcher/process-control behavior that can stop the wrong process

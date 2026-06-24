@@ -1,0 +1,9 @@
+slot	entry_addr	ptr	ptr_name	ptr_signature
+0	005db440	00453a90	<none>	<none>
+1	005db444	00453a50	<none>	<none>
+2	005db448	004a3190	<none>	<none>
+3	005db44c	00453a60	<none>	<none>
+4	005db450	004a3260	CMenuItem__RenderCentered	undefined CMenuItem__RenderCentered(void)
+5	005db454	004a3420	<none>	<none>
+6	005db458	00453a70	<none>	<none>
+7	005db45c	004a3140	<none>	<none>

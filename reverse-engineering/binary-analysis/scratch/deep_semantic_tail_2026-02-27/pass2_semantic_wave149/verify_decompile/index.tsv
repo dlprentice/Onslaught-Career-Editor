@@ -1,0 +1,21 @@
+address	name	signature	status
+0x004fb670	CUnit__ClassifyTargetRangeBand	int __thiscall CUnit__ClassifyTargetRangeBand(void * this, int param_1, int param_2)	OK
+0x004fbcb0	CUnit__UpdateDeployStateAndChargeEffects	int __fastcall CUnit__UpdateDeployStateAndChargeEffects(void * param_1)	OK
+0x004fc000	CUnit__CanDeployNow	int __fastcall CUnit__CanDeployNow(int param_1)	OK
+0x004fc220	CUnit__SpawnComponentEffectsRecursive	void __fastcall CUnit__SpawnComponentEffectsRecursive(void * param_1)	OK
+0x004fc6e0	CUnit__FindEmitterIndexBySlotTag	int CUnit__FindEmitterIndexBySlotTag(void)	OK
+0x004fcdc0	CUnit__SetCollisionAndDamageFlags	void __thiscall CUnit__SetCollisionAndDamageFlags(void * this, int param_1, uint param_2)	OK
+0x004fce80	CUnit__ForwardControllerQuery18	int CUnit__ForwardControllerQuery18(void)	OK
+0x004fcf00	CUnit__ResetKinematicsAndNotifyController	void __fastcall CUnit__ResetKinematicsAndNotifyController(int param_1)	OK
+0x004fcfa0	CUnit__ClearSpawnerSet	void __fastcall CUnit__ClearSpawnerSet(int param_1)	OK
+0x004fcfe0	CUnit__ReleaseChildUnits	void __fastcall CUnit__ReleaseChildUnits(int param_1)	OK
+0x004fd040	CUnit__ResetDeploymentGraphAndScheduleEvent	void __fastcall CUnit__ResetDeploymentGraphAndScheduleEvent(void * param_1)	OK
+0x004fd5b0	CUnit__IsActiveAndNotInState12	int __stdcall CUnit__IsActiveAndNotInState12(int param_1)	OK
+0x004fd7a0	CUnit__HasAnyReadySpawner	int __fastcall CUnit__HasAnyReadySpawner(int param_1)	OK
+0x004fd830	CUnit__SetFactionForHierarchy	void __thiscall CUnit__SetFactionForHierarchy(void * this, void * param_1, int param_2)	OK
+0x004fd910	CUnit__FindNearestFactionAnchor	void __thiscall CUnit__FindNearestFactionAnchor(void * this, int param_1, void * param_2)	OK
+0x004fda20	CUnit__PropagateTargetUnitToHierarchy	void __thiscall CUnit__PropagateTargetUnitToHierarchy(void * this, int param_1, int param_2)	OK
+0x004fdad0	CUnit__TrySpawnMembersForTarget	void __thiscall CUnit__TrySpawnMembersForTarget(void * this, void * param_1, int param_2)	OK
+0x004fdc20	CUnit__UpdateSpawnCountAccounting	void __fastcall CUnit__UpdateSpawnCountAccounting(int param_1)	OK
+0x004fdcb0	CUnit__SetEngagementModeAndMaybeClearTargetReader	void __thiscall CUnit__SetEngagementModeAndMaybeClearTargetReader(void * this, int param_1, int param_2)	OK
+0x004fde30	CUnit__BeginDeployAnimationIfIdle	void __fastcall CUnit__BeginDeployAnimationIfIdle(void * param_1)	OK

@@ -1,0 +1,11 @@
+address	name	signature	status
+0x0055d731	CTexture__Unk_0055d731	int CTexture__Unk_0055d731(void)	OK
+0x0055fa62	CDXTexture__Unk_0055fa62	int __cdecl CDXTexture__Unk_0055fa62(int param_1, uint param_2, int param_3, uint param_4)	FAILED
+0x00560cc3	CDXTexture__Unk_00560cc3	int CDXTexture__Unk_00560cc3(void)	OK
+0x00560d2a	CDXTexture__Unk_00560d2a	void __cdecl CDXTexture__Unk_00560d2a(void * param_1)	OK
+0x00560e28	CFastVB__Unk_00560e28	int __cdecl CFastVB__Unk_00560e28(void * param_1, int param_2, int param_3, int param_4)	OK
+0x00560e89	CFastVB__Unk_00560e89	int __cdecl CFastVB__Unk_00560e89(void * param_1, int param_2, int param_3, void * param_4, int param_5)	OK
+0x00560f4b	CFastVB__Unk_00560f4b	int __cdecl CFastVB__Unk_00560f4b(void * param_1, int param_2, int param_3)	OK
+0x00560fa0	CFastVB__Unk_00560fa0	int __cdecl CFastVB__Unk_00560fa0(void * param_1, int param_2, void * param_3, int param_4)	OK
+0x00561047	CFastVB__Unk_00561047	void __cdecl CFastVB__Unk_00561047(void * param_1, void * param_2, int param_3, int param_4)	OK
+0x00561530	CDXTexture__Unk_00561530	int CDXTexture__Unk_00561530(void)	OK

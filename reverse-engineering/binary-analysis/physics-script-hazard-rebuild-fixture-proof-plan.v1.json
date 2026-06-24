@@ -1,0 +1,451 @@
+{
+  "schemaVersion": "physics-script-hazard-rebuild-fixture-proof-plan.v1",
+  "status": "PASS",
+  "proofPlan": "PhysicsScript Hazard Rebuild Fixture Proof Plan",
+  "scope": "physics-script-hazard-rebuild-fixture-proof-plan",
+  "fixtureStatus": "physics-script-hazard-rebuild-fixture-proof-plan-complete-static-hazard-value-interface-fixture-not-runtime-proof",
+  "previousSlice": "PhysicsScript Spawner Rebuild Fixture Proof Plan",
+  "selectedNextSlice": "PhysicsScript Feature Rebuild Fixture Proof Plan",
+  "selectedNextScope": "physics-script-feature-rebuild-fixture-proof-plan",
+  "selectedFixtureFamily": "hazard",
+  "selectedFixturePath": "hazard-selected-value-id-interface-static-fixture",
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackupClass": "verified-static-backup-redacted"
+  },
+  "fixtureAccounting": {
+    "sourceProofCount": 6,
+    "sourceSchemaCount": 5,
+    "sourceMirrorPairCount": 9,
+    "selectedCandidateRank": 3,
+    "selectedSourceProofCount": 5,
+    "selectedValueInterfaceRowCount": 4,
+    "selectedValueIdCount": 4,
+    "selectedObservedValueIdCount": 3,
+    "selectedFactoryOnlyValueIdCount": 1,
+    "selectedUnselectedObservedValueIdCount": 0,
+    "selectedTopLevelRecordCount": 4,
+    "selectedValueNodeCount": 12,
+    "selectedRawValuePayloadBytesPreserved": 83,
+    "selectedDeclaredPayloadBytes": 273,
+    "selectedOwnedStringFieldCount": 2,
+    "selectedScalarFieldCount": 2,
+    "selectedFlagConstantTrueFieldCount": 0,
+    "selectedFixtureRowCount": 4,
+    "selectedObservedFixtureRowCount": 3,
+    "selectedFactoryOnlyFixtureRowCount": 1,
+    "selectedPayloadShapeCaseCount": 4,
+    "selectedObservedPayloadShapeClassCount": 3,
+    "selectedScalar4ShapePayloadCount": 8,
+    "selectedOwnedStringShapePayloadCount": 3,
+    "selectedThreeScalarShapePayloadCount": 1,
+    "selectedMixedPayloadShapeValueIdCount": 1,
+    "selectedMixedPayloadShapeValueIds": [
+      2
+    ],
+    "selectedCrosswalkOwnedStringCorpusCount": 4,
+    "selectedCrosswalkScalarCorpusCount": 8,
+    "selectedCrosswalkFlagConstantTrueCorpusCount": 0,
+    "effectObservedOwnedStringShapeCount": 3,
+    "effectObservedThreeScalarShapeCount": 1,
+    "factoryOnlyValueIdCount": 1,
+    "factoryOnlyValueIds": [
+      4
+    ],
+    "observedValueIds": [
+      1,
+      2,
+      3
+    ],
+    "topLevelFamilyCount": 9,
+    "valueInterfaceRowCount": 87,
+    "observedSelectedRowCount": 72,
+    "factoryOnlySelectedRowCount": 15,
+    "unselectedObservedRowCount": 113,
+    "physicsScriptCorpusByteCount": 175603,
+    "physicsScriptStreamHeader": "0x12",
+    "physicsScriptTopLevelStatementCount": 777,
+    "physicsScriptValueListNodeCount": 6803,
+    "physicsScriptStatementValuePairCount": 185,
+    "physicsScriptRawValuePayloadBytesPreserved": 73796,
+    "falseGuardCount": 40,
+    "zeroCounterCount": 25,
+    "publicLeakCheck": "PASS",
+    "latestGhidraBackupClass": "verified-static-backup-redacted"
+  },
+  "sourceEvidence": {
+    "previousFixture": {
+      "proofPath": "reverse-engineering/binary-analysis/physics-script-spawner-rebuild-fixture-proof-plan.md",
+      "schemaPath": "reverse-engineering/binary-analysis/physics-script-spawner-rebuild-fixture-proof-plan.v1.json",
+      "fixtureStatus": "physics-script-spawner-rebuild-fixture-proof-plan-complete-static-spawner-value-interface-fixture-not-runtime-proof",
+      "selectedNextSlice": "PhysicsScript Hazard Rebuild Fixture Proof Plan"
+    },
+    "fixtureSelection": {
+      "proofPath": "reverse-engineering/binary-analysis/physics-script-rebuild-fixture-selection.md",
+      "schemaPath": "reverse-engineering/binary-analysis/physics-script-rebuild-fixture-selection.v1.json",
+      "fixtureSelectionStatus": "physics-script-rebuild-fixture-selection-complete-explosion-selected",
+      "selectedFixtureFamily": "explosion",
+      "selectedFixturePath": "explosion-selected-value-id-interface-static-fixture"
+    },
+    "rollup": {
+      "proofPath": "reverse-engineering/binary-analysis/physics-script-rebuild-interface-rollup.md",
+      "schemaPath": "reverse-engineering/binary-analysis/physics-script-rebuild-interface-rollup.v1.json",
+      "rollupStatus": "physics-script-rebuild-interface-rollup-complete-static-interface-vocabulary-not-runtime-proof",
+      "valueInterfaceRowCount": 87,
+      "unselectedObservedRowCount": 113
+    },
+    "valueIdCrosswalk": {
+      "proofPath": "reverse-engineering/binary-analysis/physics-script-value-id-semantic-crosswalk-proof-plan.md",
+      "schemaPath": "reverse-engineering/binary-analysis/physics-script-value-id-semantic-crosswalk.v1.json",
+      "family": "hazard",
+      "observedValueIdCount": 3,
+      "selectedCrosswalkRowCount": 4,
+      "observedSelectedValueIdCount": 3,
+      "factoryOnlySelectedValueIdCount": 1,
+      "unselectedObservedValueIdCount": 0,
+      "deferredFactoryValueIds": []
+    },
+    "scalarStringFixture": {
+      "proofPath": "reverse-engineering/binary-analysis/physics-script-scalar-string-value-decoder-fixture-proof-plan.md",
+      "schemaPath": "reverse-engineering/binary-analysis/physics-script-scalar-string-value-decoder-fixture-proof-plan.v1.json",
+      "observedHazardPayloadShapeTotals": {
+        "owned_string_ascii_nul_shape_roundtrip": 3,
+        "scalar4_roundtrip": 8,
+        "three_scalar4_roundtrip": 1
+      }
+    },
+    "staticContract": {
+      "proofPath": "reverse-engineering/binary-analysis/physics-script-static-contract.md",
+      "anchors": [
+        "CPhysicsScriptStatements__CreateStatementType9",
+        "CHazardStatement__LoadFromMemBuffer",
+        "CPhysicsHazardValueList__LoadFromMemBuffer",
+        "CHazardStatement__CreateHazardAndRecurse",
+        "CHazardStatement__CreateAndRegisterByName",
+        "CHazardEffect__ApplyToHazardByName",
+        "CHazardNoise__ApplyToHazardByName",
+        "DAT_00855408"
+      ]
+    }
+  },
+  "selectedFixture": {
+    "family": "hazard",
+    "pathId": "hazard-selected-value-id-interface-static-fixture",
+    "statementFamilyTypeId": 9,
+    "valueFactoryTypeId": 9,
+    "nestedFactory": "CPhysicsScriptStatements__CreateStatementType9",
+    "statementLoader": "CHazardStatement__LoadFromMemBuffer",
+    "valueListLoader": "CPhysicsHazardValueList__LoadFromMemBuffer",
+    "createAnchor": "CHazardStatement__CreateHazardAndRecurse",
+    "registryGlobal": "DAT_00855408",
+    "valueIds": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "valueIdHexes": [
+      "0x1",
+      "0x2",
+      "0x3",
+      "0x4"
+    ],
+    "observedValueIds": [
+      1,
+      2,
+      3
+    ],
+    "factoryOnlyValueIds": [
+      4
+    ],
+    "ownedStringFields": [
+      "effect",
+      "noise"
+    ],
+    "scalarFields": [
+      "scalar14",
+      "scalar18"
+    ],
+    "flagConstantTrueFields": [],
+    "fixtureRows": [
+      {
+        "fixtureCaseId": "hazard-value-01-scalar14",
+        "family": "hazard",
+        "valueId": 1,
+        "valueIdHex": "0x1",
+        "rebuildFacingFieldName": "scalar14",
+        "crosswalkPayloadClass": "scalar4",
+        "observedPayloadShapeClasses": {
+          "scalar4_roundtrip": 4
+        },
+        "copiedCorpusCount": 4,
+        "corpusPresence": "copied_corpus_observed",
+        "semanticState": "resolved_static_shape",
+        "factoryAnchor": "CPhysicsScriptStatements__CreateStatementType9",
+        "applyAnchor": "CHazardScalar14__ApplyToHazardByName",
+        "registryGlobal": "DAT_00855408",
+        "destinationRecordKind": "hazard",
+        "destinationField": "+0x14",
+        "evidenceTier": "factory_case_plus_apply_anchor",
+        "factoryOnlyBoundary": false,
+        "mixedPayloadShapeBoundary": false,
+        "publicSafe": true,
+        "fixtureAssertion": "public-safe static selected hazard value-id interface row; no raw payload publication",
+        "claimBoundary": "Hazard scalar runtime meaning remains deferred."
+      },
+      {
+        "fixtureCaseId": "hazard-value-02-effect",
+        "family": "hazard",
+        "valueId": 2,
+        "valueIdHex": "0x2",
+        "rebuildFacingFieldName": "effect",
+        "crosswalkPayloadClass": "owned_string_at_08",
+        "observedPayloadShapeClasses": {
+          "owned_string_ascii_nul_shape_roundtrip": 3,
+          "three_scalar4_roundtrip": 1
+        },
+        "copiedCorpusCount": 4,
+        "corpusPresence": "copied_corpus_observed",
+        "semanticState": "resolved_static_field",
+        "factoryAnchor": "CPhysicsScriptStatements__CreateStatementType9",
+        "applyAnchor": "CHazardEffect__ApplyToHazardByName",
+        "registryGlobal": "DAT_00855408",
+        "destinationRecordKind": "hazard",
+        "destinationField": "+0x8",
+        "evidenceTier": "factory_case_plus_apply_anchor",
+        "factoryOnlyBoundary": false,
+        "mixedPayloadShapeBoundary": true,
+        "publicSafe": true,
+        "fixtureAssertion": "public-safe static selected hazard value-id interface row; no raw payload publication",
+        "claimBoundary": "Selected `effect` field has mixed copied-corpus payload-shape classes: owned-string-shaped rows plus one payload-size-12 row classified by the scalar/string fixture as three-scalar roundtrip. The fixture preserves both public-safe shape classes and does not publish raw effect names or numeric meanings."
+      },
+      {
+        "fixtureCaseId": "hazard-value-03-scalar18",
+        "family": "hazard",
+        "valueId": 3,
+        "valueIdHex": "0x3",
+        "rebuildFacingFieldName": "scalar18",
+        "crosswalkPayloadClass": "scalar4",
+        "observedPayloadShapeClasses": {
+          "scalar4_roundtrip": 4
+        },
+        "copiedCorpusCount": 4,
+        "corpusPresence": "copied_corpus_observed",
+        "semanticState": "resolved_static_shape",
+        "factoryAnchor": "CPhysicsScriptStatements__CreateStatementType9",
+        "applyAnchor": "CHazardScalar18__ApplyToHazardByName",
+        "registryGlobal": "DAT_00855408",
+        "destinationRecordKind": "hazard",
+        "destinationField": "+0x18",
+        "evidenceTier": "factory_case_plus_apply_anchor",
+        "factoryOnlyBoundary": false,
+        "mixedPayloadShapeBoundary": false,
+        "publicSafe": true,
+        "fixtureAssertion": "public-safe static selected hazard value-id interface row; no raw payload publication",
+        "claimBoundary": "Hazard scalar runtime meaning remains deferred."
+      },
+      {
+        "fixtureCaseId": "hazard-value-04-noise",
+        "family": "hazard",
+        "valueId": 4,
+        "valueIdHex": "0x4",
+        "rebuildFacingFieldName": "noise",
+        "crosswalkPayloadClass": "owned_string_at_08",
+        "observedPayloadShapeClasses": {},
+        "copiedCorpusCount": 0,
+        "corpusPresence": "factory_only_not_observed_in_copied_corpus",
+        "semanticState": "resolved_static_field",
+        "factoryAnchor": "CPhysicsScriptStatements__CreateStatementType9",
+        "applyAnchor": "CHazardNoise__ApplyToHazardByName",
+        "registryGlobal": "DAT_00855408",
+        "destinationRecordKind": "hazard",
+        "destinationField": "+0x0c",
+        "evidenceTier": "factory_case_plus_apply_anchor",
+        "factoryOnlyBoundary": true,
+        "mixedPayloadShapeBoundary": false,
+        "publicSafe": true,
+        "fixtureAssertion": "public-safe static selected hazard value-id interface row; no raw payload publication",
+        "claimBoundary": "Factory-only selected hazard row: static factory/apply evidence exists, but this copied corpus has no observed payload rows for the value id. The fixture keeps the row as an explicit boundary instead of inventing copied-corpus evidence."
+      }
+    ],
+    "payloadShapeTotals": {
+      "owned_string_ascii_nul_shape_roundtrip": 3,
+      "scalar4_roundtrip": 8,
+      "three_scalar4_roundtrip": 1
+    },
+    "factoryOnlyBoundary": {
+      "valueIds": [
+        4
+      ],
+      "fieldNames": [
+        "noise"
+      ],
+      "boundary": "The selected hazard `noise` row has static factory/apply evidence but no copied-corpus payload rows in the current public-safe corpus aggregate.",
+      "runtimeMeaningProven": false
+    }
+  },
+  "fixtureRequirementRows": [
+    {
+      "row": "family-fixture",
+      "status": "satisfied-static-with-factory-only-boundary",
+      "evidence": "hazard has 3 observed selected ids, 4 selected rows, 1 factory-only selected row, and zero unselected observed ids",
+      "boundary": "Static family-selection proof only."
+    },
+    {
+      "row": "loader-fixture",
+      "status": "satisfied-static",
+      "evidence": "CPhysicsScriptStatements__CreateStatementType9, CHazardStatement__LoadFromMemBuffer, CPhysicsHazardValueList__LoadFromMemBuffer, CHazardStatement__CreateHazardAndRecurse, and DAT_00855408",
+      "boundary": "Static loader/factory/registry bridge only."
+    },
+    {
+      "row": "value-interface-fixture",
+      "status": "satisfied-static",
+      "evidence": "selected value ids 1 through 4 and 4 rebuild-facing field names",
+      "boundary": "Selected value-id interface only, not complete value semantics."
+    },
+    {
+      "row": "factory-only-boundary-fixture",
+      "status": "satisfied-explicit-boundary",
+      "evidence": "value id 4 is a factory-only selected row in this copied-corpus aggregate",
+      "boundary": "Static factory/apply evidence only; no copied-corpus payload values are invented."
+    },
+    {
+      "row": "payload-shape-fixture",
+      "status": "satisfied-public-safe",
+      "evidence": "two scalar4 observed rows, one string-facing observed row, one explicit mixed payload-shape boundary for effect, and one factory-only selected row",
+      "boundary": "Public-safe payload shape only; no raw strings or numeric meanings."
+    },
+    {
+      "row": "effect-fixture",
+      "status": "satisfied-static",
+      "evidence": "effect value id 2 is anchored to CHazardEffect__ApplyToHazardByName and DAT_00855408",
+      "boundary": "Static effect field boundary only, not runtime hazard effect dispatch."
+    },
+    {
+      "row": "stop-fixture",
+      "status": "enforced",
+      "evidence": "runtime/Godot/Ghidra/patch/product/rebuild guards remain false with zero runtime rows",
+      "boundary": "Defer instead of broadening."
+    }
+  ],
+  "guardSummary": {
+    "falseGuards": {
+      "programFilesInputUsed": false,
+      "installedGameMutation": false,
+      "livePhysicsScriptRuntimeLoading": false,
+      "runtimeExecution": false,
+      "runtimeMissionScriptExecutionProven": false,
+      "runtimeCommandEffectsProven": false,
+      "runtimePhysicsScriptBehaviorProven": false,
+      "runtimePhysicsScriptOutcomesProven": false,
+      "runtimeHazardBehaviorProven": false,
+      "runtimeHazardEffectProven": false,
+      "runtimeHazardNoiseProven": false,
+      "serializedPhysicsScriptCompletenessProven": false,
+      "exactPhysicsScriptLayoutProven": false,
+      "exactHazardRecordLayoutProven": false,
+      "completeValueIdSemanticsProven": false,
+      "all185PairsSemanticallyNamed": false,
+      "rawStringIdentityProven": false,
+      "rawNumericMeaningProven": false,
+      "rawCopiedStringsEmitted": false,
+      "rawPayloadBytesPublished": false,
+      "beLaunch": false,
+      "newLaunch": false,
+      "screenshotCapture": false,
+      "privateFrameReviewPerformed": false,
+      "rowObservation": false,
+      "sourceSelectionObserved": false,
+      "sourceSelectionProven": false,
+      "nativeInput": false,
+      "debuggerAttachment": false,
+      "godotWork": false,
+      "ghidraMutation": false,
+      "executablePatching": false,
+      "productUiWired": false,
+      "rebuildImplementation": false,
+      "rebuildParityProven": false,
+      "noNoticeableDifferenceParityProven": false,
+      "exactSourceBodyIdentityProven": false,
+      "exactRegistryContainerLayoutProven": false,
+      "runtimeEffectDispatchProven": false,
+      "runtimeNoiseDispatchProven": false
+    },
+    "zeroCounters": {
+      "runtimeObservationRows": 0,
+      "missionScriptRuntimeEvidenceRows": 0,
+      "runtimeCommandEffectRows": 0,
+      "physicsScriptRuntimeEvidenceRows": 0,
+      "runtimePhysicsScriptRows": 0,
+      "runtimeHazardRows": 0,
+      "runtimeHazardEffectRows": 0,
+      "runtimeHazardNoiseRows": 0,
+      "privateFrameRowsObserved": 0,
+      "rowObservationRows": 0,
+      "ghidraMutationRows": 0,
+      "executablePatchRows": 0,
+      "godotRows": 0,
+      "rebuildImplementationRows": 0,
+      "beProcessesAfterFixture": 0,
+      "publicAbsolutePathLeakCount": 0,
+      "publicSha256ValueLeakCount": 0,
+      "privatePathLeakCount": 0,
+      "rawArtifactLeakCount": 0,
+      "rawCopiedStringRows": 0,
+      "rawNumericRowsPublished": 0,
+      "serializedCompletenessRows": 0,
+      "exactLayoutRows": 0,
+      "runtimeEffectRows": 0,
+      "runtimeNoiseRows": 0
+    }
+  },
+  "frontDoorValidation": {
+    "backlogUpdated": true,
+    "mappedSystemsUpdated": true,
+    "physicsContractUpdated": true,
+    "binaryIndexUpdated": true,
+    "reIndexUpdated": true,
+    "readinessNoteUpdated": true,
+    "packageScriptAdded": true
+  },
+  "publicSafety": {
+    "publicLeakCheck": "PASS",
+    "rawBytesEmitted": false,
+    "rawCopiedStringsEmitted": false,
+    "rawHashValuesEmitted": false,
+    "rawNumericValuesEmitted": false,
+    "absolutePrivatePathsEmitted": false,
+    "privateArtifactLocatorsEmitted": false
+  },
+  "claimBoundary": {
+    "summary": "Static PhysicsScript hazard selected value-id fixture only.",
+    "proves": [
+      "The selected hazard value-id interface is materialized as public-safe static fixture rows.",
+      "The selected hazard observed value ids carry static factory/apply/registry anchors and copied-corpus payload-shape counts.",
+      "The selected fixture preserves public-safe payload shape counts and records the value id 2 mixed-shape boundary.",
+      "Factory-only selected row 4 remains explicit boundary debt instead of being hidden."
+    ],
+    "doesNotProve": [
+      "runtime PhysicsScript behavior",
+      "runtime hazard behavior",
+      "runtime hazard effect dispatch",
+      "runtime hazard noise dispatch",
+      "serialized PhysicsScript completeness",
+      "exact PhysicsScript layouts",
+      "exact hazard record layout",
+      "complete value-id semantics",
+      "raw string identity",
+      "raw numeric value meaning",
+      "runtime effect behavior",
+      "BEA patching behavior",
+      "Godot parity",
+      "rebuild implementation",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  }
+}

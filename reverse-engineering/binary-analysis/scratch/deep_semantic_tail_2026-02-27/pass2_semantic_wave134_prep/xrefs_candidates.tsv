@@ -1,0 +1,8 @@
+target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
+00504a50	CVBufTexture__Unk_00504a50	005e02e4	<none>	<no_function>	DATA
+0050a870	CVBufTexture__Unk_0050a870	0050a865	<none>	<no_function>	UNCONDITIONAL_CALL
+0050a9c0	CVBufTexture__Unk_0050a9c0	0050a845	<none>	<no_function>	UNCONDITIONAL_CALL
+0050ab60	CVBufTexture__Unk_0050ab60	0053e77d	0053e2e0	CDXEngine__Render	UNCONDITIONAL_CALL
+00512040	CVBufTexture__Unk_00512040	0051213c	00512130	CLTShell__WinMain	DATA
+00511ca0	CVBufTexture__Unk_00511ca0	0051053b	00510520	CWorldPhysicsManager__ResolveLoadedDefinitionReferences	UNCONDITIONAL_CALL
+00511d20	CVBufTexture__Unk_00511d20	005105e0	00510520	CWorldPhysicsManager__ResolveLoadedDefinitionReferences	UNCONDITIONAL_CALL

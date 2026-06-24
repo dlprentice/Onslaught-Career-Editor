@@ -1,0 +1,10 @@
+target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
+00504a50	CVBufTexture__Unk_00504a50	005e02e4	<none>	<no_function>	DATA
+00504b40	CVBufTexture__Unk_00504b40	00504a5a	00504a50	CVBufTexture__Unk_00504a50	UNCONDITIONAL_CALL
+00504cf0	CVBufTexture__Unk_00504cf0	005e030c	<none>	<no_function>	DATA
+00504d30	CVBufTexture__Unk_00504d30	005e0390	<none>	<no_function>	DATA
+005068f0	CEngine__Unk_005068f0	00411d4b	00411bf0	CEngine_Unk_0050a080__Wrapper_00411bf0	UNCONDITIONAL_CALL
+005068f0	CEngine__Unk_005068f0	00413e04	00413cf0	CGeneralVolume__UpdateCurrentEntryProgressAndRefresh	UNCONDITIONAL_CALL
+005069f0	CEngine__Unk_005069f0	00506143	00506010	CGeneralVolume__Helper_00506010	UNCONDITIONAL_CALL
+005069f0	CEngine__Unk_005069f0	005069b6	<none>	<no_function>	UNCONDITIONAL_CALL
+005078b0	CEngine__Unk_005078b0	00506b75	005069f0	CEngine__Unk_005069f0	UNCONDITIONAL_CALL

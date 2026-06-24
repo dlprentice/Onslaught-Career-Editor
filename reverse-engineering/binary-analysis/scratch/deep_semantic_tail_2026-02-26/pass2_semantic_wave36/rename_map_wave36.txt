@@ -1,0 +1,8 @@
+0x004f35d0 CThing__InitRenderThing
+0x004f36d0 CThing__Render
+0x004f3710 CThing__RenderImposter
+0x004f37c0 CThing__DrawDebugCuboid
+0x004f3970 CThing__SetObjective
+0x004f3de0 CThing__IsOverWater
+0x004f4430 CComplexThing__StartDieProcess
+0x004f4480 CComplexThing__Hit

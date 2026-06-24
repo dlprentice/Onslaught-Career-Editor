@@ -1,0 +1,2 @@
+address	name	signature	status
+0x0046fb00	CGame__Pause	void __thiscall CGame__Pause(void * this, int toggle_pause_menu, void * from_controller)	OK

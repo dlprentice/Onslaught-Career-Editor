@@ -1,0 +1,6 @@
+address	name	signature	status
+0x00596e23	CFastVB__QuantizeScalarBlockIndices	int __stdcall CFastVB__QuantizeScalarBlockIndices(void * param_1, float param_2)	OK
+0x00597a61	CFastVB__PackScalarBlock_4BitEndpoints	void __stdcall CFastVB__PackScalarBlock_4BitEndpoints(void * param_1, int param_2)	OK
+0x00597b87	CFastVB__PackScalarBlock_InterpolatedEndpoints	int __stdcall CFastVB__PackScalarBlock_InterpolatedEndpoints(void * param_1, float param_2)	OK
+0x0059c610	CFastVB__ReleaseOwnedObjectAndReset_Core	void __stdcall CFastVB__ReleaseOwnedObjectAndReset_Core(int param_1)	OK
+0x0059c700	CFastVB__CopyBlockRows128Bytes	void __stdcall CFastVB__CopyBlockRows128Bytes(void * param_1, void * param_2, int param_3)	OK

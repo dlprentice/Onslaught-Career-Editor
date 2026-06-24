@@ -1,0 +1,6 @@
+address	name	signature	status
+0x00415970	CUnitAI__HandleDeployUndeployAnimationCompletion	int __fastcall CUnitAI__HandleDeployUndeployAnimationCompletion(void * param_1)	OK
+0x00424a20	CUnitAI__UpdateDeployAimAndScheduleEvent	void __fastcall CUnitAI__UpdateDeployAimAndScheduleEvent(void * param_1)	OK
+0x00424be0	CUnitAI__AdvanceDeployAnimationPhase	void __fastcall CUnitAI__AdvanceDeployAnimationPhase(int param_1)	OK
+0x00425760	CUnitAI__OrthonormalizeMat34Axes	void __fastcall CUnitAI__OrthonormalizeMat34Axes(void * param_1)	OK
+0x0042f280	CUnitAI__ComputeRecursiveNodeSize_Base8	int __fastcall CUnitAI__ComputeRecursiveNodeSize_Base8(int param_1)	OK

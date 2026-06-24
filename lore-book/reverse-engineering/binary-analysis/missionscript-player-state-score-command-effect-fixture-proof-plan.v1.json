@@ -1,0 +1,358 @@
+{
+  "schemaVersion": "missionscript-player-state-score-command-effect-fixture-proof-plan.v1",
+  "status": "PASS",
+  "missionScriptPlayerStateScoreCommandEffectFixtureProofPlanStatus": "missionscript-player-state-score-command-effect-fixture-proof-plan-complete-static-player-state-score-context-table-not-runtime-proof",
+  "previousSlice": "MissionScript Thing Value / Engine Helper Command-Effect Fixture Proof Plan",
+  "selectedNextSlice": "MissionScript Command-Effect Fixture Family Completion Rollup Proof Plan",
+  "selectedFixtureFamily": "player-state-score",
+  "selectedFixturePath": "player-state-score-descriptor-alias-boundary-table",
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackupClass": "verified-static-backup-redacted"
+  },
+  "fixtureAccounting": {
+    "sourceSchemaCount": 3,
+    "descriptorIndices": [
+      84,
+      136,
+      137
+    ],
+    "descriptorRecordCount": 3,
+    "descriptorContextCaseCount": 3,
+    "staticContextFixtureCaseCount": 3,
+    "deterministicFixtureCaseCount": 3,
+    "aliasBoundaryCaseCount": 1,
+    "rawLabelOnlyCaseCount": 2,
+    "sourceContextFamilyCount": 3,
+    "handlerBodyProvenCount": 0,
+    "deterministicRuntimeEffectCaseCount": 0,
+    "totalStaticCommandStepCount": 3,
+    "effectAssertionCount": 9,
+    "directNonCommentLooseMslRows": 25,
+    "directNonCommentLooseMslFiles": 16,
+    "commandWithCorpusRows": 2,
+    "zeroCorpusCommandCount": 1,
+    "addScoreCallRows": 15,
+    "toggleCockpitCallRows": 0,
+    "setStealthCallRows": 10,
+    "addScoreFileRows": 12,
+    "toggleCockpitFileRows": 0,
+    "setStealthFileRows": 4,
+    "sourceEvidenceWaveCount": 5,
+    "fixtureSelectionOriginalRank": 9,
+    "fixtureSelectionOriginalDecision": "deferred",
+    "previousFixtureStatus": "missionscript-thing-value-engine-helper-command-effect-fixture-proof-plan-complete-static-thing-engine-dispatch-table-not-runtime-proof",
+    "falseGuardCount": 53,
+    "zeroCounterCount": 39,
+    "publicLeakCheck": "PASS"
+  },
+  "sourceEvidence": {
+    "previousFixture": {
+      "schema": "reverse-engineering/binary-analysis/missionscript-thing-value-engine-helper-command-effect-fixture-proof-plan.v1.json",
+      "status": "missionscript-thing-value-engine-helper-command-effect-fixture-proof-plan-complete-static-thing-engine-dispatch-table-not-runtime-proof",
+      "selectedNextSlice": "MissionScript Player-State / Score Command-Effect Fixture Proof Plan"
+    },
+    "playerStateScoreStaticProof": {
+      "schema": "reverse-engineering/binary-analysis/missionscript-player-state-score-command-effect.v1.json",
+      "status": "PASS",
+      "descriptorIndices": [
+        84,
+        136,
+        137
+      ],
+      "descriptorTokens": [
+        "AddScore",
+        "ToggleCockpit",
+        "SetStealth"
+      ],
+      "looseMslUsageAggregate": {
+        "AddScore": {
+          "calls": 15,
+          "files": 12
+        },
+        "ToggleCockpit": {
+          "calls": 0,
+          "files": 0
+        },
+        "SetStealth": {
+          "calls": 10,
+          "files": 4
+        }
+      },
+      "aliasBoundary": {
+        "descriptorIndex": 84,
+        "descriptorRecord": "0x0064e350",
+        "rawEntryValue": "IScript__Unk_00534410",
+        "conflictingCurrentObjectiveName": "0x00534410 IScript__SecondaryObjectiveComplete",
+        "status": "descriptor/name/corpus context only; no AddScore handler-body bridge is claimed",
+        "whyDeferred": "the descriptor raw entry collides with current objective/outcome evidence for SecondaryObjectiveComplete, so this proof preserves the conflict instead of renaming or claiming score mutation semantics"
+      },
+      "sourceContextFamilies": [
+        "score",
+        "cockpit",
+        "stealth"
+      ],
+      "boundary": "static descriptor/corpus/source-context bridge only; runtime player-state, score, cockpit, stealth, and handler-body behavior remains unproven"
+    },
+    "fixtureSelection": {
+      "schema": "reverse-engineering/binary-analysis/missionscript-command-effect-fixture-selection.v1.json",
+      "originalRank": 9,
+      "originalDecision": "deferred"
+    }
+  },
+  "fixtureModel": {
+    "playerStateScoreModel": "finite descriptor/corpus/source-context cases for score, cockpit, and stealth commands",
+    "descriptorContextModel": "raw descriptor records remain context-only because exact descriptor layout and runtime effects are unproven",
+    "selectedRuntimeCommands": [
+      "AddScore",
+      "ToggleCockpit",
+      "SetStealth"
+    ],
+    "excludedCases": [
+      "runtime MissionScript execution",
+      "runtime command effects",
+      "runtime score behavior",
+      "runtime cockpit behavior",
+      "runtime stealth behavior",
+      "weapon-fire/stealth interaction",
+      "runtime ranking/career/save behavior",
+      "handler-body proof for AddScore, ToggleCockpit, or SetStealth",
+      "live loose-MSL loading",
+      "packed-resource script selection"
+    ]
+  },
+  "contextFixtureCases": [
+    {
+      "id": "AddScore-descriptor-corpus-alias-boundary",
+      "command": "AddScore",
+      "descriptorIndex": 84,
+      "recordAddress": "0x0064e350",
+      "observedNameSymbol": "s_AddScore_0064f5c4",
+      "rawEntryValue": "IScript__Unk_00534410",
+      "nonzeroRawShape": {
+        "+0x14": "1",
+        "+0x1c": "1"
+      },
+      "contextKind": "alias-boundary",
+      "staticContextAnchors": [
+        "0x00534410 IScript__SecondaryObjectiveComplete",
+        "CGame::IncScore"
+      ],
+      "directNonCommentLooseMslRows": 15,
+      "directNonCommentLooseMslFiles": 12,
+      "boundary": "descriptor/name/corpus context only; raw entry collides with objective/outcome naming and no score handler-body proof is claimed",
+      "staticContextOnly": true,
+      "handlerBodyProven": false,
+      "runtimeCommandEffectProven": false,
+      "runtimePlayerStateBehaviorProven": false,
+      "exactPlayerStateLayoutProven": false
+    },
+    {
+      "id": "ToggleCockpit-raw-descriptor-source-context",
+      "command": "ToggleCockpit",
+      "descriptorIndex": 136,
+      "recordAddress": "0x0064f050",
+      "observedNameSymbol": "s_ToggleCockpit_0064f288",
+      "rawEntryValue": "&LAB_00533950",
+      "nonzeroRawShape": {},
+      "contextKind": "raw-label-source-context",
+      "staticContextAnchors": [
+        "&LAB_00533950",
+        "CBattleEngine::ToggleCockpit"
+      ],
+      "directNonCommentLooseMslRows": 0,
+      "directNonCommentLooseMslFiles": 0,
+      "boundary": "raw descriptor label plus source context only; no handler-body bridge or cockpit runtime behavior is claimed",
+      "staticContextOnly": true,
+      "handlerBodyProven": false,
+      "runtimeCommandEffectProven": false,
+      "runtimePlayerStateBehaviorProven": false,
+      "exactPlayerStateLayoutProven": false
+    },
+    {
+      "id": "SetStealth-raw-descriptor-corpus-source-context",
+      "command": "SetStealth",
+      "descriptorIndex": 137,
+      "recordAddress": "0x0064f090",
+      "observedNameSymbol": "s_SetStealth_0064f27c",
+      "rawEntryValue": "&LAB_00533980",
+      "nonzeroRawShape": {
+        "+0x14": "1",
+        "+0x1c": "2"
+      },
+      "contextKind": "raw-label-corpus-source-context",
+      "staticContextAnchors": [
+        "&LAB_00533980",
+        "CBattleEngine__HandleCloak",
+        "mStealth",
+        "mDesiredStealth"
+      ],
+      "directNonCommentLooseMslRows": 10,
+      "directNonCommentLooseMslFiles": 4,
+      "boundary": "raw descriptor label plus aggregate corpus/source context only; no handler-body bridge, stealth runtime behavior, or weapon-fire interaction is claimed",
+      "staticContextOnly": true,
+      "handlerBodyProven": false,
+      "runtimeCommandEffectProven": false,
+      "runtimePlayerStateBehaviorProven": false,
+      "exactPlayerStateLayoutProven": false
+    }
+  ],
+  "deferredProofGate": {
+    "selectedNextSlice": "MissionScript Command-Effect Fixture Family Completion Rollup Proof Plan",
+    "runtimeExecution": false,
+    "beLaunch": false,
+    "sourcePathsPublic": false,
+    "rawMslRowsPublic": false,
+    "liveLooseMslLoading": false,
+    "packedResourceScriptSelectionProven": false,
+    "sourceBaselineRead": false,
+    "privateArtifactMaterialized": false,
+    "copiedFileMutation": false,
+    "ghidraMutation": false,
+    "godotWork": false,
+    "rebuildImplementation": false,
+    "requiresSeparateProofForRuntimeCommandEffects": true,
+    "requiresSeparateProofForHandlerBodyBridge": true,
+    "requiresSeparateProofForWeaponFireStealthInteraction": true
+  },
+  "guardSummary": {
+    "falseGuards": {
+      "programFilesInputUsed": false,
+      "sourcePathsPublic": false,
+      "rawMslRowsPublic": false,
+      "installedGameMutation": false,
+      "originalExecutableMutation": false,
+      "copiedFileMutation": false,
+      "sourceBaselineRead": false,
+      "privateArtifactMaterialized": false,
+      "saveSynthesis": false,
+      "liveLooseMslLoading": false,
+      "packedResourceScriptSelectionProven": false,
+      "runtimeExecution": false,
+      "runtimeMissionScriptExecutionProven": false,
+      "runtimeCommandEffectsProven": false,
+      "runtimePlayerStateScoreBehaviorProven": false,
+      "runtimeScoreBehaviorProven": false,
+      "runtimeCockpitBehaviorProven": false,
+      "runtimeStealthBehaviorProven": false,
+      "runtimeWeaponFireStealthInteractionProven": false,
+      "runtimeRankingBehaviorProven": false,
+      "runtimeCareerSaveBehaviorProven": false,
+      "runtimeGoodieStateBehaviorProven": false,
+      "runtimeObjectiveOutcomeBehaviorProven": false,
+      "runtimeHandlerBodyBridgeProven": false,
+      "addScoreHandlerBodyProven": false,
+      "toggleCockpitHandlerBodyProven": false,
+      "setStealthHandlerBodyProven": false,
+      "beLaunch": false,
+      "newLaunch": false,
+      "screenshotCapture": false,
+      "privateFrameReviewPerformed": false,
+      "rowObservation": false,
+      "exactTextOcrPerformed": false,
+      "rawDialoguePublished": false,
+      "visibleTextExcerptPublished": false,
+      "sourceSelectionObserved": false,
+      "nativeInput": false,
+      "debuggerAttachment": false,
+      "godotWork": false,
+      "ghidraMutation": false,
+      "executablePatching": false,
+      "productUiWired": false,
+      "rebuildImplementation": false,
+      "exactCommandDescriptorLayoutProven": false,
+      "exactCommandArityProven": false,
+      "exactArgumentTypeSchemaProven": false,
+      "exactDatatypeLayoutProven": false,
+      "exactPlayerStateLayoutProven": false,
+      "exactCGameLayoutProven": false,
+      "exactBattleEngineLayoutProven": false,
+      "exactSourceBodyIdentityProven": false,
+      "rebuildParityProven": false,
+      "noNoticeableDifferenceParityProven": false
+    },
+    "zeroCounters": {
+      "runtimeObservationRows": 0,
+      "missionScriptRuntimeEvidenceRows": 0,
+      "runtimeCommandEffectRows": 0,
+      "runtimePlayerStateScoreRows": 0,
+      "runtimeScoreRows": 0,
+      "runtimeCockpitRows": 0,
+      "runtimeStealthRows": 0,
+      "runtimeWeaponFireStealthRows": 0,
+      "runtimeRankingRows": 0,
+      "runtimeCareerSaveRows": 0,
+      "runtimeHandlerBodyRows": 0,
+      "addScoreHandlerBodyRows": 0,
+      "toggleCockpitHandlerBodyRows": 0,
+      "setStealthHandlerBodyRows": 0,
+      "privateFrameRowsObserved": 0,
+      "rowObservationRows": 0,
+      "sourceObservedRows": 0,
+      "sourceRuntimeObservationRows": 0,
+      "sourceRowStatusChangedCount": 0,
+      "newLaunchRows": 0,
+      "captureRows": 0,
+      "ocrRows": 0,
+      "rawDialogueRows": 0,
+      "visibleTextExcerptRows": 0,
+      "ghidraMutationRows": 0,
+      "executablePatchRows": 0,
+      "copiedFileMutationRows": 0,
+      "sourceBaselineReadRows": 0,
+      "privateArtifactRows": 0,
+      "rebuildImplementationRows": 0,
+      "godotProjectRows": 0,
+      "beProcessesAfterFixture": 0,
+      "publicAbsolutePathLeakCount": 0,
+      "publicSha256ValueLeakCount": 0,
+      "publicWindowIdentifierLeakCount": 0,
+      "publicProcessIdentifierLeakCount": 0,
+      "privatePathLeakCount": 0,
+      "rawArtifactLeakCount": 0,
+      "rawDialogueLeakCount": 0
+    }
+  },
+  "claimBoundary": {
+    "proves": [
+      "three finite static player-state/score context fixture cases tied to saved descriptor rows",
+      "one AddScore alias-boundary fixture case preserving the 0x00534410 objective/outcome conflict",
+      "two raw-label source-context fixture cases for ToggleCockpit and SetStealth",
+      "aggregate command-token counts are preserved without publishing raw loose-MSL sample rows",
+      "the fixture table is consolidated without runtime, Ghidra, patch, Godot, product UI, or rebuild claims"
+    ],
+    "doesNotProve": [
+      "runtime MissionScript execution",
+      "runtime command effects",
+      "runtime score behavior",
+      "runtime cockpit behavior",
+      "runtime stealth behavior",
+      "weapon-fire/stealth interaction",
+      "runtime ranking/career/save behavior",
+      "AddScore handler-body proof",
+      "ToggleCockpit handler-body proof",
+      "SetStealth handler-body proof",
+      "live loose-MSL loading",
+      "packed-resource script selection",
+      "exact command descriptor layout",
+      "exact command arity",
+      "exact argument type schema",
+      "exact datatype layout",
+      "exact player-state layout",
+      "source-selection observation",
+      "private-frame review",
+      "visual QA",
+      "Godot parity",
+      "Ghidra mutation",
+      "executable patching",
+      "product UI behavior",
+      "rebuild implementation",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  }
+}

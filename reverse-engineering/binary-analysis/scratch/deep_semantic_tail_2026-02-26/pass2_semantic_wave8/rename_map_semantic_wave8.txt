@@ -1,0 +1,7 @@
+0x00472570 CGame__DoWeWantMesh
+0x004725f0 CGame__GetPlayerLives
+0x00472650 CGame__IsRunningResources
+0x004815c0 CHud__Reset
+0x00481af0 CHud__PostLoadProcess
+0x00481b00 CHud__ShutDown
+0x0044a0d0 CEngine__SelectViewpoint

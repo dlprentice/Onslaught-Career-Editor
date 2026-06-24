@@ -1,0 +1,6 @@
+address	name	signature	status
+0x00469c20	CFrontEnd__ResolveEpisodeNameTextByIndex	void __cdecl CFrontEnd__ResolveEpisodeNameTextByIndex(int param_1)	OK
+0x00469cf0	CFrontEnd__ResolveLevelNameTextIdByCode	int __cdecl CFrontEnd__ResolveLevelNameTextIdByCode(int param_1)	OK
+0x0046a210	CFrontEnd__GetFallbackUnnamedLevelTextId	int CFrontEnd__GetFallbackUnnamedLevelTextId(void)	OK
+0x004cba30	CParticleManager__ProjectPointToTerrainWithRadiusClamp	int __stdcall CParticleManager__ProjectPointToTerrainWithRadiusClamp(void * param_1, float param_2, void * param_3)	OK
+0x004cba90	CParticleManager__ComputeMinCameraDistanceSqForParticle	double __stdcall CParticleManager__ComputeMinCameraDistanceSqForParticle(int param_1)	OK

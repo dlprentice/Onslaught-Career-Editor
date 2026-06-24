@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "missionscript-level100-tutorial-copied-profile-runtime-observation-clean-source-specimen-resolution.v1",
+  "status": "COMPLETE",
+  "resolutionStatus": "clean-backup-specimen-verified",
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+  },
+  "previousStoppedSlice": {
+    "name": "MissionScript Level100 Tutorial Copied-Profile Runtime Observation Copied-Profile Materialization Preflight",
+    "proof": "missionscript-level100-tutorial-copied-profile-runtime-observation-copied-profile-materialization-preflight-proof.md",
+    "result": "missionscript-level100-tutorial-copied-profile-runtime-observation-copied-profile-materialization-preflight.v1.json",
+    "deferReason": "source-specimen-hash-mismatch"
+  },
+  "specimenResolution": {
+    "expectedCleanSha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+    "cleanBackupSha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+    "cleanBackupSize": 2506752,
+    "cleanBackupMatchesExpected": true,
+    "cleanBackupAuthorityClass": "canonical-clean-retail-match",
+    "currentSpecimenSha256": "e78818292a1dbe31dc6987c71665857de3a8cf3e7619745689d74c7da829c918",
+    "currentSpecimenSize": 2506752,
+    "currentSpecimenClass": "known-stable-patch-catalog-deltas-from-clean",
+    "sameLength": true,
+    "byteDiffCount": 28,
+    "unknownDiffCount": 0,
+    "publicPathPolicy": "no-local-path-in-public-evidence"
+  },
+  "patchCatalogDeltaRows": [
+    {
+      "patchId": "resolution_gate",
+      "fileOffset": "0x129696",
+      "cleanBytes": "CC",
+      "currentBytes": "00",
+      "state": "patched"
+    },
+    {
+      "patchId": "force_windowed",
+      "fileOffset": "0x12A644",
+      "cleanBytes": "A1 F0 2D 66 00",
+      "currentBytes": "B8 01 00 00 00",
+      "state": "patched"
+    },
+    {
+      "patchId": "version_overlay_use_patched_format_pointer",
+      "fileOffset": "0x06416F",
+      "cleanBytes": "54 94 62 00",
+      "currentBytes": "44 A4 5A 00",
+      "state": "patched"
+    },
+    {
+      "patchId": "version_overlay_patched_format_cave_string",
+      "fileOffset": "0x1AA444",
+      "cleanBytes": "CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC",
+      "currentBytes": "56 25 31 64 2E 25 30 32 64 20 2D 20 50 41 54 43 48 45 44 00",
+      "state": "patched"
+    },
+    {
+      "patchId": "skip_auto_toggle",
+      "fileOffset": "0x12BB97",
+      "cleanBytes": "75 20",
+      "currentBytes": "75 20",
+      "state": "original"
+    }
+  ],
+  "materializationSummary": {
+    "materializationAttempted": false,
+    "copiedProfileCreated": false,
+    "copiedExecutableCreated": false,
+    "copiedSpecimenHashChecked": false,
+    "installedGameMutation": false,
+    "originalExecutableMutation": false,
+    "launchArmed": false,
+    "beLaunch": false,
+    "executablePatch": false,
+    "screenshotCapture": false,
+    "nativeInput": false,
+    "debuggerAttachment": false,
+    "godotWork": false,
+    "runtimeEvidenceRows": 0,
+    "privatePathLeakCount": 0,
+    "rawArtifactLeakCount": 0,
+    "publicLeakCheck": "PASS"
+  },
+  "claimBoundary": {
+    "proves": [
+      "a read-only clean backup specimen matches the canonical Steam retail Ghidra/static specimen hash",
+      "the current convenience executable differs from the clean backup by known patch-catalog deltas only",
+      "the previously observed current-executable mismatch is explained by known stable patch-catalog bytes, not an unknown specimen",
+      "no copied profile or copied executable was created",
+      "launch, patching, screenshots, native input, debugger, Godot, runtime proof, rebuild parity, and no-noticeable-difference parity remain disabled"
+    ],
+    "doesNotProve": [
+      "a copied profile exists",
+      "a copied executable exists",
+      "runtime MissionScript execution",
+      "runtime command effects",
+      "runtime event outcomes",
+      "live loose-MSL loading",
+      "packed-vs-loose script selection",
+      "runtime Level100 mission outcome",
+      "runtime objective UI",
+      "runtime message or audio output",
+      "runtime HUD flashing",
+      "runtime object identity",
+      "runtime SpawnThing behavior",
+      "runtime GetThingRef lookup behavior",
+      "BEA launch behavior",
+      "BEA patching behavior",
+      "screenshot/capture proof",
+      "native input behavior",
+      "debugger observation behavior",
+      "Godot parity",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  },
+  "nextStaticSlice": "MissionScript Level100 Tutorial Copied-Profile Runtime Observation Copied-Profile Materialization Proof Plan"
+}

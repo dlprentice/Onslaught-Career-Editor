@@ -1,0 +1,122 @@
+{
+  "timestamp": "2026-02-25",
+  "attempted": 23,
+  "ok": [],
+  "fail": [
+    {
+      "addr": "004027c0",
+      "name": "VFuncSlot_00_004026e0__Unk_004027c0",
+      "reason": "timed out"
+    },
+    {
+      "addr": "004028e0",
+      "name": "VFuncSlot_00_004026e0__Unk_004028e0",
+      "reason": "timed out"
+    },
+    {
+      "addr": "00403650",
+      "name": "Transform__Unk_00403650",
+      "reason": "timed out"
+    },
+    {
+      "addr": "00407140",
+      "name": "CMonitor__Unk_00407140",
+      "reason": "timed out"
+    },
+    {
+      "addr": "004097a0",
+      "name": "CMonitor__Unk_004097a0",
+      "reason": "timed out"
+    },
+    {
+      "addr": "0040d4d0",
+      "name": "CGeneralVolume__Unk_0040d4d0",
+      "reason": "timed out"
+    },
+    {
+      "addr": "0040d660",
+      "name": "CGeneralVolume__Unk_0040d660",
+      "reason": "timed out"
+    },
+    {
+      "addr": "0040dfb0",
+      "name": "CGeneralVolume__Unk_0040dfb0",
+      "reason": "timed out"
+    },
+    {
+      "addr": "0040e860",
+      "name": "CGeneralVolume__Unk_0040e860",
+      "reason": "timed out"
+    },
+    {
+      "addr": "0040ef20",
+      "name": "CGeneralVolume__Unk_0040ef20",
+      "reason": "timed out"
+    },
+    {
+      "addr": "00410310",
+      "name": "CGeneralVolume__Unk_00410310",
+      "reason": "timed out"
+    },
+    {
+      "addr": "00410490",
+      "name": "CGeneralVolume__Unk_00410490",
+      "reason": "timed out"
+    },
+    {
+      "addr": "00410740",
+      "name": "CGeneralVolume__Unk_00410740",
+      "reason": "timed out"
+    },
+    {
+      "addr": "004109d0",
+      "name": "CGeneralVolume__Unk_004109d0",
+      "reason": "timed out"
+    },
+    {
+      "addr": "004114d0",
+      "name": "CGeneralVolume__Unk_004114d0",
+      "reason": "timed out"
+    },
+    {
+      "addr": "004127a0",
+      "name": "CGeneralVolume__Unk_004127a0",
+      "reason": "timed out"
+    },
+    {
+      "addr": "00412d80",
+      "name": "CGeneralVolume__Unk_00412d80",
+      "reason": "timed out"
+    },
+    {
+      "addr": "00412f70",
+      "name": "CGeneralVolume__Unk_00412f70",
+      "reason": "timed out"
+    },
+    {
+      "addr": "00413160",
+      "name": "CGeneralVolume__Unk_00413160",
+      "reason": "timed out"
+    },
+    {
+      "addr": "00413360",
+      "name": "CGeneralVolume__Unk_00413360",
+      "reason": "timed out"
+    },
+    {
+      "addr": "004135e0",
+      "name": "CGeneralVolume__Unk_004135e0",
+      "reason": "timed out"
+    },
+    {
+      "addr": "00414970",
+      "name": "CGeneralVolume__Unk_00414970",
+      "reason": "timed out"
+    },
+    {
+      "addr": "00414a40",
+      "name": "CGeneralVolume__Unk_00414a40",
+      "reason": "[Errno 104] Connection reset by peer"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+slot	entry_addr	ptr	ptr_name	ptr_signature
+0	005db440	00453a90	<none>	<none>
+1	005db444	00453a50	<none>	<none>
+2	005db448	004a3190	<none>	<none>
+3	005db44c	00453a60	<none>	<none>
+4	005db450	004a3260	CMenuItem__RenderCentered	undefined CMenuItem__RenderCentered(void)
+5	005db454	004a3420	<none>	<none>
+6	005db458	00453a70	<none>	<none>
+7	005db45c	004a3140	<none>	<none>
+8	005db460	00453a80	<none>	<none>
+9	005db464	00453a80	<none>	<none>
+10	005db468	00453a80	<none>	<none>
+11	005db46c	00459990	CFrontEndPage__DeActiveNotification	void __cdecl CFrontEndPage__DeActiveNotification(void * this)
+12	005db470	00459990	CFrontEndPage__DeActiveNotification	void __cdecl CFrontEndPage__DeActiveNotification(void * this)
+13	005db474	00459990	CFrontEndPage__DeActiveNotification	void __cdecl CFrontEndPage__DeActiveNotification(void * this)
+14	005db478	41d00000	<none>	<none>
+15	005db47c	436c0000	<none>	<none>
+16	005db480	43660000	<none>	<none>
+17	005db484	41f80000	<none>	<none>
+18	005db488	00000000	<none>	<none>
+19	005db48c	40000000	<none>	<none>
+20	005db490	43200000	<none>	<none>
+21	005db494	44138000	<none>	<none>
+22	005db498	3ee66666	<none>	<none>
+23	005db49c	00000000	<none>	<none>

@@ -3,7 +3,7 @@
   "checkerScope": "public-audible-proof-contract-not-audio-capture-revalidation",
   "scope": "safe-copy-music-audible-output-acceptance-boundary",
   "generatedAt": "2026-06-22",
-  "updatedAt": "2026-06-23",
+  "updatedAt": "2026-06-24",
   "currentAcceptedEvidence": {
     "safeCopyStaging": true,
     "sourceMusicUnchanged": true,
@@ -15,9 +15,15 @@
     "audioLoopbackCalibrationNonSilent": true,
     "twoRunHarnessAcceptanceChecker": true,
     "trustedRawArtifactMaterializer": true,
+    "liveRawBundleGate": true,
+    "liveBundleExecutor": true,
+    "ambientNoBeaCensusProducer": true,
+    "sourceMusicSafetySidecarProducer": true,
     "sourceAudioReferenceFingerprint": true,
     "captureSourceCorrelationAdapter": true,
-    "runtimeAudibleOutputProof": false
+    "timestampedCdbLogProducer": true,
+    "runtimeAudibleOutputProof": false,
+    "captureSourceCorrelationBuilder": true
   },
   "minimumAudibleProof": {
     "artifactSchema": "winui-safe-copy-music-audible-output-proof.v1",
@@ -68,6 +74,8 @@
       "ambient/clean/staged/mute audio JSON summaries are bound to existing raw WAV artifacts by outputJson path, outputWav path, helper-authored rawWavSha256, raw WAV byte count, and independently rederived WAV sample statistics before sanitized output is written",
       "clean/mute source music safety sidecars provide source target/replacement hash unchanged facts when non-staged live artifacts omit source music hash rows",
       "ambient no-BEA process census is required before accepting the ambient negative control and must cover the ambient capture window while binding to ambient audio JSON and raw WAV SHA-256 values",
+      "clean/staged CDB-backed live-smoke stages must bind CDB target process id to launched safe-copy BEA process id, report attached positive CDB process ids, stopped/already-exited cleanup, and matching cleanup pid before timestamp/timeline generation",
+      "executor must run a no-BEA/no-cdb process census after each CDB-backed stage and before final receipt acceptance or failure recording",
       "capture-to-source correlation adapter sidecar is bound to clean/staged audio JSON and raw WAV SHA-256 values",
       "raw loopback device identifiers, raw WAV paths, raw JSON paths, CDB paths, copied-game paths, source paths, and local proof roots are stripped from the sanitized proof",
       "materialized output must stay inside the private raw input bundle",
@@ -106,6 +114,7 @@
     "recommendedPreset": "use-bea02-for-bea04",
     "recommendedLevel": 100,
     "recommendedComparison": "clean BEA_04 level-100 baseline versus BEA_02-over-BEA_04 staged positive",
-    "blockedBy": "requires a private live two-run bundle with timestamped CDB decode timeline sidecars, source music safety sidecars, ambient no-BEA census, ambient/mute controls, and accepted sanitized capture-to-source-audio correlation accepted by the materializer plus final checker before any audible claim"
+    "liveBundleGate": "tools/winui_safe_copy_music_audible_output_live_bundle_gate.py",
+    "blockedBy": "requires a private live two-run bundle with timestamped CDB decode timeline sidecars, source music safety sidecars, ambient/mute controls, and accepted sanitized capture-to-source-audio correlation accepted by the materializer plus final checker before any audible claim. Producer coverage is complete and the private live-bundle executor exists for the next private live attempt, including ambient no-BEA census, source-music safety sidecar, timestamped CDB log producer, and capture-source correlation builder, but actual ambient, clean, staged, mute, CDB timeline, source-safety, audio, and capture-correlation sidecars are still required for the future private bundle"
   }
 }

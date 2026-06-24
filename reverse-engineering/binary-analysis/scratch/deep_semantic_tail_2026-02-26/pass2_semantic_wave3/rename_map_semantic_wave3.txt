@@ -1,0 +1,4 @@
+0x00456830 CFEPDebriefing__ResetStateAndVector
+0x00401b50 CMCMine__ComputeClampedScaleFactor
+0x004cac80 CPDSelector__ConvertNormalizedToScreenCoords
+0x00413b90 CCylinder__ResolveSurfaceAlignmentIterative

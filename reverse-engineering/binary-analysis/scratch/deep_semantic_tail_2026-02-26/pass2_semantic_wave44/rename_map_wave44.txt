@@ -1,0 +1,3 @@
+0x00404210 CAtmospheric__Process
+0x00404790 CAtmospheric__UpdateBlendState
+0x004048c0 CAtmospheric__GetInterpolatedBlendValue

@@ -1,0 +1,10 @@
+# CGame semantic rename tranche (high confidence)
+0x00470650 CGame__RenderDebugMemoryAndSelectionInfo
+0x004eb1e0 CGame__ResetRenderStateForWorldRender
+0x00472240 CGame__AppendToStatusBufferV
+0x00472270 CGame__XorBlock64Words
+0x004eaf20 CGame__SetupRespawnReaderAndEffect
+0x004eb130 CGame__HasNearbyHostileWithinRadius
+0x004080f0 CGame__IsWalkerGroundedOrCollision
+0x00472670 CGame__CountActiveSlots_A
+0x00472690 CGame__CountActiveSlots_B

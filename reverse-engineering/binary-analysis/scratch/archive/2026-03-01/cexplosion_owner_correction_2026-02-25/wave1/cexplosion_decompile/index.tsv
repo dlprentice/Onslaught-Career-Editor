@@ -1,0 +1,38 @@
+address	name	signature	status
+0x00414cb0	CExplosionInitThing__Unk_00414cb0	void __fastcall CExplosionInitThing__Unk_00414cb0(int param_1)	OK
+0x00444620	CExplosionInitThing__Unk_00444620	void __thiscall CExplosionInitThing__Unk_00444620(void * this, int param_1, int param_2)	OK
+0x00447d50	CExplosionInitThing__Unk_00447d50	int __fastcall CExplosionInitThing__Unk_00447d50(void * param_1)	OK
+0x0044a6e0	CExplosionInitThing__Unk_0044a6e0	void __stdcall CExplosionInitThing__Unk_0044a6e0(void * param_1)	OK
+0x0044adb0	CExplosionInitThing__Unk_0044adb0	float * __thiscall CExplosionInitThing__Unk_0044adb0(void * this, void * param_1, int param_2)	OK
+0x0044d560	CExplosionInitThing__Unk_0044d560	void __fastcall CExplosionInitThing__Unk_0044d560(int param_1)	OK
+0x0046baf0	CExplosionInitThing__Unk_0046baf0	void __fastcall CExplosionInitThing__Unk_0046baf0(int param_1)	OK
+0x00477ba0	CExplosionInitThing__Unk_00477ba0	void CExplosionInitThing__Unk_00477ba0(void)	OK
+0x00479770	CExplosionInitThing__Unk_00479770	double __cdecl CExplosionInitThing__Unk_00479770(void * param_1, void * param_2)	OK
+0x00479db0	CExplosionInitThing__Unk_00479db0	void __fastcall CExplosionInitThing__Unk_00479db0(int param_1)	OK
+0x0047a160	CExplosionInitThing__Unk_0047a160	void __fastcall CExplosionInitThing__Unk_0047a160(void * param_1)	OK
+0x004804c0	CExplosionInitThing__Unk_004804c0	void __thiscall CExplosionInitThing__Unk_004804c0(void * this, int param_1, void * param_2)	OK
+0x00480ed0	CExplosionInitThing__Unk_00480ed0	void __thiscall CExplosionInitThing__Unk_00480ed0(void * this, void * param_1, void * param_2)	OK
+0x00482210	CExplosionInitThing__Unk_00482210	int CExplosionInitThing__Unk_00482210(void)	OK
+0x004879e0	CExplosionInitThing__Unk_004879e0	void __thiscall CExplosionInitThing__Unk_004879e0(void * this, void * param_1, int param_2, float param_3)	OK
+0x00487bc0	CExplosionInitThing__Unk_00487bc0	void __fastcall CExplosionInitThing__Unk_00487bc0(int param_1)	OK
+0x00487d10	CExplosionInitThing__Unk_00487d10	void __thiscall CExplosionInitThing__Unk_00487d10(void * this, void * param_1, void * param_2)	OK
+0x00488ea0	CExplosionInitThing__Unk_00488ea0	void __fastcall CExplosionInitThing__Unk_00488ea0(int param_1)	OK
+0x0048ddd0	CExplosionInitThing__Unk_0048ddd0	void __stdcall CExplosionInitThing__Unk_0048ddd0(int param_1)	OK
+0x0048ff90	CExplosionInitThing__Unk_0048ff90	void __fastcall CExplosionInitThing__Unk_0048ff90(int param_1)	OK
+0x004968f0	CExplosionInitThing__Unk_004968f0	bool __cdecl CExplosionInitThing__Unk_004968f0(int param_1)	OK
+0x0049c250	CExplosionInitThing__Unk_0049c250	bool __cdecl CExplosionInitThing__Unk_0049c250(int param_1)	OK
+0x004adf90	CExplosionInitThing__Unk_004adf90	void __fastcall CExplosionInitThing__Unk_004adf90(void * param_1)	OK
+0x004b6260	CExplosionInitThing__Unk_004b6260	int CExplosionInitThing__Unk_004b6260(void)	OK
+0x004b82a0	CExplosionInitThing__Unk_004b82a0	int __thiscall CExplosionInitThing__Unk_004b82a0(void * this, int param_1, int param_2)	OK
+0x004bc2e0	CExplosionInitThing__Unk_004bc2e0	int CExplosionInitThing__Unk_004bc2e0(void)	OK
+0x004bc510	CExplosionInitThing__Unk_004bc510	int __thiscall CExplosionInitThing__Unk_004bc510(void * this, int param_1, uint param_2, int param_3, uint param_4, float param_5)	OK
+0x004bcbf0	CExplosionInitThing__Unk_004bcbf0	void CExplosionInitThing__Unk_004bcbf0(void)	OK
+0x004bd5c0	CExplosionInitThing__Unk_004bd5c0	void __cdecl CExplosionInitThing__Unk_004bd5c0(int param_1, int param_2, int param_3, int param_4, int param_5)	OK
+0x004bdff0	CExplosionInitThing__Unk_004bdff0	void CExplosionInitThing__Unk_004bdff0(void)	OK
+0x004be1d0	CExplosionInitThing__Unk_004be1d0	int CExplosionInitThing__Unk_004be1d0(void)	OK
+0x004bed30	CExplosionInitThing__Unk_004bed30	void __cdecl CExplosionInitThing__Unk_004bed30(void * param_1, void * param_2)	OK
+0x004beea0	CExplosionInitThing__Unk_004beea0	void __thiscall CExplosionInitThing__Unk_004beea0(void * this, int param_1, void * param_2)	OK
+0x004bff40	CExplosionInitThing__Unk_004bff40	void __fastcall CExplosionInitThing__Unk_004bff40(int param_1)	OK
+0x004c7950	CExplosionInitThing__Unk_004c7950	double __thiscall CExplosionInitThing__Unk_004c7950(void * this, void * param_1, float param_2, float param_3, float param_4)	OK
+0x004c7db0	CExplosionInitThing__Unk_004c7db0	void CExplosionInitThing__Unk_004c7db0(void)	OK
+0x004d1f90	CExplosionInitThing__Unk_004d1f90	void __fastcall CExplosionInitThing__Unk_004d1f90(void * param_1)	OK

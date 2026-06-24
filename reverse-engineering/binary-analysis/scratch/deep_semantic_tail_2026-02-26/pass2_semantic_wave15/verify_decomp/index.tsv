@@ -1,0 +1,7 @@
+address	name	signature	status
+0x00512ca0	CShaderBase__Init	void __stdcall CShaderBase__Init(int param_1)	OK
+0x005428d0	CDXImposter__InitGlobals	int CDXImposter__InitGlobals(void)	OK
+0x00542990	CDXImposter__ShutdownAll	void CDXImposter__ShutdownAll(void)	OK
+0x00542a30	CDXImposter__InitEntry	void __fastcall CDXImposter__InitEntry(int param_1)	OK
+0x00542f90	CDXImposter__BuildQuadGeometry	int CDXImposter__BuildQuadGeometry(void)	OK
+0x005438c0	CDXImposter__RenderAll	void CDXImposter__RenderAll(void)	OK

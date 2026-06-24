@@ -1,0 +1,13 @@
+address	name	signature	status
+0x005833a6	CDXTexture__PackTexels_Dither_Bits2_10_10_10_Alt	void __thiscall CDXTexture__PackTexels_Dither_Bits2_10_10_10_Alt(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x005834ef	CDXTexture__PackTexels_Dither_Bits16_16_16_16	void __thiscall CDXTexture__PackTexels_Dither_Bits16_16_16_16(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00583670	CDXTexture__PackTexels_Dither_PaletteIndexA8	void __thiscall CDXTexture__PackTexels_Dither_PaletteIndexA8(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x005837b7	CDXTexture__PackTexels_Dither_PaletteIndex8	void __thiscall CDXTexture__PackTexels_Dither_PaletteIndex8(void * this, void * param_1, uint param_2, float param_3, uint param_4)	OK
+0x00583a94	CTexture__PackTexels_Dither_A4L4	void __thiscall CTexture__PackTexels_Dither_A4L4(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00583ba4	CTexture__PackTexels_Dither_L16	void __thiscall CTexture__PackTexels_Dither_L16(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00583c8e	CTexture__PackTexels_Dither_Bits8_8	void __thiscall CTexture__PackTexels_Dither_Bits8_8(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00583d89	CTexture__PackTexels_Dither_Bits5_5_5	void __thiscall CTexture__PackTexels_Dither_Bits5_5_5(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00583eb3	CTexture__PackTexels_Dither_Bits8_8_8_Alt	void __thiscall CTexture__PackTexels_Dither_Bits8_8_8_Alt(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00583fe5	CTexture__PackTexels_Dither_Bits8_8_8_8_Alt	void __thiscall CTexture__PackTexels_Dither_Bits8_8_8_8_Alt(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00584535	CTexture__PackTexels_Dither_Bits8_8_FromAuxLookup	void __thiscall CTexture__PackTexels_Dither_Bits8_8_FromAuxLookup(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x0058463a	CTexture__PackTexels_Dither_L16_Alt	void __thiscall CTexture__PackTexels_Dither_L16_Alt(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK

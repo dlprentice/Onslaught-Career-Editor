@@ -1,0 +1,5 @@
+0x00512490 PLATFORM__ProcessSystemMessages
+0x0052bb80 CD3DApplication__Reset3DEnvironment
+0x004f3110 ImageIO__WriteTGA24
+0x00404860 CAtmospheric__ConfigureTrail
+0x00469400 CFrontEnd__GetClickStateInRect

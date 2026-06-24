@@ -1,0 +1,213 @@
+{
+  "schemaVersion": "missionscript-slot-bitset-save-appcore-boundary-slot-corpus.v1",
+  "status": "PASS",
+  "slotBitsetSaveAppCoreBoundarySlotCorpusStatus": "missionscript-slot-bitset-save-appcore-boundary-slot-corpus-complete-273-appcore-cases-not-runtime-proof",
+  "previousSlice": "MissionScript Slot Bitset/Save Runtime-Proof Readiness Gate",
+  "selectedNextSlice": "MissionScript Slot Bitset/Save AppCore Copied-Baseline Boundary Corpus Harness Proof Plan",
+  "selectedFixtureFamily": "slot-bitset-save",
+  "selectedFixturePath": "slot-bitset-save-core-handler-and-career-bridge",
+  "implementation": {
+    "appCoreCodecPath": "OnslaughtCareerEditor.AppCore/MissionScriptSlotBitsetSaveCodec.cs",
+    "appCoreTestPath": "OnslaughtCareerEditor.AppCore.Tests/MissionScriptSlotBitsetSaveCodecTests.cs",
+    "interfaceKind": "pure AppCore in-memory buffer codec",
+    "fileIoPerformed": false,
+    "copiedFileMutationPerformed": false,
+    "sourceBaselineRead": false,
+    "privateArtifactMaterialized": false,
+    "productUiWired": false
+  },
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackupClass": "verified-static-backup-redacted"
+  },
+  "codecContract": {
+    "expectedFileSize": 10004,
+    "versionWord": "0x4BD1",
+    "trueViewRule": "file_offset = 0x0002 + career_offset",
+    "careerSlotsBase": "0x240A",
+    "careerSlotsEndExclusive": "0x248A",
+    "slotStorageDwords": 32,
+    "slotStorageBytes": 128,
+    "usedSlotDwords": 8,
+    "usedSlotStorageBytes": 32,
+    "reservedTailBytes": 96,
+    "validSlotRange": "0..255",
+    "firstValidSlot": 0,
+    "lastValidSlot": 255,
+    "firstUsedSlotOffset": "0x240A",
+    "lastUsedSlotOffset": "0x2429",
+    "reservedStorageEndExclusive": "0x248A"
+  },
+  "corpus": {
+    "existingSeedVectorCaseCount": 5,
+    "boundaryPairMaskCaseCount": 8,
+    "singleSlotRoundTripCaseCount": 256,
+    "xunitTestCaseCount": 273,
+    "boundaryPairMask": "0x80000001",
+    "boundaryVectorSlots": [
+      63,
+      64,
+      224,
+      255
+    ],
+    "boundaryPairDwordOffsets": [
+      "0x240A",
+      "0x240E",
+      "0x2412",
+      "0x2416",
+      "0x241A",
+      "0x241E",
+      "0x2422",
+      "0x2426"
+    ],
+    "boundaryPairs": [
+      {
+        "slots": [
+          0,
+          31
+        ],
+        "dwordIndex": 0,
+        "trueViewDwordOffset": "0x240A",
+        "mask": "0x80000001"
+      },
+      {
+        "slots": [
+          32,
+          63
+        ],
+        "dwordIndex": 1,
+        "trueViewDwordOffset": "0x240E",
+        "mask": "0x80000001"
+      },
+      {
+        "slots": [
+          64,
+          95
+        ],
+        "dwordIndex": 2,
+        "trueViewDwordOffset": "0x2412",
+        "mask": "0x80000001"
+      },
+      {
+        "slots": [
+          96,
+          127
+        ],
+        "dwordIndex": 3,
+        "trueViewDwordOffset": "0x2416",
+        "mask": "0x80000001"
+      },
+      {
+        "slots": [
+          128,
+          159
+        ],
+        "dwordIndex": 4,
+        "trueViewDwordOffset": "0x241A",
+        "mask": "0x80000001"
+      },
+      {
+        "slots": [
+          160,
+          191
+        ],
+        "dwordIndex": 5,
+        "trueViewDwordOffset": "0x241E",
+        "mask": "0x80000001"
+      },
+      {
+        "slots": [
+          192,
+          223
+        ],
+        "dwordIndex": 6,
+        "trueViewDwordOffset": "0x2422",
+        "mask": "0x80000001"
+      },
+      {
+        "slots": [
+          224,
+          255
+        ],
+        "dwordIndex": 7,
+        "trueViewDwordOffset": "0x2426",
+        "mask": "0x80000001"
+      }
+    ],
+    "allValidSlotsRoundTrip": true,
+    "setSlotIdempotentForAllValidSlots": true,
+    "clearRoundTripsForAllValidSlots": true,
+    "touchesOnlyExpectedByteForAllValidSlots": true,
+    "crossDwordMaskRejected": true,
+    "invalidSlotLowerBoundRejected": true,
+    "invalidSlotUpperBoundRejected": true,
+    "slot256Rejected": true,
+    "wrongSizeRejected": true,
+    "wrongVersionRejected": true
+  },
+  "dotnetValidation": {
+    "command": "dotnet test OnslaughtCareerEditor.AppCore.Tests/OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter MissionScriptSlotBitsetSaveCodecTests",
+    "dotnetFilter": "MissionScriptSlotBitsetSaveCodecTests",
+    "passed": true,
+    "total": 273,
+    "failed": 0,
+    "skipped": 0,
+    "previewSdkMessageOnly": true
+  },
+  "negativeGuards": {
+    "runtimeExecution": false,
+    "beLaunch": false,
+    "newLaunch": false,
+    "screenshotCapture": false,
+    "privateFrameReviewPerformed": false,
+    "rowObservation": false,
+    "nativeInput": false,
+    "debuggerAttachment": false,
+    "installedGameMutationAllowed": false,
+    "originalExecutableMutationAllowed": false,
+    "defaultoptionsMutation": false,
+    "ghidraMutation": false,
+    "executablePatching": false,
+    "godotWork": false,
+    "productUiWired": false,
+    "rebuildImplementation": false,
+    "runtimeObservationRows": 0,
+    "missionScriptRuntimeEvidenceRows": 0,
+    "runtimeCommandEffectRows": 0,
+    "runtimeSaveRows": 0,
+    "publicLeakCheck": "PASS"
+  },
+  "claimBoundary": {
+    "proves": [
+      "the clean-room AppCore in-memory codec maps every valid saved MissionScript slot 0..255",
+      "every valid saved slot set operation touches only the expected little-endian byte",
+      "every valid saved slot set operation is idempotent and clears back to baseline",
+      "the first and last slot in each used saved dword build the expected 0x80000001 mask"
+    ],
+    "doesNotProve": [
+      "runtime MissionScript execution",
+      "runtime command effects",
+      "runtime slot persistence",
+      "runtime save/load behavior",
+      "runtime defaultoptions behavior",
+      "copied-file boundary corpus behavior",
+      "source selection",
+      "private-frame review",
+      "screenshot or frame interpretation",
+      "native input",
+      "debugger behavior",
+      "installed game mutation",
+      "product UI behavior",
+      "Ghidra mutation",
+      "executable patching",
+      "Godot parity",
+      "rebuild implementation",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  }
+}

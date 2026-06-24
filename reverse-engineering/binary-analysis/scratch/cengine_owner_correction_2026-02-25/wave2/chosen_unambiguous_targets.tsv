@@ -1,0 +1,10 @@
+address	old_name	inferred_owner	xref_count	top_counts
+0x004be970	CEngine__Unk_004be970	CExplosionInitThing	8	CExplosionInitThing:8
+0x004be9b0	CEngine__Unk_004be9b0	CExplosionInitThing	5	CExplosionInitThing:5
+0x004bea10	CEngine__Unk_004bea10	CExplosionInitThing	3	CExplosionInitThing:3
+0x004bea70	CEngine__Unk_004bea70	CExplosionInitThing	4	CExplosionInitThing:4
+0x004bead0	CEngine__Unk_004bead0	CExplosionInitThing	4	CExplosionInitThing:4
+0x004c5c50	CEngine__Unk_004c5c50	CPDSimpleSprite	1	CPDSimpleSprite:1
+0x004c78b0	CEngine__Unk_004c78b0	CPDSimpleSprite	3	CPDSimpleSprite:3
+0x00509e40	CEngine__Unk_00509e40	CBattleEngine	1	CBattleEngine:1
+0x0053c2e0	CEngine__Unk_0053c2e0	CExplosionInitThing	1	CExplosionInitThing:1

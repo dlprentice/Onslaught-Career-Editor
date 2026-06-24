@@ -1,0 +1,176 @@
+{
+  "schemaVersion": "missionscript-goodie-state-save-copied-baseline-byte-diff-fixture-proof.v1",
+  "status": "PASS",
+  "missionScriptGoodieStateSaveCopiedBaselineByteDiffFixtureProofStatus": "missionscript-goodie-state-save-copied-baseline-byte-diff-fixture-proof-complete-copied-real-baseline-appcore-byte-diff-not-runtime-proof",
+  "previousSlice": "MissionScript Goodie State / Save Command-Effect Fixture Proof Plan",
+  "selectedNextSlice": "MissionScript Goodie State / Save Clean-Room Codec Interface Proof Plan",
+  "selectedFixtureFamily": "goodie-state-save",
+  "selectedFixturePath": "goodie-state-save-index-state-byte-preservation",
+  "implementation": {
+    "toolProjectPath": "tools/MissionScriptGoodieStateSaveHarness/MissionScriptGoodieStateSaveHarness.csproj",
+    "appCorePatcherPath": "OnslaughtCareerEditor.AppCore/BesFilePatcher.cs",
+    "appCoreService": "BesFilePatcher.PatchGoodieStates",
+    "patcherInputIndexClass": "zero-based-save-goodie-index",
+    "appCorePatcherUsed": true,
+    "harnessFileIo": true,
+    "productUiWired": false,
+    "privateArtifactMaterialized": true,
+    "defaultoptionsGoodieMutation": false
+  },
+  "privateEvidence": {
+    "privateEvidenceRootPublic": false,
+    "sourcePathsPublic": false,
+    "sourceHashesPublic": false,
+    "artifactPathsPublic": false,
+    "artifactHashesPublic": false,
+    "rawSaveBytesPublic": false,
+    "patchResultMessagePublic": false,
+    "copiedRealBesBaselineUsed": true,
+    "copiedDefaultOptionsValidationOnly": true,
+    "acceptedFixturesDerivedFromCopiedBaselines": true,
+    "copiedArtifactCount": 7,
+    "copyBeforeWrite": true,
+    "outputRootContainedInIgnoredEvidence": true,
+    "sourceAndOutputPathsDistinct": true,
+    "sourceBaselineMutation": false,
+    "sourceBaselineBeforeAfterDiffCount": 0,
+    "careerSourceToInputDiffCount": 0,
+    "defaultOptionsSourceToInputDiffCount": 0
+  },
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackupClass": "verified-static-backup-redacted"
+  },
+  "container": {
+    "expectedSize": 10004,
+    "expectedSizeHex": "0x2714",
+    "versionWord": "0x4BD1",
+    "trueViewRule": "file_offset = 0x0002 + career_offset",
+    "trueViewGoodieBase": "0x1F46",
+    "goodieStorageEntryCount": 300,
+    "displayableGoodieCount": 233,
+    "reservedPreserveEntryCount": 67,
+    "allOutputsFileSizePreserved": true,
+    "allOutputsVersionWordPreserved": true
+  },
+  "indexMapping": {
+    "scriptIndexSaveIndexDisambiguated": true,
+    "mappingFormula": "save_goodie_index = script_index - 1",
+    "offsetFormula": "file_offset = 0x1F46 + save_goodie_index * 4",
+    "scriptIndices": [
+      1,
+      51,
+      53,
+      68,
+      71,
+      233
+    ],
+    "saveGoodieIndices": [
+      0,
+      50,
+      52,
+      67,
+      70,
+      232
+    ],
+    "targetOffsetRanges": [
+      "0x1F46-0x1F49",
+      "0x200E-0x2011",
+      "0x2016-0x2019",
+      "0x2052-0x2055",
+      "0x205E-0x2061",
+      "0x22E6-0x22E9"
+    ],
+    "targetDwordWriteCount": 6,
+    "targetReadbackMismatchCount": 0
+  },
+  "byteDiff": {
+    "changedOffsets": [
+      "0x1F46",
+      "0x200E",
+      "0x2016",
+      "0x2052",
+      "0x205E",
+      "0x22E6"
+    ],
+    "changedOffsetCount": 6,
+    "expectedChangedOffsets": [
+      "0x1F46",
+      "0x200E",
+      "0x2016",
+      "0x2052",
+      "0x205E",
+      "0x22E6"
+    ],
+    "unexpectedDiffCount": 0,
+    "legacyTrapHitCount": 0,
+    "careerNoopDiffCount": 0,
+    "defaultOptionsNoopDiffCount": 0,
+    "idempotentDiffCount": 0,
+    "roundtripToBaselineDiffCount": 0
+  },
+  "preservation": {
+    "nonTargetGoodiesUnchanged": true,
+    "reservedGoodiesUnchanged": true,
+    "killCountersUnchanged": true,
+    "techSlotsUnchanged": true,
+    "optionsEntriesUnchanged": true,
+    "optionsTailUnchanged": true
+  },
+  "rejections": {
+    "reservedIndexRejection": true,
+    "invalidStateRejection": true,
+    "inPlaceRejection": true,
+    "emptyOverrideRejection": true
+  },
+  "negativeGuards": {
+    "saveSynthesis": false,
+    "installedGameMutation": false,
+    "originalExecutableMutation": false,
+    "runtimeExecution": false,
+    "beLaunch": false,
+    "ghidraMutation": false,
+    "executablePatching": false,
+    "godotWork": false,
+    "productUiWired": false,
+    "rebuildImplementation": false,
+    "runtimeGoodieStateMutationProven": false,
+    "runtimeSaveBehaviorProven": false,
+    "runtimeGoodiesWallBehaviorProven": false,
+    "runtimeScoreBehaviorProven": false,
+    "syntheticAuthorityBufferUsed": false,
+    "defaultoptionsGoodieMutation": false
+  },
+  "claimBoundary": {
+    "proves": [
+      "AppCore PatchGoodieStates can apply selected Goodie state dwords to a copied real career baseline",
+      "one-based MissionScript Goodie indices are translated to zero-based save Goodie indices before patching",
+      "six selected displayable Goodie dwords change only at expected true-view file offsets",
+      "defaultoptions is validated and copied/no-op compared only, not Goodie-mutated",
+      "source baselines, reserved Goodies, kill counters, tech slots, options entries, options tail, idempotent patching, and roundtrip restore satisfy the byte-preservation contract"
+    ],
+    "doesNotProve": [
+      "runtime MissionScript execution",
+      "runtime command effects",
+      "runtime Goodie state mutation",
+      "runtime save/load behavior",
+      "runtime defaultoptions behavior",
+      "runtime Goodies wall behavior",
+      "runtime score behavior",
+      "live loose-MSL loading",
+      "packed-resource script selection",
+      "installed game mutation",
+      "product UI behavior",
+      "Ghidra mutation",
+      "executable patching",
+      "Godot parity",
+      "rebuild implementation",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  }
+}

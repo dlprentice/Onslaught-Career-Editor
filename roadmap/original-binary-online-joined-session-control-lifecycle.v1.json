@@ -1,0 +1,289 @@
+{
+  "schemaVersion": "winui-original-binary-joined-session-control-lifecycle.v1",
+  "status": "complete public-safe same-host joined-session control-lifecycle proof; no BEA launch, CDB attach, true online multiplayer, second-host LAN, public matchmaking, native BEA netcode, active P3/P4 gameplay, or mode-runtime proof",
+  "date": "2026-06-19",
+  "scope": "original-binary-online-joined-session-control-lifecycle",
+  "proofBoundary": {
+    "proofClass": "control-plane-lifecycle-harness-not-runtime-gameplay-proof",
+    "sessionControlScope": "joined-session-control-lifecycle-same-host-not-online-play",
+    "sameHostSessionControlSchema": "winui-original-binary-joined-session-same-host-session-control.v1",
+    "sameHostSessionControlScope": "joined-session-same-host-session-control-not-online-play",
+    "sourceRuntimeProfile": "original-binary-copied-local-splitscreen",
+    "sourceJoinedAuthoritySchema": "winui-original-binary-joined-session-same-host-runtime-authority.v1",
+    "sourceJoinedCausalitySchema": "winui-original-binary-joined-session-runtime-causality.v1",
+    "sourceSessionDirectorySchema": "winui-original-binary-online-session-directory-smoke.v1",
+    "acceptedJoinTicketSlot": "P2",
+    "acceptedOriginalBinaryGameplaySlots": [
+      "P1",
+      "P2"
+    ],
+    "metadataOnlySlots": [
+      "P3",
+      "P4"
+    ],
+    "rejectedGameplayRouteSlots": [
+      "P3",
+      "P4"
+    ],
+    "sessionControlLifecycleProven": true,
+    "sessionControlBoundToRuntimeRelayHash": true,
+    "upstreamJoinedSessionRuntimeCausalityProven": true,
+    "upstreamNewBeaLaunchCount": 1,
+    "upstreamCdbAttachCount": 1,
+    "newBeaLaunchCount": 0,
+    "cdbAttachCount": 0,
+    "hostHelperInputSentBySessionControl": false,
+    "gameInputSentBySessionControl": false,
+    "nPlayerOriginalBinaryRuntimeProof": 0,
+    "activeP3P4OriginalBinaryGameplayProof": false,
+    "baseOnlineMultiplayerReady": false,
+    "sameHostOnly": true,
+    "samePhysicalMachineOnly": true,
+    "secondPhysicalHostProof": false,
+    "multiHostLanProof": false,
+    "publicMatchmakingProof": false,
+    "nativeBeaNetcodeProof": false,
+    "publicBind": false,
+    "publicNetworkSocketsOpened": false
+  },
+  "controlLifecycle": {
+    "stateMachine": "registered->listed->ticket-issued->joined-active->heartbeat-ok->stream-paused->stream-resumed->soft-reconnect-metadata-only->spectator-admin-metadata->left",
+    "acceptedControlActionCount": 11,
+    "rejectedControlCaseCount": 22,
+    "reconnectProofScope": "metadata-reconnect-only-not-runtime-reconnect",
+    "spectatorAdminMetadataOnly": true,
+    "modeRuntimeClassification": "unclassified-local-multiplayer-behavior",
+    "coOpVersusModeRuntimeProofSlices": 0,
+    "controlActionsAccepted": [
+      {
+        "actionId": "register-copied-host-session",
+        "fromState": "none",
+        "toState": "registered",
+        "accepted": true
+      },
+      {
+        "actionId": "list-compatible-session",
+        "fromState": "registered",
+        "toState": "listed",
+        "accepted": true
+      },
+      {
+        "actionId": "issue-p2-join-ticket",
+        "fromState": "listed",
+        "toState": "ticket-issued",
+        "accepted": true
+      },
+      {
+        "actionId": "activate-p2-join-ticket",
+        "fromState": "ticket-issued",
+        "toState": "joined-active",
+        "accepted": true
+      },
+      {
+        "actionId": "heartbeat-p2-active",
+        "fromState": "joined-active",
+        "toState": "heartbeat-ok",
+        "accepted": true
+      },
+      {
+        "actionId": "pause-command-stream",
+        "fromState": "heartbeat-ok",
+        "toState": "stream-paused",
+        "accepted": true
+      },
+      {
+        "actionId": "resume-command-stream",
+        "fromState": "stream-paused",
+        "toState": "stream-resumed",
+        "accepted": true
+      },
+      {
+        "actionId": "soft-reconnect-p2-same-ticket-fingerprint",
+        "fromState": "stream-resumed",
+        "toState": "soft-reconnect-metadata-only",
+        "accepted": true
+      },
+      {
+        "actionId": "spectator-metadata-query",
+        "fromState": "soft-reconnect-metadata-only",
+        "toState": "spectator-admin-metadata",
+        "accepted": true
+      },
+      {
+        "actionId": "admin-metadata-query",
+        "fromState": "spectator-admin-metadata",
+        "toState": "spectator-admin-metadata",
+        "accepted": true
+      },
+      {
+        "actionId": "graceful-leave-p2",
+        "fromState": "spectator-admin-metadata",
+        "toState": "left",
+        "accepted": true
+      }
+    ]
+  },
+  "controlSecurity": {
+    "securityScope": "same-host-session-control-message-smoke-not-production-security-proof",
+    "inheritsSessionSecurityProof": true,
+    "sessionScopedControlMacCoveragePolicy": "inherits-session-security-smoke-mac-bound-fields",
+    "controlMessagesSchemaAllowlisted": true,
+    "unknownFieldRejectionProof": true,
+    "strictControlSchemaProof": true,
+    "maxJsonLineBytesEnforced": true,
+    "maxJsonLineBytes": 4096,
+    "ticketReplayRejectionProof": true,
+    "expiredTicketRejectionProof": true,
+    "sequenceEnforcementProof": true,
+    "staleHeartbeatRejectionProof": true,
+    "pausedStreamDropsGameplayCommands": true,
+    "reconnectAfterLeaveRejected": true,
+    "credentialStorage": "ephemeral-not-serialized",
+    "rawCredentialSerialized": false,
+    "operatorSecretsRequired": false,
+    "publicBind": false,
+    "publicNetworkSocketsOpened": false
+  },
+  "rejectedControlCases": [
+    {
+      "caseId": "expired-ticket",
+      "reason": "expired-join-ticket",
+      "accepted": false
+    },
+    {
+      "caseId": "replayed-ticket",
+      "reason": "replay-cache-hit",
+      "accepted": false
+    },
+    {
+      "caseId": "wrong-session-id",
+      "reason": "session-identity-mismatch",
+      "accepted": false
+    },
+    {
+      "caseId": "wrong-client-slot",
+      "reason": "join-ticket-slot-mismatch",
+      "accepted": false
+    },
+    {
+      "caseId": "p3-gameplay-activation",
+      "reason": "metadata-slot-gameplay-not-allowed",
+      "accepted": false
+    },
+    {
+      "caseId": "p4-gameplay-activation",
+      "reason": "metadata-slot-gameplay-not-allowed",
+      "accepted": false
+    },
+    {
+      "caseId": "spectator-gameplay-command",
+      "reason": "spectator-metadata-only",
+      "accepted": false
+    },
+    {
+      "caseId": "admin-gameplay-mutation",
+      "reason": "admin-metadata-only",
+      "accepted": false
+    },
+    {
+      "caseId": "direct-game-input-from-control-plane",
+      "reason": "control-plane-never-sends-game-input",
+      "accepted": false
+    },
+    {
+      "caseId": "public-matchmaking-request",
+      "reason": "public-matchmaking-not-proven",
+      "accepted": false
+    },
+    {
+      "caseId": "second-host-claim",
+      "reason": "second-physical-host-not-proven",
+      "accepted": false
+    },
+    {
+      "caseId": "native-netcode-claim",
+      "reason": "native-bea-netcode-not-proven",
+      "accepted": false
+    },
+    {
+      "caseId": "mode-runtime-claim",
+      "reason": "co-op-versus-mode-runtime-not-proven",
+      "accepted": false
+    },
+    {
+      "caseId": "unknown-field",
+      "reason": "unknown-field",
+      "accepted": false
+    },
+    {
+      "caseId": "oversized-control-message",
+      "reason": "max-json-line-bytes-exceeded",
+      "accepted": false
+    },
+    {
+      "caseId": "stale-heartbeat",
+      "reason": "stale-heartbeat",
+      "accepted": false
+    },
+    {
+      "caseId": "bad-sequence",
+      "reason": "non-next-control-sequence",
+      "accepted": false
+    },
+    {
+      "caseId": "missing-runtime-relay-hash",
+      "reason": "missing-runtime-compatible-relay-hash",
+      "accepted": false
+    },
+    {
+      "caseId": "wrong-runtime-relay-hash",
+      "reason": "runtime-compatible-relay-hash-mismatch",
+      "accepted": false
+    },
+    {
+      "caseId": "secret-bearing-control-message",
+      "reason": "secret-bearing-message-rejected",
+      "accepted": false
+    },
+    {
+      "caseId": "raw-private-path-control-message",
+      "reason": "raw-private-path-message-rejected",
+      "accepted": false
+    },
+    {
+      "caseId": "reconnect-after-leave",
+      "reason": "left-session-requires-new-ticket",
+      "accepted": false
+    }
+  ],
+  "releaseBoundary": {
+    "privateProofReleaseExcludedByPolicy": true,
+    "rawPrivateProofPathPublished": false,
+    "rawPrivateArtifactContentPublished": false,
+    "absolutePrivatePathPublished": false,
+    "rawRuntimePointerPublished": false,
+    "rawRuntimePidPublished": false,
+    "rawCdbLogPathPublished": false,
+    "releaseIncludedPrivateArtifact": false
+  },
+  "nonClaims": {
+    "baseOnlineMultiplayerReady": false,
+    "secondPhysicalHostProof": false,
+    "multiHostLanProof": false,
+    "publicMatchmakingProof": false,
+    "publicServerProof": false,
+    "nativeBeaNetcodeProof": false,
+    "coOpModeRuntimeProof": false,
+    "versusModeRuntimeProof": false,
+    "teamVersusRuntimeProof": false,
+    "deterministicSyncProof": false,
+    "rollbackProof": false,
+    "antiCheatProof": false,
+    "physicalGamepadProof": false,
+    "activeP3P4OriginalBinaryGameplayProof": false,
+    "joinedSessionVisibleMovementCausalityProof": false,
+    "rebuildParityProof": false,
+    "noNoticeableDifferenceProof": false
+  },
+  "claimBoundary": "This proves a same-host joined-session control-lifecycle harness for public-safe session metadata around the already accepted P1/P2 runtime-authority path. It does not launch BEA, attach CDB, send game input, prove base online multiplayer readiness, prove a second physical host, prove multi-host LAN play, prove public matchmaking, prove native BEA netcode, prove active P3/P4 original-binary gameplay, prove co-op/versus runtime behavior, prove joined-session visible movement causality, or prove rebuild/no-noticeable-difference parity."
+}

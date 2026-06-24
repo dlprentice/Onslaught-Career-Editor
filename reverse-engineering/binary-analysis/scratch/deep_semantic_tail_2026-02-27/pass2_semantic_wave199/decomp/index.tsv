@@ -1,0 +1,6 @@
+address	name	signature	status
+0x004fd500	CExplosionInitThing__Helper_004fd500	void __thiscall CExplosionInitThing__Helper_004fd500(void * this, void * param_1, void * param_2)	OK
+0x0050d760	CExplosionInitThing__Helper_0050d760	double __thiscall CExplosionInitThing__Helper_0050d760(void * this, int param_1, int param_2)	OK
+0x0053b5f0	CExplosionInitThing__Helper_0053b5f0	void __thiscall CExplosionInitThing__Helper_0053b5f0(void * this, int param_1, float param_2, float param_3, uint param_4)	OK
+0x0053c2e0	CExplosionInitThing__Helper_0053c2e0	void __thiscall CExplosionInitThing__Helper_0053c2e0(void * this, void * param_1, int param_2)	OK
+0x0053cd30	CExplosionInitThing__Helper_0053cd30	void __thiscall CExplosionInitThing__Helper_0053cd30(void * this, void * param_1, void * param_2)	OK

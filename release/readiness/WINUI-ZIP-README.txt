@@ -27,13 +27,13 @@ Safety notes
 What this package shape proves
 ------------------------------
 
-The private maintainer ZIP probe builds disposable WinUI publish output, stages
-a friendly portable root with this README, LICENSE, Launch Onslaught
-Toolkit.cmd, and app\, creates this ZIP, writes a SHA-256 sidecar, extracts the
-ZIP, launches the extracted app from app\, runs native launch smoke, runs
-extracted app Home navigation smoke, runs representative Media smoke, and
-confirms no WinUI process remains. The probe also rejects raw publish layouts
-that expose DLLs or executables at the ZIP root.
+The repository ZIP probe builds disposable WinUI publish output, stages a
+friendly portable root with this README, LICENSE, Launch Onslaught Toolkit.cmd,
+and app\, creates this ZIP, writes a SHA-256 sidecar, extracts the ZIP,
+launches the extracted app from app\, runs native launch smoke, runs extracted
+app Home navigation smoke, runs representative Media smoke, and confirms no
+WinUI process remains. The probe also rejects raw publish layouts that expose
+DLLs or executables at the ZIP root.
 
 What this package shape does not prove
 --------------------------------------

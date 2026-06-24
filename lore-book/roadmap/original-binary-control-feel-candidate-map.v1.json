@@ -1,0 +1,356 @@
+{
+  "schema": "original-binary-control-feel-candidate-map.v1",
+  "date": "2026-06-19",
+  "scope": "copied-profile original-binary control-feel candidates",
+  "visiblePatchRowAdded": false,
+  "improvedControlFeelProof": false,
+  "physicalGamepadProof": false,
+  "wallClockLatencyProof": false,
+  "acceptedOriginalBinaryGameplaySlots": [
+    "P1",
+    "P2"
+  ],
+  "metadataOnlySlots": [
+    "P3",
+    "P4"
+  ],
+  "candidateCount": 6,
+  "riskModel": [
+    {
+      "risk": "highest",
+      "targets": [
+        "0x0042db40 CController__DoMappings",
+        "0x0042e3d0 CController__GetMappedInputValue",
+        "0x0042e4d0 CController__SendButtonAction"
+      ],
+      "reason": "Broad dispatcher/accessor changes can affect gameplay, frontend, pause/menu, debug camera, recording/playback, and local multiplayer P1/P2 routing.",
+      "allowedNextAction": "Trace and observe only until a narrower hook or table row is proven."
+    },
+    {
+      "risk": "high",
+      "targets": [
+        "0x00513120 PlatformInput__InitDirectInput",
+        "0x00513370 PlatformInput__PollPadState",
+        "CPCController joy analogue accessors"
+      ],
+      "reason": "DirectInput/deadzone changes are plausible but still have zero physical gamepad runtime proof on the current host.",
+      "allowedNextAction": "Fresh byte export and physical-device A/B proof before any player-facing deadzone claim."
+    },
+    {
+      "risk": "medium-high",
+      "targets": [
+        "0x00407540 CGame__UpdateMouseLookAngles",
+        "source look/deadzone constants",
+        "BattleEngine movement/turn constants"
+      ],
+      "reason": "These may change camera or gameplay balance rather than merely fixing control feel; source is hypothesis and retail runtime is authority.",
+      "allowedNextAction": "Runtime trace first; separate camera, movement, balance, and feel claims."
+    },
+    {
+      "risk": "lower",
+      "targets": [
+        "copied defaultoptions.bea mouse sensitivity",
+        "copied defaultoptions.bea controller config",
+        "copied defaultoptions.bea invert-Y toggles"
+      ],
+      "reason": "These are copied-file, reversible, manifest-gated controls that already have read-back/materialization evidence.",
+      "allowedNextAction": "Use as A/B baselines, not as proof that control feel is improved."
+    }
+  ],
+  "candidates": [
+    {
+      "id": "copied_defaultoptions_mouse_sensitivity",
+      "label": "Copied defaultoptions mouse sensitivity scalar",
+      "classification": "already_materialized_options_edit",
+      "status": "player_tryable_safe_copy_option",
+      "staticAnchors": [
+        {
+          "kind": "save_options_tail",
+          "fileOffset": "0x26C2",
+          "meaning": "defaultoptions.bea options tail +0x04 for 16-entry retail options layout"
+        },
+        {
+          "kind": "global",
+          "address": "0x006254f4",
+          "name": "g_MouseSensitivity"
+        },
+        {
+          "kind": "function",
+          "address": "0x00407540",
+          "name": "CGame__UpdateMouseLookAngles"
+        }
+      ],
+      "evidenceRefs": [
+        "OnslaughtCareerEditor.AppCore/GameProfileControlOptionsService.cs",
+        "OnslaughtCareerEditor.AppCore/BesFilePatcher.cs",
+        "tools/winui_safe_copy_live_runtime_control_options_artifact_check.py",
+        "tools/winui_control_feel_telemetry_bundle_check.py",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "release/readiness/winui_safe_copy_control_options_2026-06-17.md",
+        "release/readiness/winui_control_feel_telemetry_bundle_2026-06-19.md"
+      ],
+      "requiredProofs": [
+        "copied defaultoptions read-back",
+        "runtime A/B camera/mouse-look trace before claiming improved feel",
+        "no installed defaultoptions mutation"
+      ],
+      "nonClaims": [
+        "not analog deadzone behavior",
+        "not look-curve patch",
+        "not improved control-feel proof",
+        "not physical gamepad proof"
+      ],
+      "recommendedAction": "Keep exposed as copied-options preset; use as A/B baseline while searching for real byte-level feel candidates."
+    },
+    {
+      "id": "copied_defaultoptions_controller_config",
+      "label": "Copied defaultoptions controller configuration preset",
+      "classification": "already_materialized_options_edit",
+      "status": "player_tryable_safe_copy_option",
+      "staticAnchors": [
+        {
+          "kind": "source",
+          "path": "references/Onslaught/PCController.cpp",
+          "meaning": "source controller mapping rows for configurations 1-4"
+        },
+        {
+          "kind": "save_options",
+          "path": "reverse-engineering/binary-analysis/functions/Controller.cpp/ControlBindings.md",
+          "meaning": "retail options entries and control scheme nuance"
+        }
+      ],
+      "evidenceRefs": [
+        "OnslaughtCareerEditor.AppCore/GameProfileControlOptionsService.cs",
+        "OnslaughtCareerEditor.AppCore/BesFilePatcher.cs",
+        "references/Onslaught/PCController.cpp",
+        "reverse-engineering/binary-analysis/functions/Controller.cpp/ControlBindings.md",
+        "tools/winui_control_feel_diagnostics_matrix.py",
+        "release/readiness/winui_control_feel_telemetry_bundle_2026-06-19.md"
+      ],
+      "requiredProofs": [
+        "copied defaultoptions read-back",
+        "scenario-specific runtime input/capture proof",
+        "separate A/B proof before saying one config feels better"
+      ],
+      "nonClaims": [
+        "not a binary patch",
+        "not an improved-feel proof",
+        "not physical gamepad proof",
+        "not broad controls coverage"
+      ],
+      "recommendedAction": "Keep as diagnostics and user-selectable safe-copy option; do not promote a best-feel preset until A/B proof exists."
+    },
+    {
+      "id": "platform_input_directinput_deadzone_0x96",
+      "label": "PlatformInput DirectInput deadzone byte-export candidate",
+      "classification": "file_backed_static_candidate_runtime_blocked",
+      "status": "file-backed byte export complete; runtime blocked; not patchable yet",
+      "staticAnchors": [
+        {
+          "kind": "function",
+          "address": "0x00513120",
+          "name": "PlatformInput__InitDirectInput"
+        },
+        {
+          "kind": "constant",
+          "value": "0x96",
+          "meaning": "retail DirectInput deadzone setup constant documented by Wave848"
+        },
+        {
+          "kind": "source",
+          "path": "references/Onslaught/Controller.h",
+          "meaning": "source analog deadzone constants ANALOGUE_X_DEAD=0.36, ANALOGUE_Y_DEAD=0.36, ANALOGUE_BUTTON_DEAD=0.3"
+        },
+        {
+          "kind": "instruction",
+          "address": "0x00513167",
+          "fileOffset": "0x113167",
+          "bytes": "C7 85 E0 30 03 00 96 00 00 00",
+          "meaning": "clean Steam retail file-backed immediate write MOV dword ptr [EBP + 0x330e0], 0x96"
+        },
+        {
+          "kind": "immediate",
+          "address": "0x0051316D",
+          "fileOffset": "0x11316D",
+          "bytes": "96 00 00 00",
+          "meaning": "little-endian 0x96 immediate within the file-backed DirectInput deadzone setup instruction"
+        }
+      ],
+      "evidenceRefs": [
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "tools/ghidra_platform_input_core_wave848_probe.py",
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/PCController.cpp",
+        "tools/winui_safe_copy_local_multiplayer_gamepad_readiness.py",
+        "tools/winui_directinput_deadzone_byte_export_check.py",
+        "release/readiness/winui_directinput_deadzone_byte_export_2026-06-19.md",
+        "roadmap/original-binary-directinput-deadzone-runtime-ab-readiness.v1.json",
+        "tools/winui_directinput_deadzone_runtime_ab_readiness.py",
+        "release/readiness/winui_directinput_deadzone_runtime_ab_readiness_2026-06-23.md"
+      ],
+      "requiredProofs": [
+        "fresh static byte export around PlatformInput__InitDirectInput completed for 0x00513167 / 0x113167",
+        "copied-executable A/B byte verification before any patch row",
+        "restore verification before any patch row",
+        "physical gamepad or equivalent DirectInput runtime proof before player-facing claim",
+        "no keyboard-only improved-feel claim",
+        "per-configuration regression across controller configs 1-4 before default-visible control-feel claim"
+      ],
+      "nonClaims": [
+        "not currently a patch row",
+        "not patchable yet",
+        "not physical gamepad proof",
+        "not improved control-feel proof",
+        "not proof that all floatiness comes from deadzone",
+        "not runtime DirectInput proof"
+      ],
+      "recommendedAction": "Use the file-backed 0x96 immediate as a runtime-blocked candidate only; do not add a Patch Bench/catalog row until copied-executable A/B, restore, physical DirectInput/gamepad, negative-control, downstream input-state, and per-config regression proofs exist.",
+      "byteExport": {
+        "schema": "winui-directinput-deadzone-byte-export.v1",
+        "readinessNote": "release/readiness/winui_directinput_deadzone_byte_export_2026-06-19.md",
+        "checker": "tools/winui_directinput_deadzone_byte_export_check.py",
+        "cleanSpecimenSha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+        "cleanSpecimenSize": 2506752,
+        "functionVa": "0x00513120",
+        "instructionVa": "0x00513167",
+        "instructionFileOffset": "0x113167",
+        "immediateVa": "0x0051316D",
+        "immediateFileOffset": "0x11316D",
+        "fileBackedImmediate": true,
+        "addsPatchRow": false,
+        "runtimeProof": false,
+        "physicalGamepadProof": false,
+        "improvedControlFeelProof": false
+      },
+      "runtimeAbReadiness": {
+        "schema": "winui-directinput-deadzone-runtime-ab-readiness.v1",
+        "contract": "roadmap/original-binary-directinput-deadzone-runtime-ab-readiness.v1.json",
+        "readinessNote": "release/readiness/winui_directinput_deadzone_runtime_ab_readiness_2026-06-23.md",
+        "checker": "tools/winui_directinput_deadzone_runtime_ab_readiness.py",
+        "status": "blocked_no_present_gamepad",
+        "presentGamepadCandidateCount": 0,
+        "registryGamepadCandidateCount": 0,
+        "addsPatchRow": false,
+        "runtimeAbProof": false,
+        "physicalGamepadProof": false,
+        "improvedControlFeelProof": false
+      }
+    },
+    {
+      "id": "controller_mapping_engine",
+      "label": "Virtual controller mapping engine",
+      "classification": "needs_runtime_trace",
+      "status": "observer and routing target",
+      "staticAnchors": [
+        {
+          "kind": "function",
+          "address": "0x0042db40",
+          "name": "CController__DoMappings"
+        },
+        {
+          "kind": "function",
+          "address": "0x0042e3d0",
+          "name": "CController__GetMappedInputValue"
+        }
+      ],
+      "evidenceRefs": [
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "reverse-engineering/binary-analysis/functions/Controller.cpp/ControlBindings.md",
+        "tools/winui_safe_copy_controller_mapping_table_artifact_check.py",
+        "tools/runtime-probes/controller-mapping-table-observer.cdb.txt"
+      ],
+      "requiredProofs": [
+        "runtime row-window trace for candidate action",
+        "negative controls for non-target buttons",
+        "separate repeat-timing or analog-value trace before patching"
+      ],
+      "nonClaims": [
+        "not a current patch target",
+        "not proof of defaultoptions persistence by itself",
+        "not a complete controls rewrite"
+      ],
+      "recommendedAction": "Use as a trace/provenance anchor; patch only after exact input route and side effects are isolated."
+    },
+    {
+      "id": "mouse_look_angle_update",
+      "label": "Mouse-look angle update path",
+      "classification": "needs_runtime_trace",
+      "status": "candidate camera-response trace target",
+      "staticAnchors": [
+        {
+          "kind": "function",
+          "address": "0x00407540",
+          "name": "CGame__UpdateMouseLookAngles"
+        },
+        {
+          "kind": "global",
+          "address": "0x006254f4",
+          "name": "g_MouseSensitivity"
+        }
+      ],
+      "evidenceRefs": [
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "tools/ghidra_monitor_gameplay_signature_tranche_probe.py",
+        "OnslaughtCareerEditor.AppCore/GameProfileControlOptionsService.cs",
+        "tools/winui_control_feel_telemetry_bundle_check.py"
+      ],
+      "requiredProofs": [
+        "CDB trace showing mouse-look input, g_MouseSensitivity, and angle deltas",
+        "wall-clock or frame-window correlation before latency/feel claims",
+        "copied-runtime A/B proof if a patch or options preset changes behavior"
+      ],
+      "nonClaims": [
+        "not exact owner/layout proof",
+        "not improved mouse-look proof",
+        "not physical gamepad proof"
+      ],
+      "recommendedAction": "Trace first; use existing copied-options sensitivity as the controlled variable before considering code patches."
+    },
+    {
+      "id": "player_receive_button_action_observer",
+      "label": "Player ReceiveButtonAction runtime observer",
+      "classification": "observer_only",
+      "status": "current causality proof anchor",
+      "staticAnchors": [
+        {
+          "kind": "function",
+          "address": "0x004d3110",
+          "name": "CPlayer__ReceiveButtonAction"
+        }
+      ],
+      "evidenceRefs": [
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "tools/runtime-probes/local-multiplayer-level850-input-state-delta-observer.cdb.txt",
+        "tools/winui_control_causality_contract_check.py",
+        "release/readiness/winui_control_causality_contract_2026-06-19.md"
+      ],
+      "requiredProofs": [
+        "continue using exact-PID CDB observation for input-to-state proofs",
+        "do not patch this entrypoint until a specific behavior change has a safer narrower hook"
+      ],
+      "nonClaims": [
+        "not a recommended patch target yet",
+        "not improved control-feel proof",
+        "not online/matchmaking proof"
+      ],
+      "recommendedAction": "Keep as observer/proof boundary for control experiments and multiplayer host-helper delivery."
+    }
+  ],
+  "recommendedNextRung": {
+    "id": "directinput-deadzone-runtime-a-b-proof",
+    "title": "Attempt physical DirectInput/gamepad A/B proof before any deadzone patch row",
+    "addsPatchRow": false,
+    "why": "The 0x96 deadzone value is now file-backed in the clean Steam retail executable, but player-facing control-feel proof still requires copied-runtime DirectInput/gamepad evidence and regression guards.",
+    "outputs": [
+      "physical DirectInput/gamepad readiness or blocked inventory proof",
+      "machine-checkable DirectInput deadzone runtime A/B readiness contract",
+      "copied-executable A/B byte verification plan with restore guards",
+      "no-input negative control and downstream virtual-controller/player-state evidence"
+    ],
+    "blockedBy": [
+      "present physical gamepad or equivalent DirectInput runtime device on the host",
+      "runtime DirectInput poll/accessor observation for the copied executable"
+    ]
+  },
+  "claimBoundary": "This map identifies bounded copied-profile original-binary control-feel candidates. It includes one file-backed static DirectInput deadzone byte-export candidate, but adds no visible patch row, performs no runtime proof, performs no Ghidra mutation, does not mutate the installed game or original BEA.exe, and does not prove improved control feel, physical gamepad behavior, wall-clock latency, true online multiplayer, active P3/P4 original-binary gameplay, rebuild parity, or no-noticeable-difference parity."
+}

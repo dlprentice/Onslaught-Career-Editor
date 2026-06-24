@@ -1,0 +1,3 @@
+target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
+0057fa5c	CFastVB__Unk_0057fa5c	005807fd	0058070e	CFastVB__InitDualTexelConversionPipeline	UNCONDITIONAL_CALL
+005888bc	CFastVB__Unk_005888bc	00657164	<none>	<no_function>	DATA

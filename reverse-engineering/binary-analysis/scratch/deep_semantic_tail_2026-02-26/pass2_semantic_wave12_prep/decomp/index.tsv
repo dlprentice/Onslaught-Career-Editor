@@ -1,0 +1,9 @@
+address	name	signature	status
+0x00469400	CMonitor__Unk_00469400	uint __cdecl CMonitor__Unk_00469400(int param_1, int param_2, int param_3, int param_4)	OK
+0x00512490	CVBufTexture__Unk_00512490	int __thiscall CVBufTexture__Unk_00512490(void * this, void * param_1, bool param_2)	OK
+0x0054b800	CDXEngine__Unk_0054b800	void __cdecl CDXEngine__Unk_0054b800(int param_1, void * param_2)	OK
+0x0052bb80	CD3DApplication__Unk_0052bb80	int __thiscall CD3DApplication__Unk_0052bb80(void * this, void * param_1, int param_2, int param_3)	OK
+0x004f3110	CUnit__Unk_004f3110	int __cdecl CUnit__Unk_004f3110(void * param_1, int param_2, int param_3, void * param_4, int param_5)	OK
+0x00404860	CAtmospheric__Unk_00404860	int __thiscall CAtmospheric__Unk_00404860(void * this, int param_1, int param_2, int param_3, int param_4)	OK
+0x004b4de0	CEngine__Unk_004b4de0	int CEngine__Unk_004b4de0(void)	OK
+0x004fd380	CUnit__Unk_004fd380	int __fastcall CUnit__Unk_004fd380(int param_1)	OK

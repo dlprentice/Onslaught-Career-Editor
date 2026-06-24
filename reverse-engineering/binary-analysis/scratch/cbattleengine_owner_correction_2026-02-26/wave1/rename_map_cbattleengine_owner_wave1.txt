@@ -1,0 +1,2 @@
+0x00406040 CDXCompass__Helper_00406040
+0x004062d0 CSquadNormal__Helper_004062d0

@@ -1,0 +1,2 @@
+0x004bae70 CMeshPart__CanOptimizePart_Strict
+0x004bb210 CMesh__HasSpecialOptimizationConstraints

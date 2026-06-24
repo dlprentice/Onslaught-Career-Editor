@@ -1,0 +1,2 @@
+0x00403730 CExplosionInitThing__Helper_00403730
+0x004d20a0 CExplosionInitThing__Helper_004d20a0

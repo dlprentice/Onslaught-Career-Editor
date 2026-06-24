@@ -1,0 +1,15 @@
+address	name	signature	status
+0x00407540	CGame__Unk_00407540	void __fastcall CGame__Unk_00407540(void * param_1)	OK
+0x004080f0	CGame__Unk_004080f0	int __fastcall CGame__Unk_004080f0(void * param_1)	OK
+0x00470650	CGame__Unk_00470650	void __fastcall CGame__Unk_00470650(int param_1)	OK
+0x00472240	CGame__Unk_00472240	void __cdecl CGame__Unk_00472240(int param_1, void * param_2)	OK
+0x00472270	CGame__Unk_00472270	int __cdecl CGame__Unk_00472270(void * param_1, void * param_2)	OK
+0x00472570	CGame__Unk_00472570	bool __thiscall CGame__Unk_00472570(void * this, int param_1, void * param_2)	OK
+0x004725d0	CGame__Unk_004725d0	int __fastcall CGame__Unk_004725d0(int param_1)	OK
+0x004725f0	CGame__Unk_004725f0	int __thiscall CGame__Unk_004725f0(void * this, int param_1, int param_2)	OK
+0x00472650	CGame__Unk_00472650	bool __fastcall CGame__Unk_00472650(int param_1)	OK
+0x00472670	CGame__Unk_00472670	int __fastcall CGame__Unk_00472670(int param_1)	OK
+0x00472690	CGame__Unk_00472690	int __fastcall CGame__Unk_00472690(int param_1)	OK
+0x004eaf20	CGame__Unk_004eaf20	int __thiscall CGame__Unk_004eaf20(void * this, int param_1, int param_2)	OK
+0x004eb130	CGame__Unk_004eb130	int __fastcall CGame__Unk_004eb130(int param_1)	OK
+0x004eb1e0	CGame__Unk_004eb1e0	void CGame__Unk_004eb1e0(void)	OK

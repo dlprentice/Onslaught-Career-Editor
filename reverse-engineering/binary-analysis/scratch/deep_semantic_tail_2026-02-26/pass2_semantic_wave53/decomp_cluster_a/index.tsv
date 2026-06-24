@@ -1,0 +1,10 @@
+address	name	signature	status
+0x00428110	CUnitAI__Unk_00428110	void __fastcall CUnitAI__Unk_00428110(void * param_1)	OK
+0x00428500	CUnitAI__Unk_00428500	void __fastcall CUnitAI__Unk_00428500(int param_1)	OK
+0x00428800	CUnitAI__Unk_00428800	int __fastcall CUnitAI__Unk_00428800(void * param_1)	OK
+0x004289b0	CUnitAI__Unk_004289b0	int __fastcall CUnitAI__Unk_004289b0(void * param_1)	OK
+0x00428bc0	CFrontEndPage__Unk_00428bc0	double __fastcall CFrontEndPage__Unk_00428bc0(int param_1)	OK
+0x00428c70	CUnitAI__Unk_00428c70	void __fastcall CUnitAI__Unk_00428c70(void * param_1)	OK
+0x00428cf0	CUnitAI__Unk_00428cf0	void __thiscall CUnitAI__Unk_00428cf0(void * this, int param_1, int param_2)	OK
+0x00429280	FUN_00429280	undefined FUN_00429280(void)	OK
+0x0048ac80	FUN_0048ac80	undefined FUN_0048ac80(void)	OK

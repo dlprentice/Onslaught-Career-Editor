@@ -1,0 +1,152 @@
+{
+  "auto_count": 20,
+  "summary": {
+    "no_xrefs": 0,
+    "call_only": 20,
+    "data_only": 0,
+    "call_and_data": 0,
+    "single_callee_wrapper": 0
+  },
+  "rows": [
+    {
+      "addr": "00407140",
+      "name": "Auto_00407140",
+      "call_xrefs": 6,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "004097a0",
+      "name": "Auto_004097a0",
+      "call_xrefs": 18,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "0040d4d0",
+      "name": "Auto_0040d4d0",
+      "call_xrefs": 1,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "0040d660",
+      "name": "Auto_0040d660",
+      "call_xrefs": 6,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "0040dfb0",
+      "name": "Auto_0040dfb0",
+      "call_xrefs": 3,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "0040e860",
+      "name": "Auto_0040e860",
+      "call_xrefs": 1,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "0040ef20",
+      "name": "Auto_0040ef20",
+      "call_xrefs": 2,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "00410310",
+      "name": "Auto_00410310",
+      "call_xrefs": 2,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "00410490",
+      "name": "Auto_00410490",
+      "call_xrefs": 1,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "00410740",
+      "name": "Auto_00410740",
+      "call_xrefs": 1,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "004109d0",
+      "name": "Auto_004109d0",
+      "call_xrefs": 1,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "004114d0",
+      "name": "Auto_004114d0",
+      "call_xrefs": 2,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "004127a0",
+      "name": "Auto_004127a0",
+      "call_xrefs": 1,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "00412d80",
+      "name": "Auto_00412d80",
+      "call_xrefs": 1,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "00412f70",
+      "name": "Auto_00412f70",
+      "call_xrefs": 1,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "00413160",
+      "name": "Auto_00413160",
+      "call_xrefs": 1,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "00413360",
+      "name": "Auto_00413360",
+      "call_xrefs": 1,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "004135e0",
+      "name": "Auto_004135e0",
+      "call_xrefs": 1,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "00414970",
+      "name": "Auto_00414970",
+      "call_xrefs": 1,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    },
+    {
+      "addr": "00414a40",
+      "name": "Auto_00414a40",
+      "call_xrefs": 1,
+      "data_xrefs": 0,
+      "wrapper_callee": null
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+address	name	signature	status
+0x00510a90	CWorldPhysicsManager__Unk_00510a90	void CWorldPhysicsManager__Unk_00510a90(void)	OK
+0x00511440	CWorldPhysicsManager__Unk_00511440	int __cdecl CWorldPhysicsManager__Unk_00511440(void * param_1)	OK
+0x005115b0	CWorldPhysicsManager__Unk_005115b0	int __cdecl CWorldPhysicsManager__Unk_005115b0(void * param_1)	OK
+0x00511900	CWorldPhysicsManager__AddComponentByName	undefined CWorldPhysicsManager__AddComponentByName(void)	OK
+0x005119e0	CWorldPhysicsManager__AddWeaponByName	undefined CWorldPhysicsManager__AddWeaponByName(void)	OK
+0x00511ad0	CWorldPhysicsManager__AddSpawnerByName	undefined CWorldPhysicsManager__AddSpawnerByName(void)	OK

@@ -1,0 +1,250 @@
+{
+  "schemaVersion": "missionscript-level100-tutorial-text-speaker-resolution.v1",
+  "status": "PASS",
+  "source": {
+    "runtimeExecution": false,
+    "ghidraMutation": false,
+    "rawDialogueIncluded": false,
+    "schemaPurpose": "static Level100 tutorial message-token, speaker-token, text-block, and generated-ID resolution for clean-room planning"
+  },
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+  },
+  "textCorpus": {
+    "levelEnglishTokenBlocks": 52,
+    "levelGlobalTokenBlocks": 0,
+    "levelTextStfDefines": 0,
+    "sharedEnglishTokenBlocks": 241,
+    "sharedGlobalTokenBlocks": 2,
+    "sharedTextStfDefines": 2571,
+    "levelGlobalEmpty": true,
+    "levelTextStfEmpty": true,
+    "textListHeaderNotAuthoritativeForLevel100": true,
+    "boundary": "token names, aggregate counts, and static ID resolution only; raw dialogue payloads are intentionally excluded"
+  },
+  "level100References": {
+    "messageRows": 45,
+    "messageUnique": 43,
+    "helpRows": 6,
+    "helpUnique": 6,
+    "objectiveRows": 8,
+    "objectiveUnique": 4,
+    "lossRows": 2,
+    "lossUnique": 1,
+    "speakerRows": 45,
+    "speakerUnique": 3,
+    "speakerCounts": {
+      "P_TATIANA": 40,
+      "P_TECHNICIAN": 1,
+      "P_KRAMER": 4
+    }
+  },
+  "resolution": {
+    "messages": {
+      "count": 43,
+      "levelEnglish": 40,
+      "levelGlobal": 0,
+      "levelStf": 0,
+      "sharedEnglish": 0,
+      "sharedGlobal": 0,
+      "sharedStf": 43,
+      "unresolved": []
+    },
+    "help": {
+      "count": 6,
+      "levelEnglish": 0,
+      "levelGlobal": 0,
+      "levelStf": 0,
+      "sharedEnglish": 0,
+      "sharedGlobal": 0,
+      "sharedStf": 6,
+      "unresolved": []
+    },
+    "objectives": {
+      "count": 4,
+      "levelEnglish": 0,
+      "levelGlobal": 0,
+      "levelStf": 0,
+      "sharedEnglish": 0,
+      "sharedGlobal": 0,
+      "sharedStf": 4,
+      "unresolved": []
+    },
+    "loss": {
+      "count": 1,
+      "levelEnglish": 1,
+      "levelGlobal": 0,
+      "levelStf": 0,
+      "sharedEnglish": 0,
+      "sharedGlobal": 0,
+      "sharedStf": 1,
+      "unresolved": []
+    },
+    "speakers": {
+      "count": 3,
+      "levelEnglish": 0,
+      "levelGlobal": 0,
+      "levelStf": 0,
+      "sharedEnglish": 3,
+      "sharedGlobal": 0,
+      "sharedStf": 3,
+      "unresolved": []
+    },
+    "extraLevelEnglish": {
+      "count": 11,
+      "levelEnglish": 11,
+      "levelGlobal": 0,
+      "levelStf": 0,
+      "sharedEnglish": 0,
+      "sharedGlobal": 0,
+      "sharedStf": 11,
+      "unresolved": []
+    },
+    "missingReferenceTokens": [],
+    "relevantStaticTokensWithSharedStfOrSharedEnglish": 68,
+    "relevantStaticTokenCount": 68
+  },
+  "tokenSets": {
+    "generatedOnlyReferencedTextTokens": [
+      "HELP_FIRE",
+      "HELP_RETRO",
+      "HELP_TRANSFORM",
+      "HELP_WEAPON_SELECT",
+      "HELP_ZOOM_IN",
+      "HELP_ZOOM_OUT",
+      "TUTORIAL_13_MOD",
+      "TUTORIAL_DODGE_MOD",
+      "TUTORIAL_THROTTLE_MOD",
+      "_100_OBJECTIVE_1",
+      "_100_OBJECTIVE_2",
+      "_100_OBJECTIVE_3",
+      "_100_OBJECTIVE_4"
+    ],
+    "generatedOnlyMessageTokens": [
+      "TUTORIAL_13_MOD",
+      "TUTORIAL_DODGE_MOD",
+      "TUTORIAL_THROTTLE_MOD"
+    ],
+    "generatedOnlyHelpTokens": [
+      "HELP_FIRE",
+      "HELP_RETRO",
+      "HELP_TRANSFORM",
+      "HELP_WEAPON_SELECT",
+      "HELP_ZOOM_IN",
+      "HELP_ZOOM_OUT"
+    ],
+    "generatedOnlyObjectiveTokens": [
+      "_100_OBJECTIVE_1",
+      "_100_OBJECTIVE_2",
+      "_100_OBJECTIVE_3",
+      "_100_OBJECTIVE_4"
+    ],
+    "levelLocalMessageTokens": [
+      "HUD_01",
+      "HUD_02",
+      "HUD_03",
+      "HUD_04",
+      "HUD_05",
+      "HUD_06",
+      "HUD_07",
+      "TUTORIAL_01",
+      "TUTORIAL_02",
+      "TUTORIAL_03",
+      "TUTORIAL_04",
+      "TUTORIAL_05",
+      "TUTORIAL_06",
+      "TUTORIAL_07",
+      "TUTORIAL_08",
+      "TUTORIAL_09",
+      "TUTORIAL_10",
+      "TUTORIAL_11",
+      "TUTORIAL_12",
+      "TUTORIAL_ABORTED",
+      "TUTORIAL_BROKE_1",
+      "TUTORIAL_BROKE_2",
+      "TUTORIAL_BROKE_3",
+      "TUTORIAL_DODGE_2",
+      "TUTORIAL_DODGE_3",
+      "TUTORIAL_DODGE_BAD",
+      "TUTORIAL_DODGE_GOOD",
+      "TUTORIAL_HELP_PLAYER",
+      "TUTORIAL_LANDING",
+      "TUTORIAL_MESSAGE_LOG",
+      "TUTORIAL_OPEN_FIRE",
+      "TUTORIAL_OPEN_FIRE_2",
+      "TUTORIAL_PULSE_CANNON",
+      "TUTORIAL_PULSE_CANNON_2",
+      "TUTORIAL_SCANNER",
+      "TUTORIAL_STRAFE",
+      "TUTORIAL_TECHNICIAN_01",
+      "TUTORIAL_VULCAN_CANNON",
+      "TUTORIAL_VULCAN_CANNON_2",
+      "TUTORIAL_ZOOM"
+    ],
+    "levelLocalLossTokens": [
+      "LOSE_TUTORIAL_BROKE"
+    ],
+    "speakerTokens": [
+      "P_KRAMER",
+      "P_TATIANA",
+      "P_TECHNICIAN"
+    ],
+    "extraLevelEnglishTokensNotReferencedByWalkthroughCalls": [
+      "HUD_08",
+      "TUTORIAL_13",
+      "TUTORIAL_AMMO",
+      "TUTORIAL_DODGE",
+      "TUTORIAL_MOVEMENT",
+      "TUTORIAL_OVERHEAT",
+      "TUTORIAL_TECHNICIAN_02",
+      "TUTORIAL_TECHNICIAN_03",
+      "TUTORIAL_THROTTLE",
+      "TUTORIAL_WATER",
+      "TUTORIAL_WEAPON"
+    ],
+    "helpTokens": [
+      "HELP_FIRE",
+      "HELP_RETRO",
+      "HELP_TRANSFORM",
+      "HELP_WEAPON_SELECT",
+      "HELP_ZOOM_IN",
+      "HELP_ZOOM_OUT"
+    ],
+    "objectiveTokens": [
+      "_100_OBJECTIVE_1",
+      "_100_OBJECTIVE_2",
+      "_100_OBJECTIVE_3",
+      "_100_OBJECTIVE_4"
+    ],
+    "lossTokens": [
+      "LOSE_TUTORIAL_BROKE"
+    ]
+  },
+  "claims": [
+    "Level100 tutorial message/help/objective/loss/speaker token references resolve statically with zero missing tokens across level-local English, shared English, and shared text.stf.",
+    "Generated-only Level100 references are separated from level-local text blocks instead of being treated as missing dialogue text.",
+    "Speaker-token resolution is static token/label evidence only and is separate from runtime portraits, audio, or message-box behavior."
+  ],
+  "notClaimed": [
+    "runtime MissionScript execution",
+    "runtime text or audio behavior",
+    "runtime message display",
+    "runtime voice/audio playback",
+    "runtime localized text selection",
+    "speaker portrait behavior",
+    "live loose-MSL loading",
+    "packed-vs-loose script selection",
+    "runtime Level100 mission outcome",
+    "BEA patching behavior",
+    "visual QA",
+    "Godot parity",
+    "rebuild parity",
+    "no-noticeable-difference parity"
+  ],
+  "nextStaticSlice": "MissionScript Level100 Tutorial Copied-Profile Runtime Observation Boundary Planning Proof Plan"
+}

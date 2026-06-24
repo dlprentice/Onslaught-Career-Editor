@@ -1,0 +1,6 @@
+address	name	signature	status
+0x004ab400	<none>	<none>	MISSING
+0x004ab430	<none>	<none>	MISSING
+0x004ab44e	<none>	<none>	MISSING
+0x004ab565	<none>	<none>	MISSING
+0x004bb040	CMenuItem__Unk_004bb040	int __cdecl CMenuItem__Unk_004bb040(int param_1)	OK

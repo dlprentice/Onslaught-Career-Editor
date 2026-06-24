@@ -1,0 +1,10 @@
+0x0055d7e0 CRT__CallExceptionTranslator
+0x0055d896 CRT__SehFilterCppException
+0x0055d90b CRT__GetRangeOfTryBlocksForState
+0x00560520 CRT__ValidateCatchHandlersForThrow
+0x005605ca CRT__TypeMatchForCatch
+0x00560740 CRT__CallCatchBlock
+0x0056080d CRT__CleanupCatchContext
+0x00560885 CRT__BuildCatchObject
+0x00560a49 CRT__DestroyCatchObject
+0x00560ab0 CRT__AdjustPointerByPMD

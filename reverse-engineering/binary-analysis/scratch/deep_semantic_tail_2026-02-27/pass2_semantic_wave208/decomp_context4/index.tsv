@@ -1,0 +1,4 @@
+address	name	signature	status
+0x00501800	CVertexShader__CVertexShader	undefined CVertexShader__CVertexShader(void)	OK
+0x00502290	CVertexShader__DecrementLiveReferenceCount	void __fastcall CVertexShader__DecrementLiveReferenceCount(int param_1)	OK
+0x00501730	CLTShell__Helper_00501730	void CLTShell__Helper_00501730(void)	OK

@@ -1,0 +1,28 @@
+path	class	decision	reason
+reverse-engineering/binary-analysis/scratch/deep_semantic_tail_2026-02-26	keep_now	keep	High active reference density in backlog/state.
+reverse-engineering/binary-analysis/scratch/deep_semantic_tail_2026-02-27	keep_now	keep	High active reference density in backlog/state.
+reverse-engineering/binary-analysis/scratch/cdxtexture_owner_correction_2026-02-25	keep_now	keep	Still linked by active tracking notes.
+reverse-engineering/binary-analysis/scratch/cfastvb_owner_correction_2026-02-25	keep_now	keep	Still linked by active tracking notes.
+reverse-engineering/binary-analysis/scratch/ctexture_owner_correction_2026-02-25	keep_now	keep	Still linked by active tracking notes.
+reverse-engineering/binary-analysis/scratch/cunit_owner_correction_2026-02-25	keep_now	keep	Still linked by active tracking notes.
+reverse-engineering/binary-analysis/scratch/wave217_signature_pass1	keep_now	keep	Still referenced by validation/state notes.
+reverse-engineering/binary-analysis/scratch/wave217_signature_pass2	keep_now	keep	Still referenced by validation/state notes.
+reverse-engineering/binary-analysis/scratch/wave217_signature_pass3	keep_now	keep	Still referenced by validation/state notes.
+reverse-engineering/binary-analysis/scratch/wave217_signature_pass4	keep_now	keep	Still referenced by validation/state notes.
+reverse-engineering/binary-analysis/scratch/wave217_comment_pass1	keep_now	keep	Still referenced by validation/state notes.
+reverse-engineering/binary-analysis/scratch/cunitai_owner_correction_2026-02-25	archive_after_rewrite	defer	Referenced in state/backlog; move after path rewrites.
+reverse-engineering/binary-analysis/scratch/cengine_owner_correction_2026-02-25	archive_after_rewrite	defer	Referenced in state/backlog; move after path rewrites.
+reverse-engineering/binary-analysis/scratch/cdxtexture_owner_correction_2026-02-26	archive_after_rewrite	defer	Referenced in state/backlog; move after path rewrites.
+reverse-engineering/binary-analysis/scratch/ctexture_owner_correction_2026-02-26	archive_after_rewrite	defer	Referenced in state/backlog; move after path rewrites.
+reverse-engineering/binary-analysis/scratch/cfastvb_owner_correction_2026-02-26	archive_after_rewrite	defer	Referenced in state/backlog; move after path rewrites.
+reverse-engineering/binary-analysis/scratch/owner_mixed_strict_correction_2026-02-26	archive_after_rewrite	defer	Referenced in state/backlog; move after path rewrites.
+reverse-engineering/binary-analysis/scratch/options_entries_callers_deeppass_2026-02-25	archive_now	move	No active references; safe archival now.
+reverse-engineering/binary-analysis/scratch/owner_scout_2026-02-26	archive_now	move	No active references; safe archival now.
+reverse-engineering/binary-analysis/scratch/headless-2026-02-25	archive_now	move	No active references; safe archival now.
+reverse-engineering/binary-analysis/scratch/headless_live_verify_2026-02-25_controllerdef	archive_now	move	No active references; safe archival now.
+reverse-engineering/binary-analysis/scratch/cexplosion_owner_correction_2026-02-25	archive_now	move	No active references; safe archival now.
+reverse-engineering/binary-analysis/scratch/coverage_refresh_2026-02-25_controllerdef_menuitem	archive_now	move	No active references; safe archival now.
+reverse-engineering/binary-analysis/scratch/coverage_refresh_2026-02-25_menuitem_vfunc_semantic	archive_now	move	No active references; safe archival now.
+reverse-engineering/binary-analysis/scratch/coverage_refresh_2026-02-25_menuitem_wave2	archive_now	move	No active references; safe archival now.
+reverse-engineering/binary-analysis/scratch/wave217_signature_pass2_prep	archive_now	move	No active references; safe archival now.
+reverse-engineering/binary-analysis/scratch/wave217_signature_pass3_prep	archive_now	move	No active references; safe archival now.

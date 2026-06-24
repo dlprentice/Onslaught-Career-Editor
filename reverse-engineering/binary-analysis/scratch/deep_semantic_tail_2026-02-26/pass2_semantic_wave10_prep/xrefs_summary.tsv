@@ -1,0 +1,9 @@
+address	call_count	caller_count	callers
+0x005016b0	1	1	PCPlatform__Init
+0x0050abc0	1	1	CThing__SetSound
+0x00527da0	14	6	CDXBattleLine__Render; CDXEngine__Helper_0054d530; CDXLandscape__RenderTerrain; CDXLandscape__RenderTileRange; CDXSurf__Render; CWaterRenderSystem__RenderMainPass
+0x0052c430	1	1	CLTShell__WinMain
+0x0052ff30	1	0	<none>
+0x00548f90	1	1	CLTShell__WinMain
+0x00549570	1	1	CMeshRenderer__RenderMesh
+0x005be628	21	15	CD3DApplication__BuildDeviceList; CD3DApplication__Initialize3DEnvironment; CDXFrontEndVideo__Render; CDXLandscape__Helper_00527d20; CDXLandscape__SetRenderTarget; CDXShadows__Init; CDXTexture__LoadTextureFromFile_Core; CEngine__CreateTextureOrFatal; CEngine__DeviceCall68_CheckError; CEngine__GrabScreenshot; CVBufTexture__AddVertices; CVBufTexture__GetVertexPtr; CVBufTexture__RenderIndexed; CVBufTexture__ResizeVertexBuffer; CVertexShader__CompileShader

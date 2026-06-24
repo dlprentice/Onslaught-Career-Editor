@@ -1,0 +1,135 @@
+{
+  "schemaVersion": "missionscript-level100-tutorial-copied-profile-runtime-observation-copied-executable-patch.v1",
+  "status": "COMPLETE",
+  "patchStatus": "stable-copied-executable-patched",
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+  },
+  "upstreamProofs": [
+    "missionscript-level100-tutorial-copied-profile-runtime-observation-copied-profile-materialization-proof.md",
+    "missionscript-level100-tutorial-copied-profile-runtime-observation-copied-profile-materialization.v1.json",
+    "missionscript-level100-tutorial-copied-profile-runtime-observation-clean-source-specimen-resolution-proof-plan.md",
+    "missionscript-level100-tutorial-copied-profile-runtime-observation-clean-source-specimen-resolution.v1.json",
+    "missionscript-level100-tutorial-copied-profile-runtime-observation-copied-profile-materialization-preflight-proof.md",
+    "missionscript-level100-tutorial-copied-profile-runtime-observation-copied-profile-materialization-preflight.v1.json"
+  ],
+  "copiedExecutablePatch": {
+    "profileId": "level100-clean-materialized-20260608-214752",
+    "artifactRootClass": "repo-local-ignored-private-evidence-root",
+    "targetExecutableClass": "copied-profile-BEA.exe",
+    "privatePathIncluded": false,
+    "rawArtifactIncluded": false,
+    "patchTool": "tools/apply_bea_catalog_patch.py",
+    "catalog": "patches/catalog/patches.v2.json",
+    "stablePatchRows": 4,
+    "expectedCleanSha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+    "prePatchSha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+    "postPatchSha256": "e78818292a1dbe31dc6987c71665857de3a8cf3e7619745689d74c7da829c918",
+    "backupSha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+    "targetBytes": 2506752,
+    "backupBytes": 2506752,
+    "dryRunMessage": "dry-run: no bytes were written",
+    "applyMessage": "patch apply complete",
+    "readbackMessage": "verified: no bytes were written",
+    "patchIdsApplied": [
+      "resolution_gate",
+      "force_windowed",
+      "version_overlay_use_patched_format_pointer",
+      "version_overlay_patched_format_cave_string"
+    ],
+    "experimentalPatchIdsNotArmed": [
+      "skip_auto_toggle"
+    ],
+    "skipAutoToggleArmed": false
+  },
+  "patchRows": [
+    {
+      "id": "resolution_gate",
+      "track": "stable",
+      "fileOffset": "0x129696",
+      "dryRunState": "ready (original)",
+      "applyBeforeState": "ready (original)",
+      "applyAfterState": "already patched",
+      "readbackState": "already patched"
+    },
+    {
+      "id": "force_windowed",
+      "track": "stable",
+      "fileOffset": "0x12A644",
+      "dryRunState": "ready (original)",
+      "applyBeforeState": "ready (original)",
+      "applyAfterState": "already patched",
+      "readbackState": "already patched"
+    },
+    {
+      "id": "version_overlay_use_patched_format_pointer",
+      "track": "stable",
+      "fileOffset": "0x6416F",
+      "dryRunState": "ready (original)",
+      "applyBeforeState": "ready (original)",
+      "applyAfterState": "already patched",
+      "readbackState": "already patched"
+    },
+    {
+      "id": "version_overlay_patched_format_cave_string",
+      "track": "stable",
+      "fileOffset": "0x1AA444",
+      "dryRunState": "ready (original)",
+      "applyBeforeState": "ready (original)",
+      "applyAfterState": "already patched",
+      "readbackState": "already patched"
+    }
+  ],
+  "guardSummary": {
+    "copiedExecutablePatch": true,
+    "installedGameMutation": false,
+    "originalExecutableMutation": false,
+    "beLaunch": false,
+    "launchArmed": false,
+    "screenshotCapture": false,
+    "nativeInput": false,
+    "debuggerAttachment": false,
+    "godotWork": false,
+    "runtimeEvidenceRows": 0,
+    "privatePathLeakCount": 0,
+    "rawArtifactLeakCount": 0,
+    "publicLeakCheck": "PASS"
+  },
+  "claimBoundary": {
+    "proves": [
+      "copied executable dry-run found four stable patch rows ready from original bytes",
+      "copied executable apply wrote four stable patch rows only",
+      "copied executable read-back verified four stable patch rows already patched with no bytes written",
+      "clean copied-executable backup exists and matches canonical clean retail hash",
+      "installed game root and original executable remained read-only"
+    ],
+    "doesNotProve": [
+      "BEA launch behavior",
+      "runtime behavior of any patch row",
+      "runtime MissionScript execution",
+      "runtime command effects",
+      "runtime event outcomes",
+      "live loose-MSL loading",
+      "packed-vs-loose script selection",
+      "runtime Level100 mission outcome",
+      "runtime objective UI",
+      "runtime message or audio output",
+      "runtime HUD flashing",
+      "runtime object identity",
+      "runtime SpawnThing behavior",
+      "runtime GetThingRef lookup behavior",
+      "screenshot capture proof",
+      "native input behavior",
+      "debugger observation behavior",
+      "Godot parity",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  },
+  "nextStaticSlice": "MissionScript Level100 Tutorial Copied-Profile Runtime Observation Launch Command Proof Plan"
+}

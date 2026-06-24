@@ -1,0 +1,6 @@
+target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
+004144f0	CCockpit__Unk_004144f0	0040c3af	0040c3a0	CExplosionInitThing__Helper_0040c3a0	UNCONDITIONAL_CALL
+00418120	CCockpit__Unk_00418120	005d8fa0	<none>	<no_function>	DATA
+004a1c30	CMemoryManager__Unk_004a1c30	005d3543	005d3540	Unwind@005d3540	UNCONDITIONAL_CALL
+004a1c30	CMemoryManager__Unk_004a1c30	005d3563	005d3560	Unwind@005d3560	UNCONDITIONAL_CALL
+004a2a20	CMemoryManager__Unk_004a2a20	004f00ab	004efb10	CLTShell__Helper_004efb10	UNCONDITIONAL_CALL

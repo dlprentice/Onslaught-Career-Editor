@@ -1,0 +1,3 @@
+address	name	signature	status
+0x00423870	CResourceAccumulator__Helper_00423870	void __thiscall CResourceAccumulator__Helper_00423870(void * this, void * param_1, int param_2)	OK
+0x004239f0	CUnitAI__Unk_004239f0	int __fastcall CUnitAI__Unk_004239f0(void * param_1)	OK

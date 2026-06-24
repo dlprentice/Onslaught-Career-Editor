@@ -1,0 +1,9 @@
+address	name	signature	status
+0x00453970	CControllerDefinition__ctor_like_00453970	void __fastcall CControllerDefinition__ctor_like_00453970(void * param_1)	OK
+0x004539b0	CControllerDefinition__VFunc_00_004539b0	void * __thiscall CControllerDefinition__VFunc_00_004539b0(void * this, void * param_1, int param_2)	OK
+0x004539d0	CControllerDefinition__ctor_like_004539d0	void __fastcall CControllerDefinition__ctor_like_004539d0(void * param_1)	OK
+0x00454e00	Controls__GetDeviceCategory	int __cdecl Controls__GetDeviceCategory(int device_code)	OK
+0x00456080	Controls__BeginRemapCapture	undefined Controls__BeginRemapCapture(void)	OK
+0x004565d0	OptionsEntries__SetBindingSlot	undefined OptionsEntries__SetBindingSlot(void)	OK
+0x00456830	CFEPDebriefing__Unk_00456830	int __fastcall CFEPDebriefing__Unk_00456830(int param_1)	OK
+0x00456850	CFEPDebriefing__VFunc_01_00456850	void __fastcall CFEPDebriefing__VFunc_01_00456850(int param_1)	OK

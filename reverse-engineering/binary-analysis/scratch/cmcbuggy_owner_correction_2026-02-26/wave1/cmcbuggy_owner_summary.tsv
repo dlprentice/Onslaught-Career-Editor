@@ -1,0 +1,10 @@
+address	old_name	inferred_owner	xref_count	top_counts
+0x00494b00	CMCBuggy__Unk_00494b00	CMeshPart	2	CMeshPart:2
+0x00494b50	CMCBuggy__Unk_00494b50	CMeshPart	3	CMeshPart:2;CMesh:1
+0x00495030	CMCBuggy__Unk_00495030		1	CMeshPart:1
+0x00495090	CMCBuggy__Unk_00495090		1	CMeshPart:1
+0x004950f0	CMCBuggy__Unk_004950f0	CMeshPart	2	CMeshPart:2
+0x004956a0	CMCBuggy__Unk_004956a0		1	CMCMech:1
+0x004957d0	CMCBuggy__Unk_004957d0	CMeshPart	6	CMeshPart:6
+0x00495e00	CMCBuggy__Unk_00495e00		0
+0x00495ed0	CMCBuggy__Unk_00495ed0	CMCMech	2	CMCMech:2

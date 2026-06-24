@@ -1,0 +1,6 @@
+address	name	signature	status
+0x004a52b0	CMesh__ClearAllUsageMarkers	void CMesh__ClearAllUsageMarkers(void)	OK
+0x004a5430	CMesh__FreeUnusedAndReportLeaks	void CMesh__FreeUnusedAndReportLeaks(void)	OK
+0x004aa900	CMesh__CreatePolyBucketsForAllParts	void __fastcall CMesh__CreatePolyBucketsForAllParts(int param_1)	OK
+0x004ab330	CMesh__FindByRuntimeId	int __cdecl CMesh__FindByRuntimeId(int param_1)	OK
+0x004ac000	CMeshCollisionVolume__InitDirectionLookupTable	void CMeshCollisionVolume__InitDirectionLookupTable(void)	OK

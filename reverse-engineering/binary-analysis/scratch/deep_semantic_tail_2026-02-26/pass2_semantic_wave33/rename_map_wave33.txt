@@ -1,0 +1,6 @@
+0x0052b760 CD3DApplication__Resize3DEnvironment
+0x0052b840 CD3DApplication__ToggleFullscreen
+0x0052ba50 CD3DApplication__ForceWindowed
+0x0052bc80 CD3DApplication__SelectDeviceProc
+0x0052c4f0 CD3DApplication__DisplayErrorMsg
+0x0052c8d0 CD3DApplication__SetDeviceCursorFromIcon

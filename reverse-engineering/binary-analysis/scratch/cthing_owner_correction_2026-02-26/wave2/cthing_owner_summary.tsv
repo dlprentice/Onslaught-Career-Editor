@@ -1,0 +1,14 @@
+address	old_name	inferred_owner	xref_count	top_counts
+0x00403ba0	CThing__Unk_00403ba0		2	CCarverAI:1;CUnitAI:1
+0x00403bf0	CThing__Unk_00403bf0		0
+0x00417540	CThing__Unk_00417540		0
+0x004176c0	CThing__Unk_004176c0		0
+0x004f35d0	CThing__Unk_004f35d0		0
+0x004f36d0	CThing__Unk_004f36d0		4	CThing:1;CUnit:1;CUnitAI:1;OID:1
+0x004f3710	CThing__Unk_004f3710		0
+0x004f37c0	CThing__Unk_004f37c0		1	CThing:1
+0x004f3970	CThing__Unk_004f3970		0
+0x004f3a70	CThing__Unk_004f3a70		1	CCSPersistentThing:1
+0x004f3de0	CThing__Unk_004f3de0		0
+0x004f4430	CThing__Unk_004f4430		0
+0x004f4480	CThing__Unk_004f4480		2	CSphereTrigger:1;CThing:1

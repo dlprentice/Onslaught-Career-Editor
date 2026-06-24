@@ -1,0 +1,6 @@
+address	name	signature	status
+0x004aea50	CMeshPart__ComputeLocalBoundsAndBoundingRadius	void __fastcall CMeshPart__ComputeLocalBoundsAndBoundingRadius(int param_1)	OK
+0x004b0c40	CMeshPart__FindNearestVertexIndex	int __thiscall CMeshPart__FindNearestVertexIndex(void * this, int param_1, float param_2, float param_3, float param_4)	OK
+0x004b1d30	CMeshPart__LinkDamagedPartVariantsBySuffix	void __fastcall CMeshPart__LinkDamagedPartVariantsBySuffix(int param_1)	OK
+0x004b24d0	CMeshPart__ResolveWrappedFrameIndexAndLerp	int __thiscall CMeshPart__ResolveWrappedFrameIndexAndLerp(void * this, int param_1, float param_2, float param_3, void * param_4, void * param_5)	OK
+0x004b1eb0	CMeshPart__RebuildPerVertexNormalsAndTangents	void __thiscall CMeshPart__RebuildPerVertexNormalsAndTangents(void * this, int param_1, int param_2)	OK

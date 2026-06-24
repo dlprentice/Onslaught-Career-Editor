@@ -1,0 +1,18 @@
+address	old_name	inferred_owner	xref_count	top_counts
+0x00403ba0	CThing__Unk_00403ba0		4	CCarverAI:1;CUnitAI:1
+0x00403bf0	CThing__Unk_00403bf0		5
+0x00417540	CThing__Unk_00417540		1
+0x004176c0	CThing__Unk_004176c0		1
+0x004f35d0	CThing__Unk_004f35d0		60
+0x004f36d0	CThing__Unk_004f36d0		62	CThing:1;CUnitAI:1;OID:1;CUnit:1
+0x004f3710	CThing__Unk_004f3710		61
+0x004f37c0	CThing__Unk_004f37c0		1	CThing:1
+0x004f3970	CThing__Unk_004f3970		2
+0x004f39b0	CThing__Unk_004f39b0	CUnit	2	CUnit:2
+0x004f3a70	CThing__Unk_004f3a70		1	CCSPersistentThing:1
+0x004f3ac0	CThing__Unk_004f3ac0	CUnitAI	21	CUnitAI:4;CEngine:3;CBattleEngine:2;CWorld:1;CExplosionInitThing:1
+0x004f3c80	CThing__Unk_004f3c80	CAtmospheric	3	CAtmospheric:2;CCutscene:1
+0x004f3d10	CThing__Unk_004f3d10	CCollisionSeekingRound	7	CCollisionSeekingRound:4;CUnitAI:2;CWorld:1
+0x004f3de0	CThing__Unk_004f3de0		1
+0x004f4430	CThing__Unk_004f4430		24
+0x004f4480	CThing__Unk_004f4480		26	CThing:1;CSphereTrigger:1

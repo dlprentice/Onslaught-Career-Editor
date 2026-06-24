@@ -1,0 +1,6 @@
+address	name	signature	status
+0x0056f260	CFastVB__ReleaseBufferAndResetTriplet_0056f260	void __fastcall CFastVB__ReleaseBufferAndResetTriplet_0056f260(int param_1)	OK
+0x0056f520	CFastVB__ReleaseBufferAndResetTriplet_0056f520	void __fastcall CFastVB__ReleaseBufferAndResetTriplet_0056f520(int param_1)	OK
+0x00573310	CFastVB__CountDwordsFromPointerSpan	int __fastcall CFastVB__CountDwordsFromPointerSpan(int param_1)	OK
+0x005759c9	CFastVB__ConvertFloat32ArrayToFloat16	void __stdcall CFastVB__ConvertFloat32ArrayToFloat16(int param_1, int param_2, uint param_3)	OK
+0x00575dc9	CFastVB__HermiteInterpolateVec3	int CFastVB__HermiteInterpolateVec3(void)	OK

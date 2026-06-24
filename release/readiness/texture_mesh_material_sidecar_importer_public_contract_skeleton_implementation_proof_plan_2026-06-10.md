@@ -1,0 +1,73 @@
+# Texture/Mesh Material Sidecar Importer Public Contract Skeleton Implementation Proof Plan Readiness Note
+
+Status: complete public contract skeleton, not real importer proof
+Date: 2026-06-10
+Scope: `texture-mesh-material-sidecar-importer-public-contract-skeleton-implementation-proof-plan`
+
+The public contract skeleton slice created `tools/texture_mesh_material_sidecar_importer_public_contract_skeleton.py` and the canonical proof/schema pair [texture-mesh-material-sidecar-importer-public-contract-skeleton-implementation-proof-plan.md](../../reverse-engineering/game-assets/texture-mesh-material-sidecar-importer-public-contract-skeleton-implementation-proof-plan.md) and [texture-mesh-material-sidecar-importer-public-contract-skeleton-implementation-proof-plan.v1.json](../../reverse-engineering/game-assets/texture-mesh-material-sidecar-importer-public-contract-skeleton-implementation-proof-plan.v1.json).
+
+Result tokens:
+
+- `proofPlan=Texture / Mesh Material Sidecar Importer Public Contract Skeleton Implementation Proof Plan`
+- `publicContractSkeletonStatus=texture-mesh-material-sidecar-importer-public-contract-skeleton-implementation-complete-public-contract-only-not-real-importer-proof`
+- `previousSlice=Texture / Mesh Material Sidecar Importer Implementation Readiness Gate Proof Plan`
+- `previousScope=texture-mesh-material-sidecar-importer-implementation-readiness-gate-proof-plan`
+- `selectedNextSlice=Texture / Mesh Material Sidecar Importer Private Corpus Safety Boundary Proof Plan`
+- `selectedNextScope=texture-mesh-material-sidecar-importer-private-corpus-safety-boundary-proof-plan`
+- `sourceImplementationReadinessStatus=texture-mesh-material-sidecar-importer-implementation-readiness-gate-complete-public-contract-skeleton-ready-not-real-importer-proof`
+- `sourceProofCount=7`
+- `contractVersion=texture-mesh-material-sidecar-importer-public-contract-skeleton.v1`
+- `validationSchema=texture-mesh-material-sidecar-importer-public-contract-skeleton.validation.v1`
+- `contractInterfaceCount=6`
+- `implementedContractInterfaceCount=6`
+- `contractFunctionCount=2`
+- `publicContractSkeletonImplementationRows=1`
+- `validationSummaryRows=1`
+- `skeletonContractCheckCount=46`
+- `failedSkeletonContractChecks=0`
+- `sourceReadinessGateCount=8`
+- `sourceReadinessCheckCount=16`
+- `sourceFailedReadinessGateCount=0`
+- `sourceBlockedReadinessGateCount=0`
+- `sourceConsumedFixtureRowCount=8`
+- `sourceConsumerDryRunStepCount=10`
+- `sourceConsumerAssertionGroupCount=8`
+- `sourceConsumerAssertionCheckCount=19`
+- `sourceFailedConsumerAssertions=0`
+- `sourceUnexpectedFixtureRows=0`
+- `sourceConsumerOutputArtifactRows=0`
+- `publicSyntheticFixtureCount=8`
+- `publicEdgeCaseIdCount=2`
+- `modelRowsWithTextureRefs=352/352`
+- `modelTextureReferenceInstances=1268`
+- `uniqueModelTextureRefUnion=213`
+- `familyUniqueRefSum=241`
+- `familyUniqueRefsAreNotAdditive=true`
+- `sidecarFiles=213`
+- `exactFilenameMatches=212`
+- `stemOnlyMatches=1`
+- `missingSidecarRefs=0`
+- `catalogRows=4050`
+- `catalogMissingRefs=0`
+- `ambiguousCatalogRefs=1`
+- `embeddedDuplicateOutputGroups=28`
+- `embeddedDuplicateOutputSurplusRows=32`
+- `publicLeakCheck=PASS`
+
+The skeleton implements these public interfaces: `load-public-consumer-dry-run-schema`, `enumerate-consumed-fixture-row-ids`, `validate-aggregate-counts`, `validate-public-edge-case-boundaries`, `refuse-private-or-runtime-inputs`, and `emit-public-validation-summary`.
+
+The two exported public functions are `validate_public_contract_skeleton` and `emit_public_validation_summary`.
+
+The skeleton validates only tracked public aggregate evidence, including the eight fixture row IDs `importer-source-matrix-prerequisite`, `importer-loose-family-fixture`, `importer-embedded-family-fixture`, `importer-non-additive-union-fixture`, `importer-sidecar-match-mode-fixture`, `importer-catalog-linkage-fixture`, `importer-duplicate-output-surplus-fixture`, and `importer-negative-claim-guard-fixture`.
+
+Public edge IDs remain `stem-only-sidecar-match-boundary-001` and `ambiguous-catalog-ref-boundary-001`; both keep `rawRefPublished=false`, `rawStemPublished=false`, `catalogVariantPublished=false`, `filenamePublished=false`, `pathPublished=false`, and `hashPublished=false`.
+
+Arithmetic anchors: `213 + 139 = 352`, `602 + 666 = 1268`, `213 + 28 = 241`, `uniqueModelTextureRefUnion = 213`, `212 + 1 = 213`, and `139 - 107 = 32`.
+
+Boundary token: publicContractSkeletonImplemented=true; contractSkeletonValidationExecuted=true; readsOnlyTrackedPublicSchema=true; emitsOnlyValidationSummary=true; realImporterImplementation=false; realImporterExecuted=false; importerImplementation=false; importerExecuted=false; realImporterImplementationReadyNow=false; realImporterExecutionReadyNow=false; implementationDeferred=true; explicitImporterImplementationArmPresent=false; privateAssetReadAuthorizationPresent=false; operatorPrivateOutputReviewAvailable=false; runtimeExecution=false; beLaunch=false; newLaunch=false; screenshotCapture=false; privateFrameReviewPerformed=false; nativeInput=false; debuggerAttachment=false; godotWork=false; ghidraMutation=false; executablePatching=false; productUiWired=false; rebuildImplementation=false; runtimeTextureParserBehaviorProven=false; runtimeTexturePixelsProven=false; runtimeMeshLoadingProven=false; runtimeMeshSkinningProven=false; runtimeDirect3DUploadProven=false; runtimeGpuBehaviorProven=false; nativeTextured3DRenderingProven=false; materialVisualCorrectnessProven=false; materialShaderParityProven=false; visualQaComplete=false; cleanRoomRendererImplemented=false; assetFormatCompletenessProven=false; exactMeshTextureLayoutsProven=false; runtimeResourceArchiveParserProven=false; runtimeSidecarMaterialLoadProven=false; runtimeObjectIdentityProven=false; runtimeWorldLoadingProven=false; rebuildParityProven=false; noNoticeableDifferenceParityProven=false; actualAssetImportRows=0; generatedAssetRows=0; outputArtifactRows=0; dryRunOutputArtifactRows=0; realImporterImplementationRows=0; rebuildImplementationRows=0; beProcessesAfterPublicContractSkeleton=0; falseGuardCount=45; zeroCounterCount=37; publicPrivateProofLeak=false; publicLeakCheck=PASS.
+
+Static context remains `6411/6411 = 100.00%`, `0 / 0 / 0`, `1560/1560 = 100.00%`, `1179/1179 = 100.00%`, and `remainingActiveFocusedWork=0`. Latest verified Ghidra backup remains Wave1219 because this slice performs no Ghidra mutation.
+
+This proves only that the public importer contract skeleton exists, validates the tracked public readiness-gate schema, emits only a public validation summary, and preserves fixture-row, aggregate, public-edge, and negative-claim boundaries.
+
+It does not prove real importer implementation, real importer execution, private asset import, runtime resource archive parser behavior, runtime texture parser behavior, runtime texture pixels, JPEG/inflate decode fidelity, runtime mesh loading or skinning, Direct3D upload or GPU behavior, native textured 3D rendering, material visual correctness, material/shader parity, asset format completeness, exact mesh or texture layouts, product UI behavior, Godot parity, rebuild implementation, rebuild parity, or no-noticeable-difference parity.

@@ -1,0 +1,364 @@
+{
+  "schemaVersion": "texture-mesh-material-sidecar-importer-fixture-harness-consumer-dry-run-proof-plan.v1",
+  "status": "PASS",
+  "consumerDryRunStatus": "texture-mesh-material-sidecar-importer-fixture-harness-consumer-dry-run-proof-plan-complete-public-safe-consumer-dry-run-not-importer-execution-proof",
+  "previousSlice": "Texture / Mesh Material Sidecar Importer Fixture Harness Materialization Proof Plan",
+  "selectedNextSlice": "Texture / Mesh Material Sidecar Importer Implementation Readiness Gate Proof Plan",
+  "selectedNextScope": "texture-mesh-material-sidecar-importer-implementation-readiness-gate-proof-plan",
+  "sourceMaterializationStatus": "texture-mesh-material-sidecar-importer-fixture-harness-materialization-proof-plan-complete-public-safe-deterministic-fixture-row-materialization-not-runtime-proof",
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackupClass": "verified-static-backup-redacted"
+  },
+  "sourceEvidence": {
+    "sourceProofCount": 5,
+    "materializationProof": "reverse-engineering/game-assets/texture-mesh-material-sidecar-importer-fixture-harness-materialization-proof-plan.md",
+    "materializationSchema": "reverse-engineering/game-assets/texture-mesh-material-sidecar-importer-fixture-harness-materialization-proof-plan.v1.json",
+    "importerFixtureHarnessProof": "reverse-engineering/game-assets/texture-mesh-material-sidecar-importer-fixture-harness-proof-plan.md",
+    "fixtureMatrixProof": "reverse-engineering/game-assets/texture-mesh-material-sidecar-rebuild-fixture-matrix-proof.md",
+    "contractExtensionProof": "reverse-engineering/game-assets/texture-mesh-material-sidecar-rebuild-contract-extension-proof-plan.md"
+  },
+  "consumerDryRunSummary": {
+    "sourceMaterializedFixtureRowCount": 8,
+    "consumedFixtureRowCount": 8,
+    "consumerDryRunStepCount": 10,
+    "consumerAssertionGroupCount": 8,
+    "consumerAssertionCheckCount": 19,
+    "failedConsumerAssertions": 0,
+    "unexpectedFixtureRows": 0,
+    "publicSyntheticFixtureCount": 8,
+    "publicEdgeCaseIdCount": 2,
+    "derivedAssertionCount": 6,
+    "dryRunOnly": true,
+    "dryRunValidationOnly": true,
+    "consumerInputMode": "tracked-public-sanitized-materialization-schema",
+    "consumerOutputMode": "dry-run-summary-only",
+    "consumerDryRunExecuted": true,
+    "realImporterImplementation": false,
+    "realImporterExecuted": false,
+    "consumerOutputArtifactRows": 0,
+    "modelRowsWithTextureRefs": "352/352",
+    "modelTextureReferenceInstances": 1268,
+    "uniqueModelTextureRefUnion": 213,
+    "familyUniqueRefSum": 241,
+    "familyUniqueRefsAreNotAdditive": true,
+    "sidecarFiles": 213,
+    "exactFilenameMatches": 212,
+    "stemOnlyMatches": 1,
+    "missingSidecarRefs": 0,
+    "catalogRows": 4050,
+    "catalogMissingRefs": 0,
+    "ambiguousCatalogRefs": 1,
+    "embeddedDuplicateOutputGroups": 28,
+    "embeddedDuplicateOutputSurplusRows": 32,
+    "publicLeakCheck": "PASS"
+  },
+  "consumedFixtureRows": [
+    "importer-source-matrix-prerequisite",
+    "importer-loose-family-fixture",
+    "importer-embedded-family-fixture",
+    "importer-non-additive-union-fixture",
+    "importer-sidecar-match-mode-fixture",
+    "importer-catalog-linkage-fixture",
+    "importer-duplicate-output-surplus-fixture",
+    "importer-negative-claim-guard-fixture"
+  ],
+  "consumerDryRunSteps": [
+    {
+      "stepId": "load-public-materialization-schema",
+      "status": "PASS",
+      "claim": "The dry-run consumer loads only the tracked public materialization schema."
+    },
+    {
+      "stepId": "validate-source-materialization-status",
+      "status": "PASS",
+      "claim": "The source materialization status and static context match the previous slice."
+    },
+    {
+      "stepId": "consume-source-prerequisite-row",
+      "status": "PASS",
+      "claim": "The prerequisite row proves the eight-row source harness is complete before consumption."
+    },
+    {
+      "stepId": "consume-loose-family-row",
+      "status": "PASS",
+      "claim": "The loose row-family aggregate is accepted without raw texture refs or filenames."
+    },
+    {
+      "stepId": "consume-embedded-family-row",
+      "status": "PASS",
+      "claim": "The embedded row-family aggregate is accepted while preserving duplicate-output surplus."
+    },
+    {
+      "stepId": "consume-non-additive-union-row",
+      "status": "PASS",
+      "claim": "The unique-ref union is accepted as non-additive across row families."
+    },
+    {
+      "stepId": "consume-sidecar-match-and-catalog-edge-rows",
+      "status": "PASS",
+      "claim": "The stem-only and ambiguous catalog edge IDs are accepted without resolving private variants."
+    },
+    {
+      "stepId": "consume-duplicate-output-surplus-row",
+      "status": "PASS",
+      "claim": "Row coverage remains separate from unique output-file coverage."
+    },
+    {
+      "stepId": "consume-negative-claim-guard-row",
+      "status": "PASS",
+      "claim": "Runtime, importer, Godot, Ghidra, product UI, rebuild, and parity guards remain false."
+    },
+    {
+      "stepId": "emit-dry-run-summary-no-artifacts",
+      "status": "PASS",
+      "claim": "The consumer dry-run emits no importer outputs, generated assets, screenshots, frames, or private artifacts."
+    }
+  ],
+  "consumerChecks": [
+    {
+      "checkId": "source-materialization-status",
+      "status": "PASS"
+    },
+    {
+      "checkId": "source-materialized-row-count",
+      "status": "PASS"
+    },
+    {
+      "checkId": "source-public-synthetic-row-count",
+      "status": "PASS"
+    },
+    {
+      "checkId": "source-public-edge-case-count",
+      "status": "PASS"
+    },
+    {
+      "checkId": "loose-family-aggregate",
+      "status": "PASS"
+    },
+    {
+      "checkId": "embedded-family-aggregate",
+      "status": "PASS"
+    },
+    {
+      "checkId": "row-sum-arithmetic",
+      "expression": "213 + 139 = 352",
+      "status": "PASS"
+    },
+    {
+      "checkId": "ref-instance-arithmetic",
+      "expression": "602 + 666 = 1268",
+      "status": "PASS"
+    },
+    {
+      "checkId": "family-unique-ref-sum",
+      "expression": "213 + 28 = 241",
+      "status": "PASS"
+    },
+    {
+      "checkId": "unique-ref-union-non-additive",
+      "expression": "uniqueModelTextureRefUnion = 213",
+      "status": "PASS"
+    },
+    {
+      "checkId": "sidecar-match-mode-boundary",
+      "expression": "212 + 1 = 213",
+      "status": "PASS"
+    },
+    {
+      "checkId": "catalog-linkage-boundary",
+      "status": "PASS"
+    },
+    {
+      "checkId": "embedded-duplicate-output-surplus",
+      "expression": "139 - 107 = 32",
+      "status": "PASS"
+    },
+    {
+      "checkId": "public-edge-case-ids",
+      "status": "PASS"
+    },
+    {
+      "checkId": "public-field-publication-guards",
+      "status": "PASS"
+    },
+    {
+      "checkId": "negative-claim-guards",
+      "status": "PASS"
+    },
+    {
+      "checkId": "no-output-artifacts",
+      "status": "PASS"
+    },
+    {
+      "checkId": "no-private-paths-hashes-or-raw-refs",
+      "status": "PASS"
+    },
+    {
+      "checkId": "no-bea-process-after-dry-run",
+      "status": "PASS"
+    }
+  ],
+  "publicEdgeCases": [
+    {
+      "caseId": "stem-only-sidecar-match-boundary-001",
+      "kind": "stem-only-match",
+      "count": 1,
+      "rawRefPublished": false,
+      "rawStemPublished": false,
+      "catalogVariantPublished": false,
+      "filenamePublished": false,
+      "pathPublished": false,
+      "hashPublished": false
+    },
+    {
+      "caseId": "ambiguous-catalog-ref-boundary-001",
+      "kind": "ambiguous-catalog-ref",
+      "count": 1,
+      "rawRefPublished": false,
+      "rawStemPublished": false,
+      "catalogVariantPublished": false,
+      "filenamePublished": false,
+      "pathPublished": false,
+      "hashPublished": false
+    }
+  ],
+  "publicSafetyRules": [
+    "consumer dry-run reads only tracked public materialization JSON",
+    "consumer dry-run uses synthetic fixture row IDs and aggregate counts only",
+    "consumer dry-run does not publish raw texture refs, raw stems, filenames, paths, hashes, catalog variants, source rows, output artifacts, private frames, or private asset locators",
+    "consumer dry-run does not resolve the stem-only sidecar boundary to a raw sample",
+    "consumer dry-run does not resolve the ambiguous catalog boundary to a catalog variant",
+    "consumer dry-run does not collapse embedded row coverage into unique output-file coverage"
+  ],
+  "guardSummary": {
+    "falseGuards": {
+      "runtimeExecution": false,
+      "beLaunch": false,
+      "newLaunch": false,
+      "screenshotCapture": false,
+      "privateFrameReviewPerformed": false,
+      "rowObservation": false,
+      "sourceSelectionObserved": false,
+      "sourceSelectionProven": false,
+      "nativeInput": false,
+      "debuggerAttachment": false,
+      "godotWork": false,
+      "ghidraMutation": false,
+      "executablePatching": false,
+      "productUiWired": false,
+      "realImporterImplementation": false,
+      "realImporterExecuted": false,
+      "importerImplementation": false,
+      "importerExecuted": false,
+      "fixtureHarnessRuntimeExecuted": false,
+      "fixtureHarnessConsumerRuntimeExecuted": false,
+      "rebuildImplementation": false,
+      "runtimeTextureParserBehaviorProven": false,
+      "runtimeTexturePixelsProven": false,
+      "runtimeJpegInflateDecodeFidelityProven": false,
+      "runtimeMeshLoadingProven": false,
+      "runtimeMeshSkinningProven": false,
+      "runtimeAnimationBehaviorProven": false,
+      "runtimeCollisionBehaviorProven": false,
+      "runtimeDirect3DUploadProven": false,
+      "runtimeGpuBehaviorProven": false,
+      "nativeTextured3DRenderingProven": false,
+      "materialVisualCorrectnessProven": false,
+      "materialShaderParityProven": false,
+      "visualQaComplete": false,
+      "cleanRoomRendererImplemented": false,
+      "assetFormatCompletenessProven": false,
+      "exactMeshTextureLayoutsProven": false,
+      "runtimeResourceArchiveParserProven": false,
+      "runtimeSidecarMaterialLoadProven": false,
+      "runtimeObjectIdentityProven": false,
+      "runtimeWorldLoadingProven": false,
+      "rebuildParityProven": false,
+      "noNoticeableDifferenceParityProven": false,
+      "privateAssetPublication": false,
+      "publicPrivateProofLeak": false
+    },
+    "zeroCounters": {
+      "actualAssetImportRows": 0,
+      "generatedAssetRows": 0,
+      "outputArtifactRows": 0,
+      "dryRunOutputArtifactRows": 0,
+      "rawFixtureExampleRows": 0,
+      "privateFixtureRows": 0,
+      "runtimeTexturePixelRows": 0,
+      "runtimeMeshRenderRows": 0,
+      "runtimeMaterialRows": 0,
+      "runtimeObservationRows": 0,
+      "textureRuntimeEvidenceRows": 0,
+      "meshRuntimeEvidenceRows": 0,
+      "materialRuntimeEvidenceRows": 0,
+      "materialVisualReviewRows": 0,
+      "screenshotRows": 0,
+      "privateFrameRowsObserved": 0,
+      "rowObservationRows": 0,
+      "sourceObservedRows": 0,
+      "newLaunchRows": 0,
+      "captureRows": 0,
+      "ocrRows": 0,
+      "rawDialogueRows": 0,
+      "ghidraMutationRows": 0,
+      "executablePatchRows": 0,
+      "productUiRows": 0,
+      "godotRows": 0,
+      "importerImplementationRows": 0,
+      "rebuildImplementationRows": 0,
+      "runtimeCollisionRows": 0,
+      "cleanRoomRendererRows": 0,
+      "runtimeResourceArchiveParserRows": 0,
+      "runtimeSidecarMaterialLoadRows": 0,
+      "beProcessesAfterConsumerDryRun": 0,
+      "publicCaseRawRefLeakCount": 0,
+      "privatePathLeakCount": 0,
+      "rawArtifactLeakCount": 0,
+      "privateAssetLeakCount": 0,
+      "publicPrivateProofLeakCount": 0
+    },
+    "consumerDryRunFalseGuardCount": 45,
+    "consumerDryRunZeroCounterCount": 38,
+    "publicLeakCheck": "PASS"
+  },
+  "claimBoundary": {
+    "proves": [
+      "the eight public-safe materialized fixture rows can be consumed by a dry-run importer-facing contract",
+      "the consumer dry-run preserves loose and embedded row-family separation",
+      "the consumer dry-run preserves non-additive unique-ref union accounting",
+      "the consumer dry-run preserves stem-only and ambiguous catalog boundaries as public synthetic edge IDs",
+      "the consumer dry-run emits no importer outputs or private artifacts"
+    ],
+    "doesNotProve": [
+      "real importer implementation",
+      "real importer execution",
+      "runtime resource archive parser behavior",
+      "runtime texture parser behavior",
+      "runtime texture pixels",
+      "JPEG/inflate decode fidelity",
+      "runtime mesh loading or skinning",
+      "Direct3D upload or GPU behavior",
+      "native textured 3D rendering",
+      "material visual correctness",
+      "material or shader parity",
+      "asset format completeness",
+      "Godot parity",
+      "rebuild implementation",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  },
+  "stopConditions": [
+    "if the source materialization status or row count changes",
+    "if consumed fixture rows do not exactly match the eight materialized row IDs",
+    "if consumer validation would require raw texture refs, stems, filenames, paths, hashes, catalog variants, or private artifacts",
+    "if embedded duplicate-output rows are deduped down to unique output files",
+    "if the next child would implement or execute a real importer without a separate readiness gate"
+  ]
+}

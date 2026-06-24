@@ -1,0 +1,21 @@
+address	name	signature	status
+0x005715b0	CFastVB__BuildStripBatchesFromIndexBuffer	int CFastVB__BuildStripBatchesFromIndexBuffer(void)	OK
+0x00571870	CFastVB__HasDuplicateTriangleIndices32	bool __cdecl CFastVB__HasDuplicateTriangleIndices32(void * param_1)	OK
+0x00571890	CFastVB__HasDuplicateTriangleIndices16	bool __stdcall CFastVB__HasDuplicateTriangleIndices16(int param_1, int param_2, int param_3)	OK
+0x005718c0	CFastVB__MergeAndOrderStripBatches	void __thiscall CFastVB__MergeAndOrderStripBatches(void * this, void * param_1, int param_2, int param_3, int param_4, int param_5)	OK
+0x005721f0	CFastVB__SeedVertexCacheFromTriangleRefs	void __stdcall CFastVB__SeedVertexCacheFromTriangleRefs(void * param_1, int param_2)	OK
+0x00572500	CFastVB__CountResolvedOppositeEdges	char __stdcall CFastVB__CountResolvedOppositeEdges(void * param_1, int param_2)	OK
+0x00572570	CFastVB__ComputeAverageUnresolvedEdgesPerBatch	double __stdcall CFastVB__ComputeAverageUnresolvedEdgesPerBatch(int param_1)	OK
+0x005725e0	CFastVB__GenerateStripCandidatesFromAdjacency	void __thiscall CFastVB__GenerateStripCandidatesFromAdjacency(void * this, void * param_1, int param_2, int param_3, void * param_4, int param_5)	OK
+0x00572f50	CFastVB__CopyDwordRange	void __stdcall CFastVB__CopyDwordRange(void * param_1, void * param_2, void * param_3)	OK
+0x00572f80	CFastVB__GetWordCapacity	int __fastcall CFastVB__GetWordCapacity(int param_1)	OK
+0x00572fa0	CFastVB__InsertWordAndGrow	int __thiscall CFastVB__InsertWordAndGrow(void * this, int param_1, void * param_2, void * param_3)	OK
+0x00573140	CFastVB__CopyWordRange	void __stdcall CFastVB__CopyWordRange(void * param_1, void * param_2, void * param_3)	OK
+0x00573170	CFastVB__InsertDwordAndGrow	int __thiscall CFastVB__InsertDwordAndGrow(void * this, int param_1, void * param_2, void * param_3)	OK
+0x005736d0	CFastVB__InsertDwordSpanFilled	void __thiscall CFastVB__InsertDwordSpanFilled(void * this, int param_1, void * param_2, uint param_3, void * param_4)	OK
+0x00573d00	RBTree__InitUIntKeyTreeWithSharedSentinel	void __fastcall RBTree__InitUIntKeyTreeWithSharedSentinel(int param_1)	OK
+0x005741d0	CFastVB__CopyWordRange_Strict	void __cdecl CFastVB__CopyWordRange_Strict(void * param_1, void * param_2, void * param_3)	OK
+0x00574200	CFastVB__CopyDwordRange_Strict	void __cdecl CFastVB__CopyDwordRange_Strict(void * param_1, void * param_2, void * param_3)	OK
+0x00574230	CFastVB__AssignDwordIfDestNotNull	void __cdecl CFastVB__AssignDwordIfDestNotNull(void * param_1, void * param_2)	OK
+0x00574250	CFastVB__AssignWordIfDestNotNull	void __cdecl CFastVB__AssignWordIfDestNotNull(void * param_1, void * param_2)	OK
+0x00574e2b	CDXTexture__GenerateMipChainBySurfaceCopy	uint __stdcall CDXTexture__GenerateMipChainBySurfaceCopy(void * param_1, int param_2, uint param_3, uint param_4)	OK

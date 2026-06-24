@@ -1,0 +1,34 @@
+address	name	signature	status
+0x0058eefb	CTexture__ParseDebugChunkAndRelocateBindings	int __fastcall CTexture__ParseDebugChunkAndRelocateBindings(void * param_1)	OK
+0x0058f1e0	CTexture__Dtor_ReleaseBindings_DeleteOnFlag	void * __thiscall CTexture__Dtor_ReleaseBindings_DeleteOnFlag(void * this, void * param_1, int param_2)	OK
+0x0058f577	CTexture__Dtor_ReleaseParserState_DeleteOnFlag	void * __thiscall CTexture__Dtor_ReleaseParserState_DeleteOnFlag(void * this, void * param_1, int param_2)	OK
+0x0058f66f	CTexture__ParseScriptTokensAndBuildNodes	int __thiscall CTexture__ParseScriptTokensAndBuildNodes(void * this, void * param_1, int param_2, int param_3)	OK
+0x0059020b	CTexture__ParseScriptWithYaccTables	int CTexture__ParseScriptWithYaccTables(void)	OK
+0x005907d9	CTexture__LoadScriptAndDispatchByVersion	int __thiscall CTexture__LoadScriptAndDispatchByVersion(void * this, void * param_1, uint param_2, uint param_3, int param_4, void * param_5)	OK
+0x00590c4a	CTexture__SetQueryStubVtableAndReleaseChild	void __fastcall CTexture__SetQueryStubVtableAndReleaseChild(void * param_1)	OK
+0x00590cc2	CTexture__Dtor_QueryStub_DeleteOnFlag	void * __thiscall CTexture__Dtor_QueryStub_DeleteOnFlag(void * this, void * param_1, int param_2)	OK
+0x00590cde	CDXTexture__QueryInterfaceByGuid	int __stdcall CDXTexture__QueryInterfaceByGuid(void * param_1, void * param_2, void * param_3)	OK
+0x00591280	CDXTexture__DecodeJpegStream_PumpUntilReady	int __stdcall CDXTexture__DecodeJpegStream_PumpUntilReady(void * param_1)	OK
+0x00591460	CDXTexture__DecodeJpegSegment_StartOfFrame	int __fastcall CDXTexture__DecodeJpegSegment_StartOfFrame(int param_1)	OK
+0x005919e0	CDXTexture__DecodeJpegSegment_HuffmanTables	int CDXTexture__DecodeJpegSegment_HuffmanTables(void)	OK
+0x00591cb0	CDXTexture__DecodeJpegSegment_QuantizationTables	int __stdcall CDXTexture__DecodeJpegSegment_QuantizationTables(void * param_1)	OK
+0x00591ef0	CDXTexture__DecodeJpegSegment_RestartInterval	int __stdcall CDXTexture__DecodeJpegSegment_RestartInterval(void * param_1)	OK
+0x00591fc0	CDXTexture__ParseJfifApp0Header	void __fastcall CDXTexture__ParseJfifApp0Header(int param_1)	OK
+0x005921a0	CDXTexture__ParseAdobeApp14Header	void __thiscall CDXTexture__ParseAdobeApp14Header(void * this, uint param_1, int param_2)	OK
+0x00592ca0	CDXTexture__FormatChunkTagForDiagnostics	void __thiscall CDXTexture__FormatChunkTagForDiagnostics(void * this, int param_1, int param_2, void * param_3)	OK
+0x00592d7a	CDXTexture__LogChunkTagDiagnostic	void __stdcall CDXTexture__LogChunkTagDiagnostic(void * param_1, int param_2)	OK
+0x005933c6	CDXTexture__DecodePngRowsAcrossPasses	void __stdcall CDXTexture__DecodePngRowsAcrossPasses(int param_1, void * param_2)	OK
+0x00593411	CDXTexture__ResetPngDecodeContext	void __stdcall CDXTexture__ResetPngDecodeContext(void * param_1, int param_2, int param_3)	OK
+0x00593526	CDXTexture__ReleasePngDecodeContextHandles	void __stdcall CDXTexture__ReleasePngDecodeContextHandles(void * param_1, void * param_2, void * param_3)	OK
+0x005935a3	CDXTexture__TestDecodeOptionFlagMask	uint __stdcall CDXTexture__TestDecodeOptionFlagMask(int param_1, int param_2, uint param_3)	OK
+0x005935c0	CDXTexture__GetDecodeRowStride	int __stdcall CDXTexture__GetDecodeRowStride(int param_1, int param_2)	OK
+0x005937f6	CDXTexture__GetPngPassCountFromInterlace	int __stdcall CDXTexture__GetPngPassCountFromInterlace(int param_1)	OK
+0x00593994	CDXTexture__ApplyPngPostprocessLayoutFlags	void __stdcall CDXTexture__ApplyPngPostprocessLayoutFlags(int param_1, void * param_2)	OK
+0x00594ef8	CDXTexture__SetDecodeOptionFloat	void __stdcall CDXTexture__SetDecodeOptionFloat(int param_1, int param_2, double param_3)	OK
+0x00594fdc	CDXTexture__SetDecodeOptionByte	void __stdcall CDXTexture__SetDecodeOptionByte(int param_1, int param_2, int param_3)	OK
+0x00594ff9	CDXTexture__SetDecodeOptionByteWithDefaultFloat	void __stdcall CDXTexture__SetDecodeOptionByteWithDefaultFloat(int param_1, int param_2, int param_3)	OK
+0x00595030	CDXTexture__SetDecodeOptionParams	void __stdcall CDXTexture__SetDecodeOptionParams(int param_1, int param_2, int param_3, int param_4, void * param_5)	OK
+0x0059512b	CDXTexture__AllocZeroedDecodeBuffer	int __stdcall CDXTexture__AllocZeroedDecodeBuffer(int param_1, int param_2, int param_3)	OK
+0x0059517e	CDXTexture__FreeDecodeBufferIfPresent	void __stdcall CDXTexture__FreeDecodeBufferIfPresent(int param_1, int param_2)	OK
+0x00595183	CDXTexture__InitDecodeSeedDefault	void __stdcall CDXTexture__InitDecodeSeedDefault(int param_1)	OK
+0x005951d9	CDXTexture__ZeroDecodeWorkspace16Dwords	void __stdcall CDXTexture__ZeroDecodeWorkspace16Dwords(int param_1, void * param_2)	OK

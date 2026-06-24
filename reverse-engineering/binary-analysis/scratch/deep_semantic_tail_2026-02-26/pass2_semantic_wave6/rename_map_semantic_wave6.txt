@@ -1,0 +1,5 @@
+0x0040bfd0 CBattleEngine__StartDieProcess
+0x00409f70 CBattleEngine__ChangeWeapon
+0x00497140 CUnitAI__CacheNamedCollisionCylinders
+0x004a5500 CMesh__MapStateNameToId
+0x004a5670 CMesh__OptimizeTextures

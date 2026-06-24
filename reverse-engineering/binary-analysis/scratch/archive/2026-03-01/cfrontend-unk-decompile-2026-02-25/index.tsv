@@ -1,0 +1,22 @@
+address	name	signature	status
+0x0045ac30	CFrontEnd__Unk_0045ac30	void CFrontEnd__Unk_0045ac30(void)	OK
+0x004655d0	CFrontEnd__Unk_004655d0	void __cdecl CFrontEnd__Unk_004655d0(void * param_1)	OK
+0x00465640	CFrontEnd__Unk_00465640	int CFrontEnd__Unk_00465640(void)	OK
+0x004661e0	CFrontEnd__Unk_004661e0	void __fastcall CFrontEnd__Unk_004661e0(int param_1)	OK
+0x004661f0	CFrontEnd__Unk_004661f0	void CFrontEnd__Unk_004661f0(void)	OK
+0x00466980	CFrontEnd__Unk_00466980	uint __fastcall CFrontEnd__Unk_00466980(int param_1)	OK
+0x00466990	CFrontEnd__Unk_00466990	int CFrontEnd__Unk_00466990(void)	OK
+0x00466ab0	CFrontEnd__Unk_00466ab0	void __thiscall CFrontEnd__Unk_00466ab0(void * this, int param_1, int param_2)	OK
+0x00466de0	CFrontEnd__Unk_00466de0	int CFrontEnd__Unk_00466de0(void)	OK
+0x00466e70	CFrontEnd__Unk_00466e70	int CFrontEnd__Unk_00466e70(void)	OK
+0x00467010	CFrontEnd__Unk_00467010	int CFrontEnd__Unk_00467010(void)	OK
+0x004670b0	CFrontEnd__Unk_004670b0	int CFrontEnd__Unk_004670b0(void)	OK
+0x00467200	CFrontEnd__Unk_00467200	void __thiscall CFrontEnd__Unk_00467200(void * this, int param_1, float param_2, float param_3)	OK
+0x004679a0	CFrontEnd__Unk_004679a0	int __cdecl CFrontEnd__Unk_004679a0(int param_1)	OK
+0x00467ae0	CFrontEnd__Unk_00467ae0	int CFrontEnd__Unk_00467ae0(void)	OK
+0x00467bd0	CFrontEnd__Unk_00467bd0	void __stdcall CFrontEnd__Unk_00467bd0(void * param_1, float param_2, float param_3)	OK
+0x004681c0	CFrontEnd__Unk_004681c0	void CFrontEnd__Unk_004681c0(void)	OK
+0x004681e0	CFrontEnd__Unk_004681e0	void CFrontEnd__Unk_004681e0(void)	OK
+0x004685a0	CFrontEnd__Unk_004685a0	void CFrontEnd__Unk_004685a0(void)	OK
+0x00468730	CFrontEnd__Unk_00468730	double CFrontEnd__Unk_00468730(void)	OK
+0x00468750	CFrontEnd__Unk_00468750	double CFrontEnd__Unk_00468750(void)	OK

@@ -1,0 +1,21 @@
+address	name	signature	status
+0x0057dd17	CFastVB__Helper_0057dd17	int __fastcall CFastVB__Helper_0057dd17(void * param_1)	OK
+0x0057e0c3	CFastVB__Helper_0057e0c3	int __fastcall CFastVB__Helper_0057e0c3(void * param_1)	OK
+0x0057e4d3	CFastVB__Helper_0057e4d3	int __fastcall CFastVB__Helper_0057e4d3(void * param_1)	OK
+0x0057e6cc	CFastVB__Helper_0057e6cc	int __fastcall CFastVB__Helper_0057e6cc(void * param_1)	OK
+0x0057eadb	CFastVB__Helper_0057eadb	int __fastcall CFastVB__Helper_0057eadb(void * param_1)	OK
+0x0057ef10	CFastVB__Helper_0057ef10	void __stdcall CFastVB__Helper_0057ef10(int param_1)	OK
+0x0057f002	CFastVB__Helper_0057f002	int __fastcall CFastVB__Helper_0057f002(void * param_1)	OK
+0x0057f391	CFastVB__Helper_0057f391	int __fastcall CFastVB__Helper_0057f391(void * param_1)	OK
+0x0057fa10	CFastVB__Helper_0057fa10	int * __thiscall CFastVB__Helper_0057fa10(void * this, void * param_1, int param_2)	OK
+0x00580ef4	CFastVB__Helper_00580ef4	int CFastVB__Helper_00580ef4(void)	OK
+0x00581263	CFastVB__Helper_00581263	void __fastcall CFastVB__Helper_00581263(void * param_1)	OK
+0x00581279	CFastVB__Helper_00581279	int __thiscall CFastVB__Helper_00581279(void * this, int param_1, int param_2)	OK
+0x0058183d	CFastVB__Helper_0058183d	void __fastcall CFastVB__Helper_0058183d(void * param_1)	OK
+0x005819b8	CFastVB__Helper_005819b8	double __stdcall CFastVB__Helper_005819b8(float param_1)	OK
+0x00581a08	CFastVB__Helper_00581a08	double __stdcall CFastVB__Helper_00581a08(float param_1)	OK
+0x00581a4f	CFastVB__Helper_00581a4f	int CFastVB__Helper_00581a4f(void)	OK
+0x00581cc0	CFastVB__Helper_00581cc0	int __thiscall CFastVB__Helper_00581cc0(void * this, int param_1, int param_2)	OK
+0x00581e1c	CFastVB__Helper_00581e1c	void __thiscall CFastVB__Helper_00581e1c(void * this, int param_1, uint param_2)	OK
+0x0058577f	CFastVB__Helper_0058577f	int __thiscall CFastVB__Helper_0058577f(void * this, void * param_1, int param_2)	OK
+0x0058584f	CFastVB__Helper_0058584f	int __thiscall CFastVB__Helper_0058584f(void * this, void * param_1, int param_2)	OK

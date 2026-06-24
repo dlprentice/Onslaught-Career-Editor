@@ -1,0 +1,7 @@
+address	name	signature	status
+0x004d0810	CPauseMenu__ButtonPressed	void __thiscall CPauseMenu__ButtonPressed(void * this, void * param_1, int param_2)	OK
+0x004d0de0	CPauseMenu__GetBindingCapacityError	int CPauseMenu__GetBindingCapacityError(void)	OK
+0x00520370	CFEPVirtualKeyboard__ButtonPressed	void __thiscall CFEPVirtualKeyboard__ButtonPressed(void * this, int button, float val)	OK
+0x0051ff90	CFEPVirtualKeyboard__Init	int __fastcall CFEPVirtualKeyboard__Init(void * this)	OK
+0x005202d0	CFEPVirtualKeyboard__Process	void __thiscall CFEPVirtualKeyboard__Process(void * this, int state)	OK
+0x00521100	CFEPVirtualKeyboard__Render	void __thiscall CFEPVirtualKeyboard__Render(void * this, float transition, int dest)	OK

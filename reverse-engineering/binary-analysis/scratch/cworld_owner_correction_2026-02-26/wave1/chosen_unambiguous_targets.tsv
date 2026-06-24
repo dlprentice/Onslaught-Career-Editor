@@ -1,0 +1,3 @@
+address	old_name	inferred_owner	new_name	xref_count	top_counts
+0x0050b030	CWorld__Unk_0050b030	OID	OID__Helper_0050b030	12	OID:5;CBattleEngine:2;CDXEngine:1;CMCMech:1;CMonitor:1;CCollisionSeekingRound:1
+0x0050d760	CWorld__Unk_0050d760	CExplosionInitThing	CExplosionInitThing__Helper_0050d760	21	CExplosionInitThing:20;IScript:1

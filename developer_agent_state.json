@@ -1,0 +1,68 @@
+{
+  "lastUpdated": "2026-06-24",
+  "branch": "main",
+  "currentFocus": "Public-primary migration: fold former private tracked project material into the public repo as the default working tree.",
+  "publicPrimaryMigration": {
+    "status": "staged-and-validated; commit/push pending",
+    "sourcePrivateTree": "C:\\oce-agentic-winui-hardening plus selected current private music/runtime files",
+    "targetPublicRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
+    "policy": "track source/docs/tools/RE notes/wave notes/state batons/agent reports/proof summaries; keep only hard payloads local/ignored",
+    "hardPayloadsKeptOut": [
+      "game/media payload roots",
+      "copied executables/DLLs",
+      "save/options payloads",
+      "full Ghidra project databases/backups",
+      "screenshots/frame dumps/raw CDB logs",
+      "bulky generated runtime captures",
+      "secrets/.env/build outputs"
+    ],
+    "stagedFileCount": 18874,
+    "extractedTextureScratch": "ignored via reverse-engineering/binary-analysis/scratch/**/MeshTextures/*.png",
+    "generatedMdLinkReports": "ignored via subagents/md-link-check/",
+    "publicDocsUpdated": [
+      "README.MD",
+      "AGENTS.md",
+      "CONTRIBUTING.md",
+      "LOCAL_LAB_OVERLAY.md",
+      "README.RELEASE.md",
+      "SECURITY.md",
+      "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
+      "roadmap/public-primary-working-repo.md"
+    ],
+    "packageBoundary": "test:hard-payload-safety added; test:public-allowlist aliases hard-payload safety for compatibility"
+  },
+  "validation": {
+    "passed": [
+      "npm run test:hard-payload-safety",
+      "npm run test:public-allowlist",
+      "npm run test:doc-commands",
+      "py -3 tools\\docsync_check.py",
+      "dotnet build .\\OnslaughtCareerEditor.WinUI.slnx --nologo (0 warnings, 0 errors)",
+      "npm run test:md-links (3612 markdown files, 6121 local links)",
+      "npm run test:repo-hygiene (18415 explicit text files checked)",
+      "git diff --cached --check",
+      "staged hard-payload filename scan returned no matches"
+    ],
+    "pending": [
+      "commit public-primary migration",
+      "push origin/main",
+      "post-push clean/aligned verification"
+    ]
+  },
+  "staticProgress": {
+    "functionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "activeCurrentRisk": "1179/1179 = 100.00%",
+    "measurementFrontDoor": "reverse-engineering/binary-analysis/static-reaudit-measurement-register.md"
+  },
+  "runtimeTruth": {
+    "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable",
+    "musicAudibleOutputProof": "runtimeAudibleOutputProof=false; live private raw bundle still pending",
+    "originalInstallRule": "installed Steam folder and original BEA.exe remain read-only"
+  },
+  "nextSteps": [
+    "Commit and push the public-primary migration baseline.",
+    "Use the public repo as the default active repo after push.",
+    "Resume WinUI/mod/runtime/multiplayer work from public repo with hard payloads in local overlays only."
+  ]
+}

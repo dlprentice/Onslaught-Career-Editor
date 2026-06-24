@@ -1,0 +1,9 @@
+address	name	signature	status
+0x005016b0	CEngine__Unk_005016b0	void CEngine__Unk_005016b0(void)	OK
+0x0050abc0	CWorld__Unk_0050abc0	int __thiscall CWorld__Unk_0050abc0(void * this, int param_1, void * param_2)	OK
+0x00527da0	CVBufTexture__Unk_00527da0	void __fastcall CVBufTexture__Unk_00527da0(int param_1)	OK
+0x0052ff30	CEngine__Unk_0052ff30	void CEngine__Unk_0052ff30(void)	OK
+0x00548f90	CDXEngine__Unk_00548f90	uint __thiscall CDXEngine__Unk_00548f90(void * this, int param_1, int param_2)	OK
+0x00549570	CDXEngine__Unk_00549570	void CDXEngine__Unk_00549570(void)	OK
+0x005be628	CFastVB__Unk_005be628	int CFastVB__Unk_005be628(void)	OK
+0x0052c430	CD3DApplication__Unk_0052c430	void __fastcall CD3DApplication__Unk_0052c430(void * param_1)	OK

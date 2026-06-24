@@ -1,0 +1,3 @@
+target_addr	target_name	from_addr	from_function	ref_type
+00453460	FUN_00453460	00622264	<no_function>	DATA
+00514210	FUN_00514210	0062283c	<no_function>	DATA

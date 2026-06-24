@@ -1,0 +1,4 @@
+address	name	signature	status
+0x00453970	CControllerDefinition__InitDefaults	void __thiscall CControllerDefinition__InitDefaults(void * this)	OK
+0x004539b0	CControllerDefinition__scalar_deleting_dtor	void * __thiscall CControllerDefinition__scalar_deleting_dtor(void * this, int flags)	OK
+0x004539d0	CControllerDefinition__dtor	void __thiscall CControllerDefinition__dtor(void * this)	OK

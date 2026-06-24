@@ -1,0 +1,45 @@
+{
+  "depth": "depth3",
+  "created_at": "2026-03-04 15:37:00 -0500",
+  "expected_files": 11,
+  "actual_files": 11,
+  "files": [
+    "lane01_docs_fixcards.md",
+    "lane02_lore_fixcards.md",
+    "lane03_skill_fixcards.md",
+    "lane04_gui_fixcards.md",
+    "lane05_cli_fixcards.md",
+    "lane06_binary_patch_backlog_cards.md",
+    "lane07_release_readiness_cards.md",
+    "lane08_test_implementation_cards.md",
+    "lane09_semantics_wording_cards.md",
+    "lane10_master_fix_queue.tsv",
+    "fix_queue.tsv"
+  ],
+  "state_file_hashes_pre_depth1": {
+    "developer_agent_state.json": "0321b3d94daa70c33716bfd1844c4ff80b44a99df3d4c4d05f307e25e1a4f1ae",
+    "documentation_agent_state.json": "676f332e616cd50959b7cb21a87943ecd6f50cd890de4d43c1bbf1f5105ee5e1",
+    "re_orchestrator_state.json": "ec3d5e0355a66f4ae0f2d13b412009f913d447705e600cabae6ecdac43117f5d"
+  },
+  "state_file_hashes_current": {
+    "developer_agent_state.json": "0321b3d94daa70c33716bfd1844c4ff80b44a99df3d4c4d05f307e25e1a4f1ae",
+    "documentation_agent_state.json": "676f332e616cd50959b7cb21a87943ecd6f50cd890de4d43c1bbf1f5105ee5e1",
+    "re_orchestrator_state.json": "ec3d5e0355a66f4ae0f2d13b412009f913d447705e600cabae6ecdac43117f5d"
+  },
+  "state_files_unchanged": true,
+  "status": "complete",
+  "file_checksums_sha256": {
+    "lane01_docs_fixcards.md": "ea55ac9f5ec8439e6f4bc0e2b10b80908be99f6ea0d0027fe019e494a7f643a3",
+    "lane02_lore_fixcards.md": "9e5846b7146aeaf1db096691a18d8f229142e7ea8e84ff7d9843751e734fc9ba",
+    "lane03_skill_fixcards.md": "689c33ceaa00cfed782a2ce9c93e769238ac84d0b2d10dac684a71394cdcd78d",
+    "lane04_gui_fixcards.md": "91a750c4d4b912b6295aee4c715078cd467ba9fdd0a488749456f22eee6cd287",
+    "lane05_cli_fixcards.md": "dbeed1f09e38a92374cbc592a7a2eee47742bdcff726b963ccbd0596c88d6e10",
+    "lane06_binary_patch_backlog_cards.md": "07cfb9a27eddf7f56f6f180d3cb5c0d64c6f7be76e8e9b3916eb546587859bea",
+    "lane07_release_readiness_cards.md": "347db118a71e33b1727414f1819dc72eaba1b135f1b065cecd6cd72d2e964536",
+    "lane08_test_implementation_cards.md": "4788771613a6e875bd13032fae939105f2df5c8cd6d38ea4583dc6abec447ef1",
+    "lane09_semantics_wording_cards.md": "b3cf8202ccc0800d085d4fec6f529d29df35e6a3ca8dd269e3e765b45882326a",
+    "lane10_master_fix_queue.tsv": "f0f8ca88478e99989dd7e7d58ca5887660d1a7d61b107693feef1ea0f678824f",
+    "fix_queue.tsv": "f0f8ca88478e99989dd7e7d58ca5887660d1a7d61b107693feef1ea0f678824f"
+  },
+  "checksum_generated_at": "2026-03-04 23:46:20 "
+}

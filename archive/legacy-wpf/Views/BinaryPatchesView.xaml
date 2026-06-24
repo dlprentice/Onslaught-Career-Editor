@@ -1,0 +1,172 @@
+<UserControl x:Class="Onslaught___Career_Editor.Views.BinaryPatchesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="620" d:DesignWidth="860">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <GroupBox Header="Target Executable" Grid.Row="0" Margin="0,0,0,10">
+            <StackPanel Margin="10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="ExePathTextBox"
+                             Grid.Column="0"
+                             Margin="0,0,8,0"
+                             IsReadOnly="True"
+                             AutomationProperties.Name="Target BEA executable path"/>
+                    <Button x:Name="BrowseExeButton"
+                            Grid.Column="1"
+                            Content="Browse..."
+                            Click="BrowseExeButton_Click"
+                            Padding="12,4"
+                            Margin="0,0,8,0"
+                            ToolTip="Select BEA.exe manually"/>
+                    <Button x:Name="UseGameDirButton"
+                            Grid.Column="2"
+                            Content="Use Game Dir"
+                            Click="UseGameDirButton_Click"
+                            Padding="12,4"
+                            ToolTip="Use Settings game directory + BEA.exe"/>
+                </Grid>
+                <Border x:Name="ExeHintBorder"
+                        Style="{StaticResource InfoCalloutBorderStyle}"
+                        Margin="0,10,0,0">
+                    <TextBlock x:Name="ExeHintTextBlock"
+                               Style="{StaticResource CalloutTextStyle}" />
+                </Border>
+            </StackPanel>
+        </GroupBox>
+
+        <GroupBox Header="Executable Patches (Stable + Experimental)" Grid.Row="1" Margin="0,0,0,10">
+            <StackPanel Margin="10">
+                <Border Style="{StaticResource InfoCalloutBorderStyle}" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource CalloutTextStyle}" FontWeight="SemiBold" Text="Recommended flow" />
+                        <TextBlock Style="{StaticResource CalloutTextStyle}" Margin="0,4,0,0"
+                                   Text="Verify Selected first, then apply the stable set you actually want. The app only writes when bytes match expected original or already-patched values." />
+                        <TextBlock Style="{StaticResource CalloutTextStyle}" Margin="0,4,0,0"
+                                   Text="Any selected patch also updates the in-game version watermark so the game shows V1.00 - PATCHED." />
+                        <TextBlock x:Name="CatalogStatusTextBlock"
+                                   Style="{StaticResource HelperTextStyle}"
+                                   Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="10" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock Text="Recommended stable patches" FontWeight="SemiBold" FontSize="13" />
+                        <TextBlock Style="{StaticResource HelperTextStyle}" Margin="0,4,0,8">
+                            Stable items cover display-mode flow plus the retail extra-graphics/cardid gates. They are byte-verified and rollback-safe through the full-file backup.
+                        </TextBlock>
+
+                        <CheckBox x:Name="ResolutionGatePatchCheckBox"
+                                  Content="Allow widescreen resolutions (remove 4:3-only rejection)"
+                                  IsChecked="True"
+                                  Margin="0,0,0,4"
+                                  ToolTip="Patch 1: Bypasses the non-4:3 reject gate in BuildDeviceList. Byte patch: 0x129696 (CC -&gt; 00)."
+                                  Checked="PatchSelectionChanged"
+                                  Unchecked="PatchSelectionChanged"/>
+
+                        <CheckBox x:Name="ForceWindowedPatchCheckBox"
+                                  Content="Prefer windowed startup (when the game is already on a windowed-capable path)"
+                                  IsChecked="True"
+                                  Margin="0,0,0,4"
+                                  ToolTip="Patch 2: Forces startup flow toward windowed mode on windowed-capable paths. Some setups may still need wrappers. Byte patch: 0x12A644 (A1 F0 2D 66 00 -&gt; B8 01 00 00 00)."
+                                  Checked="PatchSelectionChanged"
+                                  Unchecked="PatchSelectionChanged"/>
+
+                        <CheckBox x:Name="ExtraGraphicsDefaultOnPatchCheckBox"
+                                  Content="Unlock extra graphics features by default"
+                                  IsChecked="True"
+                                  Margin="0,0,0,4"
+                                  ToolTip="Patch 3: Changes GEFORCE_FX_POWER default from 0 to 1 so extra graphics options are available without cardid vendor/device matching. Byte patch: 0x0CDD40 (6A 00 -&gt; 6A 01)."
+                                  Checked="PatchSelectionChanged"
+                                  Unchecked="PatchSelectionChanged"/>
+
+                        <CheckBox x:Name="IgnoreCardIdOverridesPatchCheckBox"
+                                  Content="Ignore cardid.txt tweak overrides"
+                                  IsChecked="True"
+                                  Margin="0,0,0,0"
+                                  ToolTip="Patch 4: Bypasses startup call that loads/applies cardid.txt vendor/device tweak overrides. Byte patch: 0x12AF3F (E8 9C D7 FF FF -&gt; 90 90 90 90 90)."
+                                  Checked="PatchSelectionChanged"
+                                  Unchecked="PatchSelectionChanged"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource WarningCalloutBorderStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Optional experimental patch" FontWeight="SemiBold" FontSize="13" />
+                        <TextBlock Style="{StaticResource CalloutTextStyle}" Margin="0,4,0,8">
+                            Use this only if startup still flips mode after the stable set is already verified. It is a partial flow tweak, not a guaranteed universal fix.
+                        </TextBlock>
+                        <CheckBox x:Name="SkipAutoTogglePatchCheckBox"
+                                  Content="Bypass one startup fullscreen toggle check"
+                                  Margin="0,0,0,0"
+                                  ToolTip="Patch 5 (optional): bypasses one startup fullscreen toggle check. Use only if startup still forces fullscreen after the stable patches. Byte patch: 0x12BB97 (75 20 -&gt; EB 20)."
+                                  Checked="PatchSelectionChanged"
+                                  Unchecked="PatchSelectionChanged"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </GroupBox>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Style="{StaticResource ActionBarGridStyle}">
+            <Button x:Name="VerifyPatchesButton"
+                    Content="Verify Selected"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Padding="14,5"
+                    Margin="0,0,8,0"
+                    Click="VerifyPatchesButton_Click"/>
+            <Button x:Name="ApplyPatchesButton"
+                    Content="Apply Verified Selection"
+                    Style="{StaticResource SuccessButtonStyle}"
+                    Padding="14,5"
+                    Margin="0,0,8,0"
+                    Click="ApplyPatchesButton_Click"/>
+            <Button x:Name="RestoreBackupButton"
+                    Content="Restore Backup"
+                    Padding="14,5"
+                    Click="RestoreBackupButton_Click"
+                    ToolTip="Restore BEA.exe from .original.backup"/>
+        </StackPanel>
+
+        <GroupBox Header="Patch Output" Grid.Row="3" Style="{StaticResource OutputGroupBoxStyle}">
+            <Grid Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Style="{StaticResource HelperTextStyle}" Margin="0,0,0,8">
+                    Apply is enabled only after a successful verify on the current target and patch selection. In-place writes create a backup file once: <Run FontFamily="Consolas">BEA.exe.original.backup</Run>.
+                </TextBlock>
+
+                <TextBox x:Name="PatchOutputTextBox"
+                         Grid.Row="1"
+                         AcceptsReturn="True"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         IsReadOnly="True"
+                         TextWrapping="NoWrap"
+                         FontFamily="Consolas"
+                         FontSize="12"
+                         Background="{StaticResource SurfaceMutedBrush}"
+                         BorderBrush="{StaticResource CardBorderBrush}"
+                         BorderThickness="1"
+                         AutomationProperties.Name="Binary patch operation output"/>
+            </Grid>
+        </GroupBox>
+    </Grid>
+</UserControl>

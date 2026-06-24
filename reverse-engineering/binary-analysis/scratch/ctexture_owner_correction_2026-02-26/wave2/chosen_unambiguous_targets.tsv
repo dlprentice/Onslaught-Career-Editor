@@ -1,0 +1,2 @@
+address	old_name	inferred_owner	new_name	xref_count	top_counts
+0x0055ed50	CTexture__Unk_0055ed50	CDXTexture	CDXTexture__Helper_0055ed50	10	CDXTexture:3;CFastVB:2;CMemoryManager:1;CVBufTexture:1

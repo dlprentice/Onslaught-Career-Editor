@@ -1,0 +1,2 @@
+vtable	col_ptr_slot	col_addr	signature	offset	cd_offset	type_desc	class_desc	raw_type_name	demangled_type_name
+005dbf78	005dbf74	00614410	0x00000000	0	0	0x0062d4c8	0x00614400	.?AVCHLCollisionDetector@@	CHLCollisionDetector

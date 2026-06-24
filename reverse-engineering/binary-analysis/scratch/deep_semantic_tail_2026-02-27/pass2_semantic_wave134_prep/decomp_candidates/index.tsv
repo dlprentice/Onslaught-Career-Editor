@@ -1,0 +1,8 @@
+address	name	signature	status
+0x00504a50	CVBufTexture__Unk_00504a50	void __fastcall CVBufTexture__Unk_00504a50(void * param_1)	OK
+0x0050a870	CVBufTexture__Unk_0050a870	void __fastcall CVBufTexture__Unk_0050a870(void * param_1)	OK
+0x0050a9c0	CVBufTexture__Unk_0050a9c0	void * __fastcall CVBufTexture__Unk_0050a9c0(void * param_1)	OK
+0x0050ab60	CVBufTexture__Unk_0050ab60	void CVBufTexture__Unk_0050ab60(void)	OK
+0x00512040	CVBufTexture__Unk_00512040	int CVBufTexture__Unk_00512040(void)	OK
+0x00511ca0	CVBufTexture__Unk_00511ca0	void __fastcall CVBufTexture__Unk_00511ca0(int param_1)	OK
+0x00511d20	CVBufTexture__Unk_00511d20	void __fastcall CVBufTexture__Unk_00511d20(void * param_1)	OK

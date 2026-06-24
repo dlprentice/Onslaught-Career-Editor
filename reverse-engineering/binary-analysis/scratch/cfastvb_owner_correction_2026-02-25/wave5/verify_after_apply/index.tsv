@@ -1,0 +1,7 @@
+address	expected_name	actual_name	status
+0x0055e21b	CTexture__Helper_0055e21b	CTexture__Helper_0055e21b	OK
+0x00561834	CDXTexture__Helper_00561834	CDXTexture__Helper_00561834	OK
+0x00573ff0	CTexture__Helper_00573ff0	CTexture__Helper_00573ff0	OK
+0x00575a65	CDXTexture__Helper_00575a65	CDXTexture__Helper_00575a65	OK
+0x005775bd	CTexture__Helper_005775bd	CTexture__Helper_005775bd	OK
+0x005987f4	CTexture__Helper_005987f4	CTexture__Helper_005987f4	OK

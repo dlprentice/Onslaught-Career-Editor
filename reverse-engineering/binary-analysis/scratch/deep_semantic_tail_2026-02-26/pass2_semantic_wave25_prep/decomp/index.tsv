@@ -1,0 +1,23 @@
+address	name	signature	status
+0x00407a50	CMonitor__Unk_00407a50	void __fastcall CMonitor__Unk_00407a50(void * param_1)	OK
+0x004081c0	CMonitor__Unk_004081c0	void __fastcall CMonitor__Unk_004081c0(void * param_1)	OK
+0x00409880	CMonitor__Unk_00409880	int __fastcall CMonitor__Unk_00409880(int param_1)	OK
+0x0040de40	CMonitor__Unk_0040de40	void __fastcall CMonitor__Unk_0040de40(void * param_1)	OK
+0x0040e840	CMonitor__Unk_0040e840	void __fastcall CMonitor__Unk_0040e840(int param_1)	OK
+0x0040e940	CMonitor__Unk_0040e940	void __fastcall CMonitor__Unk_0040e940(void * param_1)	OK
+0x0040eb50	CMonitor__Unk_0040eb50	void __fastcall CMonitor__Unk_0040eb50(int param_1)	OK
+0x0040ebf0	CMonitor__Unk_0040ebf0	void __fastcall CMonitor__Unk_0040ebf0(void * param_1)	OK
+0x00407940	CGeneralVolume__Unk_00407940	void __thiscall CGeneralVolume__Unk_00407940(void * this, int param_1, float param_2)	OK
+0x00409e80	CGeneralVolume__Unk_00409e80	void __fastcall CGeneralVolume__Unk_00409e80(int param_1)	OK
+0x00409e90	CGeneralVolume__Unk_00409e90	void __fastcall CGeneralVolume__Unk_00409e90(void * param_1)	OK
+0x00409ec0	CGeneralVolume__Unk_00409ec0	void __fastcall CGeneralVolume__Unk_00409ec0(void * param_1)	OK
+0x00409ef0	CGeneralVolume__Unk_00409ef0	void __fastcall CGeneralVolume__Unk_00409ef0(int param_1)	OK
+0x00409f20	CGeneralVolume__Unk_00409f20	void __fastcall CGeneralVolume__Unk_00409f20(int param_1)	OK
+0x0040ac50	CGeneralVolume__Unk_0040ac50	void __thiscall CGeneralVolume__Unk_0040ac50(void * this, int param_1, float param_2)	OK
+0x0040b660	CGeneralVolume__Unk_0040b660	double __cdecl CGeneralVolume__Unk_0040b660(float param_1, float param_2)	OK
+0x0040c570	CGeneralVolume__Unk_0040c570	void __fastcall CGeneralVolume__Unk_0040c570(int param_1)	OK
+0x0040c720	CGeneralVolume__Unk_0040c720	void __thiscall CGeneralVolume__Unk_0040c720(void * this, int param_1, void * param_2)	OK
+0x0040d4d0	CGeneralVolume__Unk_0040d4d0	void __fastcall CGeneralVolume__Unk_0040d4d0(int param_1)	OK
+0x0040dfb0	CGeneralVolume__Unk_0040dfb0	void __fastcall CGeneralVolume__Unk_0040dfb0(void * param_1)	OK
+0x0040e860	CGeneralVolume__Unk_0040e860	void __thiscall CGeneralVolume__Unk_0040e860(void * this, void * param_1, void * param_2)	OK
+0x0040dcb0	CCockpit__Unk_0040dcb0	void __fastcall CCockpit__Unk_0040dcb0(int param_1)	OK

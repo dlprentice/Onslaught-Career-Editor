@@ -1,0 +1,185 @@
+{
+  "schemaVersion": "winui-original-binary-online-mode-classifier.v1",
+  "status": "complete public-safe online mode classifier; no runtime co-op, versus, team-versus, spectator-admin, second-host LAN, public matchmaking, native BEA netcode, or P3/P4 gameplay proof",
+  "date": "2026-06-19",
+  "scope": "original-binary-online-mode-classifier",
+  "proofBoundary": {
+    "proofClass": "static-source-session-taxonomy-not-runtime-mode-proof",
+    "modeClassifierScope": "original-binary-online-mode-classifier-not-runtime-mode-proof",
+    "newBeaLaunchCount": 0,
+    "cdbAttachCount": 0,
+    "ghidraMutationCount": 0,
+    "gameInputSentByModeClassifier": false,
+    "publicNetworkSocketsOpened": false,
+    "publicBind": false,
+    "baseOnlineMultiplayerReady": false,
+    "sameHostRuntimeProofCreatedByClassifier": false,
+    "secondPhysicalHostProof": false,
+    "multiHostLanProof": false,
+    "publicMatchmakingProof": false,
+    "nativeBeaNetcodeProof": false,
+    "coOpVersusModeRuntimeProofSlices": 0,
+    "modeRuntimeProofSlices": 0,
+    "coOpModeRuntimeProof": false,
+    "versusModeRuntimeProof": false,
+    "teamVersusRuntimeProof": false,
+    "spectatorAdminRuntimeProof": false,
+    "nPlayerOriginalBinaryRuntimeProof": 0,
+    "activeP3P4OriginalBinaryGameplayProof": false,
+    "acceptedOriginalBinaryGameplaySlots": [
+      "P1",
+      "P2"
+    ],
+    "metadataOnlySlots": [
+      "P3",
+      "P4"
+    ],
+    "rejectedGameplayRouteSlots": [
+      "P3",
+      "P4"
+    ],
+    "safeToPatchMPlayersAbove2": false,
+    "deterministicSyncProof": false,
+    "rollbackProof": false,
+    "antiCheatProof": false,
+    "rebuildParityProof": false,
+    "noNoticeableDifferenceProof": false
+  },
+  "sourceStaticAnchors": {
+    "runtimeProfile": "original-binary-copied-local-splitscreen",
+    "levelMultiplayerGate": "references/Onslaught/game.cpp:4011 CGame::IsMultiplayer returns true for levels >849 and <900",
+    "currentPlayerCountGate": "references/Onslaught/game.cpp:705 WORLD.IsMultiplayer() sets mPlayers=2, otherwise mPlayers=1",
+    "sourceCapacityDeclaration": "references/Onslaught/game.h:22 #define MAX_PLAYERS 4",
+    "controllerAssignmentTrap": "references/Onslaught/game.cpp:726 I don't support more than 2 players.",
+    "engineViewpointCeiling": "references/Onslaught/engine.h:16 defines VIEWPOINTS 2",
+    "latentQuadSplitBranch": "references/Onslaught/game.cpp:1793 has an mPlayers==3 or mPlayers==4 render branch, but source-only branch presence is not runtime proof",
+    "livesAndResultShape": "references/Onslaught/game.cpp uses mPlayer1Lives/mPlayer2Lives, P1_OUT_OF_LIVES/P2_OUT_OF_LIVES, and MPDeclarePlayerWon(1/2)",
+    "nSlotSchemaModeRows": "roadmap/original-binary-online-n-slot-session-schema.v1.json keeps cooperative, versus-free-for-all, team-versus, and spectator-admin runtimeProofStatus=planned-not-runtime-proven"
+  },
+  "currentRuntimeModeClassification": {
+    "id": "retail-level850-local-splitscreen",
+    "runtimeProfile": "original-binary-copied-local-splitscreen",
+    "modeClass": "unclassified-local-multiplayer",
+    "classificationStatus": "runtime-observed-local-splitscreen-not-co-op-or-versus-proof",
+    "runtimeModeProofSlices": 0,
+    "cooperativeRuntimeProof": false,
+    "versusRuntimeProof": false,
+    "teamVersusRuntimeProof": false,
+    "spectatorAdminRuntimeProof": false,
+    "reason": "The accepted copied level-850 proofs establish local split-screen P1/P2 routing and host-authority scaffolding, but do not establish objective sharing, scoring, death/win, respawn, team assignment, friendly-fire, spectator/admin, or online mode authority semantics."
+  },
+  "plannedModeFamilies": [
+    {
+      "id": "cooperative",
+      "modeClass": "cooperative",
+      "classificationStatus": "schema-planned-not-runtime-proven",
+      "runtimeProof": false,
+      "requiredRuntimeEvidence": [
+        "shared objective state",
+        "shared success/failure authority",
+        "player death and respawn semantics",
+        "friendly-fire behavior",
+        "host/session authority for co-op state"
+      ]
+    },
+    {
+      "id": "versus-free-for-all",
+      "modeClass": "versus",
+      "classificationStatus": "schema-planned-not-runtime-proven",
+      "runtimeProof": false,
+      "requiredRuntimeEvidence": [
+        "opposing player damage/hostility semantics",
+        "score or win condition authority",
+        "death and respawn behavior",
+        "round/session termination",
+        "host/session authority for versus state"
+      ]
+    },
+    {
+      "id": "team-versus",
+      "modeClass": "team-versus",
+      "classificationStatus": "schema-planned-not-runtime-proven",
+      "runtimeProof": false,
+      "teamAssignmentAuthority": "schema-only-not-runtime-proof",
+      "requiredRuntimeEvidence": [
+        "runtime team membership",
+        "team score or win condition authority",
+        "friendly-fire/team-damage behavior",
+        "spawn/respawn routing by team",
+        "host/session authority for team state"
+      ]
+    },
+    {
+      "id": "spectator-admin",
+      "modeClass": "spectator-admin",
+      "classificationStatus": "schema-planned-not-runtime-proven",
+      "runtimeProof": false,
+      "adminAuthority": "metadata-only-not-runtime-proof",
+      "requiredRuntimeEvidence": [
+        "observer camera or read-only viewpoint behavior",
+        "no gameplay input injection from spectator slots",
+        "admin command authorization",
+        "host/session authority for admin actions",
+        "abuse-control and audit boundaries"
+      ]
+    }
+  ],
+  "classifierRules": [
+    {
+      "id": "local-splitscreen-is-not-coop-or-versus",
+      "description": "A level-850 local split-screen proof classifies as unclassified-local-multiplayer until objective, scoring, death/win, respawn, team, and friendly-fire semantics are proven."
+    },
+    {
+      "id": "session-type-is-not-runtime-mode-proof",
+      "description": "A sessionType or modeFamily schema value does not prove the original binary executed that gameplay mode."
+    },
+    {
+      "id": "team-assignment-schema-is-not-team-runtime-proof",
+      "description": "Team assignment metadata is not team-versus runtime proof without runtime team membership, team scoring, and friendly-fire evidence."
+    },
+    {
+      "id": "spectator-admin-metadata-is-not-runtime-admin-proof",
+      "description": "Spectator/admin metadata is not runtime observer-camera or admin-authority proof."
+    },
+    {
+      "id": "p3p4-metadata-is-not-p3p4-gameplay",
+      "description": "P3/P4 remain metadata-only and gameplay-rejected until a new original-binary runtime proof class exists."
+    }
+  ],
+  "rejectionCases": [
+    "reject cooperative runtime proof from sessionType alone",
+    "reject versus runtime proof from modeFamily alone",
+    "reject team-versus runtime proof from schema-only teamAssignments",
+    "reject spectator-admin runtime proof from metadata-only query rows",
+    "reject active P3/P4 original-binary gameplay proof from slotCapacity=4",
+    "reject second-host LAN proof from same-host, same-workstation, WSL2, or private-interface-only artifacts",
+    "reject public matchmaking proof from local session-directory smoke",
+    "reject native BEA netcode proof from host-authority wrapper/protocol scaffolding",
+    "reject base online multiplayer readiness from joined-session same-host proofs"
+  ],
+  "nextProofLadder": [
+    "real second-physical-host private LAN command-source proof when a separate client host is available",
+    "copied-runtime objective/win/death/respawn observer proof before any co-op or versus runtime claim",
+    "team/friendly-fire observer proof before any team-versus runtime claim",
+    "spectator/admin camera or command-authorization runtime proof before any spectator-admin runtime claim",
+    "retail Ghidra/CDB P3/P4 proof-class deep dive before any original-binary gameplay attempt above P1/P2"
+  ],
+  "nonClaims": {
+    "baseOnlineMultiplayerReady": false,
+    "coOpModeRuntimeProof": false,
+    "versusModeRuntimeProof": false,
+    "teamVersusRuntimeProof": false,
+    "spectatorAdminRuntimeProof": false,
+    "multiHostLanProof": false,
+    "secondPhysicalHostProof": false,
+    "publicMatchmakingProof": false,
+    "nativeBeaNetcodeProof": false,
+    "activeP3P4OriginalBinaryGameplayProof": false,
+    "moreThanTwoOriginalBinaryRuntimeProof": false,
+    "deterministicSyncProof": false,
+    "rollbackProof": false,
+    "antiCheatProof": false,
+    "rebuildParityProof": false,
+    "noNoticeableDifferenceProof": false
+  }
+}

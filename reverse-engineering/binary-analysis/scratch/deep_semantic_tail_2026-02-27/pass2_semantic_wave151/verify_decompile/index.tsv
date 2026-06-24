@@ -1,0 +1,26 @@
+address	name	signature	status
+0x00568f70	CRT__ParseCommandLineToArgv	void __cdecl CRT__ParseCommandLineToArgv(void * param_1, void * param_2, void * param_3, void * param_4, void * param_5)	OK
+0x0056928f	CRT__ReportRuntimeError	void __cdecl CRT__ReportRuntimeError(int param_1)	OK
+0x005693e2	CRT__IsReadablePtr	bool __cdecl CRT__IsReadablePtr(void * param_1, uint param_2)	OK
+0x005693fe	CRT__IsWritablePtr	bool __cdecl CRT__IsWritablePtr(int param_1, uint param_2)	OK
+0x0056941a	CRT__IsExecutablePtr	bool __cdecl CRT__IsExecutablePtr(int param_1)	OK
+0x00569494	CRT__ControlFpPublicToInternal	uint __cdecl CRT__ControlFpPublicToInternal(uint param_1)	OK
+0x00569526	CRT__ControlFpInternalToPublic	uint __cdecl CRT__ControlFpInternalToPublic(uint param_1)	OK
+0x00569856	CRT__ShiftMantissaRight96	void __cdecl CRT__ShiftMantissaRight96(void * param_1, uint param_2)	OK
+0x005698e3	CRT__ConvertLongDoubleByFormatSpec	int __cdecl CRT__ConvertLongDoubleByFormatSpec(void * param_1, void * param_2, void * param_3)	OK
+0x00569a4f	CRT__ConvertLongDoubleToFloat32	void __cdecl CRT__ConvertLongDoubleToFloat32(void * param_1, void * param_2)	OK
+0x00569a65	CRT__ConvertLongDoubleToFloat64	void __cdecl CRT__ConvertLongDoubleToFloat64(void * param_1, void * param_2)	OK
+0x00569a7b	CRT__ParseFloatTextToFloat32	void __cdecl CRT__ParseFloatTextToFloat32(void * param_1, int param_2)	OK
+0x00569aa8	CRT__ParseFloatTextToFloat64	void __cdecl CRT__ParseFloatTextToFloat64(void * param_1, int param_2)	OK
+0x00569cc1	CRT__HandleFloatingPointException	void __cdecl CRT__HandleFloatingPointException(int param_1, void * param_2, void * param_3)	OK
+0x00569d91	CRT__InitFileBuffer	void __cdecl CRT__InitFileBuffer(void * param_1)	OK
+0x00569dd5	CRT__IsFdCommitMode	int __cdecl CRT__IsFdCommitMode(uint param_1)	OK
+0x00569e57	CRT__WideCharToCurrentCodePage	int __cdecl CRT__WideCharToCurrentCodePage(int param_1, int param_2)	OK
+0x0056a106	CRT__GetCharClassMask	uint __thiscall CRT__GetCharClassMask(void * this, void * param_1, int param_2)	OK
+0x0056a82d	CRT__MbsChr	int __cdecl CRT__MbsChr(void * param_1, uint param_2)	OK
+0x0056a8c4	CRT__MbsRChr	int __cdecl CRT__MbsRChr(void * param_1, uint param_2)	OK
+0x0056ad25	CRT__OpenFd	uint __cdecl CRT__OpenFd(int param_1, uint param_2, uint param_3, uint param_4)	OK
+0x0056b4f2	CRT__LoadLocaleInfoTable	uint __cdecl CRT__LoadLocaleInfoTable(int param_1)	OK
+0x0056bdc9	CRT__FreeLocaleBufferSet	void __cdecl CRT__FreeLocaleBufferSet(int param_1)	OK
+0x0056dc9b	CRT__WriteWideCharToStream	uint __cdecl CRT__WriteWideCharToStream(uint param_1, void * param_2)	OK
+0x0056e5bf	CRT__ProcessWideArgvTableToMultibyte	int CRT__ProcessWideArgvTableToMultibyte(void)	OK

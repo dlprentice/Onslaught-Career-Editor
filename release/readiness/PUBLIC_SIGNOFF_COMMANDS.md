@@ -1,16 +1,16 @@
 # Public Sign-Off Commands
 
-Status: active public-candidate validation guide
-Last updated: 2026-06-23
+Status: active source/release validation guide
+Last updated: 2026-06-24
 
-Use this guide for sanitized public-source candidates. It intentionally excludes
-private runtime proof, Ghidra backup, local second-host, copied-game launch, and
-maintainer-only evidence commands from the private maintainer sign-off runbook.
-For PR-style handoffs and reviewer expectations, use
-`COLLABORATION.md` in the public candidate root.
+Use this guide for the public working repo and app-release signoff. It excludes
+live copied-game launch, raw CDB/debugger, full Ghidra database, second-host, and
+large runtime-capture commands from ordinary PR gates because those require
+local payload overlays. For PR-style handoffs and reviewer expectations, use
+`COLLABORATION.md` in the repo root.
 
-A passing public candidate is not automatically a GitHub Release. Portable ZIP
-publication, public repo push, signing, installer release, and announcement are
+A passing source tree is not automatically a GitHub Release. Portable ZIP
+publication, source pushes, signing, installer release, and announcement are
 separate maintainer actions.
 
 ## Start
@@ -22,12 +22,11 @@ through the Windows `py` launcher.
 cd <repo-root>
 ```
 
-For a freshly materialized public candidate payload, run the inventory check
-before install/build/test commands create generated local outputs. Also verify
-that `EXPORT_PROVENANCE.json` exists in the candidate root:
+For a fresh checkout, install dependencies after checking the hard-payload
+boundary if the change touches repo shape or release payload rules:
 
 ```powershell
-npm run test:public-candidate-inventory
+npm run test:hard-payload-safety
 npm install
 ```
 
@@ -60,48 +59,39 @@ npm run test:winui-notices
 <!-- public-package-commands:end -->
 
 `npm run test:md-links` writes ignored reports under `subagents/md-link-check`.
-Those reports are validation artifacts, not release payload. In public-source
-candidates this command checks the full exported markdown graph, including the
-curated public RE, lore, and roadmap entrypoints.
+Those reports are validation artifacts, not app release payload.
 
-`npm run test:public-candidate-inventory` is a payload cleanliness gate for a
-fresh export. It is expected to fail after local build/test runs create generated
-`bin/`, `obj/`, `subagents/`, `node_modules/`, or package-lock artifacts; clean
-or regenerate the candidate before packaging or publishing. A final shareable
-source candidate should be a fresh export with `EXPORT_PROVENANCE.json` present
-and `npm run test:public-candidate-inventory` passing after all product/docs
-validation has already been run in a disposable validation copy.
+`npm run test:hard-payload-safety` is the tracked-source cleanliness gate. It is
+expected to reject actual game/runtime binaries, local game payload roots, build
+outputs, `.env` files, and credential-like key material. It is not supposed to
+hide normal RE notes, state batons, agent reports, or proof summaries.
 
 ## Not Public Gates
 
-The following families are private maintainer/runtime evidence and are not
-required for public-source PRs:
+The following families are local runtime/debug evidence and are not required for
+ordinary PRs:
 
 - `npm run test:winui-safe-copy-runtime`
 - live copied-game launch/CDB/input/capture checks
-- second-host command-source or runtime-causality candidate checks that require
-  private proof roots
+- second-host command-source or runtime-causality checks that require local
+  proof roots
 - Ghidra mutation, read-back, backup, or local runtime proof commands
 
-Reviewed helper scripts for docs, validation, or public-safe self-tests may be
-present in the source candidate. Their presence does not make live CDB, Ghidra,
-copied-game launch, second-host, or private proof-root workflows public gates
-unless a public `package.json` script explicitly calls a bounded self-test.
-
-Public candidates may describe these workstreams only with bounded
-public-safe summaries and non-claims.
+Reviewed helper scripts for docs, validation, or self-tests may be present in
+the source tree. Their presence does not make live CDB, Ghidra, copied-game
+launch, second-host, or local proof-root workflows ordinary PR gates unless a
+root `package.json` script explicitly calls a bounded self-test.
 
 ## Packaging And Installer Status
 
-Reviewed public-safe helper scripts may be present in the source candidate for
-optional local diagnostics or self-tests, but ZIP/MSIX signing, trusted install,
-uninstall-after-install, binary packaging, and installer-grade release are not
-public sign-off gates. Do not claim a binary or installer release from source
-candidate validation alone.
+Reviewed helper scripts may be present for optional local diagnostics or
+self-tests, but ZIP/MSIX signing, trusted install, uninstall-after-install,
+binary packaging, and installer-grade release are separate release gates. Do not
+claim a binary or installer release from source validation alone.
 
-## Maintainer-Only Export Gates
+## Accounting Gates
 
-The private source repo owns curated-manifest generation, release profile
-accounting, and `tools\release_package.sh --dry-run`. Public-source candidates
-do not include the private curated manifest or private inventory artifacts, so
-those commands are not public PR gates.
+`tools\release_profile_snapshot.py`, `tools\release_curated_manifest.py`, and
+`tools\release_package.sh --dry-run` remain accounting/packaging tools. Run them
+when release-profile inputs change or when preparing an app/source release; they
+are not required for every narrow PR.

@@ -1,0 +1,4 @@
+address	name	signature	status
+0x0049fdb0	CComponent__SpawnGenericMeshBreakEffects	void __fastcall CComponent__SpawnGenericMeshBreakEffects(int param_1)	OK
+0x00482590	CExplosionInitThing__RenderTargetIndicatorOverlay	void __fastcall CExplosionInitThing__RenderTargetIndicatorOverlay(int param_1)	OK
+0x004d20a0	CFEPMultiplayerStart__Unk_004d20a0	void __fastcall CFEPMultiplayerStart__Unk_004d20a0(void * param_1)	OK

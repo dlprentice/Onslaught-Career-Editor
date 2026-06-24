@@ -1,0 +1,302 @@
+{
+  "schemaVersion": "missionscript-command-effect-fixture-selection.v1",
+  "status": "PASS",
+  "fixtureSelectionStatus": "missionscript-command-effect-fixture-selection-complete-slot-bitset-save-selected",
+  "previousSlice": "MissionScript Command-Effect Rebuild Interface Rollup Proof Plan",
+  "selectedChildLane": "MissionScript Slot Bitset/Save Rebuild Fixture Proof Plan",
+  "selectedChildScope": "missionscript-slot-bitset-save-rebuild-fixture-proof-plan",
+  "selectedFixtureFamily": "slot-bitset-save",
+  "selectedFixturePath": "slot-bitset-save-core-handler-and-career-bridge",
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackupClass": "verified-static-backup-redacted"
+  },
+  "selectionAccounting": {
+    "candidateFamilyCount": 9,
+    "selectedCandidateRank": 1,
+    "selectedSourceProofCount": 3,
+    "selectedDescriptorEntryCount": 3,
+    "selectedLooseCorpusRows": 18,
+    "selectedLevelRows": 6,
+    "falseGuardCount": 34,
+    "zeroCounterCount": 25,
+    "publicLeakCheck": "PASS"
+  },
+  "sourceEvidence": {
+    "rollup": {
+      "path": "reverse-engineering/binary-analysis/missionscript-command-effect-rebuild-interface-rollup.md",
+      "schema": "reverse-engineering/binary-analysis/missionscript-command-effect-rebuild-interface-rollup.v1.json",
+      "rollupStatus": "missionscript-command-effect-rebuild-interface-rollup-complete-static-interface-contract-not-runtime-proof",
+      "commandFamilyCount": 9,
+      "descriptorRecordCount": 52,
+      "uniqueDescriptorTokenCount": 48
+    },
+    "slotCommandEffect": {
+      "path": "reverse-engineering/binary-analysis/missionscript-slot-command-effect-static-proof.md",
+      "schema": "reverse-engineering/binary-analysis/missionscript-slot-command-effect.v1.json",
+      "descriptorEntryCount": 3,
+      "descriptorIndices": [122, 123, 132],
+      "descriptorTokens": ["SetSlot", "GetSlot", "SetSlotSave"],
+      "evidenceWaves": ["Wave579", "Wave803", "Wave903"],
+      "levelRows": 6,
+      "detailedCallRows": 18,
+      "commandCounts": {
+        "GetSlot": 6,
+        "SetSlot": 8,
+        "SetSlotSave": 4
+      },
+      "levels": ["level100", "level500", "level731", "level732", "level741", "level742"],
+      "slotExpressions": ["SLOT_TUTORIAL_1", "SLOT_TUTORIAL_2", "SLOT_TUTORIAL_3", "SLOT_TUTORIAL_4", "61", "62", "n", "n + 29"]
+    },
+    "saveBytePreservation": {
+      "path": "reverse-engineering/binary-analysis/save-options-controller-byte-preservation-copied-file-proof.md",
+      "schema": "reverse-engineering/binary-analysis/save-options-controller-byte-preservation-copied-file.v1.json",
+      "containerSize": 10004,
+      "versionWord": "0x4BD1",
+      "trueViewRule": "file_offset = 0x0002 + career_offset",
+      "careerSlotsBase": "0x240A",
+      "noOpCareerDiffCount": 0,
+      "noOpDefaultoptionsDiffCount": 0,
+      "saveSynthesis": false,
+      "runtimeExecution": false
+    }
+  },
+  "selectedFixture": {
+    "familyId": "slot-bitset-save",
+    "pathId": "slot-bitset-save-core-handler-and-career-bridge",
+    "descriptorRows": [
+      {
+        "command": "SetSlot",
+        "index": 122,
+        "handler": "0x005338d0 IScript__SetSlot"
+      },
+      {
+        "command": "GetSlot",
+        "index": 123,
+        "handler": "0x005339a0 IScript__GetSlotBitValue"
+      },
+      {
+        "command": "SetSlotSave",
+        "index": 132,
+        "handler": "0x00533900 IScript__SetSlotSave"
+      }
+    ],
+    "helperAnchors": [
+      "0x0046d3a0 CGame__SetSlot",
+      "0x0046d410 CGame__GetSlot",
+      "0x004214e0 CCareer__SetSlot",
+      "CGame+0x308",
+      "0x240A"
+    ],
+    "slotModel": {
+      "slotRange": "0..255",
+      "slotStorageDwords": 32,
+      "dwordIndexExpression": "slot >> 5",
+      "bitExpression": "1 << (slot & 31)",
+      "selectedNumericSeeds": [
+        {
+          "slot": 61,
+          "dwordIndex": 1,
+          "bitIndex": 29,
+          "bitMask": "0x20000000",
+          "trueViewOffset": "0x240E"
+        },
+        {
+          "slot": 62,
+          "dwordIndex": 1,
+          "bitIndex": 30,
+          "bitMask": "0x40000000",
+          "trueViewOffset": "0x240E"
+        }
+      ]
+    }
+  },
+  "candidateRanking": [
+    {
+      "rank": 1,
+      "family": "slot-bitset-save",
+      "decision": "selected",
+      "rationale": "Small finite descriptor set, exact static handlers/helpers, deterministic bitset math, public numeric corpus seeds, and copied-file true-view guardrails."
+    },
+    {
+      "rank": 2,
+      "family": "vector-range-helpers",
+      "decision": "deferred",
+      "rationale": "Good pure-helper candidate, but less connected to persistent state and some descriptor rows remain placeholder-token shaped."
+    },
+    {
+      "rank": 3,
+      "family": "cutscene-camera-position",
+      "decision": "deferred",
+      "rationale": "Useful, but likely to tempt runtime camera-switching and visual-output claims."
+    },
+    {
+      "rank": 4,
+      "family": "objective-outcome",
+      "decision": "deferred",
+      "rationale": "Important, but coupled to mission outcome/runtime event behavior and career progression claims."
+    },
+    {
+      "rank": 5,
+      "family": "goodie-state-save",
+      "decision": "deferred",
+      "rationale": "Save-adjacent but has the AddScore descriptor overlap boundary."
+    },
+    {
+      "rank": 6,
+      "family": "message-audio-console",
+      "decision": "deferred",
+      "rationale": "High private-frame, text/OCR, voice/audio, and runtime display risk."
+    },
+    {
+      "rank": 7,
+      "family": "hud-variable-display",
+      "decision": "deferred",
+      "rationale": "Visual HUD behavior would be easy to overclaim."
+    },
+    {
+      "rank": 8,
+      "family": "thing-value-engine-helper",
+      "decision": "deferred",
+      "rationale": "Effectful object commands need runtime object-identity and thing-state guardrails first."
+    },
+    {
+      "rank": 9,
+      "family": "player-state-score",
+      "decision": "deferred",
+      "rationale": "AddScore handler-body conflict plus cockpit, stealth, and weapon-fire/stealth risks make it a poor first fixture."
+    }
+  ],
+  "futureEvidenceRequirements": [
+    {
+      "row": "descriptor-fixture",
+      "requirement": "Reconfirm descriptor indices 122, 123, and 132 from tracked descriptor and slot schemas.",
+      "boundary": "Static descriptor proof only."
+    },
+    {
+      "row": "handler-fixture",
+      "requirement": "Preserve handler/helper anchors 0x005338d0, 0x00533900, 0x005339a0, 0x0046d3a0, 0x0046d410, and 0x004214e0.",
+      "boundary": "Static handler bridge only."
+    },
+    {
+      "row": "bitset-fixture",
+      "requirement": "Encode slot>>5 and 1<<(slot&31) for selected public numeric seeds, starting with 61 and 62.",
+      "boundary": "Pure bitset model only; not runtime CGame proof."
+    },
+    {
+      "row": "copied-file-fixture",
+      "requirement": "If file bytes are exercised, use copied real save/options baselines only and write through true-view mSlots at 0x240A.",
+      "boundary": "Copied-file codec proof only; not runtime save/load."
+    },
+    {
+      "row": "corpus-fixture",
+      "requirement": "Keep level100, level500, level731, level732, level741, and level742 corpus rows public-safe and aggregate.",
+      "boundary": "Loose corpus vocabulary only; not packed-resource selection."
+    },
+    {
+      "row": "stop-fixture",
+      "requirement": "Stop if the proof needs live MissionScript execution, runtime mission selection, source-selection observation, screenshots, private frame review, native input, debugger attachment, Godot, Ghidra mutation, executable patching, or installed-game mutation.",
+      "boundary": "Defer instead of broadening."
+    }
+  ],
+  "guardSummary": {
+    "falseGuards": {
+      "programFilesInputUsed": false,
+      "liveLooseMslLoading": false,
+      "packedResourceScriptSelectionProven": false,
+      "runtimeExecution": false,
+      "runtimeMissionScriptExecutionProven": false,
+      "runtimeCommandEffectsProven": false,
+      "runtimeSlotPersistenceProven": false,
+      "runtimeSaveBehaviorProven": false,
+      "runtimeTutorialProgressionProven": false,
+      "runtimeLevel500BranchProven": false,
+      "runtimeFenrirStateProven": false,
+      "beLaunch": false,
+      "newLaunch": false,
+      "screenshotCapture": false,
+      "privateFrameReviewPerformed": false,
+      "rowObservation": false,
+      "exactTextOcrPerformed": false,
+      "rawDialoguePublished": false,
+      "sourceSelectionObserved": false,
+      "nativeInput": false,
+      "debuggerAttachment": false,
+      "godotWork": false,
+      "ghidraMutation": false,
+      "executablePatching": false,
+      "rebuildImplementation": false,
+      "exactCommandDescriptorLayoutProven": false,
+      "exactCommandArityProven": false,
+      "exactArgumentTypeSchemaProven": false,
+      "exactCGameLayoutProven": false,
+      "exactCCareerLayoutProven": false,
+      "runtimeDefaultoptionsBehaviorProven": false,
+      "runtimeMenuBehaviorProven": false,
+      "rebuildParityProven": false,
+      "noNoticeableDifferenceParityProven": false
+    },
+    "zeroCounters": {
+      "runtimeObservationRows": 0,
+      "missionScriptRuntimeEvidenceRows": 0,
+      "runtimeCommandEffectRows": 0,
+      "runtimeSlotEvidenceRows": 0,
+      "runtimeSaveRows": 0,
+      "privateFrameRowsObserved": 0,
+      "rowObservationRows": 0,
+      "sourceObservedRows": 0,
+      "sourceRuntimeObservationRows": 0,
+      "sourceRowStatusChangedCount": 0,
+      "newLaunchRows": 0,
+      "captureRows": 0,
+      "ocrRows": 0,
+      "rawDialogueRows": 0,
+      "ghidraMutationRows": 0,
+      "executablePatchRows": 0,
+      "rebuildImplementationRows": 0,
+      "beProcessesAfterSelection": 0,
+      "publicAbsolutePathLeakCount": 0,
+      "publicSha256ValueLeakCount": 0,
+      "publicWindowIdentifierLeakCount": 0,
+      "publicProcessIdentifierLeakCount": 0,
+      "privatePathLeakCount": 0,
+      "rawArtifactLeakCount": 0,
+      "rawDialogueLeakCount": 0
+    }
+  },
+  "claimBoundary": {
+    "proves": [
+      "the first MissionScript command-effect rebuild fixture path was selected from the completed static interface rollup",
+      "slot-bitset-save has the safest first-fixture evidence shape among the nine command-effect families",
+      "future slot fixture proof requirements and stop conditions are defined before runtime, Godot, patching, or rebuild implementation begins"
+    ],
+    "doesNotProve": [
+      "runtime MissionScript execution",
+      "runtime command effects",
+      "runtime slot persistence",
+      "runtime save/load behavior",
+      "runtime tutorial progression",
+      "Level500 branch behavior",
+      "Fenrir state behavior",
+      "live loose-MSL loading",
+      "packed-resource script selection",
+      "exact descriptor layout",
+      "exact arity",
+      "exact argument type schema",
+      "exact CGame layout",
+      "exact CCareer layout",
+      "source-selection observation",
+      "private-frame review",
+      "visual QA",
+      "Godot parity",
+      "executable patching behavior",
+      "rebuild implementation",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  }
+}

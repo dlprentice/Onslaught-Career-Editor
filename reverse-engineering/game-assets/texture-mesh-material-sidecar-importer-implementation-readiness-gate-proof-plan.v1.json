@@ -1,0 +1,400 @@
+{
+  "schemaVersion": "texture-mesh-material-sidecar-importer-implementation-readiness-gate-proof-plan.v1",
+  "status": "PASS",
+  "implementationReadinessStatus": "texture-mesh-material-sidecar-importer-implementation-readiness-gate-complete-public-contract-skeleton-ready-not-real-importer-proof",
+  "previousSlice": "Texture / Mesh Material Sidecar Importer Fixture Harness Consumer Dry-Run Proof Plan",
+  "selectedNextSlice": "Texture / Mesh Material Sidecar Importer Public Contract Skeleton Implementation Proof Plan",
+  "selectedNextScope": "texture-mesh-material-sidecar-importer-public-contract-skeleton-implementation-proof-plan",
+  "sourceConsumerDryRunStatus": "texture-mesh-material-sidecar-importer-fixture-harness-consumer-dry-run-proof-plan-complete-public-safe-consumer-dry-run-not-importer-execution-proof",
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackupClass": "verified-static-backup-redacted"
+  },
+  "sourceEvidence": {
+    "sourceProofCount": 6,
+    "consumerDryRunProof": "reverse-engineering/game-assets/texture-mesh-material-sidecar-importer-fixture-harness-consumer-dry-run-proof-plan.md",
+    "consumerDryRunSchema": "reverse-engineering/game-assets/texture-mesh-material-sidecar-importer-fixture-harness-consumer-dry-run-proof-plan.v1.json",
+    "materializationProof": "reverse-engineering/game-assets/texture-mesh-material-sidecar-importer-fixture-harness-materialization-proof-plan.md",
+    "importerFixtureHarnessProof": "reverse-engineering/game-assets/texture-mesh-material-sidecar-importer-fixture-harness-proof-plan.md",
+    "fixtureMatrixProof": "reverse-engineering/game-assets/texture-mesh-material-sidecar-rebuild-fixture-matrix-proof.md",
+    "contractExtensionProof": "reverse-engineering/game-assets/texture-mesh-material-sidecar-rebuild-contract-extension-proof-plan.md"
+  },
+  "readinessDecision": {
+    "implementationReadinessGateComplete": true,
+    "publicContractSkeletonReadyNow": true,
+    "realImporterImplementationReadyNow": false,
+    "realImporterExecutionReadyNow": false,
+    "implementationDeferred": true,
+    "deferReason": "public-contract-skeleton-and-private-corpus-safety-required-before-real-importer-execution",
+    "nextLaneClass": "non-runtime public contract skeleton implementation proof",
+    "explicitImporterImplementationArmPresent": false,
+    "privateAssetReadAuthorizationPresent": false,
+    "operatorPrivateOutputReviewAvailable": false,
+    "selectedNextImplementationSliceCount": 1
+  },
+  "readinessSummary": {
+    "sourceConsumedFixtureRowCount": 8,
+    "sourceConsumerDryRunStepCount": 10,
+    "sourceConsumerAssertionGroupCount": 8,
+    "sourceConsumerAssertionCheckCount": 19,
+    "sourceFailedConsumerAssertions": 0,
+    "sourceUnexpectedFixtureRows": 0,
+    "sourceConsumerOutputArtifactRows": 0,
+    "readinessGateCount": 8,
+    "readinessCheckCount": 16,
+    "failedReadinessGateCount": 0,
+    "blockedReadinessGateCount": 0,
+    "readinessValidationOnly": true,
+    "readinessConsumesPublicDryRunOnly": true,
+    "allowedInputMode": "tracked-public-sanitized-consumer-dry-run-schema",
+    "allowedOutputMode": "public-contract-skeleton-validation-report-only",
+    "publicSyntheticFixtureCount": 8,
+    "publicEdgeCaseIdCount": 2,
+    "modelRowsWithTextureRefs": "352/352",
+    "modelTextureReferenceInstances": 1268,
+    "uniqueModelTextureRefUnion": 213,
+    "familyUniqueRefSum": 241,
+    "familyUniqueRefsAreNotAdditive": true,
+    "sidecarFiles": 213,
+    "exactFilenameMatches": 212,
+    "stemOnlyMatches": 1,
+    "missingSidecarRefs": 0,
+    "catalogRows": 4050,
+    "catalogMissingRefs": 0,
+    "ambiguousCatalogRefs": 1,
+    "embeddedDuplicateOutputGroups": 28,
+    "embeddedDuplicateOutputSurplusRows": 32,
+    "publicLeakCheck": "PASS"
+  },
+  "requiredPublicContractInterfaces": [
+    {
+      "interfaceId": "load-public-consumer-dry-run-schema",
+      "status": "READY",
+      "allowedInputMode": "tracked-public-sanitized-consumer-dry-run-schema"
+    },
+    {
+      "interfaceId": "enumerate-consumed-fixture-row-ids",
+      "status": "READY",
+      "requiredRowCount": 8
+    },
+    {
+      "interfaceId": "validate-aggregate-counts",
+      "status": "READY",
+      "requiredCheckCount": 5
+    },
+    {
+      "interfaceId": "validate-public-edge-case-boundaries",
+      "status": "READY",
+      "requiredEdgeCaseIdCount": 2
+    },
+    {
+      "interfaceId": "refuse-private-or-runtime-inputs",
+      "status": "READY",
+      "privateInputsAllowed": false
+    },
+    {
+      "interfaceId": "emit-public-validation-summary",
+      "status": "READY",
+      "outputArtifactsAllowed": false
+    }
+  ],
+  "consumedFixtureRows": [
+    "importer-source-matrix-prerequisite",
+    "importer-loose-family-fixture",
+    "importer-embedded-family-fixture",
+    "importer-non-additive-union-fixture",
+    "importer-sidecar-match-mode-fixture",
+    "importer-catalog-linkage-fixture",
+    "importer-duplicate-output-surplus-fixture",
+    "importer-negative-claim-guard-fixture"
+  ],
+  "readinessGates": [
+    {
+      "gateId": "source-consumer-dry-run-status",
+      "status": "PASS",
+      "claim": "The source consumer dry-run is complete and explicitly not importer execution proof."
+    },
+    {
+      "gateId": "fixture-row-identity",
+      "status": "PASS",
+      "claim": "The next contract skeleton may consume exactly the eight public-safe row IDs."
+    },
+    {
+      "gateId": "aggregate-arithmetic",
+      "status": "PASS",
+      "claim": "The next contract skeleton must preserve row, reference, union, sidecar, and duplicate-output arithmetic."
+    },
+    {
+      "gateId": "public-edge-boundaries",
+      "status": "PASS",
+      "claim": "The stem-only and ambiguous catalog cases remain synthetic public IDs."
+    },
+    {
+      "gateId": "private-data-refusal",
+      "status": "PASS",
+      "claim": "The next contract skeleton must refuse private paths, raw refs, raw stems, filenames, hashes, and raw artifacts."
+    },
+    {
+      "gateId": "runtime-boundary",
+      "status": "PASS",
+      "claim": "Runtime launch, capture, debugger, Ghidra, Godot, renderer, UI, patch, and rebuild work remain out of scope."
+    },
+    {
+      "gateId": "output-boundary",
+      "status": "PASS",
+      "claim": "The next slice may emit only a public validation summary, not imported assets or runtime outputs."
+    },
+    {
+      "gateId": "next-slice-selection",
+      "status": "PASS",
+      "claim": "The next selected slice is a public contract skeleton implementation proof, not a real importer execution proof."
+    }
+  ],
+  "readinessChecks": [
+    {
+      "checkId": "source-consumer-status",
+      "status": "PASS"
+    },
+    {
+      "checkId": "source-selected-next-slice",
+      "status": "PASS"
+    },
+    {
+      "checkId": "static-context",
+      "status": "PASS"
+    },
+    {
+      "checkId": "consumed-row-ids",
+      "status": "PASS"
+    },
+    {
+      "checkId": "consumer-step-and-check-counts",
+      "status": "PASS"
+    },
+    {
+      "checkId": "consumer-failure-counters",
+      "status": "PASS"
+    },
+    {
+      "checkId": "row-sum-arithmetic",
+      "expression": "213 + 139 = 352",
+      "status": "PASS"
+    },
+    {
+      "checkId": "ref-instance-arithmetic",
+      "expression": "602 + 666 = 1268",
+      "status": "PASS"
+    },
+    {
+      "checkId": "family-unique-ref-sum",
+      "expression": "213 + 28 = 241",
+      "status": "PASS"
+    },
+    {
+      "checkId": "unique-ref-union-non-additive",
+      "expression": "uniqueModelTextureRefUnion = 213",
+      "status": "PASS"
+    },
+    {
+      "checkId": "sidecar-match-mode-boundary",
+      "expression": "212 + 1 = 213",
+      "status": "PASS"
+    },
+    {
+      "checkId": "embedded-duplicate-output-surplus",
+      "expression": "139 - 107 = 32",
+      "status": "PASS"
+    },
+    {
+      "checkId": "public-edge-case-ids",
+      "status": "PASS"
+    },
+    {
+      "checkId": "public-field-publication-guards",
+      "status": "PASS"
+    },
+    {
+      "checkId": "negative-claim-guards",
+      "status": "PASS"
+    },
+    {
+      "checkId": "selected-next-slice-is-public-contract-skeleton",
+      "status": "PASS"
+    }
+  ],
+  "publicEdgeCases": [
+    {
+      "caseId": "stem-only-sidecar-match-boundary-001",
+      "kind": "stem-only-match",
+      "count": 1,
+      "rawRefPublished": false,
+      "rawStemPublished": false,
+      "catalogVariantPublished": false,
+      "filenamePublished": false,
+      "pathPublished": false,
+      "hashPublished": false
+    },
+    {
+      "caseId": "ambiguous-catalog-ref-boundary-001",
+      "kind": "ambiguous-catalog-ref",
+      "count": 1,
+      "rawRefPublished": false,
+      "rawStemPublished": false,
+      "catalogVariantPublished": false,
+      "filenamePublished": false,
+      "pathPublished": false,
+      "hashPublished": false
+    }
+  ],
+  "forbiddenImplementationScopes": [
+    "real importer implementation",
+    "real importer execution",
+    "private asset reads",
+    "raw texture ref publication",
+    "runtime resource archive parser behavior",
+    "runtime texture parser behavior",
+    "runtime texture pixels",
+    "runtime mesh loading or skinning",
+    "Direct3D or GPU behavior",
+    "material visual correctness",
+    "material or shader parity",
+    "Godot work",
+    "product UI wiring",
+    "rebuild implementation",
+    "rebuild parity",
+    "no-noticeable-difference parity"
+  ],
+  "guardSummary": {
+    "falseGuards": {
+      "runtimeExecution": false,
+      "beLaunch": false,
+      "newLaunch": false,
+      "screenshotCapture": false,
+      "privateFrameReviewPerformed": false,
+      "rowObservation": false,
+      "sourceSelectionObserved": false,
+      "sourceSelectionProven": false,
+      "nativeInput": false,
+      "debuggerAttachment": false,
+      "godotWork": false,
+      "ghidraMutation": false,
+      "executablePatching": false,
+      "productUiWired": false,
+      "realImporterImplementation": false,
+      "realImporterExecuted": false,
+      "importerImplementation": false,
+      "importerExecuted": false,
+      "fixtureHarnessRuntimeExecuted": false,
+      "fixtureHarnessConsumerRuntimeExecuted": false,
+      "rebuildImplementation": false,
+      "runtimeTextureParserBehaviorProven": false,
+      "runtimeTexturePixelsProven": false,
+      "runtimeJpegInflateDecodeFidelityProven": false,
+      "runtimeMeshLoadingProven": false,
+      "runtimeMeshSkinningProven": false,
+      "runtimeAnimationBehaviorProven": false,
+      "runtimeCollisionBehaviorProven": false,
+      "runtimeDirect3DUploadProven": false,
+      "runtimeGpuBehaviorProven": false,
+      "nativeTextured3DRenderingProven": false,
+      "materialVisualCorrectnessProven": false,
+      "materialShaderParityProven": false,
+      "visualQaComplete": false,
+      "cleanRoomRendererImplemented": false,
+      "assetFormatCompletenessProven": false,
+      "exactMeshTextureLayoutsProven": false,
+      "runtimeResourceArchiveParserProven": false,
+      "runtimeSidecarMaterialLoadProven": false,
+      "runtimeObjectIdentityProven": false,
+      "runtimeWorldLoadingProven": false,
+      "rebuildParityProven": false,
+      "noNoticeableDifferenceParityProven": false,
+      "privateAssetPublication": false,
+      "publicPrivateProofLeak": false
+    },
+    "zeroCounters": {
+      "actualAssetImportRows": 0,
+      "generatedAssetRows": 0,
+      "outputArtifactRows": 0,
+      "dryRunOutputArtifactRows": 0,
+      "rawFixtureExampleRows": 0,
+      "privateFixtureRows": 0,
+      "runtimeTexturePixelRows": 0,
+      "runtimeMeshRenderRows": 0,
+      "runtimeMaterialRows": 0,
+      "runtimeObservationRows": 0,
+      "textureRuntimeEvidenceRows": 0,
+      "meshRuntimeEvidenceRows": 0,
+      "materialRuntimeEvidenceRows": 0,
+      "materialVisualReviewRows": 0,
+      "screenshotRows": 0,
+      "privateFrameRowsObserved": 0,
+      "rowObservationRows": 0,
+      "sourceObservedRows": 0,
+      "newLaunchRows": 0,
+      "captureRows": 0,
+      "ocrRows": 0,
+      "rawDialogueRows": 0,
+      "ghidraMutationRows": 0,
+      "executablePatchRows": 0,
+      "productUiRows": 0,
+      "godotRows": 0,
+      "realImporterImplementationRows": 0,
+      "rebuildImplementationRows": 0,
+      "runtimeCollisionRows": 0,
+      "runtimeResourceArchiveParserRows": 0,
+      "runtimeSidecarMaterialLoadRows": 0,
+      "publicContractSkeletonImplementationRows": 0,
+      "beProcessesAfterReadinessGate": 0,
+      "publicCaseRawRefLeakCount": 0,
+      "privatePathLeakCount": 0,
+      "rawArtifactLeakCount": 0,
+      "privateAssetLeakCount": 0,
+      "publicPrivateProofLeakCount": 0
+    },
+    "implementationReadinessFalseGuardCount": 45,
+    "implementationReadinessZeroCounterCount": 38,
+    "publicLeakCheck": "PASS"
+  },
+  "claimBoundary": {
+    "proves": [
+      "the importer implementation path has a public-safe readiness gate",
+      "the consumer dry-run proof stack is sufficient to build a non-runtime public contract skeleton next",
+      "the next selected slice is a public contract skeleton implementation proof only",
+      "real importer implementation and execution remain deferred until a separate explicit authorization and private-safety packet exist"
+    ],
+    "doesNotProve": [
+      "real importer implementation",
+      "real importer execution",
+      "private asset import",
+      "runtime resource archive parser behavior",
+      "runtime texture parser behavior",
+      "runtime texture pixels",
+      "JPEG/inflate decode fidelity",
+      "runtime mesh loading or skinning",
+      "Direct3D upload or GPU behavior",
+      "native textured 3D rendering",
+      "material visual correctness",
+      "material or shader parity",
+      "asset format completeness",
+      "exact mesh or texture layouts",
+      "product UI behavior",
+      "Godot parity",
+      "rebuild implementation",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  },
+  "stopConditions": [
+    "if the source consumer dry-run status or row count changes",
+    "if consumed fixture rows do not exactly match the eight source row IDs",
+    "if the next skeleton would require raw texture refs, stems, filenames, paths, hashes, catalog variants, or private artifacts",
+    "if unique texture refs are treated as additive across row families",
+    "if embedded duplicate-output rows are deduped down to unique output files",
+    "if any BEA launch, screenshot capture, private-frame review, Ghidra mutation, executable patching, Godot work, product UI wiring, renderer implementation, real importer implementation, real importer execution, rebuild implementation, rebuild parity, or no-noticeable-difference parity claim is required"
+  ]
+}

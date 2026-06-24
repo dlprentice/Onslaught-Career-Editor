@@ -1,0 +1,6 @@
+address	name	signature	status
+0x0056c0da	CTexture__Helper_0056c0da	int __cdecl CTexture__Helper_0056c0da(void * param_1, void * param_2, int param_3)	OK
+0x0056c998	CDXTexture__Helper_0056c998	int CDXTexture__Helper_0056c998(void)	OK
+0x0056614c	CDXTexture__Unk_0056614c	int CDXTexture__Unk_0056614c(void)	OK
+0x0056e0ec	CDXTexture__Unk_0056e0ec	void __cdecl CDXTexture__Unk_0056e0ec(uint param_1, void * param_2, uint param_3, int param_4)	OK
+0x00562b3e	CFastVB__Unk_00562b3e	int __cdecl CFastVB__Unk_00562b3e(int param_1, uint param_2)	OK

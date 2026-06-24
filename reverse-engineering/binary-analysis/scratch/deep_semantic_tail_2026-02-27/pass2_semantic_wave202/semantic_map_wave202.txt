@@ -1,0 +1,27 @@
+0x0040d120	Vec3__SubtractToOut	Writes `(a - b)` vector into out param.
+0x0040d180	Vec3__Dot	3D dot-product helper used by collision and render math.
+0x00478510	CMeshCollisionVolume__TestSweptSphereAgainstTriangleCore	Core triangle-sweep contact resolver used by swept-sphere bounds/mesh-part tests.
+0x00479020	CMeshCollisionVolume__IsDirectionInsideTrianglePrism	Half-space/orientation gate for triangle-prism direction checks in sweep core.
+0x00479200	Geometry__SelectClosestPointOnTriangleEdges	Selects nearest edge/vertex contact candidate around triangle hull.
+0x00479630	Geometry__RaySphereEntryDistance	Computes ray/segment vs sphere entry distance (or sentinel when no hit).
+0x00479770	Geometry__DistanceOutsideAabb	Returns outside-distance against AABB extents using axis-mask combinations.
+0x0055fa40	CRT__PowDispatch_ST0_ST1	FPU wrapper dispatching to pow core with ST-register arguments.
+0x00574270	CDXTexture__FindFormatDescriptorById	Finds texture format descriptor row in conversion table by format id.
+0x0057430b	CDXTexture__SelectBestCompatibleFormat	Chooses best compatible destination format from candidate list + penalties.
+0x0057a934	CDXTexture__WriteSurfaceAsBmpToHandle	Serializes current texture surface to BMP stream on output handle.
+0x0057c28b	CDXTexture__WriteDdsSurfaceChainToHandle	Serializes DDS header + mip/face chain payload to output handle.
+0x0057c57d	CDXTexture__FlushStreamWriteBufferChunk	Flushes one full 4KB stream-write buffer chunk.
+0x0057c5b2	CDXTexture__FlushStreamWriteBufferTail	Flushes trailing partial bytes in stream-write buffer.
+0x0057c5dc	CDXTexture__EncodeRgbBufferToJpegStream	JPEG encode pipeline from RGB buffer into stream-writer callbacks.
+0x0057cc5d	CDXTexture__ReleaseSurfacePairIfPresent	Releases paired temporary objects/surfaces when present.
+0x0058877d	CDXTexture__OpenOutputFileHandle	Opens output file handle (W/A path handling) for texture export.
+0x0058c396	CTexture__InitBufferCursorRange	Initializes text/buffer cursor range from pointer+length inputs.
+0x005911d0	CDXTexture__AdvanceJpegDecodeState	JPEG decoder state-step dispatcher for stages 0xC8..0xD2.
+0x00592d9e	CDXTexture__WarnPngChunkWithFormattedTag	Formats PNG chunk tag and emits decode warning.
+0x00594945	CDXTexture__BuildPngGammaAndExpandTables	Builds PNG gamma/expansion lookup tables used by post-decode transforms.
+0x00594c48	CDXTexture__ApplyPngPostDecodeTransforms	Applies PNG palette/gamma/channel post-processing to decoded rows.
+0x0059cc7c	CDXTexture__AllocOrThrow	Allocates decode buffer or throws decoder error on failure.
+0x0059cd62	CDXTexture__IsPngChunkCrcInvalid	Checks current PNG chunk CRC/flags and returns invalid-state indicator.
+0x005b85c0	Math__Atan2ApproxPacked	Packed floating atan2 approximation core used by fast math dispatch.
+0x00576297	CDXTexture__DispatchPtr00656f68_WithInit_Thunk	Indirect dispatch thunk via global texture dispatch pointer 0x00656f68.
+0x00577267	CDXTexture__DispatchPtr00656f98_WithInit_Thunk	Indirect dispatch thunk via global texture dispatch pointer 0x00656f98.

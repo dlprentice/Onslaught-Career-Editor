@@ -1,0 +1,25 @@
+address	name	signature	status
+0x0059c070	CTexture__ProcessRowBatchesLinearStride	void __stdcall CTexture__ProcessRowBatchesLinearStride(int param_1, int param_2)	OK
+0x0059c110	CTexture__ProcessRowBatchesMcuStride128	void __stdcall CTexture__ProcessRowBatchesMcuStride128(int param_1, int param_2)	OK
+0x0059c3f0	CDXTexture__ReleaseDecodeBankLists	void __stdcall CDXTexture__ReleaseDecodeBankLists(void * param_1, int param_2)	OK
+0x0059c510	CDXTexture__InitDecodeAllocatorVtable	void __stdcall CDXTexture__InitDecodeAllocatorVtable(void * param_1)	OK
+0x0059c5d0	CDXTexture__PumpDecodeAllocatorAndSetStage	void __stdcall CDXTexture__PumpDecodeAllocatorAndSetStage(int param_1)	OK
+0x0059c6b0	CTexture__CopyRowsFromPointerTable	void __stdcall CTexture__CopyRowsFromPointerTable(int param_1, int param_2, int param_3, int param_4, int param_5, uint param_6)	OK
+0x0059c730	CDXTexture__ZeroBufferBytes	void __stdcall CDXTexture__ZeroBufferBytes(void * param_1, uint param_2)	OK
+0x0059c750	CDXTexture__BeginAsyncDecodeJob	int __stdcall CDXTexture__BeginAsyncDecodeJob(int param_1)	OK
+0x0059c78f	CDXTexture__FinishAsyncDecodeJob	int __stdcall CDXTexture__FinishAsyncDecodeJob(int param_1)	OK
+0x0059ccf3	CDXTexture__MemsetByte	int __stdcall CDXTexture__MemsetByte(int param_1, void * param_2, int param_3, uint param_4)	OK
+0x0059cd26	CDXTexture__ReadU32BigEndian	int __stdcall CDXTexture__ReadU32BigEndian(void * param_1)	OK
+0x0059cdbe	CDXTexture__ValidateChunkTagAsciiOrLog	void __stdcall CDXTexture__ValidateChunkTagAsciiOrLog(void * param_1, void * param_2)	OK
+0x0059d9d8	CDXTexture__ParsePngChunk_gAMA	void __stdcall CDXTexture__ParsePngChunk_gAMA(void * param_1, int param_2, uint param_3)	OK
+0x0059e110	CDXTexture__WriteJpegQuantTable	char __stdcall CDXTexture__WriteJpegQuantTable(int param_1)	OK
+0x0059e310	CDXTexture__WriteJpegHuffmanTable	void __thiscall CDXTexture__WriteJpegHuffmanTable(void * this, void * param_1, int param_2)	OK
+0x0059e4a0	CDXTexture__WriteJpegRestartIntervalMarker	void CDXTexture__WriteJpegRestartIntervalMarker(void)	OK
+0x0059e580	CDXTexture__WriteJpegFrameHeader	void __fastcall CDXTexture__WriteJpegFrameHeader(void * param_1)	OK
+0x0059e770	CDXTexture__WriteJpegScanHeader	void CDXTexture__WriteJpegScanHeader(void)	OK
+0x005ab0ed	CDXTexture__EvalNodeOutputSizeUnits	int __stdcall CDXTexture__EvalNodeOutputSizeUnits(int param_1)	OK
+0x005ab14b	CTexture__SerializeNodeTreeToBitstream	int __stdcall CTexture__SerializeNodeTreeToBitstream(int param_1, int param_2, uint param_3, int param_4)	OK
+0x005ab4d0	CMeshCollisionVolume__ExpandEdgeRows_MirrorHigh	void __fastcall CMeshCollisionVolume__ExpandEdgeRows_MirrorHigh(int param_1)	OK
+0x005ab620	CMeshCollisionVolume__ExpandEdgeRows_MirrorBoth	void CMeshCollisionVolume__ExpandEdgeRows_MirrorBoth(void)	OK
+0x005ab700	CMeshCollisionVolume__FinalizeEdgePaddingRows	void CMeshCollisionVolume__FinalizeEdgePaddingRows(void)	OK
+0x005aba90	CDXTexture__SelectNextScanTableForProgress	void __fastcall CDXTexture__SelectNextScanTableForProgress(int param_1)	OK

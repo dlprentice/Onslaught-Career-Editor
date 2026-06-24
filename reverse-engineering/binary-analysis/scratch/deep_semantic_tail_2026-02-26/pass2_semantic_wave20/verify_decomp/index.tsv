@@ -1,0 +1,7 @@
+address	name	signature	status
+0x00411e70	CCockpit__CycleToNextUsableWeapon	void __fastcall CCockpit__CycleToNextUsableWeapon(void * param_1)	OK
+0x004124d0	CGeneralVolume__GetSelectedWeaponDef	int __fastcall CGeneralVolume__GetSelectedWeaponDef(void * param_1)	OK
+0x004145f0	CGeneralVolume__GetSelectedWeaponDef_CachedPath	int __fastcall CGeneralVolume__GetSelectedWeaponDef_CachedPath(void * param_1)	OK
+0x00412cf0	CCockpit__DestroyWeaponSetAndOwnedNodes	void __fastcall CCockpit__DestroyWeaponSetAndOwnedNodes(void * param_1)	OK
+0x004ad7f0	CInfluenceMap__SetTrackedThingAndClearCachedObject	void __thiscall CInfluenceMap__SetTrackedThingAndClearCachedObject(void * this, int param_1, int param_2)	OK
+0x0050f440	CAirUnit__Helper_0050f440	void __fastcall CAirUnit__Helper_0050f440(int param_1)	OK

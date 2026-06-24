@@ -1,0 +1,10 @@
+address	old_name	new_name	evidence
+0x00582244	CFastVB__Unk_00582244	CFastVB__PackTexels_Dither_Bits8_8_8_BGR	Writes 3 bytes per texel in B,G,R order with per-texel dither offset from 4x4 matrix.
+0x00582355	CFastVB__Unk_00582355	CFastVB__PackTexels_Dither_Bits8_8_8_8_ARGB	Writes packed dword with A,R,G,B byte lanes and per-texel dither.
+0x0058249e	CFastVB__Unk_0058249e	CFastVB__PackTexels_Dither_Bits8_8_8_RGB	Writes packed 24-bit RGB bytes (R,G,B) with per-texel dither.
+0x005825c3	CFastVB__Unk_005825c3	CFastVB__PackTexels_Dither_Bits5_6_5	Packs dithered channels into 16-bit 5:6:5 layout.
+0x005826e8	CFastVB__Unk_005826e8	CFastVB__PackTexels_Dither_Bits5_5_5	Packs dithered channels into 16-bit 5:5:5 layout.
+0x0058280d	CFastVB__Unk_0058280d	CFastVB__PackTexels_Dither_A1R5G5B5	Packs alpha plus RGB into 1:5:5:5 layout.
+0x00582950	CFastVB__Unk_00582950	CFastVB__PackTexels_Dither_A4R4G4B4	Packs alpha plus RGB into 4:4:4:4 layout.
+0x00583891	CFastVB__Unk_00583891	CFastVB__PackTexels_Dither_L8	Computes luminance from weighted RGB and writes 8-bit output.
+0x00583979	CFastVB__Unk_00583979	CFastVB__PackTexels_Dither_A8L8	Writes 16-bit A8L8 output (high alpha byte, low luminance byte).

@@ -1,0 +1,28 @@
+address	name	signature	status
+0x0040d120	Vec3__SubtractToOut	void __thiscall Vec3__SubtractToOut(void * this, void * param_1, void * param_2, void * param_3)	OK
+0x0040d180	Vec3__Dot	double __thiscall Vec3__Dot(void * this, void * param_1, void * param_2)	OK
+0x00478510	CMeshCollisionVolume__TestSweptSphereAgainstTriangleCore	int CMeshCollisionVolume__TestSweptSphereAgainstTriangleCore(void)	OK
+0x00479020	CMeshCollisionVolume__IsDirectionInsideTrianglePrism	int __cdecl CMeshCollisionVolume__IsDirectionInsideTrianglePrism(void * param_1, void * param_2, void * param_3, void * param_4, void * param_5)	OK
+0x00479200	Geometry__SelectClosestPointOnTriangleEdges	void __cdecl Geometry__SelectClosestPointOnTriangleEdges(void * param_1, void * param_2, void * param_3, void * param_4, void * param_5)	OK
+0x00479630	Geometry__RaySphereEntryDistance	double __cdecl Geometry__RaySphereEntryDistance(void * param_1, void * param_2, float param_3)	OK
+0x00479770	Geometry__DistanceOutsideAabb	double __cdecl Geometry__DistanceOutsideAabb(void * param_1, void * param_2)	OK
+0x0055fa40	CRT__PowDispatch_ST0_ST1	void CRT__PowDispatch_ST0_ST1(void)	OK
+0x00574270	CDXTexture__FindFormatDescriptorById	int * __stdcall CDXTexture__FindFormatDescriptorById(int param_1)	OK
+0x0057430b	CDXTexture__SelectBestCompatibleFormat	int __stdcall CDXTexture__SelectBestCompatibleFormat(void * param_1, int param_2, void * param_3)	OK
+0x0057a934	CDXTexture__WriteSurfaceAsBmpToHandle	int __thiscall CDXTexture__WriteSurfaceAsBmpToHandle(void * this, void * param_1, int param_2, int param_3)	OK
+0x0057c28b	CDXTexture__WriteDdsSurfaceChainToHandle	int __thiscall CDXTexture__WriteDdsSurfaceChainToHandle(void * this, void * param_1, int param_2)	OK
+0x0057c57d	CDXTexture__FlushStreamWriteBufferChunk	int __stdcall CDXTexture__FlushStreamWriteBufferChunk(int param_1)	OK
+0x0057c5b2	CDXTexture__FlushStreamWriteBufferTail	void __stdcall CDXTexture__FlushStreamWriteBufferTail(int param_1)	OK
+0x0057c5dc	CDXTexture__EncodeRgbBufferToJpegStream	int __thiscall CDXTexture__EncodeRgbBufferToJpegStream(void * this, void * param_1, int param_2)	OK
+0x0057cc5d	CDXTexture__ReleaseSurfacePairIfPresent	void __fastcall CDXTexture__ReleaseSurfacePairIfPresent(void * param_1)	OK
+0x0058877d	CDXTexture__OpenOutputFileHandle	int __thiscall CDXTexture__OpenOutputFileHandle(void * this, void * param_1, int param_2, int param_3)	OK
+0x0058c396	CTexture__InitBufferCursorRange	int CTexture__InitBufferCursorRange(void)	OK
+0x005911d0	CDXTexture__AdvanceJpegDecodeState	int __stdcall CDXTexture__AdvanceJpegDecodeState(void * param_1)	OK
+0x00592d9e	CDXTexture__WarnPngChunkWithFormattedTag	void __stdcall CDXTexture__WarnPngChunkWithFormattedTag(int param_1, int param_2)	OK
+0x00594945	CDXTexture__BuildPngGammaAndExpandTables	void __stdcall CDXTexture__BuildPngGammaAndExpandTables(uint param_1)	OK
+0x00594c48	CDXTexture__ApplyPngPostDecodeTransforms	void __stdcall CDXTexture__ApplyPngPostDecodeTransforms(int param_1)	OK
+0x0059cc7c	CDXTexture__AllocOrThrow	void * __stdcall CDXTexture__AllocOrThrow(void * param_1, int param_2)	OK
+0x0059cd62	CDXTexture__IsPngChunkCrcInvalid	bool __stdcall CDXTexture__IsPngChunkCrcInvalid(void * param_1)	OK
+0x005b85c0	Math__Atan2ApproxPacked	int Math__Atan2ApproxPacked(void)	OK
+0x00576297	CDXTexture__DispatchPtr00656f68_WithInit_Thunk	void CDXTexture__DispatchPtr00656f68_WithInit_Thunk(void)	OK
+0x00577267	CDXTexture__DispatchPtr00656f98_WithInit_Thunk	void __stdcall CDXTexture__DispatchPtr00656f98_WithInit_Thunk(int param_1, int param_2, int param_3, int param_4)	OK

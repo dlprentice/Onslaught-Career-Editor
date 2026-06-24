@@ -1,0 +1,6 @@
+target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
+00535330	CVM__VFunc_01_00535330	005e4f20	<none>	<no_function>	DATA
+00535350	IScript__Unk_00535350	00535333	00535330	CVM__VFunc_01_00535330	UNCONDITIONAL_CALL
+00535350	IScript__Unk_00535350	005398c5	<none>	<no_function>	UNCONDITIONAL_CALL
+005398c5	<no_function>	<none>	<none>	<none>	<none>
+00539890	<no_function>	<none>	<none>	<none>	<none>

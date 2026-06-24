@@ -1,0 +1,5 @@
+target_addr	target_name	from_addr	from_function	ref_type
+004ab360	CMesh__OptimizeParts	004a953f	CMesh__Load	UNCONDITIONAL_CALL
+004bae70	CExplosionInitThing__Unk_004bae70	004ab549	CMesh__OptimizeParts	UNCONDITIONAL_CALL
+004bae70	CExplosionInitThing__Unk_004bae70	004ab750	CMesh__OptimizeParts	UNCONDITIONAL_CALL
+004bb210	CUnitAI__Unk_004bb210	004ab772	CMesh__OptimizeParts	UNCONDITIONAL_CALL

@@ -1,0 +1,9 @@
+address	name	signature	status
+0x0056ce69	CTexture__Unk_0056ce69	int __cdecl CTexture__Unk_0056ce69(int param_1)	OK
+0x0056ce8a	CTexture__Unk_0056ce8a	bool __cdecl CTexture__Unk_0056ce8a(void * param_1)	OK
+0x0056d036	CTexture__Unk_0056d036	int CTexture__Unk_0056d036(void)	OK
+0x0056d8da	CTexture__Unk_0056d8da	void __cdecl CTexture__Unk_0056d8da(void * param_1, void * param_2)	OK
+0x0056dafa	CTexture__Unk_0056dafa	void __cdecl CTexture__Unk_0056dafa(void * param_1, uint param_2, int param_3)	OK
+0x0056be17	CTexture__Unk_0056be17	int CTexture__Unk_0056be17(void)	OK
+0x0056a1cd	CTexture__Unk_0056a1cd	int CTexture__Unk_0056a1cd(void)	OK
+0x0056a69e	CTexture__Unk_0056a69e	int CTexture__Unk_0056a69e(void)	OK

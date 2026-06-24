@@ -1,0 +1,8 @@
+address	name	signature	status
+0x004b0d00	CMeshPart__InterpolateSegmentTransform	int CMeshPart__InterpolateSegmentTransform(void)	OK
+0x004bfab0	OID__RenderWithState1BOverride	void __thiscall OID__RenderWithState1BOverride(void * this, int param_1, int param_2)	OK
+0x004d1f90	CExplosionInitThing__PlayWingOpenAnimationOnce	void __fastcall CExplosionInitThing__PlayWingOpenAnimationOnce(void * param_1)	OK
+0x0053f0a0	CDXFMV__DestructorBody	void __fastcall CDXFMV__DestructorBody(void * param_1)	OK
+0x00562b3e	CFastVB__ClassifyDoubleWords	int __cdecl CFastVB__ClassifyDoubleWords(int param_1, uint param_2)	OK
+0x0056bba5	CFastVB__NormalizeDigitStringInPlace	void __cdecl CFastVB__NormalizeDigitStringInPlace(void * param_1)	OK
+0x0056bca7	CFastVB__LoadConfigFieldsBlock	uint __cdecl CFastVB__LoadConfigFieldsBlock(int param_1)	OK

@@ -1,0 +1,259 @@
+{
+  "schemaVersion": "missionscript-command-effect-post-goodie-selection-refresh.v1",
+  "status": "PASS",
+  "selectionRefreshStatus": "missionscript-command-effect-post-goodie-selection-refresh-complete-cutscene-camera-position-selected",
+  "previousSlice": "MissionScript Goodie State / Save AppCore Copied-Baseline Boundary Corpus Harness Proof",
+  "selectedChildLane": "MissionScript Cutscene Pan-Camera / Position Command-Effect Deterministic Fixture Proof Plan",
+  "selectedChildScope": "missionscript-cutscene-pan-camera-position-deterministic-fixture-proof-plan",
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "staticAccountingSource": "static-reaudit-measurement-register.md",
+    "latestGhidraBackupClass": "verified-static-backup-redacted"
+  },
+  "selectionAccounting": {
+    "originalCandidateFamilyCount": 9,
+    "completedFamilyCount": 3,
+    "remainingFamilyCount": 6,
+    "selectedOriginalRank": 3,
+    "selectedRemainingRank": 1,
+    "completedFamilies": [
+      "slot-bitset-save",
+      "vector-range-helpers",
+      "goodie-state-save"
+    ],
+    "remainingFamilies": [
+      "cutscene-camera-position",
+      "objective-outcome",
+      "message-audio-console",
+      "hud-variable-display",
+      "thing-value-engine-helper",
+      "player-state-score"
+    ],
+    "selectionFalseGuardCount": 31,
+    "selectionZeroCounterCount": 18,
+    "publicLeakCheck": "PASS"
+  },
+  "sourceEvidence": {
+    "fixtureSelection": {
+      "schema": "reverse-engineering/binary-analysis/missionscript-command-effect-fixture-selection.v1.json",
+      "statusToken": "missionscript-command-effect-fixture-selection-complete-slot-bitset-save-selected",
+      "candidateFamilyCount": 9,
+      "selectedFixtureFamily": "slot-bitset-save",
+      "completedOriginalRanks": [
+        1,
+        2,
+        5
+      ],
+      "selectedOriginalRankAfterCompletion": 3
+    },
+    "vectorRangeFixture": {
+      "schema": "reverse-engineering/binary-analysis/missionscript-vector-range-deterministic-helper-fixture-proof-plan.v1.json",
+      "statusToken": "missionscript-vector-range-deterministic-helper-fixture-proof-plan-complete-pure-helper-fixture-not-runtime-proof",
+      "selectedFixtureFamily": "vector-range-helpers",
+      "runtimeExecution": false
+    },
+    "goodieBoundaryCorpus": {
+      "schema": "reverse-engineering/binary-analysis/missionscript-goodie-state-save-appcore-copied-baseline-boundary-corpus-harness.v1.json",
+      "statusToken": "missionscript-goodie-state-save-appcore-copied-baseline-boundary-corpus-harness-complete-copied-real-baseline-boundary-corpus-not-runtime-proof",
+      "selectedFixtureFamily": "goodie-state-save",
+      "copiedBaselineBoundaryCorpusCaseCount": 632,
+      "runtimeExecution": false
+    },
+    "cutsceneStaticProof": {
+      "schema": "reverse-engineering/binary-analysis/missionscript-cutscene-pan-camera-position-command-effect.v1.json",
+      "descriptorRecordCount": 4,
+      "descriptorIndices": [
+        65,
+        113,
+        114,
+        115
+      ],
+      "positionTypeId": 6,
+      "positionVtable": "0x005e4da4",
+      "positionSizeBytes": 20,
+      "positionPayloadReads": [
+        "+0x04 float",
+        "+0x08 float",
+        "+0x0c float"
+      ],
+      "positionGetterSlot": "+0x44",
+      "handlerCount": 2,
+      "handlerAnchors": [
+        "0x00533b70 IScript__Create3PointPanCamera",
+        "0x00533eb0 IScript__Create4PointPanCamera"
+      ],
+      "fenrirCutsceneRows": 6,
+      "runtimeExecution": false
+    }
+  },
+  "remainingCandidateRanking": [
+    {
+      "remainingRank": 1,
+      "originalRank": 3,
+      "family": "cutscene-camera-position",
+      "lane": "MissionScript Cutscene Pan-Camera / Position Command-Effect Deterministic Fixture Proof Plan",
+      "decision": "selected",
+      "rationale": "Next highest original MissionScript fixture family not already completed; useful static descriptor/datatype/handler/corpus anchors can be kept non-runtime."
+    },
+    {
+      "remainingRank": 2,
+      "originalRank": 4,
+      "family": "objective-outcome",
+      "lane": "MissionScript Objective/Outcome Command-Effect Fixture Proof Plan",
+      "decision": "deferred",
+      "rationale": "Important, but coupled to mission outcome/runtime event behavior and career progression claims."
+    },
+    {
+      "remainingRank": 3,
+      "originalRank": 6,
+      "family": "message-audio-console",
+      "lane": "MissionScript Message/Audio/Console Command-Effect Fixture Proof Plan",
+      "decision": "deferred",
+      "rationale": "High private-frame, text/OCR, voice/audio, queue-ordering, and runtime-display risk."
+    },
+    {
+      "remainingRank": 4,
+      "originalRank": 7,
+      "family": "hud-variable-display",
+      "lane": "MissionScript HUD/Variable Display Command-Effect Fixture Proof Plan",
+      "decision": "deferred",
+      "rationale": "Useful UI command surface, but visible HUD behavior proof would be easy to overclaim."
+    },
+    {
+      "remainingRank": 5,
+      "originalRank": 8,
+      "family": "thing-value-engine-helper",
+      "lane": "MissionScript Thing Value / Engine Helper Command-Effect Fixture Proof Plan",
+      "decision": "deferred",
+      "rationale": "Effectful object commands need runtime object-identity and thing-state guardrails before implementation-facing proofs."
+    },
+    {
+      "remainingRank": 6,
+      "originalRank": 9,
+      "family": "player-state-score",
+      "lane": "MissionScript Player-State / Score Command-Effect Fixture Proof Plan",
+      "decision": "deferred",
+      "rationale": "AddScore handler-body conflict plus cockpit, stealth, and weapon-fire/stealth risks keep it behind safer static fixture work."
+    }
+  ],
+  "selectedChildRequirements": [
+    {
+      "row": "descriptor-anchors",
+      "requirement": "Preserve CreatePosition index 65 / 0x0064de90, Goto3PointPanCamera index 113 / 0x0064ea90, Goto4PointPanCamera index 114 / 0x0064ead0, and GotoPlayerCamera index 115 / 0x0064eb10.",
+      "boundary": "Static descriptor context only; no exact descriptor layout, arity, or argument type schema proof."
+    },
+    {
+      "row": "position-datatype",
+      "requirement": "Preserve CPositionDataType type id 6, vtable 0x005e4da4, size 20, float payload reads +0x04/+0x08/+0x0c, value getter +0x44, and the open +0x10 field boundary.",
+      "boundary": "No exact CPositionDataType layout proof."
+    },
+    {
+      "row": "pan-camera-handler-bridge",
+      "requirement": "Preserve 0x00533b70 IScript__Create3PointPanCamera, 0x00533eb0 IScript__Create4PointPanCamera, target thing getter +0x40, duration getter +0x34, CBSpline, CPanCamera, and CGame__SetCurrentCamera as static context.",
+      "boundary": "No runtime camera switching, cutscene playback, visible output, or object identity proof."
+    },
+    {
+      "row": "public-corpus-anchor",
+      "requirement": "Preserve the Fenrir cutscene example and selected level741/level742 rows as public static corpus anchors.",
+      "boundary": "No live loose-MSL loading, packed-resource script selection, source-selection observation, or runtime object lookup proof."
+    },
+    {
+      "row": "descriptor-context-guard",
+      "requirement": "Preserve Goto4PointPanCamera and GotoPlayerCamera raw descriptor rows as context rows.",
+      "boundary": "Do not treat their raw entry values as clean one-to-one runtime handler proof without a later focused proof."
+    }
+  ],
+  "guardSummary": {
+    "falseGuards": {
+      "runtimeExecution": false,
+      "beLaunch": false,
+      "newLaunch": false,
+      "screenshotCapture": false,
+      "privateFrameReviewPerformed": false,
+      "rowObservation": false,
+      "sourceSelectionObserved": false,
+      "nativeInput": false,
+      "debuggerAttachment": false,
+      "godotWork": false,
+      "ghidraMutation": false,
+      "executablePatching": false,
+      "productUiWired": false,
+      "rebuildImplementation": false,
+      "runtimeMissionScriptExecutionProven": false,
+      "runtimeCommandEffectsProven": false,
+      "runtimeCameraSwitchingProven": false,
+      "runtimeCutscenePlaybackProven": false,
+      "runtimeVisibleCameraOutputProven": false,
+      "runtimeObjectIdentityProven": false,
+      "runtimeObjectLookupByNameProven": false,
+      "liveLooseMslLoading": false,
+      "packedResourceScriptSelectionProven": false,
+      "exactCommandDescriptorLayoutProven": false,
+      "exactCommandArityProven": false,
+      "exactArgumentTypeSchemaProven": false,
+      "exactCPositionDataTypeLayoutProven": false,
+      "exactCPanCameraLayoutProven": false,
+      "exactCBSplineLayoutProven": false,
+      "rebuildParityProven": false,
+      "noNoticeableDifferenceParityProven": false
+    },
+    "zeroCounters": {
+      "runtimeObservationRows": 0,
+      "missionScriptRuntimeEvidenceRows": 0,
+      "runtimeCommandEffectRows": 0,
+      "runtimeCameraRows": 0,
+      "runtimeCutsceneRows": 0,
+      "runtimeObjectLookupRows": 0,
+      "privateFrameRowsObserved": 0,
+      "rowObservationRows": 0,
+      "sourceObservedRows": 0,
+      "newLaunchRows": 0,
+      "captureRows": 0,
+      "ocrRows": 0,
+      "ghidraMutationRows": 0,
+      "executablePatchRows": 0,
+      "productUiRows": 0,
+      "godotRows": 0,
+      "rebuildImplementationRows": 0,
+      "beProcessesAfterSelection": 0
+    }
+  },
+  "claimBoundary": {
+    "proves": [
+      "the completed slot/save, vector/range, and Goodie/save fixture chains are accounted as complete rather than reselected",
+      "the next selected non-runtime MissionScript command-effect fixture family is cutscene-camera-position",
+      "the selected child lane must stay static and public-safe until separately armed runtime or rebuild work exists"
+    ],
+    "doesNotProve": [
+      "runtime MissionScript execution",
+      "runtime command effects",
+      "runtime camera switching",
+      "runtime cutscene playback",
+      "runtime visible camera output",
+      "runtime object identity",
+      "runtime object lookup by name",
+      "live loose-MSL loading",
+      "packed-resource script selection",
+      "exact command descriptor layout",
+      "exact command arity",
+      "exact argument type schema",
+      "exact CPositionDataType layout",
+      "exact CPanCamera layout",
+      "exact CBSpline layout",
+      "source-selection observation",
+      "private-frame review",
+      "visual QA",
+      "Godot parity",
+      "Ghidra mutation",
+      "executable patching behavior",
+      "product UI behavior",
+      "rebuild implementation",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  }
+}

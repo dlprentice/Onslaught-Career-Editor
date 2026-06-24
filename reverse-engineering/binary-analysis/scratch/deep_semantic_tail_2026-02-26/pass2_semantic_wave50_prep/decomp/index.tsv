@@ -1,0 +1,25 @@
+address	name	signature	status
+0x00428bc0	CFrontEndPage__Unk_00428bc0	double __fastcall CFrontEndPage__Unk_00428bc0(int param_1)	OK
+0x00440c00	CDamage__Unk_00440c00	void __fastcall CDamage__Unk_00440c00(void * param_1)	OK
+0x00440c40	CDamage__Unk_00440c40	void __fastcall CDamage__Unk_00440c40(void * param_1)	OK
+0x00488330	CIBuffer__Unk_00488330	int __thiscall CIBuffer__Unk_00488330(void * this, void * param_1, int param_2, int param_3, int param_4, int param_5)	OK
+0x00488aa0	CIBuffer__Unk_00488aa0	double __thiscall CIBuffer__Unk_00488aa0(void * this, int param_1, int param_2)	OK
+0x0048a4e0	CIBuffer__Unk_0048a4e0	void __fastcall CIBuffer__Unk_0048a4e0(void * param_1)	OK
+0x0048ace0	CIBuffer__Unk_0048ace0	void __fastcall CIBuffer__Unk_0048ace0(int param_1)	OK
+0x004c0940	CPDSimpleSprite__Unk_004c0940	void __thiscall CPDSimpleSprite__Unk_004c0940(void * this, int param_1, uint param_2, int param_3)	OK
+0x004c0c70	CPDSimpleSprite__Unk_004c0c70	int CPDSimpleSprite__Unk_004c0c70(void)	OK
+0x004c5280	CPDSimpleSprite__Unk_004c5280	void __thiscall CPDSimpleSprite__Unk_004c5280(void * this, void * param_1, void * param_2)	OK
+0x004d30d0	CInfluenceMap__Unk_004d30d0	void __thiscall CInfluenceMap__Unk_004d30d0(void * this, int param_1, int param_2)	OK
+0x004d38c0	CInfluenceMap__Unk_004d38c0	int CInfluenceMap__Unk_004d38c0(void)	OK
+0x004d39d0	CInfluenceMap__Unk_004d39d0	void __fastcall CInfluenceMap__Unk_004d39d0(int param_1)	OK
+0x004d3a00	CInfluenceMap__Unk_004d3a00	void __fastcall CInfluenceMap__Unk_004d3a00(int param_1)	OK
+0x004ebd10	CStaticShadows__Unk_004ebd10	void __fastcall CStaticShadows__Unk_004ebd10(void * param_1)	OK
+0x004ebe40	CStaticShadows__Unk_004ebe40	void __fastcall CStaticShadows__Unk_004ebe40(int param_1)	OK
+0x004ec250	CStaticShadows__Unk_004ec250	void * __thiscall CStaticShadows__Unk_004ec250(void * this, void * param_1, int param_2)	OK
+0x0050f130	CAirUnit__Unk_0050f130	void __fastcall CAirUnit__Unk_0050f130(int param_1)	OK
+0x0050f1a0	CAirUnit__Unk_0050f1a0	void CAirUnit__Unk_0050f1a0(void)	OK
+0x0050f1f0	CAirUnit__Unk_0050f1f0	void __fastcall CAirUnit__Unk_0050f1f0(int param_1)	OK
+0x0050f260	CAirUnit__Unk_0050f260	void __fastcall CAirUnit__Unk_0050f260(int param_1)	OK
+0x0050f2d0	CAirUnit__Unk_0050f2d0	void __fastcall CAirUnit__Unk_0050f2d0(int param_1)	OK
+0x0050f340	CAirUnit__Unk_0050f340	void __fastcall CAirUnit__Unk_0050f340(int param_1)	OK
+0x0050f3b0	CAirUnit__Unk_0050f3b0	void __fastcall CAirUnit__Unk_0050f3b0(int param_1)	OK

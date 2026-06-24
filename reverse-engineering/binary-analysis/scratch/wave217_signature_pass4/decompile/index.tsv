@@ -1,0 +1,12 @@
+address	name	signature	status
+0x005234d0	PlatformInput__SetGlobalInputState	void __cdecl PlatformInput__SetGlobalInputState(int global_input_state)	OK
+0x004048f0	CMesh__IsValidProfileIndex_1to10	int __cdecl CMesh__IsValidProfileIndex_1to10(int profile_index)	OK
+0x00409e60	CGeneralVolume__ToDoubleIdentity	double __stdcall CGeneralVolume__ToDoubleIdentity(float input_value)	OK
+0x004aa6b0	CDestructableSegmentsController__FindMeshNameByIdOrUnknown	void * __cdecl CDestructableSegmentsController__FindMeshNameByIdOrUnknown(int segment_id)	OK
+0x004f2790	CDXSurf__UnlinkNodeFromGlobalList	void __cdecl CDXSurf__UnlinkNodeFromGlobalList(void * surf_node)	OK
+0x0050f680	CSpawnerThng__IsSpawnTypeAllowed	int __cdecl CSpawnerThng__IsSpawnTypeAllowed(int spawn_type)	OK
+0x0055f44b	CTokenArchive__BinarySearchByPredicate	uint __cdecl CTokenArchive__BinarySearchByPredicate(int search_key, uint base_offset, uint item_count, int item_stride, void * predicate)	OK
+0x0040d320	CMCBuggy__MultiplyMat34Basis	void __thiscall CMCBuggy__MultiplyMat34Basis(void * this, void * out_basis, void * lhs_basis, void * rhs_basis)	OK
+0x00440ad0	CWaterRenderSystem__BuildGridIndexBuffer	void __stdcall CWaterRenderSystem__BuildGridIndexBuffer(void * out_indices, int grid_width, int grid_height, int flip_winding)	OK
+0x00441b10	CGame__SetGlobalSelectionSnapshot	void __cdecl CGame__SetGlobalSelectionSnapshot(void * selection_vec4, int selection_mode)	OK
+0x004aa500	CRTMesh__GetMaterialNameAndIdByIndex	void __thiscall CRTMesh__GetMaterialNameAndIdByIndex(void * this, int material_index, void * out_name, void * out_material_id, void * unused_ctx)	OK

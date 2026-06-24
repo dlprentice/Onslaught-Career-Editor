@@ -1,0 +1,7 @@
+address	name	signature	status
+0x004b0fb0	CMCMech__Helper_004b0fb0	int CMCMech__Helper_004b0fb0(void)	OK
+0x004d2200	<none>	<none>	MISSING
+0x0053f140	CDXFMV__VFunc_01_0053f140	void * __thiscall CDXFMV__VFunc_01_0053f140(void * this, void * param_1, int param_2)	OK
+0x0053f090	<none>	<none>	MISSING
+0x004f6fd0	CUnit__Unk_004f6fd0	int __thiscall CUnit__Unk_004f6fd0(void * this, void * param_1, int param_2)	OK
+0x004fd040	CUnit__Unk_004fd040	void __fastcall CUnit__Unk_004fd040(void * param_1)	OK

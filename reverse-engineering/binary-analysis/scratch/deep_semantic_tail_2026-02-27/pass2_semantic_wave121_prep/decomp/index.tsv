@@ -1,0 +1,7 @@
+address	name	signature	status
+0x004cba30	CParticleManager__Unk_004cba30	int __stdcall CParticleManager__Unk_004cba30(void * param_1, float param_2, void * param_3)	OK
+0x004cba90	CParticleManager__Unk_004cba90	double __stdcall CParticleManager__Unk_004cba90(int param_1)	OK
+0x00469c20	CUnitAI__Unk_00469c20	void __cdecl CUnitAI__Unk_00469c20(int param_1)	OK
+0x00469cf0	CUnitAI__Unk_00469cf0	int __cdecl CUnitAI__Unk_00469cf0(int param_1)	OK
+0x0046a210	CUnitAI__Unk_0046a210	int CUnitAI__Unk_0046a210(void)	OK
+0x00451a40	CUnitAI__Unk_00451a40	int * __fastcall CUnitAI__Unk_00451a40(int param_1)	OK

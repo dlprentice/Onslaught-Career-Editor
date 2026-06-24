@@ -1,0 +1,21 @@
+address	name	signature	status
+0x00402000	CUnitAI__SetStateTimestampCCToNow	void __fastcall CUnitAI__SetStateTimestampCCToNow(int param_1)	OK
+0x00403760	CUnitAI__ProcessAndCrashIfNoAirOrHoverSupport	void __fastcall CUnitAI__ProcessAndCrashIfNoAirOrHoverSupport(void * param_1)	OK
+0x0040d0f0	CEngine__CanUseBallisticArcNoLocks	int __fastcall CEngine__CanUseBallisticArcNoLocks(int param_1)	OK
+0x00482210	CDXEngine__RenderSegmentedMeterBar	int CDXEngine__RenderSegmentedMeterBar(void)	OK
+0x00490220	CEngine__ClearNearbyProjectileBurstSlots	void __fastcall CEngine__ClearNearbyProjectileBurstSlots(int param_1)	OK
+0x00490280	CEngine__ResetBurstTrackingState	int __fastcall CEngine__ResetBurstTrackingState(int param_1)	OK
+0x004902b0	CEngine__TrackBurstEventIfNearby	int CEngine__TrackBurstEventIfNearby(void)	OK
+0x004eba30	CEngine__SetVertexShaderPathEnabled	void __stdcall CEngine__SetVertexShaderPathEnabled(int param_1)	OK
+0x004f3ac0	CUnitAI__GetWorldPositionForTargeting	void __thiscall CUnitAI__GetWorldPositionForTargeting(void * this, int param_1, void * param_2)	OK
+0x004fc080	CUnitAI__TrySpawnOrFinalizeAttachedUnit	int __fastcall CUnitAI__TrySpawnOrFinalizeAttachedUnit(void * param_1)	OK
+0x004fc170	CUnitAI__FinalizeSpawnAndAdvanceState	void __fastcall CUnitAI__FinalizeSpawnAndAdvanceState(int param_1)	OK
+0x004fcec0	CUnitAI__GetAttachedNodeReadyState	int CUnitAI__GetAttachedNodeReadyState(void)	OK
+0x004fd7e0	CUnitAI__AreSpawnedChildrenReady	int __fastcall CUnitAI__AreSpawnedChildrenReady(int param_1)	OK
+0x004fda10	CUnitAI__GetWeaponNodeState120	int __fastcall CUnitAI__GetWeaponNodeState120(int param_1)	OK
+0x004fde10	CUnitAI__IsDeployAnimationState	int __fastcall CUnitAI__IsDeployAnimationState(int param_1)	OK
+0x004fdeb0	CUnitAI__HandleDeployAndFireAnimationCompletion	int __fastcall CUnitAI__HandleDeployAndFireAnimationCompletion(void * param_1)	OK
+0x0055e64e	CRT__WStrCpy	void __cdecl CRT__WStrCpy(void * param_1, void * param_2)	OK
+0x0055eb00	CRT__WcsNcpyZeroPad	short * __cdecl CRT__WcsNcpyZeroPad(void * param_1, void * param_2, int param_3)	OK
+0x0055f807	CRT__MbsNcpy_LocaleLock	int __cdecl CRT__MbsNcpy_LocaleLock(void * param_1, void * param_2, uint param_3)	OK
+0x0055f8a1	CRT__MbsIcmp_LocaleLock	int __cdecl CRT__MbsIcmp_LocaleLock(void * param_1, void * param_2)	OK

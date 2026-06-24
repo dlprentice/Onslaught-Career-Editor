@@ -1,9 +1,9 @@
 # WinUI UI/UX Redesign Radar
 
-Status: public-safe roadmap summary
+Status: active
 Last updated: 2026-06-23
 
-This public summary tracks UI/UX debt that is too broad for a release-candidate polish patch but important enough to keep visible. It is grounded in design review and local verification; implementation and release acceptance remain owned by project maintainers.
+This document tracks UI/UX debt that is too broad for a release-candidate polish patch but important enough to keep visible. It is grounded in maintainer review and UI/UX critique; implementation and verification remain maintainer-owned.
 
 ## Release-Candidate Baseline
 
@@ -11,6 +11,7 @@ This public summary tracks UI/UX debt that is too broad for a release-candidate 
 - Keep proof vocabulary one level deeper in Details, Advanced, Diagnostics, readiness notes, or maintainer docs.
 - Do not imply online multiplayer, matchmaking, audible music replacement proof, or rebuild parity is complete.
 - Keep the installed Steam game folder and original `BEA.exe` read-only. The UI should repeat this where a user is about to copy, patch, launch, or stop a game process.
+- Current platform decision: keep WinUI 3 as the flagship and improve agent-driven inspection/visual QA before considering any rewrite. See `roadmap/winui-agentic-ui-hardening-plan.md`.
 
 ## Redesign Radar
 
@@ -41,6 +42,6 @@ This public summary tracks UI/UX debt that is too broad for a release-candidate 
 ## Current Release-Slice Fixes
 
 - Default copy now uses player-facing language for safe copies, game options, online unavailable status, music staging, and patch/mod limits.
-- Game Options patching runs off the UI thread and handles expected user/file errors without masking unexpected crashes as normal validation.
+- Game Options patching is guarded by try/catch/finally and runs off the UI thread.
 - File-picker/readiness-loader failures report user-visible status instead of relying on an app-level crash net.
-- Large summaries, receipts, logs, and hints are not live accessibility regions; concise progress/status text owns polite announcements.
+- Major result/status surfaces use polite live-region hints for accessibility.

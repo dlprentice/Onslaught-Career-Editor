@@ -1,0 +1,21 @@
+address	name	signature	status
+0x0040ac50	CGeneralVolume__Unk_0040ac50	void __thiscall CGeneralVolume__Unk_0040ac50(void * this, int param_1, float param_2)	OK
+0x0040dfb0	CGeneralVolume__Unk_0040dfb0	void __fastcall CGeneralVolume__Unk_0040dfb0(void * param_1)	OK
+0x00410310	CGeneralVolume__Unk_00410310	void __thiscall CGeneralVolume__Unk_00410310(void * this, int param_1, float param_2)	OK
+0x00410490	CGeneralVolume__Unk_00410490	void __fastcall CGeneralVolume__Unk_00410490(int param_1)	OK
+0x00410740	CGeneralVolume__Unk_00410740	void __thiscall CGeneralVolume__Unk_00410740(void * this, int param_1, float param_2)	OK
+0x004109d0	CGeneralVolume__Unk_004109d0	void __thiscall CGeneralVolume__Unk_004109d0(void * this, int param_1, float param_2)	OK
+0x004114d0	CGeneralVolume__Unk_004114d0	double __fastcall CGeneralVolume__Unk_004114d0(int param_1)	OK
+0x00411b70	CGeneralVolume__Unk_00411b70	int __fastcall CGeneralVolume__Unk_00411b70(int param_1)	OK
+0x004121b0	CGeneralVolume__Unk_004121b0	double __fastcall CGeneralVolume__Unk_004121b0(void * param_1)	OK
+0x004122b0	CGeneralVolume__Unk_004122b0	int __fastcall CGeneralVolume__Unk_004122b0(void * param_1)	OK
+0x00412310	CGeneralVolume__Unk_00412310	int __fastcall CGeneralVolume__Unk_00412310(void * param_1)	OK
+0x00412370	CGeneralVolume__Unk_00412370	double __fastcall CGeneralVolume__Unk_00412370(void * param_1)	OK
+0x00412480	CGeneralVolume__Unk_00412480	int __fastcall CGeneralVolume__Unk_00412480(void * param_1)	OK
+0x00413cc0	CGeneralVolume__Unk_00413cc0	void __fastcall CGeneralVolume__Unk_00413cc0(int param_1)	OK
+0x00413cf0	CGeneralVolume__Unk_00413cf0	void __fastcall CGeneralVolume__Unk_00413cf0(int param_1)	OK
+0x00414410	CGeneralVolume__Unk_00414410	double __fastcall CGeneralVolume__Unk_00414410(void * param_1)	OK
+0x00414470	CGeneralVolume__Unk_00414470	int __fastcall CGeneralVolume__Unk_00414470(void * param_1)	OK
+0x004144c0	CGeneralVolume__Unk_004144c0	int __fastcall CGeneralVolume__Unk_004144c0(void * param_1)	OK
+0x00414520	CGeneralVolume__Unk_00414520	double __fastcall CGeneralVolume__Unk_00414520(void * param_1)	OK
+0x004145a0	CGeneralVolume__Unk_004145a0	short * __fastcall CGeneralVolume__Unk_004145a0(void * param_1)	OK

@@ -1,0 +1,11 @@
+address	old_name	new_name	evidence
+0x0056614c	CDXTexture__Unk_0056614c	CRT__SelectHeapStrategy	OS version + __MSVCRT_HEAP_SELECT parsing + mode return
+0x00566294	CDXTexture__Unk_00566294	CRT__InitializeHeapSubsystem	HeapCreate + heap strategy selection + init path dispatch
+0x005662f1	CDXTexture__Unk_005662f1	CRT__InitSmallBlockHeap	allocates 0x140 entry array and sets small-block globals
+0x00566339	CDXTexture__Unk_00566339	CRT__FindSmallBlockHeapEntryForPtr	iterates 0x14-sized region records; pointer-range lookup
+0x00569449	CDXTexture__Unk_00569449	CRT__ControlFp	(read & mask & write) floating-point control-word update pattern
+0x0056aff4	CDXTexture__Unk_0056aff4	CRT__AllocOsHandleSlot	allocates/initializes lowio slot table entries and returns slot index
+0x0056b117	CDXTexture__Unk_0056b117	CRT__SetOsHandle	sets lowio slot HANDLE and updates std handles 0/1/2
+0x0056b193	CDXTexture__Unk_0056b193	CRT__FreeOsHandle	clears lowio slot HANDLE and std handles 0/1/2
+0x0056cbb4	CTexture__Unk_0056cbb4	CRT__EnsureTzsetInitialized	one-time gate + lock around timezone initialization
+0x0056cbe2	CTexture__Unk_0056cbe2	CRT__Tzset	TZ env/system timezone parsing + _timezone/_daylight/_tzname style globals

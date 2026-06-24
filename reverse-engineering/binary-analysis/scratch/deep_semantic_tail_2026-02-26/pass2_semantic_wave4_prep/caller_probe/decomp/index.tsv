@@ -1,0 +1,4 @@
+address	name	signature	status
+0x004879e0	CExplosionInitThing__Unk_004879e0	void __thiscall CExplosionInitThing__Unk_004879e0(void * this, void * param_1, int param_2, float param_3)	OK
+0x0047c8b0	<none>	<none>	MISSING
+0x0049fc10	CExplosionInitThing__ctor_like_0049fc10	void __fastcall CExplosionInitThing__ctor_like_0049fc10(void * param_1)	OK

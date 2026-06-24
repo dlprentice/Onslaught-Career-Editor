@@ -1,0 +1,21 @@
+address	name	signature	status
+0x00586b7f	CFastVB__TexelUnpackProfile_005ea158__ctor	int __thiscall CFastVB__TexelUnpackProfile_005ea158__ctor(void * this, void * param_1, int param_2)	OK
+0x00586b9b	CFastVB__TexelUnpackProfile_005ea168__ctor	int __thiscall CFastVB__TexelUnpackProfile_005ea168__ctor(void * this, void * param_1, int param_2)	OK
+0x00586ee3	CFastVB__TexelUnpackProfile_005ea1a8__ctor	int __thiscall CFastVB__TexelUnpackProfile_005ea1a8__ctor(void * this, void * param_1, int param_2)	OK
+0x00586eff	CFastVB__TexelUnpackProfile_005ea1b8__ctor	int __thiscall CFastVB__TexelUnpackProfile_005ea1b8__ctor(void * this, void * param_1, int param_2)	OK
+0x00586f1b	CFastVB__TexelUnpackProfile_005ea1c8__ctor	int __thiscall CFastVB__TexelUnpackProfile_005ea1c8__ctor(void * this, void * param_1, int param_2)	OK
+0x00586f37	CFastVB__DecodeRowWindowToScratchPairs	int __thiscall CFastVB__DecodeRowWindowToScratchPairs(void * this, int param_1, uint param_2, uint param_3, uint param_4)	OK
+0x00587303	CFastVB__TexelUnpackProfile_005ea1f4__ctor	int __thiscall CFastVB__TexelUnpackProfile_005ea1f4__ctor(void * this, void * param_1, int param_2)	OK
+0x00587322	CFastVB__TexelUnpackProfile_005ea204__ctor	int __thiscall CFastVB__TexelUnpackProfile_005ea204__ctor(void * this, void * param_1, int param_2)	OK
+0x0058733e	CFastVB__TexelUnpackProfile_005ea214__ctor	int __thiscall CFastVB__TexelUnpackProfile_005ea214__ctor(void * this, void * param_1, int param_2)	OK
+0x00587477	CFastVB__TexelCodecProfile__ctorFromFourCC	int __thiscall CFastVB__TexelCodecProfile__ctorFromFourCC(void * this, void * param_1, int param_2)	OK
+0x00587663	CFastVB__TexelCodecProfile_005ea224__ctor	int __thiscall CFastVB__TexelCodecProfile_005ea224__ctor(void * this, void * param_1, void * param_2)	OK
+0x0058767b	CFastVB__TexelCodecProfile_005ea234__ctor	int __thiscall CFastVB__TexelCodecProfile_005ea234__ctor(void * this, void * param_1, void * param_2)	OK
+0x00587693	CFastVB__TexelCodecProfile_005ea244__ctor	int __thiscall CFastVB__TexelCodecProfile_005ea244__ctor(void * this, void * param_1, void * param_2)	OK
+0x00587dd6	CFastVB__TexelUnpackProfileRegistry_005ea254__ctor	int __thiscall CFastVB__TexelUnpackProfileRegistry_005ea254__ctor(void * this, void * param_1, void * param_2)	OK
+0x00587e1e	CFastVB__TexelUnpackProfileRegistry_005ea284__ctor	int __thiscall CFastVB__TexelUnpackProfileRegistry_005ea284__ctor(void * this, void * param_1, void * param_2)	OK
+0x00587e36	CFastVB__TexelCodecProfile_005ea294__ctor	int __thiscall CFastVB__TexelCodecProfile_005ea294__ctor(void * this, void * param_1, void * param_2)	OK
+0x00587e4e	CFastVB__TexelCodecProfile_005ea2a4__ctor	int __thiscall CFastVB__TexelCodecProfile_005ea2a4__ctor(void * this, void * param_1, void * param_2)	OK
+0x00589094	CDXTexture__RegistryValueEqualsDword	int __stdcall CDXTexture__RegistryValueEqualsDword(int param_1, int param_2, int param_3)	OK
+0x005891c6	CDXTexture__InitCpuVendorAndSimdFlags	void CDXTexture__InitCpuVendorAndSimdFlags(void)	OK
+0x0058c0e4	CFastVB__ResetConversionStatus	void __fastcall CFastVB__ResetConversionStatus(void * param_1)	OK

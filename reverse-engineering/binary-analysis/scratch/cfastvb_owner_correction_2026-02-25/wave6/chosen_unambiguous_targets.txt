@@ -1,0 +1,3 @@
+0x00561f75	CFastVB__Unk_00561f75	CDXTexture
+0x00561faa	CFastVB__Unk_00561faa	CDXTexture
+0x00561fdb	CFastVB__Unk_00561fdb	CDXTexture

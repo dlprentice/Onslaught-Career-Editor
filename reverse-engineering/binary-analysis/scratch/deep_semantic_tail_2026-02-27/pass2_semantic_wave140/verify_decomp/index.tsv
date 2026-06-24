@@ -1,0 +1,12 @@
+address	name	signature	status
+0x00533500	IScript__CallEvent0AndRegisterNestedListeners	void __fastcall IScript__CallEvent0AndRegisterNestedListeners(int param_1)	OK
+0x005335a0	IScript__CallEventId6_OrReset	void __fastcall IScript__CallEventId6_OrReset(int param_1)	OK
+0x00533660	IScript__CallEventId5_OrReset	void __fastcall IScript__CallEventId5_OrReset(int param_1)	OK
+0x005337e0	IScript__CallEventId3_OrReset	void __fastcall IScript__CallEventId3_OrReset(int param_1)	OK
+0x00533840	IScript__RestoreSavedStateAndGotoInstruction	void __fastcall IScript__RestoreSavedStateAndGotoInstruction(int param_1)	OK
+0x00534fb0	IScript__SetThingValueViaVFunc198_FromArg	void __thiscall IScript__SetThingValueViaVFunc198_FromArg(void * this, int param_1, void * param_2)	OK
+0x00534fe0	IScript__SetThingValueViaVFunc19C_FromArg	void __thiscall IScript__SetThingValueViaVFunc19C_FromArg(void * this, int param_1, void * param_2)	OK
+0x00535010	IScript__SetThingValueViaEngineHelper4FE390_FromArg	void __thiscall IScript__SetThingValueViaEngineHelper4FE390_FromArg(void * this, int param_1, void * param_2)	OK
+0x00535040	IScript__SetThingValueViaEngineHelper4FE3F0_FromArg	void __thiscall IScript__SetThingValueViaEngineHelper4FE3F0_FromArg(void * this, int param_1, void * param_2)	OK
+0x00535530	IScript__SetThingFloatViaVFunc1C8_FromArg	void __thiscall IScript__SetThingFloatViaVFunc1C8_FromArg(void * this, int param_1, void * param_2)	OK
+0x00535560	IScript__SetThingRefViaCUnitHelper4FD830_FromArg	void __thiscall IScript__SetThingRefViaCUnitHelper4FD830_FromArg(void * this, int param_1, void * param_2)	OK

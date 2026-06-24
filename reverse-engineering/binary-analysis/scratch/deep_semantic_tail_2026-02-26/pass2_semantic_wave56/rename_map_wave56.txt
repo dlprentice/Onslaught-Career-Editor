@@ -1,0 +1,3 @@
+0x004ac140 CMeshCollisionVolume__TestSweptSphereAgainstBounds
+0x004ac4a0 CMeshCollisionVolume__TestSweptSphereAgainstMeshPart
+0x004acf30 CMeshCollisionVolume__ResolveContactNormalAndPlane

@@ -1,0 +1,10 @@
+address	name	signature	status
+0x005890f1	CDXTexture__CpuHasMmxFeature	int __fastcall CDXTexture__CpuHasMmxFeature(int param_1, int param_2)	OK
+0x00589116	CDXTexture__IsMmxEnabledBySystemConfig	int CDXTexture__IsMmxEnabledBySystemConfig(void)	OK
+0x00589367	CTexture__ReleaseIncludeNodeTreeRecursive	void __fastcall CTexture__ReleaseIncludeNodeTreeRecursive(int param_1)	OK
+0x005893d1	CTexture__FreeChildIncludeNodeChainRecursive	void __fastcall CTexture__FreeChildIncludeNodeChainRecursive(int param_1)	OK
+0x005893e9	CTexture__IncludeNodeChain_scalar_deleting_dtor	void * __thiscall CTexture__IncludeNodeChain_scalar_deleting_dtor(void * this, void * param_1, int param_2)	OK
+0x00589438	CTexture__CleanupIncludeContextRecursive	void __fastcall CTexture__CleanupIncludeContextRecursive(int param_1)	OK
+0x00589689	CTexture__FreeIncludeFileChainRecursive	void __fastcall CTexture__FreeIncludeFileChainRecursive(int param_1)	OK
+0x00589cab	CTexture__HandleDirective_Include	int __fastcall CTexture__HandleDirective_Include(int param_1)	OK
+0x00589e73	CTexture__HandleDirective_Error	int __fastcall CTexture__HandleDirective_Error(int param_1)	OK

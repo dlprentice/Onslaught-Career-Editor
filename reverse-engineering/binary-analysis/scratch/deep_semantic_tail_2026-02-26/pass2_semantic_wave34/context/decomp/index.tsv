@@ -1,0 +1,15 @@
+address	name	signature	status
+0x004e0a90	CSoundManager__PlayNamedSample	undefined CSoundManager__PlayNamedSample(void)	OK
+0x004e0b30	CSoundManager__Unk_004e0b30	int CSoundManager__Unk_004e0b30(void)	OK
+0x004e0bd0	CSoundManager__PlaySound	undefined CSoundManager__PlaySound(void)	OK
+0x004e0f70	CSoundManager__Unk_004e0f70	void __stdcall CSoundManager__Unk_004e0f70(void * param_1)	OK
+0x004e1040	CSoundManager__Unk_004e1040	void __fastcall CSoundManager__Unk_004e1040(int param_1)	OK
+0x004e1130	CSoundManager__Unk_004e1130	void __thiscall CSoundManager__Unk_004e1130(void * this, int param_1, void * param_2)	OK
+0x004e1190	CSoundManager__Unk_004e1190	void __thiscall CSoundManager__Unk_004e1190(void * this, int param_1, void * param_2, int param_3)	OK
+0x004e12b0	CSoundManager__Unk_004e12b0	void __fastcall CSoundManager__Unk_004e12b0(int param_1)	OK
+0x004e1300	CSoundManager__Unk_004e1300	void __fastcall CSoundManager__Unk_004e1300(int param_1)	OK
+0x004e1330	CSoundManager__Unk_004e1330	void __fastcall CSoundManager__Unk_004e1330(int param_1)	OK
+0x004e1360	CSoundManager__Unk_004e1360	void __stdcall CSoundManager__Unk_004e1360(void * param_1, int param_2)	OK
+0x004e18d0	CSoundManager__Unk_004e18d0	void __thiscall CSoundManager__Unk_004e18d0(void * this, int param_1, int param_2, int param_3, float param_4)	OK
+0x004e1b20	CSoundManager__UpdateStatus	void __fastcall CSoundManager__UpdateStatus(void * this)	OK
+0x004e2360	CSoundManager__Unk_004e2360	void __thiscall CSoundManager__Unk_004e2360(void * this, int param_1, int param_2, void * param_3)	OK

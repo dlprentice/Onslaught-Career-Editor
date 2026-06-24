@@ -1,0 +1,6 @@
+address	name	signature	status
+0x0049bbb0	MathMatrix3x3__DivideByScalarInPlace	void __thiscall MathMatrix3x3__DivideByScalarInPlace(void * this, void * param_1, float param_2)	OK
+0x0049bc10	MathMatrix3x3__TransposeInPlace	void __fastcall MathMatrix3x3__TransposeInPlace(int param_1)	OK
+0x0049bc40	MathMatrix3x3__Determinant	double __fastcall MathMatrix3x3__Determinant(void * param_1)	OK
+0x0049bc80	MathMatrix3x3__BuildCofactorMatrix	void __thiscall MathMatrix3x3__BuildCofactorMatrix(void * this, void * param_1, void * param_2)	OK
+0x004901e0	MathMatrix3x4__AssignFromEightScalars	int MathMatrix3x4__AssignFromEightScalars(void)	OK

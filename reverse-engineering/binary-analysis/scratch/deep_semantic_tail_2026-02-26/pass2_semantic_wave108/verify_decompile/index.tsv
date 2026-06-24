@@ -1,0 +1,6 @@
+address	name	signature	status
+0x00412570	CBattleEngine__IsIndexedEntryUsable	int __fastcall CBattleEngine__IsIndexedEntryUsable(void * param_1)	OK
+0x00412610	CBattleEngine__GetIndexedEntry	int __fastcall CBattleEngine__GetIndexedEntry(void * param_1)	OK
+0x00414630	CBattleEngine__IsResolvedEntryUsable	int __fastcall CBattleEngine__IsResolvedEntryUsable(void * param_1)	OK
+0x0042ee90	CUnitAI__CreateAndRegisterByName	void __cdecl CUnitAI__CreateAndRegisterByName(void * param_1)	OK
+0x0042efd0	CUnitAI__InitDefaults	void __fastcall CUnitAI__InitDefaults(void * param_1)	OK

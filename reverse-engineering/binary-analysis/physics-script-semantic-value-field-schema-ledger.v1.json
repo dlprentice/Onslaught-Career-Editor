@@ -1,0 +1,230 @@
+{
+  "schemaVersion": "physics-script-semantic-value-field-schema-ledger.v1",
+  "status": "PASS",
+  "ledgerStatus": "physics-script-semantic-value-field-schema-ledger-complete-static-semantic-ledger-not-runtime-proof",
+  "proofPlan": "PhysicsScript Semantic Value-Field Schema Ledger Proof Plan",
+  "scope": "physics-script-semantic-value-field-schema-ledger-proof-plan",
+  "selectedNextSlice": "PhysicsScript Scalar/String Value Decoder Fixture Proof Plan",
+  "selectedNextScope": "physics-script-scalar-string-value-decoder-fixture-proof-plan",
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackupClass": "verified-static-backup-redacted"
+  },
+  "sourceEvidence": {
+    "copiedCorpusParserProof": "reverse-engineering/binary-analysis/physics-script-copied-corpus-parser-proof.md",
+    "staticContract": "reverse-engineering/binary-analysis/physics-script-static-contract.md",
+    "functionOwnerDoc": "reverse-engineering/binary-analysis/functions/CPhysicsScriptStatements.cpp.md",
+    "privateSummaryClass": "ignored copied-corpus parser summary",
+    "publicSafety": "aggregate counts only; no raw payload bytes, raw strings, raw hashes, private artifact paths, or runtime observations"
+  },
+  "corpusCounts": {
+    "parsedCopiedCorpusFiles": 1,
+    "parsedCopiedFileName": "data/default physics.dat",
+    "parsedByteCount": 175603,
+    "streamHeader": "0x12",
+    "topLevelStatementCount": 777,
+    "topLevelTypeCounts": {
+      "1": 160,
+      "2": 139,
+      "3": 145,
+      "4": 91,
+      "5": 38,
+      "6": 118,
+      "7": 39,
+      "8": 43,
+      "9": 4
+    },
+    "unknownTopLevelIdCount": 0,
+    "valueListNodeCount": 6803,
+    "uniqueStatementValuePairCount": 185,
+    "rawValuePayloadBytesPreserved": 73796,
+    "continueMarkerCount": 6026,
+    "terminatingMarkerCount": 777
+  },
+  "topLevelFamilies": [
+    {
+      "typeId": 1,
+      "family": "unit",
+      "nestedFactory": "CPhysicsScriptStatements__CreateStatementType2",
+      "topLevelRecords": 160,
+      "valueNodes": 2338,
+      "uniqueValueIds": 54,
+      "rawValuePayloadBytes": 28840,
+      "declaredPayloadBytes": 50284
+    },
+    {
+      "typeId": 2,
+      "family": "weapon",
+      "nestedFactory": "CPhysicsScriptStatements__CreateStatementType3",
+      "topLevelRecords": 139,
+      "valueNodes": 286,
+      "uniqueValueIds": 14,
+      "rawValuePayloadBytes": 4082,
+      "declaredPayloadBytes": 8894
+    },
+    {
+      "typeId": 3,
+      "family": "weapon-mode",
+      "nestedFactory": "CPhysicsScriptStatements__CreateStatementType4",
+      "topLevelRecords": 145,
+      "valueNodes": 1934,
+      "uniqueValueIds": 32,
+      "rawValuePayloadBytes": 15007,
+      "declaredPayloadBytes": 33261
+    },
+    {
+      "typeId": 4,
+      "family": "round",
+      "nestedFactory": "CPhysicsScriptStatements__CreateStatementType5",
+      "topLevelRecords": 91,
+      "valueNodes": 782,
+      "uniqueValueIds": 33,
+      "rawValuePayloadBytes": 5431,
+      "declaredPayloadBytes": 16167
+    },
+    {
+      "typeId": 5,
+      "family": "spawner",
+      "nestedFactory": "CPhysicsScriptStatements__CreateStatementType6",
+      "topLevelRecords": 38,
+      "valueNodes": 244,
+      "uniqueValueIds": 10,
+      "rawValuePayloadBytes": 1441,
+      "declaredPayloadBytes": 5279
+    },
+    {
+      "typeId": 6,
+      "family": "explosion",
+      "nestedFactory": "CPhysicsScriptStatements__CreateStatementType7",
+      "topLevelRecords": 118,
+      "valueNodes": 869,
+      "uniqueValueIds": 14,
+      "rawValuePayloadBytes": 14616,
+      "declaredPayloadBytes": 27335
+    },
+    {
+      "typeId": 7,
+      "family": "component",
+      "nestedFactory": "CPhysicsScriptStatements__CreateStatementType10",
+      "topLevelRecords": 39,
+      "valueNodes": 225,
+      "uniqueValueIds": 20,
+      "rawValuePayloadBytes": 2921,
+      "declaredPayloadBytes": 6337
+    },
+    {
+      "typeId": 8,
+      "family": "feature",
+      "nestedFactory": "CPhysicsScriptStatements__CreateStatementType8",
+      "topLevelRecords": 43,
+      "valueNodes": 113,
+      "uniqueValueIds": 5,
+      "rawValuePayloadBytes": 1375,
+      "declaredPayloadBytes": 3319
+    },
+    {
+      "typeId": 9,
+      "family": "hazard",
+      "nestedFactory": "CPhysicsScriptStatements__CreateStatementType9",
+      "topLevelRecords": 4,
+      "valueNodes": 12,
+      "uniqueValueIds": 3,
+      "rawValuePayloadBytes": 83,
+      "declaredPayloadBytes": 273
+    }
+  ],
+  "valueCountsByFamily": {
+    "component": {"1": 39, "2": 26, "3": 39, "4": 34, "6": 25, "7": 9, "8": 6, "9": 7, "11": 8, "12": 1, "13": 2, "14": 6, "15": 2, "18": 2, "19": 1, "20": 1, "21": 2, "22": 10, "23": 4, "25": 1},
+    "explosion": {"1": 14, "2": 111, "3": 104, "4": 94, "5": 107, "6": 107, "7": 107, "8": 17, "9": 14, "10": 86, "11": 6, "12": 80, "13": 15, "15": 7},
+    "feature": {"1": 25, "2": 42, "3": 26, "4": 18, "6": 2},
+    "hazard": {"1": 4, "2": 4, "3": 4},
+    "round": {"1": 91, "2": 91, "3": 91, "4": 17, "5": 19, "6": 15, "8": 88, "9": 84, "10": 15, "11": 10, "12": 11, "13": 2, "14": 2, "15": 17, "16": 19, "17": 86, "18": 3, "19": 1, "22": 1, "23": 3, "24": 12, "26": 6, "27": 6, "28": 1, "29": 1, "30": 1, "31": 18, "32": 1, "33": 1, "35": 55, "36": 1, "37": 2, "38": 11},
+    "spawner": {"1": 38, "2": 38, "3": 38, "6": 2, "7": 38, "8": 5, "9": 5, "11": 37, "12": 34, "14": 9},
+    "unit": {"1": 47, "2": 34, "3": 159, "5": 69, "6": 33, "7": 118, "8": 160, "9": 159, "10": 148, "11": 155, "12": 27, "13": 14, "14": 35, "18": 71, "21": 123, "22": 2, "23": 101, "27": 280, "28": 4, "29": 95, "30": 9, "31": 9, "32": 9, "33": 2, "36": 27, "38": 3, "39": 23, "40": 2, "41": 2, "42": 2, "43": 58, "44": 58, "45": 3, "46": 32, "47": 43, "48": 17, "50": 1, "51": 2, "52": 4, "53": 3, "54": 61, "55": 18, "56": 25, "57": 33, "58": 8, "60": 3, "61": 4, "62": 3, "63": 12, "65": 1, "66": 5, "67": 1, "68": 1, "70": 20},
+    "weapon": {"1": 142, "2": 15, "3": 15, "4": 15, "5": 15, "6": 5, "7": 1, "8": 10, "9": 2, "10": 15, "11": 15, "12": 12, "13": 12, "14": 12},
+    "weapon-mode": {"1": 143, "2": 144, "3": 144, "4": 94, "5": 90, "6": 118, "8": 225, "9": 56, "10": 127, "11": 127, "12": 127, "13": 27, "14": 20, "16": 6, "17": 6, "18": 15, "19": 6, "20": 6, "21": 6, "22": 6, "23": 2, "24": 104, "26": 8, "27": 36, "28": 39, "29": 33, "30": 119, "31": 40, "32": 17, "33": 3, "34": 2, "35": 38}
+  },
+  "semanticBuckets": [
+    {"id": "scalar4", "evidence": ["CPhysicsScriptValue__LoadScalarAt08FromMemBuffer", "CPhysicsScriptValue__GetScalarSerializedSize4"], "claim": "four-byte scalar payload at value object field this+0x8", "boundary": "runtime units and exact field names require helper-specific apply proof"},
+    {"id": "rounded_scalar4", "evidence": ["CUnitSoundMaterial__ApplyToUnitData", "CUnitMaxLegsLifted__ApplyToUnitData", "CWeaponVolleySize__ApplyToWeaponModeByName", "CRoundGridOfFear__ApplyToRoundByName"], "claim": "four-byte scalar rounded before selected record writes", "boundary": "runtime balance/meaning not proven"},
+    {"id": "owned_string_at_08", "evidence": ["CPhysicsScriptValue__LoadOwnedStringAt08FromMemBuffer", "CPhysicsScriptValue__GetOwnedStringAt08SerializedSize"], "claim": "owned string payload at value object field this+0x8", "boundary": "raw strings are not published"},
+    {"id": "two_scalar4", "evidence": ["CPhysicsWeaponModeValue__LoadTwoScalarsFromMemBuffer"], "claim": "two four-byte scalar fields at this+0x8 and this+0xc", "boundary": "field names remain helper-specific"},
+    {"id": "three_scalar4", "evidence": ["CWeaponLaunchAngle__LoadFromMemBuffer"], "claim": "three four-byte fields at this+0x8, this+0xc, and this+0x10", "boundary": "runtime launch-angle interpretation not proven"},
+    {"id": "nested_enum_child", "evidence": ["CPhysicsScriptStatements__CreateStatementType11", "CPhysicsScriptStatements__CreateStatementType12", "CPhysicsScriptStatements__CreateStatementType13", "CPhysicsScriptStatements__CreateStatementType14", "CPhysicsScriptStatements__CreateStatementType15"], "claim": "nested child value families for seek/behaviour/alligence/navmap/state-style rows", "boundary": "complete nested enum semantics not claimed"},
+    {"id": "flag_from_scalar_nonzero", "evidence": ["feature flag apply rows", "component flag apply rows", "0x005d856c"], "claim": "scalar compared with zero and written as boolean-style field", "boundary": "runtime flag meaning remains helper-specific"},
+    {"id": "based_on_copy", "evidence": ["CWeaponBasedOn__ApplyToWeaponByName", "CSpawnerBasedOn__ApplyToSpawnerByName", "CExplosionBasedOn__ApplyToExplosionByName", "component based-on rows"], "claim": "by-name source/default record copy into target record", "boundary": "runtime inheritance behavior not proven"},
+    {"id": "registry_by_name_apply", "evidence": ["DAT_008553e8", "DAT_008553ec", "DAT_008553f0", "DAT_008553f4", "DAT_008553f8", "DAT_00855400", "DAT_00855404", "DAT_00855408", "DAT_008553fc"], "claim": "by-name registry lookup for PhysicsScript record families", "boundary": "exact list container layout and failure behavior not fully proven"},
+    {"id": "indexed_scalar", "evidence": ["CComponentIndexedScalar164__ApplyToComponentByName"], "claim": "component scalar write through record field +0x164 using value object index this+0xc", "boundary": "indexed array shape and bounds behavior not fully proven"}
+  ],
+  "guardSummary": {
+    "falseGuardCount": 20,
+    "zeroCounterCount": 10,
+    "falseGuards": {
+      "runtimeExecution": false,
+      "beLaunch": false,
+      "screenshotCapture": false,
+      "privateFrameReviewPerformed": false,
+      "rowObservation": false,
+      "sourceSelectionProven": false,
+      "nativeInput": false,
+      "debuggerAttachment": false,
+      "godotWork": false,
+      "ghidraMutation": false,
+      "executablePatching": false,
+      "productUiWired": false,
+      "rebuildImplementation": false,
+      "runtimePhysicsScriptBehaviorProven": false,
+      "runtimePhysicsScriptOutcomesProven": false,
+      "serializedPhysicsScriptCompletenessProven": false,
+      "exactPhysicsScriptLayoutProven": false,
+      "completeNestedEnumSemanticsProven": false,
+      "rebuildParityProven": false,
+      "noNoticeableDifferenceParityProven": false
+    },
+    "zeroCounters": {
+      "runtimeObservationRows": 0,
+      "physicsScriptRuntimeEvidenceRows": 0,
+      "runtimePhysicsScriptRows": 0,
+      "runtimeCommandEffectRows": 0,
+      "privateFrameRowsObserved": 0,
+      "ghidraMutationRows": 0,
+      "executablePatchRows": 0,
+      "godotRows": 0,
+      "rebuildImplementationRows": 0,
+      "beProcessesAfterLedger": 0
+    }
+  },
+  "claimBoundary": {
+    "proves": [
+      "public-safe static value-field family coverage ledger for copied PhysicsScript corpus counts",
+      "ten high-confidence semantic buckets tied to saved Ghidra loader/factory/apply evidence",
+      "all nine top-level statement families represented with family-level counts"
+    ],
+    "doesNotProve": [
+      "runtime PhysicsScript behavior",
+      "runtime physics outcomes",
+      "serialized PhysicsScript file-format completeness",
+      "exact statement/value-list/concrete record layouts",
+      "complete nested enum semantics",
+      "exact source-body identity",
+      "mission/resource-script outcomes",
+      "BEA patching behavior",
+      "visual QA",
+      "Godot parity",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  },
+  "publicSafety": {
+    "rawBytesEmitted": false,
+    "rawNamesOrStringsEmitted": false,
+    "rawHashValuesEmitted": false,
+    "absolutePrivatePathsEmitted": false,
+    "privateArtifactLocatorsEmitted": false,
+    "publicLeakCheck": "PASS"
+  }
+}

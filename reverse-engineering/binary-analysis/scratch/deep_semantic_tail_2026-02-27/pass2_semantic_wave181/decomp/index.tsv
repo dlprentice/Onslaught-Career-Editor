@@ -1,0 +1,21 @@
+address	name	signature	status
+0x00599a74	CFastVB__Helper_00599a74	void __cdecl CFastVB__Helper_00599a74(int param_1, int param_2, int param_3, int param_4)	OK
+0x00599ac8	CFastVB__Helper_00599ac8	void __cdecl CFastVB__Helper_00599ac8(int param_1, int param_2, int param_3, int param_4)	OK
+0x00599bd7	CFastVB__Helper_00599bd7	int __thiscall CFastVB__Helper_00599bd7(void * this, int param_1, int param_2)	OK
+0x00599c49	CFastVB__Helper_00599c49	int __thiscall CFastVB__Helper_00599c49(void * this, int param_1, int param_2)	OK
+0x00599cd2	CFastVB__Helper_00599cd2	bool __stdcall CFastVB__Helper_00599cd2(int param_1, int param_2)	OK
+0x00599d80	CFastVB__Helper_00599d80	int __thiscall CFastVB__Helper_00599d80(void * this, void * param_1, int param_2, uint param_3, int param_4)	OK
+0x00599e48	CFastVB__Helper_00599e48	int __stdcall CFastVB__Helper_00599e48(int param_1, int param_2, void * param_3)	OK
+0x00599ffd	CFastVB__Helper_00599ffd	int __thiscall CFastVB__Helper_00599ffd(void * this, int param_1, int param_2, int param_3, int param_4)	OK
+0x0059a10a	CFastVB__Helper_0059a10a	int __thiscall CFastVB__Helper_0059a10a(void * this, void * param_1, void * param_2, void * param_3)	OK
+0x0059f360	CFastVB__Helper_0059f360	int __stdcall CFastVB__Helper_0059f360(void * param_1, void * param_2, void * param_3)	OK
+0x0059f3d9	CFastVB__Helper_0059f3d9	float * __stdcall CFastVB__Helper_0059f3d9(void * param_1, void * param_2)	OK
+0x0059f473	CFastVB__Helper_0059f473	void __stdcall CFastVB__Helper_0059f473(void * param_1, void * param_2)	OK
+0x0059f4f1	CFastVB__Helper_0059f4f1	void __stdcall CFastVB__Helper_0059f4f1(void * param_1, float param_2, float param_3, float param_4)	OK
+0x0059f857	CFastVB__Helper_0059f857	int CFastVB__Helper_0059f857(void)	OK
+0x0059fa5d	CFastVB__Helper_0059fa5d	int CFastVB__Helper_0059fa5d(void)	OK
+0x0059fbeb	CFastVB__Helper_0059fbeb	int CFastVB__Helper_0059fbeb(void)	OK
+0x0059fd51	CFastVB__Helper_0059fd51	int CFastVB__Helper_0059fd51(void)	OK
+0x0059fe61	CFastVB__Helper_0059fe61	int CFastVB__Helper_0059fe61(void)	OK
+0x005a009f	CFastVB__Helper_005a009f	int CFastVB__Helper_005a009f(void)	OK
+0x005a026f	CFastVB__Helper_005a026f	int CFastVB__Helper_005a026f(void)	OK

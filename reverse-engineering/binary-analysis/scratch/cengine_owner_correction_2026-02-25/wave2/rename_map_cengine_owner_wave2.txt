@@ -1,0 +1,10 @@
+# owner correction from CEngine__Unk_* (wave2)
+0x004be970 CExplosionInitThing__Helper_004be970
+0x004be9b0 CExplosionInitThing__Helper_004be9b0
+0x004bea10 CExplosionInitThing__Helper_004bea10
+0x004bea70 CExplosionInitThing__Helper_004bea70
+0x004bead0 CExplosionInitThing__Helper_004bead0
+0x004c5c50 CPDSimpleSprite__Helper_004c5c50
+0x004c78b0 CPDSimpleSprite__Helper_004c78b0
+0x00509e40 CBattleEngine__Helper_00509e40
+0x0053c2e0 CExplosionInitThing__Helper_0053c2e0

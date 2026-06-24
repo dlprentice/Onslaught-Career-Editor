@@ -1,0 +1,59 @@
+<UserControl x:Class="Onslaught___Career_Editor.Views.AboutView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="520" d:DesignWidth="900">
+    <Grid Margin="10">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Border Style="{StaticResource InsetCardBorderStyle}" Margin="0,0,0,10" Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="About Onslaught Toolkit"
+                                   FontSize="22"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource AccentDarkBrush}" />
+                        <TextBlock x:Name="VersionTextBlock"
+                                   Margin="0,6,0,0"
+                                   Style="{StaticResource HelperTextStyle}"
+                                   Text="Version: -"/>
+                        <TextBlock Margin="0,10,0,0"
+                                   Style="{StaticResource HelperTextStyle}"
+                                   Text="Retail-focused save/configuration patching and byte-verified executable patch workflows for Battle Engine Aquila (2003)." />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource InsetCardBorderStyle}" Margin="0,0,0,10" Padding="16">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="Core capabilities" />
+                        <TextBlock Margin="0,0,0,4" TextWrapping="Wrap">
+                            • Save Editor: patch .bes career progression, goodies, kills, and advanced per-field overrides.
+                        </TextBlock>
+                        <TextBlock Margin="0,0,0,4" TextWrapping="Wrap">
+                            • Configuration Editor: patch defaultoptions.bea for global startup settings and keybind state.
+                        </TextBlock>
+                        <TextBlock Margin="0,0,0,4" TextWrapping="Wrap">
+                            • Binary Patches: byte-verified stable/experimental BEA.exe patch application with backup+restore.
+                        </TextBlock>
+                        <TextBlock Margin="0,0,0,4" TextWrapping="Wrap">
+                            • Lore + Media: curated lore browser and game audio/video playback surfaces.
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource InsetCardBorderStyle}" Padding="16">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitleTextStyle}" Text="Project notes" />
+                        <TextBlock Style="{StaticResource HelperTextStyle}" Margin="0,0,0,6">
+                            This app targets retail behavior and uses static RE evidence, with Stuart source used as supporting parity guidance where applicable.
+                        </TextBlock>
+                        <TextBlock Style="{StaticResource HelperTextStyle}" TextWrapping="Wrap">
+                            Build/runtime docs and release guidance are in `README.RELEASE.md` and `RELEASE_SCOPE_AND_TEST_COMMANDS.md` at repo root.
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

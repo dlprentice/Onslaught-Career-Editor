@@ -1,0 +1,145 @@
+<Window x:Class="Onslaught___Career_Editor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:views="clr-namespace:Onslaught___Career_Editor.Views"
+        mc:Ignorable="d"
+        Title="Onslaught Toolkit - Battle Engine Aquila"
+        Height="860" Width="1240"
+        MinHeight="760" MinWidth="1120"
+        WindowStartupLocation="CenterScreen"
+        Closing="Window_Closing">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- App bar -->
+        <Border Grid.Row="0"
+                Background="{StaticResource HeroBrush}"
+                Padding="22,16">
+            <StackPanel>
+                <TextBlock Text="Onslaught Toolkit"
+                           FontSize="22"
+                           FontWeight="Bold"
+                           Foreground="White"/>
+                <TextBlock Text="Retail save editing, global configuration patching, byte-verified executable fixes, and curated preservation notes."
+                           FontSize="12"
+                           Foreground="White"
+                           Opacity="0.85"
+                           Margin="0,4,0,0"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main content -->
+        <Border Grid.Row="1"
+                Margin="16,12,16,0"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource CardBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="14,14,14,10">
+            <TabControl x:Name="MainTabControl"
+                        AutomationProperties.Name="Main navigation tabs"
+                        KeyboardNavigation.TabNavigation="Local"
+                        SelectionChanged="MainTabControl_SelectionChanged">
+
+                <TabItem Header="Saves" Style="{StaticResource PrimaryTabItemStyle}" AutomationProperties.Name="Saves tab">
+                    <TabControl x:Name="SavesTabControl"
+                                ItemContainerStyle="{StaticResource SecondaryTabItemStyle}"
+                                AutomationProperties.Name="Saves sub-tabs"
+                                KeyboardNavigation.TabNavigation="Local"
+                                Margin="2,2,2,0"
+                                SelectionChanged="NestedTabControl_SelectionChanged">
+                        <TabItem Header="Save Editor" AutomationProperties.Name="Save Editor tab">
+                            <views:SaveEditorView x:Name="SaveEditorViewControl"/>
+                        </TabItem>
+                        <TabItem Header="Save Analyzer" AutomationProperties.Name="Save Analyzer tab">
+                            <views:SaveAnalyzerView x:Name="SaveAnalyzerViewControl"/>
+                        </TabItem>
+                        <TabItem Header="Configuration Editor" AutomationProperties.Name="Configuration Editor tab">
+                            <views:ConfigurationEditorView x:Name="ConfigurationEditorViewControl"/>
+                        </TabItem>
+                    </TabControl>
+                </TabItem>
+
+                <TabItem Header="Media" Style="{StaticResource PrimaryTabItemStyle}" AutomationProperties.Name="Media tab">
+                    <TabControl x:Name="MediaTabControl"
+                                ItemContainerStyle="{StaticResource SecondaryTabItemStyle}"
+                                AutomationProperties.Name="Media sub-tabs"
+                                KeyboardNavigation.TabNavigation="Local"
+                                Margin="2,2,2,0"
+                                SelectionChanged="NestedTabControl_SelectionChanged">
+                        <TabItem Header="Audio Player" AutomationProperties.Name="Audio Player tab">
+                            <views:AudioPlayerView x:Name="AudioPlayerViewControl"/>
+                        </TabItem>
+                        <TabItem Header="Video Player" AutomationProperties.Name="Video Player tab">
+                            <views:VideoPlayerView x:Name="VideoPlayerViewControl"/>
+                        </TabItem>
+                    </TabControl>
+                </TabItem>
+
+                <TabItem Header="Lore" Style="{StaticResource PrimaryTabItemStyle}" AutomationProperties.Name="Lore tab">
+                    <views:LoreBrowserView/>
+                </TabItem>
+
+                <TabItem Header="Binary Patches" Style="{StaticResource PrimaryTabItemStyle}" AutomationProperties.Name="Binary Patches tab">
+                    <views:BinaryPatchesView/>
+                </TabItem>
+
+                <TabItem Header="Settings" Style="{StaticResource PrimaryTabItemStyle}" AutomationProperties.Name="Settings tab">
+                    <views:SettingsView/>
+                </TabItem>
+
+                <TabItem Header="About" Style="{StaticResource PrimaryTabItemStyle}" AutomationProperties.Name="About tab">
+                    <views:AboutView/>
+                </TabItem>
+            </TabControl>
+        </Border>
+
+        <!-- Status bar -->
+        <Border Grid.Row="2"
+                Background="{StaticResource SurfaceAccentBrush}"
+                Padding="16,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="StatusLabel"
+                           Grid.Column="0"
+                           AutomationProperties.Name="Application status"
+                           Text="Ready"
+                           FontSize="12"
+                           FontWeight="Medium"
+                           Foreground="{StaticResource AccentDarkBrush}"
+                           VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="Game"
+                               FontSize="11"
+                               Foreground="{StaticResource MutedTextBrush}"
+                               FontWeight="SemiBold"
+                               Margin="0,0,8,0"
+                               VerticalAlignment="Center"/>
+                    <TextBlock x:Name="GameDirLabel"
+                               AutomationProperties.Name="Current game directory"
+                               FontSize="12"
+                               Foreground="{StaticResource PrimaryTextBrush}"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               MaxWidth="420"
+                               ToolTip="{Binding Text, ElementName=GameDirLabel}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

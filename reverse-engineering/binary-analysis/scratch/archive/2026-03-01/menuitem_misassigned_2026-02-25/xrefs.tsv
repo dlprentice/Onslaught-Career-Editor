@@ -1,0 +1,6 @@
+target_addr	target_name	from_addr	from_function	ref_type
+004ba9d0	CMenuItem__Unk_004ba9d0	005e1c4c	<no_function>	DATA
+004bac10	CMenuItem__Unk_004bac10	005e3cc0	<no_function>	DATA
+004bb040	CMenuItem__Unk_004bb040	004ab44e	CMesh__OptimizeParts	UNCONDITIONAL_CALL
+004bb040	CMenuItem__Unk_004bb040	004ab46e	CMesh__OptimizeParts	UNCONDITIONAL_CALL
+004bb040	CMenuItem__Unk_004bb040	004ab565	CMesh__OptimizeParts	UNCONDITIONAL_CALL

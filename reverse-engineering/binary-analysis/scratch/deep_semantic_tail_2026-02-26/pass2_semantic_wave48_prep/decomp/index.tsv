@@ -1,0 +1,39 @@
+address	name	signature	status
+0x00402220	CAirGuide__ShutdownAndUnlink	void __fastcall CAirGuide__ShutdownAndUnlink(void * param_1)	OK
+0x0049fdb0	CComponent__SpawnGenericMeshBreakEffects	void __fastcall CComponent__SpawnGenericMeshBreakEffects(int param_1)	OK
+0x00431020	CComponentStatement__GetSerializedSize	int __fastcall CComponentStatement__GetSerializedSize(int param_1)	OK
+0x0043ed20	CCutscene__DestroyRecursive	void * __thiscall CCutscene__DestroyRecursive(void * this, void * param_1, int param_2)	OK
+0x00540c30	CDXFrontEnd__SetupRenderMatricesAndProjection	void CDXFrontEnd__SetupRenderMatricesAndProjection(void)	OK
+0x00544fb0	CDXLandscape__ResetWrapper	void CDXLandscape__ResetWrapper(void)	OK
+0x004b7ab0	CDropship__SelectPortraitIndex	int __thiscall CDropship__SelectPortraitIndex(void * this, int param_1, void * param_2)	OK
+0x00456830	CFEPDebriefing__ResetStateAndVector	int __fastcall CFEPDebriefing__ResetStateAndVector(int param_1)	OK
+0x00464bc0	CFEPSaveGame__DrawLocalizedStatusPrompt	void __stdcall CFEPSaveGame__DrawLocalizedStatusPrompt(int param_1, int param_2)	OK
+0x0043e630	CFlexArray__SkipBytesFromMemBuffer	void __cdecl CFlexArray__SkipBytesFromMemBuffer(int param_1, int param_2)	OK
+0x00472a10	CGameInterface__LoadHudTextures	void __fastcall CGameInterface__LoadHudTextures(int param_1)	OK
+0x0047eb00	CHeightField__SampleInterpolatedHeight	int __fastcall CHeightField__SampleInterpolatedHeight(int param_1, uint param_2, uint param_3)	OK
+0x00401b50	CMCMine__ComputeClampedScaleFactor	double __fastcall CMCMine__ComputeClampedScaleFactor(void * param_1)	OK
+0x00491da0	CMapWho__IsEntryInBounds	int __stdcall CMapWho__IsEntryInBounds(void * param_1)	OK
+0x004a0b30	CMechGuide__ShutdownAndReleaseResources	void __fastcall CMechGuide__ShutdownAndReleaseResources(void * param_1)	OK
+0x004b6f70	CMessage__WordWrapToLineBuffer	void __thiscall CMessage__WordWrapToLineBuffer(void * this, int param_1, void * param_2, int param_3, int param_4)	OK
+0x004cac80	CPDSelector__ConvertNormalizedToScreenCoords	void __cdecl CPDSelector__ConvertNormalizedToScreenCoords(float param_1, float param_2)	OK
+0x00437fe0	CPhysicsScriptStatements__SetOwnedString	void __thiscall CPhysicsScriptStatements__SetOwnedString(void * this, int param_1, void * param_2)	OK
+0x005042f0	CResourceAccumulator__InitVertexShaderPrograms	void __cdecl CResourceAccumulator__InitVertexShaderPrograms(void * param_1)	OK
+0x004d8370	CRound__ShutdownAndDetachReaders	void __fastcall CRound__ShutdownAndDetachReaders(void * param_1)	OK
+0x004e5c30	CSPtrSet__Contains	int __thiscall CSPtrSet__Contains(void * this, void * param_1, int param_2)	OK
+0x004306b0	CSpawnerStatement__GetSerializedSize	int __fastcall CSpawnerStatement__GetSerializedSize(int param_1)	OK
+0x00482590	CExplosionInitThing__RenderTargetIndicatorOverlay	void __fastcall CExplosionInitThing__RenderTargetIndicatorOverlay(int param_1)	OK
+0x004f5b80	CTokenArchive__RegisterReferenceFixup	void __thiscall CTokenArchive__RegisterReferenceFixup(void * this, int param_1, int param_2, int param_3, void * param_4)	OK
+0x004f6430	CTree__ComputeLodBucket	int __fastcall CTree__ComputeLodBucket(int param_1)	OK
+0x004f7ab0	CUMTexture__ConfigureByMode	void __thiscall CUMTexture__ConfigureByMode(void * this, void * param_1, int param_2, int param_3, int param_4)	OK
+0x00420cd0	CCareer__GetSlotRecordPtr	int __thiscall CCareer__GetSlotRecordPtr(void * this, int param_1, int param_2)	OK
+0x00420d10	CCareer__PackLevelSummaryBits	void __thiscall CCareer__PackLevelSummaryBits(void * this, void * param_1, void * param_2)	OK
+0x0042d7a0	CController__ResetInactivityTimerConditional	void CController__ResetInactivityTimerConditional(void)	OK
+0x0042e3d0	CController__GetMappedInputValue	double __thiscall CController__GetMappedInputValue(void * this, void * param_1, int param_2, int param_3)	OK
+0x00413b90	CCylinder__ResolveSurfaceAlignmentIterative	void __fastcall CCylinder__ResolveSurfaceAlignmentIterative(int param_1)	OK
+0x00423510	CCylinder__AcquireNearestTargetReader	void __fastcall CCylinder__AcquireNearestTargetReader(int param_1)	OK
+0x004661d0	CFEPMultiplayerStart__ClearJoinedPlayerSet	void __fastcall CFEPMultiplayerStart__ClearJoinedPlayerSet(int param_1)	OK
+0x004d20a0	CExplosionInitThing__Helper_004d20a0	void __fastcall CExplosionInitThing__Helper_004d20a0(void * param_1)	OK
+0x004c7900	CRocket__NormalizeVec3InPlace	void __fastcall CRocket__NormalizeVec3InPlace(void * param_1)	OK
+0x004cdd70	CRocket__RelinquishControllerOwnership	void __fastcall CRocket__RelinquishControllerOwnership(void * param_1)	OK
+0x004027c0	VFuncSlot_00_004026e0__AcquireNearestTargetReader	void __fastcall VFuncSlot_00_004026e0__AcquireNearestTargetReader(int param_1)	OK
+0x004028e0	VFuncSlot_00_004026e0__UpdateGroundClearanceCache	void __fastcall VFuncSlot_00_004026e0__UpdateGroundClearanceCache(int param_1)	OK

@@ -1,0 +1,6 @@
+address	name	signature	status
+0x00523df0	OggVorbisStream__InitDecoder	int __fastcall OggVorbisStream__InitDecoder(int param_1)	OK
+0x00524180	OggVorbisStream__ReadPcmSamples	int __thiscall OggVorbisStream__ReadPcmSamples(void * this, void * param_1, void * param_2, uint param_3)	OK
+0x005234e0	Input__HandleMouseWindowMessage	int __stdcall Input__HandleMouseWindowMessage(int param_1, uint param_2, uint param_3)	OK
+0x00528b60	CBinkOpenThread__WorkerMain	int __stdcall CBinkOpenThread__WorkerMain(void * param_1)	OK
+0x00527c90	CReconnectInterface__ctor	int __thiscall CReconnectInterface__ctor(void * this, void * param_1, int param_2, int param_3)	OK

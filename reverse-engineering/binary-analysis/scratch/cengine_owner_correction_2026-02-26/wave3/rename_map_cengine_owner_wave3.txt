@@ -1,0 +1,12 @@
+0x00449ef0 CFrontEnd__Helper_00449ef0
+0x0044a0c0 CDXMeshVB__Helper_0044a0c0
+0x004bd440 CWorld__Helper_004bd440
+0x004bdf70 CWorld__Helper_004bdf70
+0x004ffdd0 CSquadNormal__Helper_004ffdd0
+0x00501310 CDXEngine__Helper_00501310
+0x00506010 CGeneralVolume__Helper_00506010
+0x005096a0 CUnit__Helper_005096a0
+0x005099a0 CUnit__Helper_005099a0
+0x00509f70 CUnit__Helper_00509f70
+0x00528af0 CDXTexture__Helper_00528af0
+0x0053f010 CCutscene__Helper_0053f010

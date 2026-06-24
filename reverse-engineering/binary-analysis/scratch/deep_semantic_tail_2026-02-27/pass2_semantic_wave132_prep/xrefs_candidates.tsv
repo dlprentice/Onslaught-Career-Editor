@@ -1,0 +1,17 @@
+target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
+00402fa0	CUnit__Unk_00402fa0	005e362c	<none>	<no_function>	DATA
+00402fa0	CUnit__Unk_00402fa0	005e3880	<none>	<no_function>	DATA
+00402fa0	CUnit__Unk_00402fa0	00416344	<none>	<no_function>	UNCONDITIONAL_CALL
+00402fa0	CUnit__Unk_00402fa0	00421c9f	00421c40	CUnit__ApplyFlag4DampingAndScaleSpeed_00421c40	UNCONDITIONAL_CALL
+00402fa0	CUnit__Unk_00402fa0	00422667	<none>	<no_function>	UNCONDITIONAL_CALL
+00402fa0	CUnit__Unk_00402fa0	004471bd	<none>	<no_function>	UNCONDITIONAL_CALL
+00402fa0	CUnit__Unk_00402fa0	004d1e8c	<none>	<no_function>	UNCONDITIONAL_CALL
+00402fa0	CUnit__Unk_00402fa0	0044555f	<none>	<no_function>	UNCONDITIONAL_CALL
+00402fa0	CUnit__Unk_00402fa0	0047bf4f	<none>	<no_function>	UNCONDITIONAL_CALL
+0040e910	CUnit__Unk_0040e910	005d8b04	<none>	<no_function>	DATA
+00428110	CUnitAI__Unk_00428110	005e4300	<none>	<no_function>	DATA
+00428110	CUnitAI__Unk_00428110	005e3e48	<none>	<no_function>	DATA
+00428110	CUnitAI__Unk_00428110	004f0b84	<none>	<no_function>	UNCONDITIONAL_CALL
+00428800	CUnitAI__Unk_00428800	005e42c0	<none>	<no_function>	DATA
+00428800	CUnitAI__Unk_00428800	005e3e08	<none>	<no_function>	DATA
+00438050	CUnitAI__Unk_00438050	00437f5f	<none>	<no_function>	UNCONDITIONAL_CALL

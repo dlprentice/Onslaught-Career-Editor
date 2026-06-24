@@ -1,0 +1,33 @@
+slot	entry_addr	ptr	ptr_name	ptr_signature
+0	005e2aa0	00405dd0	<none>	<none>
+1	005e2aa4	004fc080	CUnitAI__Helper_004fc080	int __fastcall CUnitAI__Helper_004fc080(void * param_1)
+2	005e2aa8	004fc3c0	<none>	<none>
+3	005e2aac	00405de0	<none>	<none>
+4	005e2ab0	004fa4b0	CUnit__Unk_004fa4b0	int CUnit__Unk_004fa4b0(void)
+5	005e2ab4	004f9a10	<none>	<none>
+6	005e2ab8	004175c0	<none>	<none>
+7	005e2abc	004175d0	<none>	<none>
+8	005e2ac0	004175e0	<none>	<none>
+9	005e2ac4	00405e10	<none>	<none>
+10	005e2ac8	00405e20	<none>	<none>
+11	005e2acc	004fc000	CUnit__Unk_004fc000	int __fastcall CUnit__Unk_004fc000(int param_1)
+12	005e2ad0	00417600	<none>	<none>
+13	005e2ad4	0047d3b0	CMonitor__Unk_0047d3b0	int __fastcall CMonitor__Unk_0047d3b0(void * param_1)
+14	005e2ad8	0047d420	CUnitAI__Unk_0047d420	void __fastcall CUnitAI__Unk_0047d420(void * param_1)
+15	005e2adc	004fc4e0	CUnit__UpdateTransform	undefined CUnit__UpdateTransform(void)
+16	005e2ae0	004fd440	<none>	<none>
+17	005e2ae4	004fd4d0	CCannon__Helper_004fd4d0	void __thiscall CCannon__Helper_004fd4d0(void * this, void * param_1, int param_2)
+18	005e2ae8	004bfc60	<none>	<none>
+19	005e2aec	004fb270	<none>	<none>
+20	005e2af0	00459990	CFrontEndPage__DeActiveNotification	void __cdecl CFrontEndPage__DeActiveNotification(void * this)
+21	005e2af4	00405e60	<none>	<none>
+22	005e2af8	004f9260	<none>	<none>
+23	005e2afc	004f9490	CExplosionInitThing__ctor_like_004f9490	void __fastcall CExplosionInitThing__ctor_like_004f9490(int param_1)
+24	005e2b00	004014a0	<none>	<none>
+25	005e2b04	004fda90	<none>	<none>
+26	005e2b08	004fdc10	CFrontEndPage__Init_ReturnTrue	int CFrontEndPage__Init_ReturnTrue(void)
+27	005e2b0c	004fdd00	<none>	<none>
+28	005e2b10	004fe030	CUnit__TriggerEffect	undefined CUnit__TriggerEffect(void)
+29	005e2b14	004fe2b0	<none>	<none>
+30	005e2b18	004fe310	<none>	<none>
+31	005e2b1c	00417630	<none>	<none>

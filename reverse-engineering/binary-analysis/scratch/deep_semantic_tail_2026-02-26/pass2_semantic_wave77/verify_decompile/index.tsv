@@ -1,0 +1,10 @@
+address	name	signature	status
+0x00582244	CFastVB__PackTexels_Dither_Bits8_8_8_BGR	void __thiscall CFastVB__PackTexels_Dither_Bits8_8_8_BGR(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00582355	CFastVB__PackTexels_Dither_Bits8_8_8_8_ARGB	void __thiscall CFastVB__PackTexels_Dither_Bits8_8_8_8_ARGB(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x0058249e	CFastVB__PackTexels_Dither_Bits8_8_8_RGB	void __thiscall CFastVB__PackTexels_Dither_Bits8_8_8_RGB(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x005825c3	CFastVB__PackTexels_Dither_Bits5_6_5	void __thiscall CFastVB__PackTexels_Dither_Bits5_6_5(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x005826e8	CFastVB__PackTexels_Dither_Bits5_5_5	void __thiscall CFastVB__PackTexels_Dither_Bits5_5_5(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x0058280d	CFastVB__PackTexels_Dither_A1R5G5B5	void __thiscall CFastVB__PackTexels_Dither_A1R5G5B5(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00582950	CFastVB__PackTexels_Dither_A4R4G4B4	void __thiscall CFastVB__PackTexels_Dither_A4R4G4B4(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00583891	CFastVB__PackTexels_Dither_L8	void __thiscall CFastVB__PackTexels_Dither_L8(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK
+0x00583979	CFastVB__PackTexels_Dither_A8L8	void __thiscall CFastVB__PackTexels_Dither_A8L8(void * this, void * param_1, uint param_2, uint param_3, int param_4)	OK

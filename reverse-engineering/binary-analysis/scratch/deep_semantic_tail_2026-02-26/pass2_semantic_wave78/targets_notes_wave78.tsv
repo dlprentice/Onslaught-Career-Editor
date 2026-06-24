@@ -1,0 +1,6 @@
+address	old_name	new_name	evidence
+0x0056f260	CFastVB__Unk_0056f260	CFastVB__ReleaseBufferAndResetTriplet_0056f260	Calls OID__FreeObject_Callback on ptr @ +0x04 then zeros +0x04/+0x08/+0x0c.
+0x0056f520	CFastVB__Unk_0056f520	CFastVB__ReleaseBufferAndResetTriplet_0056f520	Calls OID__FreeObject_Callback on ptr @ +0x04 then zeros +0x04/+0x08/+0x0c.
+0x00573310	CFastVB__Unk_00573310	CFastVB__CountDwordsFromPointerSpan	Returns ((end - begin) >> 2) when span is valid, else 0.
+0x005759c9	CFastVB__Unk_005759c9	CFastVB__ConvertFloat32ArrayToFloat16	Converts each float32 element into 16-bit half-like representation with exponent/mantissa handling.
+0x00575dc9	CFastVB__Unk_00575dc9	CFastVB__HermiteInterpolateVec3	Computes Hermite basis (2t^3-3t^2+1, t^3-2t^2+t, -2t^3+3t^2, t^3-t^2) and blends 4 vec3 inputs.

@@ -1,0 +1,7 @@
+0x004e1200 CMessageBox__Helper_004e1200
+0x004e1260 CMonitor__Helper_004e1260
+0x004e1800 CMonitor__Helper_004e1800
+0x004e1880 CMonitor__Helper_004e1880
+0x004e1910 CBattleEngine__Helper_004e1910
+0x004e1940 CMonitor__Helper_004e1940
+0x004e1ab0 CMonitor__Helper_004e1ab0

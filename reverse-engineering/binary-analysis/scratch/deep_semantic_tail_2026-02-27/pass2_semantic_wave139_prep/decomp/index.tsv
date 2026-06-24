@@ -1,0 +1,13 @@
+address	name	signature	status
+0x00504a50	CVBufTexture__Unk_00504a50	void __fastcall CVBufTexture__Unk_00504a50(void * param_1)	OK
+0x005069f0	CEngine__Unk_005069f0	int __fastcall CEngine__Unk_005069f0(void * param_1)	OK
+0x00507ab0	OID__Unk_00507ab0	int __thiscall OID__Unk_00507ab0(void * this, void * param_1, int param_2, int param_3)	OK
+0x005088b0	OID__Unk_005088b0	int __thiscall OID__Unk_005088b0(void * this, void * param_1, int param_2)	OK
+0x00509140	OID__Unk_00509140	void __thiscall OID__Unk_00509140(void * this, void * param_1, void * param_2, void * param_3)	OK
+0x005094b0	CEngine__Unk_005094b0	double __thiscall CEngine__Unk_005094b0(void * this, int param_1, float param_2, float param_3, float param_4)	OK
+0x0050ab60	CVBufTexture__Unk_0050ab60	void CVBufTexture__Unk_0050ab60(void)	OK
+0x004fb280	CUnit__Unk_004fb280	void __thiscall CUnit__Unk_004fb280(void * this, void * param_1, void * param_2)	OK
+0x004fb500	CUnit__Unk_004fb500	uint __thiscall CUnit__Unk_004fb500(void * this, int param_1, int param_2, int param_3)	OK
+0x004fb5a0	CUnit__Unk_004fb5a0	uint __thiscall CUnit__Unk_004fb5a0(void * this, int param_1, void * param_2)	OK
+0x004fb650	CWarspite__Helper_004fb650	void __thiscall CWarspite__Helper_004fb650(void * this, int param_1, int param_2, int param_3)	OK
+0x00506010	CGeneralVolume__Helper_00506010	int __fastcall CGeneralVolume__Helper_00506010(void * param_1)	OK

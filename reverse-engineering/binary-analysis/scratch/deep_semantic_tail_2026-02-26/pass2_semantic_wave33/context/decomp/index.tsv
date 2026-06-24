@@ -1,0 +1,11 @@
+address	name	signature	status
+0x0052aaf0	CD3DApplication__MsgProc	int __thiscall CD3DApplication__MsgProc(void * this, void * hwnd, uint msg, uint wparam, int lparam)	OK
+0x0052af00	CD3DApplication__Initialize3DEnvironment	undefined CD3DApplication__Initialize3DEnvironment(void)	OK
+0x0052b760	CD3DApplication__Unk_0052b760	int __fastcall CD3DApplication__Unk_0052b760(void * param_1)	OK
+0x0052b840	CD3DApplication__Unk_0052b840	int __fastcall CD3DApplication__Unk_0052b840(void * param_1)	OK
+0x0052ba50	CD3DApplication__Unk_0052ba50	int __thiscall CD3DApplication__Unk_0052ba50(void * this, void * param_1, int param_2)	OK
+0x0052bb80	CD3DApplication__Reset3DEnvironment	int __thiscall CD3DApplication__Reset3DEnvironment(void * this, void * param_1, int param_2, int param_3)	OK
+0x0052bc80	CD3DApplication__Unk_0052bc80	int __stdcall CD3DApplication__Unk_0052bc80(int param_1, void * param_2, int param_3, int param_4)	OK
+0x0052c4f0	CD3DApplication__Unk_0052c4f0	int __stdcall CD3DApplication__Unk_0052c4f0(int param_1)	OK
+0x0052c730	CD3DApplication__SetResolution	undefined CD3DApplication__SetResolution(void)	OK
+0x0052c8d0	CD3DApplication__Unk_0052c8d0	int __cdecl CD3DApplication__Unk_0052c8d0(void * param_1, int param_2)	OK

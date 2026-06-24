@@ -1,0 +1,7 @@
+target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
+005888bc	CFastVB__Unk_005888bc	00657164	<none>	<no_function>	DATA
+0058b3c7	CTexture__Unk_0058b3c7	0058bab7	0058b812	CTexture__Unk_0058b812	UNCONDITIONAL_CALL
+0058b812	CTexture__Unk_0058b812	0058be46	0058bd87	CTexture__Unk_0058bd87	UNCONDITIONAL_CALL
+0058bd25	CTexture__Unk_0058bd25	00579ac8	00579a9a	CVertexShader__Helper_00579a9a	UNCONDITIONAL_CALL
+0058bd87	CTexture__Unk_0058bd87	0058c0ac	0058c08a	CTexture__Helper_0058c08a	UNCONDITIONAL_CALL
+0058bd87	CTexture__Unk_0058bd87	0058f5b3	0058f593	CTexture__Helper_0058f593	UNCONDITIONAL_CALL

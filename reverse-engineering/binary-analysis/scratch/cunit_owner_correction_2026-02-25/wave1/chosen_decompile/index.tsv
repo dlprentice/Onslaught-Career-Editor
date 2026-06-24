@@ -1,0 +1,48 @@
+address	name	signature	status
+0x00402020	CUnit__Unk_00402020	void __fastcall CUnit__Unk_00402020(int param_1)	OK
+0x00403730	CUnit__Unk_00403730	void __fastcall CUnit__Unk_00403730(void * param_1)	OK
+0x00403760	CUnit__Unk_00403760	void __fastcall CUnit__Unk_00403760(void * param_1)	OK
+0x004d8a70	CUnit__Unk_004d8a70	void __fastcall CUnit__Unk_004d8a70(int param_1)	OK
+0x004daba0	CUnit__Unk_004daba0	int __fastcall CUnit__Unk_004daba0(int param_1)	OK
+0x004dac90	CUnit__Unk_004dac90	void __thiscall CUnit__Unk_004dac90(void * this, void * param_1, void * param_2)	OK
+0x004df530	CUnit__Unk_004df530	void __thiscall CUnit__Unk_004df530(void * this, int param_1, void * param_2)	OK
+0x004e2a90	CUnit__Unk_004e2a90	char * __cdecl CUnit__Unk_004e2a90(void * param_1, int param_2)	OK
+0x004e2b30	CUnit__Unk_004e2b30	void __fastcall CUnit__Unk_004e2b30(void * param_1)	OK
+0x004e47e0	CUnit__Unk_004e47e0	int * __thiscall CUnit__Unk_004e47e0(void * this, int param_1, int param_2)	OK
+0x004e49f0	CUnit__Unk_004e49f0	int __fastcall CUnit__Unk_004e49f0(int param_1)	OK
+0x004e6610	CUnit__Unk_004e6610	int __fastcall CUnit__Unk_004e6610(int param_1)	OK
+0x004e6680	CUnit__Unk_004e6680	int __thiscall CUnit__Unk_004e6680(void * this, int param_1, int param_2)	OK
+0x004e97e0	CUnit__Unk_004e97e0	int __thiscall CUnit__Unk_004e97e0(void * this, void * param_1, void * param_2)	OK
+0x004ebbc0	CUnit__Unk_004ebbc0	void __fastcall CUnit__Unk_004ebbc0(int param_1)	OK
+0x004efb10	CUnit__Unk_004efb10	int __fastcall CUnit__Unk_004efb10(void * param_1)	OK
+0x004f00e0	CUnit__Unk_004f00e0	void CUnit__Unk_004f00e0(void)	OK
+0x004f0330	CUnit__Unk_004f0330	int __fastcall CUnit__Unk_004f0330(void * param_1)	OK
+0x004f0ba0	CUnit__Unk_004f0ba0	void __thiscall CUnit__Unk_004f0ba0(void * this, int param_1, void * param_2)	OK
+0x004f0c50	CUnit__Unk_004f0c50	void __thiscall CUnit__Unk_004f0c50(void * this, int param_1, void * param_2)	OK
+0x004f2790	CUnit__Unk_004f2790	void __fastcall CUnit__Unk_004f2790(int param_1)	OK
+0x004f2b40	CUnit__Unk_004f2b40	void CUnit__Unk_004f2b40(void)	OK
+0x004f4530	CUnit__Unk_004f4530	int __thiscall CUnit__Unk_004f4530(void * this, int param_1, int param_2)	OK
+0x004f45e0	CUnit__Unk_004f45e0	void __stdcall CUnit__Unk_004f45e0(void * param_1)	OK
+0x004f7440	CUnit__Unk_004f7440	void __fastcall CUnit__Unk_004f7440(void * param_1)	OK
+0x004f7460	CUnit__Unk_004f7460	void __thiscall CUnit__Unk_004f7460(void * this, void * param_1, void * param_2)	OK
+0x004f7940	CUnit__Unk_004f7940	void __fastcall CUnit__Unk_004f7940(void * param_1)	OK
+0x004f99b0	CUnit__Unk_004f99b0	void __fastcall CUnit__Unk_004f99b0(int param_1)	OK
+0x004f9a40	CUnit__Unk_004f9a40	double __fastcall CUnit__Unk_004f9a40(int param_1)	OK
+0x004f9a60	CUnit__Unk_004f9a60	void __thiscall CUnit__Unk_004f9a60(void * this, int param_1, void * param_2)	OK
+0x004fb3d0	CUnit__Unk_004fb3d0	int __thiscall CUnit__Unk_004fb3d0(void * this, int param_1, void * param_2)	OK
+0x004fb780	CUnit__Unk_004fb780	int CUnit__Unk_004fb780(void)	OK
+0x004fb7e0	CUnit__Unk_004fb7e0	int CUnit__Unk_004fb7e0(void)	OK
+0x004fbc90	CUnit__Unk_004fbc90	double __fastcall CUnit__Unk_004fbc90(int param_1)	OK
+0x004fc080	CUnit__Unk_004fc080	int __fastcall CUnit__Unk_004fc080(void * param_1)	OK
+0x004fc170	CUnit__Unk_004fc170	void __fastcall CUnit__Unk_004fc170(int param_1)	OK
+0x004fc3a0	CUnit__Unk_004fc3a0	void __thiscall CUnit__Unk_004fc3a0(void * this, int param_1, float param_2)	OK
+0x004fcc30	CUnit__Unk_004fcc30	void __thiscall CUnit__Unk_004fcc30(void * this, void * param_1, int param_2, void * param_3)	OK
+0x004fce40	CUnit__Unk_004fce40	int CUnit__Unk_004fce40(void)	OK
+0x004fd4d0	CUnit__Unk_004fd4d0	void __thiscall CUnit__Unk_004fd4d0(void * this, void * param_1, int param_2)	OK
+0x004fd500	CUnit__Unk_004fd500	void __thiscall CUnit__Unk_004fd500(void * this, void * param_1, void * param_2)	OK
+0x004fd570	CUnit__Unk_004fd570	int __fastcall CUnit__Unk_004fd570(int param_1)	OK
+0x004fd7e0	CUnit__Unk_004fd7e0	int __fastcall CUnit__Unk_004fd7e0(int param_1)	OK
+0x004fd8d0	CUnit__Unk_004fd8d0	int * __thiscall CUnit__Unk_004fd8d0(void * this, int param_1, int param_2)	OK
+0x004fda10	CUnit__Unk_004fda10	int __fastcall CUnit__Unk_004fda10(int param_1)	OK
+0x004fde10	CUnit__Unk_004fde10	int __fastcall CUnit__Unk_004fde10(int param_1)	OK
+0x004fde70	CUnit__Unk_004fde70	void __fastcall CUnit__Unk_004fde70(void * param_1)	OK

@@ -1,0 +1,16 @@
+address	old_name	inferred_owner	new_name	xref_count	top_counts
+0x00402000	CUnit__Unk_00402000	CUnitAI	CUnitAI__Helper_00402000	27	CUnitAI:2;CFEPMultiplayerStart:1
+0x004dab50	CUnit__Unk_004dab50	CRound	CRound__Helper_004dab50	4	CRound:2;CEngine:1
+0x004eba30	CUnit__Unk_004eba30	CEngine	CEngine__Helper_004eba30	4	CEngine:2;CGame:1;CDXEngine:1
+0x004f27e0	CUnit__Unk_004f27e0	CHud	CHud__Helper_004f27e0	115	CHud:43;CWaterRenderSystem:8;CLTShell:7;CDXEngine:6;CPauseMenu:5
+0x004f4560	CUnit__Unk_004f4560	CGillMHead	CGillMHead__Helper_004f4560	9	CGillMHead:4;CMonitor:2;CUnit:2
+0x004f78c0	CUnit__Unk_004f78c0	CDXBattleLine	CDXBattleLine__Helper_004f78c0	2	CDXBattleLine:2
+0x004f7c70	CUnit__Unk_004f7c70	CD3DApplication	CD3DApplication__Helper_004f7c70	23	CD3DApplication:10;CDXTexture:3;CDXFont:2;PCPlatform:1;FrontendUpdate_CheatChecks:1
+0x004f8140	CUnit__Unk_004f8140	CActor	CActor__Helper_004f8140	5	CActor:2;CEquipment:1;CMonitor:1;CEngine:1
+0x004f99f0	CUnit__Unk_004f99f0	CDXCompass	CDXCompass__Helper_004f99f0	7	CDXCompass:2;FrontendUpdate_CheatChecks:1;CSphere:1;CVBufTexture:1;CBattleEngine:1
+0x004fb650	CUnit__Unk_004fb650	CWarspite	CWarspite__Helper_004fb650	13	CWarspite:3;CGillMHead:1
+0x004fb840	CUnit__Unk_004fb840	CSquadNormal	CSquadNormal__Helper_004fb840	21	CSquadNormal:3;CGillMHead:2;CWarspite:2
+0x004fcec0	CUnit__Unk_004fcec0	CUnitAI	CUnitAI__Helper_004fcec0	7	CUnitAI:3;CSquadNormal:2
+0x004fd3d0	CUnit__Unk_004fd3d0	CBattleEngine	CBattleEngine__Helper_004fd3d0	19	CBattleEngine:5;CRound:2;CMonitor:1;CCollisionSeekingInfantryBloke:1;CUnit:1
+0x004fd760	CUnit__Unk_004fd760	CVBufTexture	CVBufTexture__Helper_004fd760	9	CVBufTexture:2;CGillMHead:1
+0x004fdeb0	CUnit__Unk_004fdeb0	CUnitAI	CUnitAI__Helper_004fdeb0	21	CUnitAI:2;CCockpit:1

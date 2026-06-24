@@ -1,0 +1,5 @@
+address	name	signature	status
+0x005b3440	CFastVB__JpegEntropy_EncodeBlockZigZagHuffman	int __stdcall CFastVB__JpegEntropy_EncodeBlockZigZagHuffman(void * param_1, void * param_2, uint param_3, void * param_4)	OK
+0x005b35b0	CFastVB__JpegEntropy_WriteMarkerAndResetDcPredictors	int __stdcall CFastVB__JpegEntropy_WriteMarkerAndResetDcPredictors(int param_1)	OK
+0x005b86c0	CFastVB__FastAcosApprox_Scalar	int CFastVB__FastAcosApprox_Scalar(void)	OK
+0x005b8ca0	CFastVB__FastTrigPairApprox_Scalar	uint CFastVB__FastTrigPairApprox_Scalar(void)	OK

@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "static-to-proof-next-safe-slice-selection.v1",
+  "status": "PASS",
+  "selectionStatus": "static-to-proof-next-safe-slice-selection-complete-world-thing-spawn-rebuild-contract-crosswalk-selected",
+  "previousSlice": "MissionScript Level100 Tutorial Copied-Profile Runtime Observation Direct Level100 Runtime Message Display Observation Public-Safe Result Summary Proof Plan",
+  "selectedChildLane": "World / Thing / Spawn Static-To-Rebuild Contract Crosswalk Proof Plan",
+  "selectedChildScope": "world-thing-spawn-static-to-rebuild-contract-crosswalk",
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "staticAccountingSource": "static-reaudit-measurement-register.md",
+    "latestGhidraBackupClass": "verified-static-backup-redacted"
+  },
+  "parentBlocker": {
+    "sourceStatus": "direct-level100-runtime-message-display-observation-public-safe-result-summary-complete-private-frame-review-deferred",
+    "publicSummaryOnly": true,
+    "sourceChecklistRowsMaterialized": 9,
+    "sourceNotRunRows": 9,
+    "sourceUnobservedRows": 9,
+    "sourceObservedRows": 0,
+    "sourceRuntimeObservationRows": 0,
+    "sourceRowStatusChangedCount": 0,
+    "privateFrameReviewDeferred": true,
+    "blockedByMissingExplicitOperatorArm": true,
+    "futureReviewRequiresExplicitOperatorArm": true,
+    "runtimeMessageDisplayProven": false,
+    "sourceSelectionProven": false
+  },
+  "selectionAccounting": {
+    "consultCount": 2,
+    "candidateCount": 4,
+    "selectedCandidateRank": 1,
+    "selectedSourceProofCount": 3,
+    "selectionFalseGuardCount": 19,
+    "selectionZeroCounterCount": 12,
+    "publicLeakCheck": "PASS"
+  },
+  "candidateRanking": [
+    {
+      "rank": 1,
+      "lane": "World / Thing / Spawn Static-To-Rebuild Contract Crosswalk Proof Plan",
+      "decision": "selected",
+      "rationale": "Best safety/value balance: existing copied-corpus, spawner handoff, and GetThingRef proofs can be consolidated into an implementation-facing object/spawn contract without BEA launch, private frames, OCR, Ghidra mutation, or Godot work."
+    },
+    {
+      "rank": 2,
+      "lane": "MissionScript Command-Effect Rebuild Interface Rollup Proof Plan",
+      "decision": "deferred",
+      "rationale": "High rebuild value, but broader and more coupled to command-effect families; better after the object/spawn crosswalk makes the world handoff concrete."
+    },
+    {
+      "rank": 3,
+      "lane": "Save / Options Byte-Preservation Implementation Contract Proof Plan",
+      "decision": "deferred",
+      "rationale": "Very safe and useful for AppCore, but less connected to the currently blocked Level100 object/spawn/message path."
+    },
+    {
+      "rank": 4,
+      "lane": "PhysicsScript Parser/Rebuild Contract Extension Proof Plan",
+      "decision": "deferred",
+      "rationale": "Useful static parser work, but lower priority than consolidating object-reference and spawn handoff contracts already selected from MissionScript."
+    }
+  ],
+  "selectedSourceEvidence": {
+    "copiedCorpusSchema": {
+      "path": "reverse-engineering/binary-analysis/world-thing-spawn-copied-corpus-schema-proof.md",
+      "schema": "reverse-engineering/game-assets/world-thing-spawn-copied-corpus-schema.v1.json",
+      "rawGetThingRefRows": 574,
+      "rawSpawnThingRows": 70,
+      "rawTotalRows": 644,
+      "uniqueGetThingRefObjectReferenceRows": 418,
+      "uniqueSpawnThingObjectReferenceRows": 18,
+      "uniqueObjectReferenceRowsTotal": 436,
+      "spawnPreservingRowsTotal": 447,
+      "selectedSpawnFamily": "training-target-spawn-family",
+      "selectedSpawnRawRows": 34
+    },
+    "spawnerHandoff": {
+      "path": "reverse-engineering/binary-analysis/world-thing-spawn-spawner-handoff-static-proof.md",
+      "schema": "reverse-engineering/binary-analysis/world-thing-spawn-spawner-handoff-static.v1.json",
+      "handoffLayerCount": 8,
+      "selectedFamily": "training-target-spawn-family",
+      "fieldRoleCount": 12,
+      "anchors": [
+        "DAT_008553f4",
+        "0x0050f970 CWorldPhysicsManager__CreateSpawner",
+        "0x004e3c60 CSpawnerThng__DoSpawn",
+        "CUnit__VFunc08_InitAndAddToWorld",
+        "0x004fc3a0 CUnit__SetSpawnCooldownState3"
+      ]
+    },
+    "getThingRefObjectReference": {
+      "path": "reverse-engineering/binary-analysis/world-thing-spawn-getthingref-object-reference-static-proof.md",
+      "schema": "reverse-engineering/binary-analysis/world-thing-spawn-getthingref-object-reference-static.v1.json",
+      "selectedFamily": "training-target-zone-getthingref-family",
+      "selectedGetThingRefRawRows": 9,
+      "selectedGetThingRefUniqueObjectReferenceRows": 8,
+      "selectedDuplicateCallRows": 1,
+      "selectedEmptySpawnerRows": 9,
+      "linkageLayerCount": 4
+    }
+  },
+  "guardSummary": {
+    "runtimeExecution": false,
+    "beLaunch": false,
+    "newLaunch": false,
+    "screenshotCapture": false,
+    "privateFrameReviewPerformed": false,
+    "rowObservation": false,
+    "exactTextOcrPerformed": false,
+    "rawDialoguePublished": false,
+    "visibleTextExcerptPublished": false,
+    "sourceSelectionObserved": false,
+    "nativeInput": false,
+    "debuggerAttachment": false,
+    "godotWork": false,
+    "ghidraMutation": false,
+    "executablePatching": false,
+    "rebuildImplementation": false,
+    "runtimeMessageDisplayProven": false,
+    "rebuildParityProven": false,
+    "noNoticeableDifferenceParityProven": false,
+    "missionScriptRuntimeEvidenceRows": 0,
+    "runtimeObservationRows": 0,
+    "privateFrameRowsObserved": 0,
+    "sourceRowStatusChangedCount": 0,
+    "publicAbsolutePathLeakCount": 0,
+    "publicSha256ValueLeakCount": 0,
+    "publicWindowIdentifierLeakCount": 0,
+    "publicProcessIdentifierLeakCount": 0,
+    "privatePathLeakCount": 0,
+    "rawArtifactLeakCount": 0,
+    "rawDialogueLeakCount": 0,
+    "beProcessesAfterSelection": 0
+  },
+  "stopConditions": [
+    "BEA launch or process observation",
+    "screenshot/frame capture or private-frame review",
+    "OCR, exact visible text identity, raw dialogue publication, per-frame token identity, or per-frame speaker identity",
+    "runtime MissionScript execution or Level100 source-selection observation",
+    "native input, debugger attachment, executable patching, Godot project work, or Ghidra mutation",
+    "runtime object identity, runtime SpawnThing, runtime GetThingRef, runtime world loading, runtime spawner behavior, live loose-MSL loading, packed-resource script selection, exact layouts, rebuild implementation, rebuild parity, or no-noticeable-difference parity"
+  ],
+  "claimBoundary": {
+    "proves": [
+      "the active next safe slice selection completed without continuing the blocked Level100 private-frame observation path",
+      "the selected next child lane is a static, public-safe, implementation-facing World / Thing / Spawn crosswalk",
+      "the selected lane has enough existing public-safe source proofs to start a rebuild-facing contract without runtime or private proof"
+    ],
+    "doesNotProve": [
+      "runtime object identity",
+      "runtime SpawnThing",
+      "runtime GetThingRef",
+      "runtime MissionScript execution",
+      "runtime world loading",
+      "runtime spawner behavior",
+      "live loose-MSL loading",
+      "packed-resource script selection",
+      "exact descriptor/VM/object-code/world/thing/spawner/Unit layouts",
+      "source-selection observation",
+      "runtime message display",
+      "visual QA",
+      "executable patching behavior",
+      "Godot parity",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  }
+}

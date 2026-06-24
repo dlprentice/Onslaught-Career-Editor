@@ -1,0 +1,7 @@
+address	name	signature	status
+0x004d28a0	CPlayer__Unk_004d28a0	void __fastcall CPlayer__Unk_004d28a0(int param_1)	OK
+0x004d2a50	CPlayer__Unk_004d2a50	void __fastcall CPlayer__Unk_004d2a50(int param_1)	OK
+0x004d2a70	CPlayer__Unk_004d2a70	void __thiscall CPlayer__Unk_004d2a70(void * this, int param_1, void * param_2)	OK
+0x004d2ae0	CPlayer__Unk_004d2ae0	void __thiscall CPlayer__Unk_004d2ae0(void * this, int param_1, void * param_2)	OK
+0x004d2b40	CPlayer__Unk_004d2b40	void __thiscall CPlayer__Unk_004d2b40(void * this, int param_1, void * param_2)	OK
+0x004d2bb0	CPlayer__Unk_004d2bb0	void __thiscall CPlayer__Unk_004d2bb0(void * this, int param_1, void * param_2)	OK

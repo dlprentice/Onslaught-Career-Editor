@@ -1,0 +1,11 @@
+address	name	signature	status
+0x00596e23	CFastVB__Unk_00596e23	int __stdcall CFastVB__Unk_00596e23(void * param_1, float param_2)	OK
+0x00597a61	CFastVB__Unk_00597a61	void __stdcall CFastVB__Unk_00597a61(void * param_1, int param_2)	OK
+0x00597b87	CFastVB__Unk_00597b87	int __stdcall CFastVB__Unk_00597b87(void * param_1, float param_2)	OK
+0x00598f60	CFastVB__Unk_00598f60	int __thiscall CFastVB__Unk_00598f60(void * this, void * param_1, int param_2)	OK
+0x005997a5	CFastVB__Unk_005997a5	int __fastcall CFastVB__Unk_005997a5(void * param_1)	OK
+0x0059a21f	CFastVB__Unk_0059a21f	int __stdcall CFastVB__Unk_0059a21f(void * param_1, void * param_2, int param_3)	OK
+0x0059a54d	CFastVB__Unk_0059a54d	int __thiscall CFastVB__Unk_0059a54d(void * this, void * param_1, int param_2, void * param_3, int param_4, uint param_5)	OK
+0x0059a71a	CFastVB__Unk_0059a71a	int CFastVB__Unk_0059a71a(void)	OK
+0x0059c610	CFastVB__Unk_0059c610	void __stdcall CFastVB__Unk_0059c610(int param_1)	OK
+0x0059c700	CFastVB__Unk_0059c700	void __stdcall CFastVB__Unk_0059c700(void * param_1, void * param_2, int param_3)	OK

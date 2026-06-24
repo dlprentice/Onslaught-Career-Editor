@@ -1,0 +1,20 @@
+address	name	signature	status
+0x00402220	CAirGuide__ShutdownAndUnlink	void __fastcall CAirGuide__ShutdownAndUnlink(void * param_1)	OK
+0x004661d0	CFEPMultiplayerStart__ClearJoinedPlayerSet	void __fastcall CFEPMultiplayerStart__ClearJoinedPlayerSet(int param_1)	OK
+0x00544fb0	CDXLandscape__ResetWrapper	void CDXLandscape__ResetWrapper(void)	OK
+0x004cdd70	CRocket__RelinquishControllerOwnership	void __fastcall CRocket__RelinquishControllerOwnership(void * param_1)	OK
+0x00437fe0	CPhysicsScriptStatements__SetOwnedString	void __thiscall CPhysicsScriptStatements__SetOwnedString(void * this, int param_1, void * param_2)	OK
+0x0043ed20	CCutscene__DestroyRecursive	void * __thiscall CCutscene__DestroyRecursive(void * this, void * param_1, int param_2)	OK
+0x00472a10	CGameInterface__LoadHudTextures	void __fastcall CGameInterface__LoadHudTextures(int param_1)	OK
+0x004f5b80	CTokenArchive__RegisterReferenceFixup	void __thiscall CTokenArchive__RegisterReferenceFixup(void * this, int param_1, int param_2, int param_3, void * param_4)	OK
+0x004b6f70	CMessage__WordWrapToLineBuffer	void __thiscall CMessage__WordWrapToLineBuffer(void * this, int param_1, void * param_2, int param_3, int param_4)	OK
+0x0043e630	CFlexArray__SkipBytesFromMemBuffer	void __cdecl CFlexArray__SkipBytesFromMemBuffer(int param_1, int param_2)	OK
+0x00420cd0	CCareer__GetSlotRecordPtr	int __thiscall CCareer__GetSlotRecordPtr(void * this, int param_1, int param_2)	OK
+0x00420d10	CCareer__PackLevelSummaryBits	void __thiscall CCareer__PackLevelSummaryBits(void * this, void * param_1, void * param_2)	OK
+0x0047eb00	CHeightField__SampleInterpolatedHeight	int __fastcall CHeightField__SampleInterpolatedHeight(int param_1, uint param_2, uint param_3)	OK
+0x004f7ab0	CUMTexture__ConfigureByMode	void __thiscall CUMTexture__ConfigureByMode(void * this, void * param_1, int param_2, int param_3, int param_4)	OK
+0x004306b0	CSpawnerStatement__GetSerializedSize	int __fastcall CSpawnerStatement__GetSerializedSize(int param_1)	OK
+0x00431020	CComponentStatement__GetSerializedSize	int __fastcall CComponentStatement__GetSerializedSize(int param_1)	OK
+0x00491da0	CMapWho__IsEntryInBounds	int __stdcall CMapWho__IsEntryInBounds(void * param_1)	OK
+0x0042d7a0	CController__ResetInactivityTimerConditional	void CController__ResetInactivityTimerConditional(void)	OK
+0x004b7ab0	CDropship__SelectPortraitIndex	int __thiscall CDropship__SelectPortraitIndex(void * this, int param_1, void * param_2)	OK

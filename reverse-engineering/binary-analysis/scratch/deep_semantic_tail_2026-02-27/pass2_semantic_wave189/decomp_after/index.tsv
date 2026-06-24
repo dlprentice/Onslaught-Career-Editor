@@ -1,0 +1,21 @@
+address	name	signature	status
+0x00589bd6	CTexture__ReportDirectiveParseError	void __cdecl CTexture__ReportDirectiveParseError(int param_1, void * param_2)	OK
+0x00589c82	CTexture__SetCurrentSourceLocation	int __thiscall CTexture__SetCurrentSourceLocation(void * this, int param_1, int param_2, int param_3)	OK
+0x00589f49	CTexture__PushConditionalFrame	int __thiscall CTexture__PushConditionalFrame(void * this, int param_1, void * param_2)	OK
+0x00589fa1	CTexture__HandleDirective_Elif	int __thiscall CTexture__HandleDirective_Elif(void * this, int param_1, int param_2)	OK
+0x0058a014	CTexture__HandleDirective_Else	int __fastcall CTexture__HandleDirective_Else(int param_1)	OK
+0x0058a076	CTexture__HandleDirective_Endif	int __fastcall CTexture__HandleDirective_Endif(int param_1)	OK
+0x0058a0c6	CTexture__HandlePragma_PackMatrix	int __fastcall CTexture__HandlePragma_PackMatrix(int param_1)	OK
+0x0058a1e3	CTexture__HandlePragma_Warning	int __fastcall CTexture__HandlePragma_Warning(int param_1)	OK
+0x0058a578	CTexture__GetSymbolNameLength	int __stdcall CTexture__GetSymbolNameLength(void * param_1)	OK
+0x0058a58d	CTexture__InsertOrReplaceMacroSymbol	int __stdcall CTexture__InsertOrReplaceMacroSymbol(void * param_1)	OK
+0x0058a60a	CTexture__FindMacroSymbol	int __stdcall CTexture__FindMacroSymbol(void * param_1, void * param_2, void * param_3)	OK
+0x0058a67b	CTexture__EscapeQuotedStringInPlace	void __stdcall CTexture__EscapeQuotedStringInPlace(void * param_1, int param_2, int param_3)	OK
+0x0058a6e0	CTexture__NormalizeConditionalResultOrReport	int __thiscall CTexture__NormalizeConditionalResultOrReport(void * this, int param_1, int param_2)	OK
+0x0058a713	CTexture__HandleDirective_Define	int __thiscall CTexture__HandleDirective_Define(void * this, int param_1, void * param_2, void * param_3)	OK
+0x0058a981	CTexture__RemoveMacroSymbol	int __stdcall CTexture__RemoveMacroSymbol(void * param_1)	OK
+0x0058a9ef	CTexture__HandleDirective_Pragma	int __fastcall CTexture__HandleDirective_Pragma(int param_1)	OK
+0x0058aa69	CTexture__HandleDirective_IfdefIfndef	int __thiscall CTexture__HandleDirective_IfdefIfndef(void * this, int param_1, void * param_2)	OK
+0x0058aacf	CTexture__HandleDirective_If	int CTexture__HandleDirective_If(void)	OK
+0x0058b1a0	CTexture__InitPreprocessorDefaultDefines	int __thiscall CTexture__InitPreprocessorDefaultDefines(void * this, void * param_1, void * param_2)	OK
+0x0058c75e	CTexture__ReadTypePrefixToken_FH	int __thiscall CTexture__ReadTypePrefixToken_FH(void * this, int param_1, void * param_2, void * param_3)	OK

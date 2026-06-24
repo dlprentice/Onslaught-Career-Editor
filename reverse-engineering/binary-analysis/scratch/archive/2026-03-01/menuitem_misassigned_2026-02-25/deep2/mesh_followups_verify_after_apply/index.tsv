@@ -1,0 +1,4 @@
+address	name	signature	status
+0x004ab360	CMesh__OptimizeParts	undefined CMesh__OptimizeParts(void)	OK
+0x004bae70	CMeshPart__CanOptimizePart_Strict	int __cdecl CMeshPart__CanOptimizePart_Strict(int param_1)	OK
+0x004bb210	CMesh__HasSpecialOptimizationConstraints	bool __cdecl CMesh__HasSpecialOptimizationConstraints(int param_1)	OK

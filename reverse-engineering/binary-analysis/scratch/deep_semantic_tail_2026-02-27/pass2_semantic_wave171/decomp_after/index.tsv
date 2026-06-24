@@ -1,0 +1,13 @@
+address	name	signature	status
+0x005ab420	CTexture__BuildComponentPlaneRowPointers	void CTexture__BuildComponentPlaneRowPointers(void)	OK
+0x005ad550	CTexture__InitDecodeCallbackTables	void __stdcall CTexture__InitDecodeCallbackTables(int param_1)	OK
+0x005aeaf0	CDXTexture__UpsampleChromaLinearHorizontal	void __fastcall CDXTexture__UpsampleChromaLinearHorizontal(int param_1, int param_2, int param_3)	OK
+0x005aebb0	CDXTexture__UpsampleAndConvertYccToRgb_Mmx	void __thiscall CDXTexture__UpsampleAndConvertYccToRgb_Mmx(void * this, int param_1, int param_2, int param_3)	OK
+0x005aee40	CDXTexture__UpsampleAndConvertYccToRgb_Scalar	void __stdcall CDXTexture__UpsampleAndConvertYccToRgb_Scalar(void * param_1, int param_2, void * param_3)	OK
+0x005af5f0	CDXTexture__ConvertYccBlocksToRgb_Auto	void __thiscall CDXTexture__ConvertYccBlocksToRgb_Auto(void * this, int param_1, void * param_2, int param_3, void * param_4)	OK
+0x005afcf0	CDXTexture__ConvertYccToRgba_WithLookupTables	void __stdcall CDXTexture__ConvertYccToRgba_WithLookupTables(int param_1, void * param_2, int param_3, void * param_4, int param_5)	OK
+0x005afe60	CDXTexture__InitYccLookupTables	void CDXTexture__InitYccLookupTables(void)	OK
+0x005d06f0	CRT__InitSehFrameNoop	void CRT__InitSehFrameNoop(void)	OK
+0x005d0820	CRT__FSeek_UnlockedCore	int __cdecl CRT__FSeek_UnlockedCore(void * param_1, int param_2, int param_3)	OK
+0x005d08ad	CRT__TmpFile_OpenUniqueBinaryStream	int CRT__TmpFile_OpenUniqueBinaryStream(void)	OK
+0x005d0e88	CRT__WcsNLen	int __cdecl CRT__WcsNLen(void * param_1, int param_2)	OK

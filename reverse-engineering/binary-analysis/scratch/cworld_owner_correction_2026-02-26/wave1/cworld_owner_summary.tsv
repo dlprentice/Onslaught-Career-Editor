@@ -1,0 +1,15 @@
+address	old_name	inferred_owner	xref_count	top_counts
+0x0050abb0	CWorld__Unk_0050ada0		1	CGame:1
+0x0050abc0	CWorld__Unk_0050abc0		1	CThing:1
+0x0050ada0	CWorld__Unk_0050ada0		1	CWorld:1
+0x0050af70	CWorld__Unk_0050af70		1	CCutscene:1
+0x0050b010	CWorld__Unk_0050b010		5	CUnitAI:1;CFeature:1;CWarspiteDome:1;CNamedMesh:1;CCannon:1
+0x0050b020	CWorld__Unk_0050b020		7	CByteSprite:1;CNamedMesh:1;CCannon:1;CDropship:1;CUnitAI:1;CFeature:1
+0x0050b030	CWorld__Unk_0050b030	OID	12	OID:5;CBattleEngine:2;CDXEngine:1;CMCMech:1;CMonitor:1;CCollisionSeekingRound:1
+0x0050d680	CWorld__Unk_0050d680		3	CWorld:3
+0x0050d6a0	CWorld__Unk_0050d6a0		0
+0x0050d720	CWorld__Unk_0050d720		0
+0x0050d760	CWorld__Unk_0050d760	CExplosionInitThing	21	CExplosionInitThing:20;IScript:1
+0x0050d7a0	CWorld__Unk_0050d7a0		0
+0x0050d7d0	CWorld__Unk_0050d7d0		1	CGame:1
+0x0050d7f0	CWorld__Unk_0050d7f0		1	CWorld:1

@@ -1,0 +1,13 @@
+target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
+00584c04	CTexture__Unk_00584c04	005e9f50	<none>	<no_function>	DATA
+00584cc3	CTexture__Unk_00584cc3	005e9f60	<none>	<no_function>	DATA
+00584d78	CFastVB__Unk_00584d78	005e9f70	<none>	<no_function>	DATA
+00584e32	CFastVB__Unk_00584e32	005e9f80	<none>	<no_function>	DATA
+00584ee9	CFastVB__Unk_00584ee9	005e9f90	<none>	<no_function>	DATA
+00584fae	CFastVB__Unk_00584fae	005e9fa0	<none>	<no_function>	DATA
+00585072	CFastVB__Unk_00585072	005e9ff4	<none>	<no_function>	DATA
+00585161	CFastVB__Unk_00585161	005ea004	<none>	<no_function>	DATA
+00585220	CFastVB__Unk_00585220	005ea014	<none>	<no_function>	DATA
+005852d5	CFastVB__Unk_005852d5	005ea024	<none>	<no_function>	DATA
+00585380	CFastVB__Unk_00585380	005ea038	<none>	<no_function>	DATA
+0058546f	CMeshCollisionVolume__Unk_0058546f	005ea048	<none>	<no_function>	DATA

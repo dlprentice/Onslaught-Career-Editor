@@ -1,0 +1,22 @@
+address	old_name	inferred_owner	xref_count	top_counts
+0x004ae080	CMeshPart__Unk_004ae080	CMesh	3	CMesh:3
+0x004ae0d0	CMeshPart__Unk_004ae0d0	CMesh	3	CMesh:3
+0x004ae110	CMeshPart__Unk_004ae110		1	CMeshCollisionVolume:1
+0x004ae1a0	CMeshPart__Unk_004ae1a0		1	CMeshCollisionVolume:1
+0x004ae220	CMeshPart__Unk_004ae220		1	CStaticShadows:1
+0x004ae430	CMeshPart__Unk_004ae430		1	CStaticShadows:1
+0x004ae640	CMeshPart__Unk_004ae640		1	CMesh:1
+0x004aea50	CMeshPart__Unk_004aea50		1	CMesh:1
+0x004aede0	CMeshPart__Unk_004aede0		1	CMesh:1
+0x004af110	CMeshPart__Unk_004af110		1	CMesh:1
+0x004b0800	CMeshPart__Unk_004b0800		1	CMesh:1
+0x004b0c00	CMeshPart__Unk_004b0c00		1	CSoundManager:1
+0x004b0c20	CMeshPart__Unk_004b0c20		0
+0x004b0c40	CMeshPart__Unk_004b0c40		1	CMesh:1
+0x004b0cd0	CMeshPart__Unk_004b0cd0	CMesh	8	CMesh:4;CDestructableSegmentsController:3;CStaticShadows:1
+0x004b0d00	CMeshPart__Unk_004b0d00		0
+0x004b0fb0	CMeshPart__Unk_004b0fb0	CMCMech	27	CMCMech:7;CMCTentacle:5;CDXEngine:3;CMCBuggy:3;CMesh:2;CStaticShadows:2
+0x004b1d30	CMeshPart__Unk_004b1d30		1	CMesh:1
+0x004b1eb0	CMeshPart__Unk_004b1eb0		0
+0x004b24d0	CMeshPart__Unk_004b24d0		2	CEngine:1;CExplosionInitThing:1
+0x004b25d0	CMeshPart__Unk_004b25d0	CMesh	3	CMesh:3

@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "save-options-controller-byte-preservation-copied-file.v1",
+  "status": "PASS",
+  "scope": "copied-file byte-preservation proof for save/options/controller clean-room planning",
+  "source": {
+    "privateEvidenceRoot": "subagents/static-to-proof/save-options-controller-byte-preservation-copied-file-proof/",
+    "sourcePathsPublic": false,
+    "sourceHashesPublic": false,
+    "runtimeExecution": false,
+    "gameLaunch": false,
+    "ghidraMutation": false,
+    "installedGameMutation": false,
+    "saveSynthesis": false,
+    "proofInputs": [
+      "one real career .bes baseline",
+      "one real defaultoptions.bea baseline"
+    ]
+  },
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+  },
+  "container": {
+    "expectedSize": 10004,
+    "expectedSizeHex": "0x2714",
+    "versionWord": "0x4BD1",
+    "trueViewRule": "file_offset = 0x0002 + career_offset",
+    "careerBase": "0x0002"
+  },
+  "baselineEvidence": {
+    "copiedInputClasses": [
+      "real career .bes baseline",
+      "real defaultoptions.bea baseline"
+    ],
+    "copiedArtifactCount": 5,
+    "allContainersValidated": true,
+    "sourcePathDisclosure": "private evidence only; public schema omits source paths and source hashes"
+  },
+  "noOpPreservation": {
+    "careerDiffCount": 0,
+    "defaultoptionsDiffCount": 0
+  },
+  "scopedCareerEdit": {
+    "field": "Aircraft kill counter lower-24 payload",
+    "baseOffset": "0x23F6",
+    "metadataOffset": "0x23F9",
+    "allowedOffsets": [
+      "0x23F6",
+      "0x23F7",
+      "0x23F8"
+    ],
+    "changedOffsets": [
+      "0x23F6"
+    ],
+    "changedOffsetCount": 1,
+    "unexpectedDiffCount": 0,
+    "legacyTrapHitCount": 0,
+    "metadataBytePreserved": true,
+    "lower24Changed": true,
+    "goodieReservedRangeUnchanged": true,
+    "techSlotsRangeUnchanged": true,
+    "optionsEntriesUnchanged": true,
+    "optionsTailUnchanged": true,
+    "fileSizePreserved": true,
+    "versionWordPreserved": true
+  },
+  "preservationGuards": {
+    "goodieBase": "0x1F46",
+    "reservedGoodies": "233-299",
+    "killCountersBase": "0x23F6",
+    "killPayloadRule": "preserve top-byte metadata; edit only value & 0x00FFFFFF when intentionally changing kills",
+    "techSlotsBase": "0x240A",
+    "optionsEntriesRange": "0x24BE-0x26BD",
+    "optionsEntryCount": 16,
+    "optionsTailRange": "0x26BE-0x2713",
+    "defaultoptionsFlag0": "CCareer__Load(..., flag=0) applies entries/tail",
+    "careerSaveFlag1": "CCareer__Load(..., flag=1) skips immediate entries/tail application",
+    "controllerConfigValues": "mControllerConfigurationNum 1..4",
+    "directBindingPatchCaveat": "direct binding proofs must force or record g_ControlSchemeIndex=0",
+    "legacyAlignedViewTrapOffsets": [
+      "0x23A4",
+      "0x22D4",
+      "0x240C"
+    ]
+  },
+  "claims": [
+    "The copied career .bes and copied defaultoptions.bea baselines validate as 10004-byte containers with version word 0x4BD1.",
+    "No-op copies preserve both copied baselines byte-for-byte with DiffCount=0.",
+    "A scoped copied career-save edit can change only the allowlisted Aircraft kill-counter lower-24 payload bytes at 0x23F6-0x23F8.",
+    "The scoped edit preserves the kill-counter metadata byte at 0x23F9, file size, version word, reserved Goodies range, tech slots, options entries, and options tail.",
+    "Legacy aligned-view trap offsets 0x23A4, 0x22D4, and 0x240C were not touched."
+  ],
+  "notClaimed": [
+    "runtime save/load behavior",
+    "runtime defaultoptions boot behavior",
+    "runtime menu behavior",
+    "runtime controller remap/input behavior",
+    "runtime Goodies wall behavior",
+    "exact source-layout parity",
+    "BEA patching behavior",
+    "visual QA",
+    "Godot parity",
+    "rebuild parity",
+    "no-noticeable-difference parity"
+  ]
+}

@@ -1,0 +1,4 @@
+address	name	signature	status
+0x0042d260	OptionsEntries__InitSingleBindingEntry	int OptionsEntries__InitSingleBindingEntry(void * this, int active, int entry_id, int slot0_device_code, short slot0_scan, short slot0_vk)	OK
+0x0042d2b0	OptionsEntries__InitDualBindingEntry	int OptionsEntries__InitDualBindingEntry(void * this, int active, int entry_id, int slot0_device_code, short slot0_scan, int slot1_device_code, short slot1_scan, short slot0_vk, short slot1_vk)	OK
+0x0042d300	OptionsEntries__InitSentinelEntry	void __fastcall OptionsEntries__InitSentinelEntry(void * this)	OK

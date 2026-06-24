@@ -1,0 +1,1247 @@
+{
+  "summary": {
+    "cases": 71,
+    "both_success": 71,
+    "one_side_error": [],
+    "both_error_count": 0,
+    "byte_mismatch_cases": []
+  },
+  "rows": [
+    {
+      "file": "save-attempts/_tmp_changedkeybinds_overrides.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_changedkeybinds_overrides.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_changedkeybinds_overrides.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_inv_test.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_inv_test.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_inv_test.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_invert_patch.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_invert_patch.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_invert_patch.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_kills_only_123.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_kills_only_123.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_kills_only_123.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_newgame_bind_norm.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_newgame_bind_norm.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_newgame_bind_norm.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_options_copy.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_options_copy.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_options_copy.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_options_override_test_1770405554.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_options_override_test_1770405554.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_options_override_test_1770405554.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_preset_normalized.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_preset_normalized.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_preset_normalized.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_unlock_test.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_unlock_test.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/_tmp_unlock_test.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/haha-cannon-goes-brrrrr.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/haha-cannon-goes-brrrrr.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/haha-cannon-goes-brrrrr.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/me-actually-playing-the-game-to-get-ranks.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/me-actually-playing-the-game-to-get-ranks.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/me-actually-playing-the-game-to-get-ranks.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_defaultoptions.bea",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--sound-volume",
+        "0.42",
+        "--music-volume",
+        "0.58",
+        "--invert-walker-p1",
+        "off",
+        "--invert-walker-p2",
+        "on"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_defaultoptions.bea",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--copy-options-from",
+        "save-attempts/haha-cannon-goes-brrrrr.bes",
+        "--no-copy-options-tail",
+        "--bind-air-brake",
+        "LShift",
+        "RShift"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_kills_only.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_kills_only.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_kills_only.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_partial_goodies_and_inf161.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_partial_goodies_and_inf161.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_partial_goodies_and_inf161.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_partial_goodies_only.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_partial_goodies_only.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_partial_goodies_only.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_partial_goodies_plus_inf161.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_partial_goodies_plus_inf161.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_partial_goodies_plus_inf161.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_partial_kills_only.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_partial_kills_only.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_partial_kills_only.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_partial_ranks.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_partial_ranks.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_partial_ranks.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_ranks.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_ranks.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/proof_ranks.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/test_godmode_correct_both_raw.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/test_godmode_correct_both_raw.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/test_godmode_correct_both_raw.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/test_godmode_correct_both_shift16.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/test_godmode_correct_both_shift16.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/test_godmode_correct_both_shift16.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/test_godmode_correct_p1_raw.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/test_godmode_correct_p1_raw.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/test_godmode_correct_p1_raw.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/test_godmode_correct_p1_shift16.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/test_godmode_correct_p1_shift16.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/test_godmode_correct_p1_shift16.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/test_godmode_correct_p2_shift16.bes",
+      "scenario": 1,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--rank",
+        "B",
+        "--kills",
+        "777"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/test_godmode_correct_p2_shift16.bes",
+      "scenario": 2,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--kills-only",
+        "--aircraft-kills",
+        "25",
+        "--vehicle-kills",
+        "200",
+        "--emplacement-kills",
+        "50",
+        "--infantry-kills",
+        "160",
+        "--mech-kills",
+        "80"
+      ],
+      "byte_equal": true
+    },
+    {
+      "file": "save-attempts/test_godmode_correct_p2_shift16.bes",
+      "scenario": 3,
+      "cs_rc": 0,
+      "py_rc": 0,
+      "args": [
+        "--no-nodes",
+        "--no-links",
+        "--no-goodies",
+        "--no-kills",
+        "--bind-select-weapon",
+        "MouseRight",
+        "Key ;",
+        "--bind-transform",
+        "RControl",
+        "Key X"
+      ],
+      "byte_equal": true
+    }
+  ]
+}

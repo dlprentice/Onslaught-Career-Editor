@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "missionscript-goodie-state-command-effect.v1",
+  "status": "PASS",
+  "source": {
+    "evidenceWaves": [
+      "Wave579",
+      "Wave864",
+      "Wave903"
+    ],
+    "runtimeExecution": false,
+    "ghidraMutation": false,
+    "schemaPurpose": "static Goodie state command descriptor, handler-body, and save-offset bridge mapping for clean-room planning"
+  },
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+  },
+  "evidenceCounts": {
+    "wave579MetadataRows": 6,
+    "wave579TagRows": 6,
+    "wave579XrefRows": 6,
+    "wave579InstructionRows": 1326,
+    "wave579DecompileRows": 6,
+    "wave579VtableRows": 24
+  },
+  "descriptorRecords": {
+    "AddScore": {
+      "index": 84,
+      "recordAddress": "0x0064e350",
+      "observedNameSymbol": "s_AddScore_0064f5c4",
+      "rawEntryValue": "IScript__Unk_00534410",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_AddScore_0064f5c4",
+      "aliasBoundary": "0x00534410 IScript__SecondaryObjectiveComplete"
+    },
+    "SetGoodieState": {
+      "index": 118,
+      "recordAddress": "0x0064ebd0",
+      "observedNameSymbol": "s_SetGoodieState_0064f380",
+      "rawEntryValue": "&LAB_00533b30",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_SetGoodieState_0064f380"
+    },
+    "GetGoodieState": {
+      "index": 119,
+      "recordAddress": "0x0064ec10",
+      "observedNameSymbol": "s_GetGoodieState_0064f370",
+      "rawEntryValue": "IScript__SetGoodieState",
+      "nameStatus": "observed-symbol",
+      "expectedSymbol": "s_GetGoodieState_0064f370"
+    }
+  },
+  "handlerReadback": [
+    {
+      "command": "SetGoodieState",
+      "address": "0x00533a70",
+      "name": "IScript__SetGoodieState",
+      "signature": "void __stdcall IScript__SetGoodieState(void * script_args, void * unused_state, void * out_result)",
+      "summary": "reads a 1-based script Goodie index and state, then writes g_Career_mGoodies[index-1]"
+    },
+    {
+      "command": "GetGoodieState",
+      "address": "0x00533aa0",
+      "name": "IScript__GetGoodieState",
+      "signature": "void __stdcall IScript__GetGoodieState(void * script_args, void * unused_state, void * out_result)",
+      "summary": "allocates an 8-byte integer result, reads g_Career_mGoodies[index-1], installs vtable 0x005e4af8, and writes out_result"
+    }
+  ],
+  "saveMapping": {
+    "careerGlobal": "0x00660620",
+    "goodieArraySymbol": "g_Career_mGoodies",
+    "goodieArrayAddress": "0x00662564",
+    "entryCount": 300,
+    "displayableEntries": "0-232",
+    "reservedPreserveEntries": "233-299",
+    "trueViewFileBase": "0x1F46",
+    "scriptIndexing": "1-based; script index N maps to save Goodie index N-1",
+    "fileOffsetFormula": "0x1F46 + (script_index - 1) * 4",
+    "stateValues": {
+      "0": "GS_UNKNOWN",
+      "1": "GS_INSTRUCTIONS",
+      "2": "GS_NEW",
+      "3": "GS_OLD"
+    },
+    "zeroIndexBoundary": "script index 0 would underflow before g_Career_mGoodies[0]"
+  },
+  "scriptCorpusContext": {
+    "source": "reverse-engineering/save-file/goodies-system.md",
+    "knownScriptGoodieCalls": "documented 1-based calls for indices 51, 53, and 68-71",
+    "corpusProbeSummary": "existing Goodies docs record 32 Goodie state calls and zero calls for 72-74 in repo-local and installed loose corpora",
+    "boundary": "loose corpus and doc context only; live loose-MSL loading and packed-vs-loose script selection remain unproven"
+  },
+  "addScoreBoundary": {
+    "descriptorIndex": 84,
+    "descriptorRecord": "0x0064e350",
+    "observedNameSymbol": "s_AddScore_0064f5c4",
+    "rawEntryValue": "IScript__Unk_00534410",
+    "conflictingCurrentObjectiveName": "0x00534410 IScript__SecondaryObjectiveComplete",
+    "status": "descriptor/name context only in this proof",
+    "whyDeferred": "existing docs expose AddScore as an MSL command and descriptor row, but this slice does not promote a saved handler-body bridge for AddScore; the raw entry is preserved as an alias-boundary conflict with current objective/outcome evidence"
+  },
+  "claims": [
+    "The static descriptor schema contains SetGoodieState and GetGoodieState command names and record addresses.",
+    "Wave579 saved IScript__SetGoodieState and IScript__GetGoodieState as fixed three-stack-argument command handlers.",
+    "The Goodie handlers statically bridge MissionScript 1-based indices to g_Career_mGoodies[index-1].",
+    "The save docs map the same Goodie array to true-view file offset 0x1F46 with 300 4-byte entries.",
+    "AddScore is preserved as descriptor-adjacent context only and is not claimed as a handler-body proof in this slice."
+  ],
+  "notClaimed": [
+    "runtime MissionScript execution",
+    "runtime command effects",
+    "runtime Goodie state mutation",
+    "runtime save behavior",
+    "runtime Goodies wall behavior",
+    "live loose-MSL loading",
+    "packed-vs-loose script selection",
+    "exact command descriptor layout",
+    "exact command arity",
+    "exact argument type schema",
+    "exact CCareer layout",
+    "AddScore handler-body proof",
+    "BEA patching behavior",
+    "visual QA",
+    "Godot parity",
+    "rebuild parity",
+    "no-noticeable-difference parity"
+  ]
+}

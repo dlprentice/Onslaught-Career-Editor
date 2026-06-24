@@ -1,0 +1,5 @@
+address	old_name	inferred_owner	new_name	xref_count	top_counts
+0x004f39b0	CThing__Unk_004f39b0	CUnit	CUnit__Helper_004f39b0	2	CUnit:2
+0x004f3ac0	CThing__Unk_004f3ac0	CUnitAI	CUnitAI__Helper_004f3ac0	21	CUnitAI:4;CEngine:3;CBattleEngine:2;CWorld:1;CExplosionInitThing:1
+0x004f3c80	CThing__Unk_004f3c80	CAtmospheric	CAtmospheric__Helper_004f3c80	3	CAtmospheric:2;CCutscene:1
+0x004f3d10	CThing__Unk_004f3d10	CCollisionSeekingRound	CCollisionSeekingRound__Helper_004f3d10	7	CCollisionSeekingRound:4;CUnitAI:2;CWorld:1

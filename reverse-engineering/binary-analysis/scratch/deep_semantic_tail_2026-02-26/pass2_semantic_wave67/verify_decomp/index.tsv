@@ -1,0 +1,11 @@
+address	name	signature	status
+0x00586bb7	CFastVB__FlushPendingConvertedRows16	int __fastcall CFastVB__FlushPendingConvertedRows16(int param_1)	OK
+0x0058735a	CFastVB__StoreDecodedBlockToScratch	void __thiscall CFastVB__StoreDecodedBlockToScratch(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x005873f8	CFastVB__LoadDecodedBlockFromScratch	void __thiscall CFastVB__LoadDecodedBlockFromScratch(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x005876ab	CTexture__WriteTexelBlockWithQuadCache	void __thiscall CTexture__WriteTexelBlockWithQuadCache(void * this, void * param_1, uint param_2, int param_3, void * param_4)	OK
+0x00587af0	CTexture__ReadTexelBlockWithQuadCache	void __thiscall CTexture__ReadTexelBlockWithQuadCache(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK
+0x00587daf	CFastVB__TexelPackProfile_scalar_deleting_dtor	void __fastcall CFastVB__TexelPackProfile_scalar_deleting_dtor(void * param_1)	OK
+0x00587dee	CFastVB__InitTexelUnpackVTable_005ea264	int __thiscall CFastVB__InitTexelUnpackVTable_005ea264(void * this, void * param_1, void * param_2)	OK
+0x00587e06	CFastVB__InitTexelUnpackVTable_005ea274	int __thiscall CFastVB__InitTexelUnpackVTable_005ea274(void * this, void * param_1, void * param_2)	OK
+0x00587e66	CFastVB__TexelCodecProfile_scalar_deleting_dtor	void * __thiscall CFastVB__TexelCodecProfile_scalar_deleting_dtor(void * this, void * param_1, int param_2)	OK
+0x00587e82	CFastVB__CreateTexelUnpackProfileByFormat	int * __stdcall CFastVB__CreateTexelUnpackProfileByFormat(void * param_1)	OK

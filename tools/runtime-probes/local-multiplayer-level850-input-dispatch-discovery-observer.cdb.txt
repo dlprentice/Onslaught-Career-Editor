@@ -1,0 +1,14 @@
+.echo === local-multiplayer level850 input-dispatch discovery observer ===
+vertarget
+lm m BEA
+u 0046e460 L20
+u 00528b50 L8
+u 0044a020 L20
+u 0042e4d0 L30
+u 004d3110 L30
+bp /1 0046e460 ".printf \"CGame__Render this=%p numRenders=%d players=%d level=%d fullscreenMP=%d horizSplit=%d p0=%p p1=%p cam0=%p cam1=%p world=%p\n\", @ecx, poi(@esp+4), poi(@ecx+0x29c), poi(@ecx+0x2a0), poi(@ecx+0x40), by(@ecx+0x38), poi(@ecx+0x2a4), poi(@ecx+0x2a8), poi(@ecx+0x2c4), poi(@ecx+0x2c8), poi(0x00855090); g"
+bp /1 00528b50 ".printf \"CEngine__SetNumViewpoints engine=%p requested=%d esp8=%p\n\", @ecx, poi(@esp+4), poi(@esp+8); g"
+bp /1 0044a020 ".printf \"CEngine__SetViewpoint engine=%p vp=%d camera=%p viewport=%p player=%p rect0=%08x rect1=%08x rect2=%08x rect3=%08x\n\", @ecx, poi(@esp+4), poi(@esp+8), poi(@esp+0x0c), poi(@esp+0x10), poi(poi(@esp+0x0c)), poi(poi(@esp+0x0c)+4), poi(poi(@esp+0x0c)+8), poi(poi(@esp+0x0c)+0x0c); g"
+bp 0042e4d0 ".printf \"CController__SendButtonAction controller=%p button=%d rawButton=%08x analogRaw=%08x inputDevice=%08x controllerConfig=%08x buttons0=%08x buttons1=%08x buttons2=%08x target=%p\n\", @ecx, poi(@esp+4), poi(@esp+4), poi(@esp+8), poi(@ecx+0x16c), poi(@ecx+0x174), poi(@ecx+0x14), poi(@ecx+0x18), poi(@ecx+0x1c), poi(poi(@ecx+4)); g"
+bp 004d3110 ".printf \"CPlayer__ReceiveButtonAction player=%p fromController=%p button=%d rawButton=%08x analogRaw=%08x gameP0=%p gameP1=%p\n\", @ecx, poi(@esp+4), poi(@esp+8), poi(@esp+8), poi(@esp+0x0c), poi(0x008a9d3c), poi(0x008a9d40); g"
+g

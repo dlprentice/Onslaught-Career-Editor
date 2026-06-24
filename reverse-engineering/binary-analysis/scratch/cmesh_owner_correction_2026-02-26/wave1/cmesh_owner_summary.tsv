@@ -1,0 +1,24 @@
+address	old_name	inferred_owner	xref_count	top_counts
+0x004a50b0	CMesh__Unk_004a50b0		4	CMesh:3;CFEPGoodies:1
+0x004a51f0	CMesh__Unk_004a51f0		1	CMesh:1
+0x004a52b0	CMesh__Unk_004a52b0		1	CLTShell:1
+0x004a52d0	CMesh__Unk_004a52d0	CLTShell	3	CLTShell:2;CMesh:1
+0x004a53f0	CMesh__Unk_004a53f0		2	CFrontEnd:1;CGame:1
+0x004a5430	CMesh__Unk_004a5430		2	CUnitAI:1
+0x004a5500	CMesh__Unk_004a5500		2	CMesh:2
+0x004a5670	CMesh__Unk_004a5670		1	CMesh:1
+0x004a5970	CMesh__Unk_004a5970		1	CMesh:1
+0x004aa3f0	CMesh__Unk_004aa3f0	CMeshPart	6	CMeshPart:4;CMesh:1;CSoundManager:1
+0x004aa410	CMesh__Unk_004aa410		2	CMesh:2
+0x004aa4e0	CMesh__Unk_004aa4e0	CRTMesh	5	CRTMesh:4;CMesh:1
+0x004aa500	CMesh__Unk_004aa500	CRTMesh	2	CRTMesh:2
+0x004aa5a0	CMesh__Unk_004aa5a0		1	CRTMesh:1
+0x004aa5e0	CMesh__Unk_004aa5e0		3
+0x004aa680	CMesh__Unk_004aa680	CMCMech	4	CMCMech:2;CMCBuggy:1;CCutscene:1
+0x004aa6b0	CMesh__Unk_004aa6b0	CDestructableSegmentsController	11	CDestructableSegmentsController:6;CMeshPart:3;CSphere:1;CDestroyableSegment:1
+0x004aa7e0	CMesh__Unk_004aa7e0		2
+0x004aa820	CMesh__Unk_004aa820	CMCMech	17	CMCMech:9;CMCBuggy:5;CDestructableSegmentsController:1;CUnit:1
+0x004aa8a0	CMesh__Unk_004aa8a0	CDestroyableSegment	6	CDestroyableSegment:4
+0x004aa900	CMesh__Unk_004aa900		1
+0x004aa940	CMesh__Unk_004aa940		1
+0x004ab330	CMesh__Unk_004ab330		1	CDXImposter:1

@@ -1,0 +1,7 @@
+address	name	signature	status
+0x00540c30	CDXFrontEnd__SetupRenderMatricesAndProjection	void CDXFrontEnd__SetupRenderMatricesAndProjection(void)	OK
+0x004a5b70	CMesh__Load	undefined CMesh__Load(void)	OK
+0x00549570	CMeshRenderer__RenderMeshCore	void CMeshRenderer__RenderMeshCore(void)	OK
+0x004ec2f0	CStaticShadows__BuildShadowMaps	undefined CStaticShadows__BuildShadowMaps(void)	OK
+0x00499e30	CMCMech__UpdateBone	undefined CMCMech__UpdateBone(void)	OK
+0x0049dcd0	CMCTentacle__UpdateSpline	undefined CMCTentacle__UpdateSpline(void)	OK

@@ -1,0 +1,13 @@
+target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
+00472ad0	CUnitAI__Unk_00472ad0	00472de2	<none>	<no_function>	UNCONDITIONAL_CALL
+00478160	CUnitAI__Unk_00478160	0049216a	00492110	CMapWho__GetFirstEntryWithinLine	UNCONDITIONAL_CALL
+00478160	CUnitAI__Unk_00478160	004d5335	004d50d0	CPolyBucket__StartLineSearch	UNCONDITIONAL_CALL
+00478c20	CUnitAI__Unk_00478c20	004adc5d	<none>	<no_function>	UNCONDITIONAL_CALL
+00479d10	CUnitAI__Unk_00479d10	005e0c38	<none>	<no_function>	DATA
+00479f30	CUnitAI__Unk_00479f30	004963ae	<none>	<no_function>	UNCONDITIONAL_CALL
+0047a0b0	CUnitAI__Unk_0047a0b0	004963ce	<none>	<no_function>	UNCONDITIONAL_CALL
+0047bf60	CUnitAI__Unk_0047bf60	005e2f34	<none>	<no_function>	DATA
+0047bf60	CUnitAI__Unk_0047bf60	005e2ce0	<none>	<no_function>	DATA
+0047bf60	CUnitAI__Unk_0047bf60	005e1a44	<none>	<no_function>	DATA
+0047bf60	CUnitAI__Unk_0047bf60	005e1350	<none>	<no_function>	DATA
+0047c040	CUnitAI__Unk_0047c040	005e2cb8	<none>	<no_function>	DATA

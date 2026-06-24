@@ -1,0 +1,10 @@
+address	name	signature	status
+0x0042f5b0	CWeaponStatement__VFunc_01_0042f5b0	void __fastcall CWeaponStatement__VFunc_01_0042f5b0(int param_1)	OK
+0x0042fa40	CWeaponModeStatement__VFunc_01_0042fa40	void __fastcall CWeaponModeStatement__VFunc_01_0042fa40(int param_1)	OK
+0x0042ff60	CRoundStatement__VFunc_01_0042ff60	void __fastcall CRoundStatement__VFunc_01_0042ff60(int param_1)	OK
+0x004304d0	CSpawnerStatement__VFunc_01_004304d0	void __fastcall CSpawnerStatement__VFunc_01_004304d0(int param_1)	OK
+0x004309a0	CExplosionStatement__VFunc_01_004309a0	void __fastcall CExplosionStatement__VFunc_01_004309a0(int param_1)	OK
+0x00430e20	CComponentStatement__VFunc_01_00430e20	void __fastcall CComponentStatement__VFunc_01_00430e20(int param_1)	OK
+0x00431310	CFeatureStatement__VFunc_01_00431310	void __fastcall CFeatureStatement__VFunc_01_00431310(int param_1)	OK
+0x00431760	CHazardStatement__VFunc_01_00431760	void __fastcall CHazardStatement__VFunc_01_00431760(int param_1)	OK
+0x0044e170	<none>	<none>	MISSING

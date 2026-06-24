@@ -1,0 +1,11 @@
+address	name	signature	status
+0x00440c00	CDamage__FreeOwnedDamageObjects	void __fastcall CDamage__FreeOwnedDamageObjects(void * param_1)	OK
+0x00440c40	CDamage__ResetDamageTables	void __fastcall CDamage__ResetDamageTables(void * param_1)	OK
+0x004c0940	CPDSimpleSprite__SetUVFromTileIndex	void __thiscall CPDSimpleSprite__SetUVFromTileIndex(void * this, int param_1, uint param_2, int param_3)	OK
+0x004c5280	CPDSimpleSprite__CopyTransformMatrix	void __thiscall CPDSimpleSprite__CopyTransformMatrix(void * this, void * param_1, void * param_2)	OK
+0x004d30d0	CInfluenceMap__AccumulateThingFlags	void __thiscall CInfluenceMap__AccumulateThingFlags(void * this, int param_1, int param_2)	OK
+0x004d39d0	CInfluenceMap__ResetRuntimeState	void __fastcall CInfluenceMap__ResetRuntimeState(int param_1)	OK
+0x004d3a00	CInfluenceMap__FreeRuntimeBuffers	void __fastcall CInfluenceMap__FreeRuntimeBuffers(int param_1)	OK
+0x004ebd10	CStaticShadows__ClearAllShadowEntries	void __fastcall CStaticShadows__ClearAllShadowEntries(void * param_1)	OK
+0x004ebe40	CStaticShadows__UpdateLightVectorAndRebuild	void __fastcall CStaticShadows__UpdateLightVectorAndRebuild(int param_1)	OK
+0x004ec250	CStaticShadows__DestroyShadowMapNode	void * __thiscall CStaticShadows__DestroyShadowMapNode(void * this, void * param_1, int param_2)	OK

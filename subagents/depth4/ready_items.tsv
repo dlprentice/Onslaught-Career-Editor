@@ -1,0 +1,9 @@
+item_id	domain	status	notes	evidence
+RDY-001	subagent_orchestration	ready	depth1..depth4 lane outputs and manifests present	subagents/depth1/depth_manifest.json; subagents/depth2/depth_manifest.json; subagents/depth3/depth_manifest.json; subagents/depth4/depth_manifest.json
+RDY-002	aggregate_artifacts	ready	required depth1/depth2 aggregate TSV artifacts generated	subagents/depth1/repo_inventory.tsv; subagents/depth2/contradictions.tsv; subagents/depth2/high_risk_findings.tsv
+RDY-003	patch_catalog_v2	ready	canonical machine-readable patch catalog added	patches/catalog/patches.v2.json
+RDY-004	csharp_patch_engine	ready	C# binary patch engine now loads catalog v2 with fallback	BinaryPatchEngine.cs; Onslaught - Career Editor.csproj
+RDY-005	python_patch_engine	ready	Python core patch engine now loads catalog v2 with fallback	onslaught/core/binary_patches.py; onslaught/gui/tabs/binary_patches.py
+RDY-006	release_readiness	ready	release/readiness artifacts generated from current classification snapshot	release/readiness/release_readiness_checklist.md; release/readiness/private_only_inventory.tsv; release/readiness/public_candidate_allowlist.tsv; release/readiness/redaction_notes.md
+RDY-007	validation_python	ready	Python regression gates pass in WSL for unittest suites and policy checks	python3 -m unittest discover -v tests_pyqt -p 'test_*_unittest.py'; python3 tools/docsync_check.py; ./tools/release_package.sh --dry-run
+RDY-008	validation_csharp	ready	C# build and UI test suites pass	dotnet build Onslaught - Career Editor.sln; dotnet test OnslaughtCareerEditor.UiTests/OnslaughtCareerEditor.UiTests.csproj

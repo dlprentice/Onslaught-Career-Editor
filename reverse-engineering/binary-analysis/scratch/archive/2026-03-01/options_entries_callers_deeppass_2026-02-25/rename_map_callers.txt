@@ -1,0 +1,2 @@
+0x00453460 OptionsEntries__InitDefaultDualBindingsTable
+0x00514210 OptionsEntries__InitDefaultSingleBindingsTable

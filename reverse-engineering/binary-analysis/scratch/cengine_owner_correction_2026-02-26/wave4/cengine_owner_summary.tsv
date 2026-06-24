@@ -1,0 +1,44 @@
+address	old_name	inferred_owner	xref_count	top_counts
+0x00407310	CEngine__Unk_00407310		1	CEngine:1
+0x0044a0d0	CEngine__Unk_0044a0d0		2	CDXEngine:1;CExplosionInitThing:1
+0x004b4ba0	CEngine__Unk_004b4ba0		2	CEngine:2
+0x004b4cd0	CEngine__Unk_004b4cd0		2	CSphere:1;CEngine:1
+0x004b4de0	CEngine__Unk_004b4de0		4	CDiveBomber:1;CMeshCollisionVolume:1
+0x004bd9e0	CEngine__Unk_004bd9e0		2	CEngine:1;CWorld:1
+0x004c0560	CEngine__Unk_004c0560		2	CParticle:1;CParticleManager:1
+0x004c35d0	CEngine__Unk_004c35d0		1
+0x004c8060	CEngine__Unk_004c8060		2
+0x004cdbe0	CEngine__Unk_004cdbe0		1	CEngine:1
+0x004cddf0	CEngine__Unk_004cddf0		1	OptionsTail_Read:1
+0x004d11d0	CEngine__Unk_004d11d0		2	CDXEngine:1;CFEPOptions:1
+0x004d2010	CEngine__Unk_004d2010		1
+0x004d3020	CEngine__Unk_004d3020		7	CGame:2;CPauseMenu:2;CDXEngine:1
+0x004d3630	CEngine__Unk_004d3630		1
+0x004d9d60	CEngine__Unk_004d9d60		1
+0x004d9ef0	CEngine__Unk_004d9ef0		2
+0x004daa20	CEngine__Unk_004daa20		2
+0x004daab0	CEngine__Unk_004daab0		1	CEngine:1
+0x004db090	CEngine__Unk_004db090		1
+0x004db150	CEngine__Unk_004db150		1
+0x004db630	CEngine__Unk_004db630		1	CEngine:1
+0x004fe390	CEngine__Unk_004fe390		1	IScript:1
+0x004fe3f0	CEngine__Unk_004fe3f0		1	IScript:1
+0x004fe480	CEngine__Unk_004fe480		1
+0x005015c0	CEngine__Unk_005015c0		3	CGame:1;CDXEngine:1;VFuncSlot_00_00449890:1
+0x005016b0	CEngine__Unk_005016b0		1	PCPlatform:1
+0x005068f0	CEngine__Unk_005068f0		2	CEngine_Unk_0050a080:1;CGeneralVolume:1
+0x005069f0	CEngine__Unk_005069f0		2	CGeneralVolume:1
+0x005078b0	CEngine__Unk_005078b0		1	CEngine:1
+0x005094b0	CEngine__Unk_005094b0		3	CUnit:1;CVBufTexture:1
+0x00509e90	CEngine__Unk_00509e90		1	CGeneralVolume:1
+0x0050a080	CEngine__Unk_0050a080		2	CEngine_Unk_0050a080:1;CGeneralVolume:1
+0x0050a0b0	CEngine__Unk_0050a0b0	CSquadNormal	2	CSquadNormal:2
+0x00527f50	CEngine__Unk_00527f50		1	CEngine:1
+0x005282b0	CEngine__Unk_005282b0		1	PCPlatform:1
+0x00528460	CEngine__Unk_00528460		1
+0x00528540	CEngine__Unk_00528540		5	CEngine:4
+0x005285b0	CEngine__Unk_005285b0		1
+0x005285e0	CEngine__Unk_005285e0		1
+0x00528b00	CEngine__Unk_00528b00		5
+0x0052ff30	CEngine__Unk_0052ff30		1
+0x00533430	CEngine__Unk_00533430		1

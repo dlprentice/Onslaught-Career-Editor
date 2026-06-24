@@ -1,0 +1,11 @@
+/* address: 0x005bd52a */
+/* name: CDXTexture__Unk_005bd52a */
+/* signature: void __stdcall CDXTexture__Unk_005bd52a(int param_1, int param_2) */
+
+
+void CDXTexture__Unk_005bd52a(int param_1,int param_2)
+
+{
+  (**(code **)(param_2 + 0x24))(*(undefined4 *)(param_2 + 0x28),param_1);
+  return;
+}

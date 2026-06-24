@@ -1,0 +1,6 @@
+address	name	signature	status
+0x005602d2	CRT__SehDispatchWithScopeTable	int CRT__SehDispatchWithScopeTable(void)	OK
+0x0056036d	CRT__SehLookupAndInvokeScopeHandler	int CRT__SehLookupAndInvokeScopeHandler(void)	OK
+0x00560627	CRT__SehUnwindToTargetState	void __cdecl CRT__SehUnwindToTargetState(int param_1, int param_2, int param_3, int param_4)	OK
+0x005606c5	CRT__SehUnwindAndResumeSearch	int CRT__SehUnwindAndResumeSearch(void)	OK
+0x00560cb1	CRT__InitFpuControlWord_0x10000_0x30000	void CRT__InitFpuControlWord_0x10000_0x30000(void)	OK

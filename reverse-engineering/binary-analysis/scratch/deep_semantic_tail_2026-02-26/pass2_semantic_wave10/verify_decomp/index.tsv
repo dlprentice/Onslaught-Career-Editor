@@ -1,0 +1,6 @@
+address	name	signature	status
+0x0050abc0	CWorld__CloneScriptObjectCodeByName	int __thiscall CWorld__CloneScriptObjectCodeByName(void * this, int param_1, void * param_2)	OK
+0x0052c430	CD3DApplication__Cleanup3DEnvironment	void __fastcall CD3DApplication__Cleanup3DEnvironment(void * param_1)	OK
+0x00548f90	MEM_MANAGER__Init	uint __thiscall MEM_MANAGER__Init(void * this, int param_1, int param_2)	OK
+0x0052ff30	ScriptCommandRegistry__InitBuiltins	void ScriptCommandRegistry__InitBuiltins(void)	OK
+0x005be628	HResultToString	int HResultToString(void)	OK

@@ -1,0 +1,25 @@
+address	name	signature	status
+0x0059c670	CDXTexture__CeilDiv	int __stdcall CDXTexture__CeilDiv(int param_1, int param_2)	OK
+0x0059c690	CDXTexture__AlignUpToMultiple	int __stdcall CDXTexture__AlignUpToMultiple(int param_1, int param_2)	OK
+0x0059c8ab	CDXTexture__InflateInit_WindowBits15	void __stdcall CDXTexture__InflateInit_WindowBits15(int param_1, void * param_2, int param_3)	OK
+0x0059c8c1	CDXTexture__InflateStream_ProcessZlibState	int __stdcall CDXTexture__InflateStream_ProcessZlibState(void * param_1, int param_2)	OK
+0x0059cc24	CDXTexture__AllocZeroedDecodeState	int __stdcall CDXTexture__AllocZeroedDecodeState(int param_1)	OK
+0x0059cc68	CDXTexture__FreeDecodeState	void __stdcall CDXTexture__FreeDecodeState(int param_1)	OK
+0x0059ccb3	CDXTexture__FreeDecodeStateIfOwnerPresent	void __stdcall CDXTexture__FreeDecodeStateIfOwnerPresent(int param_1, int param_2)	OK
+0x0059ce20	CDXTexture__ExpandPackedPixelsToScanline	void __stdcall CDXTexture__ExpandPackedPixelsToScanline(int param_1, void * param_2, uint param_3)	OK
+0x0059d036	CDXTexture__ExpandAdam7PassRowInPlace	void __stdcall CDXTexture__ExpandAdam7PassRowInPlace(void * param_1, void * param_2, int param_3)	OK
+0x0059d301	CDXTexture__ApplyPngScanlineFilter	void __stdcall CDXTexture__ApplyPngScanlineFilter(int param_1, int param_2, void * param_3, void * param_4, int param_5)	OK
+0x0059d47a	CDXTexture__InitPngImageBuffersAndPassGeometry	void __stdcall CDXTexture__InitPngImageBuffersAndPassGeometry(void * param_1)	OK
+0x0059d614	CDXTexture__FinalizePngChunkAndVerifyCrc	int __stdcall CDXTexture__FinalizePngChunkAndVerifyCrc(void * param_1, uint param_2)	OK
+0x0059d699	CDXTexture__ParsePngChunk_IHDR	void __stdcall CDXTexture__ParsePngChunk_IHDR(void * param_1, int param_2, int param_3)	OK
+0x0059d879	CDXTexture__ParsePngChunk_PLTE	void __stdcall CDXTexture__ParsePngChunk_PLTE(void * param_1, int param_2, uint param_3)	OK
+0x0059d992	CDXTexture__ParsePngChunk_tRNS	void __stdcall CDXTexture__ParsePngChunk_tRNS(void * param_1, int param_2, uint param_3)	OK
+0x0059dda2	CDXTexture__ProcessIdatChunkDataAndQueueDecode	void __thiscall CDXTexture__ProcessIdatChunkDataAndQueueDecode(void * this, int param_1, void * param_2)	OK
+0x0059dfb2	CDXTexture__Crc32_Update	uint __stdcall CDXTexture__Crc32_Update(uint param_1, void * param_2, uint param_3)	OK
+0x0059e0b0	CDXTexture__WriteJpegMarkerByte	void __stdcall CDXTexture__WriteJpegMarkerByte(int param_1)	OK
+0x0059e970	CDXTexture__WriteJpegApp0JfifSegment	void CDXTexture__WriteJpegApp0JfifSegment(void)	OK
+0x0059ee20	CDXTexture__WriteJpegSegmentMarkerAndLength	void __stdcall CDXTexture__WriteJpegSegmentMarkerAndLength(void * param_1, int param_2, uint param_3)	OK
+0x0059eed0	CDXTexture__WriteJpegStartOfImageAndMetadata	void __stdcall CDXTexture__WriteJpegStartOfImageAndMetadata(void * param_1)	OK
+0x0059ef60	CDXTexture__WriteJpegQuantTablesAndFrame	void __stdcall CDXTexture__WriteJpegQuantTablesAndFrame(void * param_1)	OK
+0x0059f050	CDXTexture__WriteJpegHuffmanAndScanHeaders	void __stdcall CDXTexture__WriteJpegHuffmanAndScanHeaders(void * param_1)	OK
+0x0059f110	CDXTexture__WriteJpegEndOfImage	void __stdcall CDXTexture__WriteJpegEndOfImage(void * param_1)	OK

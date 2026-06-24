@@ -1,0 +1,5 @@
+0x00598a56 CFastVB__InitNodeType9
+0x00598f82 CFastVB__NodeType9_scalar_deleting_dtor
+0x00598b48 CFastVB__InitNodeType10
+0x00598b81 CFastVB__NodeType10_dtor
+0x00598fa4 CFastVB__NodeType10_scalar_deleting_dtor

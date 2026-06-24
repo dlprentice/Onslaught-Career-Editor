@@ -3,12 +3,16 @@
 Status: active contributor guide
 Last updated: 2026-06-23
 
-This source tree may be the private maintainer tree or a sanitized public
-candidate for a WinUI-first Battle Engine Aquila preservation and tooling
-project. Public-source exports are curated from the private tree; do not assume
-every tracked private file is public release material.
+This public source tree is the primary collaboration and day-to-day working repo
+for a WinUI-first Battle Engine Aquila preservation and tooling project. Raw
+project history and working material can be tracked here: RE notes, wave notes,
+state batons, agent reports, readiness docs, proof summaries, checkers, and
+tooling. Ignored overlay folders are for hard payloads: actual game files,
+copied executables, private media/input files, full Ghidra databases/backups,
+secrets, build output, and bulky generated runtime captures.
 
-External contributors should work from the curated public candidate or an explicitly sanitized collaborator branch. The private sync repo can contain R4/private material and is not an onboarding or PR base unless access is explicitly covered by maintainer approval and private-data handling rules.
+External contributors should work from this public repo unless a maintainer
+explicitly assigns a separate branch or private workspace.
 
 ## Developer Start Here
 
@@ -16,13 +20,12 @@ External contributors should work from the curated public candidate or an explic
    [COLLABORATION.md](COLLABORATION.md).
 2. Pick one lane: WinUI, AppCore, CLI, docs/release, or public-safe RE docs.
 3. Run only the relevant local gates for that lane before review.
-4. Keep private game content and private proof material out of public-scope work.
-5. For public candidates, use [PUBLIC_SIGNOFF_COMMANDS.md](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md), not the private maintainer sign-off runbook.
+4. Keep actual game payloads, secrets, and bulky generated runtime captures out
+   of git unless a maintainer explicitly changes that payload rule.
+5. Use [PUBLIC_SIGNOFF_COMMANDS.md](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md) for public-source/release signoff checks.
 
-Private maintainers and approved private collaborators should also read the
-private maintainer operating notes before changing private/runtime/RE/release
-posture. Those private coordination notes and policy inputs are not public
-release payload.
+Read [LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md) before adding or moving local
+game, media, save, Ghidra, proof, or agent-output material.
 
 ## Current Direction
 
@@ -36,7 +39,10 @@ release payload.
 
 - Never patch or rename the installed Steam game folder or the original `BEA.exe`.
 - Patch copied executables only, through the safe-copy profile/patch paths.
-- Do not add real game assets, private media, saves, screenshots, runtime proof bundles, Ghidra backups, secrets, state files, `.codex`, `subagents`, `game`, `media`, or `save-attempts` to public-scope work.
+- Do not add real game assets, copied executables, private media/input payloads,
+  local save payloads, screenshots, frame dumps, raw CDB logs, full Ghidra
+  databases/backups, secrets, build output, `game`, `media`, or `save-attempts`
+  to tracked source work.
 - Do not synthesize `.bes` saves from scratch. Start from a real baseline and preserve unknown bytes.
 - Do not add GitHub Actions, CI/CD workflows, hosted validation gates, or release automation. Validation for this repo is local.
 
@@ -51,15 +57,12 @@ Contributors must use a legally obtained local copy of the game and must not sub
 Required for normal product work:
 
 ```powershell
-npm run test:public-candidate-inventory # fresh public candidate only
 npm install
 dotnet build .\OnslaughtCareerEditor.WinUI.slnx --nologo
 npm run dev
 ```
 
-All `npm run ...` gates are defined in the candidate root `package.json`.
-Run `npm run test:public-candidate-inventory` before install/build/test outputs
-are created when validating a freshly exported public candidate.
+All `npm run ...` gates are defined in the root `package.json`.
 
 Tooling prerequisites:
 
@@ -69,7 +72,7 @@ Tooling prerequisites:
 | .NET 10 SDK | WinUI, AppCore, AppCore.Host, CLI, and tests |
 | Node.js with npm `11.12.1` target | local script runner and docs/release checks |
 | Python 3 with Windows `py` launcher | public-safe tooling, release, patch, and docs checks |
-| Git Bash or another `bash` provider | private maintainer release dry-run scripts only |
+| Git Bash or another `bash` provider | release dry-run scripts when packaging requires Bash |
 
 Use `ONSLAUGHT_APP_CONFIG_ROOT` when you need isolated app config during local
 tests instead of the default `%APPDATA%\OnslaughtCareerEditor` location.
@@ -99,14 +102,14 @@ Run only the gates relevant to your change, but run them locally before asking f
 
 - Keep patches small and path-scoped.
 - Read the relevant files before editing.
-- Preserve existing user/private changes and do not clean up unrelated files.
+- Preserve existing user changes and do not clean up unrelated files.
 - Prefer existing AppCore, WinUI, patch catalog, and tooling patterns over new frameworks.
 - Put canonical RE findings under `reverse-engineering/`, product strategy under `roadmap/`, and release posture under `release/readiness/`.
 - Keep user-facing WinUI wording plain. Avoid internal proof IDs, raw offsets, and maintainer jargon in normal app surfaces.
-- Bulky live runtime proof artifacts should use an approved external/private
-  artifact root plus the documented arm phrase. Keep only active working copies
-  under `subagents/`, and never paste raw runtime proof paths, captures, or CDB
-  logs into public docs or PRs.
+- Bulky live runtime proof artifacts should use an approved external artifact
+  root plus the documented arm phrase. Track compact proof summaries, checkers,
+  and state updates; keep copied-game frames, raw captures, and raw CDB logs out
+  of git.
 
 ## WinUI UI/UX Contributions
 
@@ -139,14 +142,14 @@ Host/Join UI must stay hidden or disabled until there is a real distinct endpoin
 
 ## Public Release Boundary
 
-Public-source export is manifest-driven, not a broad copy of the private repo. The current public package manifest is `release/readiness/public_package.json`; the curated export materializes that file as root `package.json` in public candidate trees. The export also materializes `release/readiness/public_AGENTS.md` as root `AGENTS.md` and `release/readiness/public_gitignore.txt` as root `.gitignore` so public contributors do not inherit private maintainer guidance.
+The public repo is the primary working repo, but public release assets are still
+intentional release artifacts. Do not confuse local ignored lab material with
+published source or ZIP payload.
 
 Before public-source packaging or sharing work, follow
 [PUBLIC_SIGNOFF_COMMANDS.md](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md).
-For a freshly exported candidate, run `npm run test:public-candidate-inventory`
-before install/build/test outputs are created and verify `EXPORT_PROVENANCE.json`
-is present. For ordinary PR work after a tree has build outputs, run the
-lane-relevant checks below instead:
+For ordinary PR work after a tree has build outputs, run the lane-relevant
+checks below:
 
 ```powershell
 npm run test:doc-commands
@@ -156,24 +159,20 @@ npm run test:repo-hygiene
 npm run test:winui-notices
 ```
 
-Private maintainers run the private release profile, curated manifest, and
-`release_package.sh --dry-run` gates from the private source tree before
-materializing a public candidate. Those private manifest/accounting gates are
-not public PR gates.
-
 Do not publish a public release, push a public release branch, sign binaries, ship an installer, or claim public package readiness without explicit maintainer authorization.
 
 ## Opening A PR
 
-- Base public PRs on the sanitized public candidate or an explicitly approved collaborator branch, not a private maintainer clone.
+- Base public PRs on this public repo unless a maintainer explicitly assigns a separate branch or private workspace.
 - Fill out the handoff template in [COLLABORATION.md](COLLABORATION.md); it is also suitable as a PR description when no separate template exists.
 - Keep the PR scoped to one lane and name the lane in the description.
 - Include the exact local gates you ran and any gates intentionally skipped.
-- Do not add GitHub Actions, CI/CD workflows, release automation, private assets, saves, screenshots, raw proof bundles, or state files.
-- Public contributors changing public/private boundaries should run
+- Do not add GitHub Actions, CI/CD workflows, release automation, game assets,
+  copied executables, local saves, screenshots, frame dumps, raw CDB logs, or
+  secrets.
+- Contributors changing hard-payload boundaries should run
   `npm run test:public-allowlist` and `npm run test:repo-hygiene` before
-  review. Private maintainers run the release-profile and curated-manifest
-  export gates before materializing a new public candidate.
+  review.
 
 ## Review Checklist
 
@@ -181,11 +180,15 @@ Before opening a PR or handing work to another developer:
 
 - The change is narrow and described in plain language.
 - Relevant local tests passed and are named in the handoff.
-- Public/private boundaries are unchanged or intentionally tightened.
-- No private path, game asset, save, screenshot, raw proof artifact, secret, or state file leaked into public-scope docs or manifests.
+- Hard-payload boundaries are unchanged or intentionally updated.
+- No game asset, copied executable, local save payload, screenshot/frame dump,
+  raw CDB log, secret, or credential material leaked into tracked source or
+  release manifests.
 - WinUI/AppCore changes preserve safe-copy behavior and do not mutate installed game files.
 - Online/multiplayer wording separates proof rungs from player-ready capabilities.
 - Release accounting artifacts are regenerated only when their inputs changed.
+- Ignored local overlays are present only when needed for local proof/tooling and
+  are not part of the PR.
 
 ## Useful Entry Points
 
@@ -199,6 +202,6 @@ Before opening a PR or handing work to another developer:
 - [roadmap/ROADMAP-INDEX.md](roadmap/ROADMAP-INDEX.md)
 - [roadmap/public-roadmap.md](roadmap/public-roadmap.md)
 - [roadmap/repo-structure-and-archive-map.md](roadmap/repo-structure-and-archive-map.md)
-- Public-safe RE docs are curated through `reverse-engineering/RE-INDEX.md` in
-  public candidates. Private proof forests stay private unless rewritten as
-  bounded, link-closed public summaries.
+- RE docs are indexed through `reverse-engineering/RE-INDEX.md`. Track compact
+  proof summaries and checkers; keep copied-game payloads, frames, raw CDB logs,
+  and full Ghidra databases in local overlays.

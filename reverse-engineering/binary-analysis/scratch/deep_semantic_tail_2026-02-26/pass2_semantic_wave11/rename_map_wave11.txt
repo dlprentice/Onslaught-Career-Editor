@@ -1,0 +1,3 @@
+0x005016b0 InitShaderCapabilityFlagsAndCVar
+0x00527da0 CVBufTexture__MarkAccepted
+0x00549570 CMeshRenderer__RenderMeshCore

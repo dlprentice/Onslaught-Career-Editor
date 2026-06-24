@@ -1,0 +1,33 @@
+slot	entry_addr	ptr	ptr_name	ptr_signature
+0	005e04f0	004bfc60	<none>	<none>
+1	005e04f4	00405930	CControllerDefinition__VFunc_03_00405930	int __thiscall CControllerDefinition__VFunc_03_00405930(void * this)
+2	005e04f8	0044e1c0	<none>	<none>
+3	005e04fc	00452b60	CFrontEndPage__Process_NoOp	void __stdcall CFrontEndPage__Process_NoOp(void * this, int state)
+4	005e0500	004f3d30	<none>	<none>
+5	005e0504	00405e50	<none>	<none>
+6	005e0508	004fdcb0	CUnit__Unk_004fdcb0	void __thiscall CUnit__Unk_004fdcb0(void * this, int param_1, int param_2)
+7	005e050c	004fdc20	CUnit__Unk_004fdc20	void __fastcall CUnit__Unk_004fdc20(int param_1)
+8	005e0510	00405e30	<none>	<none>
+9	005e0514	00405e40	<none>	<none>
+10	005e0518	004f9220	<none>	<none>
+11	005e051c	0044e2c0	CMonitor__Unk_0044e2c0	int __fastcall CMonitor__Unk_0044e2c0(void * param_1)
+12	005e0520	004f44a0	CThing__AddTrail	undefined CThing__AddTrail(void)
+13	005e0524	00403a90	<none>	<none>
+14	005e0528	0044e200	<none>	<none>
+15	005e052c	004fdd60	<none>	<none>
+16	005e0530	00421cb0	<none>	<none>
+17	005e0534	00405930	CControllerDefinition__VFunc_03_00405930	int __thiscall CControllerDefinition__VFunc_03_00405930(void * this)
+18	005e0538	0044e020	<none>	<none>
+19	005e053c	00401f70	<none>	<none>
+20	005e0540	00403730	CExplosionInitThing__Helper_00403730	void __fastcall CExplosionInitThing__Helper_00403730(void * param_1)
+21	005e0544	00403760	CUnitAI__Helper_00403760	void __fastcall CUnitAI__Helper_00403760(void * param_1)
+22	005e0548	00402020	CGeneralVolume__Helper_00402020	void __fastcall CGeneralVolume__Helper_00402020(int param_1)
+23	005e054c	00405db0	VFuncSlot_12_00405db0	void VFuncSlot_12_00405db0(void)
+24	005e0550	00405dc0	<none>	<none>
+25	005e0554	00405dd0	<none>	<none>
+26	005e0558	004fc080	CUnitAI__Helper_004fc080	int __fastcall CUnitAI__Helper_004fc080(void * param_1)
+27	005e055c	004fc3c0	<none>	<none>
+28	005e0560	00405de0	<none>	<none>
+29	005e0564	004fa4b0	CUnit__Unk_004fa4b0	int CUnit__Unk_004fa4b0(void)
+30	005e0568	004f9a10	<none>	<none>
+31	005e056c	004175c0	<none>	<none>

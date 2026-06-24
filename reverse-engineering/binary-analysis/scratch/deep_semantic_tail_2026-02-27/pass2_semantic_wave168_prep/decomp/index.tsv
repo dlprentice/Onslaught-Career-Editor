@@ -1,0 +1,21 @@
+address	name	signature	status
+0x00569256	CDXTexture__Helper_00569256	void CDXTexture__Helper_00569256(void)	OK
+0x00569432	CDXTexture__Helper_00569432	void CDXTexture__Helper_00569432(void)	OK
+0x00569788	CDXTexture__Helper_00569788	int __cdecl CDXTexture__Helper_00569788(int param_1, int param_2)	OK
+0x00569814	CDXTexture__Helper_00569814	void __cdecl CDXTexture__Helper_00569814(int param_1, void * param_2)	OK
+0x0056982f	CDXTexture__Helper_0056982f	void __cdecl CDXTexture__Helper_0056982f(void * param_1)	OK
+0x0056983b	CDXTexture__Helper_0056983b	int __cdecl CDXTexture__Helper_0056983b(void * param_1)	OK
+0x00569f35	CDXTexture__Helper_00569f35	int __cdecl CDXTexture__Helper_00569f35(int param_1, int param_2, int param_3)	OK
+0x00569f92	CDXTexture__Helper_00569f92	uint __cdecl CDXTexture__Helper_00569f92(int param_1, void * param_2, uint param_3)	OK
+0x0056a0b1	CDXTexture__Helper_0056a0b1	uint __thiscall CDXTexture__Helper_0056a0b1(void * this, void * param_1, int param_2)	OK
+0x0056a0de	CDXTexture__Helper_0056a0de	uint __thiscall CDXTexture__Helper_0056a0de(void * this, void * param_1, int param_2)	OK
+0x0056a15f	CDXTexture__Helper_0056a15f	uint __cdecl CDXTexture__Helper_0056a15f(uint param_1, void * param_2)	OK
+0x0056a7e7	CDXTexture__Helper_0056a7e7	int __cdecl CDXTexture__Helper_0056a7e7(int param_1, int param_2)	OK
+0x0056b212	CDXTexture__Helper_0056b212	int __cdecl CDXTexture__Helper_0056b212(uint param_1)	OK
+0x0056b254	CDXTexture__Helper_0056b254	void __cdecl CDXTexture__Helper_0056b254(uint param_1)	OK
+0x0056b2b3	CDXTexture__Helper_0056b2b3	void __cdecl CDXTexture__Helper_0056b2b3(uint param_1)	OK
+0x0056b2d5	CDXTexture__Helper_0056b2d5	int __cdecl CDXTexture__Helper_0056b2d5(uint param_1)	OK
+0x0056b368	CDXTexture__Helper_0056b368	uint __cdecl CDXTexture__Helper_0056b368(uint param_1, void * param_2)	OK
+0x0056c05c	CDXTexture__Helper_0056c05c	int CDXTexture__Helper_0056c05c(void)	OK
+0x0056c684	CDXTexture__Helper_0056c684	uint __stdcall CDXTexture__Helper_0056c684(int param_1)	OK
+0x0056c998	CDXTexture__Helper_0056c998	int CDXTexture__Helper_0056c998(void)	OK

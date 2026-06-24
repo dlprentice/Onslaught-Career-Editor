@@ -1,0 +1,7 @@
+address	name	signature	status
+0x00402010	CUnit__Helper_00402010	void __fastcall CUnit__Helper_00402010(int param_1)	OK
+0x00409e60	CGeneralVolume__Helper_00409e60	double __stdcall CGeneralVolume__Helper_00409e60(float param_1)	OK
+0x0040d5f0	CBattleEngine__Helper_0040d5f0	void __fastcall CBattleEngine__Helper_0040d5f0(int param_1)	OK
+0x004c10c0	CPDSimpleSprite__Helper_004c10c0	double __thiscall CPDSimpleSprite__Helper_004c10c0(void * this, void * param_1, float param_2, int param_3)	OK
+0x004fd140	CUnit__Helper_004fd140	int __fastcall CUnit__Helper_004fd140(int param_1)	OK
+0x0057d32e	CWaypointManager__Helper_0057d32e	int CWaypointManager__Helper_0057d32e(void)	OK

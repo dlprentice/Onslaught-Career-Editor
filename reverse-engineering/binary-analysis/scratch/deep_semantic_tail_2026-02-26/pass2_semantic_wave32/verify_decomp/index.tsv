@@ -1,0 +1,8 @@
+address	name	signature	status
+0x0040ac50	CGeneralVolume__IntegrateSlotAccumulators	void __thiscall CGeneralVolume__IntegrateSlotAccumulators(void * this, int param_1, float param_2)	OK
+0x0040dfb0	CGeneralVolume__SpawnPickupAndDispatch	void __fastcall CGeneralVolume__SpawnPickupAndDispatch(void * param_1)	OK
+0x00410310	CGeneralVolume__HandleBoostWindowInput	void __thiscall CGeneralVolume__HandleBoostWindowInput(void * this, int param_1, float param_2)	OK
+0x00410490	CGeneralVolume__ApplyInputDampingToVelocity	void __fastcall CGeneralVolume__ApplyInputDampingToVelocity(int param_1)	OK
+0x00410740	CGeneralVolume__HandleAxisPositiveThresholdCross	void __thiscall CGeneralVolume__HandleAxisPositiveThresholdCross(void * this, int param_1, float param_2)	OK
+0x004109d0	CGeneralVolume__HandleAxisNegativeThresholdCross	void __thiscall CGeneralVolume__HandleAxisNegativeThresholdCross(void * this, int param_1, float param_2)	OK
+0x004114d0	CGeneralVolume__GetFlagFCScalar	double __fastcall CGeneralVolume__GetFlagFCScalar(int param_1)	OK

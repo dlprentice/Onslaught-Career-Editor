@@ -1,0 +1,12 @@
+{
+  "date": "2026-02-12",
+  "markdown_files_scanned": 802,
+  "files_with_verified_vs_source_line": 236,
+  "files_with_verified_vs_source_yes": 96,
+  "verified_yes_missing_references_onslaught_count": 0,
+  "verified_yes_missing_references_onslaught": [],
+  "function_docs_scanned": 172,
+  "function_docs_with_header_source_line": 117,
+  "function_docs_header_source_references_onslaught_count": 112,
+  "function_docs_header_source_snapshot_gap_count": 30
+}

@@ -1,0 +1,7 @@
+address	name	signature	status
+0x004a3510	CMenuItem__Init	undefined CMenuItem__Init(void)	OK
+0x004a3630	CMenuItem__InitWithIcon	undefined CMenuItem__InitWithIcon(void)	OK
+0x004a32c0	CMenuItem__Render	undefined CMenuItem__Render(void)	OK
+0x00453a60	CMenuItem__VFunc_03_00453a60	int __thiscall CMenuItem__VFunc_03_00453a60(void * this)	OK
+0x00453a70	CMenuItem__VFunc_06_00453a70	int __thiscall CMenuItem__VFunc_06_00453a70(void * this)	OK
+0x00453a80	CMenuItem__VFunc_09_00453a80	byte __thiscall CMenuItem__VFunc_09_00453a80(void * this)	OK

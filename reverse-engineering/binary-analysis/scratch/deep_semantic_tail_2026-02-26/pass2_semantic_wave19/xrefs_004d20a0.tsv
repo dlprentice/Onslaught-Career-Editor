@@ -1,0 +1,5 @@
+target_addr	target_name	from_addr	from_function	ref_type
+004d20a0	CFEPMultiplayerStart__Unk_004d20a0	005e2f30	<no_function>	DATA
+004d20a0	CFEPMultiplayerStart__Unk_004d20a0	005e2cdc	<no_function>	DATA
+004d20a0	CFEPMultiplayerStart__Unk_004d20a0	005e1a40	<no_function>	DATA
+004d20a0	CFEPMultiplayerStart__Unk_004d20a0	005e134c	<no_function>	DATA

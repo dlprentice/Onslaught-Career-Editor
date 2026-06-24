@@ -1,0 +1,5 @@
+0x0055f2e8 CRT__WcsCmp
+0x0055f783 Win32__FindCloseWithErrno
+0x0055fe78 CRT__UnlockRouteByAddress
+0x0055fea7 CRT__UnlockRouteByIndex
+0x0055feec CRT__FTellAdjusted

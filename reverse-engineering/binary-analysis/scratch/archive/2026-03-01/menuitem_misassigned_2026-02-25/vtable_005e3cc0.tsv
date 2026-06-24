@@ -1,0 +1,21 @@
+slot	entry_addr	ptr	ptr_name	ptr_signature
+0	005e3cc0	004bac10	CMenuItem__Unk_004bac10	void __thiscall CMenuItem__Unk_004bac10(void * this, int param_1, int param_2, int param_3)
+1	005e3cc4	006182d8	<none>	<none>
+2	005e3cc8	00428710	VFuncSlot_00_00428710	int __thiscall VFuncSlot_00_00428710(void * this, void * param_1, void * param_2)
+3	005e3ccc	00428770	VFuncSlot_01_00428770	int __thiscall VFuncSlot_01_00428770(void * this, void * param_1, void * param_2)
+4	005e3cd0	00405930	CControllerDefinition__VFunc_03_00405930	int __thiscall CControllerDefinition__VFunc_03_00405930(void * this)
+5	005e3cd4	00405930	CControllerDefinition__VFunc_03_00405930	int __thiscall CControllerDefinition__VFunc_03_00405930(void * this)
+6	005e3cd8	00405d90	<none>	<none>
+7	005e3cdc	004de700	Return1f	float __cdecl Return1f(void * this)
+8	005e3ce0	004f45c0	<none>	<none>
+9	005e3ce4	004014d0	<none>	<none>
+10	005e3ce8	00401400	<none>	<none>
+11	005e3cec	004040a0	<none>	<none>
+12	005e3cf0	004040a0	<none>	<none>
+13	005e3cf4	00405910	<none>	<none>
+14	005e3cf8	00405930	CControllerDefinition__VFunc_03_00405930	int __thiscall CControllerDefinition__VFunc_03_00405930(void * this)
+15	005e3cfc	00405930	CControllerDefinition__VFunc_03_00405930	int __thiscall CControllerDefinition__VFunc_03_00405930(void * this)
+16	005e3d00	00405920	<none>	<none>
+17	005e3d04	004bfc60	<none>	<none>
+18	005e3d08	004de700	Return1f	float __cdecl Return1f(void * this)
+19	005e3d0c	004014a0	<none>	<none>

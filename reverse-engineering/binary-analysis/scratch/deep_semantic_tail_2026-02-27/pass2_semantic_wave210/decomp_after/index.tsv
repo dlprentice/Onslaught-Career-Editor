@@ -1,0 +1,67 @@
+address	name	signature	status
+0x0047ef20	CDXBattleLine__RecomputeGridExtentsAndHeightRange	int * __fastcall CDXBattleLine__RecomputeGridExtentsAndHeightRange(void * param_1)	OK
+0x004f7460	CDXBattleLine__InsertPointOrAppendVertex	void __thiscall CDXBattleLine__InsertPointOrAppendVertex(void * this, void * param_1, void * param_2)	OK
+0x004f74b0	CDXBattleLine__SplitTriangleAtPointAndLegalizeEdges	int __thiscall CDXBattleLine__SplitTriangleAtPointAndLegalizeEdges(void * this, void * param_1, void * param_2, void * param_3)	OK
+0x004f7660	CDXBattleLine__TryFlipSharedEdgeForQuality	void __thiscall CDXBattleLine__TryFlipSharedEdgeForQuality(void * this, void * param_1, int param_2, int param_3)	OK
+0x004f78c0	CDXBattleLine__FindTriangleByDirectedEdge	short * __thiscall CDXBattleLine__FindTriangleByDirectedEdge(void * this, int param_1, int param_2, int param_3)	OK
+0x004f7940	CDXBattleLine__RelaxMeshByEdgeFlips	void __fastcall CDXBattleLine__RelaxMeshByEdgeFlips(void * param_1)	OK
+0x0053b470	CDXBattleLine__RenderTriOverlayPass	void __fastcall CDXBattleLine__RenderTriOverlayPass(int param_1)	OK
+0x00476fe0	CVBufTexture__RenderDynamicUnitPass	void CVBufTexture__RenderDynamicUnitPass(void)	OK
+0x00477b70	CVBufTexture__QueueRenderIfDepthInRange	void __thiscall CVBufTexture__QueueRenderIfDepthInRange(void * this, void * param_1, void * param_2, float param_3)	OK
+0x004881e0	CVBufTexture__ResolveBlendModeSelector	int __thiscall CVBufTexture__ResolveBlendModeSelector(void * this, int param_1, int param_2)	OK
+0x004885e0	CVBufTexture__SetTextureStageFilterByFlag200	void __thiscall CVBufTexture__SetTextureStageFilterByFlag200(void * this, int param_1, int param_2)	OK
+0x004fd760	CVBufTexture__HasAnyTrackedUnitBeforeTimeout	int __fastcall CVBufTexture__HasAnyTrackedUnitBeforeTimeout(int param_1)	OK
+0x0057600b	CVBufTexture__DispatchTextureTransformThunk	void CVBufTexture__DispatchTextureTransformThunk(void)	OK
+0x0040d1f0	OID__BuildOrientationMatrixFromEuler	void __thiscall OID__BuildOrientationMatrixFromEuler(void * this, void * param_1, float param_2, float param_3, float param_4)	OK
+0x0044a850	OID__GetAttachmentOrOriginTransform	void __thiscall OID__GetAttachmentOrOriginTransform(void * this, int param_1, void * param_2)	OK
+0x0044a930	OID__GetAttachmentOrBaseOrientationMatrix	void __thiscall OID__GetAttachmentOrBaseOrientationMatrix(void * this, int param_1, void * param_2)	OK
+0x0044c780	OID__ReadHazardGridIfAboveTerrainDelta	int __thiscall OID__ReadHazardGridIfAboveTerrainDelta(void * this, int param_1, float param_2, float param_3, float param_4)	OK
+0x0050a0e0	OID__ComputeForwardProjectedPointTowardTarget	void __thiscall OID__ComputeForwardProjectedPointTowardTarget(void * this, void * param_1, int param_2, void * param_3)	OK
+0x0050b030	OID__TraceLineAndSelectBestTargetHit	int OID__TraceLineAndSelectBestTargetHit(void)	OK
+0x0055dcb0	OID__AcosWrapper	void OID__AcosWrapper(void)	OK
+0x004062d0	CSquadNormal__BuildOrientationMatrixFromEuler	void __thiscall CSquadNormal__BuildOrientationMatrixFromEuler(void * this, void * param_1, float param_2, float param_3, float param_4)	OK
+0x0040d2c0	CSquadNormal__TransformVec3ByOrientationMatrix	void __thiscall CSquadNormal__TransformVec3ByOrientationMatrix(void * this, void * param_1, void * param_2, void * param_3)	OK
+0x0044c720	CSquadNormal__GetCellValueAtWorldXY	int __thiscall CSquadNormal__GetCellValueAtWorldXY(void * this, int param_1, int param_2)	OK
+0x0044c810	CSquadNormal__FindNearestFreeCellSpiral	void __thiscall CSquadNormal__FindNearestFreeCellSpiral(void * this, int param_1, void * param_2)	OK
+0x00477cb0	CSquadNormal__SelectBestEngagementTarget	int * __stdcall CSquadNormal__SelectBestEngagementTarget(void * param_1)	OK
+0x004e4480	CSquadNormal__IsTargetMaskCompatible	int __thiscall CSquadNormal__IsTargetMaskCompatible(void * this, int param_1, int param_2)	OK
+0x004e6680	CSquadNormal__IsFactionCompatible	int __thiscall CSquadNormal__IsFactionCompatible(void * this, int param_1, int param_2)	OK
+0x004e97e0	CSquadNormal__SwapReadersIfPairCloser	int __thiscall CSquadNormal__SwapReadersIfPairCloser(void * this, void * param_1, void * param_2)	OK
+0x004fb3d0	CSquadNormal__IsValidLinkedSupportForTarget	int __thiscall CSquadNormal__IsValidLinkedSupportForTarget(void * this, int param_1, void * param_2)	OK
+0x004fb780	CSquadNormal__GetSupportMinEngageDistance	int CSquadNormal__GetSupportMinEngageDistance(void)	OK
+0x004fb7e0	CSquadNormal__GetSupportMaxEngageDistance	int CSquadNormal__GetSupportMaxEngageDistance(void)	OK
+0x004fb840	CSquadNormal__SelectBestSupportOrEscort	void __thiscall CSquadNormal__SelectBestSupportOrEscort(void * this, void * param_1, int param_2)	OK
+0x004fd570	CSquadNormal__HasAnyLinkedUnitWithField94	int __fastcall CSquadNormal__HasAnyLinkedUnitWithField94(int param_1)	OK
+0x004fe500	CSquadNormal__SetReaderAndUnregisterFromFactionSets	void __thiscall CSquadNormal__SetReaderAndUnregisterFromFactionSets(void * this, void * param_1, void * param_2)	OK
+0x004ffdd0	CSquadNormal__SetReaderAndRefreshSupportSelection	void __thiscall CSquadNormal__SetReaderAndRefreshSupportSelection(void * this, int param_1, void * param_2, int param_3)	OK
+0x0050a0b0	CSquadNormal__HasActiveMaskMatchWithTarget	uint __thiscall CSquadNormal__HasActiveMaskMatchWithTarget(void * this, int param_1, int param_2)	OK
+0x00402010	CUnit__ResetFieldD0ToGlobalThreshold	void __fastcall CUnit__ResetFieldD0ToGlobalThreshold(int param_1)	OK
+0x004097a0	CUnit__PushTransformHistoryAndSetCurrent	void __thiscall CUnit__PushTransformHistoryAndSetCurrent(void * this, void * param_1, void * param_2)	OK
+0x00428b50	CUnit__SetReaderAndComputeRelativeYaw	void __thiscall CUnit__SetReaderAndComputeRelativeYaw(void * this, int param_1, void * param_2, int param_3)	OK
+0x004416e0	CUnit__ResetPerSlotCooldownTables	void __fastcall CUnit__ResetPerSlotCooldownTables(int param_1)	OK
+0x004cb0b0	CUnit__FinalizeLinkedUnitStateAndClear	void __thiscall CUnit__FinalizeLinkedUnitStateAndClear(void * this, int param_1, int param_2)	OK
+0x004e43d0	CUnit__CanProvideSupportNow	int __fastcall CUnit__CanProvideSupportNow(int param_1)	OK
+0x004e4420	CUnit__IsInBlockedSupportState	bool __fastcall CUnit__IsInBlockedSupportState(int param_1)	OK
+0x004f39b0	CUnit__DebugTraceIfFlag30Set	void __thiscall CUnit__DebugTraceIfFlag30Set(void * this, int param_1, void * param_2)	OK
+0x005096a0	CUnit__ComputeMinBallisticTravelDistance	double __thiscall CUnit__ComputeMinBallisticTravelDistance(void * this, void * param_1, float param_2, float param_3, float param_4)	OK
+0x005099a0	CUnit__ComputeMaxBallisticTravelDistance	double __thiscall CUnit__ComputeMaxBallisticTravelDistance(void * this, void * param_1, float param_2, float param_3, float param_4)	OK
+0x00509f70	CUnit__IsEligibleByDistanceBucketOrRange	int __fastcall CUnit__IsEligibleByDistanceBucketOrRange(int param_1)	OK
+0x0050a0d0	CUnit__HasMaskBitsA8	uint __thiscall CUnit__HasMaskBitsA8(void * this, int param_1, uint param_2)	OK
+0x0050a290	CUnit__IsTargetTimeoutBeforeProfileLimit	int __fastcall CUnit__IsTargetTimeoutBeforeProfileLimit(int param_1)	OK
+0x00511510	CUnit__GetTypePriorityWeight	int __cdecl CUnit__GetTypePriorityWeight(int param_1)	OK
+0x00423910	CMeshPart__ReadHeaderPairAndResetByteCount	uint __fastcall CMeshPart__ReadHeaderPairAndResetByteCount(uint param_1)	OK
+0x00423960	CMeshPart__ReadBlockAndAccumulateByteCount	bool __thiscall CMeshPart__ReadBlockAndAccumulateByteCount(void * this, int param_1, int param_2, int param_3, int param_4)	OK
+0x00494b00	CMeshPart__NameMatchesWheelTokenSet	bool __cdecl CMeshPart__NameMatchesWheelTokenSet(int param_1)	OK
+0x00494b50	CMeshPart__HasAnimationToken_62cb54	bool CMeshPart__HasAnimationToken_62cb54(void)	OK
+0x004950f0	CMeshPart__AnySubPartMatchesToken_62896c	int __cdecl CMeshPart__AnySubPartMatchesToken_62896c(int param_1)	OK
+0x004957d0	CMeshPart__AnySubPartIsCoreOrBarrel	int __cdecl CMeshPart__AnySubPartIsCoreOrBarrel(int param_1)	OK
+0x00496250	CMeshPart__NameMatchesToken_62dd74	bool __cdecl CMeshPart__NameMatchesToken_62dd74(int param_1)	OK
+0x00496270	CMeshPart__HasAnimationToken_62dd88_or_62dd7c	bool CMeshPart__HasAnimationToken_62dd88_or_62dd7c(void)	OK
+0x004968f0	CMeshPart__NameIsNotToken_62dd20	bool __cdecl CMeshPart__NameIsNotToken_62dd20(int param_1)	OK
+0x00496910	CMeshPart__AnySubPartEqualsToken_62dd20	int __cdecl CMeshPart__AnySubPartEqualsToken_62dd20(int param_1)	OK
+0x00496f60	CMeshPart__NameIsBarrelAndNotToken_62dd20	bool __cdecl CMeshPart__NameIsBarrelAndNotToken_62dd20(int param_1)	OK
+0x0049c250	CMeshPart__NameMatchesTokenSet_62df3c_62df34_62df30	bool __cdecl CMeshPart__NameMatchesTokenSet_62df3c_62df34_62df30(int param_1)	OK
+0x0049c2d0	CMeshPart__HasAnimationToken_623074	bool CMeshPart__HasAnimationToken_623074(void)	OK
+0x0049f600	CMeshPart__NameMatchesBarrelSpinnerTokenSet	bool __cdecl CMeshPart__NameMatchesBarrelSpinnerTokenSet(int param_1)	OK
+0x0049f670	CMeshPart__AnySubPartMatchesBarrelSpinnerTokenSet	int __cdecl CMeshPart__AnySubPartMatchesBarrelSpinnerTokenSet(int param_1)	OK
+0x004aa3f0	CMeshPart__CopyPrimaryAxesToOutVec3Triplet	void __thiscall CMeshPart__CopyPrimaryAxesToOutVec3Triplet(void * this, void * param_1, void * param_2)	OK

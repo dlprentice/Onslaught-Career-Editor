@@ -1,0 +1,5 @@
+0x00560e28 CRT__FormatFloatScientificFromLongDouble
+0x00560e89 CRT__FormatFloatScientificCore
+0x00560f4b CRT__FormatFloatFixedFromLongDouble
+0x00560fa0 CRT__FormatFloatFixedCore
+0x00561047 CRT__FormatFloatGeneral_SelectStyle

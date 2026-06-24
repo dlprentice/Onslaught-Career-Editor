@@ -1,0 +1,3 @@
+item_id	domain	status	blocker	evidence
+BLK-001	experimental_patch_expansion	blocked	Additional stable/experimental binary patch families (beyond current display/windowed trio) need new byte-evidence and runtime validation matrix before safe exposure.	subagents/depth2/lane06_binary_patch_gap_findings.md; subagents/depth2/lane10_modernization_feasibility_findings.md
+BLK-002	modernization_call_translation	blocked	Deep legacy->modern call translation remains high-risk without wrapper-profile closure and hardware matrix signoff.	reverse-engineering/binary-analysis/display-modernization-plan.md; subagents/depth2/lane10_modernization_feasibility_findings.md

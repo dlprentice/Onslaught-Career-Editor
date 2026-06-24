@@ -1,0 +1,17 @@
+0x00560a49	CTexture__Unk_00560a49	CDXTexture	2	CDXTexture:2
+0x00566b42	CTexture__Unk_00566b42	CDXTexture	1	CDXTexture:1
+0x0056d469	CTexture__Unk_0056d469	CDXTexture	1	CDXTexture:1
+0x0056f5c0	CTexture__Unk_0056f5c0	CFastVB	1	CFastVB:1
+0x0056fdc0	CTexture__Unk_0056fdc0	CFastVB	1	CFastVB:1
+0x0056fe70	CTexture__Unk_0056fe70	CFastVB	3	CFastVB:3
+0x00570000	CTexture__Unk_00570000	CFastVB	2	CFastVB:2
+0x00571870	CTexture__Unk_00571870	CFastVB	6	CFastVB:6
+0x00571890	CTexture__Unk_00571890	CFastVB	1	CFastVB:1
+0x005721f0	CTexture__Unk_005721f0	CFastVB	2	CFastVB:2
+0x00572500	CTexture__Unk_00572500	CFastVB	1	CFastVB:1
+0x00572570	CTexture__Unk_00572570	CFastVB	1	CFastVB:1
+0x00573d00	CTexture__Unk_00573d00	CFastVB	1	CFastVB:1
+0x00574200	CTexture__Unk_00574200	CFastVB	1	CFastVB:1
+0x005928d0	CTexture__Unk_005928d0	CDXTexture	1	CDXTexture:1
+0x0059c8c1	CTexture__Unk_0059c8c1	CDXTexture	2	CDXTexture:2
+0x005d04ec	CTexture__Unk_005d04ec	CFEPSaveGame	3	EnumerateSaveFiles_Main:2;CFEPSaveGame:1

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "winui-original-binary-second-host-runtime-causality.v1",
+  "gateScope": "second-host-runtime-causality-proof-gate-not-host-join-enable",
+  "status": "validator-ready-no-accepted-live-second-host-runtime-causality-proof",
+  "validator": {
+    "script": "tools/winui_safe_copy_online_second_host_runtime_causality_check.py",
+    "packageScript": "test:winui-original-binary-second-host-runtime-causality",
+    "validatesPrivateProofSchema": "winui-original-binary-second-host-runtime-causality.v1"
+  },
+  "requiredRawArtifactReceipts": [
+    "second-host-command-source-proof",
+    "scheduler-proof",
+    "bridge-proof",
+    "runtime-input-window-artifact",
+    "exact-pid-cdb-log",
+    "copied-runtime-artifact",
+    "copied-runtime-exe-hash",
+    "process-identity-proof"
+  ],
+  "livePromotionRequirements": {
+    "requiresRawArtifactReceiptsRecomputed": true,
+    "requiresPrivateRuntimeProofRoot": true,
+    "requiresSemanticRawArtifactReceipts": true,
+    "requiresRoleSpecificRawEvidenceBodies": true,
+    "requiresConcreteRawEvidenceBodyFields": true,
+    "requiresRoleSpecificRawEvidenceMaterialDescriptors": true,
+    "requiresRawEvidenceSha256RecomputedFromFiles": true,
+    "requiresCandidateBundleRelativePrivateRootContainedArtifacts": true,
+    "rejectsReceiptOnlyCandidates": true,
+    "rejectsJsonOnlyForgedArtifacts": true,
+    "rejectsSelfTestOnlyRawArtifacts": true,
+    "scansCandidateAndRawArtifactsForPrivatePaths": true,
+    "requiresSameRunArtifactChain": true,
+    "requiresRunIdBoundAcrossReceipts": true,
+    "requiresAcceptedCommandPayloadHashBoundEndToEnd": true,
+    "requiresInvitationLifecycleHashBoundEndToEnd": true,
+    "requiresLocalSourceSafetyPreflightForLiveRuntime": true,
+    "requiresExactPidCdbRuntimeInputEvidence": true,
+    "requiresRuntimeInputDerivedFromSecondHostCommandSource": true,
+    "requiresRuntimeDrivenBySecondHostCommandSource": true,
+    "rejectsHostAuthorityDerivedRuntimeInput": true,
+    "keepsHostJoinDisabledUntilCompositeGate": true,
+    "requiresHostHelperInputBoundToSecondHostCommandSource": true,
+    "requiresMappedP2SequenceReceipt": true,
+    "rejectsSecondHostClientDirectGameInputBypass": true
+  },
+  "currentEvidence": {
+    "acceptedLiveSecondHostRuntimeCausalityProof": false,
+    "acceptedLiveSecondHostRuntimeDeliveryProof": false,
+    "runtimeInputDerivedFromSecondHostCommandSource": false,
+    "runtimeDrivenBySecondHostCommandSource": false,
+    "hostJoinControlsMayBeEnabled": false,
+    "baseOnlineMultiplayerReady": false
+  },
+  "nonClaims": {
+    "multiHostLanPlayProof": false,
+    "publicMatchmakingProof": false,
+    "nativeBeaNetcodeProof": false,
+    "activeP3P4OriginalBinaryGameplayProof": false,
+    "moreThanTwoOriginalBinaryRuntimePlayersProof": false,
+    "coOpVersusRuntimeProof": false,
+    "deterministicSyncProof": false,
+    "rollbackProof": false,
+    "antiCheatProof": false,
+    "rebuildParityProof": false,
+    "noNoticeableDifferenceProof": false
+  },
+  "releaseBoundary": {
+    "privateProofReleaseExcludedByPolicy": true,
+    "privateArtifactContentPublished": false,
+    "rawPrivateProofPathPublished": false,
+    "publicHostOrMatchmakingEndpointPublished": false,
+    "releaseIncludedPrivateArtifact": false
+  },
+  "claimBoundary": "This gate defines the proof class for source-bound second-host command to copied-runtime causality. It does not enable Host/Join, base online multiplayer, public matchmaking, native BEA netcode, P3/P4 original-binary gameplay, co-op/versus runtime behavior, deterministic sync, rollback, anti-cheat, rebuild parity, or no-noticeable-difference online parity."
+}

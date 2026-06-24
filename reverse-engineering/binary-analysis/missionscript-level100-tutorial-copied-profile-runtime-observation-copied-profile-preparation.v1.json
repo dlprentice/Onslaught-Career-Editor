@@ -1,0 +1,280 @@
+{
+  "schemaVersion": "missionscript-level100-tutorial-copied-profile-runtime-observation-copied-profile-preparation.v1",
+  "status": "PASS",
+  "preparationKind": "public-safe-copied-profile-preparation-plan",
+  "source": {
+    "runtimeExecution": false,
+    "copiedProfileCreated": false,
+    "copiedExecutableCreated": false,
+    "beLaunch": false,
+    "executablePatch": false,
+    "screenshotCapture": false,
+    "nativeInput": false,
+    "debuggerAttachment": false,
+    "godotWork": false,
+    "preparationPlanComplete": true,
+    "rawDialogueIncluded": false,
+    "privatePathsIncluded": false,
+    "schemaPurpose": "public-safe copied-profile preparation plan before any real copied-profile materialization or runtime observation proof"
+  },
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+  },
+  "validatedInputs": [
+    "missionscript-level100-tutorial-copied-profile-runtime-observation-manifest-dry-run-validation-proof-plan.md",
+    "missionscript-level100-tutorial-copied-profile-runtime-observation-manifest-dry-run-validation.v1.json",
+    "missionscript-level100-tutorial-copied-profile-runtime-observation-manifest-templates.v1.json",
+    "missionscript-level100-tutorial-copied-profile-runtime-observation-artifact-manifest-proof-plan.md",
+    "missionscript-level100-tutorial-copied-profile-runtime-observation-boundary-proof-plan.md"
+  ],
+  "selectedMission": {
+    "mission": "level100",
+    "entryScript": "LevelScript.msl",
+    "fileCount": 25,
+    "extraScriptCount": 24,
+    "totalMslLines": 1469
+  },
+  "preparationSummary": {
+    "preparationClassCount": 8,
+    "allPreparationOnly": true,
+    "allRuntimeExecutionFalse": true,
+    "allContainsPrivatePathFalse": true,
+    "allContainsRawArtifactFalse": true,
+    "allStatusesPlannedNotCreated": true,
+    "allRedactionPoliciesPublicSafe": true,
+    "copiedProfileCreated": false,
+    "copiedExecutableCreated": false,
+    "installedGameMutation": false,
+    "originalExecutableMutation": false,
+    "launchArmed": false,
+    "beLaunch": false,
+    "executablePatch": false,
+    "screenshotCapture": false,
+    "nativeInput": false,
+    "debuggerAttachment": false,
+    "godotWork": false,
+    "runtimeEvidenceRows": 0,
+    "privatePathLeakCount": 0,
+    "rawArtifactLeakCount": 0,
+    "publicLeakCheck": "PASS"
+  },
+  "preparationRows": [
+    {
+      "preparationClass": "source_specimen_policy.v1",
+      "status": "planned-not-created",
+      "preparationOnly": true,
+      "runtimeExecution": false,
+      "containsPrivatePath": false,
+      "containsRawArtifact": false,
+      "redactionPolicy": "public-safe-placeholder-only"
+    },
+    {
+      "preparationClass": "copied_profile_manifest.v1",
+      "status": "planned-not-created",
+      "preparationOnly": true,
+      "runtimeExecution": false,
+      "containsPrivatePath": false,
+      "containsRawArtifact": false,
+      "redactionPolicy": "public-safe-placeholder-only"
+    },
+    {
+      "preparationClass": "copied_directory_plan.v1",
+      "status": "planned-not-created",
+      "preparationOnly": true,
+      "runtimeExecution": false,
+      "containsPrivatePath": false,
+      "containsRawArtifact": false,
+      "redactionPolicy": "public-safe-placeholder-only"
+    },
+    {
+      "preparationClass": "specimen_byte_check_plan.v1",
+      "status": "planned-not-created",
+      "preparationOnly": true,
+      "runtimeExecution": false,
+      "containsPrivatePath": false,
+      "containsRawArtifact": false,
+      "redactionPolicy": "public-safe-placeholder-only"
+    },
+    {
+      "preparationClass": "save_options_baseline_policy.v1",
+      "status": "planned-not-created",
+      "preparationOnly": true,
+      "runtimeExecution": false,
+      "containsPrivatePath": false,
+      "containsRawArtifact": false,
+      "redactionPolicy": "public-safe-placeholder-only"
+    },
+    {
+      "preparationClass": "artifact_root_policy.v1",
+      "status": "planned-not-created",
+      "preparationOnly": true,
+      "runtimeExecution": false,
+      "containsPrivatePath": false,
+      "containsRawArtifact": false,
+      "redactionPolicy": "public-safe-placeholder-only"
+    },
+    {
+      "preparationClass": "public_redaction_policy.v1",
+      "status": "planned-not-created",
+      "preparationOnly": true,
+      "runtimeExecution": false,
+      "containsPrivatePath": false,
+      "containsRawArtifact": false,
+      "redactionPolicy": "public-safe-placeholder-only"
+    },
+    {
+      "preparationClass": "launch_block_policy.v1",
+      "status": "planned-not-created",
+      "preparationOnly": true,
+      "runtimeExecution": false,
+      "containsPrivatePath": false,
+      "containsRawArtifact": false,
+      "redactionPolicy": "public-safe-placeholder-only"
+    }
+  ],
+  "copyPlan": {
+    "profileId": "<COPIED_PROFILE_ID_PENDING>",
+    "appOwnedArtifactRoot": "<APP_OWNED_ARTIFACT_ROOT_PENDING>",
+    "privatePath": "<PRIVATE_PATH_REDACTED>",
+    "privateArtifactPath": "<PRIVATE_ARTIFACT_PATH_REDACTED>",
+    "expectedCleanSha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+    "allowedSourceClasses": [
+      "clean retail executable specimen",
+      "read-only resource source material",
+      "real baseline save/options source material"
+    ],
+    "plannedPrivateOutputs": [
+      "copied executable",
+      "copied resource root",
+      "copied save/options files",
+      "copied-profile manifest",
+      "specimen byte-check report",
+      "private artifact inventory"
+    ],
+    "plannedPublicOutputs": [
+      "sanitized profile id",
+      "hash equality or mismatch class",
+      "file/class counts",
+      "redaction status",
+      "claim boundary",
+      "stop condition summary"
+    ],
+    "publicInclusionPolicy": "deny-raw-private-artifact"
+  },
+  "level100StaticAnchors": {
+    "sourceSelectionAnchors": [
+      "0x00539dc0",
+      "0x00539ca0",
+      "this+0x20",
+      "this+0x124",
+      "CDXMemBuffer__InitFromFile"
+    ],
+    "uniqueEventNames": 26,
+    "handlers": 34,
+    "postEventCallsites": 41,
+    "eventMismatch": "Destroyed Friendly Building versus Friendly Building Destroyed",
+    "playCharMessageRows": 45,
+    "messageTokens": 43,
+    "addHelpMessageTokens": 6,
+    "speakers": [
+      "P_TATIANA",
+      "P_KRAMER",
+      "P_TECHNICIAN"
+    ],
+    "resolvedStaticTokens": "68/68",
+    "missingReferences": 0,
+    "hudParts": [
+      "HUD_BATTLE_LINE_MAP",
+      "HUD_COMPASS",
+      "HUD_CURRENT_WEAPON",
+      "HUD_ENERGY_BAR",
+      "HUD_HEALTH_BAR",
+      "HUD_RADAR"
+    ],
+    "highlightHudPart": 7,
+    "unhighlightHudPart": 7,
+    "getThingRefRaw": 18,
+    "getThingRefUnique": 15,
+    "spawnThingRows": 20,
+    "spawnFamilies": [
+      "Target Drone",
+      "Air Trainer",
+      "Target Tank",
+      "Target Truck"
+    ],
+    "getSlot": 4,
+    "setSlotSave": 4,
+    "objectiveTokens": [
+      "_100_OBJECTIVE_1",
+      "_100_OBJECTIVE_2",
+      "_100_OBJECTIVE_3",
+      "_100_OBJECTIVE_4"
+    ],
+    "lossToken": "LOSE_TUTORIAL_BROKE"
+  },
+  "guardPlan": {
+    "expectedCleanSha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+    "installedGameMutation": false,
+    "originalExecutableMutation": false,
+    "copiedProfileCreated": false,
+    "copiedExecutableCreated": false,
+    "beLaunch": false,
+    "launchArmed": false,
+    "executablePatch": false,
+    "screenshotCapture": false,
+    "nativeInput": false,
+    "debuggerAttachment": false,
+    "godotWork": false
+  },
+  "stopConditions": [
+    "real copied-profile materialization before a materialization proof plan exists",
+    "copied specimen hash mismatch",
+    "byte-check report missing or inconclusive",
+    "copied-profile root escapes the app-owned artifact root",
+    "installed game mutation would be required",
+    "original executable mutation would be required",
+    "launchArmed is true before a later runtime proof explicitly arms launch",
+    "BEA launch is requested before launch proof is armed",
+    "executable patching is requested before a copied-executable patch proof exists",
+    "private path or raw artifact would leak into public docs",
+    "Godot/rebuild work is required to make the runtime claim"
+  ],
+  "claimBoundary": {
+    "proves": [
+      "the Level100 copied-profile runtime observation lane has a public-safe preparation contract",
+      "the source-specimen, copied-profile manifest, directory plan, byte-check plan, save/options baseline policy, artifact-root policy, public redaction policy, and launch-block policy are defined",
+      "the preparation contract keeps launch, patching, screenshots, native input, debugger, Godot, runtime proof, rebuild parity, and no-noticeable-difference parity disabled"
+    ],
+    "doesNotProve": [
+      "a copied profile exists",
+      "a copied executable exists",
+      "any copied specimen hash has been checked",
+      "runtime MissionScript execution",
+      "runtime command effects",
+      "runtime event outcomes",
+      "live loose-MSL loading",
+      "packed-vs-loose script selection",
+      "runtime Level100 mission outcome",
+      "runtime objective UI",
+      "runtime message or audio output",
+      "runtime HUD flashing",
+      "runtime object identity",
+      "runtime SpawnThing behavior",
+      "runtime GetThingRef lookup behavior",
+      "BEA launch behavior",
+      "BEA patching behavior",
+      "screenshot/capture proof",
+      "native input behavior",
+      "debugger observation behavior",
+      "Godot parity",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ]
+  },
+  "nextStaticSlice": "MissionScript Level100 Tutorial Copied-Profile Runtime Observation Copied-Profile Materialization Proof Plan"
+}

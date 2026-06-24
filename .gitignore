@@ -1,4 +1,4 @@
-# Public candidate .gitignore
+# Public-primary working repo .gitignore
 
 # Build output
 bin/
@@ -27,7 +27,7 @@ Thumbs.db
 __pycache__/
 *.pyc
 *.pyo
-subagents/
+subagents/md-link-check/
 release/out/
 release/artifacts/
 .tmp*/
@@ -35,19 +35,25 @@ tmp*/
 *.tmp
 *.cache
 
-# Private game/content/proof roots
-.codex/
+# Local lab overlays and copied game payloads.
 mcps/
+local-lab/
+local-game/
+local-media/
+local-saves/
+local-ghidra/
+local-proofs/
+Ghidra/
+ghidra-local/
 game/
 media/
-save-attempts/
 GameProfiles/
 PatchBench/
-release/readiness/private_runtime_evidence/
-*_state.json
-onslaught_codex_directive.md
+reverse-engineering/binary-analysis/scratch/**/MeshTextures/*.png
 
-# Game/runtime/binary payloads
+# Game/runtime/binary payloads and secrets
+.env
+.env.*
 *.exe
 *.dll
 *.bes
@@ -64,3 +70,8 @@ onslaught_codex_directive.md
 *.fbx
 *.gzf
 *.zip
+*.gpr
+*.rep/
+*.gbf
+*.gdt
+*.bytes

@@ -1,0 +1,57 @@
+{
+  "date": "2026-02-12",
+  "markdown_files_scanned": 822,
+  "offline": {
+    "file_size_guideline": {
+      "over_1000_lines": [
+        {
+          "lines": "1807",
+          "path": "discord_channel_dumps/general.md"
+        },
+        {
+          "lines": "1126",
+          "path": "discord_channel_dumps/media.md"
+        }
+      ],
+      "over_1000_lines_count": 2
+    },
+    "md_link_check": {
+      "broken_links": 0,
+      "files_scanned": 810
+    },
+    "mirror_check": {
+      "canonical_md_files": 365,
+      "diffs": 0,
+      "extra_in_mirror": 0,
+      "mirror_md_files": 365,
+      "missing_in_mirror": 0
+    },
+    "stale_runtime_refs": {
+      "count": 0,
+      "hits": [],
+      "patterns": [
+        "GhydraMCP-Complete-v2\\.2\\.0-rc\\.1",
+        "ghidra_12\\.0\\.1_PUBLIC_20260114",
+        "ghidra_12\\.0_PUBLIC_20251205",
+        "GhidraMCP-release-1-4",
+        "D:\\\\GhydraMCP\\\\b",
+        "D:\\\\GhydraMCP-Complete-v2\\.2\\.0-rc\\.1"
+      ]
+    }
+  },
+  "online": {
+    "semantic_audit": {
+      "base": "http://172.26.112.1:8193",
+      "files_fail": 12,
+      "files_pass": 493,
+      "files_pass_with_orphans": 2,
+      "files_total": 806,
+      "reason_counts": {
+        "expected_missing_orphan": 20,
+        "missing_function": 18,
+        "name_mismatch": 0,
+        "sig_mismatch": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,262 @@
+{
+  "schemaVersion": "missionscript-thing-value-engine-helper-command-effect.v1",
+  "status": "PASS",
+  "source": {
+    "evidenceWaves": [
+      "Wave582",
+      "Wave864",
+      "Wave903"
+    ],
+    "runtimeExecution": false,
+    "ghidraMutation": false,
+    "schemaPurpose": "static MissionScript thing-value, engine-helper, vfunc-slot, descriptor-context, and loose-corpus command-name mapping for clean-room planning"
+  },
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+  },
+  "evidenceCounts": {
+    "wave582MetadataRows": 6,
+    "wave582TagRows": 6,
+    "wave582XrefRows": 6,
+    "wave582InstructionRows": 534,
+    "wave582DecompileRows": 6,
+    "wave582VtableRows": 32
+  },
+  "descriptorRecords": {
+    "SetWindVector": {
+      "index": 41,
+      "recordAddress": "0x0064d890",
+      "observedNameSymbol": "s_SetWindVector_0064f818",
+      "rawEntryValue": "IScript__Unk_00535560",
+      "postWave582HandlerName": "IScript__SetThingRefViaCUnitHelper4FD830_FromArg",
+      "rawShapeValues": {
+        "+0x14": "3",
+        "+0x18": "0",
+        "+0x1c": "2",
+        "+0x20": "2",
+        "+0x24": "2",
+        "+0x28": "0",
+        "+0x2c": "0",
+        "+0x30": "0",
+        "+0x38": "0"
+      },
+      "boundary": "raw static descriptor record only; exact descriptor field layout, exact command arity, and runtime command effect remain unproven"
+    },
+    "DisableWeapon": {
+      "index": 98,
+      "recordAddress": "0x0064e6d0",
+      "observedNameSymbol": "s_DisableWeapon_0064f4e0",
+      "rawEntryValue": "IScript__Unk_00534fb0",
+      "postWave582HandlerName": "IScript__SetThingValueViaVFunc198_FromArg",
+      "rawShapeValues": {
+        "+0x14": "1",
+        "+0x18": "0",
+        "+0x1c": "3",
+        "+0x20": "0",
+        "+0x24": "0",
+        "+0x28": "0",
+        "+0x2c": "0",
+        "+0x30": "0",
+        "+0x38": "0"
+      },
+      "boundary": "raw static descriptor record only; exact descriptor field layout, exact command arity, and runtime command effect remain unproven"
+    },
+    "EnableFlightMode": {
+      "index": 99,
+      "recordAddress": "0x0064e710",
+      "observedNameSymbol": "s_EnableFlightMode_0064f4cc",
+      "rawEntryValue": "IScript__Unk_00534fe0",
+      "postWave582HandlerName": "IScript__SetThingValueViaVFunc19C_FromArg",
+      "rawShapeValues": {
+        "+0x14": "0",
+        "+0x18": "0",
+        "+0x1c": "0",
+        "+0x20": "0",
+        "+0x24": "0",
+        "+0x28": "0",
+        "+0x2c": "0",
+        "+0x30": "0",
+        "+0x38": "0"
+      },
+      "boundary": "raw static descriptor record only; exact descriptor field layout, exact command arity, and runtime command effect remain unproven"
+    },
+    "TeleportOrientation": {
+      "index": 138,
+      "recordAddress": "0x0064f0d0",
+      "observedNameSymbol": "s_TeleportOrientation_0064f268",
+      "rawEntryValue": "IScript__Unk_00535530",
+      "postWave582HandlerName": "IScript__SetThingFloatViaVFunc1C8_FromArg",
+      "rawShapeValues": {
+        "+0x14": "3",
+        "+0x18": "0",
+        "+0x1c": "2",
+        "+0x20": "2",
+        "+0x24": "2",
+        "+0x28": "0",
+        "+0x2c": "0",
+        "+0x30": "0",
+        "+0x38": "0"
+      },
+      "boundary": "raw static descriptor record only; exact descriptor field layout, exact command arity, and runtime command effect remain unproven"
+    },
+    "DisableSpawner": {
+      "index": 140,
+      "recordAddress": "0x0064f150",
+      "observedNameSymbol": "s_DisableSpawner_0064f248",
+      "rawEntryValue": "IScript__Unk_00535010",
+      "postWave582HandlerName": "IScript__SetThingValueViaEngineHelper4FE390_FromArg",
+      "rawShapeValues": {
+        "+0x14": "1",
+        "+0x18": "0",
+        "+0x1c": "3",
+        "+0x20": "0",
+        "+0x24": "0",
+        "+0x28": "0",
+        "+0x2c": "0",
+        "+0x30": "0",
+        "+0x38": "0"
+      },
+      "boundary": "raw static descriptor record only; exact descriptor field layout, exact command arity, and runtime command effect remain unproven"
+    },
+    "SetName": {
+      "index": 141,
+      "recordAddress": "0x0064f190",
+      "observedNameSymbol": "s_SetName_0064f240",
+      "rawEntryValue": "IScript__Unk_00535040",
+      "postWave582HandlerName": "IScript__SetThingValueViaEngineHelper4FE3F0_FromArg",
+      "rawShapeValues": {
+        "+0x14": "1",
+        "+0x18": "0",
+        "+0x1c": "3",
+        "+0x20": "0",
+        "+0x24": "0",
+        "+0x28": "0",
+        "+0x2c": "0",
+        "+0x30": "0",
+        "+0x38": "0"
+      },
+      "boundary": "raw static descriptor record only; exact descriptor field layout, exact command arity, and runtime command effect remain unproven"
+    }
+  },
+  "handlers": [
+    {
+      "address": "0x00534fb0",
+      "name": "IScript__SetThingValueViaVFunc198_FromArg",
+      "signature": "void __thiscall IScript__SetThingValueViaVFunc198_FromArg(void * this, void * script_args, void * unused_state, void * out_result)",
+      "summary": "guards on context flag +0x34 & 0x10, reads the first script argument through datatype getter slot +0x38, and dispatches selected thing vfunc slot +0x198"
+    },
+    {
+      "address": "0x00534fe0",
+      "name": "IScript__SetThingValueViaVFunc19C_FromArg",
+      "signature": "void __thiscall IScript__SetThingValueViaVFunc19C_FromArg(void * this, void * script_args, void * unused_state, void * out_result)",
+      "summary": "guards on context flag +0x34 & 0x10, reads the first script argument through datatype getter slot +0x38, and dispatches selected thing vfunc slot +0x19c"
+    },
+    {
+      "address": "0x00535010",
+      "name": "IScript__SetThingValueViaEngineHelper4FE390_FromArg",
+      "signature": "void __thiscall IScript__SetThingValueViaEngineHelper4FE390_FromArg(void * this, void * script_args, void * unused_state, void * out_result)",
+      "summary": "guards on context flag +0x34 & 0x10, reads the first script argument through datatype getter slot +0x38, and calls CEngine__EnableThingByNameFlag(context+0x10, thing_name)"
+    },
+    {
+      "address": "0x00535040",
+      "name": "IScript__SetThingValueViaEngineHelper4FE3F0_FromArg",
+      "signature": "void __thiscall IScript__SetThingValueViaEngineHelper4FE3F0_FromArg(void * this, void * script_args, void * unused_state, void * out_result)",
+      "summary": "guards on context flag +0x34 & 0x10, reads the first script argument through datatype getter slot +0x38, and calls CEngine__DisableThingByNameFlag(context+0x10, thing_name)"
+    },
+    {
+      "address": "0x00535530",
+      "name": "IScript__SetThingFloatViaVFunc1C8_FromArg",
+      "signature": "void __thiscall IScript__SetThingFloatViaVFunc1C8_FromArg(void * this, void * script_args, void * unused_state, void * out_result)",
+      "summary": "guards on context flag +0x34 & 0x10, reads a float through datatype getter slot +0x34, and dispatches selected thing vfunc slot +0x1c8"
+    },
+    {
+      "address": "0x00535560",
+      "name": "IScript__SetThingRefViaCUnitHelper4FD830_FromArg",
+      "signature": "void __thiscall IScript__SetThingRefViaCUnitHelper4FD830_FromArg(void * this, void * script_args, void * unused_state, void * out_result)",
+      "summary": "guards on context flag +0x34 & 0x10, reads an integer/faction-like state through datatype getter slot +0x30, and calls CUnit__SetFactionForHierarchy(context+0x10, faction_state)"
+    }
+  ],
+  "dispatchContext": {
+    "guard": "+0x34 & 0x10",
+    "argumentGetterSlots": [
+      "+0x38",
+      "+0x34",
+      "+0x30"
+    ],
+    "thingVfuncSlots": [
+      "+0x198",
+      "+0x19c",
+      "+0x1c8"
+    ],
+    "engineHelpers": [
+      "CEngine__EnableThingByNameFlag",
+      "CEngine__DisableThingByNameFlag"
+    ],
+    "unitHelper": "CUnit__SetFactionForHierarchy",
+    "boundary": "thing vfunc slots and helper names are static dispatch evidence; exact slot meanings, exact enums, and runtime command effects remain unproven"
+  },
+  "looseMslUsage": {
+    "source": "game/data/MissionScripts/**/*.msl",
+    "directNonCommentCounts": {
+      "SetWindVector": 0,
+      "DisableWeapon": 15,
+      "EnableFlightMode": 1,
+      "TeleportOrientation": 5,
+      "DisableSpawner": 2,
+      "SetName": 4
+    },
+    "sampleRows": [
+      "game\\data\\MissionScripts\\level100\\LevelScript.msl:42:player.DisableWeapon(\"Mech Twin Vulcan Cannon\");",
+      "game\\data\\MissionScripts\\level100\\LevelScript.msl:43:player.DisableWeapon(\"Pulse Cannon Pod\");",
+      "game\\data\\MissionScripts\\level100\\LevelScript.msl:137:player.DisableWeapon(\"Pulse Cannon Pod\");",
+      "game\\data\\MissionScripts\\level100\\LevelScript.msl:186:player.DisableWeapon(\"Mech Twin Vulcan Cannon\");",
+      "game\\data\\MissionScripts\\level100\\LevelScript.msl:187:player.DisableWeapon(\"Pulse Cannon Pod\");",
+      "game\\data\\MissionScripts\\level100\\LevelScript.msl:213:player.EnableFlightMode();",
+      "game\\data\\MissionScripts\\level100\\LevelScript.msl:354:player.DisableWeapon(\"Mech Twin Vulcan Cannon\");",
+      "game\\data\\MissionScripts\\level100\\LevelScript.msl:355:player.DisableWeapon(\"Pulse Cannon Pod\");",
+      "game\\data\\MissionScripts\\level100\\LevelScript.msl:356:player.DisableWeapon(\"Mech Vulcan Cannon\");",
+      "game\\data\\MissionScripts\\level100\\LevelScript.msl:357:player.DisableWeapon(\"Missile Pod\");",
+      "game\\data\\MissionScripts\\level321\\Venturer.msl:52:DisableSpawner(\"Carrier Fighter Spawner\");",
+      "game\\data\\MissionScripts\\level322\\Venturer.msl:52:DisableSpawner(\"Carrier Fighter Spawner\");",
+      "game\\data\\MissionScripts\\level331\\Thunderhead.msl:35:DisableWeapon(\"Thunderhead Missile Launcher\");",
+      "game\\data\\MissionScripts\\level332\\Thunderhead.msl:35:DisableWeapon(\"Thunderhead Missile Launcher\");",
+      "game\\data\\MissionScripts\\level421\\Level421script.msl:170:muspell.SetName(\"\");",
+      "game\\data\\MissionScripts\\level422\\Level422script.msl:169:muspell.SetName(\"\");",
+      "game\\data\\MissionScripts\\level431\\WarspiteWeapon.msl:43:DisableWeapon(\"Warspite Main Gun\");",
+      "game\\data\\MissionScripts\\level431\\WarspiteWeapon.msl:49:DisableWeapon(\"Warspite Pulse Laser\");",
+      "game\\data\\MissionScripts\\level432\\WarspiteWeapon.msl:43:DisableWeapon(\"Warspite Main Gun\");",
+      "game\\data\\MissionScripts\\level432\\WarspiteWeapon.msl:49:DisableWeapon(\"Warspite Pulse Laser\");"
+    ],
+    "boundary": "private loose-MSL scan only; command-name usage rows are static corpus context and do not prove live loose-MSL loading or runtime command effects"
+  },
+  "verifiedBackups": {
+    "wave582": "G:\\GhidraBackups\\BEA_20260519-082352_post_wave582_iscript_thing_value_verified",
+    "latestStaticCloseout": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+  },
+  "notClaimed": [
+    "runtime MissionScript execution",
+    "runtime command effects",
+    "runtime DisableWeapon behavior",
+    "runtime EnableFlightMode behavior",
+    "runtime DisableSpawner behavior",
+    "runtime SetName behavior",
+    "runtime TeleportOrientation behavior",
+    "runtime SetWindVector behavior",
+    "live loose-MSL loading",
+    "exact command descriptor layout",
+    "exact command arity",
+    "exact thing vfunc semantics",
+    "exact thing layout",
+    "exact unit faction enum",
+    "BEA patching behavior",
+    "visual QA",
+    "Godot parity",
+    "rebuild parity",
+    "no-noticeable-difference parity"
+  ]
+}

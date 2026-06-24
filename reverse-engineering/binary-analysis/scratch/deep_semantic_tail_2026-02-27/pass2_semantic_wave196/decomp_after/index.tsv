@@ -1,0 +1,7 @@
+address	name	signature	status
+0x005b4ae0	CDXTexture__InitJpegEncoderScanScriptState	void __stdcall CDXTexture__InitJpegEncoderScanScriptState(int param_1)	OK
+0x005b7770	CDXTexture__ValidateJpegFrameAndComputeMcuLayout	void CDXTexture__ValidateJpegFrameAndComputeMcuLayout(void)	OK
+0x005b81d0	CFastVB__SinCosApproxVec4_Paired	void __stdcall CFastVB__SinCosApproxVec4_Paired(void * param_1, void * param_2, void * param_3)	OK
+0x005d075f	CRT__FormatToBufferAndTerminate	int __cdecl CRT__FormatToBufferAndTerminate(void * param_1, int param_2, void * param_3)	OK
+0x005d0c7f	CRT__LCMapStringW_AnsiCompat	int CRT__LCMapStringW_AnsiCompat(void)	OK
+0x005d0eb8	CRT__GetCharTypeMaskCompat	uint __cdecl CRT__GetCharTypeMaskCompat(int param_1, int param_2)	OK

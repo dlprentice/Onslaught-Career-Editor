@@ -1,0 +1,5 @@
+address	name	signature	status
+0x00535330	CVM__VFunc_01_00535330	void * __thiscall CVM__VFunc_01_00535330(void * this, void * param_1, int param_2)	OK
+0x00535350	IScript__Unk_00535350	void __fastcall IScript__Unk_00535350(void * param_1)	OK
+0x005398c5	<none>	<none>	MISSING
+0x00539890	<none>	<none>	MISSING

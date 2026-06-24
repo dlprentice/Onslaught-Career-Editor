@@ -1,0 +1,5 @@
+0x00412570 CBattleEngine__IsIndexedEntryUsable
+0x00412610 CBattleEngine__GetIndexedEntry
+0x00414630 CBattleEngine__IsResolvedEntryUsable
+0x0042ee90 CUnitAI__CreateAndRegisterByName
+0x0042efd0 CUnitAI__InitDefaults

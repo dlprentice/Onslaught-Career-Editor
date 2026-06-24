@@ -1,0 +1,393 @@
+{
+  "schemaVersion": "winui-original-binary-online-n-slot-session-schema.v1",
+  "status": "complete public-safe N-slot session schema proof; no BEA launch or runtime proof",
+  "date": "2026-06-18",
+  "scope": "original-binary-online-n-slot-session-schema",
+  "sourceContract": {
+    "path": "roadmap/original-binary-online-session-scalability-contract.v1.json",
+    "schemaVersion": "winui-original-binary-online-session-scalability-contract.v1",
+    "requiredRuntimeCap": "P1/P2 only",
+    "requiredMinimumArchitectureAcceptanceSlots": 4
+  },
+  "runtimeBoundary": {
+    "runtimeProfile": "original-binary-copied-local-splitscreen",
+    "originalBinaryPlayerSlotsProven": [
+      "P1",
+      "P2"
+    ],
+    "maxOriginalBinaryActiveSlots": 2,
+    "maxRuntimePlayerSlotsProven": 2,
+    "maxRetailPlayersProven": 2,
+    "retailSlotsProven": "P1,P2",
+    "retailViewpointsProven": 2,
+    "moreThanTwoOriginalBinaryRuntimeProofSlices": 0,
+    "nPlayerOriginalBinaryRuntimeProof": 0,
+    "coOpVersusModeRuntimeProofSlices": 0,
+    "nativeBeaNetcodeProofSlices": 0,
+    "beyondTwoPlayersRequiresNewProofClass": true
+  },
+  "sessionDescriptor": {
+    "schemaVersion": "winui-original-binary-host-authority-n-slot-session.v1",
+    "protocolVersion": "host-authority-n-slot-input.v1",
+    "hostAuthorityModel": "single-host-authoritative-copied-session",
+    "sessionTypeModel": "mode-family-scoped",
+    "participantField": "participants[]",
+    "slotModel": "profile-declared-indexed-player-slots",
+    "slotCapacity": 4,
+    "minimumArchitectureAcceptanceSlots": 4,
+    "acceptedSessionParticipantCount": 4,
+    "originalBinaryActiveSlots": [
+      "P1",
+      "P2"
+    ],
+    "metadataOnlySlots": [
+      "P3",
+      "P4"
+    ],
+    "unsupportedOriginalBinaryActiveSlotsRejected": [
+      "P3",
+      "P4"
+    ],
+    "participants": [
+      {
+        "slotId": "P1",
+        "clientId": "client-p1",
+        "sessionAdmission": "accepted-active-original-binary-slot",
+        "runtimeRoute": "P1/inputDevice0/top-split-half",
+        "commandPermission": "original-binary-command-allowed-when-authenticated",
+        "team": "alpha",
+        "modeEligibility": [
+          "cooperative",
+          "versus-free-for-all",
+          "team-versus"
+        ],
+        "identityRequired": true
+      },
+      {
+        "slotId": "P2",
+        "clientId": "client-p2",
+        "sessionAdmission": "accepted-active-original-binary-slot",
+        "runtimeRoute": "P2/inputDevice1/bottom-split-half",
+        "commandPermission": "original-binary-command-allowed-when-authenticated",
+        "team": "bravo",
+        "modeEligibility": [
+          "cooperative",
+          "versus-free-for-all",
+          "team-versus"
+        ],
+        "identityRequired": true
+      },
+      {
+        "slotId": "P3",
+        "clientId": "client-p3",
+        "sessionAdmission": "accepted-metadata-only-no-original-binary-gameplay-route",
+        "runtimeRoute": "unsupported-original-binary-active-slot",
+        "commandPermission": "reject-gameplay-input-until-new-proof-class",
+        "team": "alpha",
+        "modeEligibility": [
+          "cooperative",
+          "versus-free-for-all",
+          "team-versus",
+          "spectator-admin"
+        ],
+        "identityRequired": true
+      },
+      {
+        "slotId": "P4",
+        "clientId": "client-p4",
+        "sessionAdmission": "accepted-metadata-only-no-original-binary-gameplay-route",
+        "runtimeRoute": "unsupported-original-binary-active-slot",
+        "commandPermission": "reject-gameplay-input-until-new-proof-class",
+        "team": "bravo",
+        "modeEligibility": [
+          "cooperative",
+          "versus-free-for-all",
+          "team-versus",
+          "spectator-admin"
+        ],
+        "identityRequired": true
+      }
+    ]
+  },
+  "modeProfiles": [
+    {
+      "sessionType": "cooperative",
+      "modeFamily": "cooperative",
+      "participantSlots": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "originalBinaryActiveSlots": [
+        "P1",
+        "P2"
+      ],
+      "metadataOnlySlots": [
+        "P3",
+        "P4"
+      ],
+      "runtimeProofStatus": "planned-not-runtime-proven",
+      "modeRuntimeProofSlices": 0,
+      "winConditionAuthority": "unproven",
+      "respawnAuthority": "unproven",
+      "teamAssignmentAuthority": "schema-only",
+      "friendlyFireStatus": "unproven"
+    },
+    {
+      "sessionType": "versus-free-for-all",
+      "modeFamily": "versus-free-for-all",
+      "participantSlots": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "originalBinaryActiveSlots": [
+        "P1",
+        "P2"
+      ],
+      "metadataOnlySlots": [
+        "P3",
+        "P4"
+      ],
+      "runtimeProofStatus": "planned-not-runtime-proven",
+      "modeRuntimeProofSlices": 0,
+      "winConditionAuthority": "unproven",
+      "respawnAuthority": "unproven",
+      "teamAssignmentAuthority": "schema-only",
+      "friendlyFireStatus": "unproven"
+    },
+    {
+      "sessionType": "team-versus",
+      "modeFamily": "team-versus",
+      "participantSlots": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "originalBinaryActiveSlots": [
+        "P1",
+        "P2"
+      ],
+      "metadataOnlySlots": [
+        "P3",
+        "P4"
+      ],
+      "teamAssignments": {
+        "alpha": [
+          "P1",
+          "P3"
+        ],
+        "bravo": [
+          "P2",
+          "P4"
+        ]
+      },
+      "runtimeProofStatus": "planned-not-runtime-proven",
+      "modeRuntimeProofSlices": 0,
+      "winConditionAuthority": "unproven",
+      "respawnAuthority": "unproven",
+      "teamAssignmentAuthority": "schema-only",
+      "friendlyFireStatus": "unproven"
+    },
+    {
+      "sessionType": "spectator-admin",
+      "modeFamily": "spectator-admin",
+      "participantSlots": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "originalBinaryActiveSlots": [
+        "P1",
+        "P2"
+      ],
+      "metadataOnlySlots": [
+        "P3",
+        "P4"
+      ],
+      "runtimeProofStatus": "planned-not-runtime-proven",
+      "modeRuntimeProofSlices": 0,
+      "winConditionAuthority": "unproven",
+      "respawnAuthority": "unproven",
+      "teamAssignmentAuthority": "schema-only",
+      "friendlyFireStatus": "unproven"
+    }
+  ],
+  "hostAuthorityNSlotScheduler": {
+    "schedulerSchema": "host-authority-n-slot-scheduler.v1",
+    "declaredSlotCount": 4,
+    "acceptedSessionParticipantCount": 4,
+    "originalBinaryRelaySlotCount": 2,
+    "acceptedOriginalBinaryGameplayCommandCount": 2,
+    "rejectedOriginalBinaryGameplayCommandCount": 2,
+    "activeOriginalBinarySlots": [
+      "P1",
+      "P2"
+    ],
+    "metadataOnlySlots": [
+      "P3",
+      "P4"
+    ],
+    "rejectedGameplayRouteSlots": [
+      "P3",
+      "P4"
+    ],
+    "extraSlotRejectionPolicy": "required-for-unproven-original-binary-slots",
+    "arrivalOrder": [
+      "P4",
+      "P2",
+      "P3",
+      "P1"
+    ],
+    "deterministicParticipantOrder": [
+      "P1",
+      "P2",
+      "P3",
+      "P4"
+    ],
+    "deterministicOriginalBinaryRelayOrder": [
+      "P1",
+      "P2"
+    ],
+    "relayPlan": [
+      {
+        "scheduledTick": 1,
+        "clientSlot": "P1",
+        "commandId": "host-authority-p1-forward-0001",
+        "mappedInputSequence": "down:Q,wait:500,up:Q",
+        "route": "P1/inputDevice0/top-split-half",
+        "hostHelperInputSent": false
+      },
+      {
+        "scheduledTick": 1,
+        "clientSlot": "P2",
+        "commandId": "host-authority-p2-forward-0001",
+        "mappedInputSequence": "down:E,wait:500,up:E",
+        "route": "P2/inputDevice1/bottom-split-half",
+        "hostHelperInputSent": false
+      }
+    ],
+    "relayPlanSha256": "ad62052bde6b6a1108f0e599d58fb89d9b8107d3667b1adca2a18b417a389002",
+    "rejectedGameplayCommands": [
+      {
+        "clientSlot": "P3",
+        "commandId": "host-authority-p3-forward-0001",
+        "reason": "required-for-unproven-original-binary-slots",
+        "hostAccepted": false,
+        "gameInputSentByNSlotScheduler": false,
+        "hostHelperInputSent": false
+      },
+      {
+        "clientSlot": "P4",
+        "commandId": "host-authority-p4-forward-0001",
+        "reason": "required-for-unproven-original-binary-slots",
+        "hostAccepted": false,
+        "gameInputSentByNSlotScheduler": false,
+        "hostHelperInputSent": false
+      },
+      {
+        "clientSlot": "P2",
+        "commandId": "host-authority-public-matchmaking-claim-0001",
+        "reason": "public-matchmaking-not-allowed",
+        "hostAccepted": false,
+        "gameInputSentByNSlotScheduler": false,
+        "hostHelperInputSent": false
+      },
+      {
+        "clientSlot": "P1",
+        "commandId": "host-authority-direct-input-claim-0001",
+        "reason": "direct-input-not-allowed",
+        "hostAccepted": false,
+        "gameInputSentByNSlotScheduler": false,
+        "hostHelperInputSent": false
+      },
+      {
+        "clientSlot": "P9",
+        "commandId": "host-authority-unknown-slot-0001",
+        "reason": "unknown-slot",
+        "hostAccepted": false,
+        "gameInputSentByNSlotScheduler": false,
+        "hostHelperInputSent": false
+      },
+      {
+        "clientSlot": "P3",
+        "commandId": "host-authority-invalid-team-0001",
+        "reason": "invalid-team-assignment",
+        "hostAccepted": false,
+        "gameInputSentByNSlotScheduler": false,
+        "hostHelperInputSent": false
+      }
+    ],
+    "schemaRejectionCases": [
+      "slot-not-in-profile-enabledSlots",
+      "duplicate-slot-identity",
+      "duplicate-client-identity",
+      "participant-slot-mismatch",
+      "active-original-binary-slot-count-exceeds-two",
+      "spectator-issued-game-input",
+      "invalid-sessionType",
+      "invalid-mode-family",
+      "invalid-team-assignment",
+      "unknown-field",
+      "oversized-message",
+      "stale-tick",
+      "queue-overflow-backpressure-drop",
+      "missing-relayPlanHash"
+    ],
+    "gameInputSentByNSlotScheduler": false,
+    "hostHelperInputSent": false,
+    "multiHostLanClaim": false,
+    "publicMatchmakingClaim": false,
+    "nativeBeaNetcodeClaim": false,
+    "deterministicSyncClaim": false,
+    "moreThanTwoRuntimePlayerClaim": false
+  },
+  "authorization": {
+    "scheme": "HMAC-SHA256",
+    "credentialStorage": "ephemeral-not-serialized",
+    "serializedCredentialPresent": false,
+    "slotIdentityMode": "pinned-slot-fingerprint",
+    "slotCredentialFingerprints": {
+      "P1": "1111111111111111111111111111111111111111111111111111111111111111",
+      "P2": "2222222222222222222222222222222222222222222222222222222222222222",
+      "P3": "3333333333333333333333333333333333333333333333333333333333333333",
+      "P4": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    "sessionScopedHmacFields": [
+      "sessionId",
+      "protocolVersion",
+      "slotId",
+      "clientId",
+      "tick",
+      "sequence",
+      "commandId",
+      "payload"
+    ],
+    "nonceWindowSeconds": 30,
+    "replayCacheEnabled": true,
+    "sequenceEnforced": true,
+    "maxMessageBytes": 4096,
+    "schemaUnknownFieldsRejected": true,
+    "publicBind": false,
+    "operatorSecretsOutsideGit": true
+  },
+  "nonClaims": {
+    "moreThanTwoOriginalBinaryRuntimeProof": false,
+    "coOpModeRuntimeProof": false,
+    "versusModeRuntimeProof": false,
+    "teamVersusRuntimeProof": false,
+    "multiHostLanProof": false,
+    "publicMatchmakingProof": false,
+    "nativeBeaNetcodeProof": false,
+    "deterministicSyncProof": false,
+    "rollbackProof": false,
+    "antiCheatProof": false,
+    "physicalGamepadProof": false,
+    "rebuildParityProof": false,
+    "noNoticeableDifferenceProof": false
+  }
+}

@@ -1,0 +1,13 @@
+address	name	signature	status
+0x00510e60	CWorldPhysicsManager__Unk_00510e60	void __fastcall CWorldPhysicsManager__Unk_00510e60(void * param_1)	OK
+0x00510eb0	CWorldPhysicsManager__Unk_00510eb0	void __fastcall CWorldPhysicsManager__Unk_00510eb0(int param_1)	OK
+0x00510f10	CWorldPhysicsManager__Unk_00510f10	void __fastcall CWorldPhysicsManager__Unk_00510f10(void * param_1)	OK
+0x00511040	CWorldPhysicsManager__Unk_00511040	void __fastcall CWorldPhysicsManager__Unk_00511040(void * param_1)	OK
+0x00511070	CWorldPhysicsManager__Unk_00511070	void __fastcall CWorldPhysicsManager__Unk_00511070(int param_1)	OK
+0x005110f0	CWorldPhysicsManager__Unk_005110f0	void __fastcall CWorldPhysicsManager__Unk_005110f0(int param_1)	OK
+0x005113a0	CWorldPhysicsManager__Unk_005113a0	void __fastcall CWorldPhysicsManager__Unk_005113a0(int param_1)	OK
+0x00511440	CWorldPhysicsManager__Unk_00511440	int __cdecl CWorldPhysicsManager__Unk_00511440(void * param_1)	OK
+0x005115b0	CWorldPhysicsManager__Unk_005115b0	int __cdecl CWorldPhysicsManager__Unk_005115b0(void * param_1)	OK
+0x00511720	CWorldPhysicsManager__Unk_00511720	void __thiscall CWorldPhysicsManager__Unk_00511720(void * this, int param_1, void * param_2)	OK
+0x005117c0	CWorldPhysicsManager__Unk_005117c0	void __thiscall CWorldPhysicsManager__Unk_005117c0(void * this, int param_1, void * param_2)	OK
+0x00511860	CWorldPhysicsManager__Unk_00511860	void __thiscall CWorldPhysicsManager__Unk_00511860(void * this, int param_1, void * param_2)	OK

@@ -1,0 +1,17 @@
+address	old_name	inferred_owner	xref_count	top_counts
+0x004433f0	CDestroyableSegment__Unk_004433f0		1	CUnitAI:1
+0x00443fc0	CDestroyableSegment__Unk_00443fc0		1	CHiveBoss:1
+0x00444000	CDestroyableSegment__Unk_00444000		0
+0x00444030	CDestroyableSegment__Unk_00444030		1	CUnit:1
+0x00444160	CDestroyableSegment__Unk_00444160		1	CUnit:1
+0x004442d0	CDestroyableSegment__Unk_004442d0		0
+0x00444300	CDestroyableSegment__Unk_00444300		0
+0x00444330	CDestroyableSegment__Unk_00444330		1	CDXCompass:1
+0x00444370	CDestroyableSegment__Unk_00444370		1	CSphere:1
+0x004443b0	CDestroyableSegment__Unk_004443b0		0
+0x004443f0	CDestroyableSegment__Unk_004443f0		1	CUnit:1
+0x00444450	CDestroyableSegment__Unk_00444450		0
+0x004444b0	CDestroyableSegment__Unk_004444b0		0
+0x00444520	CDestroyableSegment__Unk_00444520		1	CHiveBoss:1
+0x00444580	CDestroyableSegment__Unk_00444580		0
+0x004445b0	CDestroyableSegment__Unk_004445b0		0

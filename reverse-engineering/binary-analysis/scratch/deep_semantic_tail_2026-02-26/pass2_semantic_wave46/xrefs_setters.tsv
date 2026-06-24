@@ -1,0 +1,7 @@
+target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
+00444450	CDestroyableSegment__Unk_00444450	005354b1	<none>	<no_function>	UNCONDITIONAL_CALL
+004444b0	CDestroyableSegment__Unk_004444b0	005354f1	<none>	<no_function>	UNCONDITIONAL_CALL
+00444520	CDestroyableSegment__Unk_00444520	0047feff	0047fe30	CHiveBoss__Init	UNCONDITIONAL_CALL
+00444580	CDestroyableSegment__Unk_00444580	00535525	<none>	<no_function>	UNCONDITIONAL_CALL
+004445b0	CDestroyableSegment__Unk_004445b0	00534333	<none>	<no_function>	UNCONDITIONAL_CALL
+004443f0	CDestroyableSegment__Unk_004443f0	004fd1dc	004fd140	CUnit__Helper_004fd140	UNCONDITIONAL_CALL

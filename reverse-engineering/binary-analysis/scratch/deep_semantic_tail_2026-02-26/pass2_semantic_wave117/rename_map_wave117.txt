@@ -1,0 +1,5 @@
+0x00444f00 CUnitAI__CallIndexedEntryVFunc10
+0x00447a40 CUnitAI__SetDoorWingState2AndClampYawDelta
+0x004480c0 CUnitAI__CanContinueDoorWingTransition
+0x00448110 CUnitAI__SetDoorWingState6
+0x00448120 CUnitAI__SetDoorWingState7AndMirrorYawOffset

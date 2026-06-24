@@ -1,0 +1,8 @@
+address	name	signature	status
+0x0040c650	CBattleEngine__Helper_0040c650	void __fastcall CBattleEngine__Helper_0040c650(int param_1)	OK
+0x00487d10	CDXEngine__Helper_00487d10	void __thiscall CDXEngine__Helper_00487d10(void * this, void * param_1, void * param_2)	OK
+0x005475d0	CDXEngine__Unk_005475d0	void __stdcall CDXEngine__Unk_005475d0(float param_1, float param_2, int param_3)	OK
+0x00487bc0	CDXEngine__Helper_00487bc0	void __fastcall CDXEngine__Helper_00487bc0(int param_1)	OK
+0x005490c0	CDXEngine__Unk_005490c0	void __fastcall CDXEngine__Unk_005490c0(int param_1)	OK
+0x0053ecc0	CDXEngine__PostRender	int __thiscall CDXEngine__PostRender(void * this, void * viewport)	OK
+0x0055e7ae	CDXEngine__Helper_0055e7ae	void __cdecl CDXEngine__Helper_0055e7ae(void * param_1, void * param_2, uint param_3, void * param_4)	OK

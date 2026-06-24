@@ -1,0 +1,4 @@
+target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
+0044e2c0	CMonitor__Unk_0044e2c0	005e051c	<none>	<no_function>	DATA
+0047d3b0	CMonitor__Unk_0047d3b0	005e2ad4	<none>	<no_function>	DATA
+004ef120	CMonitor__Unk_004ef120	004eeff0	<none>	<no_function>	UNCONDITIONAL_CALL

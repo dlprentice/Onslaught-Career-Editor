@@ -1,0 +1,5 @@
+address	name	signature	status
+0x004fd5e0	VFuncSlot_26_004fd5e0	int __thiscall VFuncSlot_26_004fd5e0(void * this, int param_1, int param_2)	OK
+0x004f99f0	CDXCompass__Helper_004f99f0	double __fastcall CDXCompass__Helper_004f99f0(int param_1)	OK
+0x004f9a40	CSphere__Helper_004f9a40	double __fastcall CSphere__Helper_004f9a40(int param_1)	OK
+0x004fd140	CUnit__Helper_004fd140	int __fastcall CUnit__Helper_004fd140(int param_1)	OK

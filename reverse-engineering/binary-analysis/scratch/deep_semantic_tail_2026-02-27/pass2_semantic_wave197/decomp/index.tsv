@@ -1,0 +1,21 @@
+address	name	signature	status
+0x00403730	CExplosionInitThing__Helper_00403730	void __fastcall CExplosionInitThing__Helper_00403730(void * param_1)	OK
+0x0040c3a0	CExplosionInitThing__Helper_0040c3a0	void __fastcall CExplosionInitThing__Helper_0040c3a0(int param_1)	OK
+0x0040c3c0	CExplosionInitThing__Helper_0040c3c0	double __fastcall CExplosionInitThing__Helper_0040c3c0(void * param_1)	OK
+0x0040c460	CExplosionInitThing__Helper_0040c460	void __fastcall CExplosionInitThing__Helper_0040c460(int param_1)	OK
+0x0040c480	CExplosionInitThing__Helper_0040c480	void __fastcall CExplosionInitThing__Helper_0040c480(int param_1)	OK
+0x0040c4a0	CExplosionInitThing__Helper_0040c4a0	double __fastcall CExplosionInitThing__Helper_0040c4a0(int param_1)	OK
+0x0040c550	CExplosionInitThing__Helper_0040c550	void __fastcall CExplosionInitThing__Helper_0040c550(int param_1)	OK
+0x0040c590	CExplosionInitThing__Helper_0040c590	void __fastcall CExplosionInitThing__Helper_0040c590(int param_1)	OK
+0x0040d150	CExplosionInitThing__Helper_0040d150	void __thiscall CExplosionInitThing__Helper_0040d150(void * this, void * param_1, void * param_2, float param_3)	OK
+0x0040d5b0	CExplosionInitThing__Helper_0040d5b0	double __fastcall CExplosionInitThing__Helper_0040d5b0(int param_1)	OK
+0x0040d660	CExplosionInitThing__Helper_0040d660	void __thiscall CExplosionInitThing__Helper_0040d660(void * this, int param_1, void * param_2)	OK
+0x0040d7c0	CExplosionInitThing__Helper_0040d7c0	void * __thiscall CExplosionInitThing__Helper_0040d7c0(void * this, int param_1, void * param_2)	OK
+0x0040da30	CExplosionInitThing__Helper_0040da30	void * __thiscall CExplosionInitThing__Helper_0040da30(void * this, int param_1, void * param_2)	OK
+0x0040dc90	CExplosionInitThing__Helper_0040dc90	void __fastcall CExplosionInitThing__Helper_0040dc90(int param_1)	OK
+0x00412520	CExplosionInitThing__Helper_00412520	int __fastcall CExplosionInitThing__Helper_00412520(void * param_1)	OK
+0x00414610	CExplosionInitThing__Helper_00414610	int __fastcall CExplosionInitThing__Helper_00414610(void * param_1)	OK
+0x00428cb0	CExplosionInitThing__Helper_00428cb0	void __fastcall CExplosionInitThing__Helper_00428cb0(void * param_1)	OK
+0x004725d0	CExplosionInitThing__Helper_004725d0	int __fastcall CExplosionInitThing__Helper_004725d0(int param_1)	OK
+0x0047fb50	CExplosionInitThing__Helper_0047fb50	void __cdecl CExplosionInitThing__Helper_0047fb50(int param_1, int param_2, int param_3)	OK
+0x00482090	CExplosionInitThing__Helper_00482090	void CExplosionInitThing__Helper_00482090(void)	OK

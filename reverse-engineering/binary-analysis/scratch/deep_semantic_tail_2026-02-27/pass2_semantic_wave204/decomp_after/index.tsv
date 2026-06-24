@@ -1,0 +1,13 @@
+address	name	signature	status
+0x00447d50	CUnitAI__IsCachedAnchorPointValid	int __fastcall CUnitAI__IsCachedAnchorPointValid(void * param_1)	OK
+0x00477ba0	Geometry__NoOpHook	void Geometry__NoOpHook(void)	OK
+0x00480ed0	CHLCollisionDetector__DispatchCollisionEventForPair	void __thiscall CHLCollisionDetector__DispatchCollisionEventForPair(void * this, void * param_1, void * param_2)	OK
+0x004bd5c0	CWorld__RasterizeFootprintIntoOccupancyBitplanes	void __cdecl CWorld__RasterizeFootprintIntoOccupancyBitplanes(int param_1, int param_2, int param_3, int param_4, int param_5)	OK
+0x004c78d0	CPDSimpleSprite__ReciprocalVec3Magnitude	double __fastcall CPDSimpleSprite__ReciprocalVec3Magnitude(void * param_1)	OK
+0x004c7950	CPDSimpleSprite__EvaluateCurveDrivenScale	double __thiscall CPDSimpleSprite__EvaluateCurveDrivenScale(void * this, void * param_1, float param_2, float param_3, float param_4)	OK
+0x004daba0	CEngine__FindNearbyHostileWithinProjectileRadius	int __fastcall CEngine__FindNearbyHostileWithinProjectileRadius(int param_1)	OK
+0x004df530	CEngine__CopyCStringToObjectLabel110	void __thiscall CEngine__CopyCStringToObjectLabel110(void * this, int param_1, void * param_2)	OK
+0x0044a610	CEngine__TrackBurstEventFromPreset	void __thiscall CEngine__TrackBurstEventFromPreset(void * this, int param_1, int param_2, int param_3, int param_4)	OK
+0x004f2b40	CTexture__FreeLevelResources	void CTexture__FreeLevelResources(void)	OK
+0x004fce40	CUnitAI__CallAttachedNodeVFunc14IfPresent	int CUnitAI__CallAttachedNodeVFunc14IfPresent(void)	OK
+0x004fe540	CUnitAI__AccumulateForwardedCommandScore	void __thiscall CUnitAI__AccumulateForwardedCommandScore(void * this, void * param_1, float param_2)	OK

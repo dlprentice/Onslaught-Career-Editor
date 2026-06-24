@@ -1,0 +1,204 @@
+{
+  "schemaVersion": "world-thing-spawn-getthingref-object-reference-static.v1",
+  "status": "PASS",
+  "source": {
+    "copiedCorpusSchemaPath": "reverse-engineering/game-assets/world-thing-spawn-copied-corpus-schema.v1.json",
+    "missionThingUsagePath": "reverse-engineering/game-assets/mission-thing-usage.md",
+    "copiedAppOwnedInputOnly": true,
+    "programFilesInputUsed": false,
+    "runtimeExecution": false,
+    "ghidraMutation": false
+  },
+  "staticContext": {
+    "staticFunctionQuality": "6411/6411 = 100.00%",
+    "staticDebt": "0 / 0 / 0",
+    "expandedStaticSurface": "1560/1560 = 100.00%",
+    "currentRiskFocused": "1179/1179 = 100.00%",
+    "remainingActiveFocusedWork": 0,
+    "latestGhidraBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+  },
+  "selectedFamily": {
+    "name": "training-target-zone-getthingref-family",
+    "call": "GetThingRef",
+    "levels": [
+      "22",
+      "100"
+    ],
+    "directories": [
+      "level022",
+      "level100"
+    ],
+    "files": [
+      "Level22Script.msl",
+      "LevelScript.msl"
+    ],
+    "thingLabels": [
+      "Target Zone 1",
+      "Target Zone 2",
+      "Target Zone 3",
+      "Target Zone 4"
+    ],
+    "spawners": [],
+    "rawRows": 9,
+    "uniqueObjectReferenceRows": 8,
+    "uniqueThingLabels": 4,
+    "uniqueFileThingRows": 8,
+    "duplicateCallRows": 1,
+    "emptySpawnerRows": 9,
+    "rows": [
+      {
+        "level": "100",
+        "directory": "level100",
+        "file": "LevelScript.msl",
+        "thing": "Target Zone 1",
+        "rawRows": 1
+      },
+      {
+        "level": "100",
+        "directory": "level100",
+        "file": "LevelScript.msl",
+        "thing": "Target Zone 2",
+        "rawRows": 1
+      },
+      {
+        "level": "100",
+        "directory": "level100",
+        "file": "LevelScript.msl",
+        "thing": "Target Zone 3",
+        "rawRows": 1
+      },
+      {
+        "level": "100",
+        "directory": "level100",
+        "file": "LevelScript.msl",
+        "thing": "Target Zone 4",
+        "rawRows": 2
+      },
+      {
+        "level": "22",
+        "directory": "level022",
+        "file": "Level22Script.msl",
+        "thing": "Target Zone 1",
+        "rawRows": 1
+      },
+      {
+        "level": "22",
+        "directory": "level022",
+        "file": "Level22Script.msl",
+        "thing": "Target Zone 2",
+        "rawRows": 1
+      },
+      {
+        "level": "22",
+        "directory": "level022",
+        "file": "Level22Script.msl",
+        "thing": "Target Zone 3",
+        "rawRows": 1
+      },
+      {
+        "level": "22",
+        "directory": "level022",
+        "file": "Level22Script.msl",
+        "thing": "Target Zone 4",
+        "rawRows": 1
+      }
+    ]
+  },
+  "corpusCarryForward": {
+    "rawDetailedCallRows": {
+      "GetThingRef": 574,
+      "SpawnThing": 70,
+      "total": 644
+    },
+    "uniqueObjectReferenceRows": {
+      "GetThingRef": 418,
+      "SpawnThing": 18,
+      "total": 436
+    },
+    "uniqueSpawnPreservingSpawnerRows": {
+      "GetThingRef": 418,
+      "SpawnThing": 29,
+      "total": 447
+    }
+  },
+  "linkageLayers": [
+    {
+      "id": "corpus-object-reference-family",
+      "anchors": [
+        "mission-thing-usage.md",
+        "world-thing-spawn-copied-corpus-schema.v1.json",
+        "training-target-zone-getthingref-family",
+        "level022",
+        "level100",
+        "Level22Script.msl",
+        "LevelScript.msl",
+        "Target Zone 1",
+        "Target Zone 2",
+        "Target Zone 3",
+        "Target Zone 4"
+      ],
+      "staticContract": "Preserve level, directory, file, thing label, casing, empty spawner column, and duplicate-call counts for the selected GetThingRef target-zone family."
+    },
+    {
+      "id": "missionscript-command-descriptor",
+      "anchors": [
+        "IScript__GetThingRef",
+        "GetThingRef",
+        "CThingPtrDataType",
+        "ScriptCommandRegistry__InitBuiltins",
+        "0x0052ff30",
+        "0x0064ce50",
+        "0x0064f210"
+      ],
+      "staticContract": "Tie the selected corpus family to the saved MissionScript command registry and thing-pointer datatype surface without claiming exact handler address proof or runtime dispatch."
+    },
+    {
+      "id": "world-object-reference-boundary",
+      "anchors": [
+        "world-thing-spawn-object-reference-proof-plan.md",
+        "CWorld__LoadWorld",
+        "CWorldPhysicsManager__CreateThingByType",
+        "InitThing__CreateThingByType",
+        "CThing__InitRenderThingFromInitMeshName"
+      ],
+      "staticContract": "Carry the selected object-reference labels to the existing world/load/factory boundary while preserving runtime object identity as unproven."
+    },
+    {
+      "id": "spawn-handoff-context",
+      "anchors": [
+        "world-thing-spawn-spawner-handoff-static-proof.md",
+        "world-thing-spawn-spawner-handoff-static.v1.json",
+        "training-target-spawn-family",
+        "DAT_008553f4",
+        "0x0050f970 CWorldPhysicsManager__CreateSpawner",
+        "0x004e3c60 CSpawnerThng__DoSpawn"
+      ],
+      "staticContract": "Use the completed SpawnThing handoff as context only; this GetThingRef proof does not claim runtime spawn or lookup behavior."
+    }
+  ],
+  "claims": [
+    "The selected training target-zone GetThingRef copied-corpus family has a reproducible static object-reference row set derived from the tracked loose-MSL mission thing usage table.",
+    "The proof preserves raw rows, unique object-reference rows, unique file/thing rows, empty spawner values, exact target-zone casing, and the duplicate Target Zone 4 call in level100.",
+    "The selected family is tied to MissionScript command registry, thing-pointer datatype, and existing World / Thing / Spawn static boundary docs without claiming runtime lookup behavior."
+  ],
+  "notClaimed": [
+    "runtime GetThingRef behavior",
+    "runtime object identity",
+    "runtime object lookup by name",
+    "runtime MissionScript execution",
+    "runtime world loading",
+    "runtime SpawnThing behavior",
+    "runtime spawner behavior",
+    "live loose-MSL loading",
+    "packed-resource script selection",
+    "exact descriptor layout",
+    "exact handler address proof",
+    "exact VM/object-code/world/thing/spawner layouts",
+    "exact source-body identity",
+    "BEA patching behavior",
+    "visual QA",
+    "Godot parity",
+    "rebuild parity",
+    "no-noticeable-difference parity"
+  ]
+}

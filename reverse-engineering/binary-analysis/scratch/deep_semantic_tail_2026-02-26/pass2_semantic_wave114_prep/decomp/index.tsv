@@ -1,0 +1,8 @@
+address	name	signature	status
+0x00402fa0	CUnit__Unk_00402fa0	void __fastcall CUnit__Unk_00402fa0(void * param_1)	OK
+0x00406460	CBattleEngine__Unk_00406460	void __fastcall CBattleEngine__Unk_00406460(int param_1)	OK
+0x00406560	CBattleEngine__Unk_00406560	void __fastcall CBattleEngine__Unk_00406560(int param_1)	OK
+0x00406da0	CBattleEngine__Unk_00406da0	int CBattleEngine__Unk_00406da0(void)	OK
+0x0040e8e0	CUnit__Unk_0040e8e0	double __fastcall CUnit__Unk_0040e8e0(int param_1)	OK
+0x0040e910	CUnit__Unk_0040e910	double __fastcall CUnit__Unk_0040e910(void * param_1)	OK
+0x0040eeb0	CUnit__Unk_0040eeb0	int __fastcall CUnit__Unk_0040eeb0(int param_1)	OK

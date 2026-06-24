@@ -1,0 +1,127 @@
+address	name	xref_count	owners	top_counts	unambiguous_non_cunit
+0x004015e0	CUnit__Unk_004015e0	9	CMonitor,CUnit	CMonitor:1;CUnit:1	false
+0x00402000	CUnit__Unk_00402000	27	CUnit,CUnitAI	CUnitAI:2;CUnit:1	false
+0x00402010	CUnit__Unk_00402010	32	CEngine,CUnit,CUnitAI	CUnit:3;CEngine:1;CUnitAI:1	false
+0x00402020	CUnit__Unk_00402020	42	CGeneralVolume	CGeneralVolume:1	true
+0x00402fa0	CUnit__Unk_00402fa0	9	CUnit	CUnit:1	false
+0x00403690	CUnit__Unk_00403690	10			false
+0x00403730	CUnit__Unk_00403730	6	CFEPMultiplayerStart	CFEPMultiplayerStart:1	true
+0x00403760	CUnit__Unk_00403760	6	CUnitAI	CUnitAI:1	true
+0x00408150	CUnit__Unk_00408150	1			false
+0x0040e8e0	CUnit__Unk_0040e8e0	1			false
+0x0040e910	CUnit__Unk_0040e910	1			false
+0x0040eeb0	CUnit__Unk_0040eeb0	1			false
+0x004178a0	CUnit__Unk_004178a0	1			false
+0x00421c40	CUnit__Unk_00421c40	2			false
+0x004d36c0	CUnit__Unk_004d36c0	1			false
+0x004d3730	CUnit__Unk_004d3730	1	CUnit	CUnit:1	false
+0x004d8a70	CUnit__Unk_004d8a70	1	CCollisionSeekingRound	CCollisionSeekingRound:1	true
+0x004dab50	CUnit__Unk_004dab50	4	CEngine,CUnit	CUnit:2;CEngine:1	false
+0x004daba0	CUnit__Unk_004daba0	1	CEngine	CEngine:1	true
+0x004dac90	CUnit__Unk_004dac90	2	CRound	CRound:1	true
+0x004df530	CUnit__Unk_004df530	1	CEngine	CEngine:1	true
+0x004dfce0	CUnit__Unk_004dfce0	1			false
+0x004e2a90	CUnit__Unk_004e2a90	1	CSoundManager	CSoundManager:1	true
+0x004e2b30	CUnit__Unk_004e2b30	1	CSoundManager	CSoundManager:1	true
+0x004e2bb0	CUnit__Unk_004e2bb0	1			false
+0x004e2c50	CUnit__Unk_004e2c50	4	CFrontEnd,CGame	CFrontEnd:1;CGame:1	false
+0x004e2e60	CUnit__Unk_004e2e60	1			false
+0x004e47e0	CUnit__Unk_004e47e0	1	CGame	CGame:1	true
+0x004e49f0	CUnit__Unk_004e49f0	2	CGame	CGame:2	true
+0x004e5c90	CUnit__Unk_004e5c90	25	CEngine,CGame,CMenuItemRange,CMessageLog,CPauseMenu	CMenuItemRange:9;CPauseMenu:9;CMessageLog:3;CEngine:1;CGame:1	false
+0x004e6610	CUnit__Unk_004e6610	1	CExplosionInitThing	CExplosionInitThing:1	true
+0x004e6640	CUnit__Unk_004e6640	1	CUnit	CUnit:1	false
+0x004e6660	CUnit__Unk_004e6660	1	CUnit	CUnit:1	false
+0x004e6680	CUnit__Unk_004e6680	1	CSquadNormal	CSquadNormal:1	true
+0x004e66e0	CUnit__Unk_004e66e0	2			false
+0x004e9570	CUnit__Unk_004e9570	1			false
+0x004e97e0	CUnit__Unk_004e97e0	1	CSquadNormal	CSquadNormal:1	true
+0x004eb9a0	CUnit__Unk_004eb9a0	1			false
+0x004eba30	CUnit__Unk_004eba30	4	CDXEngine,CEngine,CGame	CEngine:2;CDXEngine:1;CGame:1	false
+0x004ebbc0	CUnit__Unk_004ebbc0	1	CGame	CGame:1	true
+0x004ef000	CUnit__Unk_004ef000	1			false
+0x004ef050	CUnit__Unk_004ef050	1			false
+0x004ef0f0	CUnit__Unk_004ef0f0	1			false
+0x004ef100	CUnit__Unk_004ef100	1			false
+0x004efb10	CUnit__Unk_004efb10	1	CLTShell	CLTShell:1	true
+0x004f00e0	CUnit__Unk_004f00e0	1	CLTShell	CLTShell:1	true
+0x004f0200	CUnit__Unk_004f0200	2	CUnit	CUnit:2	false
+0x004f0330	CUnit__Unk_004f0330	1	CLTShell	CLTShell:1	true
+0x004f0ba0	CUnit__Unk_004f0ba0	2	CMCTentacle	CMCTentacle:1	true
+0x004f0c50	CUnit__Unk_004f0c50	1	CMCTentacle	CMCTentacle:1	true
+0x004f1220	CUnit__Unk_004f1220	2			false
+0x004f2790	CUnit__Unk_004f2790	3	CDXSurf	CDXSurf:1	true
+0x004f27e0	CUnit__Unk_004f27e0	115	CAtmosphericsProfile,CClouds,CConsole,CControllerDefinition,CDXBitmapFont,CDXCompass,CDXEngine,CDXImposter,CDXLandscape,CDXShadows,CDXSurf,CEngine,CFEPGoodies,CGameInterface,CHud,CLevelBriefingLog,CMenuItem,CMenuItemRange,CMenuItemRangeVariant,CMesh,CMessageBox,CMessageLog,CMissionScriptObjectCode,CPauseMenu,CUnit,CUnitAI,CVBufTexture,CWaterRenderSystem	CHud:41;CWaterRenderSystem:8;CDXEngine:6;CUnit:6;CMessageLog:5	false
+0x004f29c0	CUnit__Unk_004f29c0	2	CFrontEnd,CGame	CFrontEnd:1;CGame:1	false
+0x004f2a30	CUnit__Unk_004f2a30	1	CUnit	CUnit:1	false
+0x004f2b40	CUnit__Unk_004f2b40	2	CUnitAI	CUnitAI:1	true
+0x004f3110	CUnit__Unk_004f3110	2	CDXTexture,CEngine	CDXTexture:1;CEngine:1	false
+0x004f4530	CUnit__Unk_004f4530	4	CGillMHead	CGillMHead:4	true
+0x004f4560	CUnit__Unk_004f4560	9	CGillMHead,CMonitor,CUnit	CGillMHead:4;CMonitor:2;CUnit:2	false
+0x004f45a0	CUnit__Unk_004f45a0	27	CUnit	CUnit:1	false
+0x004f45e0	CUnit__Unk_004f45e0	59	CExplosionInitThing	CExplosionInitThing:1	true
+0x004f6fd0	CUnit__Unk_004f6fd0	1			false
+0x004f7440	CUnit__Unk_004f7440	1	CMissionScriptObjectCode	CMissionScriptObjectCode:1	true
+0x004f7460	CUnit__Unk_004f7460	1	CDXBattleLine	CDXBattleLine:1	true
+0x004f74b0	CUnit__Unk_004f74b0	1	CUnit	CUnit:1	false
+0x004f7660	CUnit__Unk_004f7660	6	CUnit	CUnit:6	false
+0x004f78c0	CUnit__Unk_004f78c0	2	CUnit	CUnit:2	false
+0x004f7940	CUnit__Unk_004f7940	1	CDXBattleLine	CDXBattleLine:1	true
+0x004f7c70	CUnit__Unk_004f7c70	23	CD3DApplication,CDXFont,CDXTexture,CFEPDevelopment,CVertexShader,CWaveSoundRead	CD3DApplication:10;CDXTexture:3;CDXFont:2;CFEPDevelopment:1;CVertexShader:1	false
+0x004f8140	CUnit__Unk_004f8140	5	CActor,CEngine,CEquipment,CMonitor	CActor:2;CEngine:1;CEquipment:1;CMonitor:1	false
+0x004f9430	CUnit__Unk_004f9430	1			false
+0x004f99b0	CUnit__Unk_004f99b0	1	CGame	CGame:1	true
+0x004f99f0	CUnit__Unk_004f99f0	7	CBattleEngine,CDXCompass,CSphere,CVBufTexture	CDXCompass:2;CBattleEngine:1;CSphere:1;CVBufTexture:1	false
+0x004f9a40	CUnit__Unk_004f9a40	2	CSphere	CSphere:1	true
+0x004f9a60	CUnit__Unk_004f9a60	1	CDestroyableSegment	CDestroyableSegment:1	true
+0x004fa4b0	CUnit__Unk_004fa4b0	31			false
+0x004fa800	CUnit__Unk_004fa800	2	CUnit	CUnit:2	false
+0x004fa8d0	CUnit__Unk_004fa8d0	10	CEngine,CUnit,CUnitAI	CUnitAI:2;CEngine:1;CUnit:1	false
+0x004fb280	CUnit__Unk_004fb280	2	CUnit	CUnit:1	false
+0x004fb3d0	CUnit__Unk_004fb3d0	6	CSquadNormal	CSquadNormal:1	true
+0x004fb500	CUnit__Unk_004fb500	7	CGillMHead,CUnitAI	CGillMHead:1;CUnitAI:1	false
+0x004fb5a0	CUnit__Unk_004fb5a0	9	CGillMHead,CSquadNormal	CGillMHead:1;CSquadNormal:1	false
+0x004fb650	CUnit__Unk_004fb650	13	CGillMHead,CWarspite	CWarspite:3;CGillMHead:1	false
+0x004fb670	CUnit__Unk_004fb670	9	CUnit	CUnit:2	false
+0x004fb780	CUnit__Unk_004fb780	6	CSquadNormal	CSquadNormal:2	true
+0x004fb7e0	CUnit__Unk_004fb7e0	6	CSquadNormal	CSquadNormal:2	true
+0x004fb840	CUnit__Unk_004fb840	21	CEngine,CGillMHead,CSquadNormal,CWarspite	CGillMHead:2;CSquadNormal:2;CWarspite:2;CEngine:1	false
+0x004fbc90	CUnit__Unk_004fbc90	2	CWarspite	CWarspite:1	true
+0x004fbcb0	CUnit__Unk_004fbcb0	33	CGillMHead,CMonitor	CGillMHead:1;CMonitor:1	false
+0x004fc000	CUnit__Unk_004fc000	31			false
+0x004fc080	CUnit__Unk_004fc080	33	CUnitAI	CUnitAI:1	true
+0x004fc170	CUnit__Unk_004fc170	33	CUnitAI	CUnitAI:1	true
+0x004fc220	CUnit__Unk_004fc220	2	CUnit	CUnit:2	false
+0x004fc3a0	CUnit__Unk_004fc3a0	1	CSpawnerThng	CSpawnerThng:1	true
+0x004fc6e0	CUnit__Unk_004fc6e0	2	CUnit	CUnit:2	false
+0x004fcc30	CUnit__Unk_004fcc30	26	CThing	CThing:2	true
+0x004fcdc0	CUnit__Unk_004fcdc0	21			false
+0x004fce40	CUnit__Unk_004fce40	6	CUnitAI	CUnitAI:1	true
+0x004fce80	CUnit__Unk_004fce80	6			false
+0x004fcec0	CUnit__Unk_004fcec0	7	CSquadNormal,CUnitAI	CUnitAI:3;CSquadNormal:2	false
+0x004fcf00	CUnit__Unk_004fcf00	24			false
+0x004fcfa0	CUnit__Unk_004fcfa0	1			false
+0x004fcfe0	CUnit__Unk_004fcfe0	6	CUnit,CUnitAI	CUnit:1;CUnitAI:1	false
+0x004fd040	CUnit__Unk_004fd040	3	CCannon,CInfluenceMap,CUnitAI	CCannon:1;CInfluenceMap:1;CUnitAI:1	false
+0x004fd140	CUnit__Unk_004fd140	12	CInfluenceMap,CUnit,CUnitAI	CUnitAI:3;CUnit:2;CInfluenceMap:1	false
+0x004fd380	CUnit__Unk_004fd380	6	CGroundVehicleGuide,CInfantryGuide,CMechGuide,CSpawnerThng,CSquadNormal	CGroundVehicleGuide:1;CInfantryGuide:1;CMechGuide:1;CSpawnerThng:1;CSquadNormal:1	false
+0x004fd3d0	CUnit__Unk_004fd3d0	19	CBattleEngine,CCollisionSeekingInfantryBloke,CMonitor,CUnit	CBattleEngine:5;CUnit:3;CCollisionSeekingInfantryBloke:1;CMonitor:1	false
+0x004fd4d0	CUnit__Unk_004fd4d0	24	CCannon	CCannon:1	true
+0x004fd500	CUnit__Unk_004fd500	4	CExplosionInitThing	CExplosionInitThing:4	true
+0x004fd570	CUnit__Unk_004fd570	2	CSquadNormal	CSquadNormal:2	true
+0x004fd5b0	CUnit__Unk_004fd5b0	7			false
+0x004fd760	CUnit__Unk_004fd760	9	CGillMHead,CVBufTexture	CVBufTexture:2;CGillMHead:1	false
+0x004fd7a0	CUnit__Unk_004fd7a0	4	CUnit	CUnit:2	false
+0x004fd7e0	CUnit__Unk_004fd7e0	4	CUnitAI	CUnitAI:1	true
+0x004fd830	CUnit__Unk_004fd830	3	CUnit	CUnit:2	false
+0x004fd8d0	CUnit__Unk_004fd8d0	4	CDestructableSegmentsController	CDestructableSegmentsController:3	true
+0x004fd910	CUnit__Unk_004fd910	1			false
+0x004fda10	CUnit__Unk_004fda10	8	CUnitAI	CUnitAI:2	true
+0x004fda20	CUnit__Unk_004fda20	2	CUnit	CUnit:1	false
+0x004fdad0	CUnit__Unk_004fdad0	1			false
+0x004fdc20	CUnit__Unk_004fdc20	33			false
+0x004fdcb0	CUnit__Unk_004fdcb0	33			false
+0x004fde10	CUnit__Unk_004fde10	6	CUnitAI	CUnitAI:1	true
+0x004fde30	CUnit__Unk_004fde30	1			false
+0x004fde70	CUnit__Unk_004fde70	6	CWarspite	CWarspite:1	true
+0x004fdeb0	CUnit__Unk_004fdeb0	21	CCockpit,CUnitAI	CUnitAI:2;CCockpit:1	false

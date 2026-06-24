@@ -1,0 +1,3 @@
+0x00561f75 CDXTexture__Helper_00561f75
+0x00561faa CDXTexture__Helper_00561faa
+0x00561fdb CDXTexture__Helper_00561fdb

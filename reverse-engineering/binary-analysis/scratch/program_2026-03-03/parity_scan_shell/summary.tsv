@@ -1,0 +1,5 @@
+career_default_unlock	cs_rc:0	py_rc:0	cs_ok:1	py_ok:1	bytes:yes	goodies:no
+career_kills_only_custom	cs_rc:0	py_rc:0	cs_ok:1	py_ok:1	bytes:yes	goodies:no
+career_partial_rank_and_bindings	cs_rc:0	py_rc:0	cs_ok:1	py_ok:1	bytes:yes	goodies:no
+options_settings_only	cs_rc:0	py_rc:0	cs_ok:1	py_ok:1	bytes:yes	goodies:no
+options_copy_entries_only	cs_rc:0	py_rc:0	cs_ok:1	py_ok:1	bytes:yes	goodies:no

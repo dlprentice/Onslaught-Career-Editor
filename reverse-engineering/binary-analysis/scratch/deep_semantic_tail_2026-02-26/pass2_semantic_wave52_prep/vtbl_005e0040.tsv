@@ -1,0 +1,25 @@
+slot	entry_addr	ptr	ptr_name	ptr_signature
+0	005e0040	004d38b0	<none>	<none>
+1	005e0044	004fdc90	<none>	<none>
+2	005e0048	00417620	<none>	<none>
+3	005e004c	004bfc60	<none>	<none>
+4	005e0050	00405930	CControllerDefinition__VFunc_03_00405930	int __thiscall CControllerDefinition__VFunc_03_00405930(void * this)
+5	005e0054	004d38c0	CInfluenceMap__Unk_004d38c0	int CInfluenceMap__Unk_004d38c0(void)
+6	005e0058	00452b60	CFrontEndPage__Process_NoOp	void __stdcall CFrontEndPage__Process_NoOp(void * this, int state)
+7	005e005c	004f3d30	<none>	<none>
+8	005e0060	00405e50	<none>	<none>
+9	005e0064	004fdcb0	CUnit__Unk_004fdcb0	void __thiscall CUnit__Unk_004fdcb0(void * this, int param_1, int param_2)
+10	005e0068	004fdc20	CUnit__Unk_004fdc20	void __fastcall CUnit__Unk_004fdc20(int param_1)
+11	005e006c	00405e30	<none>	<none>
+12	005e0070	00405e40	<none>	<none>
+13	005e0074	004f9220	<none>	<none>
+14	005e0078	004fdeb0	CUnitAI__Helper_004fdeb0	int __fastcall CUnitAI__Helper_004fdeb0(void * param_1)
+15	005e007c	004f44a0	CThing__AddTrail	undefined CThing__AddTrail(void)
+16	005e0080	004fce00	<none>	<none>
+17	005e0084	004f45e0	CExplosionInitThing__Helper_004f45e0	void __stdcall CExplosionInitThing__Helper_004f45e0(void * param_1)
+18	005e0088	004fdd60	<none>	<none>
+19	005e008c	0040c640	DebugTrace	void __cdecl DebugTrace(char * format)
+20	005e0090	00405930	CControllerDefinition__VFunc_03_00405930	int __thiscall CControllerDefinition__VFunc_03_00405930(void * this)
+21	005e0094	004d3630	CEngine__Unk_004d3630	void __fastcall CEngine__Unk_004d3630(void * param_1)
+22	005e0098	00401f70	<none>	<none>
+23	005e009c	004d3650	<none>	<none>
