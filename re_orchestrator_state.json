@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-24",
-  "currentFocus": "No new Ghidra/static mutation; public-primary repo migration only.",
+  "currentFocus": "No new Ghidra/static mutation; public-primary repo now carries the static RE docs and proof summaries, while current work is runtime music proof infrastructure.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -9,9 +9,19 @@
     "measurementFrontDoor": "reverse-engineering/binary-analysis/static-reaudit-measurement-register.md",
     "latestGhidraReviewBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
   },
-  "migrationImpact": "RE docs, scratch text exports, wave notes, function indexes, static maps, and proof summaries are staged into public repo; no Ghidra project DB, executable bytes, or Ghidra mutation added.",
+  "publicPrimaryMigration": {
+    "status": "committed-and-pushed",
+    "commit": "c58d06420e482421355d1e40f240db7d87e289d3",
+    "impact": "RE docs, scratch text exports, wave notes, function indexes, static maps, and proof summaries are now tracked in the public-primary repo; no Ghidra project DB, executable bytes, or new Ghidra mutation was added."
+  },
+  "runtimeProofBoundary": {
+    "musicAudibleOutputProof": "runtimeAudibleOutputProof=false",
+    "earlyCdbAttachSupport": "present in public checkout for clean/staged music stages; focused and broad validation passed in the public-runtime baton",
+    "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable"
+  },
   "nextSteps": [
-    "After public-primary migration commit/push, continue RE/runtime/product work from public repo.",
+    "Commit/push the public-runtime baton.",
+    "If a future static contradiction appears, stop runtime/product work and correct Ghidra/static docs with normal dry/apply/read-back/backup gates.",
     "Use G:\\GhidraBackups for any future backup-producing Ghidra wave while G: is attached."
   ]
 }

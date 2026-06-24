@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-06-24",
-  "currentFocus": "Public-primary repo documentation and release-boundary rewrite for full private-to-public working-tree pivot.",
-  "status": "staged-and-validated; commit/push pending",
+  "currentFocus": "Public-primary migration docs are closed; current docs/state work is the public-runtime baton for music audible-output early CDB attach support.",
+  "status": "focused and broad validation passed; commit/push pending",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -13,24 +13,44 @@
   },
   "migrationDocs": {
     "publicPrimary": "public repo is primary day-to-day working repo, not a sparse export",
+    "commit": "c58d06420e482421355d1e40f240db7d87e289d3",
     "trackedMaterial": "source, tools, tests, RE docs, wave notes, state batons, agent reports, readiness notes, compact proof summaries",
-    "localOnly": "actual game/runtime payloads, full Ghidra databases/backups, secrets, build outputs, screenshots/frame dumps, raw CDB logs, bulky generated captures",
-    "staleWordingRemoved": "front-door docs no longer describe subagents/state/proof summaries as automatically private/local-only"
+    "localOnly": "actual game/runtime payloads, full Ghidra databases/backups, secrets, build outputs, screenshots/frame dumps, raw CDB logs, bulky generated captures"
+  },
+  "activeRuntimeDocs": {
+    "readinessNote": "release/readiness/winui_music_audible_output_live_bundle_executor_2026-06-24.md",
+    "truth": "early exact-PID CDB attach support exists for clean/staged music stages, but runtimeAudibleOutputProof remains false",
+    "nonClaims": [
+      "no accepted BEA live music bundle yet",
+      "no staged/mute/final materialized audible-output proof yet",
+      "no public release claim change",
+      "no Host/Join enablement",
+      "no Ghidra mutation"
+    ]
   },
   "validation": {
-    "passed": [
+    "migrationBaselinePassed": [
       "npm run test:doc-commands",
       "py -3 tools\\docsync_check.py",
       "npm run test:md-links",
       "npm run test:repo-hygiene",
-      "git diff --cached --check"
+      "git diff --cached --check",
+      "post-push remote alignment check"
     ],
-    "markdownLinkCoverage": "3612 markdown files scanned; 6121 local links checked",
-    "lineEndingCoverage": "18415 explicit text files checked"
+    "activeSlicePassed": [
+      "py -3 tools\\winui_safe_copy_live_runtime_smoke_test.py (14 tests)",
+      "py -3 tools\\run_winui_safe_copy_music_audible_output_live_bundle_test.py (17 tests)",
+      "state/package JSON parse",
+      "npm run test:hard-payload-safety",
+      "npm run test:doc-commands",
+      "py -3 tools\\docsync_check.py",
+      "npm run test:repo-hygiene",
+      "git diff --check"
+    ]
   },
   "nextSteps": [
-    "Commit and push migration.",
-    "After push, continue work from public repo and update docs/state there.",
-    "Do not resurrect curated-export wording unless preparing a specific release artifact."
+    "Commit/push the public-runtime baton.",
+    "Keep public docs clear that online multiplayer and audible music replacement are not released capabilities.",
+    "Do not resurrect curated-export wording except for a deliberate release artifact."
   ]
 }

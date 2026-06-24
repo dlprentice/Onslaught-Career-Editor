@@ -1,12 +1,13 @@
 {
   "lastUpdated": "2026-06-24",
   "branch": "main",
-  "currentFocus": "Public-primary migration: fold former private tracked project material into the public repo as the default working tree.",
+  "currentFocus": "Public-primary repo is active; validating migrated early exact-PID CDB attach support for the music audible-output live-bundle ladder.",
   "publicPrimaryMigration": {
-    "status": "staged-and-validated; commit/push pending",
-    "sourcePrivateTree": "C:\\oce-agentic-winui-hardening plus selected current private music/runtime files",
+    "status": "committed-and-pushed",
+    "commit": "c58d06420e482421355d1e40f240db7d87e289d3",
     "targetPublicRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "policy": "track source/docs/tools/RE notes/wave notes/state batons/agent reports/proof summaries; keep only hard payloads local/ignored",
+    "stagedFileCount": 18874,
     "hardPayloadsKeptOut": [
       "game/media payload roots",
       "copied executables/DLLs",
@@ -15,38 +16,42 @@
       "screenshots/frame dumps/raw CDB logs",
       "bulky generated runtime captures",
       "secrets/.env/build outputs"
+    ]
+  },
+  "activeRuntimeSlice": {
+    "name": "music-audible-output-early-cdb-attach-public-closeout",
+    "status": "focused and broad validation passed; commit/push pending",
+    "filesCarriedFromPrivateDirtyTree": [
+      "release/readiness/winui_music_audible_output_live_bundle_executor_2026-06-24.md",
+      "tools/run_winui_safe_copy_music_audible_output_live_bundle.py",
+      "tools/run_winui_safe_copy_music_audible_output_live_bundle_test.py",
+      "tools/winui_safe_copy_live_runtime_smoke.py",
+      "tools/winui_safe_copy_live_runtime_smoke_test.py"
     ],
-    "stagedFileCount": 18874,
-    "extractedTextureScratch": "ignored via reverse-engineering/binary-analysis/scratch/**/MeshTextures/*.png",
-    "generatedMdLinkReports": "ignored via subagents/md-link-check/",
-    "publicDocsUpdated": [
-      "README.MD",
-      "AGENTS.md",
-      "CONTRIBUTING.md",
-      "LOCAL_LAB_OVERLAY.md",
-      "README.RELEASE.md",
-      "SECURITY.md",
-      "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
-      "roadmap/public-primary-working-repo.md"
-    ],
-    "packageBoundary": "test:hard-payload-safety added; test:public-allowlist aliases hard-payload safety for compatibility"
+    "privatePublicFileHashCheck": "all five listed files are byte-identical between the former private dirty tree and this public checkout",
+    "claimBoundary": "early CDB attach support is code/proof-infrastructure only; runtimeAudibleOutputProof remains false until a complete live raw bundle passes materializer/final checker"
   },
   "validation": {
-    "passed": [
+    "migrationBaselinePassed": [
       "npm run test:hard-payload-safety",
       "npm run test:public-allowlist",
       "npm run test:doc-commands",
       "py -3 tools\\docsync_check.py",
       "dotnet build .\\OnslaughtCareerEditor.WinUI.slnx --nologo (0 warnings, 0 errors)",
-      "npm run test:md-links (3612 markdown files, 6121 local links)",
-      "npm run test:repo-hygiene (18415 explicit text files checked)",
+      "npm run test:md-links",
+      "npm run test:repo-hygiene",
       "git diff --cached --check",
-      "staged hard-payload filename scan returned no matches"
+      "post-push remote alignment check"
     ],
-    "pending": [
-      "commit public-primary migration",
-      "push origin/main",
-      "post-push clean/aligned verification"
+    "activeSlicePassed": [
+      "py -3 tools\\winui_safe_copy_live_runtime_smoke_test.py (14 tests)",
+      "py -3 tools\\run_winui_safe_copy_music_audible_output_live_bundle_test.py (17 tests)",
+      "state/package JSON parse",
+      "npm run test:hard-payload-safety",
+      "npm run test:doc-commands",
+      "py -3 tools\\docsync_check.py",
+      "npm run test:repo-hygiene",
+      "git diff --check"
     ]
   },
   "staticProgress": {
@@ -57,12 +62,11 @@
   },
   "runtimeTruth": {
     "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable",
-    "musicAudibleOutputProof": "runtimeAudibleOutputProof=false; live private raw bundle still pending",
+    "musicAudibleOutputProof": "runtimeAudibleOutputProof=false; private live raw bundle still pending",
     "originalInstallRule": "installed Steam folder and original BEA.exe remain read-only"
   },
   "nextSteps": [
-    "Commit and push the public-primary migration baseline.",
-    "Use the public repo as the default active repo after push.",
-    "Resume WinUI/mod/runtime/multiplayer work from public repo with hard payloads in local overlays only."
+    "Commit/push the public-runtime baton.",
+    "Then attempt one private music audible-output live raw bundle from public using ignored local proof roots if runtime prerequisites are clean."
   ]
 }
