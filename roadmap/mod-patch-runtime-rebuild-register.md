@@ -1,5 +1,20 @@
 # Mod, Patch, Runtime, And Rebuild Register
 
+2026-06-24 music capture timestamp normalization addendum:
+`tools/winui_safe_copy_music_audible_output_materializer.py` now accepts strict
+UTC `+00:00` private JSON sidecar timestamps in addition to canonical `Z`
+timestamps for audio/census/timeline JSON inputs, then normalizes sanitized
+materialized proof output back to `Z`. This matches the first-party loopback
+helper's UTC output while keeping the final checker and timestamped CDB log
+contract strict. Replaying the latest 60-second private music raw bundle now
+passes the former timestamp blocker and reaches the next fail-closed proof
+boundary: the staged-positive capture still correlates more strongly to the
+original `BEA_04` target than to the replacement `BEA_02` source
+(`margin=-0.161892`, required `0.150000`). No capture-source sidecar,
+materialized proof, audible-output proof, gameplay parity proof, online proof,
+or rebuild proof is added; `runtimeAudibleOutputProof=false` remains current
+truth.
+
 2026-06-24 music audible-output live-bundle executor addendum:
 `tools/run_winui_safe_copy_music_audible_output_live_bundle.py` plus
 `test:winui-safe-copy-music-audible-output-live-bundle-executor` now provide the

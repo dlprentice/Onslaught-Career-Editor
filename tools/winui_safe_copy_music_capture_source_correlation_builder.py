@@ -210,6 +210,10 @@ def cosine(left: list[float], right: list[float]) -> float:
     return max(-1.0, min(1.0, score))
 
 
+def score_text(value: float) -> str:
+    return f"{value:.6f}"
+
+
 def validate_audio_inputs(clean_audio: Path, staged_audio: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     try:
         clean = materializer.validate_audio(clean_audio, "cleanBaseline", require_non_silent=True, timeline=None)
@@ -260,12 +264,33 @@ def build_adapter_from_vectors(
     staged_vs_target = cosine(staged_vector, target_vector)
     staged_vs_replacement = cosine(staged_vector, replacement_vector)
     source_cross = cosine(target_vector, replacement_vector)
-    require(1.0 - abs(source_cross) >= MIN_ACCEPTED_MARGIN, "source target/replacement vectors are not distinct enough.")
+    source_margin = 1.0 - abs(source_cross)
+    require(
+        source_margin >= MIN_ACCEPTED_MARGIN,
+        (
+            "source target/replacement vectors are not distinct enough "
+            f"(margin={score_text(source_margin)} minimum={score_text(MIN_ACCEPTED_MARGIN)} cross={score_text(source_cross)})."
+        ),
+    )
 
     clean_margin = clean_vs_target - clean_vs_replacement
     staged_margin = staged_vs_replacement - staged_vs_target
-    require(clean_margin >= MIN_ACCEPTED_MARGIN, "clean baseline does not prefer source target strongly enough.")
-    require(staged_margin >= MIN_ACCEPTED_MARGIN, "staged positive does not prefer source replacement strongly enough.")
+    require(
+        clean_margin >= MIN_ACCEPTED_MARGIN,
+        (
+            "clean baseline does not prefer source target strongly enough "
+            f"(margin={score_text(clean_margin)} minimum={score_text(MIN_ACCEPTED_MARGIN)} "
+            f"target={score_text(clean_vs_target)} replacement={score_text(clean_vs_replacement)})."
+        ),
+    )
+    require(
+        staged_margin >= MIN_ACCEPTED_MARGIN,
+        (
+            "staged positive does not prefer source replacement strongly enough "
+            f"(margin={score_text(staged_margin)} minimum={score_text(MIN_ACCEPTED_MARGIN)} "
+            f"target={score_text(staged_vs_target)} replacement={score_text(staged_vs_replacement)})."
+        ),
+    )
 
     artifact = {
         "schemaVersion": SCHEMA,

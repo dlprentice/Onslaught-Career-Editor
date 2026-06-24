@@ -1,16 +1,16 @@
 {
   "lastUpdated": "2026-06-24",
   "branch": "main",
-  "currentFocus": "Public-primary source boundary clarification is closed at 4e299090; active music proof lane is next.",
+  "currentFocus": "Music UTC sidecar timestamp normalization is implemented; latest 60-second bundle now fails at staged-positive source-correlation mismatch.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainCommit": "4e299090",
-    "publicMainStatus": "ahead_one_pending_state_closeout_push",
+    "publicMainCommit": "ea6e8dcd",
+    "publicMainStatus": "clean_aligned_before_current_music_timestamp_slice",
     "policy": "track source/docs/tools/tests/RE notes/wave notes/state batons/agent reports/readiness notes/compact proof summaries; keep hard payloads local/ignored"
   },
   "publicPrimaryMigration": {
-    "status": "closed_validated_pushed_plus_boundary_clarification_committed",
+    "status": "closed_validated_pushed",
     "inventoryGuard": "tools/public_primary_migration_inventory.py",
     "readinessNote": "release/readiness/public_primary_full_migration_inventory_2026-06-24.md",
     "acceptedInventory": {
@@ -31,11 +31,15 @@
   },
   "activeSlice": {
     "name": "winui-safe-copy-music-audible-output-proof-lane",
-    "goal": "run the next bounded 60000ms music/mod runtime proof attempt from the public repo if preconditions remain clean",
+    "goal": "close UTC timestamp normalization for private audio sidecars, then investigate why staged-positive capture-source correlation still prefers the original track",
     "claimBoundary": "runtimeAudibleOutputProof remains false until a complete private raw bundle passes the materializer and final checker",
     "latestFindings": [
       "music-audible-live-20260624-181120 failed before proof acceptance because source-safety sidecar did not receive --source-root; executor command shape is fixed and tested",
       "music-audible-live-20260624-181538 reached clean/staged CDB music-selection provenance but failed capture-source correlation because 30-second WAV captures ended with zero samples before decode; executor now defaults/requires 60000ms for armed live attempts",
+      "music-audible-live-20260624-144834 reached capture-source correlation with 60-second non-silent clean/staged loopback captures and restart-loop-direct CDB provenance; the prior blocker was +00:00 UTC audio timestamps",
+      "materializer now accepts private JSON sidecar timestamps ending in Z or +00:00 and normalizes materialized proof timestamps back to Z; timestamped CDB log parsing remains Z-only",
+      "replay of music-audible-live-20260624-144834 now fails at the next real boundary: staged-positive source correlation margin=-0.161892, required 0.150000, target=0.862302, replacement=0.700409; no capture-source sidecar was emitted",
+      "adversarial consult requested regression coverage that capture-source correlation executor command carries --source-root; the live-bundle executor test now covers this",
       "public-primary docs were normalized away from stale private-tree/public-candidate language; PR template now allows compact non-secret state/report text; payload safety checker now has credential-like text deny patterns",
       "public-primary boundary follow-up added tools/hard_payload_safety_check.py wrapper and clarified that compact non-secret .codex/state/subagent/proof-summary text may be tracked while portable app ZIPs and legacy curated exports exclude those surfaces"
     ]
@@ -81,6 +85,7 @@
       "npm run test:winui-safe-copy-music-capture-source-correlation",
       "npm run test:winui-safe-copy-music-capture-source-correlation-builder",
       "npm run test:winui-safe-copy-music-audible-output-live-bundle-gate",
+      "private replay: capture-source correlation builder on music-audible-live-20260624-144834 now reaches staged-positive source-correlation failure instead of timestamp rejection",
       "python tools\\docsync_check.py",
       "py -3 tools\\release_profile_snapshot.py --check (R0=6117 R2=0 R3=3 R4=13175)",
       "py -3 tools\\release_curated_manifest.py --check (selected files 625)",
@@ -90,11 +95,12 @@
       "no BEA.exe/cdb.exe process before closeout"
     ],
     "pendingForActiveSlice": [
-      "one new 60000ms live bundle attempt only if preconditions are clean"
+      "broad docs/repo/hard-payload closeout gates for current timestamp-normalization slice",
+      "source-correlation mismatch investigation after green closeout"
     ]
   },
   "nextSteps": [
-    "Run one 60000ms private live bundle attempt only if source/proof/process/audio preconditions remain clean.",
-    "If the attempt still fails, record the exact failed rung and preserve runtimeAudibleOutputProof=false."
+    "Finish broad validation and commit/push the UTC timestamp/source-root-regression slice.",
+    "Investigate whether the staged-positive source-correlation mismatch is caused by staging verification, capture timing/windowing, source fingerprinting, or preset choice; preserve runtimeAudibleOutputProof=false."
   ]
 }

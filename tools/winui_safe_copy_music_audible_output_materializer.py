@@ -138,12 +138,21 @@ def string_at(value: dict[str, Any], key: str) -> str:
 
 def utc_at(value: dict[str, Any], key: str) -> dt.datetime:
     child = string_at(value, key)
-    require(child.endswith("Z"), f"{key} must be a UTC Z timestamp.")
+    require(child.endswith("Z") or child.endswith("+00:00"), f"{key} must be a UTC timestamp.")
     try:
-        parsed = dt.datetime.fromisoformat(child.removesuffix("Z") + "+00:00")
+        parsed = dt.datetime.fromisoformat(child.removesuffix("Z") + "+00:00" if child.endswith("Z") else child)
     except ValueError as exc:
         raise MaterializerError(f"Invalid UTC timestamp {key}: {child}") from exc
     return parsed.astimezone(dt.timezone.utc)
+
+
+def format_utc(value: dt.datetime) -> str:
+    value = value.astimezone(dt.timezone.utc)
+    if value.microsecond:
+        text = value.isoformat(timespec="milliseconds")
+    else:
+        text = value.isoformat(timespec="seconds")
+    return text.replace("+00:00", "Z")
 
 
 def normalized_key(value: str) -> str:
@@ -394,8 +403,8 @@ def validate_timeline(timeline_path: Path, live_path: Path, live: dict[str, Any]
         "asyncKickPathMatched": True,
         "oggOpenPathMatched": True,
         "decodedPcmPositiveRequestObserved": True,
-        "decodeWindowStartUtc": timeline["decodeWindowStartUtc"],
-        "decodeWindowEndUtc": timeline["decodeWindowEndUtc"],
+        "decodeWindowStartUtc": format_utc(decode_start),
+        "decodeWindowEndUtc": format_utc(decode_end),
         "cdbRowCounts": parsed,
         "_decodeWindowStartAt": decode_start,
         "_decodeWindowEndAt": decode_end,
@@ -613,8 +622,8 @@ def validate_audio(path: Path, role: str, *, require_non_silent: bool, timeline:
         "boundedOutputArtifact": True,
         "startsBeforeExpectedMusicKick": starts_before,
         "endsAfterDecodeBegins": ends_after,
-        "captureStartedUtc": payload["captureStartedUtc"],
-        "captureEndedUtc": payload["captureEndedUtc"],
+        "captureStartedUtc": format_utc(capture_start),
+        "captureEndedUtc": format_utc(capture_end),
         "observedDurationMs": int_at(payload, "observedDurationMs"),
         "sanitizedEndpoint": {
             "endpointAlias": "default-render-endpoint",

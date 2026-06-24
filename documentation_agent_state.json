@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-24",
-  "currentFocus": "Public-primary source boundary wording and release-accounting semantics are closed at 4e299090; active baton returns to music audible-output proof.",
+  "currentFocus": "Music audible-output docs now record UTC sidecar timestamp normalization and the next staged-positive source-correlation mismatch boundary.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -11,8 +11,8 @@
     "migrationReadinessNote": "release/readiness/public_primary_full_migration_inventory_2026-06-24.md"
   },
   "publicPrimaryMigration": {
-    "status": "closed_validated_pushed_plus_boundary_clarification_committed",
-    "latestBoundaryHardeningCommit": "4e299090",
+    "status": "closed_validated_pushed",
+    "latestBoundaryHardeningCommit": "ea6e8dcd",
     "publicPrimary": "public repo is primary day-to-day working repo, not a sparse export",
     "trackedMaterial": "source, tools, tests, RE docs, wave notes, state batons, agent reports, readiness notes, compact proof summaries, useful text scratch exports",
     "localOnly": "actual game/runtime payloads, arbitrary saves/options payloads, full Ghidra databases/backups, secrets, build outputs, screenshots/frame dumps, raw CDB logs, bulky generated captures",
@@ -30,7 +30,8 @@
     "claimBoundary": "direct CGame restart-loop selection provenance is not audible-output proof",
     "latestLiveAttemptNotes": [
       "181120 attempt failed before proof acceptance due missing --source-root in source-safety sidecar command; executor command and regression test fixed",
-      "181538 attempt reached CDB music-selection provenance but failed capture-source correlation because 30-second WAV captures had zero samples; readiness note records calibration-tone evidence and new 60000ms live-audio guard"
+      "181538 attempt reached CDB music-selection provenance but failed capture-source correlation because 30-second WAV captures had zero samples; readiness note records calibration-tone evidence and new 60000ms live-audio guard",
+      "144834 replay reached capture-source correlation with non-silent 60-second clean/staged captures; +00:00 UTC sidecar parsing is fixed, but staged-positive source correlation still prefers BEA_04 over BEA_02 (margin=-0.161892; required 0.150000)"
     ]
   },
   "validation": {
@@ -55,6 +56,7 @@
       "npm run test:winui-safe-copy-music-capture-source-correlation",
       "npm run test:winui-safe-copy-music-capture-source-correlation-builder",
       "npm run test:winui-safe-copy-music-audible-output-live-bundle-gate",
+      "private replay: capture-source correlation builder on music-audible-live-20260624-144834 now reaches staged-positive source-correlation failure instead of timestamp rejection",
       "python tools\\docsync_check.py",
       "py -3 tools\\release_profile_snapshot.py --check (R0=6117 R2=0 R3=3 R4=13175)",
       "py -3 tools\\release_curated_manifest.py --check (selected files 625)",
@@ -64,12 +66,13 @@
       "no BEA.exe/cdb.exe process before closeout"
     ],
     "pendingForActiveSlice": [
-      "next 60000ms private live bundle attempt only after clean preconditions"
+      "broad docs/repo/hard-payload closeout gates for current timestamp-normalization slice",
+      "source-correlation mismatch investigation after green closeout"
     ]
   },
   "nextSteps": [
     "Keep public docs explicit that source/docs/tools/RE summaries are tracked while hard payloads are local overlays.",
-    "Advance the music audible-output proof lane without changing runtimeAudibleOutputProof until materializer/final-checker acceptance.",
+    "Advance the music audible-output proof lane by investigating the staged-positive source-correlation mismatch; keep runtimeAudibleOutputProof=false until materializer/final-checker acceptance.",
     "Preserve online non-player-ready wording until required distinct-endpoint and source-bound runtime proofs exist."
   ]
 }

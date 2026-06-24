@@ -354,6 +354,32 @@ class MusicAudibleOutputMaterializerTests(unittest.TestCase):
             self.assertNotIn(r"C:\Program Files", rendered)
             self.assertTrue(paths["output"].is_file())
 
+    def test_accepts_plus_zero_utc_inputs_and_normalizes_public_timestamps(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = self.build_fixture(Path(temp_dir))
+            for key in ("ambient_audio", "clean_audio", "staged_audio", "mute_audio"):
+                audio = json.loads(paths[key].read_text(encoding="utf-8"))
+                audio["captureStartedUtc"] = "2026-06-22T00:00:00+00:00"
+                audio["captureEndedUtc"] = "2026-06-22T00:00:03+00:00"
+                write_json(paths[key], audio)
+            census = json.loads(paths["ambient_census"].read_text(encoding="utf-8"))
+            census["censusStartUtc"] = "2026-06-22T00:00:00+00:00"
+            census["censusEndUtc"] = "2026-06-22T00:00:03+00:00"
+            census["audioArtifactSha256"] = sha256_file(paths["ambient_audio"])
+            write_json(paths["ambient_census"], census)
+            correlation = json.loads(paths["capture_source_correlation"].read_text(encoding="utf-8"))
+            correlation["inputBindings"]["cleanAudioJsonSha256"] = sha256_file(paths["clean_audio"])
+            correlation["inputBindings"]["stagedAudioJsonSha256"] = sha256_file(paths["staged_audio"])
+            write_json(paths["capture_source_correlation"], correlation)
+
+            proof = self.materialize(paths)
+            final_check.validate_artifact(proof)
+
+            for run in proof["runs"].values():
+                audio = run["audioCapture"]
+                self.assertTrue(audio["captureStartedUtc"].endswith("Z"))
+                self.assertTrue(audio["captureEndedUtc"].endswith("Z"))
+
     def test_materializes_with_separate_timestamped_cdb_log_sidecar(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             paths = self.build_fixture(Path(temp_dir))

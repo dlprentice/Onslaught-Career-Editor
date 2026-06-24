@@ -247,6 +247,16 @@ class MusicAudibleOutputLiveBundleExecutorTests(unittest.TestCase):
             self.assertIn("--source-root", command)
             self.assertEqual(str(source_root), command[command.index("--source-root") + 1])
 
+    def test_capture_source_correlation_command_includes_source_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            source_root = root / "source"
+            layout = live_bundle.build_layout(root / "bundle")
+            command = live_bundle.capture_source_correlation_command(layout, source_root=source_root)
+
+            self.assertIn("--source-root", command)
+            self.assertEqual(str(source_root), command[command.index("--source-root") + 1])
+
     def test_unsafe_cdb_cleanup_status_is_rejected_before_materialization(self) -> None:
         for status in ("still-running", "failed", "not-started"):
             with self.subTest(status=status), tempfile.TemporaryDirectory() as temp_dir:

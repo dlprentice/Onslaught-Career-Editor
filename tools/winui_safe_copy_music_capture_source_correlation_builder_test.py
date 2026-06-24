@@ -66,13 +66,49 @@ class MusicCaptureSourceCorrelationBuilderTests(unittest.TestCase):
             self.assertNotIn("outputWav", rendered)
             self.assertNotIn("samples", rendered)
 
+    def test_accepts_plus_zero_utc_audio_timestamps_from_loopback_helper(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            clean_audio = write_audio_json(
+                root / "clean" / "audio.json",
+                start="2026-06-22T00:00:00+00:00",
+                end="2026-06-22T00:00:03+00:00",
+                non_silent=True,
+            )
+            staged_audio = write_audio_json(
+                root / "staged" / "audio.json",
+                start="2026-06-22T00:00:00+00:00",
+                end="2026-06-22T00:00:03+00:00",
+                non_silent=True,
+            )
+            output_root = root / "out"
+            source_root = root / "source-game"
+            output_root.mkdir(parents=True)
+            source_root.mkdir(parents=True)
+
+            artifact = builder.build_adapter_from_vectors(
+                clean_audio=clean_audio,
+                staged_audio=staged_audio,
+                output=output_root / "capture-source-correlation.json",
+                allowed_output_root=output_root,
+                source_root=source_root,
+                source_target_vector=[1.0, 0.0, 0.0, 0.0],
+                source_replacement_vector=[0.0, 1.0, 0.0, 0.0],
+                clean_capture_vector=[0.95, 0.05, 0.0, 0.0],
+                staged_capture_vector=[0.05, 0.95, 0.0, 0.0],
+            )
+
+            summary = checker.validate_artifact(artifact)
+            self.assertEqual("BEA_04(Master).ogg", summary["cleanBaselineBestMatch"])
+            self.assertFalse(summary["runtimeAudibleOutputProof"])
+
     def test_rejects_swapped_capture_preference(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             paths = self.build_fixture(Path(temp_dir))
             paths["allowed_output_root"].mkdir(parents=True)
             paths["source_root"].mkdir(parents=True)
 
-            with self.assertRaises(builder.CaptureSourceCorrelationBuilderError):
+            with self.assertRaises(builder.CaptureSourceCorrelationBuilderError) as raised:
                 builder.build_adapter_from_vectors(
                     clean_audio=paths["clean_audio"],
                     staged_audio=paths["staged_audio"],
@@ -84,6 +120,8 @@ class MusicCaptureSourceCorrelationBuilderTests(unittest.TestCase):
                     clean_capture_vector=[0.05, 0.95, 0.0, 0.0],
                     staged_capture_vector=[0.95, 0.05, 0.0, 0.0],
                 )
+            self.assertIn("margin=", str(raised.exception))
+            self.assertIn("minimum=", str(raised.exception))
 
     def test_rejects_weak_margin(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

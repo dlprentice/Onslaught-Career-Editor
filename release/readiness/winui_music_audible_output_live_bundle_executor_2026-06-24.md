@@ -166,3 +166,18 @@ decode rows. The executor default is now a 60-second live audio capture, and
 `validate_live_attempt_audio_duration` rejects shorter armed live attempts.
 `runtimeAudibleOutputProof=false` remains current truth until a future
 60-second private raw bundle passes the materializer and final checker.
+
+A later 60-second replay (`music-audible-live-20260624-144834`) reached the
+capture-source correlation builder with non-silent clean/staged loopback
+captures and restart-loop-direct CDB music-selection provenance. The old
+blocker was that the loopback audio helper emitted strict UTC `+00:00`
+sidecars while the materializer accepted only literal `Z` timestamps. The
+materializer now accepts `Z` or `+00:00` for private JSON sidecar inputs and
+normalizes materialized public proof timestamps back to `Z`; the timestamped
+CDB log parser remains `Z`-only because its producer emits canonical `Z`
+timestamps. Replaying the same raw bundle now reaches the next proof boundary
+and still fails closed: the staged-positive capture did not prefer the
+replacement source track strongly enough (`margin=-0.161892`, required
+`0.150000`, target correlation `0.862302`, replacement correlation `0.700409`).
+No capture-source sidecar was emitted, the materializer/final checker could not
+accept the bundle, and `runtimeAudibleOutputProof=false` remains current truth.

@@ -6,8 +6,9 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Close the public-primary source boundary clarification, then resume the WinUI
-safe-copy music audible-output proof lane from the public primary repo.
+Close WinUI music UTC sidecar timestamp normalization, then investigate the
+staged-positive capture-source correlation mismatch from the latest 60-second
+private raw bundle.
 
 This slice starts after the public-primary migration hardening closeout at
 `e4ca5904 Repo: align public-primary proof boundaries`. The public checkout
@@ -15,13 +16,17 @@ This slice starts after the public-primary migration hardening closeout at
 truth for project-owned work. The former private checkout is no longer the
 normal working source.
 
+This slice starts after the public-primary boundary clarification closeout at
+`ea6e8dcd State: close public-primary boundary clarification`.
+
 The executable target is the next bounded music/mod runtime proof step:
 
-- run focused preflight gates for the current music audible-output live-bundle
-  chain;
-- use bounded Codex normal/adversarial consults before any armed live attempt;
-- run one private live-bundle attempt only if source/proof roots, process
-  hygiene, audio preflight, and proof-contract checks are clean;
+- fix the first-party UTC timestamp-shape blocker in the music proof
+  materializer/builder chain;
+- replay the latest private 60-second raw bundle through the fixed
+  capture-source correlation builder without relaunching BEA;
+- record the exact next fail-closed proof boundary if source correlation still
+  does not accept;
 - keep all bulky raw runtime outputs in ignored/external local proof roots;
 - materialize a public-safe result only through the tracked materializer and
   final checker;
@@ -34,9 +39,8 @@ The executable target is the next bounded music/mod runtime proof step:
   `0 / 0 / 0`, active current-risk re-audit `1179/1179 = 100.00%`.
 - Public `v1.0.2` app release remains published at
   `https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.2`.
-- Public-primary source boundary clarification is committed at
-  `4e299090 Clarify public-primary source boundary`; state closeout/push is
-  pending.
+- Public-primary source boundary clarification is closed and pushed at
+  `ea6e8dcd State: close public-primary boundary clarification`.
 - Public-primary migration hardening is closed and pushed:
   - private tracked paths measured: `24839`;
   - public tracked paths measured: `19295` after adding
@@ -82,6 +86,18 @@ The executable target is the next bounded music/mod runtime proof step:
     WAV captures had zero samples; calibration-tone capture proved the loopback
     backend can record the endpoint, and the executor now requires/defaults to
     a 60-second live audio capture.
+- The later 60-second private raw bundle
+  `music-audible-live-20260624-144834` reached the capture-source correlation
+  builder with non-silent clean/staged loopback captures and
+  restart-loop-direct CDB music-selection provenance. The old `+00:00`
+  timestamp blocker is fixed: private JSON sidecars may use `Z` or `+00:00`,
+  and sanitized materialized proof output normalizes back to `Z`.
+- Replaying that 60-second bundle now reaches the next fail-closed proof
+  boundary: staged-positive capture correlation prefers the original
+  `BEA_04` target over the replacement `BEA_02` source (`margin=-0.161892`,
+  required `0.150000`, target `0.862302`, replacement `0.700409`). No
+  capture-source sidecar was emitted and `runtimeAudibleOutputProof=false`
+  remains current truth.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof both exist.
@@ -91,8 +107,8 @@ The executable target is the next bounded music/mod runtime proof step:
 
 Public-primary migration and proof-boundary hardening closed at
 `e4ca5904 Repo: align public-primary proof boundaries`; follow-up source
-boundary clarification closed at `4e299090 Clarify public-primary source
-boundary`.
+boundary clarification closed at
+`ea6e8dcd State: close public-primary boundary clarification`.
 
 Closed-slice validation:
 
@@ -154,13 +170,14 @@ Also required:
 
 ## Next Executable Work
 
-1. Finish focused music proof-chain preflight and consult review.
-2. If preconditions are clean, run one armed private live-bundle attempt under
-   the approved external/private runtime proof root.
-3. If the attempt succeeds, materialize through the tracked materializer and
-   final checker before changing any claim.
-4. If the attempt fails, record the exact failed rung and preserve
-   `runtimeAudibleOutputProof=false`.
+1. Validate and commit the UTC timestamp normalization plus source-root
+   regression coverage.
+2. Investigate why the staged-positive capture from the 60-second bundle still
+   correlates more strongly to original `BEA_04` than replacement `BEA_02`.
+3. Decide from evidence whether the next fix belongs in staging verification,
+   audio capture timing, source-correlation windowing, or the live music preset.
+4. Preserve `runtimeAudibleOutputProof=false` until a generated private raw
+   bundle passes the materializer and final checker.
 5. Update docs/state/evidence, validate, commit/push the green slice, then
    continue with patch/mod/runtime or online proof work from the public repo.
 
