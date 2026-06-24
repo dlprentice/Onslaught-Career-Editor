@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-24",
-  "currentFocus": "Public-primary migration hardening is documented and pushed; documentation now also normalizes stale private-tree wording while the active baton remains music audible-output proof work from the public repo.",
+  "currentFocus": "Public-primary source boundary wording and release-accounting semantics are being closed; active baton returns to music audible-output proof after commit.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -11,14 +11,15 @@
     "migrationReadinessNote": "release/readiness/public_primary_full_migration_inventory_2026-06-24.md"
   },
   "publicPrimaryMigration": {
-    "status": "closed_validated_pushed",
-    "latestBoundaryHardeningCommit": "e4ca5904",
+    "status": "closed_validated_pushed_plus_boundary_clarification_pending_commit",
+    "latestBoundaryHardeningCommit": "pending-public-primary-boundary-clarification",
     "publicPrimary": "public repo is primary day-to-day working repo, not a sparse export",
     "trackedMaterial": "source, tools, tests, RE docs, wave notes, state batons, agent reports, readiness notes, compact proof summaries, useful text scratch exports",
     "localOnly": "actual game/runtime payloads, arbitrary saves/options payloads, full Ghidra databases/backups, secrets, build outputs, screenshots/frame dumps, raw CDB logs, bulky generated captures",
-    "currentInventory": "24839 private tracked paths, 19294 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths",
+    "currentInventory": "24839 private tracked paths, 19295 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths",
     "scratchHardening": "27 private-only .c/.tsv RE scratch exports were promoted; missing private RE scratch text now fails the migration inventory",
-    "wordingHardening": "active status/strategy/roadmap/register/readiness docs now describe the public repo as public-primary source instead of a sparse public candidate or private-tree export"
+    "wordingHardening": "active status/strategy/roadmap/register/readiness docs now describe the public repo as public-primary source instead of a sparse public candidate or private-tree export",
+    "releaseAccountingClarification": "R4_DENY now means excluded from portable app ZIPs and legacy curated export payloads; compact non-secret .codex/state/subagent/proof-summary text may be tracked in public source"
   },
   "musicDiagnosticDocs": {
     "readinessNote": "release/readiness/winui_music_cgame_caller_diagnostic_2026-06-24.md",
@@ -55,8 +56,8 @@
       "npm run test:winui-safe-copy-music-capture-source-correlation-builder",
       "npm run test:winui-safe-copy-music-audible-output-live-bundle-gate",
       "python tools\\docsync_check.py",
-      "py -3 tools\\release_profile_snapshot.py --check (R0=6116 R2=0 R3=3 R4=13175)",
-      "py -3 tools\\release_curated_manifest.py --check (selected files 624)",
+      "py -3 tools\\release_profile_snapshot.py --check (R0=6117 R2=0 R3=3 R4=13175)",
+      "py -3 tools\\release_curated_manifest.py --check (selected files 625)",
       "npm run test:doc-commands",
       "npm run test:md-links",
       "npm run test:repo-hygiene",

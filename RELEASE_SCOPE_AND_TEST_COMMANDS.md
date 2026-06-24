@@ -97,20 +97,27 @@ TrustedPeople-only blocker proof alone.
 
 ## 3. What Is Excluded
 
-Git-tracked source and downloadable app ZIPs have different shapes. Both must
-exclude hard payloads, including:
+Git-tracked source and downloadable app ZIPs have different shapes. The public
+source repo may track compact non-secret state batons, `.codex` project-history
+notes, text subagent reports, readiness notes, and proof summaries when they are
+useful to collaborators. Downloadable app ZIPs, legacy curated exports, and the
+public source repo must still exclude hard payloads, including:
 
 - `game/**`
-- `.codex/**`
 - `media/**` unless a future public-safe media subset is explicitly classified
 - `save-attempts/**`
-- generated/raw payloads under `subagents/**`
+- generated/raw payloads under `subagents/**`; compact text reports are allowed
 - `release/artifacts/**` and `release/out/**`
 - full Ghidra project databases/backups
 - local proof/backup-root payloads and machine-specific generated outputs
 - host-only local artifacts and packaged build output
 - raw binaries, arbitrary saves/options payloads, screenshots, frame captures,
   media caches, raw CDB logs, copied runtime evidence, and secrets
+
+Portable app ZIPs and legacy curated exports additionally exclude local
+operator/project-history surfaces such as `.codex/**`, state batons, and bulky
+or maintainer-only proof/accounting material. That exclusion does not make those
+compact text files invalid in the public-primary source repo.
 
 Narrow exception: `tests_shared/fixtures/gold_career_save.bin` is the tracked
 immutable 10,004-byte regression baseline. Do not generalize that exception to

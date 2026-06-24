@@ -3,7 +3,7 @@
 Status: active disclosure guidance
 Last updated: 2026-06-22
 
-This project handles local game paths, copied executable profiles, save/options files, patch manifests, private runtime evidence, and future online-play research. Keep reports minimal and do not paste proprietary or private material into public issues, PR text, or public release docs.
+This project handles local game paths, copied executable profiles, save/options files, patch manifests, runtime evidence summaries, and future online-play research. Keep reports minimal and do not paste proprietary or private material into public issues, PR text, or app release docs.
 
 ## User Data Safety
 
@@ -14,7 +14,7 @@ Save and options editing writes to a separate output file and refuses in-place p
 Use the maintainer channel provided with your collaboration invitation for any
 suspected issue involving:
 
-- leaked secrets, tokens, credentials, local user paths, or machine identifiers
+- leaked secrets, tokens, credentials, unnecessary local user paths, or machine identifiers
 - bundled or pasted Battle Engine Aquila executable bytes, media, manuals,
   saves, screenshots, frame captures, extracted assets, or raw runtime proof
 - unsafe mutation of the installed Steam game folder or original `BEA.exe`
@@ -38,6 +38,9 @@ It is normally fine to discuss:
 - documentation wording issues that do not reveal private paths or assets
 - failed local validation commands with private paths redacted
 - feature requests for the WinUI app, patch catalog, or public-safe tooling
+- compact historical proof summaries already tracked in this repo, as long as
+  they do not include raw game/media/save payloads, secrets, raw captures, or
+  full debugger/Ghidra databases
 
 ## License Boundary
 

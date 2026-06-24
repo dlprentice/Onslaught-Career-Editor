@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Generate or validate release-classification snapshot artifacts."""
+"""Generate or validate portable/export release-classification artifacts.
+
+The public repository is the working source repo and may track compact
+non-secret state, agent reports, RE notes, and proof summaries. R4_DENY in this
+script means excluded from portable app ZIPs and legacy curated export payloads;
+it does not automatically mean "must be absent from public source."
+"""
 
 from __future__ import annotations
 
@@ -365,11 +371,11 @@ def render_tsv(rows: Iterable[Classification]) -> str:
 
 
 def render_private_inventory(rows: Iterable[Classification]) -> str:
-    lines = ["path\tclass\treason\trelease_posture\n"]
+    lines = ["path\tclass\treason\tportable_or_legacy_export_posture\n"]
     for row in rows:
         if row.cls not in {"R3_CONDITIONAL", "R4_DENY"}:
             continue
-        posture = "exclude"
+        posture = "exclude_from_portable_or_legacy_export"
         if row.cls == "R3_CONDITIONAL":
             posture = "manual_review_required"
         lines.append(f"{row.path}\t{row.cls}\t{row.reason}\t{posture}\n")
@@ -403,17 +409,24 @@ def render_profile(
     lines.append("")
     lines.append("| Class | Count | Meaning |")
     lines.append("|---|---:|---|")
-    lines.append(f"| R0_ALLOW | {counts['R0_ALLOW']} | Default allow bucket (still requires human review before public publish) |")
+    lines.append(f"| R0_ALLOW | {counts['R0_ALLOW']} | Default allow bucket for portable/export release accounting (still requires human review before publishing an artifact) |")
     lines.append(f"| R2_REVIEW | {counts['R2_REVIEW']} | Volatile/generated/binary artifacts; include only when intentional |")
     lines.append(f"| R3_CONDITIONAL | {counts['R3_CONDITIONAL']} | Reference submodule families requiring licensing/scope review |")
-    lines.append(f"| R4_DENY | {counts['R4_DENY']} | Hard exclusions from public release |")
+    lines.append(f"| R4_DENY | {counts['R4_DENY']} | Excluded from portable app ZIPs and legacy curated export payloads; may still be tracked public source when compact, non-secret project history |")
     lines.append("")
-    lines.append("## Curated Publish-Candidate Include Patterns")
+    lines.append("Public-primary note: this profile is not the boundary for what may exist in")
+    lines.append("the public source repo. It is an app/export accounting artifact. The source")
+    lines.append("repo can track useful source, docs, tools, RE notes, compact proof summaries,")
+    lines.append("state batons, and agent reports while still excluding raw game payloads, full")
+    lines.append("Ghidra databases/backups, copied runtime output, raw captures/logs, build")
+    lines.append("outputs, and secrets.")
+    lines.append("")
+    lines.append("## Legacy Curated Export Include Patterns")
     lines.append("")
     for item in curated_patterns:
         lines.append(f"- `{item}`")
     lines.append("")
-    lines.append("## Hard Exclusions")
+    lines.append("## Portable/Legacy Export Exclusions")
     lines.append("")
     for item in DENY_PREFIXES:
         lines.append(f"- `{item}**`")
@@ -430,7 +443,7 @@ def render_profile(
     else:
         lines.append("- none")
     lines.append("")
-    lines.append("## R4 Deny Matches (Current Working Tree)")
+    lines.append("## R4 Portable/Legacy Export Exclusions (Current Working Tree)")
     lines.append("")
     for p in r4_sample:
         lines.append(f"- `{p}`")

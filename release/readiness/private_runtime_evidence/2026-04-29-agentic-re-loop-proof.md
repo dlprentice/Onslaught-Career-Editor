@@ -1,6 +1,6 @@
-# Private runtime evidence: bounded agentic RE loop proof
+# Historical runtime evidence: bounded agentic RE loop proof
 
-Status: private evidence, sanitized
+Status: compact tracked evidence summary; raw proof payloads excluded
 Date: 2026-04-29 local Prompt 7 session; artifact timestamps below are UTC `2026-04-30`
 Runtime: Electron desktop dev mode
 Branch: `wip/sandbox`
@@ -232,9 +232,9 @@ This proves a bounded agentic observe/decide/act/observe/stop loop through typed
 - This does not prove packaged portable-bundle runtime behavior.
 - This does not prove multi-step gameplay progression, debugger automation, Ghidra/runtime mutation, or continuous agent control.
 
-## Privacy and release posture
+## Payload and release posture
 
-This report is sanitized and does not embed raw frame PNGs, screenshots, data URLs, or base64 payloads. The raw local proof JSON and frame PNGs can contain private game asset evidence and remain private/ignored. The `release/readiness/private_runtime_evidence/**` path is excluded from the public curated release manifest.
+This report is compact text and does not embed raw frame PNGs, screenshots, data URLs, or base64 payloads. The raw local proof JSON and frame PNGs can contain game asset evidence and remain ignored/local. The `release/readiness/private_runtime_evidence/**` path is excluded from portable app ZIPs and legacy curated exports, but compact summaries may be tracked in the public-primary source repo.
 
 ## Verification commands
 

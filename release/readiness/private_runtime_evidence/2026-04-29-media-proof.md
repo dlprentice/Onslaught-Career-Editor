@@ -1,10 +1,10 @@
 # Prompt 4/5 media proof evidence
 
-Status: private runtime evidence
+Status: compact tracked runtime evidence summary; raw proof payloads excluded
 Last updated: 2026-04-29
-Public release posture: excluded from the curated public/community release manifest
+Release posture: excluded from portable app ZIPs and legacy curated exports
 
-This report preserves the Prompt 4 and Prompt 5 media proof facts without embedding raw game media, screenshots, data URLs, or base64 payloads. The referenced screenshots and proof JSON remain local/private evidence because they can contain private game asset paths and rendered game asset evidence.
+This report preserves the Prompt 4 and Prompt 5 media proof facts without embedding raw game media, screenshots, data URLs, or base64 payloads. The referenced screenshots and proof JSON remain ignored/local evidence because they can contain rendered game asset evidence.
 
 ## Scope
 
@@ -83,11 +83,11 @@ The final accepted Prompt 5 proof used a cache hit. A prior failed proof harness
 
 ## Privacy and release posture
 
-- The screenshots and proof JSON under `subagents/` remain local ignored/private evidence.
+- The screenshots and proof JSON under `subagents/` remain local ignored evidence.
 - The MP4 cache path is under the user app-data media cache, outside the repo.
 - This report is sanitized text only and does not contain raw PNG/MP4 bytes, `.vid` bytes, data URLs, or base64 payloads.
-- `release/readiness/private_runtime_evidence/**` is explicitly excluded from the curated public/community release manifest.
-- `onslaught_codex_directive.md` is tracked as a private operator/development directive and is explicitly excluded from the curated public/community release manifest.
+- `release/readiness/private_runtime_evidence/**` is explicitly excluded from portable app ZIPs and legacy curated exports.
+- `onslaught_codex_directive.md` is historical/operator project context and is excluded from portable app ZIPs and legacy curated exports.
 
 ## What is proven
 

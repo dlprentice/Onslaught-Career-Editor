@@ -3,7 +3,7 @@
 Status: active lane sign-off gate
 Last updated: 2026-06-22
 
-Use this runbook for private-tree local lane validation. It does not publish anything. Some commands write ignored validation reports or regenerated release-policy artifacts when explicitly listed. WinUI 3 is the primary product lane. Electron, WPF, and the old Python GUI/CLI app are archived/reference.
+Use this runbook for public-primary local lane validation. It does not publish anything. Some commands write ignored validation reports or regenerated release-policy artifacts when explicitly listed. WinUI 3 is the primary product lane. Electron, WPF, and the old Python GUI/CLI app are archived/reference.
 
 **Default branch:** `main` (WinUI lane promotion, 2026-05-27). **Release profile source:** run `py -3 tools\release_profile_snapshot.py --check` and `py -3 tools\release_curated_manifest.py --check`; do not copy release-count totals from old prose because the generated artifacts are the source of truth. **Evidence index:** `release/readiness/winui_main_lane_gate_index_2026-05-27.md` (maps local gates, ZIP probes, visual/Home smoke docs, and re-run rules). **MSIX strategy (not selected):** `release/readiness/msix_trust_strategy_next_steps_2026-05-27.md`. Re-run ZIP probes only when WinUI publish output or probe scripts change.
 
@@ -33,7 +33,7 @@ npm run test:winui-safe-copy-music-swap-runtime-artifact-checker
 npm run test:winui-patch-engine-safety
 ```
 
-`npm run test:winui-safe-copy-runtime` is a private maintainer/runtime aggregate and depends on helper scripts that are excluded from curated public source candidates. Use it in this private repo, not as a public candidate gate.
+`npm run test:winui-safe-copy-runtime` is a local maintainer/runtime aggregate. It can require ignored local overlays such as a copied executable, CDB, or proof root, so it is not a default public PR gate.
 
 Second-host online contract/self-test gates are private maintainer checks, not proof that Host/Join can be enabled:
 

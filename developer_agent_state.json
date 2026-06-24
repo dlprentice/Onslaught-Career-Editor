@@ -1,24 +1,24 @@
 {
   "lastUpdated": "2026-06-24",
   "branch": "main",
-  "currentFocus": "Public-primary migration hardening is closed; active slice is WinUI safe-copy music audible-output proof hardening plus public-primary wording cleanup from the public repo.",
+  "currentFocus": "Public-primary source boundary clarification is pending commit; active music proof lane remains next after this boundary closeout.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainCommit": "e4ca5904",
-    "publicMainStatus": "clean_and_aligned_after_public_primary_music_hardening_push",
+    "publicMainCommit": "pending-public-primary-boundary-clarification",
+    "publicMainStatus": "working_tree_has_staged_boundary_docs_and_guard_updates",
     "policy": "track source/docs/tools/tests/RE notes/wave notes/state batons/agent reports/readiness notes/compact proof summaries; keep hard payloads local/ignored"
   },
   "publicPrimaryMigration": {
-    "status": "closed_validated_pushed",
+    "status": "closed_validated_pushed_plus_boundary_clarification_pending_commit",
     "inventoryGuard": "tools/public_primary_migration_inventory.py",
     "readinessNote": "release/readiness/public_primary_full_migration_inventory_2026-06-24.md",
     "acceptedInventory": {
       "privateTrackedPaths": 24839,
-      "publicTrackedPaths": 19294,
+      "publicTrackedPaths": 19295,
       "allowedPrivateOnlyHardPayloadOrScratchPayloadPaths": 5557
     },
-    "hardening": "27 private-only text RE scratch exports were promoted; missing private RE scratch text now fails the migration inventory",
+    "hardening": "27 private-only text RE scratch exports were promoted; missing private RE scratch text now fails the migration inventory; follow-up clarifies R4/export exclusions are portable/legacy export boundaries, not public-source exclusions",
     "hardPayloadsKeptOut": [
       "game/media payload roots",
       "copied executables/DLLs",
@@ -36,7 +36,8 @@
     "latestFindings": [
       "music-audible-live-20260624-181120 failed before proof acceptance because source-safety sidecar did not receive --source-root; executor command shape is fixed and tested",
       "music-audible-live-20260624-181538 reached clean/staged CDB music-selection provenance but failed capture-source correlation because 30-second WAV captures ended with zero samples before decode; executor now defaults/requires 60000ms for armed live attempts",
-      "public-primary docs were normalized away from stale private-tree/public-candidate language; PR template now allows compact non-secret state/report text; payload safety checker now has credential-like text deny patterns"
+      "public-primary docs were normalized away from stale private-tree/public-candidate language; PR template now allows compact non-secret state/report text; payload safety checker now has credential-like text deny patterns",
+      "public-primary boundary follow-up added tools/hard_payload_safety_check.py wrapper and clarified that compact non-secret .codex/state/subagent/proof-summary text may be tracked while portable app ZIPs and legacy curated exports exclude those surfaces"
     ]
   },
   "runtimeTruth": {
@@ -81,8 +82,8 @@
       "npm run test:winui-safe-copy-music-capture-source-correlation-builder",
       "npm run test:winui-safe-copy-music-audible-output-live-bundle-gate",
       "python tools\\docsync_check.py",
-      "py -3 tools\\release_profile_snapshot.py --check (R0=6116 R2=0 R3=3 R4=13175)",
-      "py -3 tools\\release_curated_manifest.py --check (selected files 624)",
+      "py -3 tools\\release_profile_snapshot.py --check (R0=6117 R2=0 R3=3 R4=13175)",
+      "py -3 tools\\release_curated_manifest.py --check (selected files 625)",
       "npm run test:doc-commands",
       "npm run test:md-links",
       "npm run test:repo-hygiene",

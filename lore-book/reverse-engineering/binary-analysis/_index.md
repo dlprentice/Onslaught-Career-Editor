@@ -517,7 +517,7 @@ Analysis performed using:
 
 Release note:
 - Internal mutation/runbook notes are maintained privately and are not required for public app/docs use.
-- Operational mutation journals and audit byproducts are intentionally kept out of reader-facing navigation and the curated public candidate.
+- Operational mutation journals and audit byproducts may be tracked when they are compact, text-only, and useful for public-primary handoff; keep raw CDB logs, frames, copied executable output, full Ghidra databases/backups, and bulky proof payloads in ignored local overlays.
 
 ## See Also
 

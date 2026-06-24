@@ -22,7 +22,7 @@
     "test:winui-installer-preflight": "py -3 -B tools\\winui_installer_preflight.py --check",
     "test:doc-commands": "py -3 -B tools\\public_package_doc_command_check.py --self-test && py -3 -B tools\\public_package_doc_command_check.py",
     "test:md-links": "py -3 -B tools\\md_link_check.py --scope all --out-dir subagents\\md-link-check",
-    "test:hard-payload-safety": "py -3 -B tools\\public_allowlist_safety_check.py --self-test && py -3 -B tools\\public_allowlist_safety_check.py",
+    "test:hard-payload-safety": "py -3 -B tools\\hard_payload_safety_check.py --self-test && py -3 -B tools\\hard_payload_safety_check.py",
     "test:public-allowlist": "py -3 -B tools\\public_allowlist_safety_check.py --self-test && py -3 -B tools\\public_allowlist_safety_check.py",
     "test:public-candidate-inventory": "py -3 -B tools\\public_candidate_inventory_check.py --self-test && py -3 -B tools\\public_candidate_inventory_check.py --candidate-root .",
     "test:public-primary-migration-inventory": "py -3 -B tools\\public_primary_migration_inventory.py --self-test && py -3 -B tools\\public_primary_migration_inventory.py --check",

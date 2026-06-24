@@ -83,7 +83,8 @@
 
 - `references/Onslaught/Career.cpp` - Stuart's internal PC build source
 - `references/Onslaught/Career.h` - Struct definitions
-- `game/` - Full BEA installation for Ghidra analysis (tracked in private repo)
+- `game/` - Optional local ignored overlay for a user-owned BEA installation or
+  copied runtime files used during local analysis
 - Community hex-diffing of retail saves
 - Discord conversations (#general, #game-dev, #greetings, #media, #story-and-lore, #bugs, #bulletin, #who-joined, #muspell-block) parsed Dec 2025
 - LinkedIn conversations with Stuart, Alex Trowers

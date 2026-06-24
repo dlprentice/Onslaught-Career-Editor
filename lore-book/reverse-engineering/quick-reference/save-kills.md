@@ -36,10 +36,10 @@ Preserve `meta` when patching. Clamp `kills` to 24-bit (`0..0x00FFFFFF`).
 
 ## Kill-Based Goodie Unlocks (Unit Goodies)
 
-Private maintainer trees keep the full authoritative mapping in
-`reverse-engineering/save-file/goodies-system.md`. Public candidates keep this
-quick-reference summary link-closed so contributors can work without the private
-proof forest.
+The full authoritative mapping lives in
+`reverse-engineering/save-file/goodies-system.md`. This quick reference stays
+link-closed so contributors can work from the public-primary repo without
+digging through the larger proof forest first.
 
 Unit-goodies highlights (retail/Steam):
 - Infantry: 40 -> Muspell Grunt, 80 -> Commando, 160 -> Firebreather

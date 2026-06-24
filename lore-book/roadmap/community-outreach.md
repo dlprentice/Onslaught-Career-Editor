@@ -10,7 +10,7 @@
 | Roadmap docs | Yes | Help community contribute |
 | CURRENT_CAPABILITIES.md | Yes | Release-facing feature/status overview |
 | Gold save file | No | `save-attempts/` stays private; public validation should use generated/temp fixtures instead of personal save artifacts |
-| Source code quotes | No | Stuart shared privately; references are tracked as submodules in the private repo and excluded from public releases. |
+| Source code quotes | Limited | Reference source is tracked as submodules in this public repo, but quote sparingly and preserve upstream provenance/licensing context. |
 
 ## Stuart Collaboration Opportunities
 
@@ -34,13 +34,13 @@ Things to ask Stuart (via Discord) when stuck:
 - [ ] **README.md polish**: release-facing overview, screenshots, common use cases, and repo-first setup steps
 - [ ] **Contribution guide**: how to report bugs, submit patches, and improve docs/lore safely
 - [ ] **Public validation notes**: replace any private-fixture assumptions with reproducible temp/generated checks
-- [ ] **Optional binary package plan**: only after the curated repo release shape is stable
+- [ ] **Optional binary package plan**: keep the public-primary repo clean first, then package only intentional app artifacts
 
 ## Community Action Items
 
 1. [ ] Post GDC presentation to Discord (Stuart mentioned this)
 2. [ ] Document findings in Discord #dev or similar channel
-3. [ ] Finalize curated public repo layout and allowlist before any binary-package discussion
+3. [ ] Keep public-primary repo docs, issue templates, and local gates current before any binary-package discussion
 4. [ ] Write user guide for non-technical BEA fans
 
 ## Contact Status

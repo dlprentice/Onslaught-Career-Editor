@@ -299,9 +299,10 @@ npm run test:winui-notices
 py -3 tools\docsync_check.py
 ```
 
-Private maintainers run release profile and curated-manifest checks from the
-private source tree before public export. Archived Electron checks are
-private-maintainer reference checks only and are not public package commands.
+Maintainers run release profile, curated-manifest, hard-payload, and repo hygiene
+checks from the public-primary source tree before publishing source or app
+artifacts. Archived Electron checks are maintainer reference checks only and are
+not public package commands.
 
 ## Documentation
 

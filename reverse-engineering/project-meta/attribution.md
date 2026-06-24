@@ -1,6 +1,7 @@
 # Attribution & Preservation Contributors
 
-> Curated release note: this page keeps public attribution, contribution history, and preservation context while omitting unnecessary direct-contact details.
+> Public note: this page keeps attribution, contribution history, and
+> preservation context while omitting unnecessary direct-contact details.
 
 ## Original Development Contributors
 
@@ -66,4 +67,6 @@
 
 - Lost Toys Ltd dissolved in 2003.
 - Public preservation work continues under unresolved long-tail IP status; this repo treats ownership/legal status as requiring care, not certainty.
-- `references/Onslaught/` remains a private-branch reference submodule and is excluded from curated public release outputs.
+- `references/Onslaught/` is tracked as a reference submodule in this public
+  repo. Its contents keep their own provenance/licensing and are not bundled
+  into the portable WinUI app ZIP.

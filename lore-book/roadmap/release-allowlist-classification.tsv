@@ -18703,6 +18703,7 @@ tools/goodies_selection_observer_log_probe.py	R0_ALLOW	default
 tools/goodies_selection_observer_log_probe_test.py	R0_ALLOW	default
 tools/goodies_source_access_probe.py	R0_ALLOW	default
 tools/goodies_source_topology_probe.py	R0_ALLOW	default
+tools/hard_payload_safety_check.py	R0_ALLOW	default
 tools/hash_retail_specimens.py	R0_ALLOW	default
 tools/hud_frontend_overlay_visual_runtime_proof_plan_probe.py	R4_DENY	tools/*runtime*
 tools/language_dat_decode.py	R0_ALLOW	default

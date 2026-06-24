@@ -4,7 +4,10 @@
 The public repository is now the working repository. Raw RE notes, scratch
 exports, state docs, and proof reports are allowed. This check only rejects
 actual copied game/runtime payload roots, build outputs, and obvious secret
-files.
+files. It is intentionally not a portable-app ZIP manifest and should not reject
+compact non-secret state batons, agent reports, `.codex` project history, or
+readiness summaries merely because a portable/export profile excludes them from
+the packaged artifact.
 """
 
 from __future__ import annotations

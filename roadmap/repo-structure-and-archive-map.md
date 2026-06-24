@@ -90,8 +90,8 @@ are updated.
 
 | Path | Classification | Release posture | Notes |
 | --- | --- | --- | --- |
-| `release/readiness/private_runtime_evidence/` | Runtime proof reports | Track compact text summaries only | Raw screenshots/frame PNGs/proof JSON remain local/private. |
-| `.codex/` | Local Codex/session state | Ignored local runtime | Do not publish runtime cache/session material. Durable project baton state lives in tracked state files and docs. |
+| `release/readiness/private_runtime_evidence/` | Historical runtime proof reports | Track compact text summaries only; portable app ZIP excluded | Raw screenshots/frame PNGs/proof JSON remain local/ignored. Folder name is historical; tracked files are compact proof summaries, not raw payloads. |
+| `.codex/` | Historical project goal/state notes where tracked; runtime cache local where untracked | Tracked only when compact and non-secret; portable app ZIP excluded | Do not publish runtime cache/session material. Compact historical project-goal notes may be tracked as public-primary source when useful. |
 | `release/artifacts/`, `release/out/` | Generated release/build output | Ignored local output | Regenerated as needed and never treated as source content. |
 | `reverse-engineering/binary-analysis/scratch/`, `lore-book/reverse-engineering/binary-analysis/scratch/` | RE scratch evidence and generated read-back archives | Track promoted summaries/checkers; keep volatile payload scratch local | Public-safe summaries should be promoted into canonical docs instead of shipping raw scratch trees. |
 | `onslaught_codex_directive.md` | Operator/development directive | Local/operator-only unless explicitly public-reviewed | Prompt-order contract when activated; do not publish secrets or authority-bearing local runtime material. |

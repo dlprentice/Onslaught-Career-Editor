@@ -39,21 +39,19 @@ npm run test:repo-hygiene
 ```
 <!-- public-package-commands:end -->
 
-Public candidates use the materialized public `package.json`, so these command
-names are safe for public contributors and their agents. Private maintainers may
-run additional private-only doc sync, runtime, Ghidra, or release-accounting
-gates when a change touches those areas.
+This public repo's root `package.json` is the command authority for contributors
+and their agents. Maintainers may run additional local runtime, Ghidra, or
+release-accounting gates when a change touches those areas.
 
-For a freshly exported public candidate that may be shared, also run
-`npm run test:public-candidate-inventory` before install/build/test outputs are
-created, verify `EXPORT_PROVENANCE.json` is present, and regenerate a clean
-candidate after disposable validation.
+For public-primary boundary work, also run
+`npm run test:public-primary-migration-inventory` and
+`npm run test:hard-payload-safety` before sharing the change.
 
 ## Handoff Template
 
 Use this format in a PR description, review request, or agent handoff. Public
-candidates may also include `.github` issue/PR templates with the same fields;
-those templates are not hosted validation or release automation.
+issue/PR templates may use the same fields; those templates are not hosted
+validation or release automation.
 
 ```text
 Lane:
@@ -103,7 +101,7 @@ Public reports should be minimal and non-proprietary:
 
 ## Public Release Note
 
-A passing public candidate is not the same as a published release. Public
-publishing, public release branches, binary packages, signed installers, and
-runtime multiplayer claims require explicit maintainer authorization and their
-own proof.
+Passing local repo gates is not the same as publishing a release. Public
+publishing, release branches, binary packages, signed installers, and runtime
+multiplayer claims require explicit maintainer authorization and their own
+proof.

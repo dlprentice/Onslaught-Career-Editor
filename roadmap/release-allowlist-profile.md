@@ -1,17 +1,24 @@
 # Release Allowlist Profile
 
-> Generated: 2026-06-24 14:42:08 -0400
+> Generated: 2026-06-24 15:17:54 -0400
 
 ## Classification Summary
 
 | Class | Count | Meaning |
 |---|---:|---|
-| R0_ALLOW | 6116 | Default allow bucket (still requires human review before public publish) |
+| R0_ALLOW | 6117 | Default allow bucket for portable/export release accounting (still requires human review before publishing an artifact) |
 | R2_REVIEW | 0 | Volatile/generated/binary artifacts; include only when intentional |
 | R3_CONDITIONAL | 3 | Reference submodule families requiring licensing/scope review |
-| R4_DENY | 13175 | Hard exclusions from public release |
+| R4_DENY | 13175 | Excluded from portable app ZIPs and legacy curated export payloads; may still be tracked public source when compact, non-secret project history |
 
-## Curated Publish-Candidate Include Patterns
+Public-primary note: this profile is not the boundary for what may exist in
+the public source repo. It is an app/export accounting artifact. The source
+repo can track useful source, docs, tools, RE notes, compact proof summaries,
+state batons, and agent reports while still excluding raw game payloads, full
+Ghidra databases/backups, copied runtime output, raw captures/logs, build
+outputs, and secrets.
+
+## Legacy Curated Export Include Patterns
 
 - `.gitattributes`
 - `.editorconfig`
@@ -58,6 +65,7 @@
 - `tools/md_link_check.py`
 - `tools/prepare_game_profile.ps1`
 - `tools/prepare_game_profile_test.py`
+- `tools/hard_payload_safety_check.py`
 - `tools/public_allowlist_safety_check.py`
 - `tools/public_candidate_inventory_check.py`
 - `tools/public_package_doc_command_check.py`
@@ -485,7 +493,7 @@
 - `release/readiness/public_candidate_allowlist.tsv`
 - `release/readiness/redaction_notes.md`
 
-## Hard Exclusions
+## Portable/Legacy Export Exclusions
 
 - `.github/workflows/**`
 - `.codex/**`
@@ -697,7 +705,7 @@
 - `references/AYAResourceExtractor`
 - `references/Onslaught`
 
-## R4 Deny Matches (Current Working Tree)
+## R4 Portable/Legacy Export Exclusions (Current Working Tree)
 
 - `.codex/goals/active-thread-goal.md`
 - `.codex/goals/repo-hardening.md`

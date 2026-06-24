@@ -605,6 +605,7 @@ tests_shared/__init__.py	R0_ALLOW	default	allow_with_normal_review
 tests_shared/fixture_paths.py	R0_ALLOW	default	allow_with_normal_review
 tools/README.md	R0_ALLOW	default	allow_with_normal_review
 tools/generate_winui_third_party_notices.py	R0_ALLOW	default	allow_with_normal_review
+tools/hard_payload_safety_check.py	R0_ALLOW	default	allow_with_normal_review
 tools/md_link_check.py	R0_ALLOW	default	allow_with_normal_review
 tools/prepare_game_profile.ps1	R0_ALLOW	default	allow_with_normal_review
 tools/prepare_game_profile_test.py	R0_ALLOW	default	allow_with_normal_review

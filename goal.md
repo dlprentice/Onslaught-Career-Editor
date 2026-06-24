@@ -6,8 +6,8 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Advance the WinUI safe-copy music audible-output proof lane from the public
-primary repo.
+Close the public-primary source boundary clarification, then resume the WinUI
+safe-copy music audible-output proof lane from the public primary repo.
 
 This slice starts after the public-primary migration hardening closeout at
 `e4ca5904 Repo: align public-primary proof boundaries`. The public checkout
@@ -34,11 +34,13 @@ The executable target is the next bounded music/mod runtime proof step:
   `0 / 0 / 0`, active current-risk re-audit `1179/1179 = 100.00%`.
 - Public `v1.0.2` app release remains published at
   `https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.2`.
-- Public `main` and `origin/main` are aligned at
-  `e4ca5904`.
+- Latest pushed public-primary closeout before this clarification is
+  `655666ba`; this slice has staged boundary-clarification changes pending
+  validation/commit.
 - Public-primary migration hardening is closed and pushed:
   - private tracked paths measured: `24839`;
-  - public tracked paths measured: `19294`;
+  - public tracked paths measured: `19295` after adding
+    `tools/hard_payload_safety_check.py`;
   - accepted private-only hard-payload/scratch-payload paths: `5557`;
   - 27 private-only text RE scratch exports are now tracked in public;
   - `tools/public_primary_migration_inventory.py` now treats missing private RE
@@ -52,6 +54,11 @@ The executable target is the next bounded music/mod runtime proof step:
   now allows compact non-secret state/report text while continuing to reject
   hard payloads and raw proof output. The payload safety checker now has
   credential-like text deny patterns instead of an empty text denylist.
+- Boundary clarification: `R4_DENY` in release accounting now means excluded
+  from portable app ZIPs and legacy curated export payloads, not automatically
+  absent from public source. Compact non-secret `.codex`, state, subagent text,
+  readiness, and proof-summary material may be tracked; raw payloads and secrets
+  remain excluded.
 - The music CGame caller diagnostic is accepted as bounded diagnostic evidence:
   one copied-runtime level-100 run observed `CMusic__PlaySelection` returning
   to `0x0046e0bf`, the direct restart-loop music-selection call site inside
