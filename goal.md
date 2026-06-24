@@ -10,7 +10,7 @@ Advance the WinUI safe-copy music audible-output proof lane from the public
 primary repo.
 
 This slice starts after the public-primary migration hardening closeout at
-`19024026 Repo: harden public-primary migration`. The public checkout
+`e4ca5904 Repo: align public-primary proof boundaries`. The public checkout
 `C:\Users\david\source\Onslaught-Career-Editor` is the day-to-day source of
 truth for project-owned work. The former private checkout is no longer the
 normal working source.
@@ -35,8 +35,7 @@ The executable target is the next bounded music/mod runtime proof step:
 - Public `v1.0.2` app release remains published at
   `https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.2`.
 - Public `main` and `origin/main` are aligned at
-  `19024026a5b14d1c9d6324ce271ebeda2c6acd00`; the current working tree carries
-  this active music-proof/public-primary wording slice.
+  `e4ca5904`.
 - Public-primary migration hardening is closed and pushed:
   - private tracked paths measured: `24839`;
   - public tracked paths measured: `19294`;
@@ -83,8 +82,8 @@ The executable target is the next bounded music/mod runtime proof step:
 
 ## Latest Closed Slice
 
-Public-primary migration hardening closed at
-`19024026 Repo: harden public-primary migration`.
+Public-primary migration and proof-boundary hardening closed at
+`e4ca5904 Repo: align public-primary proof boundaries`.
 
 Closed-slice validation:
 

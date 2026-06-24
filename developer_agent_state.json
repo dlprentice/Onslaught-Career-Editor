@@ -5,8 +5,8 @@
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainCommit": "19024026a5b14d1c9d6324ce271ebeda2c6acd00",
-    "publicMainStatus": "origin_aligned_at_19024026_before_active_slice_commit",
+    "publicMainCommit": "e4ca5904",
+    "publicMainStatus": "clean_and_aligned_after_public_primary_music_hardening_push",
     "policy": "track source/docs/tools/tests/RE notes/wave notes/state batons/agent reports/readiness notes/compact proof summaries; keep hard payloads local/ignored"
   },
   "publicPrimaryMigration": {
@@ -31,7 +31,7 @@
   },
   "activeSlice": {
     "name": "winui-safe-copy-music-audible-output-proof-lane",
-    "goal": "advance the next bounded music/mod runtime proof step from the public repo",
+    "goal": "run the next bounded 60000ms music/mod runtime proof attempt from the public repo if preconditions remain clean",
     "claimBoundary": "runtimeAudibleOutputProof remains false until a complete private raw bundle passes the materializer and final checker",
     "latestFindings": [
       "music-audible-live-20260624-181120 failed before proof acceptance because source-safety sidecar did not receive --source-root; executor command shape is fixed and tested",
@@ -89,13 +89,11 @@
       "no BEA.exe/cdb.exe process before closeout"
     ],
     "pendingForActiveSlice": [
-      "commit/push the green hardening slice",
       "one new 60000ms live bundle attempt only if preconditions are clean"
     ]
   },
   "nextSteps": [
-    "Commit/push the green hardening slice.",
-    "After a clean push, run one 60000ms private live bundle attempt only if source/proof/process/audio preconditions remain clean.",
+    "Run one 60000ms private live bundle attempt only if source/proof/process/audio preconditions remain clean.",
     "If the attempt still fails, record the exact failed rung and preserve runtimeAudibleOutputProof=false."
   ]
 }
