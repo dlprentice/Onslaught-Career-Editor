@@ -54,6 +54,10 @@ Do not commit:
   that contain copied game output rather than compact summaries.
 - Secrets, credentials, local config, and agent session caches.
 
+Narrow exception: `tests_shared/fixtures/gold_career_save.bin` is the tracked
+immutable 10,004-byte regression baseline. Keep arbitrary `.bes`, `.bea`,
+options, and `save-attempts/` payloads local/ignored.
+
 ## Practical Workflow
 
 1. Clone the public repo.

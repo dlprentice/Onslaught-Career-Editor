@@ -25,6 +25,7 @@
     "test:hard-payload-safety": "py -3 -B tools\\public_allowlist_safety_check.py --self-test && py -3 -B tools\\public_allowlist_safety_check.py",
     "test:public-allowlist": "py -3 -B tools\\public_allowlist_safety_check.py --self-test && py -3 -B tools\\public_allowlist_safety_check.py",
     "test:public-candidate-inventory": "py -3 -B tools\\public_candidate_inventory_check.py --self-test && py -3 -B tools\\public_candidate_inventory_check.py --candidate-root .",
+    "test:public-primary-migration-inventory": "py -3 -B tools\\public_primary_migration_inventory.py --self-test && py -3 -B tools\\public_primary_migration_inventory.py --check",
     "test:repo-hygiene": "py -3 -B tools\\repo_text_hygiene_check_test.py && py -3 -B tools\\repo_text_hygiene_check.py && py -3 -B tools\\repo_line_endings_check_test.py && py -3 -B tools\\repo_line_endings_check.py",
     "test:winui-notices": "dotnet restore .\\OnslaughtCareerEditor.WinUI.slnx --nologo && dotnet restore .\\OnslaughtCareerEditor.Release.slnx --nologo && py -3 -B tools\\generate_winui_third_party_notices.py --check"
   }

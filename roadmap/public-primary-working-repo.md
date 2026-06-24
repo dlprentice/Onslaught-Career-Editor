@@ -62,3 +62,24 @@ build output, or bulky generated capture.
 - Local gates still pass after the migration.
 - Contributors can clone, build, run tests, and understand where local game or
   Ghidra material belongs without receiving proprietary payloads.
+
+## 2026-06-24 Inventory Closeout
+
+The public-primary migration is now guarded by
+`tools/public_primary_migration_inventory.py` and documented in
+`release/readiness/public_primary_full_migration_inventory_2026-06-24.md`.
+
+Accepted inventory:
+
+| Measure | Count |
+| --- | ---: |
+| Former private tracked paths | 24,839 |
+| Public tracked paths after this migration pass | 19,263 |
+| Accepted private-only hard-payload/scratch paths | 5,584 |
+
+This pass restored the reference submodule gitlinks, two archived Electron media
+source files that were accidentally ignored by an unanchored `media/` rule, and
+the single tracked `gold_career_save.bin` regression fixture. The remaining
+private-only tracked delta is limited to `game/**`, `media/**`,
+`save-attempts/**`, temporary save/options payloads, top-level executable/archive
+payloads, and volatile RE scratch outputs.

@@ -26,8 +26,10 @@ SELF_REL = "tools/public_allowlist_safety_check.py"
 DENY_ROOTS = (
     ".vs/",
     "GameProfiles/",
+    "Ghidra/",
     "PatchBench/",
     "game/",
+    "ghidra-local/",
     "local-game/",
     "local-ghidra/",
     "local-lab/",
@@ -35,6 +37,8 @@ DENY_ROOTS = (
     "local-proofs/",
     "local-saves/",
     "mcps/",
+    "media/",
+    "save-attempts/",
 )
 
 DENY_CONTAINS = (
@@ -47,18 +51,46 @@ DENY_CONTAINS = (
 DENY_EXACT = {
 }
 
+ALLOW_EXACT = {
+    "lore-book/reverse-engineering/binary-analysis/function_mutation_attempt_log.jsonl",
+    "reverse-engineering/binary-analysis/function_mutation_attempt_log.jsonl",
+    "tests_shared/fixtures/gold_career_save.bin",
+}
+
 DENY_SUFFIXES = (
+    ".aya",
+    ".bea",
+    ".bes",
+    ".bik",
+    ".bytes",
     ".crt",
+    ".dds",
     ".dll",
+    ".dmp",
+    ".etl",
     ".exe",
+    ".fbx",
+    ".gbf",
+    ".gdt",
+    ".gpr",
     ".gzf",
     ".key",
+    ".log",
+    ".mp3",
+    ".mp4",
+    ".ogg",
     ".pem",
     ".pfx",
     ".pyo",
     ".pyc",
+    ".raw",
     ".trx",
+    ".vid",
+    ".wav",
+    ".zip",
 )
+
+MAX_UNREVIEWED_FILE_BYTES = 5 * 1024 * 1024
 
 TEXT_SUFFIXES = {
     ".cmd",
@@ -120,7 +152,14 @@ def is_text_file(path: str) -> bool:
     return Path(path).suffix.lower() in TEXT_SUFFIXES
 
 
+def is_text_candidate(path: str) -> bool:
+    """Compatibility helper used by release accounting scripts."""
+    return is_text_file(path)
+
+
 def path_findings(path: str) -> list[Finding]:
+    if path in ALLOW_EXACT:
+        return []
     findings: list[Finding] = []
     lower = path.lower()
     name = Path(path).name.lower()
@@ -135,6 +174,19 @@ def path_findings(path: str) -> list[Finding]:
     if lower.endswith(DENY_SUFFIXES):
         findings.append(Finding(path, "deny-binary-or-private-suffix", Path(path).suffix.lower()))
     return findings
+
+
+def size_findings(root: Path, path: str) -> list[Finding]:
+    if path in ALLOW_EXACT:
+        return []
+    full_path = root / path
+    try:
+        size = full_path.stat().st_size
+    except OSError as exc:
+        return [Finding(path, "stat-error", str(exc))]
+    if size > MAX_UNREVIEWED_FILE_BYTES:
+        return [Finding(path, "deny-large-unreviewed-file", str(size))]
+    return []
 
 
 def text_findings(root: Path, path: str) -> list[Finding]:
@@ -159,10 +211,29 @@ def text_findings(root: Path, path: str) -> list[Finding]:
     return findings
 
 
+def find_text_payload_errors(path: str, text: str, require_private_text_guard: bool = False) -> list[str]:
+    """Compatibility helper used by release accounting scripts."""
+    if path == SELF_REL or path.startswith(TEXT_ALLOW_PATH_PREFIXES):
+        return []
+    if not is_text_candidate(path):
+        return []
+
+    errors: list[str] = []
+    for label, pattern in TEXT_DENY_PATTERNS:
+        match = pattern.search(text)
+        if match:
+            snippet = match.group(0).replace("\n", "\\n")
+            if len(snippet) > 120:
+                snippet = snippet[:117] + "..."
+            errors.append(f"{label} in {path}: {snippet}")
+    return errors
+
+
 def check_repo(root: Path) -> list[Finding]:
     findings: list[Finding] = []
     for path in public_candidate_files(root):
         findings.extend(path_findings(path))
+        findings.extend(size_findings(root, path))
         findings.extend(text_findings(root, path))
     return findings
 
@@ -174,16 +245,28 @@ def run_self_test() -> int:
         (root / "README.MD").write_text("# OK\n", encoding="utf-8")
         (root / "game").mkdir()
         (root / "game" / "BEA.exe").write_bytes(b"not ok")
+        (root / "media").mkdir()
+        (root / "media" / "music.ogg").write_bytes(b"not ok")
+        (root / "save-attempts").mkdir()
+        (root / "save-attempts" / "slot.bes").write_bytes(b"not ok")
+        (root / "big.md").write_bytes(b"x" * (MAX_UNREVIEWED_FILE_BYTES + 1))
+        (root / "tests_shared" / "fixtures").mkdir(parents=True)
+        (root / "tests_shared" / "fixtures" / "gold_career_save.bin").write_bytes(b"allowed regression fixture")
         (root / ".env").write_text("OPENAI_API_KEY=sk-not-a-real-fixture-value\n", encoding="utf-8")
         (root / "docs.md").write_text("Raw RE notes may mention local paths and field names.\n", encoding="utf-8")
         subprocess.run(["git", "add", "."], cwd=root, check=True)
         findings = check_repo(root)
         labels = {finding.label for finding in findings}
-        required = {"deny-root", "deny-binary-or-private-suffix", "deny-env-file"}
+        required = {"deny-root", "deny-binary-or-private-suffix", "deny-env-file", "deny-large-unreviewed-file"}
         missing = sorted(required - labels)
         if missing:
             print("Public payload safety self-test: FAIL")
             print(f"- missing expected labels: {', '.join(missing)}")
+            print(f"- findings: {findings!r}")
+            return 1
+        if any(finding.path == "tests_shared/fixtures/gold_career_save.bin" for finding in findings):
+            print("Public payload safety self-test: FAIL")
+            print("- gold fixture exception was rejected")
             print(f"- findings: {findings!r}")
             return 1
     print("Public payload safety self-test: PASS")

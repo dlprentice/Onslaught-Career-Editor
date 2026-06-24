@@ -4,9 +4,9 @@ Status: active public-safe collaboration guide
 Last updated: 2026-06-23
 
 Use this guide when preparing work for another developer or an agent reviewer.
-It applies to the private maintainer tree and to sanitized public candidates.
-Validation is local; do not add GitHub Actions, hosted CI, release automation,
-or workflow scaffolding.
+This public repository is now the primary collaboration and day-to-day working
+repo. Validation is local; do not add GitHub Actions, hosted CI, release
+automation, or workflow scaffolding.
 
 ## Start Here
 
@@ -15,9 +15,10 @@ or workflow scaffolding.
 2. Pick one lane and keep the change scoped to that lane.
 3. Run the smallest relevant local gate set before review.
 4. Include the exact commands you ran in the handoff.
-5. Confirm that no private game content, proof bundles, screenshots, saves,
-   local paths, secrets, state files, or generated `subagents/` reports are in
-   the change.
+5. Confirm that no game payloads, copied executables, screenshots/frame dumps,
+   raw CDB logs, arbitrary saves, secrets, or bulky generated proof payloads
+   are in the change. Text state batons, compact proof summaries, and agent
+   reports are allowed when they are useful and non-secret.
 
 ## Lanes
 
@@ -27,7 +28,7 @@ or workflow scaffolding.
 | AppCore / CLI | `OnslaughtCareerEditor.AppCore/`, `OnslaughtCareerEditor.Cli/`, tests | `npm run test:appcore`, `npm run build:cli` |
 | Patch / mod safety | `patches/`, AppCore patch services, WinUI patch surfaces | `npm run test:winui-patch-engine-safety`, `npm run test:winui-safe-copy-preflight` |
 | Docs / release safety | `README.MD`, `CONTRIBUTING.md`, `release/readiness/`, `roadmap/`, `reverse-engineering/` | `npm run test:doc-commands`, `npm run test:md-links`, `npm run test:public-allowlist`, `npm run test:repo-hygiene` |
-| Public-safe RE docs | `reverse-engineering/`, `lore/`, `lore-book/`, public templates | docs/release safety gates |
+| RE docs / proof summaries | `reverse-engineering/`, `lore/`, `lore-book/`, `release/readiness/`, state batons | docs/release safety gates |
 
 <!-- public-package-commands:start -->
 ```powershell
@@ -68,8 +69,8 @@ Remaining risks or follow-ups:
 Required answers:
 
 - `Validation run` names exact commands, not broad statements.
-- `Private/public boundary check` says whether the change adds public payload,
-  release manifest entries, copied-game proof, or private evidence.
+- `Private/public boundary check` says whether the change adds hard payload,
+  release manifest entries, copied-game proof summaries, or local evidence.
 - `Installed game / original BEA.exe mutation` must be `none` unless a private
   maintainer intentionally performed a copied-profile/runtime proof. Public
   contributors should never mutate the installed game or original executable.
@@ -83,9 +84,10 @@ Reviewers should check:
 - User-facing WinUI copy is plain and does not expose maintainer proof jargon.
 - Static RE, runtime proof, patch behavior, online play, and rebuild parity are
   kept as separate claim classes.
-- Public candidates remain free of private assets, screenshots, saves, copied
-  executables, proof bundles, local paths, secrets, state files, and
-  `subagents/` outputs.
+- The repo remains free of game assets, screenshots/frame dumps, arbitrary
+  saves, copied executables, raw proof bundles, secrets, and credential
+  material. State files and text agent reports are allowed when concise,
+  useful, and non-secret.
 
 ## Issue Or Feature Reports
 
@@ -94,8 +96,8 @@ Public reports should be minimal and non-proprietary:
 - Describe the product area, expected behavior, actual behavior, and local
   command or app action.
 - Redact local user paths and machine identifiers.
-- Do not attach game binaries, extracted assets, saves, screenshots, frame
-  captures, copied executable bytes, or runtime proof bundles.
+- Do not attach game binaries, extracted assets, arbitrary saves, screenshots,
+  frame captures, copied executable bytes, or raw runtime proof bundles.
 - For security or private-data concerns, follow [SECURITY.md](SECURITY.md)
   instead of posting public details.
 

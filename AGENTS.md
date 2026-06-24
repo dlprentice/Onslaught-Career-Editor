@@ -29,9 +29,10 @@ or backups, secrets, build output, and bulky generated runtime captures.
 - Read `README.MD`, `CONTRIBUTING.md`, `SECURITY.md`, and
   `COLLABORATION.md` before making changes.
 - Keep changes narrow and path-scoped.
-- Do not add game binaries, extracted assets, copied executables, local save
-  payloads, screenshots/frame dumps, raw CDB logs, full Ghidra databases,
-  credentials, or `.env*` files.
+- Do not add game binaries, extracted assets, copied executables, arbitrary
+  local save payloads, screenshots/frame dumps, raw CDB logs, full Ghidra
+  databases, credentials, or `.env*` files. The narrow exception is the tracked
+  immutable regression fixture `tests_shared/fixtures/gold_career_save.bin`.
 - Do not patch or mutate an installed Battle Engine Aquila folder or original
   `BEA.exe`. App workflows must operate on copied targets only.
 - Do not synthesize `.bes` saves from scratch; use real baselines and preserve
@@ -114,6 +115,9 @@ Keep out of git:
 - `game/**`, private media/input payloads, copied executable bytes, raw saves,
   extracted assets, full Ghidra project databases/backups, secrets, `.env*`,
   build/test output, screenshots, frame captures, and raw CDB logs
+- Narrow exception: `tests_shared/fixtures/gold_career_save.bin` is the tracked
+  immutable regression baseline. Do not generalize that to arbitrary `.bes`,
+  `.bea`, options, or `save-attempts/` payloads.
 
 Use `SECURITY.md` for private-data reporting and `README.RELEASE.md` /
 `PUBLIC_SIGNOFF_COMMANDS.md` for release-safety posture.

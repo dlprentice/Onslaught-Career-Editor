@@ -1,69 +1,40 @@
 {
   "lastUpdated": "2026-06-24",
   "branch": "main",
-  "currentFocus": "Public-primary repo is active; hardening music audible-output live-bundle cleanup after failed early-CDB live attempts.",
+  "currentFocus": "Close public-primary migration inventory and repo-readiness from the public repo.",
   "publicPrimaryMigration": {
-    "status": "committed-and-pushed",
-    "commit": "c58d06420e482421355d1e40f240db7d87e289d3",
+    "status": "validated_pending_commit_push",
     "targetPublicRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
-    "policy": "track source/docs/tools/RE notes/wave notes/state batons/agent reports/proof summaries; keep only hard payloads local/ignored",
-    "stagedFileCount": 18874,
+    "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
+    "policy": "track source/docs/tools/tests/RE notes/wave notes/state batons/agent reports/readiness notes/compact proof summaries; keep hard payloads local/ignored",
+    "inventoryGuard": "tools/public_primary_migration_inventory.py",
+    "readinessNote": "release/readiness/public_primary_full_migration_inventory_2026-06-24.md",
+    "acceptedInventory": {
+      "privateTrackedPaths": 24839,
+      "publicTrackedPaths": 19264,
+      "allowedPrivateOnlyHardPayloadOrScratchPaths": 5584
+    },
+    "materialRestored": [
+      "references/Onslaught gitlink at 792545b996365f383781c666d145ea6cbda83f3a",
+      "references/AYAResourceExtractor gitlink at 6f3df296201ecc62bc09c39f7a93d8a4fb2f1638",
+      "archive/electron-workbench/packages/ui/src/components/media/MediaDetails.tsx",
+      "archive/electron-workbench/packages/ui/src/components/media/MediaSection.tsx",
+      "tests_shared/fixtures/gold_career_save.bin"
+    ],
     "hardPayloadsKeptOut": [
       "game/media payload roots",
       "copied executables/DLLs",
-      "save/options payloads",
+      "arbitrary save/options payloads",
       "full Ghidra project databases/backups",
       "screenshots/frame dumps/raw CDB logs",
       "bulky generated runtime captures",
       "secrets/.env/build outputs"
     ]
   },
-  "activeRuntimeSlice": {
-    "name": "music-audible-output-live-bundle-cleanup-hardening",
-    "status": "committed-and-pushed",
-    "commit": "9bc9b420",
-    "filesCarriedFromPrivateDirtyTree": [
-      "release/readiness/winui_music_audible_output_live_bundle_executor_2026-06-24.md",
-      "tools/run_winui_safe_copy_music_audible_output_live_bundle.py",
-      "tools/run_winui_safe_copy_music_audible_output_live_bundle_test.py",
-      "tools/winui_safe_copy_live_runtime_smoke.py",
-      "tools/winui_safe_copy_live_runtime_smoke_test.py"
-    ],
-    "privatePublicFileHashCheck": "all five listed files are byte-identical between the former private dirty tree and this public checkout",
-    "claimBoundary": "cleanup hardening and early CDB attach support are proof-infrastructure only; runtimeAudibleOutputProof remains false until a complete live raw bundle passes materializer/final checker",
-    "latestLiveAttempts": [
-      {
-        "id": "music-audible-live-20260624-160116",
-        "result": "failed: cleanBaseline-live timed out after early exact-PID CDB attach; copied BEA/CDB were manually cleaned before the hardening patch"
-      },
-      {
-        "id": "music-audible-live-20260624-161657",
-        "result": "failed: cleanBaseline-timestamped-cdb rejected missing CGame__PlayMusicForCurrentLevel level=100 row; lower-level music/decode rows were visible; no BEA/CDB process remained"
-      }
-    ]
-  },
-  "validation": {
-    "migrationBaselinePassed": [
-      "npm run test:hard-payload-safety",
-      "npm run test:public-allowlist",
-      "npm run test:doc-commands",
-      "py -3 tools\\docsync_check.py",
-      "dotnet build .\\OnslaughtCareerEditor.WinUI.slnx --nologo (0 warnings, 0 errors)",
-      "npm run test:md-links",
-      "npm run test:repo-hygiene",
-      "git diff --cached --check",
-      "post-push remote alignment check"
-    ],
-    "activeSlicePassed": [
-      "py -3 tools\\run_winui_safe_copy_music_audible_output_live_bundle_test.py (20 tests)",
-      "py -3 tools\\winui_safe_copy_live_runtime_smoke_test.py (14 tests)",
-      "state/package JSON parse",
-      "npm run test:hard-payload-safety",
-      "npm run test:doc-commands",
-      "py -3 tools\\docsync_check.py",
-      "npm run test:repo-hygiene",
-      "git diff --check"
-    ]
+  "runtimeTruth": {
+    "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable",
+    "musicAudibleOutputProof": "runtimeAudibleOutputProof=false; latest consults point to likely CDB attach timing miss for the missing CGame__PlayMusicForCurrentLevel row",
+    "originalInstallRule": "installed Steam folder and original BEA.exe remain read-only"
   },
   "staticProgress": {
     "functionQuality": "6411/6411 = 100.00%",
@@ -71,12 +42,27 @@
     "activeCurrentRisk": "1179/1179 = 100.00%",
     "measurementFrontDoor": "reverse-engineering/binary-analysis/static-reaudit-measurement-register.md"
   },
-  "runtimeTruth": {
-    "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable",
-    "musicAudibleOutputProof": "runtimeAudibleOutputProof=false; public-primary live attempts reached early CDB/lower-level music rows but failed strict acceptance",
-    "originalInstallRule": "installed Steam folder and original BEA.exe remain read-only"
+  "validation": {
+    "passed": [
+      "py -3 tools\\public_primary_migration_inventory.py --self-test",
+      "py -3 tools\\public_primary_migration_inventory.py --check --private-root C:\\Users\\david\\source\\Onslaught-Career-Editor-private --require-private-root",
+      "npm run test:public-primary-migration-inventory",
+      "npm run test:hard-payload-safety",
+      "npm run test:doc-commands",
+      "npm run test:md-links",
+      "npm run test:repo-hygiene",
+      "py -3 tools\\release_profile_snapshot.py --check",
+      "py -3 tools\\release_curated_manifest.py --check",
+      "state JSON parse",
+      "git diff --cached --check"
+    ],
+    "pending": [
+      "commit/push"
+    ]
   },
   "nextSteps": [
-    "Investigate why the early observer sees lower-level music/decode rows but not CGame__PlayMusicForCurrentLevel level=100."
+    "Run public-primary migration validation gates.",
+    "Commit and push the green public migration slice.",
+    "Then return to the music-runtime CDB attach timing diagnostic from the public repo."
   ]
 }

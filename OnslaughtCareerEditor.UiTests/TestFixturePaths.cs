@@ -22,8 +22,7 @@ internal static class TestFixturePaths
         {
             Assert.Ignore(
                 "Real-save regression fixture is absent in this checkout. " +
-                "Private maintainer trees include tests_shared/fixtures/gold_career_save.bin; " +
-                "public candidates exclude save-shaped binary payloads."
+                "Expected tests_shared/fixtures/gold_career_save.bin from the public-primary fixture set."
             );
         }
 

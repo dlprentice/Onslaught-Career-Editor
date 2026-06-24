@@ -1,15 +1,15 @@
 # Release Allowlist Profile
 
-> Generated: 2026-06-24 10:34:08 -0400
+> Generated: 2026-06-24 12:57:56 -0400
 
 ## Classification Summary
 
 | Class | Count | Meaning |
 |---|---:|---|
-| R0_ALLOW | 3075 | Default allow bucket (still requires human review before public publish) |
+| R0_ALLOW | 6114 | Default allow bucket (still requires human review before public publish) |
 | R2_REVIEW | 0 | Volatile/generated/binary artifacts; include only when intentional |
 | R3_CONDITIONAL | 3 | Reference submodule families requiring licensing/scope review |
-| R4_DENY | 21766 | Hard exclusions from public release |
+| R4_DENY | 13147 | Hard exclusions from public release |
 
 ## Curated Publish-Candidate Include Patterns
 
@@ -720,13 +720,7 @@
 - `.codex/state/winui-product-sprint-evidence.md`
 - `.codex/state/winui-product-sprint.md`
 - `.gitignore`
-- `.tmp_cs_tUnyKr/base.bes`
-- `.tmp_cs_tUnyKr/input.bes`
-- `.tmp_cs_tUnyKr/ovr.bes`
 - `AGENTS.md`
-- `BEA.exe.gzf`
-- `BEA_Widescreen.exe`
-- `CURRENT_CAPABILITIES.md`
 - `MCP_DEBUGGING_OPTIONS.md`
 - `MCP_LIMITATIONS.md`
 - `archive/README.md`
@@ -819,7 +813,13 @@
 - `archive/legacy-python/onslaught/gui/tabs/save_editor.py`
 - `archive/legacy-python/onslaught/gui/tabs/settings.py`
 - `archive/legacy-python/onslaught/gui/tabs/video_player.py`
-- ... (21646 more entries in `roadmap/release-allowlist-classification.tsv`)
+- `archive/legacy-python/onslaught/gui/theme.py`
+- `archive/legacy-python/onslaught/gui/widgets/__init__.py`
+- `archive/legacy-python/onslaught/gui/widgets/save_selector.py`
+- `archive/legacy-python/onslaught_explorer.py`
+- `archive/legacy-python/patcher.py`
+- `archive/legacy-python/requirements.txt`
+- ... (13027 more entries in `roadmap/release-allowlist-classification.tsv`)
 
 ## Re-run Commands
 

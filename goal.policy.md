@@ -25,7 +25,8 @@ Keep these out of git and out of app release ZIPs unless a later explicit legal
 and technical decision changes the rule:
 
 - actual Battle Engine Aquila executables, DLLs, archives, media, manuals,
-  extracted asset payloads, and local save/options payloads
+  extracted asset payloads, and local save/options payloads other than the
+  tracked `tests_shared/fixtures/gold_career_save.bin` regression fixture
 - copied game profiles, copied executable/runtime output, screenshots/frame
   dumps, raw CDB logs, and bulky generated runtime proof captures
 - full Ghidra project databases/backups

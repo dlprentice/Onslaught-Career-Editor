@@ -1,60 +1,47 @@
 {
   "lastUpdated": "2026-06-24",
-  "currentFocus": "Public-primary migration docs are closed; current docs/state work records music audible-output live-bundle cleanup hardening and failed proof attempts.",
-  "status": "cleanup hardening committed-and-pushed",
+  "currentFocus": "Public-primary migration docs and hard-payload gate tightening are validated pending commit/push.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
     "agentGuide": "AGENTS.md",
     "contributorGuide": "CONTRIBUTING.md",
     "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
-    "releaseGuide": "README.RELEASE.md",
-    "signoffGuide": "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md"
+    "migrationPlan": "roadmap/public-primary-working-repo.md",
+    "structureMap": "roadmap/repo-structure-and-archive-map.md",
+    "migrationReadinessNote": "release/readiness/public_primary_full_migration_inventory_2026-06-24.md"
   },
   "migrationDocs": {
     "publicPrimary": "public repo is primary day-to-day working repo, not a sparse export",
-    "commit": "c58d06420e482421355d1e40f240db7d87e289d3",
     "trackedMaterial": "source, tools, tests, RE docs, wave notes, state batons, agent reports, readiness notes, compact proof summaries",
-    "localOnly": "actual game/runtime payloads, full Ghidra databases/backups, secrets, build outputs, screenshots/frame dumps, raw CDB logs, bulky generated captures"
+    "localOnly": "actual game/runtime payloads, arbitrary saves/options payloads, full Ghidra databases/backups, secrets, build outputs, screenshots/frame dumps, raw CDB logs, bulky generated captures",
+    "narrowException": "tests_shared/fixtures/gold_career_save.bin is the tracked immutable regression fixture"
   },
-  "activeRuntimeDocs": {
-    "readinessNote": "release/readiness/winui_music_audible_output_live_bundle_executor_2026-06-24.md",
-    "truth": "early exact-PID CDB attach support exists for clean/staged music stages, cleanup hardening is implemented, but runtimeAudibleOutputProof remains false",
-    "latestAttempts": [
-      "music-audible-live-20260624-160116: timed out after early exact-PID CDB attach and required manual cleanup before this hardening",
-      "music-audible-live-20260624-161657: failed timestamped CDB acceptance because CGame__PlayMusicForCurrentLevel level=100 was absent; no BEA/CDB remained"
-    ],
-    "nonClaims": [
-      "no accepted BEA live music bundle yet",
-      "no staged/mute/final materialized audible-output proof yet",
-      "no public release claim change",
-      "no Host/Join enablement",
-      "no Ghidra mutation"
-    ]
+  "consultFindings": {
+    "inventoryConsult": "private-only delta was dominated by game/media/save payload roots plus small scratch/reference/test tail; active source/tools/docs were already mostly in public",
+    "securityConsult": "do not mirror private root/history blindly; hard-payload gate needs broader suffix/root/size coverage before closeout"
   },
   "validation": {
-    "migrationBaselinePassed": [
-      "npm run test:doc-commands",
-      "py -3 tools\\docsync_check.py",
-      "npm run test:md-links",
-      "npm run test:repo-hygiene",
-      "git diff --cached --check",
-      "post-push remote alignment check"
-    ],
-    "activeSlicePassed": [
-      "py -3 tools\\run_winui_safe_copy_music_audible_output_live_bundle_test.py (20 tests)",
-      "py -3 tools\\winui_safe_copy_live_runtime_smoke_test.py (14 tests)",
-      "state/package JSON parse",
+    "passed": [
+      "py -3 tools\\public_primary_migration_inventory.py --self-test",
+      "py -3 tools\\public_primary_migration_inventory.py --check --private-root C:\\Users\\david\\source\\Onslaught-Career-Editor-private --require-private-root",
+      "npm run test:public-primary-migration-inventory",
       "npm run test:hard-payload-safety",
       "npm run test:doc-commands",
-      "py -3 tools\\docsync_check.py",
+      "npm run test:md-links",
       "npm run test:repo-hygiene",
-      "git diff --check"
+      "py -3 tools\\release_profile_snapshot.py --check",
+      "py -3 tools\\release_curated_manifest.py --check",
+      "state JSON parse",
+      "git diff --cached --check"
+    ],
+    "pending": [
+      "commit/push"
     ]
   },
   "nextSteps": [
-    "Run broad validation for the cleanup hardening.",
-    "Keep public docs clear that online multiplayer and audible music replacement are not released capabilities.",
-    "Do not resurrect curated-export wording except for a deliberate release artifact."
+    "Tighten hard-payload safety gate.",
+    "Run validation and commit/push the public-primary migration closeout.",
+    "Then resume runtime/music CDB attach timing investigation from public repo."
   ]
 }

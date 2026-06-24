@@ -36,19 +36,19 @@ tmp*/
 *.cache
 
 # Local lab overlays and copied game payloads.
-mcps/
-local-lab/
-local-game/
-local-media/
-local-saves/
-local-ghidra/
-local-proofs/
-Ghidra/
-ghidra-local/
-game/
-media/
-GameProfiles/
-PatchBench/
+/mcps/
+/local-lab/
+/local-game/
+/local-media/
+/local-saves/
+/local-ghidra/
+/local-proofs/
+/Ghidra/
+/ghidra-local/
+/game/
+/media/
+/GameProfiles/
+/PatchBench/
 reverse-engineering/binary-analysis/scratch/**/MeshTextures/*.png
 
 # Game/runtime/binary payloads and secrets
@@ -75,3 +75,6 @@ reverse-engineering/binary-analysis/scratch/**/MeshTextures/*.png
 *.gbf
 *.gdt
 *.bytes
+
+# Narrow public-primary regression fixture exception.
+!tests_shared/fixtures/gold_career_save.bin

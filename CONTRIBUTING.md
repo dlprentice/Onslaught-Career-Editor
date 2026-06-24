@@ -42,7 +42,9 @@ game, media, save, Ghidra, proof, or agent-output material.
 - Do not add real game assets, copied executables, private media/input payloads,
   local save payloads, screenshots, frame dumps, raw CDB logs, full Ghidra
   databases/backups, secrets, build output, `game`, `media`, or `save-attempts`
-  to tracked source work.
+  to tracked source work. The single tracked exception is
+  `tests_shared/fixtures/gold_career_save.bin`, the immutable regression
+  baseline used by fixture-dependent tests.
 - Do not synthesize `.bes` saves from scratch. Start from a real baseline and preserve unknown bytes.
 - Do not add GitHub Actions, CI/CD workflows, hosted validation gates, or release automation. Validation for this repo is local.
 

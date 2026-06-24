@@ -137,6 +137,7 @@
     "test:hard-payload-safety": "py -3 tools\\public_allowlist_safety_check.py --self-test && py -3 tools\\public_allowlist_safety_check.py",
     "test:public-allowlist": "npm run test:hard-payload-safety",
     "test:public-candidate-inventory": "py -3 tools\\public_candidate_inventory_check.py --self-test",
+    "test:public-primary-migration-inventory": "py -3 tools\\public_primary_migration_inventory.py --self-test && py -3 tools\\public_primary_migration_inventory.py --check",
     "test:repo-hygiene": "py -3 tools\\repo_text_hygiene_check_test.py && py -3 tools\\repo_text_hygiene_check.py && py -3 tools\\repo_line_endings_check_test.py && py -3 tools\\repo_line_endings_check.py",
     "test:goodies-model-viewer-alignment": "py -3 tools\\goodies_model_viewer_alignment_probe.py --check",
     "test:goodies-model-viewer-readback": "py -3 tools\\goodies_model_viewer_readback_probe.py --check",
