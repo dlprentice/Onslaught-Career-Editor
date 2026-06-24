@@ -313,6 +313,15 @@ static bool JsonBool(JsonElement element, string propertyName)
         property.GetBoolean();
 }
 
+static bool JsonStringIn(JsonElement element, string propertyName, params string[] expected)
+{
+    if (!element.TryGetProperty(propertyName, out JsonElement property) || property.ValueKind != JsonValueKind.String)
+        return false;
+
+    string? value = property.GetString();
+    return expected.Any(candidate => string.Equals(candidate, value, StringComparison.OrdinalIgnoreCase));
+}
+
 static JsonElement CaptureSkipped(string reason, string outputPath)
 {
     return JsonPayload(new
@@ -1207,10 +1216,15 @@ try
     int inputScanKeybdEventsSent = inputResults.Sum(result => JsonInt(result, "scanKeybdEventsSent"));
     int inputWindowMessageEventsSent = inputResults.Sum(result => JsonInt(result, "windowMessageEventsSent"));
     int inputMouseEventsSent = inputResults.Sum(result => JsonInt(result, "mouseEventsSent"));
+    bool cdbObserverCleanupSucceeded = !cdbObserverEnabled ||
+        (cdbObserverCleanupResult.HasValue &&
+            JsonStringIn(cdbObserverCleanupResult.Value, "status", "stopped", "already-exited"));
     bool cdbObserverSucceeded = !cdbObserverEnabled ||
         (cdbObserverResult.HasValue &&
+            JsonNullableInt(cdbObserverResult.Value, "cdbProcessId").HasValue &&
             cdbObserverResult.Value.TryGetProperty("status", out JsonElement cdbStatusEl) &&
-            string.Equals(cdbStatusEl.GetString(), "attached", StringComparison.OrdinalIgnoreCase));
+            string.Equals(cdbStatusEl.GetString(), "attached", StringComparison.OrdinalIgnoreCase) &&
+            cdbObserverCleanupSucceeded);
     var payload = new
     {
         schemaVersion = "winui-safe-copy-live-runtime-smoke.v1",

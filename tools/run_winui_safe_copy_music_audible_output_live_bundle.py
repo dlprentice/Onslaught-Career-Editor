@@ -15,6 +15,7 @@ import hashlib
 import io
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -630,14 +631,204 @@ def parse_tasklist_csv(text: str) -> list[dict[str, Any]]:
     return rows
 
 
+def process_row_pid(row: dict[str, Any]) -> int:
+    raw = row.get("ProcessId", row.get("processId", row.get("pid")))
+    try:
+        value = int(str(raw))
+    except (TypeError, ValueError) as exc:
+        raise LiveBundleError(f"Process row has invalid PID: {row}") from exc
+    require(value > 0, f"Process row has invalid PID: {row}")
+    return value
+
+
+def process_row_name(row: dict[str, Any]) -> str:
+    return str(row.get("Name", row.get("imageName", ""))).strip()
+
+
+def process_row_executable_path(row: dict[str, Any]) -> str:
+    return str(row.get("ExecutablePath", row.get("executablePath", "")) or "").strip()
+
+
+def process_row_command_line(row: dict[str, Any]) -> str:
+    return str(row.get("CommandLine", row.get("commandLine", "")) or "").strip()
+
+
+def powershell_executable() -> str:
+    return shutil.which("pwsh") or shutil.which("powershell") or "powershell"
+
+
+def snapshot_bea_or_cdb_processes() -> list[dict[str, Any]]:
+    command = [
+        powershell_executable(),
+        "-NoProfile",
+        "-Command",
+        (
+            "$items = @(Get-CimInstance Win32_Process "
+            "-Filter \"Name = 'BEA.exe' OR Name = 'cdb.exe'\" | "
+            "Select-Object Name,ProcessId,ExecutablePath,CommandLine,CreationDate); "
+            "if ($items.Count -eq 0) { '[]' } else { $items | ConvertTo-Json -Compress }"
+        ),
+    ]
+    result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, timeout=20, check=False, env=sanitized_child_env())
+    require(result.returncode == 0, "PowerShell process snapshot failed before live bundle attempt.")
+    text = result.stdout.strip()
+    if not text:
+        return []
+    payload = json.loads(text)
+    if isinstance(payload, dict):
+        return [payload]
+    require(isinstance(payload, list), "PowerShell process snapshot did not return a JSON list.")
+    return [row for row in payload if isinstance(row, dict)]
+
+
+def snapshot_process_by_pid(pid: int) -> dict[str, Any] | None:
+    command = [
+        powershell_executable(),
+        "-NoProfile",
+        "-Command",
+        (
+            f"$item = Get-CimInstance Win32_Process -Filter \"ProcessId = {pid}\" | "
+            "Select-Object Name,ProcessId,ExecutablePath,CommandLine,CreationDate; "
+            "if ($null -eq $item) { 'null' } else { $item | ConvertTo-Json -Compress }"
+        ),
+    ]
+    result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, timeout=20, check=False, env=sanitized_child_env())
+    require(result.returncode == 0, f"PowerShell process revalidation failed for PID {pid}.")
+    payload = json.loads(result.stdout.strip() or "null")
+    if payload is None:
+        return None
+    require(isinstance(payload, dict), f"PowerShell process revalidation did not return an object for PID {pid}.")
+    return payload
+
+
+def command_line_contains_path(command_line: str, path: Path) -> bool:
+    if not command_line:
+        return False
+    normalized_line = os.path.normcase(command_line).replace("/", "\\")
+    normalized_path = os.path.normcase(str(path.resolve())).replace("/", "\\").rstrip("\\")
+    index = normalized_line.find(normalized_path)
+    while index >= 0:
+        before = normalized_line[index - 1] if index > 0 else ""
+        after_index = index + len(normalized_path)
+        after = normalized_line[after_index] if after_index < len(normalized_line) else ""
+        if before in {"", '"', "'", " ", "="} and after in {"", "\\", '"', "'", " ", ";"}:
+            return True
+        index = normalized_line.find(normalized_path, index + 1)
+    return False
+
+
+def stage_live_roots(layout: BundleLayout) -> tuple[Path, ...]:
+    return tuple(layout.stage(role).live_root for role in ROLE_DIRS)
+
+
+def stage_cdb_log_paths(layout: BundleLayout) -> tuple[Path, ...]:
+    return tuple(layout.stage(role).raw_cdb_log for role in CDB_STAGE_ROLES)
+
+
+def is_generated_profile_exe(path: Path, live_roots: tuple[Path, ...]) -> bool:
+    if path.name.lower() != "bea.exe":
+        return False
+    for live_root in live_roots:
+        try:
+            if not is_same_or_under(path, live_root):
+                continue
+        except OSError:
+            continue
+        parts = {part.lower() for part in path.parts}
+        if "gameprofiles" not in parts:
+            return False
+        manifest = path.parent / "onslaught-profile-manifest.json"
+        return manifest.is_file()
+    return False
+
+
+def process_attempt_match(row: dict[str, Any], layout: BundleLayout) -> str | None:
+    name = process_row_name(row).lower()
+    if name not in {"bea.exe", "cdb.exe"}:
+        return None
+    live_roots = stage_live_roots(layout)
+    executable_path = process_row_executable_path(row)
+    if name == "bea.exe" and executable_path:
+        try:
+            if is_generated_profile_exe(Path(executable_path), live_roots):
+                return "executablePath"
+        except OSError:
+            pass
+    if name == "cdb.exe":
+        command_line = process_row_command_line(row)
+        for cdb_log_path in stage_cdb_log_paths(layout):
+            if command_line_contains_path(command_line, cdb_log_path):
+                return "commandLine"
+    return None
+
+
+def cleanup_attempt_owned_processes(layout: BundleLayout) -> dict[str, Any]:
+    results: list[dict[str, Any]] = []
+    for row in snapshot_bea_or_cdb_processes():
+        match = process_attempt_match(row, layout)
+        if match is None:
+            continue
+        pid = process_row_pid(row)
+        image_name = process_row_name(row)
+        creation_date = str(row.get("CreationDate", "") or "")
+        current = snapshot_process_by_pid(pid)
+        if current is None:
+            results.append(
+                {
+                    "imageName": image_name,
+                    "processId": pid,
+                    "matchedBy": match,
+                    "status": "already-exited-before-kill",
+                    "stopped": True,
+                }
+            )
+            continue
+        revalidated_match = process_attempt_match(current, layout)
+        current_creation_date = str(current.get("CreationDate", "") or "")
+        if revalidated_match is None or (creation_date and current_creation_date and creation_date != current_creation_date):
+            results.append(
+                {
+                    "imageName": image_name,
+                    "processId": pid,
+                    "matchedBy": match,
+                    "status": "skipped-revalidation-failed",
+                    "stopped": False,
+                }
+            )
+            continue
+        kill_result = subprocess.run(
+            ["taskkill", "/PID", str(pid), "/T", "/F"],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            timeout=15,
+            check=False,
+            env=sanitized_child_env(),
+        )
+        results.append(
+            {
+                "imageName": image_name,
+                "processId": pid,
+                "matchedBy": revalidated_match,
+                "status": "taskkill-executed",
+                "exitCode": kill_result.returncode,
+                "stopped": kill_result.returncode == 0,
+            }
+        )
+    return {
+        "schemaVersion": "winui-safe-copy-live-bundle-failure-process-cleanup.v1",
+        "attemptRoot": str(layout.root),
+        "matchedProcessCount": len(results),
+        "results": results,
+    }
+
+
 def ensure_no_bea_or_cdb_processes() -> None:
-    result = subprocess.run(["tasklist", "/fo", "csv"], cwd=ROOT, text=True, capture_output=True, timeout=20, check=False, env=sanitized_child_env())
-    require(result.returncode == 0, "tasklist failed before live bundle attempt.")
     matches = []
-    for row in parse_tasklist_csv(result.stdout):
-        name = str(row.get("imageName", "")).lower()
+    for row in snapshot_bea_or_cdb_processes():
+        name = process_row_name(row).lower()
         if name in {"bea.exe", "cdb.exe"}:
-            matches.append(row)
+            matches.append({"imageName": process_row_name(row), "pid": str(process_row_pid(row))})
     require(not matches, f"Refusing live bundle attempt while BEA/CDB processes exist: {matches}")
 
 
@@ -774,6 +965,8 @@ def run_live_bundle(
         "claimBoundary": "Private live raw-bundle attempt receipt. Final audible proof requires materializer and checker acceptance.",
     }
     final_process_check_error: str | None = None
+    failure_process_cleanup: dict[str, Any] | None = None
+    failure_process_cleanup_error: str | None = None
     try:
         ensure_no_bea_or_cdb_processes()
         run_ambient_stage(layout, source_root=source_root, audio_duration_ms=audio_duration_ms, log_root=log_root)
@@ -793,6 +986,10 @@ def run_live_bundle(
         )
     except Exception as exc:
         try:
+            failure_process_cleanup = cleanup_attempt_owned_processes(layout)
+        except Exception as cleanup_exc:  # noqa: BLE001 - keep original failure primary in receipt.
+            failure_process_cleanup_error = materializer.sanitize_error_message(str(cleanup_exc))
+        try:
             ensure_no_bea_or_cdb_processes()
         except Exception as cleanup_exc:  # noqa: BLE001 - keep original failure primary in receipt.
             final_process_check_error = materializer.sanitize_error_message(str(cleanup_exc))
@@ -806,6 +1003,10 @@ def run_live_bundle(
         )
         if final_process_check_error:
             receipt["finalProcessCheckError"] = final_process_check_error
+        if failure_process_cleanup is not None:
+            receipt["failureProcessCleanup"] = failure_process_cleanup
+        if failure_process_cleanup_error:
+            receipt["failureProcessCleanupError"] = failure_process_cleanup_error
         write_json(layout.receipt, receipt)
         raise
     write_json(layout.receipt, receipt)

@@ -44,6 +44,11 @@ Safety controls:
   case-insensitively, including `SYSTEMROOT`/`COMSPEC`, so native tools such as
   `tasklist.exe` can load their system modules;
 - executor subprocesses use outer timeouts and task-tree cleanup on timeout;
+- failed bundle attempts now run a proof-root-bounded cleanup pass before the
+  final process census. The cleanup only targets copied `BEA.exe` processes
+  under a generated stage `live\GameProfiles` folder with a copied-profile
+  manifest, or `cdb.exe` processes whose command line points at the exact stage
+  CDB log path. Each PID is re-read before `taskkill` to reduce PID-reuse risk;
 - loopback capture helper disposes its WAV writer before hashing the raw WAV;
 - ambient process census allows for loopback-helper startup/build overhead
   before requiring the ambient audio JSON sidecar;
@@ -56,6 +61,8 @@ Safety controls:
   or materialization unless the stage binds CDB target PID to the launched
   safe-copy `BEA.exe` PID, reports an attached positive CDB PID, reports a
   matching cleanup PID, and cleanup status is `stopped` or `already-exited`;
+- direct live-smoke success also requires a positive CDB PID and accepted CDB
+  cleanup status when the CDB observer is enabled;
 - the executor reruns the no-`BEA.exe`/no-`cdb.exe` process census after each
   accepted CDB-backed stage before timestamp/timeline generation, and again
   before accepting or recording a failed final receipt;
@@ -112,8 +119,18 @@ bundle because the one-shot `CGame__PlayMusicForCurrentLevel level=100` row was
 missing. Normal and adversarial consults agreed not to weaken that contract
 yet. The live-smoke helper now supports `--cdb-attach-phase after-launch`, and
 the private live-bundle executor uses it for clean/staged CDB music stages.
+A 2026-06-24 public-primary retry (`music-audible-live-20260624-160116`)
+timed out in the clean-baseline live stage after early exact-PID CDB attach and
+left copied BEA/CDB processes that required manual cleanup. This slice fixes
+that parent-executor cleanup gap. A later retry
+(`music-audible-live-20260624-161657`) failed later in the timestamped CDB
+producer because the required `CGame__PlayMusicForCurrentLevel level=100` row
+was still absent. It recorded `failureProcessCleanup.matchedProcessCount=0`,
+and the post-run process census found no `BEA.exe` or `cdb.exe`.
 `runtimeAudibleOutputProof=false` remains current truth.
 
-Next step: make one private live attempt only when preflight is clean, then
-accept an audible-output claim only if the materializer and final checker pass
-against the generated private raw bundle.
+Next step: investigate why the early observer still misses the
+`CGame__PlayMusicForCurrentLevel level=100` row while lower-level music/decode
+rows are visible, then make another private live attempt only when preflight is
+clean. Accept an audible-output claim only if the materializer and final checker
+pass against the generated private raw bundle.

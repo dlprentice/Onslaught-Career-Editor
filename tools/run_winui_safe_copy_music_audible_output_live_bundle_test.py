@@ -401,6 +401,100 @@ class MusicAudibleOutputLiveBundleExecutorTests(unittest.TestCase):
             self.assertEqual(receipt["status"], "accepted")
             self.assertEqual(process_checks, ["checked", "checked"])
 
+    def test_process_attempt_match_is_artifact_root_bounded(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            layout = live_bundle.build_layout(root / "bundle")
+            copied_exe = layout.root / "raw" / "clean-baseline" / "live" / "GameProfiles" / "profile" / "BEA.exe"
+            unrelated_exe = root / "other" / "Battle Engine Aquila" / "BEA.exe"
+            copied_exe.parent.mkdir(parents=True)
+            copied_exe.touch()
+            (copied_exe.parent / "onslaught-profile-manifest.json").write_text("{}", encoding="utf-8")
+
+            self.assertEqual(
+                live_bundle.process_attempt_match(
+                    {"Name": "BEA.exe", "ProcessId": 101, "ExecutablePath": str(copied_exe), "CommandLine": ""},
+                    layout,
+                ),
+                "executablePath",
+            )
+            self.assertEqual(
+                live_bundle.process_attempt_match(
+                    {"Name": "cdb.exe", "ProcessId": 202, "ExecutablePath": r"C:\Debuggers\x86\cdb.exe", "CommandLine": f'-logo "{layout.stage("cleanBaseline").raw_cdb_log}"'},
+                    layout,
+                ),
+                "commandLine",
+            )
+            self.assertIsNone(
+                live_bundle.process_attempt_match(
+                    {"Name": "BEA.exe", "ProcessId": 303, "ExecutablePath": str(unrelated_exe), "CommandLine": ""},
+                    layout,
+                )
+            )
+            self.assertIsNone(
+                live_bundle.process_attempt_match(
+                    {"Name": "cdb.exe", "ProcessId": 404, "ExecutablePath": r"C:\Debuggers\x86\cdb.exe", "CommandLine": f'-logo "{layout.root}\\other\\windbg.log"'},
+                    layout,
+                )
+            )
+
+    def test_cleanup_attempt_owned_processes_only_kills_artifact_root_matches(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            layout = live_bundle.build_layout(root / "bundle")
+            copied_exe = layout.root / "raw" / "clean-baseline" / "live" / "GameProfiles" / "profile" / "BEA.exe"
+            copied_exe.parent.mkdir(parents=True)
+            copied_exe.touch()
+            (copied_exe.parent / "onslaught-profile-manifest.json").write_text("{}", encoding="utf-8")
+            killed: list[int] = []
+
+            def fake_run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+                self.assertEqual(command[:2], ["taskkill", "/PID"])
+                killed.append(int(command[2]))
+                return subprocess.CompletedProcess(command, 0, "ok", "")
+
+            rows = [
+                {"Name": "BEA.exe", "ProcessId": 101, "ExecutablePath": str(copied_exe), "CommandLine": "", "CreationDate": "20260624120000.000000-000"},
+                {"Name": "cdb.exe", "ProcessId": 202, "ExecutablePath": r"C:\Debuggers\x86\cdb.exe", "CommandLine": f'-logo "{layout.stage("cleanBaseline").raw_cdb_log}"', "CreationDate": "20260624120001.000000-000"},
+                {"Name": "BEA.exe", "ProcessId": 303, "ExecutablePath": str(root / "other" / "BEA.exe"), "CommandLine": ""},
+                {"Name": "cdb.exe", "ProcessId": 404, "ExecutablePath": r"C:\Debuggers\x86\cdb.exe", "CommandLine": "-logo C:\\other\\windbg.log"},
+            ]
+            by_pid = {row["ProcessId"]: row for row in rows}
+
+            with (
+                mock.patch.object(live_bundle, "snapshot_bea_or_cdb_processes", return_value=rows),
+                mock.patch.object(live_bundle, "snapshot_process_by_pid", side_effect=lambda pid: by_pid.get(pid)),
+                mock.patch.object(live_bundle.subprocess, "run", side_effect=fake_run),
+            ):
+                cleanup = live_bundle.cleanup_attempt_owned_processes(layout)
+
+            self.assertEqual(killed, [101, 202])
+            self.assertEqual(cleanup["matchedProcessCount"], 2)
+            self.assertTrue(all(item["stopped"] for item in cleanup["results"]))
+
+    def test_cleanup_attempt_owned_processes_skips_pid_revalidation_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            layout = live_bundle.build_layout(root / "bundle")
+            copied_exe = layout.stage("cleanBaseline").live_root / "GameProfiles" / "profile" / "BEA.exe"
+            copied_exe.parent.mkdir(parents=True)
+            copied_exe.touch()
+            (copied_exe.parent / "onslaught-profile-manifest.json").write_text("{}", encoding="utf-8")
+            initial = {"Name": "BEA.exe", "ProcessId": 101, "ExecutablePath": str(copied_exe), "CommandLine": "", "CreationDate": "old"}
+            reused = {"Name": "BEA.exe", "ProcessId": 101, "ExecutablePath": str(root / "other" / "BEA.exe"), "CommandLine": "", "CreationDate": "new"}
+
+            with (
+                mock.patch.object(live_bundle, "snapshot_bea_or_cdb_processes", return_value=[initial]),
+                mock.patch.object(live_bundle, "snapshot_process_by_pid", return_value=reused),
+                mock.patch.object(live_bundle.subprocess, "run") as run_mock,
+            ):
+                cleanup = live_bundle.cleanup_attempt_owned_processes(layout)
+
+            run_mock.assert_not_called()
+            self.assertEqual(cleanup["matchedProcessCount"], 1)
+            self.assertEqual(cleanup["results"][0]["status"], "skipped-revalidation-failed")
+            self.assertFalse(cleanup["results"][0]["stopped"])
+
     def test_run_live_bundle_records_final_process_check_error_after_failure(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -419,6 +513,7 @@ class MusicAudibleOutputLiveBundleExecutorTests(unittest.TestCase):
                 mock.patch.object(live_bundle, "run_ambient_stage"),
                 mock.patch.object(live_bundle, "run_live_audio_stage"),
                 mock.patch.object(live_bundle, "materialize_attempt", side_effect=live_bundle.LiveBundleError("materializer failed")),
+                mock.patch.object(live_bundle, "cleanup_attempt_owned_processes", return_value={"matchedProcessCount": 0, "results": []}),
             ):
                 with self.assertRaises(live_bundle.LiveBundleError):
                     live_bundle.run_live_bundle(
@@ -433,6 +528,7 @@ class MusicAudibleOutputLiveBundleExecutorTests(unittest.TestCase):
             self.assertEqual(receipt["error"], "materializer failed")
             self.assertIn("finalProcessCheckError", receipt)
             self.assertNotIn("C:\\secret", receipt["finalProcessCheckError"])
+            self.assertEqual(receipt["failureProcessCleanup"]["matchedProcessCount"], 0)
 
     def test_run_live_bundle_checks_no_bea_or_cdb_after_failure(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -450,6 +546,7 @@ class MusicAudibleOutputLiveBundleExecutorTests(unittest.TestCase):
                 mock.patch.object(live_bundle, "run_ambient_stage"),
                 mock.patch.object(live_bundle, "run_live_audio_stage"),
                 mock.patch.object(live_bundle, "materialize_attempt", side_effect=live_bundle.LiveBundleError("materializer failed")),
+                mock.patch.object(live_bundle, "cleanup_attempt_owned_processes", return_value={"matchedProcessCount": 0, "results": []}),
             ):
                 with self.assertRaises(live_bundle.LiveBundleError):
                     live_bundle.run_live_bundle(

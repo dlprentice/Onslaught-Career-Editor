@@ -6,9 +6,9 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Resume runtime/mod work from the new public-primary repo by validating the
-migrated music audible-output live-bundle support and preparing the next safe
-live attempt from this checkout.
+Resume runtime/mod work from the new public-primary repo by hardening the music
+audible-output live-bundle executor after the first public-primary live
+attempts and preparing the next safe investigation of the missing CDB level row.
 
 The public-primary migration baseline is already committed and pushed:
 `c58d0642 Migrate private project into public primary repo`. Normal development
@@ -43,6 +43,15 @@ This slice is bounded to the music audible-output proof ladder:
   exact-PID CDB attach, and saw lower-level music/decode rows, but the strict
   contract rejected the bundle because `CGame__PlayMusicForCurrentLevel
   level=100` was missing. That rejection still stands.
+- Public-primary live attempt `music-audible-live-20260624-160116` timed out in
+  the clean-baseline live stage after early exact-PID CDB attach and left copied
+  BEA/CDB processes that required manual cleanup. This slice adds
+  proof-root-bounded parent-executor cleanup for that failure mode.
+- Public-primary live attempt `music-audible-live-20260624-161657` progressed
+  through copied launch, exact-PID CDB attach, lower-level music/decode rows,
+  and clean process exit, then failed in the timestamped CDB producer because
+  the required `CGame__PlayMusicForCurrentLevel level=100` row was still
+  absent. `runtimeAudibleOutputProof=false` remains current truth.
 - Online multiplayer is still not player-ready. Host/Join remains disabled until
   distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof exist.
@@ -53,10 +62,9 @@ This slice is bounded to the music audible-output proof ladder:
 
 Passed in this slice:
 
-- `py -3 tools\winui_safe_copy_live_runtime_smoke_test.py` (14 tests);
 - `py -3 tools\run_winui_safe_copy_music_audible_output_live_bundle_test.py`
-  (17 tests);
-- state/package JSON parse.
+  (20 tests);
+- `py -3 tools\winui_safe_copy_live_runtime_smoke_test.py` (14 tests);
 - `npm run test:hard-payload-safety`;
 - `npm run test:doc-commands`;
 - `py -3 tools\docsync_check.py`;
@@ -70,10 +78,11 @@ Optional if the workstation/proof root is ready after the source/docs closeout:
 
 ## Next Executable Work
 
-1. Commit and push the public-runtime baton.
-2. If local runtime prerequisites are clean, make one private music audible-output
-   live raw-bundle attempt from the public repo using ignored/local proof roots.
-3. Keep `runtimeAudibleOutputProof=false` unless the final checker accepts the
+1. Validate the cleanup hardening and docs/state closeout.
+2. Commit and push the cleanup-hardening baton.
+3. Investigate why the early CDB observer catches lower-level music/decode rows
+   but still misses `CGame__PlayMusicForCurrentLevel level=100`.
+4. Keep `runtimeAudibleOutputProof=false` unless the final checker accepts the
    complete live bundle.
 
 ## Stop Conditions

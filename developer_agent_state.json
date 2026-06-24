@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-06-24",
   "branch": "main",
-  "currentFocus": "Public-primary repo is active; validating migrated early exact-PID CDB attach support for the music audible-output live-bundle ladder.",
+  "currentFocus": "Public-primary repo is active; hardening music audible-output live-bundle cleanup after failed early-CDB live attempts.",
   "publicPrimaryMigration": {
     "status": "committed-and-pushed",
     "commit": "c58d06420e482421355d1e40f240db7d87e289d3",
@@ -19,7 +19,7 @@
     ]
   },
   "activeRuntimeSlice": {
-    "name": "music-audible-output-early-cdb-attach-public-closeout",
+    "name": "music-audible-output-live-bundle-cleanup-hardening",
     "status": "focused and broad validation passed; commit/push pending",
     "filesCarriedFromPrivateDirtyTree": [
       "release/readiness/winui_music_audible_output_live_bundle_executor_2026-06-24.md",
@@ -29,7 +29,17 @@
       "tools/winui_safe_copy_live_runtime_smoke_test.py"
     ],
     "privatePublicFileHashCheck": "all five listed files are byte-identical between the former private dirty tree and this public checkout",
-    "claimBoundary": "early CDB attach support is code/proof-infrastructure only; runtimeAudibleOutputProof remains false until a complete live raw bundle passes materializer/final checker"
+    "claimBoundary": "cleanup hardening and early CDB attach support are proof-infrastructure only; runtimeAudibleOutputProof remains false until a complete live raw bundle passes materializer/final checker",
+    "latestLiveAttempts": [
+      {
+        "id": "music-audible-live-20260624-160116",
+        "result": "failed: cleanBaseline-live timed out after early exact-PID CDB attach; copied BEA/CDB were manually cleaned before the hardening patch"
+      },
+      {
+        "id": "music-audible-live-20260624-161657",
+        "result": "failed: cleanBaseline-timestamped-cdb rejected missing CGame__PlayMusicForCurrentLevel level=100 row; lower-level music/decode rows were visible; no BEA/CDB process remained"
+      }
+    ]
   },
   "validation": {
     "migrationBaselinePassed": [
@@ -44,8 +54,8 @@
       "post-push remote alignment check"
     ],
     "activeSlicePassed": [
+      "py -3 tools\\run_winui_safe_copy_music_audible_output_live_bundle_test.py (20 tests)",
       "py -3 tools\\winui_safe_copy_live_runtime_smoke_test.py (14 tests)",
-      "py -3 tools\\run_winui_safe_copy_music_audible_output_live_bundle_test.py (17 tests)",
       "state/package JSON parse",
       "npm run test:hard-payload-safety",
       "npm run test:doc-commands",
@@ -62,11 +72,12 @@
   },
   "runtimeTruth": {
     "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable",
-    "musicAudibleOutputProof": "runtimeAudibleOutputProof=false; private live raw bundle still pending",
+    "musicAudibleOutputProof": "runtimeAudibleOutputProof=false; public-primary live attempts reached early CDB/lower-level music rows but failed strict acceptance",
     "originalInstallRule": "installed Steam folder and original BEA.exe remain read-only"
   },
   "nextSteps": [
-    "Commit/push the public-runtime baton.",
-    "Then attempt one private music audible-output live raw bundle from public using ignored local proof roots if runtime prerequisites are clean."
+    "Run broad validation for the cleanup hardening.",
+    "Commit/push the cleanup-hardening baton.",
+    "Investigate why the early observer sees lower-level music/decode rows but not CGame__PlayMusicForCurrentLevel level=100."
   ]
 }

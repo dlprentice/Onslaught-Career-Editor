@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-24",
-  "currentFocus": "Public-primary migration docs are closed; current docs/state work is the public-runtime baton for music audible-output early CDB attach support.",
+  "currentFocus": "Public-primary migration docs are closed; current docs/state work records music audible-output live-bundle cleanup hardening and failed proof attempts.",
   "status": "focused and broad validation passed; commit/push pending",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
@@ -19,7 +19,11 @@
   },
   "activeRuntimeDocs": {
     "readinessNote": "release/readiness/winui_music_audible_output_live_bundle_executor_2026-06-24.md",
-    "truth": "early exact-PID CDB attach support exists for clean/staged music stages, but runtimeAudibleOutputProof remains false",
+    "truth": "early exact-PID CDB attach support exists for clean/staged music stages, cleanup hardening is implemented, but runtimeAudibleOutputProof remains false",
+    "latestAttempts": [
+      "music-audible-live-20260624-160116: timed out after early exact-PID CDB attach and required manual cleanup before this hardening",
+      "music-audible-live-20260624-161657: failed timestamped CDB acceptance because CGame__PlayMusicForCurrentLevel level=100 was absent; no BEA/CDB remained"
+    ],
     "nonClaims": [
       "no accepted BEA live music bundle yet",
       "no staged/mute/final materialized audible-output proof yet",
@@ -38,8 +42,8 @@
       "post-push remote alignment check"
     ],
     "activeSlicePassed": [
+      "py -3 tools\\run_winui_safe_copy_music_audible_output_live_bundle_test.py (20 tests)",
       "py -3 tools\\winui_safe_copy_live_runtime_smoke_test.py (14 tests)",
-      "py -3 tools\\run_winui_safe_copy_music_audible_output_live_bundle_test.py (17 tests)",
       "state/package JSON parse",
       "npm run test:hard-payload-safety",
       "npm run test:doc-commands",
@@ -49,7 +53,8 @@
     ]
   },
   "nextSteps": [
-    "Commit/push the public-runtime baton.",
+    "Run broad validation for the cleanup hardening.",
+    "Commit/push the cleanup-hardening baton.",
     "Keep public docs clear that online multiplayer and audible music replacement are not released capabilities.",
     "Do not resurrect curated-export wording except for a deliberate release artifact."
   ]
