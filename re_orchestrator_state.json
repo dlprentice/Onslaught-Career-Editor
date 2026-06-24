@@ -17,6 +17,7 @@
   "runtimeProofBoundary": {
     "musicAudibleOutputProof": "runtimeAudibleOutputProof=false",
     "earlyCdbAttachSupport": "present in public checkout for clean/staged music stages; lower-level music/decode rows observed in failed live attempts",
+    "latestCleanupHardeningCommit": "9bc9b420",
     "latestMusicLiveAttempts": [
       "music-audible-live-20260624-160116 timed out after early exact-PID CDB attach and required manual cleanup before parent cleanup hardening",
       "music-audible-live-20260624-161657 failed timestamped CDB acceptance because CGame__PlayMusicForCurrentLevel level=100 was absent; no BEA/CDB remained"
@@ -24,7 +25,6 @@
     "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable"
   },
   "nextSteps": [
-    "Run broad validation for the cleanup hardening and commit/push the baton.",
     "Investigate why the early CDB observer sees lower-level music/decode rows but not CGame__PlayMusicForCurrentLevel level=100.",
     "If a future static contradiction appears, stop runtime/product work and correct Ghidra/static docs with normal dry/apply/read-back/backup gates.",
     "Use G:\\GhidraBackups for any future backup-producing Ghidra wave while G: is attached."

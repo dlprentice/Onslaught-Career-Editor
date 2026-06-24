@@ -47,6 +47,7 @@ This slice is bounded to the music audible-output proof ladder:
   the clean-baseline live stage after early exact-PID CDB attach and left copied
   BEA/CDB processes that required manual cleanup. This slice adds
   proof-root-bounded parent-executor cleanup for that failure mode.
+- Cleanup hardening commit `9bc9b420` is pushed to `origin/main`.
 - Public-primary live attempt `music-audible-live-20260624-161657` progressed
   through copied launch, exact-PID CDB attach, lower-level music/decode rows,
   and clean process exit, then failed in the timestamped CDB producer because
@@ -78,11 +79,9 @@ Optional if the workstation/proof root is ready after the source/docs closeout:
 
 ## Next Executable Work
 
-1. Validate the cleanup hardening and docs/state closeout.
-2. Commit and push the cleanup-hardening baton.
-3. Investigate why the early CDB observer catches lower-level music/decode rows
+1. Investigate why the early CDB observer catches lower-level music/decode rows
    but still misses `CGame__PlayMusicForCurrentLevel level=100`.
-4. Keep `runtimeAudibleOutputProof=false` unless the final checker accepts the
+2. Keep `runtimeAudibleOutputProof=false` unless the final checker accepts the
    complete live bundle.
 
 ## Stop Conditions

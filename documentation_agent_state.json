@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-06-24",
   "currentFocus": "Public-primary migration docs are closed; current docs/state work records music audible-output live-bundle cleanup hardening and failed proof attempts.",
-  "status": "focused and broad validation passed; commit/push pending",
+  "status": "cleanup hardening committed-and-pushed",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -54,7 +54,6 @@
   },
   "nextSteps": [
     "Run broad validation for the cleanup hardening.",
-    "Commit/push the cleanup-hardening baton.",
     "Keep public docs clear that online multiplayer and audible music replacement are not released capabilities.",
     "Do not resurrect curated-export wording except for a deliberate release artifact."
   ]
