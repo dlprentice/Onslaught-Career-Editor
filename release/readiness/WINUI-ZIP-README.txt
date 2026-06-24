@@ -9,9 +9,11 @@ Quick start
 -----------
 
 1. Extract the whole ZIP to a writable folder.
-2. Run OnslaughtCareerEditor.WinUI.exe from the extracted folder.
-3. Keep the files together; do not move the executable away from the
-   extracted support files.
+2. Run Launch Onslaught Toolkit.cmd from the extracted top-level folder.
+3. If the launcher is blocked by local policy, run
+   app\OnslaughtCareerEditor.WinUI.exe directly.
+4. Keep the files together; do not move the executable away from the
+   app folder and its support files.
 
 Safety notes
 ------------
@@ -25,10 +27,13 @@ Safety notes
 What this package shape proves
 ------------------------------
 
-The repository ZIP probe builds disposable WinUI publish output, creates this
-ZIP, writes a SHA-256 sidecar, extracts the ZIP, launches the extracted app,
-runs native launch smoke, runs extracted-exe Home navigation smoke, runs
-representative Media smoke, and confirms no WinUI process remains.
+The private maintainer ZIP probe builds disposable WinUI publish output, stages
+a friendly portable root with this README, LICENSE, Launch Onslaught
+Toolkit.cmd, and app\, creates this ZIP, writes a SHA-256 sidecar, extracts the
+ZIP, launches the extracted app from app\, runs native launch smoke, runs
+extracted app Home navigation smoke, runs representative Media smoke, and
+confirms no WinUI process remains. The probe also rejects raw publish layouts
+that expose DLLs or executables at the ZIP root.
 
 What this package shape does not prove
 --------------------------------------

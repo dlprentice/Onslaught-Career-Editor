@@ -15,7 +15,9 @@ For the current feature surface, navigation order, Save Lab workflows, static-RE
 Downloadable app builds are published on the
 [GitHub Releases](https://github.com/dlprentice/Onslaught-Career-Editor/releases)
 page as unsigned portable Windows x64 ZIP assets with SHA-256 checksum sidecars.
-Extract the full ZIP and run `OnslaughtCareerEditor.WinUI.exe`.
+Extract the full ZIP and run `Launch Onslaught Toolkit.cmd` from the clean
+top-level folder. The app payload lives under `app\`; run
+`app\OnslaughtCareerEditor.WinUI.exe` only as a fallback.
 
 The ZIP release does not include Battle Engine Aquila game files, saves, media,
 or private proof material. Use your own retail/Steam install; patching workflows

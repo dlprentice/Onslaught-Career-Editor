@@ -11,7 +11,9 @@ Contributor setup, local validation expectations, and public/private contributio
 
 Current downloadable app releases use an unsigned portable Windows x64 ZIP
 attached to GitHub Releases with a SHA-256 checksum sidecar. Extract the full
-ZIP and run `OnslaughtCareerEditor.WinUI.exe`.
+ZIP and run `Launch Onslaught Toolkit.cmd` from the clean top-level folder. The
+self-contained WinUI payload lives under `app\`; run
+`app\OnslaughtCareerEditor.WinUI.exe` only as a fallback.
 
 The ZIP release does not include Battle Engine Aquila game files, saves, media,
 or private proof material. Users provide their own retail/Steam installation,
