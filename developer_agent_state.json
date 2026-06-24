@@ -1,16 +1,16 @@
 {
   "lastUpdated": "2026-06-24",
   "branch": "main",
-  "currentFocus": "Public-primary source boundary clarification is pending commit; active music proof lane remains next after this boundary closeout.",
+  "currentFocus": "Public-primary source boundary clarification is closed at 4e299090; active music proof lane is next.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainCommit": "pending-public-primary-boundary-clarification",
-    "publicMainStatus": "working_tree_has_staged_boundary_docs_and_guard_updates",
+    "publicMainCommit": "4e299090",
+    "publicMainStatus": "ahead_one_pending_state_closeout_push",
     "policy": "track source/docs/tools/tests/RE notes/wave notes/state batons/agent reports/readiness notes/compact proof summaries; keep hard payloads local/ignored"
   },
   "publicPrimaryMigration": {
-    "status": "closed_validated_pushed_plus_boundary_clarification_pending_commit",
+    "status": "closed_validated_pushed_plus_boundary_clarification_committed",
     "inventoryGuard": "tools/public_primary_migration_inventory.py",
     "readinessNote": "release/readiness/public_primary_full_migration_inventory_2026-06-24.md",
     "acceptedInventory": {

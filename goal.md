@@ -34,9 +34,9 @@ The executable target is the next bounded music/mod runtime proof step:
   `0 / 0 / 0`, active current-risk re-audit `1179/1179 = 100.00%`.
 - Public `v1.0.2` app release remains published at
   `https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.2`.
-- Latest pushed public-primary closeout before this clarification is
-  `655666ba`; this slice has staged boundary-clarification changes pending
-  validation/commit.
+- Public-primary source boundary clarification is committed at
+  `4e299090 Clarify public-primary source boundary`; state closeout/push is
+  pending.
 - Public-primary migration hardening is closed and pushed:
   - private tracked paths measured: `24839`;
   - public tracked paths measured: `19295` after adding
@@ -90,13 +90,23 @@ The executable target is the next bounded music/mod runtime proof step:
 ## Latest Closed Slice
 
 Public-primary migration and proof-boundary hardening closed at
-`e4ca5904 Repo: align public-primary proof boundaries`.
+`e4ca5904 Repo: align public-primary proof boundaries`; follow-up source
+boundary clarification closed at `4e299090 Clarify public-primary source
+boundary`.
 
 Closed-slice validation:
 
 ```powershell
 npm run test:public-primary-migration-inventory
 npm run test:hard-payload-safety
+npm run test:public-primary-migration-inventory
+python tools\docsync_check.py
+py -3 tools\release_profile_snapshot.py --check
+py -3 tools\release_curated_manifest.py --check
+npm run test:doc-commands
+npm run test:md-links
+npm run test:public-allowlist
+npm run test:repo-hygiene
 py -3 -c "import json; [json.load(open(p, encoding='utf-8')) for p in ['developer_agent_state.json','documentation_agent_state.json']] ; print('state json ok')"
 git diff --cached --check
 ```
