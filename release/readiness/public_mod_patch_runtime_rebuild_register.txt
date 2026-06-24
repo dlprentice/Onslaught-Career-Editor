@@ -4,9 +4,10 @@ Status: public-safe summary
 Last updated: 2026-06-24
 
 This public register summarizes the current player-facing and contributor-facing
-state. The private maintainer tree contains deeper runtime ledgers, debugger
-logs, screenshots, copied-game artifacts, and proof helper scripts that are
-intentionally excluded from public candidates.
+state. Runtime ledgers, proof summaries, and helper scripts are tracked here
+when they are useful to contributors. Raw copied-game artifacts, screenshots,
+frame dumps, raw CDB logs, full proof bundles, and local proof roots remain
+ignored overlays.
 
 ## Safe-Copy Patch Surface
 

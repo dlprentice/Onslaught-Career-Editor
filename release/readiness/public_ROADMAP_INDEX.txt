@@ -1,11 +1,12 @@
 # Public Roadmap Index
 
-Status: public-safe roadmap entrypoint
-Last updated: 2026-06-22
+Status: public-primary roadmap entrypoint
+Last updated: 2026-06-24
 
-Use this index for public-source collaboration. Private maintainer proof
-registers and runtime evidence logs stay in the private tree unless a maintainer
-exports a closed public-safe subgraph.
+Use this index for public-source collaboration. Project-owned roadmap,
+register, proof-summary, and RE material lives in this public-primary repo.
+Raw local proof payloads, copied-game outputs, screenshots/frame dumps, raw CDB
+logs, full Ghidra databases/backups, and secrets stay in ignored local overlays.
 
 ## Start Here
 

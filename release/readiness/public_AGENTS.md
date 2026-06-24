@@ -1,12 +1,12 @@
 # AGENTS.md
 
-Status: public-safe contributor agent guide
-Last updated: 2026-06-22
+Status: public-primary contributor agent guide
+Last updated: 2026-06-24
 
-This file is the public-candidate agent guide for Onslaught Toolkit. It is
-materialized as root `AGENTS.md` when `tools/export_curated_release_tree.py`
-builds a sanitized public candidate. The private root `AGENTS.md` is a
-maintainer/operator contract and is intentionally not public payload.
+This file is the public-primary contributor agent guide for Onslaught Toolkit.
+The root `AGENTS.md` is now the normal working guide. Public candidate exports
+may still materialize this file for package/export compatibility, but the public
+repo is no longer a sparse subset of a private source tree.
 
 ## Current Direction
 
@@ -14,22 +14,23 @@ maintainer/operator contract and is intentionally not public payload.
 - `OnslaughtCareerEditor.AppCore` holds shared correctness logic for saves,
   options, patch planning, media/catalog support, and safe-copy workflows.
 - `OnslaughtCareerEditor.Cli` is a C# support CLI.
-- Python under `tools/` is a curated public subset for repo tooling,
-  validation, asset/RE support, and release-policy support. It is not a
-  product GUI lane, and many private maintainer proof helpers are intentionally
-  absent from public candidates.
+- Python under `tools/` supports repo tooling, validation, asset/RE support,
+  local lab workflows, and release-policy support. It is not a product GUI lane.
 - Electron, WPF, and the old Python GUI/CLI are archived/reference lanes only.
-- Static reverse-engineering docs are public-safe research/spec material.
-  Runtime proof, private game assets, copied executables, screenshots, saves,
-  and local proof bundles are not public payload.
+- Static reverse-engineering docs, wave notes, state batons, agent reports, and
+  compact proof summaries are tracked project material. Actual game payloads,
+  copied executables, screenshots/frame dumps, arbitrary saves/options, raw CDB
+  logs, full Ghidra databases/backups, secrets, and bulky local proof bundles
+  are ignored local overlays.
 
 ## First Rules
 
 - Read `README.MD`, `CONTRIBUTING.md`, `SECURITY.md`, and
   `COLLABORATION.md` before making changes.
 - Keep changes narrow and path-scoped.
-- Do not add game binaries, extracted assets, saves, screenshots, local proof
-  bundles, private paths, credentials, or state files.
+- Do not add game binaries, extracted assets, arbitrary saves/options,
+  screenshots/frame dumps, raw CDB logs, bulky local proof bundles, credentials,
+  `.env*`, or copied runtime outputs.
 - Do not patch or mutate an installed Battle Engine Aquila folder or original
   `BEA.exe`. App workflows must operate on copied targets only.
 - Do not synthesize `.bes` saves from scratch; use real baselines and preserve
@@ -49,9 +50,9 @@ maintainer/operator contract and is intentionally not public payload.
 | Shared core | Active support | `OnslaughtCareerEditor.AppCore/` |
 | C# CLI | Active support | `OnslaughtCareerEditor.Cli/` |
 | Tests | Active | `OnslaughtCareerEditor.AppCore.Tests/`, `OnslaughtCareerEditor.UiTests/` |
-| Tooling | Active support | curated `tools/` subset |
+| Tooling | Active support | `tools/` |
 | Reverse-engineering docs | Public-safe specs/research | `reverse-engineering/RE-INDEX.md`, `reverse-engineering/quick-reference/`, `roadmap/ROADMAP-INDEX.md` |
-| Archived apps | Reference only | `archive/` is excluded from public candidates |
+| Archived apps | Reference only | `archive/` is tracked reference source, not shipped app payload |
 
 ## Setup
 
@@ -64,10 +65,9 @@ dotnet build .\OnslaughtCareerEditor.WinUI.slnx --nologo
 npm run dev
 ```
 
-Use the public candidate `package.json` for contributor commands. The private
-source repo has many maintainer-only npm scripts that are not public gates.
-Public-source validation also requires Python 3 through the Windows `py`
-launcher because public docs/release/tooling checks use `py -3`.
+Use this repo's `package.json` for contributor commands. Public-source
+validation also requires Python 3 through the Windows `py` launcher because
+docs/release/tooling checks use `py -3`.
 
 ## Common Local Gates
 

@@ -3,8 +3,10 @@
 Status: public-safe overview
 Last updated: 2026-06-22
 
-This roadmap is written for public-source collaboration. It avoids private proof
-paths and maintainer-only evidence ledgers.
+This roadmap is written for public-source collaboration. It avoids raw local
+proof payload paths and machine-only evidence roots, while normal project-owned
+docs, ledgers, tools, state batons, and compact proof summaries live in this
+public-primary repo.
 
 ## Current Priorities
 

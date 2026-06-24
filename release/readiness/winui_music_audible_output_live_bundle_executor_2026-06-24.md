@@ -146,3 +146,23 @@ restart-loop direct selector path without pretending the wrapper-entry row was
 seen. Accept an audible-output claim only if the materializer and final checker
 pass against a generated private raw bundle with audio, source-safety,
 capture-correlation, process-cleanup, and provenance evidence intact.
+
+A later public-primary live attempt
+(`music-audible-live-20260624-181120`) failed in the source-safety sidecar
+before any audible-output claim because the executor did not pass
+`--source-root` to `winui_safe_copy_music_source_music_safety_sidecar.py`. The
+executor now passes the source root into source-safety sidecar generation, and
+the regression test `test_source_safety_command_includes_source_root` covers
+that command shape.
+
+The follow-up attempt (`music-audible-live-20260624-181538`) progressed through
+ambient, clean, staged, and mute stages with CDB music-selection provenance for
+the clean/staged stages, but failed at capture-source correlation because the
+raw WAV artifacts contained zero samples. A synthetic calibration-tone capture
+on the same endpoint proved the loopback backend can record non-silent audio.
+The accepted interpretation is a live-bundle timing bug: the 30-second capture
+window ended before the copied BEA process reached the timestamped CDB music
+decode rows. The executor default is now a 60-second live audio capture, and
+`validate_live_attempt_audio_duration` rejects shorter armed live attempts.
+`runtimeAudibleOutputProof=false` remains current truth until a future
+60-second private raw bundle passes the materializer and final checker.

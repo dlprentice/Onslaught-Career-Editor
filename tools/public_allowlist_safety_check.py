@@ -115,6 +115,11 @@ TEXT_SUFFIXES = {
 }
 
 TEXT_DENY_PATTERNS = (
+    ("deny-private-key-block", re.compile(r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----")),
+    ("deny-openai-key", re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b")),
+    ("deny-github-token", re.compile(r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{20,}\b")),
+    ("deny-github-fine-grained-token", re.compile(r"\bgithub_pat_[A-Za-z0-9_]{30,}\b")),
+    ("deny-aws-access-key", re.compile(r"\bA(?:KIA|SIA)[A-Z0-9]{16}\b")),
 )
 
 TEXT_ALLOW_PATH_PREFIXES = (
@@ -254,10 +259,25 @@ def run_self_test() -> int:
         (root / "tests_shared" / "fixtures" / "gold_career_save.bin").write_bytes(b"allowed regression fixture")
         (root / ".env").write_text("OPENAI_API_KEY=sk-not-a-real-fixture-value\n", encoding="utf-8")
         (root / "docs.md").write_text("Raw RE notes may mention local paths and field names.\n", encoding="utf-8")
+        (root / "token-note.md").write_text(
+            "Accidental token example sk-thisfixturehasenoughcharacters000000\n",
+            encoding="utf-8",
+        )
+        (root / "github-token-note.md").write_text(
+            "Accidental token example ghp_thisfixturehasenoughcharacters000000\n",
+            encoding="utf-8",
+        )
         subprocess.run(["git", "add", "."], cwd=root, check=True)
         findings = check_repo(root)
         labels = {finding.label for finding in findings}
-        required = {"deny-root", "deny-binary-or-private-suffix", "deny-env-file", "deny-large-unreviewed-file"}
+        required = {
+            "deny-root",
+            "deny-binary-or-private-suffix",
+            "deny-env-file",
+            "deny-large-unreviewed-file",
+            "deny-openai-key",
+            "deny-github-token",
+        }
         missing = sorted(required - labels)
         if missing:
             print("Public payload safety self-test: FAIL")

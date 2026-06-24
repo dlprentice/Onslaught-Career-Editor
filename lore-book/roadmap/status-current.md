@@ -11,22 +11,22 @@ The repo is now WinUI-first.
 - shared core: `OnslaughtCareerEditor.AppCore`
 - C# support CLI: `OnslaughtCareerEditor.Cli`
 - active tests: `OnslaughtCareerEditor.AppCore.Tests`, `OnslaughtCareerEditor.UiTests`
-- active utility/tooling scripts: private tree `tools/`; public candidates include a curated public-safe subset
-- archived Electron detour: private tree `archive/electron-workbench/`; excluded from public candidates
-- archived Python GUI/CLI parity app: private tree `archive/legacy-python/`; excluded from public candidates
-- archived WPF app: private tree `archive/legacy-wpf/`; excluded from public candidates
+- active utility/tooling scripts: tracked public-primary `tools/` source, with hard payload inputs supplied through ignored local overlays
+- archived Electron detour: tracked reference source under `archive/electron-workbench/`; not shipped as the active app payload
+- archived Python GUI/CLI parity app: tracked reference source under `archive/legacy-python/`; not an active product lane
+- archived WPF app: tracked reference source under `archive/legacy-wpf/`; not an active product lane
 
-Electron, WPF, and the old Python GUI/CLI app remain in the private maintainer tree for reference, but they are not active product lanes and are excluded from public candidates. Active Python work is limited to RE/tooling/lab scripts, not a shipping GUI/product lane.
+Electron, WPF, and the old Python GUI/CLI app remain tracked in this public-primary repo for reference, provenance, and selective inspection. They are not active product lanes and are not part of the default shipped WinUI app ZIP. Active Python work is limited to RE/tooling/lab scripts, not a shipping GUI/product lane.
 
-Repo cleanup and archive decisions are tracked in `roadmap/repo-structure-and-archive-map.md`; use that map before moving or deleting legacy, private, or release-excluded surfaces.
+Repo cleanup and archive decisions are tracked in `roadmap/repo-structure-and-archive-map.md`; use that map before moving or deleting legacy, local-overlay, or release-excluded surfaces.
 
 ## Ghidra Static RE Posture (Steam retail)
 
 - Loaded Ghidra function-quality queue: **6411/6411 = 100.00%** with `0 / 0 / 0` commentless / exact-undefined / `param_N` debt.
 - Wave1220 aggregate static closeout acceptance validates active current-risk focused accounting at **1179/1179 = 100.00%** with remaining active focused work `0`.
 - This is rebuild-grade static-contract posture, not runtime gameplay proof, exact layout proof, rebuild parity, or no-noticeable-difference proof.
-- Detailed maintainer static-measurement ledgers remain private/release-excluded; public candidates carry this bounded summary plus the public static contracts index.
-- Public candidate static summary front door: `reverse-engineering/public-static-contracts.md` plus `reverse-engineering/RE-INDEX.md`.
+- Detailed static-measurement ledgers and RE contracts are tracked in this public-primary repo. Full Ghidra project databases/backups remain local overlays; the repo carries deterministic exports, ledgers, docs, scripts, and compact proof summaries.
+- Static summary front door: `reverse-engineering/public-static-contracts.md` plus `reverse-engineering/RE-INDEX.md`.
 
 ## Current WinUI Product Features
 
@@ -44,7 +44,7 @@ Repo cleanup and archive decisions are tracked in `roadmap/repo-structure-and-ar
 - Maximized scrolled-section WinUI visual smoke captures lower workflow regions for Home, Save Lab, Asset Library, Windowed & Mods, Settings, and About.
 - Windowed & Mods creates app-owned playable copied game folders and separated BEA.exe-only technical copies before verifying, applying, restoring, launching, stopping, or staging copied-game music. The original `BEA.exe` remains read-only source material.
 - Windowed & Mods now shows sanitized safe-copy profile catalog source/schema/hash-prefix metadata beside the selected preset, and packaged WinUI output includes `patches/catalog/safe-copy-profiles.v1.json` beside `patches.v2.json` so the app can load tracked safe-copy profiles after extraction. This is UI/accounting and package-content clarity only; it does not add a BEA launch, byte patch, Host/Join enablement, online proof, music audible-output proof, or installed-game mutation.
-- Windowed & Mods/runtime proof is the active post-static lane. Current public proof accounting lives in `roadmap/mod-patch-runtime-rebuild-register.md`; detailed online feasibility ledgers remain private until rewritten as public summaries.
+- Windowed & Mods/runtime proof is the active post-static lane. Current proof accounting lives in `roadmap/mod-patch-runtime-rebuild-register.md`; raw copied-runtime bundles, screenshots/frame dumps, and raw CDB logs remain local overlays.
 - Windowed & Mods now includes the bounded `Debug Camera Preview` safe-copy profile for copied executable testing. It combines resolution/windowed/free-camera/Q-forward patch rows on the copied target only; it is a debug/control profile, not a player-ready camera system or online proof.
 - Second-host readiness/run-kit artifact intake now fails closed for oversized local JSON, missing/non-false proof keys, nested truthy Host/Join/online overclaims, private/sensitive strings, unsupported statuses, out-of-range counters, and ready-to-run prerequisite mismatches. Host/Join remains disabled until accepted distinct-endpoint command-source and source-bound copied-runtime causality proofs exist.
 - Current safe-copy music support includes copied-track and external-OGG staging plus three named shipped-track presets: `BEA_02 over BEA_01`, `BEA_01 over BEA_02`, and `BEA_02 over BEA_04`. The latest bounded proof ties `use-bea02-for-bea04` to a level-100 CDB selection/decode path with two visual captures, one async music kick, one Ogg open, one Ogg read, and no installed-game mutation. The music audible-proof contract preserves `runtimeAudibleOutputProof=false`; a private audio-loopback backend preflight proved bounded WASAPI capture can observe an explicitly armed calibration tone, but not BEA output. Real audible playback still requires bounded audio capture plus a clean same-level baseline comparison and CDB correlation. Audible playback, looping, volume/mixing, arbitrary OGG compatibility, and all-cue coverage remain unproven.
@@ -93,8 +93,8 @@ Current release work is focused on:
 
 1. WinUI 3 lane hardening, visual/run smoke, and future packaging/signing proof
 2. AppCore/C# CLI support while the Windows lane stabilizes
-3. framework-neutral public/private safety/export policy
-4. keeping archived app detours out of default public/community release outputs
+3. framework-neutral public-primary hard-payload and release ZIP policy
+4. keeping archived app detours out of default shipped WinUI release outputs
 
 ## Active Host Shape
 
@@ -106,6 +106,6 @@ Current release work is focused on:
 | `OnslaughtCareerEditor.AppCore.Host` | Support/reference | JSON/stdio diagnostics |
 | `OnslaughtCareerEditor.AppCore.Tests` | Active | Core regression tests |
 | `OnslaughtCareerEditor.UiTests` | Active | WinUI/static/contrast/launch-smoke tests |
-| `archive/electron-workbench` | Private archived reference | Former Electron/React/TypeScript app and CLI; excluded from public candidates |
-| `archive/legacy-python` | Private archived reference | Historical Python GUI/CLI parity app; excluded from public candidates |
-| `archive/legacy-wpf` | Private archived reference | Historical WPF app; excluded from public candidates |
+| `archive/electron-workbench` | Tracked archived reference | Former Electron/React/TypeScript app and CLI; not shipped app payload |
+| `archive/legacy-python` | Tracked archived reference | Historical Python GUI/CLI parity app; not active product payload |
+| `archive/legacy-wpf` | Tracked archived reference | Historical WPF app; not active product payload |

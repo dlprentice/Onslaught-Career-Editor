@@ -281,7 +281,7 @@ def assert_contract() -> dict[str, Any]:
         require(token in safe_inputs, f"safe-copy input requirement missing: {token}")
 
     for token in {
-        "CGame__PlayMusicForCurrentLevel observed for the intended level",
+        "CGame music-selection provenance observed for the intended level via wrapper or restart-loop direct call",
         "CMusic__PlaySelection observed for the intended selection",
         "PCPlatform__KickAsyncMusicStreamRead path matches the staged target",
         "COggFileRead__OpenFileAndPrimeDecoder path matches the staged target",

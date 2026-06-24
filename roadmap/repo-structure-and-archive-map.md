@@ -101,7 +101,7 @@ are updated.
 | `AGENTS.md` | Public-primary contributor agent guide | Tracked root guide | Required for public repo operation. |
 | `COLLABORATION.md` | Public-safe collaboration guide | Included | Handoff/PR/review expectations for private approved collaborators and public candidates. |
 | `CONTRIBUTING.md`, `SECURITY.md`, `README.RELEASE.md`, `PUBLIC_SIGNOFF_COMMANDS.md` | Public-safe contributor/release guides | Included where public-safe | Local validation, private-data reporting, and public-source sign-off guidance. |
-| `CURRENT_CAPABILITIES.md` | Public/private capability summary | Included as public materialized summary | Public candidates use the sanitized current-capabilities surface; private proof paths and raw evidence remain excluded. |
+| `CURRENT_CAPABILITIES.md` | Public-primary capability summary | Tracked public source | Current capability surface for contributors and users; raw local proof payload paths and generated runtime evidence remain excluded. |
 
 ## Move Decisions
 

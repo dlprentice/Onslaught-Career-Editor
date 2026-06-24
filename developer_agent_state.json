@@ -1,28 +1,24 @@
 {
   "lastUpdated": "2026-06-24",
   "branch": "main",
-  "currentFocus": "Public-primary full-migration hardening is validated; public repo remains the working source of truth.",
-  "publicPrimaryMigration": {
-    "status": "closed_validated",
-    "targetPublicRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
+  "currentFocus": "Public-primary migration hardening is closed; active slice is WinUI safe-copy music audible-output proof hardening plus public-primary wording cleanup from the public repo.",
+  "repositoryTruth": {
+    "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "policy": "track source/docs/tools/tests/RE notes/wave notes/state batons/agent reports/readiness notes/compact proof summaries; keep hard payloads local/ignored",
+    "publicMainCommit": "19024026a5b14d1c9d6324ce271ebeda2c6acd00",
+    "publicMainStatus": "origin_aligned_at_19024026_before_active_slice_commit",
+    "policy": "track source/docs/tools/tests/RE notes/wave notes/state batons/agent reports/readiness notes/compact proof summaries; keep hard payloads local/ignored"
+  },
+  "publicPrimaryMigration": {
+    "status": "closed_validated_pushed",
     "inventoryGuard": "tools/public_primary_migration_inventory.py",
     "readinessNote": "release/readiness/public_primary_full_migration_inventory_2026-06-24.md",
     "acceptedInventory": {
       "privateTrackedPaths": 24839,
       "publicTrackedPaths": 19294,
-      "allowedPrivateOnlyHardPayloadOrScratchPaths": 5557
+      "allowedPrivateOnlyHardPayloadOrScratchPayloadPaths": 5557
     },
-    "materialRestored": [
-      "references/Onslaught gitlink at 792545b996365f383781c666d145ea6cbda83f3a",
-      "references/AYAResourceExtractor gitlink at 6f3df296201ecc62bc09c39f7a93d8a4fb2f1638",
-      "archive/electron-workbench/packages/ui/src/components/media/MediaDetails.tsx",
-      "archive/electron-workbench/packages/ui/src/components/media/MediaSection.tsx",
-      "tests_shared/fixtures/gold_career_save.bin",
-      "27 text RE scratch exports under reverse-engineering/binary-analysis/scratch/deep_semantic_tail_2026-02-27"
-    ],
-    "hardening": "tools/public_primary_migration_inventory.py now treats missing private RE scratch text as missing project material and allows only payload-like scratch outputs as private-only scratch",
+    "hardening": "27 private-only text RE scratch exports were promoted; missing private RE scratch text now fails the migration inventory",
     "hardPayloadsKeptOut": [
       "game/media payload roots",
       "copied executables/DLLs",
@@ -33,27 +29,28 @@
       "secrets/.env/build outputs"
     ]
   },
+  "activeSlice": {
+    "name": "winui-safe-copy-music-audible-output-proof-lane",
+    "goal": "advance the next bounded music/mod runtime proof step from the public repo",
+    "claimBoundary": "runtimeAudibleOutputProof remains false until a complete private raw bundle passes the materializer and final checker",
+    "latestFindings": [
+      "music-audible-live-20260624-181120 failed before proof acceptance because source-safety sidecar did not receive --source-root; executor command shape is fixed and tested",
+      "music-audible-live-20260624-181538 reached clean/staged CDB music-selection provenance but failed capture-source correlation because 30-second WAV captures ended with zero samples before decode; executor now defaults/requires 60000ms for armed live attempts",
+      "public-primary docs were normalized away from stale private-tree/public-candidate language; PR template now allows compact non-secret state/report text; payload safety checker now has credential-like text deny patterns"
+    ]
+  },
   "runtimeTruth": {
-    "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable",
-    "musicAudibleOutputProof": "runtimeAudibleOutputProof=false; CGame caller diagnostic observed restart-loop direct level-100 music-selection provenance but no audible-output acceptance",
+    "musicAudibleOutputProof": false,
     "musicCGameCallerDiagnostic": {
       "status": "accepted_bounded_diagnostic",
-      "artifact": "music-cgame-diagnostic-20260624-131246/live-safe-copy-runtime-smoke.json",
       "classification": "restart-loop-direct-level100-music-selection-observed",
-      "gameMusicRows": 0,
-      "level100SelectionRows": 1,
-      "restartLoopDirectRows": 1,
       "directReturnAddress": "0x0046e0bf",
-      "runtimeAudibleOutputProof": false,
+      "wrapperEntryRows": 0,
+      "restartLoopDirectRows": 1,
       "readinessNote": "release/readiness/winui_music_cgame_caller_diagnostic_2026-06-24.md"
     },
+    "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable",
     "originalInstallRule": "installed Steam folder and original BEA.exe remain read-only"
-  },
-  "activeSlice": {
-    "name": "public-primary-full-migration-hardening",
-    "goal": "make the public repo the primary working repo for project-owned material while keeping hard payloads as ignored local overlays",
-    "repo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
-    "claimBoundary": "track source/docs/tools/RE/state/proof summaries/text scratch; keep game files, copied exes, arbitrary saves, media payloads, raw logs, full Ghidra DBs, secrets, and build output out of git"
   },
   "staticProgress": {
     "functionQuality": "6411/6411 = 100.00%",
@@ -62,28 +59,43 @@
     "measurementFrontDoor": "reverse-engineering/binary-analysis/static-reaudit-measurement-register.md"
   },
   "validation": {
-    "passed": [
+    "latestPassed": [
+      "state JSON parse",
+      "git diff --check",
       "npm run test:public-primary-migration-inventory",
       "npm run test:hard-payload-safety",
+      "py -3 tools\\public_allowlist_safety_check.py --self-test",
+      "py -3 tools\\public_allowlist_safety_check.py",
+      "py -3 tools\\run_winui_safe_copy_music_audible_output_live_bundle_test.py -k live_attempt_audio_duration_rejects_short_capture_window",
+      "npm run test:winui-safe-copy-music-cgame-caller-diagnostic",
+      "npm run test:winui-safe-copy-music-cdb-timeline-sidecar",
+      "npm run test:winui-safe-copy-music-audible-output-contract",
+      "npm run test:winui-safe-copy-music-audible-output-materializer",
+      "npm run test:winui-safe-copy-music-audible-output-two-run-harness",
+      "npm run test:winui-safe-copy-music-audible-output-live-bundle-executor",
+      "npm run test:winui-safe-copy-music-timestamped-cdb-log-producer",
+      "npm run test:winui-safe-copy-music-source-music-safety-sidecar",
+      "npm run test:winui-safe-copy-music-ambient-no-bea-census",
+      "npm run test:winui-safe-copy-music-source-audio-correlation",
+      "npm run test:winui-safe-copy-music-capture-source-correlation",
+      "npm run test:winui-safe-copy-music-capture-source-correlation-builder",
+      "npm run test:winui-safe-copy-music-audible-output-live-bundle-gate",
+      "python tools\\docsync_check.py",
+      "py -3 tools\\release_profile_snapshot.py --check (R0=6116 R2=0 R3=3 R4=13175)",
+      "py -3 tools\\release_curated_manifest.py --check (selected files 624)",
       "npm run test:doc-commands",
       "npm run test:md-links",
       "npm run test:repo-hygiene",
-      "py -3 -m py_compile tools\\winui_safe_copy_music_cgame_caller_diagnostic_check.py",
-      "npm run test:winui-safe-copy-music-cgame-caller-diagnostic",
-      "py -3 tools\\winui_safe_copy_music_cgame_caller_diagnostic_check.py <accepted-local-ignored-artifact>",
-      "CDB observer command validation",
-      "npm run test:winui-safe-copy-music-cdb-timeline-sidecar",
-      "npm run test:winui-safe-copy-music-audible-output-materializer",
-      "npm run test:winui-safe-copy-music-audible-output-two-run-harness",
-      "state JSON parse",
-      "git diff --check",
-      "git diff --cached --check",
-      "no BEA.exe/cdb.exe process after closeout"
+      "no BEA.exe/cdb.exe process before closeout"
     ],
-    "pending": []
+    "pendingForActiveSlice": [
+      "commit/push the green hardening slice",
+      "one new 60000ms live bundle attempt only if preconditions are clean"
+    ]
   },
   "nextSteps": [
-    "Commit/push the green public-primary migration hardening pass if authorized.",
-    "Then return to patch/mod/runtime work from the public repo only."
+    "Commit/push the green hardening slice.",
+    "After a clean push, run one 60000ms private live bundle attempt only if source/proof/process/audio preconditions remain clean.",
+    "If the attempt still fails, record the exact failed rung and preserve runtimeAudibleOutputProof=false."
   ]
 }

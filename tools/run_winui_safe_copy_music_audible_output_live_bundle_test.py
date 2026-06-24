@@ -110,6 +110,10 @@ class MusicAudibleOutputLiveBundleExecutorTests(unittest.TestCase):
         self.assertTrue(child_env[lower_keys["systemroot"]])
         self.assertTrue(child_env[lower_keys["comspec"]])
 
+    def test_live_attempt_audio_duration_rejects_short_capture_window(self) -> None:
+        with self.assertRaises(live_bundle.LiveBundleError):
+            live_bundle.validate_live_attempt_audio_duration(30000)
+
     def test_ambient_census_window_includes_audio_startup_margin(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             layout = live_bundle.build_layout(Path(temp_dir) / "bundle")
@@ -232,6 +236,16 @@ class MusicAudibleOutputLiveBundleExecutorTests(unittest.TestCase):
             ):
                 self.assertIn(token, command)
             self.assertIn(str(layout.final_proof), joined)
+
+    def test_source_safety_command_includes_source_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            source_root = root / "source"
+            layout = live_bundle.build_layout(root / "bundle")
+            command = live_bundle.source_safety_command(layout.stage("cleanBaseline"), source_root=source_root)
+
+            self.assertIn("--source-root", command)
+            self.assertEqual(str(source_root), command[command.index("--source-root") + 1])
 
     def test_unsafe_cdb_cleanup_status_is_rejected_before_materialization(self) -> None:
         for status in ("still-running", "failed", "not-started"):

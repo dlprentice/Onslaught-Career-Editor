@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-24",
-  "currentFocus": "Public-primary full-migration hardening is validated; docs/state record stricter inventory and promoted RE scratch text.",
+  "currentFocus": "Public-primary migration hardening is documented and pushed; documentation now also normalizes stale private-tree wording while the active baton remains music audible-output proof work from the public repo.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -8,57 +8,68 @@
     "contributorGuide": "CONTRIBUTING.md",
     "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
     "migrationPlan": "roadmap/public-primary-working-repo.md",
-    "structureMap": "roadmap/repo-structure-and-archive-map.md",
     "migrationReadinessNote": "release/readiness/public_primary_full_migration_inventory_2026-06-24.md"
   },
-  "migrationDocs": {
+  "publicPrimaryMigration": {
+    "status": "closed_validated_pushed",
+    "commit": "19024026a5b14d1c9d6324ce271ebeda2c6acd00",
     "publicPrimary": "public repo is primary day-to-day working repo, not a sparse export",
-    "trackedMaterial": "source, tools, tests, RE docs, wave notes, state batons, agent reports, readiness notes, compact proof summaries",
+    "trackedMaterial": "source, tools, tests, RE docs, wave notes, state batons, agent reports, readiness notes, compact proof summaries, useful text scratch exports",
     "localOnly": "actual game/runtime payloads, arbitrary saves/options payloads, full Ghidra databases/backups, secrets, build outputs, screenshots/frame dumps, raw CDB logs, bulky generated captures",
-    "narrowException": "tests_shared/fixtures/gold_career_save.bin is the tracked immutable regression fixture",
     "currentInventory": "24839 private tracked paths, 19294 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths",
-    "scratchHardening": "27 private-only .c/.tsv RE scratch exports were promoted; missing private RE scratch text now fails the migration inventory"
-  },
-  "activeSliceDocs": {
-    "name": "public-primary-full-migration-hardening",
-    "proofBoundary": "migration docs/checks distinguish public command scripts and compact proof summaries from raw logs/full proof payloads",
-    "onlineBoundary": "Host/Join and online multiplayer remain non-player-ready"
+    "scratchHardening": "27 private-only .c/.tsv RE scratch exports were promoted; missing private RE scratch text now fails the migration inventory",
+    "wordingHardening": "active status/strategy/roadmap/register/readiness docs now describe the public repo as public-primary source instead of a sparse public candidate or private-tree export"
   },
   "musicDiagnosticDocs": {
     "readinessNote": "release/readiness/winui_music_cgame_caller_diagnostic_2026-06-24.md",
-    "existingExecutorNoteUpdated": "release/readiness/winui_music_audible_output_live_bundle_executor_2026-06-24.md",
-    "staticRuntimeDocUpdated": "reverse-engineering/binary-analysis/functions/game.cpp/CGame__RestartLoopRunLevel.md",
+    "executorNote": "release/readiness/winui_music_audible_output_live_bundle_executor_2026-06-24.md",
+    "staticRuntimeDoc": "reverse-engineering/binary-analysis/functions/game.cpp/CGame__RestartLoopRunLevel.md",
     "classification": "restart-loop-direct-level100-music-selection-observed",
-    "runtimeAudibleOutputProof": false
-  },
-  "consultFindings": {
-    "inventoryConsult": "private-only delta was dominated by game/media/save payload roots; the only reviewable candidate set was 27 .c/.tsv RE scratch exports, now promoted",
-    "securityConsult": "do not mirror private root/history blindly; keep hard payloads/raw proof/full Ghidra DBs local and preserve public governance files"
+    "runtimeAudibleOutputProof": false,
+    "claimBoundary": "direct CGame restart-loop selection provenance is not audible-output proof",
+    "latestLiveAttemptNotes": [
+      "181120 attempt failed before proof acceptance due missing --source-root in source-safety sidecar command; executor command and regression test fixed",
+      "181538 attempt reached CDB music-selection provenance but failed capture-source correlation because 30-second WAV captures had zero samples; readiness note records calibration-tone evidence and new 60000ms live-audio guard"
+    ]
   },
   "validation": {
-    "passed": [
+    "latestPassed": [
+      "state JSON parse",
+      "git diff --check",
       "npm run test:public-primary-migration-inventory",
       "npm run test:hard-payload-safety",
+      "py -3 tools\\public_allowlist_safety_check.py --self-test",
+      "py -3 tools\\public_allowlist_safety_check.py",
+      "py -3 tools\\run_winui_safe_copy_music_audible_output_live_bundle_test.py -k live_attempt_audio_duration_rejects_short_capture_window",
+      "npm run test:winui-safe-copy-music-cgame-caller-diagnostic",
+      "npm run test:winui-safe-copy-music-cdb-timeline-sidecar",
+      "npm run test:winui-safe-copy-music-audible-output-contract",
+      "npm run test:winui-safe-copy-music-audible-output-materializer",
+      "npm run test:winui-safe-copy-music-audible-output-two-run-harness",
+      "npm run test:winui-safe-copy-music-audible-output-live-bundle-executor",
+      "npm run test:winui-safe-copy-music-timestamped-cdb-log-producer",
+      "npm run test:winui-safe-copy-music-source-music-safety-sidecar",
+      "npm run test:winui-safe-copy-music-ambient-no-bea-census",
+      "npm run test:winui-safe-copy-music-source-audio-correlation",
+      "npm run test:winui-safe-copy-music-capture-source-correlation",
+      "npm run test:winui-safe-copy-music-capture-source-correlation-builder",
+      "npm run test:winui-safe-copy-music-audible-output-live-bundle-gate",
+      "python tools\\docsync_check.py",
+      "py -3 tools\\release_profile_snapshot.py --check (R0=6116 R2=0 R3=3 R4=13175)",
+      "py -3 tools\\release_curated_manifest.py --check (selected files 624)",
       "npm run test:doc-commands",
       "npm run test:md-links",
       "npm run test:repo-hygiene",
-      "py -3 -m py_compile tools\\winui_safe_copy_music_cgame_caller_diagnostic_check.py",
-      "npm run test:winui-safe-copy-music-cgame-caller-diagnostic",
-      "py -3 tools\\winui_safe_copy_music_cgame_caller_diagnostic_check.py <accepted-local-ignored-artifact>",
-      "CDB observer command validation",
-      "npm run test:winui-safe-copy-music-cdb-timeline-sidecar",
-      "npm run test:winui-safe-copy-music-audible-output-materializer",
-      "npm run test:winui-safe-copy-music-audible-output-two-run-harness",
-      "state JSON parse",
-      "git diff --check",
-      "git diff --cached --check",
-      "no BEA.exe/cdb.exe process after closeout"
+      "no BEA.exe/cdb.exe process before closeout"
     ],
-    "pending": []
+    "pendingForActiveSlice": [
+      "commit/push the green hardening slice",
+      "next 60000ms private live bundle attempt only after clean preconditions"
+    ]
   },
   "nextSteps": [
-    "Commit/push the green public-primary migration hardening pass if authorized.",
-    "Keep public docs explicit that hard payloads are local overlays, not source material to publish.",
-    "Return to patch/mod/runtime work from the public repo after the migration hardening closeout is green."
+    "Keep public docs explicit that source/docs/tools/RE summaries are tracked while hard payloads are local overlays.",
+    "Advance the music audible-output proof lane without changing runtimeAudibleOutputProof until materializer/final-checker acceptance.",
+    "Preserve online non-player-ready wording until required distinct-endpoint and source-bound runtime proofs exist."
   ]
 }

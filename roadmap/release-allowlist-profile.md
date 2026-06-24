@@ -1,15 +1,15 @@
 # Release Allowlist Profile
 
-> Generated: 2026-06-24 12:57:56 -0400
+> Generated: 2026-06-24 14:42:08 -0400
 
 ## Classification Summary
 
 | Class | Count | Meaning |
 |---|---:|---|
-| R0_ALLOW | 6114 | Default allow bucket (still requires human review before public publish) |
+| R0_ALLOW | 6116 | Default allow bucket (still requires human review before public publish) |
 | R2_REVIEW | 0 | Volatile/generated/binary artifacts; include only when intentional |
 | R3_CONDITIONAL | 3 | Reference submodule families requiring licensing/scope review |
-| R4_DENY | 13147 | Hard exclusions from public release |
+| R4_DENY | 13175 | Hard exclusions from public release |
 
 ## Curated Publish-Candidate Include Patterns
 
@@ -819,7 +819,7 @@
 - `archive/legacy-python/onslaught_explorer.py`
 - `archive/legacy-python/patcher.py`
 - `archive/legacy-python/requirements.txt`
-- ... (13027 more entries in `roadmap/release-allowlist-classification.tsv`)
+- ... (13055 more entries in `roadmap/release-allowlist-classification.tsv`)
 
 ## Re-run Commands
 

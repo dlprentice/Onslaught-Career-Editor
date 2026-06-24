@@ -55,6 +55,8 @@ RAW_LINE_INTERVAL_MS = 100
 CDB_STAGE_ROLES = {"cleanBaseline", "stagedPositive"}
 CDB_CLEANUP_ACCEPTED_STATUSES = {"stopped", "already-exited"}
 AUDIO_CAPTURE_STARTUP_MARGIN_MS = 15000
+DEFAULT_LIVE_AUDIO_DURATION_MS = 60000
+MIN_LIVE_ATTEMPT_AUDIO_DURATION_MS = 60000
 SAFE_ENV_KEYS = {
     "ALLUSERSPROFILE",
     "APPDATA",
@@ -96,6 +98,13 @@ class LiveBundleError(RuntimeError):
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise LiveBundleError(message)
+
+
+def validate_live_attempt_audio_duration(duration_ms: int) -> None:
+    require(
+        duration_ms >= MIN_LIVE_ATTEMPT_AUDIO_DURATION_MS,
+        f"--audio-duration-ms must be at least {MIN_LIVE_ATTEMPT_AUDIO_DURATION_MS} for live bundle attempts.",
+    )
 
 
 def format_utc(value: dt.datetime) -> str:
@@ -338,11 +347,13 @@ def source_snapshot_command(stage: StagePaths, *, source_root: Path) -> list[str
     ]
 
 
-def source_safety_command(stage: StagePaths) -> list[str]:
+def source_safety_command(stage: StagePaths, *, source_root: Path) -> list[str]:
     return [
         "py",
         "-3",
         r"tools\winui_safe_copy_music_source_music_safety_sidecar.py",
+        "--source-root",
+        str(source_root),
         "--before-snapshot",
         str(stage.source_snapshot),
         "--live",
@@ -937,7 +948,7 @@ def run_live_audio_stage(
         run_command(timestamped_log_command(stage), log_root=log_root, label=f"{role}-timestamped-cdb")
         run_command(timeline_command(stage), log_root=log_root, label=f"{role}-timeline")
     if role in {"cleanBaseline", "muteControl"}:
-        run_command(source_safety_command(stage), log_root=log_root, label=f"{role}-source-safety")
+        run_command(source_safety_command(stage, source_root=source_root), log_root=log_root, label=f"{role}-source-safety")
 
 
 def materialize_attempt(layout: BundleLayout, *, source_root: Path, log_root: Path) -> dict[str, Any]:
@@ -1068,7 +1079,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--artifact-root", type=Path, default=None)
     parser.add_argument("--source-root", type=Path, default=SOURCE_ROOT_DEFAULT)
-    parser.add_argument("--audio-duration-ms", type=int, default=30000)
+    parser.add_argument("--audio-duration-ms", type=int, default=DEFAULT_LIVE_AUDIO_DURATION_MS)
     parser.add_argument("--live-timeout-seconds", type=int, default=24)
     parser.add_argument("--arm-live-bundle", default="")
     parser.add_argument("--self-test", action="store_true")
@@ -1081,6 +1092,7 @@ def main() -> int:
             return 0
         require(args.arm_live_bundle == ARM_PHRASE, f'Refusing live bundle attempt without --arm-live-bundle "{ARM_PHRASE}".')
         require(5000 <= args.audio_duration_ms <= 60000, "--audio-duration-ms must be between 5000 and 60000.")
+        validate_live_attempt_audio_duration(args.audio_duration_ms)
         require(5 <= args.live_timeout_seconds <= 120, "--live-timeout-seconds must be between 5 and 120.")
         artifact_root = args.artifact_root
         if artifact_root is None:

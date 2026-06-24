@@ -92,25 +92,34 @@ AppCore is shared correctness/core support for the Windows product lane and a us
 
 The archived TypeScript CLI and Electron job runner remain preserved under `archive/electron-workbench/`. They are not active automation surfaces. Current automation should prefer C# AppCore/C# CLI or focused scripts under `tools/` unless a later prompt explicitly reactivates archived TypeScript pieces.
 
-## Public/Private Safety Boundary
+## Public-Primary Source / Local Overlay Boundary
 
-The private repo is not a public release shape. Keep curated public safety/export tooling intact and framework-neutral.
+The public repo is now the normal working source repo, not a sparse export. Keep
+the public-primary migration inventory, hard-payload safety checks, and release
+packaging checks intact and framework-neutral.
 
-Public safety remains allowlist/curation based until a later public-shaped repo review proves otherwise. `.gitignore` is not a release boundary.
+The source repo and shipped ZIP are different artifacts. The source repo should
+track useful project-owned source, docs, tools, tests, RE notes, state batons,
+agent reports, readiness notes, compact proof summaries, and text scratch
+evidence. Release ZIPs should contain only the app package payload and required
+notices/docs. `.gitignore` is a local-overlay guard, not a substitute for
+release-package validation.
 
-Hard-deny families remain excluded unless a future review sanitizes and reclassifies a narrow subset:
+Hard payload families remain local/ignored unless a future explicit review
+reclassifies a narrow subset:
 
 - `game/**`
 - `media/**`
 - `save-attempts/**`
-- `subagents/**`
+- raw generated proof payload below `subagents/**`
 - `.codex/**`
 - `release/readiness/private_runtime_evidence/**`
 - operator directives
-- repo state files
-- raw binaries, saves, screenshots, frames, cache paths, and private runtime evidence
+- raw binaries, saves, screenshots, frames, cache paths, full Ghidra
+  databases/backups, raw CDB logs, copied runtime output, and secrets
 
-The curated source candidate can be WinUI-first when release policy explicitly includes reviewed WinUI/AppCore/CLI/docs/tooling source. Do not claim signed installer readiness until packaging, signing, install/uninstall, dependency, and public-safety impact are reviewed.
+Do not claim signed installer readiness until packaging, signing,
+install/uninstall, dependency, and hard-payload impact are reviewed.
 
 ## Validation Gates
 
@@ -162,9 +171,9 @@ py -3 tools\release_curated_manifest.py --check
 
 1. Three-lane strategy reset: complete.
 2. Static Ghidra closeout: complete at **6411/6411 = 100.00%** with `0 / 0 / 0` static debt and Wave1220 active current-risk closeout **1179/1179 = 100.00%**. Reopen static/Ghidra only when source, decompile, xref, runtime, or patch evidence contradicts the current contract.
-3. Active runtime/mod/patch proof: continue safe-copy WinUI/AppCore work through bounded copied-profile artifacts. Current public front door is `roadmap/mod-patch-runtime-rebuild-register.md`; detailed online feasibility ledgers remain private until rewritten as public summaries.
+3. Active runtime/mod/patch proof: continue safe-copy WinUI/AppCore work through bounded copied-profile artifacts. Current public front door is `roadmap/mod-patch-runtime-rebuild-register.md`; raw copied-runtime bundles, screenshots/frame dumps, and raw CDB logs remain local overlays.
 4. Online multiplayer proof ladder: continue toward private multi-host proof when a second host/session is available; otherwise keep improving same-host authority/control evidence without claiming multi-host LAN, public matchmaking, native BEA netcode, active P3/P4 original-binary gameplay, or 4+ player runtime behavior.
 5. WinUI 3 UX/product polish: keep dedicated UI/UX critique active after clean runtime/proof checkpoints. UI/UX and copy changes should receive helpful and skeptical review, but implementation, validation, and release acceptance stay with the maintainer lane.
-6. Private/public repo cleanup: prepare tidy private and public repo surfaces with release denylist boundaries intact, but do not publish a public release without explicit operator approval.
+6. Public-primary repo cleanup: keep the public source repo tidy and collaboration-ready while preserving local-overlay hard-payload boundaries; do not publish a public release without explicit operator approval.
 7. Python tooling inventory: keep active work under script/tooling paths and leave the archived Python GUI/CLI parity app as reference unless a narrow piece is deliberately ported.
 8. Archived Electron workbench: do not resume unless a later explicit strategy prompt reactivates it.

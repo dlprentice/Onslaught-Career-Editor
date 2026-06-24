@@ -6,131 +6,158 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Close the public-primary full-migration hardening pass so day-to-day work uses
-`C:\Users\david\source\Onslaught-Career-Editor` and the former private repo is
-no longer a required source of truth for project-owned material.
+Advance the WinUI safe-copy music audible-output proof lane from the public
+primary repo.
 
-This slice is bounded to repo migration/readiness work:
+This slice starts after the public-primary migration hardening closeout at
+`19024026 Repo: harden public-primary migration`. The public checkout
+`C:\Users\david\source\Onslaught-Career-Editor` is the day-to-day source of
+truth for project-owned work. The former private checkout is no longer the
+normal working source.
 
-- work only from `C:\Users\david\source\Onslaught-Career-Editor`;
-- keep public as the primary collaboration and working repo;
-- track useful project material broadly: source, tests, tools, patch catalogs,
-  RE docs, wave notes, state batons, agent reports, readiness notes, compact
-  proof summaries, and useful text scratch exports;
-- keep hard payloads local/ignored: game files, copied executables, private
-  media/input payloads, arbitrary saves/options, full Ghidra databases/backups,
-  raw screenshots/frame dumps, raw CDB logs, secrets, and generated build/proof
-  output;
-- preserve the installed Steam game folder and original `BEA.exe` as read-only;
-- keep Host/Join and online wording disabled/non-player-ready;
-- do not weaken public hard-payload guards to satisfy 1:1 path parity.
+The executable target is the next bounded music/mod runtime proof step:
+
+- run focused preflight gates for the current music audible-output live-bundle
+  chain;
+- use bounded Codex normal/adversarial consults before any armed live attempt;
+- run one private live-bundle attempt only if source/proof roots, process
+  hygiene, audio preflight, and proof-contract checks are clean;
+- keep all bulky raw runtime outputs in ignored/external local proof roots;
+- materialize a public-safe result only through the tracked materializer and
+  final checker;
+- keep `runtimeAudibleOutputProof=false` until a complete private raw bundle
+  passes materializer and final-checker acceptance.
 
 ## Current Truth
 
 - Static Ghidra closure remains complete: `6411/6411 = 100.00%`, static debt
   `0 / 0 / 0`, active current-risk re-audit `1179/1179 = 100.00%`.
-- `v1.0.2` app release remains published at
+- Public `v1.0.2` app release remains published at
   `https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.2`.
-- Public-primary migration is closed on public `main` at
-  `c1c04564 Repo: close public-primary migration inventory`; the former private
-  repo is no longer the normal source of truth.
-- This hardening pass promoted 27 private-only `.c` / `.tsv` RE scratch exports
-  from `reverse-engineering/binary-analysis/scratch/deep_semantic_tail_2026-02-27/**`
-  and tightened the migration guard so missing private RE scratch text fails
-  instead of being accepted as scratch.
+- Public `main` and `origin/main` are aligned at
+  `19024026a5b14d1c9d6324ce271ebeda2c6acd00`; the current working tree carries
+  this active music-proof/public-primary wording slice.
+- Public-primary migration hardening is closed and pushed:
+  - private tracked paths measured: `24839`;
+  - public tracked paths measured: `19294`;
+  - accepted private-only hard-payload/scratch-payload paths: `5557`;
+  - 27 private-only text RE scratch exports are now tracked in public;
+  - `tools/public_primary_migration_inventory.py` now treats missing private RE
+    scratch text as missing project material instead of accepting it as scratch.
+- Remaining local-only material is hard payload or bulky generated evidence:
+  actual game files, copied executable/runtime files, private media/input
+  payloads, arbitrary saves/options, full Ghidra databases/backups, raw CDB
+  logs, screenshots/frame dumps, secrets, build output, and bulky proof roots.
+- Active public-primary docs were normalized so the public repo is described as
+  the normal working source repo, not a sparse public candidate. The PR template
+  now allows compact non-secret state/report text while continuing to reject
+  hard payloads and raw proof output. The payload safety checker now has
+  credential-like text deny patterns instead of an empty text denylist.
 - The music CGame caller diagnostic is accepted as bounded diagnostic evidence:
   one copied-runtime level-100 run observed `CMusic__PlaySelection` returning
   to `0x0046e0bf`, the direct restart-loop music-selection call site inside
-  `CGame__RestartLoopRunLevel`. The wrapper-entry
-  `CGame__PlayMusicForCurrentLevel level=100` row remained absent.
-- `runtimeAudibleOutputProof=false` remains current truth. The diagnostic
-  narrows the previous materializer failure to contract/attach-timing
-  provenance; it does not prove audible output, all cues, gameplay parity,
-  online play, rebuild parity, or no-noticeable-difference parity.
-- Latest accepted diagnostic note:
-  `release/readiness/winui_music_cgame_caller_diagnostic_2026-06-24.md`.
-- Online multiplayer is still not player-ready. Host/Join remains disabled until
-  distinct-endpoint command-source proof and source-bound copied-runtime
-  causality proof exist.
-- WinUI 3 remains the current shipped app lane. Blazor/Tauri/Godot remain future
-  evaluations, not active replacements for this slice.
+  `CGame__RestartLoopRunLevel`.
+- The wrapper-entry `CGame__PlayMusicForCurrentLevel level=100` row remained
+  absent in that diagnostic. The materializer/timeline/final-checker contract
+  therefore carries explicit `musicSelectionProvenance` values and accepts only
+  `cgame-wrapper` or `cgame-restart-loop-direct` selector provenance when the
+  timestamped CDB log and timeline sidecar agree.
+- `runtimeAudibleOutputProof=false` remains current truth. The diagnostic does
+  not prove audible output, loopback/source-correlation acceptance, all cues,
+  gameplay parity, online play, rebuild parity, or no-noticeable-difference
+  parity.
+- Two public-primary armed live-bundle attempts after the caller diagnostic did
+  not accept audible output:
+  - `music-audible-live-20260624-181120` failed before a proof claim because the
+    executor omitted `--source-root` for the source-safety sidecar; the command
+    shape is now fixed and covered by regression test.
+  - `music-audible-live-20260624-181538` reached clean/staged CDB music-selection
+    provenance but failed capture-source correlation because the 30-second raw
+    WAV captures had zero samples; calibration-tone capture proved the loopback
+    backend can record the endpoint, and the executor now requires/defaults to
+    a 60-second live audio capture.
+- Online multiplayer is still not player-ready. Host/Join remains disabled
+  until distinct-endpoint command-source proof and source-bound copied-runtime
+  causality proof both exist.
+- Installed Steam game files and original `BEA.exe` remain read-only.
 
-## Closed Migration Evidence
+## Latest Closed Slice
 
-Public-primary migration closeout at `c1c04564` accepted:
+Public-primary migration hardening closed at
+`19024026 Repo: harden public-primary migration`.
 
-- former private tracked paths: `24839`
-- public tracked paths after this migration hardening pass: `19294`
-- accepted private-only hard-payload/scratch paths: `5557`
+Closed-slice validation:
 
-Migration validation passed:
+```powershell
+npm run test:public-primary-migration-inventory
+npm run test:hard-payload-safety
+py -3 -c "import json; [json.load(open(p, encoding='utf-8')) for p in ['developer_agent_state.json','documentation_agent_state.json']] ; print('state json ok')"
+git diff --cached --check
+```
 
-- `npm run test:public-primary-migration-inventory`
-- `npm run test:hard-payload-safety`
-- `npm run test:doc-commands`
-- `npm run test:md-links`
-- `npm run test:repo-hygiene`
-- `py -3 tools\release_profile_snapshot.py --check`
-- `py -3 tools\release_curated_manifest.py --check`
-- state JSON parse
-- `git diff --cached --check`
+Final pushed-state verification:
 
-Current hardening additions:
-
-- 27 private-only text RE scratch exports promoted to public tracking.
-- `tools/public_primary_migration_inventory.py` now only accepts payload-like
-  scratch outputs (`.png`, `.fbx`, `.bes`) as private-only scratch; missing
-  private RE scratch text is treated as missing project material.
-
-## Latest Closed Slice Validation
-
-The CGame caller diagnostic closeout passed:
-
-- `py -3 -m py_compile tools\winui_safe_copy_music_cgame_caller_diagnostic_check.py`
-- `npm run test:winui-safe-copy-music-cgame-caller-diagnostic`
-- focused checker against the accepted local ignored diagnostic artifact
-- CDB observer command validation
-- state JSON parse
-- `git diff --check`
-- `npm run test:hard-payload-safety`
-- `npm run test:doc-commands`
-- `npm run test:public-allowlist`
-- `npm run test:md-links`
-- `npm run test:repo-hygiene`
-- final process check: no `BEA.exe` or `cdb.exe`
+```powershell
+git status --short --branch
+git rev-parse --short HEAD
+git rev-parse --short origin/main
+Get-Process BEA,cdb -ErrorAction SilentlyContinue
+```
 
 ## Validation For This Slice
 
-Required before closeout:
+Required before any commit/push:
 
-- `npm run test:public-primary-migration-inventory`
-- `npm run test:hard-payload-safety`
-- `npm run test:doc-commands`
-- `npm run test:md-links`
-- `npm run test:repo-hygiene`
-- focused music materializer/observer checks for the currently dirty music
-  contract WIP
-- process cleanup check if any runtime proof command is run
-- docs/state JSON parse
-- `git diff --check`
+```powershell
+npm run test:winui-safe-copy-music-cgame-caller-diagnostic
+npm run test:winui-safe-copy-music-cdb-timeline-sidecar
+npm run test:winui-safe-copy-music-audible-output-materializer
+npm run test:winui-safe-copy-music-audible-output-two-run-harness
+npm run test:winui-safe-copy-music-audible-output-live-bundle-executor
+npm run test:winui-safe-copy-music-timestamped-cdb-log-producer
+npm run test:winui-safe-copy-music-source-music-safety-sidecar
+npm run test:winui-safe-copy-music-ambient-no-bea-census
+npm run test:winui-safe-copy-music-source-audio-correlation
+npm run test:winui-safe-copy-music-capture-source-correlation
+npm run test:winui-safe-copy-music-capture-source-correlation-builder
+npm run test:winui-safe-copy-music-audible-output-live-bundle-gate
+npm run test:winui-safe-copy-music-audible-output-contract
+npm run test:hard-payload-safety
+npm run test:doc-commands
+npm run test:md-links
+npm run test:repo-hygiene
+```
+
+Also required:
+
+- state JSON parse;
+- `git diff --check`;
+- final `BEA.exe` / `cdb.exe` process cleanup check;
+- public/private payload boundary check if any release, migration, or proof
+  material changes.
 
 ## Next Executable Work
 
-1. Finish validation for the public-primary hardening pass.
-2. Commit/push only after the repo is green and release/public boundaries are
-   still clean.
-3. Then return to patch/mod/runtime work from the public repo only, with
-   `runtimeAudibleOutputProof=false` until a complete raw bundle passes the
-   materializer and final checker.
+1. Finish focused music proof-chain preflight and consult review.
+2. If preconditions are clean, run one armed private live-bundle attempt under
+   the approved external/private runtime proof root.
+3. If the attempt succeeds, materialize through the tracked materializer and
+   final checker before changing any claim.
+4. If the attempt fails, record the exact failed rung and preserve
+   `runtimeAudibleOutputProof=false`.
+5. Update docs/state/evidence, validate, commit/push the green slice, then
+   continue with patch/mod/runtime or online proof work from the public repo.
 
 ## Stop Conditions
 
-- A proposed tracked file is an actual BEA executable/DLL/game archive/media
-  payload, full Ghidra database/backup, secret, `.env*`, copied runtime output,
-  screenshot/frame dump, raw CDB log, or build artifact.
-- A proposed runtime or patch step mutates the installed Steam game folder or
-  original `BEA.exe`.
+- Any step would mutate the installed Steam game folder or original `BEA.exe`.
+- Any tracked file is an actual game executable/DLL/archive/media payload,
+  arbitrary save/options payload, full Ghidra database/backup, raw CDB log,
+  screenshot/frame dump, secret, `.env*`, copied runtime output, or build
+  artifact.
 - Online wording or UI implies player-ready online multiplayer before required
-  proofs exist.
+  distinct-endpoint and source-bound runtime proofs exist.
+- A runtime proof would require unavailable operator hardware/endpoints and no
+  other bounded progress remains.
 - A static RE contradiction appears; stop product/runtime work and correct the
   static claim with bounded evidence first.
