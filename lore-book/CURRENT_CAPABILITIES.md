@@ -97,6 +97,13 @@ package-content clarity only: no BEA launch, CDB attach, byte patch, Host/Join
 enablement, online proof, music audible-output proof, rebuild proof, or
 installed-game mutation is added.
 
+Windowed & Mods preset/profile and menu-background choices now expose a visible
+selected state plus plain selected-status text for the current profile and menu
+background. UI Automation names also change to identify the active choice, so
+agent/UIA checks can verify the same state a user sees. This is UX/state clarity
+only: no patch rows, byte changes, safe-copy launch behavior, online proof,
+music audible-output proof, rebuild proof, or installed-game mutation changed.
+
 Windowed & Mods dynamic patch rows now expose stable patch-key-derived
 AutomationIds for the row, checkbox, and Details expander so UIA/agent tests can
 target individual patch rows without depending on display text. The normal

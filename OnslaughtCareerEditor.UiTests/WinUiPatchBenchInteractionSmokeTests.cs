@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading;
@@ -16,6 +17,96 @@ namespace OnslaughtCareerEditor.UiTests;
 
 public class WinUiPatchBenchInteractionSmokeTests
 {
+    private const int SwRestore = 9;
+    private const uint SwpShowWindow = 0x0040;
+    private static readonly IntPtr HwndTop = IntPtr.Zero;
+
+    [Test]
+    [Category("WinUIRuntime")]
+    [Apartment(ApartmentState.STA)]
+    public void PatchBench_ProfileAndMenuColorChoices_UpdateSelectedStateThroughUia()
+    {
+        string exePath = ResolveWinUiAppPath();
+        if (!File.Exists(exePath))
+        {
+            Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
+        }
+
+        string evidenceDir = Path.Combine(Path.GetTempPath(), "onslaught-patch-choice-state-20260625");
+        if (Directory.Exists(evidenceDir))
+        {
+            Directory.Delete(evidenceDir, recursive: true);
+        }
+
+        Directory.CreateDirectory(evidenceDir);
+        string appDataDir = PrepareIsolatedAppData(evidenceDir, Path.GetTempPath());
+        Application? app = null;
+        try
+        {
+            var startInfo = new ProcessStartInfo(exePath)
+            {
+                WorkingDirectory = Path.GetDirectoryName(exePath) ?? ResolveRepoRoot()
+            };
+            startInfo.Environment["APPDATA"] = appDataDir;
+            startInfo.Environment["ONSLAUGHT_APP_CONFIG_ROOT"] = appDataDir;
+            startInfo.Environment["ONSLAUGHT_WINUI_TEST_INITIAL_TAG"] = "binary";
+
+            app = Application.Launch(startInfo);
+            using var automation = new UIA3Automation();
+            Window window = WaitForMainWindow(app, automation);
+
+            WaitForText(window, "Safe game copy", TimeSpan.FromSeconds(20));
+            AssertAutomationNameContains(window, "PatchBenchWindowedPresetButton", "Selected: Compatibility Copy profile");
+            AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Compatibility Copy");
+
+            InvokeByAutomationId(window, "PatchBenchStableDefaultsButton");
+            AssertAutomationNameContains(window, "PatchBenchStableDefaultsButton", "Selected: Windowed and Graphics Defaults profile");
+            AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Windowed + Graphics Defaults");
+
+            InvokeByAutomationId(window, "PatchBenchEnhancedPreviewProfileButton");
+            AssertAutomationNameContains(window, "PatchBenchEnhancedPreviewProfileButton", "Selected: Enhanced Profile Preview profile");
+            AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Enhanced Profile Preview");
+
+            InvokeByAutomationId(window, "PatchBenchDebugCameraPreviewProfileButton");
+            AssertAutomationNameContains(window, "PatchBenchDebugCameraPreviewProfileButton", "Selected: Debug Camera Preview profile");
+            AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Debug Camera Preview");
+            CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-profile-selected-normal.png", "PatchBenchDebugCameraPreviewProfileButton", 1000, 640);
+            CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-profile-selected-narrow.png", "PatchBenchDebugCameraPreviewProfileButton", 760, 640);
+
+            InvokeByAutomationId(window, "PatchBenchMenuColorRedButton");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorRedButton", "Selected: red menu background color");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected menu background: red.");
+
+            InvokeByAutomationId(window, "PatchBenchMenuColorGreenButton");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorGreenButton", "Selected: green menu background color");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorRedButton", "Select red menu background color");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected menu background: green.");
+            CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-menu-color-selected-normal.png", "PatchBenchMenuColorRedButton", 1000, 640);
+            CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-menu-color-selected-narrow.png", "PatchBenchMenuColorRedButton", 760, 640);
+
+            InvokeByAutomationId(window, "PatchBenchMenuColorClearButton");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorClearButton", "Selected: no menu background color");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected menu background: none.");
+        }
+        finally
+        {
+            try
+            {
+                app?.Close();
+            }
+            catch
+            {
+                // Fall through to process termination below.
+            }
+
+            if (app != null && !app.HasExited)
+            {
+                app.Kill();
+            }
+
+        }
+    }
+
     [Test]
     [Category("WinUIRuntime")]
     [Explicit("Requires a private BEA.exe source path in ONSLAUGHT_WINUI_REAL_BEA_EXE_PATH and writes only copied outputs under subagents/.")]
@@ -153,6 +244,47 @@ public class WinUiPatchBenchInteractionSmokeTests
         continueButton!.AsButton().Invoke();
     }
 
+    private static void InvokeByAutomationId(Window window, string automationId)
+    {
+        AutomationElement element = FindByAutomationId(window, automationId);
+        ScrollIntoView(element);
+        element.AsButton().Invoke();
+    }
+
+    private static void AssertAutomationNameContains(Window window, string automationId, string expectedText)
+    {
+        bool matched = Retry.WhileFalse(
+            () => (TryGetName(FindByAutomationId(window, automationId)) ?? string.Empty).Contains(expectedText, StringComparison.OrdinalIgnoreCase),
+            TimeSpan.FromSeconds(10)).Success;
+        Assert.That(matched, Is.True, $"Expected {automationId} automation name to contain: {expectedText}");
+    }
+
+    private static void CaptureChoiceStateScreenshot(Window window, IntPtr windowHandle, string evidenceDir, string fileName, string anchorAutomationId, int width, int height)
+    {
+        NormalizeWindowForCapture(windowHandle, width, height);
+        ScrollIntoView(FindByAutomationId(window, anchorAutomationId));
+        string outputPath = Path.Combine(evidenceDir, fileName);
+        window.Focus();
+        Thread.Sleep(350);
+        window.CaptureToFile(outputPath);
+        Assert.That(File.Exists(outputPath), Is.True, $"Expected selected-state screenshot: {outputPath}");
+        Assert.That(new FileInfo(outputPath).Length, Is.GreaterThan(10_000), $"Selected-state screenshot should not be empty: {outputPath}");
+        TestContext.Out.WriteLine($"Patch Bench selected-state screenshot: {outputPath}");
+    }
+
+    private static void NormalizeWindowForCapture(IntPtr windowHandle, int width, int height)
+    {
+        if (windowHandle == IntPtr.Zero)
+        {
+            return;
+        }
+
+        _ = ShowWindow(windowHandle, SwRestore);
+        _ = SetWindowPos(windowHandle, HwndTop, 16, 16, width, height, SwpShowWindow);
+        _ = SetForegroundWindow(windowHandle);
+        Thread.Sleep(350);
+    }
+
     private static string WaitForSingleWorkingCopy(string patchWorkspace)
     {
         string? workingCopy = Retry.WhileNull(
@@ -180,6 +312,18 @@ public class WinUiPatchBenchInteractionSmokeTests
         try
         {
             return element.AsTextBox().Text;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? TryGetName(AutomationElement element)
+    {
+        try
+        {
+            return element.Name;
         }
         catch
         {
@@ -290,4 +434,13 @@ public class WinUiPatchBenchInteractionSmokeTests
         return Path.GetFullPath(
             Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
     }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
 }

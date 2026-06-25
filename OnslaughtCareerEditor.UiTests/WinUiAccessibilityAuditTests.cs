@@ -73,6 +73,7 @@ public class WinUiAccessibilityAuditTests
                 "PatchBenchApplyButton",
                 "PatchBenchRestoreButton",
                 "PatchBenchSelectedProfileStatus",
+                "PatchBenchMenuColorSelectionStatus",
                 "PatchBenchSelectedProfileDetailsExpander",
                 "PatchBenchSelectedProfileDetails",
                 "PatchBenchDebugCameraPreviewProfileButton",

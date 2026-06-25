@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "Audio loopback wall-clock padding hardening docs are closed with focused and broad gates green; next active docs touchpoint is Windowed & Mods selected-state UX wording.",
+  "currentFocus": "Windowed & Mods selected-state UX docs/state are accepted with focused and broad repo gates green. Next docs touchpoint is Asset Library first-run catalog guidance.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -19,7 +19,7 @@
     "localOnly": "actual game/runtime payloads, local-rom-input payloads, arbitrary saves/options payloads, full Ghidra databases/backups, secrets, build outputs, screenshots/frame dumps, raw CDB logs, bulky generated captures",
     "localOverlayStatus": "maintainer-local ignored overlays contain the copied game mirror/local extras, save-attempts payloads, local-rom-input, mcps, and G: junctions for runtime proof/Ghidra backups; those overlays are useful locally but not GitHub-tracked source.",
     "localStorageCleanup": "C:\\Users\\david\\source\\Onslaught-Career-Editor-public-candidate* scratch clones were moved to G:\\OnslaughtRepoArchives\\source-scratch-20260624 with move-manifest.json; zero public-candidate scratch dirs remain on C:.",
-    "currentInventory": "24839 private tracked paths, 19311 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths; explicit maintainer parity command uses --private-root and --require-private-root.",
+    "currentInventory": "24839 private tracked paths, 19312 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths; explicit maintainer parity command uses --private-root and --require-private-root.",
     "wordingFixes": [
       "AGENTS.md and roadmap/repo-structure-and-archive-map.md now point to release/readiness/PUBLIC_SIGNOFF_COMMANDS.md.",
       "roadmap/public-primary-working-repo.md uses the public tracked-path count current at that closeout; latest public-primary migration inventory reports 19311 public tracked paths.",
@@ -59,30 +59,24 @@
       "git diff --check (PASS)"
     ],
     "activeSliceFocusedPassed": [
-      "py -3 tools\\winui_safe_copy_music_audible_output_materializer_test.py (26 tests)",
-      "npm run test:audio-loopback-capture-helper",
-      "npm run test:winui-safe-copy-music-audible-output-materializer",
-      "npm run test:winui-safe-copy-music-decode-window-correlation-diagnostic",
-      "npm run test:winui-safe-copy-music-audible-output-contract",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench\""
+      "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiPatchBenchInteractionSmokeTests.PatchBench_ProfileAndMenuColorChoices_UpdateSelectedStateThroughUia\" (PASS; 1 test)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests|FullyQualifiedName~WinUiAccessibilityAuditTests|FullyQualifiedName~ThemeContrastAuditTests\" (PASS; 39 tests)",
+      "visual inspection of Temp screenshots patch-choice-profile-selected-narrow.png and patch-choice-menu-color-selected-narrow.png (accepted; selected state visible and no obvious narrow clipping)"
     ],
     "activeSliceBroadPassed": [
-      "npm run test:doc-commands",
-      "npm run test:md-links",
-      "npm run release:profile-check",
-      "npm run release:curated-check",
+      "npm run test:md-links (PASS; 3623 markdown files, 6123 local links)",
       "npm run test:hard-payload-safety (PASS; public candidate files checked 19312)",
-      "npm run test:public-allowlist",
-      "npm run test:repo-hygiene",
-      "git diff --check",
-      "state JSON parse"
+      "npm run test:public-allowlist (PASS; hard payload, submodule payload, and public-primary migration inventory; public tracked paths 19312, submodule candidate files 19496)",
+      "npm run test:repo-hygiene (PASS; text hygiene and 18465 explicit text files line-ending check)",
+      "git diff --check (PASS)",
+      "state JSON parse (PASS)"
     ],
     "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Keep docs clear that v1.0.7 is the current published portable ZIP with the generated 943-document lore-pack.",
-    "Commit/push the accepted music loopback wall-clock padding hardening if final parse/diff/status checks remain green.",
-    "Resume bounded patch/mod UX work from public main; next slice is Windowed & Mods selected-state styling, followed by Asset Library first-run guidance.",
+    "Commit/push selected-state UX if status remains clean.",
+    "Resume from goal.md with Asset Library first-run catalog guidance.",
     "Track Ghidra project public-distribution policy and repo-specific .codex skill transfer as separate future tooling/policy slices."
   ],
   "winuiReleaseCandidate": {
@@ -154,7 +148,7 @@
       "private repo still has active-looking goal/state wording and should eventually be frozen or bannered as archived if kept",
       "historical source docs may contain maintainer-local provenance markers, but the v1.0.7 lore-pack builder redacts maintainer-local paths and the package probe rejects local/private path text before ZIP acceptance",
       "Asset Library needs a clearer first-run path for generating/finding a local asset catalog",
-      "Windowed & Mods broader page split and selected-state UX debt remains tracked in roadmap/winui-ui-ux-redesign-radar.md."
+      "Windowed & Mods selected-state UX has an initial accepted fix for profile/menu-color choices; broader page split and shared choice component work remains tracked in roadmap/winui-ui-ux-redesign-radar.md."
     ]
   },
   "lorePackaging": {

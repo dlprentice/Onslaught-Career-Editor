@@ -6,9 +6,11 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Improve Windowed & Mods selected-state UX for preset/menu-color/profile choices
-without changing patch semantics, runtime proof claims, or release packaging,
-then continue bounded patch/mod UX and runtime-proof work from this checkout:
+Add clearer Asset Library first-run catalog guidance so a new public checkout or
+portable app user understands why the catalog is empty, how to point the app at
+generated local catalog material, and what still requires a local game/assets
+overlay. Do not bundle game assets or imply full 3D rendering/rebuild parity.
+Continue bounded patch/mod UX and runtime-proof work from this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -53,6 +55,12 @@ contributor work.
 - Current WinUI Lore cleanup loads generated `lore-pack/` documents when present,
   falls back to `lore-book/BOOK.md` otherwise, keeps included document links
   inside the reader, and labels source/external links as browser actions.
+- Windowed & Mods selected-state UX for safe-copy profiles and menu-background
+  choices is accepted: visible selected button styling, plain selected-status
+  text, UIA selected names, and focused runtime UIA/visual smoke coverage are in
+  place. This did not change patch rows, byte patches, safe-copy launch
+  behavior, online proof, music audible-output proof, rebuild proof, or
+  installed-game mutation.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof both exist.
@@ -105,11 +113,10 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Add visible selected-state styling for Windowed & Mods presets/menu-color/
-   profile choices, keeping user copy plain and maintainer proof details out of
-   normal controls.
-2. Then add clearer Asset Library first-run catalog guidance if the selected-state
-   slice closes cleanly.
+1. Add clearer Asset Library first-run catalog guidance for empty catalog state,
+   generated catalog selection, and local overlay expectations.
+2. Keep the guidance plain and actionable; move technical catalog-generation and
+   importer/rebuild details behind existing advanced/docs surfaces.
 3. Defer another private music live-bundle attempt until the helper/materializer
    guard is present and no BEA/CDB process is already running.
 

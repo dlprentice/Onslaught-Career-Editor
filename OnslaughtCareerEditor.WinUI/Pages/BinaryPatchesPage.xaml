@@ -7,6 +7,27 @@
     xmlns:models="using:OnslaughtCareerEditor.WinUI.Models"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <Style x:Key="PatchBenchChoiceButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{ThemeResource ShellSurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource ShellBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{ThemeResource ShellTextBrush}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <Style x:Key="PatchBenchChoiceSelectedButtonStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource PatchBenchChoiceButtonStyle}">
+            <Setter Property="Background" Value="{ThemeResource ShellSurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource ShellAccentBrush}" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="Foreground" Value="{ThemeResource ShellTextBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+    </Page.Resources>
     <ScrollViewer AutomationProperties.AutomationId="PatchBenchScrollViewer"
                   AutomationProperties.Name="Windowed &amp; Mods workflow">
         <StackPanel Padding="20,18,20,24">
@@ -221,43 +242,54 @@
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
-                                        <Button Content="Compatibility Copy"
+                                        <Button x:Name="PatchBenchWindowedPresetButton"
+                                                Content="Compatibility Copy"
                                                 AutomationProperties.AutomationId="PatchBenchWindowedPresetButton"
                                                 AutomationProperties.Name="Select Compatibility Copy profile"
                                                 Grid.Row="0"
                                                 Grid.Column="0"
                                                 HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                 Click="WindowedPresetButton_Click" />
-                                        <Button Content="Windowed + Graphics Defaults"
+                                        <Button x:Name="PatchBenchStableDefaultsButton"
+                                                Content="Windowed + Graphics Defaults"
                                                 AutomationProperties.AutomationId="PatchBenchStableDefaultsButton"
                                                 AutomationProperties.Name="Select Windowed and Graphics Defaults profile"
                                                 Grid.Row="0"
                                                 Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                 Click="StableDefaultsButton_Click" />
-                                        <Button Content="Enhanced Profile Preview"
+                                        <Button x:Name="PatchBenchEnhancedPreviewProfileButton"
+                                                Content="Enhanced Profile Preview"
                                                 AutomationProperties.AutomationId="PatchBenchEnhancedPreviewProfileButton"
                                                 AutomationProperties.Name="Select Enhanced Profile Preview profile"
                                                 ToolTipService.ToolTip="Preview profile: compatibility, graphics defaults, PATCHED title marker, red menu background, Goodies preview, and copied-options control tweaks. Open row details for what was checked and current limits."
                                                 Grid.Row="1"
                                                 Grid.Column="0"
                                                 HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                 Click="EnhancedPreviewPresetButton_Click" />
-                                        <Button Content="Clear optional mods"
+                                        <Button x:Name="PatchBenchClearSelectionButton"
+                                                Content="Clear optional mods"
                                                 AutomationProperties.AutomationId="PatchBenchClearSelectionButton"
                                                 AutomationProperties.Name="Clear optional mod rows; safe copies still include required compatibility"
                                                 Grid.Row="1"
                                                 Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                 Click="ClearSelectionButton_Click" />
-                                        <Button Content="Graphics flag rows only"
+                                        <Button x:Name="PatchBenchModernGraphicsPresetButton"
+                                                Content="Graphics flag rows only"
                                                 AutomationProperties.AutomationId="PatchBenchModernGraphicsPresetButton"
                                                 AutomationProperties.Name="Select extra graphics flag rows only"
                                                 Grid.Row="2"
                                                 Grid.Column="0"
                                                 HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                 Click="ModernGraphicsPresetButton_Click" />
-                                        <Button Content="Debug Camera Preview"
+                                        <Button x:Name="PatchBenchDebugCameraPreviewProfileButton"
+                                                Content="Debug Camera Preview"
                                                 AutomationProperties.AutomationId="PatchBenchDebugCameraPreviewProfileButton"
                                                 AutomationProperties.Name="Select Debug Camera Preview profile"
                                                 AutomationProperties.HelpText="Experimental profile: Q-forward only; not full camera controls, joystick or analog camera coverage, pause/menu safety, or gameplay safety."
@@ -265,6 +297,7 @@
                                                 Grid.Row="2"
                                                 Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                 Click="DebugCameraPreviewPresetButton_Click" />
                                     </Grid>
                                 </StackPanel>
@@ -291,35 +324,48 @@
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
-                                        <Button Content="Red background"
+                                        <Button x:Name="PatchBenchMenuColorRedButton"
+                                                Content="Red background"
                                                 AutomationProperties.AutomationId="PatchBenchMenuColorRedButton"
                                                 AutomationProperties.Name="Select red menu background color"
                                                 Grid.Row="0"
                                                 Grid.Column="0"
                                                 HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                 Click="MenuColorRedButton_Click" />
-                                        <Button Content="Green background"
+                                        <Button x:Name="PatchBenchMenuColorGreenButton"
+                                                Content="Green background"
                                                 AutomationProperties.AutomationId="PatchBenchMenuColorGreenButton"
                                                 AutomationProperties.Name="Select green menu background color"
                                                 Grid.Row="0"
                                                 Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                 Click="MenuColorGreenButton_Click" />
-                                        <Button Content="Black background"
+                                        <Button x:Name="PatchBenchMenuColorBlackButton"
+                                                Content="Black background"
                                                 AutomationProperties.AutomationId="PatchBenchMenuColorBlackButton"
                                                 AutomationProperties.Name="Select black menu background color"
                                                 Grid.Row="1"
                                                 Grid.Column="0"
                                                 HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                 Click="MenuColorBlackButton_Click" />
-                                        <Button Content="Clear menu color"
+                                        <Button x:Name="PatchBenchMenuColorClearButton"
+                                                Content="Clear menu color"
                                                 AutomationProperties.AutomationId="PatchBenchMenuColorClearButton"
                                                 AutomationProperties.Name="Clear menu background color selection"
                                                 Grid.Row="1"
                                                 Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                 Click="MenuColorClearButton_Click" />
                                     </Grid>
+                                    <TextBlock x:Name="PatchBenchMenuColorSelectionStatus"
+                                               AutomationProperties.AutomationId="PatchBenchMenuColorSelectionStatus"
+                                               AutomationProperties.Name="Selected menu background color status"
+                                               Text="Selected menu background: none."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
                                 </StackPanel>
                             </Border>
 

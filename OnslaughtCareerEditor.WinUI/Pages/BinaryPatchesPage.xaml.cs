@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using OnslaughtCareerEditor.WinUI.Helpers;
 using OnslaughtCareerEditor.WinUI.Models;
@@ -532,8 +533,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchSafeCopySourceStatus.Text = BuildSafeCopySourceStatus(sourcePath);
             WorkingCopySummaryTextBlock.Text = BuildWorkingCopySummary(exePath);
             PatchBenchSelectedProfileStatus.Text = BuildSelectedProfileStatus(visibleSelectedKeys);
+            AutomationProperties.SetName(PatchBenchSelectedProfileStatus, PatchBenchSelectedProfileStatus.Text);
             PatchBenchProfileCatalogStatus.Text = BuildSafeCopyProfileCatalogStatus();
             PatchBenchSelectedProfileDetails.Text = BuildSelectedProfileDetails(visibleSelectedKeys);
+            UpdateChoiceVisualState(visibleSelectedKeys);
 
             SelectionSummaryTextBlock.Text = hasSelected
                 ? BuildSelectionSummary(visibleSelectedKeys)
@@ -558,6 +561,51 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 copiedProfileContentMatchesCurrent,
                 copiedProfileHasLaunchPlan ? copiedProfileLaunchPlan : null,
                 copiedProfileLaunchError);
+        }
+
+        private void UpdateChoiceVisualState(IReadOnlyCollection<string> selectedKeys)
+        {
+            Style selectedStyle = (Style)Resources["PatchBenchChoiceSelectedButtonStyle"];
+            Style normalStyle = (Style)Resources["PatchBenchChoiceButtonStyle"];
+            string? profileId = MatchSelectableSafeCopyProfileId(selectedKeys);
+
+            SetChoiceButtonState(PatchBenchWindowedPresetButton, "Select Compatibility Copy profile", "Selected: Compatibility Copy profile", string.Equals(profileId, BinaryPatchPlanBuilder.CompatibilityProfileId, StringComparison.OrdinalIgnoreCase), selectedStyle, normalStyle);
+            SetChoiceButtonState(PatchBenchStableDefaultsButton, "Select Windowed and Graphics Defaults profile", "Selected: Windowed and Graphics Defaults profile", string.Equals(profileId, BinaryPatchPlanBuilder.RecommendedProfileId, StringComparison.OrdinalIgnoreCase), selectedStyle, normalStyle);
+            SetChoiceButtonState(PatchBenchEnhancedPreviewProfileButton, "Select Enhanced Profile Preview profile", "Selected: Enhanced Profile Preview profile", string.Equals(profileId, BinaryPatchPlanBuilder.EnhancedPreviewProfileId, StringComparison.OrdinalIgnoreCase), selectedStyle, normalStyle);
+            SetChoiceButtonState(PatchBenchClearSelectionButton, "Clear optional mod rows; safe copies still include required compatibility", "Selected: no optional mod rows", selectedKeys.Count == 0, selectedStyle, normalStyle);
+            SetChoiceButtonState(PatchBenchModernGraphicsPresetButton, "Select extra graphics flag rows only", "Selected: graphics flag rows only", SetEquals(selectedKeys, s_modernGraphicsKeys), selectedStyle, normalStyle);
+            SetChoiceButtonState(PatchBenchDebugCameraPreviewProfileButton, "Select Debug Camera Preview profile", "Selected: Debug Camera Preview profile", string.Equals(profileId, BinaryPatchPlanBuilder.DebugCameraPreviewProfileId, StringComparison.OrdinalIgnoreCase), selectedStyle, normalStyle);
+
+            string? selectedMenuColorKey = selectedKeys.FirstOrDefault(IsFrontendColorPatchKey);
+            SetChoiceButtonState(PatchBenchMenuColorRedButton, "Select red menu background color", "Selected: red menu background color", string.Equals(selectedMenuColorKey, "frontend_clear_screen_dark_red", StringComparison.OrdinalIgnoreCase), selectedStyle, normalStyle);
+            SetChoiceButtonState(PatchBenchMenuColorGreenButton, "Select green menu background color", "Selected: green menu background color", string.Equals(selectedMenuColorKey, "frontend_clear_screen_dark_green", StringComparison.OrdinalIgnoreCase), selectedStyle, normalStyle);
+            SetChoiceButtonState(PatchBenchMenuColorBlackButton, "Select black menu background color", "Selected: black menu background color", string.Equals(selectedMenuColorKey, "frontend_clear_screen_black", StringComparison.OrdinalIgnoreCase), selectedStyle, normalStyle);
+            SetChoiceButtonState(PatchBenchMenuColorClearButton, "Clear menu background color selection", "Selected: no menu background color", selectedMenuColorKey is null, selectedStyle, normalStyle);
+            PatchBenchMenuColorSelectionStatus.Text = BuildMenuColorSelectionStatus(selectedMenuColorKey);
+            AutomationProperties.SetName(PatchBenchMenuColorSelectionStatus, PatchBenchMenuColorSelectionStatus.Text);
+        }
+
+        private static void SetChoiceButtonState(Button button, string normalName, string selectedName, bool isSelected, Style selectedStyle, Style normalStyle)
+        {
+            button.Style = isSelected ? selectedStyle : normalStyle;
+            AutomationProperties.SetName(button, isSelected ? selectedName : normalName);
+        }
+
+        private static string BuildMenuColorSelectionStatus(string? selectedKey)
+        {
+            if (string.Equals(selectedKey, "frontend_clear_screen_dark_red", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Selected menu background: red.";
+            }
+
+            if (string.Equals(selectedKey, "frontend_clear_screen_dark_green", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Selected menu background: green.";
+            }
+
+            return string.Equals(selectedKey, "frontend_clear_screen_black", StringComparison.OrdinalIgnoreCase)
+                ? "Selected menu background: black."
+                : "Selected menu background: none.";
         }
 
         private void PatchCheckBox_Changed(object sender, RoutedEventArgs e)

@@ -1,7 +1,7 @@
 # WinUI UI/UX Redesign Radar
 
 Status: active
-Last updated: 2026-06-23
+Last updated: 2026-06-25
 
 This document tracks UI/UX debt that is too broad for a release-candidate polish patch but important enough to keep visible. It is grounded in maintainer review and UI/UX critique; implementation and verification remain maintainer-owned.
 
@@ -32,8 +32,8 @@ This document tracks UI/UX debt that is too broad for a release-candidate polish
    - Future work should provide friendly common controls first, then expose raw bindings under an Advanced section.
 
 5. **Preset controls need clearer selected state.**
-   - Menu color, safe-copy profiles, launch presets, and similar button grids should show which choice is currently active.
-   - A shared selected-chip or radio-style component would improve confidence without changing patch semantics.
+   - Initial fix landed for Windowed & Mods safe-copy profile and menu-background choice grids: selected buttons now have visible state, selected-status text, and UIA selected names.
+   - Remaining broader redesign: a shared selected-chip/radio-style component should cover launch presets and other repeated choice grids without changing patch semantics.
 
 6. **Save Lab has duplicate navigation.**
    - The quick-action cards and tab strip both navigate the same three flows.
@@ -46,6 +46,9 @@ This document tracks UI/UX debt that is too broad for a release-candidate polish
   and details AutomationIds for agent/UIA targeting; the normal debug-camera,
   online-unavailable, music-staging, and preset-detail copy no longer puts CDB,
   proof-boundary, key-census, raw-offset, or evidence jargon in the primary path.
+- Windowed & Mods safe-copy profile and menu-background choice grids now show
+  selected state visibly, update plain selected-status text, and expose selected
+  UIA names for focused runtime smoke coverage.
 - Lore now distinguishes packaged offline chapters from GitHub source links in
   the visible UI and rendered Markdown. Full offline Lore is tracked as a
   generated content-pack plan instead of raw long-path ZIP extraction.

@@ -377,6 +377,13 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("PatchBenchSelectedProfileStatus"));
         Assert.That(pageXaml, Does.Contain("PatchBenchProfileCatalogStatus"));
         Assert.That(pageXaml, Does.Contain("Profile catalog and preset source"));
+        Assert.That(pageXaml, Does.Contain("PatchBenchChoiceButtonStyle"));
+        Assert.That(pageXaml, Does.Contain("PatchBenchChoiceSelectedButtonStyle"));
+        Assert.That(code, Does.Contain("UpdateChoiceVisualState(visibleSelectedKeys)"));
+        Assert.That(code, Does.Contain("SetChoiceButtonState("));
+        Assert.That(code, Does.Contain("Selected: Compatibility Copy profile"));
+        Assert.That(code, Does.Contain("Selected: Windowed and Graphics Defaults profile"));
+        Assert.That(code, Does.Contain("Selected: Debug Camera Preview profile"));
         Assert.That(pageXaml, Does.Contain("PatchBenchSelectedProfileDetailsExpander"));
         Assert.That(pageXaml, Does.Contain("Preset details and limits"));
         Assert.That(pageXaml, Does.Not.Contain("Preset details and proof limits"));
@@ -387,6 +394,7 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("Checks and limits: open row details for what was checked and remaining limits."));
         Assert.That(code, Does.Not.Contain("Evidence and limits: open row details for exact offsets, checks, and unproven boundaries."));
         Assert.That(code, Does.Contain("PatchBenchSelectedProfileDetails.Text = BuildSelectedProfileDetails(visibleSelectedKeys)"));
+        Assert.That(code, Does.Contain("AutomationProperties.SetName(PatchBenchSelectedProfileStatus, PatchBenchSelectedProfileStatus.Text)"));
         Assert.That(code, Does.Contain("PatchBenchProfileCatalogStatus.Text = BuildSafeCopyProfileCatalogStatus()"));
         Assert.That(code, Does.Contain("BinaryPatchPlanBuilder.SafeCopyProfileCatalogVersion"));
         Assert.That(code, Does.Contain("BinaryPatchPlanBuilder.SafeCopyProfileCatalogSha256"));
@@ -419,6 +427,8 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("PatchBenchMenuColorGreenButton"));
         Assert.That(pageXaml, Does.Contain("PatchBenchMenuColorBlackButton"));
         Assert.That(pageXaml, Does.Contain("PatchBenchMenuColorClearButton"));
+        Assert.That(pageXaml, Does.Contain("PatchBenchMenuColorSelectionStatus"));
+        Assert.That(pageXaml, Does.Contain("Selected menu background: none."));
         Assert.That(pageXaml, Does.Contain("Red background"));
         Assert.That(pageXaml, Does.Contain("Green background"));
         Assert.That(pageXaml, Does.Contain("Black background"));
@@ -452,6 +462,11 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("SelectFrontendColorPatch(null, \"frontend clear-screen color selection cleared\")"));
         Assert.That(code, Does.Contain("if (IsFrontendColorPatchKey(item.Spec.Key))"));
         Assert.That(code, Does.Contain("item.IsSelected = selectedKey is not null"));
+        Assert.That(code, Does.Contain("PatchBenchMenuColorSelectionStatus.Text = BuildMenuColorSelectionStatus(selectedMenuColorKey)"));
+        Assert.That(code, Does.Contain("AutomationProperties.SetName(PatchBenchMenuColorSelectionStatus, PatchBenchMenuColorSelectionStatus.Text)"));
+        Assert.That(code, Does.Contain("Selected menu background: red."));
+        Assert.That(code, Does.Contain("Selected menu background: green."));
+        Assert.That(code, Does.Contain("Selected menu background: black."));
         Assert.That(code, Does.Contain("red menu background selected"));
         Assert.That(code, Does.Contain("green menu background selected"));
         Assert.That(code, Does.Contain("black menu background selected"));

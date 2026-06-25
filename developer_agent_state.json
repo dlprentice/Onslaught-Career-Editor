@@ -1,11 +1,11 @@
 {
   "lastUpdated": "2026-06-25",
   "branch": "main",
-  "currentFocus": "Audio loopback wall-clock padding hardening is closed with focused and broad gates green; next active slice is Windowed & Mods selected-state UX for preset/menu-color/profile choices.",
+  "currentFocus": "Windowed & Mods selected-state UX is accepted with focused and broad repo gates green; next active slice is Asset Library first-run catalog guidance.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainStatus": "main/origin/main is pushed through b0ed1ba5; v1.0.7 publication-state docs/state are recorded. Release asset/tag truth remains documented separately.",
+    "publicMainStatus": "public main is the active working branch; v1.0.7 release truth is documented separately and this slice adds source/test/docs UX work only.",
     "policy": "public repo is primary for source/docs/tools/tests/RE notes/proof summaries/state; hard payloads remain maintainer-local ignored overlays"
   },
   "publicPrimaryMigration": {
@@ -14,7 +14,7 @@
     "readinessNote": "release/readiness/public_primary_full_migration_inventory_2026-06-24.md",
     "acceptedInventory": {
       "privateTrackedPaths": 24839,
-      "publicTrackedPaths": 19311,
+      "publicTrackedPaths": 19312,
       "allowedPrivateOnlyHardPayloadOrScratchPayloadPaths": 5557
     },
     "hardening": "test:public-allowlist now chains hard-payload safety, submodule payload scan, and public-primary migration/hash inventory; public_allowlist_safety_check.py now checks more payload suffixes, magic bytes, raw-log-shaped text, JSONL text, exact fixture hashes, and missing/unreadable submodules.",
@@ -32,19 +32,18 @@
     "maintainerParityCommand": "py -3 tools\\public_primary_migration_inventory.py --check --private-root C:\\Users\\david\\source\\Onslaught-Career-Editor-private --require-private-root"
   },
   "activeSlice": {
-    "name": "winui-music-loopback-wall-clock-padding",
-    "goal": "preserve wall-clock capture duration in loopback WAV data and make materialization fail closed when raw WAV data does not cover the reported capture/CDB decode window",
-    "claimBoundary": "helper/materializer/diagnostic hardening only; no BEA launch, no CDB attach, no byte patch, no Ghidra mutation, no game payload redistribution, no accepted audible-output proof, and no online proof.",
+    "name": "winui-windowed-mods-selected-state",
+    "goal": "show visible and UIA-observable selected state for Windowed & Mods safe-copy profile and menu-background choice grids",
+    "claimBoundary": "UX/state clarity only; no patch-row change, byte patch, safe-copy launch behavior, BEA launch, CDB attach, online proof, music audible-output proof, rebuild proof, release packaging, Ghidra mutation, or installed-game mutation.",
     "latestFindings": [
-      "capture_audio_loopback.py now inserts zero-silence padding for WASAPI loopback quiet gaps so WAV byte offsets preserve wall-clock capture duration.",
-      "capture_audio_loopback.py validates wallClockPadding metadata, byte-rate/block-align fields, and derived WAV data duration against requested capture duration.",
-      "winui_safe_copy_music_audible_output_materializer.py now derives raw WAV data duration from canonical RIFF sample-rate/block-align/data-frame math and rejects forged byteRate/blockAlign headers, non-frame-aligned data, missing/inconsistent wallClockPadding metadata, summaries whose timestamps outlast the raw WAV data span, and spans that miss the CDB decode window.",
-      "The old music-audible-live-20260624-144834 bundle remains rejected; runtimeAudibleOutputProof stays false until a new private raw bundle passes materializer plus final checker."
+      "Added page-local normal/selected choice button styles for Windowed & Mods profile/menu-color grids.",
+      "Profile and menu-background status now update both visible text and UI Automation names as selections change.",
+      "Focused runtime UIA smoke clicks Compatibility, Windowed + Graphics Defaults, Enhanced Profile Preview, Debug Camera Preview, red/green/clear menu-color choices and captures normal/narrow selected-state screenshots under Temp.",
+      "Generated subagents/winui-visual-qa screenshots/config are now ignored as local visual QA artifacts rather than tracked payload."
     ],
     "consultReview": {
-      "specialist": "Carson confirmed stopwatch/capture ordering, WAV header/duration guards, and false audible-proof boundary; accepted blocker was missing materializer enforcement for helper-authored wallClockPadding metadata.",
-      "adversarial": "Hilbert caught the forged byteRate/header-duration bypass; fixed with canonical blockAlign/byteRate/data alignment validation.",
-      "docsAudit": "Plato caught stale state overclaiming broad validation and stale capability/re_orchestrator wording; fixed in touched-lane docs/state."
+      "specialist": "Russell recommended page-local selected styles, stable AutomationIds, selected text/UIA coverage, and keeping this as a small UX slice rather than a page rewrite.",
+      "adversarial": "Helmholtz required runtime UIA proof, reuse of shared profile matching, and quieter selected styling that does not compete with primary actions; all three were accepted."
     },
     "status": "accepted_closed_broad_validation_green"
   },
@@ -95,33 +94,25 @@
       "git diff --check (PASS)"
     ],
     "activeSliceFocusedPassed": [
-      "py -3 -m py_compile tools\\capture_audio_loopback.py tools\\capture_audio_loopback_test.py tools\\winui_safe_copy_music_audible_output_materializer.py tools\\winui_safe_copy_music_audible_output_materializer_test.py",
-      "py -3 tools\\capture_audio_loopback_test.py",
-      "py -3 tools\\winui_safe_copy_music_audible_output_materializer_test.py (26 tests)",
-      "npm run test:audio-loopback-capture-helper",
-      "npm run test:winui-safe-copy-music-audible-output-materializer",
-      "npm run test:winui-safe-copy-music-decode-window-correlation-diagnostic",
-      "npm run test:winui-safe-copy-music-audible-output-contract",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench\"",
-      "npm run test:winui-safe-copy-music-audible-output-live-bundle-executor"
+      "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiPatchBenchInteractionSmokeTests.PatchBench_ProfileAndMenuColorChoices_UpdateSelectedStateThroughUia\" (PASS; 1 test)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests|FullyQualifiedName~WinUiAccessibilityAuditTests|FullyQualifiedName~ThemeContrastAuditTests\" (PASS; 39 tests)",
+      "visual inspection of Temp screenshots patch-choice-profile-selected-narrow.png and patch-choice-menu-color-selected-narrow.png (accepted; selected state visible and no obvious narrow clipping)"
     ],
     "activeSliceBroadPassed": [
-      "npm run test:doc-commands",
-      "npm run test:md-links",
-      "npm run release:profile-check",
-      "npm run release:curated-check",
+      "npm run test:md-links (PASS; 3623 markdown files, 6123 local links)",
       "npm run test:hard-payload-safety (PASS; public candidate files checked 19312)",
-      "npm run test:public-allowlist",
-      "npm run test:repo-hygiene",
-      "git diff --check",
-      "state JSON parse"
+      "npm run test:public-allowlist (PASS; hard payload, submodule payload, and public-primary migration inventory; public tracked paths 19312, submodule candidate files 19496)",
+      "npm run test:repo-hygiene (PASS; text hygiene and 18465 explicit text files line-ending check)",
+      "git diff --check (PASS)",
+      "state JSON parse (PASS)"
     ],
     "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Commit/push the accepted audio loopback wall-clock padding hardening if final parse/diff/status checks remain green.",
-    "Begin the next bounded slice: Windowed & Mods selected-state styling for presets/menu-color/profile choices, with specialist plus adversarial review before closeout.",
-    "Record the Ghidra-project-public-distribution and repo-specific .codex skills transfer questions as separate policy/tooling slices before changing tracked/local overlay policy."
+    "Commit/push selected-state UX if status remains clean.",
+    "Start the next bounded slice from goal.md: Asset Library first-run catalog guidance.",
+    "Keep Ghidra project public-distribution and repo-specific .codex skill transfer as separate future tooling/policy slices before changing tracked/local overlay policy."
   ],
   "releaseAccounting": {
     "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",
