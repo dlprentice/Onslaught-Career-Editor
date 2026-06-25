@@ -138,7 +138,8 @@ contributor work.
   and runtime UIA smoke passed. No launch arguments, launch preset payloads,
   copied-profile launch behavior, safe-copy signatures/manifests, patch
   semantics, music, online/runtime proof, AppCore correctness logic, release
-  packaging, or installed-game mutation rules changed.
+  packaging, or installed-game mutation rules changed. Commit `e2e0c07d`
+  pushed this slice to `origin/main`.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof both exist.

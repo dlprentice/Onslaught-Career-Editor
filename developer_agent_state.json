@@ -1,11 +1,11 @@
 {
   "lastUpdated": "2026-06-25",
   "branch": "main",
-  "currentFocus": "Windowed & Mods choice-style helper modularity is validated; current slice is a read-first Asset Library QOL inspection around configured game folders and generated catalog loading.",
+  "currentFocus": "Windowed & Mods choice-style helper modularity was pushed in e2e0c07d; current slice is a read-first Asset Library QOL inspection around configured game folders and generated catalog loading.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainStatus": "main/origin/main is the active public-primary lane; current local slice validates Windowed & Mods choice-style helper modularity before moving to Asset Library QOL.",
+    "publicMainStatus": "main/origin/main is pushed through e2e0c07d for Windowed & Mods choice-style helper modularity; next active slice is Asset Library QOL.",
     "policy": "public repo is primary for source/docs/tools/tests/RE notes/proof summaries/state; hard payloads remain maintainer-local ignored overlays"
   },
   "publicPrimaryMigration": {
@@ -50,7 +50,8 @@
   },
   "recentClosedSlice": {
     "name": "winui-windowed-mods-choice-style-helper-modularity",
-    "status": "validated",
+    "status": "pushed",
+    "commit": "e2e0c07d",
     "readinessNote": "release/readiness/winui_windowed_mods_choice_style_helper_modularity_2026-06-25.md",
     "claimBoundary": "WinUI presentation/helper and UIA coverage only; launch arguments, launch preset payloads, copied-profile launch behavior, safe-copy manifests/signatures, patch semantics, music, online/runtime proof, AppCore correctness logic, release packaging, and installed-game mutation rules were unchanged."
   },
@@ -120,8 +121,8 @@
       "npm run test:doc-commands (PASS; 4283 documented npm commands checked; public package command check passed)",
       "npm run test:hard-payload-safety (PASS; 19326 public candidate files checked)",
       "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19325; submodule candidate files 19510)",
-      "npm run test:md-links (PASS; 3629 Markdown files scanned, 6125 local links checked)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18478 explicit text files checked)",
+      "npm run test:md-links (PASS; 3630 Markdown files scanned, 6125 local links checked)",
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18479 explicit text files checked)",
       "node JSON parse for developer_agent_state.json and documentation_agent_state.json (PASS)",
       "git diff --check (PASS)",
       "Get-Process BEA,cdb,OnslaughtCareerEditor.WinUI -ErrorAction SilentlyContinue (PASS; no matching process output)"
