@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "Asset Library first-run catalog guidance docs/state are accepted with focused and broad repo gates green. Next docs touchpoint is repo-specific Codex skill inventory and Ghidra distribution policy.",
+  "currentFocus": "Asset Library first-run catalog guidance is committed/pushed at 4f6dfe30; current docs touchpoint is repo-specific Codex skill inventory and Ghidra distribution policy.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -58,25 +58,13 @@
       "npm run test:repo-hygiene (PASS; repo text hygiene and 18464 explicit text files line-ending check)",
       "git diff --check (PASS)"
     ],
-    "activeSliceFocusedPassed": [
-      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~AssetCatalogServiceTests\" (PASS; 94 tests)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.AssetLibrary_IsNativeWinUiCatalogBrowser|FullyQualifiedName~WinUiAccessibilityAuditTests.PrimaryShellAndLongWorkflowControls\" (PASS; 2 tests)",
-      "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiRuntimeAccessibilitySmokeTests.MainWindow_ShellNavigationIsNamedEnabledAndInvokableThroughUiAutomation\" (PASS; 1 test)"
-    ],
-    "activeSliceBroadPassed": [
-      "npm run test:md-links (PASS; 3623 markdown files, 6125 local links)",
-      "npm run test:hard-payload-safety (PASS; public candidate files checked 19312)",
-      "npm run test:public-allowlist (PASS; hard payload, submodule payload, and public-primary migration inventory; public tracked paths 19312, submodule candidate files 19496)",
-      "npm run test:repo-hygiene (PASS; text hygiene and 18465 explicit text files line-ending check)",
-      "git diff --check (PASS)",
-      "state JSON parse (PASS)"
-    ],
+    "activeSliceFocusedPassed": [],
+    "activeSliceBroadPassed": [],
     "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Commit/push Asset Library first-run guidance if status remains clean.",
-    "Resume from goal.md with repo-specific Codex skill inventory/transfer and Ghidra public-distribution policy."
+    "Resume from goal.md with repo-specific Codex skill inventory/transfer and Ghidra public-distribution policy.",
+    "Record consult scope, accepted findings, rejected findings, and remaining risks before closeout."
   ],
   "winuiReleaseCandidate": {
     "status": "published",
