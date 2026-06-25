@@ -593,6 +593,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             string? profileId = MatchSelectableSafeCopyProfileId(selectedKeys);
             string? selectedMenuColorKey = selectedKeys.FirstOrDefault(IsFrontendColorPatchKey);
+            PatchBenchMenuColorSelectionKind menuColorSelection = BuildMenuColorSelectionKind(selectedMenuColorKey);
 
             PatchBenchChoiceVisualState.ApplyPatchBenchChoiceStyles(
                 new[]
@@ -609,7 +610,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorClearButton, "Clear menu background color selection", "Selected: no menu background color", selectedMenuColorKey is null),
                 },
                 Resources);
-            PatchBenchMenuColorSelectionStatus.Text = BuildMenuColorSelectionStatus(selectedMenuColorKey);
+            PatchBenchMenuColorSelectionStatus.Text = PatchBenchMenuColorSelectionText.BuildStatus(menuColorSelection);
             AutomationProperties.SetName(PatchBenchMenuColorSelectionStatus, PatchBenchMenuColorSelectionStatus.Text);
         }
 
@@ -666,21 +667,21 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 || ReferenceEquals(sender, PatchBenchMouseSensitivityPresetComboBox);
         }
 
-        private static string BuildMenuColorSelectionStatus(string? selectedKey)
+        private static PatchBenchMenuColorSelectionKind BuildMenuColorSelectionKind(string? selectedKey)
         {
             if (string.Equals(selectedKey, "frontend_clear_screen_dark_red", StringComparison.OrdinalIgnoreCase))
             {
-                return "Selected menu background: red.";
+                return PatchBenchMenuColorSelectionKind.Red;
             }
 
             if (string.Equals(selectedKey, "frontend_clear_screen_dark_green", StringComparison.OrdinalIgnoreCase))
             {
-                return "Selected menu background: green.";
+                return PatchBenchMenuColorSelectionKind.Green;
             }
 
             return string.Equals(selectedKey, "frontend_clear_screen_black", StringComparison.OrdinalIgnoreCase)
-                ? "Selected menu background: black."
-                : "Selected menu background: none.";
+                ? PatchBenchMenuColorSelectionKind.Black
+                : PatchBenchMenuColorSelectionKind.None;
         }
 
         private void PatchCheckBox_Changed(object sender, RoutedEventArgs e)

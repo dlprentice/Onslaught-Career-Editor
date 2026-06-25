@@ -345,6 +345,8 @@ public class WinUiProductLaneTests
         string code = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs");
         string itemModel = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "BinaryPatchItemModel.cs");
         string launchTextHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchLaunchText.cs");
+        string menuColorTextHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchMenuColorSelectionText.cs");
+        string menuColorKindModel = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchMenuColorSelectionKind.cs");
         string settingsXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "SettingsPage.xaml");
 
         Assert.That(shellXaml, Does.Contain("Windowed &amp; Mods"));
@@ -537,11 +539,37 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("SelectFrontendColorPatch(null, \"frontend clear-screen color selection cleared\")"));
         Assert.That(code, Does.Contain("if (IsFrontendColorPatchKey(item.Spec.Key))"));
         Assert.That(code, Does.Contain("item.IsSelected = selectedKey is not null"));
-        Assert.That(code, Does.Contain("PatchBenchMenuColorSelectionStatus.Text = BuildMenuColorSelectionStatus(selectedMenuColorKey)"));
+        Assert.That(code, Does.Contain("PatchBenchMenuColorSelectionKind menuColorSelection = BuildMenuColorSelectionKind(selectedMenuColorKey)"));
+        Assert.That(code, Does.Contain("PatchBenchMenuColorSelectionStatus.Text = PatchBenchMenuColorSelectionText.BuildStatus(menuColorSelection)"));
         Assert.That(code, Does.Contain("AutomationProperties.SetName(PatchBenchMenuColorSelectionStatus, PatchBenchMenuColorSelectionStatus.Text)"));
-        Assert.That(code, Does.Contain("Selected menu background: red."));
-        Assert.That(code, Does.Contain("Selected menu background: green."));
-        Assert.That(code, Does.Contain("Selected menu background: black."));
+        Assert.That(code, Does.Contain("private static PatchBenchMenuColorSelectionKind BuildMenuColorSelectionKind(string? selectedKey)"));
+        Assert.That(code, Does.Contain("PatchBenchMenuColorSelectionKind.Red"));
+        Assert.That(code, Does.Contain("PatchBenchMenuColorSelectionKind.Green"));
+        Assert.That(code, Does.Contain("PatchBenchMenuColorSelectionKind.Black"));
+        Assert.That(code, Does.Contain("PatchBenchMenuColorSelectionKind.None"));
+        Assert.That(code, Does.Contain("\"frontend_clear_screen_dark_red\""));
+        Assert.That(code, Does.Contain("\"frontend_clear_screen_dark_green\""));
+        Assert.That(code, Does.Contain("\"frontend_clear_screen_black\""));
+        Assert.That(code, Does.Not.Contain("private static string BuildMenuColorSelectionStatus"));
+        Assert.That(menuColorKindModel, Does.Contain("internal enum PatchBenchMenuColorSelectionKind"));
+        Assert.That(menuColorKindModel, Does.Contain("Red"));
+        Assert.That(menuColorKindModel, Does.Contain("Green"));
+        Assert.That(menuColorKindModel, Does.Contain("Black"));
+        Assert.That(menuColorTextHelper, Does.Contain("internal static class PatchBenchMenuColorSelectionText"));
+        Assert.That(menuColorTextHelper, Does.Contain("public static string BuildStatus(PatchBenchMenuColorSelectionKind selection)"));
+        Assert.That(menuColorTextHelper, Does.Contain("Selected menu background: red."));
+        Assert.That(menuColorTextHelper, Does.Contain("Selected menu background: green."));
+        Assert.That(menuColorTextHelper, Does.Contain("Selected menu background: black."));
+        Assert.That(menuColorTextHelper, Does.Not.Contain("frontend_clear_screen_"));
+        Assert.That(menuColorTextHelper, Does.Not.Contain("BinaryPatch"));
+        Assert.That(menuColorTextHelper, Does.Not.Contain("GameProfile"));
+        Assert.That(menuColorTextHelper, Does.Not.Contain("SelectFrontendColorPatch"));
+        Assert.That(menuColorTextHelper, Does.Not.Contain("IsFrontendColorPatchKey"));
+        Assert.That(menuColorTextHelper, Does.Not.Contain("BuildSafeCopyContentSignature"));
+        Assert.That(menuColorTextHelper, Does.Not.Contain("BuildSelectedLaunchArguments"));
+        Assert.That(menuColorTextHelper, Does.Not.Contain("Online"));
+        Assert.That(menuColorTextHelper, Does.Not.Contain("Process.Start"));
+        Assert.That(menuColorTextHelper, Does.Not.Contain("File."));
         Assert.That(code, Does.Contain("red menu background selected"));
         Assert.That(code, Does.Contain("green menu background selected"));
         Assert.That(code, Does.Contain("black menu background selected"));
@@ -1060,7 +1088,7 @@ public class WinUiProductLaneTests
         string launchPresetVisualState = ExtractCodeSlice(
             code,
             "private void UpdateLaunchPresetVisualState()",
-            "private static string BuildMenuColorSelectionStatus");
+            "private void ClearSelectedLaunchPresetChoiceForManualEdit()");
         string buildSelectedLaunchArguments = ExtractCodeSlice(
             code,
             "private IReadOnlyList<string> BuildSelectedLaunchArguments()",

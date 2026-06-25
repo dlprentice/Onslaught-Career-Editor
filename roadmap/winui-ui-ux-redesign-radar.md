@@ -52,6 +52,9 @@ This document tracks UI/UX debt that is too broad for a release-candidate polish
 - Windowed & Mods selected-choice state now uses a small WinUI model/helper for
   selected/normal UIA names and styling, while the page keeps patch-selection
   and safe-copy semantics unchanged.
+- Windowed & Mods menu-background selected-status text now uses a page-local
+  raw-key-to-enum mapping plus a small WinUI text helper, keeping raw patch keys
+  and patch semantics in the page.
 - Windowed & Mods selected-profile status/details text now uses a small WinUI
   presentation model/helper, while the page keeps profile matching, selected
   patch keys, `ProfilePresetId`, safe-copy manifests, launch, music, and online

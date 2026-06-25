@@ -94,6 +94,11 @@ public class WinUiPatchBenchInteractionSmokeTests
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-menu-color-selected-normal.png", "PatchBenchMenuColorRedButton", 1000, 640);
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-menu-color-selected-narrow.png", "PatchBenchMenuColorRedButton", 760, 640);
 
+            InvokeByAutomationId(window, "PatchBenchMenuColorBlackButton");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorBlackButton", "Selected: black menu background color");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorGreenButton", "Select green menu background color");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected menu background: black.");
+
             InvokeByAutomationId(window, "PatchBenchMenuColorClearButton");
             AssertAutomationNameContains(window, "PatchBenchMenuColorClearButton", "Selected: no menu background color");
             AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected menu background: none.");

@@ -7,12 +7,13 @@ Policy: `goal.policy.md`
 ## Current Slice
 
 Start the next bounded WinUI modularity inspection: read the Windowed & Mods
-`BinaryPatchesPage` surface and existing presentation helpers, then choose one
-small extraction candidate only if it reduces code-behind duplication without
-moving patch semantics, launch arguments, safe-copy behavior, music behavior,
-online readiness, runtime proof, or release packaging. Keep this slice
-read-first unless exact evidence supports a narrow edit. Continue from this
-checkout:
+`BinaryPatchesPage` surface and existing presentation helpers after the menu-
+color selected-status extraction, then choose one small extraction or test-
+hardening candidate only if it reduces code-behind duplication or strengthens a
+guard without moving patch semantics, launch arguments, safe-copy behavior,
+music behavior, online readiness, runtime proof, or release packaging. Keep this
+slice read-first unless exact evidence supports a narrow edit. Continue from
+this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -91,6 +92,17 @@ contributor work.
   a small WinUI model/helper, while `BinaryPatchesPage` still owns selected-key
   predicates, profile matching, menu-color matching, safe-copy state, and patch
   semantics.
+- Windowed & Mods menu-color selected-status text modularity is accepted in
+  `release/readiness/winui_windowed_mods_menu_color_text_modularity_2026-06-25.md`.
+  Raw `frontend_clear_screen_*` patch keys and key-to-kind mapping remain
+  page-local in `BinaryPatchesPage`; `PatchBenchMenuColorSelectionText` formats
+  enum values only. Runtime UIA smoke now covers red, green, black, and clear
+  selected-status text. Focused PatchBench tests, WinUI build, native UIA smoke,
+  patch-plan regression tests, primary WinUI lane, docs commands, Markdown
+  links, hard-payload safety, public allowlist, and repo hygiene passed. This
+  did not change patch rows, byte patches, safe-copy launch behavior, music
+  replacement behavior, online status, runtime proof, AppCore correctness
+  logic, release packaging, or installed-game mutation rules.
 - Windowed & Mods selected-profile text modularity is accepted in
   `release/readiness/winui_windowed_mods_selected_profile_text_modularity_2026-06-25.md`.
   Selected-profile status/details copy now flows through a small WinUI
@@ -202,7 +214,8 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 ## Next Executable Work
 
 1. Inspect `BinaryPatchesPage.xaml.cs`, current `PatchBench*` helpers, and
-   focused PatchBench tests for the next smallest presentation-only extraction.
+   focused PatchBench tests for the next smallest presentation-only extraction
+   or test-hardening candidate.
 2. Use at least one specialist consult and one adversarial reviewer before any
    nontrivial edit.
 3. If a small improvement is justified, keep it bounded to WinUI presentation

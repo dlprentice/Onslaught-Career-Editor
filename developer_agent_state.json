@@ -1,11 +1,11 @@
 {
   "lastUpdated": "2026-06-25",
   "branch": "main",
-  "currentFocus": "Asset Library export-folder QOL was committed in 9b27745b; current slice is a read-first Windowed & Mods modularity inspection for the next small presentation-only extraction.",
+  "currentFocus": "Windowed & Mods menu-color selected-status text modularity passed focused and broad closeout gates; commit/push is pending, then the next slice is read-first Windowed & Mods modularity inspection.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainStatus": "local main has Asset Library export-folder QOL commit 9b27745b pending push; next active slice is Windowed & Mods modularity inspection.",
+    "publicMainStatus": "public main is aligned through 78bbbf60; current tree has validated WinUI menu-color selected-status text modularity changes pending commit/push.",
     "policy": "public repo is primary for source/docs/tools/tests/RE notes/proof summaries/state; hard payloads remain maintainer-local ignored overlays"
   },
   "publicPrimaryMigration": {
@@ -49,26 +49,27 @@
     }
   },
   "recentClosedSlice": {
-    "name": "winui-asset-library-export-folder-qol",
-    "status": "committed_pending_push",
-    "commit": "9b27745b",
-    "readinessNote": "release/readiness/winui_asset_library_export_folder_qol_2026-06-25.md",
-    "claimBoundary": "WinUI first-run/copy/status clarity plus AppCore status-text helper/test only; catalog resolution/service loading behavior, asset bundling, in-app extraction/generation, runtime proof, full 3D rendering, rebuild parity, release packaging, and installed-game mutation rules were unchanged."
+    "name": "winui-windowed-mods-menu-color-text-modularity",
+    "status": "validated_ready_for_commit",
+    "commit": "pending",
+    "readinessNote": "release/readiness/winui_windowed_mods_menu_color_text_modularity_2026-06-25.md",
+    "claimBoundary": "WinUI presentation extraction only: raw menu-background patch keys and key-to-kind mapping remain page-local; helper formats enum values only. No patch rows, byte changes, safe-copy launch behavior, music behavior, online/readiness, runtime proof, release packaging, or installed-game mutation changed.",
+    "acceptedTruth": [
+      "Focused static PatchBench guard passed after red/green: the helper exists, raw frontend_clear_screen keys remain page-local, and the text helper has no patch/safe-copy/launch/process/file symbols.",
+      "Runtime UIA smoke now selects red, green, black, and clear menu-background choices and verifies selected-status text.",
+      "Patch-plan regression tests for multiple frontend color rejection and safe-copy profile policy passed in the correct UiTests project."
+    ],
+    "consultReview": {
+      "specialist": "allowed a tiny presentation extraction only if BinaryPatchesPage retained raw patch-key ownership and selected-color mapping",
+      "adversarial": "blocked passing raw patch keys into a new helper; accepted enum-based formatting plus black-selection UIA coverage",
+      "closeout": "Halley/Noether found no behavior/security blocker; accepted risks are commit-scope inclusion of new files and future drift if another menu color is added without updating page mapping/helper text"
+    }
   },
   "activeSlice": {
     "name": "windowed-mods-next-presentation-modularity-inspection",
-    "goal": "inspect BinaryPatchesPage and current PatchBench helpers for the next smallest presentation-only extraction candidate",
-    "claimBoundary": "read-first WinUI modularity inspection; no patch rows, byte changes, copied-profile launch behavior, safe-copy manifests/signatures, music behavior, online readiness, runtime proof, release packaging, or installed-game mutation rule changes unless a concrete bug is found and documented.",
-    "latestFindings": [
-      "Asset Library export-folder QOL focused gates passed: executable AppCore temp-directory status regression, static product-lane guard, AppCore AssetCatalogService tests, WinUI build, and native UIA accessibility smoke.",
-      "Next likely work is a small Windowed & Mods presentation-helper extraction if inspection finds duplication that can move without touching behavior."
-    ],
-    "consultReview": {
-      "specialist": "recommended narrow text-only catalog-picker QOL and keeping AssetCatalogService behavior unchanged",
-      "adversarial": "blocked in-app extraction/generation, game-install writes, asset bundling, private-path publication, and full 3D/rebuild/runtime overclaims",
-      "closeout": "accepted UIA browse-name alignment and executable AppCore status-helper regression for selected game-install paths"
-    },
-    "status": "ready_to_inspect"
+    "goal": "inspect BinaryPatchesPage and current PatchBench helpers for the next smallest presentation-only extraction or test-hardening candidate",
+    "claimBoundary": "read-first WinUI modularity inspection; do not move patch rows, byte changes, copied-profile launch behavior, safe-copy manifests/signatures, music behavior, online readiness, runtime proof, release packaging, or installed-game mutation rules.",
+    "status": "ready_after_menu_color_commit"
   },
   "runtimeTruth": {
     "musicAudibleOutputProof": false,
@@ -117,31 +118,30 @@
       "git diff --check (PASS)"
     ],
     "activeSliceFocusedPassed": [
-      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~BuildMissingCatalogStatus_CallsOutSelectedGameInstallWithoutLeakingPath\" (PASS; 1 test)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.AssetLibrary_IsNativeWinUiCatalogBrowser\" (PASS; 1 test after red/green)",
-      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~AssetCatalogServiceTests\" (PASS; 95 tests)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench\" (PASS; 5 tests)",
       "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiRuntimeAccessibilitySmokeTests.MainWindow_ShellNavigationIsNamedEnabledAndInvokableThroughUiAutomation\" (PASS; 1 native UIA smoke)"
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiPatchBenchInteractionSmokeTests.PatchBench_ProfileAndMenuColorChoices_UpdateSelectedStateThroughUia\" (PASS; 1 native UIA smoke)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~BinaryPatchRegressionTests.BinaryPatchPlanBuilder_RejectsMultipleFrontendColorPresets|FullyQualifiedName~BinaryPatchRegressionTests.BinaryPatchPlanBuilder_SafeCopyProfilePresetsCarryExpectedPolicy\" (PASS; 2 tests)"
     ],
     "activeSliceBroadPassed": [
+      "npm run build:winui (PASS; 0 warnings, 0 errors)",
+      "npm run test:winui-primary-lane (PASS; solution build 0 warnings/errors, AppCore 1178/1178, WinUI 87 passed / 2 skipped catalog-dependent rows)",
       "npm run test:doc-commands (PASS; 4283 documented npm commands checked; public package command check passed)",
-      "npm run test:md-links (PASS; 3630 Markdown files scanned, 6125 local links checked)",
-      "npm run test:hard-payload-safety (PASS; 19328 public candidate files checked)",
-      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19326; submodule candidate files 19512; allowed private-only hard-payload/scratch paths 5557)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18479 explicit text files checked)",
-      "node JSON parse for developer_agent_state.json and documentation_agent_state.json (PASS)",
-      "git diff --check (PASS)",
-      "Get-Process BEA,cdb,OnslaughtCareerEditor.WinUI -ErrorAction SilentlyContinue (PASS; no matching process output)"
+      "npm run test:md-links (PASS; 3631 Markdown files scanned, 6125 local links checked)",
+      "npm run test:hard-payload-safety (PASS; 19331 public candidate files checked)",
+      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19331; submodule candidate files 19515; allowed private-only hard-payload/scratch paths 5557)",
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18481 explicit text files checked)"
     ],
     "pendingForActiveSlice": [
-      "push Asset Library export-folder QOL commit 9b27745b and this baton update",
-      "inspect BinaryPatchesPage and current PatchBench helpers for the next smallest presentation-only extraction candidate"
+      "run final JSON parse, git diff --check, process check, and git status",
+      "include OnslaughtCareerEditor.WinUI/Helpers/PatchBenchMenuColorSelectionText.cs and OnslaughtCareerEditor.WinUI/Models/PatchBenchMenuColorSelectionKind.cs in commit",
+      "commit and push the validated closeout"
     ]
   },
   "nextSteps": [
-    "Push Asset Library export-folder QOL commit 9b27745b and this baton update.",
-    "Inspect BinaryPatchesPage and PatchBench helpers for the next smallest presentation-only modularity slice.",
-    "Keep patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of the next modularity slice unless evidence reveals a bounded bug."
+    "Run final JSON parse, git diff --check, process check, and git status.",
+    "Commit and push the focused WinUI menu-color selected-status text extraction.",
+    "Continue with read-first Windowed & Mods modularity inspection or another ready bounded backlog item."
   ],
   "releaseAccounting": {
     "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",
