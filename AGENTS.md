@@ -126,6 +126,21 @@ Keep out of git:
 Use `SECURITY.md` for private-data reporting and `README.RELEASE.md` /
 `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md` for release-safety posture.
 
+## Agent Skill Guidance
+
+Repo-specific Codex knowledge should be durable in normal repo files:
+`AGENTS.md`, `CONTRIBUTING.md`, `LOCAL_LAB_OVERLAY.md`, `tools/README.md`,
+`reverse-engineering/`, `roadmap/`, release readiness notes, and state batons.
+Maintainer-local Codex skills such as `aya-assets`, `bea-binary-re`,
+`bes-career-save`, and `onslaught-engine-source` are conveniences that route
+agents to those tracked docs and tools; public contributors do not need those
+user-local skill files to build, test, or review the repo.
+
+Do not commit repo-local `.codex/skills`, Codex auth/session/cache/log/plugin
+state, or copied runtime skill caches. If the project later needs an installable
+public skill pack, create it as an explicit source artifact with its own review
+and hard-payload checks instead of copying a user runtime directory.
+
 ## WinUI Contribution Rules
 
 - Keep normal user wording plain. Hide proof IDs, raw offsets, and maintainer

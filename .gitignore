@@ -25,6 +25,14 @@
 .DS_Store
 Thumbs.db
 
+# Codex runtime-local state. Tracked .codex/goals and .codex/state markdown
+# remain public project batons; runtime skills/auth/cache/session material does not.
+/.codex/*
+!/.codex/goals/
+!/.codex/goals/**/*.md
+!/.codex/state/
+!/.codex/state/**/*.md
+
 # Local validation scratch
 __pycache__/
 *.pyc

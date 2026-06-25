@@ -6,12 +6,11 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Inventory repo-specific Codex skills and local Ghidra project distribution
-options for the public-primary repo, then document the next safe action. Compare
-the former private checkout and local Codex skill locations only as needed. Do
-not move full Ghidra project stores, raw game payloads, secrets, or runtime
-caches in this slice. Continue bounded patch/mod UX and runtime-proof work from
-this checkout:
+Reduce `Windowed & Mods` code-behind through one bounded modularity slice over
+the recently accepted selected-choice UX. Inspect `BinaryPatchesPage` profile/
+menu-color choice state, identify one small helper/ViewModel/service extraction,
+implement it without changing patch semantics, and preserve stable
+AutomationIds plus focused UIA/static tests. Continue from this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -53,6 +52,11 @@ contributor work.
   `C:\Users\david\Ghidra\Projects\BEA.gpr` with store
   `C:\Users\david\Ghidra\Projects\BEA.rep\`. The repo tracks scripts, exports,
   ledgers, and docs instead of full binary project stores.
+- Repo-specific Codex skill and Ghidra policy inventory is accepted in
+  `release/readiness/repo_skills_ghidra_policy_inventory_2026-06-25.md`.
+  The public repo remains durable through normal tracked docs/tools/state, not
+  copied runtime `.codex/skills`; full Ghidra project stores remain local/
+  ignored.
 - Current WinUI Lore cleanup loads generated `lore-pack/` documents when present,
   falls back to `lore-book/BOOK.md` otherwise, keeps included document links
   inside the reader, and labels source/external links as browser actions.
@@ -121,15 +125,16 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Inventory repo-specific Codex skill material that exists in the public repo,
-   former private repo, and local Codex skill roots; identify what is already
-   durable, what is repo-specific, and what should stay runtime-local.
-2. Inventory the local Ghidra project path/status and current repo policy for
-   Ghidra exports/backups versus full project stores; document public/linking
-   options without moving or tracking hard payloads.
-3. Update state/docs with the recommended next action, then continue to the
-   next bounded WinUI/modularity/runtime slice after this policy/tooling slice
-   closes.
+1. Read `BinaryPatchesPage.xaml`, `BinaryPatchesPage.xaml.cs`, current WinUI
+   tests, and the selected-state readiness note.
+2. Use at least one specialist consult and one adversarial reviewer unless the
+   slice proves microscopic.
+3. Extract one small selected-choice state/rendering helper or ViewModel shape
+   from `BinaryPatchesPage` while preserving current profile/menu-color
+   behavior, copy, AutomationIds, and UIA selected names.
+4. Validate with focused WinUI/AppCore tests plus repo/docs gates appropriate to
+   the touched paths.
+5. Update state/docs with exact evidence and choose the next bounded slice.
 
 ## Stop Conditions
 

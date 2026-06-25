@@ -24,7 +24,7 @@ Use these names when possible:
 | `media/` or `local-media/` | Private media/input payloads used for local extraction or validation. |
 | `local-rom-input/` | Large local ROM/input payloads that are useful for extraction or comparison but should not be tracked. |
 | `save-attempts/` or `local-saves/` | Local saves and options payloads used for testing. |
-| `local-ghidra/`, `ghidra-local/`, or `Ghidra/` | Full local Ghidra projects, databases, exports, and backups. |
+| `local-ghidra/`, `ghidra-local/`, or `Ghidra/` | Full local Ghidra projects, databases, local-only exports, and backups. |
 | `local-proofs/` | Bulky runtime proof bundles, screenshots, traces, CDB logs, and frame captures. |
 | `local-lab/` | Miscellaneous local-only lab material that is too large or payload-like for git. |
 | `mcps/` | Local MCP/tooling sandboxes and generated local integration payloads. |
@@ -110,3 +110,18 @@ Current maintainer-local live project on this workstation:
 Public clones do not need this database to build or test the app. Use the
 tracked Ghidra scripts, exports, ledgers, and RE docs for source work; use the
 live Ghidra project only for maintainer-local mutation or read-back proof.
+
+### Ghidra Distribution Options
+
+| Option | Public repo status | Use |
+| --- | --- | --- |
+| Deterministic exports, scripts, rename maps, ledgers, hashes, Markdown/JSON/TSV summaries | Track when useful and non-secret | Normal collaboration surface for agents and contributors. |
+| Compact proof summaries and readiness notes | Track when they do not embed raw payloads | Durable evidence that avoids requiring the maintainer database. |
+| Full `.gpr` / `.rep` project stores and Ghidra backups | Keep local/ignored | Maintainer-local read-back or mutation work only. Do not commit, package, mirror, hardlink, or publish them as source artifacts. |
+| Junctions to large local archives | Allowed only under ignored overlay roots such as `local-ghidra/` or `local-proofs/` | Local disk-management convenience. Never use a junction as a public distribution path. |
+
+Hardlinks to game, Ghidra, proof, save, or runtime payloads are not allowed in
+the repo tree. They make local payloads look like ordinary source files and can
+defeat review expectations. If a future policy intentionally changes full
+Ghidra project distribution, that decision needs a separate review and release
+boundary update before any file move.

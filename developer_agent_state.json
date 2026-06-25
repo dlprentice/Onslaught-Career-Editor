@@ -1,11 +1,11 @@
 {
   "lastUpdated": "2026-06-25",
   "branch": "main",
-  "currentFocus": "Asset Library first-run catalog guidance is committed/pushed at 4f6dfe30; current goal.md slice is repo-specific Codex skill inventory and Ghidra distribution policy.",
+  "currentFocus": "Repo-specific Codex skill/Ghidra policy inventory is validated in docs/state; current goal.md is advanced to a bounded WinUI Windowed & Mods modularity slice.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainStatus": "main/origin/main is pushed through 4f6dfe30; v1.0.7 release truth is documented separately.",
+    "publicMainStatus": "main/origin/main was aligned at 50c417a1 before this policy closeout; v1.0.7 release truth is documented separately.",
     "policy": "public repo is primary for source/docs/tools/tests/RE notes/proof summaries/state; hard payloads remain maintainer-local ignored overlays"
   },
   "publicPrimaryMigration": {
@@ -31,16 +31,33 @@
     "localStorageCleanup": "C:\\Users\\david\\source\\Onslaught-Career-Editor-public-candidate* scratch clones were moved to G:\\OnslaughtRepoArchives\\source-scratch-20260624 with move-manifest.json; zero public-candidate scratch dirs remain on C:.",
     "maintainerParityCommand": "py -3 tools\\public_primary_migration_inventory.py --check --private-root C:\\Users\\david\\source\\Onslaught-Career-Editor-private --require-private-root"
   },
-  "activeSlice": {
+  "recentClosedSlice": {
     "name": "repo-skills-ghidra-policy-inventory",
-    "goal": "inventory repo-specific Codex skill material and local Ghidra project distribution options, then document the next safe action without moving full Ghidra stores, hard payloads, secrets, or runtime caches",
-    "claimBoundary": "inventory/policy only; no hard payload tracking change, no full Ghidra DB move, no game asset move, no runtime proof, no Ghidra mutation, no release publication.",
+    "status": "validated_ready_for_commit",
+    "readinessNote": "release/readiness/repo_skills_ghidra_policy_inventory_2026-06-25.md",
+    "claimBoundary": "policy/inventory only; no hard payload tracking change, no full Ghidra DB move, no game asset move, no runtime proof, no Ghidra mutation, no release publication.",
+    "acceptedFindings": [
+      "Public repo has no tracked SKILL.md, skills/, or .codex/skills/ paths.",
+      "Relevant BEA/Onslaught maintainer-local Codex skills are user-local routing conveniences over tracked docs/tools, not public clone prerequisites.",
+      "Full Ghidra .gpr/.rep project stores and backups remain local/ignored; public repo should track deterministic exports, scripts, ledgers, hashes, markdown/JSON/TSV summaries, and compact proof summaries.",
+      ".codex runtime skills/auth/cache/session/plugin/log state is ignored by default while .codex/goals and .codex/state Markdown batons remain trackable."
+    ],
+    "consultReview": {
+      "specialist": "read-only consult recommended documenting skill routing in LOCAL_LAB_OVERLAY.md/tools/README.md rather than copying runtime skill bodies",
+      "adversarial": "security review blocked public Ghidra DB distribution, repo-local runtime .codex/skills/cache publication, and hardlink-style payload distribution",
+      "finalDocsReview": "state and readiness-note validation wording issues were accepted and fixed"
+    }
+  },
+  "activeSlice": {
+    "name": "winui-windowed-mods-selected-choice-modularity",
+    "goal": "reduce BinaryPatchesPage/Windowed & Mods code-behind through one bounded helper/ViewModel extraction around the accepted selected-choice profile/menu-color UX",
+    "claimBoundary": "WinUI modularity and testability only; preserve current patch semantics, selected-state copy, AutomationIds, UIA names, safe-copy behavior, online-disabled posture, and installed-game read-only boundary.",
     "latestFindings": [
-      "Asset Library first-run guidance closed and pushed at 4f6dfe30.",
-      "goal.md now points to the skills/Ghidra policy inventory slice."
+      "Windowed & Mods profile/menu-color selected-state UX is accepted.",
+      "Repo-specific skill/Ghidra policy inventory is documented and validated."
     ],
     "consultReview": {},
-    "status": "active_not_started"
+    "status": "next_slice_ready"
   },
   "runtimeTruth": {
     "musicAudibleOutputProof": false,
@@ -88,14 +105,23 @@
       "npm run test:repo-hygiene (PASS; repo text hygiene and 18464 explicit text files line-ending check)",
       "git diff --check (PASS)"
     ],
-    "activeSliceFocusedPassed": [],
-    "activeSliceBroadPassed": [],
+    "activeSliceFocusedPassed": [
+      "git ls-files .codex (PASS; only goals/state Markdown tracked)",
+      "git ls-files | rg \"(^|/)SKILL\\.md$|(^|/)skills/\" (PASS; no tracked matches)",
+      "git check-ignore -v game\\BEA.exe local-ghidra\\GhidraBackups local-proofs\\OnslaughtRuntimeProofArchive .codex\\skills\\bea-binary-re\\SKILL.md (PASS; overlay/runtime paths ignored)"
+    ],
+    "activeSliceBroadPassed": [
+      "npm run test:hard-payload-safety (PASS; 19313 public candidate files checked)",
+      "npm run test:public-allowlist (PASS; includes hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19313)",
+      "npm run test:md-links (PASS; 3623 Markdown files, 6125 local links)",
+      "npm run test:repo-hygiene (PASS; 18465 explicit text files checked)"
+    ],
     "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Start the repo-specific Codex skill inventory and Ghidra public-distribution policy slice from goal.md.",
-    "Use specialist plus adversarial consults before changing docs/state/policy.",
-    "Do not move or track full Ghidra project stores, game payloads, secrets, or runtime caches in the inventory slice."
+    "Commit/push the validated repo-skills/Ghidra policy closeout.",
+    "Start the next goal.md slice: inspect BinaryPatchesPage selected-choice state and extract one small helper/ViewModel/service shape with focused WinUI tests.",
+    "Do not move or track full Ghidra project stores, game payloads, secrets, runtime caches, or release outputs."
   ],
   "releaseAccounting": {
     "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",

@@ -53,3 +53,20 @@ may compile a local runner, launch a copied executable, attach CDB, capture
 frames, and send scoped input by design. Prefer tracked scripts, narrow
 arguments, and one reviewed external proof root instead of inline shell byte
 dumps or broad ad hoc scans.
+
+## Agent Skill Routing
+
+Some maintainers have user-local Codex skills that route BEA work into this
+tracked tool/docs surface. They are not required for a public clone and should
+not be copied from a runtime directory into the repo.
+
+| Local skill | Public source of truth |
+| --- | --- |
+| `aya-assets` | `reverse-engineering/game-assets/_index.md`, `reverse-engineering/game-assets/extraction-pipeline.md`, `tools/export_game_assets.py`, `tools/export_asset_catalog.py`, `tools/aya_archive_inventory.py` |
+| `bea-binary-re` | `reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md`, `reverse-engineering/binary-analysis/ghydra-mcp-runbook.md`, `reverse-engineering/binary-analysis/windbg-cdb-runbook.md`, `patches/README.md`, `patches/catalog/patches.v2.json` |
+| `bes-career-save` | `reverse-engineering/save-file/save-format.md`, `reverse-engineering/save-file/struct-layouts.md`, `reverse-engineering/quick-reference/save-structs.md`, `tools/options_entries_decode.py` |
+| `onslaught-engine-source` | `references/Onslaught/`, `reverse-engineering/source-code/`, `reverse-engineering/game-mechanics/`, `reverse-engineering/quick-reference/source-key-functions.md` |
+
+If a local skill says something different from tracked repo docs, treat that as
+a drift bug. Update the tracked docs or the local skill source after review; do
+not rely on untracked runtime state as contributor authority.
