@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "No Ghidra/static mutation; live Ghidra path documentation is green inside the combined WinUI/Lore package-truth cleanup.",
+  "currentFocus": "No Ghidra/static mutation; v1.0.6 release is published and static RE remains unchanged.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -27,21 +27,20 @@
     ],
     "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable; current slice is UI/copy/testability only",
     "latestWinuiReleaseCandidate": {
-      "version": "v1.0.5",
+      "version": "v1.0.6",
       "status": "published",
-      "sha256": "f8ba14a51ed57b14c3575a82f424de96c03b94453b03f19c6ed93a7ed5f65847",
-      "byteSize": 243916186,
-      "readinessNote": "release/readiness/winui_zip_release_v1_0_5_2026-06-25.md",
-      "releaseUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.5",
-      "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.5/OnslaughtToolkit-winui-v1.0.5-win-x64.zip",
-      "publishedAt": "2026-06-25T12:16:30Z",
-      "tagCommit": "eac3d9db800f3270bb36d28ff9ad7fd6d7c88028"
+      "sha256": "ce5cb69a836f1b9c759ec608407cee51520f147979816a8661c29bf32cd6d720",
+      "byteSize": 243917871,
+      "readinessNote": "release/readiness/winui_zip_release_v1_0_6_2026-06-25.md",
+      "releaseUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.6",
+      "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.6/OnslaughtToolkit-winui-v1.0.6-win-x64.zip",
+      "publishedAt": "2026-06-25T14:04:04Z",
+      "tagCommit": "8c16631a"
     }
   },
   "nextSteps": [
-    "Commit/push v1.0.6 release-prep update.",
-    "No Ghidra backup is required for this no-mutation slice.",
-    "After release publication, resume bounded patch/mod/runtime proof work from public main unless a static RE contradiction appears."
+    "Resume bounded patch/mod/runtime proof work from public main unless a static RE contradiction appears.",
+    "No Ghidra backup was required for the no-mutation v1.0.6 release slice."
   ],
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -82,8 +81,6 @@
       "git diff --check (PASS)",
       "state JSON parse (PASS)"
     ],
-    "pendingForActiveSlice": [
-      "commit, push, tag, and publish v1.0.6"
-    ]
+    "pendingForActiveSlice": []
   }
 }

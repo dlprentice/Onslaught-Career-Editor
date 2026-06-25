@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "v1.0.6 WinUI ZIP release prep is green locally and ready to commit, push, tag, and publish.",
+  "currentFocus": "v1.0.6 WinUI ZIP release is published; docs/state now use v1.0.6 as the current app baseline.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -53,14 +53,12 @@
       "git diff --check (PASS)",
       "state JSON parse (PASS)"
     ],
-    "pendingForActiveSlice": [
-      "commit, push, tag, and publish v1.0.6"
-    ]
+    "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Commit and push v1.0.6 release-prep docs/state/package update.",
-    "Publish v1.0.6 GitHub Release with the validated ZIP plus checksum sidecar.",
-    "Carry the full offline Lore content-pack plan as a future implementation slice."
+    "Resume bounded patch/mod/runtime work from public main.",
+    "Carry full offline Lore as a generated content-pack plan for a future app release.",
+    "Use v1.0.6 links for collaborators and users."
   ],
   "winuiReleaseCandidate": {
     "status": "published",
@@ -95,15 +93,15 @@
     "publicSubmoduleCandidateFiles": 19492
   },
   "githubRelease": {
-    "version": "v1.0.5",
+    "version": "v1.0.6",
     "status": "published",
-    "url": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.5",
-    "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.5/OnslaughtToolkit-winui-v1.0.5-win-x64.zip",
-    "checksumUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.5/OnslaughtToolkit-v1.0.5-SHA256SUMS.txt",
-    "sha256": "f8ba14a51ed57b14c3575a82f424de96c03b94453b03f19c6ed93a7ed5f65847",
-    "byteSize": 243916186,
-    "publishedAt": "2026-06-25T12:16:30Z",
-    "tagCommit": "eac3d9db800f3270bb36d28ff9ad7fd6d7c88028"
+    "url": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.6",
+    "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.6/OnslaughtToolkit-winui-v1.0.6-win-x64.zip",
+    "checksumUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.6/OnslaughtToolkit-v1.0.6-SHA256SUMS.txt",
+    "sha256": "ce5cb69a836f1b9c759ec608407cee51520f147979816a8661c29bf32cd6d720",
+    "byteSize": 243917871,
+    "publishedAt": "2026-06-25T14:04:04Z",
+    "tagCommit": "8c16631a"
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -145,6 +143,6 @@
     "path": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.6-win-x64.zip",
     "byteSize": 243917871,
     "sha256": "ce5cb69a836f1b9c759ec608407cee51520f147979816a8661c29bf32cd6d720",
-    "status": "local green v1.0.6 candidate; GitHub Release publication pending"
+    "status": "published as GitHub Release v1.0.6"
   }
 }
