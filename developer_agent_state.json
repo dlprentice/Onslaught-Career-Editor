@@ -1,11 +1,11 @@
 {
   "lastUpdated": "2026-06-25",
   "branch": "main",
-  "currentFocus": "Asset Library export-folder QOL is broad-validated and ready to commit; next slice is a read-first Windowed & Mods modularity inspection for the next small presentation-only extraction.",
+  "currentFocus": "Asset Library export-folder QOL was committed in 9b27745b; current slice is a read-first Windowed & Mods modularity inspection for the next small presentation-only extraction.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainStatus": "main/origin/main is pushed through bd83f5ad; local tree has broad-validated Asset Library export-folder QOL changes ready to commit/push.",
+    "publicMainStatus": "local main has Asset Library export-folder QOL commit 9b27745b pending push; next active slice is Windowed & Mods modularity inspection.",
     "policy": "public repo is primary for source/docs/tools/tests/RE notes/proof summaries/state; hard payloads remain maintainer-local ignored overlays"
   },
   "publicPrimaryMigration": {
@@ -50,8 +50,8 @@
   },
   "recentClosedSlice": {
     "name": "winui-asset-library-export-folder-qol",
-    "status": "broad_validated_ready_for_commit",
-    "commit": null,
+    "status": "committed_pending_push",
+    "commit": "9b27745b",
     "readinessNote": "release/readiness/winui_asset_library_export_folder_qol_2026-06-25.md",
     "claimBoundary": "WinUI first-run/copy/status clarity plus AppCore status-text helper/test only; catalog resolution/service loading behavior, asset bundling, in-app extraction/generation, runtime proof, full 3D rendering, rebuild parity, release packaging, and installed-game mutation rules were unchanged."
   },
@@ -68,7 +68,7 @@
       "adversarial": "blocked in-app extraction/generation, game-install writes, asset bundling, private-path publication, and full 3D/rebuild/runtime overclaims",
       "closeout": "accepted UIA browse-name alignment and executable AppCore status-helper regression for selected game-install paths"
     },
-    "status": "ready_to_inspect_after_asset_qol_closeout"
+    "status": "ready_to_inspect"
   },
   "runtimeTruth": {
     "musicAudibleOutputProof": false,
@@ -134,11 +134,12 @@
       "Get-Process BEA,cdb,OnslaughtCareerEditor.WinUI -ErrorAction SilentlyContinue (PASS; no matching process output)"
     ],
     "pendingForActiveSlice": [
-      "commit/push Asset Library export-folder QOL if broad closeout stays green"
+      "push Asset Library export-folder QOL commit 9b27745b and this baton update",
+      "inspect BinaryPatchesPage and current PatchBench helpers for the next smallest presentation-only extraction candidate"
     ]
   },
   "nextSteps": [
-    "Finish Asset Library export-folder QOL broad closeout, commit, and push if green.",
+    "Push Asset Library export-folder QOL commit 9b27745b and this baton update.",
     "Inspect BinaryPatchesPage and PatchBench helpers for the next smallest presentation-only modularity slice.",
     "Keep patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of the next modularity slice unless evidence reveals a bounded bug."
   ],

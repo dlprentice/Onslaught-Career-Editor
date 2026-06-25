@@ -81,9 +81,10 @@ contributor work.
   to use the install as source for the external extractor before loading the
   separate generated export folder, and missing-catalog status now calls out a
   selected full BEA install as the game install rather than a generated export
-  folder. This did not change catalog resolution, service behavior, asset
-  bundling, in-app extraction/generation, runtime proof, full 3D rendering,
-  rebuild parity, release packaging, or installed-game mutation rules.
+  folder. The focused implementation is committed as `9b27745b`. This did not
+  change catalog resolution, service behavior, asset bundling, in-app
+  extraction/generation, runtime proof, full 3D rendering, rebuild parity,
+  release packaging, or installed-game mutation rules.
 - Windowed & Mods selected-choice modularity is accepted in
   `release/readiness/winui_windowed_mods_selected_choice_modularity_2026-06-25.md`.
   Profile/menu-background selected-state UIA names and styles now flow through
