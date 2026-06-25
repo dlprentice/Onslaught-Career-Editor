@@ -22,6 +22,9 @@ First run
   extraction for the documents listed in BOOK.md. Links from those pages to
   deeper source docs open GitHub source/search pages instead of shipping the
   full deep lore/RE mirror in this app ZIP.
+- A future full-offline Lore package should use a generated short-path content
+  pack rather than raw long lore-book\ filenames, so normal Explorer extraction
+  remains reliable.
 - If Battle Engine Aquila is installed in Steam or a known Steam library,
   the app attempts to find and save that read-only game folder automatically.
 - Media and safe copied-game workflows need a local Battle Engine Aquila

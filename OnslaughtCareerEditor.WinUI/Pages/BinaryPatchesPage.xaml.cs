@@ -2094,13 +2094,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (selectedKeys.Count == 0)
             {
-                return "Selected safe-copy preset details: Compatibility-only safe copy. Modules: required windowed compatibility rows are applied during safe-copy creation. Evidence and limits: open row details for exact offsets, checks, and unproven boundaries. Restore: recreate the safe copy, restore the copied BEA.exe.original.backup, or restore copied defaultoptions.bea backup when options were written. Limits: No Host/Join or online multiplayer. No installed-game mutation.";
+                return "Selected safe-copy preset details: Compatibility-only safe copy. Included changes: required windowed compatibility rows are applied during safe-copy creation. Checks and limits: open row details for what was checked and remaining limits. Restore: recreate the safe copy, restore the copied BEA.exe.original.backup, or restore copied defaultoptions.bea backup when options were written. Limits: No Host/Join or online multiplayer. No installed-game mutation.";
             }
 
             string? profileId = MatchSelectableSafeCopyProfileId(selectedKeys);
             if (string.IsNullOrWhiteSpace(profileId))
             {
-                return $"Selected safe-copy preset details: Manual patch selection. Modules: {selectedKeys.Count} visible row(s). Evidence and limits: open row details for exact offsets, checks, and unproven boundaries. Restore: restore copied BEA.exe.original.backup, restore copied defaultoptions.bea backup when options were written, or recreate the safe copy. Limits: No Host/Join or online multiplayer. No installed-game mutation.";
+                return $"Selected safe-copy preset details: Manual patch selection. Included changes: {selectedKeys.Count} visible row(s). Checks and limits: open row details for what was checked and remaining limits. Restore: restore copied BEA.exe.original.backup, restore copied defaultoptions.bea backup when options were written, or recreate the safe copy. Limits: No Host/Join or online multiplayer. No installed-game mutation.";
             }
 
             SafeCopyProfilePreset preset = BinaryPatchPlanBuilder.GetSafeCopyProfilePreset(profileId);

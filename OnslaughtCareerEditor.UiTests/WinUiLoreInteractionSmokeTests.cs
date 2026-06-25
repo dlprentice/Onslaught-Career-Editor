@@ -67,7 +67,7 @@ public class WinUiLoreInteractionSmokeTests
             Assert.That(documentSelected, Is.True, "Expected selecting the filtered tree row to update the visible Lore reader title.");
 
             string summary = TryGetName(FindByAutomationId(window, "LoreCurrentDocumentSummary")) ?? string.Empty;
-            Assert.That(summary, Does.Contain("curated lore library"));
+            Assert.That(summary, Does.Contain("packaged lore library"));
             Assert.That(summary, Does.Not.Contain(@":\"));
             Assert.That(summary, Does.Not.Contain(ResolveRepoRoot()));
 

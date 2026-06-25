@@ -6,7 +6,8 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Finish the public-primary release-readiness pass from this checkout:
+Close the Windowed & Mods patch/mod UX/testability cleanup plus the Lore package
+truth and Ghidra path documentation follow-up from this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -41,6 +42,19 @@ contributor work.
   reader set, rewrites deeper unbundled source links to GitHub source/search
   pages, auto-detects common Steam installs where possible, and makes Asset
   Library catalog requirements clear instead of implying raw game browsing.
+- The current app ZIP should not raw-copy the full `lore-book/` mirror because
+  the full tree has long RE/proof filenames that can exceed Windows Explorer
+  Extract All path budgets. Full offline Lore remains a planned WinUI feature
+  via a generated short-path content pack; see
+  `roadmap/winui-lore-offline-pack-plan.md`.
+- The maintainer-local live Ghidra project path is
+  `C:\Users\david\Ghidra\Projects\BEA.gpr` with store
+  `C:\Users\david\Ghidra\Projects\BEA.rep\`. The repo tracks scripts, exports,
+  ledgers, and docs instead of full binary project stores.
+- Current Windowed & Mods cleanup adds patch-key-derived AutomationIds for
+  dynamic patch rows, checkboxes, and Details expanders; it also keeps CDB,
+  proof-boundary, key-census, raw-offset, and evidence jargon out of the normal
+  debug-camera, online-unavailable, music-staging, and preset-detail path.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof both exist.
@@ -87,8 +101,11 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Continue bounded patch/mod/runtime proof work from public `main` after the
-   release baseline is clean.
+1. Commit and push the validated Windowed & Mods patch-row UX/testability plus
+   Lore/Ghidra package-truth cleanup after docs/state/hygiene gates are green.
+2. Continue bounded patch/mod/runtime proof work from public `main`, likely
+   Asset Library first-run catalog guidance or the next safe-copy/mod runtime
+   proof that does not require external endpoint material.
 
 ## Stop Conditions
 

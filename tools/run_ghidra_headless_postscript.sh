@@ -21,7 +21,7 @@ GHIDRA_HOME_DEFAULT="/mnt/d/ghidra_12.0.3_PUBLIC_20260210/ghidra_12.0.3_PUBLIC"
 PROJECT_DIR_DEFAULT="/mnt/c/Users/david/Ghidra/Projects"
 PROJECT_NAME_DEFAULT="BEA"
 PROGRAM_DEFAULT="BEA.exe"
-SCRIPT_DIR_DEFAULT="/mnt/c/Users/david/source/Onslaught-Career-Editor-private/tools"
+SCRIPT_DIR_DEFAULT="/mnt/c/Users/david/source/Onslaught-Career-Editor/tools"
 
 GHIDRA_HOME="${GHIDRA_HOME:-$GHIDRA_HOME_DEFAULT}"
 PROJECT_DIR="${GHIDRA_PROJECT_DIR:-$PROJECT_DIR_DEFAULT}"

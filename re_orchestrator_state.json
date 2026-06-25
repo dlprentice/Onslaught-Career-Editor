@@ -1,13 +1,15 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "No Ghidra/static mutation; WinUI v1.0.5 ZIP hotfix is published and verified.",
+  "currentFocus": "No Ghidra/static mutation; live Ghidra path documentation is green inside the combined WinUI/Lore package-truth cleanup.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
     "activeCurrentRisk": "1179/1179 = 100.00%",
     "wave1220CloseoutProbe": "tools/static_reaudit_final_closeout_wave1220.py",
     "measurementFrontDoor": "reverse-engineering/binary-analysis/static-reaudit-measurement-register.md",
-    "latestGhidraReviewBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+    "latestGhidraReviewBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified",
+    "latestLiveProject": "C:\\Users\\david\\Ghidra\\Projects\\BEA.gpr",
+    "latestLiveStore": "C:\\Users\\david\\Ghidra\\Projects\\BEA.rep\\"
   },
   "publicPrimaryMigration": {
     "status": "validated_public_primary_with_maintainer_local_ignored_overlays",
@@ -23,7 +25,7 @@
       "music-audible-live-20260624-160116 timed out after early exact-PID CDB attach and required manual cleanup before parent cleanup hardening",
       "music-audible-live-20260624-161657 failed timestamped CDB acceptance because CGame__PlayMusicForCurrentLevel level=100 was absent; no BEA/CDB remained"
     ],
-    "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable",
+    "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable; current slice is UI/copy/testability only",
     "latestWinuiReleaseCandidate": {
       "version": "v1.0.5",
       "status": "published",
@@ -37,8 +39,9 @@
     }
   },
   "nextSteps": [
-    "Push the final v1.0.5 published-state closeout to origin/main.",
-    "After the release is durable, resume bounded patch/mod/runtime proof work from the public repo."
+    "Commit and push the WinUI/Lore package-truth cleanup.",
+    "No Ghidra backup is required for this no-mutation slice.",
+    "Then resume bounded patch/mod/runtime proof work from public main unless a static RE contradiction appears."
   ],
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -65,22 +68,22 @@
   },
   "validation": {
     "latestPassed": [
-      "npm run test:winui-zip-release-candidate-probe (PASS; v1.0.5 ZIP size 243916186; SHA-256 f8ba14a51ed57b14c3575a82f424de96c03b94453b03f19c6ed93a7ed5f65847; 53 BOOK.md-linked Lore files; max default Extract All relative path 133/180; no dead packaged Lore links; launch/Home/Lore/Media smokes exit 0)",
-      "npm run test:doc-commands (PASS; 4231 documented npm commands checked)",
-      "npm run test:md-links (PASS; 3617 markdown files, 6122 local links)",
-      "npm run release:profile-check (PASS; R0=6126 R2=0 R3=3 R4=13177)",
+      "py -3 tools\\winui_zip_package_probe_test.py (PASS; 14 tests)",
+      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~LoreBrowserServiceTests\" (PASS; 6 tests)",
+      "npm run test:winui-primary-lane (PASS; build 0 warnings/errors, AppCore 1172, UiTests 85 passed / 2 skipped)",
+      "npm run test:doc-commands (PASS; 4232 documented npm commands checked)",
+      "npm run test:winui-zip-release-candidate-probe (PASS; ZIP 243917567 bytes, SHA-256 96f921b4670900c63d67d87be7fbb6476be8ef3d3b90742196bf058df238cca2, extracted launch/Home/Lore/Media smokes passed)",
+      "npm run test:md-links (PASS; 3618 markdown files, 6123 local links)",
       "npm run release:curated-check (PASS; selected files 625)",
-      "npm run test:public-allowlist (PASS; hard payload, submodule payload, public-primary migration inventory)",
+      "npm run release:profile-check (PASS; R0=6126 R2=0 R3=3 R4=13177)",
+      "npm run test:public-allowlist (PASS; public candidate files 19307, submodule candidate files 19491, migration inventory public tracked paths 19306)",
       "npm run test:winui-notices (PASS; 74 packages)",
-      "npm run test:repo-hygiene (PASS; 18458 explicit text files checked)",
-      "state JSON parse",
-      "git diff --check",
-      "gh release view v1.0.5 (published; ZIP asset size 243916186; ZIP asset digest sha256:f8ba14a51ed57b14c3575a82f424de96c03b94453b03f19c6ed93a7ed5f65847)",
-      "gh release download v1.0.5 (downloaded ZIP SHA-256 F8BA14A51ED57B14C3575A82F424DE96C03B94453B03F19C6ED93A7ED5F65847; checksum sidecar matches)"
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18459 explicit text files line-ending check)",
+      "git diff --check (PASS)",
+      "state JSON parse (PASS)"
     ],
     "pendingForActiveSlice": [
-      "final published-state closeout commit and push",
-      "resume bounded patch/mod/runtime proof work from the public repo"
+      "commit and push combined cleanup"
     ]
   }
 }

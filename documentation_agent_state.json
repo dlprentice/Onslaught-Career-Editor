@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "WinUI v1.0.5 release docs/state closeout: v1.0.5 is published and verified for Explorer-safe extraction and packaged Lore link hardening.",
+  "currentFocus": "Combined Windowed & Mods UX/testability plus Lore/Ghidra package-truth cleanup is green locally and ready to commit/push.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -39,28 +39,28 @@
   },
   "validation": {
     "latestPassed": [
-      "npm run test:winui-zip-release-candidate-probe (PASS; v1.0.5 ZIP size 243916186; SHA-256 f8ba14a51ed57b14c3575a82f424de96c03b94453b03f19c6ed93a7ed5f65847; 53 BOOK.md-linked Lore files; max default Extract All relative path 133/180; no dead packaged Lore links; launch/Home/Lore/Media smokes exit 0)",
-      "npm run test:doc-commands (PASS; 4231 documented npm commands checked)",
-      "npm run test:md-links (PASS; 3617 markdown files, 6122 local links)",
-      "npm run release:profile-check (PASS; R0=6126 R2=0 R3=3 R4=13177)",
+      "py -3 tools\\winui_zip_package_probe_test.py (PASS; 14 tests)",
+      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~LoreBrowserServiceTests\" (PASS; 6 tests)",
+      "npm run test:winui-primary-lane (PASS; build 0 warnings/errors, AppCore 1172, UiTests 85 passed / 2 skipped)",
+      "npm run test:doc-commands (PASS; 4232 documented npm commands checked)",
+      "npm run test:winui-zip-release-candidate-probe (PASS; ZIP 243917567 bytes, SHA-256 96f921b4670900c63d67d87be7fbb6476be8ef3d3b90742196bf058df238cca2, extracted launch/Home/Lore/Media smokes passed)",
+      "npm run test:md-links (PASS; 3618 markdown files, 6123 local links)",
       "npm run release:curated-check (PASS; selected files 625)",
-      "npm run test:public-allowlist (PASS; hard payload, submodule payload, public-primary migration inventory)",
+      "npm run release:profile-check (PASS; R0=6126 R2=0 R3=3 R4=13177)",
+      "npm run test:public-allowlist (PASS; public candidate files 19307, submodule candidate files 19491, migration inventory public tracked paths 19306)",
       "npm run test:winui-notices (PASS; 74 packages)",
-      "npm run test:repo-hygiene (PASS; 18458 explicit text files checked)",
-      "state JSON parse",
-      "git diff --check",
-      "gh release view v1.0.5 (published; ZIP asset size 243916186; ZIP asset digest sha256:f8ba14a51ed57b14c3575a82f424de96c03b94453b03f19c6ed93a7ed5f65847)",
-      "gh release download v1.0.5 (downloaded ZIP SHA-256 F8BA14A51ED57B14C3575A82F424DE96C03B94453B03F19C6ED93A7ED5F65847; checksum sidecar matches)"
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18459 explicit text files line-ending check)",
+      "git diff --check (PASS)",
+      "state JSON parse (PASS)"
     ],
     "pendingForActiveSlice": [
-      "final published-state closeout commit and push",
-      "resume bounded patch/mod/runtime proof work from the public repo"
+      "commit and push combined cleanup"
     ]
   },
   "nextSteps": [
-    "Push the validated post-release audit cleanup to origin/main.",
-    "Next docs follow-up: classify or sanitize bundled lore-book local backup path markers before a future ZIP.",
-    "Next UI docs/product follow-up: clarify Asset Library first-run catalog generation and move normal-path proof jargon behind details."
+    "Commit and push combined cleanup.",
+    "If a new app release is requested, publish a new tag/asset rather than silently replacing the existing v1.0.5 truth.",
+    "Carry the full offline Lore content-pack plan as a future implementation slice."
   ],
   "winuiReleaseCandidate": {
     "status": "published",
@@ -91,8 +91,8 @@
   "releaseAccounting": {
     "releaseProfile": "R0=6126 R2=0 R3=3 R4=13177",
     "curatedSelectedFiles": 625,
-    "publicCandidateFiles": 19306,
-    "publicSubmoduleCandidateFiles": 19490
+    "publicCandidateFiles": 19307,
+    "publicSubmoduleCandidateFiles": 19491
   },
   "githubRelease": {
     "version": "v1.0.5",
@@ -124,8 +124,27 @@
       "private repo still has active-looking goal/state wording and should eventually be frozen or bannered as archived if kept",
       "release lore-book contains local backup path provenance markers; not a payload/secret blocker, but should be classified or sanitized before the next ZIP",
       "Asset Library needs a clearer first-run path for generating/finding a local asset catalog",
-      "Windowed & Mods should move proof jargon/offset/evidence language further behind details/maintainer surfaces",
-      "dynamic patch row controls should get stable AutomationIds derived from patch keys"
+      "Windowed & Mods broader page split and selected-state UX debt remains tracked in roadmap/winui-ui-ux-redesign-radar.md."
     ]
+  },
+  "lorePackaging": {
+    "status": "documented_current_release_boundary_and_future_pack_plan",
+    "currentZip": "v1.0.5 uses BOOK.md-linked offline Lore files and externalizes deeper source links to GitHub",
+    "decision": "raw full lore-book mirror should not be shipped in the app ZIP; future full offline Lore should use a generated short-path content pack",
+    "plan": "roadmap/winui-lore-offline-pack-plan.md",
+    "userFacingCopy": "WinUI Lore page and rendered Markdown now identify source links that open online."
+  },
+  "ghidraLocalTruth": {
+    "liveProject": "C:\\Users\\david\\Ghidra\\Projects\\BEA.gpr",
+    "liveStore": "C:\\Users\\david\\Ghidra\\Projects\\BEA.rep\\",
+    "latestVerifiedBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified",
+    "note": "public clones do not need the Ghidra DB; repo tracks scripts/exports/ledgers/docs."
+  },
+  "latestLocalZipCandidate": {
+    "packageName": "OnslaughtToolkit-winui-v1.0.5-win-x64.zip",
+    "path": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.5-win-x64.zip",
+    "byteSize": 243917567,
+    "sha256": "96f921b4670900c63d67d87be7fbb6476be8ef3d3b90742196bf058df238cca2",
+    "status": "local green candidate from uncommitted tree; not the published GitHub asset"
   }
 }

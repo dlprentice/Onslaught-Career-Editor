@@ -34,7 +34,9 @@ executables, saves, media payloads, full Ghidra databases, or bulky generated
 proof captures. The ZIP bundles the Lore reader files listed in
 `lore-book\BOOK.md` for offline reading; links to deeper source docs open
 GitHub source/search pages instead of shipping the full deep RE mirror in the
-app ZIP.
+app ZIP. A future full-offline Lore reader should use a generated short-path
+content pack instead of raw deep `lore-book/` filenames so normal Explorer
+extraction remains reliable.
 Media, safe copied-game, and asset-export workflows use your own retail/Steam
 install; patching workflows operate on copied files and safe game copies.
 

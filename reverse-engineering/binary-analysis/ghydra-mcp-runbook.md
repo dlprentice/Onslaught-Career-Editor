@@ -6,12 +6,13 @@
 ## Active Environment (Authoritative)
 
 - Ghidra install (active): `D:\ghidra_12.0.3_PUBLIC_20260210\ghidra_12.0.3_PUBLIC`
-- Ghidra projects root (active): `C:\Users\david\Ghidra`
+- Ghidra projects root (active): `C:\Users\david\Ghidra\Projects`
+- Live BEA project (maintainer-local): `C:\Users\david\Ghidra\Projects\BEA.gpr` with store `C:\Users\david\Ghidra\Projects\BEA.rep\`
 - Active GhydraMCP bundle: `D:\GhydraMCP-Complete-v2.2.0-rc.2-20260211-083952`
 - Repo-local `tools/GhydraMCP/` has been removed from this repo to avoid runtime-bundle confusion.
 - Canonical workstation setup, mutation discipline, backup-root posture, and static closeout truth live in `AGENTS.md` sections `Ghidra / Headless Rules` and `Current Known Gaps`.
 - After any chat context reset/compaction or Ghidra restart/deadlock, reread `AGENTS.md`, this runbook, the three repo state batons, and the relevant wave evidence before attempting mutations.
-- Backup root note (2026-06-21): external `G:\` backup storage is not attached. For any new backup-producing Ghidra wave, use `D:\GhidraBackups` or another explicit local backup root until an external drive is available, and record that temporary root in the evidence/state. Historical docs may still cite older verified `G:\GhidraBackups\...` backup IDs.
+- Backup root note (2026-06-25): external `G:\` backup storage is machine-local and can be attached or detached. Current local check found `G:\GhidraBackups` available, with latest verified historical backup `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`. If `G:\` is unavailable during a new backup-producing Ghidra wave, use `D:\GhidraBackups` or another explicit local backup root and record that temporary root in evidence/state.
 
 ## Two Access Modes (Same Backend)
 

@@ -32,8 +32,10 @@ links.
 The ZIP release does not include Battle Engine Aquila game files, copied
 executables, saves, media payloads, full Ghidra databases, or bulky generated
 proof captures. Users provide their own retail/Steam installation, and mutating
-workflows operate on copied files or safe game copies. This is not an MSIX,
-installer, Store package, signed release, or SmartScreen/reputation claim.
+workflows operate on copied files or safe game copies. A full-offline Lore
+reader remains viable as a generated short-path content pack, not as a raw deep
+`lore-book/` mirror in the ZIP. This is not an MSIX, installer, Store package,
+signed release, or SmartScreen/reputation claim.
 
 ## Shipping Direction
 

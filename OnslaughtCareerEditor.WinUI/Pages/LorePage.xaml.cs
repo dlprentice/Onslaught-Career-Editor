@@ -101,7 +101,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 }
 
                 LibrarySummaryTextBlock.Text = _index.UsingLoreBook
-                    ? $"Curated reader ready from lore-book/BOOK.md."
+                    ? $"Packaged lore reader ready from lore-book/BOOK.md."
                     : "Fallback lore-book index loaded.";
 
                 ApplyTreeFilter(updateSelection: false);
@@ -544,7 +544,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 args.Cancel = true;
                 await Launcher.LaunchUriAsync(new Uri(uri));
-                AppStatusService.SetStatus("Lore: opened link externally");
+                AppStatusService.SetStatus(DescribeExternalLinkStatus(uri));
                 return;
             }
 
@@ -597,7 +597,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (IsExternalUri(args.Uri))
             {
                 await Launcher.LaunchUriAsync(new Uri(args.Uri));
-                AppStatusService.SetStatus("Lore: opened link externally");
+                AppStatusService.SetStatus(DescribeExternalLinkStatus(args.Uri));
                 return;
             }
 
@@ -639,7 +639,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 LibraryCountTextBlock.Text = $"{_index.Documents.Count} documents ready";
                 PaneStateTextBlock.Text = _index.UsingLoreBook
-                    ? "Showing the curated lore-book structure."
+                    ? "Showing packaged lore-book chapters; source links may open online."
                     : "Showing the fallback lore-book scan.";
             }
             else
@@ -693,13 +693,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string fileName = Path.GetFileName(fullPath);
             if (_index == null || string.IsNullOrWhiteSpace(fileName))
             {
-                return "Reading from the curated lore library.";
+                return "Reading from the packaged lore library.";
             }
 
             if (_documentLookup.TryGetValue(fullPath, out LoreDocument? document) &&
                 !string.IsNullOrWhiteSpace(document.RelativePath))
             {
-                return $"Reading {fileName} from the curated lore library.";
+                return $"Reading {fileName} from the packaged lore library.";
             }
 
             return $"Reading {fileName}.";
@@ -721,6 +721,22 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             return value.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
                    value.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
                    value.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string DescribeExternalLinkStatus(string value)
+        {
+            return IsProjectSourceUri(value)
+                ? "Lore: opened source link in browser"
+                : "Lore: opened external link in browser";
+        }
+
+        private static bool IsProjectSourceUri(string value)
+        {
+            return Uri.TryCreate(value, UriKind.Absolute, out Uri? uri) &&
+                   (uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase) ||
+                    uri.Scheme.Equals("http", StringComparison.OrdinalIgnoreCase)) &&
+                   uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase) &&
+                   uri.AbsolutePath.StartsWith("/dlprentice/Onslaught-Career-Editor/", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool PathsEqual(string? left, string? right)

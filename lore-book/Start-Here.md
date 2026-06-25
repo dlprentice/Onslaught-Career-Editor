@@ -13,8 +13,8 @@ Companion docs:
 
 - Use the left-hand tree to move through chapters.
 - Back/Forward/Home let you retrace your steps or return to the overview.
-- Internal links stay inside the app.
-- External links open your browser.
+- Packaged chapter links stay inside the app.
+- Source links and external references open your browser.
 
 ## Suggested paths
 

@@ -99,3 +99,13 @@ as `local-proofs/` or `local-ghidra/`.
 Agents can work with a local Ghidra project if it exists in an ignored overlay,
 but the repo should receive deterministic exports, scripts, markdown, JSON, TSV,
 and ledger files instead of binary Ghidra project stores.
+
+Current maintainer-local live project on this workstation:
+
+- Project file: `C:\Users\david\Ghidra\Projects\BEA.gpr`
+- Project store: `C:\Users\david\Ghidra\Projects\BEA.rep\`
+- Latest verified historical backup pointer: `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`
+
+Public clones do not need this database to build or test the app. Use the
+tracked Ghidra scripts, exports, ledgers, and RE docs for source work; use the
+live Ghidra project only for maintainer-local mutation or read-back proof.

@@ -42,6 +42,13 @@ This document tracks UI/UX debt that is too broad for a release-candidate polish
 ## Current Release-Slice Fixes
 
 - Default copy now uses player-facing language for safe copies, game options, online unavailable status, music staging, and patch/mod limits.
+- Windowed & Mods patch rows now expose stable patch-key-derived row, checkbox,
+  and details AutomationIds for agent/UIA targeting; the normal debug-camera,
+  online-unavailable, music-staging, and preset-detail copy no longer puts CDB,
+  proof-boundary, key-census, raw-offset, or evidence jargon in the primary path.
+- Lore now distinguishes packaged offline chapters from GitHub source links in
+  the visible UI and rendered Markdown. Full offline Lore is tracked as a
+  generated content-pack plan instead of raw long-path ZIP extraction.
 - Game Options patching is guarded by try/catch/finally and runs off the UI thread.
 - File-picker/readiness-loader failures report user-visible status instead of relying on an app-level crash net.
 - Major result/status surfaces use polite live-region hints for accessibility.

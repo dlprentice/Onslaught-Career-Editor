@@ -283,6 +283,45 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
 
             self.assertIn("zip_lore_link_safety", failures)
 
+    def test_folder_inspection_rejects_stale_packaged_lore_all_in_app_claims(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            for relative_path in (probe.ROOT_LAUNCHER, probe.ROOT_README, probe.ROOT_LICENSE, "lore-book/BOOK.md"):
+                path = bundle_dir / relative_path
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(relative_path, encoding="utf-8")
+            (bundle_dir / "lore-book" / "Start.md").write_text(
+                "Internal links stay inside the app.\n",
+                encoding="utf-8",
+            )
+
+            failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
+
+            self.assertIn("bundle_lore_copy_truth", failures)
+
+    def test_zip_inspection_rejects_stale_packaged_lore_all_in_app_claims(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            zip_path = root / "lore-copy.zip"
+            self._write_publish_payload(bundle_dir / "app")
+            for relative_path in (probe.ROOT_LAUNCHER, probe.ROOT_README, probe.ROOT_LICENSE, "lore-book/BOOK.md"):
+                path = bundle_dir / relative_path
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(relative_path, encoding="utf-8")
+            (bundle_dir / "lore-book" / "Start.md").write_text(
+                "Search without leaving the app.\n",
+                encoding="utf-8",
+            )
+
+            exit_code, _ = probe.create_zip(bundle_dir, zip_path)
+            self.assertEqual(exit_code, 0)
+            failures = {item.key for item in probe.inspect_zip(zip_path) if item.status == "FAIL"}
+
+            self.assertIn("zip_lore_copy_truth", failures)
+
     def test_ui_retry_records_failed_attempt_before_success(self) -> None:
         calls: list[int] = []
         original_run_ui_test = probe.run_ui_test

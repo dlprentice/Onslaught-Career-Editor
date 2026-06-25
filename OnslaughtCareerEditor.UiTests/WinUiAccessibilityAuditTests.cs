@@ -186,6 +186,7 @@ public class WinUiAccessibilityAuditTests
             ["OnslaughtCareerEditor.WinUI/Pages/LorePage.xaml"] =
             [
                 "LoreSearchBox",
+                "LoreSourceBoundaryStatus",
                 "LoreDocumentTree",
                 "LoreCurrentDocumentTitle",
                 "LoreReaderPanel"

@@ -11,6 +11,10 @@ to GitHub source/search pages, rejects raw root DLL/EXE layouts, rejects
 Explorer-unsafe long ZIP entry paths, and passes extracted launch, Home, Lore,
 and representative Media UI smokes with no skipped test rows. Evidence:
 `release/readiness/winui_zip_release_v1_0_5_2026-06-25.md`.
+WinUI now labels packaged Lore source links as browser-opening source links
+instead of implying every Lore link stays inside the app. Full offline Lore is
+planned as a generated short-path content pack, not as raw deep `lore-book/`
+filenames in the ZIP.
 It does not include Battle Engine Aquila game files, saves, private media,
 private proof material, MSIX/installer packaging, signing, Store distribution,
 SmartScreen/reputation proof, player-ready online multiplayer, or gameplay
@@ -86,6 +90,13 @@ packaged app can load the tracked profile catalog. This is UI/accounting and
 package-content clarity only: no BEA launch, CDB attach, byte patch, Host/Join
 enablement, online proof, music audible-output proof, rebuild proof, or
 installed-game mutation is added.
+
+Windowed & Mods dynamic patch rows now expose stable patch-key-derived
+AutomationIds for the row, checkbox, and Details expander so UIA/agent tests can
+target individual patch rows without depending on display text. The normal
+debug-camera, online-unavailable, music-staging, and preset-detail copy now uses
+plain user language and keeps CDB/proof-boundary/key-census/raw-offset jargon out
+of the primary path.
 
 Windowed & Mods now includes a `Debug Camera Preview` safe-copy profile selector. It selects the existing windowed compatibility pair plus `free_camera_aurore_gate_bypass` and `free_camera_keyboard_forward_q_hook`; AppCore expands the required hidden `free_camera_keyboard_forward_q_cave` dependency when preparing the patch plan. This is a preset/UX contract over already bounded patch rows, not a new BEA launch, CDB attach, full free-camera control scheme, gameplay-safety proof, online mode, or rebuild-parity claim.
 

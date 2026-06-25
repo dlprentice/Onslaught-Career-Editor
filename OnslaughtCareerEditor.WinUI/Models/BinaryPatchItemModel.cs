@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Microsoft.UI.Xaml.Media;
 using OnslaughtCareerEditor.WinUI.Helpers;
 using Onslaught___Career_Editor;
@@ -63,11 +64,11 @@ namespace OnslaughtCareerEditor.WinUI.Models
             };
             UserFacingStatus = spec.Key switch
             {
-                "resolution_gate" => "Safe-copy compatibility fix. Technical evidence is in Details and limits.",
-                "force_windowed" => "Safe-copy compatibility fix. Technical evidence is in Details and limits.",
+                "resolution_gate" => "Safe-copy compatibility fix. Open Details and limits for what was checked.",
+                "force_windowed" => "Safe-copy compatibility fix. Open Details and limits for what was checked.",
                 "extra_graphics_default_on" => "Safe-copy graphics option. Needs visual comparison on your machine.",
                 "ignore_cardid_tweak_overrides" => "Safe-copy graphics option. Needs visual comparison on your machine.",
-                "version_overlay_use_patched_format_pointer" => "Safe-copy title-screen marker. Technical evidence is in Details and limits.",
+                "version_overlay_use_patched_format_pointer" => "Safe-copy title-screen marker. Open Details and limits for what was checked.",
                 "frontend_clear_screen_dark_red" => "Safe-copy menu color test. Broader menu coverage is still pending.",
                 "frontend_clear_screen_dark_green" => "Safe-copy menu color test. Broader menu coverage is still pending.",
                 "frontend_clear_screen_black" => "Safe-copy menu color test. Broader menu coverage is still pending.",
@@ -83,7 +84,7 @@ namespace OnslaughtCareerEditor.WinUI.Models
                 "free_camera_keyboard_yaw_right_q_hook" => "Experimental camera rotation test. One key path only.",
                 "free_camera_keyboard_pitch_up_q_hook" => "Experimental camera pitch test. One key path only.",
                 "free_camera_keyboard_pitch_down_q_hook" => "Experimental camera pitch test. One key path only.",
-                _ => "Byte-verified copied-executable patch. Technical evidence is in Details and limits.",
+                _ => "Byte-verified copied-executable patch. Open Details and limits for what was checked.",
             };
             ExpectedVisibleResult = spec.Key switch
             {
@@ -224,9 +225,15 @@ namespace OnslaughtCareerEditor.WinUI.Models
         };
 
         public string AccessibilityHelpText =>
-            $"{DisplayName}. {Summary} {UserFacingStatus} Safe copy only. Use the adjacent Details and limits expander for technical evidence and remaining limits.";
+            $"{DisplayName}. {Summary} {UserFacingStatus} Safe copy only. Use the adjacent Details and limits expander for what was checked and remaining limits.";
 
         public string DetailsHeader => $"Details and limits for {DisplayName}";
+
+        public string RowAutomationId => BuildAutomationId("PatchBenchPatchRow", Spec.Key);
+
+        public string CheckBoxAutomationId => BuildAutomationId("PatchBenchPatchCheckBox", Spec.Key);
+
+        public string DetailsAutomationId => BuildAutomationId("PatchBenchPatchDetails", Spec.Key);
 
         public string Summary { get; }
 
@@ -287,8 +294,8 @@ namespace OnslaughtCareerEditor.WinUI.Models
             "free_camera_keyboard_pitch_down_q_hook" => "EXPERIMENTAL CAMERA TEST",
             "skip_auto_toggle" => "EXPERIMENTAL FALLBACK",
             "pause_o_scan_initializer_experiment" => "EXPERIMENTAL PAUSE TEST",
-            "extra_graphics_default_on" => "LAUNCH SMOKE",
-            "ignore_cardid_tweak_overrides" => "LAUNCH SMOKE",
+            "extra_graphics_default_on" => "BASIC LAUNCH CHECK",
+            "ignore_cardid_tweak_overrides" => "BASIC LAUNCH CHECK",
             _ when string.Equals(Spec.Track, "Experimental", System.StringComparison.OrdinalIgnoreCase) => "EXPERIMENTAL: RUNTIME UNPROVEN",
             _ when string.Equals(Spec.Track, "Dangerous", System.StringComparison.OrdinalIgnoreCase) => "DANGEROUS",
             _ => "BYTE VERIFIED",
@@ -311,6 +318,21 @@ namespace OnslaughtCareerEditor.WinUI.Models
         public string OffsetText => $"Offset 0x{Spec.FileOffset:X}";
 
         public event PropertyChangedEventHandler? PropertyChanged;
+
+        private static string BuildAutomationId(string prefix, string key)
+        {
+            var builder = new StringBuilder(prefix.Length + key.Length + 1);
+            builder.Append(prefix);
+            builder.Append('_');
+
+            foreach (char character in key)
+            {
+                bool useLiteralCharacter = character is '_' or '-' || char.IsLetterOrDigit(character);
+                builder.Append(useLiteralCharacter ? character : '_');
+            }
+
+            return builder.ToString();
+        }
 
         private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {

@@ -18,7 +18,11 @@
                     Spacing="6">
             <TextBlock Text="Lore"
                        Style="{StaticResource SectionTitleTextStyle}" />
-            <TextBlock Text="Browse the curated lore library inside the app with searchable navigation, in-app reading, and document history."
+            <TextBlock Text="Browse the packaged offline lore reader with searchable navigation and document history. Source links may open GitHub in your browser."
+                       Style="{StaticResource SectionBodyTextStyle}" />
+            <TextBlock x:Name="LoreSourceBoundaryStatusTextBlock"
+                       AutomationProperties.AutomationId="LoreSourceBoundaryStatus"
+                       Text="Offline reader: packaged chapters stay here; source links open online."
                        Style="{StaticResource SectionBodyTextStyle}" />
             <StackPanel Visibility="Collapsed">
                 <TextBlock x:Name="LibrarySummaryTextBlock"
@@ -54,7 +58,7 @@
                                 <TextBlock Text="Library"
                                            FontSize="18"
                                            FontWeight="SemiBold" />
-                                <TextBlock Text="Search titles and document content, then browse the book structure without leaving the app."
+                                <TextBlock Text="Search packaged titles and document content, then browse the book structure. Source links may open your browser."
                                            Style="{StaticResource SectionBodyTextStyle}" />
                                 <Grid ColumnSpacing="8">
                                     <Grid.ColumnDefinitions>
@@ -166,7 +170,7 @@
                         <TextBlock x:Name="CurrentPathTextBlock"
                                    AutomationProperties.AutomationId="LoreCurrentDocumentSummary"
                                    Style="{StaticResource SectionBodyTextStyle}"
-                                   Text="The in-app lore reader will stay on this page while you browse." />
+                                   Text="Packaged lore opens here; source links may open your browser." />
                     </StackPanel>
                 </Border>
 

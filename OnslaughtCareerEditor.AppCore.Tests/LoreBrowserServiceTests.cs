@@ -115,6 +115,26 @@ See the [world](lore/world-lore.md).
         }
 
         [Fact]
+        public void RenderDocument_MarksGitHubSourceLinksAsExternalSource()
+        {
+            string loreBook = CreateLoreBookSkeleton();
+            string markdownPath = Path.Combine(loreBook, "Start-Here.md");
+            File.WriteAllText(markdownPath, """
+# Start Here
+
+See the [deep source](https://github.com/dlprentice/Onslaught-Career-Editor/blob/main/lore-book/deep/Deep.md).
+""");
+
+            LoreBrowserService service = new();
+            RenderedLoreDocument rendered = service.RenderDocument(markdownPath);
+
+            string html = File.ReadAllText(new Uri(rendered.DisplayUri).LocalPath);
+            Assert.Contains("class=\"source-link\"", html);
+            Assert.Contains("Source link; opens GitHub in your browser", html);
+            Assert.Contains("<span class=\"source-link-badge\" aria-hidden=\"true\">Source</span>", html);
+        }
+
+        [Fact]
         public void ResolveInternalTarget_HandlesRelativeMarkdownAndDirectories()
         {
             string loreBook = CreateLoreBookSkeleton();

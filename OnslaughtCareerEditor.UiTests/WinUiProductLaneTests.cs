@@ -344,9 +344,14 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("Windowed + Graphics Defaults"));
         Assert.That(pageXaml, Does.Contain("Enhanced Profile Preview"));
         Assert.That(pageXaml, Does.Contain("Enhanced Profile Preview combines the windowed setup, graphics defaults, PATCHED title marker, red menu background, Goodies preview, and copied-options control starting values."));
-        Assert.That(pageXaml, Does.Contain("Debug Camera Preview selects only the bounded free-camera toggle plus one Q-forward remap path."));
+        Assert.That(pageXaml, Does.Contain("Debug Camera Preview selects the camera toggle plus one Q-forward movement test."));
         Assert.That(pageXaml, Does.Contain("PatchBenchDebugCameraProofMatrixStatus"));
-        Assert.That(pageXaml, Does.Contain("Debug Camera Preview only selects Q-forward. Seven other Q remap rows are manual/custom-only and mutually exclusive; their accepted CDB movement/orientation proofs are tracked for future work."));
+        Assert.That(pageXaml, Does.Contain("Debug Camera Preview keeps the other camera-key experiments manual so you can opt into them one at a time."));
+        Assert.That(pageXaml, Does.Contain("Use this preview as a small camera-control trial, not a full camera overhaul."));
+        Assert.That(pageXaml, Does.Contain("Some camera-key combinations still need broader menu and pause testing before they become presets."));
+        Assert.That(pageXaml, Does.Not.Contain("accepted CDB movement/orientation proofs"));
+        Assert.That(pageXaml, Does.Not.Contain("proof-boundary consistency guard"));
+        Assert.That(pageXaml, Does.Not.Contain("key-census proof"));
         Assert.That(pageXaml, Does.Contain("Experimental camera controls may be unstable."));
         Assert.That(pageXaml, Does.Contain("It does not prove full camera controls or gameplay safety."));
         Assert.That(pageXaml, Does.Contain("Fullscreen fallback, netcode, and in-game toggle menus are not part of any preset yet."));
@@ -355,9 +360,14 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("PatchBenchProfileCatalogStatus"));
         Assert.That(pageXaml, Does.Contain("Profile catalog and preset source"));
         Assert.That(pageXaml, Does.Contain("PatchBenchSelectedProfileDetailsExpander"));
-        Assert.That(pageXaml, Does.Contain("Preset details and proof limits"));
+        Assert.That(pageXaml, Does.Contain("Preset details and limits"));
+        Assert.That(pageXaml, Does.Not.Contain("Preset details and proof limits"));
         Assert.That(pageXaml, Does.Contain("PatchBenchSelectedProfileDetails"));
         Assert.That(pageXaml, Does.Contain("Selected safe-copy preset details"));
+        Assert.That(pageXaml, Does.Not.Contain("Open row details for evidence and limits"));
+        Assert.That(pageXaml, Does.Not.Contain("analog camera proof"));
+        Assert.That(code, Does.Contain("Checks and limits: open row details for what was checked and remaining limits."));
+        Assert.That(code, Does.Not.Contain("Evidence and limits: open row details for exact offsets, checks, and unproven boundaries."));
         Assert.That(code, Does.Contain("PatchBenchSelectedProfileDetails.Text = BuildSelectedProfileDetails(visibleSelectedKeys)"));
         Assert.That(code, Does.Contain("PatchBenchProfileCatalogStatus.Text = BuildSafeCopyProfileCatalogStatus()"));
         Assert.That(code, Does.Contain("BinaryPatchPlanBuilder.SafeCopyProfileCatalogVersion"));
@@ -440,8 +450,14 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("Goodies display preview row cleared"));
         Assert.That(code, Does.Contain("Patch row is not available: {key}"));
         Assert.That(pageXaml, Does.Contain("Available changes include windowed startup, wider display-mode support, graphics defaults, menu color presets, music swaps, Goodies preview, title marker, launch options, control-option presets, and experimental camera/control rows."));
-        Assert.That(pageXaml, Does.Contain("Open Details and limits on any row"));
+        Assert.That(pageXaml, Does.Contain("Open Details and limits on a row when you want the technical checks and remaining limits."));
         Assert.That(pageXaml, Does.Contain("Details and limits"));
+        Assert.That(itemModel, Does.Contain("public string RowAutomationId => BuildAutomationId(\"PatchBenchPatchRow\", Spec.Key);"));
+        Assert.That(itemModel, Does.Contain("public string CheckBoxAutomationId => BuildAutomationId(\"PatchBenchPatchCheckBox\", Spec.Key);"));
+        Assert.That(itemModel, Does.Contain("public string DetailsAutomationId => BuildAutomationId(\"PatchBenchPatchDetails\", Spec.Key);"));
+        Assert.That(pageXaml, Does.Contain("AutomationProperties.AutomationId=\"{Binding RowAutomationId}\""));
+        Assert.That(pageXaml, Does.Contain("AutomationProperties.AutomationId=\"{Binding CheckBoxAutomationId}\""));
+        Assert.That(pageXaml, Does.Contain("AutomationProperties.AutomationId=\"{Binding DetailsAutomationId}\""));
         string[] patchRowCheckBoxBlocks = Regex.Matches(pageXaml, "<CheckBox\\b[\\s\\S]*?</CheckBox>")
             .Select(match => match.Value)
             .Where(block => block.Contains("Details and limits", StringComparison.Ordinal))
@@ -514,13 +530,14 @@ public class WinUiProductLaneTests
         Assert.That(itemModel, Does.Contain("public string UserFacingStatus"));
         Assert.That(pageXaml, Does.Contain("Text=\"{Binding UserFacingStatus}\""));
         Assert.That(itemModel, Does.Not.Contain("Checked: {ProofStatus}"));
-        Assert.That(itemModel, Does.Contain("Use the adjacent Details and limits expander for technical evidence and remaining limits"));
+        Assert.That(itemModel, Does.Contain("Use the adjacent Details and limits expander for what was checked and remaining limits"));
         Assert.That(itemModel, Does.Contain("public string DetailsHeader => $\"Details and limits for {DisplayName}\";"));
         Assert.That(itemModel, Does.Contain("SAFE COPY REQUIRED"));
         Assert.That(itemModel, Does.Contain("VISIBLE MARKER"));
         Assert.That(itemModel, Does.Contain("MENU COLOR CHECK"));
         Assert.That(itemModel, Does.Contain("GOODIES DISPLAY CHECK"));
-        Assert.That(itemModel, Does.Contain("LAUNCH SMOKE"));
+        Assert.That(itemModel, Does.Contain("BASIC LAUNCH CHECK"));
+        Assert.That(itemModel, Does.Not.Contain("LAUNCH SMOKE"));
         Assert.That(itemModel, Does.Contain("EXPERIMENTAL PAUSE TEST"));
         Assert.That(itemModel, Does.Not.Contain("Status: {TrackLabel}."));
         Assert.That(pageXaml, Does.Contain("AutomationProperties.HelpText=\"{Binding AccessibilityHelpText}\""));
@@ -547,10 +564,17 @@ public class WinUiProductLaneTests
             Assert.That(collapsedText, Does.Not.Contain("CDB"));
             Assert.That(collapsedText, Does.Not.Contain("Readiness:"));
             Assert.That(collapsedText, Does.Not.Contain("0x"));
+            Assert.That(collapsedText, Does.Not.Contain("proof").IgnoreCase);
+            Assert.That(collapsedText, Does.Not.Contain("evidence").IgnoreCase);
+            Assert.That(collapsedText, Does.Not.Contain("offset").IgnoreCase);
+            Assert.That(collapsedText, Does.Not.Contain("key-census").IgnoreCase);
+            Assert.That(collapsedText, Does.Not.Contain("proof-boundary").IgnoreCase);
             Assert.That(collapsedText, Does.Not.Contain("PROOF"));
             Assert.That(collapsedText, Does.Not.Contain("ProofStatus"));
             Assert.That(collapsedText, Does.Not.Contain("TrackLabel"));
         }
+        Assert.That(itemModel, Does.Contain("character is '_' or '-'"));
+        Assert.That(itemModel, Does.Not.Contain("char.IsLetterOrDigit(character) ? character : '_'"));
         Assert.That(
             pageXaml.IndexOf("Safe game copy", StringComparison.Ordinal),
             Is.LessThan(pageXaml.IndexOf("Advanced: patch one BEA.exe copy", StringComparison.Ordinal)),
@@ -647,7 +671,8 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("Online multiplayer is not ready"));
         Assert.That(pageXaml, Does.Contain("Local split-screen launch preset is available for testing in a safe copy."));
         Assert.That(pageXaml, Does.Contain("Online play is not available in this release."));
-        Assert.That(pageXaml, Does.Contain("The preset only fills a copied-game launch setup; it is not Host/Join, online play, or gameplay proof."));
+        Assert.That(pageXaml, Does.Contain("This preset only prepares a local split-screen safe-copy launch."));
+        Assert.That(pageXaml, Does.Not.Contain("gameplay proof."));
         Assert.That(pageXaml, Does.Contain("PatchBenchOnlinePrepLocalProbeButton"));
         Assert.That(pageXaml, Does.Contain("Use local split-screen launch preset"));
         Assert.That(pageXaml, Does.Contain("PatchBenchOnlinePrepActionStatus"));
@@ -836,8 +861,9 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("write a restore manifest in the safe copy"));
         Assert.That(pageXaml, Does.Contain("PatchBenchMusicAudibleProofContractStatus"));
         Assert.That(pageXaml, Does.Contain("A music swap modifies safe-copy files only"));
-        Assert.That(pageXaml, Does.Contain("Audible proof still requires a bounded audio-output capture"));
-        Assert.That(pageXaml, Does.Contain("Staging and CDB decode are not audible playback proof."));
+        Assert.That(pageXaml, Does.Contain("Staging does not confirm what you will hear in game; test after launching the safe copy."));
+        Assert.That(pageXaml, Does.Not.Contain("Audible proof still requires a bounded audio-output capture"));
+        Assert.That(pageXaml, Does.Not.Contain("Staging and CDB decode are not audible playback proof."));
         Assert.That(pageXaml, Does.Contain("PatchBenchMusicSwapBea02ForBea01PresetButton"));
         Assert.That(pageXaml, Does.Contain("PatchBenchMusicSwapBea01ForBea02PresetButton"));
         Assert.That(pageXaml, Does.Contain("BEA_02 over BEA_01"));
@@ -1130,7 +1156,7 @@ public class WinUiProductLaneTests
 
         Assert.That(xaml, Does.Contain("PatchBenchMusicSwapBea02ForBea04PresetButton"));
         Assert.That(xaml, Does.Contain("BEA_02 over BEA_04"));
-        Assert.That(xaml, Does.Contain("Audible proof still requires a bounded audio-output capture"));
+        Assert.That(xaml, Does.Contain("Staging does not confirm what you will hear in game; test after launching the safe copy."));
         Assert.That(code, Does.Contain("UseBea02ForBea04PresetId"));
         Assert.That(code, Does.Contain("PatchBenchMusicSwapBea02ForBea04PresetButton.IsEnabled"));
         Assert.That(code, Does.Contain("MusicSwapBea02ForBea04PresetButton_Click"));

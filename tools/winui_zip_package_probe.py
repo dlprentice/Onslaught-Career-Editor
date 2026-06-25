@@ -48,6 +48,10 @@ LORE_BOOK_LINK_REGEX = re.compile(r"\[[^\]]+\]\((?P<target>[^)]+)\)")
 LORE_BOOK_MARKDOWN_LINK_REGEX = re.compile(r"(?P<prefix>\[[^\]]+\]\()(?P<target>[^)]+)(?P<suffix>\))")
 GITHUB_SOURCE_BLOB_BASE = "https://github.com/dlprentice/Onslaught-Career-Editor/blob/main"
 GITHUB_SOURCE_SEARCH_BASE = "https://github.com/dlprentice/Onslaught-Career-Editor/search"
+PACKAGED_LORE_FORBIDDEN_CLAIMS = (
+    "Internal links stay inside the app.",
+    "without leaving the app",
+)
 WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH = 180
 REQUIRED_APP_FILES = (
     APP_EXE,
@@ -508,6 +512,7 @@ def inspect_folder(root: Path, prefix: str) -> list[CheckResult]:
         checks.extend(inspect_payload_safety_names(names, prefix))
         checks.extend(inspect_explorer_path_safety_names(names, prefix))
         checks.extend(inspect_packaged_lore_link_safety(root, prefix))
+        checks.extend(inspect_packaged_lore_copy_truth(read_folder_lore_texts(root), prefix))
     package_suffixes = {".msix", ".appx", ".appinstaller", ".msixbundle", ".appxbundle"}
     package_files = [path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in package_suffixes]
     checks.append(
@@ -568,6 +573,7 @@ def inspect_zip(zip_path: Path) -> list[CheckResult]:
     checks.extend(inspect_payload_safety_names(names, "zip"))
     checks.extend(inspect_explorer_path_safety_names(names, "zip", default_extract_folder_name=zip_path.stem))
     checks.extend(inspect_packaged_lore_link_safety_archive(names, lore_texts, "zip"))
+    checks.extend(inspect_packaged_lore_copy_truth(lore_texts, "zip"))
     installer_suffixes = (".msix", ".appx", ".appinstaller", ".msixbundle", ".appxbundle")
     installers = [name for name in names if name.lower().endswith(installer_suffixes)]
     checks.append(
@@ -596,6 +602,37 @@ def read_zip_lore_texts(package: zipfile.ZipFile) -> dict[str, str]:
         except KeyError:
             continue
     return texts
+
+
+def read_folder_lore_texts(root: Path) -> dict[str, str]:
+    lore_root = root / LORE_BOOK_DIR
+    if not lore_root.is_dir():
+        return {}
+    texts: dict[str, str] = {}
+    for source in sorted(lore_root.rglob("*")):
+        if not source.is_file() or source.suffix.lower() not in {".md", ".txt"}:
+            continue
+        texts[source.relative_to(root).as_posix()] = source.read_text(encoding="utf-8", errors="replace")
+    return texts
+
+
+def inspect_packaged_lore_copy_truth(lore_texts: dict[str, str], prefix: str) -> list[CheckResult]:
+    if not lore_texts:
+        return []
+    findings: list[str] = []
+    for source_name, content in sorted(lore_texts.items()):
+        for claim in PACKAGED_LORE_FORBIDDEN_CLAIMS:
+            if claim in content:
+                findings.append(f"{source_name}: {claim}")
+    return [
+        CheckResult(
+            f"{prefix}_lore_copy_truth",
+            "PASS" if not findings else "FAIL",
+            "Packaged Lore copy accurately distinguishes offline chapters from source links that may open online."
+            if not findings
+            else "Packaged Lore copy contains stale all-in-app claims: " + ", ".join(findings[:8]),
+        )
+    ]
 
 
 def inspect_packaged_lore_link_safety(root: Path, prefix: str) -> list[CheckResult]:

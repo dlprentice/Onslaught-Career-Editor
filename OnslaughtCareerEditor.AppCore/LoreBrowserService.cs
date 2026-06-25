@@ -9,6 +9,9 @@ namespace Onslaught___Career_Editor
     {
         private static readonly Regex BookEntryRegex = new(@"^(?<indent>\s*)-\s+(?<content>.+?)\s*$", RegexOptions.Compiled);
         private static readonly Regex MarkdownLinkRegex = new(@"\[(?<title>[^\]]+)\]\((?<path>[^)]+)\)", RegexOptions.Compiled);
+        private static readonly Regex HtmlAnchorRegex = new(
+            @"<a\s+(?<attrs>[^>]*\bhref=(?<quote>[""'])(?<href>[^""']+)\k<quote>[^>]*)>(?<content>.*?)</a>",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
         private readonly MarkdownPipeline _pipeline;
 
         public LoreBrowserService()
@@ -82,6 +85,7 @@ namespace Onslaught___Career_Editor
             string markdown = File.ReadAllText(filePath);
             string title = ResolveMarkdownTitle(markdown, filePath);
             string contentHtml = Markdown.ToHtml(markdown, _pipeline);
+            contentHtml = AnnotateSourceLinks(contentHtml);
             string wrappedHtml = WrapHtmlDocument(title, contentHtml, filePath);
 
             string renderPath = GetRenderPathForDocument(filePath);
@@ -467,6 +471,24 @@ namespace Onslaught___Career_Editor
     p, li { font-size: 0.98rem; }
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
+    .source-link {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.35rem;
+    }
+    .source-link-badge {
+      display: inline-block;
+      padding: 0.05rem 0.32rem;
+      border: 1px solid #b7c6eb;
+      border-radius: 999px;
+      background: #eef3ff;
+      color: #334f91;
+      font-size: 0.72rem;
+      font-weight: 600;
+      line-height: 1.35;
+      text-decoration: none;
+      vertical-align: baseline;
+    }
     code, pre {
       font-family: "Cascadia Code", Consolas, monospace;
       font-size: 0.92rem;
@@ -531,6 +553,46 @@ namespace Onslaught___Career_Editor
 </body>
 </html>
 """;
+        }
+
+        private static string AnnotateSourceLinks(string html)
+        {
+            return HtmlAnchorRegex.Replace(html, match =>
+            {
+                string href = match.Groups["href"].Value;
+                if (!IsProjectSourceLink(href))
+                {
+                    return match.Value;
+                }
+
+                string attrs = match.Groups["attrs"].Value;
+                if (!Regex.IsMatch(attrs, @"\bclass\s*=", RegexOptions.IgnoreCase))
+                {
+                    attrs += " class=\"source-link\"";
+                }
+
+                if (!Regex.IsMatch(attrs, @"\btitle\s*=", RegexOptions.IgnoreCase))
+                {
+                    attrs += " title=\"Opens GitHub source in your browser\"";
+                }
+
+                if (!Regex.IsMatch(attrs, @"\baria-label\s*=", RegexOptions.IgnoreCase))
+                {
+                    attrs += " aria-label=\"Source link; opens GitHub in your browser\"";
+                }
+
+                string content = match.Groups["content"].Value;
+                return $"<a {attrs}>{content}<span class=\"source-link-badge\" aria-hidden=\"true\">Source</span></a>";
+            });
+        }
+
+        private static bool IsProjectSourceLink(string value)
+        {
+            return Uri.TryCreate(value, UriKind.Absolute, out Uri? uri) &&
+                   (uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase) ||
+                    uri.Scheme.Equals("http", StringComparison.OrdinalIgnoreCase)) &&
+                   uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase) &&
+                   uri.AbsolutePath.StartsWith("/dlprentice/Onslaught-Career-Editor/", StringComparison.OrdinalIgnoreCase);
         }
 
         private static string GetRenderPathForDocument(string filePath)
