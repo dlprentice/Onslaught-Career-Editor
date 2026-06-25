@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-06-25",
   "branch": "main",
-  "currentFocus": "Windowed & Mods selected-state UX is accepted with focused and broad repo gates green; next active slice is Asset Library first-run catalog guidance.",
+  "currentFocus": "Asset Library first-run catalog guidance is accepted with focused and broad repo gates green; next active slice is repo-specific Codex skill inventory and Ghidra distribution policy.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
@@ -32,18 +32,19 @@
     "maintainerParityCommand": "py -3 tools\\public_primary_migration_inventory.py --check --private-root C:\\Users\\david\\source\\Onslaught-Career-Editor-private --require-private-root"
   },
   "activeSlice": {
-    "name": "winui-windowed-mods-selected-state",
-    "goal": "show visible and UIA-observable selected state for Windowed & Mods safe-copy profile and menu-background choice grids",
-    "claimBoundary": "UX/state clarity only; no patch-row change, byte patch, safe-copy launch behavior, BEA launch, CDB attach, online proof, music audible-output proof, rebuild proof, release packaging, Ghidra mutation, or installed-game mutation.",
+    "name": "winui-asset-library-first-run-catalog-guidance",
+    "goal": "make Asset Library first run explain generated catalog setup, generated export-folder selection, and local overlay boundaries without bundling assets or claiming full rendering/rebuild parity",
+    "claimBoundary": "UX/docs/resolver guard only; no in-app exporter, no game asset bundle, no raw game-file browsing, no runtime BEA launch, no CDB attach, no full native 3D rendering proof, no rebuild parity, no Ghidra mutation, and no installed-game mutation.",
     "latestFindings": [
-      "Added page-local normal/selected choice button styles for Windowed & Mods profile/menu-color grids.",
-      "Profile and menu-background status now update both visible text and UI Automation names as selections change.",
-      "Focused runtime UIA smoke clicks Compatibility, Windowed + Graphics Defaults, Enhanced Profile Preview, Debug Camera Preview, red/green/clear menu-color choices and captures normal/narrow selected-state screenshots under Temp.",
-      "Generated subagents/winui-visual-qa screenshots/config are now ignored as local visual QA artifacts rather than tracked payload."
+      "Asset Library now shows a visible first-run guide telling users to generate a catalog outside the app and load the generated export folder containing asset_catalog/catalog.json, not the game install folder itself.",
+      "AssetCatalogStatus now distinguishes no catalog, invalid selected path, and detected-install/no-catalog states with plain user wording.",
+      "AssetCatalogFirstRunGuide exposes the guidance through UI Automation for native smoke coverage and assistive tooling.",
+      "AssetCatalogServiceTests now prove a game-install-shaped folder without catalog.json is not a generated catalog candidate.",
+      "reverse-engineering/game-assets/_index.md now opens with the current extraction entrypoint before historical evidence notes."
     ],
     "consultReview": {
-      "specialist": "Russell recommended page-local selected styles, stable AutomationIds, selected text/UIA coverage, and keeping this as a small UX slice rather than a page rewrite.",
-      "adversarial": "Helmholtz required runtime UIA proof, reuse of shared profile matching, and quieter selected styling that does not compete with primary actions; all three were accepted."
+      "specialist": "Dewey recommended final copy, generated-export-folder wording, a fake-install resolver regression, and runtime UIA coverage; accepted.",
+      "adversarial": "Wegener required runtime UIA assertions for the actual guide text, source-of-truth doc/state updates, and a better asset-doc entrypoint; accepted."
     },
     "status": "accepted_closed_broad_validation_green"
   },
@@ -94,13 +95,13 @@
       "git diff --check (PASS)"
     ],
     "activeSliceFocusedPassed": [
+      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~AssetCatalogServiceTests\" (PASS; 94 tests)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.AssetLibrary_IsNativeWinUiCatalogBrowser|FullyQualifiedName~WinUiAccessibilityAuditTests.PrimaryShellAndLongWorkflowControls\" (PASS; 2 tests)",
       "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiPatchBenchInteractionSmokeTests.PatchBench_ProfileAndMenuColorChoices_UpdateSelectedStateThroughUia\" (PASS; 1 test)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests|FullyQualifiedName~WinUiAccessibilityAuditTests|FullyQualifiedName~ThemeContrastAuditTests\" (PASS; 39 tests)",
-      "visual inspection of Temp screenshots patch-choice-profile-selected-narrow.png and patch-choice-menu-color-selected-narrow.png (accepted; selected state visible and no obvious narrow clipping)"
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiRuntimeAccessibilitySmokeTests.MainWindow_ShellNavigationIsNamedEnabledAndInvokableThroughUiAutomation\" (PASS; 1 test)"
     ],
     "activeSliceBroadPassed": [
-      "npm run test:md-links (PASS; 3623 markdown files, 6123 local links)",
+      "npm run test:md-links (PASS; 3623 markdown files, 6125 local links)",
       "npm run test:hard-payload-safety (PASS; public candidate files checked 19312)",
       "npm run test:public-allowlist (PASS; hard payload, submodule payload, and public-primary migration inventory; public tracked paths 19312, submodule candidate files 19496)",
       "npm run test:repo-hygiene (PASS; text hygiene and 18465 explicit text files line-ending check)",
@@ -110,9 +111,8 @@
     "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Commit/push selected-state UX if status remains clean.",
-    "Start the next bounded slice from goal.md: Asset Library first-run catalog guidance.",
-    "Keep Ghidra project public-distribution and repo-specific .codex skill transfer as separate future tooling/policy slices before changing tracked/local overlay policy."
+    "Commit/push Asset Library first-run guidance if status remains clean.",
+    "Start the next bounded slice from goal.md: repo-specific Codex skill inventory/transfer and Ghidra public-distribution policy without moving hard payloads."
   ],
   "releaseAccounting": {
     "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",

@@ -56,8 +56,15 @@ public class WinUiRuntimeAccessibilitySmokeTests
             NavigateAndWait(window, "MediaNavigationItem", "Media", "Source folder");
             NavigateAndWait(window, "AssetLibraryNavigationItem", "Asset Library", "Load generated catalog");
             string assetCatalogStatus = FindByAutomationId(window, "AssetCatalogStatus").Name;
-            Assert.That(assetCatalogStatus, Does.Contain("This release loads an existing generated catalog only"));
-            Assert.That(assetCatalogStatus, Does.Contain("does not include game assets or generate a catalog here"));
+            Assert.That(assetCatalogStatus, Does.Contain("generated catalog is loaded"));
+            Assert.That(assetCatalogStatus, Does.Contain("generated export folder"));
+            Assert.That(assetCatalogStatus, Does.Contain("asset_catalog/catalog.json"));
+            Assert.That(assetCatalogStatus, Does.Contain("game install folder itself is not a catalog"));
+            AutomationElement assetFirstRunGuide = FindByAutomationId(window, "AssetCatalogFirstRunGuide");
+            Assert.That(assetFirstRunGuide.Name, Does.Contain("First run"));
+            Assert.That(assetFirstRunGuide.Name, Does.Contain("Generate a catalog from your own game install"));
+            Assert.That(assetFirstRunGuide.Name, Does.Contain("asset_catalog/catalog.json"));
+            Assert.That(assetFirstRunGuide.Name, Does.Contain("does not bundle game assets"));
             NavigateAndWait(window, "LoreNavigationItem", "Lore", "Library");
             NavigateAndWait(window, "BinaryNavigationItem", "Windowed & Mods", "Safe game copy");
             NavigateAndWait(window, "SettingsNavigationItem", "Settings", "Game Directory");

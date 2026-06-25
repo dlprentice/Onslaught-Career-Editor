@@ -6,11 +6,12 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Add clearer Asset Library first-run catalog guidance so a new public checkout or
-portable app user understands why the catalog is empty, how to point the app at
-generated local catalog material, and what still requires a local game/assets
-overlay. Do not bundle game assets or imply full 3D rendering/rebuild parity.
-Continue bounded patch/mod UX and runtime-proof work from this checkout:
+Inventory repo-specific Codex skills and local Ghidra project distribution
+options for the public-primary repo, then document the next safe action. Compare
+the former private checkout and local Codex skill locations only as needed. Do
+not move full Ghidra project stores, raw game payloads, secrets, or runtime
+caches in this slice. Continue bounded patch/mod UX and runtime-proof work from
+this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -61,6 +62,13 @@ contributor work.
   place. This did not change patch rows, byte patches, safe-copy launch
   behavior, online proof, music audible-output proof, rebuild proof, or
   installed-game mutation.
+- Asset Library first-run catalog guidance is accepted: the page now tells
+  users to generate a catalog from their own game install outside the app, load
+  the generated export folder containing `asset_catalog/catalog.json` rather
+  than the game install folder itself, and confirms the app does not bundle
+  assets or generate catalogs in place. A focused AppCore regression confirms a
+  game-install-shaped folder is not treated as a catalog candidate, and native
+  UIA smoke verifies the first-run guide text is accessible.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof both exist.
@@ -113,12 +121,15 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Add clearer Asset Library first-run catalog guidance for empty catalog state,
-   generated catalog selection, and local overlay expectations.
-2. Keep the guidance plain and actionable; move technical catalog-generation and
-   importer/rebuild details behind existing advanced/docs surfaces.
-3. Defer another private music live-bundle attempt until the helper/materializer
-   guard is present and no BEA/CDB process is already running.
+1. Inventory repo-specific Codex skill material that exists in the public repo,
+   former private repo, and local Codex skill roots; identify what is already
+   durable, what is repo-specific, and what should stay runtime-local.
+2. Inventory the local Ghidra project path/status and current repo policy for
+   Ghidra exports/backups versus full project stores; document public/linking
+   options without moving or tracking hard payloads.
+3. Update state/docs with the recommended next action, then continue to the
+   next bounded WinUI/modularity/runtime slice after this policy/tooling slice
+   closes.
 
 ## Stop Conditions
 

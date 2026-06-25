@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "Windowed & Mods selected-state UX docs/state are accepted with focused and broad repo gates green. Next docs touchpoint is Asset Library first-run catalog guidance.",
+  "currentFocus": "Asset Library first-run catalog guidance docs/state are accepted with focused and broad repo gates green. Next docs touchpoint is repo-specific Codex skill inventory and Ghidra distribution policy.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -59,13 +59,13 @@
       "git diff --check (PASS)"
     ],
     "activeSliceFocusedPassed": [
+      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~AssetCatalogServiceTests\" (PASS; 94 tests)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.AssetLibrary_IsNativeWinUiCatalogBrowser|FullyQualifiedName~WinUiAccessibilityAuditTests.PrimaryShellAndLongWorkflowControls\" (PASS; 2 tests)",
       "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiPatchBenchInteractionSmokeTests.PatchBench_ProfileAndMenuColorChoices_UpdateSelectedStateThroughUia\" (PASS; 1 test)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests|FullyQualifiedName~WinUiAccessibilityAuditTests|FullyQualifiedName~ThemeContrastAuditTests\" (PASS; 39 tests)",
-      "visual inspection of Temp screenshots patch-choice-profile-selected-narrow.png and patch-choice-menu-color-selected-narrow.png (accepted; selected state visible and no obvious narrow clipping)"
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiRuntimeAccessibilitySmokeTests.MainWindow_ShellNavigationIsNamedEnabledAndInvokableThroughUiAutomation\" (PASS; 1 test)"
     ],
     "activeSliceBroadPassed": [
-      "npm run test:md-links (PASS; 3623 markdown files, 6123 local links)",
+      "npm run test:md-links (PASS; 3623 markdown files, 6125 local links)",
       "npm run test:hard-payload-safety (PASS; public candidate files checked 19312)",
       "npm run test:public-allowlist (PASS; hard payload, submodule payload, and public-primary migration inventory; public tracked paths 19312, submodule candidate files 19496)",
       "npm run test:repo-hygiene (PASS; text hygiene and 18465 explicit text files line-ending check)",
@@ -75,9 +75,8 @@
     "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Commit/push selected-state UX if status remains clean.",
-    "Resume from goal.md with Asset Library first-run catalog guidance.",
-    "Track Ghidra project public-distribution policy and repo-specific .codex skill transfer as separate future tooling/policy slices."
+    "Commit/push Asset Library first-run guidance if status remains clean.",
+    "Resume from goal.md with repo-specific Codex skill inventory/transfer and Ghidra public-distribution policy."
   ],
   "winuiReleaseCandidate": {
     "status": "published",
@@ -147,8 +146,8 @@
     "nonBlockingFollowups": [
       "private repo still has active-looking goal/state wording and should eventually be frozen or bannered as archived if kept",
       "historical source docs may contain maintainer-local provenance markers, but the v1.0.7 lore-pack builder redacts maintainer-local paths and the package probe rejects local/private path text before ZIP acceptance",
-      "Asset Library needs a clearer first-run path for generating/finding a local asset catalog",
-      "Windowed & Mods selected-state UX has an initial accepted fix for profile/menu-color choices; broader page split and shared choice component work remains tracked in roadmap/winui-ui-ux-redesign-radar.md."
+      "Windowed & Mods selected-state UX has an initial accepted fix for profile/menu-color choices; broader page split and shared choice component work remains tracked in roadmap/winui-ui-ux-redesign-radar.md.",
+      "Asset Library first-run guidance now has an accepted focused slice; broader asset generation/onboarding polish remains tied to extraction-pipeline docs and local overlay policy."
     ]
   },
   "lorePackaging": {

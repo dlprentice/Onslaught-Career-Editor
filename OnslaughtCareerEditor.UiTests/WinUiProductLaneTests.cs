@@ -88,6 +88,12 @@ public class WinUiProductLaneTests
         Assert.That(shellCode, Does.Contain("typeof(AssetLibraryPage)"));
         Assert.That(assetXaml, Does.Contain("Asset Library"));
         Assert.That(assetXaml, Does.Contain("Load generated catalog"));
+        Assert.That(assetXaml, Does.Contain("AssetCatalogFirstRunGuide"));
+        Assert.That(assetXaml, Does.Contain("First run"));
+        Assert.That(assetXaml, Does.Contain("Generate a catalog from your own game install outside the app."));
+        Assert.That(assetXaml, Does.Contain("not the game install folder"));
+        Assert.That(assetXaml, Does.Contain("asset_catalog/catalog.json"));
+        Assert.That(assetXaml, Does.Contain("does not bundle game assets or create catalogs here"));
         Assert.That(assetXaml, Does.Contain("Paste catalog.json path or browse to a generated export folder"));
         Assert.That(assetXaml, Does.Contain("Browse folder"));
         Assert.That(assetXaml, Does.Contain("AssetCatalogProvenanceSummary"));
@@ -176,9 +182,9 @@ public class WinUiProductLaneTests
         Assert.That(assetCode, Does.Contain("AssetCatalogPath"));
         Assert.That(assetCode, Does.Contain("FindCatalogCandidates"));
         Assert.That(assetCode, Does.Contain("BuildInitialCatalogCandidates"));
-        Assert.That(assetCode, Does.Contain("This release loads an existing generated catalog only"));
-        Assert.That(assetCode, Does.Contain("does not include game assets or generate a catalog here"));
-        Assert.That(assetCode, Does.Contain("Generate a catalog from your local game files"));
+        Assert.That(assetCode, Does.Contain("No generated catalog is loaded. This app reads an existing generated local asset catalog only."));
+        Assert.That(assetCode, Does.Contain("The selected path does not contain catalog.json."));
+        Assert.That(assetCode, Does.Contain("the game install folder itself is not a catalog"));
         Assert.That(assetCode, Does.Contain("AssetMaterialImportPackageMaterializationService"));
         Assert.That(assetCode, Does.Contain("AssetMaterialImportPackageWorkOrderService"));
         Assert.That(assetCode, Does.Contain("AssetMaterialImportPackageImporterBatchService"));

@@ -284,6 +284,29 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void FindCatalogCandidates_DoesNotTreatGameInstallFolderAsGeneratedCatalog()
+        {
+            string fakeGameRoot = Path.Combine(Path.GetTempPath(), "oce-fake-bea-install", Guid.NewGuid().ToString("N"));
+            try
+            {
+                Directory.CreateDirectory(Path.Combine(fakeGameRoot, "data"));
+                File.WriteAllText(Path.Combine(fakeGameRoot, "BEA.exe"), "placeholder executable marker");
+                File.WriteAllText(Path.Combine(fakeGameRoot, "defaultoptions.bea"), "placeholder options marker");
+
+                IReadOnlyList<string> candidates = AssetCatalogService.FindCatalogCandidates(fakeGameRoot);
+
+                Assert.Empty(candidates);
+            }
+            finally
+            {
+                if (Directory.Exists(fakeGameRoot))
+                {
+                    Directory.Delete(fakeGameRoot, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
         public void Load_ReturnsEmptyForMissingCatalog()
         {
             string missing = Path.Combine(Path.GetTempPath(), "oce-missing-assets", Guid.NewGuid().ToString("N"));

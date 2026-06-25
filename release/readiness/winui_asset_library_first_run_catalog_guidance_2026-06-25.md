@@ -13,13 +13,19 @@ catalog.
 - `AssetCatalogService.FindCatalogCandidates(...)` resolves `catalog.json`,
   catalog directories, and `asset_catalog/catalog.json` candidates with stable
   de-duplication.
+- A regression test now confirms a plain game-install-shaped folder without
+  `asset_catalog/catalog.json` is not treated as an Asset Library catalog.
 - Asset Library startup uses persisted/test catalog candidates, but does not use
   the detected Steam install as a catalog candidate.
-- Asset Library empty-state copy now says the release loads an existing
-  generated catalog only, does not include game assets, and does not generate a
-  catalog in place.
-- The browse button is labeled as a folder picker and the placeholder says users
-  can paste a `catalog.json` path or browse to a generated export folder.
+- Asset Library first-run copy now says to generate a catalog from the user's
+  own game install outside the app, then choose the generated export folder
+  containing `asset_catalog/catalog.json`, not the game install folder itself.
+- The first-run guide is exposed through a stable `AssetCatalogFirstRunGuide`
+  UI Automation element so native UIA tests and assistive tools can read the
+  guidance.
+- The game-assets index now opens with a plain current entrypoint that points
+  to `reverse-engineering/game-assets/extraction-pipeline.md` and the local
+  overlay rules before older evidence notes.
 
 ## Non-Claims
 
@@ -34,10 +40,16 @@ catalog.
 
 Accepted local validation:
 
-- `dotnet test .\OnslaughtCareerEditor.AppCore.Tests\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter "FullyQualifiedName~LoreBrowserServiceTests|FullyQualifiedName~AssetCatalogServiceTests"` passed `101/101` in read-only consult review.
-- `dotnet test .\OnslaughtCareerEditor.UiTests\OnslaughtCareerEditor.UiTests.csproj --nologo --filter "FullyQualifiedName~WinUiProductLaneTests.AssetLibrary_IsNativeWinUiCatalogBrowser"` passed `1/1` in read-only consult review.
-- `npm run test:winui-zip-package-probe` passed with the Asset Library copy in the extracted app smoke context.
-- `npm run test:winui-zip-release-candidate-probe` passed with the Asset Library copy in the versioned release-candidate context.
+- `dotnet test .\OnslaughtCareerEditor.AppCore.Tests\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter "FullyQualifiedName~AssetCatalogServiceTests"` passed `94/94`.
+- `dotnet test .\OnslaughtCareerEditor.UiTests\OnslaughtCareerEditor.UiTests.csproj --nologo --filter "FullyQualifiedName~WinUiProductLaneTests.AssetLibrary_IsNativeWinUiCatalogBrowser|FullyQualifiedName~WinUiAccessibilityAuditTests.PrimaryShellAndLongWorkflowControls"` passed `2/2`.
+- `dotnet build .\OnslaughtCareerEditor.WinUI\OnslaughtCareerEditor.WinUI.csproj --nologo` passed with `0` warnings and `0` errors.
+- `dotnet test .\OnslaughtCareerEditor.UiTests\OnslaughtCareerEditor.UiTests.csproj --nologo --filter "FullyQualifiedName~WinUiRuntimeAccessibilitySmokeTests.MainWindow_ShellNavigationIsNamedEnabledAndInvokableThroughUiAutomation"` passed `1/1`.
 
-Broader docs/release/public/hygiene gates remain part of final active-slice
-closeout before commit, push, or release.
+Final closeout validation:
+
+- `npm run test:md-links` passed: `3623` Markdown files and `6125` local links.
+- `npm run test:hard-payload-safety` passed: `19312` public candidate files.
+- `npm run test:public-allowlist` passed: hard payload safety, submodule payload
+  safety over `19496` candidate files, and public-primary migration inventory.
+- `npm run test:repo-hygiene` passed: text hygiene plus `18465` explicit text
+  files in the line-ending check.

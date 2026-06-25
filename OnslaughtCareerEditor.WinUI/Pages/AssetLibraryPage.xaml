@@ -40,10 +40,28 @@
                     <TextBlock Text="Load generated catalog"
                                FontSize="18"
                                FontWeight="SemiBold" />
-                            <TextBlock x:Name="CatalogStatusTextBlock"
-                                       AutomationProperties.AutomationId="AssetCatalogStatus"
-                                       Style="{StaticResource SectionBodyTextStyle}"
-                                       Text="This release loads an existing generated catalog only. It does not include game assets or generate a catalog here. Generate a catalog from your local game files, then paste catalog.json or browse to the generated export folder." />
+                    <TextBlock x:Name="CatalogStatusTextBlock"
+                               AutomationProperties.AutomationId="AssetCatalogStatus"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               Text="No generated catalog is loaded yet." />
+                    <Border Background="{ThemeResource ShellMutedSurfaceBrush}"
+                            BorderBrush="{ThemeResource ShellBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12">
+                        <StackPanel AutomationProperties.AutomationId="AssetCatalogFirstRunGuide"
+                                    AutomationProperties.Name="First run. Generate a catalog from your own game install outside the app. Then choose the generated export folder that contains asset_catalog/catalog.json. The app reads local PNG and FBX exports only and does not bundle game assets or create catalogs here."
+                                    Spacing="4">
+                            <TextBlock Text="First run"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Style="{StaticResource SectionBodyTextStyle}"
+                                       Text="Generate a catalog from your own game install outside the app." />
+                            <TextBlock Style="{StaticResource SectionBodyTextStyle}"
+                                       Text="Then choose the generated export folder, not the game install folder. It should contain asset_catalog/catalog.json." />
+                            <TextBlock Style="{StaticResource SectionBodyTextStyle}"
+                                       Text="The app reads local PNG and FBX exports only; it does not bundle game assets or create catalogs here." />
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
                 <StackPanel Grid.Column="1"
                             Orientation="Horizontal"
