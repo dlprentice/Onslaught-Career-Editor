@@ -1,11 +1,11 @@
 {
   "lastUpdated": "2026-06-25",
   "branch": "main",
-  "currentFocus": "Windowed & Mods menu-color selected-status text modularity passed focused and broad closeout gates; commit/push is pending, then the next slice is read-first Windowed & Mods modularity inspection.",
+  "currentFocus": "Windowed & Mods menu-color selected-status text modularity is committed as 2abf0584; next slice is read-first Windowed & Mods modularity inspection.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainStatus": "public main is aligned through 78bbbf60; current tree has validated WinUI menu-color selected-status text modularity changes pending commit/push.",
+    "publicMainStatus": "origin/main is expected to include menu-color selected-status text commit 2abf0584 after this baton push; next active slice is Windowed & Mods modularity inspection.",
     "policy": "public repo is primary for source/docs/tools/tests/RE notes/proof summaries/state; hard payloads remain maintainer-local ignored overlays"
   },
   "publicPrimaryMigration": {
@@ -50,8 +50,8 @@
   },
   "recentClosedSlice": {
     "name": "winui-windowed-mods-menu-color-text-modularity",
-    "status": "validated_ready_for_commit",
-    "commit": "pending",
+    "status": "pushed",
+    "commit": "2abf0584",
     "readinessNote": "release/readiness/winui_windowed_mods_menu_color_text_modularity_2026-06-25.md",
     "claimBoundary": "WinUI presentation extraction only: raw menu-background patch keys and key-to-kind mapping remain page-local; helper formats enum values only. No patch rows, byte changes, safe-copy launch behavior, music behavior, online/readiness, runtime proof, release packaging, or installed-game mutation changed.",
     "acceptedTruth": [
@@ -132,16 +132,12 @@
       "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19331; submodule candidate files 19515; allowed private-only hard-payload/scratch paths 5557)",
       "npm run test:repo-hygiene (PASS; repo text hygiene and 18481 explicit text files checked)"
     ],
-    "pendingForActiveSlice": [
-      "run final JSON parse, git diff --check, process check, and git status",
-      "include OnslaughtCareerEditor.WinUI/Helpers/PatchBenchMenuColorSelectionText.cs and OnslaughtCareerEditor.WinUI/Models/PatchBenchMenuColorSelectionKind.cs in commit",
-      "commit and push the validated closeout"
-    ]
+    "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Run final JSON parse, git diff --check, process check, and git status.",
-    "Commit and push the focused WinUI menu-color selected-status text extraction.",
-    "Continue with read-first Windowed & Mods modularity inspection or another ready bounded backlog item."
+    "Inspect BinaryPatchesPage and PatchBench helpers for the next smallest presentation-only extraction or test-hardening candidate.",
+    "Use specialist and adversarial review before any nontrivial edit.",
+    "Keep patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of the next modularity slice unless evidence reveals a bounded bug."
   ],
   "releaseAccounting": {
     "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",

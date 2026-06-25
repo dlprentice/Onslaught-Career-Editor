@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "Windowed & Mods menu-color selected-status text modularity passed focused and broad closeout gates; commit/push is pending, then the next slice is read-first Windowed & Mods modularity inspection.",
+  "currentFocus": "Windowed & Mods menu-color selected-status text modularity is committed as 2abf0584; next slice is read-first Windowed & Mods modularity inspection.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -82,16 +82,12 @@
       "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19331; submodule candidate files 19515; allowed private-only hard-payload/scratch paths 5557)",
       "npm run test:repo-hygiene (PASS; repo text hygiene and 18481 explicit text files checked)"
     ],
-    "pendingForActiveSlice": [
-      "run final JSON parse, git diff --check, process check, and git status",
-      "include the new menu-color text helper and enum model files in the commit",
-      "commit and push the validated closeout"
-    ]
+    "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Run final JSON parse, git diff --check, process check, and git status.",
-    "Commit and push the focused WinUI menu-color selected-status text extraction.",
-    "Continue with read-first Windowed & Mods modularity inspection or another ready bounded backlog item."
+    "Inspect BinaryPatchesPage and PatchBench helpers for the next smallest presentation-only extraction or test-hardening candidate.",
+    "Use specialist and adversarial review before any nontrivial edit.",
+    "Keep patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of the next modularity slice unless evidence reveals a bounded bug."
   ],
   "winuiSelectedChoiceModularity": {
     "status": "validated_ready_for_commit",
