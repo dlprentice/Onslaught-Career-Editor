@@ -160,14 +160,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private static string BuildMissingCatalogStatus(string? attemptedPath)
         {
             string? gameDir = AppConfig.Load().GetGameDirOrDetect(persistDetection: true);
-            string attempted = string.IsNullOrWhiteSpace(attemptedPath) ? string.Empty : " The selected path does not contain catalog.json.";
-            const string baseline = "No generated catalog is loaded. This app reads an existing generated local asset catalog only.";
-            if (string.IsNullOrWhiteSpace(gameDir))
-            {
-                return $"{baseline}{attempted} Generate a catalog from your own game install outside the app, then choose the generated export folder that contains asset_catalog/catalog.json.";
-            }
-
-            return $"Battle Engine Aquila install detected, but no generated catalog is loaded.{attempted} Choose the generated export folder that contains asset_catalog/catalog.json; the game install folder itself is not a catalog.";
+            return AssetCatalogLoadStatusText.BuildMissingCatalogStatus(attemptedPath, gameDir);
         }
 
         private string BuildCatalogCoverageSummary()

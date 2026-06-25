@@ -50,7 +50,7 @@
                             CornerRadius="8"
                             Padding="12">
                         <StackPanel AutomationProperties.AutomationId="AssetCatalogFirstRunGuide"
-                                    AutomationProperties.Name="First run. Generate a catalog from your own game install outside the app. Then choose the generated export folder that contains asset_catalog/catalog.json. The app reads local PNG and FBX exports only and does not bundle game assets or create catalogs here."
+                                    AutomationProperties.Name="First run. Generate a catalog from your own game install outside the app. Then choose the generated export folder that contains asset_catalog/catalog.json. Use the install as source for the external extractor, then load the separate generated export folder. The app reads local PNG and FBX exports only and does not bundle game assets or create catalogs here."
                                     Spacing="4">
                             <TextBlock Text="First run"
                                        FontWeight="SemiBold" />
@@ -58,6 +58,8 @@
                                        Text="Generate a catalog from your own game install outside the app." />
                             <TextBlock Style="{StaticResource SectionBodyTextStyle}"
                                        Text="Then choose the generated export folder, not the game install folder. It should contain asset_catalog/catalog.json." />
+                            <TextBlock Style="{StaticResource SectionBodyTextStyle}"
+                                       Text="Use the install as source for the external extractor, then load the separate generated export folder." />
                             <TextBlock Style="{StaticResource SectionBodyTextStyle}"
                                        Text="The app reads local PNG and FBX exports only; it does not bundle game assets or create catalogs here." />
                         </StackPanel>
@@ -98,8 +100,8 @@
                              PlaceholderText="Paste catalog.json path or browse to a generated export folder" />
                     <Button Grid.Column="1"
                             AutomationProperties.AutomationId="AssetBrowseCatalogButton"
-                            AutomationProperties.Name="Browse generated catalog folder"
-                            Content="Browse folder"
+                            AutomationProperties.Name="Browse generated export folder"
+                            Content="Browse export folder"
                             Click="BrowseCatalogButton_Click" />
                     <Button Grid.Column="2"
                             x:Name="LoadCatalogButton"

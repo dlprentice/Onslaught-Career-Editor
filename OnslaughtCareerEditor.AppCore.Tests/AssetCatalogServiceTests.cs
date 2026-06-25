@@ -307,6 +307,32 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void BuildMissingCatalogStatus_CallsOutSelectedGameInstallWithoutLeakingPath()
+        {
+            string fakeGameRoot = Path.Combine(Path.GetTempPath(), "oce-fake-bea-install", Guid.NewGuid().ToString("N"));
+            try
+            {
+                Directory.CreateDirectory(Path.Combine(fakeGameRoot, "data"));
+                File.WriteAllText(Path.Combine(fakeGameRoot, "BEA.exe"), "placeholder executable marker");
+
+                string status = AssetCatalogLoadStatusText.BuildMissingCatalogStatus(fakeGameRoot, detectedGameDirectory: fakeGameRoot);
+
+                Assert.Contains("That is the game install, not the generated export folder.", status);
+                Assert.Contains("Use the install as source for the external extractor, then load the separate generated export folder.", status);
+                Assert.Contains("asset_catalog/catalog.json", status);
+                Assert.Contains("the game install folder itself is not a catalog", status);
+                Assert.DoesNotContain(fakeGameRoot, status, StringComparison.OrdinalIgnoreCase);
+            }
+            finally
+            {
+                if (Directory.Exists(fakeGameRoot))
+                {
+                    Directory.Delete(fakeGameRoot, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
         public void Load_ReturnsEmptyForMissingCatalog()
         {
             string missing = Path.Combine(Path.GetTempPath(), "oce-missing-assets", Guid.NewGuid().ToString("N"));

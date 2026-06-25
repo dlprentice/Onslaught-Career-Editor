@@ -6,14 +6,13 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Start the next bounded Asset Library QOL inspection: read the first-run catalog
-guidance, configured-game-directory handling, and catalog-load flow, then decide
-whether a small improvement is justified for users who have Battle Engine Aquila
-installed but have not generated an asset catalog yet. Keep this slice
-read-first and source/lab-boundary-only unless exact evidence supports a narrow
-edit. Do not bundle game assets, generate catalogs in place from the normal app
-path, mutate the installed game folder, add runtime proof, or imply full 3D
-rendering/rebuild parity. Continue from this checkout:
+Start the next bounded WinUI modularity inspection: read the Windowed & Mods
+`BinaryPatchesPage` surface and existing presentation helpers, then choose one
+small extraction candidate only if it reduces code-behind duplication without
+moving patch semantics, launch arguments, safe-copy behavior, music behavior,
+online readiness, runtime proof, or release packaging. Keep this slice
+read-first unless exact evidence supports a narrow edit. Continue from this
+checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -76,6 +75,15 @@ contributor work.
   assets or generate catalogs in place. A focused AppCore regression confirms a
   game-install-shaped folder is not treated as a catalog candidate, and native
   UIA smoke verifies the first-run guide text is accessible.
+- Asset Library export-folder QOL is accepted in
+  `release/readiness/winui_asset_library_export_folder_qol_2026-06-25.md`.
+  The browse action now says `Browse export folder`, the first-run guide says
+  to use the install as source for the external extractor before loading the
+  separate generated export folder, and missing-catalog status now calls out a
+  selected full BEA install as the game install rather than a generated export
+  folder. This did not change catalog resolution, service behavior, asset
+  bundling, in-app extraction/generation, runtime proof, full 3D rendering,
+  rebuild parity, release packaging, or installed-game mutation rules.
 - Windowed & Mods selected-choice modularity is accepted in
   `release/readiness/winui_windowed_mods_selected_choice_modularity_2026-06-25.md`.
   Profile/menu-background selected-state UIA names and styles now flow through
@@ -192,17 +200,18 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Inspect Asset Library first-run text, configured-game-directory handoff,
-   catalog-folder loading, and related AppCore/WinUI tests.
+1. Inspect `BinaryPatchesPage.xaml.cs`, current `PatchBench*` helpers, and
+   focused PatchBench tests for the next smallest presentation-only extraction.
 2. Use at least one specialist consult and one adversarial reviewer before any
-   nontrivial UX or flow edit.
-3. If a small improvement is justified, keep it bounded to guidance/path
-   selection or testable presentation flow; validate with focused AppCore/WinUI
-   gates plus docs/state updates. If no edit is justified, record that decision
-   and choose the next bounded UX/modularity slice.
-4. Keep game asset bundling, source-game mutation, in-place extraction,
-   runtime proof, full 3D rendering claims, rebuild parity, and release
-   packaging out of this slice unless a concrete bug is found and documented.
+   nontrivial edit.
+3. If a small improvement is justified, keep it bounded to WinUI presentation
+   models/helpers or testable copy/state formatting; validate with focused
+   PatchBench/WinUI gates plus docs/state updates. If no edit is justified,
+   record that decision and choose the next bounded UX/modularity slice.
+4. Keep patch rows, byte changes, copied-profile launch behavior, safe-copy
+   manifests/signatures, music replacement behavior, online/readiness gates,
+   runtime proof, release packaging, and installed-game mutation rules out of
+   this slice unless a concrete bug is found and documented.
 
 ## Stop Conditions
 

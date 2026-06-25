@@ -82,6 +82,7 @@ public class WinUiProductLaneTests
         string shellCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "MainWindow.xaml.cs");
         string assetXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "AssetLibraryPage.xaml");
         string assetCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "AssetLibraryPage.xaml.cs");
+        string assetStatusText = ReadRepoFile("OnslaughtCareerEditor.AppCore", "AssetCatalogLoadStatusText.cs");
 
         Assert.That(shellXaml, Does.Contain("AssetLibraryNavigationItem"));
         Assert.That(shellXaml, Does.Contain("Asset Library"));
@@ -95,7 +96,8 @@ public class WinUiProductLaneTests
         Assert.That(assetXaml, Does.Contain("asset_catalog/catalog.json"));
         Assert.That(assetXaml, Does.Contain("does not bundle game assets or create catalogs here"));
         Assert.That(assetXaml, Does.Contain("Paste catalog.json path or browse to a generated export folder"));
-        Assert.That(assetXaml, Does.Contain("Browse folder"));
+        Assert.That(assetXaml, Does.Contain("Browse generated export folder"));
+        Assert.That(assetXaml, Does.Contain("Browse export folder"));
         Assert.That(assetXaml, Does.Contain("AssetCatalogProvenanceSummary"));
         Assert.That(assetXaml, Does.Contain("Texture preview"));
         Assert.That(assetXaml, Does.Contain("AssetPreviewTitle"));
@@ -182,9 +184,14 @@ public class WinUiProductLaneTests
         Assert.That(assetCode, Does.Contain("AssetCatalogPath"));
         Assert.That(assetCode, Does.Contain("FindCatalogCandidates"));
         Assert.That(assetCode, Does.Contain("BuildInitialCatalogCandidates"));
-        Assert.That(assetCode, Does.Contain("No generated catalog is loaded. This app reads an existing generated local asset catalog only."));
-        Assert.That(assetCode, Does.Contain("The selected path does not contain catalog.json."));
-        Assert.That(assetCode, Does.Contain("the game install folder itself is not a catalog"));
+        Assert.That(assetCode, Does.Contain("AssetCatalogLoadStatusText.BuildMissingCatalogStatus(attemptedPath, gameDir)"));
+        Assert.That(assetStatusText, Does.Contain("No generated catalog is loaded. This app reads an existing generated local asset catalog only."));
+        Assert.That(assetStatusText, Does.Contain("The selected path does not contain catalog.json."));
+        Assert.That(assetStatusText, Does.Contain("That is the game install, not the generated export folder."));
+        Assert.That(assetStatusText, Does.Contain("Use the install as source for the external extractor, then load the separate generated export folder."));
+        Assert.That(assetStatusText, Does.Contain("AppConfig.InspectGameDirectory(attemptedPath)"));
+        Assert.That(assetStatusText, Does.Contain("detectedGameDirectory"));
+        Assert.That(assetStatusText, Does.Contain("the game install folder itself is not a catalog"));
         Assert.That(assetCode, Does.Contain("AssetMaterialImportPackageMaterializationService"));
         Assert.That(assetCode, Does.Contain("AssetMaterialImportPackageWorkOrderService"));
         Assert.That(assetCode, Does.Contain("AssetMaterialImportPackageImporterBatchService"));

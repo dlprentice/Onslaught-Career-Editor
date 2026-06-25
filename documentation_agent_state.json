@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "Windowed & Mods choice-style helper modularity was pushed in e2e0c07d; next documentation baton is a read-first Asset Library QOL inspection around configured game folders and generated catalog loading.",
+  "currentFocus": "Asset Library export-folder QOL is broad-validated and ready to commit; next documentation baton is read-first Windowed & Mods modularity inspection after commit/push.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -17,7 +17,8 @@
     "winuiEnhancedPreviewMusicSwapGuard": "release/readiness/winui_enhanced_preview_music_swap_guard_2026-06-25.md",
     "winuiLaunchTextModularity": "release/readiness/winui_windowed_mods_launch_text_modularity_2026-06-25.md",
     "winuiLaunchPresetSelectedState": "release/readiness/winui_windowed_mods_launch_preset_selected_state_2026-06-25.md",
-    "winuiChoiceStyleHelperModularity": "release/readiness/winui_windowed_mods_choice_style_helper_modularity_2026-06-25.md"
+    "winuiChoiceStyleHelperModularity": "release/readiness/winui_windowed_mods_choice_style_helper_modularity_2026-06-25.md",
+    "winuiAssetLibraryExportFolderQol": "release/readiness/winui_asset_library_export_folder_qol_2026-06-25.md"
   },
   "publicPrimaryMigration": {
     "status": "validated_public_primary_with_maintainer_local_ignored_overlays",
@@ -66,29 +67,30 @@
       "git diff --check (PASS)"
     ],
     "activeSliceFocusedPassed": [
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench\" (PASS; 5 tests)",
+      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~BuildMissingCatalogStatus_CallsOutSelectedGameInstallWithoutLeakingPath\" (PASS; 1 test)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.AssetLibrary_IsNativeWinUiCatalogBrowser\" (PASS; 1 test after red/green)",
+      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~AssetCatalogServiceTests\" (PASS; 95 tests)",
       "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiPatchBenchInteractionSmokeTests.PatchBench_ProfileAndMenuColorChoices_UpdateSelectedStateThroughUia\" (PASS; 1 runtime UIA smoke)"
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiRuntimeAccessibilitySmokeTests.MainWindow_ShellNavigationIsNamedEnabledAndInvokableThroughUiAutomation\" (PASS; 1 native UIA smoke)"
     ],
     "activeSliceBroadPassed": [
       "npm run test:doc-commands (PASS; 4283 documented npm commands checked; public package command check passed)",
-      "npm run test:hard-payload-safety (PASS; 19326 public candidate files checked)",
-      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19325; submodule candidate files 19510)",
       "npm run test:md-links (PASS; 3630 Markdown files scanned, 6125 local links checked)",
+      "npm run test:hard-payload-safety (PASS; 19328 public candidate files checked)",
+      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19326; submodule candidate files 19512; allowed private-only hard-payload/scratch paths 5557)",
       "npm run test:repo-hygiene (PASS; repo text hygiene and 18479 explicit text files checked)",
       "node JSON parse for developer_agent_state.json and documentation_agent_state.json (PASS)",
       "git diff --check (PASS)",
       "Get-Process BEA,cdb,OnslaughtCareerEditor.WinUI -ErrorAction SilentlyContinue (PASS; no matching process output)"
     ],
     "pendingForActiveSlice": [
-      "inspect Asset Library first-run text, configured-game-directory handoff, catalog-folder loading, and related tests",
-      "consult specialist and adversarial reviewer before any nontrivial UX or flow edit",
-      "run focused AppCore/WinUI/docs gates if implementation proceeds"
+      "commit/push Asset Library export-folder QOL if broad closeout stays green"
     ]
   },
   "nextSteps": [
-    "Inspect Asset Library first-run catalog guidance and configured-game-folder behavior.",
-    "Keep game asset bundling, installed-game mutation, in-place extraction, runtime proof, full 3D rendering, and rebuild parity out of scope unless evidence reveals a bounded bug."
+    "Finish Asset Library export-folder QOL broad closeout, commit, and push if green.",
+    "Inspect BinaryPatchesPage and PatchBench helpers for the next smallest presentation-only modularity slice.",
+    "Keep patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of the next modularity slice unless evidence reveals a bounded bug."
   ],
   "winuiSelectedChoiceModularity": {
     "status": "validated_ready_for_commit",
@@ -281,9 +283,25 @@
     ],
     "commit": "e2e0c07d"
   },
+  "winuiAssetLibraryExportFolderQol": {
+    "status": "broad_validated_ready_for_commit",
+    "readinessNote": "release/readiness/winui_asset_library_export_folder_qol_2026-06-25.md",
+    "acceptedTruth": [
+      "Asset Library browse action now says Browse export folder.",
+      "First-run guidance says to use the game install as source for the external extractor, then load the separate generated export folder.",
+      "Missing-catalog status now calls out a selected full BEA install as the game install, not the generated export folder.",
+      "Missing-catalog status now lives in AppCore AssetCatalogLoadStatusText and has an executable temp-directory regression that verifies no full local path is leaked.",
+      "Catalog resolution and AssetCatalogService loading behavior remain unchanged."
+    ],
+    "consultReview": [
+      "Specialist review recommended the narrow text-only catalog-picker QOL change.",
+      "Adversarial review blocked in-app extraction/generation, game-install writes, asset bundling, private-path publication, and full 3D/rebuild/runtime overclaims.",
+      "Closeout review requested UIA browse-name alignment and executable helper coverage for the selected-game-install status branch; both were accepted and implemented."
+    ]
+  },
   "activeSlice": {
-    "name": "asset-library-first-run-configured-game-folder-qol-inspection",
-    "status": "ready_to_inspect",
-    "claimBoundary": "read-first source/lab-boundary inspection only; do not bundle game assets, mutate installed game files, generate catalogs in place from the normal app path, add runtime proof, or imply full 3D rendering/rebuild parity."
+    "name": "windowed-mods-next-presentation-modularity-inspection",
+    "status": "ready_to_inspect_after_asset_qol_closeout",
+    "claimBoundary": "read-first WinUI modularity inspection only; do not move patch rows, byte changes, launch behavior, safe-copy behavior, music behavior, online/readiness gates, runtime proof, release packaging, or installed-game mutation rules."
   }
 }
