@@ -39,7 +39,10 @@ public class WinUiPatchBenchInteractionSmokeTests
         }
 
         Directory.CreateDirectory(evidenceDir);
-        string appDataDir = PrepareIsolatedAppData(evidenceDir, Path.GetTempPath());
+        string fakeGameDir = Path.Combine(evidenceDir, "fake-game");
+        Directory.CreateDirectory(fakeGameDir);
+        File.WriteAllBytes(Path.Combine(fakeGameDir, "BEA.exe"), new byte[] { 0 });
+        string appDataDir = PrepareIsolatedAppData(evidenceDir, fakeGameDir);
         Application? app = null;
         try
         {
@@ -63,9 +66,12 @@ public class WinUiPatchBenchInteractionSmokeTests
             AssertAutomationNameContains(window, "PatchBenchStableDefaultsButton", "Selected: Windowed and Graphics Defaults profile");
             AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Windowed + Graphics Defaults");
 
+            SelectComboBoxItem(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
+            AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
             InvokeByAutomationId(window, "PatchBenchEnhancedPreviewProfileButton");
             AssertAutomationNameContains(window, "PatchBenchEnhancedPreviewProfileButton", "Selected: Enhanced Profile Preview profile");
             AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Enhanced Profile Preview");
+            AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
 
             InvokeByAutomationId(window, "PatchBenchDebugCameraPreviewProfileButton");
             AssertAutomationNameContains(window, "PatchBenchDebugCameraPreviewProfileButton", "Selected: Debug Camera Preview profile");
@@ -253,6 +259,34 @@ public class WinUiPatchBenchInteractionSmokeTests
         AutomationElement element = FindByAutomationId(window, automationId);
         ScrollIntoView(element);
         element.AsButton().Invoke();
+    }
+
+    private static void SelectComboBoxItem(Window window, string automationId, string itemText)
+    {
+        AutomationElement element = FindByAutomationId(window, automationId);
+        ScrollIntoView(element);
+        Assert.That(element.IsEnabled, Is.True, $"{automationId} should be enabled before selecting {itemText}.");
+        ComboBox comboBox = element.AsComboBox();
+        comboBox.Select(itemText);
+    }
+
+    private static void AssertComboBoxSelectedText(Window window, string automationId, string expectedText)
+    {
+        bool matched = Retry.WhileFalse(
+            () =>
+            {
+                try
+                {
+                    ComboBox comboBox = FindByAutomationId(window, automationId).AsComboBox();
+                    return string.Equals(comboBox.SelectedItem?.Text, expectedText, StringComparison.OrdinalIgnoreCase);
+                }
+                catch
+                {
+                    return false;
+                }
+            },
+            TimeSpan.FromSeconds(10)).Success;
+        Assert.That(matched, Is.True, $"{automationId} should keep selected item: {expectedText}");
     }
 
     private static void AssertAutomationNameContains(Window window, string automationId, string expectedText)

@@ -6,12 +6,12 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Close out `Windowed & Mods` selected-profile text modularity and prepare the next
-bounded test-hardening slice: inspect the Enhanced Profile Preview create-time
-music-swap guard noted by adversarial review and decide whether a focused static
-or UIA guard can be strengthened without changing patch semantics, safe-copy
-manifest logic, launch behavior, online status, runtime proof, or AppCore
-correctness logic. Continue from this checkout:
+Close out `Windowed & Mods` Enhanced Profile Preview music-swap guard hardening
+and prepare the next bounded modularity slice: inspect launch-preset/status
+presentation code for one safe helper/model extraction. Do not change launch
+arguments, copied-profile launch behavior, patch semantics, safe-copy manifest
+logic, online status, runtime proof, or AppCore correctness logic. Continue from
+this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -92,6 +92,15 @@ contributor work.
   Profile Preview and create-time music-swap reset. That is a next-slice
   test-hardening candidate, not behavior changed by the selected-profile text
   modularity slice.
+- Windowed & Mods Enhanced Profile Preview music-swap guard hardening is
+  accepted in
+  `release/readiness/winui_enhanced_preview_music_swap_guard_2026-06-25.md`.
+  Static tests now scope the no-music-swap default to the constructor, pin the
+  default index/XAML item, and verify Enhanced Preview does not touch create-time
+  music-swap controls or preset constants. Runtime UIA smoke now selects
+  `BEA_02 over BEA_01`, invokes Enhanced Profile Preview, and verifies that
+  selection remains unchanged. This is test hardening only; no user behavior
+  changed.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof both exist.
@@ -144,15 +153,14 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Read `EnhancedPreviewPresetButton_Click`, launch/music option controls,
-   `WinUiProductLaneTests` launch/preset guards, and the runtime UIA PatchBench
-   smoke.
+1. Read `LaunchPresetSelection`, `ApplyLaunchPreset`, launch option status/copy
+   helpers, `WinUiProductLaneTests` launch/preset guards, and the runtime UIA
+   PatchBench smoke.
 2. Use at least one specialist consult and one adversarial reviewer unless the
    slice proves microscopic.
-3. If safe, strengthen the test guard so any Enhanced Profile Preview
-   create-time music-swap expectation is scoped to the relevant handler or UIA
-   flow. Do not add or remove user-visible behavior unless the current code and
-   tests prove the intended behavior separately.
+3. If safe, extract one presentation-only launch-preset/status helper or model.
+   Do not move `BuildSelectedLaunchArguments`, `TryBuildCopiedProfileLaunchPlan`,
+   copied-profile launch, safe-copy manifest, or AppCore calls.
 4. Validate with focused WinUI/AppCore tests plus repo/docs gates appropriate to
    the touched paths.
 5. Update state/docs with exact evidence and choose the next bounded slice.

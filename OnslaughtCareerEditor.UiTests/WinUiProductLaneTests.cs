@@ -967,6 +967,7 @@ public class WinUiProductLaneTests
     public void PatchBench_RendersEveryVisiblePatchFunctionalArea()
     {
         string code = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs");
+        string pageXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml");
         string itemModel = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "BinaryPatchItemModel.cs");
         string catalogJson = ReadRepoFile("patches", "catalog", "patches.v2.json");
         int functionalAreaStart = itemModel.IndexOf("public string FunctionalArea", StringComparison.Ordinal);
@@ -999,7 +1000,16 @@ public class WinUiProductLaneTests
     public void PatchBench_CodeRequiresAppOwnedWorkingCopyBeforeApply()
     {
         string code = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs");
+        string pageXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml");
         string itemModel = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "BinaryPatchItemModel.cs");
+        string constructorBody = ExtractCodeSlice(
+            code,
+            "public BinaryPatchesPage()",
+            "private void RenderOnlineMultiplayerReadiness()");
+        string enhancedPreviewHandler = ExtractCodeSlice(
+            code,
+            "private void EnhancedPreviewPresetButton_Click",
+            "private void DebugCameraPreviewPresetButton_Click");
 
         Assert.That(code, Does.Contain("GetPatchWorkspaceRoot()"));
         Assert.That(code, Does.Contain("GameProfilePreflightService.ValidateExecutableSourceForWorkspaceCopy(sourcePath)"));
@@ -1066,7 +1076,14 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("PatchBenchPersistControllerConfigOption.IsChecked = preset.DefaultPersistControllerConfigInOptions"));
         Assert.That(code, Does.Contain("PatchBenchSharpenMouseLookOption.IsChecked = preset.DefaultSharpenMouseLook"));
         Assert.That(code, Does.Contain("PatchBenchMouseSensitivityPresetComboBox.SelectedIndex = DefaultMouseSensitivityPresetIndex"));
-        Assert.That(code, Does.Contain("PatchBenchCreateMusicSwapPresetComboBox.SelectedIndex = NoCreateMusicSwapPresetIndex"));
+        Assert.That(code, Does.Contain("private const int NoCreateMusicSwapPresetIndex = 0;"));
+        Assert.That(pageXaml, Does.Contain("<ComboBoxItem Content=\"No music swap\""));
+        Assert.That(constructorBody, Does.Contain("PatchBenchCreateMusicSwapPresetComboBox.SelectedIndex = NoCreateMusicSwapPresetIndex"));
+        Assert.That(enhancedPreviewHandler, Does.Not.Contain("PatchBenchCreateMusicSwapPresetComboBox"));
+        Assert.That(enhancedPreviewHandler, Does.Not.Contain("NoCreateMusicSwapPresetIndex"));
+        Assert.That(enhancedPreviewHandler, Does.Not.Contain("UseBea02ForBea01PresetId"));
+        Assert.That(enhancedPreviewHandler, Does.Not.Contain("UseBea01ForBea02PresetId"));
+        Assert.That(enhancedPreviewHandler, Does.Not.Contain("UseBea02ForBea04PresetId"));
         Assert.That(code, Does.Contain("PatchBenchInvertWalkerYOption.IsChecked = false"));
         Assert.That(code, Does.Contain("PatchBenchInvertFlightYOption.IsChecked = false"));
         Assert.That(code, Does.Contain("ProfilePresetId: MatchSelectableSafeCopyProfileId(selectedPatchKeys)"));
@@ -1402,5 +1419,14 @@ public class WinUiProductLaneTests
         string path = Path.Combine(relativeParts.Prepend(TestFixturePaths.RepoRoot).ToArray());
         Assert.That(File.Exists(path), Is.True, $"Missing expected repo file: {path}");
         return File.ReadAllText(path);
+    }
+
+    private static string ExtractCodeSlice(string code, string startToken, string endToken)
+    {
+        int start = code.IndexOf(startToken, StringComparison.Ordinal);
+        Assert.That(start, Is.GreaterThanOrEqualTo(0), $"Missing start token: {startToken}");
+        int end = code.IndexOf(endToken, start, StringComparison.Ordinal);
+        Assert.That(end, Is.GreaterThan(start), $"Missing end token after {startToken}: {endToken}");
+        return code[start..end];
     }
 }

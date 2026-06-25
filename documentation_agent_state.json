@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "Windowed & Mods selected-profile text modularity is accepted and ready to commit/push; next slice is Enhanced Profile Preview music-swap guard hardening.",
+  "currentFocus": "Enhanced Profile Preview music-swap guard hardening is accepted and ready to commit/push; next slice is Windowed & Mods launch-preset/status presentation modularity.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -13,7 +13,8 @@
     "releaseCandidateNote": "release/readiness/winui_zip_release_v1_0_7_2026-06-25.md",
     "skillsGhidraPolicyInventory": "release/readiness/repo_skills_ghidra_policy_inventory_2026-06-25.md",
     "winuiSelectedChoiceModularity": "release/readiness/winui_windowed_mods_selected_choice_modularity_2026-06-25.md",
-    "winuiSelectedProfileTextModularity": "release/readiness/winui_windowed_mods_selected_profile_text_modularity_2026-06-25.md"
+    "winuiSelectedProfileTextModularity": "release/readiness/winui_windowed_mods_selected_profile_text_modularity_2026-06-25.md",
+    "winuiEnhancedPreviewMusicSwapGuard": "release/readiness/winui_enhanced_preview_music_swap_guard_2026-06-25.md"
   },
   "publicPrimaryMigration": {
     "status": "validated_public_primary_with_maintainer_local_ignored_overlays",
@@ -62,25 +63,26 @@
       "git diff --check (PASS)"
     ],
     "activeSliceFocusedPassed": [
-      "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench\" (PASS; 5 tests)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench_CodeRequiresAppOwnedWorkingCopyBeforeApply\" (PASS; 1 test)",
       "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiPatchBenchInteractionSmokeTests.PatchBench_ProfileAndMenuColorChoices_UpdateSelectedStateThroughUia\" (PASS; 1 runtime UIA smoke)",
-      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~GameProfilePreflightServiceTests.PrepareWindowedCompatibilityProfile_AppliesSelectedVisiblePatchRowsToSafeCopyOnly|FullyQualifiedName~GameProfilePreflightServiceTests.PrepareWindowedCompatibilityProfile_RecordsEnhancedPreviewPresetInManifest|FullyQualifiedName~GameProfilePreflightServiceTests.PrepareWindowedCompatibilityProfile_RecordsDebugCameraPreviewPresetBoundary|FullyQualifiedName~GameProfilePreflightServiceTests.BuildPrepareReceipt\" (PASS; 6 tests)"
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench\" (PASS; 5 tests)",
+      "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
+      "npm run test:winui-primary-lane (PASS; solution build 0 warnings/errors; AppCore 1177/1177; WinUI UI tests 87 passed / 2 expected catalog-dependent skips)"
     ],
     "activeSliceBroadPassed": [
-      "npm run test:hard-payload-safety (PASS; 19319 public candidate files checked)",
-      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19316)",
-      "npm run test:md-links (PASS; 3625 Markdown files scanned, 6125 local links checked)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18469 explicit text files checked)",
+      "npm run test:hard-payload-safety (PASS; 19320 public candidate files checked)",
+      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19319)",
+      "npm run test:md-links (PASS; 3626 Markdown files scanned, 6125 local links checked)",
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18472 explicit text files checked)",
       "node JSON parse for developer_agent_state.json and documentation_agent_state.json (PASS)",
       "git diff --check (PASS)"
     ],
     "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Commit/push the accepted Windowed & Mods selected-profile text modularity slice.",
-    "Start the next goal.md slice: Enhanced Profile Preview music-swap guard hardening, scoped to current behavior/tests unless evidence justifies a separate behavior change.",
-    "Keep hard payloads, full Ghidra databases/backups, raw proofs, and installed-game mutation out of scope."
+    "Commit/push the accepted Enhanced Profile Preview music-swap guard hardening slice.",
+    "Start the next goal.md slice: Windowed & Mods launch-preset/status presentation modularity.",
+    "Keep launch arguments, copied-profile launch behavior, patch semantics, safe-copy manifests, online/runtime proof, and AppCore correctness logic out of the presentation-only slice."
   ],
   "winuiSelectedChoiceModularity": {
     "status": "validated_ready_for_commit",
@@ -215,6 +217,18 @@
     "consultReview": [
       "Specialist consult recommended reduced presentation state and keeping selected-key semantics out of the helper.",
       "Adversarial review caught duplicate identity risk and a pre-existing Enhanced Preview music-swap guard weakness; duplicate identity was fixed and the guard weakness is the next bounded slice."
+    ]
+  },
+  "winuiEnhancedPreviewMusicSwapGuard": {
+    "status": "accepted_ready_for_commit",
+    "readinessNote": "release/readiness/winui_enhanced_preview_music_swap_guard_2026-06-25.md",
+    "acceptedTruth": [
+      "The slice hardens tests only: constructor default, Enhanced Preview non-touch boundary, and runtime UIA preservation of a selected create-time music swap.",
+      "No product behavior, patch/mod, online, audible-output, runtime, release, or installed-game mutation claim changed."
+    ],
+    "consultReview": [
+      "Specialist consult agreed with the no-behavior-change static guard direction.",
+      "Adversarial consult requested runtime UIA preservation and default index/XAML pins; accepted and implemented."
     ]
   }
 }
