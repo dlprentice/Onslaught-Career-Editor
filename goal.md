@@ -32,8 +32,8 @@ contributor work.
 - `local-proofs/OnslaughtRuntimeProofArchive` and
   `local-ghidra/GhidraBackups` are ignored junctions to `G:` archives rather
   than duplicated on `C:`.
-- The public app release `v1.0.5` candidate is validated and pending GitHub
-  publication. It supersedes `v1.0.3`/`v1.0.4`: v1.0.3 included deep
+- The public app release `v1.0.5` is published and verified. It supersedes
+  `v1.0.3`/`v1.0.4`: v1.0.3 included deep
   `lore-book/` mirror paths that can hit Windows Explorer `0x80010135`
   path-too-long extraction failures under normal Downloads paths, and v1.0.4
   did not rewrite deeper unbundled Lore links. The v1.0.5 package keeps the

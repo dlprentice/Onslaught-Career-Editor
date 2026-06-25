@@ -1,6 +1,6 @@
 # WinUI ZIP Release v1.0.5
 
-Status: release-candidate package validated locally
+Status: published and verified
 Date: 2026-06-25
 Scope: `winui-zip-release-v1.0.5`
 
@@ -17,6 +17,10 @@ downloaded app ZIP does not contain dead local Lore links.
 | Byte size | `243916186` |
 | SHA-256 | `f8ba14a51ed57b14c3575a82f424de96c03b94453b03f19c6ed93a7ed5f65847` |
 | Package script | `npm run test:winui-zip-release-candidate-probe` |
+| GitHub release | `https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.5` |
+| ZIP asset | `https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.5/OnslaughtToolkit-winui-v1.0.5-win-x64.zip` |
+| Checksum asset | `https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.5/OnslaughtToolkit-v1.0.5-SHA256SUMS.txt` |
+| Published at | `2026-06-25T12:16:30Z` |
 
 The package uses the friendly top-level layout:
 
