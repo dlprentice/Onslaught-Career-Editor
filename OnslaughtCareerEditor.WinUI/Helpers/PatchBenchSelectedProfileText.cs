@@ -1,0 +1,149 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using OnslaughtCareerEditor.WinUI.Models;
+using Onslaught___Career_Editor;
+
+namespace OnslaughtCareerEditor.WinUI.Helpers
+{
+    internal static class PatchBenchSelectedProfileText
+    {
+        public static string BuildStatus(PatchBenchSelectedProfileTextState state)
+        {
+            if (state.SelectedVisibleRowCount == 0)
+            {
+                return "Selected profile: compatibility-only safe copy. No optional visible mod rows are selected; Create safe copy still applies the required windowed compatibility pair.";
+            }
+
+            string? matchedProfileId = state.MatchedPreset?.Id;
+
+            if (string.Equals(matchedProfileId, BinaryPatchPlanBuilder.CompatibilityProfileId, StringComparison.OrdinalIgnoreCase))
+            {
+                return "Selected profile: Compatibility Copy. Safest default: windowed startup plus non-4:3 display-mode acceptance only.";
+            }
+
+            if (string.Equals(matchedProfileId, BinaryPatchPlanBuilder.RecommendedProfileId, StringComparison.OrdinalIgnoreCase))
+            {
+                return "Selected profile: Windowed + Graphics Defaults. Adds launch-smoked graphics-default rows; visible graphics difference is not proven.";
+            }
+
+            if (string.Equals(matchedProfileId, BinaryPatchPlanBuilder.EnhancedPreviewProfileId, StringComparison.OrdinalIgnoreCase))
+            {
+                return "Selected profile: Enhanced Profile Preview. Patch rows match visible safe-copy mods; copied-options controls come from the current controls below. Not a full overhaul, online mode, or control-feel fix.";
+            }
+
+            if (string.Equals(matchedProfileId, BinaryPatchPlanBuilder.DebugCameraPreviewProfileId, StringComparison.OrdinalIgnoreCase))
+            {
+                return "Selected profile: Debug Camera Preview. Experimental free-camera toggle and Q-forward path; not full camera controls, gameplay safety, or online play.";
+            }
+
+            if (state.MatchedPreset is not null)
+            {
+                return $"Selected profile: {state.MatchedPreset.DisplayName}. Selected rows match a catalog safe-copy preset; open preset details for included changes and limits.";
+            }
+
+            if (state.IsModernGraphicsOnly)
+            {
+                return "Selected profile: graphics flag rows only. Use this for byte/launch checks, not as a complete compatibility profile.";
+            }
+
+            return $"Selected profile: manual patch selection with {state.SelectedVisibleRowCount} visible row(s). Create safe copy will add required compatibility and these selected rows.";
+        }
+
+        public static string BuildDetails(PatchBenchSelectedProfileTextState state)
+        {
+            if (state.SelectedVisibleRowCount == 0)
+            {
+                return "Selected safe-copy preset details: Compatibility-only safe copy. Included changes: required windowed compatibility rows are applied during safe-copy creation. Checks and limits: open row details for what was checked and remaining limits. Restore: recreate the safe copy, restore the copied BEA.exe.original.backup, or restore copied defaultoptions.bea backup when options were written. Limits: No Host/Join or online multiplayer. No installed-game mutation.";
+            }
+
+            if (state.MatchedPreset is null)
+            {
+                return $"Selected safe-copy preset details: Manual patch selection. Included changes: {state.SelectedVisibleRowCount} visible row(s). Checks and limits: open row details for what was checked and remaining limits. Restore: restore copied BEA.exe.original.backup, restore copied defaultoptions.bea backup when options were written, or recreate the safe copy. Limits: No Host/Join or online multiplayer. No installed-game mutation.";
+            }
+
+            SafeCopyProfilePreset preset = state.MatchedPreset;
+            bool isEnhancedPreview = string.Equals(preset.Id, BinaryPatchPlanBuilder.EnhancedPreviewProfileId, StringComparison.OrdinalIgnoreCase);
+            var builder = new StringBuilder();
+            builder.AppendLine($"Selected safe-copy preset details: {preset.DisplayName}.");
+            builder.AppendLine(FormatSafeCopyProfileModules(preset, isEnhancedPreview));
+            builder.AppendLine(FormatSafeCopyProfileEvidence(preset));
+            builder.AppendLine(FormatSafeCopyProfileRestore(preset));
+            builder.Append(FormatSafeCopyProfileLimits(preset));
+            return builder.ToString();
+        }
+
+        private static string FormatSafeCopyProfileModules(SafeCopyProfilePreset preset, bool isEnhancedPreview)
+        {
+            string[] names = preset.Modules
+                .Select(module => FormatSafeCopyProfileModuleName(module))
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            string prefix = isEnhancedPreview
+                ? "Patch rows match Enhanced Profile Preview; copied-options controls come from the current controls below. Control defaults apply only while P1/P2 config 1, mouse sensitivity 2.25, and invert settings still match the preset. Modules: "
+                : "Modules: ";
+            return names.Length == 0
+                ? $"{prefix}none listed; use row details for selected patch evidence."
+                : $"{prefix}{string.Join("; ", names)}.";
+        }
+
+        private static string FormatSafeCopyProfileModuleName(SafeCopyProfileModule module)
+        {
+            return string.Equals(module.Id, "copied-options-control-defaults", StringComparison.OrdinalIgnoreCase)
+                ? "Copied-options controls (current UI selections; preset defaults only if unchanged)"
+                : module.DisplayName;
+        }
+
+        private static string FormatSafeCopyProfileEvidence(SafeCopyProfilePreset preset)
+        {
+            string[] refs = preset.Modules
+                .SelectMany(module => module.EvidenceRefs)
+                .Where(reference => !string.IsNullOrWhiteSpace(reference))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(4)
+                .ToArray();
+
+            return refs.Length == 0
+                ? "Evidence: no catalog refs listed; use row details before treating this preset as proven."
+                : $"Evidence: {string.Join("; ", refs)}.";
+        }
+
+        private static string FormatSafeCopyProfileRestore(SafeCopyProfilePreset preset)
+        {
+            string[] restoreStrategies = preset.Modules
+                .Select(module => module.RestoreStrategy)
+                .Where(strategy => !string.IsNullOrWhiteSpace(strategy))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(4)
+                .ToArray();
+
+            return restoreStrategies.Length == 0
+                ? "Restore: restore copied BEA.exe.original.backup, restore copied defaultoptions.bea backup when options were written, or recreate the safe copy."
+                : $"Restore: {string.Join("; ", restoreStrategies)}.";
+        }
+
+        private static string FormatSafeCopyProfileLimits(SafeCopyProfilePreset preset)
+        {
+            var limits = preset.Modules
+                .SelectMany(module => module.NonClaims)
+                .Where(nonClaim => !string.IsNullOrWhiteSpace(nonClaim))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            AddLimitIfMissing(limits, "No Host/Join or online multiplayer.");
+            AddLimitIfMissing(limits, "No installed-game mutation.");
+
+            return $"Limits: {string.Join(" ", limits.Take(8))}";
+        }
+
+        private static void AddLimitIfMissing(List<string> limits, string requiredLimit)
+        {
+            if (!limits.Any(limit => string.Equals(limit.Trim(), requiredLimit, StringComparison.OrdinalIgnoreCase)))
+            {
+                limits.Add(requiredLimit);
+            }
+        }
+    }
+}

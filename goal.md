@@ -6,12 +6,12 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Continue `Windowed & Mods` modularity with one bounded follow-up: inspect
-selected-profile status/details copy and identify whether one more
-presentation-only helper/model extraction is safe. Do not move safe-copy
-profile manifest logic, patch row selection semantics, launch behavior, online
-status, runtime proof, or AppCore correctness logic in this slice. Continue from
-this checkout:
+Close out `Windowed & Mods` selected-profile text modularity and prepare the next
+bounded test-hardening slice: inspect the Enhanced Profile Preview create-time
+music-swap guard noted by adversarial review and decide whether a focused static
+or UIA guard can be strengthened without changing patch semantics, safe-copy
+manifest logic, launch behavior, online status, runtime proof, or AppCore
+correctness logic. Continue from this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -80,6 +80,18 @@ contributor work.
   a small WinUI model/helper, while `BinaryPatchesPage` still owns selected-key
   predicates, profile matching, menu-color matching, safe-copy state, and patch
   semantics.
+- Windowed & Mods selected-profile text modularity is accepted in
+  `release/readiness/winui_windowed_mods_selected_profile_text_modularity_2026-06-25.md`.
+  Selected-profile status/details copy now flows through a small WinUI
+  presentation model/helper, while `BinaryPatchesPage` still owns profile
+  matching, selected patch keys, `ProfilePresetId`, safe-copy manifests, launch,
+  music, and online logic. Focused build, static PatchBench guard, runtime UIA
+  selected-state smoke, AppCore safe-copy profile validation, public allowlist,
+  Markdown link, repo hygiene, state JSON, and diff checks passed.
+- Adversarial review noted a pre-existing weak static guard around Enhanced
+  Profile Preview and create-time music-swap reset. That is a next-slice
+  test-hardening candidate, not behavior changed by the selected-profile text
+  modularity slice.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof both exist.
@@ -132,15 +144,15 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Read `BinaryPatchesPage.xaml.cs` selected-profile status/details builders,
-   `PatchBenchSelectedChoiceState`, `PatchBenchChoiceVisualState`, and current
-   WinUI tests.
+1. Read `EnhancedPreviewPresetButton_Click`, launch/music option controls,
+   `WinUiProductLaneTests` launch/preset guards, and the runtime UIA PatchBench
+   smoke.
 2. Use at least one specialist consult and one adversarial reviewer unless the
    slice proves microscopic.
-3. If safe, extract one more presentation-only selected-profile status/details
-   helper or model shape from `BinaryPatchesPage`. Leave `PrepareCopiedProfile`,
-   `MatchSelectableSafeCopyProfileId`, direct patch-row exclusivity, and
-   AppCore calls unchanged unless the evidence requires a separate slice.
+3. If safe, strengthen the test guard so any Enhanced Profile Preview
+   create-time music-swap expectation is scoped to the relevant handler or UIA
+   flow. Do not add or remove user-visible behavior unless the current code and
+   tests prove the intended behavior separately.
 4. Validate with focused WinUI/AppCore tests plus repo/docs gates appropriate to
    the touched paths.
 5. Update state/docs with exact evidence and choose the next bounded slice.

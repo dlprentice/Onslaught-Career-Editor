@@ -52,6 +52,10 @@ This document tracks UI/UX debt that is too broad for a release-candidate polish
 - Windowed & Mods selected-choice state now uses a small WinUI model/helper for
   selected/normal UIA names and styling, while the page keeps patch-selection
   and safe-copy semantics unchanged.
+- Windowed & Mods selected-profile status/details text now uses a small WinUI
+  presentation model/helper, while the page keeps profile matching, selected
+  patch keys, `ProfilePresetId`, safe-copy manifests, launch, music, and online
+  logic unchanged.
 - Lore now distinguishes packaged offline chapters from GitHub source links in
   the visible UI and rendered Markdown. Full offline Lore is tracked as a
   generated content-pack plan instead of raw long-path ZIP extraction.

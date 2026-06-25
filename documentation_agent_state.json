@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "Windowed & Mods selected-choice modularity is validated and ready to commit; current goal.md now points to a bounded selected-profile copy/modularity follow-up.",
+  "currentFocus": "Windowed & Mods selected-profile text modularity is accepted and ready to commit/push; next slice is Enhanced Profile Preview music-swap guard hardening.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -12,7 +12,8 @@
     "releaseReadinessNote": "release/readiness/winui_zip_release_v1_0_7_2026-06-25.md",
     "releaseCandidateNote": "release/readiness/winui_zip_release_v1_0_7_2026-06-25.md",
     "skillsGhidraPolicyInventory": "release/readiness/repo_skills_ghidra_policy_inventory_2026-06-25.md",
-    "winuiSelectedChoiceModularity": "release/readiness/winui_windowed_mods_selected_choice_modularity_2026-06-25.md"
+    "winuiSelectedChoiceModularity": "release/readiness/winui_windowed_mods_selected_choice_modularity_2026-06-25.md",
+    "winuiSelectedProfileTextModularity": "release/readiness/winui_windowed_mods_selected_profile_text_modularity_2026-06-25.md"
   },
   "publicPrimaryMigration": {
     "status": "validated_public_primary_with_maintainer_local_ignored_overlays",
@@ -63,21 +64,23 @@
     "activeSliceFocusedPassed": [
       "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
       "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench\" (PASS; 5 tests)",
-      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~GameProfilePreflightServiceTests.PrepareWindowedCompatibilityProfile_AppliesSelectedVisiblePatchRowsToSafeCopyOnly|FullyQualifiedName~GameProfilePreflightServiceTests.PrepareWindowedCompatibilityProfile_RecordsEnhancedPreviewPresetInManifest|FullyQualifiedName~GameProfilePreflightServiceTests.BuildPrepareReceipt\" (PASS; 5 tests)",
       "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiPatchBenchInteractionSmokeTests.PatchBench_ProfileAndMenuColorChoices_UpdateSelectedStateThroughUia\" (PASS; 1 runtime UIA smoke)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench|FullyQualifiedName~WinUiAccessibilityAuditTests\" (PASS; 15 tests)"
+      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~GameProfilePreflightServiceTests.PrepareWindowedCompatibilityProfile_AppliesSelectedVisiblePatchRowsToSafeCopyOnly|FullyQualifiedName~GameProfilePreflightServiceTests.PrepareWindowedCompatibilityProfile_RecordsEnhancedPreviewPresetInManifest|FullyQualifiedName~GameProfilePreflightServiceTests.PrepareWindowedCompatibilityProfile_RecordsDebugCameraPreviewPresetBoundary|FullyQualifiedName~GameProfilePreflightServiceTests.BuildPrepareReceipt\" (PASS; 6 tests)"
     ],
     "activeSliceBroadPassed": [
-      "npm run test:hard-payload-safety (PASS; 19316 public candidate files checked)",
-      "npm run test:public-allowlist (PASS; includes hard-payload safety, submodule payload safety, and public-primary migration inventory; public tracked paths 19316)",
-      "npm run test:md-links (PASS; 3625 Markdown files, 6125 local links)",
-      "npm run test:repo-hygiene (PASS; 18469 explicit text files checked)"
+      "npm run test:hard-payload-safety (PASS; 19319 public candidate files checked)",
+      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19316)",
+      "npm run test:md-links (PASS; 3625 Markdown files scanned, 6125 local links checked)",
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18469 explicit text files checked)",
+      "node JSON parse for developer_agent_state.json and documentation_agent_state.json (PASS)",
+      "git diff --check (PASS)"
     ],
     "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Commit/push the validated Windowed & Mods selected-choice modularity closeout.",
-    "Start the next goal.md slice: one bounded selected-profile status/details presentation extraction if it remains separate from patch semantics."
+    "Commit/push the accepted Windowed & Mods selected-profile text modularity slice.",
+    "Start the next goal.md slice: Enhanced Profile Preview music-swap guard hardening, scoped to current behavior/tests unless evidence justifies a separate behavior change.",
+    "Keep hard payloads, full Ghidra databases/backups, raw proofs, and installed-game mutation out of scope."
   ],
   "winuiSelectedChoiceModularity": {
     "status": "validated_ready_for_commit",
@@ -200,5 +203,18 @@
     "sha256": "033d9f65d51e884c7896fcd1180689988743c50ef6c57a6ce0c72f8b4f38c7ae",
     "status": "published as GitHub Release v1.0.7",
     "readinessNote": "release/readiness/winui_zip_release_v1_0_7_2026-06-25.md"
+  },
+  "winuiSelectedProfileTextModularity": {
+    "status": "accepted_ready_for_commit",
+    "readinessNote": "release/readiness/winui_windowed_mods_selected_profile_text_modularity_2026-06-25.md",
+    "acceptedTruth": [
+      "Selected-profile status/details copy now lives in a WinUI presentation helper and text-state model.",
+      "BinaryPatchesPage keeps profile matching, selected patch keys, ProfilePresetId, safe-copy manifest logic, launch, music, and online logic.",
+      "No runtime, online, music audible-output, rebuild, release, or installed-game mutation claim changed."
+    ],
+    "consultReview": [
+      "Specialist consult recommended reduced presentation state and keeping selected-key semantics out of the helper.",
+      "Adversarial review caught duplicate identity risk and a pre-existing Enhanced Preview music-swap guard weakness; duplicate identity was fixed and the guard weakness is the next bounded slice."
+    ]
   }
 }

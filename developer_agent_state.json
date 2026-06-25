@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-06-25",
   "branch": "main",
-  "currentFocus": "Windowed & Mods selected-choice modularity is validated and ready to commit; goal.md is advanced to the next bounded selected-profile copy/modularity follow-up.",
+  "currentFocus": "Windowed & Mods selected-profile text modularity is accepted and ready to commit/push; next slice is Enhanced Profile Preview music-swap guard hardening.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
@@ -49,27 +49,28 @@
     }
   },
   "recentClosedSlice": {
-    "name": "winui-windowed-mods-selected-choice-modularity",
-    "status": "validated_ready_for_commit",
-    "readinessNote": "release/readiness/winui_windowed_mods_selected_choice_modularity_2026-06-25.md",
-    "claimBoundary": "WinUI modularity/testability only; no patch catalog change, no selected patch semantics change, no safe-copy creation change, no launch behavior change, no online/music/runtime/rebuild claim change, and no installed-game mutation.",
+    "name": "winui-windowed-mods-selected-profile-text-modularity",
+    "status": "accepted_ready_for_commit",
+    "readinessNote": "release/readiness/winui_windowed_mods_selected_profile_text_modularity_2026-06-25.md",
+    "claimBoundary": "WinUI presentation modularity only; no patch catalog change, no selected patch semantics change, no safe-copy creation change, no launch behavior change, no online/music/runtime/rebuild claim change, and no installed-game mutation.",
     "acceptedFindings": [
-      "Selected-choice style/UIA-name application moved into a small WinUI helper and selected-choice model.",
-      "BinaryPatchesPage still owns selected-key predicates, profile matching, menu-color matching, safe-copy state, and patch semantics.",
-      "Runtime UIA smoke now also verifies the clear optional mod rows state remains compatibility-only."
+      "Selected-profile status/details copy moved into a small WinUI presentation helper and text-state model.",
+      "BinaryPatchesPage still owns profile matching, selected patch keys, ProfilePresetId, safe-copy manifests, launch, music, and online logic.",
+      "The text-state model no longer carries duplicate profile identity, so status/details cannot disagree through mismatched profile id versus preset input.",
+      "Static guards now reject behavior hooks such as BuildSafeCopyProfilePatchKeys, ProfilePresetId, prepare/launch, online rendering, and copied-profile state inside the text helper."
     ],
     "consultReview": {
-      "specialist": "recommended a WinUI-layer selected-choice state helper/model and warned not to move safe-copy profile manifest logic",
-      "adversarial": "found no blocker after extraction stayed narrow; clear-selection UIA hardening was accepted"
+      "specialist": "recommended presentation-only selected-profile text extraction and reduced helper input instead of passing the full selected-key collection",
+      "adversarial": "caught compile/test drift in the in-progress patch and duplicate identity risk; both were accepted and fixed; noted Enhanced Preview music-swap guard weakness as a follow-up, not this slice behavior"
     }
   },
   "activeSlice": {
-    "name": "winui-windowed-mods-selected-profile-copy-modularity",
-    "goal": "inspect selected-profile status/details copy and extract one more presentation-only helper/model shape only if it can stay separate from safe-copy profile manifest logic and patch semantics",
-    "claimBoundary": "WinUI presentation modularity only; do not move safe-copy profile manifest logic, patch row selection semantics, launch behavior, online status, runtime proof, or AppCore correctness logic.",
+    "name": "winui-enhanced-preview-music-swap-guard-hardening",
+    "goal": "inspect Enhanced Profile Preview create-time music-swap guard and strengthen static/UIA coverage only if it can stay scoped to current behavior",
+    "claimBoundary": "test hardening only unless current code/test evidence justifies a separate behavior change; do not change patch semantics, safe-copy manifests, launch behavior, online status, runtime proof, or AppCore correctness logic in the current closeout.",
     "latestFindings": [
-      "Windowed & Mods selected-choice UIA/style application helper is validated.",
-      "Clear optional mod rows remains compatibility-only in runtime UIA smoke."
+      "Selected-profile text helper extraction is focused-validated.",
+      "Adversarial review identified a pre-existing broad static assertion that does not prove EnhancedPreviewPresetButton_Click owns any create-time music-swap reset."
     ],
     "consultReview": {},
     "status": "next_slice_ready"
@@ -123,22 +124,23 @@
     "activeSliceFocusedPassed": [
       "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
       "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench\" (PASS; 5 tests)",
-      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~GameProfilePreflightServiceTests.PrepareWindowedCompatibilityProfile_AppliesSelectedVisiblePatchRowsToSafeCopyOnly|FullyQualifiedName~GameProfilePreflightServiceTests.PrepareWindowedCompatibilityProfile_RecordsEnhancedPreviewPresetInManifest|FullyQualifiedName~GameProfilePreflightServiceTests.BuildPrepareReceipt\" (PASS; 5 tests)",
       "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiPatchBenchInteractionSmokeTests.PatchBench_ProfileAndMenuColorChoices_UpdateSelectedStateThroughUia\" (PASS; 1 runtime UIA smoke)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench|FullyQualifiedName~WinUiAccessibilityAuditTests\" (PASS; 15 tests)"
+      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~GameProfilePreflightServiceTests.PrepareWindowedCompatibilityProfile_AppliesSelectedVisiblePatchRowsToSafeCopyOnly|FullyQualifiedName~GameProfilePreflightServiceTests.PrepareWindowedCompatibilityProfile_RecordsEnhancedPreviewPresetInManifest|FullyQualifiedName~GameProfilePreflightServiceTests.PrepareWindowedCompatibilityProfile_RecordsDebugCameraPreviewPresetBoundary|FullyQualifiedName~GameProfilePreflightServiceTests.BuildPrepareReceipt\" (PASS; 6 tests)"
     ],
     "activeSliceBroadPassed": [
-      "npm run test:hard-payload-safety (PASS; 19316 public candidate files checked)",
-      "npm run test:public-allowlist (PASS; includes hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19316)",
-      "npm run test:md-links (PASS; 3625 Markdown files, 6125 local links)",
-      "npm run test:repo-hygiene (PASS; 18469 explicit text files checked)"
+      "npm run test:hard-payload-safety (PASS; 19319 public candidate files checked)",
+      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19316)",
+      "npm run test:md-links (PASS; 3625 Markdown files scanned, 6125 local links checked)",
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18469 explicit text files checked)",
+      "node JSON parse for developer_agent_state.json and documentation_agent_state.json (PASS)",
+      "git diff --check (PASS)"
     ],
     "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Commit/push the validated Windowed & Mods selected-choice modularity closeout.",
-    "Start the next goal.md slice: inspect selected-profile status/details copy for one more presentation-only extraction, guarded by focused WinUI tests.",
-    "Do not move or track full Ghidra project stores, game payloads, secrets, runtime caches, or release outputs."
+    "Commit/push the accepted Windowed & Mods selected-profile text modularity slice.",
+    "Start the next goal.md slice: Enhanced Profile Preview music-swap guard hardening, scoped to current behavior/tests unless evidence justifies a separate behavior change.",
+    "Keep hard payloads, full Ghidra databases/backups, raw proofs, and installed-game mutation out of scope."
   ],
   "releaseAccounting": {
     "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",
