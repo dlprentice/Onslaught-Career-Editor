@@ -20,30 +20,31 @@ Current downloadable app releases use an unsigned portable Windows x64 ZIP
 attached to GitHub Releases with a SHA-256 checksum sidecar. Extract the full
 ZIP and run `Launch Onslaught Toolkit.cmd` from the clean top-level folder. The
 self-contained WinUI payload lives under `app\`; run
-`app\OnslaughtCareerEditor.WinUI.exe` only as a fallback. The `v1.0.6` package
-bundles the offline Lore reader documents listed in `lore-book\BOOK.md`,
-rewrites deeper unbundled source links to GitHub source/search pages, and
-verifies the exact ZIP with Explorer-safe entry paths, packaged-Lore copy truth,
-extracted launch, Home, Lore, and representative Media UI smokes. `v1.0.6`
-supersedes `v1.0.3`/`v1.0.4`/`v1.0.5`: v1.0.3 could hit Windows Explorer
+`app\OnslaughtCareerEditor.WinUI.exe` only as a fallback. The `v1.0.7` package
+bundles a generated short-path `lore-pack/` with 943
+public-safe Markdown/TXT Lore documents, rewrites unbundled source links to
+GitHub source/search pages, and verifies the exact ZIP with Explorer-safe entry
+paths, packaged-Lore copy truth, extracted launch, Home, Lore, and
+representative Media UI smokes. `v1.0.7` supersedes
+`v1.0.3`/`v1.0.4`/`v1.0.5`/`v1.0.6`: v1.0.3 could hit Windows Explorer
 `0x80010135` path-too-long extraction failures under normal Downloads paths,
-v1.0.4 did not rewrite deeper unbundled Lore links, and v1.0.5 did not yet
-surface the source-link boundary clearly inside the app.
+v1.0.4 did not rewrite deeper unbundled Lore links, v1.0.5 did not yet surface
+the source-link boundary clearly inside the app, and v1.0.6 did not yet include
+the generated broad offline Lore content pack.
 
 `release/readiness/WINUI-ZIP-README.txt` describes ZIPs built from the current
-source candidate. The published `v1.0.6` asset is documented by its historical
-readiness note and does not contain the generated `lore-pack/` candidate shape.
+source candidate. The published `v1.0.7` asset is documented by
+`release/readiness/winui_zip_release_v1_0_7_2026-06-25.md`.
 
 The ZIP release does not include Battle Engine Aquila game files, copied
 executables, saves, media payloads, full Ghidra databases, or bulky generated
 proof captures. Users provide their own retail/Steam installation, and mutating
-workflows operate on copied files or safe game copies. Current package
-candidates now stage a generated short-path `lore-pack/` content pack beside
-the short `lore-book/BOOK.md` entry point so public Markdown/TXT Lore and
-public Markdown/TXT documents can be searched and read offline without raw
-deep `lore-book/` mirror paths in the ZIP. External references may still open
-in the browser. This is not an MSIX, installer, Store package, signed release,
-or SmartScreen/reputation claim.
+workflows operate on copied files or safe game copies. The current published
+portable ZIP stages a generated short-path `lore-pack/` content pack beside the
+short `lore-book/BOOK.md` entry point so public Markdown/TXT Lore documents can
+be searched and read offline without raw deep `lore-book/` mirror paths in the
+ZIP. External references may still open in the browser. This is not an MSIX,
+installer, Store package, signed release, or SmartScreen/reputation claim.
 Asset Library loads generated local asset catalogs; downloadable app ZIPs do
 not bundle game assets, browse raw game files directly, or generate catalogs in
 place. Catalog generation is a source/lab workflow documented under

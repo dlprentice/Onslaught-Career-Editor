@@ -1,12 +1,17 @@
-# WinUI ZIP Release Candidate v1.0.7 - 2026-06-25
+# WinUI ZIP Release v1.0.7 - 2026-06-25
 
-Status: local candidate proven, not published
+Status: published GitHub Release
 
 ## Artifact
 
 - ZIP: `subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.7-win-x64.zip`
 - Byte size: `246757113`
 - SHA-256: `033d9f65d51e884c7896fcd1180689988743c50ef6c57a6ce0c72f8b4f38c7ae`
+- Release: https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.7
+- Download: https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.7/OnslaughtToolkit-winui-v1.0.7-win-x64.zip
+- Checksum: https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.7/OnslaughtToolkit-v1.0.7-SHA256SUMS.txt
+- Published at: `2026-06-25T17:33:53Z`
+- Tag commit: `f9fb41b1a6090965778f770533367893b957ab98`
 
 ## Included
 
@@ -42,6 +47,5 @@ Status: local candidate proven, not published
 
 ## Boundary
 
-This is a local release candidate only. Published GitHub Release `v1.0.6`
-remains the current public downloadable app until a maintainer explicitly tags
-and uploads a later release.
+This is the current public downloadable app release. It is a portable unsigned
+ZIP, not an MSIX/AppInstaller/signed installer or SmartScreen/reputation proof.

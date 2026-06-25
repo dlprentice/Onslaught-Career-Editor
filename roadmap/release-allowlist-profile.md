@@ -1,6 +1,6 @@
 # Release Allowlist Profile
 
-> Generated: 2026-06-25 13:26:34 -0400
+> Generated: 2026-06-25 13:37:06 -0400
 
 ## Classification Summary
 

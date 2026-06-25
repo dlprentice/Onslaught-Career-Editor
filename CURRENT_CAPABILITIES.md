@@ -2,24 +2,19 @@
 
 Deployment shape: offline safe-copy patches should feel like "choose a preset, prepare a copied game folder, launch the copied executable." Any future first-generation online experiment is expected to require WinUI or a bundled companion helper during the session for identity/auth, invitations, relay/host authority, input delivery, cleanup, and rollback. A later native-feeling mega patch or in-game menu remains a promotion target for proven features, not the first netplay deployment shape.
 
-Downloadable app release shape: the public `v1.0.6` release is an
+Downloadable app release shape: the public `v1.0.7` release is an
 unsigned portable Windows x64 ZIP with a SHA-256 checksum sidecar. The package
 uses a friendly top-level launcher/readme/license layout, keeps the
-self-contained WinUI payload under `app/`, includes the offline Lore reader
-documents listed in `lore-book/BOOK.md`, rewrites deeper unbundled source links
-to GitHub source/search pages, rejects raw root DLL/EXE layouts, rejects
-Explorer-unsafe long ZIP entry paths, and passes extracted launch, Home, Lore,
-and representative Media UI smokes with no skipped test rows. Evidence:
-`release/readiness/winui_zip_release_v1_0_6_2026-06-25.md`.
-WinUI now labels Lore source links as browser-opening source links instead of
-implying every Lore link stays inside the app. The current source tree can stage
-a generated short-path `lore-pack/` content pack beside the short
-`lore-book/BOOK.md` entry point, so public Markdown/TXT Lore and public
-Markdown/TXT documents can be searched and read offline without raw deep
-`lore-book/` filenames in the ZIP. External references may still open in the
-browser.
-Published `v1.0.6` remains the current public release asset until a later
-package is tagged and uploaded.
+self-contained WinUI payload under `app/`, includes a generated short-path
+`lore-pack/` with 943 public-safe Markdown/TXT Lore documents beside the short
+`lore-book/BOOK.md` entry point, rewrites unbundled source links to GitHub
+source/search pages, rejects raw root DLL/EXE layouts, rejects Explorer-unsafe
+long ZIP entry paths, and passes extracted launch, Home, Lore, and
+representative Media UI smokes with no skipped test rows. Evidence:
+`release/readiness/winui_zip_release_v1_0_7_2026-06-25.md`.
+WinUI labels Lore source/external links as browser-opening actions instead of
+implying every Lore link stays inside the app. External references may still
+open in the browser.
 It does not include Battle Engine Aquila game files, saves, private media,
 private proof material, MSIX/installer packaging, signing, Store distribution,
 SmartScreen/reputation proof, player-ready online multiplayer, or gameplay

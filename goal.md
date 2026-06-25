@@ -33,19 +33,18 @@ contributor work.
 - `local-proofs/OnslaughtRuntimeProofArchive` and
   `local-ghidra/GhidraBackups` are ignored junctions to `G:` archives rather
   than duplicated on `C:`.
-- The public app release `v1.0.6` remains the latest published GitHub asset
-  until a later version is tagged and published. It keeps the friendly wrapper
-  layout and avoids raw deep `lore-book/` paths that can hit Windows Explorer
-  `0x80010135` path-too-long extraction failures.
-- The source tree now stages packaged public Lore library content for package
-  candidates through a generated short-path `lore-pack/` content pack. Package
+- The public app release `v1.0.7` is the latest published GitHub asset. It keeps
+  the friendly wrapper layout, includes the generated short-path `lore-pack/`
+  content pack, and avoids raw deep `lore-book/` paths that can hit Windows
+  Explorer `0x80010135` path-too-long extraction failures.
+- The source tree stages packaged public Lore library content through a
+  generated short-path `lore-pack/` content pack. Package
   probes build and validate `lore-pack/onslaught-lore.v1.index.json` plus
   `lore-pack/onslaught-lore.v1.jsonl`, keep only short `lore-book/` entry files
   beside it, and reject raw deep `lore-book/` mirror leakage. The latest local
   package probe generated 943 public-safe offline Markdown/TXT Lore documents
-  and passed launch/Home/Lore/Media smokes; external references may
-  still open in the browser, and no new GitHub release has been published for
-  this pack yet.
+  and passed launch/Home/Lore/Media smokes; external references may still open
+  in the browser.
 - The maintainer-local live Ghidra project path is
   `C:\Users\david\Ghidra\Projects\BEA.gpr` with store
   `C:\Users\david\Ghidra\Projects\BEA.rep\`. The repo tracks scripts, exports,
@@ -99,12 +98,9 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Commit and push the validated generated Lore content-pack support
-   after docs/state/hygiene gates are green and commit authority is clear.
-2. Cut a new GitHub app release only after explicit release authorization and a
-   release-candidate probe for the versioned asset; the next candidate must not
-   reuse the published `v1.0.6` ZIP filename.
-3. Continue bounded patch/mod/runtime proof work from public `main`, likely the
+1. Commit and push the v1.0.7 publication-state docs/state update after
+   docs/state/hygiene gates are green.
+2. Continue bounded patch/mod/runtime proof work from public `main`, likely the
    next safe-copy/mod runtime proof that does not require external endpoint
    material.
 

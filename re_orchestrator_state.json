@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "No Ghidra/static mutation; generated WinUI Lore content-pack package candidate is local-only and static RE remains unchanged.",
+  "currentFocus": "No Ghidra/static mutation; WinUI v1.0.7 generated Lore content-pack release is published and static RE remains unchanged.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -15,7 +15,7 @@
     "status": "validated_public_primary_with_maintainer_local_ignored_overlays",
     "commit": "c58d06420e482421355d1e40f240db7d87e289d3",
     "impact": "Public repo is primary for RE docs, wave notes, scratch text exports, function indexes, static maps, proof summaries, and checkers; hard payloads, full Ghidra DBs/backups, raw captures, and copied executables remain ignored local overlays.",
-    "currentRefreshPointer": "See developer_agent_state.json and documentation_agent_state.json for v1.0.5 published release, validation, and next runtime/product follow-up status."
+    "currentRefreshPointer": "See developer_agent_state.json and documentation_agent_state.json for v1.0.7 published release, validation, and next runtime/product follow-up status."
   },
   "runtimeProofBoundary": {
     "musicAudibleOutputProof": "runtimeAudibleOutputProof=false",
@@ -27,28 +27,29 @@
     ],
     "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable; current slice is UI/copy/testability only",
     "latestWinuiReleaseCandidate": {
-      "version": "v1.0.6",
+      "version": "v1.0.7",
       "status": "published",
-      "sha256": "ce5cb69a836f1b9c759ec608407cee51520f147979816a8661c29bf32cd6d720",
-      "byteSize": 243917871,
-      "readinessNote": "release/readiness/winui_zip_release_v1_0_6_2026-06-25.md",
-      "releaseUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.6",
-      "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.6/OnslaughtToolkit-winui-v1.0.6-win-x64.zip",
-      "publishedAt": "2026-06-25T14:04:04Z",
-      "tagCommit": "8c16631a"
+      "sha256": "033d9f65d51e884c7896fcd1180689988743c50ef6c57a6ce0c72f8b4f38c7ae",
+      "byteSize": 246757113,
+      "readinessNote": "release/readiness/winui_zip_release_v1_0_7_2026-06-25.md",
+      "releaseUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.7",
+      "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.7/OnslaughtToolkit-winui-v1.0.7-win-x64.zip",
+      "checksumUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.7/OnslaughtToolkit-v1.0.7-SHA256SUMS.txt",
+      "publishedAt": "2026-06-25T17:33:53Z",
+      "tagCommit": "f9fb41b1a6090965778f770533367893b957ab98"
     },
     "latestWinuiLoreContentPackCandidate": {
-      "status": "local_release_candidate_probe_passed_not_published",
+      "status": "published_as_v1_0_7",
       "documentCount": 943,
       "zip": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.7-win-x64.zip",
       "byteSize": 246757113,
       "sha256": "033d9f65d51e884c7896fcd1180689988743c50ef6c57a6ce0c72f8b4f38c7ae",
-      "readinessNote": "release/readiness/winui_zip_release_candidate_v1_0_7_2026-06-25.md"
+      "readinessNote": "release/readiness/winui_zip_release_v1_0_7_2026-06-25.md"
     }
   },
   "nextSteps": [
-    "No Ghidra backup is required for this no-mutation WinUI/package slice.",
-    "Publish v1.0.7 only after explicit release authorization using the validated release-candidate ZIP or a fresh equivalent probe.",
+    "No Ghidra backup is required for this no-mutation WinUI/package publication slice.",
+    "Commit/push the v1.0.7 publication-state docs/state update.",
     "Resume static work only if a product/runtime contradiction points back to a specific RE issue."
   ],
   "currentCounters": {
@@ -85,12 +86,12 @@
       "npm run test:winui-notices (PASS; 74 packages)",
       "npm run test:winui-zip-package-probe (PASS; ZIP 246757113 bytes, SHA-256 5dfa8271456c1356fe560a4face65703f6b9a49df5c3fab6842327d0f43fc49f, 943 Lore pack docs, extracted launch/Home/Lore/Media smokes passed)",
       "npm run test:winui-zip-release-candidate-probe (PASS; OnslaughtToolkit-winui-v1.0.7-win-x64.zip, 246757113 bytes, SHA-256 033d9f65d51e884c7896fcd1180689988743c50ef6c57a6ce0c72f8b4f38c7ae, 943 Lore pack docs, extracted launch/Home/Lore/Media smokes passed)",
-      "npm run test:doc-commands (PASS; 4241 documented npm commands checked)",
-      "npm run test:md-links (PASS; 3620 markdown files, 6123 local links)",
+      "npm run test:doc-commands (PASS; 4243 documented npm commands checked)",
+      "npm run test:md-links (PASS; 3622 markdown files, 6123 local links)",
       "npm run release:profile-check (PASS; R0=6131 R2=0 R3=3 R4=13177)",
       "npm run release:curated-check (PASS; selected files 625)",
       "npm run test:public-allowlist (PASS; public candidate files 19311, submodule candidate files 19495, migration inventory public tracked paths 19311)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18461 explicit text files line-ending check)",
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18464 explicit text files line-ending check)",
       "git diff --check (PASS)"
     ],
     "pendingForActiveSlice": []

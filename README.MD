@@ -25,21 +25,19 @@ Downloadable app builds are published on the
 page as unsigned portable Windows x64 ZIP assets with SHA-256 checksum sidecars.
 Extract the full ZIP and run `Launch Onslaught Toolkit.cmd` from the clean
 top-level folder. The app payload lives under `app\`; run
-`app\OnslaughtCareerEditor.WinUI.exe` only as a fallback. Use `v1.0.6` or newer;
-it keeps the Explorer-safe ZIP layout introduced after `v1.0.3`/`v1.0.4` and
-adds clearer Lore source-link copy. The current working tree can also stage a
-generated public Lore library content pack for the next package candidate.
+`app\OnslaughtCareerEditor.WinUI.exe` only as a fallback. Use `v1.0.7` or newer;
+it keeps the Explorer-safe ZIP layout introduced after `v1.0.3`/`v1.0.4`, labels
+browser-opening Lore links clearly, and includes a generated offline Lore
+content pack.
 
 The ZIP release does not include Battle Engine Aquila game files, copied
 executables, saves, media payloads, full Ghidra databases, or bulky generated
-proof captures. Published `v1.0.6` bundles the Lore reader files listed in
-`lore-book\BOOK.md` for offline reading and sends deeper source docs to online
-project source pages. Current package candidates keep `lore-book\BOOK.md` as a
-short entry point and add `lore-pack\onslaught-lore.v1.jsonl` plus
-`lore-pack\onslaught-lore.v1.index.json` so public Markdown/TXT Lore and
-public Markdown/TXT documents can be searched and read offline without raw
-deep `lore-book/` filenames breaking normal Explorer extraction. External
-references may still open in the browser.
+proof captures. Published `v1.0.7` keeps `lore-book\BOOK.md` as a short entry
+point and adds `lore-pack\onslaught-lore.v1.jsonl` plus
+`lore-pack\onslaught-lore.v1.index.json` with 943 public-safe Markdown/TXT Lore
+documents, so the app can search and read broad offline Lore without raw deep
+`lore-book/` filenames breaking normal Explorer extraction. External references
+may still open in the browser.
 Media and safe copied-game workflows use your own retail/Steam install.
 Asset Library loads generated local asset catalogs; the ZIP does not bundle
 game assets or generate catalogs in-place. Catalog generation is a source/lab
