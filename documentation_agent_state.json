@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "Docs updated for WinUI v1.0.4 release-packaging hotfix: v1.0.3 is superseded for Explorer path-too-long extraction, and v1.0.4 records deterministic BOOK.md-linked Lore packaging plus Explorer path safety.",
+  "currentFocus": "WinUI v1.0.4 release docs/state closeout: v1.0.4 is published and supersedes v1.0.3 for Explorer path-too-long extraction.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -48,12 +48,12 @@
       "npm run test:winui-notices (PASS; 74 packages)",
       "npm run test:repo-hygiene (PASS; 18457 explicit text files checked)",
       "state JSON parse",
-      "git diff --check"
+      "git diff --check",
+      "gh release view v1.0.4 (published; assets uploaded; ZIP digest/size match expected)"
     ],
     "pendingForActiveSlice": [
-      "commit/push v1.0.4 package hotfix to origin/main",
-      "tag v1.0.4 and publish GitHub release with ZIP and SHA256SUMS assets",
-      "verify GitHub release metadata/assets, then update final state to published"
+      "final state/docs closeout commit and push",
+      "resume bounded patch/mod/runtime proof work from the public repo"
     ]
   },
   "nextSteps": [
@@ -62,7 +62,7 @@
     "Next UI docs/product follow-up: clarify Asset Library first-run catalog generation and move normal-path proof jargon behind details."
   ],
   "winuiReleaseCandidate": {
-    "status": "validated_publication_pending",
+    "status": "published",
     "version": "v1.0.4",
     "zip": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.4-win-x64.zip",
     "byteSize": 243908905,
@@ -93,12 +93,14 @@
   },
   "githubRelease": {
     "version": "v1.0.4",
-    "status": "validated_publication_pending",
+    "status": "published",
     "url": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.4",
     "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.4/OnslaughtToolkit-winui-v1.0.4-win-x64.zip",
     "checksumUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.4/OnslaughtToolkit-v1.0.4-SHA256SUMS.txt",
     "sha256": "641f17a44343e19efa858af30d6194f6e2b844f06d35a5753b3eb03156ac72b3",
-    "byteSize": 243908905
+    "byteSize": 243908905,
+    "publishedAt": "2026-06-25T03:31:09Z",
+    "tagCommit": "6ca6dfccd7c04ae8e42634242ac3f05949be0551"
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",

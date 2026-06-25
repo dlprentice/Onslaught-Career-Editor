@@ -1,6 +1,6 @@
 # WinUI ZIP Release v1.0.4
 
-Status: release candidate validated for publication
+Status: published release package validated
 Date: 2026-06-25
 Scope: `winui-zip-release-v1.0.4`
 

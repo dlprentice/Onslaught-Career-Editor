@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-06-25",
   "branch": "main",
-  "currentFocus": "WinUI v1.0.4 ZIP hotfix: v1.0.3 is superseded for Explorer path-too-long extraction; v1.0.4 candidate uses deterministic BOOK.md-linked Lore reader packaging and Explorer path guards. Broad validation/publish closeout is pending.",
+  "currentFocus": "WinUI v1.0.4 ZIP hotfix is published: v1.0.3 is superseded for Explorer path-too-long extraction; v1.0.4 uses deterministic BOOK.md-linked Lore reader packaging and Explorer path guards.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
@@ -41,7 +41,7 @@
       "v1.0.4 packages 53 deterministic BOOK.md-linked Lore reader files; max ZIP entry length is 95 characters within the 180-character Explorer-safe budget.",
       "Package probe now rejects Explorer-unsafe long ZIP entries and raw root DLL/EXE layouts."
     ],
-    "status": "validated_publication_pending"
+    "status": "published_and_verified"
   },
   "runtimeTruth": {
     "musicAudibleOutputProof": false,
@@ -81,12 +81,12 @@
       "npm run test:winui-notices (PASS; 74 packages)",
       "npm run test:repo-hygiene (PASS; 18457 explicit text files checked)",
       "state JSON parse",
-      "git diff --check"
+      "git diff --check",
+      "gh release view v1.0.4 (published; assets uploaded; ZIP digest/size match expected)"
     ],
     "pendingForActiveSlice": [
-      "commit/push v1.0.4 package hotfix to origin/main",
-      "tag v1.0.4 and publish GitHub release with ZIP and SHA256SUMS assets",
-      "verify GitHub release metadata/assets, then update final state to published"
+      "final state/docs closeout commit and push",
+      "resume bounded patch/mod/runtime proof work from the public repo"
     ]
   },
   "nextSteps": [
@@ -101,12 +101,14 @@
   },
   "githubRelease": {
     "version": "v1.0.4",
-    "status": "validated_publication_pending",
+    "status": "published",
     "url": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.4",
     "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.4/OnslaughtToolkit-winui-v1.0.4-win-x64.zip",
     "checksumUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.4/OnslaughtToolkit-v1.0.4-SHA256SUMS.txt",
     "sha256": "641f17a44343e19efa858af30d6194f6e2b844f06d35a5753b3eb03156ac72b3",
-    "byteSize": 243908905
+    "byteSize": 243908905,
+    "publishedAt": "2026-06-25T03:31:09Z",
+    "tagCommit": "6ca6dfccd7c04ae8e42634242ac3f05949be0551"
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
