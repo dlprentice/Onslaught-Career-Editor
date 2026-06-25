@@ -39,9 +39,9 @@
     }
   },
   "nextSteps": [
-    "Commit and push the WinUI/Lore package-truth cleanup.",
+    "Commit/push v1.0.6 release-prep update.",
     "No Ghidra backup is required for this no-mutation slice.",
-    "Then resume bounded patch/mod/runtime proof work from public main unless a static RE contradiction appears."
+    "After release publication, resume bounded patch/mod/runtime proof work from public main unless a static RE contradiction appears."
   ],
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -71,19 +71,19 @@
       "py -3 tools\\winui_zip_package_probe_test.py (PASS; 14 tests)",
       "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~LoreBrowserServiceTests\" (PASS; 6 tests)",
       "npm run test:winui-primary-lane (PASS; build 0 warnings/errors, AppCore 1172, UiTests 85 passed / 2 skipped)",
-      "npm run test:doc-commands (PASS; 4232 documented npm commands checked)",
-      "npm run test:winui-zip-release-candidate-probe (PASS; ZIP 243917567 bytes, SHA-256 96f921b4670900c63d67d87be7fbb6476be8ef3d3b90742196bf058df238cca2, extracted launch/Home/Lore/Media smokes passed)",
-      "npm run test:md-links (PASS; 3618 markdown files, 6123 local links)",
+      "npm run test:doc-commands (PASS; 4232 documented npm commands checked under package version 1.0.6)",
+      "npm run test:winui-zip-release-candidate-probe (PASS; ZIP 243917871 bytes, SHA-256 ce5cb69a836f1b9c759ec608407cee51520f147979816a8661c29bf32cd6d720, extracted launch/Home/Lore/Media smokes passed)",
+      "npm run test:md-links (PASS; 3619 markdown files, 6123 local links)",
       "npm run release:curated-check (PASS; selected files 625)",
-      "npm run release:profile-check (PASS; R0=6126 R2=0 R3=3 R4=13177)",
-      "npm run test:public-allowlist (PASS; public candidate files 19307, submodule candidate files 19491, migration inventory public tracked paths 19306)",
+      "npm run release:profile-check (PASS; R0=6127 R2=0 R3=3 R4=13177)",
+      "npm run test:public-allowlist (PASS; public candidate files 19308, submodule candidate files 19492, migration inventory public tracked paths 19307)",
       "npm run test:winui-notices (PASS; 74 packages)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18459 explicit text files line-ending check)",
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18460 explicit text files line-ending check)",
       "git diff --check (PASS)",
       "state JSON parse (PASS)"
     ],
     "pendingForActiveSlice": [
-      "commit and push combined cleanup"
+      "commit, push, tag, and publish v1.0.6"
     ]
   }
 }

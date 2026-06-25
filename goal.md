@@ -33,15 +33,19 @@ contributor work.
 - `local-proofs/OnslaughtRuntimeProofArchive` and
   `local-ghidra/GhidraBackups` are ignored junctions to `G:` archives rather
   than duplicated on `C:`.
-- The public app release `v1.0.5` is published and verified. It supersedes
-  `v1.0.3`/`v1.0.4`: v1.0.3 included deep
+- The public app release `v1.0.5` remains the latest published GitHub asset
+  until `v1.0.6` is tagged and published. The validated `v1.0.6` candidate
+  keeps the same safe wrapper layout and adds clearer Lore source-link copy.
+  It supersedes `v1.0.3`/`v1.0.4`/`v1.0.5`: v1.0.3 included deep
   `lore-book/` mirror paths that can hit Windows Explorer `0x80010135`
   path-too-long extraction failures under normal Downloads paths, and v1.0.4
-  did not rewrite deeper unbundled Lore links. The v1.0.5 package keeps the
+  did not rewrite deeper unbundled Lore links, while v1.0.5 did not yet surface
+  the source-link boundary clearly inside the app. The v1.0.6 package keeps the
   friendly wrapper layout, includes the `lore-book/BOOK.md`-linked offline Lore
   reader set, rewrites deeper unbundled source links to GitHub source/search
-  pages, auto-detects common Steam installs where possible, and makes Asset
-  Library catalog requirements clear instead of implying raw game browsing.
+  pages, labels source links in-app, auto-detects common Steam installs where
+  possible, and makes Asset Library catalog requirements clear instead of
+  implying raw game browsing.
 - The current app ZIP should not raw-copy the full `lore-book/` mirror because
   the full tree has long RE/proof filenames that can exceed Windows Explorer
   Extract All path budgets. Full offline Lore remains a planned WinUI feature

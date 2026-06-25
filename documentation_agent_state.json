@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "Combined Windowed & Mods UX/testability plus Lore/Ghidra package-truth cleanup is green locally and ready to commit/push.",
+  "currentFocus": "v1.0.6 WinUI ZIP release prep is green locally and ready to commit, push, tag, and publish.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -18,7 +18,7 @@
     "localOnly": "actual game/runtime payloads, local-rom-input payloads, arbitrary saves/options payloads, full Ghidra databases/backups, secrets, build outputs, screenshots/frame dumps, raw CDB logs, bulky generated captures",
     "localOverlayStatus": "maintainer-local ignored overlays contain the copied game mirror/local extras, save-attempts payloads, local-rom-input, mcps, and G: junctions for runtime proof/Ghidra backups; those overlays are useful locally but not GitHub-tracked source.",
     "localStorageCleanup": "C:\\Users\\david\\source\\Onslaught-Career-Editor-public-candidate* scratch clones were moved to G:\\OnslaughtRepoArchives\\source-scratch-20260624 with move-manifest.json; zero public-candidate scratch dirs remain on C:.",
-    "currentInventory": "24839 private tracked paths, 19306 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths; explicit maintainer parity command uses --private-root and --require-private-root.",
+    "currentInventory": "24839 private tracked paths, 19307 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths; explicit maintainer parity command uses --private-root and --require-private-root.",
     "wordingFixes": [
       "AGENTS.md and roadmap/repo-structure-and-archive-map.md now point to release/readiness/PUBLIC_SIGNOFF_COMMANDS.md.",
       "roadmap/public-primary-working-repo.md uses the public tracked-path count current at that closeout; latest public-primary migration inventory reports 19306 public tracked paths.",
@@ -42,32 +42,32 @@
       "py -3 tools\\winui_zip_package_probe_test.py (PASS; 14 tests)",
       "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~LoreBrowserServiceTests\" (PASS; 6 tests)",
       "npm run test:winui-primary-lane (PASS; build 0 warnings/errors, AppCore 1172, UiTests 85 passed / 2 skipped)",
-      "npm run test:doc-commands (PASS; 4232 documented npm commands checked)",
-      "npm run test:winui-zip-release-candidate-probe (PASS; ZIP 243917567 bytes, SHA-256 96f921b4670900c63d67d87be7fbb6476be8ef3d3b90742196bf058df238cca2, extracted launch/Home/Lore/Media smokes passed)",
-      "npm run test:md-links (PASS; 3618 markdown files, 6123 local links)",
+      "npm run test:doc-commands (PASS; 4232 documented npm commands checked under package version 1.0.6)",
+      "npm run test:winui-zip-release-candidate-probe (PASS; ZIP 243917871 bytes, SHA-256 ce5cb69a836f1b9c759ec608407cee51520f147979816a8661c29bf32cd6d720, extracted launch/Home/Lore/Media smokes passed)",
+      "npm run test:md-links (PASS; 3619 markdown files, 6123 local links)",
       "npm run release:curated-check (PASS; selected files 625)",
-      "npm run release:profile-check (PASS; R0=6126 R2=0 R3=3 R4=13177)",
-      "npm run test:public-allowlist (PASS; public candidate files 19307, submodule candidate files 19491, migration inventory public tracked paths 19306)",
+      "npm run release:profile-check (PASS; R0=6127 R2=0 R3=3 R4=13177)",
+      "npm run test:public-allowlist (PASS; public candidate files 19308, submodule candidate files 19492, migration inventory public tracked paths 19307)",
       "npm run test:winui-notices (PASS; 74 packages)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18459 explicit text files line-ending check)",
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18460 explicit text files line-ending check)",
       "git diff --check (PASS)",
       "state JSON parse (PASS)"
     ],
     "pendingForActiveSlice": [
-      "commit and push combined cleanup"
+      "commit, push, tag, and publish v1.0.6"
     ]
   },
   "nextSteps": [
-    "Commit and push combined cleanup.",
-    "If a new app release is requested, publish a new tag/asset rather than silently replacing the existing v1.0.5 truth.",
+    "Commit and push v1.0.6 release-prep docs/state/package update.",
+    "Publish v1.0.6 GitHub Release with the validated ZIP plus checksum sidecar.",
     "Carry the full offline Lore content-pack plan as a future implementation slice."
   ],
   "winuiReleaseCandidate": {
     "status": "published",
-    "version": "v1.0.5",
-    "zip": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.5-win-x64.zip",
-    "byteSize": 243916186,
-    "sha256": "f8ba14a51ed57b14c3575a82f424de96c03b94453b03f19c6ed93a7ed5f65847",
+    "version": "v1.0.6",
+    "zip": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.6-win-x64.zip",
+    "byteSize": 243917871,
+    "sha256": "ce5cb69a836f1b9c759ec608407cee51520f147979816a8661c29bf32cd6d720",
     "proven": [
       "friendly top-level launcher/readme/license",
       "app/ self-contained payload",
@@ -89,10 +89,10 @@
     ]
   },
   "releaseAccounting": {
-    "releaseProfile": "R0=6126 R2=0 R3=3 R4=13177",
+    "releaseProfile": "R0=6127 R2=0 R3=3 R4=13177",
     "curatedSelectedFiles": 625,
-    "publicCandidateFiles": 19307,
-    "publicSubmoduleCandidateFiles": 19491
+    "publicCandidateFiles": 19308,
+    "publicSubmoduleCandidateFiles": 19492
   },
   "githubRelease": {
     "version": "v1.0.5",
@@ -141,10 +141,10 @@
     "note": "public clones do not need the Ghidra DB; repo tracks scripts/exports/ledgers/docs."
   },
   "latestLocalZipCandidate": {
-    "packageName": "OnslaughtToolkit-winui-v1.0.5-win-x64.zip",
-    "path": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.5-win-x64.zip",
-    "byteSize": 243917567,
-    "sha256": "96f921b4670900c63d67d87be7fbb6476be8ef3d3b90742196bf058df238cca2",
-    "status": "local green candidate from uncommitted tree; not the published GitHub asset"
+    "packageName": "OnslaughtToolkit-winui-v1.0.6-win-x64.zip",
+    "path": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.6-win-x64.zip",
+    "byteSize": 243917871,
+    "sha256": "ce5cb69a836f1b9c759ec608407cee51520f147979816a8661c29bf32cd6d720",
+    "status": "local green v1.0.6 candidate; GitHub Release publication pending"
   }
 }

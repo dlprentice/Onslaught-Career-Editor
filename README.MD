@@ -25,9 +25,9 @@ Downloadable app builds are published on the
 page as unsigned portable Windows x64 ZIP assets with SHA-256 checksum sidecars.
 Extract the full ZIP and run `Launch Onslaught Toolkit.cmd` from the clean
 top-level folder. The app payload lives under `app\`; run
-`app\OnslaughtCareerEditor.WinUI.exe` only as a fallback. Use `v1.0.5` or newer;
-it supersedes `v1.0.3`/`v1.0.4` with an Explorer-safe ZIP layout for normal
-Windows Extract All paths and cleaner packaged Lore links.
+`app\OnslaughtCareerEditor.WinUI.exe` only as a fallback. Use `v1.0.6` or newer;
+it keeps the Explorer-safe ZIP layout introduced after `v1.0.3`/`v1.0.4` and
+adds clearer packaged Lore source-link copy.
 
 The ZIP release does not include Battle Engine Aquila game files, copied
 executables, saves, media payloads, full Ghidra databases, or bulky generated
