@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-06-24",
   "branch": "main",
-  "currentFocus": "v1.0.3 public WinUI ZIP release closeout from the public-primary repo; broad source/release gates are green and final diff/process checks are pending before commit/push/tag/release.",
+  "currentFocus": "v1.0.3 public WinUI ZIP release is published; next work resumes bounded patch/mod/runtime proof and contributor-readiness refinements from public main.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
@@ -41,7 +41,7 @@
       "Asset Library and Media empty states now make local game/catalog requirements explicit rather than leaving users at no-content dead ends.",
       "public_allowlist_safety_check.py now supports --payload-root so legacy curated export checks cannot silently call a missing mode."
     ],
-    "status": "broad_validation_green_pending_final_closeout"
+    "status": "published"
   },
   "runtimeTruth": {
     "musicAudibleOutputProof": false,
@@ -88,22 +88,28 @@
       "npm run test:winui-notices"
     ],
     "pendingForActiveSlice": [
-      "state JSON parse",
-      "git diff --check",
-      "process check",
-      "commit/push/tag/release"
+      "post-publication state commit/push"
     ]
   },
   "nextSteps": [
-    "Run broad public/release gates and regenerate generated release accounting only if checks require it.",
-    "Commit and push public main after green validation.",
-    "Create GitHub release v1.0.3 with the validated ZIP and checksum, then verify GitHub-visible assets.",
-    "Resume bounded patch/mod/runtime proof work from public main after the release baseline is clean."
+    "Push post-publication state/docs update on public main.",
+    "Resume bounded patch/mod/runtime proof work from public main.",
+    "Continue contributor-readiness and app UX improvements with hard-payload boundaries intact."
   ],
   "releaseAccounting": {
     "releaseProfile": "R0=6121 R2=0 R3=3 R4=13175",
     "curatedSelectedFiles": 625,
     "publicCandidateFiles": 19304,
     "publicSubmoduleCandidateFiles": 19488
+  },
+  "githubRelease": {
+    "version": "v1.0.3",
+    "status": "published",
+    "url": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.3",
+    "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.3/OnslaughtToolkit-winui-v1.0.3-win-x64.zip",
+    "checksumUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.3/OnslaughtToolkit-v1.0.3-SHA256SUMS.txt",
+    "sha256": "406f34bdac0f1a39939e57eba9dab1dc37a889d780c9392470f9dc19a77c4044",
+    "byteSize": 249834185,
+    "tagCommit": "4adc6152b76ad53fe5124c9dcf7c612f5e201f0b"
   }
 }

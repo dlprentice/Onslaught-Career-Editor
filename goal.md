@@ -82,12 +82,8 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Finish broad source/release gates after the v1.0.3 ZIP candidate passed.
-2. Update state with the final gate list and generated release-accounting truth.
-3. Commit and push public `main`.
-4. Tag/release `v1.0.3`, upload the validated ZIP and checksum sidecar, then
-   verify GitHub-visible release assets.
-5. Continue bounded patch/mod/runtime proof work from public `main` after the
+1. Record the v1.0.3 GitHub release publication in state/docs.
+2. Continue bounded patch/mod/runtime proof work from public `main` after the
    release baseline is clean.
 
 ## Stop Conditions

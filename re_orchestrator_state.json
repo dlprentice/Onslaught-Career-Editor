@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-24",
-  "currentFocus": "No new Ghidra/static mutation; v1.0.3 public release closeout is through broad validation and awaits final diff/process checks plus GitHub publication.",
+  "currentFocus": "No new Ghidra/static mutation; v1.0.3 public release is published and runtime/product work can resume from public main.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -26,14 +26,16 @@
     "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable",
     "latestWinuiReleaseCandidate": {
       "version": "v1.0.3",
-      "status": "broad_validation_green_pending_final_closeout",
+      "status": "published",
       "sha256": "406f34bdac0f1a39939e57eba9dab1dc37a889d780c9392470f9dc19a77c4044",
       "byteSize": 249834185,
-      "readinessNote": "release/readiness/winui_zip_release_v1_0_3_2026-06-24.md"
+      "readinessNote": "release/readiness/winui_zip_release_v1_0_3_2026-06-24.md",
+      "releaseUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.3",
+      "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.3/OnslaughtToolkit-winui-v1.0.3-win-x64.zip"
     }
   },
   "nextSteps": [
-    "Finish v1.0.3 broad release validation and GitHub publication from public main.",
+    "Push post-publication state/docs update on public main.",
     "After release baseline is clean, continue bounded patch/mod/runtime proof work from public repo.",
     "If a future static contradiction appears, stop runtime/product work and correct Ghidra/static docs with normal dry/apply/read-back/backup gates."
   ]

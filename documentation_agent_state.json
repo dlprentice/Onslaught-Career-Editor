@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-24",
-  "currentFocus": "v1.0.3 public release docs/state closeout; release note, capabilities, contributor setup, local overlay guidance, and package probes are green through broad validation.",
+  "currentFocus": "v1.0.3 public release is published; public-primary docs now point at the live release and validated ZIP baseline.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -55,20 +55,16 @@
       "npm run test:winui-notices"
     ],
     "pendingForActiveSlice": [
-      "state JSON parse",
-      "git diff --check",
-      "process check",
-      "commit/push/tag/release"
+      "post-publication state commit/push"
     ]
   },
   "nextSteps": [
-    "Finish broad validation.",
-    "Commit/push public main.",
-    "Publish GitHub release v1.0.3 with validated ZIP/checksum and verify release URLs.",
-    "Keep public docs clear: source/docs/tools/RE proof summaries are public-primary, hard payloads are local ignored overlays."
+    "Push post-publication state/docs update.",
+    "Keep public docs clear: source/docs/tools/RE proof summaries are public-primary, hard payloads are local ignored overlays.",
+    "Continue app/repo contributor-readiness work from public main."
   ],
   "winuiReleaseCandidate": {
-    "status": "broad_validation_green_pending_final_closeout",
+    "status": "published",
     "version": "v1.0.3",
     "zip": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.3-win-x64.zip",
     "byteSize": 249834185,
@@ -95,5 +91,15 @@
     "curatedSelectedFiles": 625,
     "publicCandidateFiles": 19304,
     "publicSubmoduleCandidateFiles": 19488
+  },
+  "githubRelease": {
+    "version": "v1.0.3",
+    "status": "published",
+    "url": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.3",
+    "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.3/OnslaughtToolkit-winui-v1.0.3-win-x64.zip",
+    "checksumUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.3/OnslaughtToolkit-v1.0.3-SHA256SUMS.txt",
+    "sha256": "406f34bdac0f1a39939e57eba9dab1dc37a889d780c9392470f9dc19a77c4044",
+    "byteSize": 249834185,
+    "tagCommit": "4adc6152b76ad53fe5124c9dcf7c612f5e201f0b"
   }
 }
