@@ -433,14 +433,20 @@ def parse_riff_wave(path: Path) -> dict[str, Any]:
     require(fmt_chunk is not None, "raw WAV artifact missing fmt chunk.")
     require(data_chunk is not None, "raw WAV artifact missing data chunk.")
     require(len(fmt_chunk) >= 16, "raw WAV fmt chunk is too small.")
-    audio_format, channels, sample_rate, _byte_rate, block_align, bits_per_sample = struct.unpack_from("<HHIIHH", fmt_chunk, 0)
+    audio_format, channels, sample_rate, byte_rate, block_align, bits_per_sample = struct.unpack_from("<HHIIHH", fmt_chunk, 0)
     if audio_format == 0xFFFE and len(fmt_chunk) >= 40:
         audio_format = struct.unpack_from("<H", fmt_chunk, 24)[0]
     require(channels > 0, "raw WAV channel count must be positive.")
     require(sample_rate > 0, "raw WAV sample rate must be positive.")
+    require(byte_rate > 0, "raw WAV byte rate must be positive.")
     require(bits_per_sample in {16, 32}, "raw WAV bits-per-sample must be 16 or 32 for materializer validation.")
     bytes_per_sample = bits_per_sample // 8
-    require(block_align >= bytes_per_sample, "raw WAV block alignment is invalid.")
+    require(block_align > 0, "raw WAV block alignment must be positive.")
+    expected_block_align = channels * bytes_per_sample
+    expected_byte_rate = sample_rate * expected_block_align
+    require(block_align == expected_block_align, "raw WAV block alignment does not match channel/sample width.")
+    require(byte_rate == expected_byte_rate, "raw WAV byte rate does not match sample rate and block alignment.")
+    require(len(data_chunk) % expected_block_align == 0, "raw WAV data length is not block aligned.")
     sample_count = len(data_chunk) // bytes_per_sample
     require(sample_count > 0, "raw WAV has no samples.")
     peak_abs = 0.0
@@ -469,6 +475,9 @@ def parse_riff_wave(path: Path) -> dict[str, Any]:
         "sampleRate": sample_rate,
         "channels": channels,
         "bitsPerSample": bits_per_sample,
+        "byteRate": byte_rate,
+        "blockAlign": block_align,
+        "dataDurationMs": len(data_chunk) * 1000.0 / expected_byte_rate,
         "sampleCount": sample_count,
         "nonZeroSampleCount": non_zero,
         "peakAbs": peak_abs,
@@ -587,6 +596,11 @@ def validate_audio(path: Path, role: str, *, require_non_silent: bool, timeline:
     capture_start = utc_at(payload, "captureStartedUtc")
     capture_end = utc_at(payload, "captureEndedUtc")
     require(capture_start < capture_end, f"{role} audio capture window is not positive.")
+    capture_window_ms = (capture_end - capture_start).total_seconds() * 1000.0
+    require(
+        float(wav_stats["dataDurationMs"]) + 2.0 >= capture_window_ms,
+        f"{role} raw WAV data duration is shorter than the reported capture window.",
+    )
     wave_format = object_at(payload, "waveFormat")
     stats = object_at(payload, "audioStats")
     non_silent = bool_at(stats, "nonSilent")
@@ -599,14 +613,31 @@ def validate_audio(path: Path, role: str, *, require_non_silent: bool, timeline:
     if timeline is not None:
         starts_before = capture_start <= timeline["_decodeWindowStartAt"]
         ends_after = capture_end >= timeline["_decodeWindowEndAt"]
+        decode_end_offset_ms = (timeline["_decodeWindowEndAt"] - capture_start).total_seconds() * 1000.0
         require(starts_before, f"{role} capture starts after CDB decode window.")
         require(ends_after, f"{role} capture ends before CDB decode window closes.")
+        require(
+            float(wav_stats["dataDurationMs"]) + 2.0 >= decode_end_offset_ms,
+            f"{role} raw WAV data duration does not cover the CDB decode window.",
+        )
     require(int_at(wave_format, "sampleRate") > 0, f"{role} sample rate must be positive.")
     require(int_at(wave_format, "channels") > 0, f"{role} channel count must be positive.")
     require(int_at(stats, "wavFileBytes") > 0, f"{role} WAV file bytes must be positive.")
     require(int_at(stats, "wavFileBytes") == raw_wav_size, f"{role} WAV byte count does not match raw artifact.")
-    require(int_at(stats, "bytesRecorded") >= 0, f"{role} bytesRecorded must be present.")
-    require(int_at(stats, "bytesRecorded") == wav_stats["dataBytes"], f"{role} bytesRecorded does not match raw WAV data length.")
+    bytes_recorded = int_at(stats, "bytesRecorded")
+    captured_bytes = int_at(stats, "capturedBytes")
+    silence_padding_bytes = int_at(stats, "silencePaddingBytes")
+    padding = object_at(payload, "wallClockPadding")
+    require(bytes_recorded >= 0, f"{role} bytesRecorded must be non-negative.")
+    require(captured_bytes >= 0, f"{role} capturedBytes must be non-negative.")
+    require(silence_padding_bytes >= 0, f"{role} silencePaddingBytes must be non-negative.")
+    require(bytes_recorded == captured_bytes + silence_padding_bytes, f"{role} bytesRecorded must equal capturedBytes plus silencePaddingBytes.")
+    require(bool_at(padding, "enabled"), f"{role} wallClockPadding must be enabled.")
+    require(padding.get("method") == "insert-zero-silence-for-loopback-data-gaps", f"{role} wallClockPadding method changed.")
+    require(int_at(padding, "capturedBytes") == captured_bytes, f"{role} wallClockPadding capturedBytes mismatch.")
+    require(int_at(padding, "silencePaddingBytes") == silence_padding_bytes, f"{role} wallClockPadding silencePaddingBytes mismatch.")
+    require(int_at(padding, "dataBytesWritten") == bytes_recorded, f"{role} wallClockPadding dataBytesWritten mismatch.")
+    require(bytes_recorded == wav_stats["dataBytes"], f"{role} bytesRecorded does not match raw WAV data length.")
     require(int_at(stats, "sampleCount") == wav_stats["sampleCount"], f"{role} sampleCount does not match raw WAV analysis.")
     require(int_at(wave_format, "sampleRate") == wav_stats["sampleRate"], f"{role} sample rate does not match raw WAV.")
     require(int_at(wave_format, "channels") == wav_stats["channels"], f"{role} channel count does not match raw WAV.")
@@ -635,9 +666,12 @@ def validate_audio(path: Path, role: str, *, require_non_silent: bool, timeline:
             "bitsPerSample": wave_format.get("bitsPerSample"),
         },
         "audioStats": {
-            "bytesRecorded": int_at(stats, "bytesRecorded"),
+            "bytesRecorded": bytes_recorded,
+            "capturedBytes": captured_bytes,
+            "silencePaddingBytes": silence_padding_bytes,
             "wavFileBytes": int_at(stats, "wavFileBytes"),
             "sampleCount": int_at(stats, "sampleCount"),
+            "dataDurationMs": float(wav_stats["dataDurationMs"]),
             "peakAbs": float(stats.get("peakAbs", 0.0)),
             "rms": float(stats.get("rms", 0.0)),
             "nonSilent": non_silent,

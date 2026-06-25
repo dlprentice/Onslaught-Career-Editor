@@ -879,9 +879,8 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("write a restore manifest in the safe copy"));
         Assert.That(pageXaml, Does.Contain("PatchBenchMusicAudibleProofContractStatus"));
         Assert.That(pageXaml, Does.Contain("A music swap modifies safe-copy files only"));
-        Assert.That(pageXaml, Does.Contain("Staging does not confirm what you will hear in game; test after launching the safe copy."));
-        Assert.That(pageXaml, Does.Not.Contain("Audible proof still requires a bounded audio-output capture"));
-        Assert.That(pageXaml, Does.Not.Contain("Staging and CDB decode are not audible playback proof."));
+        Assert.That(pageXaml, Does.Contain("Audible proof still requires a bounded audio-output capture"));
+        Assert.That(pageXaml, Does.Contain("Staging and CDB decode are not audible playback proof."));
         Assert.That(pageXaml, Does.Contain("PatchBenchMusicSwapBea02ForBea01PresetButton"));
         Assert.That(pageXaml, Does.Contain("PatchBenchMusicSwapBea01ForBea02PresetButton"));
         Assert.That(pageXaml, Does.Contain("BEA_02 over BEA_01"));
@@ -1174,7 +1173,8 @@ public class WinUiProductLaneTests
 
         Assert.That(xaml, Does.Contain("PatchBenchMusicSwapBea02ForBea04PresetButton"));
         Assert.That(xaml, Does.Contain("BEA_02 over BEA_04"));
-        Assert.That(xaml, Does.Contain("Staging does not confirm what you will hear in game; test after launching the safe copy."));
+        Assert.That(xaml, Does.Contain("Audible proof still requires a bounded audio-output capture."));
+        Assert.That(xaml, Does.Contain("Staging and CDB decode are not audible playback proof."));
         Assert.That(code, Does.Contain("UseBea02ForBea04PresetId"));
         Assert.That(code, Does.Contain("PatchBenchMusicSwapBea02ForBea04PresetButton.IsEnabled"));
         Assert.That(code, Does.Contain("MusicSwapBea02ForBea04PresetButton_Click"));

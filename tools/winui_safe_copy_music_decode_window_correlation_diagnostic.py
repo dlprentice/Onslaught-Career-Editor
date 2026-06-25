@@ -1009,8 +1009,8 @@ def self_test() -> None:
 
     with _tempfile.TemporaryDirectory(prefix="music-decode-window-self-test-") as temp_dir:
         root = Path(temp_dir)
-        clean_audio = write_audio_json(root / "clean" / "cleanBaseline.json", start="2026-06-24T18:49:58Z", end="2026-06-24T18:52:10Z", non_silent=True)
-        staged_audio = write_audio_json(root / "staged" / "stagedPositive.json", start="2026-06-24T18:50:58Z", end="2026-06-24T18:52:10Z", non_silent=True)
+        clean_audio = write_audio_json(root / "clean" / "cleanBaseline.json", start="2026-06-24T18:50:59Z", end="2026-06-24T18:51:02Z", non_silent=True)
+        staged_audio = write_audio_json(root / "staged" / "stagedPositive.json", start="2026-06-24T18:50:59Z", end="2026-06-24T18:51:02Z", non_silent=True)
         clean_live = write_json(root / "clean" / "live.json", {"schemaVersion": "winui-safe-copy-live-runtime-smoke.v1"})
         staged_live = write_json(root / "staged" / "live.json", {"schemaVersion": "winui-safe-copy-live-runtime-smoke.v1"})
         clean_timeline = write_json(root / "clean" / "timeline.json", timeline_fixture(clean_live, role="cleanBaseline"))

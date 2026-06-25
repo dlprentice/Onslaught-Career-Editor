@@ -159,6 +159,8 @@ def audio_payload(
         "waveFormat": {"sampleRate": 48000, "channels": 2, "bitsPerSample": 16},
         "audioStats": {
             "bytesRecorded": stats["bytesRecorded"],
+            "capturedBytes": stats["bytesRecorded"],
+            "silencePaddingBytes": 0,
             "wavFileBytes": wav_size,
             "sampleCount": stats["sampleCount"],
             "nonZeroSampleCount": stats["nonZeroSampleCount"],
@@ -166,14 +168,22 @@ def audio_payload(
             "rms": stats["rms"],
             "nonSilent": non_silent,
         },
+        "wallClockPadding": {
+            "enabled": True,
+            "method": "insert-zero-silence-for-loopback-data-gaps",
+            "capturedBytes": stats["bytesRecorded"],
+            "silencePaddingBytes": 0,
+            "dataBytesWritten": stats["bytesRecorded"],
+            "targetDurationMs": 3000,
+        },
         "claimBoundary": "Loopback capture only.",
         "nonClaims": ["BEA audible playback"],
     }
 
 
-def write_pcm16_wav(path: Path, *, non_silent: bool) -> dict[str, Any]:
+def write_pcm16_wav(path: Path, *, non_silent: bool, duration_seconds: int = 3) -> dict[str, Any]:
     sample_value = 1000 if non_silent else 0
-    samples = [sample_value] * 1000
+    samples = [sample_value] * (48000 * 2 * duration_seconds)
     path.parent.mkdir(parents=True, exist_ok=True)
     with wave.open(str(path), "wb") as handle:
         handle.setnchannels(2)
@@ -188,6 +198,51 @@ def write_pcm16_wav(path: Path, *, non_silent: bool) -> dict[str, Any]:
         "peakAbs": normalized,
         "rms": normalized,
     }
+
+
+def rewrite_wav_fmt(path: Path, *, byte_rate: int | None = None, block_align: int | None = None) -> None:
+    data = bytearray(path.read_bytes())
+    offset = 12
+    while offset + 8 <= len(data):
+        chunk_id = bytes(data[offset : offset + 4])
+        chunk_size = struct.unpack_from("<I", data, offset + 4)[0]
+        chunk_start = offset + 8
+        chunk_end = chunk_start + chunk_size
+        if chunk_id == b"fmt ":
+            if byte_rate is not None:
+                struct.pack_into("<I", data, chunk_start + 8, byte_rate)
+            if block_align is not None:
+                struct.pack_into("<H", data, chunk_start + 12, block_align)
+            path.write_bytes(data)
+            return
+        offset = chunk_end + (chunk_size % 2)
+    raise AssertionError("test WAV missing fmt chunk")
+
+
+def trim_wav_data_by_one_byte(path: Path) -> dict[str, Any]:
+    data = bytearray(path.read_bytes())
+    offset = 12
+    while offset + 8 <= len(data):
+        chunk_id = bytes(data[offset : offset + 4])
+        chunk_size = struct.unpack_from("<I", data, offset + 4)[0]
+        chunk_start = offset + 8
+        chunk_end = chunk_start + chunk_size
+        if chunk_id == b"data":
+            trimmed_size = chunk_size - 1
+            require_size = chunk_start + trimmed_size
+            struct.pack_into("<I", data, offset + 4, trimmed_size)
+            path.write_bytes(bytes(data[:require_size]))
+            sample_count = trimmed_size // 2
+            normalized = 1000 / 32768.0
+            return {
+                "bytesRecorded": trimmed_size,
+                "sampleCount": sample_count,
+                "nonZeroSampleCount": sample_count,
+                "peakAbs": normalized,
+                "rms": normalized,
+            }
+        offset = chunk_end + (chunk_size % 2)
+    raise AssertionError("test WAV missing data chunk")
 
 
 def write_audio_json(
@@ -474,6 +529,35 @@ class MusicAudibleOutputMaterializerTests(unittest.TestCase):
             with self.assertRaises(materializer.MaterializerError):
                 self.materialize(paths)
 
+    def test_rejects_audio_summary_without_wall_clock_padding_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = self.build_fixture(Path(temp_dir))
+            audio = json.loads(paths["staged_audio"].read_text(encoding="utf-8"))
+            audio.pop("wallClockPadding")
+            audio["audioStats"].pop("capturedBytes")
+            audio["audioStats"].pop("silencePaddingBytes")
+            write_json(paths["staged_audio"], audio)
+            correlation = json.loads(paths["capture_source_correlation"].read_text(encoding="utf-8"))
+            correlation["inputBindings"]["stagedAudioJsonSha256"] = sha256_file(paths["staged_audio"])
+            write_json(paths["capture_source_correlation"], correlation)
+
+            with self.assertRaises(materializer.MaterializerError):
+                self.materialize(paths)
+
+    def test_rejects_audio_summary_with_inconsistent_wall_clock_padding_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = self.build_fixture(Path(temp_dir))
+            audio = json.loads(paths["staged_audio"].read_text(encoding="utf-8"))
+            audio["audioStats"]["silencePaddingBytes"] = 4
+            audio["wallClockPadding"]["silencePaddingBytes"] = 4
+            write_json(paths["staged_audio"], audio)
+            correlation = json.loads(paths["capture_source_correlation"].read_text(encoding="utf-8"))
+            correlation["inputBindings"]["stagedAudioJsonSha256"] = sha256_file(paths["staged_audio"])
+            write_json(paths["capture_source_correlation"], correlation)
+
+            with self.assertRaises(materializer.MaterializerError):
+                self.materialize(paths)
+
     def test_rejects_missing_timestamped_cdb_timeline(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             paths = self.build_fixture(Path(temp_dir))
@@ -497,6 +581,78 @@ class MusicAudibleOutputMaterializerTests(unittest.TestCase):
             timeline = json.loads(paths["staged_timeline"].read_text(encoding="utf-8"))
             timeline["decodeWindowEndUtc"] = "2026-06-22T00:00:05Z"
             write_json(paths["staged_timeline"], timeline)
+
+            with self.assertRaises(materializer.MaterializerError):
+                self.materialize(paths)
+
+    def test_rejects_raw_wav_data_span_shorter_than_capture_window(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = self.build_fixture(Path(temp_dir))
+            audio = json.loads(paths["staged_audio"].read_text(encoding="utf-8"))
+            wav = Path(audio["outputWav"])
+            short_stats = write_pcm16_wav(wav, non_silent=True, duration_seconds=1)
+            audio["rawWavSha256"] = sha256_file(wav)
+            audio["audioStats"].update(short_stats)
+            audio["audioStats"]["wavFileBytes"] = wav.stat().st_size
+            write_json(paths["staged_audio"], audio)
+            correlation = json.loads(paths["capture_source_correlation"].read_text(encoding="utf-8"))
+            correlation["inputBindings"]["stagedAudioJsonSha256"] = sha256_file(paths["staged_audio"])
+            correlation["inputBindings"]["stagedAudioWavSha256"] = sha256_file(wav)
+            write_json(paths["capture_source_correlation"], correlation)
+
+            with self.assertRaises(materializer.MaterializerError):
+                self.materialize(paths)
+
+    def test_rejects_forged_low_byte_rate_that_stretches_short_wav(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = self.build_fixture(Path(temp_dir))
+            audio = json.loads(paths["staged_audio"].read_text(encoding="utf-8"))
+            wav = Path(audio["outputWav"])
+            short_stats = write_pcm16_wav(wav, non_silent=True, duration_seconds=1)
+            rewrite_wav_fmt(wav, byte_rate=64000)
+            audio["rawWavSha256"] = sha256_file(wav)
+            audio["audioStats"].update(short_stats)
+            audio["audioStats"]["wavFileBytes"] = wav.stat().st_size
+            write_json(paths["staged_audio"], audio)
+            correlation = json.loads(paths["capture_source_correlation"].read_text(encoding="utf-8"))
+            correlation["inputBindings"]["stagedAudioJsonSha256"] = sha256_file(paths["staged_audio"])
+            correlation["inputBindings"]["stagedAudioWavSha256"] = sha256_file(wav)
+            write_json(paths["capture_source_correlation"], correlation)
+
+            with self.assertRaises(materializer.MaterializerError):
+                self.materialize(paths)
+
+    def test_rejects_raw_wav_with_inconsistent_block_align(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = self.build_fixture(Path(temp_dir))
+            audio = json.loads(paths["staged_audio"].read_text(encoding="utf-8"))
+            wav = Path(audio["outputWav"])
+            rewrite_wav_fmt(wav, block_align=2)
+            audio["rawWavSha256"] = sha256_file(wav)
+            audio["audioStats"]["wavFileBytes"] = wav.stat().st_size
+            write_json(paths["staged_audio"], audio)
+            correlation = json.loads(paths["capture_source_correlation"].read_text(encoding="utf-8"))
+            correlation["inputBindings"]["stagedAudioJsonSha256"] = sha256_file(paths["staged_audio"])
+            correlation["inputBindings"]["stagedAudioWavSha256"] = sha256_file(wav)
+            write_json(paths["capture_source_correlation"], correlation)
+
+            with self.assertRaises(materializer.MaterializerError):
+                self.materialize(paths)
+
+    def test_rejects_raw_wav_with_data_length_not_block_aligned(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = self.build_fixture(Path(temp_dir))
+            audio = json.loads(paths["staged_audio"].read_text(encoding="utf-8"))
+            wav = Path(audio["outputWav"])
+            odd_stats = trim_wav_data_by_one_byte(wav)
+            audio["rawWavSha256"] = sha256_file(wav)
+            audio["audioStats"].update(odd_stats)
+            audio["audioStats"]["wavFileBytes"] = wav.stat().st_size
+            write_json(paths["staged_audio"], audio)
+            correlation = json.loads(paths["capture_source_correlation"].read_text(encoding="utf-8"))
+            correlation["inputBindings"]["stagedAudioJsonSha256"] = sha256_file(paths["staged_audio"])
+            correlation["inputBindings"]["stagedAudioWavSha256"] = sha256_file(wav)
+            write_json(paths["capture_source_correlation"], correlation)
 
             with self.assertRaises(materializer.MaterializerError):
                 self.materialize(paths)

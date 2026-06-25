@@ -30,10 +30,17 @@ DOC_TOKENS = {
         '"captureSourceCorrelationAdapter": true',
         '"captureSourceCorrelationBuilder": true',
         '"timestampedCdbLogProducer": true',
+        '"loopbackWallClockPaddingHelper": true',
+        '"rawWavDataDurationMaterializerGuard": true',
         '"runtimeAudibleOutputProof": false',
         '"negativeControls"',
         '"sourceAudioCorrelation"',
         '"audioCapture"',
+        "raw WAV data duration must cover the reported capture window",
+        "raw WAV blockAlign must equal channels * bitsPerSample / 8",
+        "WASAPI loopback quiet gaps must be represented as explicit zero-silence padding",
+        "materializer independently derives raw WAV data duration from canonical RIFF sample-rate/block-align/data-frame math",
+        "materializer requires enabled wallClockPadding metadata",
         '"positive staged run differs from a clean same-level baseline"',
         '"not current audible playback proof"',
     ],
@@ -279,6 +286,8 @@ def assert_contract() -> dict[str, Any]:
     require(accepted.get("captureSourceCorrelationAdapter") is True, "capture-to-source adapter must remain recorded")
     require(accepted.get("captureSourceCorrelationBuilder") is True, "capture-to-source builder must remain recorded")
     require(accepted.get("timestampedCdbLogProducer") is True, "timestamped CDB log producer must remain recorded")
+    require(accepted.get("loopbackWallClockPaddingHelper") is True, "loopback wall-clock padding helper must remain recorded")
+    require(accepted.get("rawWavDataDurationMaterializerGuard") is True, "raw WAV duration materializer guard must remain recorded")
     require(accepted.get("runtimeAudibleOutputProof") is False, "current contract must not claim audible output proof")
 
     minimum = object_at(payload, "minimumAudibleProof")
@@ -326,6 +335,9 @@ def assert_contract() -> dict[str, Any]:
         "capture starts before the expected music kick and ends after decode begins",
         "capture start/end UTC timestamps are reported and compared against the CDB decode window",
         "capture duration is positive and reported in milliseconds",
+        "raw WAV data duration must cover the reported capture window and any CDB decode window being evaluated",
+        "raw WAV blockAlign must equal channels * bitsPerSample / 8, byteRate must equal sampleRate * blockAlign, and data length must be block aligned",
+        "WASAPI loopback quiet gaps must be represented as explicit zero-silence padding or equivalent wall-clock-preserving samples",
         "sample rate and channel count are reported",
         "sanitized audio endpoint alias/fingerprint is reported without raw device identifiers",
         "clean baseline and staged positive both observe non-silent signal in the expected window",
@@ -347,6 +359,8 @@ def assert_contract() -> dict[str, Any]:
         "final proof is generated from explicit private raw artifact paths, not accepted as a hand-authored summary",
         "clean/staged timestamped CDB decode timeline sidecars are bound to live artifact, raw live CDB log SHA-256, and timestamped CDB evidence log SHA-256 values",
         "ambient/clean/staged/mute audio JSON summaries are bound to existing raw WAV artifacts by outputJson path, outputWav path, helper-authored rawWavSha256, raw WAV byte count, and independently rederived WAV sample statistics before sanitized output is written",
+        "materializer independently derives raw WAV data duration from canonical RIFF sample-rate/block-align/data-frame math and rejects summaries where timestamps outlast the actual data span",
+        "materializer requires enabled wallClockPadding metadata and verifies capturedBytes plus silencePaddingBytes equals bytesRecorded",
         "clean/mute source music safety sidecars provide source target/replacement hash unchanged facts when non-staged live artifacts omit source music hash rows",
         "ambient no-BEA process census is required before accepting the ambient negative control and must cover the ambient capture window while binding to ambient audio JSON and raw WAV SHA-256 values",
         "clean/staged CDB-backed live-smoke stages must bind CDB target process id to launched safe-copy BEA process id, report attached positive CDB process ids, stopped/already-exited cleanup, and matching cleanup pid before timestamp/timeline generation",
@@ -423,6 +437,8 @@ def assert_contract() -> dict[str, Any]:
         "captureSourceCorrelationAdapter": accepted["captureSourceCorrelationAdapter"],
         "captureSourceCorrelationBuilder": accepted["captureSourceCorrelationBuilder"],
         "timestampedCdbLogProducer": accepted["timestampedCdbLogProducer"],
+        "loopbackWallClockPaddingHelper": accepted["loopbackWallClockPaddingHelper"],
+        "rawWavDataDurationMaterializerGuard": accepted["rawWavDataDurationMaterializerGuard"],
         "audioCaptureRequirements": len(audio_capture),
         "comparisonControlRequirements": len(controls),
         "materializationRequirements": len(materialization),

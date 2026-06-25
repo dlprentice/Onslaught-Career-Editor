@@ -18,14 +18,14 @@ class MusicDecodeWindowCorrelationDiagnosticTests(unittest.TestCase):
     def build_fixture(self, root: Path) -> dict[str, Path]:
         clean_audio = write_audio_json(
             root / "clean" / "cleanBaseline.json",
-            start="2026-06-24T18:49:58Z",
-            end="2026-06-24T18:52:10Z",
+            start="2026-06-24T18:50:59Z",
+            end="2026-06-24T18:51:02Z",
             non_silent=True,
         )
         staged_audio = write_audio_json(
             root / "staged" / "stagedPositive.json",
-            start="2026-06-24T18:50:58Z",
-            end="2026-06-24T18:52:10Z",
+            start="2026-06-24T18:50:59Z",
+            end="2026-06-24T18:51:02Z",
             non_silent=True,
         )
         clean_live = write_json(root / "clean" / "live.json", {"schemaVersion": "winui-safe-copy-live-runtime-smoke.v1"})

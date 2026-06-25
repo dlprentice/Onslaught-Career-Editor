@@ -1052,7 +1052,7 @@
                                         <TextBlock x:Name="PatchBenchMusicAudibleProofContractStatus"
                                                    AutomationProperties.AutomationId="PatchBenchMusicAudibleProofContractStatus"
                                                    AutomationProperties.Name="Music swap status"
-                                                   Text="A music swap modifies safe-copy files only. Staging does not confirm what you will hear in game; test after launching the safe copy."
+                                                   Text="A music swap modifies safe-copy files only. Audible proof still requires a bounded audio-output capture. Staging and CDB decode are not audible playback proof."
                                                    Style="{StaticResource SectionBodyTextStyle}"
                                                    FontWeight="SemiBold" />
                                         <TextBlock Text="Use Restore if you want to undo the staged track swap before testing."

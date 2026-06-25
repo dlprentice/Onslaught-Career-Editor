@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "Generated Lore content-pack docs are updated for the published v1.0.7 package with 943 public-safe Markdown/TXT Lore documents.",
+  "currentFocus": "Audio loopback wall-clock padding hardening docs are closed with focused and broad gates green; next active docs touchpoint is Windowed & Mods selected-state UX wording.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -9,7 +9,7 @@
     "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
     "releaseGuide": "README.RELEASE.md",
     "releaseSignoff": "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
-    "releaseReadinessNote": "release/readiness/winui_zip_release_v1_0_6_2026-06-25.md",
+    "releaseReadinessNote": "release/readiness/winui_zip_release_v1_0_7_2026-06-25.md",
     "releaseCandidateNote": "release/readiness/winui_zip_release_v1_0_7_2026-06-25.md"
   },
   "publicPrimaryMigration": {
@@ -19,10 +19,10 @@
     "localOnly": "actual game/runtime payloads, local-rom-input payloads, arbitrary saves/options payloads, full Ghidra databases/backups, secrets, build outputs, screenshots/frame dumps, raw CDB logs, bulky generated captures",
     "localOverlayStatus": "maintainer-local ignored overlays contain the copied game mirror/local extras, save-attempts payloads, local-rom-input, mcps, and G: junctions for runtime proof/Ghidra backups; those overlays are useful locally but not GitHub-tracked source.",
     "localStorageCleanup": "C:\\Users\\david\\source\\Onslaught-Career-Editor-public-candidate* scratch clones were moved to G:\\OnslaughtRepoArchives\\source-scratch-20260624 with move-manifest.json; zero public-candidate scratch dirs remain on C:.",
-    "currentInventory": "24839 private tracked paths, 19308 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths; explicit maintainer parity command uses --private-root and --require-private-root.",
+    "currentInventory": "24839 private tracked paths, 19311 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths; explicit maintainer parity command uses --private-root and --require-private-root.",
     "wordingFixes": [
       "AGENTS.md and roadmap/repo-structure-and-archive-map.md now point to release/readiness/PUBLIC_SIGNOFF_COMMANDS.md.",
-      "roadmap/public-primary-working-repo.md uses the public tracked-path count current at that closeout; latest public-primary migration inventory reports 19308 public tracked paths.",
+      "roadmap/public-primary-working-repo.md uses the public tracked-path count current at that closeout; latest public-primary migration inventory reports 19311 public tracked paths.",
       "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md now says test:public-allowlist runs hard-payload safety, submodule payload safety, and public-primary migration/hash inventory."
     ]
   },
@@ -36,10 +36,11 @@
     ],
     "claimBoundary": "not accepted capture-source correlation, not materializer input, not runtimeAudibleOutputProof, not raw audio/CDB/source-path publication",
     "decodeWindowResult": "decodeWindowInsideRawAudioCapture=false; exact-PID CDB decode instants occur around 44-46s while raw WAV data spans about 11-12s, so analysis rows are capture-window-out-of-range and stagedReplacementPreferredInDecodeWindow=false means unavailable, not measured source preference.",
-    "nextDocsTruth": "next music work should fix capture data-span/duration/flush alignment before another materializer attempt."
+    "nextDocsTruth": "loopback wall-clock padding plus materializer raw WAV data-span/header-consistency/padding-metadata guards are accepted helper/materializer hardening; next music proof requires a new private live bundle, not reinterpretation of the old rejected bundle.",
+    "consultReview": "Carson/Hilbert/Plato review findings accepted: forged WAV headers, missing materializer wallClockPadding enforcement, and stale active-slice validation state were fixed in the touched music-proof lane."
   },
   "validation": {
-    "latestPassed": [
+    "previousReleaseValidationPassed": [
       "py -3 tools\\winui_lore_pack_builder.py --self-test (PASS; 3 tests)",
       "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
       "npm run test:winui-primary-lane (PASS; solution build 0 warnings/errors, AppCore 1176/1176, WinUI UI tests 86 passed / 2 skipped catalog-dependent rows)",
@@ -57,12 +58,32 @@
       "npm run test:repo-hygiene (PASS; repo text hygiene and 18464 explicit text files line-ending check)",
       "git diff --check (PASS)"
     ],
+    "activeSliceFocusedPassed": [
+      "py -3 tools\\winui_safe_copy_music_audible_output_materializer_test.py (26 tests)",
+      "npm run test:audio-loopback-capture-helper",
+      "npm run test:winui-safe-copy-music-audible-output-materializer",
+      "npm run test:winui-safe-copy-music-decode-window-correlation-diagnostic",
+      "npm run test:winui-safe-copy-music-audible-output-contract",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench\""
+    ],
+    "activeSliceBroadPassed": [
+      "npm run test:doc-commands",
+      "npm run test:md-links",
+      "npm run release:profile-check",
+      "npm run release:curated-check",
+      "npm run test:hard-payload-safety (PASS; public candidate files checked 19312)",
+      "npm run test:public-allowlist",
+      "npm run test:repo-hygiene",
+      "git diff --check",
+      "state JSON parse"
+    ],
     "pendingForActiveSlice": []
   },
   "nextSteps": [
     "Keep docs clear that v1.0.7 is the current published portable ZIP with the generated 943-document lore-pack.",
-    "Commit/push the publication-state docs/state update.",
-    "Resume bounded patch/mod/runtime proof work from public main."
+    "Commit/push the accepted music loopback wall-clock padding hardening if final parse/diff/status checks remain green.",
+    "Resume bounded patch/mod UX work from public main; next slice is Windowed & Mods selected-state styling, followed by Asset Library first-run guidance.",
+    "Track Ghidra project public-distribution policy and repo-specific .codex skill transfer as separate future tooling/policy slices."
   ],
   "winuiReleaseCandidate": {
     "status": "published",
@@ -100,8 +121,8 @@
   "releaseAccounting": {
     "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",
     "curatedSelectedFiles": 625,
-    "publicCandidateFiles": 19311,
-    "publicSubmoduleCandidateFiles": 19495
+    "publicCandidateFiles": 19312,
+    "publicSubmoduleCandidateFiles": 19496
   },
   "githubRelease": {
     "version": "v1.0.7",
@@ -123,7 +144,7 @@
     "consultedAgents": 10,
     "consultScope": "migration parity, adversarial private/public boundary, release assets, payload/security, stale docs/state, onboarding, validation evidence, first-run WinUI UX, product adversarial review",
     "acceptedTruth": [
-      "v1.0.3 GitHub release is published but superseded by v1.0.4 for Explorer path-length safety",
+      "v1.0.7 GitHub release is published and supersedes earlier v1.0.3/v1.0.4/v1.0.6 ZIPs for current user-facing downloads.",
       "public repo is the primary day-to-day collaboration repo for project-owned source/docs/tools/tests/RE notes/proof summaries/state",
       "maintainer private-parity inventory passes when run with explicit private root and require-private-root",
       "remaining private-only tracked delta is accepted hard-payload/scratch-payload material, not missing project source/docs/tools/tests",

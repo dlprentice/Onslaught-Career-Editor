@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "No Ghidra/static mutation; WinUI v1.0.7 generated Lore content-pack release is published and static RE remains unchanged.",
+  "currentFocus": "No Ghidra/static mutation; audio loopback wall-clock padding hardening is accepted runtime-proof infrastructure, static RE remains unchanged, and the next active slice is WinUI selected-state UX.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -19,13 +19,14 @@
   },
   "runtimeProofBoundary": {
     "musicAudibleOutputProof": "runtimeAudibleOutputProof=false",
+    "loopbackWallClockPadding": "accepted helper/materializer hardening: future raw WAV data must preserve wall-clock capture duration, carry enabled helper-authored wallClockPadding metadata, pass canonical WAV header/data-frame consistency checks, and cover the CDB decode window before materialization",
     "earlyCdbAttachSupport": "present in public checkout for clean/staged music stages; lower-level music/decode rows observed in failed live attempts",
     "latestCleanupHardeningCommit": "9bc9b420",
     "latestMusicLiveAttempts": [
       "music-audible-live-20260624-160116 timed out after early exact-PID CDB attach and required manual cleanup before parent cleanup hardening",
       "music-audible-live-20260624-161657 failed timestamped CDB acceptance because CGame__PlayMusicForCurrentLevel level=100 was absent; no BEA/CDB remained"
     ],
-    "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable; current slice is UI/copy/testability only",
+    "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable; current slice is audio loopback helper/materializer/contract hardening only",
     "latestWinuiReleaseCandidate": {
       "version": "v1.0.7",
       "status": "published",
@@ -48,8 +49,9 @@
     }
   },
   "nextSteps": [
-    "No Ghidra backup is required for this no-mutation WinUI/package publication slice.",
-    "Commit/push the v1.0.7 publication-state docs/state update.",
+    "No Ghidra backup is required for this no-mutation runtime-helper slice.",
+    "Commit/push the accepted audio loopback wall-clock padding hardening if final parse/diff/status checks remain green.",
+    "Resume Windowed & Mods selected-state UX as the next bounded product slice.",
     "Resume static work only if a product/runtime contradiction points back to a specific RE issue."
   ],
   "currentCounters": {
@@ -61,7 +63,7 @@
     "consultedAgents": 10,
     "consultScope": "migration parity, adversarial private/public boundary, release assets, payload/security, stale docs/state, onboarding, validation evidence, first-run WinUI UX, product adversarial review",
     "acceptedTruth": [
-      "v1.0.3 GitHub release is published but superseded by v1.0.4 for Explorer path-length safety",
+      "v1.0.7 GitHub release is published and supersedes earlier v1.0.3/v1.0.4/v1.0.6 ZIPs for current user-facing downloads.",
       "public repo is the primary day-to-day collaboration repo for project-owned source/docs/tools/tests/RE notes/proof summaries/state",
       "maintainer private-parity inventory passes when run with explicit private root and require-private-root",
       "remaining private-only tracked delta is accepted hard-payload/scratch-payload material, not missing project source/docs/tools/tests",
@@ -69,14 +71,14 @@
     ],
     "nonBlockingFollowups": [
       "private repo still has active-looking goal/state wording and should eventually be frozen or bannered as archived if kept",
-      "release lore-book contains local backup path provenance markers; not a payload/secret blocker, but should be classified or sanitized before the next ZIP",
+      "historical source docs may contain maintainer-local provenance markers, but the v1.0.7 lore-pack builder redacts maintainer-local paths and the package probe rejects local/private path text before ZIP acceptance",
       "Asset Library needs a clearer first-run path for generating/finding a local asset catalog",
       "Windowed & Mods should move proof jargon/offset/evidence language further behind details/maintainer surfaces",
       "dynamic patch row controls should get stable AutomationIds derived from patch keys"
     ]
   },
   "validation": {
-    "latestPassed": [
+    "previousReleaseValidationPassed": [
       "py -3 tools\\winui_lore_pack_builder.py --self-test (PASS; 3 tests)",
       "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
       "npm run test:winui-primary-lane (PASS; solution build 0 warnings/errors, AppCore 1176/1176, WinUI UI tests 86 passed / 2 skipped catalog-dependent rows)",
@@ -93,6 +95,25 @@
       "npm run test:public-allowlist (PASS; public candidate files 19311, submodule candidate files 19495, migration inventory public tracked paths 19311)",
       "npm run test:repo-hygiene (PASS; repo text hygiene and 18464 explicit text files line-ending check)",
       "git diff --check (PASS)"
+    ],
+    "activeSliceFocusedPassed": [
+      "py -3 tools\\winui_safe_copy_music_audible_output_materializer_test.py (26 tests)",
+      "npm run test:audio-loopback-capture-helper",
+      "npm run test:winui-safe-copy-music-audible-output-materializer",
+      "npm run test:winui-safe-copy-music-decode-window-correlation-diagnostic",
+      "npm run test:winui-safe-copy-music-audible-output-contract",
+      "npm run test:winui-safe-copy-music-audible-output-live-bundle-executor"
+    ],
+    "activeSliceBroadPassed": [
+      "npm run test:doc-commands",
+      "npm run test:md-links",
+      "npm run release:profile-check",
+      "npm run release:curated-check",
+      "npm run test:hard-payload-safety (PASS; public candidate files checked 19312)",
+      "npm run test:public-allowlist",
+      "npm run test:repo-hygiene",
+      "git diff --check",
+      "state JSON parse"
     ],
     "pendingForActiveSlice": []
   }

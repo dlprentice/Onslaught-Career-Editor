@@ -164,6 +164,34 @@ static string Sha256File(string path)
     return Convert.ToHexString(digest).ToLowerInvariant();
 }
 
+static long AlignToBlock(long byteCount, int blockAlign)
+{
+    if (blockAlign <= 0)
+        return Math.Max(0, byteCount);
+    return Math.Max(0, byteCount - (byteCount % blockAlign));
+}
+
+static long AudioBytesForElapsedMs(double elapsedMs, WaveFormat format)
+{
+    if (elapsedMs <= 0 || format.AverageBytesPerSecond <= 0)
+        return 0;
+    long bytes = (long)Math.Floor(elapsedMs * format.AverageBytesPerSecond / 1000.0);
+    return AlignToBlock(bytes, format.BlockAlign);
+}
+
+static void WriteSilencePadding(WaveFileWriter writer, long byteCount)
+{
+    const int ChunkSize = 65536;
+    byte[] silence = new byte[ChunkSize];
+    long remaining = byteCount;
+    while (remaining > 0)
+    {
+        int chunk = (int)Math.Min(remaining, silence.Length);
+        writer.Write(silence, 0, chunk);
+        remaining -= chunk;
+    }
+}
+
 if (args.Length != 5)
 {
     Console.Error.WriteLine("usage: LoopbackCapture <output-wav> <duration-ms> <output-json> <play-calibration-tone> <tone-gain>");
@@ -185,14 +213,16 @@ try
     using MMDevice device = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
     using var capture = new WasapiLoopbackCapture(device);
 
-    long bytesRecorded = 0;
+    long dataBytesWritten = 0;
+    long capturedBytes = 0;
+    long silencePaddingBytes = 0;
     long sampleCount = 0;
     long nonZeroSampleCount = 0;
     double peakAbs = 0.0;
     double sumSquares = 0.0;
     int dataEventCount = 0;
     string statsMode = "unsupported-format";
-    var stopwatch = Stopwatch.StartNew();
+    var stopwatch = new Stopwatch();
     var stopped = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
     DateTimeOffset captureStartedUtc;
     DateTimeOffset captureEndedUtc;
@@ -209,9 +239,26 @@ try
     {
         capture.DataAvailable += (_, eventArgs) =>
         {
+            double eventEndElapsedMs = stopwatch.Elapsed.TotalMilliseconds;
+            double eventDurationMs = capture.WaveFormat.AverageBytesPerSecond > 0
+                ? eventArgs.BytesRecorded * 1000.0 / capture.WaveFormat.AverageBytesPerSecond
+                : 0.0;
+            double eventStartElapsedMs = Math.Max(0.0, eventEndElapsedMs - eventDurationMs);
+            long expectedBytesBeforeEvent = AudioBytesForElapsedMs(eventStartElapsedMs, capture.WaveFormat);
+            long gapBytes = expectedBytesBeforeEvent - dataBytesWritten;
+            if (gapBytes > 0)
+            {
+                WriteSilencePadding(writer, gapBytes);
+                silencePaddingBytes += gapBytes;
+                dataBytesWritten += gapBytes;
+                if (canDecodeStats && bytesPerSample > 0)
+                    sampleCount += gapBytes / bytesPerSample;
+            }
+
             writer.Write(eventArgs.Buffer, 0, eventArgs.BytesRecorded);
             writer.Flush();
-            bytesRecorded += eventArgs.BytesRecorded;
+            capturedBytes += eventArgs.BytesRecorded;
+            dataBytesWritten += eventArgs.BytesRecorded;
             dataEventCount++;
 
             if (!canDecodeStats)
@@ -250,14 +297,28 @@ try
         }
 
         captureStartedUtc = DateTimeOffset.UtcNow;
+        stopwatch.Restart();
         capture.StartRecording();
         toneOut?.Play();
         await Task.Delay(durationMs);
         toneOut?.Stop();
+        captureEndedUtc = DateTimeOffset.UtcNow;
         capture.StopRecording();
         await stopped.Task;
-        captureEndedUtc = DateTimeOffset.UtcNow;
         stopwatch.Stop();
+
+        double captureElapsedMs = Math.Max(durationMs, (captureEndedUtc - captureStartedUtc).TotalMilliseconds);
+        long expectedFinalBytes = AudioBytesForElapsedMs(captureElapsedMs, capture.WaveFormat);
+        long finalGapBytes = expectedFinalBytes - dataBytesWritten;
+        if (finalGapBytes > 0)
+        {
+            WriteSilencePadding(writer, finalGapBytes);
+            silencePaddingBytes += finalGapBytes;
+            dataBytesWritten += finalGapBytes;
+            if (canDecodeStats && bytesPerSample > 0)
+                sampleCount += finalGapBytes / bytesPerSample;
+        }
+        writer.Flush();
     }
 
     // WaveFileWriter must be disposed before hashing the WAV.
@@ -307,13 +368,25 @@ try
         {
             statsMode,
             dataEventCount,
-            bytesRecorded,
+            bytesRecorded = dataBytesWritten,
+            capturedBytes,
+            silencePaddingBytes,
             wavFileBytes = wavInfo.Exists ? wavInfo.Length : 0,
             sampleCount,
             nonZeroSampleCount,
             peakAbs,
             rms,
             nonSilent
+        },
+        wallClockPadding = new
+        {
+            enabled = true,
+            method = "insert-zero-silence-for-loopback-data-gaps",
+            capturedBytes,
+            silencePaddingBytes,
+            dataBytesWritten,
+            targetDurationMs = durationMs,
+            note = "WASAPI loopback may omit quiet wall-clock gaps; inserted zero samples keep WAV offsets comparable to captureStartedUtc/captureEndedUtc."
         },
         claimBoundary = "Bounded system render-loopback capture only. This does not prove BEA music is audible, source-bound, replaced, or different from a clean baseline.",
         nonClaims = new[]
@@ -384,6 +457,18 @@ def object_at(value: dict[str, Any], key: str) -> dict[str, Any]:
     return child
 
 
+def int_at(value: dict[str, Any], key: str) -> int:
+    child = value.get(key)
+    require(isinstance(child, int) and not isinstance(child, bool), f"Missing integer: {key}")
+    return int(child)
+
+
+def bool_at(value: dict[str, Any], key: str) -> bool:
+    child = value.get(key)
+    require(isinstance(child, bool), f"Missing boolean: {key}")
+    return bool(child)
+
+
 def validate_artifact(path: Path, *, require_non_silent: bool = False) -> dict[str, Any]:
     payload = read_json(path)
     require(payload.get("schemaVersion") == SCHEMA, "Unexpected loopback artifact schema.")
@@ -393,10 +478,32 @@ def validate_artifact(path: Path, *, require_non_silent: bool = False) -> dict[s
     require(isinstance(payload.get("captureEndedUtc"), str), "captureEndedUtc must be present.")
     stats = object_at(payload, "audioStats")
     wave_format = object_at(payload, "waveFormat")
-    require(int(stats.get("bytesRecorded", 0)) >= 0, "bytesRecorded must be present.")
-    require(int(stats.get("wavFileBytes", 0)) > 0, "WAV file bytes must be positive.")
-    require(int(wave_format.get("sampleRate", 0)) > 0, "sample rate must be positive.")
-    require(int(wave_format.get("channels", 0)) > 0, "channel count must be positive.")
+    bytes_recorded = int_at(stats, "bytesRecorded")
+    captured_bytes = int_at(stats, "capturedBytes")
+    silence_padding_bytes = int_at(stats, "silencePaddingBytes")
+    wav_file_bytes = int_at(stats, "wavFileBytes")
+    sample_count = int_at(stats, "sampleCount")
+    requested_duration_ms = int_at(payload, "requestedDurationMs")
+    average_bytes_per_second = int_at(wave_format, "averageBytesPerSecond")
+    block_align = int_at(wave_format, "blockAlign")
+    padding = object_at(payload, "wallClockPadding")
+    require(bytes_recorded >= 0, "bytesRecorded must be non-negative.")
+    require(captured_bytes >= 0, "capturedBytes must be non-negative.")
+    require(silence_padding_bytes >= 0, "silencePaddingBytes must be non-negative.")
+    require(bytes_recorded == captured_bytes + silence_padding_bytes, "bytesRecorded must equal capturedBytes plus silencePaddingBytes.")
+    require(int_at(padding, "capturedBytes") == captured_bytes, "wallClockPadding capturedBytes mismatch.")
+    require(int_at(padding, "silencePaddingBytes") == silence_padding_bytes, "wallClockPadding silencePaddingBytes mismatch.")
+    require(int_at(padding, "dataBytesWritten") == bytes_recorded, "wallClockPadding dataBytesWritten mismatch.")
+    require(bool_at(padding, "enabled"), "wallClockPadding must be enabled.")
+    require(padding.get("method") == "insert-zero-silence-for-loopback-data-gaps", "Unexpected wallClockPadding method.")
+    require(wav_file_bytes > 0, "WAV file bytes must be positive.")
+    require(int_at(wave_format, "sampleRate") > 0, "sample rate must be positive.")
+    require(int_at(wave_format, "channels") > 0, "channel count must be positive.")
+    require(average_bytes_per_second > 0, "average bytes per second must be positive.")
+    require(block_align > 0, "blockAlign must be positive.")
+    require(bytes_recorded % block_align == 0, "bytesRecorded must align to the WAV block size.")
+    data_duration_ms = bytes_recorded * 1000.0 / average_bytes_per_second
+    require(data_duration_ms + 1.0 >= requested_duration_ms, "WAV data duration is shorter than the requested capture duration.")
     require("BEA audible playback" in payload.get("nonClaims", []), "non-claims must reject BEA audible playback.")
     non_silent = bool(stats.get("nonSilent"))
     if require_non_silent:
@@ -408,13 +515,16 @@ def validate_artifact(path: Path, *, require_non_silent: bool = False) -> dict[s
         "captureStartedUtc": payload.get("captureStartedUtc"),
         "captureEndedUtc": payload.get("captureEndedUtc"),
         "device": object_at(payload, "device").get("friendlyName"),
-        "requestedDurationMs": payload.get("requestedDurationMs"),
+        "requestedDurationMs": requested_duration_ms,
         "observedDurationMs": payload.get("observedDurationMs"),
         "sampleRate": wave_format.get("sampleRate"),
         "channels": wave_format.get("channels"),
-        "bytesRecorded": stats.get("bytesRecorded"),
-        "wavFileBytes": stats.get("wavFileBytes"),
-        "sampleCount": stats.get("sampleCount"),
+        "bytesRecorded": bytes_recorded,
+        "capturedBytes": captured_bytes,
+        "silencePaddingBytes": silence_padding_bytes,
+        "derivedDataDurationMs": data_duration_ms,
+        "wavFileBytes": wav_file_bytes,
+        "sampleCount": sample_count,
         "peakAbs": stats.get("peakAbs"),
         "rms": stats.get("rms"),
         "nonSilent": non_silent,
@@ -474,15 +584,27 @@ def self_test() -> None:
                     "captureKind": "wasapi-loopback",
                     "captureStartedUtc": "2026-06-22T00:00:00Z",
                     "captureEndedUtc": "2026-06-22T00:00:01Z",
+                    "requestedDurationMs": 1000,
+                    "observedDurationMs": 1000,
                     "device": {"friendlyName": "self-test"},
-                    "waveFormat": {"sampleRate": 8000, "channels": 1},
+                    "waveFormat": {"sampleRate": 8000, "channels": 1, "blockAlign": 2, "averageBytesPerSecond": 16000},
                     "audioStats": {
-                        "bytesRecorded": 0,
+                        "bytesRecorded": 16000,
+                        "capturedBytes": 0,
+                        "silencePaddingBytes": 16000,
                         "wavFileBytes": len(wav.read_bytes()),
-                        "sampleCount": 0,
+                        "sampleCount": 8000,
                         "peakAbs": 0.0,
                         "rms": 0.0,
                         "nonSilent": False,
+                    },
+                    "wallClockPadding": {
+                        "enabled": True,
+                        "method": "insert-zero-silence-for-loopback-data-gaps",
+                        "capturedBytes": 0,
+                        "silencePaddingBytes": 16000,
+                        "dataBytesWritten": 16000,
+                        "targetDurationMs": 1000,
                     },
                     "claimBoundary": "self-test",
                     "nonClaims": ["BEA audible playback"],

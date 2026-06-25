@@ -6,8 +6,9 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Close the generated offline Lore content-pack implementation, package guard
-follow-up, and Asset Library first-run catalog guidance from this checkout:
+Improve Windowed & Mods selected-state UX for preset/menu-color/profile choices
+without changing patch semantics, runtime proof claims, or release packaging,
+then continue bounded patch/mod UX and runtime-proof work from this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -55,6 +56,12 @@ contributor work.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof both exist.
+- Music audible output is still not proven. The previous rejected live bundle
+  showed CDB decode instants at about 44-46 seconds but raw WAV data spanning
+  only about 11-12 seconds, so the accepted 2026-06-25 helper/materializer
+  hardening now preserves/verifies wall-clock WAV data span, helper-authored
+  padding metadata, and canonical WAV header/data-frame consistency before any
+  later private live materializer attempt.
 - Installed Steam game files and original `BEA.exe` remain read-only.
 
 ## Public Reproducible Gates
@@ -98,11 +105,13 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Commit and push the v1.0.7 publication-state docs/state update after
-   docs/state/hygiene gates are green.
-2. Continue bounded patch/mod/runtime proof work from public `main`, likely the
-   next safe-copy/mod runtime proof that does not require external endpoint
-   material.
+1. Add visible selected-state styling for Windowed & Mods presets/menu-color/
+   profile choices, keeping user copy plain and maintainer proof details out of
+   normal controls.
+2. Then add clearer Asset Library first-run catalog guidance if the selected-state
+   slice closes cleanly.
+3. Defer another private music live-bundle attempt until the helper/materializer
+   guard is present and no BEA/CDB process is already running.
 
 ## Stop Conditions
 
