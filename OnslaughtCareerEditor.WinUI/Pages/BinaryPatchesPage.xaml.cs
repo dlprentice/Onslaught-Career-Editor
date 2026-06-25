@@ -54,6 +54,18 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             new("851", "admin level preset local multiplayer world 851 selected"),
         };
         private sealed record AdminLevelPreset(string LevelId, string StatusMessage);
+        private enum LaunchPresetChoice
+        {
+            None,
+            QuietCapture,
+            HighDetail,
+            ControlBaseline,
+            ControlSharpened,
+            ControlConfig2,
+            ControlConfig3,
+            ControlConfig4,
+        }
+
         private sealed record LaunchPresetSelection(
             bool SkipFmv,
             bool NoMusic,
@@ -88,6 +100,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private bool _isStoppingCopiedProfile;
         private bool _isStagingMusicReplacement;
         private bool _isRestoringMusicReplacement;
+        private bool _isApplyingLaunchPreset;
+        private LaunchPresetChoice _selectedLaunchPresetChoice = LaunchPresetChoice.None;
         private const string DefaultMusicReplacementStatus = "No music swap staged. Staging only; in-game playback is still experimental and unproven.";
 
         public BinaryPatchesPage()
@@ -548,6 +562,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchSelectedProfileDetails.Text = PatchBenchSelectedProfileText.BuildDetails(
                 selectedProfileTextState);
             UpdateChoiceVisualState(visibleSelectedKeys);
+            UpdateLaunchPresetVisualState();
 
             SelectionSummaryTextBlock.Text = hasSelected
                 ? BuildSelectionSummary(visibleSelectedKeys)
@@ -599,6 +614,63 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 normalStyle);
             PatchBenchMenuColorSelectionStatus.Text = BuildMenuColorSelectionStatus(selectedMenuColorKey);
             AutomationProperties.SetName(PatchBenchMenuColorSelectionStatus, PatchBenchMenuColorSelectionStatus.Text);
+        }
+
+        private void UpdateLaunchPresetVisualState()
+        {
+            Style selectedStyle = (Style)Resources["PatchBenchChoiceSelectedButtonStyle"];
+            Style normalStyle = (Style)Resources["PatchBenchChoiceButtonStyle"];
+
+            PatchBenchChoiceVisualState.Apply(
+                new[]
+                {
+                    PatchBenchChoiceVisualState.Bind(PatchBenchQuietCaptureLaunchPresetButton, "Set quiet capture launch options for safe copy", "Selected: quiet capture launch preset", _selectedLaunchPresetChoice == LaunchPresetChoice.QuietCapture),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchHighDetailLaunchPresetButton, "Set high detail launch options for safe copy", "Selected: high detail launch preset", _selectedLaunchPresetChoice == LaunchPresetChoice.HighDetail),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchControlBaselinePresetButton, "Set control diagnostics baseline config 1", "Selected: control diagnostics baseline config 1", _selectedLaunchPresetChoice == LaunchPresetChoice.ControlBaseline),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchControlSharpenedPresetButton, "Set control diagnostics sensitivity test config 1", "Selected: control diagnostics sensitivity test config 1", _selectedLaunchPresetChoice == LaunchPresetChoice.ControlSharpened),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig2PresetButton, "Set control diagnostics swapped sticks config 2", "Selected: control diagnostics swapped config 2", _selectedLaunchPresetChoice == LaunchPresetChoice.ControlConfig2),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig3PresetButton, "Set control diagnostics alternate morph jets config 3", "Selected: control diagnostics alternate morph jets config 3", _selectedLaunchPresetChoice == LaunchPresetChoice.ControlConfig3),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig4PresetButton, "Set control diagnostics swapped alternate config 4", "Selected: control diagnostics swapped alternate config 4", _selectedLaunchPresetChoice == LaunchPresetChoice.ControlConfig4),
+                },
+                selectedStyle,
+                normalStyle);
+        }
+
+        private void ClearSelectedLaunchPresetChoiceForManualEdit()
+        {
+            if (_isApplyingLaunchPreset)
+            {
+                return;
+            }
+
+            _selectedLaunchPresetChoice = LaunchPresetChoice.None;
+        }
+
+        private bool IsLaunchPresetOwnedCheckBox(object sender)
+        {
+            return ReferenceEquals(sender, PatchBenchSkipFmvLaunchOption)
+                || ReferenceEquals(sender, PatchBenchNoMusicLaunchOption)
+                || ReferenceEquals(sender, PatchBenchNoSoundLaunchOption)
+                || ReferenceEquals(sender, PatchBenchHighDetailLaunchOption)
+                || ReferenceEquals(sender, PatchBenchNoStaticShadowsLaunchOption)
+                || ReferenceEquals(sender, PatchBenchNoRumbleLaunchOption)
+                || ReferenceEquals(sender, PatchBenchShowDebugTraceLaunchOption)
+                || ReferenceEquals(sender, PatchBenchPersistControllerConfigOption)
+                || ReferenceEquals(sender, PatchBenchSharpenMouseLookOption)
+                || ReferenceEquals(sender, PatchBenchInvertWalkerYOption)
+                || ReferenceEquals(sender, PatchBenchInvertFlightYOption);
+        }
+
+        private bool IsLaunchPresetOwnedTextBox(object sender)
+        {
+            return ReferenceEquals(sender, PatchBenchLevelLaunchOption)
+                || ReferenceEquals(sender, PatchBenchTextureRamLimitLaunchOption);
+        }
+
+        private bool IsLaunchPresetOwnedComboBox(object sender)
+        {
+            return ReferenceEquals(sender, PatchBenchConfigurationLaunchPresetComboBox)
+                || ReferenceEquals(sender, PatchBenchMouseSensitivityPresetComboBox);
         }
 
         private static string BuildMenuColorSelectionStatus(string? selectedKey)
@@ -781,6 +853,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void LocalMultiplayerProbeButton_Click(object sender, RoutedEventArgs e)
         {
+            _selectedLaunchPresetChoice = LaunchPresetChoice.None;
             ApplyLaunchPreset(new LaunchPresetSelection(
                 SkipFmv: true,
                 NoMusic: false,
@@ -988,6 +1061,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 return;
 
             AdminLevelPreset preset = s_adminLevelPresets[presetIndex];
+            ClearSelectedLaunchPresetChoiceForManualEdit();
             PatchBenchLevelLaunchOption.Text = preset.LevelId;
             RefreshCopiedProfileLaunchPlanPreview();
             UpdateControlState();
@@ -996,7 +1070,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void QuietCaptureLaunchPresetButton_Click(object sender, RoutedEventArgs e)
         {
-            ApplyLaunchPreset(new LaunchPresetSelection(
+            ApplyLaunchPreset(LaunchPresetChoice.QuietCapture, new LaunchPresetSelection(
                 SkipFmv: true,
                 NoMusic: true,
                 NoSound: false,
@@ -1016,7 +1090,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void ControlBaselinePresetButton_Click(object sender, RoutedEventArgs e)
         {
-            ApplyLaunchPreset(new LaunchPresetSelection(
+            ApplyLaunchPreset(LaunchPresetChoice.ControlBaseline, new LaunchPresetSelection(
                 SkipFmv: true,
                 NoMusic: false,
                 NoSound: false,
@@ -1036,7 +1110,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void ControlSharpenedPresetButton_Click(object sender, RoutedEventArgs e)
         {
-            ApplyLaunchPreset(new LaunchPresetSelection(
+            ApplyLaunchPreset(LaunchPresetChoice.ControlSharpened, new LaunchPresetSelection(
                 SkipFmv: true,
                 NoMusic: false,
                 NoSound: false,
@@ -1056,21 +1130,21 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void ControlConfig2PresetButton_Click(object sender, RoutedEventArgs e)
         {
-            ApplyLaunchPreset(BuildPersistedControlDiagnosticPreset(
+            ApplyLaunchPreset(LaunchPresetChoice.ControlConfig2, BuildPersistedControlDiagnosticPreset(
                 controllerConfigurationIndex: 2,
                 statusMessage: "control diagnostics swapped config 2 selected"));
         }
 
         private void ControlConfig3PresetButton_Click(object sender, RoutedEventArgs e)
         {
-            ApplyLaunchPreset(BuildPersistedControlDiagnosticPreset(
+            ApplyLaunchPreset(LaunchPresetChoice.ControlConfig3, BuildPersistedControlDiagnosticPreset(
                 controllerConfigurationIndex: 3,
                 statusMessage: "control diagnostics alternate config 3 selected"));
         }
 
         private void ControlConfig4PresetButton_Click(object sender, RoutedEventArgs e)
         {
-            ApplyLaunchPreset(BuildPersistedControlDiagnosticPreset(
+            ApplyLaunchPreset(LaunchPresetChoice.ControlConfig4, BuildPersistedControlDiagnosticPreset(
                 controllerConfigurationIndex: 4,
                 statusMessage: "control diagnostics swapped alternate config 4 selected"));
         }
@@ -1097,7 +1171,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void HighDetailLaunchPresetButton_Click(object sender, RoutedEventArgs e)
         {
-            ApplyLaunchPreset(new LaunchPresetSelection(
+            ApplyLaunchPreset(LaunchPresetChoice.HighDetail, new LaunchPresetSelection(
                 SkipFmv: true,
                 NoMusic: false,
                 NoSound: false,
@@ -1117,6 +1191,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void ClearLaunchOptionsButton_Click(object sender, RoutedEventArgs e)
         {
+            _selectedLaunchPresetChoice = LaunchPresetChoice.None;
             ApplyLaunchPreset(new LaunchPresetSelection(
                 SkipFmv: false,
                 NoMusic: false,
@@ -1135,25 +1210,47 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 StatusMessage: "launch options cleared"));
         }
 
+        private void ApplyLaunchPreset(LaunchPresetChoice selectedChoice, LaunchPresetSelection preset)
+        {
+            ApplyLaunchPreset(preset);
+            _selectedLaunchPresetChoice = selectedChoice;
+            UpdateLaunchPresetVisualState();
+            _ = DispatcherQueue.TryEnqueue(() =>
+            {
+                _selectedLaunchPresetChoice = selectedChoice;
+                UpdateLaunchPresetVisualState();
+            });
+        }
+
         private void ApplyLaunchPreset(LaunchPresetSelection preset)
         {
-            PatchBenchSkipFmvLaunchOption.IsChecked = preset.SkipFmv;
-            PatchBenchNoMusicLaunchOption.IsChecked = preset.NoMusic;
-            PatchBenchNoSoundLaunchOption.IsChecked = preset.NoSound;
-            PatchBenchHighDetailLaunchOption.IsChecked = preset.HighDetail;
-            PatchBenchNoStaticShadowsLaunchOption.IsChecked = preset.NoStaticShadows;
-            PatchBenchNoRumbleLaunchOption.IsChecked = preset.NoRumble;
-            PatchBenchShowDebugTraceLaunchOption.IsChecked = false;
-            PatchBenchLevelLaunchOption.Text = preset.LevelId;
-            PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex = Math.Clamp(preset.ControllerConfigurationIndex, 0, 4);
-            PatchBenchPersistControllerConfigOption.IsChecked = preset.PersistControllerConfig;
-            PatchBenchSharpenMouseLookOption.IsChecked = preset.SharpenMouseLook;
-            PatchBenchMouseSensitivityPresetComboBox.SelectedIndex = Math.Clamp(preset.MouseSensitivityPresetIndex, 0, s_mouseLookSensitivityPresets.Length - 1);
-            PatchBenchInvertWalkerYOption.IsChecked = preset.InvertWalkerY;
-            PatchBenchInvertFlightYOption.IsChecked = preset.InvertFlightY;
-            PatchBenchTextureRamLimitLaunchOption.Text = preset.TextureRamLimitMb;
-            RefreshCopiedProfileLaunchPlanPreview();
-            UpdateControlState();
+            bool wasApplyingLaunchPreset = _isApplyingLaunchPreset;
+            _isApplyingLaunchPreset = true;
+            try
+            {
+                PatchBenchSkipFmvLaunchOption.IsChecked = preset.SkipFmv;
+                PatchBenchNoMusicLaunchOption.IsChecked = preset.NoMusic;
+                PatchBenchNoSoundLaunchOption.IsChecked = preset.NoSound;
+                PatchBenchHighDetailLaunchOption.IsChecked = preset.HighDetail;
+                PatchBenchNoStaticShadowsLaunchOption.IsChecked = preset.NoStaticShadows;
+                PatchBenchNoRumbleLaunchOption.IsChecked = preset.NoRumble;
+                PatchBenchShowDebugTraceLaunchOption.IsChecked = false;
+                PatchBenchLevelLaunchOption.Text = preset.LevelId;
+                PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex = Math.Clamp(preset.ControllerConfigurationIndex, 0, 4);
+                PatchBenchPersistControllerConfigOption.IsChecked = preset.PersistControllerConfig;
+                PatchBenchSharpenMouseLookOption.IsChecked = preset.SharpenMouseLook;
+                PatchBenchMouseSensitivityPresetComboBox.SelectedIndex = Math.Clamp(preset.MouseSensitivityPresetIndex, 0, s_mouseLookSensitivityPresets.Length - 1);
+                PatchBenchInvertWalkerYOption.IsChecked = preset.InvertWalkerY;
+                PatchBenchInvertFlightYOption.IsChecked = preset.InvertFlightY;
+                PatchBenchTextureRamLimitLaunchOption.Text = preset.TextureRamLimitMb;
+                RefreshCopiedProfileLaunchPlanPreview();
+                UpdateControlState();
+            }
+            finally
+            {
+                _isApplyingLaunchPreset = wasApplyingLaunchPreset;
+            }
+
             AppStatusService.SetStatus($"Windowed & Mods: {preset.StatusMessage}");
         }
 
@@ -1186,18 +1283,33 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void LaunchOptionCheckBox_Changed(object sender, RoutedEventArgs e)
         {
+            if (IsLaunchPresetOwnedCheckBox(sender))
+            {
+                ClearSelectedLaunchPresetChoiceForManualEdit();
+            }
+
             RefreshCopiedProfileLaunchPlanPreview();
             UpdateControlState();
         }
 
         private void LaunchOptionTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            if (IsLaunchPresetOwnedTextBox(sender))
+            {
+                ClearSelectedLaunchPresetChoiceForManualEdit();
+            }
+
             RefreshCopiedProfileLaunchPlanPreview();
             UpdateControlState();
         }
 
         private void LaunchOptionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (IsLaunchPresetOwnedComboBox(sender))
+            {
+                ClearSelectedLaunchPresetChoiceForManualEdit();
+            }
+
             RefreshCopiedProfileLaunchPlanPreview();
             UpdateControlState();
         }

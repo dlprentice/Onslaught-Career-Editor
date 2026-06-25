@@ -387,6 +387,7 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("PatchBenchChoiceButtonStyle"));
         Assert.That(pageXaml, Does.Contain("PatchBenchChoiceSelectedButtonStyle"));
         Assert.That(code, Does.Contain("UpdateChoiceVisualState(visibleSelectedKeys)"));
+        Assert.That(code, Does.Contain("UpdateLaunchPresetVisualState()"));
         Assert.That(code, Does.Contain("PatchBenchChoiceVisualState.Apply("));
         Assert.That(code, Does.Contain("PatchBenchChoiceVisualState.Bind("));
         Assert.That(code, Does.Not.Contain("SetChoiceButtonState("));
@@ -395,11 +396,43 @@ public class WinUiProductLaneTests
         Assert.That(choiceStateHelper, Does.Contain("internal sealed record PatchBenchChoiceButtonBinding"));
         Assert.That(choiceStateHelper, Does.Contain("AutomationProperties.SetName("));
         Assert.That(choiceStateHelper, Does.Contain("binding.State.AutomationName"));
+        Assert.That(choiceStateHelper, Does.Not.Contain("GameProfile"));
+        Assert.That(choiceStateHelper, Does.Not.Contain("BinaryPatch"));
+        Assert.That(choiceStateHelper, Does.Not.Contain("BuildSelectedLaunchArguments"));
+        Assert.That(choiceStateHelper, Does.Not.Contain("BuildSafeCopyContentSignature"));
+        Assert.That(choiceStateHelper, Does.Not.Contain("PatchBenchSkipFmvLaunchOption"));
+        Assert.That(choiceStateHelper, Does.Not.Contain("PatchBenchCopiedProfileLaunchPlan"));
+        Assert.That(choiceStateHelper, Does.Not.Contain("ComboBox"));
+        Assert.That(choiceStateHelper, Does.Not.Contain("TextBox"));
+        Assert.That(choiceStateHelper, Does.Not.Contain("File."));
+        Assert.That(choiceStateHelper, Does.Not.Contain("Task"));
+        Assert.That(choiceStateHelper, Does.Not.Contain("Online"));
         Assert.That(choiceStateModel, Does.Contain("internal sealed record PatchBenchSelectedChoiceState"));
         Assert.That(choiceStateModel, Does.Contain("public string AutomationName => IsSelected ? SelectedAutomationName : NormalAutomationName"));
         Assert.That(code, Does.Contain("Selected: Compatibility Copy profile"));
         Assert.That(code, Does.Contain("Selected: Windowed and Graphics Defaults profile"));
         Assert.That(code, Does.Contain("Selected: Debug Camera Preview profile"));
+        Assert.That(code, Does.Contain("private enum LaunchPresetChoice"));
+        Assert.That(code, Does.Contain("_selectedLaunchPresetChoice = LaunchPresetChoice.None"));
+        Assert.That(code, Does.Contain("_isApplyingLaunchPreset"));
+        Assert.That(code, Does.Contain("ClearSelectedLaunchPresetChoiceForManualEdit"));
+        Assert.That(code, Does.Contain("IsLaunchPresetOwnedCheckBox"));
+        Assert.That(code, Does.Contain("IsLaunchPresetOwnedComboBox"));
+        Assert.That(code, Does.Contain("IsLaunchPresetOwnedTextBox"));
+        Assert.That(code, Does.Contain("Selected: quiet capture launch preset"));
+        Assert.That(code, Does.Contain("Selected: high detail launch preset"));
+        Assert.That(code, Does.Contain("Selected: control diagnostics baseline config 1"));
+        Assert.That(code, Does.Contain("Selected: control diagnostics sensitivity test config 1"));
+        Assert.That(code, Does.Contain("Selected: control diagnostics swapped config 2"));
+        Assert.That(code, Does.Contain("Selected: control diagnostics alternate morph jets config 3"));
+        Assert.That(code, Does.Contain("Selected: control diagnostics swapped alternate config 4"));
+        Assert.That(pageXaml, Does.Contain("x:Name=\"PatchBenchQuietCaptureLaunchPresetButton\""));
+        Assert.That(pageXaml, Does.Contain("x:Name=\"PatchBenchHighDetailLaunchPresetButton\""));
+        Assert.That(pageXaml, Does.Contain("x:Name=\"PatchBenchControlBaselinePresetButton\""));
+        Assert.That(pageXaml, Does.Contain("x:Name=\"PatchBenchControlSharpenedPresetButton\""));
+        Assert.That(pageXaml, Does.Contain("x:Name=\"PatchBenchControlConfig2PresetButton\""));
+        Assert.That(pageXaml, Does.Contain("x:Name=\"PatchBenchControlConfig3PresetButton\""));
+        Assert.That(pageXaml, Does.Contain("x:Name=\"PatchBenchControlConfig4PresetButton\""));
         Assert.That(pageXaml, Does.Contain("PatchBenchSelectedProfileDetailsExpander"));
         Assert.That(pageXaml, Does.Contain("Preset details and limits"));
         Assert.That(pageXaml, Does.Not.Contain("Preset details and proof limits"));
@@ -1014,6 +1047,22 @@ public class WinUiProductLaneTests
             code,
             "private void EnhancedPreviewPresetButton_Click",
             "private void DebugCameraPreviewPresetButton_Click");
+        string launchPresetVisualState = ExtractCodeSlice(
+            code,
+            "private void UpdateLaunchPresetVisualState()",
+            "private static string BuildMenuColorSelectionStatus");
+        string buildSelectedLaunchArguments = ExtractCodeSlice(
+            code,
+            "private IReadOnlyList<string> BuildSelectedLaunchArguments()",
+            "private uint? GetSelectedControllerConfigurationPreset()");
+        string buildSafeCopyContentSignature = ExtractCodeSlice(
+            code,
+            "private string BuildCurrentSafeCopyContentSignature",
+            "private static string BuildSafeCopyContentSignature(");
+        string buildCopiedProfileLaunchPlan = ExtractCodeSlice(
+            code,
+            "private bool TryBuildCopiedProfileLaunchPlan",
+            "private static bool IsUserFacingOperationException");
 
         Assert.That(code, Does.Contain("GetPatchWorkspaceRoot()"));
         Assert.That(code, Does.Contain("GameProfilePreflightService.ValidateExecutableSourceForWorkspaceCopy(sourcePath)"));
@@ -1088,6 +1137,39 @@ public class WinUiProductLaneTests
         Assert.That(enhancedPreviewHandler, Does.Not.Contain("UseBea02ForBea01PresetId"));
         Assert.That(enhancedPreviewHandler, Does.Not.Contain("UseBea01ForBea02PresetId"));
         Assert.That(enhancedPreviewHandler, Does.Not.Contain("UseBea02ForBea04PresetId"));
+        Assert.That(code, Does.Contain("private enum LaunchPresetChoice"));
+        Assert.That(code, Does.Contain("ApplyLaunchPreset(LaunchPresetChoice selectedChoice, LaunchPresetSelection preset)"));
+        Assert.That(code, Does.Contain("_isApplyingLaunchPreset = true;"));
+        Assert.That(code, Does.Contain("_isApplyingLaunchPreset = wasApplyingLaunchPreset;"));
+        Assert.That(code, Does.Contain("ClearSelectedLaunchPresetChoiceForManualEdit();"));
+        Assert.That(code, Does.Contain("ReferenceEquals(sender, PatchBenchSkipFmvLaunchOption)"));
+        Assert.That(code, Does.Contain("ReferenceEquals(sender, PatchBenchMouseSensitivityPresetComboBox)"));
+        Assert.That(code, Does.Not.Contain("ReferenceEquals(sender, PatchBenchIncludeSavegamesOption)"));
+        Assert.That(code, Does.Not.Contain("ReferenceEquals(sender, PatchBenchCreateMusicSwapPresetComboBox)"));
+        Assert.That(launchPresetVisualState, Does.Contain("PatchBenchChoiceVisualState.Bind(PatchBenchQuietCaptureLaunchPresetButton"));
+        Assert.That(launchPresetVisualState, Does.Contain("PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig4PresetButton"));
+        Assert.That(launchPresetVisualState, Does.Not.Contain("BuildSelectedLaunchArguments"));
+        Assert.That(launchPresetVisualState, Does.Not.Contain("BuildSafeCopyContentSignature"));
+        Assert.That(launchPresetVisualState, Does.Not.Contain("RefreshCopiedProfileLaunchPlanPreview"));
+        Assert.That(launchPresetVisualState, Does.Not.Contain("ApplyLaunchPreset("));
+        Assert.That(launchPresetVisualState, Does.Not.Contain("GameProfilePreflightService"));
+        Assert.That(launchPresetVisualState, Does.Not.Contain("GameProfileRuntimeService"));
+        Assert.That(launchPresetVisualState, Does.Not.Contain("OnlineMultiplayerReadinessService"));
+        Assert.That(launchPresetVisualState, Does.Not.Contain("Host"));
+        Assert.That(launchPresetVisualState, Does.Not.Contain("Join"));
+        Assert.That(launchPresetVisualState, Does.Not.Contain("Matchmaking"));
+        Assert.That(buildSelectedLaunchArguments, Does.Not.Contain("_selectedLaunchPresetChoice"));
+        Assert.That(buildSelectedLaunchArguments, Does.Not.Contain("LaunchPresetChoice"));
+        Assert.That(buildSelectedLaunchArguments, Does.Not.Contain("AutomationProperties"));
+        Assert.That(buildSelectedLaunchArguments, Does.Not.Contain("PatchBenchChoiceVisualState"));
+        Assert.That(buildSafeCopyContentSignature, Does.Not.Contain("_selectedLaunchPresetChoice"));
+        Assert.That(buildSafeCopyContentSignature, Does.Not.Contain("LaunchPresetChoice"));
+        Assert.That(buildSafeCopyContentSignature, Does.Not.Contain("AutomationProperties"));
+        Assert.That(buildSafeCopyContentSignature, Does.Not.Contain("PatchBenchChoiceVisualState"));
+        Assert.That(buildCopiedProfileLaunchPlan, Does.Not.Contain("_selectedLaunchPresetChoice"));
+        Assert.That(buildCopiedProfileLaunchPlan, Does.Not.Contain("LaunchPresetChoice"));
+        Assert.That(buildCopiedProfileLaunchPlan, Does.Not.Contain("AutomationProperties"));
+        Assert.That(buildCopiedProfileLaunchPlan, Does.Not.Contain("PatchBenchChoiceVisualState"));
         Assert.That(code, Does.Contain("PatchBenchInvertWalkerYOption.IsChecked = false"));
         Assert.That(code, Does.Contain("PatchBenchInvertFlightYOption.IsChecked = false"));
         Assert.That(code, Does.Contain("ProfilePresetId: MatchSelectableSafeCopyProfileId(selectedPatchKeys)"));

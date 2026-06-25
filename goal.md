@@ -6,12 +6,15 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Close out `Windowed & Mods` launch-preset/status presentation modularity and
-prepare the next bounded UX slice: inspect launch-preset selected-state styling
-and UIA names for the launch preset buttons. Do not change launch arguments,
-launch preset effects, copied-profile launch behavior, patch semantics,
-safe-copy manifest logic, online status, runtime proof, or AppCore correctness
-logic. Continue from this checkout:
+Close out `Windowed & Mods` launch-preset selected-state UX: visible selected
+styling and selected UIA names are implemented for the seven launch preset
+buttons, focused and broad closeout gates pass, and the slice is ready to
+commit/push. Then start the next bounded slice: inspect a small Windowed & Mods
+modularity extraction around repeated selected-choice/launch-preset presentation
+plumbing. Do not change launch arguments, launch preset payloads,
+copied-profile launch behavior, patch semantics, safe-copy manifest/signature
+logic, online status, runtime proof, or AppCore correctness logic. Continue
+from this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -112,6 +115,17 @@ contributor work.
   WinUI build, runtime UIA selected-state smoke, hard-payload safety, public
   allowlist, Markdown links, repo hygiene, state JSON parse, and whitespace diff
   checks passed.
+- Windowed & Mods launch-preset selected-state UX is focused-validated in
+  `release/readiness/winui_windowed_mods_launch_preset_selected_state_2026-06-25.md`.
+  The seven launch preset buttons now reuse the selected-choice visual pattern
+  and selected UIA names. Manual edits to launch-preset-owned controls clear
+  the selected marker; savegame and create-time music-swap controls remain
+  independent. Static guards keep selected UIA/style state out of launch
+  argument construction, copied-profile launch planning, safe-copy signatures,
+  runtime/preflight services, and online wording. Focused static PatchBench
+  tests, WinUI build, runtime UIA smoke, docs command checks, hard-payload
+  safety, public allowlist, Markdown links, repo hygiene, state JSON parse,
+  whitespace diff check, and process cleanup checks passed.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof both exist.
@@ -164,24 +178,17 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Inspect launch-preset selected-state UX for
-   `PatchBenchQuietCaptureLaunchPresetButton`,
-   `PatchBenchHighDetailLaunchPresetButton`,
-   `PatchBenchControlBaselinePresetButton`,
-   `PatchBenchControlSharpenedPresetButton`,
-   `PatchBenchControlConfig2PresetButton`,
-   `PatchBenchControlConfig3PresetButton`, and
-   `PatchBenchControlConfig4PresetButton`.
-2. Use at least one specialist consult and one adversarial reviewer unless the
-   slice proves microscopic.
-3. If safe, add visible selected-state styling and selected UIA names for the
-   launch preset buttons using the existing choice-state pattern or a similarly
-   small presentation-only helper. Do not change `LaunchPresetSelection`,
-   `ApplyLaunchPreset`, launch arguments, copied-profile launch, safe-copy
-   manifest, or AppCore calls.
-4. Validate with focused WinUI/AppCore tests plus repo/docs gates appropriate to
-   the touched paths.
-5. Update state/docs with exact evidence and choose the next bounded slice.
+1. Commit and push the accepted launch-preset selected-state UX slice.
+2. Start the next bounded slice: inspect repeated selected-choice and launch
+   preset presentation plumbing in `BinaryPatchesPage` and decide whether a
+   small extraction is justified. Keep the slice read-first and
+   presentation-only unless exact evidence supports a narrow edit.
+3. Use at least one specialist consult and one adversarial reviewer before
+   implementing any nontrivial extraction.
+4. Keep launch arguments, copied-profile launch behavior, safe-copy
+   signatures/manifests, patch semantics, music, online/runtime proof, and
+   AppCore correctness logic out of the next modularity slice unless a concrete
+   bug is found and documented.
 
 ## Stop Conditions
 

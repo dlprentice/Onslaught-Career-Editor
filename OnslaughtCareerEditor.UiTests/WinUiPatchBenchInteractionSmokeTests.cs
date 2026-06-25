@@ -97,6 +97,30 @@ public class WinUiPatchBenchInteractionSmokeTests
             InvokeByAutomationId(window, "PatchBenchMenuColorClearButton");
             AssertAutomationNameContains(window, "PatchBenchMenuColorClearButton", "Selected: no menu background color");
             AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected menu background: none.");
+
+            ExpandByAutomationId(window, "PatchBenchAdvancedLaunchOptionsExpander");
+            ClickByAutomationId(window, "PatchBenchQuietCaptureLaunchPresetButton");
+            AssertAutomationNameContains(window, "PatchBenchQuietCaptureLaunchPresetButton", "Selected: quiet capture launch preset");
+            AssertAutomationNameContains(window, "PatchBenchHighDetailLaunchPresetButton", "Set high detail launch options for safe copy");
+            AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
+
+            ClickByAutomationId(window, "PatchBenchHighDetailLaunchPresetButton");
+            AssertAutomationNameContains(window, "PatchBenchHighDetailLaunchPresetButton", "Selected: high detail launch preset");
+            AssertAutomationNameContains(window, "PatchBenchQuietCaptureLaunchPresetButton", "Set quiet capture launch options for safe copy");
+            AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
+
+            ClickByAutomationId(window, "PatchBenchControlBaselinePresetButton");
+            AssertAutomationNameContains(window, "PatchBenchControlBaselinePresetButton", "Selected: control diagnostics baseline config 1");
+            AssertAutomationNameContains(window, "PatchBenchHighDetailLaunchPresetButton", "Set high detail launch options for safe copy");
+
+            ClickByAutomationId(window, "PatchBenchControlConfig4PresetButton");
+            AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Selected: control diagnostics swapped alternate config 4");
+            AssertAutomationNameContains(window, "PatchBenchControlBaselinePresetButton", "Set control diagnostics baseline config 1");
+            CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-launch-preset-selected-normal.png", "PatchBenchControlConfig4PresetButton", 1000, 720);
+
+            SetTextBoxText(window, "PatchBenchLevelLaunchOption", "100");
+            AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Set control diagnostics swapped alternate config 4");
+            AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
         }
         finally
         {
@@ -261,6 +285,57 @@ public class WinUiPatchBenchInteractionSmokeTests
         element.AsButton().Invoke();
     }
 
+    private static void ClickByAutomationId(Window window, string automationId)
+    {
+        AutomationElement element = FindByAutomationId(window, automationId);
+        window.Focus();
+        ScrollIntoView(element);
+        try
+        {
+            element.Focus();
+        }
+        catch
+        {
+            // Best-effort focus before a visible click.
+        }
+
+        if (element.Patterns.Invoke.IsSupported)
+        {
+            element.Patterns.Invoke.Pattern.Invoke();
+            Thread.Sleep(150);
+        }
+
+        element.Click();
+        Thread.Sleep(350);
+    }
+
+    private static void ExpandByAutomationId(Window window, string automationId)
+    {
+        AutomationElement element = FindByAutomationId(window, automationId);
+        ScrollIntoView(element);
+        if (element.Patterns.ExpandCollapse.IsSupported)
+        {
+            element.Patterns.ExpandCollapse.Pattern.Expand();
+        }
+        else if (element.Patterns.Invoke.IsSupported)
+        {
+            element.Patterns.Invoke.Pattern.Invoke();
+        }
+        else
+        {
+            element.Click();
+        }
+
+        Thread.Sleep(250);
+    }
+
+    private static void SetTextBoxText(Window window, string automationId, string text)
+    {
+        AutomationElement element = FindByAutomationId(window, automationId);
+        ScrollIntoView(element);
+        element.AsTextBox().Text = text;
+    }
+
     private static void SelectComboBoxItem(Window window, string automationId, string itemText)
     {
         AutomationElement element = FindByAutomationId(window, automationId);
@@ -291,10 +366,15 @@ public class WinUiPatchBenchInteractionSmokeTests
 
     private static void AssertAutomationNameContains(Window window, string automationId, string expectedText)
     {
+        string? actualName = null;
         bool matched = Retry.WhileFalse(
-            () => (TryGetName(FindByAutomationId(window, automationId)) ?? string.Empty).Contains(expectedText, StringComparison.OrdinalIgnoreCase),
+            () =>
+            {
+                actualName = TryGetName(FindByAutomationId(window, automationId));
+                return (actualName ?? string.Empty).Contains(expectedText, StringComparison.OrdinalIgnoreCase);
+            },
             TimeSpan.FromSeconds(10)).Success;
-        Assert.That(matched, Is.True, $"Expected {automationId} automation name to contain: {expectedText}");
+        Assert.That(matched, Is.True, $"Expected {automationId} automation name to contain: {expectedText}. Actual: {actualName ?? "<null>"}");
     }
 
     private static void CaptureChoiceStateScreenshot(Window window, IntPtr windowHandle, string evidenceDir, string fileName, string anchorAutomationId, int width, int height)

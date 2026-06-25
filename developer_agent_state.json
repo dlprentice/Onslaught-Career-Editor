@@ -1,11 +1,11 @@
 {
   "lastUpdated": "2026-06-25",
   "branch": "main",
-  "currentFocus": "Windowed & Mods launch text modularity is accepted; current slice is launch-preset selected-state UX inspection.",
+  "currentFocus": "Windowed & Mods launch-preset selected-state UX is accepted and ready to commit; next slice is a bounded Windowed & Mods modularity inspection.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainStatus": "main/origin/main is pushed through a5dbcdec before this launch-text modularity closeout; v1.0.7 release truth is documented separately.",
+    "publicMainStatus": "main/origin/main is pushed through dd3c009e before this launch-preset selected-state closeout; current working tree has uncommitted focused WinUI UX/doc/state changes.",
     "policy": "public repo is primary for source/docs/tools/tests/RE notes/proof summaries/state; hard payloads remain maintainer-local ignored overlays"
   },
   "publicPrimaryMigration": {
@@ -14,7 +14,7 @@
     "readinessNote": "release/readiness/public_primary_full_migration_inventory_2026-06-24.md",
     "acceptedInventory": {
       "privateTrackedPaths": 24839,
-      "publicTrackedPaths": 19312,
+      "publicTrackedPaths": 19324,
       "allowedPrivateOnlyHardPayloadOrScratchPayloadPaths": 5557
     },
     "hardening": "test:public-allowlist now chains hard-payload safety, submodule payload scan, and public-primary migration/hash inventory; public_allowlist_safety_check.py now checks more payload suffixes, magic bytes, raw-log-shaped text, JSONL text, exact fixture hashes, and missing/unreadable submodules.",
@@ -50,30 +50,29 @@
   },
   "recentClosedSlice": {
     "name": "winui-windowed-mods-launch-text-modularity",
-    "status": "accepted_ready_for_commit",
+    "status": "pushed",
+    "commit": "dd3c009e",
     "readinessNote": "release/readiness/winui_windowed_mods_launch_text_modularity_2026-06-25.md",
-    "claimBoundary": "WinUI presentation modularity only; no launch arguments, launch preset effects, copied-profile launch behavior, safe-copy manifest, patch semantics, online/runtime proof, music audible-output proof, AppCore correctness logic, or installed-game mutation changed.",
-    "acceptedFindings": [
-      "Launch boundary copy, launch modifier summary copy, and copied-profile stale/ready/error launch-readiness text now flow through PatchBenchLaunchText and reduced value-state/result records.",
-      "BinaryPatchesPage still owns LaunchPresetSelection, ApplyLaunchPreset, BuildSelectedLaunchArguments, TryBuildCopiedProfileLaunchPlan, copied-profile launch, safe-copy manifest handling, music, online readiness, and all AppCore calls.",
-      "Static guards verify the helper does not grow launch/runtime/online/music-manifest responsibilities."
-    ],
-    "consultReview": {
-      "specialist": "recommended extracting launch/status presentation text and duplicated launch readiness text, not launch preset application",
-      "adversarial": "blocked moving launch args, plan validation, prepare/launch handlers, music swap, online wording, or runtime proof language into the helper; accepted and pinned by tests",
-      "publicBoundary": "confirmed .codex skills remain runtime-local conveniences and full Ghidra project stores remain local/ignored, with tracked docs/tools/state as durable public handoff"
-    }
+    "claimBoundary": "WinUI presentation modularity only; no launch arguments, launch preset effects, copied-profile launch behavior, safe-copy manifest, patch semantics, online/runtime proof, music audible-output proof, AppCore correctness logic, or installed-game mutation changed."
   },
   "activeSlice": {
     "name": "winui-windowed-mods-launch-preset-selected-state-ux",
-    "goal": "inspect launch-preset selected-state styling and UIA names for launch preset buttons",
-    "claimBoundary": "WinUI UX/presentation only; do not change LaunchPresetSelection payloads, ApplyLaunchPreset effects, BuildSelectedLaunchArguments, TryBuildCopiedProfileLaunchPlan, copied-profile launch behavior, safe-copy manifests, patch semantics, online/runtime proof, or AppCore correctness logic.",
+    "goal": "add visible selected-state styling and selected UIA names for seven Windowed & Mods launch preset buttons",
+    "claimBoundary": "WinUI UX/presentation only; launch arguments, launch preset payloads, copied-profile launch behavior, safe-copy manifests/signatures, patch semantics, online/runtime proof, music audible-output proof, AppCore correctness logic, and installed-game mutation rules are unchanged.",
+    "readinessNote": "release/readiness/winui_windowed_mods_launch_preset_selected_state_2026-06-25.md",
     "latestFindings": [
-      "Launch text modularity focused validations passed.",
-      "Launch preset buttons still lack the same visible selected-state treatment already added for profile/menu-color choices."
+      "Seven launch preset buttons now reuse the selected-choice visual pattern and selected UIA names.",
+      "Manual edits to launch-preset-owned controls clear the selected marker; savegame and create-time music-swap controls do not clear it because they are independent safe-copy choices.",
+      "Local split-screen helper remains outside the seven launch-preset selected set and still does not imply Host/Join or online play.",
+      "Static guards block selected-state/UIA/style from entering launch argument construction, safe-copy content signatures, launch-plan building, runtime/preflight services, or online wording.",
+      "Runtime UIA smoke verifies selected-state switching, music-swap independence, and manual mission-id edit clearing."
     ],
-    "consultReview": {},
-    "status": "next_slice_ready_after_commit"
+    "consultReview": {
+      "specialist": "recommended reusing PatchBenchChoiceVisualState with page-local presentation state, an applying-preset guard, and targeted manual-edit clearing; accepted.",
+      "adversarial": "blocked selected-state as a behavior source and required guards around launch args, safe-copy signatures, music independence, online wording, and manual edit clearing; accepted.",
+      "finalImplementationReview": "found no blocker; confirmed selected state only feeds style/UIA names and called out non-blocking caveat that the UIA click helper should remain limited to idempotent preset buttons."
+    },
+    "status": "accepted_ready_for_commit"
   },
   "runtimeTruth": {
     "musicAudibleOutputProof": false,
@@ -122,31 +121,32 @@
       "git diff --check (PASS)"
     ],
     "activeSliceFocusedPassed": [
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench_CodeRequiresAppOwnedWorkingCopyBeforeApply\" (PASS; 1 test)",
       "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench\" (PASS; 5 tests)",
       "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiPatchBenchInteractionSmokeTests.PatchBench_ProfileAndMenuColorChoices_UpdateSelectedStateThroughUia\" (PASS; 1 runtime UIA smoke after rebuilt WinUI app)"
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiPatchBenchInteractionSmokeTests.PatchBench_ProfileAndMenuColorChoices_UpdateSelectedStateThroughUia\" (PASS; 1 runtime UIA smoke)"
     ],
     "activeSliceBroadPassed": [
-      "npm run test:hard-payload-safety (PASS; 19324 public candidate files checked)",
-      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19320)",
-      "npm run test:md-links (PASS; 3627 Markdown files scanned, 6125 local links checked)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18473 explicit text files checked)",
+      "npm run test:doc-commands (PASS; 4278 documented npm commands checked; public package command check passed)",
+      "npm run test:hard-payload-safety (PASS; 19325 public candidate files checked)",
+      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19324; submodule candidate files 19509)",
+      "npm run test:md-links (PASS; 3628 Markdown files scanned, 6125 local links checked)",
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18477 explicit text files checked)",
       "node JSON parse for developer_agent_state.json and documentation_agent_state.json (PASS)",
-      "git diff --check (PASS)"
+      "git diff --check (PASS)",
+      "Get-Process BEA,cdb,OnslaughtCareerEditor.WinUI -ErrorAction SilentlyContinue (PASS; no matching process output)"
     ],
     "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Commit/push the accepted launch-text modularity slice.",
-    "Start next goal.md slice: Windowed & Mods launch-preset selected-state UX, bounded to presentation/UIA only.",
-    "Keep launch arguments, copied-profile launch behavior, patch semantics, safe-copy manifests, online/runtime proof, and AppCore correctness logic out of the selected-state UX slice."
+    "Commit and push the accepted launch-preset selected-state UX slice.",
+    "Start next goal.md slice: inspect a small Windowed & Mods modularity extraction around repeated selected-choice/launch-preset presentation plumbing.",
+    "Keep launch arguments, copied-profile launch behavior, safe-copy signatures/manifests, patch semantics, music, online/runtime proof, and AppCore correctness logic out of the next modularity inspection unless evidence requires a narrow follow-up."
   ],
   "releaseAccounting": {
     "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",
     "curatedSelectedFiles": 625,
-    "publicCandidateFiles": 19316,
-    "publicSubmoduleCandidateFiles": 19500
+    "publicCandidateFiles": 19324,
+    "publicSubmoduleCandidateFiles": 19509
   },
   "githubRelease": {
     "version": "v1.0.7",
@@ -177,7 +177,7 @@
     "nonBlockingFollowups": [
       "private repo still has active-looking goal/state wording and should eventually be frozen or bannered as archived if kept",
       "historical source docs may contain maintainer-local provenance markers, but the v1.0.7 lore-pack builder redacts maintainer-local paths and the package probe rejects local/private path text before ZIP acceptance",
-      "Windowed & Mods still has broader page-split/selected-state UX debt tracked in roadmap/winui-ui-ux-redesign-radar.md.",
+      "Windowed & Mods selected-state UX now covers profile/menu-color/launch preset choices; broader page split and shared selected-choice component work remains tracked in roadmap/winui-ui-ux-redesign-radar.md.",
       "Asset Library first-run guidance now has an accepted focused slice; broader asset generation/onboarding polish remains tied to extraction-pipeline docs and local overlay policy."
     ]
   },

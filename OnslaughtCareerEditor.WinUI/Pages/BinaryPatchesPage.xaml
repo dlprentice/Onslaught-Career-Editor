@@ -678,6 +678,7 @@
                                              AutomationProperties.AutomationId="PatchBenchQuietCaptureLaunchPresetButton"
                                              AutomationProperties.Name="Set quiet capture launch options for safe copy"
                                              Content="Quiet capture"
+                                             Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                              Click="QuietCaptureLaunchPresetButton_Click" />
                                  </StackPanel>
                                  <StackPanel Orientation="Horizontal" Spacing="10">
@@ -685,6 +686,7 @@
                                              AutomationProperties.AutomationId="PatchBenchHighDetailLaunchPresetButton"
                                              AutomationProperties.Name="Set high detail launch options for safe copy"
                                              Content="High detail test"
+                                             Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                              Click="HighDetailLaunchPresetButton_Click" />
                                      <Button x:Name="PatchBenchClearLaunchOptionsButton"
                                              AutomationProperties.AutomationId="PatchBenchClearLaunchOptionsButton"
@@ -1033,6 +1035,7 @@
                                             Grid.Row="0"
                                             Grid.Column="0"
                                             HorizontalAlignment="Stretch"
+                                            Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                             Click="ControlBaselinePresetButton_Click" />
                                     <Button x:Name="PatchBenchControlSharpenedPresetButton"
                                             AutomationProperties.AutomationId="PatchBenchControlSharpenedPresetButton"
@@ -1041,6 +1044,7 @@
                                             Grid.Row="0"
                                             Grid.Column="1"
                                             HorizontalAlignment="Stretch"
+                                            Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                             Click="ControlSharpenedPresetButton_Click" />
                                     <Button x:Name="PatchBenchControlConfig2PresetButton"
                                             AutomationProperties.AutomationId="PatchBenchControlConfig2PresetButton"
@@ -1049,6 +1053,7 @@
                                             Grid.Row="1"
                                             Grid.Column="0"
                                             HorizontalAlignment="Stretch"
+                                            Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                             Click="ControlConfig2PresetButton_Click" />
                                     <Button x:Name="PatchBenchControlConfig3PresetButton"
                                             AutomationProperties.AutomationId="PatchBenchControlConfig3PresetButton"
@@ -1057,6 +1062,7 @@
                                             Grid.Row="1"
                                             Grid.Column="1"
                                             HorizontalAlignment="Stretch"
+                                            Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                             Click="ControlConfig3PresetButton_Click" />
                                     <Button x:Name="PatchBenchControlConfig4PresetButton"
                                             AutomationProperties.AutomationId="PatchBenchControlConfig4PresetButton"
@@ -1066,6 +1072,7 @@
                                             Grid.Column="0"
                                             Grid.ColumnSpan="2"
                                             HorizontalAlignment="Stretch"
+                                            Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                             Click="ControlConfig4PresetButton_Click" />
                                 </Grid>
                                 <TextBlock Text="These are A/B test presets for safe-copy control diagnostics. They do not add deadzone, look-curve, camera, movement, or online patches."
