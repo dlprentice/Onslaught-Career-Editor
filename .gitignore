@@ -1,19 +1,21 @@
 # Public-primary working repo .gitignore
 
 # Build output
-bin/
-obj/
-TestResults/
+/bin/
+/obj/
+**/bin/
+**/obj/
+/TestResults/
 *.trx
-node_modules/
-dist/
-build/
-out/
-coverage/
-publish/
-AppPackages/
-BundleArtifacts/
-MsixPackages/
+/node_modules/
+/dist/
+/build/
+/out/
+/coverage/
+/publish/
+/AppPackages/
+/BundleArtifacts/
+/MsixPackages/
 
 # IDE and OS local state
 .vs/

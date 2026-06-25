@@ -1,11 +1,11 @@
 # WinUI ZIP Release v1.0.3
 
-Status: release-candidate package validated
+Status: published release package validated
 Date: 2026-06-24
 Scope: `winui-zip-release-v1.0.3`
 
-This pass validates the exact unsigned portable Windows x64 ZIP intended for
-GitHub Release publication:
+This pass validates the exact unsigned portable Windows x64 ZIP published to
+GitHub Release `v1.0.3`:
 
 | Field | Value |
 | --- | --- |
@@ -13,11 +13,13 @@ GitHub Release publication:
 | Byte size | `249834185` |
 | SHA-256 | `406f34bdac0f1a39939e57eba9dab1dc37a889d780c9392470f9dc19a77c4044` |
 | Package script | `npm run test:winui-zip-release-candidate-probe` |
+| GitHub release | `https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.3` |
+| ZIP asset | `https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.3/OnslaughtToolkit-winui-v1.0.3-win-x64.zip` |
 
 The package uses the friendly top-level layout:
 
 - `Launch Onslaught Toolkit.cmd`
-- `README.txt`
+- `README.MD`
 - `LICENSE`
 - `app/`
 - `lore-book/`

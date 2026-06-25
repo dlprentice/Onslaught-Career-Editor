@@ -13,7 +13,7 @@ Use this runbook for public-primary local lane validation. It does not publish a
 cd <repo-root>
 ```
 
-## 1. Private WinUI Product Lane Gates
+## 1. Maintainer-Local WinUI Product Lane Gates
 
 ```powershell
 dotnet build ".\OnslaughtCareerEditor.WinUI.slnx" --nologo

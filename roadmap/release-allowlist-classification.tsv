@@ -25,6 +25,8 @@
 .github/PULL_REQUEST_TEMPLATE.md	R0_ALLOW	default
 .gitignore	R4_DENY	.gitignore
 .gitmodules	R3_CONDITIONAL	submodule-map-review
+.node-version	R0_ALLOW	default
+.nvmrc	R0_ALLOW	default
 AGENTS.md	R4_DENY	AGENTS.md
 COLLABORATION.md	R0_ALLOW	default
 CONTRIBUTING.md	R0_ALLOW	default
@@ -3137,6 +3139,7 @@ release/readiness/winui_zip_package_probe_2026-05-27.md	R0_ALLOW	default
 release/readiness/winui_zip_portable_layout_hotfix_2026-06-24.md	R0_ALLOW	default
 release/readiness/winui_zip_release_candidate_probe_2026-05-06.md	R0_ALLOW	default
 release/readiness/winui_zip_release_candidate_probe_2026-05-27.md	R0_ALLOW	default
+release/readiness/winui_zip_release_v1_0_3_2026-06-24.md	R0_ALLOW	default
 release/readiness/world_thing_spawn_copied_corpus_schema_proof_2026-06-08.md	R0_ALLOW	default
 release/readiness/world_thing_spawn_copied_corpus_schema_proof_plan_2026-06-08.md	R0_ALLOW	default
 release/readiness/world_thing_spawn_getthingref_object_reference_static_proof_2026-06-08.md	R0_ALLOW	default
@@ -19200,6 +19203,8 @@ tools/winui_safe_copy_music_capture_source_correlation_check_test.py	R4_DENY	too
 tools/winui_safe_copy_music_cdb_timeline_sidecar.py	R0_ALLOW	default
 tools/winui_safe_copy_music_cdb_timeline_sidecar_test.py	R0_ALLOW	default
 tools/winui_safe_copy_music_cgame_caller_diagnostic_check.py	R0_ALLOW	default
+tools/winui_safe_copy_music_decode_window_correlation_diagnostic.py	R4_DENY	tools/winui_safe_copy_music_decode_window_correlation_diagnostic.py
+tools/winui_safe_copy_music_decode_window_correlation_diagnostic_test.py	R4_DENY	tools/winui_safe_copy_music_decode_window_correlation_diagnostic_test.py
 tools/winui_safe_copy_music_rejected_replay_diagnostic_check.py	R0_ALLOW	default
 tools/winui_safe_copy_music_rejected_replay_diagnostic_check_test.py	R0_ALLOW	default
 tools/winui_safe_copy_music_selection_decode_artifact_check.py	R4_DENY	tools/winui_safe_copy_music_selection_decode_artifact_check.py

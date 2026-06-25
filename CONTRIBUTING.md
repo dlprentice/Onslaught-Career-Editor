@@ -62,7 +62,7 @@ Required for normal product work:
 ```powershell
 git submodule update --init --recursive
 node --version # must be v24.x
-npm --version  # must be 11.12.x
+npm --version  # must satisfy >=11.12 <12; npm@11.12.1 is the packageManager target
 npm run test:hard-payload-safety
 npm install
 dotnet build .\OnslaughtCareerEditor.WinUI.slnx --nologo
@@ -77,7 +77,7 @@ Tooling prerequisites:
 | --- | --- |
 | Windows 10/11 | WinUI 3 desktop app and UIA tests |
 | .NET 10 SDK | WinUI, AppCore, AppCore.Host, CLI, and tests |
-| Node.js 24.x with npm 11.12.x target | local script runner and docs/release checks |
+| Node.js 24.x with npm `>=11.12 <12` (`npm@11.12.1` packageManager target) | local script runner and docs/release checks |
 | Python 3 with Windows `py` launcher | public-safe tooling, release, patch, and docs checks |
 | Git Bash or another `bash` provider | release dry-run scripts when packaging requires Bash |
 
@@ -121,8 +121,8 @@ Run only the gates relevant to your change, but run them locally before asking f
 
 ## State Baton Updates
 
-For meaningful code, docs, runtime proof, release, or repo-boundary changes,
-update the relevant state baton before handoff:
+For agent-led or maintainer-led code, docs, runtime proof, release, or
+repo-boundary changes, update the relevant state baton before handoff:
 
 - `developer_agent_state.json` for implementation, runtime, tooling, and
   validation truth.
@@ -132,6 +132,8 @@ update the relevant state baton before handoff:
 
 Keep state concise and non-secret. For read-only audits, do not edit state just
 to satisfy the rule; report the needed state update in the audit result.
+External contributors may instead explain that no baton update was made; a
+maintainer can fold their PR into the current state files during review.
 
 ## WinUI UI/UX Contributions
 

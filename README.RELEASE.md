@@ -21,7 +21,7 @@ attached to GitHub Releases with a SHA-256 checksum sidecar. Extract the full
 ZIP and run `Launch Onslaught Toolkit.cmd` from the clean top-level folder. The
 self-contained WinUI payload lives under `app\`; run
 `app\OnslaughtCareerEditor.WinUI.exe` only as a fallback. The `v1.0.3` package
-bundles offline `lore-book\` content and the release-candidate probe verifies
+bundles offline `lore-book\` content and the package probe verifies
 the exact ZIP with extracted launch, Home, Lore, and representative Media UI
 smokes.
 

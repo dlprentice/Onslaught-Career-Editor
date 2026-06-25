@@ -15,14 +15,14 @@ separate maintainer actions.
 
 ## Start
 
-Prerequisites: Windows 10/11, .NET 10 SDK, Node.js 24.x, npm 11.12.x, and
+Prerequisites: Windows 10/11, .NET 10 SDK, Node.js 24.x, npm `>=11.12 <12`, and
 Python 3 available through the Windows `py` launcher.
 
 ```powershell
 cd <repo-root>
 git submodule update --init --recursive
 node --version # must be v24.x
-npm --version  # must be 11.12.x
+npm --version  # must satisfy >=11.12 <12; npm@11.12.1 is the packageManager target
 ```
 
 For a fresh checkout, install dependencies after checking the hard-payload
@@ -85,7 +85,11 @@ outputs, `.env` files, and credential-like key material. It is not supposed to
 hide normal RE notes, state batons, agent reports, or proof summaries.
 
 `npm run test:public-allowlist` runs the hard-payload gate, the submodule
-payload scan, and the public-primary migration/hash inventory. Keep
+payload scan, and the public-primary migration/hash inventory for the current
+public checkout. That public gate can run without the archived private checkout;
+maintainer private-parity proof must run
+`py -3 tools\public_primary_migration_inventory.py --check --private-root C:\Users\david\source\Onslaught-Career-Editor-private --require-private-root`.
+Keep
 `npm run test:public-submodule-payload-safety` available as a focused diagnostic
 when a submodule boundary changes.
 

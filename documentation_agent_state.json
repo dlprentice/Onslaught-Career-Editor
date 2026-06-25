@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-24",
-  "currentFocus": "v1.0.3 public release is published; public-primary docs now point at the live release and validated ZIP baseline.",
+  "currentFocus": "Post-release public-primary audit completed and authorized for commit/push; docs/state/accounting describe v1.0.3 as published and public repo as primary, with local ignored overlays for hard payloads.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -12,13 +12,13 @@
     "releaseReadinessNote": "release/readiness/winui_zip_release_v1_0_3_2026-06-24.md"
   },
   "publicPrimaryMigration": {
-    "status": "public_primary_with_local_ignored_overlays_release_closeout_pending",
+    "status": "validated_public_primary_with_maintainer_local_ignored_overlays",
     "publicPrimary": "public repo is primary day-to-day working repo, not a sparse export",
     "trackedMaterial": "source, tools, tests, RE docs, wave notes, state batons, agent reports, readiness notes, compact proof summaries, useful non-secret/non-payload text scratch exports",
     "localOnly": "actual game/runtime payloads, local-rom-input payloads, arbitrary saves/options payloads, full Ghidra databases/backups, secrets, build outputs, screenshots/frame dumps, raw CDB logs, bulky generated captures",
-    "localOverlayStatus": "game/ now contains a copied Battle Engine Aquila install mirror plus local extras; public game/savegames has 10 files including all 9 installed saves plus the private-only test save, and public save-attempts matches the former private checkout at 24 files / 240096 bytes. local-rom-input/ and mcps/ were moved from the former private checkout; local-proofs/OnslaughtRuntimeProofArchive and local-ghidra/GhidraBackups are ignored junctions to G: archives.",
+    "localOverlayStatus": "maintainer-local ignored overlays contain the copied game mirror/local extras, save-attempts payloads, local-rom-input, mcps, and G: junctions for runtime proof/Ghidra backups; those overlays are useful locally but not GitHub-tracked source.",
     "localStorageCleanup": "C:\\Users\\david\\source\\Onslaught-Career-Editor-public-candidate* scratch clones were moved to G:\\OnslaughtRepoArchives\\source-scratch-20260624 with move-manifest.json; zero public-candidate scratch dirs remain on C:.",
-    "currentInventory": "24839 private tracked paths, 19304 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths",
+    "currentInventory": "24839 private tracked paths, 19304 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths; explicit maintainer parity command uses --private-root and --require-private-root.",
     "wordingFixes": [
       "AGENTS.md and roadmap/repo-structure-and-archive-map.md now point to release/readiness/PUBLIC_SIGNOFF_COMMANDS.md.",
       "roadmap/public-primary-working-repo.md now uses the current 19304 public tracked-path count.",
@@ -26,7 +26,7 @@
     ]
   },
   "musicRejectionDiagnostic": {
-    "status": "decode_window_diagnostic_recorded_pending_final_gates",
+    "status": "recorded_validated",
     "readinessNote": "release/readiness/winui_music_capture_source_correlation_rejected_replay_2026-06-24.md",
     "schemas": [
       "winui-safe-copy-music-capture-source-correlation-rejection.v1",
@@ -39,29 +39,37 @@
   },
   "validation": {
     "latestPassed": [
-      "dotnet test AppCore focused AppConfig/Media/Lore tests",
-      "py -3 tools\\winui_zip_package_probe_test.py",
-      "dotnet test UiTests AssetLibrary smoke",
-      "py -3 -B tools\\public_allowlist_safety_check.py --self-test",
-      "dotnet build .\\OnslaughtCareerEditor.WinUI.slnx --nologo",
-      "npm run test:winui-zip-release-candidate-probe",
-      "npm run test:public-allowlist",
+      "npm run build:winui (0 warnings, 0 errors)",
+      "npm run build:cli (0 warnings, 0 errors)",
+      "npm run build:host (0 warnings, 0 errors)",
+      "npm run test:appcore (1171 passed, 0 failed, 0 skipped)",
+      "npm run test:winui (85 passed, 0 failed, 2 conditional Asset Library skips)",
+      "npm run test:winui-primary-lane (solution build + AppCore + WinUI tests passed)",
+      "npm run test:winui-safe-copy-preflight (30 AppCore + 6 WinUI + 8 helper tests passed)",
+      "npm run test:winui-patch-engine-safety (32 UI tests + legacy patch safety + 29-row catalog accounting passed)",
+      "dotnet run --project .\\OnslaughtCareerEditor.Cli\\OnslaughtCareerEditor.Cli.csproj -- --help (exit 0)",
       "python tools\\docsync_check.py",
       "npm run test:doc-commands",
       "npm run test:md-links",
-      "npm run release:profile-check (R0=6121 R2=0 R3=3 R4=13175)",
+      "npm run release:profile-check (R0=6124 R2=0 R3=3 R4=13177)",
       "npm run release:curated-check (selected files 625)",
       "npm run test:repo-hygiene",
-      "npm run test:winui-notices"
+      "npm run test:public-allowlist",
+      "npm run test:winui-notices",
+      "state JSON parse",
+      "git diff --check",
+      "no BEA.exe/cdb.exe process check"
     ],
     "pendingForActiveSlice": [
-      "post-publication state commit/push"
+      "commit/push explicitly authorized by user on 2026-06-24; cleanup is being published to origin/main",
+      "next-release follow-up: classify or sanitize bundled lore-book local backup path markers such as G:\\GhidraBackups",
+      "next product follow-up: improve Asset Library first-run catalog guidance and hide Windowed & Mods proof jargon behind details surfaces"
     ]
   },
   "nextSteps": [
-    "Push post-publication state/docs update.",
-    "Keep public docs clear: source/docs/tools/RE proof summaries are public-primary, hard payloads are local ignored overlays.",
-    "Continue app/repo contributor-readiness work from public main."
+    "Push the validated post-release audit cleanup to origin/main.",
+    "Next docs follow-up: classify or sanitize bundled lore-book local backup path markers before a future ZIP.",
+    "Next UI docs/product follow-up: clarify Asset Library first-run catalog generation and move normal-path proof jargon behind details."
   ],
   "winuiReleaseCandidate": {
     "status": "published",
@@ -87,7 +95,7 @@
     ]
   },
   "releaseAccounting": {
-    "releaseProfile": "R0=6121 R2=0 R3=3 R4=13175",
+    "releaseProfile": "R0=6124 R2=0 R3=3 R4=13177",
     "curatedSelectedFiles": 625,
     "publicCandidateFiles": 19304,
     "publicSubmoduleCandidateFiles": 19488
@@ -101,5 +109,28 @@
     "sha256": "406f34bdac0f1a39939e57eba9dab1dc37a889d780c9392470f9dc19a77c4044",
     "byteSize": 249834185,
     "tagCommit": "4adc6152b76ad53fe5124c9dcf7c612f5e201f0b"
+  },
+  "currentCounters": {
+    "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
+    "catalogRows": "29/29 target specimen identity and policy metadata rows"
+  },
+  "postReleaseAudit": {
+    "status": "completed_with_no_release_takedown_blocker_found",
+    "consultedAgents": 10,
+    "consultScope": "migration parity, adversarial private/public boundary, release assets, payload/security, stale docs/state, onboarding, validation evidence, first-run WinUI UX, product adversarial review",
+    "acceptedTruth": [
+      "v1.0.3 GitHub release is published and latest with the friendly wrapped ZIP asset",
+      "public repo is the primary day-to-day collaboration repo for project-owned source/docs/tools/tests/RE notes/proof summaries/state",
+      "maintainer private-parity inventory passes when run with explicit private root and require-private-root",
+      "remaining private-only tracked delta is accepted hard-payload/scratch-payload material, not missing project source/docs/tools/tests",
+      "tracked public tree has no hard-payload or secret leak according to current gates"
+    ],
+    "nonBlockingFollowups": [
+      "private repo still has active-looking goal/state wording and should eventually be frozen or bannered as archived if kept",
+      "release lore-book contains local backup path provenance markers; not a payload/secret blocker, but should be classified or sanitized before the next ZIP",
+      "Asset Library needs a clearer first-run path for generating/finding a local asset catalog",
+      "Windowed & Mods should move proof jargon/offset/evidence language further behind details/maintainer surfaces",
+      "dynamic patch row controls should get stable AutomationIds derived from patch keys"
+    ]
   }
 }

@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-24",
-  "currentFocus": "No new Ghidra/static mutation; v1.0.3 public release is published and runtime/product work can resume from public main.",
+  "currentFocus": "No Ghidra/static mutation; post-release public-primary audit completed and authorized for commit/push before runtime/product work resumes.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -10,10 +10,10 @@
     "latestGhidraReviewBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
   },
   "publicPrimaryMigration": {
-    "status": "public_primary_release_closeout_pending",
+    "status": "validated_public_primary_with_maintainer_local_ignored_overlays",
     "commit": "c58d06420e482421355d1e40f240db7d87e289d3",
-    "impact": "RE docs, scratch text exports, wave notes, function indexes, static maps, and proof summaries are now tracked in the public-primary repo; no Ghidra project DB, executable bytes, or new Ghidra mutation was added.",
-    "currentRefreshPointer": "See developer_agent_state.json and documentation_agent_state.json for v1.0.3 release/package closeout, local overlay, and public-primary docs status."
+    "impact": "Public repo is primary for RE docs, wave notes, scratch text exports, function indexes, static maps, proof summaries, and checkers; hard payloads, full Ghidra DBs/backups, raw captures, and copied executables remain ignored local overlays.",
+    "currentRefreshPointer": "See developer_agent_state.json and documentation_agent_state.json for v1.0.3 release, post-release audit, validation, local overlay, and non-blocking follow-up status."
   },
   "runtimeProofBoundary": {
     "musicAudibleOutputProof": "runtimeAudibleOutputProof=false",
@@ -35,8 +35,31 @@
     }
   },
   "nextSteps": [
-    "Push post-publication state/docs update on public main.",
-    "After release baseline is clean, continue bounded patch/mod/runtime proof work from public repo.",
+    "Push the validated post-release audit cleanup to origin/main.",
+    "Resume bounded patch/mod/runtime proof work from the public repo after the release baseline cleanup is durable.",
     "If a future static contradiction appears, stop runtime/product work and correct Ghidra/static docs with normal dry/apply/read-back/backup gates."
-  ]
+  ],
+  "currentCounters": {
+    "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
+    "catalogRows": "29/29 target specimen identity and policy metadata rows"
+  },
+  "postReleaseAudit": {
+    "status": "completed_with_no_release_takedown_blocker_found",
+    "consultedAgents": 10,
+    "consultScope": "migration parity, adversarial private/public boundary, release assets, payload/security, stale docs/state, onboarding, validation evidence, first-run WinUI UX, product adversarial review",
+    "acceptedTruth": [
+      "v1.0.3 GitHub release is published and latest with the friendly wrapped ZIP asset",
+      "public repo is the primary day-to-day collaboration repo for project-owned source/docs/tools/tests/RE notes/proof summaries/state",
+      "maintainer private-parity inventory passes when run with explicit private root and require-private-root",
+      "remaining private-only tracked delta is accepted hard-payload/scratch-payload material, not missing project source/docs/tools/tests",
+      "tracked public tree has no hard-payload or secret leak according to current gates"
+    ],
+    "nonBlockingFollowups": [
+      "private repo still has active-looking goal/state wording and should eventually be frozen or bannered as archived if kept",
+      "release lore-book contains local backup path provenance markers; not a payload/secret blocker, but should be classified or sanitized before the next ZIP",
+      "Asset Library needs a clearer first-run path for generating/finding a local asset catalog",
+      "Windowed & Mods should move proof jargon/offset/evidence language further behind details/maintainer surfaces",
+      "dynamic patch row controls should get stable AutomationIds derived from patch keys"
+    ]
+  }
 }

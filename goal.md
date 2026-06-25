@@ -32,10 +32,10 @@ contributor work.
 - `local-proofs/OnslaughtRuntimeProofArchive` and
   `local-ghidra/GhidraBackups` are ignored junctions to `G:` archives rather
   than duplicated on `C:`.
-- The public app release target is `v1.0.3`. The candidate ZIP must use the
-  friendly wrapper layout, include offline `lore-book/`, auto-detect common
-  Steam installs where possible, and make Asset Library catalog requirements
-  clear instead of implying raw game browsing.
+- The public app release `v1.0.3` is published. The ZIP uses the friendly
+  wrapper layout, includes offline `lore-book/`, auto-detects common Steam
+  installs where possible, and makes Asset Library catalog requirements clear
+  instead of implying raw game browsing.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof both exist.
@@ -48,7 +48,7 @@ These are normal public source/release checks:
 ```powershell
 git submodule update --init --recursive
 node --version # v24.x
-npm --version  # 11.12.x
+npm --version  # >=11.12 <12; npm@11.12.1 is the packageManager target
 npm run test:hard-payload-safety
 npm install
 npm run build:winui
@@ -82,8 +82,7 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Record the v1.0.3 GitHub release publication in state/docs.
-2. Continue bounded patch/mod/runtime proof work from public `main` after the
+1. Continue bounded patch/mod/runtime proof work from public `main` after the
    release baseline is clean.
 
 ## Stop Conditions

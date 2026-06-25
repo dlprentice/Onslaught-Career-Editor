@@ -65,7 +65,7 @@ From repo root:
 ```powershell
 git submodule update --init --recursive
 node --version # must be v24.x
-npm --version  # must be 11.12.x
+npm --version  # must satisfy >=11.12 <12; npm@11.12.1 is the packageManager target
 npm run test:hard-payload-safety
 npm install
 dotnet build .\OnslaughtCareerEditor.WinUI.slnx --nologo
