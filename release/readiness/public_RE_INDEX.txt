@@ -3,10 +3,13 @@
 Status: public-safe overview
 Last updated: 2026-06-22
 
-This public index summarizes the reverse-engineering material that is suitable
-for normal source collaboration. The private maintainer tree contains much
-deeper Ghidra wave notes, proof sidecars, runtime evidence, and local backup
-records; those are intentionally not part of the public candidate by default.
+This package/export index summarizes reverse-engineering material that is useful
+for normal source collaboration from the public-primary repo. Project-owned RE
+notes, wave notes, proof summaries, readiness notes, and state batons belong in
+public source when they are useful and do not embed hard payloads. Full Ghidra
+databases/backups, raw runtime captures, raw CDB logs, screenshots/frame dumps,
+copied executables, source game payloads, secrets, and bulky generated proof
+outputs remain local ignored overlays.
 
 ## What Is Public Here
 

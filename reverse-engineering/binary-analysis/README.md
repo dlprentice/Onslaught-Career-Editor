@@ -21,12 +21,12 @@ This folder contains documentation from analyzing the `BEA.exe` executable using
 
 If your BEA.exe has a different hash, it may be modified or from a different release.
 
-### Other binaries in this repo (reference/diff targets)
+### Local binary overlays (reference/diff targets)
 
 | File | Purpose | Notes |
 |------|---------|-------|
-| `BEA_Widescreen.exe` | Community widescreen patch | Used as a diff target for widescreen attribution; not the canonical base binary for retail hash analysis. |
-| `BEA.exe.gzf` | Ghidra packed database | **Not** an executable (Ghidra cache artifact). |
+| `BEA_Widescreen.exe` | Community widescreen patch | Local ignored overlay used as a diff target for widescreen attribution; not the canonical base binary for retail hash analysis. |
+| `BEA.exe.gzf` | Ghidra packed database | Local ignored overlay. **Not** an executable (Ghidra cache artifact). |
 
 ## Documents
 
@@ -96,8 +96,8 @@ These numbers are archived milestone values and are not current coverage totals.
 
 - [../source-code/](../source-code/) - Stuart's source code (reference for naming)
 - [CURRENT_CAPABILITIES.md](/CURRENT_CAPABILITIES.md) - Current app surface and supported workflows
-- Internal mutation/runbook notes are intentionally kept out of curated public-release artifacts.
-- [../game-assets/game-folder-analysis.md](../game-assets/game-folder-analysis.md) - Game installation layout (**private branch only**)
+- Internal mutation/runbook notes may be tracked public source when they are useful and do not embed hard payloads or secrets.
+- [../game-assets/game-folder-analysis.md](../game-assets/game-folder-analysis.md) - Game installation layout and local overlay boundary
 
 ---
 

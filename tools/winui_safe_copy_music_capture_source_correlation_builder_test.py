@@ -123,6 +123,43 @@ class MusicCaptureSourceCorrelationBuilderTests(unittest.TestCase):
             self.assertIn("margin=", str(raised.exception))
             self.assertIn("minimum=", str(raised.exception))
 
+    def test_writes_sanitized_rejection_diagnostic_for_wrong_staged_preference(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = self.build_fixture(Path(temp_dir))
+            paths["allowed_output_root"].mkdir(parents=True)
+            paths["source_root"].mkdir(parents=True)
+            diagnostic = paths["allowed_output_root"] / "capture-source-correlation-rejection.json"
+
+            with self.assertRaises(builder.CaptureSourceCorrelationBuilderError):
+                builder.build_adapter_from_vectors(
+                    clean_audio=paths["clean_audio"],
+                    staged_audio=paths["staged_audio"],
+                    output=paths["output"],
+                    allowed_output_root=paths["allowed_output_root"],
+                    source_root=paths["source_root"],
+                    source_target_vector=[1.0, 0.0, 0.0, 0.0],
+                    source_replacement_vector=[0.0, 1.0, 0.0, 0.0],
+                    clean_capture_vector=[0.95, 0.05, 0.0, 0.0],
+                    staged_capture_vector=[0.95, 0.05, 0.0, 0.0],
+                    rejection_diagnostic_output=diagnostic,
+                )
+
+            self.assertFalse(paths["output"].exists())
+            payload = json.loads(diagnostic.read_text(encoding="utf-8"))
+            summary = checker.validate_rejection_diagnostic(payload)
+            self.assertEqual(builder.REJECTION_SCHEMA, payload["schemaVersion"])
+            self.assertEqual("rejected", payload["status"])
+            self.assertEqual("staged-positive-source-correlation-margin-too-weak", payload["rejectionReason"])
+            self.assertEqual("staged-positive-source-correlation-margin-too-weak", summary["rejectionReason"])
+            self.assertFalse(payload["runtimeAudibleOutputProof"])
+            self.assertEqual("BEA_04(Master).ogg", payload["sourceAudioCorrelationDiagnostics"]["stagedPositiveBestMatch"])
+            self.assertLess(payload["sourceAudioCorrelationDiagnostics"]["stagedPositiveMargin"], payload["sourceAudioCorrelationDiagnostics"]["minimumAcceptedMargin"])
+            rendered = json.dumps(payload)
+            self.assertNotIn(str(paths["source_root"]), rendered)
+            self.assertNotIn("outputWav", rendered)
+            self.assertNotIn("samples", rendered)
+            self.assertNotIn("sourceTargetVector", rendered)
+
     def test_rejects_weak_margin(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             paths = self.build_fixture(Path(temp_dir))

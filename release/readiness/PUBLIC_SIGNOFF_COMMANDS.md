@@ -15,11 +15,14 @@ separate maintainer actions.
 
 ## Start
 
-Prerequisites: Windows 10/11, .NET 10 SDK, Node/npm, and Python 3 available
-through the Windows `py` launcher.
+Prerequisites: Windows 10/11, .NET 10 SDK, Node.js 24.x, npm 11.12.x, and
+Python 3 available through the Windows `py` launcher.
 
 ```powershell
 cd <repo-root>
+git submodule update --init --recursive
+node --version # must be v24.x
+npm --version  # must be 11.12.x
 ```
 
 For a fresh checkout, install dependencies after checking the hard-payload
@@ -29,6 +32,21 @@ boundary if the change touches repo shape or release payload rules:
 npm run test:hard-payload-safety
 npm install
 ```
+
+## App Release Candidate Gate
+
+Run this before publishing a downloadable WinUI ZIP release:
+
+```powershell
+npm run test:winui-zip-release-candidate-probe
+```
+
+This builds the exact portable ZIP candidate, verifies the friendly top-level
+layout, rejects raw-root DLL/EXE layouts and hard payloads, checks bundled
+`lore-book/BOOK.md`, extracts the ZIP, runs launch smoke, runs Home navigation
+smoke, runs extracted-package Lore reader smoke, and runs representative Media
+smoke when a local game install is available. A green source tree is not enough
+for app release publication without this package gate.
 
 ## Product Source Gates
 
@@ -65,6 +83,11 @@ Those reports are validation artifacts, not app release payload.
 expected to reject actual game/runtime binaries, local game payload roots, build
 outputs, `.env` files, and credential-like key material. It is not supposed to
 hide normal RE notes, state batons, agent reports, or proof summaries.
+
+`npm run test:public-allowlist` runs the hard-payload gate, the submodule
+payload scan, and the public-primary migration/hash inventory. Keep
+`npm run test:public-submodule-payload-safety` available as a focused diagnostic
+when a submodule boundary changes.
 
 ## Not Public Gates
 

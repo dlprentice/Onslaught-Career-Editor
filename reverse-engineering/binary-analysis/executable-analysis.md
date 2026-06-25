@@ -70,6 +70,6 @@
 ```
 Stuart's response: *"Sounded like a bad day in the office for someone. Could of been me."*
 
-**Source file debug paths**: Public candidates summarize source/path findings through `reverse-engineering/public-static-contracts.md` and `reverse-engineering/quick-reference/_index.md`. Private maintainer indexes carry the full string-location/source-inventory tables and are excluded from public candidates.
+**Source file debug paths**: Public-primary source carries source/path findings through `reverse-engineering/public-static-contracts.md`, `reverse-engineering/quick-reference/_index.md`, and the tracked binary-analysis indexes when useful. Full Ghidra databases/backups, raw payloads, and bulky generated proof captures remain local ignored overlays.
 
 **PC Version History**: Original 2003 Windows release was bundled with Nvidia cards (date 26/5/03 found in file). The Steam version is a later retail build (console-port lineage) and differs from Stuart's internal PC dev snapshot; the exact lineage between console/retail variants is not fully proven yet.

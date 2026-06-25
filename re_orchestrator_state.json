@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-24",
-  "currentFocus": "No new Ghidra/static mutation; public-primary repo now carries the static RE docs and proof summaries, while current work is runtime music proof cleanup hardening.",
+  "currentFocus": "No new Ghidra/static mutation; v1.0.3 public release closeout is through broad validation and awaits final diff/process checks plus GitHub publication.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -10,9 +10,10 @@
     "latestGhidraReviewBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
   },
   "publicPrimaryMigration": {
-    "status": "committed-and-pushed",
+    "status": "public_primary_release_closeout_pending",
     "commit": "c58d06420e482421355d1e40f240db7d87e289d3",
-    "impact": "RE docs, scratch text exports, wave notes, function indexes, static maps, and proof summaries are now tracked in the public-primary repo; no Ghidra project DB, executable bytes, or new Ghidra mutation was added."
+    "impact": "RE docs, scratch text exports, wave notes, function indexes, static maps, and proof summaries are now tracked in the public-primary repo; no Ghidra project DB, executable bytes, or new Ghidra mutation was added.",
+    "currentRefreshPointer": "See developer_agent_state.json and documentation_agent_state.json for v1.0.3 release/package closeout, local overlay, and public-primary docs status."
   },
   "runtimeProofBoundary": {
     "musicAudibleOutputProof": "runtimeAudibleOutputProof=false",
@@ -22,11 +23,18 @@
       "music-audible-live-20260624-160116 timed out after early exact-PID CDB attach and required manual cleanup before parent cleanup hardening",
       "music-audible-live-20260624-161657 failed timestamped CDB acceptance because CGame__PlayMusicForCurrentLevel level=100 was absent; no BEA/CDB remained"
     ],
-    "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable"
+    "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable",
+    "latestWinuiReleaseCandidate": {
+      "version": "v1.0.3",
+      "status": "broad_validation_green_pending_final_closeout",
+      "sha256": "406f34bdac0f1a39939e57eba9dab1dc37a889d780c9392470f9dc19a77c4044",
+      "byteSize": 249834185,
+      "readinessNote": "release/readiness/winui_zip_release_v1_0_3_2026-06-24.md"
+    }
   },
   "nextSteps": [
-    "Investigate why the early CDB observer sees lower-level music/decode rows but not CGame__PlayMusicForCurrentLevel level=100.",
-    "If a future static contradiction appears, stop runtime/product work and correct Ghidra/static docs with normal dry/apply/read-back/backup gates.",
-    "Use G:\\GhidraBackups for any future backup-producing Ghidra wave while G: is attached."
+    "Finish v1.0.3 broad release validation and GitHub publication from public main.",
+    "After release baseline is clean, continue bounded patch/mod/runtime proof work from public repo.",
+    "If a future static contradiction appears, stop runtime/product work and correct Ghidra/static docs with normal dry/apply/read-back/backup gates."
   ]
 }

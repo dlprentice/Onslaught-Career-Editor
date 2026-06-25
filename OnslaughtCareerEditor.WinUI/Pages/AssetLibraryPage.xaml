@@ -18,7 +18,7 @@
                     Spacing="6">
             <TextBlock Text="Asset Library"
                        Style="{StaticResource SectionTitleTextStyle}" />
-            <TextBlock Text="Open a generated local asset catalog to browse extracted textures and meshes without bundling private game files."
+            <TextBlock Text="Open a generated local asset catalog to browse extracted textures and meshes."
                        Style="{StaticResource SectionBodyTextStyle}" />
         </StackPanel>
 
@@ -43,7 +43,7 @@
                     <TextBlock x:Name="CatalogStatusTextBlock"
                                AutomationProperties.AutomationId="AssetCatalogStatus"
                                Style="{StaticResource SectionBodyTextStyle}"
-                               Text="No catalog loaded yet. Generate one with the asset export tool, then choose the catalog folder here." />
+                               Text="No generated asset catalog loaded. Choose a folder containing asset_catalog/catalog.json or catalog.json." />
                 </StackPanel>
                 <StackPanel Grid.Column="1"
                             Orientation="Horizontal"

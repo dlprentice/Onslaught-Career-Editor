@@ -74,7 +74,7 @@ are updated.
 | `archive/historical-docs/USER_SANITY_CHECK.md` | Deprecated C#/WPF sanity checklist | Tracked historical docs | Archived after reference checks; use WinUI/AppCore `dotnet build` / `dotnet test` and `npm run test:winui-primary-lane` in active docs instead. Optional `npm run archive:electron:build` applies only when archived workbench health is deliberately in scope. |
 | `archive/historical-docs/winui-migration-plan.md` | Superseded WinUI migration record | Tracked historical docs | Archived after reference checks; active roadmap index points readers to the three-lane strategy instead. |
 | `wave_online_audit/`, `wave_online_audit2/` | Historical audit notes | Tracked if text/non-payload | Useful for audit provenance; raw runtime payloads still stay local. |
-| `.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md` | Documentation-only collaboration templates | Included where public-safe | Allowed public candidate issue/PR templates. Do not add workflows, hosted CI, release automation, or Actions scaffolding. |
+| `.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md` | Documentation-only collaboration templates | Included where public-safe | Allowed public-primary collaboration templates. Do not add workflows, hosted CI, release automation, or Actions scaffolding. |
 
 ## Private Local/Runtime-Only Surfaces
 
@@ -99,8 +99,8 @@ are updated.
 | `documentation_agent_state.json` | Repo docs/review state | Tracked state baton | Main-agent handoff state. Keep concise and non-secret. |
 | `re_orchestrator_state.json` | RE orchestration state | Tracked state baton when active | RE coordination state. Keep concise and non-secret. |
 | `AGENTS.md` | Public-primary contributor agent guide | Tracked root guide | Required for public repo operation. |
-| `COLLABORATION.md` | Public-safe collaboration guide | Included | Handoff/PR/review expectations for private approved collaborators and public candidates. |
-| `CONTRIBUTING.md`, `SECURITY.md`, `README.RELEASE.md`, `PUBLIC_SIGNOFF_COMMANDS.md` | Public-safe contributor/release guides | Included where public-safe | Local validation, private-data reporting, and public-source sign-off guidance. |
+| `COLLABORATION.md` | Public-safe collaboration guide | Included | Handoff/PR/review expectations for collaborators working from the public-primary repo. |
+| `CONTRIBUTING.md`, `SECURITY.md`, `README.RELEASE.md`, `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md` | Public-safe contributor/release guides | Included where public-safe | Local validation, private-data reporting, and public-source sign-off guidance. |
 | `CURRENT_CAPABILITIES.md` | Public-primary capability summary | Tracked public source | Current capability surface for contributors and users; raw local proof payload paths and generated runtime evidence remain excluded. |
 
 ## Move Decisions
@@ -122,15 +122,18 @@ Prompt 8 moved no files. The 2026-05-05 WinUI consolidation pass then archived t
 
 ## Current Hard-Payload Excludes To Preserve
 
-The public source repo can carry source/docs/tools/history broadly. Git and app
-ZIP releases must continue to exclude hard payloads:
+The public source repo can carry source/docs/tools/history broadly. Git must
+exclude hard payloads, while app ZIP releases additionally exclude
+package-irrelevant project-history/accounting surfaces:
 
 - `game/**`
 - `media/**`
 - `save-attempts/**`
 - `subagents/md-link-check/**` and any generated/raw proof payload below
   `subagents/**`
-- `.codex/**`
+- runtime `.codex` cache/session/auth/log material; compact non-secret
+  `.codex/goals/**` and `.codex/state/**` markdown may be tracked in source
+  when useful, but app ZIPs and legacy exports omit them
 - `release/artifacts/**`
 - `release/out/**`
 - full Ghidra project databases/backups

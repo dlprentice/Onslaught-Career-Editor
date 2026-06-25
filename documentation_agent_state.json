@@ -1,79 +1,99 @@
 {
   "lastUpdated": "2026-06-24",
-  "currentFocus": "Public-primary full migration/readiness docs and checks are active; music audible-output timestamp normalization is closed and pushed.",
+  "currentFocus": "v1.0.3 public release docs/state closeout; release note, capabilities, contributor setup, local overlay guidance, and package probes are green through broad validation.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
     "agentGuide": "AGENTS.md",
     "contributorGuide": "CONTRIBUTING.md",
     "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
-    "migrationPlan": "roadmap/public-primary-working-repo.md",
-    "migrationReadinessNote": "release/readiness/public_primary_full_migration_inventory_2026-06-24.md"
+    "releaseGuide": "README.RELEASE.md",
+    "releaseSignoff": "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
+    "releaseReadinessNote": "release/readiness/winui_zip_release_v1_0_3_2026-06-24.md"
   },
   "publicPrimaryMigration": {
-    "status": "closed_validated_pushed_before_current_full_migration_readiness_slice",
-    "latestBoundaryHardeningCommit": "e10db436",
+    "status": "public_primary_with_local_ignored_overlays_release_closeout_pending",
     "publicPrimary": "public repo is primary day-to-day working repo, not a sparse export",
-    "trackedMaterial": "source, tools, tests, RE docs, wave notes, state batons, agent reports, readiness notes, compact proof summaries, useful text scratch exports",
-    "localOnly": "actual game/runtime payloads, arbitrary saves/options payloads, full Ghidra databases/backups, secrets, build outputs, screenshots/frame dumps, raw CDB logs, bulky generated captures",
-    "currentInventory": "24839 private tracked paths, 19295 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths",
-    "scratchHardening": "27 private-only .c/.tsv RE scratch exports were promoted; missing private RE scratch text now fails the migration inventory",
-    "wordingHardening": "active status/strategy/roadmap/register/readiness docs now describe the public repo as public-primary source instead of a sparse public candidate or private-tree export",
-    "releaseAccountingClarification": "R4_DENY now means excluded from portable app ZIPs and legacy curated export payloads; compact non-secret .codex/state/subagent/proof-summary text may be tracked in public source"
-  },
-  "musicDiagnosticDocs": {
-    "readinessNote": "release/readiness/winui_music_cgame_caller_diagnostic_2026-06-24.md",
-    "executorNote": "release/readiness/winui_music_audible_output_live_bundle_executor_2026-06-24.md",
-    "staticRuntimeDoc": "reverse-engineering/binary-analysis/functions/game.cpp/CGame__RestartLoopRunLevel.md",
-    "classification": "restart-loop-direct-level100-music-selection-observed",
-    "runtimeAudibleOutputProof": false,
-    "claimBoundary": "direct CGame restart-loop selection provenance is not audible-output proof",
-    "latestLiveAttemptNotes": [
-      "181120 attempt failed before proof acceptance due missing --source-root in source-safety sidecar command; executor command and regression test fixed",
-      "181538 attempt reached CDB music-selection provenance but failed capture-source correlation because 30-second WAV captures had zero samples; readiness note records calibration-tone evidence and new 60000ms live-audio guard",
-      "144834 replay reached capture-source correlation with non-silent 60-second clean/staged captures; +00:00 UTC sidecar parsing is fixed, but staged-positive source correlation still prefers BEA_04 over BEA_02 (margin=-0.161892; required 0.150000)"
+    "trackedMaterial": "source, tools, tests, RE docs, wave notes, state batons, agent reports, readiness notes, compact proof summaries, useful non-secret/non-payload text scratch exports",
+    "localOnly": "actual game/runtime payloads, local-rom-input payloads, arbitrary saves/options payloads, full Ghidra databases/backups, secrets, build outputs, screenshots/frame dumps, raw CDB logs, bulky generated captures",
+    "localOverlayStatus": "game/ now contains a copied Battle Engine Aquila install mirror plus local extras; public game/savegames has 10 files including all 9 installed saves plus the private-only test save, and public save-attempts matches the former private checkout at 24 files / 240096 bytes. local-rom-input/ and mcps/ were moved from the former private checkout; local-proofs/OnslaughtRuntimeProofArchive and local-ghidra/GhidraBackups are ignored junctions to G: archives.",
+    "localStorageCleanup": "C:\\Users\\david\\source\\Onslaught-Career-Editor-public-candidate* scratch clones were moved to G:\\OnslaughtRepoArchives\\source-scratch-20260624 with move-manifest.json; zero public-candidate scratch dirs remain on C:.",
+    "currentInventory": "24839 private tracked paths, 19304 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths",
+    "wordingFixes": [
+      "AGENTS.md and roadmap/repo-structure-and-archive-map.md now point to release/readiness/PUBLIC_SIGNOFF_COMMANDS.md.",
+      "roadmap/public-primary-working-repo.md now uses the current 19304 public tracked-path count.",
+      "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md now says test:public-allowlist runs hard-payload safety, submodule payload safety, and public-primary migration/hash inventory."
     ]
+  },
+  "musicRejectionDiagnostic": {
+    "status": "decode_window_diagnostic_recorded_pending_final_gates",
+    "readinessNote": "release/readiness/winui_music_capture_source_correlation_rejected_replay_2026-06-24.md",
+    "schemas": [
+      "winui-safe-copy-music-capture-source-correlation-rejection.v1",
+      "winui-safe-copy-music-rejected-replay-diagnostic.v1",
+      "winui-safe-copy-music-decode-window-correlation-diagnostic.v1"
+    ],
+    "claimBoundary": "not accepted capture-source correlation, not materializer input, not runtimeAudibleOutputProof, not raw audio/CDB/source-path publication",
+    "decodeWindowResult": "decodeWindowInsideRawAudioCapture=false; exact-PID CDB decode instants occur around 44-46s while raw WAV data spans about 11-12s, so analysis rows are capture-window-out-of-range and stagedReplacementPreferredInDecodeWindow=false means unavailable, not measured source preference.",
+    "nextDocsTruth": "next music work should fix capture data-span/duration/flush alignment before another materializer attempt."
   },
   "validation": {
     "latestPassed": [
-      "state JSON parse",
-      "git diff --check",
-      "npm run test:public-primary-migration-inventory",
-      "npm run test:hard-payload-safety",
-      "py -3 tools\\public_allowlist_safety_check.py --self-test",
-      "py -3 tools\\public_allowlist_safety_check.py",
-      "py -3 tools\\run_winui_safe_copy_music_audible_output_live_bundle_test.py -k live_attempt_audio_duration_rejects_short_capture_window",
-      "npm run test:winui-safe-copy-music-cgame-caller-diagnostic",
-      "npm run test:winui-safe-copy-music-cdb-timeline-sidecar",
-      "npm run test:winui-safe-copy-music-audible-output-contract",
-      "npm run test:winui-safe-copy-music-audible-output-materializer",
-      "npm run test:winui-safe-copy-music-audible-output-two-run-harness",
-      "npm run test:winui-safe-copy-music-audible-output-live-bundle-executor",
-      "npm run test:winui-safe-copy-music-timestamped-cdb-log-producer",
-      "npm run test:winui-safe-copy-music-source-music-safety-sidecar",
-      "npm run test:winui-safe-copy-music-ambient-no-bea-census",
-      "npm run test:winui-safe-copy-music-source-audio-correlation",
-      "npm run test:winui-safe-copy-music-capture-source-correlation",
-      "npm run test:winui-safe-copy-music-capture-source-correlation-builder",
-      "npm run test:winui-safe-copy-music-audible-output-live-bundle-gate",
-      "private replay: capture-source correlation builder on music-audible-live-20260624-144834 now reaches staged-positive source-correlation failure instead of timestamp rejection",
+      "dotnet test AppCore focused AppConfig/Media/Lore tests",
+      "py -3 tools\\winui_zip_package_probe_test.py",
+      "dotnet test UiTests AssetLibrary smoke",
+      "py -3 -B tools\\public_allowlist_safety_check.py --self-test",
+      "dotnet build .\\OnslaughtCareerEditor.WinUI.slnx --nologo",
+      "npm run test:winui-zip-release-candidate-probe",
+      "npm run test:public-allowlist",
       "python tools\\docsync_check.py",
-      "py -3 tools\\release_profile_snapshot.py --check (R0=6117 R2=0 R3=3 R4=13175)",
-      "py -3 tools\\release_curated_manifest.py --check (selected files 625)",
       "npm run test:doc-commands",
       "npm run test:md-links",
+      "npm run release:profile-check (R0=6121 R2=0 R3=3 R4=13175)",
+      "npm run release:curated-check (selected files 625)",
       "npm run test:repo-hygiene",
-      "no BEA.exe/cdb.exe process before closeout"
+      "npm run test:winui-notices"
     ],
     "pendingForActiveSlice": [
-      "Codex migration/readiness consult synthesis",
-      "private-vs-public inventory review for remaining safe project material",
-      "public-primary docs/checker updates if inventory or consults find stale sparse-export wording"
+      "state JSON parse",
+      "git diff --check",
+      "process check",
+      "commit/push/tag/release"
     ]
   },
   "nextSteps": [
-    "Synthesize migration/readiness consults and update public-primary docs if they still imply a sparse candidate export.",
-    "Run inventory and promote any remaining safe private-only source/docs/tools/tests/RE/state/report/proof-summary material.",
-    "Validate, commit/push public-primary readiness, then resume runtime/mod/online proof work from public main."
-  ]
+    "Finish broad validation.",
+    "Commit/push public main.",
+    "Publish GitHub release v1.0.3 with validated ZIP/checksum and verify release URLs.",
+    "Keep public docs clear: source/docs/tools/RE proof summaries are public-primary, hard payloads are local ignored overlays."
+  ],
+  "winuiReleaseCandidate": {
+    "status": "broad_validation_green_pending_final_closeout",
+    "version": "v1.0.3",
+    "zip": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.3-win-x64.zip",
+    "byteSize": 249834185,
+    "sha256": "406f34bdac0f1a39939e57eba9dab1dc37a889d780c9392470f9dc19a77c4044",
+    "proven": [
+      "friendly top-level launcher/readme/license",
+      "app/ self-contained payload",
+      "bundled lore-book/BOOK.md",
+      "no root DLL/EXE layout",
+      "extracted launch/Home/Lore/Media smokes exit 0",
+      "skipped UI rows rejected",
+      "process cleanup passed"
+    ],
+    "nonClaims": [
+      "MSIX/AppInstaller/signing/Store/SmartScreen",
+      "game payload redistribution",
+      "player-ready online multiplayer",
+      "gameplay parity",
+      "clean-room rebuild parity"
+    ]
+  },
+  "releaseAccounting": {
+    "releaseProfile": "R0=6121 R2=0 R3=3 R4=13175",
+    "curatedSelectedFiles": 625,
+    "publicCandidateFiles": 19304,
+    "publicSubmoduleCandidateFiles": 19488
+  }
 }

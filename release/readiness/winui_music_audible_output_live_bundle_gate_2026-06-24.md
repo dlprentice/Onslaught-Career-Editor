@@ -52,6 +52,13 @@ adapter from explicit clean/staged audio JSON/WAV artifacts plus read-only
 source music references. The actual capture-correlation sidecar is still
 required in a future private live bundle.
 
+The armed private live-bundle executor now also passes
+`--rejection-diagnostic-output` to the capture-source builder, writing a local
+`capture-source-correlation-rejection.json` sidecar when post-threshold
+source/capture margin checks fail. That rejected sidecar is guarded by the
+checker with `--rejection-diagnostic`; it is local failure triage only and is
+not accepted capture correlation, materializer input, or audible-output proof.
+
 The armed private executor for producing a future live raw bundle is tracked in
 `tools/run_winui_safe_copy_music_audible_output_live_bundle.py` and guarded by
 `test:winui-safe-copy-music-audible-output-live-bundle-executor`. It is not run

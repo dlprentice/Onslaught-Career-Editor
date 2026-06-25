@@ -74,7 +74,7 @@ Accepted inventory:
 | Measure | Count |
 | --- | ---: |
 | Former private tracked paths | 24,839 |
-| Public tracked paths after this migration pass | 19,294 |
+| Public tracked paths after this migration pass | 19,304 |
 | Accepted private-only hard-payload/scratch paths | 5,557 |
 
 This pass restored the reference submodule gitlinks, two archived Electron media

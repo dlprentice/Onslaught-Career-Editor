@@ -23,7 +23,7 @@ Accepted output:
 ```text
 Public-primary migration inventory: PASS
 Private tracked paths: 24839
-Public tracked paths: 19294
+Public tracked paths: 19304
 Allowed private-only hard-payload/scratch paths: 5557
 ```
 
@@ -49,6 +49,9 @@ Allowed private-only hard-payload/scratch paths: 5557
 - Tightened the migration guard so private-only RE scratch text is not silently
   allowed; only payload-like scratch outputs such as `.png`, `.fbx`, and `.bes`
   remain accepted private-only scratch classes.
+- Tightened the mirrored `lore-book/reverse-engineering/binary-analysis/scratch/**`
+  guard the same way, so mirrored text scratch exports cannot remain private by
+  accident.
 
 ## Remaining Private-Only Classes
 

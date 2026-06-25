@@ -181,6 +181,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="1.15*" />
                                 <ColumnDefinition Width="1.45*" />
+                                <ColumnDefinition Width="1.2*" />
                             </Grid.ColumnDefinitions>
 
                             <Border Grid.Column="0"

@@ -1,7 +1,7 @@
 {
   "name": "onslaught-toolkit-public-source",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "WinUI-first source validation scripts for Onslaught Toolkit.",
   "packageManager": "npm@11.12.1",
   "scripts": {

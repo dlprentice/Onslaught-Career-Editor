@@ -3,6 +3,13 @@
 Status: private/operator historical readiness checklist; excluded from public export when local proof roots are present
 Last updated: 2026-06-22
 
+> **Historical checklist:** This file is retained as a mutation/provenance
+> ledger. Do not use it as the current public-primary release signoff route.
+> Use `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md` and
+> `RELEASE_SCOPE_AND_TEST_COMMANDS.md` for current app/source release checks.
+> Body text below may still describe the old private workspace/public export
+> model.
+
 > **Ghidra/static queue truth (2026-06-19):** The loaded Steam retail function-quality queue is **6411/6411 = 100.00%** with `0 / 0 / 0` commentless / exact-undefined / `param_N` debt. Wave1220 static closeout acceptance validates active current-risk focused accounting at **1179/1179 = 100.00%** with remaining active focused work `0`. Body paragraphs below that cite older live-queue counts (for example `6049` functions, `6113/6113`, Wave900, or pre-Wave1220 percentages) are a **historical mutation ledger**, not current queue state. Use `reverse-engineering/binary-analysis/static-reaudit-measurement-register.md`, `roadmap/status-current.md`, and `CURRENT_CAPABILITIES.md` as the current front doors.
 
 This checklist prepares the private workspace for public-safety/export review. It does not publish by itself and is not itself public-safe when it contains local Ghidra backup-root evidence. WinUI 3 is the primary product lane. Electron, WPF, and the old Python GUI/CLI app are archived/reference.

@@ -29,6 +29,7 @@ import winui_safe_copy_music_capture_source_correlation_check as checker
 
 
 SCHEMA = "winui-safe-copy-music-capture-source-correlation.v1"
+REJECTION_SCHEMA = checker.REJECTION_SCHEMA
 ADAPTER_VERSION = "capture-source-correlation-helper.v1"
 ARM_PHRASE = "BUILD CAPTURE SOURCE CORRELATION"
 RUNNER_MARKER = ".onslaught-capture-source-correlation-runner"
@@ -214,6 +215,10 @@ def score_text(value: float) -> str:
     return f"{value:.6f}"
 
 
+def best_match(target_score: float, replacement_score: float) -> str:
+    return TARGET if target_score >= replacement_score else REPLACEMENT
+
+
 def validate_audio_inputs(clean_audio: Path, staged_audio: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     try:
         clean = materializer.validate_audio(clean_audio, "cleanBaseline", require_non_silent=True, timeline=None)
@@ -236,6 +241,7 @@ def build_adapter_from_vectors(
     clean_capture_vector: Iterable[float],
     staged_capture_vector: Iterable[float],
     allow_overwrite: bool = False,
+    rejection_diagnostic_output: Path | None = None,
 ) -> dict[str, Any]:
     validate_output_path(
         output=output,
@@ -244,6 +250,14 @@ def build_adapter_from_vectors(
         allow_overwrite=allow_overwrite,
     )
     clean_summary, staged_summary = validate_audio_inputs(clean_audio, staged_audio)
+    if rejection_diagnostic_output is not None:
+        require(rejection_diagnostic_output != output, "Rejection diagnostic output must differ from accepted adapter output.")
+        validate_output_path(
+            output=rejection_diagnostic_output,
+            allowed_output_root=allowed_output_root,
+            source_root=source_root,
+            allow_overwrite=allow_overwrite,
+        )
 
     target_vector = expand_to_windows(source_target_vector, label="source target")
     replacement_vector = expand_to_windows(source_replacement_vector, label="source replacement")
@@ -265,32 +279,91 @@ def build_adapter_from_vectors(
     staged_vs_replacement = cosine(staged_vector, replacement_vector)
     source_cross = cosine(target_vector, replacement_vector)
     source_margin = 1.0 - abs(source_cross)
-    require(
-        source_margin >= MIN_ACCEPTED_MARGIN,
-        (
-            "source target/replacement vectors are not distinct enough "
-            f"(margin={score_text(source_margin)} minimum={score_text(MIN_ACCEPTED_MARGIN)} cross={score_text(source_cross)})."
-        ),
-    )
-
     clean_margin = clean_vs_target - clean_vs_replacement
     staged_margin = staged_vs_replacement - staged_vs_target
-    require(
-        clean_margin >= MIN_ACCEPTED_MARGIN,
-        (
+
+    def write_rejection(reason: str, message: str) -> None:
+        if rejection_diagnostic_output is None:
+            return
+        diagnostic = {
+            "schemaVersion": REJECTION_SCHEMA,
+            "adapterVersion": ADAPTER_VERSION,
+            "generatedAt": utc_now_text(),
+            "status": "rejected",
+            "rejectionReason": reason,
+            "sanitizedError": sanitize_error_message(message),
+            "presetId": PRESET_ID,
+            "levelId": LEVEL_ID,
+            "target": TARGET,
+            "replacement": REPLACEMENT,
+            "runtimeAudibleOutputProof": False,
+            "inputBindings": {
+                "cleanAudioJsonSha256": clean_summary["_audioArtifactSha256"],
+                "cleanAudioWavSha256": clean_summary["_rawWavSha256"],
+                "stagedAudioJsonSha256": staged_summary["_audioArtifactSha256"],
+                "stagedAudioWavSha256": staged_summary["_rawWavSha256"],
+            },
+            "captureAnalysis": {
+                "method": METHOD,
+                "windowCount": WINDOW_COUNT,
+                "minimumActiveWindowCount": MIN_ACTIVE_WINDOW_COUNT,
+                "cleanBaselineActiveWindowCount": clean_active,
+                "stagedPositiveActiveWindowCount": staged_active,
+                "rmsPeakOnly": False,
+            },
+            "sourceAudioCorrelationDiagnostics": {
+                "method": METHOD,
+                "fingerprintVersion": HELPER_VERSION,
+                "sourceTargetReplacementDistinctMargin": source_margin,
+                "cleanBaselineBestMatch": best_match(clean_vs_target, clean_vs_replacement),
+                "stagedPositiveBestMatch": best_match(staged_vs_target, staged_vs_replacement),
+                "cleanBaselineMargin": clean_margin,
+                "stagedPositiveMargin": staged_margin,
+                "minimumAcceptedMargin": MIN_ACCEPTED_MARGIN,
+                "rawAudioPublished": False,
+                "sourceAudioPathsPublished": False,
+                "privateCapturePathsPublished": False,
+                "scoreMatrix": {
+                    "cleanBaselineVsTarget": clean_vs_target,
+                    "cleanBaselineVsReplacement": clean_vs_replacement,
+                    "stagedPositiveVsTarget": staged_vs_target,
+                    "stagedPositiveVsReplacement": staged_vs_replacement,
+                },
+            },
+            "claimBoundary": "Sanitized rejection diagnostic only. Not accepted capture-source correlation, not materializer input, and not runtime audible-output proof.",
+            "nonClaims": sorted(checker.REQUIRED_REJECTION_NON_CLAIMS),
+        }
+        try:
+            checker.validate_rejection_diagnostic(diagnostic)
+        except checker.CorrelationAdapterError as exc:
+            raise CaptureSourceCorrelationBuilderError(f"Generated rejection diagnostic failed validation: {exc}") from exc
+        write_json(rejection_diagnostic_output, diagnostic)
+
+    def fail(reason: str, message: str) -> None:
+        write_rejection(reason, message)
+        raise CaptureSourceCorrelationBuilderError(message)
+
+    if source_margin < MIN_ACCEPTED_MARGIN:
+        fail(
+            "source-target-replacement-margin-too-weak",
+            "source target/replacement vectors are not distinct enough "
+            f"(margin={score_text(source_margin)} minimum={score_text(MIN_ACCEPTED_MARGIN)} cross={score_text(source_cross)}).",
+        )
+
+    if clean_margin < MIN_ACCEPTED_MARGIN:
+        fail(
+            "clean-baseline-source-correlation-margin-too-weak",
             "clean baseline does not prefer source target strongly enough "
             f"(margin={score_text(clean_margin)} minimum={score_text(MIN_ACCEPTED_MARGIN)} "
-            f"target={score_text(clean_vs_target)} replacement={score_text(clean_vs_replacement)})."
-        ),
-    )
-    require(
-        staged_margin >= MIN_ACCEPTED_MARGIN,
-        (
+            f"target={score_text(clean_vs_target)} replacement={score_text(clean_vs_replacement)}).",
+        )
+    if staged_margin < MIN_ACCEPTED_MARGIN:
+        fail(
+            "staged-positive-source-correlation-margin-too-weak",
             "staged positive does not prefer source replacement strongly enough "
             f"(margin={score_text(staged_margin)} minimum={score_text(MIN_ACCEPTED_MARGIN)} "
-            f"target={score_text(staged_vs_target)} replacement={score_text(staged_vs_replacement)})."
-        ),
-    )
+            f"target={score_text(staged_vs_target)} replacement={score_text(staged_vs_replacement)}).",
+        )
 
     artifact = {
         "schemaVersion": SCHEMA,
@@ -530,6 +603,7 @@ def build_adapter_from_paths(
     allowed_output_root: Path,
     source_root: Path,
     allow_overwrite: bool = False,
+    rejection_diagnostic_output: Path | None = None,
     runner_invoker: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> dict[str, Any]:
     validate_output_path(
@@ -600,6 +674,7 @@ def build_adapter_from_paths(
         clean_capture_vector=vector_list(vectors, "cleanCaptureVector"),
         staged_capture_vector=vector_list(vectors, "stagedCaptureVector"),
         allow_overwrite=allow_overwrite,
+        rejection_diagnostic_output=rejection_diagnostic_output,
     )
 
 
@@ -686,6 +761,7 @@ def main() -> int:
     parser.add_argument("--source-root", type=Path, default=DEFAULT_SOURCE_ROOT)
     parser.add_argument("--allowed-output-root", type=Path)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--rejection-diagnostic-output", type=Path)
     parser.add_argument("--arm-correlation", default="")
     parser.add_argument("--allow-overwrite", action="store_true")
     args = parser.parse_args()
@@ -711,6 +787,7 @@ def main() -> int:
             allowed_output_root=args.allowed_output_root,
             source_root=args.source_root,
             allow_overwrite=args.allow_overwrite,
+            rejection_diagnostic_output=args.rejection_diagnostic_output,
         )
         print(json.dumps(checker.validate_artifact(artifact), indent=2, sort_keys=True))
         return 0

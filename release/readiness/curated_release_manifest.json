@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Curated public safety/export candidate manifest for the WinUI-first source candidate. Include reviewed public-safe WinUI/AppCore/C# CLI/docs/tooling support; exclude private, volatile, archived Electron/Python/WPF UI, and ops-sensitive paths.",
+  "description": "Package/export candidate manifest for the WinUI-first public-primary source repo. Include reviewed WinUI/AppCore/C# CLI/docs/tooling support for generated release/export artifacts; exclude hard payload overlays, volatile outputs, and ops-sensitive paths.",
   "tracked_only": true,
   "include": [
     ".gitattributes",

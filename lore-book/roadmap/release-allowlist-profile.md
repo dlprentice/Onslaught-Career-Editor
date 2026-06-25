@@ -1,12 +1,12 @@
 # Release Allowlist Profile
 
-> Generated: 2026-06-24 15:17:54 -0400
+> Generated: 2026-06-24 20:08:17 -0400
 
 ## Classification Summary
 
 | Class | Count | Meaning |
 |---|---:|---|
-| R0_ALLOW | 6117 | Default allow bucket for portable/export release accounting (still requires human review before publishing an artifact) |
+| R0_ALLOW | 6121 | Default allow bucket for portable/export release accounting (still requires human review before publishing an artifact) |
 | R2_REVIEW | 0 | Volatile/generated/binary artifacts; include only when intentional |
 | R3_CONDITIONAL | 3 | Reference submodule families requiring licensing/scope review |
 | R4_DENY | 13175 | Excluded from portable app ZIPs and legacy curated export payloads; may still be tracked public source when compact, non-secret project history |
@@ -570,6 +570,8 @@ outputs, and secrets.
 - `tools/winui_safe_copy_music_source_audio_correlation_check_test.py`
 - `tools/winui_safe_copy_music_capture_source_correlation_builder.py`
 - `tools/winui_safe_copy_music_capture_source_correlation_builder_test.py`
+- `tools/winui_safe_copy_music_decode_window_correlation_diagnostic.py`
+- `tools/winui_safe_copy_music_decode_window_correlation_diagnostic_test.py`
 - `tools/run_winui_safe_copy_music_audible_output_live_bundle.py`
 - `tools/run_winui_safe_copy_music_audible_output_live_bundle_test.py`
 - `tools/winui_safe_copy_music_timestamped_cdb_log_producer.py`

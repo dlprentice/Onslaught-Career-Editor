@@ -46,6 +46,27 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void LoadIndex_FindsPackagedLoreBookSiblingFromAppFolder()
+        {
+            string bundleRoot = Path.Combine(_tempRoot, "bundle");
+            string appFolder = Path.Combine(bundleRoot, "app");
+            string loreBook = Path.Combine(bundleRoot, "lore-book");
+            Directory.CreateDirectory(appFolder);
+            Directory.CreateDirectory(loreBook);
+            File.WriteAllText(Path.Combine(loreBook, "BOOK.md"), "- [Packaged Home](Packaged-Home.md)");
+            File.WriteAllText(Path.Combine(loreBook, "Packaged-Home.md"), "# Packaged Home");
+
+            LoreBrowserService service = new();
+            LoreIndex index = service.LoadIndex(appFolder);
+
+            Assert.True(index.UsingLoreBook);
+            Assert.Equal(bundleRoot, index.ProjectRoot);
+            Assert.NotNull(index.HomeDocument);
+            Assert.Equal("Packaged Home", index.HomeDocument!.Title);
+        }
+
+
+        [Fact]
         public void FilterTree_MatchesDocumentTextAndKeepsBranch()
         {
             string loreBook = CreateLoreBookSkeleton();

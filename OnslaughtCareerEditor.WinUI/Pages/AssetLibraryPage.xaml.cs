@@ -61,6 +61,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             else
             {
                 ResetSelection();
+                CatalogStatusTextBlock.Text = BuildMissingCatalogStatus(configuredCatalog);
+                CatalogSummaryTextBlock.Text = "Load a generated catalog to see textures, meshes, and goodies.";
+                CatalogCoverageTextBlock.Text = "Coverage summary appears after a generated catalog loads.";
+                CatalogProvenanceTextBlock.Text = "Catalog provenance appears after a generated catalog loads.";
+                CatalogFullPathTextBlock.Text = string.Empty;
                 AppStatusService.SetStatus("Asset Library: choose a generated catalog");
             }
 
@@ -104,7 +109,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _materialPackageOutputRoot = string.Empty;
                 CatalogInputGrid.Visibility = Visibility.Visible;
                 ChangeCatalogButton.Visibility = Visibility.Collapsed;
-                CatalogStatusTextBlock.Text = "No generated catalog found. Choose the folder that contains asset_catalog/catalog.json or catalog.json.";
+                CatalogStatusTextBlock.Text = BuildMissingCatalogStatus(path);
                 CatalogSummaryTextBlock.Text = "Load a catalog to see textures, meshes, and goodies.";
                 CatalogCoverageTextBlock.Text = "Coverage summary appears after a generated catalog loads.";
                 CatalogProvenanceTextBlock.Text = "Catalog provenance appears after a generated catalog loads.";
@@ -138,6 +143,18 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             UpdateAssetList();
+        }
+
+        private static string BuildMissingCatalogStatus(string? attemptedPath)
+        {
+            string? gameDir = AppConfig.Load().GetGameDirOrDetect(persistDetection: true);
+            string attempted = string.IsNullOrWhiteSpace(attemptedPath) ? string.Empty : " The selected path does not contain a catalog.";
+            if (string.IsNullOrWhiteSpace(gameDir))
+            {
+                return $"No generated asset catalog loaded.{attempted} Choose a folder that contains asset_catalog/catalog.json or catalog.json.";
+            }
+
+            return $"Game install detected. Asset Library still needs a generated asset catalog before textures and models can be browsed.{attempted} Choose a folder that contains asset_catalog/catalog.json or catalog.json.";
         }
 
         private string BuildCatalogCoverageSummary()

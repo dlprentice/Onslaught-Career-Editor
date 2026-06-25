@@ -52,8 +52,11 @@ public class WinUiLoreInteractionSmokeTests
             SetTextBox(window, "LoreSearchBox", "Battle Engine Tech");
             WaitForNameContains(window, "Filtered results for", TimeSpan.FromSeconds(10));
 
-            AutomationElement techDocument = WaitForTreeItem(window, "Battle Engine Tech", TimeSpan.FromSeconds(15));
-            techDocument.Click();
+            AutomationElement techDocument = WaitForTreeItem(
+                FindByAutomationId(window, "LoreDocumentTree"),
+                "Battle Engine Tech",
+                TimeSpan.FromSeconds(15));
+            InvokeElement(techDocument);
 
             bool documentSelected = Retry.WhileFalse(
                 () => string.Equals(
@@ -107,16 +110,39 @@ public class WinUiLoreInteractionSmokeTests
         Assert.That(valueApplied, Is.True, $"Expected {automationId} to accept the requested text value.");
     }
 
-    private static AutomationElement WaitForTreeItem(Window window, string name, TimeSpan timeout)
+    private static AutomationElement WaitForTreeItem(AutomationElement treeRoot, string name, TimeSpan timeout)
     {
         AutomationElement? element = Retry.WhileNull(
-            () => window.FindAllDescendants()
+            () => treeRoot.FindAllDescendants()
                 .FirstOrDefault(candidate =>
                     candidate.ControlType == ControlType.TreeItem &&
                     string.Equals(TryGetName(candidate), name, StringComparison.OrdinalIgnoreCase)),
             timeout).Result;
         Assert.That(element, Is.Not.Null, $"Expected visible Lore tree item: {name}");
         return element!;
+    }
+
+    private static void InvokeElement(AutomationElement element)
+    {
+        if (element.Patterns.ScrollItem.IsSupported)
+        {
+            element.Patterns.ScrollItem.Pattern.ScrollIntoView();
+        }
+
+        if (element.Patterns.SelectionItem.IsSupported)
+        {
+            element.Patterns.SelectionItem.Pattern.Select();
+        }
+
+        element.Focus();
+        Thread.Sleep(250);
+
+        if (element.Patterns.Invoke.IsSupported)
+        {
+            element.Patterns.Invoke.Pattern.Invoke();
+        }
+
+        element.Click();
     }
 
     private static void WaitForText(Window window, string text, TimeSpan timeout)

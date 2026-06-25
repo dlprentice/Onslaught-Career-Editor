@@ -17,7 +17,9 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.self_test:
-        return public_allowlist_safety_check.run_self_test()
+        result = public_allowlist_safety_check.run_self_test()
+        if result != 0:
+            return result
 
     root = Path(args.candidate_root).resolve()
     findings = public_allowlist_safety_check.check_repo(root)

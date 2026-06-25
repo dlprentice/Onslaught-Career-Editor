@@ -12,9 +12,30 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         public void LooksLikeGameDirectory_RequiresBeaExeAndDataFolder()
         {
             using TempGameDirectory temp = TempGameDirectory.Create();
+            string mediaOnly = Path.Combine(Path.GetTempPath(), "oce-media-tests", Guid.NewGuid().ToString("N"));
+            string exeOnly = Path.Combine(Path.GetTempPath(), "oce-media-tests", Guid.NewGuid().ToString("N"));
+            try
+            {
+                Directory.CreateDirectory(Path.Combine(mediaOnly, "data"));
+                Directory.CreateDirectory(exeOnly);
+                File.WriteAllText(Path.Combine(exeOnly, "BEA.exe"), string.Empty);
 
-            Assert.True(MediaCatalogService.LooksLikeGameDirectory(temp.RootPath));
-            Assert.False(MediaCatalogService.LooksLikeGameDirectory(Path.Combine(temp.RootPath, "data")));
+                Assert.True(MediaCatalogService.LooksLikeGameDirectory(temp.RootPath));
+                Assert.False(MediaCatalogService.LooksLikeGameDirectory(Path.Combine(temp.RootPath, "data")));
+                Assert.False(MediaCatalogService.LooksLikeGameDirectory(mediaOnly));
+                Assert.False(MediaCatalogService.LooksLikeGameDirectory(exeOnly));
+            }
+            finally
+            {
+                if (Directory.Exists(mediaOnly))
+                {
+                    Directory.Delete(mediaOnly, recursive: true);
+                }
+                if (Directory.Exists(exeOnly))
+                {
+                    Directory.Delete(exeOnly, recursive: true);
+                }
+            }
         }
 
         [Fact]

@@ -58,7 +58,7 @@ namespace OnslaughtCareerEditor.WinUI
         public void RefreshFooter()
         {
             AppConfig config = AppConfig.Load();
-            string? gameDir = config.GetGameDir();
+            string? gameDir = config.GetGameDirOrDetect(persistDetection: true);
             GameDirectoryTextBlock.Text = BuildGameDirectoryLabel(gameDir);
             ToolTipService.SetToolTip(
                 GameDirectoryTextBlock,

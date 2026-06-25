@@ -297,6 +297,7 @@ archive/legacy-wpf/Views/VideoPlayerView.xaml	R4_DENY	archive/
 archive/legacy-wpf/Views/VideoPlayerView.xaml.cs	R4_DENY	archive/
 developer_agent_state.json	R4_DENY	developer_agent_state.json
 documentation_agent_state.json	R4_DENY	documentation_agent_state.json
+global.json	R0_ALLOW	default
 goal.md	R4_DENY	goal.md
 goal.policy.md	R4_DENY	goal.policy.md
 lore-book/BOOK.md	R0_ALLOW	default
@@ -3065,6 +3066,7 @@ release/readiness/winui_music_audible_proof_contract_2026-06-22.md	R0_ALLOW	defa
 release/readiness/winui_music_audio_loopback_preflight_2026-06-22.md	R0_ALLOW	default
 release/readiness/winui_music_capture_source_correlation_adapter_2026-06-22.md	R0_ALLOW	default
 release/readiness/winui_music_capture_source_correlation_builder_2026-06-24.md	R0_ALLOW	default
+release/readiness/winui_music_capture_source_correlation_rejected_replay_2026-06-24.md	R0_ALLOW	default
 release/readiness/winui_music_cgame_caller_diagnostic_2026-06-24.md	R0_ALLOW	default
 release/readiness/winui_music_source_audio_correlation_2026-06-22.md	R0_ALLOW	default
 release/readiness/winui_music_source_music_safety_sidecar_2026-06-24.md	R0_ALLOW	default
@@ -19198,6 +19200,8 @@ tools/winui_safe_copy_music_capture_source_correlation_check_test.py	R4_DENY	too
 tools/winui_safe_copy_music_cdb_timeline_sidecar.py	R0_ALLOW	default
 tools/winui_safe_copy_music_cdb_timeline_sidecar_test.py	R0_ALLOW	default
 tools/winui_safe_copy_music_cgame_caller_diagnostic_check.py	R0_ALLOW	default
+tools/winui_safe_copy_music_rejected_replay_diagnostic_check.py	R0_ALLOW	default
+tools/winui_safe_copy_music_rejected_replay_diagnostic_check_test.py	R0_ALLOW	default
 tools/winui_safe_copy_music_selection_decode_artifact_check.py	R4_DENY	tools/winui_safe_copy_music_selection_decode_artifact_check.py
 tools/winui_safe_copy_music_source_audio_correlation_check.py	R4_DENY	tools/winui_safe_copy_music_source_audio_correlation_check.py
 tools/winui_safe_copy_music_source_audio_correlation_check_test.py	R4_DENY	tools/winui_safe_copy_music_source_audio_correlation_check_test.py

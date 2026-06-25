@@ -75,7 +75,9 @@ def is_allowed_private_only(path: str) -> tuple[bool, str]:
             return True, "volatile RE scratch payload output"
         return False, ""
     if path.startswith("lore-book/reverse-engineering/binary-analysis/scratch/"):
-        return True, "volatile mirrored RE scratch output"
+        if Path(path).suffix.lower() in {".bes", ".fbx", ".png"}:
+            return True, "volatile mirrored RE scratch payload output"
+        return False, ""
     return False, ""
 
 
@@ -130,6 +132,9 @@ def run_self_test() -> int:
         "save-attempts/foo.bes": True,
         "reverse-engineering/binary-analysis/scratch/probe/out/file.c": False,
         "reverse-engineering/binary-analysis/scratch/probe/out/file.png": True,
+        "lore-book/reverse-engineering/binary-analysis/scratch/probe/out/file.c": False,
+        "lore-book/reverse-engineering/binary-analysis/scratch/probe/out/file.tsv": False,
+        "lore-book/reverse-engineering/binary-analysis/scratch/probe/out/file.png": True,
         "tools/missing_checker.py": False,
         "roadmap/missing.md": False,
     }

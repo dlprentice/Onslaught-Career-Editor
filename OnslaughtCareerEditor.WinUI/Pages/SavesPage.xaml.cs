@@ -118,7 +118,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             string selectedPath = (DetectedFilesComboBox.SelectedItem as SaveAnalyzerFileItem)?.Path
                 ?? (FilePathTextBox.Text ?? string.Empty).Trim();
-            string? gameDir = AppConfig.Load().GetGameDir();
+            string? gameDir = AppConfig.Load().GetGameDirOrDetect(persistDetection: true);
             _detectedFiles = SaveAnalyzerService.GetDetectedFiles(gameDir);
             DetectedFilesComboBox.ItemsSource = _detectedFiles;
             DetectedFilesComboBox.PlaceholderText = _detectedFiles.Count == 0
@@ -145,7 +145,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             string selectedPath = (EditorDetectedFilesComboBox.SelectedItem as SaveAnalyzerFileItem)?.Path
                 ?? (EditorInputFileTextBox.Text ?? string.Empty).Trim();
-            string? gameDir = AppConfig.Load().GetGameDir();
+            string? gameDir = AppConfig.Load().GetGameDirOrDetect(persistDetection: true);
             _editorDetectedFiles = SaveEditorService.GetDetectedCareerSaves(gameDir);
             EditorDetectedFilesComboBox.ItemsSource = _editorDetectedFiles;
             EditorDetectedFilesComboBox.PlaceholderText = _editorDetectedFiles.Count == 0

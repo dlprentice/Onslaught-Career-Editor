@@ -68,14 +68,7 @@ namespace Onslaught___Career_Editor
 
         public static bool LooksLikeGameDirectory(string? gameDirectory)
         {
-            if (string.IsNullOrWhiteSpace(gameDirectory) || !Directory.Exists(gameDirectory))
-            {
-                return false;
-            }
-
-            string fullPath = Path.GetFullPath(gameDirectory);
-            return File.Exists(Path.Combine(fullPath, "BEA.exe")) &&
-                   Directory.Exists(Path.Combine(fullPath, "data"));
+            return AppConfig.InspectGameDirectory(gameDirectory).Status == GameDirectoryStatus.FullInstall;
         }
 
         public static string GetMainVideoDisplayName(string videoStem)

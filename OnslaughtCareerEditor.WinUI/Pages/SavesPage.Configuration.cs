@@ -38,7 +38,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             string selectedPath = (ConfigurationDetectedFilesComboBox.SelectedItem as SaveAnalyzerFileItem)?.Path
                 ?? (ConfigurationInputFileTextBox.Text ?? string.Empty).Trim();
-            string? gameDir = AppConfig.Load().GetGameDir();
+            string? gameDir = AppConfig.Load().GetGameDirOrDetect(persistDetection: true);
             _configurationDetectedFiles = ConfigurationEditorService.GetDetectedOptionsFiles(gameDir);
             ConfigurationDetectedFilesComboBox.ItemsSource = _configurationDetectedFiles;
             ConfigurationDetectedFilesComboBox.PlaceholderText = _configurationDetectedFiles.Count == 0

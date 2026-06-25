@@ -1,4 +1,8 @@
-# Public candidate .gitignore
+# Package/export candidate .gitignore
+#
+# Root .gitignore is the public-primary working-repo policy. This template is
+# only for materialized package/export candidates, which are intentionally
+# smaller than the public source repo.
 
 # Build output
 bin/
@@ -23,11 +27,14 @@ MsixPackages/
 .DS_Store
 Thumbs.db
 
-# Local validation scratch
+# Local validation scratch and generated reports
 __pycache__/
 *.pyc
 *.pyo
-subagents/
+subagents/md-link-check/
+subagents/**/frames/
+subagents/**/*.png
+subagents/**/*.wav
 release/out/
 release/artifacts/
 .tmp*/
@@ -35,15 +42,23 @@ tmp*/
 *.tmp
 *.cache
 
-# Private game/content/proof roots
-.codex/
+# Game/content/proof roots and package-irrelevant project history
 mcps/
+local-lab/
+local-game/
+local-media/
+local-saves/
+local-ghidra/
+local-proofs/
+Ghidra/
+ghidra-local/
 game/
 media/
 save-attempts/
 GameProfiles/
 PatchBench/
 release/readiness/private_runtime_evidence/
+.codex/
 *_state.json
 onslaught_codex_directive.md
 
@@ -63,4 +78,9 @@ onslaught_codex_directive.md
 *.dds
 *.fbx
 *.gzf
+*.gpr
+*.rep/
+*.gbf
+*.gdt
+*.bytes
 *.zip

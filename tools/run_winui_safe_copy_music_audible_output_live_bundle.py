@@ -246,6 +246,10 @@ class BundleLayout:
         return self.raw_root / "capture-source-correlation.json"
 
     @property
+    def capture_source_correlation_rejection(self) -> Path:
+        return self.raw_root / "capture-source-correlation-rejection.json"
+
+    @property
     def final_proof(self) -> Path:
         return self.raw_root / "audible-proof.json"
 
@@ -435,6 +439,8 @@ def capture_source_correlation_command(layout: BundleLayout, *, source_root: Pat
         str(layout.raw_root),
         "--output",
         str(layout.correlation),
+        "--rejection-diagnostic-output",
+        str(layout.capture_source_correlation_rejection),
         "--arm-correlation",
         CORRELATION_ARM,
     ]

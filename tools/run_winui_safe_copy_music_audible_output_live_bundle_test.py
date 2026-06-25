@@ -256,6 +256,11 @@ class MusicAudibleOutputLiveBundleExecutorTests(unittest.TestCase):
 
             self.assertIn("--source-root", command)
             self.assertEqual(str(source_root), command[command.index("--source-root") + 1])
+            self.assertIn("--rejection-diagnostic-output", command)
+            self.assertEqual(
+                str(layout.capture_source_correlation_rejection),
+                command[command.index("--rejection-diagnostic-output") + 1],
+            )
 
     def test_unsafe_cdb_cleanup_status_is_rejected_before_materialization(self) -> None:
         for status in ("still-running", "failed", "not-started"):

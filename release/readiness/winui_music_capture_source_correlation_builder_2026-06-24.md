@@ -28,6 +28,18 @@ The sidecar binds to the clean/staged audio JSON and raw WAV SHA-256 values and
 keeps private source paths, raw audio samples, spectrograms, raw WAV paths, raw
 JSON paths, and endpoint identifiers out of the sanitized output.
 
+Follow-up hardening adds a separate local rejection diagnostic schema,
+`winui-safe-copy-music-capture-source-correlation-rejection.v1`, validated by
+`tools/winui_safe_copy_music_capture_source_correlation_check.py` with
+`--rejection-diagnostic`. The builder can write
+`capture-source-correlation-rejection.json` for post-threshold source/capture
+margin rejections, including the currently observed staged-positive failure
+where the live capture still prefers `BEA_04(Master).ogg` over the replacement
+`BEA_02(Master).ogg`. That file is local triage only: it is not accepted by the adapter validator, not consumed by the audible-output materializer, and not
+runtime audible-output proof. Low-active-window, invalid-audio, runner, and
+input-validation failures still fail closed as normal builder errors rather
+than accepted diagnostics.
+
 Claim boundary:
 
 - `runtimeAudibleOutputProof=false`

@@ -68,9 +68,9 @@ For RE sessions:
 For release work:
 
 ```text
-1. CONTEXT: Read RELEASE_SCOPE_AND_TEST_COMMANDS.md and release/readiness/release_readiness_checklist.md.
+1. CONTEXT: Read release/readiness/PUBLIC_SIGNOFF_COMMANDS.md and RELEASE_SCOPE_AND_TEST_COMMANDS.md.
 2. GOAL: Decide whether the target is WinUI product health, Electron workbench validation, active Python script/tooling work, public safety/export, or legacy-reference validation.
-3. METHOD: Keep `.codex/`, game/media/save-attempts/subagents/state files out of community outputs.
+3. METHOD: Keep hard payloads out of app ZIPs and release artifacts. Compact non-secret `.codex/goals`, `.codex/state`, state batons, subagent reports, readiness notes, and proof summaries may remain in public source when useful.
 4. DOCUMENT: Update release docs and generated manifests together.
 5. VERIFY: Run the lane-specific gates plus public safety/export checks.
 ```
@@ -109,6 +109,6 @@ For delegated subagent work:
 3. Do not let renderer code reach raw Node, shell, debugger, Ghidra, or filesystem APIs.
 4. Do not treat the old Python GUI/CLI app or WPF as parity obligations.
 5. Do not treat Electron as the product backlog target.
-6. Do not ship `.codex/`, private `game/`, `media/`, `save-attempts/`, `subagents/`, or state files in community outputs.
+6. Do not ship game/media/save payloads, raw proof payloads, raw CDB logs, copied runtime output, full Ghidra databases/backups, secrets, or runtime caches in app ZIPs or release artifacts. Do not confuse that package boundary with the public source repo: compact non-secret state, subagent summaries, readiness notes, and proof summaries may be tracked in source.
 
 See [CURRENT_CAPABILITIES.md](/CURRENT_CAPABILITIES.md), [electron-workbench-migration.md](/roadmap/electron-workbench-migration.md), and [RE-INDEX.md](/reverse-engineering/RE-INDEX.md).

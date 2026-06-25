@@ -427,7 +427,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private bool LoadSourcePathFromConfig()
         {
-            string? gameDir = AppConfig.Load().GetGameDir();
+            string? gameDir = AppConfig.Load().GetGameDirOrDetect(persistDetection: true);
             if (string.IsNullOrWhiteSpace(gameDir))
             {
                 return false;

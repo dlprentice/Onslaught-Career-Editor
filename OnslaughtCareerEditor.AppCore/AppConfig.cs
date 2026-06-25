@@ -36,6 +36,8 @@ namespace Onslaught___Career_Editor
             @"E:\Steam\steamapps\common\Battle Engine Aquila",
             @"E:\SteamLibrary\steamapps\common\Battle Engine Aquila",
         };
+        private const string GameDirectoryCandidatesEnvironmentVariable = "ONSLAUGHT_GAME_DIR_CANDIDATES";
+        private const string SteamRootCandidatesEnvironmentVariable = "ONSLAUGHT_STEAM_ROOT_CANDIDATES";
 
         /// <summary>
         /// Subdirectories to search for save files within the game directory
@@ -208,6 +210,32 @@ namespace Onslaught___Career_Editor
         }
 
         /// <summary>
+        /// Get the configured game directory, or auto-detect and optionally persist it.
+        /// </summary>
+        public string? GetGameDirOrDetect(bool persistDetection = false)
+        {
+            string? configured = GetGameDir();
+            if (!string.IsNullOrWhiteSpace(configured))
+            {
+                return configured;
+            }
+
+            string? detected = DetectGameDirectory();
+            if (string.IsNullOrWhiteSpace(detected))
+            {
+                return null;
+            }
+
+            if (persistDetection)
+            {
+                GameDirectory = detected;
+                Save();
+            }
+
+            return detected;
+        }
+
+        /// <summary>
         /// Set and persist the game directory
         /// </summary>
         /// <param name="path">Path to the game directory</param>
@@ -253,24 +281,228 @@ namespace Onslaught___Career_Editor
         }
 
         /// <summary>
-        /// Auto-detect Battle Engine Aquila installation directory
+        /// Auto-detect a full Battle Engine Aquila installation directory.
         /// </summary>
         public static string? DetectGameDirectory()
         {
-            foreach (string path in DefaultSteamPaths)
+            foreach (string path in GetGameDirectoryCandidates())
             {
-                if (Directory.Exists(path))
+                if (InspectGameDirectory(path).Status == GameDirectoryStatus.FullInstall)
                 {
-                    // Verify it's actually BEA by checking for known files
-                    string beaExe = Path.Combine(path, "BEA.exe");
-                    string dataDir = Path.Combine(path, "data");
-                    if (File.Exists(beaExe) || Directory.Exists(dataDir))
-                    {
-                        return path;
-                    }
+                    return path;
                 }
             }
             return null;
+        }
+
+        public static GameDirectoryInspection InspectGameDirectory(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
+            {
+                return new GameDirectoryInspection(GameDirectoryStatus.Missing, null, false, false, false, false);
+            }
+
+            string fullPath = Path.GetFullPath(path);
+            bool hasExe = File.Exists(Path.Combine(fullPath, "BEA.exe")) || File.Exists(Path.Combine(fullPath, "bea.exe"));
+            bool hasData = Directory.Exists(Path.Combine(fullPath, "data"));
+            bool hasMusic = Directory.Exists(Path.Combine(fullPath, "data", "Music"));
+            bool hasVideo = Directory.Exists(Path.Combine(fullPath, "data", "video"));
+
+            GameDirectoryStatus status = (hasExe, hasData) switch
+            {
+                (true, true) => GameDirectoryStatus.FullInstall,
+                (true, false) => GameDirectoryStatus.ExecutableOnly,
+                (false, true) => GameDirectoryStatus.MediaOnly,
+                _ => GameDirectoryStatus.Missing
+            };
+
+            return new GameDirectoryInspection(status, fullPath, hasExe, hasData, hasMusic, hasVideo);
+        }
+
+        private static IEnumerable<string> GetGameDirectoryCandidates()
+        {
+            string? overrideCandidates = Environment.GetEnvironmentVariable(GameDirectoryCandidatesEnvironmentVariable);
+            if (overrideCandidates != null)
+            {
+                if (!string.IsNullOrWhiteSpace(overrideCandidates))
+                {
+                    foreach (string path in overrideCandidates.Split(
+                        Path.PathSeparator,
+                        StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    {
+                        yield return path;
+                    }
+                }
+
+                foreach (string path in GetSteamLibraryGameDirectoryCandidates())
+                {
+                    yield return path;
+                }
+                yield break;
+            }
+
+            foreach (string path in DefaultSteamPaths)
+            {
+                yield return path;
+            }
+            foreach (string path in GetSteamLibraryGameDirectoryCandidates())
+            {
+                yield return path;
+            }
+        }
+
+        private static IEnumerable<string> GetSteamLibraryGameDirectoryCandidates()
+        {
+            var libraryRoots = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string steamRoot in GetSteamRootCandidates())
+            {
+                libraryRoots.Add(steamRoot);
+                string libraryFoldersPath = Path.Combine(steamRoot, "steamapps", "libraryfolders.vdf");
+                foreach (string libraryRoot in ReadSteamLibraryRoots(libraryFoldersPath))
+                {
+                    libraryRoots.Add(libraryRoot);
+                }
+            }
+
+            foreach (string libraryRoot in libraryRoots)
+            {
+                yield return Path.Combine(libraryRoot, "steamapps", "common", "Battle Engine Aquila");
+            }
+        }
+
+        private static IEnumerable<string> GetSteamRootCandidates()
+        {
+            string? overrideCandidates = Environment.GetEnvironmentVariable(SteamRootCandidatesEnvironmentVariable);
+            if (!string.IsNullOrWhiteSpace(overrideCandidates))
+            {
+                foreach (string path in overrideCandidates.Split(
+                    Path.PathSeparator,
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    yield return path;
+                }
+                yield break;
+            }
+
+            var candidates = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                @"C:\Program Files (x86)\Steam",
+                @"C:\Program Files\Steam",
+                @"D:\Steam",
+                @"D:\SteamLibrary",
+                @"E:\Steam",
+                @"E:\SteamLibrary",
+            };
+
+            foreach (string defaultGamePath in DefaultSteamPaths)
+            {
+                DirectoryInfo? directory = new(defaultGamePath);
+                DirectoryInfo? steamApps = directory.Parent?.Parent;
+                DirectoryInfo? steamRoot = steamApps?.Parent;
+                if (steamRoot != null)
+                {
+                    candidates.Add(steamRoot.FullName);
+                }
+            }
+
+            foreach (string path in candidates)
+            {
+                yield return path;
+            }
+        }
+
+        private static IEnumerable<string> ReadSteamLibraryRoots(string libraryFoldersPath)
+        {
+            if (!File.Exists(libraryFoldersPath))
+            {
+                yield break;
+            }
+
+            string text;
+            try
+            {
+                text = File.ReadAllText(libraryFoldersPath);
+            }
+            catch (IOException)
+            {
+                yield break;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                yield break;
+            }
+
+            foreach (string value in ReadVdfQuotedPairs(text, key: "path"))
+            {
+                yield return value;
+            }
+
+            foreach (string value in ReadVdfNumericLibraryRows(text))
+            {
+                yield return value;
+            }
+        }
+
+        private static IEnumerable<string> ReadVdfQuotedPairs(string text, string key)
+        {
+            string quotedKey = $"\"{key}\"";
+            foreach (string line in text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string trimmed = line.Trim();
+                if (!trimmed.StartsWith(quotedKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                string remainder = trimmed[quotedKey.Length..].Trim();
+                string? value = ReadLeadingQuotedValue(remainder);
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    yield return value.Replace(@"\\", @"\");
+                }
+            }
+        }
+
+        private static IEnumerable<string> ReadVdfNumericLibraryRows(string text)
+        {
+            foreach (string line in text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string trimmed = line.Trim();
+                if (!trimmed.StartsWith('"'))
+                {
+                    continue;
+                }
+
+                int endKey = trimmed.IndexOf('"', 1);
+                if (endKey <= 1)
+                {
+                    continue;
+                }
+
+                string key = trimmed.Substring(1, endKey - 1);
+                if (!int.TryParse(key, out _))
+                {
+                    continue;
+                }
+
+                string? value = ReadLeadingQuotedValue(trimmed[(endKey + 1)..].Trim());
+                if (!string.IsNullOrWhiteSpace(value) &&
+                    value.Contains("Steam", StringComparison.OrdinalIgnoreCase))
+                {
+                    yield return value.Replace(@"\\", @"\");
+                }
+            }
+        }
+
+        private static string? ReadLeadingQuotedValue(string text)
+        {
+            if (!text.StartsWith('"'))
+            {
+                return null;
+            }
+
+            int end = text.IndexOf('"', 1);
+            return end <= 1 ? null : text.Substring(1, end - 1);
         }
 
         /// <summary>
@@ -389,4 +621,20 @@ namespace Onslaught___Career_Editor
         public DateTime Modified { get; set; }
         public bool IsValid { get; set; }
     }
+
+    public enum GameDirectoryStatus
+    {
+        Missing,
+        MediaOnly,
+        ExecutableOnly,
+        FullInstall
+    }
+
+    public sealed record GameDirectoryInspection(
+        GameDirectoryStatus Status,
+        string? FullPath,
+        bool HasExecutable,
+        bool HasData,
+        bool HasMusic,
+        bool HasVideo);
 }

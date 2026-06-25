@@ -59,7 +59,7 @@ Authoritative strategy docs:
 - `roadmap/repo-structure-and-archive-map.md`
 - `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`
 - `release/readiness/redaction_notes.md`
-- `release/readiness/public_AGENTS.md` (materialized as public root `AGENTS.md`)
+- root `AGENTS.md` as the public-primary contributor guide; `release/readiness/public_AGENTS.md` is a package/export compatibility template
 - `EXPORT_PROVENANCE.json` in materialized public candidates
 
 Release-accounting inputs, repo state files, and historical checklists may be
@@ -74,7 +74,7 @@ MSIX assembly, disposable local MSIX signing, untrusted-install blocking, and
 TrustedPeople-only cleanup/blocker evidence are recorded as local evidence only,
 while installer-grade trust/install/uninstall is still a separate future proof.
 
-The public-safe source candidate can include:
+The payload/secret-safe public source repo can include:
 
 - WinUI 3 product code
 - AppCore/C# CLI/C# support projects and tests
@@ -85,23 +85,23 @@ The public-safe source candidate can include:
   overlays or public source material
 - release/readiness policy artifacts and migration inventory reports
 
-Current WinUI binary smoke is intentionally unpackaged. Private maintainers can
-use the private root scripts for publish, ZIP, unsigned MSIX, signing,
-untrusted-install, and trusted-install probes under ignored `subagents/`.
-Public source candidates may include reviewed public-safe probe source when the
-script fails closed, uses local explicit-arm guards for state-changing actions,
-and is not listed as a public sign-off gate. Do not claim installer-grade
-release from source validation, unpackaged publish smoke, unsigned package
-assembly, local signing proof, blocked untrusted install proof, or
-TrustedPeople-only blocker proof alone.
+Current WinUI binary smoke is intentionally unpackaged. Maintainers can use
+local scripts for publish, ZIP, unsigned MSIX, signing, untrusted-install, and
+trusted-install probes with ignored local proof roots. Public source may include
+reviewed payload/secret-safe probe source when the script fails closed, uses
+local explicit-arm guards for state-changing actions, and is not listed as a
+public sign-off gate. Do not claim installer-grade release from source
+validation, unpackaged publish smoke, unsigned package assembly, local signing
+proof, blocked untrusted install proof, or TrustedPeople-only blocker proof
+alone.
 
 ## 3. What Is Excluded
 
 Git-tracked source and downloadable app ZIPs have different shapes. The public
 source repo may track compact non-secret state batons, `.codex` project-history
 notes, text subagent reports, readiness notes, and proof summaries when they are
-useful to collaborators. Downloadable app ZIPs, legacy curated exports, and the
-public source repo must still exclude hard payloads, including:
+useful to collaborators. The public source repo, downloadable app ZIPs, and
+legacy curated exports must still exclude hard payloads, including:
 
 - `game/**`
 - `media/**` unless a future public-safe media subset is explicitly classified
@@ -153,7 +153,7 @@ GitHub is used only as a git remote backup for this repo. Do not add hosted vali
 
 ZIP package probes, explicit WinUI UI Automation smokes, and installer/MSIX
 probes remain local Windows desktop checks. `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`
-identifies which commands are public source-candidate gates and which packaging
+identifies which commands are public-source gates and which packaging
 or installer claims remain out of scope. Private maintainer-only runtime variants
 remain outside public export.
 

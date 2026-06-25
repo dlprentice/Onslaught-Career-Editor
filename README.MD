@@ -29,8 +29,9 @@ top-level folder. The app payload lives under `app\`; run
 
 The ZIP release does not include Battle Engine Aquila game files, copied
 executables, saves, media payloads, full Ghidra databases, or bulky generated
-proof captures. Use your own retail/Steam install; patching workflows operate on
-copied files and safe game copies.
+proof captures. Lore is bundled for offline reading. Media, safe copied-game,
+and asset-export workflows use your own retail/Steam install; patching
+workflows operate on copied files and safe game copies.
 
 For contributor setup, local validation expectations, hard-payload boundaries, and PR-ready change rules, see **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
@@ -68,8 +69,11 @@ product lanes and are not part of the default shipped app ZIP.
 From repo root:
 
 ```powershell
-npm install
+git submodule update --init --recursive
+node --version # must be v24.x
+npm --version  # must be 11.12.x
 npm run test:hard-payload-safety
+npm install
 dotnet build .\OnslaughtCareerEditor.WinUI.slnx --nologo
 npm run dev
 ```
@@ -138,7 +142,7 @@ reference implementations, but WinUI/AppCore remains the release lane.
 
 - Windows 10/11 for WinUI 3.
 - .NET 10 SDK for WinUI/AppCore/C# CLI.
-- Node.js/npm for repo docs/release checks and optional archived Electron inspection. The tracked npm target is `npm@11.12.1`.
+- Node.js 24.x and npm 11.12.x for repo docs/release checks and optional archived Electron inspection. The tracked npm target is `npm@11.12.1`.
 - Python 3 with the Windows `py` launcher for public-safe tooling checks.
 - A valid Battle Engine Aquila installation for game-aware workflows.
 

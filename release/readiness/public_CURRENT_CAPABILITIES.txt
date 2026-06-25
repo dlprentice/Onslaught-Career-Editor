@@ -3,10 +3,13 @@
 Status: public-safe capability summary
 Last updated: 2026-06-24
 
-This public summary describes what outside contributors can rely on in a
-sanitized public candidate. The private maintainer tree contains deeper static
-reverse-engineering ledgers, runtime proof notes, and local evidence records
-that are intentionally not public payload.
+This package/export summary describes what outside contributors can rely on in
+the public-primary source tree and downloadable release artifacts. The public
+repo carries useful source, docs, tools, RE notes, state batons, agent reports,
+readiness notes, and compact proof summaries. Hard payloads such as actual game
+files, copied executables, raw saves/options, screenshots/frame dumps, raw CDB
+logs, full Ghidra databases/backups, secrets, build output, and bulky generated
+runtime captures remain local ignored overlays.
 
 Public-source validation and downloadable release publication are separate
 steps. The current downloadable app shape is an unsigned portable Windows x64

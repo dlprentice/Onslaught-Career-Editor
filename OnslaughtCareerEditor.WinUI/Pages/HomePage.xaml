@@ -150,10 +150,10 @@
                             Style="{StaticResource SectionCardStyle}"
                             Margin="0">
                         <StackPanel Spacing="10">
-                            <TextBlock Text="Browse extracted assets"
+                            <TextBlock Text="Review asset catalogs"
                                        FontSize="18"
                                        FontWeight="SemiBold" />
-                            <TextBlock Text="Open a generated asset catalog to review textures, mesh exports, and local extraction status."
+                            <TextBlock Text="Open a generated local catalog to review extracted texture previews, mesh exports, and Goodies links."
                                        Style="{StaticResource SectionBodyTextStyle}" />
                             <Button Content="Open Asset Library"
                                     AutomationProperties.AutomationId="HomeOpenAssetLibraryButton"

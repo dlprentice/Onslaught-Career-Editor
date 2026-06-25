@@ -20,7 +20,10 @@ Current downloadable app releases use an unsigned portable Windows x64 ZIP
 attached to GitHub Releases with a SHA-256 checksum sidecar. Extract the full
 ZIP and run `Launch Onslaught Toolkit.cmd` from the clean top-level folder. The
 self-contained WinUI payload lives under `app\`; run
-`app\OnslaughtCareerEditor.WinUI.exe` only as a fallback.
+`app\OnslaughtCareerEditor.WinUI.exe` only as a fallback. The `v1.0.3` package
+bundles offline `lore-book\` content and the release-candidate probe verifies
+the exact ZIP with extracted launch, Home, Lore, and representative Media UI
+smokes.
 
 The ZIP release does not include Battle Engine Aquila game files, copied
 executables, saves, media payloads, full Ghidra databases, or bulky generated
@@ -112,8 +115,8 @@ Generated release accounting is owned by
 `py -3 tools\release_curated_manifest.py --check` when those accounting inputs
 change; do not copy stale count literals from old prose. The
 `test:hard-payload-safety` gate checks for tracked hard payloads and obvious
-secrets, while `test:public-allowlist` currently aliases that payload boundary
-for compatibility with older command docs.
+secrets, while `test:public-allowlist` runs hard-payload safety, submodule
+payload safety, and public-primary migration/hash inventory.
 
 ## Archive Posture
 

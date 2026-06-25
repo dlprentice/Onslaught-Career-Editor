@@ -1,5 +1,5 @@
-Onslaught Career Editor - WinUI ZIP Package
-===========================================
+Onslaught Toolkit - WinUI ZIP Package
+=====================================
 
 This ZIP package is the non-cert distribution shape for the WinUI 3 app.
 It is not an installer, MSIX package, Microsoft Store package, or signed
@@ -15,14 +15,27 @@ Quick start
 4. Keep the files together; do not move the executable away from the
    app folder and its support files.
 
+First run
+---------
+
+- Lore is bundled in lore-book\ and should work offline after extraction.
+- If Battle Engine Aquila is installed in Steam or a known Steam library,
+  the app attempts to find and save that read-only game folder automatically.
+- Media and safe copied-game workflows need a local Battle Engine Aquila
+  install. If auto-detect does not find it, open Settings and choose the game
+  folder manually.
+- Asset Library needs a generated local asset catalog. It does not browse raw
+  game files directly; choose a folder containing asset_catalog\catalog.json or
+  catalog.json after generating/exporting assets locally.
+
 Safety notes
 ------------
 
 - The app is designed to work on copied saves, copied options files, and
   copied game executables for mutating workflows.
 - Do not patch an installed Steam/Program Files BEA.exe in place.
-- Full game assets, private screenshots, proof JSON, generated media caches,
-  and local test outputs are not included in this public-safe ZIP lane.
+- Full game assets, raw saves, private screenshots, proof JSON, generated media
+  caches, and local test outputs are not included in this ZIP lane.
 
 What this package shape proves
 ------------------------------
@@ -31,8 +44,9 @@ The repository ZIP probe builds disposable WinUI publish output, stages a
 friendly portable root with this README, LICENSE, Launch Onslaught Toolkit.cmd,
 and app\, creates this ZIP, writes a SHA-256 sidecar, extracts the ZIP,
 launches the extracted app from app\, runs native launch smoke, runs extracted
-app Home navigation smoke, runs representative Media smoke, and confirms no
-WinUI process remains. The probe also rejects raw publish layouts that expose
+app Home navigation smoke, runs extracted-package Lore reader smoke, runs
+representative Media smoke when a local game install is available, and confirms
+no WinUI process remains. The probe also rejects raw publish layouts that expose
 DLLs or executables at the ZIP root.
 
 What this package shape does not prove

@@ -7,15 +7,19 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 {
     public sealed class AppConfigTests
     {
+        private const string ConfigRootEnvironmentVariable = "ONSLAUGHT_APP_CONFIG_ROOT";
+        private const string GameDirectoryCandidatesEnvironmentVariable = "ONSLAUGHT_GAME_DIR_CANDIDATES";
+        private const string SteamRootCandidatesEnvironmentVariable = "ONSLAUGHT_STEAM_ROOT_CANDIDATES";
+
         [Fact]
         public void GetConfigPath_UsesExplicitConfigRootOverride()
         {
-            string? previous = Environment.GetEnvironmentVariable("ONSLAUGHT_APP_CONFIG_ROOT");
+            string? previous = Environment.GetEnvironmentVariable(ConfigRootEnvironmentVariable);
             string root = Path.Combine(Path.GetTempPath(), $"onslaught-config-root-{Guid.NewGuid():N}");
 
             try
             {
-                Environment.SetEnvironmentVariable("ONSLAUGHT_APP_CONFIG_ROOT", root);
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, root);
 
                 string expectedPath = Path.Combine(Path.GetFullPath(root), "OnslaughtCareerEditor", "config.json");
                 Assert.Equal(expectedPath, AppConfig.GetConfigPath());
@@ -33,7 +37,163 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             }
             finally
             {
-                Environment.SetEnvironmentVariable("ONSLAUGHT_APP_CONFIG_ROOT", previous);
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, previous);
+                if (Directory.Exists(root))
+                {
+                    Directory.Delete(root, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
+        public void DetectGameDirectory_UsesOverrideCandidatesForPortableTests()
+        {
+            string? previousCandidates = Environment.GetEnvironmentVariable(GameDirectoryCandidatesEnvironmentVariable);
+            string gameDir = Path.Combine(Path.GetTempPath(), $"onslaught-detect-game-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(Path.Combine(gameDir, "data"));
+            File.WriteAllText(Path.Combine(gameDir, "BEA.exe"), string.Empty);
+
+            try
+            {
+                Environment.SetEnvironmentVariable(GameDirectoryCandidatesEnvironmentVariable, gameDir);
+
+                Assert.Equal(gameDir, AppConfig.DetectGameDirectory());
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(GameDirectoryCandidatesEnvironmentVariable, previousCandidates);
+                if (Directory.Exists(gameDir))
+                {
+                    Directory.Delete(gameDir, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
+        public void DetectGameDirectory_DoesNotPersistPartialInstallFolders()
+        {
+            string? previousRoot = Environment.GetEnvironmentVariable(ConfigRootEnvironmentVariable);
+            string? previousCandidates = Environment.GetEnvironmentVariable(GameDirectoryCandidatesEnvironmentVariable);
+            string? previousSteamRoots = Environment.GetEnvironmentVariable(SteamRootCandidatesEnvironmentVariable);
+            string root = Path.Combine(Path.GetTempPath(), $"onslaught-config-partial-{Guid.NewGuid():N}");
+            string mediaOnlyDir = Path.Combine(Path.GetTempPath(), $"onslaught-media-only-{Guid.NewGuid():N}");
+            string exeOnlyDir = Path.Combine(Path.GetTempPath(), $"onslaught-exe-only-{Guid.NewGuid():N}");
+            string emptySteamRoot = Path.Combine(Path.GetTempPath(), $"onslaught-empty-steam-root-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(Path.Combine(mediaOnlyDir, "data", "Music"));
+            Directory.CreateDirectory(exeOnlyDir);
+            Directory.CreateDirectory(emptySteamRoot);
+            File.WriteAllText(Path.Combine(exeOnlyDir, "BEA.exe"), string.Empty);
+
+            try
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, root);
+                Environment.SetEnvironmentVariable(SteamRootCandidatesEnvironmentVariable, emptySteamRoot);
+                Environment.SetEnvironmentVariable(
+                    GameDirectoryCandidatesEnvironmentVariable,
+                    string.Join(Path.PathSeparator, mediaOnlyDir, exeOnlyDir));
+
+                Assert.Null(AppConfig.DetectGameDirectory());
+                var config = new AppConfig();
+                Assert.Null(config.GetGameDirOrDetect(persistDetection: true));
+                Assert.False(File.Exists(AppConfig.GetConfigPath()));
+                Assert.Equal(GameDirectoryStatus.MediaOnly, AppConfig.InspectGameDirectory(mediaOnlyDir).Status);
+                Assert.Equal(GameDirectoryStatus.ExecutableOnly, AppConfig.InspectGameDirectory(exeOnlyDir).Status);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, previousRoot);
+                Environment.SetEnvironmentVariable(GameDirectoryCandidatesEnvironmentVariable, previousCandidates);
+                Environment.SetEnvironmentVariable(SteamRootCandidatesEnvironmentVariable, previousSteamRoots);
+                if (Directory.Exists(root))
+                {
+                    Directory.Delete(root, recursive: true);
+                }
+                if (Directory.Exists(mediaOnlyDir))
+                {
+                    Directory.Delete(mediaOnlyDir, recursive: true);
+                }
+                if (Directory.Exists(exeOnlyDir))
+                {
+                    Directory.Delete(exeOnlyDir, recursive: true);
+                }
+                if (Directory.Exists(emptySteamRoot))
+                {
+                    Directory.Delete(emptySteamRoot, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
+        public void GetGameDirOrDetect_PersistsDetectedGameDirectory()
+        {
+            string? previousRoot = Environment.GetEnvironmentVariable(ConfigRootEnvironmentVariable);
+            string? previousCandidates = Environment.GetEnvironmentVariable(GameDirectoryCandidatesEnvironmentVariable);
+            string root = Path.Combine(Path.GetTempPath(), $"onslaught-config-detect-{Guid.NewGuid():N}");
+            string gameDir = Path.Combine(Path.GetTempPath(), $"onslaught-detect-persist-game-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(Path.Combine(gameDir, "data"));
+            File.WriteAllText(Path.Combine(gameDir, "BEA.exe"), string.Empty);
+
+            try
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, root);
+                Environment.SetEnvironmentVariable(GameDirectoryCandidatesEnvironmentVariable, gameDir);
+
+                var config = new AppConfig();
+                Assert.Equal(gameDir, config.GetGameDirOrDetect(persistDetection: true));
+
+                AppConfig loaded = AppConfig.Load();
+                Assert.Equal(gameDir, loaded.GetGameDir());
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, previousRoot);
+                Environment.SetEnvironmentVariable(GameDirectoryCandidatesEnvironmentVariable, previousCandidates);
+                if (Directory.Exists(root))
+                {
+                    Directory.Delete(root, recursive: true);
+                }
+                if (Directory.Exists(gameDir))
+                {
+                    Directory.Delete(gameDir, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
+        public void DetectGameDirectory_ReadsSteamLibraryFoldersForCustomLibraries()
+        {
+            string? previousGameCandidates = Environment.GetEnvironmentVariable(GameDirectoryCandidatesEnvironmentVariable);
+            string? previousSteamRoots = Environment.GetEnvironmentVariable(SteamRootCandidatesEnvironmentVariable);
+            string root = Path.Combine(Path.GetTempPath(), $"onslaught-steam-root-{Guid.NewGuid():N}");
+            string steamRoot = Path.Combine(root, "Steam");
+            string customLibrary = Path.Combine(root, "CustomSteamLibrary");
+            string gameDir = Path.Combine(customLibrary, "steamapps", "common", "Battle Engine Aquila");
+            Directory.CreateDirectory(Path.Combine(steamRoot, "steamapps"));
+            Directory.CreateDirectory(Path.Combine(gameDir, "data"));
+            File.WriteAllText(Path.Combine(gameDir, "BEA.exe"), string.Empty);
+            File.WriteAllText(
+                Path.Combine(steamRoot, "steamapps", "libraryfolders.vdf"),
+                $$"""
+                "libraryfolders"
+                {
+                    "0"
+                    {
+                        "path" "{{customLibrary.Replace(@"\", @"\\")}}"
+                    }
+                }
+                """);
+
+            try
+            {
+                Environment.SetEnvironmentVariable(GameDirectoryCandidatesEnvironmentVariable, string.Empty);
+                Environment.SetEnvironmentVariable(SteamRootCandidatesEnvironmentVariable, steamRoot);
+
+                Assert.Equal(gameDir, AppConfig.DetectGameDirectory());
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(GameDirectoryCandidatesEnvironmentVariable, previousGameCandidates);
+                Environment.SetEnvironmentVariable(SteamRootCandidatesEnvironmentVariable, previousSteamRoots);
                 if (Directory.Exists(root))
                 {
                     Directory.Delete(root, recursive: true);
@@ -76,12 +236,12 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         [Fact]
         public void Load_NormalizesMalformedUserConfig()
         {
-            string? previous = Environment.GetEnvironmentVariable("ONSLAUGHT_APP_CONFIG_ROOT");
+            string? previous = Environment.GetEnvironmentVariable(ConfigRootEnvironmentVariable);
             string root = Path.Combine(Path.GetTempPath(), $"onslaught-config-normalize-{Guid.NewGuid():N}");
 
             try
             {
-                Environment.SetEnvironmentVariable("ONSLAUGHT_APP_CONFIG_ROOT", root);
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, root);
                 string configDir = Path.Combine(root, "OnslaughtCareerEditor");
                 Directory.CreateDirectory(configDir);
                 File.WriteAllText(
@@ -111,7 +271,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             }
             finally
             {
-                Environment.SetEnvironmentVariable("ONSLAUGHT_APP_CONFIG_ROOT", previous);
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, previous);
                 if (Directory.Exists(root))
                 {
                     Directory.Delete(root, recursive: true);

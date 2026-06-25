@@ -22,9 +22,12 @@ Use these names when possible:
 | --- | --- |
 | `game/` or `local-game/` | Your own Battle Engine Aquila install mirror or copied executable/runtime files. |
 | `media/` or `local-media/` | Private media/input payloads used for local extraction or validation. |
+| `local-rom-input/` | Large local ROM/input payloads that are useful for extraction or comparison but should not be tracked. |
 | `save-attempts/` or `local-saves/` | Local saves and options payloads used for testing. |
-| `local-ghidra/` or `Ghidra/` | Full local Ghidra projects, databases, exports, and backups. |
+| `local-ghidra/`, `ghidra-local/`, or `Ghidra/` | Full local Ghidra projects, databases, exports, and backups. |
 | `local-proofs/` | Bulky runtime proof bundles, screenshots, traces, CDB logs, and frame captures. |
+| `local-lab/` | Miscellaneous local-only lab material that is too large or payload-like for git. |
+| `mcps/` | Local MCP/tooling sandboxes and generated local integration payloads. |
 | `GameProfiles/` / `PatchBench/` | Copied game profiles and patch-bench runtime output. |
 
 These paths are intentionally ignored by `.gitignore`.
@@ -72,9 +75,24 @@ npm run test:repo-hygiene
 npm run test:public-allowlist
 ```
 
-If a hard payload appears in `git status`, stop and fix the ignore rule or move
-the payload into an ignored local overlay. Do not use this rule to hide normal
-source, docs, state batons, RE summaries, or agent reports.
+`git status --short` is the normal source-change view and intentionally hides
+ignored local payloads. When auditing overlay placement, use targeted ignored
+checks rather than broad whole-repo ignored scans:
+
+```powershell
+git status --short --ignored -- game save-attempts local-rom-input local-proofs local-ghidra ghidra-local local-lab mcps
+git check-ignore -v game\BEA.exe local-proofs\OnslaughtRuntimeProofArchive local-ghidra\GhidraBackups
+```
+
+Extension ignore rules are a safety net, not an approved placement plan. Put
+hard payloads under the approved overlay roots above. If a hard payload appears
+as tracked or untracked source, stop and fix the ignore rule or move the payload
+into an ignored local overlay. Do not use this rule to hide normal source, docs,
+state batons, RE summaries, or agent reports.
+
+Large archives can be exposed through ignored junctions instead of duplicated on
+the primary source drive. Keep those junctions under ignored overlay roots such
+as `local-proofs/` or `local-ghidra/`.
 
 ## Ghidra Note
 

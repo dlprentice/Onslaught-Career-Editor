@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest a public-safe product, tooling, or documentation improvement
+about: Suggest a payload/secret-safe product, tooling, or documentation improvement
 title: "[Feature] "
 labels: enhancement
 assignees: ""
@@ -9,7 +9,7 @@ assignees: ""
 ## Area
 
 Choose one: WinUI, AppCore / CLI, patch / mod safety, docs / release safety,
-public-safe reverse-engineering docs.
+payload/secret-safe reverse-engineering docs.
 
 ## Problem
 

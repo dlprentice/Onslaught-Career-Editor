@@ -190,7 +190,10 @@ Durable operating lessons from the long WinUI product and reverse-engineering ca
 ## Release And Public-Safety Lessons
 
 - Public release summaries must stay public-safe. Do not commit private screenshots, raw frames, full private paths, media caches, copied executables, raw proof JSON, or private game/save/media assets.
-- `.codex/`, `subagents/`, `game/`, private `media/`, `save-attempts/`, state files, and operator directives are release-excluded by policy.
+- `.codex/`, hard-payload `subagents/` output, `game/`, private `media/`,
+  `save-attempts/`, raw runtime evidence, and operator directives are excluded
+  from app ZIPs and legacy package/export payloads by policy. Compact
+  non-secret repo state batons may be tracked in public-primary source.
 - If a tracked public doc is added or renamed, run the release manifest/profile checks and regenerate only when the check proves stale output.
 - The curated release manifest lives at `release/readiness/curated_release_manifest.json`. Do not parse or document a nonexistent `release/curated_release_manifest.json` path.
 - Do not let readiness reports imply unresolved blockers after follow-up commits fix them. Add post-fix traceability sections when needed.

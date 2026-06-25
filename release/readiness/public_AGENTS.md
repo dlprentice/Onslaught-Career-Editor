@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Status: public-primary contributor agent guide
+Status: package/export compatibility agent guide; root AGENTS.md is the canonical public-primary contributor guide
 Last updated: 2026-06-24
 
 This file is the public-primary contributor agent guide for Onslaught Toolkit.
@@ -51,7 +51,7 @@ repo is no longer a sparse subset of a private source tree.
 | C# CLI | Active support | `OnslaughtCareerEditor.Cli/` |
 | Tests | Active | `OnslaughtCareerEditor.AppCore.Tests/`, `OnslaughtCareerEditor.UiTests/` |
 | Tooling | Active support | `tools/` |
-| Reverse-engineering docs | Public-safe specs/research | `reverse-engineering/RE-INDEX.md`, `reverse-engineering/quick-reference/`, `roadmap/ROADMAP-INDEX.md` |
+| Reverse-engineering docs | Payload/secret-safe specs/research | `reverse-engineering/RE-INDEX.md`, `reverse-engineering/quick-reference/`, `roadmap/ROADMAP-INDEX.md` |
 | Archived apps | Reference only | `archive/` is tracked reference source, not shipped app payload |
 
 ## Setup
@@ -59,7 +59,7 @@ repo is no longer a sparse subset of a private source tree.
 From repo root:
 
 ```powershell
-npm run test:public-candidate-inventory
+npm run test:hard-payload-safety
 npm install
 dotnet build .\OnslaughtCareerEditor.WinUI.slnx --nologo
 npm run dev
@@ -90,33 +90,42 @@ npm run test:winui-notices
 ```
 <!-- public-package-commands:end -->
 
-Private maintainers run the private release profile and curated-manifest gates
-before export. Public agents should not require those private manifest files in
-the public candidate.
-Run `npm run test:public-candidate-inventory` only on a fresh exported payload
-before install/build/test outputs are created.
-Before trusting a shared public candidate, verify `EXPORT_PROVENANCE.json` is
-present and then run `npm run test:public-candidate-inventory` on a clean tree.
+Maintainers may still run release profile and curated-manifest gates before
+packaging or export. Public agents working in the normal repo should use the
+root `AGENTS.md` and `npm run test:hard-payload-safety`; run
+`npm run test:public-candidate-inventory` only on a fresh materialized
+package/export candidate before install/build/test outputs are created. Before
+trusting a shared export candidate, verify `EXPORT_PROVENANCE.json` is present
+and then run `npm run test:public-candidate-inventory` on a clean tree.
 
 Run .NET build/test commands serially. UI Automation and visual claims require
 native WinUI checks; browser or fixture success is not native runtime proof.
-Public candidates include a curated, link-closed RE/lore/roadmap documentation
-surface. Private proof forests, raw wave evidence, backup paths, runtime
-artifacts, and operator-only docs remain excluded unless they are rewritten as
-bounded public summaries.
+The normal public-primary source repo can track broad source/docs/tools/RE
+history, compact non-secret state batons, text subagent reports, readiness
+notes, and proof summaries. Package/export candidates may still be smaller than
+the source repo and must exclude raw hard payloads, bulky generated proof
+output, full Ghidra databases/backups, secrets, and machine-only runtime
+material.
 
 ## Public/Private Boundary
 
-Public source candidates are manifest-driven. Do not assume that a private
-working tree is public-shaped.
+This file may be materialized into package/export candidates. It is not a
+reason to reduce the public-primary source repo to a sparse export.
 
-Public candidates must exclude:
+Package/export candidates and app ZIP payloads must exclude hard payloads:
 
-- `game/**`, private `media/**`, `save-attempts/**`, `subagents/**`, `.codex/**`
-- repo state files such as `developer_agent_state.json`
-- private runtime evidence, local proof bundles, screenshots, frame captures,
-  copied executable bytes, raw saves, extracted assets, secrets, and operator
-  directives
+- `game/**`, private `media/**`, `save-attempts/**`, copied executable bytes,
+  arbitrary saves/options, extracted assets, screenshots/frame captures, raw CDB
+  logs, full Ghidra databases/backups, secrets, local config, and bulky local
+  proof bundles.
+- Generated/raw payloads under `subagents/**`; compact text reports and proof
+  summaries may be tracked in public source.
+- Runtime `.codex` sessions/cache/auth/log material; compact non-secret
+  `.codex/goals/**` and `.codex/state/**` markdown may be tracked in public
+  source when useful.
+- Portable app ZIPs and legacy curated exports may omit state batons and
+  maintainer-only accounting surfaces, but that does not make compact
+  non-secret state files invalid in the public-primary source repo.
 
 Use `SECURITY.md` for private-data reporting and `README.RELEASE.md` /
 `PUBLIC_SIGNOFF_COMMANDS.md` for release-safety posture.
@@ -155,8 +164,11 @@ Before asking for review:
 
 - Describe the change and affected paths plainly.
 - Name the local gates you ran.
-- Confirm no private assets, saves, screenshots, proof bundles, secrets, or
-  state files were added.
+- Confirm no private assets, arbitrary saves/options, screenshots/frame dumps,
+  raw CDB logs, copied executables, bulky proof bundles, secrets, runtime
+  cache/session/auth/log material, or copied runtime outputs were added.
+- Confirm any state batons or text agent reports added are compact, non-secret,
+  and free of hard payloads or raw local proof output.
 - Confirm installed game files and original `BEA.exe` were not mutated.
 - Keep archived app changes out of scope unless the task explicitly targets an
   archive.

@@ -167,7 +167,8 @@ decode rows. The executor default is now a 60-second live audio capture, and
 `runtimeAudibleOutputProof=false` remains current truth until a future
 60-second private raw bundle passes the materializer and final checker.
 
-A later 60-second replay (`music-audible-live-20260624-144834`) reached the
+A later 60-second maintainer-local replay, artifact ID
+`music-audible-live-20260624-144834`, reached the
 capture-source correlation builder with non-silent clean/staged loopback
 captures and restart-loop-direct CDB music-selection provenance. The old
 blocker was that the loopback audio helper emitted strict UTC `+00:00`
@@ -181,3 +182,11 @@ replacement source track strongly enough (`margin=-0.161892`, required
 `0.150000`, target correlation `0.862302`, replacement correlation `0.700409`).
 No capture-source sidecar was emitted, the materializer/final checker could not
 accept the bundle, and `runtimeAudibleOutputProof=false` remains current truth.
+
+After the rejection-diagnostic hardening, replaying that same private raw
+bundle produced a validated local
+`winui-safe-copy-music-capture-source-correlation-rejection.v1` sidecar with
+reason `staged-positive-source-correlation-margin-too-weak`. The rejected
+sidecar records `stagedPositiveBestMatch=BEA_04(Master).ogg`, not the
+replacement `BEA_02(Master).ogg`; it is not accepted capture-source
+correlation, not materializer input, and not runtime audible-output proof.

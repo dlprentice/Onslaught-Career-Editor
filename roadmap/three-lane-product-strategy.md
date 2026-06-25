@@ -112,11 +112,17 @@ reclassifies a narrow subset:
 - `media/**`
 - `save-attempts/**`
 - raw generated proof payload below `subagents/**`
-- `.codex/**`
+- Codex/runtime session caches, auth, logs, and temp data
 - `release/readiness/private_runtime_evidence/**`
 - operator directives
 - raw binaries, saves, screenshots, frames, cache paths, full Ghidra
   databases/backups, raw CDB logs, copied runtime output, and secrets
+
+Compact non-secret project-history text may be tracked when useful:
+`.codex/goals/**`, `.codex/state/**`, state batons, concise subagent reports,
+readiness notes, proof summaries, and RE notes are source material, not hard
+payloads. They remain excluded from portable app ZIPs unless a package manifest
+explicitly includes them.
 
 Do not claim signed installer readiness until packaging, signing,
 install/uninstall, dependency, and hard-payload impact are reviewed.

@@ -16,7 +16,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void RefreshSetupStatus()
         {
-            string? gameDir = AppConfig.Load().GetGameDir();
+            string? gameDir = AppConfig.Load().GetGameDirOrDetect(persistDetection: true);
             if (string.IsNullOrWhiteSpace(gameDir))
             {
                 SetupStatusTextBlock.Text = "Game directory not set. Choose your installed game folder in Settings. The app reads it to create playable copies; it does not edit that folder.";

@@ -1,5 +1,38 @@
 # Mod, Patch, Runtime, And Rebuild Register
 
+2026-06-24 music rejected replay addendum:
+a maintainer-local nominal 60-second live-bundle attempt, artifact ID
+`music-audible-live-20260624-144834`, now emits a validated local
+`winui-safe-copy-music-capture-source-correlation-rejection.v1` diagnostic
+instead of only failing with a console message. The rejected reason is
+`staged-positive-source-correlation-margin-too-weak`; the staged-positive
+capture still prefers `BEA_04(Master).ogg` over `BEA_02(Master).ogg`. This is
+local triage only, not accepted capture-source correlation, not materializer
+input, and not `runtimeAudibleOutputProof`.
+`tools/winui_safe_copy_music_rejected_replay_diagnostic_check.py` adds a
+JSON-only cross-check for that bundle: `stagedFileLayoutProven=true`,
+`exactPidDecodeTimelineProven=true`, and `captureSourceCorrelationRejected=true`.
+That narrows the current blocker to capture/source correlation or decode-window
+alignment rather than basic copied-file staging.
+Guard tokens: `not materializer input`; `runtimeAudibleOutputProof=false`.
+
+2026-06-24 music decode-window correlation diagnostic addendum:
+`tools/winui_safe_copy_music_decode_window_correlation_diagnostic.py` plus
+`test:winui-safe-copy-music-decode-window-correlation-diagnostic` now provide a
+replay-only JSON diagnostic over the same rejected
+`music-audible-live-20260624-144834` bundle. The sanitized sidecar records
+`winui-safe-copy-music-decode-window-correlation-diagnostic.v1`,
+`decodeWindowInsideRawAudioCapture=false`, clean decode offset `46208.935ms`
+versus raw audio duration `11380.0ms`, staged decode offset `44148.22ms` versus
+raw audio duration `11880.0ms`, all analysis rows skipped as
+`capture-window-out-of-range`, and `runtimeAudibleOutputProof=false`.
+`stagedReplacementPreferredInDecodeWindow=false` means unavailable, not
+measured source preference. This narrows the next music blocker to loopback
+capture data-span/duration/flush alignment before materialization. It is not
+accepted capture-source correlation, not materializer input, not raw audio/CDB
+publication, not all-cue proof, not gameplay/online proof, and not rebuild
+parity.
+
 2026-06-24 music capture timestamp normalization addendum:
 `tools/winui_safe_copy_music_audible_output_materializer.py` now accepts strict
 UTC `+00:00` private JSON sidecar timestamps in addition to canonical `Z`

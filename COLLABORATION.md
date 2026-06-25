@@ -19,6 +19,8 @@ automation, or workflow scaffolding.
    raw CDB logs, arbitrary saves, secrets, or bulky generated proof payloads
    are in the change. Text state batons, compact proof summaries, and agent
    reports are allowed when they are useful and non-secret.
+6. For meaningful code, docs, runtime proof, release, or repo-boundary changes,
+   update the relevant state baton or explain why the work was read-only.
 
 ## Lanes
 
@@ -43,9 +45,11 @@ This public repo's root `package.json` is the command authority for contributors
 and their agents. Maintainers may run additional local runtime, Ghidra, or
 release-accounting gates when a change touches those areas.
 
-For public-primary boundary work, also run
-`npm run test:public-primary-migration-inventory` and
-`npm run test:hard-payload-safety` before sharing the change.
+For public-primary boundary work, `npm run test:public-allowlist` runs the
+hard-payload, submodule payload, and migration inventory gates. Use
+`npm run test:public-primary-migration-inventory` or
+`npm run test:hard-payload-safety` as focused diagnostics when one of those
+sub-gates needs isolated triage.
 
 ## Handoff Template
 
@@ -60,6 +64,7 @@ Changed paths:
 Validation run:
 Validation intentionally skipped:
 Private/public boundary check:
+State baton update:
 Installed game / original BEA.exe mutation:
 Remaining risks or follow-ups:
 ```
@@ -69,6 +74,8 @@ Required answers:
 - `Validation run` names exact commands, not broad statements.
 - `Private/public boundary check` says whether the change adds hard payload,
   release manifest entries, copied-game proof summaries, or local evidence.
+- `State baton update` names updated state files, or says `read-only/no state
+  edit`.
 - `Installed game / original BEA.exe mutation` must be `none` unless a private
   maintainer intentionally performed a copied-profile/runtime proof. Public
   contributors should never mutate the installed game or original executable.

@@ -172,7 +172,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             DispatcherQueue.TryEnqueue(async () =>
             {
-                string? configuredGameDir = config.GetGameDir() ?? config.GameDirectory;
+                string? configuredGameDir = config.GetGameDirOrDetect(persistDetection: true) ?? config.GameDirectory;
                 if (!string.IsNullOrWhiteSpace(configuredGameDir) &&
                     !string.Equals(Path.GetFullPath(configuredGameDir), _snapshot.GameDirectory, StringComparison.OrdinalIgnoreCase))
                 {
@@ -197,7 +197,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             try
             {
                 AppConfig config = AppConfig.Load();
-                string? gameDirectory = config.GetGameDir() ?? AppConfig.DetectGameDirectory();
+                string? gameDirectory = config.GetGameDirOrDetect(persistDetection: true);
                 SetMediaDirectoryDisplay(gameDirectory, "Scanning the configured read-only install for audio and video.");
                 if (string.IsNullOrWhiteSpace(gameDirectory) || !MediaCatalogService.LooksLikeGameDirectory(gameDirectory))
                 {
@@ -211,12 +211,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     return;
                 }
 
-                if (string.IsNullOrWhiteSpace(config.GetGameDir()))
-                {
-                    config.GameDirectory = gameDirectory;
-                    config.Save();
-                    App.MainWindowInstance?.RefreshFooter();
-                }
+                App.MainWindowInstance?.RefreshFooter();
 
                 _snapshot = await Task.Run(() => _catalogService.Load(Path.GetFullPath(gameDirectory)));
                 _hasLoaded = true;
@@ -258,6 +253,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             SetSelectedVideo(null);
             StopAudioPlayback();
             StopVideoPlayback();
+            AddAudioPlaceholderNode("Game install not configured. Choose Settings or Browse Game Directory.");
+            AddVideoPlaceholderNode("Game install not configured. Choose Settings or Browse Game Directory.");
         }
 
         private void SetMediaDirectoryDisplay(string? fullPath, string status)
@@ -789,6 +786,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _audioItemsByPath.Clear();
             AudioTreeView.RootNodes.Clear();
 
+            if (filtered.Count == 0)
+            {
+                AddAudioPlaceholderNode(BuildAudioEmptyStateText(search));
+                if (_selectedAudio != null)
+                {
+                    SetSelectedAudio(null);
+                }
+                return;
+            }
+
             Dictionary<string, TreeViewNode> nodesByPath = new(StringComparer.OrdinalIgnoreCase);
             foreach (IGrouping<(int SortOrder, string GroupName), MediaAudioItem> group in filtered
                 .GroupBy(static item => (item.GroupSortOrder, item.GroupName))
@@ -848,6 +855,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _videoItemsByPath.Clear();
             VideoTreeView.RootNodes.Clear();
 
+            if (filtered.Count == 0)
+            {
+                AddVideoPlaceholderNode(BuildVideoEmptyStateText(search));
+                if (_selectedVideo != null && !VideoMatchesSearch(_selectedVideo, search))
+                {
+                    SetSelectedVideo(null);
+                }
+                return;
+            }
+
             Dictionary<string, TreeViewNode> nodesByPath = new(StringComparer.OrdinalIgnoreCase);
             foreach (IGrouping<(int SortOrder, string SectionName), MediaVideoItem> group in filtered
                 .GroupBy(static item => (item.SectionSortOrder, item.SectionName))
@@ -895,6 +912,46 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
         }
 
+        private void AddAudioPlaceholderNode(string message)
+        {
+            AudioTreeView.RootNodes.Add(new TreeViewNode
+            {
+                Content = new MediaTreeNodeTag(message)
+            });
+        }
+
+        private void AddVideoPlaceholderNode(string message)
+        {
+            VideoTreeView.RootNodes.Add(new TreeViewNode
+            {
+                Content = new MediaTreeNodeTag(message)
+            });
+        }
+
+        private string BuildAudioEmptyStateText(string search)
+        {
+            if (string.IsNullOrWhiteSpace(_snapshot.GameDirectory))
+            {
+                return "Game install not configured. Choose Settings or Browse Game Directory.";
+            }
+
+            return string.IsNullOrWhiteSpace(search)
+                ? "No audio found in the current install."
+                : "No audio matches the current search.";
+        }
+
+        private string BuildVideoEmptyStateText(string search)
+        {
+            if (string.IsNullOrWhiteSpace(_snapshot.GameDirectory))
+            {
+                return "Game install not configured. Choose Settings or Browse Game Directory.";
+            }
+
+            return string.IsNullOrWhiteSpace(search)
+                ? "No video found in the current install."
+                : "No video matches the current search.";
+        }
+
         private void ApplyPendingVideoHandoff()
         {
             MediaHandoffRequest? request = MediaHandoffService.ConsumeVideoRequest();
@@ -932,7 +989,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             AppConfig config = AppConfig.Load();
-            string? gameDirectory = config.GetGameDir() ?? AppConfig.DetectGameDirectory();
+            string? gameDirectory = config.GetGameDirOrDetect(persistDetection: true);
             if (!MediaCatalogService.LooksLikeGameDirectory(gameDirectory))
             {
                 return null;

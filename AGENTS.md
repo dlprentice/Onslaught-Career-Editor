@@ -63,6 +63,9 @@ or backups, secrets, build output, and bulky generated runtime captures.
 From repo root:
 
 ```powershell
+git submodule update --init --recursive
+node --version # must be v24.x
+npm --version  # must be 11.12.x
 npm run test:hard-payload-safety
 npm install
 dotnet build .\OnslaughtCareerEditor.WinUI.slnx --nologo
@@ -86,6 +89,7 @@ npm run test:winui-primary-lane
 npm run test:winui-safe-copy-preflight
 npm run test:winui-patch-engine-safety
 npm run build:host
+npm run build:cli
 npm run test:doc-commands
 npm run test:md-links
 npm run test:public-allowlist
@@ -120,7 +124,7 @@ Keep out of git:
   `.bea`, options, or `save-attempts/` payloads.
 
 Use `SECURITY.md` for private-data reporting and `README.RELEASE.md` /
-`PUBLIC_SIGNOFF_COMMANDS.md` for release-safety posture.
+`release/readiness/PUBLIC_SIGNOFF_COMMANDS.md` for release-safety posture.
 
 ## WinUI Contribution Rules
 

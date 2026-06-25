@@ -18,10 +18,11 @@ explicitly assigns a separate branch or private workspace.
 
 1. Read this file, [SECURITY.md](SECURITY.md), [README.MD](README.MD), and
    [COLLABORATION.md](COLLABORATION.md).
-2. Pick one lane: WinUI, AppCore, CLI, docs/release, or public-safe RE docs.
+2. Pick one lane: WinUI, AppCore, CLI, docs/release, or payload/secret-safe RE docs.
 3. Run only the relevant local gates for that lane before review.
 4. Keep actual game payloads, secrets, and bulky generated runtime captures out
-   of git unless a maintainer explicitly changes that payload rule.
+   of git. Maintainer policy changes may add narrow public-safe fixtures, but
+   they do not authorize proprietary game payloads in public source.
 5. Use [PUBLIC_SIGNOFF_COMMANDS.md](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md) for public-source/release signoff checks.
 
 Read [LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md) before adding or moving local
@@ -59,6 +60,10 @@ Contributors must use a legally obtained local copy of the game and must not sub
 Required for normal product work:
 
 ```powershell
+git submodule update --init --recursive
+node --version # must be v24.x
+npm --version  # must be 11.12.x
+npm run test:hard-payload-safety
 npm install
 dotnet build .\OnslaughtCareerEditor.WinUI.slnx --nologo
 npm run dev
@@ -72,7 +77,7 @@ Tooling prerequisites:
 | --- | --- |
 | Windows 10/11 | WinUI 3 desktop app and UIA tests |
 | .NET 10 SDK | WinUI, AppCore, AppCore.Host, CLI, and tests |
-| Node.js with npm `11.12.1` target | local script runner and docs/release checks |
+| Node.js 24.x with npm 11.12.x target | local script runner and docs/release checks |
 | Python 3 with Windows `py` launcher | public-safe tooling, release, patch, and docs checks |
 | Git Bash or another `bash` provider | release dry-run scripts when packaging requires Bash |
 
@@ -90,6 +95,7 @@ npm run test:winui-primary-lane
 npm run test:winui-safe-copy-preflight
 npm run test:winui-patch-engine-safety
 npm run build:host
+npm run build:cli
 npm run test:doc-commands
 npm run test:md-links
 npm run test:public-allowlist
@@ -112,6 +118,20 @@ Run only the gates relevant to your change, but run them locally before asking f
   root plus the documented arm phrase. Track compact proof summaries, checkers,
   and state updates; keep copied-game frames, raw captures, and raw CDB logs out
   of git.
+
+## State Baton Updates
+
+For meaningful code, docs, runtime proof, release, or repo-boundary changes,
+update the relevant state baton before handoff:
+
+- `developer_agent_state.json` for implementation, runtime, tooling, and
+  validation truth.
+- `documentation_agent_state.json` for docs, release posture, collaboration
+  posture, and handoff truth.
+- `re_orchestrator_state.json` only when active RE orchestration changes.
+
+Keep state concise and non-secret. For read-only audits, do not edit state just
+to satisfy the rule; report the needed state update in the audit result.
 
 ## WinUI UI/UX Contributions
 
@@ -142,6 +162,21 @@ Current proof classes support same-workstation safe-copy control and host-helper
 
 Host/Join UI must stay hidden or disabled until there is a real distinct endpoint command-source proof and a source-bound runtime-causality proof for the copied game. Loopback, synthetic, WSL-only, fixture, or same-process proofs cannot be promoted to player-ready online play.
 
+## Runtime Proof Contributions
+
+Runtime proof work is welcome, but the submitted source change should be small
+and reproducible:
+
+- Put required local game, save, media, Ghidra, or proof inputs in ignored
+  overlay folders from [LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md).
+- Submit scripts, checkers, schemas, manifests, hashes, compact summaries, and
+  bounded readiness notes, not raw frames, WAVs, screenshots, CDB logs, copied
+  executables, or full proof bundles.
+- Separate self-tests from live proof commands. Live copied-game, CDB, input, or
+  Ghidra mutation commands need explicit arm phrases and should fail closed when
+  required local inputs are absent.
+- Update capability/docs/state only to the evidence level actually proven.
+
 ## Public Release Boundary
 
 The public repo is the primary working repo, but public release assets are still
@@ -159,6 +194,7 @@ npm run test:md-links
 npm run test:public-allowlist
 npm run test:repo-hygiene
 npm run test:winui-notices
+npm run build:cli
 ```
 
 Do not publish a public release, push a public release branch, sign binaries, ship an installer, or claim public package readiness without explicit maintainer authorization.
@@ -166,7 +202,7 @@ Do not publish a public release, push a public release branch, sign binaries, sh
 ## Opening A PR
 
 - Base public PRs on this public repo unless a maintainer explicitly assigns a separate branch or private workspace.
-- Fill out the handoff template in [COLLABORATION.md](COLLABORATION.md); it is also suitable as a PR description when no separate template exists.
+- Use the GitHub PR template for PRs; use [COLLABORATION.md](COLLABORATION.md) for agent handoffs, review requests, or non-GitHub handoff notes.
 - Keep the PR scoped to one lane and name the lane in the description.
 - Include the exact local gates you ran and any gates intentionally skipped.
 - Do not add GitHub Actions, CI/CD workflows, release automation, game assets,

@@ -89,6 +89,54 @@ class MusicCaptureSourceCorrelationCheckTests(unittest.TestCase):
         with self.assertRaises(checker.CorrelationAdapterError):
             checker.validate_artifact(payload)
 
+    def test_rejection_fixture_validates_as_local_diagnostic_only(self) -> None:
+        payload = checker.rejection_fixture()
+        summary = checker.validate_rejection_diagnostic(payload)
+
+        self.assertEqual("winui-safe-copy-music-capture-source-correlation-rejection.v1", summary["schema"])
+        self.assertEqual("rejected", summary["status"])
+        self.assertEqual("staged-positive-source-correlation-margin-too-weak", summary["rejectionReason"])
+        self.assertFalse(summary["runtimeAudibleOutputProof"])
+
+    def test_rejection_fixture_is_not_accepted_adapter(self) -> None:
+        with self.assertRaises(checker.CorrelationAdapterError):
+            checker.validate_artifact(checker.rejection_fixture())
+
+    def test_rejection_diagnostic_rejects_accepted_adapter_shape(self) -> None:
+        payload = checker.rejection_fixture()
+        payload["sourceAudioCorrelation"] = {}
+
+        with self.assertRaises(checker.CorrelationAdapterError):
+            checker.validate_rejection_diagnostic(payload)
+
+    def test_rejection_diagnostic_private_path_leak_fails_closed(self) -> None:
+        payload = checker.rejection_fixture()
+        payload["sanitizedError"] = r"failed at C:\Users\david\private\capture.wav"
+
+        with self.assertRaises(checker.CorrelationAdapterError):
+            checker.validate_rejection_diagnostic(payload)
+
+    def test_rejection_diagnostic_reason_must_match_margin(self) -> None:
+        payload = checker.rejection_fixture()
+        payload["rejectionReason"] = "clean-baseline-source-correlation-margin-too-weak"
+
+        with self.assertRaises(checker.CorrelationAdapterError):
+            checker.validate_rejection_diagnostic(payload)
+
+    def test_rejection_diagnostic_raw_payload_key_fails_closed(self) -> None:
+        payload = checker.rejection_fixture()
+        payload["sourceAudioCorrelationDiagnostics"]["samples"] = [0, 1]
+
+        with self.assertRaises(checker.CorrelationAdapterError):
+            checker.validate_rejection_diagnostic(payload)
+
+    def test_rejection_diagnostic_requires_materializer_non_claim(self) -> None:
+        payload = checker.rejection_fixture()
+        payload["nonClaims"] = [item for item in payload["nonClaims"] if item != "not materializer input"]
+
+        with self.assertRaises(checker.CorrelationAdapterError):
+            checker.validate_rejection_diagnostic(payload)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -28,6 +28,12 @@ __pycache__/
 *.pyc
 *.pyo
 subagents/md-link-check/
+subagents/winui-home-navigation/
+subagents/winui-launch-smoke/
+subagents/winui-lore-reader-interaction/
+subagents/winui-media-representative-playback/
+subagents/winui-zip-package-probe/
+subagents/winui-zip-release-candidate-probe/
 release/out/
 release/artifacts/
 .tmp*/
@@ -39,6 +45,7 @@ tmp*/
 /mcps/
 /local-lab/
 /local-game/
+/local-rom-input/
 /local-media/
 /local-saves/
 /save-attempts/

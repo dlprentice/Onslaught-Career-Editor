@@ -210,7 +210,11 @@ This dossier is public-safe and intentionally contains no raw assets, executable
 Any future web runtime must keep these release rules:
 
 - Use bring-your-own-game-files for copyrighted retail assets unless a sanitized subset is explicitly cleared.
-- Keep `game/**`, private `media/**`, `save-attempts/**`, `subagents/**`, private runtime evidence, state files, and operator directives out of public/community releases.
+- Keep `game/**`, private `media/**`, `save-attempts/**`, raw `subagents/**`
+  proof output, private runtime evidence, and operator directives out of
+  app ZIPs, generated package/source exports, and web/community runtime
+  bundles. Compact non-secret state batons may be tracked in public-primary
+  source.
 - Do not ship copied `BEA.exe` bytes, extracted private media, raw Bink video, raw screenshots, or local proof JSON.
 - Treat Stuart's source as architecture/name/logic evidence, not as directly shippable web-runtime code unless rights and cleanup are explicitly reviewed.
 - Keep public docs focused on methods, schemas, and sanitized evidence.

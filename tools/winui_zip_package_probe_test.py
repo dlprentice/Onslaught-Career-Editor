@@ -37,6 +37,7 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             self.assertTrue((bundle_dir / probe.ROOT_LAUNCHER).is_file())
             self.assertTrue((bundle_dir / probe.ROOT_README).is_file())
             self.assertTrue((bundle_dir / probe.ROOT_LICENSE).is_file())
+            self.assertTrue((bundle_dir / "lore-book" / "BOOK.md").is_file())
             self.assertTrue((bundle_dir / "app" / probe.APP_EXE).is_file())
             self.assertTrue((bundle_dir / "app" / "support.dll").is_file())
             self.assertFalse((bundle_dir / probe.APP_EXE).exists())
@@ -56,6 +57,7 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             self.assertIn("zip_no_root_executables", failures)
             self.assertIn("zip_no_root_dlls", failures)
             self.assertIn("zip_contains_Launch Onslaught Toolkit.cmd", failures)
+            self.assertIn("zip_contains_lore-book_BOOK.md", failures)
 
     def test_zip_inspection_accepts_portable_bundle_root(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:
@@ -71,6 +73,26 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             failures = [item for item in probe.inspect_zip(zip_path) if item.status == "FAIL"]
 
             self.assertEqual(failures, [])
+
+    def test_zip_inspection_rejects_hard_payload_entries_inside_app_folder(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            publish_dir = root / "publish"
+            bundle_dir = root / "bundle"
+            zip_path = root / "payload.zip"
+            self._write_publish_payload(publish_dir)
+            probe.stage_portable_bundle(publish_dir, bundle_dir)
+            payload_path = bundle_dir / "app" / "game" / "BEA.exe"
+            payload_path.parent.mkdir(parents=True, exist_ok=True)
+            payload_path.write_bytes(b"not ok")
+
+            folder_failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
+            exit_code, _ = probe.create_zip(bundle_dir, zip_path)
+            self.assertEqual(exit_code, 0)
+            zip_failures = {item.key for item in probe.inspect_zip(zip_path) if item.status == "FAIL"}
+
+            self.assertIn("bundle_payload_safety", folder_failures)
+            self.assertIn("zip_payload_safety", zip_failures)
 
     def test_ui_retry_records_failed_attempt_before_success(self) -> None:
         calls: list[int] = []

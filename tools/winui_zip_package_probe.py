@@ -17,6 +17,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -38,6 +39,9 @@ ROOT_LAUNCHER = "Launch Onslaught Toolkit.cmd"
 ROOT_README = "README.MD"
 ROOT_LICENSE = "LICENSE"
 APP_DIR = "app"
+LORE_BOOK_DIR = "lore-book"
+LORE_BOOK_REQUIRED_FILE = f"{LORE_BOOK_DIR}/BOOK.md"
+LORE_BOOK_SOURCE = ROOT / LORE_BOOK_DIR
 REQUIRED_APP_FILES = (
     APP_EXE,
     APP_PRI,
@@ -50,11 +54,56 @@ REQUIRED_ROOT_FILES = (
     ROOT_README,
     ROOT_LICENSE,
 )
-REQUIRED_PAYLOAD_FILES = REQUIRED_ROOT_FILES + tuple(f"{APP_DIR}/{filename}" for filename in REQUIRED_APP_FILES)
+REQUIRED_PAYLOAD_FILES = REQUIRED_ROOT_FILES + (LORE_BOOK_REQUIRED_FILE,) + tuple(f"{APP_DIR}/{filename}" for filename in REQUIRED_APP_FILES)
 DEFAULT_PACKAGE_NAME = "OnslaughtCareerEditor.WinUI-local-probe-win-x64.zip"
 HOME_NAVIGATION_FILTER = "FullyQualifiedName~WinUiHomeNavigationSmokeTests"
+LORE_SMOKE_FILTER = "FullyQualifiedName~WinUiLoreInteractionSmokeTests.LoreReader_SearchesSelectsAndShowsCurrentDocumentThroughUiAutomation"
 HOME_NAVIGATION_TEST_TIMEOUT_SECONDS = 600
+LORE_SMOKE_TEST_TIMEOUT_SECONDS = 240
 MEDIA_SMOKE_MAX_ATTEMPTS = 2
+ZIP_PAYLOAD_DENY_SEGMENTS = {
+    ".codex",
+    "GameProfiles",
+    "Ghidra",
+    "PatchBench",
+    "game",
+    "ghidra-local",
+    "local-game",
+    "local-ghidra",
+    "local-lab",
+    "local-media",
+    "local-proofs",
+    "local-saves",
+    "media",
+    "save-attempts",
+}
+ZIP_PAYLOAD_DENY_SUFFIXES = (
+    ".aya",
+    ".bea",
+    ".bes",
+    ".bik",
+    ".bytes",
+    ".dds",
+    ".dmp",
+    ".etl",
+    ".fbx",
+    ".gbf",
+    ".gdt",
+    ".gpr",
+    ".gzf",
+    ".mp3",
+    ".mp4",
+    ".raw",
+    ".trx",
+    ".vid",
+    ".wav",
+)
+ZIP_PAYLOAD_DENY_FILENAMES = {
+    "bea.exe",
+    "bea.exe.original.backup",
+    "bea_widescreen.exe",
+    "defaultoptions.bea",
+}
 
 
 @dataclass
@@ -178,6 +227,24 @@ def copy_license(bundle_dir: Path) -> CheckResult:
     return CheckResult("bundle_license", "PASS", f"{relative(destination)} copied from repo license.")
 
 
+def copy_lore_book(bundle_dir: Path) -> CheckResult:
+    destination = bundle_dir / LORE_BOOK_DIR
+    required_source = LORE_BOOK_SOURCE / "BOOK.md"
+    if not required_source.is_file() or required_source.stat().st_size <= 0:
+        return CheckResult("lore_book_source", "FAIL", f"{relative(required_source)} is missing or empty.")
+    if destination.exists():
+        shutil.rmtree(destination)
+    shutil.copytree(LORE_BOOK_SOURCE, destination)
+    required_destination = destination / "BOOK.md"
+    return CheckResult(
+        "bundle_lore_book",
+        "PASS" if required_destination.is_file() and required_destination.stat().st_size > 0 else "FAIL",
+        f"{relative(destination)} copied so the packaged Lore page has an offline index."
+        if required_destination.is_file() and required_destination.stat().st_size > 0
+        else f"{relative(required_destination)} is missing after copy.",
+    )
+
+
 def stage_portable_bundle(publish_dir: Path, bundle_dir: Path) -> list[CheckResult]:
     if bundle_dir.exists():
         shutil.rmtree(bundle_dir)
@@ -187,6 +254,7 @@ def stage_portable_bundle(publish_dir: Path, bundle_dir: Path) -> list[CheckResu
         write_launcher(bundle_dir),
         copy_zip_readme(bundle_dir),
         copy_license(bundle_dir),
+        copy_lore_book(bundle_dir),
     ]
     return checks
 
@@ -210,7 +278,7 @@ def inspect_root_layout_names(names: set[str], prefix: str) -> list[CheckResult]
     checks: list[CheckResult] = []
     root_files = sorted(name for name in names if "/" not in name.rstrip("/"))
     top_levels = sorted({name.rstrip("/").split("/", 1)[0] for name in names if name.rstrip("/")})
-    allowed_top_levels = set(REQUIRED_ROOT_FILES) | {APP_DIR}
+    allowed_top_levels = set(REQUIRED_ROOT_FILES) | {APP_DIR, LORE_BOOK_DIR}
     unexpected_top_levels = [name for name in top_levels if name not in allowed_top_levels]
     root_executables = [name for name in root_files if name.lower().endswith(".exe")]
     root_dlls = [name for name in root_files if name.lower().endswith(".dll")]
@@ -218,7 +286,7 @@ def inspect_root_layout_names(names: set[str], prefix: str) -> list[CheckResult]
         CheckResult(
             f"{prefix}_friendly_root_shape",
             "PASS" if not unexpected_top_levels else "FAIL",
-            "Top-level ZIP/folder entries are limited to launcher, readme, license, and app/."
+            "Top-level ZIP/folder entries are limited to launcher, readme, license, lore-book/, and app/."
             if not unexpected_top_levels
             else "Unexpected top-level entries: " + ", ".join(unexpected_top_levels[:12]),
         )
@@ -244,6 +312,42 @@ def inspect_root_layout_names(names: set[str], prefix: str) -> list[CheckResult]
     return checks
 
 
+def inspect_payload_safety_names(names: set[str], prefix: str) -> list[CheckResult]:
+    findings: list[str] = []
+    deny_segments_lower = {segment.lower() for segment in ZIP_PAYLOAD_DENY_SEGMENTS}
+    for name in sorted(names):
+        normalized = name.replace("\\", "/").strip("/")
+        if not normalized:
+            continue
+        parts = [part for part in normalized.split("/") if part]
+        lower_parts = [part.lower() for part in parts]
+        basename = lower_parts[-1] if lower_parts else ""
+        lower_name = normalized.lower()
+        if any(part in deny_segments_lower for part in lower_parts):
+            findings.append(f"{normalized} (payload-root segment)")
+            continue
+        if basename in ZIP_PAYLOAD_DENY_FILENAMES:
+            findings.append(f"{normalized} (game executable/options filename)")
+            continue
+        if lower_name.endswith(ZIP_PAYLOAD_DENY_SUFFIXES):
+            findings.append(f"{normalized} (hard-payload suffix)")
+    if findings:
+        return [
+            CheckResult(
+                f"{prefix}_payload_safety",
+                "FAIL",
+                "Hard-payload-like package entries: " + ", ".join(findings[:12]),
+            )
+        ]
+    return [
+        CheckResult(
+            f"{prefix}_payload_safety",
+            "PASS",
+            "No game/proof/save/media/Ghidra hard-payload entries were found in the packaged layout.",
+        )
+    ]
+
+
 def inspect_folder(root: Path, prefix: str) -> list[CheckResult]:
     checks: list[CheckResult] = []
     for filename in REQUIRED_PAYLOAD_FILES:
@@ -264,6 +368,7 @@ def inspect_folder(root: Path, prefix: str) -> list[CheckResult]:
             except ValueError:
                 continue
         checks.extend(inspect_root_layout_names(names, prefix))
+        checks.extend(inspect_payload_safety_names(names, prefix))
     package_suffixes = {".msix", ".appx", ".appinstaller", ".msixbundle", ".appxbundle"}
     package_files = [path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in package_suffixes]
     checks.append(
@@ -320,6 +425,7 @@ def inspect_zip(zip_path: Path) -> list[CheckResult]:
             )
         )
     checks.extend(inspect_root_layout_names(names, "zip"))
+    checks.extend(inspect_payload_safety_names(names, "zip"))
     installer_suffixes = (".msix", ".appx", ".appinstaller", ".msixbundle", ".appxbundle")
     installers = [name for name in names if name.lower().endswith(installer_suffixes)]
     checks.append(
@@ -395,6 +501,13 @@ def run_ui_test_with_retry(
     return last_exit, "\n\n".join(attempts), max_attempts
 
 
+def ui_test_passed_without_skip(exit_code: int | None, output: str) -> bool:
+    if exit_code != 0:
+        return False
+    skipped_match = re.search(r"Skipped:\s+([1-9][0-9]*)", output)
+    return skipped_match is None
+
+
 def get_process_state() -> tuple[int, str]:
     return run_powershell(
         "Get-Process -Name OnslaughtCareerEditor.WinUI -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,Path | ConvertTo-Json -Compress",
@@ -424,6 +537,8 @@ def build_report(
     launch_output: str,
     home_navigation_exit: int | None,
     home_navigation_output: str,
+    lore_exit: int | None,
+    lore_output: str,
     media_exit: int | None,
     media_output: str,
     process_after: str,
@@ -446,12 +561,14 @@ def build_report(
         "launchSmokeExitCode": launch_exit,
         "homeNavigationSmokeExitCode": home_navigation_exit,
         "homeDeeplinkSmokeExitCode": home_navigation_exit,
+        "loreSmokeExitCode": lore_exit,
         "mediaSmokeExitCode": media_exit,
         "checks": [item.__dict__ for item in checks],
         "publishOutputTail": "\n".join(publish_output.splitlines()[-20:]),
         "launchOutputTail": "\n".join(launch_output.splitlines()[-40:]),
         "homeNavigationOutputTail": "\n".join(home_navigation_output.splitlines()[-40:]),
         "homeDeeplinkOutputTail": "\n".join(home_navigation_output.splitlines()[-40:]),
+        "loreOutputTail": "\n".join(lore_output.splitlines()[-40:]),
         "mediaOutputTail": "\n".join(media_output.splitlines()[-40:]),
         "processAfter": process_after.strip() or "<none>",
         "notProven": [
@@ -518,6 +635,8 @@ def main() -> int:
     launch_output = ""
     home_navigation_exit: int | None = None
     home_navigation_output = ""
+    lore_exit: int | None = None
+    lore_output = ""
     media_exit: int | None = None
     media_output = ""
     process_after = ""
@@ -559,11 +678,11 @@ def main() -> int:
                     checks.append(
                         CheckResult(
                             "extracted_launch_smoke",
-                            "PASS" if launch_exit == 0 else "FAIL",
-                            f"Launch smoke exit code {launch_exit}.",
+                            "PASS" if ui_test_passed_without_skip(launch_exit, launch_output) else "FAIL",
+                            f"Launch smoke exit code {launch_exit}; skipped rows are not accepted.",
                         )
                     )
-                    if launch_exit == 0:
+                    if ui_test_passed_without_skip(launch_exit, launch_output):
                         stop_app_process()
                         home_navigation_exit, home_navigation_output = run_ui_test(
                             HOME_NAVIGATION_FILTER,
@@ -574,11 +693,25 @@ def main() -> int:
                         checks.append(
                             CheckResult(
                                 "extracted_home_navigation_smoke",
-                                "PASS" if home_navigation_exit == 0 else "FAIL",
-                                f"Home navigation smoke exit code {home_navigation_exit}.",
+                                "PASS" if ui_test_passed_without_skip(home_navigation_exit, home_navigation_output) else "FAIL",
+                                f"Home navigation smoke exit code {home_navigation_exit}; skipped rows are not accepted.",
                             )
                         )
-                    if args.include_media_smoke and launch_exit == 0 and home_navigation_exit == 0:
+                    if ui_test_passed_without_skip(launch_exit, launch_output) and ui_test_passed_without_skip(home_navigation_exit, home_navigation_output):
+                        stop_app_process()
+                        lore_exit, lore_output = run_ui_test(
+                            LORE_SMOKE_FILTER,
+                            extracted_exe,
+                            timeout_seconds=LORE_SMOKE_TEST_TIMEOUT_SECONDS,
+                        )
+                        checks.append(
+                            CheckResult(
+                                "extracted_lore_smoke",
+                                "PASS" if ui_test_passed_without_skip(lore_exit, lore_output) else "FAIL",
+                                f"Lore reader smoke exit code {lore_exit}; skipped rows are not accepted.",
+                            )
+                        )
+                    if args.include_media_smoke and ui_test_passed_without_skip(launch_exit, launch_output) and ui_test_passed_without_skip(home_navigation_exit, home_navigation_output) and ui_test_passed_without_skip(lore_exit, lore_output):
                         stop_app_process()
                         media_exit, media_output, media_attempts = run_ui_test_with_retry(
                             "FullyQualifiedName~WinUiMediaInteractionSmokeTests.MediaPage_PlaysRepresentativeAudioAndVideoRowsThroughUi",
@@ -588,8 +721,8 @@ def main() -> int:
                         checks.append(
                             CheckResult(
                                 "extracted_media_smoke",
-                                "PASS" if media_exit == 0 else "FAIL",
-                                f"Representative Media smoke exit code {media_exit} after {media_attempts} attempt(s).",
+                                "PASS" if ui_test_passed_without_skip(media_exit, media_output) else "FAIL",
+                                f"Representative Media smoke exit code {media_exit} after {media_attempts} attempt(s); skipped rows are not accepted.",
                             )
                         )
 
@@ -618,6 +751,8 @@ def main() -> int:
         launch_output,
         home_navigation_exit,
         home_navigation_output,
+        lore_exit,
+        lore_output,
         media_exit,
         media_output,
         process_after,
@@ -640,6 +775,8 @@ def main() -> int:
             print(report["launchOutputTail"])
             print("Home navigation output:")
             print(report["homeNavigationOutputTail"])
+            print("Lore output:")
+            print(report["loreOutputTail"])
             print("Media output:")
             print(report["mediaOutputTail"])
 

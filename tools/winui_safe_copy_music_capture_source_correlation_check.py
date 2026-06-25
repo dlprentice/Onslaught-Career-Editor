@@ -18,6 +18,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = "winui-safe-copy-music-capture-source-correlation.v1"
+REJECTION_SCHEMA = "winui-safe-copy-music-capture-source-correlation-rejection.v1"
 ADAPTER_VERSION = "capture-source-correlation-helper.v1"
 PRESET_ID = "use-bea02-for-bea04"
 TARGET = "BEA_04(Master).ogg"
@@ -37,6 +38,15 @@ REQUIRED_NON_CLAIMS = {
     "not all music cues",
     "not gameplay parity",
     "not rebuild parity",
+}
+REQUIRED_REJECTION_NON_CLAIMS = REQUIRED_NON_CLAIMS | {
+    "not accepted capture-source correlation",
+    "not materializer input",
+}
+ACCEPTED_REJECTION_REASONS = {
+    "source-target-replacement-margin-too-weak",
+    "clean-baseline-source-correlation-margin-too-weak",
+    "staged-positive-source-correlation-margin-too-weak",
 }
 FORBIDDEN_PAYLOAD_KEYS = {
     "capturepath",
@@ -262,6 +272,97 @@ def validate_artifact(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def validate_rejection_diagnostic(payload: dict[str, Any]) -> dict[str, Any]:
+    require(payload.get("schemaVersion") == REJECTION_SCHEMA, "Unexpected capture-source rejection schema.")
+    require(payload.get("adapterVersion") == ADAPTER_VERSION, "Unexpected rejection adapter version.")
+    require(payload.get("status") == "rejected", "Rejection diagnostic status must be rejected.")
+    reason = payload.get("rejectionReason")
+    require(reason in ACCEPTED_REJECTION_REASONS, "Unexpected rejection reason.")
+    require(payload.get("presetId") == PRESET_ID, "Preset id changed.")
+    require(payload.get("target") == TARGET, "Target track changed.")
+    require(payload.get("replacement") == REPLACEMENT, "Replacement track changed.")
+    require(int_at(payload, "levelId") == LEVEL_ID, "Level id changed.")
+    require(bool_at(payload, "runtimeAudibleOutputProof") is False, "Rejection diagnostic must not claim audible output.")
+    require("sourceAudioCorrelation" not in payload, "Rejection diagnostic must not masquerade as an accepted adapter.")
+    require(not has_private_path_text(payload), "Rejection diagnostic contains private path-like text.")
+    require(not has_forbidden_payload_key(payload), "Rejection diagnostic contains raw/private audio payload keys.")
+
+    bindings = validate_input_bindings(payload)
+    capture = validate_capture_analysis(payload)
+    diagnostic = object_at(payload, "sourceAudioCorrelationDiagnostics")
+    require(diagnostic.get("method") == capture["method"], "capture and rejection diagnostic methods must match.")
+    require(diagnostic.get("method") in ACCEPTED_METHODS, "rejection diagnostic method is not accepted.")
+    require(diagnostic.get("fingerprintVersion") == SOURCE_AUDIO_FINGERPRINT_VERSION, "source audio fingerprint version changed.")
+    require(diagnostic.get("cleanBaselineBestMatch") in {TARGET, REPLACEMENT}, "unexpected clean baseline best match.")
+    require(diagnostic.get("stagedPositiveBestMatch") in {TARGET, REPLACEMENT}, "unexpected staged positive best match.")
+    require(bool_at(diagnostic, "rawAudioPublished") is False, "raw audio must not be published.")
+    require(bool_at(diagnostic, "sourceAudioPathsPublished") is False, "source audio paths must not be published.")
+    require(bool_at(diagnostic, "privateCapturePathsPublished") is False, "private capture paths must not be published.")
+
+    source_margin = number_at(diagnostic, "sourceTargetReplacementDistinctMargin")
+    clean_margin = number_at(diagnostic, "cleanBaselineMargin")
+    staged_margin = number_at(diagnostic, "stagedPositiveMargin")
+    minimum_margin = number_at(diagnostic, "minimumAcceptedMargin")
+    require(0.0 <= source_margin <= 1.0, "source distinct margin must be normalized.")
+    require(minimum_margin >= MIN_ACCEPTED_MARGIN, "rejection minimum margin too weak.")
+
+    scores = object_at(diagnostic, "scoreMatrix")
+    clean_target = number_at(scores, "cleanBaselineVsTarget")
+    clean_replacement = number_at(scores, "cleanBaselineVsReplacement")
+    staged_target = number_at(scores, "stagedPositiveVsTarget")
+    staged_replacement = number_at(scores, "stagedPositiveVsReplacement")
+    for label, score in {
+        "cleanBaselineVsTarget": clean_target,
+        "cleanBaselineVsReplacement": clean_replacement,
+        "stagedPositiveVsTarget": staged_target,
+        "stagedPositiveVsReplacement": staged_replacement,
+    }.items():
+        require(-1.0 <= score <= 1.0, f"{label} must be normalized.")
+
+    require(abs((clean_target - clean_replacement) - clean_margin) <= 0.000001, "clean baseline rejection margin drifted from score matrix.")
+    require(abs((staged_replacement - staged_target) - staged_margin) <= 0.000001, "staged positive rejection margin drifted from score matrix.")
+    expected_clean_best = TARGET if clean_target >= clean_replacement else REPLACEMENT
+    expected_staged_best = TARGET if staged_target >= staged_replacement else REPLACEMENT
+    require(diagnostic["cleanBaselineBestMatch"] == expected_clean_best, "clean baseline best match drifted from score matrix.")
+    require(diagnostic["stagedPositiveBestMatch"] == expected_staged_best, "staged positive best match drifted from score matrix.")
+
+    if reason == "source-target-replacement-margin-too-weak":
+        require(source_margin < minimum_margin, "source rejection reason does not match margin evidence.")
+    elif reason == "clean-baseline-source-correlation-margin-too-weak":
+        require(clean_margin < minimum_margin, "clean rejection reason does not match margin evidence.")
+    elif reason == "staged-positive-source-correlation-margin-too-weak":
+        require(staged_margin < minimum_margin, "staged rejection reason does not match margin evidence.")
+
+    boundary = payload.get("claimBoundary")
+    require(isinstance(boundary, str), "Rejection diagnostic must state its claim boundary.")
+    boundary_lower = boundary.lower()
+    require("not accepted capture-source correlation" in boundary_lower, "Rejection diagnostic must state it is not accepted capture-source correlation.")
+    require("not materializer input" in boundary_lower, "Rejection diagnostic must state it is not materializer input.")
+    require("not runtime audible-output proof" in boundary_lower, "Rejection diagnostic must state it is not runtime audible-output proof.")
+    non_claims = {str(item) for item in list_at(payload, "nonClaims")}
+    for token in REQUIRED_REJECTION_NON_CLAIMS:
+        require(token in non_claims, f"Missing rejection non-claim: {token}")
+
+    return {
+        "schema": REJECTION_SCHEMA,
+        "adapterVersion": ADAPTER_VERSION,
+        "status": "rejected",
+        "rejectionReason": reason,
+        "presetId": PRESET_ID,
+        "levelId": LEVEL_ID,
+        "target": TARGET,
+        "replacement": REPLACEMENT,
+        "runtimeAudibleOutputProof": False,
+        "cleanBaselineBestMatch": diagnostic["cleanBaselineBestMatch"],
+        "stagedPositiveBestMatch": diagnostic["stagedPositiveBestMatch"],
+        "cleanBaselineMargin": clean_margin,
+        "stagedPositiveMargin": staged_margin,
+        "sourceTargetReplacementDistinctMargin": source_margin,
+        "inputBindings": bindings,
+        "claimBoundary": "Rejected local diagnostic only: not accepted capture-source correlation, not materializer input, and not current audible output proof.",
+    }
+
+
 def fixture() -> dict[str, Any]:
     return {
         "schemaVersion": SCHEMA,
@@ -310,8 +411,70 @@ def fixture() -> dict[str, Any]:
     }
 
 
+def rejection_fixture(reason: str = "staged-positive-source-correlation-margin-too-weak") -> dict[str, Any]:
+    clean_target = 0.91
+    clean_replacement = 0.19
+    staged_target = 0.86
+    staged_replacement = 0.70
+    source_margin = 0.78
+    if reason == "clean-baseline-source-correlation-margin-too-weak":
+        clean_target = 0.40
+        clean_replacement = 0.32
+    if reason == "source-target-replacement-margin-too-weak":
+        source_margin = 0.04
+    return {
+        "schemaVersion": REJECTION_SCHEMA,
+        "adapterVersion": ADAPTER_VERSION,
+        "generatedAt": "2026-06-24T00:00:00Z",
+        "status": "rejected",
+        "rejectionReason": reason,
+        "sanitizedError": "staged positive does not prefer source replacement strongly enough.",
+        "presetId": PRESET_ID,
+        "levelId": LEVEL_ID,
+        "target": TARGET,
+        "replacement": REPLACEMENT,
+        "runtimeAudibleOutputProof": False,
+        "inputBindings": {
+            "cleanAudioJsonSha256": "1" * 64,
+            "cleanAudioWavSha256": "2" * 64,
+            "stagedAudioJsonSha256": "3" * 64,
+            "stagedAudioWavSha256": "4" * 64,
+        },
+        "captureAnalysis": {
+            "method": "bounded-fingerprint",
+            "windowCount": WINDOW_COUNT,
+            "minimumActiveWindowCount": MIN_ACTIVE_WINDOW_COUNT,
+            "cleanBaselineActiveWindowCount": 92,
+            "stagedPositiveActiveWindowCount": 96,
+            "rmsPeakOnly": False,
+        },
+        "sourceAudioCorrelationDiagnostics": {
+            "method": "bounded-fingerprint",
+            "fingerprintVersion": SOURCE_AUDIO_FINGERPRINT_VERSION,
+            "sourceTargetReplacementDistinctMargin": source_margin,
+            "cleanBaselineBestMatch": TARGET if clean_target >= clean_replacement else REPLACEMENT,
+            "stagedPositiveBestMatch": TARGET if staged_target >= staged_replacement else REPLACEMENT,
+            "cleanBaselineMargin": clean_target - clean_replacement,
+            "stagedPositiveMargin": staged_replacement - staged_target,
+            "minimumAcceptedMargin": MIN_ACCEPTED_MARGIN,
+            "rawAudioPublished": False,
+            "sourceAudioPathsPublished": False,
+            "privateCapturePathsPublished": False,
+            "scoreMatrix": {
+                "cleanBaselineVsTarget": clean_target,
+                "cleanBaselineVsReplacement": clean_replacement,
+                "stagedPositiveVsTarget": staged_target,
+                "stagedPositiveVsReplacement": staged_replacement,
+            },
+        },
+        "claimBoundary": "Sanitized rejection diagnostic only. Not accepted capture-source correlation, not materializer input, and not runtime audible-output proof.",
+        "nonClaims": sorted(REQUIRED_REJECTION_NON_CLAIMS),
+    }
+
+
 def self_test() -> None:
     validate_artifact(fixture())
+    validate_rejection_diagnostic(rejection_fixture())
     for mutator in (
         lambda payload: payload.__setitem__("runtimeAudibleOutputProof", True),
         lambda payload: payload["captureAnalysis"].__setitem__("outputWav", r"C:\temp\capture.wav"),
@@ -329,11 +492,28 @@ def self_test() -> None:
             pass
         else:
             raise CorrelationAdapterError("Self-test expected invalid fixture to fail.")
+    for mutator in (
+        lambda payload: payload.__setitem__("runtimeAudibleOutputProof", True),
+        lambda payload: payload.__setitem__("sourceAudioCorrelation", {}),
+        lambda payload: payload["captureAnalysis"].__setitem__("outputWav", r"C:\temp\capture.wav"),
+        lambda payload: payload["sourceAudioCorrelationDiagnostics"].__setitem__("scoreMatrix", {"cleanBaselineVsTarget": 0.1}),
+        lambda payload: payload["sourceAudioCorrelationDiagnostics"].__setitem__("stagedPositiveBestMatch", REPLACEMENT),
+        lambda payload: payload.__setitem__("rejectionReason", "clean-baseline-source-correlation-margin-too-weak"),
+    ):
+        payload = rejection_fixture()
+        mutator(payload)
+        try:
+            validate_rejection_diagnostic(payload)
+        except CorrelationAdapterError:
+            pass
+        else:
+            raise CorrelationAdapterError("Self-test expected invalid rejection fixture to fail.")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("artifact", nargs="?", help="Sanitized capture-to-source correlation JSON artifact")
+    parser.add_argument("--rejection-diagnostic", action="store_true", help="Validate a rejected local diagnostic artifact instead of an accepted adapter.")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
 
@@ -343,7 +523,9 @@ def main() -> int:
             print("WinUI safe-copy music capture-source correlation checker self-test: PASS")
             return 0
         require(bool(args.artifact), "Provide an artifact path or --self-test.")
-        print(json.dumps(validate_artifact(read_json(Path(args.artifact))), indent=2, sort_keys=True))
+        payload = read_json(Path(args.artifact))
+        summary = validate_rejection_diagnostic(payload) if args.rejection_diagnostic else validate_artifact(payload)
+        print(json.dumps(summary, indent=2, sort_keys=True))
         return 0
     except CorrelationAdapterError as exc:
         print(f"WinUI safe-copy music capture-source correlation check: FAIL: {exc}")

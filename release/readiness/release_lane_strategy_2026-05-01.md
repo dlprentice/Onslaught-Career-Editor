@@ -1,24 +1,39 @@
 # Release Lane Strategy - 2026-05-01
 
-Status: active public-safe strategy
-Last updated: 2026-05-26
+Status: historical strategy note, superseded by public-primary source posture
+Last updated: 2026-06-24
 
-This document defines the release lanes required by the Ralph-loop goal. It is public-safe: it does not include private absolute paths, raw game assets, raw screenshots, raw frame captures, save contents, executable bytes, data URLs, secrets, or private runtime proof payloads.
+This document is retained as public-safe historical release-lane context. It no
+longer defines the active source-repository strategy. Current truth is that
+`C:\Users\david\source\Onslaught-Career-Editor` is the public-primary working
+repo: source, docs, tools, tests, RE notes, state batons, agent reports,
+readiness notes, and compact proof summaries belong here when useful. Actual
+game payloads, copied executables, arbitrary saves/options payloads, raw CDB
+logs, screenshots/frame dumps, bulky generated runtime captures, full Ghidra
+databases/backups, secrets, and build outputs remain local ignored overlays.
 
 ## Recommendation
 
-Keep the curated public safety/export lane for now, centered on the WinUI-first source candidate.
+Historical recommendation, superseded: keep a curated public safety/export lane
+centered on a WinUI-first source candidate.
 
-The private working repository is not shaped like a public release repository yet. It intentionally mixes active WinUI product code, archived Electron/Python/WPF app code, active Python utility/tooling scripts, shared AppCore/C# support, reverse-engineering documentation, generated release evidence, private/local runtime evidence, operator directives, and state files. A broad "publish the repo except ignored paths" model would make release safety depend on every private or historical family being perfectly denied across a mixed workspace.
+Current recommendation: use the public repo as the primary collaboration repo,
+and keep curated package/export accounting for downloadable ZIPs, generated
+source/package manifests, and release payload checks. The old private checkout is
+an archived comparison/source snapshot, not the normal working repo.
 
-The near-term release model should therefore remain explicit:
+The current release model remains explicit:
 
 - Player/community deliverables are WinUI-first.
 - The curated source candidate includes reviewed WinUI/AppCore/C# CLI/docs/tooling support and excludes archived app surfaces by default.
 - Electron is archived/reference under `archive/electron-workbench/`, not an active product or release lane.
 - Active Python scripts remain RE/tooling/lab support; the old Python GUI/CLI parity app remains archived/reference, not a shipping GUI/product lane.
-- Maintainer/private workflows stay in the private workspace and require typed job boundaries, copied targets, policy gates, and private evidence handling.
-- Public release/export artifacts are generated from the curated manifest, generated allowlist, generated private inventory, and relevant bundle/export policy checks, not from a raw repository copy.
+- Maintainer-local hard payload workflows stay in ignored overlays and require
+  typed job boundaries, copied targets, policy gates, and private evidence
+  handling.
+- Package/export artifacts are generated from manifests, allowlists, inventories,
+  and relevant bundle/export policy checks. These do not redefine the public
+  source repo as sparse or sanitized.
 
 Do not claim signed installer readiness from this strategy. The current evidence supports review of a public-safe source/bundle candidate, not signed or installer-grade release readiness.
 
@@ -26,7 +41,7 @@ Do not claim signed installer readiness from this strategy. The current evidence
 
 | Lane | Audience | What ships | What stays private | Required gates | Current proof gaps |
 | --- | --- | --- | --- | --- | --- |
-| WinUI product lane | Players and community modders using the primary Windows desktop app | Reviewed WinUI/AppCore/CLI/docs/tooling source in the curated candidate; future installer/MSIX deliverables after separate packaging/signing proof. | Bundled game payloads, private `media/**`, private saves, runtime proof captures, raw screenshots, copied executables, local proof JSON, agent/operator directives, state files, and unreviewed dependencies/assets. | WinUI/AppCore build/tests, native Media interaction smoke when runtime media posture is in scope, disposable unpackaged publish smoke when packaging posture is in scope, plus public safety/export checks before any public release. | Signed/installer readiness is not proven; unpackaged publish, focused Media interaction, and published-output Media interaction smoke exist, but installer/MSIX/install-uninstall proof remains future work. |
+| WinUI product lane | Players and community modders using the primary Windows desktop app | Reviewed WinUI/AppCore/CLI/docs/tooling source in the public-primary repo; future installer/MSIX deliverables after separate packaging/signing proof. | Bundled game payloads, private `media/**`, private saves, runtime proof captures, raw screenshots, copied executables, raw local proof JSON, agent/operator directives, and unreviewed dependencies/assets. Compact non-secret repo state batons may live in public source, but do not belong in app ZIP/install packages by default. | WinUI/AppCore build/tests, native Media interaction smoke when runtime media posture is in scope, disposable unpackaged publish smoke when packaging posture is in scope, plus public safety/export checks before any public release. | Signed/installer readiness is not proven; unpackaged publish, focused Media interaction, and published-output Media interaction smoke exist, but installer/MSIX/install-uninstall proof remains future work. |
 | Archived Electron workbench lane | Future maintainers inspecting historical Electron/React/TypeScript work | Nothing from this lane ships by default. Narrow ideas may be ported into WinUI/AppCore/tools only after review. | Entire `archive/electron-workbench/**` tree, private runtime proof, generated catalogs with private paths, and old package outputs. | Optional `archive:electron:*` checks only when archive health is deliberately in scope. | It is archived; no active runtime proof is required for product release. |
 | Python script/tooling lane | Maintainers doing RE/tooling/lab work | Script outputs or tools ship only if explicitly reviewed and included by policy. | Python GUI/product work, revived archived Python app outputs, private extraction outputs, private asset paths, scratch data, and unreviewed generated artifacts. | Script-specific validation plus docs/public-safety gates. | Active Python tool inventory and validation commands still need a focused pass. |
 | Public safety/export lane | Reviewers and future public source/bundle consumers | Curated public source candidate from `release/readiness/curated_release_manifest.json`, generated `release/readiness/public_candidate_allowlist.tsv`, release/readiness evidence summaries, bundle/export policy metadata, and public-safe docs/tests/tools allowed by policy. | All hard-deny families, conditional reference corpora until approved, archived/non-shipping surfaces unless explicitly allowed, and any evidence that exposes private local/runtime material. | `py -3 tools\docsync_check.py`, `py -3 tools\release_profile_snapshot.py --check`, `py -3 tools\release_curated_manifest.py --check`, path-aware allowlist scan for deny families, and lane-specific gates for changed surfaces. | The generated allowlist must be refreshed whenever new public release evidence files are added. A clean public clone/archive review is still required before moving to repo-as-release. |
@@ -35,8 +50,8 @@ Do not claim signed installer readiness from this strategy. The current evidence
 
 | Option | Summary | Strengths | Risks | Decision |
 | --- | --- | --- | --- | --- |
-| Option A - keep curated public safety/export lane | Public source candidates come from `release/readiness/curated_release_manifest.json`; the release tooling generates `release/readiness/public_candidate_allowlist.tsv` and `release/readiness/private_only_inventory.tsv`; bundle/export policy separately checks packaged outputs when relevant. | Explicit source surface, reviewable generated evidence, works while private/reference/evidence files remain in the private repo, supports public-safe summaries without publishing raw proof. | More files and terminology for maintainers to understand; generated artifacts can drift if checks are not run after release-surface changes. | Keep now. Simplify names/docs in a coordinated cleanup later. |
-| Option B - repo-as-release minus `.gitignore` | Treat the repository itself as publishable, excluding ignored paths and a small denylist. | Simpler once the repo is genuinely public-shaped and private material has been moved or removed. | Unsafe now because ignored rules do not protect tracked files, and this private repo still contains tracked operator/state/reference/evidence surfaces with different release postures. | Do not use yet. Revisit only after the prerequisites below are true. |
+| Historical Option A - curated public safety/export lane | Public source candidates came from `release/readiness/curated_release_manifest.json`; the release tooling generated `release/readiness/public_candidate_allowlist.tsv` and `release/readiness/private_only_inventory.tsv`; bundle/export policy separately checked packaged outputs when relevant. | Explicit source surface and reviewable generated evidence. | Terminology implied a sparse source export after the repo became public-primary. | Superseded as source strategy; still useful as package/export accounting context. |
+| Current public-primary repo plus package/export gates | Treat this public repo as the normal collaboration source tree, with ignored local overlays for hard payloads and generated captures. Keep package/export manifests for downloadable app/source release artifacts. | Contributors see the real project-owned source/docs/tools/RE/proof-summary surface while payload safety remains enforceable. | Requires hard-payload safety and clear local-overlay docs. | Active strategy. |
 
 ## Why `.gitignore` Is Not A Release Boundary
 
@@ -44,7 +59,11 @@ Do not claim signed installer readiness from this strategy. The current evidence
 
 That distinction matters in this repository. A file can remain tracked and publishable through a clone, archive, branch push, or raw tree export even if a later ignore rule matches it. Removing a tracked file from the public surface requires deliberate index/history/release-policy work; adding an ignore pattern is not enough.
 
-For this project, release safety must be allowlist-first until the repository is public-shaped. The release path should prove what is included, prove what is excluded, and fail when generated release evidence drifts.
+For this project, source collaboration now happens in the public-primary repo.
+Release/package safety remains allowlist/checker-backed for downloadable ZIPs,
+generated package/source exports, and boundary-sensitive release payloads. The
+release path should prove what is included, prove what is excluded, and fail when
+generated release evidence drifts.
 
 ## Current Deny Families
 
@@ -56,7 +75,11 @@ These families stay out of public/community release outputs unless a later revie
 - `subagents/**`: agent scratch, local screenshots, generated catalogs, proof JSON, and private run artifacts.
 - `release/readiness/private_runtime_evidence/**`: private runtime evidence summaries and related local proof references.
 - Binary/save/runtime payload suffixes: `*.exe`, `*.dll`, `*.bes`, `*.bea`, `*.gzf`, plus generated build/test payloads unless an explicit public-safe fixture policy allows a specific file.
-- Agent operating state: `.codex/**`, `developer_agent_state.json`, `documentation_agent_state.json`, and `re_orchestrator_state.json`.
+- Agent runtime/operator state: `.codex/**`, session caches, and private
+  operator prompts. Compact non-secret repo state batons such as
+  `developer_agent_state.json`, `documentation_agent_state.json`, and
+  `re_orchestrator_state.json` may be tracked in public-primary source, but
+  remain out of app ZIP/install packages unless deliberately included.
 - Operator/private prompt contracts, especially `onslaught_codex_directive.md`.
 - Ghidra/CDB mutation logs, scratch exports, private debugger evidence, and runtime-only proof material.
 - Archived/non-shipping app surfaces unless they are intentionally retained as public parity/reference material.
@@ -68,7 +91,7 @@ The deny policy is family-based because filenames change. Release checks should 
 
 `release/readiness/curated_release_manifest.json` is the source candidate policy. It names include patterns for the public candidate and exclude patterns for private, volatile, archived, legacy, and ops-sensitive paths. It includes WinUI/AppCore/C# CLI/docs/tooling support and excludes archived app surfaces by default. It already includes the Ralph-loop strategy/evidence report paths as release-readiness summaries, so those files are intended to be public-safe.
 
-`release/readiness/public_candidate_allowlist.tsv` is generated evidence from the manifest. It is the reviewable file list for the source candidate. It must be regenerated by `py -3 tools\release_curated_manifest.py`, not hand-edited. After generation, run `npm run test:public-allowlist`; it scans path-aware for deny families such as `.codex/`, top-level `game/`, top-level `media/`, `save-attempts/`, `subagents/`, `private_runtime_evidence`, operator directives, state files, denied binary/save suffixes, private absolute user paths, sandbox attachment paths, and embedded base64 data URLs. Run `npm run test:doc-commands` and `npm run test:repo-hygiene` with it to catch stale documented npm commands, tracked stale evidence placeholders, sandbox attachment links, renderer preview-mode wording regressions, and generated build/test output tracked outside private hard-excluded families.
+`release/readiness/public_candidate_allowlist.tsv` is generated evidence from the manifest. It is the reviewable file list for package/export candidates, not the definition of what may exist in public-primary source. It must be regenerated by `py -3 tools\release_curated_manifest.py`, not hand-edited. After generation, run `npm run test:public-allowlist`; it scans path-aware for deny families such as `.codex/`, top-level `game/`, top-level `media/`, `save-attempts/`, private proof roots, operator directives, denied binary/save suffixes, private absolute user paths, sandbox attachment paths, and embedded base64 data URLs. Run `npm run test:doc-commands` and `npm run test:repo-hygiene` with it to catch stale documented npm commands, tracked stale evidence placeholders, sandbox attachment links, renderer preview-mode wording regressions, and generated build/test output tracked outside private hard-excluded families.
 
 `release/readiness/private_only_inventory.tsv` is generated evidence for excluded or conditional paths. It is useful because it proves the release tooling still sees private-only material as private. It is not a publication list.
 
@@ -136,20 +159,22 @@ Not proven:
 
 These gaps should remain visible in release evidence. Browser preview-mode success and renderer smoke are useful UI proof, but they are not proof of native/game/debug/Ghidra runtime behavior.
 
-## When Repo-As-Release Becomes Safe
+## Public-Primary Source Boundary
 
-Revisit Option B only when all of these are true:
+This section supersedes the older "when repo-as-release becomes safe" checklist.
+The repository is now public-primary for project-owned source/docs/tools/RE
+material. That does not make ignored hard payloads GitHub-trackable, and it does
+not turn package/export artifacts into the source-of-truth repo.
 
-1. Hard-deny families are untracked, moved outside the public repository, or replaced by explicitly public-safe fixtures.
-2. Operator directives, repo state files, private runtime evidence, and local proof artifacts are absent from the public-shaped repo.
-3. Conditional reference corpora have documented provenance, license, and publication decisions.
-4. The active product surface is small and obvious: WinUI product, AppCore support, C# CLI, explicitly reviewed Python tools selected for publication, curated docs/lore, release tooling, tests, and still-needed parity oracles only; archived Electron/Python/WPF app source is absent from the public-shaped repo.
-5. Archived WPF surfaces and unreviewed Python GUI/product material are removed from the public-shaped repo or isolated outside default release packaging.
-6. Release checks prove tracked-file safety and generated-bundle safety, not just ignored-file safety.
-7. A clean public clone/archive review finds no private paths, payload suffixes, state files, operator docs, raw runtime evidence, or accidental private media.
-8. Public docs explain one release path in plain language, with legacy diagnostics clearly marked as legacy.
+Current requirements:
 
-Until those conditions are met, a raw repository release is less safe than the curated lane.
+1. Track useful source, docs, tools, tests, RE notes, state batons, agent reports,
+   readiness notes, and compact proof summaries.
+2. Keep actual game files, copied executables, arbitrary saves/options payloads,
+   screenshots/frame dumps, raw CDB logs, full Ghidra databases/backups, secrets,
+   build output, and bulky generated proof captures in ignored overlays.
+3. Use `npm run test:public-allowlist`, `npm run test:hard-payload-safety`, and
+   release package/export gates to prove the boundary before publication.
 
 ## Documentation Cleanup Targets
 
@@ -173,4 +198,8 @@ Plain language should be:
 
 ## Next Recommended Action
 
-Keep Option A active. Continue WinUI product hardening with deliberate native in-app 3D renderer planning, installer/MSIX planning, and deeper RE reconstruction. Keep Electron packaged/runtime proof as archived maintainer-workbench validation, not as the primary product release gate. Signed/installer readiness should remain out of scope until a signing/installer lane exists and is proven.
+Use this file only as historical context. For current source-collaboration truth,
+start with `README.MD`, `AGENTS.md`, `LOCAL_LAB_OVERLAY.md`,
+`roadmap/public-primary-working-repo.md`, `goal.policy.md`, and `goal.md`.
+Continue WinUI product hardening, safe-copy patch/mod proof, and online/rebuild
+research from the public-primary repo.
