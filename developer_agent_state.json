@@ -1,11 +1,11 @@
 {
   "lastUpdated": "2026-06-25",
   "branch": "main",
-  "currentFocus": "Windowed & Mods launch-preset selected-state UX is accepted and ready to commit; next slice is a bounded Windowed & Mods modularity inspection.",
+  "currentFocus": "Launch-preset selected-state UX was pushed in eeb9c299; current slice is a read-first Windowed & Mods selected-choice/launch-preset presentation modularity inspection.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainStatus": "main/origin/main is pushed through dd3c009e before this launch-preset selected-state closeout; current working tree has uncommitted focused WinUI UX/doc/state changes.",
+    "publicMainStatus": "main/origin/main is pushed through eeb9c299 for launch-preset selected-state UX; current working tree has only a baton update for the next slice.",
     "policy": "public repo is primary for source/docs/tools/tests/RE notes/proof summaries/state; hard payloads remain maintainer-local ignored overlays"
   },
   "publicPrimaryMigration": {
@@ -49,30 +49,22 @@
     }
   },
   "recentClosedSlice": {
-    "name": "winui-windowed-mods-launch-text-modularity",
+    "name": "winui-windowed-mods-launch-preset-selected-state-ux",
     "status": "pushed",
-    "commit": "dd3c009e",
-    "readinessNote": "release/readiness/winui_windowed_mods_launch_text_modularity_2026-06-25.md",
-    "claimBoundary": "WinUI presentation modularity only; no launch arguments, launch preset effects, copied-profile launch behavior, safe-copy manifest, patch semantics, online/runtime proof, music audible-output proof, AppCore correctness logic, or installed-game mutation changed."
+    "commit": "eeb9c299",
+    "readinessNote": "release/readiness/winui_windowed_mods_launch_preset_selected_state_2026-06-25.md",
+    "claimBoundary": "WinUI UX/presentation only; launch arguments, launch preset payloads, copied-profile launch behavior, safe-copy manifests/signatures, patch semantics, online/runtime proof, music audible-output proof, AppCore correctness logic, and installed-game mutation rules were unchanged."
   },
   "activeSlice": {
-    "name": "winui-windowed-mods-launch-preset-selected-state-ux",
-    "goal": "add visible selected-state styling and selected UIA names for seven Windowed & Mods launch preset buttons",
-    "claimBoundary": "WinUI UX/presentation only; launch arguments, launch preset payloads, copied-profile launch behavior, safe-copy manifests/signatures, patch semantics, online/runtime proof, music audible-output proof, AppCore correctness logic, and installed-game mutation rules are unchanged.",
-    "readinessNote": "release/readiness/winui_windowed_mods_launch_preset_selected_state_2026-06-25.md",
+    "name": "winui-windowed-mods-selected-choice-presentation-modularity-inspection",
+    "goal": "inspect repeated selected-choice and launch-preset presentation plumbing in BinaryPatchesPage and decide whether a small presentation-only extraction is justified",
+    "claimBoundary": "read-first modularity inspection; no launch arguments, copied-profile launch behavior, safe-copy signatures/manifests, patch semantics, music, online/runtime proof, or AppCore correctness logic changes unless a concrete bug is found and documented.",
     "latestFindings": [
-      "Seven launch preset buttons now reuse the selected-choice visual pattern and selected UIA names.",
-      "Manual edits to launch-preset-owned controls clear the selected marker; savegame and create-time music-swap controls do not clear it because they are independent safe-copy choices.",
-      "Local split-screen helper remains outside the seven launch-preset selected set and still does not imply Host/Join or online play.",
-      "Static guards block selected-state/UIA/style from entering launch argument construction, safe-copy content signatures, launch-plan building, runtime/preflight services, or online wording.",
-      "Runtime UIA smoke verifies selected-state switching, music-swap independence, and manual mission-id edit clearing."
+      "Launch-preset selected-state UX is pushed in eeb9c299.",
+      "Next likely work is reducing repeated selected-choice/launch-preset presentation plumbing without moving behavior."
     ],
-    "consultReview": {
-      "specialist": "recommended reusing PatchBenchChoiceVisualState with page-local presentation state, an applying-preset guard, and targeted manual-edit clearing; accepted.",
-      "adversarial": "blocked selected-state as a behavior source and required guards around launch args, safe-copy signatures, music independence, online wording, and manual edit clearing; accepted.",
-      "finalImplementationReview": "found no blocker; confirmed selected state only feeds style/UIA names and called out non-blocking caveat that the UIA click helper should remain limited to idempotent preset buttons."
-    },
-    "status": "accepted_ready_for_commit"
+    "consultReview": {},
+    "status": "ready_to_inspect"
   },
   "runtimeTruth": {
     "musicAudibleOutputProof": false,
@@ -135,12 +127,17 @@
       "git diff --check (PASS)",
       "Get-Process BEA,cdb,OnslaughtCareerEditor.WinUI -ErrorAction SilentlyContinue (PASS; no matching process output)"
     ],
-    "pendingForActiveSlice": []
+    "pendingForActiveSlice": [
+      "inspect BinaryPatchesPage selected-choice and launch-preset presentation plumbing",
+      "specialist consult and adversarial review before any nontrivial extraction",
+      "focused static/UIA tests if implementation proceeds"
+    ]
   },
   "nextSteps": [
-    "Commit and push the accepted launch-preset selected-state UX slice.",
-    "Start next goal.md slice: inspect a small Windowed & Mods modularity extraction around repeated selected-choice/launch-preset presentation plumbing.",
-    "Keep launch arguments, copied-profile launch behavior, safe-copy signatures/manifests, patch semantics, music, online/runtime proof, and AppCore correctness logic out of the next modularity inspection unless evidence requires a narrow follow-up."
+    "Commit/push this baton update.",
+    "Inspect selected-choice and launch-preset presentation plumbing for a small presentation-only extraction candidate.",
+    "Use specialist and adversarial consults before editing.",
+    "Keep behavior/proof/AppCore paths out of scope unless evidence reveals a bounded bug."
   ],
   "releaseAccounting": {
     "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",

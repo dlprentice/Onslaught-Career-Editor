@@ -6,15 +6,13 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Close out `Windowed & Mods` launch-preset selected-state UX: visible selected
-styling and selected UIA names are implemented for the seven launch preset
-buttons, focused and broad closeout gates pass, and the slice is ready to
-commit/push. Then start the next bounded slice: inspect a small Windowed & Mods
-modularity extraction around repeated selected-choice/launch-preset presentation
-plumbing. Do not change launch arguments, launch preset payloads,
-copied-profile launch behavior, patch semantics, safe-copy manifest/signature
-logic, online status, runtime proof, or AppCore correctness logic. Continue
-from this checkout:
+Start the next bounded `Windowed & Mods` modularity inspection: read the
+selected-choice and launch-preset presentation plumbing in `BinaryPatchesPage`
+and decide whether a small extraction is justified. Keep this slice read-first
+and presentation-only unless exact evidence supports a narrow edit. Do not
+change launch arguments, launch preset payloads, copied-profile launch behavior,
+patch semantics, safe-copy manifest/signature logic, online status, runtime
+proof, or AppCore correctness logic. Continue from this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -125,7 +123,8 @@ contributor work.
   runtime/preflight services, and online wording. Focused static PatchBench
   tests, WinUI build, runtime UIA smoke, docs command checks, hard-payload
   safety, public allowlist, Markdown links, repo hygiene, state JSON parse,
-  whitespace diff check, and process cleanup checks passed.
+  whitespace diff check, and process cleanup checks passed. Commit
+  `eeb9c299` pushed this slice to `origin/main`.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof both exist.
@@ -178,13 +177,15 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Commit and push the accepted launch-preset selected-state UX slice.
-2. Start the next bounded slice: inspect repeated selected-choice and launch
-   preset presentation plumbing in `BinaryPatchesPage` and decide whether a
-   small extraction is justified. Keep the slice read-first and
-   presentation-only unless exact evidence supports a narrow edit.
-3. Use at least one specialist consult and one adversarial reviewer before
+1. Inspect repeated selected-choice and launch-preset presentation plumbing in
+   `BinaryPatchesPage`, `PatchBenchChoiceVisualState`, and the relevant UIA
+   tests.
+2. Use at least one specialist consult and one adversarial reviewer before
    implementing any nontrivial extraction.
+3. If a small extraction is justified, keep it presentation-only and validate
+   with focused static/UIA tests plus docs/state updates. If no extraction is
+   justified, record that decision and choose the next bounded UX/modularity
+   slice.
 4. Keep launch arguments, copied-profile launch behavior, safe-copy
    signatures/manifests, patch semantics, music, online/runtime proof, and
    AppCore correctness logic out of the next modularity slice unless a concrete

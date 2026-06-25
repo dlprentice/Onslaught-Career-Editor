@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "Windowed & Mods launch-preset selected-state UX is accepted and ready to commit; next documentation baton is a bounded Windowed & Mods modularity inspection.",
+  "currentFocus": "Launch-preset selected-state UX was pushed in eeb9c299; next documentation baton is a read-first Windowed & Mods presentation modularity inspection.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -79,12 +79,16 @@
       "git diff --check (PASS)",
       "Get-Process BEA,cdb,OnslaughtCareerEditor.WinUI -ErrorAction SilentlyContinue (PASS; no matching process output)"
     ],
-    "pendingForActiveSlice": []
+    "pendingForActiveSlice": [
+      "inspect touched presentation plumbing",
+      "consult specialist and adversarial reviewer before nontrivial extraction",
+      "run focused docs/UIA/static gates if implementation proceeds"
+    ]
   },
   "nextSteps": [
-    "Commit and push the accepted launch-preset selected-state UX slice.",
-    "Start next goal.md slice after commit: bounded Windowed & Mods modularity inspection around repeated selected-choice/launch-preset presentation plumbing.",
-    "Keep behavior/proof claims unchanged unless the next slice proves otherwise."
+    "Commit/push this baton update.",
+    "Inspect selected-choice/launch-preset presentation plumbing and record whether extraction is justified.",
+    "Keep launch/runtime/online/music/rebuild claims unchanged."
   ],
   "winuiSelectedChoiceModularity": {
     "status": "validated_ready_for_commit",
@@ -248,7 +252,7 @@
     ]
   },
   "winuiLaunchPresetSelectedState": {
-    "status": "accepted_ready_for_commit",
+    "status": "pushed",
     "readinessNote": "release/readiness/winui_windowed_mods_launch_preset_selected_state_2026-06-25.md",
     "acceptedTruth": [
       "Seven Windowed & Mods launch preset buttons now show selected state and selected UIA names.",
@@ -260,6 +264,12 @@
       "Specialist consult recommended the existing selected-choice helper plus page-local presentation state and targeted manual-edit clearing.",
       "Adversarial review blocked using selected/UIA/style state as a behavior source and requested static guards around launch args, signatures, music independence, and online wording.",
       "Final implementation review found no blocker and noted only that the test click helper should stay limited to idempotent preset buttons."
-    ]
+    ],
+    "commit": "eeb9c299"
+  },
+  "activeSlice": {
+    "name": "winui-windowed-mods-selected-choice-presentation-modularity-inspection",
+    "status": "ready_to_inspect",
+    "claimBoundary": "read-first presentation modularity inspection only; behavior/proof/AppCore claims unchanged."
   }
 }
