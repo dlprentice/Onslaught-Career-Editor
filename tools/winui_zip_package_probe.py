@@ -24,6 +24,7 @@ import sys
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import unquote
 
 sys.dont_write_bytecode = True
 
@@ -42,6 +43,8 @@ APP_DIR = "app"
 LORE_BOOK_DIR = "lore-book"
 LORE_BOOK_REQUIRED_FILE = f"{LORE_BOOK_DIR}/BOOK.md"
 LORE_BOOK_SOURCE = ROOT / LORE_BOOK_DIR
+LORE_BOOK_LINK_REGEX = re.compile(r"\[[^\]]+\]\((?P<target>[^)]+)\)")
+WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH = 180
 REQUIRED_APP_FILES = (
     APP_EXE,
     APP_PRI,
@@ -234,15 +237,37 @@ def copy_lore_book(bundle_dir: Path) -> CheckResult:
         return CheckResult("lore_book_source", "FAIL", f"{relative(required_source)} is missing or empty.")
     if destination.exists():
         shutil.rmtree(destination)
-    shutil.copytree(LORE_BOOK_SOURCE, destination)
+    packaged_files = resolve_packaged_lore_files(required_source)
+    for source in sorted(packaged_files):
+        destination_path = destination / source.relative_to(LORE_BOOK_SOURCE)
+        destination_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination_path)
     required_destination = destination / "BOOK.md"
+    copied_count = sum(1 for path in destination.rglob("*") if path.is_file()) if destination.exists() else 0
     return CheckResult(
         "bundle_lore_book",
-        "PASS" if required_destination.is_file() and required_destination.stat().st_size > 0 else "FAIL",
-        f"{relative(destination)} copied so the packaged Lore page has an offline index."
+        "PASS" if required_destination.is_file() and required_destination.stat().st_size > 0 and copied_count == len(packaged_files) else "FAIL",
+        f"{relative(destination)} copied with {copied_count} deterministic BOOK.md-linked file(s) for the packaged offline Lore reader."
         if required_destination.is_file() and required_destination.stat().st_size > 0
-        else f"{relative(required_destination)} is missing after copy.",
+        else f"{relative(required_destination)} is missing after deterministic BOOK.md-linked lore copy.",
     )
+
+
+def resolve_packaged_lore_files(book_path: Path) -> set[Path]:
+    lore_root = LORE_BOOK_SOURCE.resolve()
+    packaged_files: set[Path] = {book_path.resolve()}
+    for match in LORE_BOOK_LINK_REGEX.finditer(book_path.read_text(encoding="utf-8")):
+        target = unquote(match.group("target").strip()).split("#", 1)[0]
+        if not target or re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", target):
+            continue
+        candidate = (LORE_BOOK_SOURCE / target.replace("\\", "/")).resolve()
+        try:
+            candidate.relative_to(lore_root)
+        except ValueError:
+            continue
+        if candidate.is_file():
+            packaged_files.add(candidate)
+    return packaged_files
 
 
 def stage_portable_bundle(publish_dir: Path, bundle_dir: Path) -> list[CheckResult]:
@@ -348,6 +373,22 @@ def inspect_payload_safety_names(names: set[str], prefix: str) -> list[CheckResu
     ]
 
 
+def inspect_explorer_path_safety_names(names: set[str], prefix: str) -> list[CheckResult]:
+    files = [name.rstrip("/") for name in names if name.rstrip("/") and not name.endswith("/")]
+    over_limit = sorted((name for name in files if len(name) > WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH), key=len, reverse=True)
+    max_length = max((len(name) for name in files), default=0)
+    return [
+        CheckResult(
+            f"{prefix}_explorer_path_safety",
+            "PASS" if not over_limit else "FAIL",
+            f"Longest packaged entry is {max_length} character(s), within the {WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH}-character Explorer-safe ZIP entry budget."
+            if not over_limit
+            else f"ZIP/folder entries exceed the {WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH}-character Explorer-safe ZIP entry budget: "
+            + ", ".join(over_limit[:8]),
+        )
+    ]
+
+
 def inspect_folder(root: Path, prefix: str) -> list[CheckResult]:
     checks: list[CheckResult] = []
     for filename in REQUIRED_PAYLOAD_FILES:
@@ -369,6 +410,7 @@ def inspect_folder(root: Path, prefix: str) -> list[CheckResult]:
                 continue
         checks.extend(inspect_root_layout_names(names, prefix))
         checks.extend(inspect_payload_safety_names(names, prefix))
+        checks.extend(inspect_explorer_path_safety_names(names, prefix))
     package_suffixes = {".msix", ".appx", ".appinstaller", ".msixbundle", ".appxbundle"}
     package_files = [path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in package_suffixes]
     checks.append(
@@ -426,6 +468,7 @@ def inspect_zip(zip_path: Path) -> list[CheckResult]:
         )
     checks.extend(inspect_root_layout_names(names, "zip"))
     checks.extend(inspect_payload_safety_names(names, "zip"))
+    checks.extend(inspect_explorer_path_safety_names(names, "zip"))
     installer_suffixes = (".msix", ".appx", ".appinstaller", ".msixbundle", ".appxbundle")
     installers = [name for name in names if name.lower().endswith(installer_suffixes)]
     checks.append(

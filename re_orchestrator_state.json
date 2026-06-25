@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-06-24",
-  "currentFocus": "No Ghidra/static mutation; post-release public-primary audit completed and authorized for commit/push before runtime/product work resumes.",
+  "lastUpdated": "2026-06-25",
+  "currentFocus": "No Ghidra/static mutation; closing WinUI v1.0.4 ZIP Explorer path-length hotfix before resuming product/runtime work.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -13,7 +13,7 @@
     "status": "validated_public_primary_with_maintainer_local_ignored_overlays",
     "commit": "c58d06420e482421355d1e40f240db7d87e289d3",
     "impact": "Public repo is primary for RE docs, wave notes, scratch text exports, function indexes, static maps, proof summaries, and checkers; hard payloads, full Ghidra DBs/backups, raw captures, and copied executables remain ignored local overlays.",
-    "currentRefreshPointer": "See developer_agent_state.json and documentation_agent_state.json for v1.0.3 release, post-release audit, validation, local overlay, and non-blocking follow-up status."
+    "currentRefreshPointer": "See developer_agent_state.json and documentation_agent_state.json for v1.0.4 release hotfix, post-release audit, validation, local overlay, and non-blocking follow-up status."
   },
   "runtimeProofBoundary": {
     "musicAudibleOutputProof": "runtimeAudibleOutputProof=false",
@@ -25,19 +25,19 @@
     ],
     "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable",
     "latestWinuiReleaseCandidate": {
-      "version": "v1.0.3",
-      "status": "published",
-      "sha256": "406f34bdac0f1a39939e57eba9dab1dc37a889d780c9392470f9dc19a77c4044",
-      "byteSize": 249834185,
-      "readinessNote": "release/readiness/winui_zip_release_v1_0_3_2026-06-24.md",
-      "releaseUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.3",
-      "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.3/OnslaughtToolkit-winui-v1.0.3-win-x64.zip"
+      "version": "v1.0.4",
+      "status": "validated_publication_pending",
+      "sha256": "641f17a44343e19efa858af30d6194f6e2b844f06d35a5753b3eb03156ac72b3",
+      "byteSize": 243908905,
+      "readinessNote": "release/readiness/winui_zip_release_v1_0_4_2026-06-25.md",
+      "releaseUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.4",
+      "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.4/OnslaughtToolkit-winui-v1.0.4-win-x64.zip"
     }
   },
   "nextSteps": [
-    "Push the validated post-release audit cleanup to origin/main.",
-    "Resume bounded patch/mod/runtime proof work from the public repo after the release baseline cleanup is durable.",
-    "If a future static contradiction appears, stop runtime/product work and correct Ghidra/static docs with normal dry/apply/read-back/backup gates."
+    "Rerun v1.0.4 package/docs/release/hygiene gates.",
+    "Commit/push, tag v1.0.4, publish GitHub release, and verify release assets.",
+    "Resume bounded patch/mod/runtime proof work from the public repo after the release hotfix is durable."
   ],
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -48,7 +48,7 @@
     "consultedAgents": 10,
     "consultScope": "migration parity, adversarial private/public boundary, release assets, payload/security, stale docs/state, onboarding, validation evidence, first-run WinUI UX, product adversarial review",
     "acceptedTruth": [
-      "v1.0.3 GitHub release is published and latest with the friendly wrapped ZIP asset",
+      "v1.0.3 GitHub release is published but superseded by v1.0.4 for Explorer path-length safety",
       "public repo is the primary day-to-day collaboration repo for project-owned source/docs/tools/tests/RE notes/proof summaries/state",
       "maintainer private-parity inventory passes when run with explicit private root and require-private-root",
       "remaining private-only tracked delta is accepted hard-payload/scratch-payload material, not missing project source/docs/tools/tests",
@@ -60,6 +60,25 @@
       "Asset Library needs a clearer first-run path for generating/finding a local asset catalog",
       "Windowed & Mods should move proof jargon/offset/evidence language further behind details/maintainer surfaces",
       "dynamic patch row controls should get stable AutomationIds derived from patch keys"
+    ]
+  },
+  "validation": {
+    "latestPassed": [
+      "npm run test:winui-zip-release-candidate-probe (PASS; v1.0.4 ZIP size 243908905; SHA-256 641f17a44343e19efa858af30d6194f6e2b844f06d35a5753b3eb03156ac72b3; 53 BOOK.md-linked Lore files; max entry 95/180; launch/Home/Lore/Media smokes exit 0)",
+      "npm run test:doc-commands (PASS; 4228 documented npm commands checked)",
+      "npm run test:md-links (PASS; 3616 markdown files, 6122 local links)",
+      "npm run release:profile-check (PASS; R0=6124 R2=0 R3=3 R4=13177)",
+      "npm run release:curated-check (PASS; selected files 625)",
+      "npm run test:public-allowlist (PASS; hard payload, submodule payload, public-primary migration inventory)",
+      "npm run test:winui-notices (PASS; 74 packages)",
+      "npm run test:repo-hygiene (PASS; 18457 explicit text files checked)",
+      "state JSON parse",
+      "git diff --check"
+    ],
+    "pendingForActiveSlice": [
+      "commit/push v1.0.4 package hotfix to origin/main",
+      "tag v1.0.4 and publish GitHub release with ZIP and SHA256SUMS assets",
+      "verify GitHub release metadata/assets, then update final state to published"
     ]
   }
 }

@@ -43,6 +43,42 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             self.assertFalse((bundle_dir / probe.APP_EXE).exists())
             self.assertFalse((bundle_dir / "support.dll").exists())
 
+    def test_copy_lore_book_uses_book_linked_subset(self) -> None:
+        original_lore_book_source = probe.LORE_BOOK_SOURCE
+        try:
+            with tempfile.TemporaryDirectory() as temp_root:
+                root = Path(temp_root)
+                source = root / "source" / "lore-book"
+                destination_root = root / "bundle"
+                source.mkdir(parents=True)
+                (source / "BOOK.md").write_text(
+                    "- [Start Here](Start-Here.md)\n"
+                    "- [Tech](reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md)\n",
+                    encoding="utf-8",
+                )
+                (source / "Start-Here.md").write_text("# Start Here\n", encoding="utf-8")
+                linked = source / "reverse-engineering" / "binary-analysis" / "GHIDRA-REFERENCE.md"
+                linked.parent.mkdir(parents=True)
+                linked.write_text("# Ghidra Reference\n", encoding="utf-8")
+                unlinked = source / "reverse-engineering" / "game-assets" / (
+                    "texture-mesh-material-sidecar-importer-private-corpus-real-importer-"
+                    "dry-run-harness-command-arm-checklist-command-arm-checklist-command-"
+                    "dry-run-consumer-validation-proof-plan.md"
+                )
+                unlinked.parent.mkdir(parents=True)
+                unlinked.write_text("# Internal proof plan\n", encoding="utf-8")
+
+                probe.LORE_BOOK_SOURCE = source
+                result = probe.copy_lore_book(destination_root)
+
+                self.assertEqual(result.status, "PASS")
+                self.assertTrue((destination_root / "lore-book" / "BOOK.md").is_file())
+                self.assertTrue((destination_root / "lore-book" / "Start-Here.md").is_file())
+                self.assertTrue((destination_root / "lore-book" / "reverse-engineering" / "binary-analysis" / "GHIDRA-REFERENCE.md").is_file())
+                self.assertFalse((destination_root / "lore-book" / unlinked.relative_to(source)).exists())
+        finally:
+            probe.LORE_BOOK_SOURCE = original_lore_book_source
+
     def test_zip_inspection_rejects_raw_publish_root(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:
             root = Path(temp_root)
@@ -73,6 +109,27 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             failures = [item for item in probe.inspect_zip(zip_path) if item.status == "FAIL"]
 
             self.assertEqual(failures, [])
+
+    def test_zip_inspection_rejects_entries_too_long_for_explorer_extract_all(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            zip_path = root / "long-path.zip"
+            self._write_publish_payload(bundle_dir / "app")
+            for relative_path in (probe.ROOT_LAUNCHER, probe.ROOT_README, probe.ROOT_LICENSE, "lore-book/BOOK.md"):
+                path = bundle_dir / relative_path
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(relative_path, encoding="utf-8")
+            long_name = "lore-book/" + ("a" * probe.WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH) + ".md"
+            long_path = bundle_dir / long_name
+            long_path.parent.mkdir(parents=True, exist_ok=True)
+            long_path.write_text("# too long\n", encoding="utf-8")
+
+            exit_code, _ = probe.create_zip(bundle_dir, zip_path)
+            self.assertEqual(exit_code, 0)
+            failures = {item.key for item in probe.inspect_zip(zip_path) if item.status == "FAIL"}
+
+            self.assertIn("zip_explorer_path_safety", failures)
 
     def test_zip_inspection_rejects_hard_payload_entries_inside_app_folder(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:

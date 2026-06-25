@@ -1,11 +1,17 @@
 # WinUI ZIP Release v1.0.3
 
-Status: published release package validated
+Status: superseded by v1.0.4 Explorer path-length hotfix
 Date: 2026-06-24
 Scope: `winui-zip-release-v1.0.3`
 
 This pass validates the exact unsigned portable Windows x64 ZIP published to
 GitHub Release `v1.0.3`:
+
+Important follow-up: after publication, Explorer extraction from a normal
+Downloads folder hit Windows `0x80010135` path-too-long failures on deep
+`lore-book/` proof-plan paths. The app payload and short-path package smokes
+below remain useful historical evidence, but v1.0.3 should not be recommended
+for normal users. Use v1.0.4 or newer.
 
 | Field | Value |
 | --- | --- |
@@ -47,12 +53,18 @@ Focused package results:
 
 What this proves:
 
-- The exact v1.0.3 ZIP can be extracted and launched through the friendly
-  top-level command wrapper.
+- The exact v1.0.3 ZIP could be extracted and launched in the probe's short
+  artifact path through the friendly top-level command wrapper.
 - The extracted package can navigate Home, open bundled Lore content, and run
   the representative Media smoke without accepting skipped UI test rows.
 - The app package includes public-safe docs/lore needed for first-run browsing
   without requiring a private checkout.
+
+What this did not prove, and what v1.0.4 adds:
+
+- Explorer-safe extraction from normal user paths such as Downloads.
+- Rejection of ZIP entries whose relative paths are too long for a normal
+  Explorer Extract All destination.
 
 What this does not prove:
 

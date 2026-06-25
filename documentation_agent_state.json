@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-06-24",
-  "currentFocus": "Post-release public-primary audit completed and authorized for commit/push; docs/state/accounting describe v1.0.3 as published and public repo as primary, with local ignored overlays for hard payloads.",
+  "lastUpdated": "2026-06-25",
+  "currentFocus": "Docs updated for WinUI v1.0.4 release-packaging hotfix: v1.0.3 is superseded for Explorer path-too-long extraction, and v1.0.4 records deterministic BOOK.md-linked Lore packaging plus Explorer path safety.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -9,7 +9,7 @@
     "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
     "releaseGuide": "README.RELEASE.md",
     "releaseSignoff": "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
-    "releaseReadinessNote": "release/readiness/winui_zip_release_v1_0_3_2026-06-24.md"
+    "releaseReadinessNote": "release/readiness/winui_zip_release_v1_0_4_2026-06-25.md"
   },
   "publicPrimaryMigration": {
     "status": "validated_public_primary_with_maintainer_local_ignored_overlays",
@@ -39,31 +39,21 @@
   },
   "validation": {
     "latestPassed": [
-      "npm run build:winui (0 warnings, 0 errors)",
-      "npm run build:cli (0 warnings, 0 errors)",
-      "npm run build:host (0 warnings, 0 errors)",
-      "npm run test:appcore (1171 passed, 0 failed, 0 skipped)",
-      "npm run test:winui (85 passed, 0 failed, 2 conditional Asset Library skips)",
-      "npm run test:winui-primary-lane (solution build + AppCore + WinUI tests passed)",
-      "npm run test:winui-safe-copy-preflight (30 AppCore + 6 WinUI + 8 helper tests passed)",
-      "npm run test:winui-patch-engine-safety (32 UI tests + legacy patch safety + 29-row catalog accounting passed)",
-      "dotnet run --project .\\OnslaughtCareerEditor.Cli\\OnslaughtCareerEditor.Cli.csproj -- --help (exit 0)",
-      "python tools\\docsync_check.py",
-      "npm run test:doc-commands",
-      "npm run test:md-links",
-      "npm run release:profile-check (R0=6124 R2=0 R3=3 R4=13177)",
-      "npm run release:curated-check (selected files 625)",
-      "npm run test:repo-hygiene",
-      "npm run test:public-allowlist",
-      "npm run test:winui-notices",
+      "npm run test:winui-zip-release-candidate-probe (PASS; v1.0.4 ZIP size 243908905; SHA-256 641f17a44343e19efa858af30d6194f6e2b844f06d35a5753b3eb03156ac72b3; 53 BOOK.md-linked Lore files; max entry 95/180; launch/Home/Lore/Media smokes exit 0)",
+      "npm run test:doc-commands (PASS; 4228 documented npm commands checked)",
+      "npm run test:md-links (PASS; 3616 markdown files, 6122 local links)",
+      "npm run release:profile-check (PASS; R0=6124 R2=0 R3=3 R4=13177)",
+      "npm run release:curated-check (PASS; selected files 625)",
+      "npm run test:public-allowlist (PASS; hard payload, submodule payload, public-primary migration inventory)",
+      "npm run test:winui-notices (PASS; 74 packages)",
+      "npm run test:repo-hygiene (PASS; 18457 explicit text files checked)",
       "state JSON parse",
-      "git diff --check",
-      "no BEA.exe/cdb.exe process check"
+      "git diff --check"
     ],
     "pendingForActiveSlice": [
-      "commit/push explicitly authorized by user on 2026-06-24; cleanup is being published to origin/main",
-      "next-release follow-up: classify or sanitize bundled lore-book local backup path markers such as G:\\GhidraBackups",
-      "next product follow-up: improve Asset Library first-run catalog guidance and hide Windowed & Mods proof jargon behind details surfaces"
+      "commit/push v1.0.4 package hotfix to origin/main",
+      "tag v1.0.4 and publish GitHub release with ZIP and SHA256SUMS assets",
+      "verify GitHub release metadata/assets, then update final state to published"
     ]
   },
   "nextSteps": [
@@ -72,15 +62,16 @@
     "Next UI docs/product follow-up: clarify Asset Library first-run catalog generation and move normal-path proof jargon behind details."
   ],
   "winuiReleaseCandidate": {
-    "status": "published",
-    "version": "v1.0.3",
-    "zip": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.3-win-x64.zip",
-    "byteSize": 249834185,
-    "sha256": "406f34bdac0f1a39939e57eba9dab1dc37a889d780c9392470f9dc19a77c4044",
+    "status": "validated_publication_pending",
+    "version": "v1.0.4",
+    "zip": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.4-win-x64.zip",
+    "byteSize": 243908905,
+    "sha256": "641f17a44343e19efa858af30d6194f6e2b844f06d35a5753b3eb03156ac72b3",
     "proven": [
       "friendly top-level launcher/readme/license",
       "app/ self-contained payload",
-      "bundled lore-book/BOOK.md",
+      "deterministic BOOK.md-linked lore-book reader set",
+      "Explorer-safe ZIP entry path budget: max 95/180",
       "no root DLL/EXE layout",
       "extracted launch/Home/Lore/Media smokes exit 0",
       "skipped UI rows rejected",
@@ -101,14 +92,13 @@
     "publicSubmoduleCandidateFiles": 19488
   },
   "githubRelease": {
-    "version": "v1.0.3",
-    "status": "published",
-    "url": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.3",
-    "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.3/OnslaughtToolkit-winui-v1.0.3-win-x64.zip",
-    "checksumUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.3/OnslaughtToolkit-v1.0.3-SHA256SUMS.txt",
-    "sha256": "406f34bdac0f1a39939e57eba9dab1dc37a889d780c9392470f9dc19a77c4044",
-    "byteSize": 249834185,
-    "tagCommit": "4adc6152b76ad53fe5124c9dcf7c612f5e201f0b"
+    "version": "v1.0.4",
+    "status": "validated_publication_pending",
+    "url": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.4",
+    "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.4/OnslaughtToolkit-winui-v1.0.4-win-x64.zip",
+    "checksumUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.4/OnslaughtToolkit-v1.0.4-SHA256SUMS.txt",
+    "sha256": "641f17a44343e19efa858af30d6194f6e2b844f06d35a5753b3eb03156ac72b3",
+    "byteSize": 243908905
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -119,7 +109,7 @@
     "consultedAgents": 10,
     "consultScope": "migration parity, adversarial private/public boundary, release assets, payload/security, stale docs/state, onboarding, validation evidence, first-run WinUI UX, product adversarial review",
     "acceptedTruth": [
-      "v1.0.3 GitHub release is published and latest with the friendly wrapped ZIP asset",
+      "v1.0.3 GitHub release is published but superseded by v1.0.4 for Explorer path-length safety",
       "public repo is the primary day-to-day collaboration repo for project-owned source/docs/tools/tests/RE notes/proof summaries/state",
       "maintainer private-parity inventory passes when run with explicit private root and require-private-root",
       "remaining private-only tracked delta is accepted hard-payload/scratch-payload material, not missing project source/docs/tools/tests",

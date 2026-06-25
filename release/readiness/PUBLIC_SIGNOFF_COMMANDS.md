@@ -1,7 +1,7 @@
 # Public Sign-Off Commands
 
 Status: active source/release validation guide
-Last updated: 2026-06-24
+Last updated: 2026-06-25
 
 Use this guide for the public working repo and app-release signoff. It excludes
 live copied-game launch, raw CDB/debugger, full Ghidra database, second-host, and
@@ -43,10 +43,11 @@ npm run test:winui-zip-release-candidate-probe
 
 This builds the exact portable ZIP candidate, verifies the friendly top-level
 layout, rejects raw-root DLL/EXE layouts and hard payloads, checks bundled
-`lore-book/BOOK.md`, extracts the ZIP, runs launch smoke, runs Home navigation
-smoke, runs extracted-package Lore reader smoke, and runs representative Media
-smoke when a local game install is available. A green source tree is not enough
-for app release publication without this package gate.
+`lore-book/BOOK.md`, rejects Explorer-unsafe long ZIP entry paths, extracts the
+ZIP, runs launch smoke, runs Home navigation smoke, runs extracted-package Lore
+reader smoke, and runs representative Media smoke when a local game install is
+available. A green source tree is not enough for app release publication without
+this package gate.
 
 ## Product Source Gates
 
