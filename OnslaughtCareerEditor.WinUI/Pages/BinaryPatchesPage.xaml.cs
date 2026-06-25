@@ -1473,7 +1473,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 UpdateControlState();
                 PatchBenchCopiedProfileSummary.Text = "Creating safe game copy. This can take a few minutes for a full game folder...";
                 PatchBenchCopiedProfileLaunchPlan.Text = string.Empty;
-                PatchBenchCopiedProfileLaunchStatus.Text = BuildLaunchBoundaryText("No safe copy launch attempted.");
+                PatchBenchCopiedProfileLaunchStatus.Text = PatchBenchLaunchText.BuildBoundary("No safe copy launch attempted.");
                 OperationLogTextBox.Text = "Preparing a safe game copy in the app-owned GameProfiles workspace. The selected Steam/game install stays unchanged.";
                 AppStatusService.SetStatus("Windowed & Mods: preparing safe copy");
 
@@ -1537,7 +1537,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     $"Play will run BEA.exe from safe copy folder: {Path.GetFileName(Path.TrimEndingDirectorySeparator(result.TargetGameRoot))}";
                 PatchBenchCopiedProfileLaunchPlan.Text = result.LaunchPlan.CommandPreview;
                 PatchBenchCopiedProfileLaunchStatus.Text =
-                    BuildLaunchBoundaryText("Safe copy ready for a guarded launch attempt.");
+                    PatchBenchLaunchText.BuildBoundary("Safe copy ready for a guarded launch attempt.");
                 PatchBenchMusicReplacementStatus.Text =
                     createMusicSwapResult is null
                         ? "Safe copy ready for music replacement staging. Staging only; in-game playback is still experimental and unproven."
@@ -1546,7 +1546,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     "Safe game copy preparation complete.\n" +
                     $"Files copied: {result.Entries.Count}\n" +
                     $"Patches applied: {BuildPatchDisplayList(result.PatchResult.PatchKeys)}\n" +
-                    $"{BuildLaunchModifierSummary(result.LaunchPlan.Arguments)}\n" +
+                    $"{PatchBenchLaunchText.BuildModifierSummary(result.LaunchPlan.Arguments)}\n" +
                     BuildSafeCopySavegamesSummary(copiedSavegames) + "\n" +
                     BuildSafeCopyControlOptionsSummary(controlOptionsResult) + "\n" +
                     BuildSafeCopyMusicSwapSummary(createMusicSwapResult) + "\n" +
@@ -1564,7 +1564,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 PatchBenchCopiedProfileReceipt.Text =
                     "Safe copy preparation failed before a receipt could be written. The installed game was not changed.";
                 PatchBenchCopiedProfileLaunchPlan.Text = string.Empty;
-                PatchBenchCopiedProfileLaunchStatus.Text = BuildLaunchBoundaryText("No safe copy launch attempted.");
+                PatchBenchCopiedProfileLaunchStatus.Text = PatchBenchLaunchText.BuildBoundary("No safe copy launch attempted.");
                 PatchBenchMusicReplacementStatus.Text = DefaultMusicReplacementStatus;
                 OperationLogTextBox.Text = $"Could not prepare safe game copy: {ex.Message}";
                 AppStatusService.SetStatus("Windowed & Mods: safe copy preparation failed");
@@ -1612,7 +1612,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 if (!await ConfirmAsync(
                         "Play safe copy?",
-                        $"The app will launch BEA.exe from the safe game copy only.\n\nSafe copy: {plan.WorkingDirectory}\n{BuildLaunchModifierSummary(plan.Arguments)}\n\nThe Steam/game install stays unchanged. The game may take focus, switch display modes, fail to start, or exit. Any manual input after launch is not counted as automated proof."))
+                        $"The app will launch BEA.exe from the safe game copy only.\n\nSafe copy: {plan.WorkingDirectory}\n{PatchBenchLaunchText.BuildModifierSummary(plan.Arguments)}\n\nThe Steam/game install stays unchanged. The game may take focus, switch display modes, fail to start, or exit. Any manual input after launch is not counted as automated proof."))
                 {
                     AppStatusService.SetStatus("Windowed & Mods: safe copy launch canceled");
                     return;
@@ -1632,11 +1632,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 App.SafeGameCopyProcesses.Register(launched, GetCopiedProfileWorkspaceRoot());
                 _managedCopiedProfileProcess = launched;
                 PatchBenchCopiedProfileLaunchStatus.Text =
-                    BuildLaunchBoundaryText($"Started safe copy process {launched.ProcessId}. This proves process start only.");
+                    PatchBenchLaunchText.BuildBoundary($"Started safe copy process {launched.ProcessId}. This proves process start only.");
                 OperationLogTextBox.Text =
                     "Safe copy launch attempt started.\n" +
                     $"Process id: {launched.ProcessId}\n" +
-                    $"{BuildLaunchModifierSummary(launched.Arguments)}\n" +
+                    $"{PatchBenchLaunchText.BuildModifierSummary(launched.Arguments)}\n" +
                     "The original BEA.exe stays unchanged. Stop targets only this managed safe-copy process record.";
                 AppStatusService.SetStatus("Windowed & Mods: safe copy launch started");
             }
@@ -1686,7 +1686,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 }
 
                 PatchBenchCopiedProfileLaunchStatus.Text = result.Success
-                    ? BuildLaunchBoundaryText("Managed safe copy process stopped.")
+                    ? PatchBenchLaunchText.BuildBoundary("Managed safe copy process stopped.")
                     : "Managed safe copy process was not stopped.";
                 OperationLogTextBox.Text = result.Message;
                 AppStatusService.SetStatus(result.Success ? "Windowed & Mods: safe copy stopped" : "Windowed & Mods: safe copy stop failed");
@@ -2217,11 +2217,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             };
         }
 
-        private static string BuildLaunchBoundaryText(string prefix)
-        {
-            return $"{prefix} This does not confirm it reached the menu, stayed windowed, rendered correctly, or played replacement music.";
-        }
-
         private static string BuildSafeCopySavegamesSummary(bool copiedSavegames)
         {
             return copiedSavegames
@@ -2263,26 +2258,19 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 return;
             }
 
-            if (!contentMatchesCurrent)
+            PatchBenchLaunchReadinessTextResult readinessText = PatchBenchLaunchText.BuildReadiness(
+                new PatchBenchLaunchReadinessTextState(
+                    contentMatchesCurrent,
+                    hasLaunchPlan && launchPlan is not null,
+                    launchPlan?.CommandPreview,
+                    launchError));
+            if (readinessText.SummaryText is not null)
             {
-                PatchBenchCopiedProfileSummary.Text =
-                    "Prepared safe game copy is stale. Create a new safe copy to apply the current optional patch/savegame/control choices.";
-                PatchBenchCopiedProfileLaunchPlan.Text =
-                    "Prepared safe copy does not match the current optional patch/savegame/control choices. Create a new safe copy before Play.";
-                PatchBenchCopiedProfileLaunchStatus.Text = BuildLaunchBoundaryText(
-                    "Selections changed after this safe copy was created. Create a new safe copy to apply the current optional mods/savegame/control choice.");
-                return;
+                PatchBenchCopiedProfileSummary.Text = readinessText.SummaryText;
             }
 
-            if (hasLaunchPlan && launchPlan is not null)
-            {
-                PatchBenchCopiedProfileLaunchPlan.Text = launchPlan.CommandPreview;
-                PatchBenchCopiedProfileLaunchStatus.Text = BuildLaunchBoundaryText("Safe copy ready for a guarded launch attempt.");
-                return;
-            }
-
-            PatchBenchCopiedProfileLaunchPlan.Text = launchError ?? "Launch plan is not ready.";
-            PatchBenchCopiedProfileLaunchStatus.Text = "Safe copy launch option needs review.";
+            PatchBenchCopiedProfileLaunchPlan.Text = readinessText.LaunchPlanText;
+            PatchBenchCopiedProfileLaunchStatus.Text = readinessText.LaunchStatusText;
         }
 
         private void RestoreTrackedSafeGameCopyProcess()
@@ -2364,7 +2352,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 : "Source changed while a safe copy process is still tracked. Stop it and create a new safe copy to write a fresh receipt.";
             PatchBenchCopiedProfileLaunchPlan.Text = string.Empty;
             PatchBenchCopiedProfileLaunchStatus.Text = _managedCopiedProfileProcess is null
-                ? BuildLaunchBoundaryText("No safe copy launch attempted.")
+                ? PatchBenchLaunchText.BuildBoundary("No safe copy launch attempted.")
                 : "A safe copy process is still tracked. Stop it before preparing another safe copy.";
             PatchBenchMusicReplacementStatus.Text = DefaultMusicReplacementStatus;
             ClearMusicTrackChoices();
@@ -2507,13 +2495,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             };
         }
 
-        private static string BuildLaunchModifierSummary(IReadOnlyList<string> arguments)
-        {
-            return arguments.Count == 0
-                ? "Launch modifiers: none."
-                : $"Launch modifiers: {string.Join(" ", arguments)}.";
-        }
-
         private void RefreshCopiedProfileLaunchPlanPreview()
         {
             if (string.IsNullOrWhiteSpace(_lastCopiedProfileRoot))
@@ -2521,26 +2502,28 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 return;
             }
 
-            if (!IsCopiedProfileContentCurrent((SourceExePathTextBox.Text ?? string.Empty).Trim(), GetVisibleSelectedKeys().ToArray()))
+            bool contentMatchesCurrent = IsCopiedProfileContentCurrent(
+                (SourceExePathTextBox.Text ?? string.Empty).Trim(),
+                GetVisibleSelectedKeys().ToArray());
+            GameProfileLaunchPlan? plan = null;
+            string? error = null;
+            bool hasLaunchPlan = contentMatchesCurrent &&
+                TryBuildCopiedProfileLaunchPlan(_lastCopiedProfileRoot, out plan, out error) &&
+                plan is not null;
+
+            PatchBenchLaunchReadinessTextResult readinessText = PatchBenchLaunchText.BuildReadiness(
+                new PatchBenchLaunchReadinessTextState(
+                    contentMatchesCurrent,
+                    hasLaunchPlan,
+                    plan?.CommandPreview,
+                    error));
+            if (readinessText.SummaryText is not null)
             {
-                PatchBenchCopiedProfileSummary.Text =
-                    "Prepared safe game copy is stale. Create a new safe copy to apply the current optional patch/savegame/control choices.";
-                PatchBenchCopiedProfileLaunchPlan.Text =
-                    "Prepared safe copy does not match the current optional patch/savegame/control choices. Create a new safe copy before Play.";
-                PatchBenchCopiedProfileLaunchStatus.Text = BuildLaunchBoundaryText(
-                    "Selections changed after this safe copy was created. Create a new safe copy to apply the current optional mods/savegame/control choice.");
-                return;
+                PatchBenchCopiedProfileSummary.Text = readinessText.SummaryText;
             }
 
-            if (TryBuildCopiedProfileLaunchPlan(_lastCopiedProfileRoot, out GameProfileLaunchPlan? plan, out string? error) && plan is not null)
-            {
-                PatchBenchCopiedProfileLaunchPlan.Text = plan.CommandPreview;
-                PatchBenchCopiedProfileLaunchStatus.Text = BuildLaunchBoundaryText("Safe copy ready for a guarded launch attempt.");
-                return;
-            }
-
-            PatchBenchCopiedProfileLaunchPlan.Text = error ?? "Launch plan is not ready.";
-            PatchBenchCopiedProfileLaunchStatus.Text = "Safe copy launch option needs review.";
+            PatchBenchCopiedProfileLaunchPlan.Text = readinessText.LaunchPlanText;
+            PatchBenchCopiedProfileLaunchStatus.Text = readinessText.LaunchStatusText;
         }
 
         private static bool IsFrontendColorPatchKey(string key)

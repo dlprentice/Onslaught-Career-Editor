@@ -337,6 +337,7 @@ public class WinUiProductLaneTests
         string pageXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml");
         string code = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs");
         string itemModel = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "BinaryPatchItemModel.cs");
+        string launchTextHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchLaunchText.cs");
         string settingsXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "SettingsPage.xaml");
 
         Assert.That(shellXaml, Does.Contain("Windowed &amp; Mods"));
@@ -551,9 +552,9 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("IsFrontendColorPatchKey"));
         Assert.That(code, Does.Contain("_lastCopiedProfileContentSignature"));
         Assert.That(code, Does.Contain("BuildCurrentSafeCopyContentSignature"));
-        Assert.That(code, Does.Contain("Selections changed after this safe copy was created"));
-        Assert.That(code, Does.Contain("Prepared safe copy does not match the current optional patch/savegame/control choices"));
-        Assert.That(code, Does.Contain("Prepared safe game copy is stale"));
+        Assert.That(launchTextHelper, Does.Contain("Selections changed after this safe copy was created"));
+        Assert.That(launchTextHelper, Does.Contain("Prepared safe copy does not match the current optional patch/savegame/control choices"));
+        Assert.That(launchTextHelper, Does.Contain("Prepared safe game copy is stale"));
         Assert.That(code, Does.Contain("No safe game copy prepared in this session."));
         Assert.That(itemModel, Does.Contain("frontend_clear_screen_dark_red"));
         Assert.That(itemModel, Does.Contain("Red menu background"));
@@ -1002,6 +1003,9 @@ public class WinUiProductLaneTests
         string code = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs");
         string pageXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml");
         string itemModel = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "BinaryPatchItemModel.cs");
+        string launchTextHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchLaunchText.cs");
+        string launchReadinessTextState = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchLaunchReadinessTextState.cs");
+        string launchReadinessTextResult = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchLaunchReadinessTextResult.cs");
         string constructorBody = ExtractCodeSlice(
             code,
             "public BinaryPatchesPage()",
@@ -1115,7 +1119,42 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("PatchBenchPrepareCopiedProfileButton"));
         Assert.That(code, Does.Contain("PatchBenchIncludeSavegamesOption"));
         Assert.That(code, Does.Contain("BuildSelectedLaunchArguments"));
-        Assert.That(code, Does.Contain("BuildLaunchModifierSummary"));
+        Assert.That(code, Does.Contain("PatchBenchLaunchText.BuildModifierSummary"));
+        Assert.That(code, Does.Contain("PatchBenchLaunchText.BuildBoundary"));
+        Assert.That(code, Does.Contain("PatchBenchLaunchText.BuildReadiness("));
+        Assert.That(code, Does.Contain("new PatchBenchLaunchReadinessTextState("));
+        Assert.That(launchTextHelper, Does.Contain("internal static class PatchBenchLaunchText"));
+        Assert.That(launchTextHelper, Does.Contain("public static string BuildModifierSummary(IReadOnlyList<string> arguments)"));
+        Assert.That(launchTextHelper, Does.Contain("public static string BuildBoundary(string prefix)"));
+        Assert.That(launchTextHelper, Does.Contain("public static PatchBenchLaunchReadinessTextResult BuildReadiness(PatchBenchLaunchReadinessTextState state)"));
+        Assert.That(launchTextHelper, Does.Contain("Launch modifiers: none."));
+        Assert.That(launchTextHelper, Does.Contain("Prepared safe game copy is stale. Create a new safe copy to apply the current optional patch/savegame/control choices."));
+        Assert.That(launchTextHelper, Does.Contain("This does not confirm it reached the menu, stayed windowed, rendered correctly, or played replacement music."));
+        Assert.That(launchReadinessTextState, Does.Contain("internal sealed record PatchBenchLaunchReadinessTextState"));
+        Assert.That(launchReadinessTextState, Does.Contain("bool ContentMatchesCurrent"));
+        Assert.That(launchReadinessTextState, Does.Contain("bool HasLaunchPlan"));
+        Assert.That(launchReadinessTextState, Does.Contain("string? CommandPreview"));
+        Assert.That(launchReadinessTextState, Does.Contain("string? LaunchError"));
+        Assert.That(launchReadinessTextResult, Does.Contain("internal sealed record PatchBenchLaunchReadinessTextResult"));
+        Assert.That(launchReadinessTextResult, Does.Contain("string? SummaryText"));
+        Assert.That(launchReadinessTextResult, Does.Contain("string LaunchPlanText"));
+        Assert.That(launchReadinessTextResult, Does.Contain("string LaunchStatusText"));
+        Assert.That(launchTextHelper, Does.Not.Contain("BuildSelectedLaunchArguments"));
+        Assert.That(launchTextHelper, Does.Not.Contain("TryBuildCopiedProfileLaunchPlan"));
+        Assert.That(launchTextHelper, Does.Not.Contain("BuildLaunchPlan"));
+        Assert.That(launchTextHelper, Does.Not.Contain("PrepareWindowedCompatibilityProfile"));
+        Assert.That(launchTextHelper, Does.Not.Contain("LaunchCopiedProfile"));
+        Assert.That(launchTextHelper, Does.Not.Contain("ProfilePresetId"));
+        Assert.That(launchTextHelper, Does.Not.Contain("MusicSwapPresetId"));
+        Assert.That(launchTextHelper, Does.Not.Contain("PatchBenchCopiedProfileLaunchPlan.Text"));
+        Assert.That(launchTextHelper, Does.Not.Contain("_lastCopiedProfileRoot"));
+        Assert.That(launchTextHelper, Does.Not.Contain("_lastCopiedProfileContentSignature"));
+        Assert.That(launchTextHelper, Does.Not.Contain("OnlineMultiplayerReadinessService"));
+        Assert.That(launchTextHelper, Does.Not.Contain("Process.Start"));
+        Assert.That(launchTextHelper, Does.Not.Contain("HostOnlineSession"));
+        Assert.That(launchTextHelper, Does.Not.Contain("JoinOnlineSession"));
+        Assert.That(code, Does.Not.Contain("private static string BuildLaunchBoundaryText"));
+        Assert.That(code, Does.Not.Contain("private static string BuildLaunchModifierSummary"));
         Assert.That(code, Does.Contain("RefreshCopiedProfileLaunchPlanPreview"));
         Assert.That(code, Does.Contain("PatchBenchSkipFmvLaunchOption"));
         Assert.That(code, Does.Contain("PatchBenchNoMusicLaunchOption"));
@@ -1191,7 +1230,7 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("Only the copied BEA.exe was patched"));
         Assert.That(code, Does.Contain("Selected mods are applied when you create the safe game copy. The advanced buttons below patch a separate BEA.exe-only copy and do not create a launchable game folder."));
         Assert.That(code, Does.Contain("No optional mod rows selected. Safe-copy creation still applies the required windowed compatibility pair."));
-        Assert.That(code, Does.Contain("This does not confirm it reached the menu, stayed windowed, rendered correctly, or played replacement music."));
+        Assert.That(launchTextHelper, Does.Contain("This does not confirm it reached the menu, stayed windowed, rendered correctly, or played replacement music."));
         Assert.That(code, Does.Contain("This proves process start only."));
         Assert.That(code, Does.Contain("Any manual input after launch is not counted as automated proof."));
         Assert.That(code, Does.Contain("Stop can close or force-close the copied game after a timeout."));

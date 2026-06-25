@@ -56,6 +56,10 @@ This document tracks UI/UX debt that is too broad for a release-candidate polish
   presentation model/helper, while the page keeps profile matching, selected
   patch keys, `ProfilePresetId`, safe-copy manifests, launch, music, and online
   logic unchanged.
+- Windowed & Mods copied-profile launch status/modifier copy now uses small
+  WinUI presentation models plus a helper, while the page keeps launch presets,
+  launch argument construction, launch-plan validation, safe-copy launch,
+  manifest handling, music, and online logic unchanged.
 - Lore now distinguishes packaged offline chapters from GitHub source links in
   the visible UI and rendered Markdown. Full offline Lore is tracked as a
   generated content-pack plan instead of raw long-path ZIP extraction.

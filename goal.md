@@ -6,12 +6,12 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Close out `Windowed & Mods` Enhanced Profile Preview music-swap guard hardening
-and prepare the next bounded modularity slice: inspect launch-preset/status
-presentation code for one safe helper/model extraction. Do not change launch
-arguments, copied-profile launch behavior, patch semantics, safe-copy manifest
-logic, online status, runtime proof, or AppCore correctness logic. Continue from
-this checkout:
+Close out `Windowed & Mods` launch-preset/status presentation modularity and
+prepare the next bounded UX slice: inspect launch-preset selected-state styling
+and UIA names for the launch preset buttons. Do not change launch arguments,
+launch preset effects, copied-profile launch behavior, patch semantics,
+safe-copy manifest logic, online status, runtime proof, or AppCore correctness
+logic. Continue from this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -101,6 +101,17 @@ contributor work.
   `BEA_02 over BEA_01`, invokes Enhanced Profile Preview, and verifies that
   selection remains unchanged. This is test hardening only; no user behavior
   changed.
+- Windowed & Mods launch text modularity is accepted in
+  `release/readiness/winui_windowed_mods_launch_text_modularity_2026-06-25.md`.
+  Copied-profile launch boundary copy, launch modifier summaries, and stale/
+  ready/error launch-readiness text now flow through small WinUI presentation
+  models plus `PatchBenchLaunchText`, while `BinaryPatchesPage` still owns
+  `LaunchPresetSelection`, `ApplyLaunchPreset`, `BuildSelectedLaunchArguments`,
+  `TryBuildCopiedProfileLaunchPlan`, safe-copy launch, manifest handling, music,
+  online readiness, and all AppCore calls. Focused static PatchBench tests,
+  WinUI build, runtime UIA selected-state smoke, hard-payload safety, public
+  allowlist, Markdown links, repo hygiene, state JSON parse, and whitespace diff
+  checks passed.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof both exist.
@@ -153,14 +164,21 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Read `LaunchPresetSelection`, `ApplyLaunchPreset`, launch option status/copy
-   helpers, `WinUiProductLaneTests` launch/preset guards, and the runtime UIA
-   PatchBench smoke.
+1. Inspect launch-preset selected-state UX for
+   `PatchBenchQuietCaptureLaunchPresetButton`,
+   `PatchBenchHighDetailLaunchPresetButton`,
+   `PatchBenchControlBaselinePresetButton`,
+   `PatchBenchControlSharpenedPresetButton`,
+   `PatchBenchControlConfig2PresetButton`,
+   `PatchBenchControlConfig3PresetButton`, and
+   `PatchBenchControlConfig4PresetButton`.
 2. Use at least one specialist consult and one adversarial reviewer unless the
    slice proves microscopic.
-3. If safe, extract one presentation-only launch-preset/status helper or model.
-   Do not move `BuildSelectedLaunchArguments`, `TryBuildCopiedProfileLaunchPlan`,
-   copied-profile launch, safe-copy manifest, or AppCore calls.
+3. If safe, add visible selected-state styling and selected UIA names for the
+   launch preset buttons using the existing choice-state pattern or a similarly
+   small presentation-only helper. Do not change `LaunchPresetSelection`,
+   `ApplyLaunchPreset`, launch arguments, copied-profile launch, safe-copy
+   manifest, or AppCore calls.
 4. Validate with focused WinUI/AppCore tests plus repo/docs gates appropriate to
    the touched paths.
 5. Update state/docs with exact evidence and choose the next bounded slice.
