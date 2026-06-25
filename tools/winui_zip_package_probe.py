@@ -24,10 +24,13 @@ import subprocess
 import sys
 import zipfile
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from urllib.parse import quote, unquote
 
 sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import winui_lore_pack_builder
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT = ROOT / "OnslaughtCareerEditor.WinUI" / "OnslaughtCareerEditor.WinUI.csproj"
@@ -42,7 +45,10 @@ ROOT_README = "README.MD"
 ROOT_LICENSE = "LICENSE"
 APP_DIR = "app"
 LORE_BOOK_DIR = "lore-book"
+LORE_PACK_DIR = "lore-pack"
 LORE_BOOK_REQUIRED_FILE = f"{LORE_BOOK_DIR}/BOOK.md"
+LORE_PACK_INDEX_FILE = f"{LORE_PACK_DIR}/{winui_lore_pack_builder.INDEX_FILE_NAME}"
+LORE_PACK_CONTENT_FILE = f"{LORE_PACK_DIR}/{winui_lore_pack_builder.CONTENT_FILE_NAME}"
 LORE_BOOK_SOURCE = ROOT / LORE_BOOK_DIR
 LORE_BOOK_LINK_REGEX = re.compile(r"\[[^\]]+\]\((?P<target>[^)]+)\)")
 LORE_BOOK_MARKDOWN_LINK_REGEX = re.compile(r"(?P<prefix>\[[^\]]+\]\()(?P<target>[^)]+)(?P<suffix>\))")
@@ -51,6 +57,15 @@ GITHUB_SOURCE_SEARCH_BASE = "https://github.com/dlprentice/Onslaught-Career-Edit
 PACKAGED_LORE_FORBIDDEN_CLAIMS = (
     "Internal links stay inside the app.",
     "without leaving the app",
+)
+LORE_PACK_FORBIDDEN_TEXT_PATTERNS = (
+    re.compile(r"\b[A-Z]:\\", re.IGNORECASE),
+    re.compile(r"\b[A-Z]:\\(?:Users|Steam|GhidraBackups|OnslaughtRuntimeProofArchive)\\", re.IGNORECASE),
+    re.compile(r"\bG:\\(?:GhidraBackups|OnslaughtRuntimeProofArchive)\\", re.IGNORECASE),
+    re.compile(r"https?://(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|127\.\d{1,3}\.\d{1,3}\.\d{1,3}|localhost)(?::\d+)?(?:/[^\s<>()\]]*)?", re.IGNORECASE),
+    re.compile(r"\b(?:0:000>|Child-SP|RetAddr)\b", re.IGNORECASE),
+    re.compile(r"\bdata:image/(?:png|jpeg|webp);base64,", re.IGNORECASE),
+    re.compile(r"\b(?:sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9_]{20,})\b"),
 )
 WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH = 180
 REQUIRED_APP_FILES = (
@@ -65,7 +80,11 @@ REQUIRED_ROOT_FILES = (
     ROOT_README,
     ROOT_LICENSE,
 )
-REQUIRED_PAYLOAD_FILES = REQUIRED_ROOT_FILES + (LORE_BOOK_REQUIRED_FILE,) + tuple(f"{APP_DIR}/{filename}" for filename in REQUIRED_APP_FILES)
+REQUIRED_PAYLOAD_FILES = (
+    REQUIRED_ROOT_FILES
+    + (LORE_BOOK_REQUIRED_FILE, LORE_PACK_INDEX_FILE, LORE_PACK_CONTENT_FILE)
+    + tuple(f"{APP_DIR}/{filename}" for filename in REQUIRED_APP_FILES)
+)
 DEFAULT_PACKAGE_NAME = "OnslaughtCareerEditor.WinUI-local-probe-win-x64.zip"
 HOME_NAVIGATION_FILTER = "FullyQualifiedName~WinUiHomeNavigationSmokeTests"
 LORE_SMOKE_FILTER = "FullyQualifiedName~WinUiLoreInteractionSmokeTests.LoreReader_SearchesSelectsAndShowsCurrentDocumentThroughUiAutomation"
@@ -94,6 +113,7 @@ ZIP_PAYLOAD_DENY_SUFFIXES = (
     ".bes",
     ".bik",
     ".bytes",
+    ".db",
     ".dds",
     ".dmp",
     ".etl",
@@ -104,10 +124,22 @@ ZIP_PAYLOAD_DENY_SUFFIXES = (
     ".gzf",
     ".mp3",
     ".mp4",
+    ".pem",
+    ".png",
+    ".jpg",
+    ".jpeg",
     ".raw",
+    ".sqlite",
     ".trx",
     ".vid",
     ".wav",
+    ".webp",
+    ".zip",
+)
+ZIP_PACKAGE_ALLOWED_IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
+ZIP_PACKAGE_ALLOWED_IMAGE_PREFIXES = (
+    f"{APP_DIR}/microsoft.ui.xaml/assets/",
+    f"{APP_DIR}/libvlc/",
 )
 ZIP_PAYLOAD_DENY_FILENAMES = {
     "bea.exe",
@@ -207,9 +239,33 @@ def write_launcher(bundle_dir: Path) -> CheckResult:
             "setlocal",
             'set "APP_DIR=%~dp0app"',
             'set "APP_EXE=%APP_DIR%\\OnslaughtCareerEditor.WinUI.exe"',
+            'set "LORE_BOOK=%~dp0lore-book\\BOOK.md"',
+            'set "LORE_PACK_INDEX=%~dp0lore-pack\\onslaught-lore.v1.index.json"',
+            'set "LORE_PACK_CONTENT=%~dp0lore-pack\\onslaught-lore.v1.jsonl"',
             'if not exist "%APP_EXE%" (',
             "  echo Onslaught Toolkit app payload is missing:",
             '  echo   "%APP_EXE%"',
+            "  pause",
+            "  exit /b 1",
+            ")",
+            'if not exist "%LORE_BOOK%" (',
+            "  echo Onslaught Toolkit Lore files are missing:",
+            '  echo   "%LORE_BOOK%"',
+            "  echo Extract the full ZIP and keep the top-level folders together.",
+            "  pause",
+            "  exit /b 1",
+            ")",
+            'if not exist "%LORE_PACK_INDEX%" (',
+            "  echo Onslaught Toolkit Lore pack is missing:",
+            '  echo   "%LORE_PACK_INDEX%"',
+            "  echo Extract the full ZIP and keep the top-level folders together.",
+            "  pause",
+            "  exit /b 1",
+            ")",
+            'if not exist "%LORE_PACK_CONTENT%" (',
+            "  echo Onslaught Toolkit Lore pack content is missing:",
+            '  echo   "%LORE_PACK_CONTENT%"',
+            "  echo Extract the full ZIP and keep the top-level folders together.",
             "  pause",
             "  exit /b 1",
             ")",
@@ -246,7 +302,7 @@ def copy_lore_book(bundle_dir: Path) -> CheckResult:
     if destination.exists():
         shutil.rmtree(destination)
     try:
-        packaged_files = resolve_packaged_lore_files(required_source)
+        packaged_files = resolve_packaged_lore_entry_files(required_source)
     except ValueError as exc:
         return CheckResult("bundle_lore_book", "FAIL", str(exc))
     for source in sorted(packaged_files):
@@ -263,15 +319,34 @@ def copy_lore_book(bundle_dir: Path) -> CheckResult:
     return CheckResult(
         "bundle_lore_book",
         "PASS" if required_destination.is_file() and required_destination.stat().st_size > 0 and copied_count == len(packaged_files) else "FAIL",
-        f"{relative(destination)} copied with {copied_count} BOOK.md-linked file(s) for the packaged offline Lore reader; deeper unbundled source links are rewritten to GitHub."
+        f"{relative(destination)} copied with {copied_count} short entry-point file(s); packaged Lore library content lives in lore-pack/ and deeper source links are rewritten to GitHub."
         if required_destination.is_file() and required_destination.stat().st_size > 0
         else f"{relative(required_destination)} is missing after BOOK.md-linked lore copy.",
     )
 
 
-def resolve_packaged_lore_files(book_path: Path) -> set[Path]:
+def build_lore_pack(bundle_dir: Path) -> CheckResult:
+    destination = bundle_dir / LORE_PACK_DIR
+    if destination.exists():
+        shutil.rmtree(destination)
+    try:
+        report = winui_lore_pack_builder.build_lore_pack(ROOT, destination, use_git=True)
+    except Exception as exc:
+        return CheckResult("bundle_lore_pack", "FAIL", f"Lore pack build failed: {exc}")
+    document_count = report.get("documentCount", 0)
+    return CheckResult(
+        "bundle_lore_pack",
+        "PASS" if (destination / winui_lore_pack_builder.INDEX_FILE_NAME).is_file() and (destination / winui_lore_pack_builder.CONTENT_FILE_NAME).is_file() else "FAIL",
+        f"{relative(destination)} generated with {document_count} public-safe offline Lore document(s).",
+    )
+
+
+def resolve_packaged_lore_entry_files(book_path: Path) -> set[Path]:
     lore_root = LORE_BOOK_SOURCE.resolve()
     packaged_files: set[Path] = {book_path.resolve()}
+    start_here = LORE_BOOK_SOURCE / "Start-Here.md"
+    if start_here.is_file():
+        packaged_files.add(start_here.resolve())
     for match in LORE_BOOK_LINK_REGEX.finditer(book_path.read_text(encoding="utf-8")):
         target = unquote(match.group("target").strip()).split("#", 1)[0]
         if not target or re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", target):
@@ -283,7 +358,6 @@ def resolve_packaged_lore_files(book_path: Path) -> set[Path]:
             continue
         if not candidate.is_file():
             raise ValueError(f"missing local BOOK.md link: {target}")
-        packaged_files.add(candidate)
     return packaged_files
 
 
@@ -377,6 +451,7 @@ def stage_portable_bundle(publish_dir: Path, bundle_dir: Path) -> list[CheckResu
         copy_zip_readme(bundle_dir),
         copy_license(bundle_dir),
         copy_lore_book(bundle_dir),
+        build_lore_pack(bundle_dir),
     ]
     return checks
 
@@ -400,7 +475,7 @@ def inspect_root_layout_names(names: set[str], prefix: str) -> list[CheckResult]
     checks: list[CheckResult] = []
     root_files = sorted(name for name in names if "/" not in name.rstrip("/"))
     top_levels = sorted({name.rstrip("/").split("/", 1)[0] for name in names if name.rstrip("/")})
-    allowed_top_levels = set(REQUIRED_ROOT_FILES) | {APP_DIR, LORE_BOOK_DIR}
+    allowed_top_levels = set(REQUIRED_ROOT_FILES) | {APP_DIR, LORE_BOOK_DIR, LORE_PACK_DIR}
     unexpected_top_levels = [name for name in top_levels if name not in allowed_top_levels]
     root_executables = [name for name in root_files if name.lower().endswith(".exe")]
     root_dlls = [name for name in root_files if name.lower().endswith(".dll")]
@@ -408,7 +483,7 @@ def inspect_root_layout_names(names: set[str], prefix: str) -> list[CheckResult]
         CheckResult(
             f"{prefix}_friendly_root_shape",
             "PASS" if not unexpected_top_levels else "FAIL",
-            "Top-level ZIP/folder entries are limited to launcher, readme, license, lore-book/, and app/."
+            "Top-level ZIP/folder entries are limited to launcher, readme, license, lore-book/, lore-pack/, and app/."
             if not unexpected_top_levels
             else "Unexpected top-level entries: " + ", ".join(unexpected_top_levels[:12]),
         )
@@ -450,6 +525,10 @@ def inspect_payload_safety_names(names: set[str], prefix: str) -> list[CheckResu
             continue
         if basename in ZIP_PAYLOAD_DENY_FILENAMES:
             findings.append(f"{normalized} (game executable/options filename)")
+            continue
+        if lower_name.endswith(ZIP_PACKAGE_ALLOWED_IMAGE_SUFFIXES) and any(
+            lower_name.startswith(allowed_prefix) for allowed_prefix in ZIP_PACKAGE_ALLOWED_IMAGE_PREFIXES
+        ):
             continue
         if lower_name.endswith(ZIP_PAYLOAD_DENY_SUFFIXES):
             findings.append(f"{normalized} (hard-payload suffix)")
@@ -513,6 +592,8 @@ def inspect_folder(root: Path, prefix: str) -> list[CheckResult]:
         checks.extend(inspect_explorer_path_safety_names(names, prefix))
         checks.extend(inspect_packaged_lore_link_safety(root, prefix))
         checks.extend(inspect_packaged_lore_copy_truth(read_folder_lore_texts(root), prefix))
+        checks.extend(inspect_lore_pack_folder(root, prefix))
+        checks.extend(inspect_raw_deep_lore_book_leakage(names, prefix))
     package_suffixes = {".msix", ".appx", ".appinstaller", ".msixbundle", ".appxbundle"}
     package_files = [path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in package_suffixes]
     checks.append(
@@ -560,6 +641,7 @@ def inspect_zip(zip_path: Path) -> list[CheckResult]:
     with zipfile.ZipFile(zip_path) as package:
         names = set(package.namelist())
         lore_texts = read_zip_lore_texts(package)
+        lore_pack_texts = read_zip_lore_pack_texts(package)
     for filename in REQUIRED_PAYLOAD_FILES:
         key = filename.replace("/", "_").replace("\\", "_")
         checks.append(
@@ -574,6 +656,8 @@ def inspect_zip(zip_path: Path) -> list[CheckResult]:
     checks.extend(inspect_explorer_path_safety_names(names, "zip", default_extract_folder_name=zip_path.stem))
     checks.extend(inspect_packaged_lore_link_safety_archive(names, lore_texts, "zip"))
     checks.extend(inspect_packaged_lore_copy_truth(lore_texts, "zip"))
+    checks.extend(inspect_lore_pack_texts(lore_pack_texts, "zip"))
+    checks.extend(inspect_raw_deep_lore_book_leakage(names, "zip"))
     installer_suffixes = (".msix", ".appx", ".appinstaller", ".msixbundle", ".appxbundle")
     installers = [name for name in names if name.lower().endswith(installer_suffixes)]
     checks.append(
@@ -604,6 +688,59 @@ def read_zip_lore_texts(package: zipfile.ZipFile) -> dict[str, str]:
     return texts
 
 
+def read_zip_lore_pack_texts(package: zipfile.ZipFile) -> dict[str, str]:
+    texts: dict[str, str] = {}
+    for name in package.namelist():
+        normalized = name.replace("\\", "/")
+        if normalized not in {LORE_PACK_INDEX_FILE, LORE_PACK_CONTENT_FILE}:
+            continue
+        try:
+            texts[normalized] = package.read(name).decode("utf-8", errors="replace")
+        except KeyError:
+            continue
+    return texts
+
+
+def normalize_pack_relative_path(path: str) -> str:
+    parts: list[str] = []
+    for part in PurePosixPath(path.replace("\\", "/")).parts:
+        if part in ("", "."):
+            continue
+        if part == "..":
+            if parts:
+                parts.pop()
+            continue
+        parts.append(part)
+    return "/".join(parts)
+
+
+def resolve_pack_link_candidate(source_relative_path: str, target: str, available_paths: set[str]) -> str | None:
+    normalized_target = target.replace("\\", "/")
+    if normalized_target.startswith("/"):
+        candidate = normalize_pack_relative_path(normalized_target.lstrip("/"))
+    else:
+        source_parent = PurePosixPath(source_relative_path).parent.as_posix()
+        candidate = normalize_pack_relative_path(f"{source_parent}/{normalized_target}")
+
+    candidate_without_suffix = str(PurePosixPath(candidate).with_suffix("")) if PurePosixPath(candidate).suffix else candidate
+    candidates = (
+        candidate,
+        f"{candidate}.md",
+        f"{candidate}.html",
+        f"{candidate}/_index.md",
+        f"{candidate}/README.md",
+        f"{candidate}/index.md",
+        f"{candidate_without_suffix}.md",
+        f"{candidate_without_suffix}.html",
+        f"{candidate_without_suffix}.htm",
+    )
+    for item in candidates:
+        normalized = normalize_pack_relative_path(item)
+        if normalized.lower() in available_paths:
+            return normalized
+    return None
+
+
 def read_folder_lore_texts(root: Path) -> dict[str, str]:
     lore_root = root / LORE_BOOK_DIR
     if not lore_root.is_dir():
@@ -614,6 +751,141 @@ def read_folder_lore_texts(root: Path) -> dict[str, str]:
             continue
         texts[source.relative_to(root).as_posix()] = source.read_text(encoding="utf-8", errors="replace")
     return texts
+
+
+def inspect_lore_pack_folder(root: Path, prefix: str) -> list[CheckResult]:
+    pack_root = root / LORE_PACK_DIR
+    if not pack_root.is_dir():
+        return [CheckResult(f"{prefix}_lore_pack", "FAIL", f"{relative(pack_root)} is missing.")]
+    texts: dict[str, str] = {}
+    for relative_name in (LORE_PACK_INDEX_FILE, LORE_PACK_CONTENT_FILE):
+        path = root / relative_name
+        if path.is_file():
+            texts[relative_name] = path.read_text(encoding="utf-8", errors="replace")
+    return inspect_lore_pack_texts(texts, prefix)
+
+
+def inspect_lore_pack_texts(pack_texts: dict[str, str], prefix: str) -> list[CheckResult]:
+    if LORE_PACK_INDEX_FILE not in pack_texts or LORE_PACK_CONTENT_FILE not in pack_texts:
+        return [
+            CheckResult(
+                f"{prefix}_lore_pack",
+                "FAIL",
+                "Lore pack index/content files are missing.",
+            )
+        ]
+
+    findings: list[str] = []
+    try:
+        index = json.loads(pack_texts[LORE_PACK_INDEX_FILE])
+        if index.get("schema") != winui_lore_pack_builder.SCHEMA:
+            findings.append("schema mismatch")
+        expected_rows = {
+            item.get("id"): item
+            for item in index.get("documents", [])
+            if isinstance(item, dict) and item.get("id")
+        }
+        if index.get("documentCount") != len(expected_rows):
+            findings.append("documentCount does not match index row count")
+        available_paths = {
+            normalize_pack_relative_path(str(item.get("relativePath"))).lower()
+            for item in expected_rows.values()
+            if isinstance(item.get("relativePath"), str)
+        }
+        seen_rows: set[str] = set()
+        for line_number, line in enumerate(pack_texts[LORE_PACK_CONTENT_FILE].splitlines(), start=1):
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            allowed_keys = {"id", "relativePath", "title", "sha256", "byteLength", "content"}
+            extra_keys = sorted(set(row) - allowed_keys)
+            if extra_keys:
+                findings.append(f"row {line_number} has unexpected keys {extra_keys[:4]}")
+                continue
+            doc_id = row.get("id")
+            if doc_id not in expected_rows:
+                findings.append(f"row {line_number} has unknown id {doc_id!r}")
+                continue
+            content = row.get("content")
+            relative_path = row.get("relativePath")
+            if not isinstance(content, str) or not isinstance(relative_path, str):
+                findings.append(f"row {line_number} missing content or relativePath")
+                continue
+            content_byte_length = len(content.encode("utf-8"))
+            expected_row = expected_rows[doc_id]
+            if row.get("byteLength") != content_byte_length or expected_row.get("byteLength") != content_byte_length:
+                findings.append(f"row {line_number} byteLength mismatch")
+                continue
+            if normalize_pack_relative_path(relative_path) != normalize_pack_relative_path(str(expected_row.get("relativePath", ""))):
+                findings.append(f"row {line_number} relativePath mismatch")
+                continue
+            if has_payload_like_lore_pack_text(relative_path) or has_payload_like_lore_pack_text(content):
+                findings.append(f"row {line_number} contains payload-like/local/private text")
+                continue
+            digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
+            if digest != row.get("sha256") or digest != expected_rows[doc_id].get("sha256"):
+                findings.append(f"row {line_number} hash mismatch")
+                continue
+            unresolved_links: list[str] = []
+            for match in LORE_BOOK_MARKDOWN_LINK_REGEX.finditer(content):
+                target = match.group("target").strip()
+                path_part, _ = split_link_target(target)
+                if not path_part or path_part.startswith("#") or re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", path_part):
+                    continue
+                if resolve_pack_link_candidate(relative_path, path_part, available_paths) is None:
+                    unresolved_links.append(target)
+            if unresolved_links:
+                findings.append(f"row {line_number} has unresolved packed links: {', '.join(unresolved_links[:4])}")
+                continue
+            seen_rows.add(str(doc_id))
+        missing_rows = sorted(set(expected_rows) - seen_rows)
+        if missing_rows:
+            findings.append("missing content rows: " + ", ".join(missing_rows[:8]))
+    except Exception as exc:
+        findings.append(str(exc))
+
+    return [
+        CheckResult(
+            f"{prefix}_lore_pack",
+            "PASS" if not findings else "FAIL",
+            "Lore pack index/content schema, hashes, and content safety passed."
+            if not findings
+            else "Lore pack validation failed: " + "; ".join(findings[:8]),
+        )
+    ]
+
+
+def has_payload_like_lore_pack_text(value: str) -> bool:
+    lower = value.lower()
+    if any(lower.endswith(suffix) for suffix in ZIP_PAYLOAD_DENY_SUFFIXES):
+        return True
+    if any(pattern.search(value) for pattern in LORE_PACK_FORBIDDEN_TEXT_PATTERNS):
+        return True
+    return False
+
+
+def inspect_raw_deep_lore_book_leakage(names: set[str], prefix: str) -> list[CheckResult]:
+    has_pack = LORE_PACK_INDEX_FILE in names and LORE_PACK_CONTENT_FILE in names
+    if not has_pack:
+        return []
+    allowed_lore_book = {
+        f"{LORE_BOOK_DIR}/BOOK.md",
+        f"{LORE_BOOK_DIR}/Start-Here.md",
+    }
+    leaked = sorted(
+        name for name in names
+        if name.startswith(f"{LORE_BOOK_DIR}/") and
+        name.rstrip("/") not in allowed_lore_book
+    )
+    return [
+        CheckResult(
+            f"{prefix}_raw_deep_lore_book_leakage",
+            "PASS" if not leaked else "FAIL",
+            "Raw deep lore-book mirror entries are not packaged beside the generated Lore pack."
+            if not leaked
+            else "Raw deep lore-book entries leaked into package: " + ", ".join(leaked[:8]),
+        )
+    ]
 
 
 def inspect_packaged_lore_copy_truth(lore_texts: dict[str, str], prefix: str) -> list[CheckResult]:

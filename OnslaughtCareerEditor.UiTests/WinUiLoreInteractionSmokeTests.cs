@@ -49,25 +49,27 @@ public class WinUiLoreInteractionSmokeTests
             Assert.That(FindByAutomationId(window, "LoreSearchBox").IsEnabled, Is.True, "Lore search box should be enabled.");
             Assert.That(FindByAutomationId(window, "LoreReaderPanel").Name, Is.EqualTo("Lore document reader"));
 
-            SetTextBox(window, "LoreSearchBox", "Battle Engine Tech");
+            const string expectedDocumentTitle = "The Battle Engine - Technology Lore";
+
+            SetTextBox(window, "LoreSearchBox", "Technology Lore");
             WaitForNameContains(window, "Filtered results for", TimeSpan.FromSeconds(10));
 
             AutomationElement techDocument = WaitForTreeItem(
                 FindByAutomationId(window, "LoreDocumentTree"),
-                "Battle Engine Tech",
+                expectedDocumentTitle,
                 TimeSpan.FromSeconds(15));
             InvokeElement(techDocument);
 
             bool documentSelected = Retry.WhileFalse(
                 () => string.Equals(
                     TryGetName(FindByAutomationId(window, "LoreCurrentDocumentTitle")),
-                    "Battle Engine Tech",
+                    expectedDocumentTitle,
                     StringComparison.Ordinal),
                 TimeSpan.FromSeconds(15)).Success;
             Assert.That(documentSelected, Is.True, "Expected selecting the filtered tree row to update the visible Lore reader title.");
 
             string summary = TryGetName(FindByAutomationId(window, "LoreCurrentDocumentSummary")) ?? string.Empty;
-            Assert.That(summary, Does.Contain("packaged lore library"));
+            Assert.That(summary, Does.Contain("offline Lore library"));
             Assert.That(summary, Does.Not.Contain(@":\"));
             Assert.That(summary, Does.Not.Contain(ResolveRepoRoot()));
 

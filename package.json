@@ -1,7 +1,7 @@
 {
   "name": "onslaught-career-editor-workspace",
   "private": true,
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "WinUI-first workspace for the Onslaught Toolkit with archived Electron/Python/WPF reference apps.",
   "packageManager": "npm@11.12.1",
   "engines": {
@@ -157,8 +157,9 @@
     "test:asset-material-package-plan": "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~AssetCatalogServiceTests\"",
     "test:asset-material-package-materialization": "py -3 tools\\asset_material_package_materialization_probe.py --check",
     "test:winui-publish-smoke": "py -3 tools\\winui_publish_smoke.py --check",
-    "test:winui-zip-package-probe": "py -3 tools\\winui_zip_package_probe_test.py && py -3 tools\\winui_zip_package_probe.py --check --include-media-smoke",
-    "test:winui-zip-release-candidate-probe": "py -3 tools\\winui_zip_package_probe_test.py && py -3 tools\\winui_zip_package_probe.py --check --include-media-smoke --out-root subagents\\winui-zip-release-candidate-probe\\current --package-name OnslaughtToolkit-winui-v1.0.6-win-x64.zip",
+    "test:winui-lore-pack-builder": "py -3 tools\\winui_lore_pack_builder.py --self-test",
+    "test:winui-zip-package-probe": "py -3 tools\\winui_lore_pack_builder.py --self-test && py -3 tools\\winui_zip_package_probe_test.py && py -3 tools\\winui_zip_package_probe.py --check --include-media-smoke",
+    "test:winui-zip-release-candidate-probe": "py -3 tools\\winui_lore_pack_builder.py --self-test && py -3 tools\\winui_zip_package_probe_test.py && py -3 tools\\winui_zip_package_probe.py --check --include-media-smoke --out-root subagents\\winui-zip-release-candidate-probe\\current --package-name OnslaughtToolkit-winui-v1.0.7-win-x64.zip",
     "test:winui-msix-candidate-probe": "py -3 tools\\winui_msix_candidate_probe.py --check",
     "test:winui-msix-signing-probe": "py -3 tools\\winui_msix_signing_probe.py --check",
     "test:winui-msix-install-probe": "py -3 tools\\winui_msix_install_probe.py --check",

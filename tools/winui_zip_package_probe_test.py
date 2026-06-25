@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -38,12 +40,19 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             self.assertTrue((bundle_dir / probe.ROOT_README).is_file())
             self.assertTrue((bundle_dir / probe.ROOT_LICENSE).is_file())
             self.assertTrue((bundle_dir / "lore-book" / "BOOK.md").is_file())
+            self.assertTrue((bundle_dir / "lore-pack" / "onslaught-lore.v1.index.json").is_file())
+            self.assertTrue((bundle_dir / "lore-pack" / "onslaught-lore.v1.jsonl").is_file())
             self.assertTrue((bundle_dir / "app" / probe.APP_EXE).is_file())
             self.assertTrue((bundle_dir / "app" / "support.dll").is_file())
             self.assertFalse((bundle_dir / probe.APP_EXE).exists())
             self.assertFalse((bundle_dir / "support.dll").exists())
+            launcher = (bundle_dir / probe.ROOT_LAUNCHER).read_text(encoding="utf-8")
+            self.assertIn("lore-book\\BOOK.md", launcher)
+            self.assertIn("lore-pack\\onslaught-lore.v1.index.json", launcher)
+            self.assertIn("lore-pack\\onslaught-lore.v1.jsonl", launcher)
+            self.assertIn("keep the top-level folders together", launcher)
 
-    def test_copy_lore_book_uses_book_linked_subset(self) -> None:
+    def test_copy_lore_book_uses_short_entry_subset_when_pack_exists(self) -> None:
         original_lore_book_source = probe.LORE_BOOK_SOURCE
         try:
             with tempfile.TemporaryDirectory() as temp_root:
@@ -74,7 +83,7 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
                 self.assertEqual(result.status, "PASS")
                 self.assertTrue((destination_root / "lore-book" / "BOOK.md").is_file())
                 self.assertTrue((destination_root / "lore-book" / "Start-Here.md").is_file())
-                self.assertTrue((destination_root / "lore-book" / "reverse-engineering" / "binary-analysis" / "GHIDRA-REFERENCE.md").is_file())
+                self.assertFalse((destination_root / "lore-book" / "reverse-engineering" / "binary-analysis" / "GHIDRA-REFERENCE.md").exists())
                 self.assertFalse((destination_root / "lore-book" / unlinked.relative_to(source)).exists())
         finally:
             probe.LORE_BOOK_SOURCE = original_lore_book_source
@@ -113,11 +122,11 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
                 source.mkdir(parents=True)
                 (repo_root / "tools").mkdir(parents=True)
                 (source / "BOOK.md").write_text(
-                    "- [Start](Start.md)\n"
+                    "- [Start](Start-Here.md)\n"
                     "- [Sibling](Sibling.md)\n",
                     encoding="utf-8",
                 )
-                (source / "Start.md").write_text(
+                (source / "Start-Here.md").write_text(
                     "[Sibling](Sibling.md)\n"
                     "[Deep](deep/Deep.md#anchor)\n"
                     "[Tool](../tools/helper.py)\n",
@@ -134,8 +143,11 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
                 result = probe.copy_lore_book(destination_root)
 
                 self.assertEqual(result.status, "PASS")
-                packaged_start = (destination_root / "lore-book" / "Start.md").read_text(encoding="utf-8")
-                self.assertIn("[Sibling](Sibling.md)", packaged_start)
+                packaged_start = (destination_root / "lore-book" / "Start-Here.md").read_text(encoding="utf-8")
+                self.assertIn(
+                    "[Sibling](https://github.com/dlprentice/Onslaught-Career-Editor/blob/main/lore-book/Sibling.md)",
+                    packaged_start,
+                )
                 self.assertIn(
                     "[Deep](https://github.com/dlprentice/Onslaught-Career-Editor/blob/main/lore-book/deep/Deep.md#anchor)",
                     packaged_start,
@@ -180,16 +192,104 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
 
             self.assertEqual(failures, [])
 
+    def test_lore_pack_inspection_rejects_payload_like_content(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(
+                bundle_dir,
+                content="# Leak\n\nC:\\Users\\david\\source\\secret-path\n",
+            )
+
+            failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
+
+            self.assertIn("bundle_lore_pack", failures)
+
+    def test_lore_pack_inspection_rejects_private_windows_paths_and_endpoints(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(
+                bundle_dir,
+                content="# Leak\n\nD:\\Ghidra\\Projects\\BEA.gpr\n\nhttp://172.26.112.1:8193\n",
+            )
+
+            failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
+
+            self.assertIn("bundle_lore_pack", failures)
+
+    def test_lore_pack_inspection_rejects_document_count_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(bundle_dir)
+            index_path = bundle_dir / "lore-pack" / "onslaught-lore.v1.index.json"
+            index = json.loads(index_path.read_text(encoding="utf-8"))
+            index["documentCount"] = 2
+            index_path.write_text(json.dumps(index), encoding="utf-8")
+
+            failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
+
+            self.assertIn("bundle_lore_pack", failures)
+
+    def test_lore_pack_inspection_rejects_byte_length_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(bundle_dir)
+            content_path = bundle_dir / "lore-pack" / "onslaught-lore.v1.jsonl"
+            row = json.loads(content_path.read_text(encoding="utf-8").strip())
+            row["byteLength"] = row["byteLength"] + 1
+            content_path.write_text(json.dumps(row) + "\n", encoding="utf-8")
+
+            failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
+
+            self.assertIn("bundle_lore_pack", failures)
+
+    def test_lore_pack_inspection_rejects_raw_deep_lore_book_leakage_when_pack_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(bundle_dir)
+            deep = bundle_dir / "lore-book" / "reverse-engineering" / "binary-analysis" / "functions" / "Deep.md"
+            deep.parent.mkdir(parents=True, exist_ok=True)
+            deep.write_text("# Deep\n", encoding="utf-8")
+
+            failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
+
+            self.assertIn("bundle_raw_deep_lore_book_leakage", failures)
+
+    def test_lore_pack_inspection_rejects_any_extra_lore_book_file_when_pack_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(bundle_dir)
+            extra = bundle_dir / "lore-book" / "extra.md"
+            extra.write_text("# Extra\n", encoding="utf-8")
+
+            failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
+
+            self.assertIn("bundle_raw_deep_lore_book_leakage", failures)
+
     def test_zip_inspection_rejects_entries_too_long_for_explorer_extract_all(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:
             root = Path(temp_root)
             bundle_dir = root / "bundle"
             zip_path = root / "long-path.zip"
             self._write_publish_payload(bundle_dir / "app")
-            for relative_path in (probe.ROOT_LAUNCHER, probe.ROOT_README, probe.ROOT_LICENSE, "lore-book/BOOK.md"):
-                path = bundle_dir / relative_path
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(relative_path, encoding="utf-8")
+            self._write_required_root_payload(bundle_dir)
             long_name = "lore-book/" + ("a" * probe.WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH) + ".md"
             long_path = bundle_dir / long_name
             long_path.parent.mkdir(parents=True, exist_ok=True)
@@ -207,10 +307,7 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             bundle_dir = root / "bundle"
             zip_path = root / "OnslaughtToolkit-winui-v1.0.4-win-x64.zip"
             self._write_publish_payload(bundle_dir / "app")
-            for relative_path in (probe.ROOT_LAUNCHER, probe.ROOT_README, probe.ROOT_LICENSE, "lore-book/BOOK.md"):
-                path = bundle_dir / relative_path
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(relative_path, encoding="utf-8")
+            self._write_required_root_payload(bundle_dir)
             entry_name = "lore-book/" + ("a" * 147) + ".md"
             self.assertLessEqual(len(entry_name), probe.WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH)
             self.assertGreater(len(f"{zip_path.stem}/{entry_name}"), probe.WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH)
@@ -244,15 +341,33 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             self.assertIn("bundle_payload_safety", folder_failures)
             self.assertIn("zip_payload_safety", zip_failures)
 
+    def test_folder_inspection_allows_framework_images_but_rejects_payload_images(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(bundle_dir)
+            allowed = bundle_dir / "app" / "Microsoft.UI.Xaml" / "Assets" / "NoiseAsset_256x256_PNG.png"
+            allowed.parent.mkdir(parents=True, exist_ok=True)
+            allowed.write_bytes(b"framework image")
+
+            allowed_failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
+            self.assertNotIn("bundle_payload_safety", allowed_failures)
+
+            blocked = bundle_dir / "textures" / "retail-texture.png"
+            blocked.parent.mkdir(parents=True, exist_ok=True)
+            blocked.write_bytes(b"payload image")
+
+            blocked_failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
+            self.assertIn("bundle_payload_safety", blocked_failures)
+
     def test_folder_inspection_rejects_dead_local_lore_links(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:
             root = Path(temp_root)
             bundle_dir = root / "bundle"
             self._write_publish_payload(bundle_dir / "app")
-            for relative_path in (probe.ROOT_LAUNCHER, probe.ROOT_README, probe.ROOT_LICENSE, "lore-book/BOOK.md"):
-                path = bundle_dir / relative_path
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(relative_path, encoding="utf-8")
+            self._write_required_root_payload(bundle_dir)
             (bundle_dir / "lore-book" / "Start.md").write_text(
                 "[Missing](missing-local-page.md)\n",
                 encoding="utf-8",
@@ -268,10 +383,7 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             bundle_dir = root / "bundle"
             zip_path = root / "lore-links.zip"
             self._write_publish_payload(bundle_dir / "app")
-            for relative_path in (probe.ROOT_LAUNCHER, probe.ROOT_README, probe.ROOT_LICENSE, "lore-book/BOOK.md"):
-                path = bundle_dir / relative_path
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(relative_path, encoding="utf-8")
+            self._write_required_root_payload(bundle_dir)
             (bundle_dir / "lore-book" / "Start.md").write_text(
                 "[Missing](missing-local-page.md)\n",
                 encoding="utf-8",
@@ -288,10 +400,7 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             root = Path(temp_root)
             bundle_dir = root / "bundle"
             self._write_publish_payload(bundle_dir / "app")
-            for relative_path in (probe.ROOT_LAUNCHER, probe.ROOT_README, probe.ROOT_LICENSE, "lore-book/BOOK.md"):
-                path = bundle_dir / relative_path
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(relative_path, encoding="utf-8")
+            self._write_required_root_payload(bundle_dir)
             (bundle_dir / "lore-book" / "Start.md").write_text(
                 "Internal links stay inside the app.\n",
                 encoding="utf-8",
@@ -307,10 +416,7 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             bundle_dir = root / "bundle"
             zip_path = root / "lore-copy.zip"
             self._write_publish_payload(bundle_dir / "app")
-            for relative_path in (probe.ROOT_LAUNCHER, probe.ROOT_README, probe.ROOT_LICENSE, "lore-book/BOOK.md"):
-                path = bundle_dir / relative_path
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(relative_path, encoding="utf-8")
+            self._write_required_root_payload(bundle_dir)
             (bundle_dir / "lore-book" / "Start.md").write_text(
                 "Search without leaving the app.\n",
                 encoding="utf-8",
@@ -358,6 +464,43 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
         self.assertIn("=== attempt 1 exit 1 ===", output)
         self.assertIn("transient missing row", output)
         self.assertIn("=== attempt 2 exit 0 ===", output)
+
+    def _write_required_root_payload(self, bundle_dir: Path) -> None:
+        for relative_path in (probe.ROOT_LAUNCHER, probe.ROOT_README, probe.ROOT_LICENSE, "lore-book/BOOK.md", "lore-book/Start-Here.md"):
+            path = bundle_dir / relative_path
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(relative_path, encoding="utf-8")
+        self._write_lore_pack_payload(bundle_dir)
+
+    def _write_lore_pack_payload(self, bundle_dir: Path, *, content: str = "# Start\n\nSynthetic fixture.\n") -> None:
+        pack_dir = bundle_dir / "lore-pack"
+        pack_dir.mkdir(parents=True, exist_ok=True)
+        digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
+        row = {
+            "id": "doc-000001",
+            "relativePath": "Start-Here.md",
+            "title": "Start",
+            "sha256": digest,
+            "byteLength": len(content.encode("utf-8")),
+            "content": content,
+        }
+        index = {
+            "schema": "onslaught-lore-pack.v1",
+            "sourceRoot": "lore-book",
+            "documentCount": 1,
+            "documents": [
+                {
+                    "id": row["id"],
+                    "relativePath": row["relativePath"],
+                    "title": row["title"],
+                    "sha256": row["sha256"],
+                    "byteLength": row["byteLength"],
+                    "order": 0,
+                }
+            ],
+        }
+        (pack_dir / "onslaught-lore.v1.index.json").write_text(json.dumps(index), encoding="utf-8")
+        (pack_dir / "onslaught-lore.v1.jsonl").write_text(json.dumps(row) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

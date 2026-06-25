@@ -1,5 +1,8 @@
 using Onslaught___Career_Editor;
 using System;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -90,6 +93,51 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void LoadIndex_UsesLorePackWhenPresent()
+        {
+            string loreBook = CreateLoreBookSkeleton();
+            File.WriteAllText(Path.Combine(loreBook, "BOOK.md"), "- [Start Here](Start-Here.md)");
+            File.WriteAllText(Path.Combine(loreBook, "Start-Here.md"), "# Start Here");
+            WriteLorePack(
+                ("BOOK.md", "# Book\n\nWelcome."),
+                ("deep/Deep-Research.md", "# Deep Research\n\nAquila sector content."));
+
+            LoreBrowserService service = new();
+            LoreIndex index = service.LoadIndex(_repoRoot);
+
+            Assert.True(index.UsingContentPack);
+            Assert.Equal("content-pack", index.SourceKind);
+            Assert.Equal(2, index.Documents.Count);
+            Assert.Contains(index.Documents, doc => doc.RelativePath == "deep/Deep-Research.md");
+
+            var filtered = service.FilterTree(index.RootItems, "Aquila sector");
+            Assert.Single(filtered);
+            Assert.Equal("deep", filtered[0].Title);
+        }
+
+        [Fact]
+        public void RenderDocument_RewritesPackedInternalLinksToReaderNavigation()
+        {
+            CreateLoreBookSkeleton();
+            WriteLorePack(
+                ("Start-Here.md", "# Start\n\nSee [Deep](deep/Deep.md#anchor)."),
+                ("deep/Deep.md", "# Deep\n\nPacked target."));
+
+            LoreBrowserService service = new();
+            LoreIndex index = service.LoadIndex(_repoRoot);
+            LoreDocument start = Assert.Single(index.Documents, doc => doc.RelativePath == "Start-Here.md");
+
+            RenderedLoreDocument rendered = service.RenderDocument(start.FilePath);
+            string html = File.ReadAllText(new Uri(rendered.DisplayUri).LocalPath);
+            string? target = service.ResolveInternalTarget(start.FilePath, "deep/Deep.md#anchor");
+
+            Assert.Contains("onslaught-lore://document/", html);
+            Assert.NotNull(target);
+            Assert.StartsWith("lore-pack://", target, StringComparison.OrdinalIgnoreCase);
+            Assert.True(service.DocumentExists(target!));
+        }
+
+        [Fact]
         public void RenderDocument_CreatesStyledHtmlOutput()
         {
             string loreBook = CreateLoreBookSkeleton();
@@ -135,6 +183,26 @@ See the [deep source](https://github.com/dlprentice/Onslaught-Career-Editor/blob
         }
 
         [Fact]
+        public void RenderDocument_MarksExternalLinksAsBrowserLinks()
+        {
+            string loreBook = CreateLoreBookSkeleton();
+            string markdownPath = Path.Combine(loreBook, "Start-Here.md");
+            File.WriteAllText(markdownPath, """
+# Start Here
+
+See the [reference](https://example.com/reference).
+""");
+
+            LoreBrowserService service = new();
+            RenderedLoreDocument rendered = service.RenderDocument(markdownPath);
+
+            string html = File.ReadAllText(new Uri(rendered.DisplayUri).LocalPath);
+            Assert.Contains("class=\"external-link\"", html);
+            Assert.Contains("External link; opens in your browser", html);
+            Assert.Contains("<span class=\"source-link-badge\" aria-hidden=\"true\">External</span>", html);
+        }
+
+        [Fact]
         public void ResolveInternalTarget_HandlesRelativeMarkdownAndDirectories()
         {
             string loreBook = CreateLoreBookSkeleton();
@@ -164,6 +232,68 @@ See the [deep source](https://github.com/dlprentice/Onslaught-Career-Editor/blob
             string loreBook = Path.Combine(_repoRoot, "lore-book");
             Directory.CreateDirectory(loreBook);
             return loreBook;
+        }
+
+        private void WriteLorePack(params (string RelativePath, string Content)[] documents)
+        {
+            string packDirectory = Path.Combine(_repoRoot, "lore-pack");
+            Directory.CreateDirectory(packDirectory);
+            var indexRows = documents.Select((doc, index) =>
+            {
+                string id = $"doc-{index + 1:000000}";
+                string sha256 = Sha256Text(doc.Content);
+                return new
+                {
+                    id,
+                    relativePath = doc.RelativePath,
+                    title = ResolveTitle(doc.Content, doc.RelativePath),
+                    sha256,
+                    byteLength = Encoding.UTF8.GetByteCount(doc.Content),
+                    order = index
+                };
+            }).ToArray();
+            var contentRows = documents.Select((doc, index) =>
+            {
+                string id = $"doc-{index + 1:000000}";
+                return JsonSerializer.Serialize(new
+                {
+                    id,
+                    relativePath = doc.RelativePath,
+                    title = ResolveTitle(doc.Content, doc.RelativePath),
+                    sha256 = Sha256Text(doc.Content),
+                    byteLength = Encoding.UTF8.GetByteCount(doc.Content),
+                    content = doc.Content
+                });
+            });
+            File.WriteAllText(
+                Path.Combine(packDirectory, "onslaught-lore.v1.index.json"),
+                JsonSerializer.Serialize(new
+                {
+                    schema = "onslaught-lore-pack.v1",
+                    sourceRoot = "lore-book",
+                    documentCount = documents.Length,
+                    documents = indexRows
+                }),
+                Encoding.UTF8);
+            File.WriteAllText(
+                Path.Combine(packDirectory, "onslaught-lore.v1.jsonl"),
+                string.Join(Environment.NewLine, contentRows) + Environment.NewLine,
+                Encoding.UTF8);
+        }
+
+        private static string Sha256Text(string value)
+        {
+            return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
+        }
+
+        private static string ResolveTitle(string content, string relativePath)
+        {
+            string? heading = content.Split('\n')
+                .Select(static line => line.Trim())
+                .FirstOrDefault(static line => line.StartsWith("# ", StringComparison.Ordinal));
+            return heading == null
+                ? Path.GetFileNameWithoutExtension(relativePath)
+                : heading.TrimStart('#', ' ');
         }
 
         public void Dispose()

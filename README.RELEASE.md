@@ -30,13 +30,24 @@ supersedes `v1.0.3`/`v1.0.4`/`v1.0.5`: v1.0.3 could hit Windows Explorer
 v1.0.4 did not rewrite deeper unbundled Lore links, and v1.0.5 did not yet
 surface the source-link boundary clearly inside the app.
 
+`release/readiness/WINUI-ZIP-README.txt` describes ZIPs built from the current
+source candidate. The published `v1.0.6` asset is documented by its historical
+readiness note and does not contain the generated `lore-pack/` candidate shape.
+
 The ZIP release does not include Battle Engine Aquila game files, copied
 executables, saves, media payloads, full Ghidra databases, or bulky generated
 proof captures. Users provide their own retail/Steam installation, and mutating
-workflows operate on copied files or safe game copies. A full-offline Lore
-reader remains viable as a generated short-path content pack, not as a raw deep
-`lore-book/` mirror in the ZIP. This is not an MSIX, installer, Store package,
-signed release, or SmartScreen/reputation claim.
+workflows operate on copied files or safe game copies. Current package
+candidates now stage a generated short-path `lore-pack/` content pack beside
+the short `lore-book/BOOK.md` entry point so public Markdown/TXT Lore and
+public Markdown/TXT documents can be searched and read offline without raw
+deep `lore-book/` mirror paths in the ZIP. External references may still open
+in the browser. This is not an MSIX, installer, Store package, signed release,
+or SmartScreen/reputation claim.
+Asset Library loads generated local asset catalogs; downloadable app ZIPs do
+not bundle game assets, browse raw game files directly, or generate catalogs in
+place. Catalog generation is a source/lab workflow documented under
+`reverse-engineering/game-assets/`.
 
 ## Shipping Direction
 

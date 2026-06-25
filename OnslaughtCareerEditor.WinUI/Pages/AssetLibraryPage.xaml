@@ -40,10 +40,10 @@
                     <TextBlock Text="Load generated catalog"
                                FontSize="18"
                                FontWeight="SemiBold" />
-                    <TextBlock x:Name="CatalogStatusTextBlock"
-                               AutomationProperties.AutomationId="AssetCatalogStatus"
-                               Style="{StaticResource SectionBodyTextStyle}"
-                               Text="No generated asset catalog loaded. Choose a folder containing asset_catalog/catalog.json or catalog.json." />
+                            <TextBlock x:Name="CatalogStatusTextBlock"
+                                       AutomationProperties.AutomationId="AssetCatalogStatus"
+                                       Style="{StaticResource SectionBodyTextStyle}"
+                                       Text="This release loads an existing generated catalog only. It does not include game assets or generate a catalog here. Generate a catalog from your local game files, then paste catalog.json or browse to the generated export folder." />
                 </StackPanel>
                 <StackPanel Grid.Column="1"
                             Orientation="Horizontal"
@@ -77,10 +77,11 @@
                     <TextBox x:Name="CatalogPathTextBox"
                              Grid.Column="0"
                              AutomationProperties.AutomationId="AssetCatalogPathTextBox"
-                             PlaceholderText="Choose a catalog.json file or asset export folder" />
+                             PlaceholderText="Paste catalog.json path or browse to a generated export folder" />
                     <Button Grid.Column="1"
                             AutomationProperties.AutomationId="AssetBrowseCatalogButton"
-                            Content="Browse"
+                            AutomationProperties.Name="Browse generated catalog folder"
+                            Content="Browse folder"
                             Click="BrowseCatalogButton_Click" />
                     <Button Grid.Column="2"
                             x:Name="LoadCatalogButton"
@@ -247,7 +248,7 @@
                             <TextBlock x:Name="GoodiesFilterStatusTextBlock"
                                        AutomationProperties.AutomationId="AssetGoodiesFilterStatus"
                                        Style="{StaticResource SectionBodyTextStyle}"
-                                       Text="Goodies filters use static catalog links; runtime wall proof is separate."
+                                       Text="Goodies filters use catalog links; in-game wall availability is not shown here."
                                        TextWrapping="WrapWholeWords" />
                         </StackPanel>
                         <ListView x:Name="AssetItemsListView"

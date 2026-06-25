@@ -1,13 +1,13 @@
 # Active Goal Slice
 
 Status: active
-Last updated: 2026-06-24
+Last updated: 2026-06-25
 Policy: `goal.policy.md`
 
 ## Current Slice
 
-Close the Windowed & Mods patch/mod UX/testability cleanup plus the Lore package
-truth and Ghidra path documentation follow-up from this checkout:
+Close the generated offline Lore content-pack implementation, package guard
+follow-up, and Asset Library first-run catalog guidance from this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -33,32 +33,26 @@ contributor work.
 - `local-proofs/OnslaughtRuntimeProofArchive` and
   `local-ghidra/GhidraBackups` are ignored junctions to `G:` archives rather
   than duplicated on `C:`.
-- The public app release `v1.0.5` remains the latest published GitHub asset
-  until `v1.0.6` is tagged and published. The validated `v1.0.6` candidate
-  keeps the same safe wrapper layout and adds clearer Lore source-link copy.
-  It supersedes `v1.0.3`/`v1.0.4`/`v1.0.5`: v1.0.3 included deep
-  `lore-book/` mirror paths that can hit Windows Explorer `0x80010135`
-  path-too-long extraction failures under normal Downloads paths, and v1.0.4
-  did not rewrite deeper unbundled Lore links, while v1.0.5 did not yet surface
-  the source-link boundary clearly inside the app. The v1.0.6 package keeps the
-  friendly wrapper layout, includes the `lore-book/BOOK.md`-linked offline Lore
-  reader set, rewrites deeper unbundled source links to GitHub source/search
-  pages, labels source links in-app, auto-detects common Steam installs where
-  possible, and makes Asset Library catalog requirements clear instead of
-  implying raw game browsing.
-- The current app ZIP should not raw-copy the full `lore-book/` mirror because
-  the full tree has long RE/proof filenames that can exceed Windows Explorer
-  Extract All path budgets. Full offline Lore remains a planned WinUI feature
-  via a generated short-path content pack; see
-  `roadmap/winui-lore-offline-pack-plan.md`.
+- The public app release `v1.0.6` remains the latest published GitHub asset
+  until a later version is tagged and published. It keeps the friendly wrapper
+  layout and avoids raw deep `lore-book/` paths that can hit Windows Explorer
+  `0x80010135` path-too-long extraction failures.
+- The source tree now stages packaged public Lore library content for package
+  candidates through a generated short-path `lore-pack/` content pack. Package
+  probes build and validate `lore-pack/onslaught-lore.v1.index.json` plus
+  `lore-pack/onslaught-lore.v1.jsonl`, keep only short `lore-book/` entry files
+  beside it, and reject raw deep `lore-book/` mirror leakage. The latest local
+  package probe generated 943 public-safe offline Markdown/TXT Lore documents
+  and passed launch/Home/Lore/Media smokes; external references may
+  still open in the browser, and no new GitHub release has been published for
+  this pack yet.
 - The maintainer-local live Ghidra project path is
   `C:\Users\david\Ghidra\Projects\BEA.gpr` with store
   `C:\Users\david\Ghidra\Projects\BEA.rep\`. The repo tracks scripts, exports,
   ledgers, and docs instead of full binary project stores.
-- Current Windowed & Mods cleanup adds patch-key-derived AutomationIds for
-  dynamic patch rows, checkboxes, and Details expanders; it also keeps CDB,
-  proof-boundary, key-census, raw-offset, and evidence jargon out of the normal
-  debug-camera, online-unavailable, music-staging, and preset-detail path.
+- Current WinUI Lore cleanup loads generated `lore-pack/` documents when present,
+  falls back to `lore-book/BOOK.md` otherwise, keeps included document links
+  inside the reader, and labels source/external links as browser actions.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof both exist.
@@ -105,11 +99,14 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Commit and push the validated Windowed & Mods patch-row UX/testability plus
-   Lore/Ghidra package-truth cleanup after docs/state/hygiene gates are green.
-2. Continue bounded patch/mod/runtime proof work from public `main`, likely
-   Asset Library first-run catalog guidance or the next safe-copy/mod runtime
-   proof that does not require external endpoint material.
+1. Commit and push the validated generated Lore content-pack support
+   after docs/state/hygiene gates are green and commit authority is clear.
+2. Cut a new GitHub app release only after explicit release authorization and a
+   release-candidate probe for the versioned asset; the next candidate must not
+   reuse the published `v1.0.6` ZIP filename.
+3. Continue bounded patch/mod/runtime proof work from public `main`, likely the
+   next safe-copy/mod runtime proof that does not require external endpoint
+   material.
 
 ## Stop Conditions
 

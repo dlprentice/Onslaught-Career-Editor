@@ -55,6 +55,9 @@ public class WinUiRuntimeAccessibilitySmokeTests
             NavigateAndWait(window, "SavesNavigationItem", "Save Lab", "1. Inspect a file");
             NavigateAndWait(window, "MediaNavigationItem", "Media", "Source folder");
             NavigateAndWait(window, "AssetLibraryNavigationItem", "Asset Library", "Load generated catalog");
+            string assetCatalogStatus = FindByAutomationId(window, "AssetCatalogStatus").Name;
+            Assert.That(assetCatalogStatus, Does.Contain("This release loads an existing generated catalog only"));
+            Assert.That(assetCatalogStatus, Does.Contain("does not include game assets or generate a catalog here"));
             NavigateAndWait(window, "LoreNavigationItem", "Lore", "Library");
             NavigateAndWait(window, "BinaryNavigationItem", "Windowed & Mods", "Safe game copy");
             NavigateAndWait(window, "SettingsNavigationItem", "Settings", "Game Directory");

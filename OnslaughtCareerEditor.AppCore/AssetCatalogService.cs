@@ -87,6 +87,28 @@ namespace Onslaught___Career_Editor
             return File.Exists(nestedCatalog) ? nestedCatalog : null;
         }
 
+        public static IReadOnlyList<string> FindCatalogCandidates(params string?[] catalogPathOrDirectoryCandidates)
+        {
+            List<string> candidates = new();
+            HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
+            foreach (string? candidate in catalogPathOrDirectoryCandidates)
+            {
+                string? catalogFilePath = ResolveCatalogFilePath(candidate);
+                if (string.IsNullOrWhiteSpace(catalogFilePath))
+                {
+                    continue;
+                }
+
+                string normalized = Path.GetFullPath(catalogFilePath);
+                if (seen.Add(normalized))
+                {
+                    candidates.Add(normalized);
+                }
+            }
+
+            return candidates;
+        }
+
         private static AssetCatalogSummary BuildSummary(
             JsonElement root,
             int textureCount,

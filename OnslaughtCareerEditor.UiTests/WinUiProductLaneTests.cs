@@ -88,6 +88,8 @@ public class WinUiProductLaneTests
         Assert.That(shellCode, Does.Contain("typeof(AssetLibraryPage)"));
         Assert.That(assetXaml, Does.Contain("Asset Library"));
         Assert.That(assetXaml, Does.Contain("Load generated catalog"));
+        Assert.That(assetXaml, Does.Contain("Paste catalog.json path or browse to a generated export folder"));
+        Assert.That(assetXaml, Does.Contain("Browse folder"));
         Assert.That(assetXaml, Does.Contain("AssetCatalogProvenanceSummary"));
         Assert.That(assetXaml, Does.Contain("Texture preview"));
         Assert.That(assetXaml, Does.Contain("AssetPreviewTitle"));
@@ -132,7 +134,7 @@ public class WinUiProductLaneTests
         Assert.That(assetCode, Does.Contain("LooksLikeBroadPcInstallCatalog"));
         Assert.That(assetCode, Does.Contain("broad PC-install export from local game files"));
         Assert.That(assetCode, Does.Contain("not source-tree sample data"));
-        Assert.That(assetCode, Does.Contain("runtime Goodies behavior is separate proof"));
+        Assert.That(assetCode, Does.Contain("in-game Goodies behavior is not shown here"));
         Assert.That(assetCode, Does.Contain("direct catalog texture links"));
         Assert.That(assetCode, Does.Contain("catalog-missing texture binding files have sidecar previews"));
         Assert.That(assetCode, Does.Contain("unresolved material import binding files"));
@@ -172,6 +174,11 @@ public class WinUiProductLaneTests
         Assert.That(assetCode, Does.Not.Contain("Native in-app 3D rendering is not enabled yet"));
         Assert.That(assetCode, Does.Contain("ONSLAUGHT_WINUI_TEST_INITIAL_ASSET_TAB"));
         Assert.That(assetCode, Does.Contain("AssetCatalogPath"));
+        Assert.That(assetCode, Does.Contain("FindCatalogCandidates"));
+        Assert.That(assetCode, Does.Contain("BuildInitialCatalogCandidates"));
+        Assert.That(assetCode, Does.Contain("This release loads an existing generated catalog only"));
+        Assert.That(assetCode, Does.Contain("does not include game assets or generate a catalog here"));
+        Assert.That(assetCode, Does.Contain("Generate a catalog from your local game files"));
         Assert.That(assetCode, Does.Contain("AssetMaterialImportPackageMaterializationService"));
         Assert.That(assetCode, Does.Contain("AssetMaterialImportPackageWorkOrderService"));
         Assert.That(assetCode, Does.Contain("AssetMaterialImportPackageImporterBatchService"));
@@ -211,6 +218,17 @@ public class WinUiProductLaneTests
         Assert.That(assetCode, Does.Contain("UseShellExecute = true"));
         Assert.That(assetCode, Does.Contain("Clipboard.SetContent"));
         Assert.That(assetCode, Does.Not.Contain("SourcePathTextBlock.Text ="));
+    }
+
+    [Test]
+    public void LoreReader_DebouncesSearchFiltering()
+    {
+        string loreCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "LorePage.xaml.cs");
+
+        Assert.That(loreCode, Does.Contain("CancellationTokenSource"));
+        Assert.That(loreCode, Does.Contain("ApplyTreeFilterAsync"));
+        Assert.That(loreCode, Does.Contain("Task.Delay(180"));
+        Assert.That(loreCode, Does.Contain("Task.Run("));
     }
 
     [Test]

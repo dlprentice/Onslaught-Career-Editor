@@ -2963,6 +2963,7 @@ release/readiness/winui_asset_catalog_readability_2026-05-06.md	R0_ALLOW	default
 release/readiness/winui_asset_library_backing_truth_2026-05-07.md	R0_ALLOW	default
 release/readiness/winui_asset_library_catalog_coverage_summary_2026-05-07.md	R0_ALLOW	default
 release/readiness/winui_asset_library_export_actions_2026-05-06.md	R0_ALLOW	default
+release/readiness/winui_asset_library_first_run_catalog_guidance_2026-06-25.md	R0_ALLOW	default
 release/readiness/winui_asset_library_integration_2026-05-06.md	R0_ALLOW	default
 release/readiness/winui_asset_library_model_copy_2026-05-06.md	R0_ALLOW	default
 release/readiness/winui_asset_library_preview_stability_2026-05-07.md	R0_ALLOW	default
@@ -3139,9 +3140,11 @@ release/readiness/winui_zip_package_probe_2026-05-27.md	R0_ALLOW	default
 release/readiness/winui_zip_portable_layout_hotfix_2026-06-24.md	R0_ALLOW	default
 release/readiness/winui_zip_release_candidate_probe_2026-05-06.md	R0_ALLOW	default
 release/readiness/winui_zip_release_candidate_probe_2026-05-27.md	R0_ALLOW	default
+release/readiness/winui_zip_release_candidate_v1_0_7_2026-06-25.md	R0_ALLOW	default
 release/readiness/winui_zip_release_v1_0_3_2026-06-24.md	R0_ALLOW	default
 release/readiness/winui_zip_release_v1_0_4_2026-06-25.md	R0_ALLOW	default
 release/readiness/winui_zip_release_v1_0_5_2026-06-25.md	R0_ALLOW	default
+release/readiness/winui_zip_release_v1_0_6_2026-06-25.md	R0_ALLOW	default
 release/readiness/world_thing_spawn_copied_corpus_schema_proof_2026-06-08.md	R0_ALLOW	default
 release/readiness/world_thing_spawn_copied_corpus_schema_proof_plan_2026-06-08.md	R0_ALLOW	default
 release/readiness/world_thing_spawn_getthingref_object_reference_static_proof_2026-06-08.md	R0_ALLOW	default
@@ -19152,6 +19155,7 @@ tools/winui_directinput_deadzone_runtime_ab_readiness_test.py	R4_DENY	tools/*run
 tools/winui_enhanced_preview_runtime_artifact_check.py	R4_DENY	tools/winui_enhanced_preview_runtime_artifact_check.py
 tools/winui_frontend_color_runtime_artifact_check.py	R4_DENY	tools/*runtime*
 tools/winui_installer_preflight.py	R0_ALLOW	default
+tools/winui_lore_pack_builder.py	R0_ALLOW	default
 tools/winui_msix_candidate_probe.py	R0_ALLOW	default
 tools/winui_msix_install_probe.py	R0_ALLOW	default
 tools/winui_msix_signing_probe.py	R0_ALLOW	default

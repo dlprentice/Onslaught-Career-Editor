@@ -48,20 +48,26 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             UpdateTabStyles();
             ApplyTexturePreviewBackground();
 
+            AppConfig config = AppConfig.Load();
             string? testCatalog = Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_TEST_ASSET_CATALOG");
-            string? configuredCatalog = string.IsNullOrWhiteSpace(testCatalog)
-                ? AppConfig.Load().AssetCatalogPath
-                : testCatalog;
+            bool hasTestCatalog = !string.IsNullOrWhiteSpace(testCatalog);
+            string? configuredCatalog = hasTestCatalog
+                ? testCatalog
+                : config.AssetCatalogPath;
+            string? initialCatalog = hasTestCatalog
+                ? AssetCatalogService.FindCatalogCandidates(configuredCatalog).FirstOrDefault()
+                : BuildInitialCatalogCandidates(config, configuredCatalog).FirstOrDefault();
+            string? catalogToLoad = initialCatalog ?? configuredCatalog;
 
-            CatalogPathTextBox.Text = configuredCatalog ?? string.Empty;
-            if (!string.IsNullOrWhiteSpace(configuredCatalog))
+            CatalogPathTextBox.Text = catalogToLoad ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(catalogToLoad))
             {
-                LoadCatalog(configuredCatalog, persist: string.IsNullOrWhiteSpace(testCatalog));
+                LoadCatalog(catalogToLoad, persist: !hasTestCatalog);
             }
             else
             {
                 ResetSelection();
-                CatalogStatusTextBlock.Text = BuildMissingCatalogStatus(configuredCatalog);
+                CatalogStatusTextBlock.Text = BuildMissingCatalogStatus(catalogToLoad);
                 CatalogSummaryTextBlock.Text = "Load a generated catalog to see textures, meshes, and goodies.";
                 CatalogCoverageTextBlock.Text = "Coverage summary appears after a generated catalog loads.";
                 CatalogProvenanceTextBlock.Text = "Catalog provenance appears after a generated catalog loads.";
@@ -74,6 +80,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 LoadGoodieSaveState(testGoodieSave, updateInput: false);
             }
+        }
+
+        private static IReadOnlyList<string> BuildInitialCatalogCandidates(AppConfig config, string? configuredCatalog)
+        {
+            _ = config.GetGameDirOrDetect(persistDetection: true);
+            return AssetCatalogService.FindCatalogCandidates(configuredCatalog);
         }
 
         private async void BrowseCatalogButton_Click(object sender, RoutedEventArgs e)
@@ -123,7 +135,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             CatalogInputGrid.Visibility = Visibility.Collapsed;
             ChangeCatalogButton.Visibility = Visibility.Visible;
             CatalogPathTextBox.Text = string.Empty;
-            CatalogPathTextBox.PlaceholderText = "Choose a catalog.json file or asset export folder";
+            CatalogPathTextBox.PlaceholderText = "Paste catalog.json path or browse to a generated export folder";
             RefreshMaterialImportPlans();
             _materialPackageOutputRoot = BuildMaterialPackageOutputRoot(_snapshot.CatalogFilePath);
             UpdateMaterialPackageOutputStatus();
@@ -149,12 +161,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             string? gameDir = AppConfig.Load().GetGameDirOrDetect(persistDetection: true);
             string attempted = string.IsNullOrWhiteSpace(attemptedPath) ? string.Empty : " The selected path does not contain a catalog.";
+            const string baseline = "This release loads an existing generated catalog only. It does not include game assets or generate a catalog here.";
             if (string.IsNullOrWhiteSpace(gameDir))
             {
-                return $"No generated asset catalog loaded.{attempted} Choose a folder that contains asset_catalog/catalog.json or catalog.json.";
+                return $"{baseline}{attempted} Generate a catalog from your local game files, then paste catalog.json or browse to the generated export folder.";
             }
 
-            return $"Game install detected. Asset Library still needs a generated asset catalog before textures and models can be browsed.{attempted} Choose a folder that contains asset_catalog/catalog.json or catalog.json.";
+            return $"Battle Engine Aquila install detected. {baseline}{attempted} Generate a catalog from your local game files, then choose the folder containing asset_catalog/catalog.json.";
         }
 
         private string BuildCatalogCoverageSummary()
@@ -225,7 +238,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             return
                 $"Catalog provenance: {scope}. Previews use local exported PNG and FBX files; " +
                 "model display is metadata and wireframe geometry, not final textured 3D rendering. " +
-                "Private assets stay local; runtime Goodies behavior is separate proof.";
+                "Private assets stay local; in-game Goodies behavior is not shown here.";
         }
 
         private bool LooksLikeBroadPcInstallCatalog()
@@ -618,7 +631,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             GoodieFactRewardTextBlock.Text = BuildGoodieRewardFact(goodie);
             GoodieFactEvidenceTextBlock.Text = goodie.IsSourceGridVisible
                 ? $"{goodie.WallVisibilityEvidenceLabel}; {goodie.UnlockEvidenceLabel}."
-                : $"{goodie.WallVisibilityEvidenceLabel}; runtime reachability still needs copied-game proof.";
+                : $"{goodie.WallVisibilityEvidenceLabel}; in-game reachability is not shown here.";
         }
 
         private static string BuildGoodieRewardFact(AssetGoodieItem goodie)
@@ -724,7 +737,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 GoodieBrowserFilter.Videos =>
                     $"Showing {count} video Goodies linked to the media catalog.",
                 _ =>
-                    $"Showing {count} cataloged Goodies. Filters use static catalog links; runtime wall proof is separate."
+                    $"Showing {count} cataloged Goodies. Filters use catalog links; in-game wall availability is not shown here."
             };
         }
 

@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "No Ghidra/static mutation; v1.0.6 release is published and static RE remains unchanged.",
+  "currentFocus": "No Ghidra/static mutation; generated WinUI Lore content-pack package candidate is local-only and static RE remains unchanged.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -36,11 +36,20 @@
       "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.6/OnslaughtToolkit-winui-v1.0.6-win-x64.zip",
       "publishedAt": "2026-06-25T14:04:04Z",
       "tagCommit": "8c16631a"
+    },
+    "latestWinuiLoreContentPackCandidate": {
+      "status": "local_release_candidate_probe_passed_not_published",
+      "documentCount": 943,
+      "zip": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.7-win-x64.zip",
+      "byteSize": 246757113,
+      "sha256": "033d9f65d51e884c7896fcd1180689988743c50ef6c57a6ce0c72f8b4f38c7ae",
+      "readinessNote": "release/readiness/winui_zip_release_candidate_v1_0_7_2026-06-25.md"
     }
   },
   "nextSteps": [
-    "Resume bounded patch/mod/runtime proof work from public main unless a static RE contradiction appears.",
-    "No Ghidra backup was required for the no-mutation v1.0.6 release slice."
+    "No Ghidra backup is required for this no-mutation WinUI/package slice.",
+    "Publish v1.0.7 only after explicit release authorization using the validated release-candidate ZIP or a fresh equivalent probe.",
+    "Resume static work only if a product/runtime contradiction points back to a specific RE issue."
   ],
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -67,19 +76,22 @@
   },
   "validation": {
     "latestPassed": [
-      "py -3 tools\\winui_zip_package_probe_test.py (PASS; 14 tests)",
-      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~LoreBrowserServiceTests\" (PASS; 6 tests)",
-      "npm run test:winui-primary-lane (PASS; build 0 warnings/errors, AppCore 1172, UiTests 85 passed / 2 skipped)",
-      "npm run test:doc-commands (PASS; 4232 documented npm commands checked under package version 1.0.6)",
-      "npm run test:winui-zip-release-candidate-probe (PASS; ZIP 243917871 bytes, SHA-256 ce5cb69a836f1b9c759ec608407cee51520f147979816a8661c29bf32cd6d720, extracted launch/Home/Lore/Media smokes passed)",
-      "npm run test:md-links (PASS; 3619 markdown files, 6123 local links)",
-      "npm run release:curated-check (PASS; selected files 625)",
-      "npm run release:profile-check (PASS; R0=6127 R2=0 R3=3 R4=13177)",
-      "npm run test:public-allowlist (PASS; public candidate files 19308, submodule candidate files 19492, migration inventory public tracked paths 19307)",
+      "py -3 tools\\winui_lore_pack_builder.py --self-test (PASS; 3 tests)",
+      "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
+      "npm run test:winui-primary-lane (PASS; solution build 0 warnings/errors, AppCore 1176/1176, WinUI UI tests 86 passed / 2 skipped catalog-dependent rows)",
+      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~LoreBrowserServiceTests|FullyQualifiedName~AssetCatalogServiceTests\" (PASS; 102 tests)",
+      "py -3 tools\\winui_zip_package_probe_test.py (PASS; 21 tests)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.LoreReader_DebouncesSearchFiltering\" (PASS; 1 test)",
       "npm run test:winui-notices (PASS; 74 packages)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18460 explicit text files line-ending check)",
-      "git diff --check (PASS)",
-      "state JSON parse (PASS)"
+      "npm run test:winui-zip-package-probe (PASS; ZIP 246757113 bytes, SHA-256 5dfa8271456c1356fe560a4face65703f6b9a49df5c3fab6842327d0f43fc49f, 943 Lore pack docs, extracted launch/Home/Lore/Media smokes passed)",
+      "npm run test:winui-zip-release-candidate-probe (PASS; OnslaughtToolkit-winui-v1.0.7-win-x64.zip, 246757113 bytes, SHA-256 033d9f65d51e884c7896fcd1180689988743c50ef6c57a6ce0c72f8b4f38c7ae, 943 Lore pack docs, extracted launch/Home/Lore/Media smokes passed)",
+      "npm run test:doc-commands (PASS; 4241 documented npm commands checked)",
+      "npm run test:md-links (PASS; 3620 markdown files, 6123 local links)",
+      "npm run release:profile-check (PASS; R0=6131 R2=0 R3=3 R4=13177)",
+      "npm run release:curated-check (PASS; selected files 625)",
+      "npm run test:public-allowlist (PASS; public candidate files 19311, submodule candidate files 19495, migration inventory public tracked paths 19311)",
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18461 explicit text files line-ending check)",
+      "git diff --check (PASS)"
     ],
     "pendingForActiveSlice": []
   }

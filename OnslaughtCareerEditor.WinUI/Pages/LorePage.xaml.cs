@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.System;
 
@@ -30,6 +31,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private bool _isWebViewReady;
         private bool _suppressHistory;
         private bool _suppressTreeSelection;
+        private CancellationTokenSource? _searchFilterCancellation;
 
         public LorePage()
         {
@@ -79,6 +81,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             _isLoading = true;
+            CancelPendingSearchFilter();
             ShowReaderPlaceholder(
                 "Loading lore library...",
                 "Refreshing the curated document tree and embedded reader.");
@@ -100,15 +103,17 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     _documentLookup[document.FilePath] = document;
                 }
 
-                LibrarySummaryTextBlock.Text = _index.UsingLoreBook
-                    ? $"Packaged lore reader ready from lore-book/BOOK.md."
-                    : "Fallback lore-book index loaded.";
+                LibrarySummaryTextBlock.Text = _index.UsingContentPack
+                    ? "Offline Lore library ready."
+                    : _index.UsingLoreBook
+                        ? "Offline Lore entry guide ready."
+                        : "Fallback Lore index loaded.";
 
                 ApplyTreeFilter(updateSelection: false);
 
                 string? initialPath = restorePath;
                 string? initialAnchor = restoreAnchor;
-                if (string.IsNullOrWhiteSpace(initialPath) || (!_documentLookup.ContainsKey(initialPath) && !File.Exists(initialPath)))
+                if (string.IsNullOrWhiteSpace(initialPath) || (!_documentLookup.ContainsKey(initialPath) && !_service.DocumentExists(initialPath)))
                 {
                     initialPath = _index.HomeDocument?.FilePath;
                     initialAnchor = null;
@@ -166,6 +171,29 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 ? _index.RootItems
                 : _service.FilterTree(_index.RootItems, query);
 
+            ApplyTreeFilterItems(sourceItems, query, updateSelection);
+        }
+
+        private async Task ApplyTreeFilterAsync(bool updateSelection, CancellationToken cancellationToken)
+        {
+            if (_index == null)
+            {
+                DocumentTree.RootNodes.Clear();
+                UpdateCounts();
+                return;
+            }
+
+            string query = (SearchTextBox.Text ?? string.Empty).Trim();
+            IReadOnlyList<LoreTreeItem> sourceItems = string.IsNullOrWhiteSpace(query)
+                ? _index.RootItems
+                : await Task.Run(() => _service.FilterTree(_index.RootItems, query), cancellationToken);
+
+            cancellationToken.ThrowIfCancellationRequested();
+            ApplyTreeFilterItems(sourceItems, query, updateSelection);
+        }
+
+        private void ApplyTreeFilterItems(IReadOnlyList<LoreTreeItem> sourceItems, string query, bool updateSelection)
+        {
             HashSet<string> expandedKeys = CaptureExpandedKeys();
             RebuildTree(sourceItems, expandedKeys, expandAll: !string.IsNullOrWhiteSpace(query));
 
@@ -259,38 +287,38 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private async Task LoadDocumentAsync(string filePath, string? anchor, bool addToHistory)
         {
-            string fullPath = Path.GetFullPath(filePath);
-            if (!File.Exists(fullPath))
+            string documentKey = _service.NormalizeDocumentKey(filePath);
+            if (!_service.DocumentExists(documentKey))
             {
-                throw new FileNotFoundException("The selected lore document was not found.", fullPath);
+                throw new FileNotFoundException("The selected lore document was not found.", documentKey);
             }
 
             await EnsureWebViewReadyAsync();
 
             if (addToHistory && !_suppressHistory && !string.IsNullOrWhiteSpace(_currentSourcePath))
             {
-                if (!PathsEqual(_currentSourcePath, fullPath) || !string.Equals(_currentAnchor, anchor, StringComparison.Ordinal))
+                if (!PathsEqual(_currentSourcePath, documentKey) || !string.Equals(_currentAnchor, anchor, StringComparison.Ordinal))
                 {
                     _backStack.Push(new LoreHistoryEntry(_currentSourcePath!, _currentAnchor));
                     _forwardStack.Clear();
                 }
             }
 
-            RenderedLoreDocument rendered = await Task.Run(() => _service.RenderDocument(fullPath, anchor));
+            RenderedLoreDocument rendered = await Task.Run(() => _service.RenderDocument(documentKey, anchor));
 
-            _currentSourcePath = fullPath;
+            _currentSourcePath = rendered.SourcePath;
             _currentDisplayUri = rendered.DisplayUri;
             _currentAnchor = anchor;
 
-            CurrentDocumentTextBlock.Text = ResolveDocumentTitle(fullPath, rendered.Title);
-            CurrentPathTextBlock.Text = ResolveDisplayPath(fullPath);
-            ToolTipService.SetToolTip(CurrentPathTextBlock, fullPath);
+            CurrentDocumentTextBlock.Text = ResolveDocumentTitle(rendered.SourcePath, rendered.Title);
+            CurrentPathTextBlock.Text = ResolveDisplayPath(rendered.SourcePath);
+            ToolTipService.SetToolTip(CurrentPathTextBlock, ResolveToolTipPath(rendered.SourcePath));
 
             ReaderPlaceholderBorder.Visibility = Visibility.Collapsed;
             ContentWebView.Visibility = Visibility.Visible;
             ContentWebView.Source = new Uri(rendered.DisplayUri);
 
-            SyncTreeSelection(fullPath);
+            SyncTreeSelection(rendered.SourcePath);
             UpdateNavButtons();
             AppStatusService.SetStatus($"Lore: loaded {CurrentDocumentTextBlock.Text}");
         }
@@ -317,7 +345,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 return false;
             }
 
-            string fullTarget = Path.GetFullPath(targetPath);
+            string fullTarget = _service.NormalizeDocumentKey(targetPath);
             if (PathsEqual(fullTarget, _currentSourcePath))
             {
                 NavigateToCurrentAnchor(anchor);
@@ -325,7 +353,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             string extension = Path.GetExtension(fullTarget);
-            if (extension.Equals(".md", StringComparison.OrdinalIgnoreCase) ||
+            if (IsLorePackSourcePath(fullTarget) ||
+                extension.Equals(".md", StringComparison.OrdinalIgnoreCase) ||
                 extension.Equals(".html", StringComparison.OrdinalIgnoreCase) ||
                 extension.Equals(".htm", StringComparison.OrdinalIgnoreCase))
             {
@@ -354,9 +383,20 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ContentWebView.Source = new Uri(AppendAnchor(RemoveAnchor(_currentDisplayUri), anchor));
         }
 
-        private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private async void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            ApplyTreeFilter();
+            CancelPendingSearchFilter();
+            _searchFilterCancellation = new CancellationTokenSource();
+            CancellationToken cancellationToken = _searchFilterCancellation.Token;
+
+            try
+            {
+                await Task.Delay(180, cancellationToken);
+                await ApplyTreeFilterAsync(updateSelection: true, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+            }
         }
 
         private async void RefreshButton_Click(object sender, RoutedEventArgs e)
@@ -399,6 +439,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 return;
             }
 
+            if (_isLoading)
+            {
+                await WaitForLoreIndexIdleAsync();
+            }
+
+            if (_isLoading)
+            {
+                return;
+            }
+
             if (_isDocumentLoading)
             {
                 return;
@@ -417,6 +467,14 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             finally
             {
                 _isDocumentLoading = false;
+            }
+        }
+
+        private async Task WaitForLoreIndexIdleAsync()
+        {
+            for (int attempt = 0; attempt < 100 && _isLoading; attempt++)
+            {
+                await Task.Delay(50);
             }
         }
 
@@ -638,9 +696,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (string.IsNullOrWhiteSpace(query))
             {
                 LibraryCountTextBlock.Text = $"{_index.Documents.Count} documents ready";
-                PaneStateTextBlock.Text = _index.UsingLoreBook
-                    ? "Showing packaged lore-book chapters; source links may open online."
-                    : "Showing the fallback lore-book scan.";
+                PaneStateTextBlock.Text = _index.UsingContentPack
+                    ? "Showing included offline documents; Source and External links open in your browser."
+                    : _index.UsingLoreBook
+                        ? "Showing included Lore chapters; Source and External links open in your browser."
+                        : "Showing the fallback Lore scan.";
             }
             else
             {
@@ -678,6 +738,18 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ToggleLibraryButton.Label = LoreSplitView.IsPaneOpen ? "Hide Library" : "Show Library";
         }
 
+        private void CancelPendingSearchFilter()
+        {
+            if (_searchFilterCancellation == null)
+            {
+                return;
+            }
+
+            _searchFilterCancellation.Cancel();
+            _searchFilterCancellation.Dispose();
+            _searchFilterCancellation = null;
+        }
+
         private string ResolveDocumentTitle(string fullPath, string fallbackTitle)
         {
             if (_documentLookup.TryGetValue(fullPath, out LoreDocument? document))
@@ -690,26 +762,43 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private string ResolveDisplayPath(string fullPath)
         {
-            string fileName = Path.GetFileName(fullPath);
-            if (_index == null || string.IsNullOrWhiteSpace(fileName))
+            if (_index == null)
             {
-                return "Reading from the packaged lore library.";
+                return "Reading from the offline Lore library.";
             }
 
             if (_documentLookup.TryGetValue(fullPath, out LoreDocument? document) &&
                 !string.IsNullOrWhiteSpace(document.RelativePath))
             {
-                return $"Reading {fileName} from the packaged lore library.";
+                return $"Reading {document.RelativePath} from the offline Lore library.";
             }
 
-            return $"Reading {fileName}.";
+            string fileName = IsLorePackSourcePath(fullPath)
+                ? "included document"
+                : Path.GetFileName(fullPath);
+            return string.IsNullOrWhiteSpace(fileName)
+                ? "Reading from the offline Lore library."
+                : $"Reading {fileName}.";
+        }
+
+        private string ResolveToolTipPath(string sourcePath)
+        {
+            if (_documentLookup.TryGetValue(sourcePath, out LoreDocument? document) &&
+                !string.IsNullOrWhiteSpace(document.RelativePath))
+            {
+                return document.RelativePath;
+            }
+
+            return sourcePath;
         }
 
         private static string BuildNodeKey(LoreTreeItem item, string? parentKey, int index)
         {
             if (!string.IsNullOrWhiteSpace(item.FilePath))
             {
-                return $"file:{Path.GetFullPath(item.FilePath)}";
+                return IsLorePackSourcePath(item.FilePath)
+                    ? $"file:{item.FilePath}"
+                    : $"file:{Path.GetFullPath(item.FilePath)}";
             }
 
             string parentPart = string.IsNullOrWhiteSpace(parentKey) ? "root" : parentKey;
@@ -744,6 +833,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (string.IsNullOrWhiteSpace(left) || string.IsNullOrWhiteSpace(right))
             {
                 return false;
+            }
+
+            if (IsLorePackSourcePath(left) || IsLorePackSourcePath(right))
+            {
+                return string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
             }
 
             return string.Equals(
@@ -787,6 +881,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private static string NormalizeNavigationTarget(string value)
         {
             string withoutAnchor = RemoveAnchor(value);
+            if (IsLorePackSourcePath(withoutAnchor))
+            {
+                return withoutAnchor;
+            }
+
             if (Uri.TryCreate(withoutAnchor, UriKind.Absolute, out Uri? uri))
             {
                 return uri.IsFile
@@ -811,6 +910,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             return $"{RemoveAnchor(value)}#{Uri.EscapeDataString(anchor)}";
+        }
+
+        private static bool IsLorePackSourcePath(string? value)
+        {
+            return !string.IsNullOrWhiteSpace(value) &&
+                   value.StartsWith("lore-pack://", StringComparison.OrdinalIgnoreCase);
         }
 
         private sealed record LoreHistoryEntry(string FilePath, string? Anchor);

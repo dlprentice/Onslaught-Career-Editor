@@ -266,6 +266,24 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void FindCatalogCandidates_ResolvesGeneratedCatalogsFromCandidateRoots()
+        {
+            using TempAssetCatalog catalog = TempAssetCatalog.Create();
+            string missing = Path.Combine(catalog.RootPath, "missing");
+
+            IReadOnlyList<string> candidates = AssetCatalogService.FindCatalogCandidates(
+                null,
+                "",
+                missing,
+                catalog.RootPath,
+                catalog.CatalogFilePath,
+                Path.GetDirectoryName(catalog.CatalogFilePath)!);
+
+            string resolved = Path.GetFullPath(catalog.CatalogFilePath);
+            Assert.Equal(new[] { resolved }, candidates);
+        }
+
+        [Fact]
         public void Load_ReturnsEmptyForMissingCatalog()
         {
             string missing = Path.Combine(Path.GetTempPath(), "oce-missing-assets", Guid.NewGuid().ToString("N"));

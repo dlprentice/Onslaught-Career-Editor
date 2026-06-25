@@ -18,11 +18,11 @@
                     Spacing="6">
             <TextBlock Text="Lore"
                        Style="{StaticResource SectionTitleTextStyle}" />
-            <TextBlock Text="Browse the packaged offline lore reader with searchable navigation and document history. Source links may open GitHub in your browser."
+            <TextBlock Text="Read included Lore documents offline with searchable navigation and document history. Source and External links open in your browser."
                        Style="{StaticResource SectionBodyTextStyle}" />
             <TextBlock x:Name="LoreSourceBoundaryStatusTextBlock"
                        AutomationProperties.AutomationId="LoreSourceBoundaryStatus"
-                       Text="Offline reader: packaged chapters stay here; source links open online."
+                       Text="Offline library: included document links stay here; Source and External links open in your browser."
                        Style="{StaticResource SectionBodyTextStyle}" />
             <StackPanel Visibility="Collapsed">
                 <TextBlock x:Name="LibrarySummaryTextBlock"
@@ -58,7 +58,7 @@
                                 <TextBlock Text="Library"
                                            FontSize="18"
                                            FontWeight="SemiBold" />
-                                <TextBlock Text="Search packaged titles and document content, then browse the book structure. Source links may open your browser."
+                                <TextBlock Text="Search included titles and document content, then browse the library."
                                            Style="{StaticResource SectionBodyTextStyle}" />
                                 <Grid ColumnSpacing="8">
                                     <Grid.ColumnDefinitions>
@@ -147,7 +147,7 @@
                             <AppBarSeparator />
                             <AppBarButton x:Name="OpenExternalButton"
                                           AutomationProperties.AutomationId="LoreOpenExternalButton"
-                                          Label="Open External"
+                                          Label="Open in browser"
                                           Click="OpenExternalButton_Click">
                                 <AppBarButton.Icon>
                                     <SymbolIcon Symbol="OpenFile" />
@@ -170,7 +170,7 @@
                         <TextBlock x:Name="CurrentPathTextBlock"
                                    AutomationProperties.AutomationId="LoreCurrentDocumentSummary"
                                    Style="{StaticResource SectionBodyTextStyle}"
-                                   Text="Packaged lore opens here; source links may open your browser." />
+                                   Text="Included Lore opens here; Source and External links may open your browser." />
                     </StackPanel>
                 </Border>
 

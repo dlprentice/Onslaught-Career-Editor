@@ -1,24 +1,26 @@
 # WinUI Offline Lore Pack Plan
 
-Status: planned
+Status: active implementation
 Last updated: 2026-06-25
 
-The current portable app ZIP ships the `lore-book/BOOK.md` reading set as normal
-files. This is intentionally smaller than the full `lore-book/` tree because
-the full mirror has long reverse-engineering/proof filenames that can exceed
-Windows Explorer `Extract All` path limits under normal Downloads folders.
+The published `v1.0.6` portable app ZIP ships the `lore-book/BOOK.md` reading
+set as normal files. The current source tree now stages a generated
+`lore-pack/` content pack for the next package candidate. This avoids the raw
+full `lore-book/` tree because the full mirror has long reverse-engineering and
+proof filenames that can exceed Windows Explorer `Extract All` path limits under
+normal Downloads folders.
 
-The desired future state is still full offline Lore inside the app. The safe
-shape is a generated content pack, not raw long filenames.
+The desired shape is broad offline Lore reading inside the app through a
+generated content pack, not raw long filenames.
 
 ## Target Shape
 
 - Keep `lore-book/BOOK.md` and a short human entry point in the ZIP.
-- Add a generated offline pack such as `lore-pack/onslaught-lore.v1.jsonl` plus
-  `lore-pack/onslaught-lore.v1.index.json`, or an equivalent single short-path
-  archive.
-- Store each public-safe Lore document with a stable ID, title, original logical
-  path, hash, byte range or short entry path, and outbound-link metadata.
+- Add the generated offline pack `lore-pack/onslaught-lore.v1.jsonl` plus
+  `lore-pack/onslaught-lore.v1.index.json`.
+- Store each public-safe Markdown/TXT Lore document with a
+  stable ID, title, original logical path, hash, byte range or short entry path,
+  and outbound-link metadata.
 - Resolve internal links through AppCore document IDs so packed documents stay
   in the WinUI reader.
 - Keep source paths visible as metadata only; do not use long logical paths as
@@ -26,7 +28,8 @@ shape is a generated content pack, not raw long filenames.
 
 ## Acceptance
 
-- The app can search and open all tracked public-safe Lore documents offline.
+- The app can search and open tracked public-safe Markdown/TXT Lore documents
+  offline.
 - Internal packed-document links stay inside the reader.
 - GitHub or external links are visibly identified as source/external links.
 - ZIP path safety still passes with default Explorer extraction-folder
@@ -35,6 +38,18 @@ shape is a generated content pack, not raw long filenames.
   `lore-book/` mirror leakage.
 - Search is debounced or asynchronous enough that typing does not visibly block
   the WinUI thread.
+
+## Current Implementation
+
+- `tools/winui_lore_pack_builder.py` builds/checks the deterministic JSONL plus
+  index pack from tracked public-safe `lore-book/` Markdown/TXT files. Non-packed
+  source/data references are externalized to repository source/search links.
+- `tools/winui_zip_package_probe.py` stages `lore-pack/` beside the short
+  `lore-book/` entry point, verifies schema and hashes, rejects payload-like
+  pack content, keeps Explorer path checks, and rejects raw deep `lore-book/`
+  mirror leakage.
+- `LoreBrowserService` prefers the content pack when present and falls back to
+  the existing `lore-book/BOOK.md` file reader when the pack is absent.
 
 ## Non-Goals
 

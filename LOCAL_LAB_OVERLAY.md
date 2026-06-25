@@ -96,9 +96,10 @@ as `local-proofs/` or `local-ghidra/`.
 
 ## Ghidra Note
 
-Agents can work with a local Ghidra project if it exists in an ignored overlay,
-but the repo should receive deterministic exports, scripts, markdown, JSON, TSV,
-and ledger files instead of binary Ghidra project stores.
+Agents can work with a local Ghidra project from an ignored overlay or another
+maintainer-local path, but the repo should receive deterministic exports,
+scripts, markdown, JSON, TSV, and ledger files instead of binary Ghidra project
+stores.
 
 Current maintainer-local live project on this workstation:
 

@@ -27,18 +27,24 @@ Extract the full ZIP and run `Launch Onslaught Toolkit.cmd` from the clean
 top-level folder. The app payload lives under `app\`; run
 `app\OnslaughtCareerEditor.WinUI.exe` only as a fallback. Use `v1.0.6` or newer;
 it keeps the Explorer-safe ZIP layout introduced after `v1.0.3`/`v1.0.4` and
-adds clearer packaged Lore source-link copy.
+adds clearer Lore source-link copy. The current working tree can also stage a
+generated public Lore library content pack for the next package candidate.
 
 The ZIP release does not include Battle Engine Aquila game files, copied
 executables, saves, media payloads, full Ghidra databases, or bulky generated
-proof captures. The ZIP bundles the Lore reader files listed in
-`lore-book\BOOK.md` for offline reading; links to deeper source docs open
-GitHub source/search pages instead of shipping the full deep RE mirror in the
-app ZIP. A future full-offline Lore reader should use a generated short-path
-content pack instead of raw deep `lore-book/` filenames so normal Explorer
-extraction remains reliable.
-Media, safe copied-game, and asset-export workflows use your own retail/Steam
-install; patching workflows operate on copied files and safe game copies.
+proof captures. Published `v1.0.6` bundles the Lore reader files listed in
+`lore-book\BOOK.md` for offline reading and sends deeper source docs to online
+project source pages. Current package candidates keep `lore-book\BOOK.md` as a
+short entry point and add `lore-pack\onslaught-lore.v1.jsonl` plus
+`lore-pack\onslaught-lore.v1.index.json` so public Markdown/TXT Lore and
+public Markdown/TXT documents can be searched and read offline without raw
+deep `lore-book/` filenames breaking normal Explorer extraction. External
+references may still open in the browser.
+Media and safe copied-game workflows use your own retail/Steam install.
+Asset Library loads generated local asset catalogs; the ZIP does not bundle
+game assets or generate catalogs in-place. Catalog generation is a source/lab
+workflow documented under `reverse-engineering/game-assets/`. Patching
+workflows operate on copied files and safe game copies.
 
 For contributor setup, local validation expectations, hard-payload boundaries, and PR-ready change rules, see **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 

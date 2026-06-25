@@ -1,6 +1,7 @@
 # Onslaught Lore Book
 
-A curated reading order for the Lore Browser. The tree view follows this flow.
+A curated reading order for the Lore Browser. Packaged app builds may show a
+broader generated document tree while this page remains the reading map.
 Primary navigation entry: [Start Here](Start-Here.md). Use this page as the full map/reference view.
 Authority note: where source-code notes conflict with retail behavior, retail/Steam `BEA.exe` + real save behavior are authoritative.
 Roadmap source-of-truth: [roadmap/ROADMAP-INDEX.md](roadmap/ROADMAP-INDEX.md).

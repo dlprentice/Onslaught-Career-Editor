@@ -13,7 +13,7 @@ Companion docs:
 
 - Use the left-hand tree to move through chapters.
 - Back/Forward/Home let you retrace your steps or return to the overview.
-- Packaged chapter links stay inside the app.
+- Included document links stay inside the reader.
 - Source links and external references open your browser.
 
 ## Suggested paths
@@ -30,4 +30,4 @@ Companion docs:
 - **Deep Dives**: longer-form analysis and special topics.
 - **Appendices**: reverse engineering, formats, binary analysis, and tools.
 
-If you want the raw, engineering-oriented structure, you can still browse the copied directories under `lore-book/`.
+If you want the raw, engineering-oriented structure, browse the source tree in the repository. The downloadable app focuses this reader around included documents and source links.

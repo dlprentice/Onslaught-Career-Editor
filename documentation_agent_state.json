@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "v1.0.6 WinUI ZIP release is published; docs/state now use v1.0.6 as the current app baseline.",
+  "currentFocus": "Generated Lore content-pack docs are updated for the 943-document v1.0.7 package candidate; v1.0.6 remains the published release baseline until a later release is cut.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -9,7 +9,8 @@
     "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
     "releaseGuide": "README.RELEASE.md",
     "releaseSignoff": "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
-    "releaseReadinessNote": "release/readiness/winui_zip_release_v1_0_5_2026-06-25.md"
+    "releaseReadinessNote": "release/readiness/winui_zip_release_v1_0_6_2026-06-25.md",
+    "releaseCandidateNote": "release/readiness/winui_zip_release_candidate_v1_0_7_2026-06-25.md"
   },
   "publicPrimaryMigration": {
     "status": "validated_public_primary_with_maintainer_local_ignored_overlays",
@@ -18,10 +19,10 @@
     "localOnly": "actual game/runtime payloads, local-rom-input payloads, arbitrary saves/options payloads, full Ghidra databases/backups, secrets, build outputs, screenshots/frame dumps, raw CDB logs, bulky generated captures",
     "localOverlayStatus": "maintainer-local ignored overlays contain the copied game mirror/local extras, save-attempts payloads, local-rom-input, mcps, and G: junctions for runtime proof/Ghidra backups; those overlays are useful locally but not GitHub-tracked source.",
     "localStorageCleanup": "C:\\Users\\david\\source\\Onslaught-Career-Editor-public-candidate* scratch clones were moved to G:\\OnslaughtRepoArchives\\source-scratch-20260624 with move-manifest.json; zero public-candidate scratch dirs remain on C:.",
-    "currentInventory": "24839 private tracked paths, 19307 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths; explicit maintainer parity command uses --private-root and --require-private-root.",
+    "currentInventory": "24839 private tracked paths, 19308 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths; explicit maintainer parity command uses --private-root and --require-private-root.",
     "wordingFixes": [
       "AGENTS.md and roadmap/repo-structure-and-archive-map.md now point to release/readiness/PUBLIC_SIGNOFF_COMMANDS.md.",
-      "roadmap/public-primary-working-repo.md uses the public tracked-path count current at that closeout; latest public-primary migration inventory reports 19306 public tracked paths.",
+      "roadmap/public-primary-working-repo.md uses the public tracked-path count current at that closeout; latest public-primary migration inventory reports 19308 public tracked paths.",
       "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md now says test:public-allowlist runs hard-payload safety, submodule payload safety, and public-primary migration/hash inventory."
     ]
   },
@@ -39,41 +40,47 @@
   },
   "validation": {
     "latestPassed": [
-      "py -3 tools\\winui_zip_package_probe_test.py (PASS; 14 tests)",
-      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~LoreBrowserServiceTests\" (PASS; 6 tests)",
-      "npm run test:winui-primary-lane (PASS; build 0 warnings/errors, AppCore 1172, UiTests 85 passed / 2 skipped)",
-      "npm run test:doc-commands (PASS; 4232 documented npm commands checked under package version 1.0.6)",
-      "npm run test:winui-zip-release-candidate-probe (PASS; ZIP 243917871 bytes, SHA-256 ce5cb69a836f1b9c759ec608407cee51520f147979816a8661c29bf32cd6d720, extracted launch/Home/Lore/Media smokes passed)",
-      "npm run test:md-links (PASS; 3619 markdown files, 6123 local links)",
-      "npm run release:curated-check (PASS; selected files 625)",
-      "npm run release:profile-check (PASS; R0=6127 R2=0 R3=3 R4=13177)",
-      "npm run test:public-allowlist (PASS; public candidate files 19308, submodule candidate files 19492, migration inventory public tracked paths 19307)",
+      "py -3 tools\\winui_lore_pack_builder.py --self-test (PASS; 3 tests)",
+      "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
+      "npm run test:winui-primary-lane (PASS; solution build 0 warnings/errors, AppCore 1176/1176, WinUI UI tests 86 passed / 2 skipped catalog-dependent rows)",
+      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~LoreBrowserServiceTests|FullyQualifiedName~AssetCatalogServiceTests\" (PASS; 102 tests)",
+      "py -3 tools\\winui_zip_package_probe_test.py (PASS; 21 tests)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.LoreReader_DebouncesSearchFiltering\" (PASS; 1 test)",
       "npm run test:winui-notices (PASS; 74 packages)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18460 explicit text files line-ending check)",
-      "git diff --check (PASS)",
-      "state JSON parse (PASS)"
+      "npm run test:winui-zip-package-probe (PASS; ZIP 246757113 bytes, SHA-256 5dfa8271456c1356fe560a4face65703f6b9a49df5c3fab6842327d0f43fc49f, 943 Lore pack docs, extracted launch/Home/Lore/Media smokes passed)",
+      "npm run test:winui-zip-release-candidate-probe (PASS; OnslaughtToolkit-winui-v1.0.7-win-x64.zip, 246757113 bytes, SHA-256 033d9f65d51e884c7896fcd1180689988743c50ef6c57a6ce0c72f8b4f38c7ae, 943 Lore pack docs, extracted launch/Home/Lore/Media smokes passed)",
+      "npm run test:doc-commands (PASS; 4241 documented npm commands checked)",
+      "npm run test:md-links (PASS; 3620 markdown files, 6123 local links)",
+      "npm run release:profile-check (PASS; R0=6131 R2=0 R3=3 R4=13177)",
+      "npm run release:curated-check (PASS; selected files 625)",
+      "npm run test:public-allowlist (PASS; public candidate files 19311, submodule candidate files 19495, migration inventory public tracked paths 19311)",
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18461 explicit text files line-ending check)",
+      "git diff --check (PASS)"
     ],
     "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Resume bounded patch/mod/runtime work from public main.",
-    "Carry full offline Lore as a generated content-pack plan for a future app release.",
-    "Use v1.0.6 links for collaborators and users."
+    "Keep docs clear that v1.0.6 is published, while the 943-document lore-pack/ is implemented for the next package candidate/release.",
+    "Commit/push the source/docs/package-probe changes when commit authority is clear.",
+    "If a new release is authorized, publish only the exact validated v1.0.7 ZIP or a fresh equivalent release-candidate probe."
   ],
   "winuiReleaseCandidate": {
-    "status": "published",
-    "version": "v1.0.6",
-    "zip": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.6-win-x64.zip",
-    "byteSize": 243917871,
-    "sha256": "ce5cb69a836f1b9c759ec608407cee51520f147979816a8661c29bf32cd6d720",
+    "status": "local_candidate_not_published",
+    "version": "v1.0.7",
+    "zip": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.7-win-x64.zip",
+    "byteSize": 246757113,
+    "sha256": "033d9f65d51e884c7896fcd1180689988743c50ef6c57a6ce0c72f8b4f38c7ae",
     "proven": [
       "friendly top-level launcher/readme/license",
+      "launcher verifies app exe, lore-book/BOOK.md, lore-pack index, and lore-pack JSONL content before starting the app",
       "app/ self-contained payload",
-      "BOOK.md-linked offline lore-book reader set",
-      "deeper unbundled Lore links rewritten to GitHub source/search pages",
+      "short lore-book/ entry files plus generated lore-pack/",
+      "943 public-safe Markdown/TXT Lore documents packed through short paths",
+      "packed local links validated; unpacked source links rewritten to GitHub source/search pages",
       "Explorer-safe ZIP entry path budget: max default Extract All relative path 133/180",
       "no root DLL/EXE layout",
-      "no dead local packaged Lore links",
+      "no hard payloads, Ghidra DBs, raw proofs, game files, saves, or media payloads",
+      "third-party notices check passed for 74 packages",
       "extracted launch/Home/Lore/Media smokes exit 0",
       "skipped UI rows rejected",
       "process cleanup passed"
@@ -84,13 +91,14 @@
       "player-ready online multiplayer",
       "gameplay parity",
       "clean-room rebuild parity"
-    ]
+    ],
+    "readinessNote": "release/readiness/winui_zip_release_candidate_v1_0_7_2026-06-25.md"
   },
   "releaseAccounting": {
-    "releaseProfile": "R0=6127 R2=0 R3=3 R4=13177",
+    "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",
     "curatedSelectedFiles": 625,
-    "publicCandidateFiles": 19308,
-    "publicSubmoduleCandidateFiles": 19492
+    "publicCandidateFiles": 19311,
+    "publicSubmoduleCandidateFiles": 19495
   },
   "githubRelease": {
     "version": "v1.0.6",
@@ -120,17 +128,17 @@
     ],
     "nonBlockingFollowups": [
       "private repo still has active-looking goal/state wording and should eventually be frozen or bannered as archived if kept",
-      "release lore-book contains local backup path provenance markers; not a payload/secret blocker, but should be classified or sanitized before the next ZIP",
+      "historical source docs may contain maintainer-local provenance markers, but the v1.0.7 lore-pack builder redacts maintainer-local paths and the package probe rejects local/private path text before ZIP acceptance",
       "Asset Library needs a clearer first-run path for generating/finding a local asset catalog",
       "Windowed & Mods broader page split and selected-state UX debt remains tracked in roadmap/winui-ui-ux-redesign-radar.md."
     ]
   },
   "lorePackaging": {
-    "status": "documented_current_release_boundary_and_future_pack_plan",
-    "currentZip": "v1.0.5 uses BOOK.md-linked offline Lore files and externalizes deeper source links to GitHub",
-    "decision": "raw full lore-book mirror should not be shipped in the app ZIP; future full offline Lore should use a generated short-path content pack",
-    "plan": "roadmap/winui-lore-offline-pack-plan.md",
-    "userFacingCopy": "WinUI Lore page and rendered Markdown now identify source links that open online."
+    "status": "implemented_for_local_package_candidates_not_yet_published",
+    "currentRelease": "v1.0.6 is published and remains the user-facing release link; it predates the generated lore-pack candidate.",
+    "currentSource": "WinUI/AppCore can read generated lore-pack/ docs; package probes build a 943-document public-safe Markdown/TXT pack and validate schema, hashes, content safety, packed link integrity, Explorer path budget, extraction, and extracted Lore smoke.",
+    "userFacingCopy": "Included Lore opens in the app; external/source links open in the browser.",
+    "plan": "roadmap/winui-lore-offline-pack-plan.md"
   },
   "ghidraLocalTruth": {
     "liveProject": "C:\\Users\\david\\Ghidra\\Projects\\BEA.gpr",
@@ -139,10 +147,11 @@
     "note": "public clones do not need the Ghidra DB; repo tracks scripts/exports/ledgers/docs."
   },
   "latestLocalZipCandidate": {
-    "packageName": "OnslaughtToolkit-winui-v1.0.6-win-x64.zip",
-    "path": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.6-win-x64.zip",
-    "byteSize": 243917871,
-    "sha256": "ce5cb69a836f1b9c759ec608407cee51520f147979816a8661c29bf32cd6d720",
-    "status": "published as GitHub Release v1.0.6"
+    "packageName": "OnslaughtToolkit-winui-v1.0.7-win-x64.zip",
+    "path": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.7-win-x64.zip",
+    "byteSize": 246757113,
+    "sha256": "033d9f65d51e884c7896fcd1180689988743c50ef6c57a6ce0c72f8b4f38c7ae",
+    "status": "local release candidate only; not published as a GitHub release",
+    "readinessNote": "release/readiness/winui_zip_release_candidate_v1_0_7_2026-06-25.md"
   }
 }

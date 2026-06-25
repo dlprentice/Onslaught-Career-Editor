@@ -1,18 +1,26 @@
 using Markdig;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace Onslaught___Career_Editor
 {
-    public sealed class LoreBrowserService
+    public sealed partial class LoreBrowserService
     {
+        private const string LorePackDirectoryName = "lore-pack";
+        private const string LorePackIndexFileName = "onslaught-lore.v1.index.json";
+        private const string LorePackContentFileName = "onslaught-lore.v1.jsonl";
+        private const string LorePackSourcePrefix = "lore-pack://";
+        private const string LorePackNavigationScheme = "onslaught-lore";
+
         private static readonly Regex BookEntryRegex = new(@"^(?<indent>\s*)-\s+(?<content>.+?)\s*$", RegexOptions.Compiled);
         private static readonly Regex MarkdownLinkRegex = new(@"\[(?<title>[^\]]+)\]\((?<path>[^)]+)\)", RegexOptions.Compiled);
         private static readonly Regex HtmlAnchorRegex = new(
             @"<a\s+(?<attrs>[^>]*\bhref=(?<quote>[""'])(?<href>[^""']+)\k<quote>[^>]*)>(?<content>.*?)</a>",
             RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
         private readonly MarkdownPipeline _pipeline;
+        private LoreContentPack? _contentPack;
 
         public LoreBrowserService()
         {
@@ -24,8 +32,22 @@ namespace Onslaught___Career_Editor
         public LoreIndex LoadIndex(string? startDirectory = null)
         {
             string projectRoot = FindProjectRoot(startDirectory)
-                ?? throw new DirectoryNotFoundException("Could not locate repo root containing lore-book.");
+                ?? throw new DirectoryNotFoundException("Could not locate repo root containing lore-book or lore-pack.");
 
+            if (TryLoadContentPack(projectRoot, out LoreContentPack? contentPack, out List<LoreTreeItem> packRootItems, out Dictionary<string, LoreDocument> packDocumentMap))
+            {
+                _contentPack = contentPack;
+                IReadOnlyList<LoreDocument> packDocuments = packDocumentMap.Values
+                    .OrderBy(static doc => doc.Order ?? int.MaxValue)
+                    .ThenBy(static doc => doc.Title, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                LoreDocument? packHome = packDocuments.FirstOrDefault(static doc => doc.RelativePath.Equals("BOOK.md", StringComparison.OrdinalIgnoreCase))
+                    ?? packDocuments.FirstOrDefault();
+                return new LoreIndex(projectRoot, packDocuments, CloneTree(packRootItems), true, packHome, "content-pack");
+            }
+
+            _contentPack = null;
             string loreBookDirectory = Path.Combine(projectRoot, "lore-book");
             if (!Directory.Exists(loreBookDirectory))
             {
@@ -44,7 +66,7 @@ namespace Onslaught___Career_Editor
                 .ToList();
 
             LoreDocument? homeDocument = documents.FirstOrDefault();
-            return new LoreIndex(projectRoot, documents, CloneTree(rootItems), usingLoreBook, homeDocument);
+            return new LoreIndex(projectRoot, documents, CloneTree(rootItems), usingLoreBook, homeDocument, usingLoreBook ? "book-files" : "fallback-files");
         }
 
         public IReadOnlyList<LoreTreeItem> FilterTree(IReadOnlyList<LoreTreeItem> rootItems, string? query)
@@ -68,45 +90,100 @@ namespace Onslaught___Career_Editor
             return filtered;
         }
 
-        public RenderedLoreDocument RenderDocument(string filePath, string? anchor = null)
+        public bool DocumentExists(string sourcePath)
         {
-            string extension = Path.GetExtension(filePath);
+            string normalized = NormalizeDocumentKey(sourcePath);
+            if (TryGetPackedDocument(normalized, out _))
+            {
+                return true;
+            }
+
+            return File.Exists(normalized);
+        }
+
+        public string NormalizeDocumentKey(string sourcePath)
+        {
+            if (string.IsNullOrWhiteSpace(sourcePath))
+            {
+                return string.Empty;
+            }
+
+            string withoutAnchor = RemoveAnchor(sourcePath.Trim());
+            if (IsLorePackDocumentUri(withoutAnchor))
+            {
+                return withoutAnchor;
+            }
+
+            return Path.GetFullPath(withoutAnchor);
+        }
+
+        public RenderedLoreDocument RenderDocument(string sourcePath, string? anchor = null)
+        {
+            string normalizedSource = NormalizeDocumentKey(sourcePath);
+            if (TryGetPackedDocument(normalizedSource, out LorePackDocument? packedDocument))
+            {
+                string packedMarkdown = RewritePackedMarkdownLinks(packedDocument!);
+                string contentHtml = Markdown.ToHtml(packedMarkdown, _pipeline);
+                contentHtml = AnnotateSourceLinks(contentHtml);
+                string renderPath = GetRenderPathForDocument(normalizedSource);
+                string wrappedHtml = WrapHtmlDocument(packedDocument!.Title, contentHtml, renderPath);
+
+                Directory.CreateDirectory(Path.GetDirectoryName(renderPath)!);
+                File.WriteAllText(renderPath, wrappedHtml, Encoding.UTF8);
+
+                string renderUri = AppendAnchor(new Uri(renderPath).AbsoluteUri, anchor);
+                return new RenderedLoreDocument(packedDocument.Title, normalizedSource, renderUri, true, anchor);
+            }
+
+            string extension = Path.GetExtension(normalizedSource);
             if (extension.Equals(".html", StringComparison.OrdinalIgnoreCase) ||
                 extension.Equals(".htm", StringComparison.OrdinalIgnoreCase))
             {
                 return new RenderedLoreDocument(
-                    Path.GetFileNameWithoutExtension(filePath),
-                    filePath,
-                    new Uri(filePath).AbsoluteUri,
+                    Path.GetFileNameWithoutExtension(normalizedSource),
+                    normalizedSource,
+                    new Uri(normalizedSource).AbsoluteUri,
                     false,
                     anchor);
             }
 
-            string markdown = File.ReadAllText(filePath);
-            string title = ResolveMarkdownTitle(markdown, filePath);
-            string contentHtml = Markdown.ToHtml(markdown, _pipeline);
-            contentHtml = AnnotateSourceLinks(contentHtml);
-            string wrappedHtml = WrapHtmlDocument(title, contentHtml, filePath);
+            string markdown = File.ReadAllText(normalizedSource);
+            string title = ResolveMarkdownTitle(markdown, normalizedSource);
+            string fileContentHtml = Markdown.ToHtml(markdown, _pipeline);
+            fileContentHtml = AnnotateSourceLinks(fileContentHtml);
+            string fileRenderPath = GetRenderPathForDocument(normalizedSource);
+            string fileWrappedHtml = WrapHtmlDocument(title, fileContentHtml, normalizedSource);
 
-            string renderPath = GetRenderPathForDocument(filePath);
-            Directory.CreateDirectory(Path.GetDirectoryName(renderPath)!);
-            File.WriteAllText(renderPath, wrappedHtml, Encoding.UTF8);
+            Directory.CreateDirectory(Path.GetDirectoryName(fileRenderPath)!);
+            File.WriteAllText(fileRenderPath, fileWrappedHtml, Encoding.UTF8);
 
-            string renderUri = AppendAnchor(new Uri(renderPath).AbsoluteUri, anchor);
-            return new RenderedLoreDocument(title, filePath, renderUri, true, anchor);
+            string fileRenderUri = AppendAnchor(new Uri(fileRenderPath).AbsoluteUri, anchor);
+            return new RenderedLoreDocument(title, normalizedSource, fileRenderUri, true, anchor);
         }
 
-        public string? ResolveInternalTarget(string currentFilePath, string? target)
+        public string? ResolveInternalTarget(string currentSourcePath, string? target)
         {
             if (string.IsNullOrWhiteSpace(target))
             {
                 return null;
             }
 
+            string currentNormalized = NormalizeDocumentKey(currentSourcePath);
             string trimmed = target.Trim();
+            string targetWithoutAnchor = RemoveAnchor(trimmed);
             if (trimmed.StartsWith("#", StringComparison.Ordinal))
             {
-                return currentFilePath;
+                return currentNormalized;
+            }
+
+            if (TryResolveLorePackNavigationUri(targetWithoutAnchor, out string? packedUri))
+            {
+                return packedUri;
+            }
+
+            if (TryGetPackedDocument(currentNormalized, out LorePackDocument? currentPacked))
+            {
+                return ResolvePackedInternalTarget(currentPacked!, targetWithoutAnchor);
             }
 
             if (trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
@@ -119,7 +196,7 @@ namespace Onslaught___Career_Editor
             }
 
             string? resolved = null;
-            if (Uri.TryCreate(trimmed, UriKind.Absolute, out Uri? absoluteUri))
+            if (Uri.TryCreate(targetWithoutAnchor, UriKind.Absolute, out Uri? absoluteUri))
             {
                 if (absoluteUri.IsFile)
                 {
@@ -132,9 +209,9 @@ namespace Onslaught___Career_Editor
             }
             else
             {
-                string candidate = Path.IsPathRooted(trimmed)
-                    ? trimmed
-                    : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(currentFilePath)!, trimmed));
+                string candidate = Path.IsPathRooted(targetWithoutAnchor)
+                    ? targetWithoutAnchor
+                    : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(currentNormalized)!, targetWithoutAnchor));
                 resolved = candidate;
             }
 
@@ -172,7 +249,8 @@ namespace Onslaught___Career_Editor
             while (directory != null)
             {
                 string loreBook = Path.Combine(directory.FullName, "lore-book");
-                if (Directory.Exists(loreBook))
+                string lorePack = Path.Combine(directory.FullName, LorePackDirectoryName, LorePackIndexFileName);
+                if (Directory.Exists(loreBook) || File.Exists(lorePack))
                 {
                     return directory.FullName;
                 }
@@ -310,6 +388,170 @@ namespace Onslaught___Career_Editor
             }
         }
 
+        private static bool TryLoadContentPack(
+            string projectRoot,
+            out LoreContentPack? pack,
+            out List<LoreTreeItem> rootItems,
+            out Dictionary<string, LoreDocument> documentMap)
+        {
+            pack = null;
+            rootItems = new List<LoreTreeItem>();
+            documentMap = new Dictionary<string, LoreDocument>(StringComparer.OrdinalIgnoreCase);
+
+            string packDirectory = Path.Combine(projectRoot, LorePackDirectoryName);
+            string indexPath = Path.Combine(packDirectory, LorePackIndexFileName);
+            string contentPath = Path.Combine(packDirectory, LorePackContentFileName);
+            if (!File.Exists(indexPath) || !File.Exists(contentPath))
+            {
+                return false;
+            }
+
+            Dictionary<string, int> orderById = LoadPackOrder(indexPath);
+            Dictionary<string, LorePackDocument> documentsById = new(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, LorePackDocument> documentsByRelativePath = new(StringComparer.OrdinalIgnoreCase);
+
+            foreach (string line in File.ReadLines(contentPath, Encoding.UTF8))
+            {
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
+
+                LorePackLine? row = JsonSerializer.Deserialize<LorePackLine>(
+                    line,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (row == null ||
+                    string.IsNullOrWhiteSpace(row.Id) ||
+                    string.IsNullOrWhiteSpace(row.RelativePath) ||
+                    row.Content == null)
+                {
+                    continue;
+                }
+
+                string normalizedRelativePath = NormalizeRelativePath(row.RelativePath);
+                string id = row.Id.Trim();
+                string title = string.IsNullOrWhiteSpace(row.Title)
+                    ? Path.GetFileNameWithoutExtension(normalizedRelativePath).Replace('-', ' ')
+                    : row.Title.Trim();
+                string sha256 = ComputeContentSha256(row.Content);
+                if (!string.IsNullOrWhiteSpace(row.Sha256) &&
+                    !sha256.Equals(row.Sha256, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidDataException($"Lore pack content hash mismatch for {normalizedRelativePath}.");
+                }
+
+                int order = orderById.TryGetValue(id, out int foundOrder) ? foundOrder : documentsById.Count;
+                LorePackDocument document = new(id, normalizedRelativePath, title, row.Content, sha256, row.Content.Length, order);
+                documentsById[id] = document;
+                documentsByRelativePath[normalizedRelativePath] = document;
+            }
+
+            if (documentsById.Count == 0)
+            {
+                return false;
+            }
+
+            pack = new LoreContentPack(documentsById, documentsByRelativePath);
+            foreach (LorePackDocument packedDocument in documentsById.Values.OrderBy(static doc => doc.Order).ThenBy(static doc => doc.RelativePath, StringComparer.OrdinalIgnoreCase))
+            {
+                string sourcePath = ToLorePackSourcePath(packedDocument.Id);
+                LoreDocument document = new()
+                {
+                    Title = packedDocument.Title,
+                    FilePath = sourcePath,
+                    RelativePath = packedDocument.RelativePath,
+                    IsIndex = IsIndexFile(packedDocument.RelativePath),
+                    Order = packedDocument.Order
+                };
+                documentMap[sourcePath] = document;
+                AddPackedDocumentToTree(rootItems, document);
+            }
+
+            return true;
+        }
+
+        private static Dictionary<string, int> LoadPackOrder(string indexPath)
+        {
+            Dictionary<string, int> orderById = new(StringComparer.OrdinalIgnoreCase);
+            using JsonDocument document = JsonDocument.Parse(File.ReadAllText(indexPath, Encoding.UTF8));
+            if (!document.RootElement.TryGetProperty("documents", out JsonElement documents) ||
+                documents.ValueKind != JsonValueKind.Array)
+            {
+                return orderById;
+            }
+
+            int fallbackOrder = 0;
+            foreach (JsonElement item in documents.EnumerateArray())
+            {
+                if (!item.TryGetProperty("id", out JsonElement idElement))
+                {
+                    continue;
+                }
+
+                string? id = idElement.GetString();
+                if (string.IsNullOrWhiteSpace(id))
+                {
+                    continue;
+                }
+
+                int order = item.TryGetProperty("order", out JsonElement orderElement) && orderElement.TryGetInt32(out int parsedOrder)
+                    ? parsedOrder
+                    : fallbackOrder;
+                orderById[id] = order;
+                fallbackOrder++;
+            }
+
+            return orderById;
+        }
+
+        private static void AddPackedDocumentToTree(List<LoreTreeItem> rootItems, LoreDocument document)
+        {
+            string[] parts = document.RelativePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0)
+            {
+                rootItems.Add(new LoreTreeItem
+                {
+                    Title = document.Title,
+                    FilePath = document.FilePath,
+                    RelativePath = document.RelativePath,
+                    IsIndex = document.IsIndex,
+                    Order = document.Order
+                });
+                return;
+            }
+
+            List<LoreTreeItem> currentItems = rootItems;
+            for (int index = 0; index < parts.Length - 1; index++)
+            {
+                string directoryTitle = FormatTreeSegment(parts[index]);
+                LoreTreeItem? existing = currentItems.FirstOrDefault(item =>
+                    string.IsNullOrWhiteSpace(item.FilePath) &&
+                    item.Title.Equals(directoryTitle, StringComparison.OrdinalIgnoreCase));
+                if (existing == null)
+                {
+                    existing = new LoreTreeItem
+                    {
+                        Title = directoryTitle,
+                        Order = document.Order
+                    };
+                    currentItems.Add(existing);
+                    currentItems.Sort(CompareTreeItems);
+                }
+
+                currentItems = existing.Children;
+            }
+
+            currentItems.Add(new LoreTreeItem
+            {
+                Title = document.Title,
+                FilePath = document.FilePath,
+                RelativePath = document.RelativePath,
+                IsIndex = document.IsIndex,
+                Order = document.Order
+            });
+            currentItems.Sort(CompareTreeItems);
+        }
+
         private LoreTreeItem? FilterNode(LoreTreeItem item, string query)
         {
             List<LoreTreeItem> filteredChildren = new();
@@ -333,7 +575,7 @@ namespace Onslaught___Career_Editor
             return null;
         }
 
-        private static bool MatchesQuery(LoreTreeItem item, string query)
+        private bool MatchesQuery(LoreTreeItem item, string query)
         {
             if (item.Title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                 (!string.IsNullOrWhiteSpace(item.RelativePath) &&
@@ -342,7 +584,17 @@ namespace Onslaught___Career_Editor
                 return true;
             }
 
-            if (string.IsNullOrWhiteSpace(item.FilePath) || !File.Exists(item.FilePath))
+            if (string.IsNullOrWhiteSpace(item.FilePath))
+            {
+                return false;
+            }
+
+            if (TryGetPackedDocument(item.FilePath, out LorePackDocument? packedDocument))
+            {
+                return packedDocument!.Content.Contains(query, StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (!File.Exists(item.FilePath))
             {
                 return false;
             }
@@ -356,6 +608,100 @@ namespace Onslaught___Career_Editor
                 return false;
             }
         }
+
+        private bool TryGetPackedDocument(string sourcePath, out LorePackDocument? document)
+        {
+            document = null;
+            if (_contentPack == null || !TryGetLorePackDocumentId(sourcePath, out string? id))
+            {
+                return false;
+            }
+
+            return id != null && _contentPack.DocumentsById.TryGetValue(id, out document);
+        }
+
+        private string? ResolvePackedInternalTarget(LorePackDocument currentDocument, string target)
+        {
+            if (_contentPack == null ||
+                string.IsNullOrWhiteSpace(target) ||
+                target.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                target.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+                target.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase) ||
+                target.StartsWith("data:", StringComparison.OrdinalIgnoreCase) ||
+                target.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            string candidate = target.StartsWith("/", StringComparison.Ordinal)
+                ? target.TrimStart('/')
+                : Path.Combine(Path.GetDirectoryName(currentDocument.RelativePath) ?? string.Empty, target).Replace('\\', '/');
+
+            LorePackDocument? resolved = ResolvePackedRelativeDocument(candidate);
+            return resolved == null ? null : ToLorePackSourcePath(resolved.Id);
+        }
+
+        private LorePackDocument? ResolvePackedRelativeDocument(string candidate)
+        {
+            if (_contentPack == null)
+            {
+                return null;
+            }
+
+            string normalized = NormalizeRelativePath(candidate);
+            string[] candidates =
+            {
+                normalized,
+                $"{normalized}.md",
+                $"{normalized}.html",
+                $"{normalized}/_index.md",
+                $"{normalized}/README.md",
+                $"{normalized}/index.md"
+            };
+
+            foreach (string item in candidates)
+            {
+                if (_contentPack.DocumentsByRelativePath.TryGetValue(NormalizeRelativePath(item), out LorePackDocument? document))
+                {
+                    return document;
+                }
+            }
+
+            return null;
+        }
+
+        private string RewritePackedMarkdownLinks(LorePackDocument document)
+        {
+            return LORE_BOOK_MARKDOWN_LINK_REGEX().Replace(document.Content, match =>
+            {
+                string target = match.Groups["target"].Value.Trim();
+                string pathPart = RemoveAnchor(target);
+                string anchor = ExtractAnchor(target) is { } extractedAnchor ? $"#{Uri.EscapeDataString(extractedAnchor)}" : string.Empty;
+                if (string.IsNullOrWhiteSpace(pathPart) ||
+                    pathPart.StartsWith("#", StringComparison.Ordinal) ||
+                    pathPart.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                    pathPart.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+                    pathPart.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
+                {
+                    return match.Value;
+                }
+
+                LorePackDocument? resolved = ResolvePackedInternalTarget(document, pathPart) is { } packedTarget &&
+                    TryGetPackedDocument(packedTarget, out LorePackDocument? targetDocument)
+                        ? targetDocument
+                        : null;
+                if (resolved == null)
+                {
+                    return match.Value;
+                }
+
+                string packedUri = $"{LorePackNavigationScheme}://document/{Uri.EscapeDataString(resolved.Id)}{anchor}";
+                return $"{match.Groups["prefix"].Value}{packedUri}{match.Groups["suffix"].Value}";
+            });
+        }
+
+        [GeneratedRegex(@"(?<prefix>\[[^\]]+\]\()(?<target>[^)]+)(?<suffix>\))", RegexOptions.Compiled)]
+        private static partial Regex LORE_BOOK_MARKDOWN_LINK_REGEX();
 
         private static IReadOnlyList<LoreTreeItem> CloneTree(IReadOnlyList<LoreTreeItem> rootItems)
         {
@@ -560,30 +906,50 @@ namespace Onslaught___Career_Editor
             return HtmlAnchorRegex.Replace(html, match =>
             {
                 string href = match.Groups["href"].Value;
-                if (!IsProjectSourceLink(href))
+                if (IsProjectSourceLink(href))
                 {
-                    return match.Value;
+                    return AnnotateBrowserLink(
+                        match,
+                        "source-link",
+                        "Opens GitHub source in your browser",
+                        "Source link; opens GitHub in your browser",
+                        "Source");
                 }
 
-                string attrs = match.Groups["attrs"].Value;
-                if (!Regex.IsMatch(attrs, @"\bclass\s*=", RegexOptions.IgnoreCase))
+                if (IsExternalBrowserLink(href))
                 {
-                    attrs += " class=\"source-link\"";
+                    return AnnotateBrowserLink(
+                        match,
+                        "external-link",
+                        "Opens external site in your browser",
+                        "External link; opens in your browser",
+                        "External");
                 }
 
-                if (!Regex.IsMatch(attrs, @"\btitle\s*=", RegexOptions.IgnoreCase))
-                {
-                    attrs += " title=\"Opens GitHub source in your browser\"";
-                }
-
-                if (!Regex.IsMatch(attrs, @"\baria-label\s*=", RegexOptions.IgnoreCase))
-                {
-                    attrs += " aria-label=\"Source link; opens GitHub in your browser\"";
-                }
-
-                string content = match.Groups["content"].Value;
-                return $"<a {attrs}>{content}<span class=\"source-link-badge\" aria-hidden=\"true\">Source</span></a>";
+                return match.Value;
             });
+        }
+
+        private static string AnnotateBrowserLink(Match match, string className, string title, string ariaLabel, string badge)
+        {
+            string attrs = match.Groups["attrs"].Value;
+            if (!Regex.IsMatch(attrs, @"\bclass\s*=", RegexOptions.IgnoreCase))
+            {
+                attrs += $" class=\"{className}\"";
+            }
+
+            if (!Regex.IsMatch(attrs, @"\btitle\s*=", RegexOptions.IgnoreCase))
+            {
+                attrs += $" title=\"{title}\"";
+            }
+
+            if (!Regex.IsMatch(attrs, @"\baria-label\s*=", RegexOptions.IgnoreCase))
+            {
+                attrs += $" aria-label=\"{ariaLabel}\"";
+            }
+
+            string content = match.Groups["content"].Value;
+            return $"<a {attrs}>{content}<span class=\"source-link-badge\" aria-hidden=\"true\">{badge}</span></a>";
         }
 
         private static bool IsProjectSourceLink(string value)
@@ -595,11 +961,21 @@ namespace Onslaught___Career_Editor
                    uri.AbsolutePath.StartsWith("/dlprentice/Onslaught-Career-Editor/", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static string GetRenderPathForDocument(string filePath)
+        private static bool IsExternalBrowserLink(string value)
         {
-            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            return Uri.TryCreate(value, UriKind.Absolute, out Uri? uri) &&
+                   (uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase) ||
+                    uri.Scheme.Equals("http", StringComparison.OrdinalIgnoreCase) ||
+                    uri.Scheme.Equals("mailto", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static string GetRenderPathForDocument(string sourcePath)
+        {
+            string fileName = TryGetLorePackDocumentId(sourcePath, out string? id)
+                ? id ?? "packed-document"
+                : Path.GetFileNameWithoutExtension(sourcePath) ?? "document";
             string safeName = Regex.Replace(fileName, @"[^a-zA-Z0-9_-]", "_");
-            string hash = ComputeShortHash(filePath);
+            string hash = ComputeShortHash(sourcePath);
             return Path.Combine(Path.GetTempPath(), "OnslaughtCareerEditor", "LoreRender", $"{safeName}-{hash}.html");
         }
 
@@ -608,6 +984,12 @@ namespace Onslaught___Career_Editor
             using SHA1 sha1 = SHA1.Create();
             byte[] hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(value));
             return string.Concat(hash.Take(6).Select(static value => value.ToString("x2")));
+        }
+
+        private static string ComputeContentSha256(string value)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(value);
+            return Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
         }
 
         private static string StripMarkdownFormatting(string value)
@@ -625,6 +1007,103 @@ namespace Onslaught___Career_Editor
                 ? uri
                 : $"{uri}#{Uri.EscapeDataString(anchor)}";
         }
+
+        private static string RemoveAnchor(string value)
+        {
+            int anchorIndex = value.IndexOf('#');
+            return anchorIndex >= 0 ? value[..anchorIndex] : value;
+        }
+
+        private static bool IsLorePackDocumentUri(string value)
+        {
+            return value.StartsWith(LorePackSourcePrefix, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool TryGetLorePackDocumentId(string sourcePath, out string? id)
+        {
+            id = null;
+            if (!IsLorePackDocumentUri(sourcePath))
+            {
+                return false;
+            }
+
+            id = sourcePath[LorePackSourcePrefix.Length..];
+            return !string.IsNullOrWhiteSpace(id);
+        }
+
+        private static string ToLorePackSourcePath(string id)
+        {
+            return $"{LorePackSourcePrefix}{id}";
+        }
+
+        private static bool TryResolveLorePackNavigationUri(string value, out string? packedUri)
+        {
+            packedUri = null;
+            if (!Uri.TryCreate(value, UriKind.Absolute, out Uri? uri) ||
+                !uri.Scheme.Equals(LorePackNavigationScheme, StringComparison.OrdinalIgnoreCase) ||
+                !uri.Host.Equals("document", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            string id = Uri.UnescapeDataString(uri.AbsolutePath.Trim('/'));
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return false;
+            }
+
+            packedUri = ToLorePackSourcePath(id);
+            return true;
+        }
+
+        private static string NormalizeRelativePath(string value)
+        {
+            string normalized = value.Replace('\\', '/').Trim().TrimStart('/');
+            while (normalized.Contains("//", StringComparison.Ordinal))
+            {
+                normalized = normalized.Replace("//", "/", StringComparison.Ordinal);
+            }
+
+            return normalized;
+        }
+
+        private static string FormatTreeSegment(string value)
+        {
+            return value.Replace('-', ' ').Replace('_', ' ');
+        }
+
+        private static int CompareTreeItems(LoreTreeItem left, LoreTreeItem right)
+        {
+            int leftOrder = left.Order ?? int.MaxValue;
+            int rightOrder = right.Order ?? int.MaxValue;
+            int orderCompare = leftOrder.CompareTo(rightOrder);
+            return orderCompare != 0
+                ? orderCompare
+                : string.Compare(left.Title, right.Title, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private sealed record LoreContentPack(
+            IReadOnlyDictionary<string, LorePackDocument> DocumentsById,
+            IReadOnlyDictionary<string, LorePackDocument> DocumentsByRelativePath);
+
+        private sealed record LorePackDocument(
+            string Id,
+            string RelativePath,
+            string Title,
+            string Content,
+            string Sha256,
+            int ByteLength,
+            int Order);
+
+        private sealed class LorePackLine
+        {
+            public string Id { get; set; } = string.Empty;
+            public string RelativePath { get; set; } = string.Empty;
+            public string Title { get; set; } = string.Empty;
+            public string Content { get; set; } = string.Empty;
+            public string Sha256 { get; set; } = string.Empty;
+            public int ByteLength { get; set; }
+        }
     }
 
     public sealed record LoreIndex(
@@ -632,7 +1111,11 @@ namespace Onslaught___Career_Editor
         IReadOnlyList<LoreDocument> Documents,
         IReadOnlyList<LoreTreeItem> RootItems,
         bool UsingLoreBook,
-        LoreDocument? HomeDocument);
+        LoreDocument? HomeDocument,
+        string SourceKind)
+    {
+        public bool UsingContentPack => SourceKind.Equals("content-pack", StringComparison.OrdinalIgnoreCase);
+    }
 
     public sealed class LoreDocument
     {
