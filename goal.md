@@ -32,12 +32,14 @@ contributor work.
 - `local-proofs/OnslaughtRuntimeProofArchive` and
   `local-ghidra/GhidraBackups` are ignored junctions to `G:` archives rather
   than duplicated on `C:`.
-- The public app release `v1.0.4` is published and supersedes `v1.0.3` because
-  the v1.0.3 ZIP included deep `lore-book/` mirror paths
-  that can hit Windows Explorer `0x80010135` path-too-long extraction failures
-  under normal Downloads paths. The v1.0.4 package keeps the friendly wrapper
-  layout, includes the deterministic `lore-book/BOOK.md`-linked offline Lore
-  reader set, auto-detects common Steam installs where possible, and makes Asset
+- The public app release `v1.0.5` candidate is validated and pending GitHub
+  publication. It supersedes `v1.0.3`/`v1.0.4`: v1.0.3 included deep
+  `lore-book/` mirror paths that can hit Windows Explorer `0x80010135`
+  path-too-long extraction failures under normal Downloads paths, and v1.0.4
+  did not rewrite deeper unbundled Lore links. The v1.0.5 package keeps the
+  friendly wrapper layout, includes the `lore-book/BOOK.md`-linked offline Lore
+  reader set, rewrites deeper unbundled source links to GitHub source/search
+  pages, auto-detects common Steam installs where possible, and makes Asset
   Library catalog requirements clear instead of implying raw game browsing.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime

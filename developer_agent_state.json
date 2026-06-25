@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-06-25",
   "branch": "main",
-  "currentFocus": "WinUI v1.0.4 ZIP hotfix is published: v1.0.3 is superseded for Explorer path-too-long extraction; v1.0.4 uses deterministic BOOK.md-linked Lore reader packaging and Explorer path guards.",
+  "currentFocus": "WinUI v1.0.5 ZIP release candidate is validated for Explorer-safe extraction and packaged Lore link hardening; commit/push and GitHub release publication are pending.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
@@ -14,7 +14,7 @@
     "readinessNote": "release/readiness/public_primary_full_migration_inventory_2026-06-24.md",
     "acceptedInventory": {
       "privateTrackedPaths": 24839,
-      "publicTrackedPaths": 19304,
+      "publicTrackedPaths": 19305,
       "allowedPrivateOnlyHardPayloadOrScratchPayloadPaths": 5557
     },
     "hardening": "test:public-allowlist now chains hard-payload safety, submodule payload scan, and public-primary migration/hash inventory; public_allowlist_safety_check.py now checks more payload suffixes, magic bytes, raw-log-shaped text, JSONL text, exact fixture hashes, and missing/unreadable submodules.",
@@ -32,16 +32,17 @@
     "maintainerParityCommand": "py -3 tools\\public_primary_migration_inventory.py --check --private-root C:\\Users\\david\\source\\Onslaught-Career-Editor-private --require-private-root"
   },
   "activeSlice": {
-    "name": "winui-zip-v1.0.4-explorer-path-hotfix",
-    "goal": "publish a v1.0.4 portable WinUI ZIP that preserves the friendly wrapper layout while preventing Windows Explorer 0x80010135 path-too-long extraction failures seen in v1.0.3",
+    "name": "winui-zip-v1.0.5-lore-link-hotfix",
+    "goal": "publish a v1.0.5 portable WinUI ZIP that keeps the friendly wrapper layout, avoids Explorer path-too-long extraction failures, and prevents dead local packaged Lore links",
     "claimBoundary": "release packaging hotfix only; no app feature, runtime proof, online multiplayer, installer/signing, SmartScreen, or gameplay parity claim",
     "latestFindings": [
       "v1.0.3 remains a historical published release but is superseded because normal Downloads extraction can fail on deep lore-book proof-plan paths.",
-      "v1.0.4 candidate ZIP SHA-256 is 641f17a44343e19efa858af30d6194f6e2b844f06d35a5753b3eb03156ac72b3 and byte size is 243908905.",
-      "v1.0.4 packages 53 deterministic BOOK.md-linked Lore reader files; max ZIP entry length is 95 characters within the 180-character Explorer-safe budget.",
-      "Package probe now rejects Explorer-unsafe long ZIP entries and raw root DLL/EXE layouts."
+      "v1.0.4 fixed the Explorer path-length packaging issue but did not rewrite deeper unbundled Lore links inside packaged Lore pages.",
+      "v1.0.5 candidate ZIP SHA-256 is f8ba14a51ed57b14c3575a82f424de96c03b94453b03f19c6ed93a7ed5f65847 and byte size is 243916186.",
+      "v1.0.5 packages 53 BOOK.md-linked Lore reader files, rewrites deeper unbundled source links to GitHub source/search pages, and has max default Extract All relative path 133/180.",
+      "Package probe now rejects Explorer-unsafe long ZIP entries, raw root DLL/EXE layouts, hard-payload entries, and dead local packaged Lore links."
     ],
-    "status": "published_and_verified"
+    "status": "validated_release_candidate_publish_pending"
   },
   "runtimeTruth": {
     "musicAudibleOutputProof": false,
@@ -72,21 +73,21 @@
   },
   "validation": {
     "latestPassed": [
-      "npm run test:winui-zip-release-candidate-probe (PASS; v1.0.4 ZIP size 243908905; SHA-256 641f17a44343e19efa858af30d6194f6e2b844f06d35a5753b3eb03156ac72b3; 53 BOOK.md-linked Lore files; max entry 95/180; launch/Home/Lore/Media smokes exit 0)",
-      "npm run test:doc-commands (PASS; 4228 documented npm commands checked)",
-      "npm run test:md-links (PASS; 3616 markdown files, 6122 local links)",
-      "npm run release:profile-check (PASS; R0=6124 R2=0 R3=3 R4=13177)",
+      "npm run test:winui-zip-release-candidate-probe (PASS; v1.0.5 ZIP size 243916186; SHA-256 f8ba14a51ed57b14c3575a82f424de96c03b94453b03f19c6ed93a7ed5f65847; 53 BOOK.md-linked Lore files; max default Extract All relative path 133/180; no dead packaged Lore links; launch/Home/Lore/Media smokes exit 0)",
+      "npm run test:doc-commands (PASS; 4231 documented npm commands checked)",
+      "npm run test:md-links (PASS; 3617 markdown files, 6122 local links)",
+      "npm run release:profile-check (PASS; R0=6125 R2=0 R3=3 R4=13177)",
       "npm run release:curated-check (PASS; selected files 625)",
       "npm run test:public-allowlist (PASS; hard payload, submodule payload, public-primary migration inventory)",
       "npm run test:winui-notices (PASS; 74 packages)",
-      "npm run test:repo-hygiene (PASS; 18457 explicit text files checked)",
+      "npm run test:repo-hygiene (PASS; 18458 explicit text files checked)",
       "state JSON parse",
-      "git diff --check",
-      "gh release view v1.0.4 (published; assets uploaded; ZIP digest/size match expected)"
+      "git diff --check"
     ],
     "pendingForActiveSlice": [
-      "final state/docs closeout commit and push",
-      "resume bounded patch/mod/runtime proof work from the public repo"
+      "commit and push the v1.0.5 release-candidate fix",
+      "publish GitHub Release v1.0.5 with the exact validated ZIP and checksum sidecar",
+      "verify GitHub release asset digest/size and update state to published"
     ]
   },
   "nextSteps": [
@@ -94,21 +95,21 @@
     "After the baseline is durable, resume the next bounded patch/mod/runtime/UI follow-up from public repo."
   ],
   "releaseAccounting": {
-    "releaseProfile": "R0=6124 R2=0 R3=3 R4=13177",
+    "releaseProfile": "R0=6125 R2=0 R3=3 R4=13177",
     "curatedSelectedFiles": 625,
-    "publicCandidateFiles": 19304,
-    "publicSubmoduleCandidateFiles": 19488
+    "publicCandidateFiles": 19306,
+    "publicSubmoduleCandidateFiles": 19490
   },
   "githubRelease": {
-    "version": "v1.0.4",
-    "status": "published",
-    "url": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.4",
-    "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.4/OnslaughtToolkit-winui-v1.0.4-win-x64.zip",
-    "checksumUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.4/OnslaughtToolkit-v1.0.4-SHA256SUMS.txt",
-    "sha256": "641f17a44343e19efa858af30d6194f6e2b844f06d35a5753b3eb03156ac72b3",
-    "byteSize": 243908905,
-    "publishedAt": "2026-06-25T03:31:09Z",
-    "tagCommit": "6ca6dfccd7c04ae8e42634242ac3f05949be0551"
+    "version": "v1.0.5",
+    "status": "validated_release_candidate_publish_pending",
+    "url": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.5",
+    "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.5/OnslaughtToolkit-winui-v1.0.5-win-x64.zip",
+    "checksumUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.5/OnslaughtToolkit-v1.0.5-SHA256SUMS.txt",
+    "sha256": "f8ba14a51ed57b14c3575a82f424de96c03b94453b03f19c6ed93a7ed5f65847",
+    "byteSize": 243916186,
+    "publishedAt": null,
+    "tagCommit": null
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",

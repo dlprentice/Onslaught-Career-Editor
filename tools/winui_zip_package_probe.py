@@ -17,6 +17,7 @@ import argparse
 import hashlib
 import json
 import os
+import posixpath
 import re
 import shutil
 import subprocess
@@ -24,7 +25,7 @@ import sys
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
-from urllib.parse import unquote
+from urllib.parse import quote, unquote
 
 sys.dont_write_bytecode = True
 
@@ -44,6 +45,9 @@ LORE_BOOK_DIR = "lore-book"
 LORE_BOOK_REQUIRED_FILE = f"{LORE_BOOK_DIR}/BOOK.md"
 LORE_BOOK_SOURCE = ROOT / LORE_BOOK_DIR
 LORE_BOOK_LINK_REGEX = re.compile(r"\[[^\]]+\]\((?P<target>[^)]+)\)")
+LORE_BOOK_MARKDOWN_LINK_REGEX = re.compile(r"(?P<prefix>\[[^\]]+\]\()(?P<target>[^)]+)(?P<suffix>\))")
+GITHUB_SOURCE_BLOB_BASE = "https://github.com/dlprentice/Onslaught-Career-Editor/blob/main"
+GITHUB_SOURCE_SEARCH_BASE = "https://github.com/dlprentice/Onslaught-Career-Editor/search"
 WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH = 180
 REQUIRED_APP_FILES = (
     APP_EXE,
@@ -237,19 +241,27 @@ def copy_lore_book(bundle_dir: Path) -> CheckResult:
         return CheckResult("lore_book_source", "FAIL", f"{relative(required_source)} is missing or empty.")
     if destination.exists():
         shutil.rmtree(destination)
-    packaged_files = resolve_packaged_lore_files(required_source)
+    try:
+        packaged_files = resolve_packaged_lore_files(required_source)
+    except ValueError as exc:
+        return CheckResult("bundle_lore_book", "FAIL", str(exc))
     for source in sorted(packaged_files):
         destination_path = destination / source.relative_to(LORE_BOOK_SOURCE)
         destination_path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, destination_path)
+        if source.suffix.lower() in {".md", ".txt"}:
+            content = source.read_text(encoding="utf-8")
+            content = rewrite_packaged_lore_links(source, content, packaged_files)
+            destination_path.write_text(content, encoding="utf-8", newline="\n")
+        else:
+            shutil.copy2(source, destination_path)
     required_destination = destination / "BOOK.md"
     copied_count = sum(1 for path in destination.rglob("*") if path.is_file()) if destination.exists() else 0
     return CheckResult(
         "bundle_lore_book",
         "PASS" if required_destination.is_file() and required_destination.stat().st_size > 0 and copied_count == len(packaged_files) else "FAIL",
-        f"{relative(destination)} copied with {copied_count} deterministic BOOK.md-linked file(s) for the packaged offline Lore reader."
+        f"{relative(destination)} copied with {copied_count} BOOK.md-linked file(s) for the packaged offline Lore reader; deeper unbundled source links are rewritten to GitHub."
         if required_destination.is_file() and required_destination.stat().st_size > 0
-        else f"{relative(required_destination)} is missing after deterministic BOOK.md-linked lore copy.",
+        else f"{relative(required_destination)} is missing after BOOK.md-linked lore copy.",
     )
 
 
@@ -265,9 +277,90 @@ def resolve_packaged_lore_files(book_path: Path) -> set[Path]:
             candidate.relative_to(lore_root)
         except ValueError:
             continue
-        if candidate.is_file():
-            packaged_files.add(candidate)
+        if not candidate.is_file():
+            raise ValueError(f"missing local BOOK.md link: {target}")
+        packaged_files.add(candidate)
     return packaged_files
+
+
+def rewrite_packaged_lore_links(source: Path, content: str, packaged_files: set[Path]) -> str:
+    packaged_resolved = {path.resolve() for path in packaged_files}
+    lore_root = LORE_BOOK_SOURCE.resolve()
+    repo_root = ROOT.resolve()
+
+    def replace(match: re.Match[str]) -> str:
+        target = match.group("target").strip()
+        path_part, anchor = split_link_target(target)
+        if not path_part or re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", path_part):
+            return match.group(0)
+
+        candidate = resolve_source_link_candidate(source, path_part)
+        resolved = resolve_existing_repo_link(candidate)
+
+        if resolved is not None and is_relative_to(resolved, lore_root) and resolved in packaged_resolved:
+            return match.group(0)
+
+        github_url = build_github_source_url(candidate, path_part, anchor, resolved, repo_root)
+        if github_url is None:
+            return match.group(0)
+
+        return f"{match.group('prefix')}{github_url}{match.group('suffix')}"
+
+    return LORE_BOOK_MARKDOWN_LINK_REGEX.sub(replace, content)
+
+
+def resolve_source_link_candidate(source: Path, path_part: str) -> Path:
+    normalized = path_part.replace("\\", "/")
+    if normalized.startswith("/"):
+        return (ROOT / normalized.lstrip("/")).resolve()
+    return (source.parent / normalized).resolve()
+
+
+def split_link_target(target: str) -> tuple[str, str]:
+    path_part, separator, anchor = target.partition("#")
+    return unquote(path_part), f"#{anchor}" if separator else ""
+
+
+def resolve_existing_repo_link(candidate: Path) -> Path | None:
+    if candidate.is_file():
+        return candidate.resolve()
+    if candidate.is_dir():
+        for filename in ("_index.md", "README.md", "index.md"):
+            index_path = candidate / filename
+            if index_path.is_file():
+                return index_path.resolve()
+        return None
+    if candidate.suffix:
+        return None
+    for suffix in (".md", ".html", ".htm"):
+        suffixed = Path(f"{candidate}{suffix}")
+        if suffixed.is_file():
+            return suffixed.resolve()
+    return None
+
+
+def build_github_source_url(candidate: Path, path_part: str, anchor: str, resolved: Path | None, repo_root: Path) -> str | None:
+    if resolved is not None:
+        if not is_relative_to(resolved, repo_root):
+            return None
+        repo_relative = resolved.relative_to(repo_root).as_posix()
+        return f"{GITHUB_SOURCE_BLOB_BASE}/{quote(repo_relative, safe='/')}{anchor}"
+    if is_relative_to(candidate, repo_root):
+        try:
+            repo_relative = candidate.relative_to(repo_root).as_posix()
+        except ValueError:
+            repo_relative = path_part.strip("/")
+        query = quote(repo_relative or path_part, safe="")
+        return f"{GITHUB_SOURCE_SEARCH_BASE}?q={query}&type=code"
+    return None
+
+
+def is_relative_to(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
 
 
 def stage_portable_bundle(publish_dir: Path, bundle_dir: Path) -> list[CheckResult]:
@@ -373,17 +466,20 @@ def inspect_payload_safety_names(names: set[str], prefix: str) -> list[CheckResu
     ]
 
 
-def inspect_explorer_path_safety_names(names: set[str], prefix: str) -> list[CheckResult]:
+def inspect_explorer_path_safety_names(names: set[str], prefix: str, default_extract_folder_name: str | None = None) -> list[CheckResult]:
     files = [name.rstrip("/") for name in names if name.rstrip("/") and not name.endswith("/")]
-    over_limit = sorted((name for name in files if len(name) > WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH), key=len, reverse=True)
-    max_length = max((len(name) for name in files), default=0)
+    measured_names = list(files)
+    if default_extract_folder_name:
+        measured_names.extend(f"{default_extract_folder_name}/{name}" for name in files)
+    over_limit = sorted((name for name in measured_names if len(name) > WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH), key=len, reverse=True)
+    max_length = max((len(name) for name in measured_names), default=0)
     return [
         CheckResult(
             f"{prefix}_explorer_path_safety",
             "PASS" if not over_limit else "FAIL",
-            f"Longest packaged entry is {max_length} character(s), within the {WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH}-character Explorer-safe ZIP entry budget."
+            f"Longest packaged Explorer-relative path is {max_length} character(s), within the {WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH}-character Explorer-safe ZIP entry budget."
             if not over_limit
-            else f"ZIP/folder entries exceed the {WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH}-character Explorer-safe ZIP entry budget: "
+            else f"ZIP/folder entries exceed the {WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH}-character Explorer-safe ZIP entry budget after default extraction-folder accounting: "
             + ", ".join(over_limit[:8]),
         )
     ]
@@ -411,6 +507,7 @@ def inspect_folder(root: Path, prefix: str) -> list[CheckResult]:
         checks.extend(inspect_root_layout_names(names, prefix))
         checks.extend(inspect_payload_safety_names(names, prefix))
         checks.extend(inspect_explorer_path_safety_names(names, prefix))
+        checks.extend(inspect_packaged_lore_link_safety(root, prefix))
     package_suffixes = {".msix", ".appx", ".appinstaller", ".msixbundle", ".appxbundle"}
     package_files = [path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in package_suffixes]
     checks.append(
@@ -457,6 +554,7 @@ def inspect_zip(zip_path: Path) -> list[CheckResult]:
     checks.append(CheckResult("zip_file", "PASS", f"{relative(zip_path)} exists and is non-empty."))
     with zipfile.ZipFile(zip_path) as package:
         names = set(package.namelist())
+        lore_texts = read_zip_lore_texts(package)
     for filename in REQUIRED_PAYLOAD_FILES:
         key = filename.replace("/", "_").replace("\\", "_")
         checks.append(
@@ -468,7 +566,8 @@ def inspect_zip(zip_path: Path) -> list[CheckResult]:
         )
     checks.extend(inspect_root_layout_names(names, "zip"))
     checks.extend(inspect_payload_safety_names(names, "zip"))
-    checks.extend(inspect_explorer_path_safety_names(names, "zip"))
+    checks.extend(inspect_explorer_path_safety_names(names, "zip", default_extract_folder_name=zip_path.stem))
+    checks.extend(inspect_packaged_lore_link_safety_archive(names, lore_texts, "zip"))
     installer_suffixes = (".msix", ".appx", ".appinstaller", ".msixbundle", ".appxbundle")
     installers = [name for name in names if name.lower().endswith(installer_suffixes)]
     checks.append(
@@ -481,6 +580,108 @@ def inspect_zip(zip_path: Path) -> list[CheckResult]:
         )
     )
     return checks
+
+
+def read_zip_lore_texts(package: zipfile.ZipFile) -> dict[str, str]:
+    texts: dict[str, str] = {}
+    for name in package.namelist():
+        normalized = name.replace("\\", "/")
+        if not normalized.startswith(f"{LORE_BOOK_DIR}/") or normalized.endswith("/"):
+            continue
+        suffix = Path(normalized).suffix.lower()
+        if suffix not in {".md", ".txt"}:
+            continue
+        try:
+            texts[normalized] = package.read(name).decode("utf-8", errors="replace")
+        except KeyError:
+            continue
+    return texts
+
+
+def inspect_packaged_lore_link_safety(root: Path, prefix: str) -> list[CheckResult]:
+    lore_root = root / LORE_BOOK_DIR
+    if not lore_root.is_dir():
+        return []
+    root_resolved = root.resolve()
+    findings: list[str] = []
+    for source in sorted(lore_root.rglob("*")):
+        if not source.is_file() or source.suffix.lower() not in {".md", ".txt"}:
+            continue
+        content = source.read_text(encoding="utf-8", errors="replace")
+        source_relative = source.relative_to(root).as_posix()
+        for match in LORE_BOOK_MARKDOWN_LINK_REGEX.finditer(content):
+            target = match.group("target").strip()
+            path_part, _ = split_link_target(target)
+            if not path_part or re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", path_part):
+                continue
+            candidate = resolve_packaged_link_candidate(root, source, path_part)
+            resolved = resolve_existing_repo_link(candidate)
+            if resolved is None or not is_relative_to(resolved, root_resolved):
+                findings.append(f"{source_relative} -> {target}")
+    return [
+        CheckResult(
+            f"{prefix}_lore_link_safety",
+            "PASS" if not findings else "FAIL",
+            "Packaged Lore markdown has no dead local links; unbundled source links must be externalized."
+            if not findings
+            else "Packaged Lore markdown has dead local links: " + ", ".join(findings[:8]),
+        )
+    ]
+
+
+def inspect_packaged_lore_link_safety_archive(names: set[str], lore_texts: dict[str, str], prefix: str) -> list[CheckResult]:
+    if not any(name.rstrip("/").startswith(f"{LORE_BOOK_DIR}/") for name in names):
+        return []
+    normalized_names = {name.rstrip("/").replace("\\", "/") for name in names if name.rstrip("/")}
+    findings: list[str] = []
+    for source_name, content in sorted(lore_texts.items()):
+        for match in LORE_BOOK_MARKDOWN_LINK_REGEX.finditer(content):
+            target = match.group("target").strip()
+            path_part, _ = split_link_target(target)
+            if not path_part or re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", path_part):
+                continue
+            candidate = resolve_packaged_archive_link_candidate(source_name, path_part)
+            if resolve_existing_archive_link(candidate, normalized_names) is None:
+                findings.append(f"{source_name} -> {target}")
+    return [
+        CheckResult(
+            f"{prefix}_lore_link_safety",
+            "PASS" if not findings else "FAIL",
+            "Packaged Lore markdown has no dead local links inside the ZIP; unbundled source links must be externalized."
+            if not findings
+            else "Packaged Lore markdown has dead local ZIP links: " + ", ".join(findings[:8]),
+        )
+    ]
+
+
+def resolve_packaged_link_candidate(package_root: Path, source: Path, path_part: str) -> Path:
+    normalized = path_part.replace("\\", "/")
+    if normalized.startswith("/"):
+        return (package_root / normalized.lstrip("/")).resolve()
+    return (source.parent / normalized).resolve()
+
+
+def resolve_packaged_archive_link_candidate(source_name: str, path_part: str) -> str:
+    normalized = path_part.replace("\\", "/")
+    if normalized.startswith("/"):
+        return posixpath.normpath(normalized.lstrip("/"))
+    return posixpath.normpath(posixpath.join(posixpath.dirname(source_name), normalized))
+
+
+def resolve_existing_archive_link(candidate: str, names: set[str]) -> str | None:
+    candidate = candidate.rstrip("/")
+    if candidate in names:
+        return candidate
+    for index_name in ("_index.md", "README.md", "index.md"):
+        indexed = f"{candidate}/{index_name}"
+        if indexed in names:
+            return indexed
+    if not Path(candidate).suffix:
+        for suffix in (".md", ".html", ".htm"):
+            suffixed = f"{candidate}{suffix}"
+            if suffixed in names:
+                return suffixed
+    return None
 
 
 def extract_zip(zip_path: Path, extract_dir: Path) -> tuple[int, str]:
@@ -590,7 +791,7 @@ def build_report(
     return {
         "schema": "winui-zip-package-probe.v1",
         "status": "pass" if publish_exit == 0 and extract_exit == 0 and not failures else "blocked",
-        "releaseClaim": "Disposable friendly portable ZIP package, extraction, extracted app launch smoke, and extracted app Home navigation smoke (all WinUiHomeNavigationSmokeTests) are proven only if status is pass; signing/MSIX/installer/SmartScreen readiness remain separate gates.",
+        "releaseClaim": "Disposable friendly portable ZIP package, Explorer-safe entry paths, extraction, extracted app launch smoke, extracted app Home navigation smoke (all WinUiHomeNavigationSmokeTests), extracted Lore smoke, and representative Media smoke when requested are proven only if status is pass; signing/MSIX/installer/SmartScreen readiness remain separate gates.",
         "outputRoot": relative(out_root),
         "zipPackage": relative(zip_path),
         "zipByteSize": zip_path.stat().st_size if zip_path.is_file() else 0,

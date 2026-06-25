@@ -79,6 +79,76 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
         finally:
             probe.LORE_BOOK_SOURCE = original_lore_book_source
 
+    def test_copy_lore_book_rejects_missing_local_book_link(self) -> None:
+        original_lore_book_source = probe.LORE_BOOK_SOURCE
+        try:
+            with tempfile.TemporaryDirectory() as temp_root:
+                root = Path(temp_root)
+                source = root / "source" / "lore-book"
+                destination_root = root / "bundle"
+                source.mkdir(parents=True)
+                (source / "BOOK.md").write_text(
+                    "- [Missing](missing-local-lore-file.md)\n",
+                    encoding="utf-8",
+                )
+
+                probe.LORE_BOOK_SOURCE = source
+                result = probe.copy_lore_book(destination_root)
+
+                self.assertEqual(result.status, "FAIL")
+                self.assertIn("missing local BOOK.md link", result.summary)
+                self.assertFalse((destination_root / "lore-book" / "BOOK.md").exists())
+        finally:
+            probe.LORE_BOOK_SOURCE = original_lore_book_source
+
+    def test_copy_lore_book_rewrites_unpackaged_local_page_links_to_source_repo(self) -> None:
+        original_root = probe.ROOT
+        original_lore_book_source = probe.LORE_BOOK_SOURCE
+        try:
+            with tempfile.TemporaryDirectory() as temp_root:
+                root = Path(temp_root)
+                repo_root = root / "source"
+                source = repo_root / "lore-book"
+                destination_root = root / "bundle"
+                source.mkdir(parents=True)
+                (repo_root / "tools").mkdir(parents=True)
+                (source / "BOOK.md").write_text(
+                    "- [Start](Start.md)\n"
+                    "- [Sibling](Sibling.md)\n",
+                    encoding="utf-8",
+                )
+                (source / "Start.md").write_text(
+                    "[Sibling](Sibling.md)\n"
+                    "[Deep](deep/Deep.md#anchor)\n"
+                    "[Tool](../tools/helper.py)\n",
+                    encoding="utf-8",
+                )
+                (source / "Sibling.md").write_text("# Sibling\n", encoding="utf-8")
+                deep = source / "deep" / "Deep.md"
+                deep.parent.mkdir(parents=True)
+                deep.write_text("# Deep\n", encoding="utf-8")
+                (repo_root / "tools" / "helper.py").write_text("print('helper')\n", encoding="utf-8")
+
+                probe.ROOT = repo_root
+                probe.LORE_BOOK_SOURCE = source
+                result = probe.copy_lore_book(destination_root)
+
+                self.assertEqual(result.status, "PASS")
+                packaged_start = (destination_root / "lore-book" / "Start.md").read_text(encoding="utf-8")
+                self.assertIn("[Sibling](Sibling.md)", packaged_start)
+                self.assertIn(
+                    "[Deep](https://github.com/dlprentice/Onslaught-Career-Editor/blob/main/lore-book/deep/Deep.md#anchor)",
+                    packaged_start,
+                )
+                self.assertIn(
+                    "[Tool](https://github.com/dlprentice/Onslaught-Career-Editor/blob/main/tools/helper.py)",
+                    packaged_start,
+                )
+                self.assertFalse((destination_root / "lore-book" / "deep" / "Deep.md").exists())
+        finally:
+            probe.ROOT = original_root
+            probe.LORE_BOOK_SOURCE = original_lore_book_source
+
     def test_zip_inspection_rejects_raw_publish_root(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:
             root = Path(temp_root)
@@ -131,6 +201,29 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
 
             self.assertIn("zip_explorer_path_safety", failures)
 
+    def test_zip_inspection_rejects_default_extract_folder_plus_entry_too_long(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            zip_path = root / "OnslaughtToolkit-winui-v1.0.4-win-x64.zip"
+            self._write_publish_payload(bundle_dir / "app")
+            for relative_path in (probe.ROOT_LAUNCHER, probe.ROOT_README, probe.ROOT_LICENSE, "lore-book/BOOK.md"):
+                path = bundle_dir / relative_path
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(relative_path, encoding="utf-8")
+            entry_name = "lore-book/" + ("a" * 147) + ".md"
+            self.assertLessEqual(len(entry_name), probe.WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH)
+            self.assertGreater(len(f"{zip_path.stem}/{entry_name}"), probe.WINDOWS_EXPLORER_SAFE_ENTRY_LENGTH)
+            entry_path = bundle_dir / entry_name
+            entry_path.parent.mkdir(parents=True, exist_ok=True)
+            entry_path.write_text("# too long after default extract folder\n", encoding="utf-8")
+
+            exit_code, _ = probe.create_zip(bundle_dir, zip_path)
+            self.assertEqual(exit_code, 0)
+            failures = {item.key for item in probe.inspect_zip(zip_path) if item.status == "FAIL"}
+
+            self.assertIn("zip_explorer_path_safety", failures)
+
     def test_zip_inspection_rejects_hard_payload_entries_inside_app_folder(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:
             root = Path(temp_root)
@@ -150,6 +243,45 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
 
             self.assertIn("bundle_payload_safety", folder_failures)
             self.assertIn("zip_payload_safety", zip_failures)
+
+    def test_folder_inspection_rejects_dead_local_lore_links(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            for relative_path in (probe.ROOT_LAUNCHER, probe.ROOT_README, probe.ROOT_LICENSE, "lore-book/BOOK.md"):
+                path = bundle_dir / relative_path
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(relative_path, encoding="utf-8")
+            (bundle_dir / "lore-book" / "Start.md").write_text(
+                "[Missing](missing-local-page.md)\n",
+                encoding="utf-8",
+            )
+
+            failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
+
+            self.assertIn("bundle_lore_link_safety", failures)
+
+    def test_zip_inspection_rejects_dead_local_lore_links(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            zip_path = root / "lore-links.zip"
+            self._write_publish_payload(bundle_dir / "app")
+            for relative_path in (probe.ROOT_LAUNCHER, probe.ROOT_README, probe.ROOT_LICENSE, "lore-book/BOOK.md"):
+                path = bundle_dir / relative_path
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(relative_path, encoding="utf-8")
+            (bundle_dir / "lore-book" / "Start.md").write_text(
+                "[Missing](missing-local-page.md)\n",
+                encoding="utf-8",
+            )
+
+            exit_code, _ = probe.create_zip(bundle_dir, zip_path)
+            self.assertEqual(exit_code, 0)
+            failures = {item.key for item in probe.inspect_zip(zip_path) if item.status == "FAIL"}
+
+            self.assertIn("zip_lore_link_safety", failures)
 
     def test_ui_retry_records_failed_attempt_before_success(self) -> None:
         calls: list[int] = []

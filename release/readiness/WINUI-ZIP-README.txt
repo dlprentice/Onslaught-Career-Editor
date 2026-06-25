@@ -19,8 +19,9 @@ First run
 ---------
 
 - Lore reader files are bundled in lore-book\ and should work offline after
-  extraction. The downloadable ZIP carries the deterministic BOOK.md-linked
-  reader set; the full deeper lore/RE tree remains in the source repository.
+  extraction for the documents listed in BOOK.md. Links from those pages to
+  deeper source docs open GitHub source/search pages instead of shipping the
+  full deep lore/RE mirror in this app ZIP.
 - If Battle Engine Aquila is installed in Steam or a known Steam library,
   the app attempts to find and save that read-only game folder automatically.
 - Media and safe copied-game workflows need a local Battle Engine Aquila

@@ -43,11 +43,11 @@ npm run test:winui-zip-release-candidate-probe
 
 This builds the exact portable ZIP candidate, verifies the friendly top-level
 layout, rejects raw-root DLL/EXE layouts and hard payloads, checks bundled
-`lore-book/BOOK.md`, rejects Explorer-unsafe long ZIP entry paths, extracts the
-ZIP, runs launch smoke, runs Home navigation smoke, runs extracted-package Lore
-reader smoke, and runs representative Media smoke when a local game install is
-available. A green source tree is not enough for app release publication without
-this package gate.
+`lore-book/BOOK.md`, rejects dead local links in packaged Lore markdown, rejects
+Explorer-unsafe long ZIP entry paths, extracts the ZIP, runs launch smoke, runs
+Home navigation smoke, runs extracted-package Lore reader smoke, and runs
+representative Media smoke when a local game install is available. A green
+source tree is not enough for app release publication without this package gate.
 
 ## Product Source Gates
 

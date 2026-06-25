@@ -1,20 +1,23 @@
 # WinUI ZIP Release v1.0.4
 
-Status: published release package validated
+Status: superseded by v1.0.5 Lore link hardening
 Date: 2026-06-25
 Scope: `winui-zip-release-v1.0.4`
 
-This pass validates the unsigned portable Windows x64 ZIP intended to supersede
-v1.0.3. The v1.0.3 app payload was usable, but its bundled full deep
-`lore-book/` mirror exposed long proof-plan paths that could fail Windows
-Explorer extraction from normal Downloads folders with `0x80010135`.
+This pass validated the unsigned portable Windows x64 ZIP intended to supersede
+v1.0.3. It is now superseded by v1.0.5, which keeps the v1.0.4 Explorer-safe
+ZIP shape and also rewrites deeper unbundled packaged-Lore links to GitHub
+instead of leaving dead local links. The v1.0.3 app payload was usable, but its
+bundled full deep `lore-book/` mirror exposed long proof-plan paths that could
+fail Windows Explorer extraction from normal Downloads folders with
+`0x80010135`.
 
 | Field | Value |
 | --- | --- |
 | ZIP | `subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.4-win-x64.zip` |
 | Byte size | `243908905` |
 | SHA-256 | `641f17a44343e19efa858af30d6194f6e2b844f06d35a5753b3eb03156ac72b3` |
-| Package script | `npm run test:winui-zip-release-candidate-probe` |
+| Package script at validation time | `npm run test:winui-zip-release-candidate-probe` |
 | GitHub release | `https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.4` |
 | ZIP asset | `https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.4/OnslaughtToolkit-winui-v1.0.4-win-x64.zip` |
 
@@ -25,6 +28,10 @@ The package uses the friendly top-level layout:
 - `LICENSE`
 - `app/`
 - `lore-book/`
+
+This is historical release evidence. The current
+`npm run test:winui-zip-release-candidate-probe` command builds the latest
+configured release candidate, not this archived v1.0.4 ZIP.
 
 The repo still carries the full public `lore-book/` and RE documentation tree.
 The downloadable app ZIP carries the deterministic `BOOK.md`-linked offline

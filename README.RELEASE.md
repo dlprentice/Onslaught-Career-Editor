@@ -20,12 +20,14 @@ Current downloadable app releases use an unsigned portable Windows x64 ZIP
 attached to GitHub Releases with a SHA-256 checksum sidecar. Extract the full
 ZIP and run `Launch Onslaught Toolkit.cmd` from the clean top-level folder. The
 self-contained WinUI payload lives under `app\`; run
-`app\OnslaughtCareerEditor.WinUI.exe` only as a fallback. The `v1.0.4` package
-bundles the deterministic `lore-book\BOOK.md`-linked offline Lore reader set
-and the package probe verifies the exact ZIP with Explorer-safe entry paths,
-extracted launch, Home, Lore, and representative Media UI smokes. `v1.0.4`
-supersedes `v1.0.3` because the earlier ZIP could hit Windows Explorer
-`0x80010135` path-too-long extraction failures under normal Downloads paths.
+`app\OnslaughtCareerEditor.WinUI.exe` only as a fallback. The `v1.0.5` package
+bundles the offline Lore reader documents listed in `lore-book\BOOK.md`,
+rewrites deeper unbundled source links to GitHub source/search pages, and
+verifies the exact ZIP with Explorer-safe entry paths, extracted launch, Home,
+Lore, and representative Media UI smokes. `v1.0.5` supersedes `v1.0.3`/`v1.0.4`:
+v1.0.3 could hit Windows Explorer `0x80010135` path-too-long extraction failures
+under normal Downloads paths, and v1.0.4 did not rewrite deeper unbundled Lore
+links.
 
 The ZIP release does not include Battle Engine Aquila game files, copied
 executables, saves, media payloads, full Ghidra databases, or bulky generated
