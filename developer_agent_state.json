@@ -1,11 +1,11 @@
 {
   "lastUpdated": "2026-06-25",
   "branch": "main",
-  "currentFocus": "Repo-specific Codex skill/Ghidra policy inventory is validated in docs/state; current goal.md is advanced to a bounded WinUI Windowed & Mods modularity slice.",
+  "currentFocus": "Windowed & Mods selected-choice modularity is validated and ready to commit; goal.md is advanced to the next bounded selected-profile copy/modularity follow-up.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainStatus": "main/origin/main was aligned at 50c417a1 before this policy closeout; v1.0.7 release truth is documented separately.",
+    "publicMainStatus": "main/origin/main is pushed through b928200a before this WinUI modularity closeout; v1.0.7 release truth is documented separately.",
     "policy": "public repo is primary for source/docs/tools/tests/RE notes/proof summaries/state; hard payloads remain maintainer-local ignored overlays"
   },
   "publicPrimaryMigration": {
@@ -31,10 +31,10 @@
     "localStorageCleanup": "C:\\Users\\david\\source\\Onslaught-Career-Editor-public-candidate* scratch clones were moved to G:\\OnslaughtRepoArchives\\source-scratch-20260624 with move-manifest.json; zero public-candidate scratch dirs remain on C:.",
     "maintainerParityCommand": "py -3 tools\\public_primary_migration_inventory.py --check --private-root C:\\Users\\david\\source\\Onslaught-Career-Editor-private --require-private-root"
   },
-  "recentClosedSlice": {
-    "name": "repo-skills-ghidra-policy-inventory",
-    "status": "validated_ready_for_commit",
+  "repoSkillsGhidraPolicyInventory": {
+    "status": "pushed",
     "readinessNote": "release/readiness/repo_skills_ghidra_policy_inventory_2026-06-25.md",
+    "commit": "b928200a",
     "claimBoundary": "policy/inventory only; no hard payload tracking change, no full Ghidra DB move, no game asset move, no runtime proof, no Ghidra mutation, no release publication.",
     "acceptedFindings": [
       "Public repo has no tracked SKILL.md, skills/, or .codex/skills/ paths.",
@@ -48,13 +48,28 @@
       "finalDocsReview": "state and readiness-note validation wording issues were accepted and fixed"
     }
   },
-  "activeSlice": {
+  "recentClosedSlice": {
     "name": "winui-windowed-mods-selected-choice-modularity",
-    "goal": "reduce BinaryPatchesPage/Windowed & Mods code-behind through one bounded helper/ViewModel extraction around the accepted selected-choice profile/menu-color UX",
-    "claimBoundary": "WinUI modularity and testability only; preserve current patch semantics, selected-state copy, AutomationIds, UIA names, safe-copy behavior, online-disabled posture, and installed-game read-only boundary.",
+    "status": "validated_ready_for_commit",
+    "readinessNote": "release/readiness/winui_windowed_mods_selected_choice_modularity_2026-06-25.md",
+    "claimBoundary": "WinUI modularity/testability only; no patch catalog change, no selected patch semantics change, no safe-copy creation change, no launch behavior change, no online/music/runtime/rebuild claim change, and no installed-game mutation.",
+    "acceptedFindings": [
+      "Selected-choice style/UIA-name application moved into a small WinUI helper and selected-choice model.",
+      "BinaryPatchesPage still owns selected-key predicates, profile matching, menu-color matching, safe-copy state, and patch semantics.",
+      "Runtime UIA smoke now also verifies the clear optional mod rows state remains compatibility-only."
+    ],
+    "consultReview": {
+      "specialist": "recommended a WinUI-layer selected-choice state helper/model and warned not to move safe-copy profile manifest logic",
+      "adversarial": "found no blocker after extraction stayed narrow; clear-selection UIA hardening was accepted"
+    }
+  },
+  "activeSlice": {
+    "name": "winui-windowed-mods-selected-profile-copy-modularity",
+    "goal": "inspect selected-profile status/details copy and extract one more presentation-only helper/model shape only if it can stay separate from safe-copy profile manifest logic and patch semantics",
+    "claimBoundary": "WinUI presentation modularity only; do not move safe-copy profile manifest logic, patch row selection semantics, launch behavior, online status, runtime proof, or AppCore correctness logic.",
     "latestFindings": [
-      "Windowed & Mods profile/menu-color selected-state UX is accepted.",
-      "Repo-specific skill/Ghidra policy inventory is documented and validated."
+      "Windowed & Mods selected-choice UIA/style application helper is validated.",
+      "Clear optional mod rows remains compatibility-only in runtime UIA smoke."
     ],
     "consultReview": {},
     "status": "next_slice_ready"
@@ -106,28 +121,30 @@
       "git diff --check (PASS)"
     ],
     "activeSliceFocusedPassed": [
-      "git ls-files .codex (PASS; only goals/state Markdown tracked)",
-      "git ls-files | rg \"(^|/)SKILL\\.md$|(^|/)skills/\" (PASS; no tracked matches)",
-      "git check-ignore -v game\\BEA.exe local-ghidra\\GhidraBackups local-proofs\\OnslaughtRuntimeProofArchive .codex\\skills\\bea-binary-re\\SKILL.md (PASS; overlay/runtime paths ignored)"
+      "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench\" (PASS; 5 tests)",
+      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~GameProfilePreflightServiceTests.PrepareWindowedCompatibilityProfile_AppliesSelectedVisiblePatchRowsToSafeCopyOnly|FullyQualifiedName~GameProfilePreflightServiceTests.PrepareWindowedCompatibilityProfile_RecordsEnhancedPreviewPresetInManifest|FullyQualifiedName~GameProfilePreflightServiceTests.BuildPrepareReceipt\" (PASS; 5 tests)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiPatchBenchInteractionSmokeTests.PatchBench_ProfileAndMenuColorChoices_UpdateSelectedStateThroughUia\" (PASS; 1 runtime UIA smoke)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench|FullyQualifiedName~WinUiAccessibilityAuditTests\" (PASS; 15 tests)"
     ],
     "activeSliceBroadPassed": [
-      "npm run test:hard-payload-safety (PASS; 19313 public candidate files checked)",
-      "npm run test:public-allowlist (PASS; includes hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19313)",
-      "npm run test:md-links (PASS; 3623 Markdown files, 6125 local links)",
-      "npm run test:repo-hygiene (PASS; 18465 explicit text files checked)"
+      "npm run test:hard-payload-safety (PASS; 19316 public candidate files checked)",
+      "npm run test:public-allowlist (PASS; includes hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19316)",
+      "npm run test:md-links (PASS; 3625 Markdown files, 6125 local links)",
+      "npm run test:repo-hygiene (PASS; 18469 explicit text files checked)"
     ],
     "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Commit/push the validated repo-skills/Ghidra policy closeout.",
-    "Start the next goal.md slice: inspect BinaryPatchesPage selected-choice state and extract one small helper/ViewModel/service shape with focused WinUI tests.",
+    "Commit/push the validated Windowed & Mods selected-choice modularity closeout.",
+    "Start the next goal.md slice: inspect selected-profile status/details copy for one more presentation-only extraction, guarded by focused WinUI tests.",
     "Do not move or track full Ghidra project stores, game payloads, secrets, runtime caches, or release outputs."
   ],
   "releaseAccounting": {
     "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",
     "curatedSelectedFiles": 625,
-    "publicCandidateFiles": 19312,
-    "publicSubmoduleCandidateFiles": 19496
+    "publicCandidateFiles": 19316,
+    "publicSubmoduleCandidateFiles": 19500
   },
   "githubRelease": {
     "version": "v1.0.7",

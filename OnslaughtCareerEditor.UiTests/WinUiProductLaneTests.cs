@@ -386,7 +386,16 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("PatchBenchChoiceButtonStyle"));
         Assert.That(pageXaml, Does.Contain("PatchBenchChoiceSelectedButtonStyle"));
         Assert.That(code, Does.Contain("UpdateChoiceVisualState(visibleSelectedKeys)"));
-        Assert.That(code, Does.Contain("SetChoiceButtonState("));
+        Assert.That(code, Does.Contain("PatchBenchChoiceVisualState.Apply("));
+        Assert.That(code, Does.Contain("PatchBenchChoiceVisualState.Bind("));
+        Assert.That(code, Does.Not.Contain("SetChoiceButtonState("));
+        string choiceStateHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchChoiceVisualState.cs");
+        string choiceStateModel = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchSelectedChoiceState.cs");
+        Assert.That(choiceStateHelper, Does.Contain("internal sealed record PatchBenchChoiceButtonBinding"));
+        Assert.That(choiceStateHelper, Does.Contain("AutomationProperties.SetName("));
+        Assert.That(choiceStateHelper, Does.Contain("binding.State.AutomationName"));
+        Assert.That(choiceStateModel, Does.Contain("internal sealed record PatchBenchSelectedChoiceState"));
+        Assert.That(choiceStateModel, Does.Contain("public string AutomationName => IsSelected ? SelectedAutomationName : NormalAutomationName"));
         Assert.That(code, Does.Contain("Selected: Compatibility Copy profile"));
         Assert.That(code, Does.Contain("Selected: Windowed and Graphics Defaults profile"));
         Assert.That(code, Does.Contain("Selected: Debug Camera Preview profile"));

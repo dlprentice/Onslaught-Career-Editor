@@ -6,11 +6,12 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Reduce `Windowed & Mods` code-behind through one bounded modularity slice over
-the recently accepted selected-choice UX. Inspect `BinaryPatchesPage` profile/
-menu-color choice state, identify one small helper/ViewModel/service extraction,
-implement it without changing patch semantics, and preserve stable
-AutomationIds plus focused UIA/static tests. Continue from this checkout:
+Continue `Windowed & Mods` modularity with one bounded follow-up: inspect
+selected-profile status/details copy and identify whether one more
+presentation-only helper/model extraction is safe. Do not move safe-copy
+profile manifest logic, patch row selection semantics, launch behavior, online
+status, runtime proof, or AppCore correctness logic in this slice. Continue from
+this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -73,6 +74,12 @@ contributor work.
   assets or generate catalogs in place. A focused AppCore regression confirms a
   game-install-shaped folder is not treated as a catalog candidate, and native
   UIA smoke verifies the first-run guide text is accessible.
+- Windowed & Mods selected-choice modularity is accepted in
+  `release/readiness/winui_windowed_mods_selected_choice_modularity_2026-06-25.md`.
+  Profile/menu-background selected-state UIA names and styles now flow through
+  a small WinUI model/helper, while `BinaryPatchesPage` still owns selected-key
+  predicates, profile matching, menu-color matching, safe-copy state, and patch
+  semantics.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof both exist.
@@ -125,13 +132,15 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Read `BinaryPatchesPage.xaml`, `BinaryPatchesPage.xaml.cs`, current WinUI
-   tests, and the selected-state readiness note.
+1. Read `BinaryPatchesPage.xaml.cs` selected-profile status/details builders,
+   `PatchBenchSelectedChoiceState`, `PatchBenchChoiceVisualState`, and current
+   WinUI tests.
 2. Use at least one specialist consult and one adversarial reviewer unless the
    slice proves microscopic.
-3. Extract one small selected-choice state/rendering helper or ViewModel shape
-   from `BinaryPatchesPage` while preserving current profile/menu-color
-   behavior, copy, AutomationIds, and UIA selected names.
+3. If safe, extract one more presentation-only selected-profile status/details
+   helper or model shape from `BinaryPatchesPage`. Leave `PrepareCopiedProfile`,
+   `MatchSelectableSafeCopyProfileId`, direct patch-row exclusivity, and
+   AppCore calls unchanged unless the evidence requires a separate slice.
 4. Validate with focused WinUI/AppCore tests plus repo/docs gates appropriate to
    the touched paths.
 5. Update state/docs with exact evidence and choose the next bounded slice.

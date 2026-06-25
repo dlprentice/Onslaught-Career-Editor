@@ -73,6 +73,10 @@ public class WinUiPatchBenchInteractionSmokeTests
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-profile-selected-normal.png", "PatchBenchDebugCameraPreviewProfileButton", 1000, 640);
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-profile-selected-narrow.png", "PatchBenchDebugCameraPreviewProfileButton", 760, 640);
 
+            InvokeByAutomationId(window, "PatchBenchClearSelectionButton");
+            AssertAutomationNameContains(window, "PatchBenchClearSelectionButton", "Selected: no optional mod rows");
+            AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "compatibility-only safe copy");
+
             InvokeByAutomationId(window, "PatchBenchMenuColorRedButton");
             AssertAutomationNameContains(window, "PatchBenchMenuColorRedButton", "Selected: red menu background color");
             AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected menu background: red.");

@@ -49,6 +49,9 @@ This document tracks UI/UX debt that is too broad for a release-candidate polish
 - Windowed & Mods safe-copy profile and menu-background choice grids now show
   selected state visibly, update plain selected-status text, and expose selected
   UIA names for focused runtime smoke coverage.
+- Windowed & Mods selected-choice state now uses a small WinUI model/helper for
+  selected/normal UIA names and styling, while the page keeps patch-selection
+  and safe-copy semantics unchanged.
 - Lore now distinguishes packaged offline chapters from GitHub source links in
   the visible UI and rendered Markdown. Full offline Lore is tracked as a
   generated content-pack plan instead of raw long-path ZIP extraction.
