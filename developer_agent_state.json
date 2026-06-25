@@ -1,11 +1,11 @@
 {
   "lastUpdated": "2026-06-25",
   "branch": "main",
-  "currentFocus": "Launch-preset selected-state UX was pushed in eeb9c299; current slice is a read-first Windowed & Mods selected-choice/launch-preset presentation modularity inspection.",
+  "currentFocus": "Windowed & Mods choice-style helper modularity is validated; current slice is a read-first Asset Library QOL inspection around configured game folders and generated catalog loading.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainStatus": "main/origin/main is pushed through eeb9c299 for launch-preset selected-state UX; current working tree has only a baton update for the next slice.",
+    "publicMainStatus": "main/origin/main is the active public-primary lane; current local slice validates Windowed & Mods choice-style helper modularity before moving to Asset Library QOL.",
     "policy": "public repo is primary for source/docs/tools/tests/RE notes/proof summaries/state; hard payloads remain maintainer-local ignored overlays"
   },
   "publicPrimaryMigration": {
@@ -49,19 +49,18 @@
     }
   },
   "recentClosedSlice": {
-    "name": "winui-windowed-mods-launch-preset-selected-state-ux",
-    "status": "pushed",
-    "commit": "eeb9c299",
-    "readinessNote": "release/readiness/winui_windowed_mods_launch_preset_selected_state_2026-06-25.md",
-    "claimBoundary": "WinUI UX/presentation only; launch arguments, launch preset payloads, copied-profile launch behavior, safe-copy manifests/signatures, patch semantics, online/runtime proof, music audible-output proof, AppCore correctness logic, and installed-game mutation rules were unchanged."
+    "name": "winui-windowed-mods-choice-style-helper-modularity",
+    "status": "validated",
+    "readinessNote": "release/readiness/winui_windowed_mods_choice_style_helper_modularity_2026-06-25.md",
+    "claimBoundary": "WinUI presentation/helper and UIA coverage only; launch arguments, launch preset payloads, copied-profile launch behavior, safe-copy manifests/signatures, patch semantics, music, online/runtime proof, AppCore correctness logic, release packaging, and installed-game mutation rules were unchanged."
   },
   "activeSlice": {
-    "name": "winui-windowed-mods-selected-choice-presentation-modularity-inspection",
-    "goal": "inspect repeated selected-choice and launch-preset presentation plumbing in BinaryPatchesPage and decide whether a small presentation-only extraction is justified",
-    "claimBoundary": "read-first modularity inspection; no launch arguments, copied-profile launch behavior, safe-copy signatures/manifests, patch semantics, music, online/runtime proof, or AppCore correctness logic changes unless a concrete bug is found and documented.",
+    "name": "asset-library-first-run-configured-game-folder-qol-inspection",
+    "goal": "inspect Asset Library first-run catalog guidance, configured-game-directory handling, and catalog-load flow for a bounded QOL improvement",
+    "claimBoundary": "read-first source/lab-boundary inspection; no game asset bundling, installed-game mutation, in-place catalog generation from the normal app path, runtime proof, full 3D rendering claim, rebuild parity claim, or release packaging change unless a concrete bug is found and documented.",
     "latestFindings": [
-      "Launch-preset selected-state UX is pushed in eeb9c299.",
-      "Next likely work is reducing repeated selected-choice/launch-preset presentation plumbing without moving behavior."
+      "Windowed & Mods choice-style helper modularity is validated with focused static, build, and runtime UIA gates.",
+      "Next likely work is clarifying the Asset Library flow for users with a configured game folder but no generated catalog."
     ],
     "consultReview": {},
     "status": "ready_to_inspect"
@@ -118,32 +117,31 @@
       "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiPatchBenchInteractionSmokeTests.PatchBench_ProfileAndMenuColorChoices_UpdateSelectedStateThroughUia\" (PASS; 1 runtime UIA smoke)"
     ],
     "activeSliceBroadPassed": [
-      "npm run test:doc-commands (PASS; 4278 documented npm commands checked; public package command check passed)",
-      "npm run test:hard-payload-safety (PASS; 19325 public candidate files checked)",
-      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19324; submodule candidate files 19509)",
-      "npm run test:md-links (PASS; 3628 Markdown files scanned, 6125 local links checked)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18477 explicit text files checked)",
+      "npm run test:doc-commands (PASS; 4283 documented npm commands checked; public package command check passed)",
+      "npm run test:hard-payload-safety (PASS; 19326 public candidate files checked)",
+      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19325; submodule candidate files 19510)",
+      "npm run test:md-links (PASS; 3629 Markdown files scanned, 6125 local links checked)",
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18478 explicit text files checked)",
       "node JSON parse for developer_agent_state.json and documentation_agent_state.json (PASS)",
       "git diff --check (PASS)",
       "Get-Process BEA,cdb,OnslaughtCareerEditor.WinUI -ErrorAction SilentlyContinue (PASS; no matching process output)"
     ],
     "pendingForActiveSlice": [
-      "inspect BinaryPatchesPage selected-choice and launch-preset presentation plumbing",
-      "specialist consult and adversarial review before any nontrivial extraction",
-      "focused static/UIA tests if implementation proceeds"
+      "inspect Asset Library first-run text, configured-game-directory handoff, catalog-folder loading, and related tests",
+      "specialist consult and adversarial review before any nontrivial UX or flow edit",
+      "focused AppCore/WinUI tests if implementation proceeds"
     ]
   },
   "nextSteps": [
-    "Commit/push this baton update.",
-    "Inspect selected-choice and launch-preset presentation plumbing for a small presentation-only extraction candidate.",
-    "Use specialist and adversarial consults before editing.",
-    "Keep behavior/proof/AppCore paths out of scope unless evidence reveals a bounded bug."
+    "Inspect Asset Library first-run catalog guidance and configured-game-folder behavior.",
+    "Use specialist and adversarial consults before editing Asset Library flow.",
+    "Keep game asset bundling, installed-game mutation, in-place extraction, runtime proof, full 3D rendering, and rebuild parity out of scope unless evidence reveals a bounded bug."
   ],
   "releaseAccounting": {
     "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",
     "curatedSelectedFiles": 625,
-    "publicCandidateFiles": 19324,
-    "publicSubmoduleCandidateFiles": 19509
+    "publicCandidateFiles": 19325,
+    "publicSubmoduleCandidateFiles": 19510
   },
   "githubRelease": {
     "version": "v1.0.7",

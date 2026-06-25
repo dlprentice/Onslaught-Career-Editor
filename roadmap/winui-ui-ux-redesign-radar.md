@@ -62,9 +62,10 @@ This document tracks UI/UX debt that is too broad for a release-candidate polish
   manifest handling, music, and online logic unchanged.
 - Windowed & Mods launch preset buttons now reuse the selected-choice visual
   pattern, expose selected UIA names, preserve music-swap independence, and
-  clear selected state when launch-owned controls are manually edited. Launch
-  arguments and copied-profile launch planning still come from the actual
-  launch-option controls.
+  clear selected state when launch-owned checkbox, combo, or text controls are
+  manually edited. The selected/normal style lookup now lives in the shared
+  WinUI choice-state helper. Launch arguments and copied-profile launch
+  planning still come from the actual launch-option controls.
 - Lore now distinguishes packaged offline chapters from GitHub source links in
   the visible UI and rendered Markdown. Full offline Lore is tracked as a
   generated content-pack plan instead of raw long-path ZIP extraction.

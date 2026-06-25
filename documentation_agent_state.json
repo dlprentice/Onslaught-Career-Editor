@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "Launch-preset selected-state UX was pushed in eeb9c299; next documentation baton is a read-first Windowed & Mods presentation modularity inspection.",
+  "currentFocus": "Windowed & Mods choice-style helper modularity is validated; next documentation baton is a read-first Asset Library QOL inspection around configured game folders and generated catalog loading.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -16,7 +16,8 @@
     "winuiSelectedProfileTextModularity": "release/readiness/winui_windowed_mods_selected_profile_text_modularity_2026-06-25.md",
     "winuiEnhancedPreviewMusicSwapGuard": "release/readiness/winui_enhanced_preview_music_swap_guard_2026-06-25.md",
     "winuiLaunchTextModularity": "release/readiness/winui_windowed_mods_launch_text_modularity_2026-06-25.md",
-    "winuiLaunchPresetSelectedState": "release/readiness/winui_windowed_mods_launch_preset_selected_state_2026-06-25.md"
+    "winuiLaunchPresetSelectedState": "release/readiness/winui_windowed_mods_launch_preset_selected_state_2026-06-25.md",
+    "winuiChoiceStyleHelperModularity": "release/readiness/winui_windowed_mods_choice_style_helper_modularity_2026-06-25.md"
   },
   "publicPrimaryMigration": {
     "status": "validated_public_primary_with_maintainer_local_ignored_overlays",
@@ -70,25 +71,24 @@
       "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiPatchBenchInteractionSmokeTests.PatchBench_ProfileAndMenuColorChoices_UpdateSelectedStateThroughUia\" (PASS; 1 runtime UIA smoke)"
     ],
     "activeSliceBroadPassed": [
-      "npm run test:doc-commands (PASS; 4278 documented npm commands checked; public package command check passed)",
-      "npm run test:hard-payload-safety (PASS; 19325 public candidate files checked)",
-      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19324; submodule candidate files 19509)",
-      "npm run test:md-links (PASS; 3628 Markdown files scanned, 6125 local links checked)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18477 explicit text files checked)",
+      "npm run test:doc-commands (PASS; 4283 documented npm commands checked; public package command check passed)",
+      "npm run test:hard-payload-safety (PASS; 19326 public candidate files checked)",
+      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19325; submodule candidate files 19510)",
+      "npm run test:md-links (PASS; 3629 Markdown files scanned, 6125 local links checked)",
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18478 explicit text files checked)",
       "node JSON parse for developer_agent_state.json and documentation_agent_state.json (PASS)",
       "git diff --check (PASS)",
       "Get-Process BEA,cdb,OnslaughtCareerEditor.WinUI -ErrorAction SilentlyContinue (PASS; no matching process output)"
     ],
     "pendingForActiveSlice": [
-      "inspect touched presentation plumbing",
-      "consult specialist and adversarial reviewer before nontrivial extraction",
-      "run focused docs/UIA/static gates if implementation proceeds"
+      "inspect Asset Library first-run text, configured-game-directory handoff, catalog-folder loading, and related tests",
+      "consult specialist and adversarial reviewer before any nontrivial UX or flow edit",
+      "run focused AppCore/WinUI/docs gates if implementation proceeds"
     ]
   },
   "nextSteps": [
-    "Commit/push this baton update.",
-    "Inspect selected-choice/launch-preset presentation plumbing and record whether extraction is justified.",
-    "Keep launch/runtime/online/music/rebuild claims unchanged."
+    "Inspect Asset Library first-run catalog guidance and configured-game-folder behavior.",
+    "Keep game asset bundling, installed-game mutation, in-place extraction, runtime proof, full 3D rendering, and rebuild parity out of scope unless evidence reveals a bounded bug."
   ],
   "winuiSelectedChoiceModularity": {
     "status": "validated_ready_for_commit",
@@ -155,8 +155,8 @@
   "releaseAccounting": {
     "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",
     "curatedSelectedFiles": 625,
-    "publicCandidateFiles": 19324,
-    "publicSubmoduleCandidateFiles": 19509
+    "publicCandidateFiles": 19325,
+    "publicSubmoduleCandidateFiles": 19510
   },
   "githubRelease": {
     "version": "v1.0.7",
@@ -267,9 +267,22 @@
     ],
     "commit": "eeb9c299"
   },
+  "winuiChoiceStyleHelperModularity": {
+    "status": "validated",
+    "readinessNote": "release/readiness/winui_windowed_mods_choice_style_helper_modularity_2026-06-25.md",
+    "acceptedTruth": [
+      "PatchBench selected/normal style lookup now lives in PatchBenchChoiceVisualState.ApplyPatchBenchChoiceStyles.",
+      "BinaryPatchesPage still owns selected-key predicates, profile matching, menu-color matching, launch-preset selected marker, and manual-edit routing.",
+      "Runtime UIA smoke now covers launch-owned checkbox, combo, and text manual-edit clearing while preserving create-time music-swap independence."
+    ],
+    "consultReview": [
+      "Specialist review recommended only a small WinUI presentation extraction and keeping predicates/manual-clear routing page-local.",
+      "Adversarial review blocked any extraction where selected-preset state could drive launch args, safe-copy prep, AppCore calls, Host/Join wording, or proof/status claims."
+    ]
+  },
   "activeSlice": {
-    "name": "winui-windowed-mods-selected-choice-presentation-modularity-inspection",
+    "name": "asset-library-first-run-configured-game-folder-qol-inspection",
     "status": "ready_to_inspect",
-    "claimBoundary": "read-first presentation modularity inspection only; behavior/proof/AppCore claims unchanged."
+    "claimBoundary": "read-first source/lab-boundary inspection only; do not bundle game assets, mutate installed game files, generate catalogs in place from the normal app path, add runtime proof, or imply full 3D rendering/rebuild parity."
   }
 }

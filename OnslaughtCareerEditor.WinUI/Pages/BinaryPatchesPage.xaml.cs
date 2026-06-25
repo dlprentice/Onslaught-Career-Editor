@@ -591,12 +591,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void UpdateChoiceVisualState(IReadOnlyCollection<string> selectedKeys)
         {
-            Style selectedStyle = (Style)Resources["PatchBenchChoiceSelectedButtonStyle"];
-            Style normalStyle = (Style)Resources["PatchBenchChoiceButtonStyle"];
             string? profileId = MatchSelectableSafeCopyProfileId(selectedKeys);
             string? selectedMenuColorKey = selectedKeys.FirstOrDefault(IsFrontendColorPatchKey);
 
-            PatchBenchChoiceVisualState.Apply(
+            PatchBenchChoiceVisualState.ApplyPatchBenchChoiceStyles(
                 new[]
                 {
                     PatchBenchChoiceVisualState.Bind(PatchBenchWindowedPresetButton, "Select Compatibility Copy profile", "Selected: Compatibility Copy profile", string.Equals(profileId, BinaryPatchPlanBuilder.CompatibilityProfileId, StringComparison.OrdinalIgnoreCase)),
@@ -610,18 +608,14 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorBlackButton, "Select black menu background color", "Selected: black menu background color", string.Equals(selectedMenuColorKey, "frontend_clear_screen_black", StringComparison.OrdinalIgnoreCase)),
                     PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorClearButton, "Clear menu background color selection", "Selected: no menu background color", selectedMenuColorKey is null),
                 },
-                selectedStyle,
-                normalStyle);
+                Resources);
             PatchBenchMenuColorSelectionStatus.Text = BuildMenuColorSelectionStatus(selectedMenuColorKey);
             AutomationProperties.SetName(PatchBenchMenuColorSelectionStatus, PatchBenchMenuColorSelectionStatus.Text);
         }
 
         private void UpdateLaunchPresetVisualState()
         {
-            Style selectedStyle = (Style)Resources["PatchBenchChoiceSelectedButtonStyle"];
-            Style normalStyle = (Style)Resources["PatchBenchChoiceButtonStyle"];
-
-            PatchBenchChoiceVisualState.Apply(
+            PatchBenchChoiceVisualState.ApplyPatchBenchChoiceStyles(
                 new[]
                 {
                     PatchBenchChoiceVisualState.Bind(PatchBenchQuietCaptureLaunchPresetButton, "Set quiet capture launch options for safe copy", "Selected: quiet capture launch preset", _selectedLaunchPresetChoice == LaunchPresetChoice.QuietCapture),
@@ -632,8 +626,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig3PresetButton, "Set control diagnostics alternate morph jets config 3", "Selected: control diagnostics alternate morph jets config 3", _selectedLaunchPresetChoice == LaunchPresetChoice.ControlConfig3),
                     PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig4PresetButton, "Set control diagnostics swapped alternate config 4", "Selected: control diagnostics swapped alternate config 4", _selectedLaunchPresetChoice == LaunchPresetChoice.ControlConfig4),
                 },
-                selectedStyle,
-                normalStyle);
+                Resources);
         }
 
         private void ClearSelectedLaunchPresetChoiceForManualEdit()

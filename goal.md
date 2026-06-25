@@ -6,13 +6,14 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Start the next bounded `Windowed & Mods` modularity inspection: read the
-selected-choice and launch-preset presentation plumbing in `BinaryPatchesPage`
-and decide whether a small extraction is justified. Keep this slice read-first
-and presentation-only unless exact evidence supports a narrow edit. Do not
-change launch arguments, launch preset payloads, copied-profile launch behavior,
-patch semantics, safe-copy manifest/signature logic, online status, runtime
-proof, or AppCore correctness logic. Continue from this checkout:
+Start the next bounded Asset Library QOL inspection: read the first-run catalog
+guidance, configured-game-directory handling, and catalog-load flow, then decide
+whether a small improvement is justified for users who have Battle Engine Aquila
+installed but have not generated an asset catalog yet. Keep this slice
+read-first and source/lab-boundary-only unless exact evidence supports a narrow
+edit. Do not bundle game assets, generate catalogs in place from the normal app
+path, mutate the installed game folder, add runtime proof, or imply full 3D
+rendering/rebuild parity. Continue from this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -125,6 +126,19 @@ contributor work.
   safety, public allowlist, Markdown links, repo hygiene, state JSON parse,
   whitespace diff check, and process cleanup checks passed. Commit
   `eeb9c299` pushed this slice to `origin/main`.
+- Windowed & Mods choice-style helper modularity is accepted in
+  `release/readiness/winui_windowed_mods_choice_style_helper_modularity_2026-06-25.md`.
+  The repeated Patch Bench selected/normal style lookup now lives in
+  `PatchBenchChoiceVisualState.ApplyPatchBenchChoiceStyles`, while
+  `BinaryPatchesPage` still owns selected-key predicates, profile matching,
+  menu-color matching, launch-preset selected marker, and manual-edit routing.
+  Runtime UIA smoke now verifies launch-preset selected state clears after
+  launch-owned checkbox, combo, and text edits while create-time music-swap
+  selection remains independent. Focused static PatchBench tests, WinUI build,
+  and runtime UIA smoke passed. No launch arguments, launch preset payloads,
+  copied-profile launch behavior, safe-copy signatures/manifests, patch
+  semantics, music, online/runtime proof, AppCore correctness logic, release
+  packaging, or installed-game mutation rules changed.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof both exist.
@@ -177,19 +191,17 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 
 ## Next Executable Work
 
-1. Inspect repeated selected-choice and launch-preset presentation plumbing in
-   `BinaryPatchesPage`, `PatchBenchChoiceVisualState`, and the relevant UIA
-   tests.
-2. Use at least one specialist consult and one adversarial reviewer before
-   implementing any nontrivial extraction.
-3. If a small extraction is justified, keep it presentation-only and validate
-   with focused static/UIA tests plus docs/state updates. If no extraction is
-   justified, record that decision and choose the next bounded UX/modularity
-   slice.
-4. Keep launch arguments, copied-profile launch behavior, safe-copy
-   signatures/manifests, patch semantics, music, online/runtime proof, and
-   AppCore correctness logic out of the next modularity slice unless a concrete
-   bug is found and documented.
+1. Inspect Asset Library first-run text, configured-game-directory handoff,
+   catalog-folder loading, and related AppCore/WinUI tests.
+2. Use at least one specialist consult and one adversarial reviewer before any
+   nontrivial UX or flow edit.
+3. If a small improvement is justified, keep it bounded to guidance/path
+   selection or testable presentation flow; validate with focused AppCore/WinUI
+   gates plus docs/state updates. If no edit is justified, record that decision
+   and choose the next bounded UX/modularity slice.
+4. Keep game asset bundling, source-game mutation, in-place extraction,
+   runtime proof, full 3D rendering claims, rebuild parity, and release
+   packaging out of this slice unless a concrete bug is found and documented.
 
 ## Stop Conditions
 

@@ -118,6 +118,18 @@ public class WinUiPatchBenchInteractionSmokeTests
             AssertAutomationNameContains(window, "PatchBenchControlBaselinePresetButton", "Set control diagnostics baseline config 1");
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-launch-preset-selected-normal.png", "PatchBenchControlConfig4PresetButton", 1000, 720);
 
+            ToggleCheckBoxByAutomationId(window, "PatchBenchNoSoundLaunchOption");
+            AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Set control diagnostics swapped alternate config 4");
+            AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
+
+            ClickByAutomationId(window, "PatchBenchControlConfig4PresetButton");
+            AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Selected: control diagnostics swapped alternate config 4");
+            SelectComboBoxItem(window, "PatchBenchConfigurationLaunchPresetComboBox", "Config 3: Alternate morph/jets");
+            AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Set control diagnostics swapped alternate config 4");
+            AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
+
+            ClickByAutomationId(window, "PatchBenchControlConfig4PresetButton");
+            AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Selected: control diagnostics swapped alternate config 4");
             SetTextBoxText(window, "PatchBenchLevelLaunchOption", "100");
             AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Set control diagnostics swapped alternate config 4");
             AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
@@ -307,6 +319,23 @@ public class WinUiPatchBenchInteractionSmokeTests
 
         element.Click();
         Thread.Sleep(350);
+    }
+
+    private static void ToggleCheckBoxByAutomationId(Window window, string automationId)
+    {
+        AutomationElement element = FindByAutomationId(window, automationId);
+        window.Focus();
+        ScrollIntoView(element);
+        if (element.Patterns.Toggle.IsSupported)
+        {
+            element.Patterns.Toggle.Pattern.Toggle();
+        }
+        else
+        {
+            element.Click();
+        }
+
+        Thread.Sleep(250);
     }
 
     private static void ExpandByAutomationId(Window window, string automationId)

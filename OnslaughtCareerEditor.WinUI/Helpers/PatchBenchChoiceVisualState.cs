@@ -37,5 +37,15 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 AutomationProperties.SetName(binding.Button, binding.State.AutomationName);
             }
         }
+
+        public static void ApplyPatchBenchChoiceStyles(
+            IEnumerable<PatchBenchChoiceButtonBinding> bindings,
+            ResourceDictionary resources)
+        {
+            Apply(
+                bindings,
+                (Style)resources["PatchBenchChoiceSelectedButtonStyle"],
+                (Style)resources["PatchBenchChoiceButtonStyle"]);
+        }
     }
 }
