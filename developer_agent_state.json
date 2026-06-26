@@ -1,14 +1,25 @@
 {
   "lastUpdated": "2026-06-26",
   "branch": "main",
-  "currentFocus": "Repo-quality hash closeout is accepted and the public-candidate/curated-export wording classification is closed with no docs edit needed; the next baton is read-first public-main and state verification.",
+  "currentFocus": "PR-ready modularity wave integration candidate: accepted PR-template and PatchBench safe-copy presentation-helper commits are integrated with state reconciliation; validation gates remain the closeout authority.",
   "currentTruth": {
     "publicMain": {
-      "status": "verified_before_integration_push",
-      "verifiedHeadOriginAndRemoteBeforePush": "c5dfae7c7108a89fd861cb286b3e9d03e3a17d85",
-      "acceptedHashCloseoutCommit": "f5ab519b8393eb12197fa4d591d466e6517b79f7",
-      "nextWriteRequirement": "Re-read live git truth before treating any exact main commit as current."
+      "baseBeforeIntegration": "ab90daa299beff655552899a71372678878af1ea",
+      "nextWriteRequirement": "Before any later write, re-read live HEAD, origin/main, and remote refs/heads/main."
     },
+    "integratedWorkerCommits": [
+      {
+        "worker": "collaboration-pr-readiness-001",
+        "commit": "3af7d18bd2ae16e9c0e18070f593c80765f0bb1c",
+        "summary": "PR handoff template now exposes explicit lane/scope, validation, private/public boundary, state-baton, installed-game/original-BEA mutation, and remaining-risk fields."
+      },
+      {
+        "worker": "winui-patchbench-status-guard-001",
+        "commit": "931af99e8de62ffa5d7c4fc90b8b7a047a0d8b93",
+        "summary": "PatchBench safe-copy canceled/failed/restored/source-changed status copy and No Host/Join receipt fallback copy now live in the presentation helper with static guard coverage."
+      }
+    ],
+    "patchBenchBoundary": "The PatchBench integration is presentation-only. AppCore receipt construction, patch planning, safe-copy manifests/signatures, launch arguments, process decisions, patch catalog rows, byte data, music behavior, Host/Join availability, online readiness, runtime proof, and release packaging are unchanged.",
     "publicPrimaryRepo": "The public repo remains the primary collaboration repo for source, docs, tools, tests, RE notes, wave notes, state batons, agent reports, readiness notes, and compact proof summaries that are non-secret and non-payload.",
     "coordinationPolicy": {
       "status": "durable_policy_on_main",
@@ -19,34 +30,35 @@
         "coordination/RESOURCE_LEASES.md"
       ]
     },
-    "wordingClassification": "No clearly stale non-validation public-candidate or curated-export wording requiring a docs edit was found.",
-    "releasePublicationStatus": "No release was built, published, signed, pushed as a package, or announced.",
-    "claimBoundary": "State refresh and next-baton docs only; no product source, product tests, package scripts, patch catalogs, release artifacts, AppCore, WinUI, CLI, runtime/proof scripts, Ghidra content, game files, installed game folder, original BEA.exe, runtime behavior, patch semantics, launch behavior, safe-copy behavior, Host/Join capability, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference claim, release publication, Ghidra mutation, hard-payload boundary, or installed-game/original-BEA mutation changed.",
-    "productBaseline": "WinUI 3 remains the primary app, AppCore remains shared correctness logic, the C# CLI remains a support lane, and Python tooling remains repo/lab support.",
+    "releasePublicationStatus": "No release was built, published, signed, packaged, tagged, pushed as a package, or announced by this integration.",
     "runtimeBoundaries": {
       "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint and source-bound copied-runtime proof exists",
       "musicAudibleOutputProof": false,
       "staticReClosure": "static closure is not runtime, gameplay, visual, online, rebuild, or parity proof",
       "installedGameOriginalBea": "read-only"
     },
-    "hardPayloadBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, and local runtime caches stay out of git and release ZIPs; use LOCAL_LAB_OVERLAY.md for local-only placement."
+    "hardPayloadBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, and local runtime caches stay out of git and release ZIPs; use LOCAL_LAB_OVERLAY.md for local-only placement."
   },
   "activeSlice": {
-    "name": "post-wording-repo-quality-state-verification",
-    "status": "ready",
-    "goal": "from clean main, confirm live git truth and state baton alignment before any write; make only a small docs/state baton correction if drift is proven, otherwise report no change",
-    "claimBoundary": "docs/state verification only; no package script, product code, runtime, release publication, Host/Join, online, Ghidra, hard-payload, installed-game, or original-BEA claim changes"
+    "name": "pr-ready-modularity-wave-integration",
+    "status": "validating",
+    "goal": "validate and close the integrated PR-template and PatchBench presentation-helper wave from the short integration path, then leave a read-first acceptance/follow-up baton",
+    "claimBoundary": "integration, state reconciliation, and local validation only; no release, package, Host/Join, online, runtime, Ghidra, hard-payload, installed-game, original-BEA, patch-row, byte-patch, launch, safe-copy manifest/signature, music, gameplay, visual, rebuild, or no-noticeable-difference claim changes"
+  },
+  "currentCounters": {
+    "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
+    "catalogRows": "29/29 target specimen identity and policy metadata rows"
   },
   "validation": {
-    "currentStateRefresh": "Validate with JSON parsing, stale-reference scan, docs/repo hygiene gates, public allowlist, hard-payload safety, and git diff checks.",
-    "nextSlice": "Use docs/state gates for documentation-only cleanup and add the relevant WinUI/AppCore gates before claiming any code or UI behavior change."
+    "currentIntegration": "Run git diff --check, docs/repo hygiene gates, public allowlist, hard-payload safety, build:winui, winui primary lane, winui patch-engine safety, and focused PatchBench static tests from C:\\otk-int-20260626.",
+    "nextSlice": "Use read-only acceptance/review first; add WinUI/AppCore gates before claiming any code or UI behavior change."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "Start from clean main and verify HEAD, origin/main, and live remote refs/heads/main before writing.",
-    "Re-read goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json; confirm no stale consolidated-main hash references remain.",
-    "Treat the public-candidate/curated-export wording classification as no-op evidence unless a new concrete stale claim is proven.",
-    "Keep package scripts, product behavior, patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of scope."
+    "Run and record the assigned integration validation gates from C:\\otk-int-20260626.",
+    "If validation and origin/main checks pass, commit the integrated result and push HEAD to main under the campaign integration authority.",
+    "After this wave lands, start the next slice with read-only main/state verification before any edit.",
+    "Keep package scripts, release publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, and original-BEA mutation claims bounded to accepted evidence."
   ]
 }

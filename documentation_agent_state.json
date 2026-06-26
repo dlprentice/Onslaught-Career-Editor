@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-26",
-  "currentFocus": "Repo-quality hash closeout is accepted and the public-candidate/curated-export wording classification is closed with no docs edit needed; docs/state truth now points to a read-first main/state verification slice.",
+  "currentFocus": "PR-ready modularity wave integration candidate: collaboration PR-template handoff fields and PatchBench presentation-helper boundary truth are reconciled into docs/state; validation gates remain the closeout authority.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -20,11 +20,21 @@
   },
   "currentDocsTruth": {
     "publicMain": {
-      "status": "verified_before_integration_push",
-      "verifiedHeadOriginAndRemoteBeforePush": "c5dfae7c7108a89fd861cb286b3e9d03e3a17d85",
-      "acceptedHashCloseoutCommit": "f5ab519b8393eb12197fa4d591d466e6517b79f7",
+      "baseBeforeIntegration": "ab90daa299beff655552899a71372678878af1ea",
       "nextWriteRequirement": "Re-read live git truth before treating any exact main commit as current."
     },
+    "integratedWorkerCommits": [
+      {
+        "worker": "collaboration-pr-readiness-001",
+        "commit": "3af7d18bd2ae16e9c0e18070f593c80765f0bb1c",
+        "summary": "GitHub PR template now matches the repo handoff shape more explicitly, including validation skipped, private/public boundary, state baton, and installed-game/original-BEA mutation fields."
+      },
+      {
+        "worker": "winui-patchbench-status-guard-001",
+        "commit": "931af99e8de62ffa5d7c4fc90b8b7a047a0d8b93",
+        "summary": "PatchBench safe-copy status and receipt fallback copy is centralized in a presentation helper and guarded by static tests without changing patch/runtime claims."
+      }
+    ],
     "publicPrimaryRepo": "The public repo is the normal collaboration surface, not a sparse export.",
     "coordinationPolicy": {
       "status": "durable_policy_on_main",
@@ -35,22 +45,25 @@
         "coordination/RESOURCE_LEASES.md"
       ]
     },
-    "stateReconciliation": "goal.md, developer_agent_state.json, and documentation_agent_state.json now record accepted hash-closeout evidence, close the wording classification as no-edit, and point the next baton at bounded public-main/state verification.",
-    "wordingClassification": "No clearly stale non-validation public-candidate or curated-export wording requiring a docs edit was found.",
-    "releasePublicationStatus": "No release was built, published, signed, pushed as a package, or announced.",
-    "claimBoundary": "Docs/state refresh only; no product source, product tests, package scripts, patch catalogs, release artifacts, AppCore, WinUI, CLI, runtime/proof scripts, Ghidra content, game files, installed game folder, original BEA.exe, product/runtime/test behavior, release/publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference claim, Ghidra, hard-payload, or installed-game/original-BEA mutation change.",
-    "localOnlyBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, local runtime caches, local campaign logs, active thread/session IDs, raw proof evidence, and local proof paths stay out of tracked docs/state."
+    "stateReconciliation": "developer_agent_state.json and documentation_agent_state.json record the accepted wave and current patch catalog counters; re_orchestrator_state.json already had current counters and was left unchanged.",
+    "releasePublicationStatus": "No release was built, published, signed, packaged, tagged, pushed as a package, or announced by this integration.",
+    "claimBoundary": "Docs/state and presentation-helper integration only; no AppCore, patch catalog row, byte patch, launch argument, safe-copy manifest/signature, runtime proof, release/publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, or original-BEA mutation claim change.",
+    "localOnlyBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, local runtime caches, local campaign logs, active thread/session IDs, raw proof evidence, and local proof paths stay out of tracked docs/state."
+  },
+  "currentCounters": {
+    "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
+    "catalogRows": "29/29 target specimen identity and policy metadata rows"
   },
   "validation": {
-    "currentStateRefresh": "Validate with JSON parsing, stale-reference scan, docs/repo hygiene gates, public allowlist, hard-payload safety, and git diff checks.",
-    "nextSlice": "Use docs/state gates for documentation-only cleanup and add the relevant WinUI/AppCore gates before claiming any code or UI behavior change."
+    "currentIntegration": "Run the assigned docs/repo, payload, WinUI, patch-engine, and focused PatchBench validation gates from C:\\otk-int-20260626.",
+    "nextSlice": "Use read-only acceptance/review first; add WinUI/AppCore gates before claiming any code or UI behavior change."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "Start from clean main and verify HEAD, origin/main, and live remote refs/heads/main before writing.",
-    "Re-read goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json; confirm no stale consolidated-main hash references remain.",
-    "Treat the public-candidate/curated-export wording classification as no-op evidence unless a new concrete stale claim is proven.",
+    "After this wave lands, start from clean main and verify HEAD, origin/main, and live remote refs/heads/main before writing.",
+    "Keep the PR-template handoff fields aligned with CONTRIBUTING.md and COLLABORATION.md if future collaboration docs move.",
+    "Keep PatchBench user-facing copy plain and presentation-only unless a separate product slice changes behavior with matching AppCore/WinUI validation.",
     "Keep product, runtime, release publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, and installed-game mutation claims bounded to accepted evidence."
   ]
 }
