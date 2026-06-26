@@ -1,16 +1,17 @@
 {
   "lastUpdated": "2026-06-26",
-  "branch": "campaign/20260626T024429Z-public-primary-coordination/integration-001",
-  "currentFocus": "Coordination-policy bootstrap integration is locally reconciled; fresh read-only acceptance is next before any broad write fanout.",
+  "branch": "campaign/20260626T124649Z-branch-consolidation-repo-quality/coordination-branch-closeout-001",
+  "currentFocus": "Accepted coordination policy/state integration is being closed out so the next executable baton can start from main on repo-quality, modularity, and stale-doc cleanup.",
   "currentTruth": {
     "publicPrimaryRepo": "The public repo remains the primary collaboration repo for source, docs, tools, tests, RE notes, wave notes, state batons, agent reports, readiness notes, and compact proof summaries that are non-secret and non-payload.",
-    "coordinationPolicyBootstrap": {
-      "status": "integrated_pending_fresh_acceptance",
-      "campaignId": "20260626T024429Z-public-primary-coordination",
+    "coordinationPolicyIntegration": {
+      "status": "accepted_prior_integration",
+      "previousCampaignId": "20260626T024429Z-public-primary-coordination",
       "acceptedBootstrapCommit": "2622b030374db46d395d92327f7da7d32253fb43",
-      "baseCommit": "eeb3197c28aee59d24abbe9bdfd1ac8318dcd140",
-      "integrationBranch": "campaign/20260626T024429Z-public-primary-coordination/integration-001",
-      "scope": "durable coordination policy plus one canonical goal/state reconciliation",
+      "acceptedIntegrationCommit": "286fad8a5f5175150d1d148b06d8309c29656ea3",
+      "integrationBranch": "origin/campaign/20260626T024429Z-public-primary-coordination/integration-001",
+      "closeoutContinuationBranch": "campaign/20260626T124649Z-branch-consolidation-repo-quality/coordination-branch-closeout-001",
+      "scope": "durable coordination policy plus canonical goal/state reconciliation",
       "docs": [
         "coordination/README.md",
         "coordination/WORKSTREAM_CONTRACT.md",
@@ -18,7 +19,7 @@
         "coordination/RESOURCE_LEASES.md"
       ]
     },
-    "claimBoundary": "No product source, product tests, runtime behavior, patch semantics, launch behavior, safe-copy behavior, Host/Join capability, runtime proof, release/publication action, Ghidra mutation, hard-payload boundary, or installed-game/original-BEA mutation changed.",
+    "claimBoundary": "Coordination closeout and next-baton docs/state only; no product source, product tests, runtime behavior, patch semantics, launch behavior, safe-copy behavior, Host/Join capability, runtime proof, release/publication action, Ghidra mutation, hard-payload boundary, or installed-game/original-BEA mutation changed.",
     "productBaseline": "WinUI 3 remains the primary app, AppCore remains shared correctness logic, the C# CLI remains a support lane, and Python tooling remains repo/lab support.",
     "runtimeBoundaries": {
       "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint and source-bound copied-runtime proof exists",
@@ -29,21 +30,21 @@
     "hardPayloadBoundary": "Hard payloads, raw proof logs, screenshots/frame dumps, copied executable output, full Ghidra databases, secrets, .env files, local config, caches, and build/package output stay out of git and release ZIPs; use LOCAL_LAB_OVERLAY.md for local-only placement."
   },
   "activeSlice": {
-    "name": "coordination-policy-bootstrap-integration",
-    "status": "integrated_pending_fresh_acceptance",
-    "goal": "integrate accepted coordination policy bootstrap commit, reconcile canonical state once, validate, and send to fresh read-only acceptance before broad write fanout",
-    "claimBoundary": "documentation/state policy only; no product/runtime/test behavior, release/publication state, Host/Join readiness, runtime proof, Ghidra state, or installed-game/original-BEA mutation changes"
+    "name": "post-consolidation-repo-quality-modularity-stale-doc-cleanup",
+    "status": "next_from_main_after_coordination_closeout_consolidation",
+    "goal": "from consolidated main, perform a read-first scan and choose one bounded repo-quality, modularity, or stale-doc cleanup with clear ownership and matching validation",
+    "claimBoundary": "docs/state/repo-quality first; product code only after fresh file review and clear lease; no runtime, release, Host/Join, online, Ghidra, hard-payload, installed-game, or original-BEA claim changes"
   },
   "validation": {
-    "thisIntegration": "Final command results live in the local integration report. Required closeout gates are git diff --check, docs commands, Markdown links, repo hygiene, public allowlist, hard-payload safety, state JSON parse, and integration report JSON parse.",
-    "previousProductSliceEvidence": "Use the slice readiness notes and release/readiness/PUBLIC_SIGNOFF_COMMANDS.md instead of expanding historical command logs in this baton."
+    "closeout": "Closeout validation results live in the local campaign report for coordination-branch-closeout-001.",
+    "nextSlice": "Use docs/state gates for documentation-only cleanup and add the relevant WinUI/AppCore gates before claiming any code or UI behavior change."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "Complete fresh read-only acceptance of the coordination-policy integration and release the integration/state lease.",
-    "Use the coordination contracts to assign exactly one writer for any BinaryPatchesPage, PatchBench helper/model, or focused PatchBench test changes.",
-    "Inspect safe-copy canceled/failed/restored/source-changed status copy and defensive receipt Host/Join fallback for a small presentation-only extraction or guard-hardening candidate.",
-    "Keep patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of the next product slice unless evidence reveals a bounded bug."
+    "After main contains the accepted coordination closeout, start from clean main and re-read current front-door docs, goal.md, and state batons.",
+    "Use rg to find stale acceptance/campaign wording, outdated state pointers, and recent Windowed & Mods modularity follow-up candidates.",
+    "Select exactly one narrow path family with clear ownership before editing.",
+    "Keep patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of scope unless fresh evidence reveals a bounded bug."
   ]
 }
