@@ -15,7 +15,7 @@ with a safe docs-only correction.
 ## Current Truth
 
 - Public `main` and `origin/main` are consolidated at commit
-  `7e0f856c216c14bc538c55b1c6f6df99509f585a`.
+  `c5dfae7c7108a89fd861cb286b3e9d03e3a17d85`.
 - Coordination contracts in `coordination/` are the durable policy for
   coordinator, worker, reviewer, integration, acceptance, path-ownership,
   resource-lease, report, and local-log boundaries.
@@ -54,7 +54,7 @@ with a safe docs-only correction.
 ## Next Executable Work
 
 1. Start from clean consolidated `main`; if `main` moved after
-   `7e0f856c216c14bc538c55b1c6f6df99509f585a`, re-read changed docs and state
+   `c5dfae7c7108a89fd861cb286b3e9d03e3a17d85`, re-read changed docs and state
    before editing.
 2. Read and classify legacy public-candidate and curated-export wording in
    `RELEASE_SCOPE_AND_TEST_COMMANDS.md`, `README.RELEASE.md`, `tools/README.md`,

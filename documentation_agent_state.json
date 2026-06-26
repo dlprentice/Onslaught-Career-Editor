@@ -21,8 +21,8 @@
   "currentDocsTruth": {
     "publicMain": {
       "status": "consolidated",
-      "commit": "7e0f856c216c14bc538c55b1c6f6df99509f585a",
-      "originMain": "7e0f856c216c14bc538c55b1c6f6df99509f585a"
+      "commit": "c5dfae7c7108a89fd861cb286b3e9d03e3a17d85",
+      "originMain": "c5dfae7c7108a89fd861cb286b3e9d03e3a17d85"
     },
     "publicPrimaryRepo": "The public repo is the normal collaboration surface, not a sparse export.",
     "coordinationPolicy": {
