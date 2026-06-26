@@ -1,7 +1,7 @@
 # AGENTS.md
 
 Status: public-primary contributor agent guide
-Last updated: 2026-06-24
+Last updated: 2026-06-26
 
 This file is the public-primary agent guide for Onslaught Toolkit. Treat this
 checkout as the normal collaboration and day-to-day working repo. Raw project
@@ -140,6 +140,13 @@ Do not commit repo-local `.codex/skills`, Codex auth/session/cache/log/plugin
 state, or copied runtime skill caches. If the project later needs an installable
 public skill pack, create it as an explicit source artifact with its own review
 and hard-payload checks instead of copying a user runtime directory.
+
+For coordinated multi-thread campaigns, read
+[coordination/README.md](coordination/README.md) before assigning or accepting
+worker changes. That contract defines coordinator, worker, reviewer,
+integration, acceptance, path-ownership, resource-lease, report, and local-log
+boundaries. Unknown ownership is read-only until the coordinator or integration
+owner records a clear lease.
 
 ## WinUI Contribution Rules
 

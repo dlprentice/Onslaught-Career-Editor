@@ -1,7 +1,7 @@
 # Goal Policy
 
 Status: active public-primary charter
-Last updated: 2026-06-24
+Last updated: 2026-06-26
 
 This file is the durable charter for repo `/goal` loops. It should change
 rarely. The mutable current slice lives in `goal.md`.
@@ -50,6 +50,11 @@ proof summaries, and reproducible checkers instead of shipping the payloads.
   work when safe and available. If a lane is unavailable, usage-limited, unsafe
   to brief, or disproportionate for tiny/urgent work, record that and continue
   with Codex-root verification.
+- Coordinated multi-thread campaigns use the additional contract in
+  [coordination/README.md](coordination/README.md): the coordinator is a control
+  plane, workers own only leased scopes in isolated worktrees, reviewers and
+  acceptance are read-only, and the integration owner performs canonical
+  merge/state/docs reconciliation after leases release.
 
 ## Technical Direction
 

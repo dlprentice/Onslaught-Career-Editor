@@ -1,7 +1,7 @@
 # Contributing To Onslaught Toolkit
 
 Status: active contributor guide
-Last updated: 2026-06-23
+Last updated: 2026-06-26
 
 This public source tree is the primary collaboration and day-to-day working repo
 for a WinUI-first Battle Engine Aquila preservation and tooling project. Raw
@@ -134,6 +134,13 @@ Keep state concise and non-secret. For read-only audits, do not edit state just
 to satisfy the rule; report the needed state update in the audit result.
 External contributors may instead explain that no baton update was made; a
 maintainer can fold their PR into the current state files during review.
+
+During coordinated multi-thread campaigns, follow
+[coordination/README.md](coordination/README.md). Worker branches do not all edit
+canonical state batons; the integration owner reconciles `goal.md`,
+`developer_agent_state.json`, `documentation_agent_state.json`, and shared
+readiness/front-door docs after write leases are released. Review and acceptance
+threads stay read-only.
 
 ## WinUI UI/UX Contributions
 
