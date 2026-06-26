@@ -6,16 +6,20 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Start the first bounded repo-quality wave from consolidated `main` by
-classifying remaining legacy public-candidate and curated-export wording in
-front-door and release-readiness docs. Keep it read-first and path-scoped; edit
-only if the classification proves one clearly stale non-validation wording issue
-with a safe docs-only correction.
+Run the next repo-quality baton verification from the accepted hash-closeout and
+wording-classification evidence. Start read-only: confirm live `main`, state
+batons, and front-door docs still align before any edit. If drift is proven,
+make only the smallest docs/state baton correction; otherwise produce a concise
+no-change report.
 
 ## Current Truth
 
-- Public `main` and `origin/main` are consolidated at commit
-  `c5dfae7c7108a89fd861cb286b3e9d03e3a17d85`.
+- Public `main`, `origin/main`, and live remote `refs/heads/main` were verified
+  at `c5dfae7c7108a89fd861cb286b3e9d03e3a17d85` before integrating the accepted
+  hash-closeout commit `f5ab519b8393eb12197fa4d591d466e6517b79f7`. Future
+  writes must re-read live git truth first.
+- The wording classification found no clearly stale non-validation
+  public-candidate or curated-export wording requiring a docs edit.
 - Coordination contracts in `coordination/` are the durable policy for
   coordinator, worker, reviewer, integration, acceptance, path-ownership,
   resource-lease, report, and local-log boundaries.
@@ -23,9 +27,10 @@ with a safe docs-only correction.
   tools, tests, RE notes, wave notes, state batons, agent reports, readiness
   notes, and compact proof summaries that are non-secret and non-payload.
 - Hard payloads remain outside git and outside release ZIPs: game executables,
-  copied runtime output, arbitrary saves/options, raw proof logs, screenshots or
-  frame dumps, full Ghidra databases, secrets, `.env*`, local config, caches,
-  and build/package output. Use `LOCAL_LAB_OVERLAY.md` for local-only placement.
+  copied executables, copied runtime output, arbitrary saves/options, raw proof
+  logs, screenshots or frame dumps, full Ghidra databases, secrets, `.env*`,
+  local runtime caches, and build/package output. Use `LOCAL_LAB_OVERLAY.md` for
+  local-only placement.
 - WinUI 3 remains the primary user-facing app. AppCore remains the shared
   correctness layer for saves, options, patch planning, media/catalog support,
   and safe-copy workflows. The C# CLI and Python tooling remain support lanes.
@@ -35,6 +40,13 @@ with a safe docs-only correction.
 - Runtime audible music output is still not proven. Static RE closure is not
   runtime, gameplay, visual, online, rebuild, or no-noticeable-difference proof.
 - Installed game files and original `BEA.exe` remain read-only.
+- No product source, product tests, package scripts, patch catalogs, release
+  artifacts, AppCore, WinUI, CLI, runtime/proof scripts, Ghidra content, game
+  files, installed game folder, or original `BEA.exe` changed in the accepted
+  repo-quality closeout evidence.
+- No release was built, published, signed, pushed as a package, or announced.
+- No Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, or
+  no-noticeable-difference claim changed.
 
 ## Evidence Pointers
 
@@ -53,23 +65,25 @@ with a safe docs-only correction.
 
 ## Next Executable Work
 
-1. Start from clean consolidated `main`; if `main` moved after
-   `c5dfae7c7108a89fd861cb286b3e9d03e3a17d85`, re-read changed docs and state
-   before editing.
-2. Read and classify legacy public-candidate and curated-export wording in
-   `RELEASE_SCOPE_AND_TEST_COMMANDS.md`, `README.RELEASE.md`, `tools/README.md`,
-   `roadmap/repo-structure-and-archive-map.md`, and the public package/reference
-   files under `release/readiness/`.
-3. Preserve active validation-template, allowlist, and release-accounting names
-   when wording is intentional compatibility rather than stale product truth.
-4. If one clearly stale non-validation wording issue is found, make the smallest
-   docs-only correction in that path family; otherwise produce a concise
-   no-change classification report for the next write slice.
-5. Validate any docs edit with `npm run test:doc-commands`,
-   `npm run test:md-links`, `npm run test:public-allowlist`,
-   `npm run test:repo-hygiene`, and `git diff --check`.
-6. Update the state batons to the resulting current truth and rewrite this file
-   to the next safe executable slice after verified closeout.
+1. Start from clean `main`; fetch or otherwise verify `HEAD`, `origin/main`, and
+   live remote `refs/heads/main` before writing.
+2. Re-read `goal.md`, `developer_agent_state.json`,
+   `documentation_agent_state.json`, and `re_orchestrator_state.json`; confirm
+   there are no stale consolidated-main hash references and no accidental
+   reopening of the completed wording-classification slice.
+3. Re-read front-door public repo docs only if git or baton truth moved since
+   the last closeout evidence; treat the wording classification as no-op
+   evidence unless a new concrete stale claim is proven.
+4. If a state/docs mismatch is proven, make the smallest correction in
+   `goal.md`, `developer_agent_state.json`, or `documentation_agent_state.json`;
+   leave `re_orchestrator_state.json` untouched unless RE orchestration truth
+   actually changed.
+5. Validate edits with JSON parsing for edited state files, stale-hash scan,
+   `git diff --check`, `npm run test:doc-commands`,
+   `npm run test:repo-hygiene`, `npm run test:public-allowlist`, and
+   `npm run test:hard-payload-safety`; run `npm run test:md-links` only if
+   Markdown links change.
+6. Stop with a no-change report if no mismatch is proven.
 
 ## Stop Conditions
 

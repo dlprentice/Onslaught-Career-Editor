@@ -1,12 +1,13 @@
 {
   "lastUpdated": "2026-06-26",
   "branch": "main",
-  "currentFocus": "Public main is consolidated; the next executable baton is a public-candidate/curated-export wording classification slice from main with docs-only correction authority if one stale non-validation issue is proven.",
+  "currentFocus": "Repo-quality hash closeout is accepted and the public-candidate/curated-export wording classification is closed with no docs edit needed; the next baton is read-first public-main and state verification.",
   "currentTruth": {
     "publicMain": {
-      "status": "consolidated",
-      "commit": "c5dfae7c7108a89fd861cb286b3e9d03e3a17d85",
-      "originMain": "c5dfae7c7108a89fd861cb286b3e9d03e3a17d85"
+      "status": "verified_before_integration_push",
+      "verifiedHeadOriginAndRemoteBeforePush": "c5dfae7c7108a89fd861cb286b3e9d03e3a17d85",
+      "acceptedHashCloseoutCommit": "f5ab519b8393eb12197fa4d591d466e6517b79f7",
+      "nextWriteRequirement": "Re-read live git truth before treating any exact main commit as current."
     },
     "publicPrimaryRepo": "The public repo remains the primary collaboration repo for source, docs, tools, tests, RE notes, wave notes, state batons, agent reports, readiness notes, and compact proof summaries that are non-secret and non-payload.",
     "coordinationPolicy": {
@@ -18,7 +19,9 @@
         "coordination/RESOURCE_LEASES.md"
       ]
     },
-    "claimBoundary": "State refresh and next-baton docs only; no product source, product tests, runtime behavior, patch semantics, launch behavior, safe-copy behavior, Host/Join capability, runtime proof, release/publication action, Ghidra mutation, hard-payload boundary, or installed-game/original-BEA mutation changed.",
+    "wordingClassification": "No clearly stale non-validation public-candidate or curated-export wording requiring a docs edit was found.",
+    "releasePublicationStatus": "No release was built, published, signed, pushed as a package, or announced.",
+    "claimBoundary": "State refresh and next-baton docs only; no product source, product tests, package scripts, patch catalogs, release artifacts, AppCore, WinUI, CLI, runtime/proof scripts, Ghidra content, game files, installed game folder, original BEA.exe, runtime behavior, patch semantics, launch behavior, safe-copy behavior, Host/Join capability, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference claim, release publication, Ghidra mutation, hard-payload boundary, or installed-game/original-BEA mutation changed.",
     "productBaseline": "WinUI 3 remains the primary app, AppCore remains shared correctness logic, the C# CLI remains a support lane, and Python tooling remains repo/lab support.",
     "runtimeBoundaries": {
       "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint and source-bound copied-runtime proof exists",
@@ -26,13 +29,13 @@
       "staticReClosure": "static closure is not runtime, gameplay, visual, online, rebuild, or parity proof",
       "installedGameOriginalBea": "read-only"
     },
-    "hardPayloadBoundary": "Hard payloads, raw proof logs, screenshots/frame dumps, copied executable output, full Ghidra databases, secrets, .env files, local config, caches, and build/package output stay out of git and release ZIPs; use LOCAL_LAB_OVERLAY.md for local-only placement."
+    "hardPayloadBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, and local runtime caches stay out of git and release ZIPs; use LOCAL_LAB_OVERLAY.md for local-only placement."
   },
   "activeSlice": {
-    "name": "public-candidate-legacy-wording-map",
+    "name": "post-wording-repo-quality-state-verification",
     "status": "ready",
-    "goal": "from consolidated main, classify legacy public-candidate and curated-export wording in front-door/release-readiness docs, preserving intentional validation-template names and editing only one clearly stale docs-only wording issue if proven",
-    "claimBoundary": "docs/release-readiness wording only; no package script, product code, runtime, release publication, Host/Join, online, Ghidra, hard-payload, installed-game, or original-BEA claim changes"
+    "goal": "from clean main, confirm live git truth and state baton alignment before any write; make only a small docs/state baton correction if drift is proven, otherwise report no change",
+    "claimBoundary": "docs/state verification only; no package script, product code, runtime, release publication, Host/Join, online, Ghidra, hard-payload, installed-game, or original-BEA claim changes"
   },
   "validation": {
     "currentStateRefresh": "Validate with JSON parsing, stale-reference scan, docs/repo hygiene gates, public allowlist, hard-payload safety, and git diff checks.",
@@ -41,9 +44,9 @@
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "Start from clean consolidated main and re-read current front-door docs, release readiness pointers, goal.md, and state batons.",
-    "Use rg to classify legacy public-candidate and curated-export wording in README.RELEASE.md, RELEASE_SCOPE_AND_TEST_COMMANDS.md, tools/README.md, roadmap/repo-structure-and-archive-map.md, and release/readiness reference files.",
-    "Preserve active validation-template and allowlist names when they are intentional compatibility surfaces.",
+    "Start from clean main and verify HEAD, origin/main, and live remote refs/heads/main before writing.",
+    "Re-read goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json; confirm no stale consolidated-main hash references remain.",
+    "Treat the public-candidate/curated-export wording classification as no-op evidence unless a new concrete stale claim is proven.",
     "Keep package scripts, product behavior, patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of scope."
   ]
 }

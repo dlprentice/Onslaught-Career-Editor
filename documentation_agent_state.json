@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-26",
-  "currentFocus": "Public main is consolidated; docs/state truth now points to a bounded public-candidate/curated-export wording classification slice from main.",
+  "currentFocus": "Repo-quality hash closeout is accepted and the public-candidate/curated-export wording classification is closed with no docs edit needed; docs/state truth now points to a read-first main/state verification slice.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -20,9 +20,10 @@
   },
   "currentDocsTruth": {
     "publicMain": {
-      "status": "consolidated",
-      "commit": "c5dfae7c7108a89fd861cb286b3e9d03e3a17d85",
-      "originMain": "c5dfae7c7108a89fd861cb286b3e9d03e3a17d85"
+      "status": "verified_before_integration_push",
+      "verifiedHeadOriginAndRemoteBeforePush": "c5dfae7c7108a89fd861cb286b3e9d03e3a17d85",
+      "acceptedHashCloseoutCommit": "f5ab519b8393eb12197fa4d591d466e6517b79f7",
+      "nextWriteRequirement": "Re-read live git truth before treating any exact main commit as current."
     },
     "publicPrimaryRepo": "The public repo is the normal collaboration surface, not a sparse export.",
     "coordinationPolicy": {
@@ -34,9 +35,11 @@
         "coordination/RESOURCE_LEASES.md"
       ]
     },
-    "stateReconciliation": "goal.md, developer_agent_state.json, and documentation_agent_state.json now reflect consolidated main and point the next baton at a bounded public-candidate/curated-export wording classification slice from main.",
-    "claimBoundary": "Docs/state refresh only; no product/runtime/test behavior, release/publication, Host/Join, runtime proof, Ghidra, hard-payload, or installed-game/original-BEA mutation change.",
-    "localOnlyBoundary": "Local campaign logs, active thread/session IDs, raw proof evidence, local proof paths, copied executables, full Ghidra databases, secrets, and runtime caches stay out of tracked docs/state."
+    "stateReconciliation": "goal.md, developer_agent_state.json, and documentation_agent_state.json now record accepted hash-closeout evidence, close the wording classification as no-edit, and point the next baton at bounded public-main/state verification.",
+    "wordingClassification": "No clearly stale non-validation public-candidate or curated-export wording requiring a docs edit was found.",
+    "releasePublicationStatus": "No release was built, published, signed, pushed as a package, or announced.",
+    "claimBoundary": "Docs/state refresh only; no product source, product tests, package scripts, patch catalogs, release artifacts, AppCore, WinUI, CLI, runtime/proof scripts, Ghidra content, game files, installed game folder, original BEA.exe, product/runtime/test behavior, release/publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference claim, Ghidra, hard-payload, or installed-game/original-BEA mutation change.",
+    "localOnlyBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, local runtime caches, local campaign logs, active thread/session IDs, raw proof evidence, and local proof paths stay out of tracked docs/state."
   },
   "validation": {
     "currentStateRefresh": "Validate with JSON parsing, stale-reference scan, docs/repo hygiene gates, public allowlist, hard-payload safety, and git diff checks.",
@@ -45,9 +48,9 @@
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "Start from clean consolidated main and re-read current front-door docs, release readiness pointers, goal.md, and state batons.",
-    "Classify legacy public-candidate and curated-export wording in README.RELEASE.md, RELEASE_SCOPE_AND_TEST_COMMANDS.md, tools/README.md, roadmap/repo-structure-and-archive-map.md, and release/readiness reference files.",
-    "Edit only if the classification proves one clearly stale non-validation wording issue with a safe docs-only correction.",
-    "Keep product, runtime, release publication, Host/Join, Ghidra, hard-payload, and installed-game mutation claims bounded to accepted evidence."
+    "Start from clean main and verify HEAD, origin/main, and live remote refs/heads/main before writing.",
+    "Re-read goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json; confirm no stale consolidated-main hash references remain.",
+    "Treat the public-candidate/curated-export wording classification as no-op evidence unless a new concrete stale claim is proven.",
+    "Keep product, runtime, release publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, and installed-game mutation claims bounded to accepted evidence."
   ]
 }
