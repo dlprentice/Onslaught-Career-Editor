@@ -1109,6 +1109,104 @@ public class WinUiProductLaneTests
         Assert.That(renderedGroups, Is.SupersetOf(functionalAreas));
         Assert.That(mappedPatchKeys, Is.SupersetOf(visiblePatchKeys));
     }
+
+    [Test]
+    public void PatchBench_PresentationHelpersStayBehaviorFree()
+    {
+        string helperRoot = Path.Combine(TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Helpers");
+        string[] expectedHelperFiles =
+        {
+            "PatchBenchChoiceVisualState.cs",
+            "PatchBenchLaunchText.cs",
+            "PatchBenchMenuColorSelectionText.cs",
+            "PatchBenchPatchGroups.cs",
+            "PatchBenchSelectedProfileText.cs",
+        };
+        string[] actualHelperFiles = Directory.GetFiles(helperRoot, "PatchBench*.cs")
+            .Select(Path.GetFileName)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray()!;
+        Assert.That(actualHelperFiles, Is.EqualTo(expectedHelperFiles));
+
+        Dictionary<string, string> helpers = expectedHelperFiles.ToDictionary(
+            name => name,
+            name => ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", name),
+            StringComparer.OrdinalIgnoreCase);
+        string[] behaviorTokens =
+        {
+            "File.",
+            "Directory.",
+            "Process",
+            "Task",
+            "async ",
+            "await ",
+            "GameProfilePreflightService",
+            "GameProfileRuntimeService",
+            "GameProfileMusicReplacementService",
+            "GameProfileControlOptionsService",
+            "GameProfileManagedProcess",
+            "GameProfilePrepareReceipt",
+            "GameProfileLaunchPlan",
+            "BinaryPatchEngine",
+            "ApplyPatchesToFile",
+            "VerifyPatchTargetFile",
+            "RestoreFromBackup",
+            "BuildPatchTargetOptions",
+            "BuildLaunchPlan",
+            "BuildSelectedLaunchArguments",
+            "BuildSafeCopyContentSignature",
+            "TryBuildCopiedProfileLaunchPlan",
+            "BuildCurrentSafeCopyContentSignature",
+            "LaunchCopiedProfile",
+            "StopCopiedProfile",
+            "PrepareWindowedCompatibilityProfile",
+            "GameProfilePrepareOptions",
+            "GameProfilePrepareResult",
+            "GameProfileControlOptionsRequest",
+            "GameProfileMusicReplacementResult",
+            "StageMusicReplacement",
+            "RestoreMusicReplacement",
+            "PatchBenchHostOnlineSessionButton",
+            "PatchBenchJoinOnlineSessionButton",
+            "PatchBenchPublicMatchmakingButton",
+            "OnlineMultiplayerReadinessService",
+            "OnlineCompanionSessionReadinessSummary",
+            "OnlineSecondHost",
+            "PublicMatchmaking",
+            "OnslaughtToolkit-winui",
+            "README.RELEASE",
+            "GitHub Release",
+            "MSIX",
+        };
+        foreach ((string name, string text) in helpers)
+        {
+            foreach (string token in behaviorTokens)
+            {
+                Assert.That(text, Does.Not.Contain(token), $"{name} should stay presentation-only and must not contain behavior token {token}.");
+            }
+        }
+
+        string selectedProfileText = helpers["PatchBenchSelectedProfileText.cs"];
+        Assert.That(selectedProfileText, Does.Contain("SafeCopyProfilePreset"));
+        Assert.That(selectedProfileText, Does.Contain("BinaryPatchPlanBuilder.CompatibilityProfileId"));
+        Assert.That(selectedProfileText, Does.Not.Contain("GetSafeCopyProfilePreset"));
+        Assert.That(selectedProfileText, Does.Not.Contain("GetSafeCopyProfilePresets"));
+        Assert.That(selectedProfileText, Does.Not.Contain("ValidateVisibleSelection"));
+        Assert.That(selectedProfileText, Does.Not.Contain("BuildSelectedSpecs"));
+        Assert.That(selectedProfileText, Does.Not.Contain("BuildSelectionSignature"));
+        Assert.That(selectedProfileText, Does.Not.Contain("BuildSafeCopyProfilePatchKeys"));
+        Assert.That(selectedProfileText, Does.Not.Contain("SafeCopyProfileCatalog"));
+        Assert.That(selectedProfileText, Does.Not.Contain("ProfilePresetId"));
+        Assert.That(selectedProfileText, Does.Not.Contain("GetSelectedCreateMusicSwapPresetId"));
+        Assert.That(selectedProfileText, Does.Not.Contain("PatchBenchCreateMusicSwapPresetComboBox"));
+        Assert.That(selectedProfileText, Does.Not.Contain("PatchBenchConfigurationLaunchPresetComboBox"));
+
+        foreach ((string name, string text) in helpers.Where(pair => !string.Equals(pair.Key, "PatchBenchSelectedProfileText.cs", StringComparison.OrdinalIgnoreCase)))
+        {
+            Assert.That(text, Does.Not.Contain("BinaryPatchPlanBuilder"), $"{name} should not depend on patch-plan constants.");
+            Assert.That(text, Does.Not.Contain("SafeCopyProfilePreset"), $"{name} should not format safe-copy profile catalog data.");
+        }
+    }
     [Test]
     public void PatchBench_CodeRequiresAppOwnedWorkingCopyBeforeApply()
     {

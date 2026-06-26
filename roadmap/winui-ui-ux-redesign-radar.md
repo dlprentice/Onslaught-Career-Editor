@@ -59,6 +59,10 @@ This document tracks UI/UX debt that is too broad for a release-candidate polish
   titles, order, descriptions, and missing-group fail-closed text, while
   `BinaryPatchItemModel.FunctionalArea` and AppCore patch-selection,
   dependency, and conflict policy stay unchanged.
+- Windowed & Mods `PatchBench*` presentation helpers now have a static boundary
+  guard that blocks file/process APIs, safe-copy runtime services, patch
+  engines, launch-plan builders, Host/Join controls, and release/package
+  wording from those helpers.
 - Windowed & Mods selected-profile status/details text now uses a small WinUI
   presentation model/helper, while the page keeps profile matching, selected
   patch keys, `ProfilePresetId`, safe-copy manifests, launch, music, and online

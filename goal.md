@@ -116,6 +116,15 @@ contributor work.
   `FunctionalArea` mappings, selection/dependency/conflict policy, safe-copy
   creation/launch/music/online behavior, runtime proof, release packaging, or
   installed-game/original `BEA.exe` mutation rules.
+- Windowed & Mods PatchBench presentation-helper boundary guard is accepted in
+  `release/readiness/winui_patchbench_presentation_helper_boundary_guard_2026-06-25.md`.
+  The static test now enumerates the current `PatchBench*` helper files and
+  blocks behavior-bearing file/process, runtime-service, patch-engine,
+  launch-plan, Host/Join, matchmaking, and release/package tokens from those
+  helpers. WinUI primary lane, docs commands, Markdown links, hard-payload
+  safety, public allowlist, repo hygiene, state JSON, and whitespace diff
+  checks passed. This is test hardening only; no production WinUI code or user
+  behavior changed.
 - Windowed & Mods selected-profile text modularity is accepted in
   `release/readiness/winui_windowed_mods_selected_profile_text_modularity_2026-06-25.md`.
   Selected-profile status/details copy now flows through a small WinUI
