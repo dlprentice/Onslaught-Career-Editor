@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "Windowed & Mods patch-group helper modularity is accepted and staged; commit and push are pending.",
+  "currentFocus": "Windowed & Mods patch-group helper modularity is pushed as de1ccc0c; next slice is read-first Windowed & Mods modularity inspection.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -85,14 +85,12 @@
       "git diff --cached --check (PASS)",
       "Get-Process BEA,cdb,OnslaughtCareerEditor.WinUI -ErrorAction SilentlyContinue (PASS; no matching processes)"
     ],
-    "pendingForActiveSlice": [
-      "commit and push"
-    ]
+    "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Run process cleanup check for BEA/cdb/WinUI.",
-    "Commit and push the green patch-group helper source slice.",
-    "Rewrite goal.md to the next bounded executable slice after push."
+    "Inspect BinaryPatchesPage and PatchBench helpers for the next smallest presentation-only extraction or test-hardening candidate.",
+    "Use specialist and adversarial review before any nontrivial edit.",
+    "Keep patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of the next modularity slice unless evidence reveals a bounded bug."
   ],
   "winuiSelectedChoiceModularity": {
     "status": "validated_ready_for_commit",
@@ -302,8 +300,8 @@
     ]
   },
   "activeSlice": {
-    "name": "winui-windowed-mods-patch-group-helper-modularity",
-    "status": "accepted_ready_for_commit",
-    "claimBoundary": "Patch group titles/order/descriptions/missing-group text only; do not move patch rows, byte changes, FunctionalArea mappings, launch behavior, safe-copy behavior, music behavior, online/readiness gates, runtime proof, release packaging, or installed-game mutation rules."
+    "name": "windowed-mods-next-presentation-modularity-inspection",
+    "status": "ready_after_patch_group_helper_commit",
+    "claimBoundary": "read-first WinUI modularity inspection; do not move patch rows, byte changes, FunctionalArea mappings, launch behavior, safe-copy behavior, music behavior, online/readiness gates, runtime proof, release packaging, or installed-game mutation rules."
   }
 }

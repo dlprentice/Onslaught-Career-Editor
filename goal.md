@@ -7,13 +7,13 @@ Policy: `goal.policy.md`
 ## Current Slice
 
 Start the next bounded WinUI modularity inspection: read the Windowed & Mods
-`BinaryPatchesPage` surface and existing presentation helpers after the menu-
-color selected-status extraction, then choose one small extraction or test-
-hardening candidate only if it reduces code-behind duplication or strengthens a
-guard without moving patch semantics, launch arguments, safe-copy behavior,
-music behavior, online readiness, runtime proof, or release packaging. Keep this
-slice read-first unless exact evidence supports a narrow edit. Continue from
-this checkout:
+`BinaryPatchesPage` surface and existing `PatchBench*` presentation helpers
+after the patch-group helper extraction, then choose one small extraction or
+test-hardening candidate only if it reduces code-behind duplication or
+strengthens a guard without moving patch semantics, launch arguments, safe-copy
+behavior, music behavior, online readiness, runtime proof, or release
+packaging. Keep this slice read-first unless exact evidence supports a narrow
+edit. Continue from this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -111,7 +111,8 @@ contributor work.
   unchanged. Focused PatchBench tests, WinUI build, runtime UIA smoke, patch-
   plan regression tests, docs commands, Markdown links, hard-payload safety,
   public allowlist, repo hygiene, state JSON, and whitespace diff checks
-  passed. This did not change patch catalog rows, byte changes,
+  passed. The source slice is committed and pushed as `de1ccc0c`. This did not
+  change patch catalog rows, byte changes,
   `FunctionalArea` mappings, selection/dependency/conflict policy, safe-copy
   creation/launch/music/online behavior, runtime proof, release packaging, or
   installed-game/original `BEA.exe` mutation rules.
