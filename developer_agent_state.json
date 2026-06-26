@@ -5,7 +5,7 @@
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainStatus": "origin/main includes the PatchBench presentation-helper boundary guard commit 94e07124; advanced summary text modularity is locally validated and ready for commit/push.",
+    "publicMainStatus": "advanced summary text modularity source slice is committed locally as 0bf9f87a; closeout baton update is ready to push.",
     "policy": "public repo is primary for source/docs/tools/tests/RE notes/proof summaries/state; hard payloads remain maintainer-local ignored overlays"
   },
   "publicPrimaryMigration": {
@@ -50,8 +50,8 @@
   },
   "recentClosedSlice": {
     "name": "winui-windowed-mods-advanced-summary-text-modularity",
-    "status": "validated_ready_for_commit",
-    "commit": null,
+    "status": "committed_pending_push",
+    "commit": "0bf9f87a",
     "readinessNote": "release/readiness/winui_windowed_mods_advanced_summary_text_modularity_2026-06-25.md",
     "claimBoundary": "Presentation-only WinUI helper extraction: advanced BEA.exe-only selection-summary copy now lives in PatchBenchSelectedProfileText. BinaryPatchesPage still owns selected-key matching, profile classification, ProfilePresetId, safe-copy manifests/signatures, launch, music, and online logic.",
     "acceptedTruth": [
