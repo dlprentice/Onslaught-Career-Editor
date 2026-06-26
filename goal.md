@@ -103,6 +103,18 @@ contributor work.
   did not change patch rows, byte patches, safe-copy launch behavior, music
   replacement behavior, online status, runtime proof, AppCore correctness
   logic, release packaging, or installed-game mutation rules.
+- Windowed & Mods patch-group helper modularity is accepted in
+  `release/readiness/winui_windowed_mods_patch_group_helper_modularity_2026-06-25.md`.
+  Patch group titles, order, descriptions, and missing-group fail-closed
+  behavior now live in `PatchBenchPatchGroups`, while
+  `BinaryPatchItemModel.FunctionalArea` and AppCore patch policy remain
+  unchanged. Focused PatchBench tests, WinUI build, runtime UIA smoke, patch-
+  plan regression tests, docs commands, Markdown links, hard-payload safety,
+  public allowlist, repo hygiene, state JSON, and whitespace diff checks
+  passed. This did not change patch catalog rows, byte changes,
+  `FunctionalArea` mappings, selection/dependency/conflict policy, safe-copy
+  creation/launch/music/online behavior, runtime proof, release packaging, or
+  installed-game/original `BEA.exe` mutation rules.
 - Windowed & Mods selected-profile text modularity is accepted in
   `release/readiness/winui_windowed_mods_selected_profile_text_modularity_2026-06-25.md`.
   Selected-profile status/details copy now flows through a small WinUI

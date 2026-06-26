@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "Windowed & Mods menu-color selected-status text modularity is committed as 2abf0584; next slice is read-first Windowed & Mods modularity inspection.",
+  "currentFocus": "Windowed & Mods patch-group helper modularity is accepted and staged; commit and push are pending.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -19,7 +19,8 @@
     "winuiLaunchPresetSelectedState": "release/readiness/winui_windowed_mods_launch_preset_selected_state_2026-06-25.md",
     "winuiChoiceStyleHelperModularity": "release/readiness/winui_windowed_mods_choice_style_helper_modularity_2026-06-25.md",
     "winuiAssetLibraryExportFolderQol": "release/readiness/winui_asset_library_export_folder_qol_2026-06-25.md",
-    "winuiMenuColorTextModularity": "release/readiness/winui_windowed_mods_menu_color_text_modularity_2026-06-25.md"
+    "winuiMenuColorTextModularity": "release/readiness/winui_windowed_mods_menu_color_text_modularity_2026-06-25.md",
+    "winuiPatchGroupHelperModularity": "release/readiness/winui_windowed_mods_patch_group_helper_modularity_2026-06-25.md"
   },
   "publicPrimaryMigration": {
     "status": "validated_public_primary_with_maintainer_local_ignored_overlays",
@@ -68,26 +69,30 @@
       "git diff --check (PASS)"
     ],
     "activeSliceFocusedPassed": [
+      "Red check: dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench_VisibleCopyPromisesCopiedExecutableWorkflow|FullyQualifiedName~WinUiProductLaneTests.PatchBench_RendersEveryVisiblePatchFunctionalArea\" (FAIL as expected before helper existed)",
       "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench\" (PASS; 5 tests)",
       "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
       "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiPatchBenchInteractionSmokeTests.PatchBench_ProfileAndMenuColorChoices_UpdateSelectedStateThroughUia\" (PASS; 1 native UIA smoke)",
       "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~BinaryPatchRegressionTests.BinaryPatchPlanBuilder_RejectsMultipleFrontendColorPresets|FullyQualifiedName~BinaryPatchRegressionTests.BinaryPatchPlanBuilder_SafeCopyProfilePresetsCarryExpectedPolicy\" (PASS; 2 tests)"
     ],
     "activeSliceBroadPassed": [
-      "npm run build:winui (PASS; 0 warnings, 0 errors)",
-      "npm run test:winui-primary-lane (PASS; solution build 0 warnings/errors, AppCore 1178/1178, WinUI 87 passed / 2 skipped catalog-dependent rows)",
-      "npm run test:doc-commands (PASS; 4283 documented npm commands checked; public package command check passed)",
-      "npm run test:md-links (PASS; 3631 Markdown files scanned, 6125 local links checked)",
-      "npm run test:hard-payload-safety (PASS; 19331 public candidate files checked)",
-      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19331; submodule candidate files 19515; allowed private-only hard-payload/scratch paths 5557)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18481 explicit text files checked)"
+      "npm run test:doc-commands (PASS; 4295 documented npm commands checked; public package command check passed)",
+      "npm run test:md-links (PASS; 3633 Markdown files scanned, 6125 local links checked)",
+      "npm run test:hard-payload-safety (PASS; 19333 public candidate files checked)",
+      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19333; submodule candidate files 19517; allowed private-only hard-payload/scratch paths 5557)",
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18486 explicit text files checked)",
+      "state JSON parse (PASS; developer_agent_state.json and documentation_agent_state.json)",
+      "git diff --cached --check (PASS)",
+      "Get-Process BEA,cdb,OnslaughtCareerEditor.WinUI -ErrorAction SilentlyContinue (PASS; no matching processes)"
     ],
-    "pendingForActiveSlice": []
+    "pendingForActiveSlice": [
+      "commit and push"
+    ]
   },
   "nextSteps": [
-    "Inspect BinaryPatchesPage and PatchBench helpers for the next smallest presentation-only extraction or test-hardening candidate.",
-    "Use specialist and adversarial review before any nontrivial edit.",
-    "Keep patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of the next modularity slice unless evidence reveals a bounded bug."
+    "Run process cleanup check for BEA/cdb/WinUI.",
+    "Commit and push the green patch-group helper source slice.",
+    "Rewrite goal.md to the next bounded executable slice after push."
   ],
   "winuiSelectedChoiceModularity": {
     "status": "validated_ready_for_commit",
@@ -297,8 +302,8 @@
     ]
   },
   "activeSlice": {
-    "name": "windowed-mods-next-presentation-modularity-inspection",
-    "status": "ready_after_menu_color_commit",
-    "claimBoundary": "read-first WinUI modularity inspection; do not move patch rows, byte changes, launch behavior, safe-copy behavior, music behavior, online/readiness gates, runtime proof, release packaging, or installed-game mutation rules."
+    "name": "winui-windowed-mods-patch-group-helper-modularity",
+    "status": "accepted_ready_for_commit",
+    "claimBoundary": "Patch group titles/order/descriptions/missing-group text only; do not move patch rows, byte changes, FunctionalArea mappings, launch behavior, safe-copy behavior, music behavior, online/readiness gates, runtime proof, release packaging, or installed-game mutation rules."
   }
 }

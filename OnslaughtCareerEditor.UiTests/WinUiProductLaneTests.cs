@@ -347,6 +347,7 @@ public class WinUiProductLaneTests
         string launchTextHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchLaunchText.cs");
         string menuColorTextHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchMenuColorSelectionText.cs");
         string menuColorKindModel = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchMenuColorSelectionKind.cs");
+        string patchGroupsHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchPatchGroups.cs");
         string settingsXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "SettingsPage.xaml");
 
         Assert.That(shellXaml, Does.Contain("Windowed &amp; Mods"));
@@ -610,15 +611,30 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("StillUnproven"));
         Assert.That(pageXaml, Does.Contain("ProofReference"));
         Assert.That(pageXaml, Does.Contain("PatchBenchSafeCopySourceStatus"));
-        Assert.That(code, Does.Contain("Frontend Color Mods"));
-        Assert.That(code, Does.Contain("Goodies Gallery Mods"));
-        Assert.That(code, Does.Contain("Debug Camera Mods"));
-        Assert.That(code, Does.Contain("Controls & Pause"));
-        Assert.That(code, Does.Contain("visible patch rows without a rendered group"));
+        Assert.That(code, Does.Contain("_patchGroups = PatchBenchPatchGroups.Build(_allPatchItems);"));
+        Assert.That(code, Does.Not.Contain("private static List<BinaryPatchGroupModel> BuildPatchGroups"));
+        Assert.That(patchGroupsHelper, Does.Contain("internal static class PatchBenchPatchGroups"));
+        Assert.That(patchGroupsHelper, Does.Contain("public static List<BinaryPatchGroupModel> Build(IEnumerable<BinaryPatchItemModel> items)"));
+        Assert.That(patchGroupsHelper, Does.Contain("Frontend Color Mods"));
+        Assert.That(patchGroupsHelper, Does.Contain("Goodies Gallery Mods"));
+        Assert.That(patchGroupsHelper, Does.Contain("Debug Camera Mods"));
+        Assert.That(patchGroupsHelper, Does.Contain("Controls & Pause"));
+        Assert.That(patchGroupsHelper, Does.Contain("visible patch rows without a rendered group"));
         Assert.That(code, Does.Contain("Version overlay support payload (auto-selected)"));
-        Assert.That(code, Does.Contain("these affect frontend clear-screen backgrounds, not textures, fonts, or HUD colors"));
-        Assert.That(code, Does.Contain("These may be unstable; open Details on a row for exactly what has been tested."));
-        Assert.That(code, Does.Contain("Open Details on a row for tested behavior, remaining limits, and proof notes."));
+        Assert.That(patchGroupsHelper, Does.Contain("these affect frontend clear-screen backgrounds, not textures, fonts, or HUD colors"));
+        Assert.That(patchGroupsHelper, Does.Contain("These may be unstable; open Details on a row for exactly what has been tested."));
+        Assert.That(patchGroupsHelper, Does.Contain("Open Details on a row for tested behavior, remaining limits, and proof notes."));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("frontend_clear_screen_"));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("BinaryPatchPlanBuilder"));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("BinaryPatchEngine"));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("BuildSafeCopyProfilePatchKeys"));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("ApplyPatchesToFile"));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("VerifyPatchTargetFile"));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("GameProfile"));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("Process"));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("File."));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("Task"));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("Online"));
         Assert.That(code, Does.Contain("s_frontendColorPatchKeys"));
         Assert.That(code, Does.Contain("IsFrontendColorPatchKey"));
         Assert.That(code, Does.Contain("_lastCopiedProfileContentSignature"));
@@ -1040,6 +1056,7 @@ public class WinUiProductLaneTests
     {
         string code = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs");
         string pageXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml");
+        string patchGroupsHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchPatchGroups.cs");
         string itemModel = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "BinaryPatchItemModel.cs");
         string catalogJson = ReadRepoFile("patches", "catalog", "patches.v2.json");
         int functionalAreaStart = itemModel.IndexOf("public string FunctionalArea", StringComparison.Ordinal);
@@ -1053,8 +1070,21 @@ public class WinUiProductLaneTests
         HashSet<string> mappedPatchKeys = explicitFunctionalAreaMappings
             .Select(match => match.Groups["key"].Value)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        HashSet<string> renderedGroups = Regex.Matches(code, "AddGroup\\(\\s*\"(?<area>[^\"]+)\"")
-            .Select(match => match.Groups["area"].Value)
+        string[] expectedRenderedGroups =
+        {
+            "Display & Startup|Windowed startup, wider display-mode acceptance, and the optional fullscreen fallback all live together here.",
+            "Graphics & Hardware Overrides|Use these when you want the safe copy to use executable defaults instead of legacy GPU override rules.",
+            "Frontend Color Mods|Menu background color choices for the safe copy. Choose only one color preset at a time; these affect frontend clear-screen backgrounds, not textures, fonts, or HUD colors.",
+            "Goodies Gallery Mods|Opt-in Goodies gallery display changes for the safe copy. These do not edit saves or permanently award Goodies.",
+            "Debug Camera Mods|Experimental debug-camera changes for safe copies only. These may be unstable; open Details on a row for exactly what has been tested.",
+            "Controls & Pause|Experimental safe-copy control changes. Open Details on a row for tested behavior, remaining limits, and proof notes.",
+            "UI & Diagnostics|Small visible markers and diagnostics that make a modded safe copy easier to recognize.",
+        };
+        string[] renderedGroupDefinitions = Regex.Matches(patchGroupsHelper, "AddGroup\\(\\s*\"(?<area>[^\"]+)\"\\s*,\\s*\"(?<description>[^\"]+)\"")
+            .Select(match => $"{match.Groups["area"].Value}|{match.Groups["description"].Value}")
+            .ToArray();
+        HashSet<string> renderedGroups = renderedGroupDefinitions
+            .Select(definition => definition.Split('|')[0])
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         using JsonDocument catalog = JsonDocument.Parse(catalogJson);
         HashSet<string> visiblePatchKeys = catalog.RootElement.GetProperty("patches").EnumerateArray()
@@ -1063,17 +1093,29 @@ public class WinUiProductLaneTests
             .Select(patch => patch.GetProperty("id").GetString()!)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+        Assert.That(code, Does.Contain("PatchBenchPatchGroups.Build(_allPatchItems)"));
+        Assert.That(code, Does.Not.Contain("private static List<BinaryPatchGroupModel> BuildPatchGroups"));
+        Assert.That(renderedGroupDefinitions, Is.EqualTo(expectedRenderedGroups));
+        Assert.That(patchGroupsHelper, Does.Contain("visible patch rows without a rendered group"));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("frontend_clear_screen_"));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("BinaryPatchPlanBuilder"));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("BinaryPatchEngine"));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("GameProfile"));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("File."));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("Process"));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("Online"));
+
         Assert.That(functionalAreas, Is.Not.Empty);
         Assert.That(renderedGroups, Is.SupersetOf(functionalAreas));
         Assert.That(mappedPatchKeys, Is.SupersetOf(visiblePatchKeys));
     }
-
     [Test]
     public void PatchBench_CodeRequiresAppOwnedWorkingCopyBeforeApply()
     {
         string code = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs");
         string pageXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml");
         string itemModel = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "BinaryPatchItemModel.cs");
+        string patchGroupsHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchPatchGroups.cs");
         string launchTextHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchLaunchText.cs");
         string launchReadinessTextState = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchLaunchReadinessTextState.cs");
         string launchReadinessTextResult = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchLaunchReadinessTextResult.cs");
@@ -1220,7 +1262,7 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("Enhanced Profile Preview selected. Patch rows match visible safe-copy mods"));
         Assert.That(code, Does.Contain("pre-fills copied-options controls for config 1 and mouse sensitivity 2.25"));
         Assert.That(code, Does.Contain("\"extra_graphics_default_on\", \"ignore_cardid_tweak_overrides\""));
-        Assert.That(code, Does.Contain("UI & Diagnostics"));
+        Assert.That(patchGroupsHelper, Does.Contain("UI & Diagnostics"));
         Assert.That(itemModel, Does.Contain("Shows a small PATCHED marker"));
         Assert.That(code, Does.Contain("BinaryPatchEngine.ApplyPatchesToFile(BuildPatchTargetOptions(exePath), selected)"));
         Assert.That(code, Does.Contain("GameProfilePreflightService.PrepareWindowedCompatibilityProfile"));
