@@ -1600,11 +1600,42 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("PatchBenchCopiedProfileReceipt.Text"));
         Assert.That(code, Does.Contain("Included changes"));
         Assert.That(code, Does.Contain("Still not included"));
-        Assert.That(code, Does.Contain("No Host/Join or online multiplayer"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("No Host/Join or online multiplayer"));
         Assert.That(safeCopyOutcomeText, Does.Contain("Play will run BEA.exe from safe copy folder"));
         Assert.That(code, Does.Not.Contain("Play will run BEA.exe from safe copy: {result.TargetGameRoot}"));
         Assert.That(code, Does.Not.Contain("PatchBenchHostOnlineSessionButton"));
         Assert.That(code, Does.Not.Contain("PatchBenchJoinOnlineSessionButton"));
+    }
+
+    [Test]
+    public void PatchBench_SafeCopyStatusAndReceiptFallbackCopyUsesPresentationHelper()
+    {
+        string code = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs");
+        string safeCopyOutcomeText = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchSafeCopyOutcomeText.cs");
+
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.HostJoinReceiptBoundary"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildCanceledSummary()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildCanceledOperationLog()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildFailedSummary()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildFailedReceipt()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildRestoredTrackedLaunchSummary()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildRestoredTrackedLaunchReceipt()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildRestoredTrackedLaunchStatus()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildSourceChangedSummary("));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildSourceChangedReceipt("));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildSourceChangedLaunchStatus("));
+
+        Assert.That(safeCopyOutcomeText, Does.Contain("public const string HostJoinReceiptBoundary = \"No Host/Join or online multiplayer\";"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Safe copy creation canceled."));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Safe copy creation canceled before any copy or patch operation started."));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Safe game copy preparation failed."));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Safe copy preparation failed before a receipt could be written. The installed game was not changed."));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Tracked safe-copy process restored from the app launch record. Create a new safe copy to write a fresh receipt for the current selections."));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Source changed while a safe copy process is still tracked. Stop it and create a new safe copy to write a fresh receipt."));
+
+        Assert.That(code, Does.Not.Contain("\"Safe copy creation canceled.\""));
+        Assert.That(code, Does.Not.Contain("\"Safe copy preparation failed before a receipt could be written. The installed game was not changed.\""));
+        Assert.That(code, Does.Not.Contain("const string hostJoinBoundary = \"No Host/Join or online multiplayer\";"));
     }
 
     [Test]

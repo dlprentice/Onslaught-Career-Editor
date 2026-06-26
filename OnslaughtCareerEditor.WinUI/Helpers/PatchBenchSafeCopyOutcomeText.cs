@@ -4,6 +4,64 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 {
     internal static class PatchBenchSafeCopyOutcomeText
     {
+        public const string HostJoinReceiptBoundary = "No Host/Join or online multiplayer";
+
+        public static string BuildCanceledSummary()
+        {
+            return "Safe copy creation canceled.";
+        }
+
+        public static string BuildCanceledOperationLog()
+        {
+            return "Safe copy creation canceled before any copy or patch operation started.";
+        }
+
+        public static string BuildFailedSummary()
+        {
+            return "Safe game copy preparation failed.";
+        }
+
+        public static string BuildFailedReceipt()
+        {
+            return "Safe copy preparation failed before a receipt could be written. The installed game was not changed.";
+        }
+
+        public static string BuildRestoredTrackedLaunchSummary()
+        {
+            return "A safe copy process from this app launch record is still tracked.";
+        }
+
+        public static string BuildRestoredTrackedLaunchReceipt()
+        {
+            return "Tracked safe-copy process restored from the app launch record. Create a new safe copy to write a fresh receipt for the current selections.";
+        }
+
+        public static string BuildRestoredTrackedLaunchStatus()
+        {
+            return "A safe-copy BEA.exe process launched by this app is still tracked from a saved app launch record. Stop it before preparing or launching another safe copy.";
+        }
+
+        public static string BuildSourceChangedSummary(bool hasTrackedSafeCopyLaunch)
+        {
+            return hasTrackedSafeCopyLaunch
+                ? "Source changed while a safe copy process is still tracked."
+                : "No safe game copy prepared in this session.";
+        }
+
+        public static string BuildSourceChangedReceipt(bool hasTrackedSafeCopyLaunch)
+        {
+            return hasTrackedSafeCopyLaunch
+                ? "Source changed while a safe copy process is still tracked. Stop it and create a new safe copy to write a fresh receipt."
+                : "Create a safe copy to see the exact profile, included changes, launch modifiers, savegame/music/control choices, and limits.";
+        }
+
+        public static string BuildSourceChangedLaunchStatus(bool hasTrackedSafeCopyLaunch)
+        {
+            return hasTrackedSafeCopyLaunch
+                ? "A safe copy process is still tracked. Stop it before preparing another safe copy."
+                : PatchBenchLaunchText.BuildBoundary("No safe copy launch attempted.");
+        }
+
         public static string BuildPreparedSummary(PatchBenchSafeCopyOutcomeTextState state)
         {
             return

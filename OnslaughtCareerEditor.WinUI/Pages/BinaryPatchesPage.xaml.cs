@@ -1513,8 +1513,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     "Create safe copy?",
                     $"The app will copy the selected game folder into its own safe workspace, then patch only that copied BEA.exe.\n\nSource folder:\n{sourceGameRoot}\n\nDestination root:\n{options.OutputRoot}\n\nThis can take a few minutes and may require several GB of free disk space. The Steam/game install stays unchanged."))
             {
-                PatchBenchCopiedProfileSummary.Text = "Safe copy creation canceled.";
-                OperationLogTextBox.Text = "Safe copy creation canceled before any copy or patch operation started.";
+                PatchBenchCopiedProfileSummary.Text = PatchBenchSafeCopyOutcomeText.BuildCanceledSummary();
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.BuildCanceledOperationLog();
                 AppStatusService.SetStatus("Windowed & Mods: safe copy creation canceled");
                 return;
             }
@@ -1605,9 +1605,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _lastCopiedProfileCreateMusicSwapPresetId = null;
                 _lastMusicReplacementResult = null;
                 ClearMusicTrackChoices();
-                PatchBenchCopiedProfileSummary.Text = "Safe game copy preparation failed.";
-                PatchBenchCopiedProfileReceipt.Text =
-                    "Safe copy preparation failed before a receipt could be written. The installed game was not changed.";
+                PatchBenchCopiedProfileSummary.Text = PatchBenchSafeCopyOutcomeText.BuildFailedSummary();
+                PatchBenchCopiedProfileReceipt.Text = PatchBenchSafeCopyOutcomeText.BuildFailedReceipt();
                 PatchBenchCopiedProfileLaunchPlan.Text = string.Empty;
                 PatchBenchCopiedProfileLaunchStatus.Text = PatchBenchLaunchText.BuildBoundary("No safe copy launch attempted.");
                 PatchBenchMusicReplacementStatus.Text = DefaultMusicReplacementStatus;
@@ -2184,7 +2183,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private static string BuildSafeCopyReceiptText(GameProfilePrepareReceipt receipt)
         {
-            const string hostJoinBoundary = "No Host/Join or online multiplayer";
+            string hostJoinBoundary = PatchBenchSafeCopyOutcomeText.HostJoinReceiptBoundary;
             var builder = new StringBuilder();
             builder.AppendLine(receipt.Headline);
             foreach (GameProfileReceiptLine line in receipt.Lines)
@@ -2285,11 +2284,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             _managedCopiedProfileProcess = registered.Process;
             _lastCopiedProfileRoot = registered.Process.WorkingDirectory;
-            PatchBenchCopiedProfileSummary.Text = "A safe copy process from this app launch record is still tracked.";
-            PatchBenchCopiedProfileReceipt.Text =
-                "Tracked safe-copy process restored from the app launch record. Create a new safe copy to write a fresh receipt for the current selections.";
-            PatchBenchCopiedProfileLaunchStatus.Text =
-                "A safe-copy BEA.exe process launched by this app is still tracked from a saved app launch record. Stop it before preparing or launching another safe copy.";
+            PatchBenchCopiedProfileSummary.Text = PatchBenchSafeCopyOutcomeText.BuildRestoredTrackedLaunchSummary();
+            PatchBenchCopiedProfileReceipt.Text = PatchBenchSafeCopyOutcomeText.BuildRestoredTrackedLaunchReceipt();
+            PatchBenchCopiedProfileLaunchStatus.Text = PatchBenchSafeCopyOutcomeText.BuildRestoredTrackedLaunchStatus();
             PatchBenchCopiedProfileLaunchPlan.Text =
                 $"\"{registered.Process.ExecutablePath}\" {string.Join(" ", registered.Process.Arguments)}".TrimEnd();
         }
@@ -2347,16 +2344,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _managedCopiedProfileProcess = null;
             }
 
-            PatchBenchCopiedProfileSummary.Text = _managedCopiedProfileProcess is null
-                ? "No safe game copy prepared in this session."
-                : "Source changed while a safe copy process is still tracked.";
-            PatchBenchCopiedProfileReceipt.Text = _managedCopiedProfileProcess is null
-                ? "Create a safe copy to see the exact profile, included changes, launch modifiers, savegame/music/control choices, and limits."
-                : "Source changed while a safe copy process is still tracked. Stop it and create a new safe copy to write a fresh receipt.";
+            bool hasTrackedSafeCopyLaunch = _managedCopiedProfileProcess is not null;
+            PatchBenchCopiedProfileSummary.Text = PatchBenchSafeCopyOutcomeText.BuildSourceChangedSummary(hasTrackedSafeCopyLaunch);
+            PatchBenchCopiedProfileReceipt.Text = PatchBenchSafeCopyOutcomeText.BuildSourceChangedReceipt(hasTrackedSafeCopyLaunch);
             PatchBenchCopiedProfileLaunchPlan.Text = string.Empty;
-            PatchBenchCopiedProfileLaunchStatus.Text = _managedCopiedProfileProcess is null
-                ? PatchBenchLaunchText.BuildBoundary("No safe copy launch attempted.")
-                : "A safe copy process is still tracked. Stop it before preparing another safe copy.";
+            PatchBenchCopiedProfileLaunchStatus.Text = PatchBenchSafeCopyOutcomeText.BuildSourceChangedLaunchStatus(hasTrackedSafeCopyLaunch);
             PatchBenchMusicReplacementStatus.Text = DefaultMusicReplacementStatus;
             ClearMusicTrackChoices();
         }
