@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-26",
-  "currentFocus": "Accepted coordination policy/state integration is being closed out, and the next baton is a main-based repo-quality, modularity, and stale-doc cleanup slice.",
+  "currentFocus": "Public main is consolidated; docs/state truth now points to a bounded public-candidate/curated-export wording classification slice from main.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -19,35 +19,35 @@
     "roadmapIndex": "roadmap/ROADMAP-INDEX.md"
   },
   "currentDocsTruth": {
+    "publicMain": {
+      "status": "consolidated",
+      "commit": "7e0f856c216c14bc538c55b1c6f6df99509f585a",
+      "originMain": "7e0f856c216c14bc538c55b1c6f6df99509f585a"
+    },
     "publicPrimaryRepo": "The public repo is the normal collaboration surface, not a sparse export.",
-    "coordinationPolicyIntegration": {
-      "status": "accepted_prior_integration",
-      "previousCampaignId": "20260626T024429Z-public-primary-coordination",
-      "acceptedBootstrapCommit": "2622b030374db46d395d92327f7da7d32253fb43",
-      "acceptedIntegrationCommit": "286fad8a5f5175150d1d148b06d8309c29656ea3",
-      "integrationBranch": "origin/campaign/20260626T024429Z-public-primary-coordination/integration-001",
-      "closeoutContinuationBranch": "campaign/20260626T124649Z-branch-consolidation-repo-quality/coordination-branch-closeout-001",
-      "docsAdded": [
+    "coordinationPolicy": {
+      "status": "durable_policy_on_main",
+      "docs": [
         "coordination/README.md",
         "coordination/WORKSTREAM_CONTRACT.md",
         "coordination/REPORT_CONTRACT.md",
         "coordination/RESOURCE_LEASES.md"
       ]
     },
-    "stateReconciliation": "goal.md, developer_agent_state.json, and documentation_agent_state.json now reflect accepted coordination policy/state integration and point the next baton at bounded repo-quality/modularity/stale-doc cleanup from main after consolidation.",
-    "claimBoundary": "Docs/state closeout only; no product/runtime/test behavior, release/publication, Host/Join, runtime proof, Ghidra, hard-payload, or installed-game/original-BEA mutation change.",
+    "stateReconciliation": "goal.md, developer_agent_state.json, and documentation_agent_state.json now reflect consolidated main and point the next baton at a bounded public-candidate/curated-export wording classification slice from main.",
+    "claimBoundary": "Docs/state refresh only; no product/runtime/test behavior, release/publication, Host/Join, runtime proof, Ghidra, hard-payload, or installed-game/original-BEA mutation change.",
     "localOnlyBoundary": "Local campaign logs, active thread/session IDs, raw proof evidence, local proof paths, copied executables, full Ghidra databases, secrets, and runtime caches stay out of tracked docs/state."
   },
   "validation": {
-    "closeout": "Closeout validation results live in the local campaign report for coordination-branch-closeout-001.",
+    "currentStateRefresh": "Validate with JSON parsing, stale-reference scan, docs/repo hygiene gates, public allowlist, hard-payload safety, and git diff checks.",
     "nextSlice": "Use docs/state gates for documentation-only cleanup and add the relevant WinUI/AppCore gates before claiming any code or UI behavior change."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "After main contains the accepted coordination closeout, start from clean main and re-read current front-door docs, goal.md, and state batons.",
-    "Use rg to find stale acceptance/campaign wording, outdated state pointers, and recent Windowed & Mods modularity follow-up candidates.",
-    "Select exactly one narrow path family with clear ownership before editing.",
-    "Keep product, runtime, release, Host/Join, Ghidra, hard-payload, and installed-game mutation claims bounded to accepted evidence."
+    "Start from clean consolidated main and re-read current front-door docs, release readiness pointers, goal.md, and state batons.",
+    "Classify legacy public-candidate and curated-export wording in README.RELEASE.md, RELEASE_SCOPE_AND_TEST_COMMANDS.md, tools/README.md, roadmap/repo-structure-and-archive-map.md, and release/readiness reference files.",
+    "Edit only if the classification proves one clearly stale non-validation wording issue with a safe docs-only correction.",
+    "Keep product, runtime, release publication, Host/Join, Ghidra, hard-payload, and installed-game mutation claims bounded to accepted evidence."
   ]
 }

@@ -1,17 +1,16 @@
 {
   "lastUpdated": "2026-06-26",
-  "branch": "campaign/20260626T124649Z-branch-consolidation-repo-quality/coordination-branch-closeout-001",
-  "currentFocus": "Accepted coordination policy/state integration is being closed out so the next executable baton can start from main on repo-quality, modularity, and stale-doc cleanup.",
+  "branch": "main",
+  "currentFocus": "Public main is consolidated; the next executable baton is a public-candidate/curated-export wording classification slice from main with docs-only correction authority if one stale non-validation issue is proven.",
   "currentTruth": {
+    "publicMain": {
+      "status": "consolidated",
+      "commit": "7e0f856c216c14bc538c55b1c6f6df99509f585a",
+      "originMain": "7e0f856c216c14bc538c55b1c6f6df99509f585a"
+    },
     "publicPrimaryRepo": "The public repo remains the primary collaboration repo for source, docs, tools, tests, RE notes, wave notes, state batons, agent reports, readiness notes, and compact proof summaries that are non-secret and non-payload.",
-    "coordinationPolicyIntegration": {
-      "status": "accepted_prior_integration",
-      "previousCampaignId": "20260626T024429Z-public-primary-coordination",
-      "acceptedBootstrapCommit": "2622b030374db46d395d92327f7da7d32253fb43",
-      "acceptedIntegrationCommit": "286fad8a5f5175150d1d148b06d8309c29656ea3",
-      "integrationBranch": "origin/campaign/20260626T024429Z-public-primary-coordination/integration-001",
-      "closeoutContinuationBranch": "campaign/20260626T124649Z-branch-consolidation-repo-quality/coordination-branch-closeout-001",
-      "scope": "durable coordination policy plus canonical goal/state reconciliation",
+    "coordinationPolicy": {
+      "status": "durable_policy_on_main",
       "docs": [
         "coordination/README.md",
         "coordination/WORKSTREAM_CONTRACT.md",
@@ -19,7 +18,7 @@
         "coordination/RESOURCE_LEASES.md"
       ]
     },
-    "claimBoundary": "Coordination closeout and next-baton docs/state only; no product source, product tests, runtime behavior, patch semantics, launch behavior, safe-copy behavior, Host/Join capability, runtime proof, release/publication action, Ghidra mutation, hard-payload boundary, or installed-game/original-BEA mutation changed.",
+    "claimBoundary": "State refresh and next-baton docs only; no product source, product tests, runtime behavior, patch semantics, launch behavior, safe-copy behavior, Host/Join capability, runtime proof, release/publication action, Ghidra mutation, hard-payload boundary, or installed-game/original-BEA mutation changed.",
     "productBaseline": "WinUI 3 remains the primary app, AppCore remains shared correctness logic, the C# CLI remains a support lane, and Python tooling remains repo/lab support.",
     "runtimeBoundaries": {
       "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint and source-bound copied-runtime proof exists",
@@ -30,21 +29,21 @@
     "hardPayloadBoundary": "Hard payloads, raw proof logs, screenshots/frame dumps, copied executable output, full Ghidra databases, secrets, .env files, local config, caches, and build/package output stay out of git and release ZIPs; use LOCAL_LAB_OVERLAY.md for local-only placement."
   },
   "activeSlice": {
-    "name": "post-consolidation-repo-quality-modularity-stale-doc-cleanup",
-    "status": "next_from_main_after_coordination_closeout_consolidation",
-    "goal": "from consolidated main, perform a read-first scan and choose one bounded repo-quality, modularity, or stale-doc cleanup with clear ownership and matching validation",
-    "claimBoundary": "docs/state/repo-quality first; product code only after fresh file review and clear lease; no runtime, release, Host/Join, online, Ghidra, hard-payload, installed-game, or original-BEA claim changes"
+    "name": "public-candidate-legacy-wording-map",
+    "status": "ready",
+    "goal": "from consolidated main, classify legacy public-candidate and curated-export wording in front-door/release-readiness docs, preserving intentional validation-template names and editing only one clearly stale docs-only wording issue if proven",
+    "claimBoundary": "docs/release-readiness wording only; no package script, product code, runtime, release publication, Host/Join, online, Ghidra, hard-payload, installed-game, or original-BEA claim changes"
   },
   "validation": {
-    "closeout": "Closeout validation results live in the local campaign report for coordination-branch-closeout-001.",
+    "currentStateRefresh": "Validate with JSON parsing, stale-reference scan, docs/repo hygiene gates, public allowlist, hard-payload safety, and git diff checks.",
     "nextSlice": "Use docs/state gates for documentation-only cleanup and add the relevant WinUI/AppCore gates before claiming any code or UI behavior change."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "After main contains the accepted coordination closeout, start from clean main and re-read current front-door docs, goal.md, and state batons.",
-    "Use rg to find stale acceptance/campaign wording, outdated state pointers, and recent Windowed & Mods modularity follow-up candidates.",
-    "Select exactly one narrow path family with clear ownership before editing.",
-    "Keep patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of scope unless fresh evidence reveals a bounded bug."
+    "Start from clean consolidated main and re-read current front-door docs, release readiness pointers, goal.md, and state batons.",
+    "Use rg to classify legacy public-candidate and curated-export wording in README.RELEASE.md, RELEASE_SCOPE_AND_TEST_COMMANDS.md, tools/README.md, roadmap/repo-structure-and-archive-map.md, and release/readiness reference files.",
+    "Preserve active validation-template and allowlist names when they are intentional compatibility surfaces.",
+    "Keep package scripts, product behavior, patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of scope."
   ]
 }

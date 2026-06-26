@@ -6,23 +6,17 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Start the next bounded repo-quality slice from `main` after the accepted
-coordination-policy branch stack has been consolidated. Use a read-first pass
-to find one narrow stale-doc, state-baton, or modularity cleanup candidate, then
-make the smallest safe edit with matching local validation.
-
-This closeout branch,
-`campaign/20260626T124649Z-branch-consolidation-repo-quality/coordination-branch-closeout-001`,
-continues accepted coordination integration commit
-`286fad8a5f5175150d1d148b06d8309c29656ea3` only to remove completed
-pre-acceptance wording and prepare this next executable baton.
+Start the first bounded repo-quality wave from consolidated `main` by
+classifying remaining legacy public-candidate and curated-export wording in
+front-door and release-readiness docs. Keep it read-first and path-scoped; edit
+only if the classification proves one clearly stale non-validation wording issue
+with a safe docs-only correction.
 
 ## Current Truth
 
-- The coordination policy/state integration on
-  `origin/campaign/20260626T024429Z-public-primary-coordination/integration-001`
-  was accepted at commit `286fad8a5f5175150d1d148b06d8309c29656ea3`.
-- Coordination contracts in `coordination/` are now the durable policy for
+- Public `main` and `origin/main` are consolidated at commit
+  `7e0f856c216c14bc538c55b1c6f6df99509f585a`.
+- Coordination contracts in `coordination/` are the durable policy for
   coordinator, worker, reviewer, integration, acceptance, path-ownership,
   resource-lease, report, and local-log boundaries.
 - The public repo remains the primary collaboration repo for source, docs,
@@ -59,19 +53,21 @@ pre-acceptance wording and prepare this next executable baton.
 
 ## Next Executable Work
 
-1. Start from the consolidated `main` branch with a clean status and current
-   branch truth; if `main` moved after this baton, re-read the changed docs and
-   state before editing.
-2. Run a read-first stale-doc/state/modularity scan with `rg` over the front
-   door docs, state batons, roadmap/release pointers, and the recent Windowed &
-   Mods modularity readiness notes.
-3. Select one narrow path family with clear ownership: a stale docs/state
-   cleanup, or a small Windowed & Mods presentation-helper modularity follow-up
-   only if the code lease is clear and current files still justify it.
-4. Preserve existing product behavior unless a concrete, bounded bug is found
-   and documented before editing.
-5. Validate with the docs/state gates for documentation-only work, and add the
-   relevant WinUI/AppCore gates before claiming any code or UI behavior change.
+1. Start from clean consolidated `main`; if `main` moved after
+   `7e0f856c216c14bc538c55b1c6f6df99509f585a`, re-read changed docs and state
+   before editing.
+2. Read and classify legacy public-candidate and curated-export wording in
+   `RELEASE_SCOPE_AND_TEST_COMMANDS.md`, `README.RELEASE.md`, `tools/README.md`,
+   `roadmap/repo-structure-and-archive-map.md`, and the public package/reference
+   files under `release/readiness/`.
+3. Preserve active validation-template, allowlist, and release-accounting names
+   when wording is intentional compatibility rather than stale product truth.
+4. If one clearly stale non-validation wording issue is found, make the smallest
+   docs-only correction in that path family; otherwise produce a concise
+   no-change classification report for the next write slice.
+5. Validate any docs edit with `npm run test:doc-commands`,
+   `npm run test:md-links`, `npm run test:public-allowlist`,
+   `npm run test:repo-hygiene`, and `git diff --check`.
 6. Update the state batons to the resulting current truth and rewrite this file
    to the next safe executable slice after verified closeout.
 
