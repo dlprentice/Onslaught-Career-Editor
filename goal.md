@@ -7,13 +7,13 @@ Policy: `goal.policy.md`
 ## Current Slice
 
 Start the next bounded WinUI modularity inspection: read the Windowed & Mods
-`BinaryPatchesPage` surface and existing `PatchBench*` presentation helpers
-after the patch-group helper extraction, then choose one small extraction or
-test-hardening candidate only if it reduces code-behind duplication or
-strengthens a guard without moving patch semantics, launch arguments, safe-copy
-behavior, music behavior, online readiness, runtime proof, or release
-packaging. Keep this slice read-first unless exact evidence supports a narrow
-edit. Continue from this checkout:
+`BinaryPatchesPage` safe-copy receipt/status summary surface and existing
+`PatchBench*` presentation helpers after the advanced summary text extraction,
+then choose one small extraction or test-hardening candidate only if it reduces
+code-behind duplication or strengthens a guard without moving patch semantics,
+launch arguments, safe-copy behavior, music behavior, online readiness,
+runtime proof, or release packaging. Keep this slice read-first unless exact
+evidence supports a narrow edit. Continue from this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -125,6 +125,21 @@ contributor work.
   safety, public allowlist, repo hygiene, state JSON, and whitespace diff
   checks passed. The source slice is committed and pushed as `94e07124`. This
   is test hardening only; no production WinUI code or user behavior changed.
+- Windowed & Mods advanced BEA.exe-only selection-summary text modularity is
+  accepted in
+  `release/readiness/winui_windowed_mods_advanced_summary_text_modularity_2026-06-25.md`.
+  Advanced selection-summary copy now flows through
+  `PatchBenchSelectedProfileText.BuildAdvancedCopySelectionSummary(...)`, while
+  `BinaryPatchesPage` still owns selected-key matching, profile
+  classification, `SetEquals`, `MatchSelectableSafeCopyProfileId`,
+  `ProfilePresetId`, safe-copy manifests/signatures, launch, music, and online
+  logic. Focused red/green source-shape tests, full PatchBench static tests,
+  WinUI build, WinUI primary lane, a fresh WinUI UI test rerun, docs commands,
+  Markdown links, hard-payload safety, public allowlist, repo hygiene,
+  whitespace diff, and process cleanup checks passed. This did not change patch
+  rows, byte patches, selected-key semantics, safe-copy launch behavior, music
+  behavior, online readiness, runtime proof, release packaging, app release
+  assets, or installed-game/original `BEA.exe` mutation rules.
 - Windowed & Mods selected-profile text modularity is accepted in
   `release/readiness/winui_windowed_mods_selected_profile_text_modularity_2026-06-25.md`.
   Selected-profile status/details copy now flows through a small WinUI
@@ -236,8 +251,8 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 ## Next Executable Work
 
 1. Inspect `BinaryPatchesPage.xaml.cs`, current `PatchBench*` helpers, and
-   focused PatchBench tests for the next smallest presentation-only extraction
-   or test-hardening candidate.
+   focused PatchBench tests around safe-copy receipt/status summaries for the
+   next smallest presentation-only extraction or test-hardening candidate.
 2. Use at least one specialist consult and one adversarial reviewer before any
    nontrivial edit.
 3. If a small improvement is justified, keep it bounded to WinUI presentation

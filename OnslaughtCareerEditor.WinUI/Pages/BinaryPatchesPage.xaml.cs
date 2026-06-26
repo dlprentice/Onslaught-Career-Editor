@@ -513,9 +513,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             UpdateChoiceVisualState(visibleSelectedKeys);
             UpdateLaunchPresetVisualState();
 
-            SelectionSummaryTextBlock.Text = hasSelected
-                ? BuildSelectionSummary(visibleSelectedKeys)
-                : "No optional mod rows selected. Safe-copy creation still applies the required windowed compatibility pair. Advanced BEA.exe-only actions need a selected row.";
+            SelectionSummaryTextBlock.Text =
+                PatchBenchSelectedProfileText.BuildAdvancedCopySelectionSummary(selectedProfileTextState);
 
             WorkflowHintTextBlock.Text = !hasSourceExe
                 ? "Select BEA.exe or BEA.exe.original.backup as a read-only source first."
@@ -2173,45 +2172,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             return IsUsableWorkingCopy(path)
                 ? "BEA.exe in the app advanced patch workspace."
                 : "Create an app-owned BEA.exe-only copy before verification or patching.";
-        }
-
-        private static string BuildSelectionSummary(IReadOnlyCollection<string> selectedKeys)
-        {
-            IReadOnlyList<string> compatibilityProfileKeys = BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.CompatibilityProfileId);
-            IReadOnlyList<string> recommendedProfileKeys = BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.RecommendedProfileId);
-            if (SetEquals(selectedKeys, compatibilityProfileKeys))
-            {
-                return BuildPatchDestinationSummary("Compatibility Copy profile selected.");
-            }
-
-            if (SetEquals(selectedKeys, s_modernGraphicsKeys))
-            {
-                return BuildPatchDestinationSummary("Extra graphics gate defaults preset selected.");
-            }
-
-            if (SetEquals(selectedKeys, recommendedProfileKeys))
-            {
-                return BuildPatchDestinationSummary("Windowed + Graphics Defaults profile selected.");
-            }
-
-            IReadOnlyList<string> enhancedPreviewKeys = BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.EnhancedPreviewProfileId);
-            if (SetEquals(selectedKeys, enhancedPreviewKeys))
-            {
-                return BuildPatchDestinationSummary("Enhanced Profile Preview selected. Patch rows match visible safe-copy mods, not a full overhaul or online mode. It pre-fills copied-options controls for config 1 and mouse sensitivity 2.25; the control-options manifest records current controls only when options are written.");
-            }
-
-            IReadOnlyList<string> debugCameraPreviewKeys = BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.DebugCameraPreviewProfileId);
-            if (SetEquals(selectedKeys, debugCameraPreviewKeys))
-            {
-                return BuildPatchDestinationSummary("Debug Camera Preview selected. It adds an experimental free-camera toggle and one Q-forward remap path, not full camera controls or gameplay safety.");
-            }
-
-            return BuildPatchDestinationSummary($"{selectedKeys.Count} visible patch(es) selected.");
-        }
-
-        private static string BuildPatchDestinationSummary(string prefix)
-        {
-            return $"{prefix} Selected mods are applied when you create the safe game copy. The advanced buttons below patch a separate BEA.exe-only copy and do not create a launchable game folder.";
         }
 
         private string BuildPatchDisplayList(IEnumerable<string> patchKeys)

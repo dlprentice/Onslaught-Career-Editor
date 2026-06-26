@@ -74,6 +74,48 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return builder.ToString();
         }
 
+        public static string BuildAdvancedCopySelectionSummary(PatchBenchSelectedProfileTextState state)
+        {
+            if (state.SelectedVisibleRowCount == 0)
+            {
+                return "No optional mod rows selected. Safe-copy creation still applies the required windowed compatibility pair. Advanced BEA.exe-only actions need a selected row.";
+            }
+
+            string? matchedProfileId = state.MatchedPreset?.Id;
+
+            if (string.Equals(matchedProfileId, BinaryPatchPlanBuilder.CompatibilityProfileId, StringComparison.OrdinalIgnoreCase))
+            {
+                return BuildAdvancedCopyDestinationSummary("Compatibility Copy profile selected.");
+            }
+
+            if (string.Equals(matchedProfileId, BinaryPatchPlanBuilder.RecommendedProfileId, StringComparison.OrdinalIgnoreCase))
+            {
+                return BuildAdvancedCopyDestinationSummary("Windowed + Graphics Defaults profile selected.");
+            }
+
+            if (string.Equals(matchedProfileId, BinaryPatchPlanBuilder.EnhancedPreviewProfileId, StringComparison.OrdinalIgnoreCase))
+            {
+                return BuildAdvancedCopyDestinationSummary("Enhanced Profile Preview selected. Patch rows match visible safe-copy mods, not a full overhaul or online mode. It pre-fills copied-options controls for config 1 and mouse sensitivity 2.25; the control-options manifest records current controls only when options are written.");
+            }
+
+            if (string.Equals(matchedProfileId, BinaryPatchPlanBuilder.DebugCameraPreviewProfileId, StringComparison.OrdinalIgnoreCase))
+            {
+                return BuildAdvancedCopyDestinationSummary("Debug Camera Preview selected. It adds an experimental free-camera toggle and one Q-forward remap path, not full camera controls or gameplay safety.");
+            }
+
+            if (state.IsModernGraphicsOnly)
+            {
+                return BuildAdvancedCopyDestinationSummary("Extra graphics gate defaults preset selected.");
+            }
+
+            return BuildAdvancedCopyDestinationSummary($"{state.SelectedVisibleRowCount} visible patch(es) selected.");
+        }
+
+        private static string BuildAdvancedCopyDestinationSummary(string prefix)
+        {
+            return $"{prefix} Selected mods are applied when you create the safe game copy. The advanced buttons below patch a separate BEA.exe-only copy and do not create a launchable game folder.";
+        }
+
         private static string FormatSafeCopyProfileModules(SafeCopyProfilePreset preset, bool isEnhancedPreview)
         {
             string[] names = preset.Modules

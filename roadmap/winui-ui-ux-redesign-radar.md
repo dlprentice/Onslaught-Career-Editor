@@ -63,6 +63,10 @@ This document tracks UI/UX debt that is too broad for a release-candidate polish
   guard that blocks file/process APIs, safe-copy runtime services, patch
   engines, launch-plan builders, Host/Join controls, and release/package
   wording from those helpers.
+- Windowed & Mods advanced BEA.exe-only selection-summary copy now uses the
+  selected-profile presentation helper, while the page keeps selected-key
+  matching, profile classification, safe-copy `ProfilePresetId`, launch, music,
+  online, and runtime behavior unchanged.
 - Windowed & Mods selected-profile status/details text now uses a small WinUI
   presentation model/helper, while the page keeps profile matching, selected
   patch keys, `ProfilePresetId`, safe-copy manifests, launch, music, and online
