@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-25",
-  "currentFocus": "Windowed & Mods advanced BEA.exe-only selection-summary text modularity is accepted; next slice is read-first safe-copy receipt/status modularity inspection.",
+  "currentFocus": "Windowed & Mods safe-copy outcome text modularity is accepted; next slice is read-first safe-copy status/receipt guard inspection.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -22,7 +22,8 @@
     "winuiMenuColorTextModularity": "release/readiness/winui_windowed_mods_menu_color_text_modularity_2026-06-25.md",
     "winuiPatchGroupHelperModularity": "release/readiness/winui_windowed_mods_patch_group_helper_modularity_2026-06-25.md",
     "winuiPatchBenchPresentationHelperBoundaryGuard": "release/readiness/winui_patchbench_presentation_helper_boundary_guard_2026-06-25.md",
-    "winuiAdvancedSummaryTextModularity": "release/readiness/winui_windowed_mods_advanced_summary_text_modularity_2026-06-25.md"
+    "winuiAdvancedSummaryTextModularity": "release/readiness/winui_windowed_mods_advanced_summary_text_modularity_2026-06-25.md",
+    "winuiSafeCopyOutcomeTextModularity": "release/readiness/winui_windowed_mods_safe_copy_outcome_text_modularity_2026-06-25.md"
   },
   "publicPrimaryMigration": {
     "status": "validated_public_primary_with_maintainer_local_ignored_overlays",
@@ -31,10 +32,10 @@
     "localOnly": "actual game/runtime payloads, local-rom-input payloads, arbitrary saves/options payloads, full Ghidra databases/backups, secrets, build outputs, screenshots/frame dumps, raw CDB logs, bulky generated captures",
     "localOverlayStatus": "maintainer-local ignored overlays contain the copied game mirror/local extras, save-attempts payloads, local-rom-input, mcps, and G: junctions for runtime proof/Ghidra backups; those overlays are useful locally but not GitHub-tracked source.",
     "localStorageCleanup": "C:\\Users\\david\\source\\Onslaught-Career-Editor-public-candidate* scratch clones were moved to G:\\OnslaughtRepoArchives\\source-scratch-20260624 with move-manifest.json; zero public-candidate scratch dirs remain on C:.",
-    "currentInventory": "24839 private tracked paths, 19324 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths; explicit maintainer parity command uses --private-root and --require-private-root.",
+    "currentInventory": "24839 private tracked paths, 19335 public tracked paths, 5557 accepted private-only hard-payload/scratch-payload paths; explicit maintainer parity command uses --private-root and --require-private-root.",
     "wordingFixes": [
       "AGENTS.md and roadmap/repo-structure-and-archive-map.md now point to release/readiness/PUBLIC_SIGNOFF_COMMANDS.md.",
-      "roadmap/public-primary-working-repo.md uses the public tracked-path count current at that closeout; latest public-primary migration inventory reports 19311 public tracked paths.",
+      "roadmap/public-primary-working-repo.md uses the public tracked-path count current at that closeout; latest public-primary migration inventory reports 19335 public tracked paths.",
       "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md now says test:public-allowlist runs hard-payload safety, submodule payload safety, and public-primary migration/hash inventory."
     ]
   },
@@ -71,26 +72,26 @@
       "git diff --check (PASS)"
     ],
     "activeSliceFocusedPassed": [
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench_VisibleCopyPromisesCopiedExecutableWorkflow\" (RED; failed for missing PatchBenchSelectedProfileText.BuildAdvancedCopySelectionSummary call before implementation)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench_VisibleCopyPromisesCopiedExecutableWorkflow|FullyQualifiedName~WinUiProductLaneTests.PatchBench_PresentationHelpersStayBehaviorFree\" (PASS; 2 tests)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench_CodeRequiresAppOwnedWorkingCopyBeforeApply|FullyQualifiedName~WinUiProductLaneTests.PatchBench_PresentationHelpersStayBehaviorFree\" (RED; failed for missing PatchBenchSafeCopyOutcomeText.cs helper/state records before implementation)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench_CodeRequiresAppOwnedWorkingCopyBeforeApply|FullyQualifiedName~WinUiProductLaneTests.PatchBench_PresentationHelpersStayBehaviorFree\" (PASS; 2 tests)",
       "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench\" (PASS; 6 tests)",
       "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)"
     ],
     "activeSliceBroadPassed": [
-      "npm run test:winui-primary-lane (PASS; solution build 0 warnings/errors, AppCore 1178/1178, WinUI 88 passed / 2 skipped catalog-dependent rows)",
-      "npm run test:doc-commands (PASS; 4301 documented npm commands checked; public package command check passed)",
-      "npm run test:md-links (PASS; 3634 Markdown files scanned, 6125 local links checked)",
-      "npm run test:hard-payload-safety (PASS; 19335 public candidate files checked)",
-      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19334; submodule candidate files 19519; allowed private-only hard-payload/scratch paths 5557)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName!~LegacyWpf\" (fresh rerun after operator interference warning; PASS; 88 passed / 2 skipped catalog-dependent rows)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18487 explicit text files checked)",
+      "npm run test:winui-primary-lane (PASS; solution build 0 warnings/errors, AppCore 1178/1178, WinUI 88 passed / 2 catalog-dependent skips)",
+      "npm run test:doc-commands (PASS; 4307 documented npm commands checked; 8 marked public docs checked)",
+      "npm run test:md-links (PASS; 3635 Markdown files scanned, 6125 local links checked)",
+      "npm run test:hard-payload-safety (PASS; 19340 public candidate files checked)",
+      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19335; submodule candidate files 19524; allowed private-only hard-payload/scratch paths 5557)",
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18488 explicit text files checked)",
       "git diff --check (PASS)",
+      "state JSON parse (PASS)",
       "Get-Process BEA,cdb,OnslaughtCareerEditor.WinUI -ErrorAction SilentlyContinue (PASS; no matching processes)"
     ],
     "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Inspect BinaryPatchesPage safe-copy receipt/status summaries and PatchBench helpers for the next smallest presentation-only extraction or test-hardening candidate.",
+    "Inspect BinaryPatchesPage safe-copy canceled/failed/restored/source-changed status copy and defensive receipt Host/Join fallback for a small presentation-only extraction or guard-hardening candidate.",
     "Use specialist and adversarial review before any nontrivial edit.",
     "Keep patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of the next modularity slice unless evidence reveals a bounded bug."
   ],
@@ -159,8 +160,8 @@
   "releaseAccounting": {
     "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",
     "curatedSelectedFiles": 625,
-    "publicCandidateFiles": 19325,
-    "publicSubmoduleCandidateFiles": 19510
+    "publicCandidateFiles": 19340,
+    "publicSubmoduleCandidateFiles": 19524
   },
   "githubRelease": {
     "version": "v1.0.7",
@@ -302,8 +303,22 @@
     ]
   },
   "activeSlice": {
-    "name": "windowed-mods-safe-copy-receipt-status-modularity-inspection",
-    "status": "ready_after_advanced_summary_text_validation",
-    "claimBoundary": "read-first WinUI modularity inspection; do not move patch rows, byte changes, FunctionalArea mappings, launch behavior, safe-copy behavior, music behavior, online/readiness gates, runtime proof, release packaging, or installed-game mutation rules."
+    "name": "windowed-mods-safe-copy-status-receipt-guard-inspection",
+    "status": "ready_after_safe_copy_outcome_text_validation",
+    "claimBoundary": "read-first WinUI modularity/test-hardening inspection; do not move patch rows, byte changes, copied-profile launch behavior, safe-copy manifests/signatures, music behavior, online readiness, runtime proof, release packaging, or installed-game mutation rules."
+  },
+  "winuiSafeCopyOutcomeTextModularity": {
+    "status": "accepted_ready_for_commit",
+    "readinessNote": "release/readiness/winui_windowed_mods_safe_copy_outcome_text_modularity_2026-06-25.md",
+    "acceptedTruth": [
+      "Prepared safe-copy summary, operation-log, and music-status copy now flow through PatchBenchSafeCopyOutcomeText.",
+      "BinaryPatchesPage keeps AppCore service calls, result projection, safe-copy signatures, launch planning, process state, music staging state, online/readiness behavior, and receipt rendering.",
+      "Focused and broad public-source closeout gates passed; no runtime, online, music audible-output, rebuild, release, or installed-game mutation claim changed."
+    ],
+    "consultReview": [
+      "Specialist consult recommended primitive presentation state and page-local AppCore result projection.",
+      "Adversarial consult rejected broad receipt/status extraction and service/result-type movement into helpers.",
+      "Final adversarial code review found no blockers; direct helper behavior tests remain a non-blocking future improvement."
+    ]
   }
 }

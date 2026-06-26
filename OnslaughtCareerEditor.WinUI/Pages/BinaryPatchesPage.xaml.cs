@@ -1582,29 +1582,20 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     controlOptionsResult);
                 RenderSafeCopyReceipt(receipt);
                 RefreshMusicTrackChoices();
-                PatchBenchCopiedProfileSummary.Text =
-                    "Safe game copy prepared. Required and selected patch verification passed on the copied BEA.exe. " +
-                    "The selected Steam/game install stays unchanged.\n" +
-                    BuildSafeCopySavegamesSummary(copiedSavegames) + "\n" +
-                    BuildSafeCopyControlOptionsSummary(controlOptionsResult) + "\n" +
-                    BuildSafeCopyMusicSwapSummary(createMusicSwapResult) + "\n" +
-                    $"Play will run BEA.exe from safe copy folder: {Path.GetFileName(Path.TrimEndingDirectorySeparator(result.TargetGameRoot))}";
+                PatchBenchSafeCopyOutcomeTextState outcomeText = new PatchBenchSafeCopyOutcomeTextState(
+                    CopiedSavegames: copiedSavegames,
+                    ControlOptions: BuildSafeCopyControlOptionsTextState(controlOptionsResult),
+                    MusicSwap: BuildSafeCopyMusicSwapTextState(createMusicSwapResult),
+                    SafeCopyFolderName: Path.GetFileName(Path.TrimEndingDirectorySeparator(result.TargetGameRoot)),
+                    FilesCopied: result.Entries.Count,
+                    PatchDisplayList: BuildPatchDisplayList(result.PatchResult.PatchKeys),
+                    LaunchModifierSummary: PatchBenchLaunchText.BuildModifierSummary(result.LaunchPlan.Arguments));
+                PatchBenchCopiedProfileSummary.Text = PatchBenchSafeCopyOutcomeText.BuildPreparedSummary(outcomeText);
                 PatchBenchCopiedProfileLaunchPlan.Text = result.LaunchPlan.CommandPreview;
                 PatchBenchCopiedProfileLaunchStatus.Text =
                     PatchBenchLaunchText.BuildBoundary("Safe copy ready for a guarded launch attempt.");
-                PatchBenchMusicReplacementStatus.Text =
-                    createMusicSwapResult is null
-                        ? "Safe copy ready for music replacement staging. Staging only; in-game playback is still experimental and unproven."
-                        : $"Safe-copy track swap staged for {createMusicSwapResult.TargetMusicFileName}. Restore before staging another swap. In-game playback is still experimental and unproven.";
-                OperationLogTextBox.Text =
-                    "Safe game copy preparation complete.\n" +
-                    $"Files copied: {result.Entries.Count}\n" +
-                    $"Patches applied: {BuildPatchDisplayList(result.PatchResult.PatchKeys)}\n" +
-                    $"{PatchBenchLaunchText.BuildModifierSummary(result.LaunchPlan.Arguments)}\n" +
-                    BuildSafeCopySavegamesSummary(copiedSavegames) + "\n" +
-                    BuildSafeCopyControlOptionsSummary(controlOptionsResult) + "\n" +
-                    BuildSafeCopyMusicSwapSummary(createMusicSwapResult) + "\n" +
-                    "Only the copied BEA.exe was patched; no game process was started.";
+                PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicReplacementStatus(outcomeText.MusicSwap);
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.BuildPreparedOperationLog(outcomeText);
                 AppStatusService.SetStatus("Windowed & Mods: safe copy ready");
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
@@ -2232,30 +2223,27 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             };
         }
 
-        private static string BuildSafeCopySavegamesSummary(bool copiedSavegames)
-        {
-            return copiedSavegames
-                ? "Savegames: copied into the safe game copy only; source savegames remain read-only."
-                : "Savegames: not copied into this safe copy.";
-        }
-
-        private static string BuildSafeCopyControlOptionsSummary(GameProfileControlOptionsResult? result)
+        private static PatchBenchSafeCopyControlOptionsTextState? BuildSafeCopyControlOptionsTextState(GameProfileControlOptionsResult? result)
         {
             return result is null
-                ? "Control options: no safe-copy defaultoptions.bea control preset applied."
-                : $"Control options: safe-copy mouse sensitivity {result.MouseSensitivity:0.###}; controller config P1={result.ControllerConfigP1}, P2={result.ControllerConfigP2}; invert walker Y P1/P2={FormatBool(result.InvertWalkerP1)}/{FormatBool(result.InvertWalkerP2)}; invert flight Y P1/P2={FormatBool(result.InvertFlightP1)}/{FormatBool(result.InvertFlightP2)}; runtime feel still needs live testing.";
+                ? null
+                : new PatchBenchSafeCopyControlOptionsTextState(
+                    result.MouseSensitivity,
+                    result.ControllerConfigP1,
+                    result.ControllerConfigP2,
+                    result.InvertWalkerP1,
+                    result.InvertWalkerP2,
+                    result.InvertFlightP1,
+                    result.InvertFlightP2);
         }
 
-        private static string BuildSafeCopyMusicSwapSummary(GameProfileMusicReplacementResult? result)
+        private static PatchBenchSafeCopyMusicSwapTextState? BuildSafeCopyMusicSwapTextState(GameProfileMusicReplacementResult? result)
         {
             return result is null
-                ? "Music swap: no copied-track swap staged during safe-copy creation."
-                : $"Music swap: copied-track swap staged for {result.TargetMusicFileName}; backup {result.BackupRelativePath}; runtime playback still needs live testing.";
-        }
-
-        private static string FormatBool(bool value)
-        {
-            return value ? "on" : "off";
+                ? null
+                : new PatchBenchSafeCopyMusicSwapTextState(
+                    result.TargetMusicFileName,
+                    result.BackupRelativePath);
         }
 
         private void UpdateCopiedProfileLaunchReadiness(

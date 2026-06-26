@@ -67,6 +67,10 @@ This document tracks UI/UX debt that is too broad for a release-candidate polish
   selected-profile presentation helper, while the page keeps selected-key
   matching, profile classification, safe-copy `ProfilePresetId`, launch, music,
   online, and runtime behavior unchanged.
+- Windowed & Mods prepared safe-copy outcome summary/log/music-status copy now
+  uses a small WinUI presentation helper fed by primitive state, while the page
+  keeps AppCore result projection, safe-copy signatures, launch planning,
+  process state, music staging state, and online/readiness behavior unchanged.
 - Windowed & Mods selected-profile status/details text now uses a small WinUI
   presentation model/helper, while the page keeps profile matching, selected
   patch keys, `ProfilePresetId`, safe-copy manifests, launch, music, and online

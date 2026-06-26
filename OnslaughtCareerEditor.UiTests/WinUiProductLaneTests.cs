@@ -1147,6 +1147,7 @@ public class WinUiProductLaneTests
             "PatchBenchLaunchText.cs",
             "PatchBenchMenuColorSelectionText.cs",
             "PatchBenchPatchGroups.cs",
+            "PatchBenchSafeCopyOutcomeText.cs",
             "PatchBenchSelectedProfileText.cs",
         };
         string[] actualHelperFiles = Directory.GetFiles(helperRoot, "PatchBench*.cs")
@@ -1242,7 +1243,11 @@ public class WinUiProductLaneTests
         string itemModel = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "BinaryPatchItemModel.cs");
         string patchGroupsHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchPatchGroups.cs");
         string launchTextHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchLaunchText.cs");
+        string safeCopyOutcomeText = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchSafeCopyOutcomeText.cs");
         string selectedProfileText = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchSelectedProfileText.cs");
+        string safeCopyOutcomeTextState = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchSafeCopyOutcomeTextState.cs");
+        string safeCopyControlOptionsTextState = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchSafeCopyControlOptionsTextState.cs");
+        string safeCopyMusicSwapTextState = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchSafeCopyMusicSwapTextState.cs");
         string launchReadinessTextState = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchLaunchReadinessTextState.cs");
         string launchReadinessTextResult = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchLaunchReadinessTextResult.cs");
         string constructorBody = ExtractCodeSlice(
@@ -1385,7 +1390,8 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("if (SetEquals(selectedKeys, preset.PatchKeys))"));
         Assert.That(code, Does.Contain("MusicSwapPresetId: createMusicSwapPresetId"));
         Assert.That(code, Does.Contain("GameProfileMusicReplacementResult? createMusicSwapResult = result.MusicSwapResult"));
-        Assert.That(code, Does.Contain("BuildSafeCopyMusicSwapSummary(createMusicSwapResult)"));
+        Assert.That(code, Does.Contain("BuildSafeCopyMusicSwapTextState(createMusicSwapResult)"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicReplacementStatus(outcomeText.MusicSwap)"));
         Assert.That(code, Does.Contain("createMusicSwapPreset="));
         Assert.That(code, Does.Contain("GetSelectedCreateMusicSwapPresetId"));
         Assert.That(code, Does.Contain("MatchSelectableSafeCopyProfileId"));
@@ -1415,6 +1421,46 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("PatchBenchLaunchText.BuildBoundary"));
         Assert.That(code, Does.Contain("PatchBenchLaunchText.BuildReadiness("));
         Assert.That(code, Does.Contain("new PatchBenchLaunchReadinessTextState("));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildPreparedSummary("));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildPreparedOperationLog("));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicReplacementStatus("));
+        Assert.That(code, Does.Contain("new PatchBenchSafeCopyOutcomeTextState("));
+        Assert.That(code, Does.Contain("new PatchBenchSafeCopyControlOptionsTextState("));
+        Assert.That(code, Does.Contain("new PatchBenchSafeCopyMusicSwapTextState("));
+        Assert.That(code, Does.Not.Contain("private static string BuildSafeCopySavegamesSummary"));
+        Assert.That(code, Does.Not.Contain("private static string BuildSafeCopyControlOptionsSummary"));
+        Assert.That(code, Does.Not.Contain("private static string BuildSafeCopyMusicSwapSummary"));
+        Assert.That(code, Does.Not.Contain("private static string FormatBool"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("internal static class PatchBenchSafeCopyOutcomeText"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("public static string BuildPreparedSummary(PatchBenchSafeCopyOutcomeTextState state)"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("public static string BuildPreparedOperationLog(PatchBenchSafeCopyOutcomeTextState state)"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("public static string BuildMusicReplacementStatus(PatchBenchSafeCopyMusicSwapTextState? musicSwap)"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Savegames: copied into the safe game copy only; source savegames remain read-only."));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Control options: no safe-copy defaultoptions.bea control preset applied."));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Music swap: no copied-track swap staged during safe-copy creation."));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Play will run BEA.exe from safe copy folder:"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Only the copied BEA.exe was patched; no game process was started."));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Staging only; in-game playback is still experimental and unproven."));
+        Assert.That(safeCopyOutcomeText, Does.Not.Contain("GameProfile"));
+        Assert.That(safeCopyOutcomeText, Does.Not.Contain("BuildSelectedLaunchArguments"));
+        Assert.That(safeCopyOutcomeText, Does.Not.Contain("BuildSafeCopyContentSignature"));
+        Assert.That(safeCopyOutcomeText, Does.Not.Contain("PatchBenchCopiedProfileLaunchPlan"));
+        Assert.That(safeCopyOutcomeText, Does.Not.Contain("File."));
+        Assert.That(safeCopyOutcomeText, Does.Not.Contain("Task"));
+        Assert.That(safeCopyOutcomeText, Does.Not.Contain("Online"));
+        Assert.That(safeCopyOutcomeTextState, Does.Contain("internal sealed record PatchBenchSafeCopyOutcomeTextState"));
+        Assert.That(safeCopyOutcomeTextState, Does.Contain("bool CopiedSavegames"));
+        Assert.That(safeCopyOutcomeTextState, Does.Contain("PatchBenchSafeCopyControlOptionsTextState? ControlOptions"));
+        Assert.That(safeCopyOutcomeTextState, Does.Contain("PatchBenchSafeCopyMusicSwapTextState? MusicSwap"));
+        Assert.That(safeCopyOutcomeTextState, Does.Contain("string SafeCopyFolderName"));
+        Assert.That(safeCopyOutcomeTextState, Does.Contain("int FilesCopied"));
+        Assert.That(safeCopyOutcomeTextState, Does.Contain("string PatchDisplayList"));
+        Assert.That(safeCopyOutcomeTextState, Does.Contain("string LaunchModifierSummary"));
+        Assert.That(safeCopyControlOptionsTextState, Does.Contain("internal sealed record PatchBenchSafeCopyControlOptionsTextState"));
+        Assert.That(safeCopyControlOptionsTextState, Does.Contain("float MouseSensitivity"));
+        Assert.That(safeCopyMusicSwapTextState, Does.Contain("internal sealed record PatchBenchSafeCopyMusicSwapTextState"));
+        Assert.That(safeCopyMusicSwapTextState, Does.Contain("string TargetMusicFileName"));
+        Assert.That(safeCopyMusicSwapTextState, Does.Contain("string BackupRelativePath"));
         Assert.That(launchTextHelper, Does.Contain("internal static class PatchBenchLaunchText"));
         Assert.That(launchTextHelper, Does.Contain("public static string BuildModifierSummary(IReadOnlyList<string> arguments)"));
         Assert.That(launchTextHelper, Does.Contain("public static string BuildBoundary(string prefix)"));
@@ -1514,12 +1560,13 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Not.Contain("AllowByteLayoutOnlyTarget: true"));
         Assert.That(code, Does.Contain("await Task.Run"));
         Assert.That(code, Does.Contain("IncludeSavegames: includeSavegames"));
-        Assert.That(code, Does.Contain("BuildSafeCopySavegamesSummary"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildPreparedSummary(outcomeText)"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildPreparedOperationLog(outcomeText)"));
         Assert.That(code, Does.Contain("string[] selectedPatchKeys = GetVisibleSelectedKeys().ToArray();"));
         Assert.That(code, Does.Contain("PatchKeys: selectedPatchKeys"));
         Assert.That(code, Does.Contain("defaultProfileKeys = BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.CompatibilityProfileId)"));
         Assert.That(code, Does.Contain("PatchBenchSelectedProfileStatus.Text = PatchBenchSelectedProfileText.BuildStatus("));
-        Assert.That(code, Does.Contain("Only the copied BEA.exe was patched"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Only the copied BEA.exe was patched"));
         Assert.That(selectedProfileText, Does.Contain("Selected mods are applied when you create the safe game copy. The advanced buttons below patch a separate BEA.exe-only copy and do not create a launchable game folder."));
         Assert.That(selectedProfileText, Does.Contain("No optional mod rows selected. Safe-copy creation still applies the required windowed compatibility pair."));
         Assert.That(launchTextHelper, Does.Contain("This does not confirm it reached the menu, stayed windowed, rendered correctly, or played replacement music."));
@@ -1541,6 +1588,7 @@ public class WinUiProductLaneTests
     {
         string xaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml");
         string code = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs");
+        string safeCopyOutcomeText = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchSafeCopyOutcomeText.cs");
 
         Assert.That(xaml, Does.Contain("PatchBenchCopiedProfileReceiptExpander"));
         Assert.That(xaml, Does.Contain("Safe copy receipt"));
@@ -1553,7 +1601,7 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("Included changes"));
         Assert.That(code, Does.Contain("Still not included"));
         Assert.That(code, Does.Contain("No Host/Join or online multiplayer"));
-        Assert.That(code, Does.Contain("Play will run BEA.exe from safe copy folder"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Play will run BEA.exe from safe copy folder"));
         Assert.That(code, Does.Not.Contain("Play will run BEA.exe from safe copy: {result.TargetGameRoot}"));
         Assert.That(code, Does.Not.Contain("PatchBenchHostOnlineSessionButton"));
         Assert.That(code, Does.Not.Contain("PatchBenchJoinOnlineSessionButton"));

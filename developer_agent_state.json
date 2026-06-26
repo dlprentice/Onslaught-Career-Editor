@@ -1,11 +1,11 @@
 {
   "lastUpdated": "2026-06-25",
   "branch": "main",
-  "currentFocus": "Windowed & Mods advanced BEA.exe-only selection-summary text modularity is accepted; next slice is read-first safe-copy receipt/status modularity inspection.",
+  "currentFocus": "Windowed & Mods safe-copy outcome text modularity is accepted; next slice is read-first safe-copy status/receipt guard inspection.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainStatus": "advanced summary text modularity source slice is committed locally as 0bf9f87a; closeout baton update is ready to push.",
+    "publicMainStatus": "safe-copy outcome text modularity source slice is green locally; commit/push pending.",
     "policy": "public repo is primary for source/docs/tools/tests/RE notes/proof summaries/state; hard payloads remain maintainer-local ignored overlays"
   },
   "publicPrimaryMigration": {
@@ -14,7 +14,7 @@
     "readinessNote": "release/readiness/public_primary_full_migration_inventory_2026-06-24.md",
     "acceptedInventory": {
       "privateTrackedPaths": 24839,
-      "publicTrackedPaths": 19324,
+      "publicTrackedPaths": 19335,
       "allowedPrivateOnlyHardPayloadOrScratchPayloadPaths": 5557
     },
     "hardening": "test:public-allowlist now chains hard-payload safety, submodule payload scan, and public-primary migration/hash inventory; public_allowlist_safety_check.py now checks more payload suffixes, magic bytes, raw-log-shaped text, JSONL text, exact fixture hashes, and missing/unreadable submodules.",
@@ -49,27 +49,28 @@
     }
   },
   "recentClosedSlice": {
-    "name": "winui-windowed-mods-advanced-summary-text-modularity",
-    "status": "committed_pending_push",
-    "commit": "0bf9f87a",
-    "readinessNote": "release/readiness/winui_windowed_mods_advanced_summary_text_modularity_2026-06-25.md",
-    "claimBoundary": "Presentation-only WinUI helper extraction: advanced BEA.exe-only selection-summary copy now lives in PatchBenchSelectedProfileText. BinaryPatchesPage still owns selected-key matching, profile classification, ProfilePresetId, safe-copy manifests/signatures, launch, music, and online logic.",
+    "name": "winui-windowed-mods-safe-copy-outcome-text-modularity",
+    "status": "accepted_ready_for_commit",
+    "commit": null,
+    "readinessNote": "release/readiness/winui_windowed_mods_safe_copy_outcome_text_modularity_2026-06-25.md",
+    "claimBoundary": "Presentation-only WinUI helper extraction: prepared safe-copy summary/log/music-status copy now lives in PatchBenchSafeCopyOutcomeText. BinaryPatchesPage still owns AppCore service calls, result projection, safe-copy signatures, launch planning, process state, music staging state, and online/readiness behavior.",
     "acceptedTruth": [
-      "Red source-shape test failed first for the missing PatchBenchSelectedProfileText.BuildAdvancedCopySelectionSummary call.",
-      "Focused source-shape and helper-boundary tests pin the helper call, removed page-local formatter methods, preserved page-owned classification, and blocked selected-key/profile-policy drift into the helper.",
-      "Full PatchBench static tests, WinUI build, WinUI primary lane, and a fresh WinUI UI test rerun passed after the extraction."
+      "Red source-shape test failed first for missing PatchBenchSafeCopyOutcomeText.cs helper/state records.",
+      "BinaryPatchesPage projects GameProfileControlOptionsResult and GameProfileMusicReplacementResult into primitive PatchBenchSafeCopy*TextState records before helper formatting.",
+      "PatchBenchSafeCopyOutcomeText formats prepared safe-copy summary, operation log, and music replacement status only; helper-boundary tests block service, file/process, patch-engine, launch-plan, online, and release tokens.",
+      "Focused PatchBench guard tests, full PatchBench static tests, WinUI build, WinUI primary lane, docs commands, Markdown links, hard-payload safety, public allowlist, repo hygiene, whitespace diff, state JSON parse, and process cleanup checks passed."
     ],
     "consultReview": {
-      "specialist": "approved the extraction only if the helper received already-classified PatchBenchSelectedProfileTextState and the page kept selection/profile matching",
-      "adversarial": "blocked moving BuildSelectionSummary wholesale because that would move selected-key/profile policy into a presentation helper",
-      "closeout": "final read-only review found no blockers; direct helper behavior tests were noted as a future non-blocking option because UiTests do not currently reference the WinUI assembly"
+      "specialist": "recommended prepared-outcome text helper only with page-local AppCore-result projection into primitive presentation state",
+      "adversarial": "blocked broad receipt/status extraction and result-type/service movement into helpers; accepted only narrow formatter or guard hardening",
+      "closeout": "final adversarial review found no blockers and noted only residual source-shape/static-test limitation"
     }
   },
   "activeSlice": {
-    "name": "windowed-mods-safe-copy-receipt-status-modularity-inspection",
-    "goal": "inspect BinaryPatchesPage safe-copy receipt/status summary copy and current PatchBench helpers for the next smallest presentation-only extraction or test-hardening candidate",
-    "claimBoundary": "read-first WinUI modularity inspection; do not move patch rows, byte changes, copied-profile launch behavior, safe-copy manifests/signatures, music behavior, online readiness, runtime proof, release packaging, or installed-game mutation rules.",
-    "status": "ready_after_advanced_summary_text_validation"
+    "name": "windowed-mods-safe-copy-status-receipt-guard-inspection",
+    "goal": "inspect BinaryPatchesPage safe-copy canceled/failed/restored/source-changed status copy and receipt Host/Join fallback guards for the next smallest presentation-only extraction or test-hardening candidate",
+    "claimBoundary": "read-first WinUI modularity/test-hardening inspection; do not move patch rows, byte changes, copied-profile launch behavior, safe-copy manifests/signatures, music behavior, online readiness, runtime proof, release packaging, or installed-game mutation rules.",
+    "status": "ready_after_safe_copy_outcome_text_validation"
   },
   "runtimeTruth": {
     "musicAudibleOutputProof": false,
@@ -118,34 +119,34 @@
       "git diff --check (PASS)"
     ],
     "activeSliceFocusedPassed": [
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench_VisibleCopyPromisesCopiedExecutableWorkflow\" (RED; failed for missing PatchBenchSelectedProfileText.BuildAdvancedCopySelectionSummary call before implementation)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench_VisibleCopyPromisesCopiedExecutableWorkflow|FullyQualifiedName~WinUiProductLaneTests.PatchBench_PresentationHelpersStayBehaviorFree\" (PASS; 2 tests)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench_CodeRequiresAppOwnedWorkingCopyBeforeApply|FullyQualifiedName~WinUiProductLaneTests.PatchBench_PresentationHelpersStayBehaviorFree\" (RED; failed for missing PatchBenchSafeCopyOutcomeText.cs helper/state records before implementation)",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench_CodeRequiresAppOwnedWorkingCopyBeforeApply|FullyQualifiedName~WinUiProductLaneTests.PatchBench_PresentationHelpersStayBehaviorFree\" (PASS; 2 tests)",
       "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench\" (PASS; 6 tests)",
       "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)"
     ],
     "activeSliceBroadPassed": [
-      "npm run test:winui-primary-lane (PASS; solution build 0 warnings/errors, AppCore 1178/1178, WinUI 88 passed / 2 skipped catalog-dependent rows)",
-      "npm run test:doc-commands (PASS; 4301 documented npm commands checked; public package command check passed)",
-      "npm run test:md-links (PASS; 3634 Markdown files scanned, 6125 local links checked)",
-      "npm run test:hard-payload-safety (PASS; 19335 public candidate files checked)",
-      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19334; submodule candidate files 19519; allowed private-only hard-payload/scratch paths 5557)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName!~LegacyWpf\" (fresh rerun after operator interference warning; PASS; 88 passed / 2 skipped catalog-dependent rows)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18487 explicit text files checked)",
+      "npm run test:winui-primary-lane (PASS; solution build 0 warnings/errors, AppCore 1178/1178, WinUI 88 passed / 2 catalog-dependent skips)",
+      "npm run test:doc-commands (PASS; 4307 documented npm commands checked; 8 marked public docs checked)",
+      "npm run test:md-links (PASS; 3635 Markdown files scanned, 6125 local links checked)",
+      "npm run test:hard-payload-safety (PASS; 19340 public candidate files checked)",
+      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19335; submodule candidate files 19524; allowed private-only hard-payload/scratch paths 5557)",
+      "npm run test:repo-hygiene (PASS; repo text hygiene and 18488 explicit text files checked)",
       "git diff --check (PASS)",
+      "state JSON parse (PASS)",
       "Get-Process BEA,cdb,OnslaughtCareerEditor.WinUI -ErrorAction SilentlyContinue (PASS; no matching processes)"
     ],
     "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Inspect BinaryPatchesPage safe-copy receipt/status summaries and PatchBench helpers for the next smallest presentation-only extraction or test-hardening candidate.",
+    "Inspect BinaryPatchesPage safe-copy canceled/failed/restored/source-changed status copy and defensive receipt Host/Join fallback for a small presentation-only extraction or guard-hardening candidate.",
     "Use specialist and adversarial review before any nontrivial edit.",
     "Keep patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of the next modularity slice unless evidence reveals a bounded bug."
   ],
   "releaseAccounting": {
     "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",
     "curatedSelectedFiles": 625,
-    "publicCandidateFiles": 19325,
-    "publicSubmoduleCandidateFiles": 19510
+    "publicCandidateFiles": 19340,
+    "publicSubmoduleCandidateFiles": 19524
   },
   "githubRelease": {
     "version": "v1.0.7",

@@ -6,14 +6,14 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-Start the next bounded WinUI modularity inspection: read the Windowed & Mods
-`BinaryPatchesPage` safe-copy receipt/status summary surface and existing
-`PatchBench*` presentation helpers after the advanced summary text extraction,
-then choose one small extraction or test-hardening candidate only if it reduces
-code-behind duplication or strengthens a guard without moving patch semantics,
-launch arguments, safe-copy behavior, music behavior, online readiness,
-runtime proof, or release packaging. Keep this slice read-first unless exact
-evidence supports a narrow edit. Continue from this checkout:
+Start the next bounded WinUI modularity/test-hardening inspection: read the
+Windowed & Mods safe-copy canceled/failed/restored/source-changed status copy
+and receipt fallback guards after the safe-copy outcome text extraction, then
+choose one small extraction or guard-hardening candidate only if it strengthens
+claim boundaries without moving patch semantics, launch arguments, safe-copy
+behavior, music behavior, online readiness, runtime proof, or release
+packaging. Keep this slice read-first unless exact evidence supports a narrow
+edit. Continue from this checkout:
 
 `C:\Users\david\source\Onslaught-Career-Editor`
 
@@ -141,6 +141,21 @@ contributor work.
   selected-key semantics, safe-copy launch behavior, music behavior, online
   readiness, runtime proof, release packaging, app release assets, or
   installed-game/original `BEA.exe` mutation rules.
+- Windowed & Mods prepared safe-copy outcome text modularity is accepted in
+  `release/readiness/winui_windowed_mods_safe_copy_outcome_text_modularity_2026-06-25.md`.
+  Prepared safe-copy summary, operation log, and music replacement status copy
+  now flow through `PatchBenchSafeCopyOutcomeText` using primitive
+  presentation state. `BinaryPatchesPage` still owns AppCore service calls,
+  result projection, safe-copy signatures, launch planning, process state,
+  music staging state, receipt creation/rendering, and online/readiness
+  behavior. Focused red/green guard tests, full PatchBench static tests, WinUI
+  build, WinUI primary lane, docs commands, Markdown links, hard-payload
+  safety, public allowlist, repo hygiene, whitespace diff, state JSON parse,
+  and process cleanup checks passed. This did not change patch rows, byte
+  patches, selected-key semantics, launch
+  arguments, copied-profile launch behavior, music replacement behavior,
+  online readiness, runtime proof, release packaging, app release assets, or
+  installed-game/original `BEA.exe` mutation rules.
 - Windowed & Mods selected-profile text modularity is accepted in
   `release/readiness/winui_windowed_mods_selected_profile_text_modularity_2026-06-25.md`.
   Selected-profile status/details copy now flows through a small WinUI
@@ -252,14 +267,15 @@ Get-Process BEA,cdb -ErrorAction SilentlyContinue
 ## Next Executable Work
 
 1. Inspect `BinaryPatchesPage.xaml.cs`, current `PatchBench*` helpers, and
-   focused PatchBench tests around safe-copy receipt/status summaries for the
-   next smallest presentation-only extraction or test-hardening candidate.
+   focused PatchBench tests around safe-copy canceled/failed/restored/
+   source-changed status copy and the defensive receipt `No Host/Join` fallback.
 2. Use at least one specialist consult and one adversarial reviewer before any
    nontrivial edit.
 3. If a small improvement is justified, keep it bounded to WinUI presentation
-   models/helpers or testable copy/state formatting; validate with focused
-   PatchBench/WinUI gates plus docs/state updates. If no edit is justified,
-   record that decision and choose the next bounded UX/modularity slice.
+   models/helpers or source-shape/UIA guard hardening; validate with
+   focused PatchBench/WinUI gates plus docs/state updates. If no edit is
+   justified, record that decision and choose the next bounded UX/modularity
+   slice.
 4. Keep patch rows, byte changes, copied-profile launch behavior, safe-copy
    manifests/signatures, music replacement behavior, online/readiness gates,
    runtime proof, release packaging, and installed-game mutation rules out of
