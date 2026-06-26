@@ -79,7 +79,7 @@
     ],
     "activeSliceBroadPassed": [
       "npm run test:winui-primary-lane (PASS; solution build 0 warnings/errors, AppCore 1178/1178, WinUI 88 passed / 2 catalog-dependent skips)",
-      "npm run test:doc-commands (PASS; 4307 documented npm commands checked; 8 marked public docs checked)",
+      "npm run test:doc-commands (PASS; 4313 documented npm commands checked; 8 marked public docs checked)",
       "npm run test:md-links (PASS; 3635 Markdown files scanned, 6125 local links checked)",
       "npm run test:hard-payload-safety (PASS; 19340 public candidate files checked)",
       "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19335; submodule candidate files 19524; allowed private-only hard-payload/scratch paths 5557)",
@@ -308,7 +308,8 @@
     "claimBoundary": "read-first WinUI modularity/test-hardening inspection; do not move patch rows, byte changes, copied-profile launch behavior, safe-copy manifests/signatures, music behavior, online readiness, runtime proof, release packaging, or installed-game mutation rules."
   },
   "winuiSafeCopyOutcomeTextModularity": {
-    "status": "accepted_ready_for_commit",
+    "status": "pushed",
+    "commit": "3bd3bfb3",
     "readinessNote": "release/readiness/winui_windowed_mods_safe_copy_outcome_text_modularity_2026-06-25.md",
     "acceptedTruth": [
       "Prepared safe-copy summary, operation-log, and music-status copy now flow through PatchBenchSafeCopyOutcomeText.",

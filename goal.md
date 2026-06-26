@@ -151,11 +151,11 @@ contributor work.
   behavior. Focused red/green guard tests, full PatchBench static tests, WinUI
   build, WinUI primary lane, docs commands, Markdown links, hard-payload
   safety, public allowlist, repo hygiene, whitespace diff, state JSON parse,
-  and process cleanup checks passed. This did not change patch rows, byte
-  patches, selected-key semantics, launch
-  arguments, copied-profile launch behavior, music replacement behavior,
-  online readiness, runtime proof, release packaging, app release assets, or
-  installed-game/original `BEA.exe` mutation rules.
+  and process cleanup checks passed. The source slice is committed and pushed as
+  `3bd3bfb3`. This did not change patch rows, byte patches, selected-key
+  semantics, launch arguments, copied-profile launch behavior, music
+  replacement behavior, online readiness, runtime proof, release packaging, app
+  release assets, or installed-game/original `BEA.exe` mutation rules.
 - Windowed & Mods selected-profile text modularity is accepted in
   `release/readiness/winui_windowed_mods_selected_profile_text_modularity_2026-06-25.md`.
   Selected-profile status/details copy now flows through a small WinUI
