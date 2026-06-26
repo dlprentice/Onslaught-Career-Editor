@@ -1,11 +1,11 @@
 {
   "lastUpdated": "2026-06-25",
   "branch": "main",
-  "currentFocus": "Windowed & Mods PatchBench presentation-helper boundary guard is accepted and staged; commit and push are pending.",
+  "currentFocus": "Windowed & Mods PatchBench presentation-helper boundary guard is pushed as 94e07124; next slice is read-first Windowed & Mods modularity inspection.",
   "repositoryTruth": {
     "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
     "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainStatus": "origin/main includes the patch-group helper modularity commit de1ccc0c and baton commit 23f4f27b; the current local tree contains the accepted staged presentation-helper boundary guard test slice.",
+    "publicMainStatus": "origin/main includes the PatchBench presentation-helper boundary guard commit 94e07124; current baton update is local until the docs/state follow-up push completes.",
     "policy": "public repo is primary for source/docs/tools/tests/RE notes/proof summaries/state; hard payloads remain maintainer-local ignored overlays"
   },
   "publicPrimaryMigration": {
@@ -66,10 +66,10 @@
     }
   },
   "activeSlice": {
-    "name": "winui-patchbench-presentation-helper-boundary-guard",
-    "goal": "add static guard coverage proving PatchBench presentation helpers stay behavior-free",
-    "claimBoundary": "test-hardening only; do not move production code, patch rows, byte changes, selected-key semantics, FunctionalArea mappings, safe-copy behavior, music behavior, online readiness, runtime proof, release packaging, or installed-game mutation rules.",
-    "status": "accepted_ready_for_commit"
+    "name": "windowed-mods-next-presentation-modularity-inspection",
+    "goal": "inspect BinaryPatchesPage and current PatchBench helpers for the next smallest presentation-only extraction or test-hardening candidate",
+    "claimBoundary": "read-first WinUI modularity inspection; do not move patch rows, byte changes, copied-profile launch behavior, safe-copy manifests/signatures, music behavior, online readiness, runtime proof, release packaging, or installed-game mutation rules.",
+    "status": "ready_after_helper_boundary_guard_commit"
   },
   "runtimeTruth": {
     "musicAudibleOutputProof": false,
@@ -131,14 +131,12 @@
       "git diff --cached --check (PASS)",
       "Get-Process BEA,cdb,OnslaughtCareerEditor.WinUI -ErrorAction SilentlyContinue (PASS; no matching processes)"
     ],
-    "pendingForActiveSlice": [
-      "commit and push"
-    ]
+    "pendingForActiveSlice": []
   },
   "nextSteps": [
-    "Run final state JSON, diff whitespace, and process cleanup checks.",
-    "Commit and push the green test-hardening slice.",
-    "Rewrite goal.md to the next bounded executable slice after push."
+    "Inspect BinaryPatchesPage and PatchBench helpers for the next smallest presentation-only extraction or test-hardening candidate.",
+    "Use specialist and adversarial review before any nontrivial edit.",
+    "Keep patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of the next modularity slice unless evidence reveals a bounded bug."
   ],
   "releaseAccounting": {
     "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",
