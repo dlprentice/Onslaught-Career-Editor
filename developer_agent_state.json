@@ -1,210 +1,49 @@
 {
-  "lastUpdated": "2026-06-25",
-  "branch": "main",
-  "currentFocus": "Windowed & Mods safe-copy outcome text modularity is accepted; next slice is read-first safe-copy status/receipt guard inspection.",
-  "repositoryTruth": {
-    "workingRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor",
-    "formerPrivateRepo": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
-    "publicMainStatus": "safe-copy outcome text modularity source slice is committed and pushed as 3bd3bfb3.",
-    "policy": "public repo is primary for source/docs/tools/tests/RE notes/proof summaries/state; hard payloads remain maintainer-local ignored overlays"
-  },
-  "publicPrimaryMigration": {
-    "status": "validated_public_primary_with_maintainer_local_ignored_overlays",
-    "inventoryGuard": "tools/public_primary_migration_inventory.py",
-    "readinessNote": "release/readiness/public_primary_full_migration_inventory_2026-06-24.md",
-    "acceptedInventory": {
-      "privateTrackedPaths": 24839,
-      "publicTrackedPaths": 19335,
-      "allowedPrivateOnlyHardPayloadOrScratchPayloadPaths": 5557
+  "lastUpdated": "2026-06-26",
+  "branch": "campaign/20260626T024429Z-public-primary-coordination/integration-001",
+  "currentFocus": "Coordination-policy bootstrap integration is locally reconciled; fresh read-only acceptance is next before any broad write fanout.",
+  "currentTruth": {
+    "publicPrimaryRepo": "The public repo remains the primary collaboration repo for source, docs, tools, tests, RE notes, wave notes, state batons, agent reports, readiness notes, and compact proof summaries that are non-secret and non-payload.",
+    "coordinationPolicyBootstrap": {
+      "status": "integrated_pending_fresh_acceptance",
+      "campaignId": "20260626T024429Z-public-primary-coordination",
+      "acceptedBootstrapCommit": "2622b030374db46d395d92327f7da7d32253fb43",
+      "baseCommit": "eeb3197c28aee59d24abbe9bdfd1ac8318dcd140",
+      "integrationBranch": "campaign/20260626T024429Z-public-primary-coordination/integration-001",
+      "scope": "durable coordination policy plus one canonical goal/state reconciliation",
+      "docs": [
+        "coordination/README.md",
+        "coordination/WORKSTREAM_CONTRACT.md",
+        "coordination/REPORT_CONTRACT.md",
+        "coordination/RESOURCE_LEASES.md"
+      ]
     },
-    "hardening": "test:public-allowlist now chains hard-payload safety, submodule payload scan, and public-primary migration/hash inventory; public_allowlist_safety_check.py now checks more payload suffixes, magic bytes, raw-log-shaped text, JSONL text, exact fixture hashes, and missing/unreadable submodules.",
-    "localOnly": [
-      "game/media/local-rom-input payload roots",
-      "copied executables/DLLs",
-      "arbitrary save/options payloads",
-      "full Ghidra project databases/backups",
-      "screenshots/frame dumps/raw CDB logs",
-      "bulky generated runtime captures",
-      "secrets/.env/build outputs"
-    ],
-    "localOverlayStatus": "maintainer-local ignored overlays contain the copied game mirror/local extras, save-attempts payloads, local-rom-input, mcps, and G: junctions for runtime proof/Ghidra backups; these are available in this checkout but are not GitHub-tracked project source.",
-    "localStorageCleanup": "C:\\Users\\david\\source\\Onslaught-Career-Editor-public-candidate* scratch clones were moved to G:\\OnslaughtRepoArchives\\source-scratch-20260624 with move-manifest.json; zero public-candidate scratch dirs remain on C:.",
-    "maintainerParityCommand": "py -3 tools\\public_primary_migration_inventory.py --check --private-root C:\\Users\\david\\source\\Onslaught-Career-Editor-private --require-private-root"
-  },
-  "repoSkillsGhidraPolicyInventory": {
-    "status": "pushed",
-    "readinessNote": "release/readiness/repo_skills_ghidra_policy_inventory_2026-06-25.md",
-    "commit": "b928200a",
-    "claimBoundary": "policy/inventory only; no hard payload tracking change, no full Ghidra DB move, no game asset move, no runtime proof, no Ghidra mutation, no release publication.",
-    "acceptedFindings": [
-      "Public repo has no tracked SKILL.md, skills/, or .codex/skills/ paths.",
-      "Relevant BEA/Onslaught maintainer-local Codex skills are user-local routing conveniences over tracked docs/tools, not public clone prerequisites.",
-      "Full Ghidra .gpr/.rep project stores and backups remain local/ignored; public repo should track deterministic exports, scripts, ledgers, hashes, markdown/JSON/TSV summaries, and compact proof summaries.",
-      ".codex runtime skills/auth/cache/session/plugin/log state is ignored by default while .codex/goals and .codex/state Markdown batons remain trackable."
-    ],
-    "consultReview": {
-      "specialist": "read-only consult recommended documenting skill routing in LOCAL_LAB_OVERLAY.md/tools/README.md rather than copying runtime skill bodies",
-      "adversarial": "security review blocked public Ghidra DB distribution, repo-local runtime .codex/skills/cache publication, and hardlink-style payload distribution",
-      "finalDocsReview": "state and readiness-note validation wording issues were accepted and fixed"
-    }
-  },
-  "recentClosedSlice": {
-    "name": "winui-windowed-mods-safe-copy-outcome-text-modularity",
-    "status": "pushed",
-    "commit": "3bd3bfb3",
-    "readinessNote": "release/readiness/winui_windowed_mods_safe_copy_outcome_text_modularity_2026-06-25.md",
-    "claimBoundary": "Presentation-only WinUI helper extraction: prepared safe-copy summary/log/music-status copy now lives in PatchBenchSafeCopyOutcomeText. BinaryPatchesPage still owns AppCore service calls, result projection, safe-copy signatures, launch planning, process state, music staging state, and online/readiness behavior.",
-    "acceptedTruth": [
-      "Red source-shape test failed first for missing PatchBenchSafeCopyOutcomeText.cs helper/state records.",
-      "BinaryPatchesPage projects GameProfileControlOptionsResult and GameProfileMusicReplacementResult into primitive PatchBenchSafeCopy*TextState records before helper formatting.",
-      "PatchBenchSafeCopyOutcomeText formats prepared safe-copy summary, operation log, and music replacement status only; helper-boundary tests block service, file/process, patch-engine, launch-plan, online, and release tokens.",
-      "Focused PatchBench guard tests, full PatchBench static tests, WinUI build, WinUI primary lane, docs commands, Markdown links, hard-payload safety, public allowlist, repo hygiene, whitespace diff, state JSON parse, and process cleanup checks passed."
-    ],
-    "consultReview": {
-      "specialist": "recommended prepared-outcome text helper only with page-local AppCore-result projection into primitive presentation state",
-      "adversarial": "blocked broad receipt/status extraction and result-type/service movement into helpers; accepted only narrow formatter or guard hardening",
-      "closeout": "final adversarial review found no blockers and noted only residual source-shape/static-test limitation"
-    }
+    "claimBoundary": "No product source, product tests, runtime behavior, patch semantics, launch behavior, safe-copy behavior, Host/Join capability, runtime proof, release/publication action, Ghidra mutation, hard-payload boundary, or installed-game/original-BEA mutation changed.",
+    "productBaseline": "WinUI 3 remains the primary app, AppCore remains shared correctness logic, the C# CLI remains a support lane, and Python tooling remains repo/lab support.",
+    "runtimeBoundaries": {
+      "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint and source-bound copied-runtime proof exists",
+      "musicAudibleOutputProof": false,
+      "staticReClosure": "static closure is not runtime, gameplay, visual, online, rebuild, or parity proof",
+      "installedGameOriginalBea": "read-only"
+    },
+    "hardPayloadBoundary": "Hard payloads, raw proof logs, screenshots/frame dumps, copied executable output, full Ghidra databases, secrets, .env files, local config, caches, and build/package output stay out of git and release ZIPs; use LOCAL_LAB_OVERLAY.md for local-only placement."
   },
   "activeSlice": {
-    "name": "windowed-mods-safe-copy-status-receipt-guard-inspection",
-    "goal": "inspect BinaryPatchesPage safe-copy canceled/failed/restored/source-changed status copy and receipt Host/Join fallback guards for the next smallest presentation-only extraction or test-hardening candidate",
-    "claimBoundary": "read-first WinUI modularity/test-hardening inspection; do not move patch rows, byte changes, copied-profile launch behavior, safe-copy manifests/signatures, music behavior, online readiness, runtime proof, release packaging, or installed-game mutation rules.",
-    "status": "ready_after_safe_copy_outcome_text_validation"
-  },
-  "runtimeTruth": {
-    "musicAudibleOutputProof": false,
-    "musicCGameCallerDiagnostic": {
-      "status": "accepted_bounded_diagnostic",
-      "classification": "restart-loop-direct-level100-music-selection-observed",
-      "directReturnAddress": "0x0046e0bf",
-      "wrapperEntryRows": 0,
-      "restartLoopDirectRows": 1,
-      "readinessNote": "release/readiness/winui_music_cgame_caller_diagnostic_2026-06-24.md"
-    },
-    "musicDecodeWindowDiagnostic": {
-      "status": "validated_on_existing_20260624_144834_bundle",
-      "schema": "winui-safe-copy-music-decode-window-correlation-diagnostic.v1",
-      "decodeWindowInsideRawAudioCapture": false,
-      "stagedReplacementPreferredInDecodeWindow": false,
-      "runtimeAudibleOutputProof": false,
-      "nextAction": "rerun a new private live bundle only after wall-clock padding hardening is committed; old rejected bundle remains rejected"
-    },
-    "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable",
-    "originalInstallRule": "installed Steam folder and original BEA.exe remain read-only"
-  },
-  "staticProgress": {
-    "functionQuality": "6411/6411 = 100.00%",
-    "staticDebt": "0 / 0 / 0",
-    "activeCurrentRisk": "1179/1179 = 100.00%",
-    "measurementFrontDoor": "reverse-engineering/binary-analysis/static-reaudit-measurement-register.md"
+    "name": "coordination-policy-bootstrap-integration",
+    "status": "integrated_pending_fresh_acceptance",
+    "goal": "integrate accepted coordination policy bootstrap commit, reconcile canonical state once, validate, and send to fresh read-only acceptance before broad write fanout",
+    "claimBoundary": "documentation/state policy only; no product/runtime/test behavior, release/publication state, Host/Join readiness, runtime proof, Ghidra state, or installed-game/original-BEA mutation changes"
   },
   "validation": {
-    "previousReleaseValidationPassed": [
-      "py -3 tools\\winui_lore_pack_builder.py --self-test (PASS; 3 tests)",
-      "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
-      "npm run test:winui-primary-lane (PASS; solution build 0 warnings/errors, AppCore 1176/1176, WinUI UI tests 86 passed / 2 skipped catalog-dependent rows)",
-      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~LoreBrowserServiceTests|FullyQualifiedName~AssetCatalogServiceTests\" (PASS; 102 tests)",
-      "py -3 tools\\winui_zip_package_probe_test.py (PASS; 21 tests)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.LoreReader_DebouncesSearchFiltering\" (PASS; 1 test)",
-      "npm run test:winui-notices (PASS; 74 packages)",
-      "npm run test:winui-zip-package-probe (PASS; ZIP 246757113 bytes, SHA-256 5dfa8271456c1356fe560a4face65703f6b9a49df5c3fab6842327d0f43fc49f, 943 Lore pack docs, extracted launch/Home/Lore/Media smokes passed)",
-      "npm run test:winui-zip-release-candidate-probe (PASS; OnslaughtToolkit-winui-v1.0.7-win-x64.zip, 246757113 bytes, SHA-256 033d9f65d51e884c7896fcd1180689988743c50ef6c57a6ce0c72f8b4f38c7ae, 943 Lore pack docs, extracted launch/Home/Lore/Media smokes passed)",
-      "npm run test:doc-commands (PASS; 4243 documented npm commands checked)",
-      "npm run test:md-links (PASS; 3622 markdown files, 6123 local links)",
-      "npm run release:profile-check (PASS; R0=6131 R2=0 R3=3 R4=13177)",
-      "npm run release:curated-check (PASS; selected files 625)",
-      "npm run test:public-allowlist (PASS; public candidate files 19311, submodule candidate files 19495, migration inventory public tracked paths 19311)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18464 explicit text files line-ending check)",
-      "git diff --check (PASS)"
-    ],
-    "activeSliceFocusedPassed": [
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench_CodeRequiresAppOwnedWorkingCopyBeforeApply|FullyQualifiedName~WinUiProductLaneTests.PatchBench_PresentationHelpersStayBehaviorFree\" (RED; failed for missing PatchBenchSafeCopyOutcomeText.cs helper/state records before implementation)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench_CodeRequiresAppOwnedWorkingCopyBeforeApply|FullyQualifiedName~WinUiProductLaneTests.PatchBench_PresentationHelpersStayBehaviorFree\" (PASS; 2 tests)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.PatchBench\" (PASS; 6 tests)",
-      "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)"
-    ],
-    "activeSliceBroadPassed": [
-      "npm run test:winui-primary-lane (PASS; solution build 0 warnings/errors, AppCore 1178/1178, WinUI 88 passed / 2 catalog-dependent skips)",
-      "npm run test:doc-commands (PASS; 4313 documented npm commands checked; 8 marked public docs checked)",
-      "npm run test:md-links (PASS; 3635 Markdown files scanned, 6125 local links checked)",
-      "npm run test:hard-payload-safety (PASS; 19340 public candidate files checked)",
-      "npm run test:public-allowlist (PASS; hard-payload safety, submodule payload safety, public-primary migration inventory; public tracked paths 19335; submodule candidate files 19524; allowed private-only hard-payload/scratch paths 5557)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18488 explicit text files checked)",
-      "git diff --check (PASS)",
-      "state JSON parse (PASS)",
-      "Get-Process BEA,cdb,OnslaughtCareerEditor.WinUI -ErrorAction SilentlyContinue (PASS; no matching processes)"
-    ],
-    "pendingForActiveSlice": []
+    "thisIntegration": "Final command results live in the local integration report. Required closeout gates are git diff --check, docs commands, Markdown links, repo hygiene, public allowlist, hard-payload safety, state JSON parse, and integration report JSON parse.",
+    "previousProductSliceEvidence": "Use the slice readiness notes and release/readiness/PUBLIC_SIGNOFF_COMMANDS.md instead of expanding historical command logs in this baton."
   },
+  "openQuestions": [],
+  "blockers": [],
   "nextSteps": [
-    "Inspect BinaryPatchesPage safe-copy canceled/failed/restored/source-changed status copy and defensive receipt Host/Join fallback for a small presentation-only extraction or guard-hardening candidate.",
-    "Use specialist and adversarial review before any nontrivial edit.",
-    "Keep patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of the next modularity slice unless evidence reveals a bounded bug."
-  ],
-  "releaseAccounting": {
-    "releaseProfile": "R0=6131 R2=0 R3=3 R4=13177",
-    "curatedSelectedFiles": 625,
-    "publicCandidateFiles": 19340,
-    "publicSubmoduleCandidateFiles": 19524
-  },
-  "githubRelease": {
-    "version": "v1.0.7",
-    "status": "published",
-    "url": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.7",
-    "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.7/OnslaughtToolkit-winui-v1.0.7-win-x64.zip",
-    "checksumUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.7/OnslaughtToolkit-v1.0.7-SHA256SUMS.txt",
-    "sha256": "033d9f65d51e884c7896fcd1180689988743c50ef6c57a6ce0c72f8b4f38c7ae",
-    "byteSize": 246757113,
-    "publishedAt": "2026-06-25T17:33:53Z",
-    "tagCommit": "f9fb41b1a6090965778f770533367893b957ab98"
-  },
-  "currentCounters": {
-    "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
-    "catalogRows": "29/29 target specimen identity and policy metadata rows"
-  },
-  "postReleaseAudit": {
-    "status": "completed_with_no_release_takedown_blocker_found",
-    "consultedAgents": 10,
-    "consultScope": "migration parity, adversarial private/public boundary, release assets, payload/security, stale docs/state, onboarding, validation evidence, first-run WinUI UX, product adversarial review",
-    "acceptedTruth": [
-      "v1.0.7 GitHub release is published and supersedes earlier v1.0.3/v1.0.4/v1.0.6 ZIPs for current user-facing downloads.",
-      "public repo is the primary day-to-day collaboration repo for project-owned source/docs/tools/tests/RE notes/proof summaries/state",
-      "maintainer private-parity inventory passes when run with explicit private root and require-private-root",
-      "remaining private-only tracked delta is accepted hard-payload/scratch-payload material, not missing project source/docs/tools/tests",
-      "tracked public tree has no hard-payload or secret leak according to current gates"
-    ],
-    "nonBlockingFollowups": [
-      "private repo still has active-looking goal/state wording and should eventually be frozen or bannered as archived if kept",
-      "historical source docs may contain maintainer-local provenance markers, but the v1.0.7 lore-pack builder redacts maintainer-local paths and the package probe rejects local/private path text before ZIP acceptance",
-      "Windowed & Mods selected-state UX now covers profile/menu-color/launch preset choices; broader page split and shared selected-choice component work remains tracked in roadmap/winui-ui-ux-redesign-radar.md.",
-      "Asset Library first-run guidance now has an accepted focused slice; broader asset generation/onboarding polish remains tied to extraction-pipeline docs and local overlay policy."
-    ]
-  },
-  "lorePackaging": {
-    "status": "published_in_v1_0_7",
-    "currentRelease": "v1.0.7 is the latest published GitHub app ZIP and includes the generated short-path lore-pack.",
-    "currentSource": "Package candidates now stage lore-book/BOOK.md and Start-Here.md as short entry files plus generated lore-pack/onslaught-lore.v1.index.json and onslaught-lore.v1.jsonl with 943 public-safe Markdown/TXT Lore documents.",
-    "documentCount": 943,
-    "localCandidate": "subagents/winui-zip-package-probe/current/OnslaughtCareerEditor.WinUI-local-probe-win-x64.zip",
-    "sha256": "5dfa8271456c1356fe560a4face65703f6b9a49df5c3fab6842327d0f43fc49f",
-    "byteSize": 246757113,
-    "decision": "Do not raw-copy the full deep lore-book tree into the app ZIP; use the generated short-path content pack to avoid Explorer path-too-long extraction failures.",
-    "plan": "roadmap/winui-lore-offline-pack-plan.md",
-    "readinessNote": "release/readiness/winui_zip_release_v1_0_7_2026-06-25.md"
-  },
-  "ghidraLocalTruth": {
-    "liveProject": "C:\\Users\\david\\Ghidra\\Projects\\BEA.gpr",
-    "liveStore": "C:\\Users\\david\\Ghidra\\Projects\\BEA.rep\\",
-    "latestVerifiedBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified",
-    "repoPolicy": "track scripts/exports/ledgers/docs, not full Ghidra project databases/backups"
-  },
-  "latestLocalZipCandidate": {
-    "packageName": "OnslaughtToolkit-winui-v1.0.7-win-x64.zip",
-    "path": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.7-win-x64.zip",
-    "byteSize": 246757113,
-    "sha256": "033d9f65d51e884c7896fcd1180689988743c50ef6c57a6ce0c72f8b4f38c7ae",
-    "status": "published as GitHub Release v1.0.7",
-    "readinessNote": "release/readiness/winui_zip_release_v1_0_7_2026-06-25.md"
-  }
+    "Complete fresh read-only acceptance of the coordination-policy integration and release the integration/state lease.",
+    "Use the coordination contracts to assign exactly one writer for any BinaryPatchesPage, PatchBench helper/model, or focused PatchBench test changes.",
+    "Inspect safe-copy canceled/failed/restored/source-changed status copy and defensive receipt Host/Join fallback for a small presentation-only extraction or guard-hardening candidate.",
+    "Keep patch rows, launch behavior, safe-copy behavior, music, online gates, runtime proof, release packaging, and installed-game mutation rules out of the next product slice unless evidence reveals a bounded bug."
+  ]
 }
