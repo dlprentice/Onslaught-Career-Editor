@@ -1,6 +1,11 @@
 # Pull Request
 
-## Lane
+Use this template with [CONTRIBUTING.md](../CONTRIBUTING.md) and
+[COLLABORATION.md](../COLLABORATION.md). Keep the description concise and
+public-safe; do not paste private game payloads, raw proof logs, screenshots,
+secrets, or local-only evidence.
+
+## Lane / Scope
 
 Choose one primary lane:
 
@@ -20,7 +25,27 @@ List the main files or folders touched.
 
 ## Local Validation
 
-List exact commands run and results. If a relevant gate was skipped, explain why.
+List exact commands run and results.
+
+## Validation Intentionally Skipped
+
+List any relevant gate not run and why.
+
+## Private / Public Boundary Check
+
+Say whether this PR adds or changes hard-payload boundaries, release manifest
+entries, copied-game proof summaries, local evidence references, or other
+public/private boundary material.
+
+## State Baton Update
+
+Name any updated state files, or explain why no state update was made.
+
+## Installed Game / Original BEA.exe Mutation
+
+Confirm `none` for installed game folder and original `BEA.exe` mutation.
+If maintainer-authorized proof used only copied or app-owned targets, note that
+separately under the boundary check or remaining risks.
 
 ## Safety Confirmations
 
