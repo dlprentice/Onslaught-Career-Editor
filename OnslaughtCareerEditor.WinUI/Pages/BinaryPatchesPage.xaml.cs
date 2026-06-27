@@ -585,7 +585,157 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 return;
             }
 
+            if (CurrentLaunchOptionsMatchSelectedPreset())
+            {
+                return;
+            }
+
             _selectedLaunchPresetChoice = LaunchPresetChoice.None;
+        }
+
+        private bool CurrentLaunchOptionsMatchSelectedPreset()
+        {
+            return _selectedLaunchPresetChoice switch
+            {
+                LaunchPresetChoice.QuietCapture => CurrentLaunchOptionsMatch(
+                    skipFmv: true,
+                    noMusic: true,
+                    noSound: false,
+                    highDetail: false,
+                    noStaticShadows: false,
+                    noRumble: false,
+                    levelId: string.Empty,
+                    controllerConfigurationIndex: 0,
+                    persistControllerConfig: false,
+                    sharpenMouseLook: false,
+                    mouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
+                    invertWalkerY: false,
+                    invertFlightY: false,
+                    textureRamLimitMb: string.Empty),
+                LaunchPresetChoice.HighDetail => CurrentLaunchOptionsMatch(
+                    skipFmv: true,
+                    noMusic: false,
+                    noSound: false,
+                    highDetail: true,
+                    noStaticShadows: false,
+                    noRumble: false,
+                    levelId: string.Empty,
+                    controllerConfigurationIndex: 0,
+                    persistControllerConfig: false,
+                    sharpenMouseLook: false,
+                    mouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
+                    invertWalkerY: false,
+                    invertFlightY: false,
+                    textureRamLimitMb: HighDetailTextureRamLimitMb),
+                LaunchPresetChoice.ControlBaseline => CurrentLaunchOptionsMatch(
+                    skipFmv: true,
+                    noMusic: false,
+                    noSound: false,
+                    highDetail: false,
+                    noStaticShadows: false,
+                    noRumble: false,
+                    levelId: string.Empty,
+                    controllerConfigurationIndex: 1,
+                    persistControllerConfig: false,
+                    sharpenMouseLook: false,
+                    mouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
+                    invertWalkerY: false,
+                    invertFlightY: false,
+                    textureRamLimitMb: string.Empty),
+                LaunchPresetChoice.ControlSharpened => CurrentLaunchOptionsMatch(
+                    skipFmv: true,
+                    noMusic: false,
+                    noSound: false,
+                    highDetail: false,
+                    noStaticShadows: false,
+                    noRumble: false,
+                    levelId: string.Empty,
+                    controllerConfigurationIndex: 1,
+                    persistControllerConfig: true,
+                    sharpenMouseLook: true,
+                    mouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
+                    invertWalkerY: false,
+                    invertFlightY: false,
+                    textureRamLimitMb: string.Empty),
+                LaunchPresetChoice.ControlConfig2 => CurrentLaunchOptionsMatch(
+                    skipFmv: true,
+                    noMusic: false,
+                    noSound: false,
+                    highDetail: false,
+                    noStaticShadows: false,
+                    noRumble: false,
+                    levelId: string.Empty,
+                    controllerConfigurationIndex: 2,
+                    persistControllerConfig: true,
+                    sharpenMouseLook: false,
+                    mouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
+                    invertWalkerY: false,
+                    invertFlightY: false,
+                    textureRamLimitMb: string.Empty),
+                LaunchPresetChoice.ControlConfig3 => CurrentLaunchOptionsMatch(
+                    skipFmv: true,
+                    noMusic: false,
+                    noSound: false,
+                    highDetail: false,
+                    noStaticShadows: false,
+                    noRumble: false,
+                    levelId: string.Empty,
+                    controllerConfigurationIndex: 3,
+                    persistControllerConfig: true,
+                    sharpenMouseLook: false,
+                    mouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
+                    invertWalkerY: false,
+                    invertFlightY: false,
+                    textureRamLimitMb: string.Empty),
+                LaunchPresetChoice.ControlConfig4 => CurrentLaunchOptionsMatch(
+                    skipFmv: true,
+                    noMusic: false,
+                    noSound: false,
+                    highDetail: false,
+                    noStaticShadows: false,
+                    noRumble: false,
+                    levelId: string.Empty,
+                    controllerConfigurationIndex: 4,
+                    persistControllerConfig: true,
+                    sharpenMouseLook: false,
+                    mouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
+                    invertWalkerY: false,
+                    invertFlightY: false,
+                    textureRamLimitMb: string.Empty),
+                _ => false,
+            };
+        }
+
+        private bool CurrentLaunchOptionsMatch(
+            bool skipFmv,
+            bool noMusic,
+            bool noSound,
+            bool highDetail,
+            bool noStaticShadows,
+            bool noRumble,
+            string levelId,
+            int controllerConfigurationIndex,
+            bool persistControllerConfig,
+            bool sharpenMouseLook,
+            int mouseSensitivityPresetIndex,
+            bool invertWalkerY,
+            bool invertFlightY,
+            string textureRamLimitMb)
+        {
+            return PatchBenchSkipFmvLaunchOption.IsChecked == skipFmv
+                && PatchBenchNoMusicLaunchOption.IsChecked == noMusic
+                && PatchBenchNoSoundLaunchOption.IsChecked == noSound
+                && PatchBenchHighDetailLaunchOption.IsChecked == highDetail
+                && PatchBenchNoStaticShadowsLaunchOption.IsChecked == noStaticShadows
+                && PatchBenchNoRumbleLaunchOption.IsChecked == noRumble
+                && string.Equals(PatchBenchLevelLaunchOption.Text ?? string.Empty, levelId, StringComparison.Ordinal)
+                && PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex == controllerConfigurationIndex
+                && PatchBenchPersistControllerConfigOption.IsChecked == persistControllerConfig
+                && PatchBenchSharpenMouseLookOption.IsChecked == sharpenMouseLook
+                && PatchBenchMouseSensitivityPresetComboBox.SelectedIndex == mouseSensitivityPresetIndex
+                && PatchBenchInvertWalkerYOption.IsChecked == invertWalkerY
+                && PatchBenchInvertFlightYOption.IsChecked == invertFlightY
+                && string.Equals(PatchBenchTextureRamLimitLaunchOption.Text ?? string.Empty, textureRamLimitMb, StringComparison.Ordinal);
         }
 
         private bool IsLaunchPresetOwnedCheckBox(object sender)
@@ -1154,8 +1304,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void ApplyLaunchPreset(LaunchPresetChoice selectedChoice, LaunchPresetSelection preset)
         {
-            ApplyLaunchPreset(preset);
             _selectedLaunchPresetChoice = selectedChoice;
+            ApplyLaunchPreset(preset);
             UpdateLaunchPresetVisualState();
             _ = DispatcherQueue.TryEnqueue(() =>
             {
