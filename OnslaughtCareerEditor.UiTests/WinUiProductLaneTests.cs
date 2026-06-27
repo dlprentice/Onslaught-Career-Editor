@@ -976,6 +976,8 @@ public class WinUiProductLaneTests
         string[] buttonBlocks = Regex.Matches(pageXaml, "<Button\\b[\\s\\S]*?(?:/>|>)")
             .Select(match => match.Value)
             .ToArray();
+        const string forbiddenOnlineActionLabelPattern =
+            "\\b(?:Host|Join|Matchmaking)\\b|Online session|Public matchmaking|\\bonline play\\b|\\bnetplay\\b";
         string[] blockedOnlineButtonBlocks = buttonBlocks
             .Where(block => Regex.IsMatch(block, "Host online|Join online|Online session|Matchmaking", RegexOptions.IgnoreCase))
             .ToArray();
@@ -983,14 +985,22 @@ public class WinUiProductLaneTests
             .Select(block => Regex.Match(block, "\\bContent\\s*=\\s*\"([^\"]*)\"", RegexOptions.IgnoreCase))
             .Where(match => match.Success)
             .Select(match => match.Groups[1].Value)
-            .Where(label => Regex.IsMatch(label, "\\b(?:Host|Join|Matchmaking)\\b|Online session|Public matchmaking", RegexOptions.IgnoreCase))
+            .Where(label => Regex.IsMatch(label, forbiddenOnlineActionLabelPattern, RegexOptions.IgnoreCase))
             .ToArray();
         string[] blockedOnlineClickHandlers = Regex.Matches(code, "\\b\\w*(?:Host|Join|Matchmaking)\\w*Button_Click\\b")
             .Select(match => match.Value)
             .ToArray();
+        string[] blockedOnlineRuntimeButtonContentStatements = Regex.Matches(
+                code,
+                "\\bPatchBench\\w*Button\\.Content\\s*=\\s*(?<rhs>[^;]*);",
+                RegexOptions.Singleline)
+            .Select(match => match.Value)
+            .Where(statement => Regex.IsMatch(statement, forbiddenOnlineActionLabelPattern, RegexOptions.IgnoreCase))
+            .ToArray();
         Assert.That(blockedOnlineButtonBlocks, Is.Empty, "Windowed & Mods must not grow Host/Join/Matchmaking buttons before readiness flags and proof contract allow them.");
         Assert.That(blockedOnlineButtonContentLabels, Is.Empty, "Windowed & Mods button labels must not expose Host/Join/Matchmaking actions before readiness flags and proof contract allow them.");
         Assert.That(blockedOnlineClickHandlers, Is.Empty, "Windowed & Mods must not grow Host/Join/Matchmaking click handlers before readiness flags and proof contract allow them.");
+        Assert.That(blockedOnlineRuntimeButtonContentStatements, Is.Empty, "Windowed & Mods code-behind must not expose Host/Join/Matchmaking/online-play actions through runtime button labels before readiness flags and proof contract allow them.");
         Assert.That(pageXaml, Does.Contain("PatchBenchConfigurationLaunchPresetComboBox"));
         Assert.That(pageXaml, Does.Contain("PatchBenchPersistControllerConfigOption"));
         Assert.That(pageXaml, Does.Contain("PatchBenchSharpenMouseLookOption"));
