@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-27",
-  "currentFocus": "Post-wave closeout and PatchBench static guard integration is reconciled on main; docs/state preserve the accepted evidence and leave a tooling/docs follow-up for WinUI validation-wrapper long-path handling.",
+  "currentFocus": "State batons are slimmed to current-state pointers after the post-wave closeout and PatchBench static guard integration; docs/state preserve accepted evidence and leave a tooling/docs follow-up for WinUI validation-wrapper long-path handling.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -48,7 +48,7 @@
         "coordination/RESOURCE_LEASES.md"
       ]
     },
-    "stateReconciliation": "goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json now describe the accepted closeout plus PatchBench static guard integration without local campaign report paths or stale active-slice wording.",
+    "stateReconciliation": "goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json now keep concise current-state pointers and non-claims; completed release-audit detail, repeated command logs, and local campaign paths are not live state.",
     "validationWrapperFinding": "Classifier evidence says the deep-worktree WinUI build failure is a Windows App SDK/XAML compiler long-path/tooling issue. The next documented slice should harden or document the primary-lane wrapper short-path behavior without product, package-script, release, or runtime changes.",
     "releasePublicationStatus": "No release, tag, package, signing, installer, announcement, hosted workflow, or publication action is part of this integration.",
     "claimBoundary": "Docs/state and test-only PatchBench guard integration only; no AppCore, patch catalog row, byte patch, launch argument, safe-copy manifest/signature, runtime proof, release/publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, or original-BEA mutation claim change.",

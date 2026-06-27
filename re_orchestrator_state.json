@@ -1,119 +1,47 @@
 {
   "lastUpdated": "2026-06-27",
-  "currentFocus": "No Ghidra/static mutation in the post-wave closeout and PatchBench integration; static RE remains unchanged, and the next repo slice is the WinUI validation-wrapper short-path guard/docs follow-up.",
+  "currentFocus": "Static RE/Ghidra state is unchanged; no static mutation is active. Use the next repo slice for the WinUI validation-wrapper short-path guard/docs follow-up.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
     "activeCurrentRisk": "1179/1179 = 100.00%",
     "wave1220CloseoutProbe": "tools/static_reaudit_final_closeout_wave1220.py",
     "measurementFrontDoor": "reverse-engineering/binary-analysis/static-reaudit-measurement-register.md",
-    "latestGhidraReviewBackup": "maintainer-local; keep full backup paths outside tracked state",
-    "latestLiveProject": "maintainer-local; see LOCAL_LAB_OVERLAY.md for local-only Ghidra placement",
-    "latestLiveStore": "maintainer-local; see LOCAL_LAB_OVERLAY.md for local-only Ghidra placement"
+    "latestGhidraReviewBackup": "maintainer-local descriptor only; keep full backup paths outside tracked state",
+    "latestLiveProject": "maintainer-local descriptor only; see LOCAL_LAB_OVERLAY.md for local-only Ghidra placement",
+    "latestLiveStore": "maintainer-local descriptor only; see LOCAL_LAB_OVERLAY.md for local-only Ghidra placement"
   },
-  "publicPrimaryMigration": {
-    "status": "validated_public_primary_with_maintainer_local_ignored_overlays",
-    "commit": "c58d06420e482421355d1e40f240db7d87e289d3",
-    "impact": "Public repo is primary for RE docs, wave notes, scratch text exports, function indexes, static maps, proof summaries, and checkers; hard payloads, full Ghidra DBs/backups, raw captures, and copied executables remain ignored local overlays.",
-    "currentRefreshPointer": "See developer_agent_state.json and documentation_agent_state.json for v1.0.7 published release, validation, and next runtime/product follow-up status."
-  },
+  "publicPrimaryBoundary": "The public repo is primary for RE docs, wave notes, scratch text exports, function indexes, static maps, proof summaries, and checkers. Hard payloads, full Ghidra DBs/backups, raw captures, copied executables, secrets, build output, and package output remain local/ignored per LOCAL_LAB_OVERLAY.md.",
   "runtimeProofBoundary": {
-    "musicAudibleOutputProof": "runtimeAudibleOutputProof=false",
-    "loopbackWallClockPadding": "accepted helper/materializer hardening: future raw WAV data must preserve wall-clock capture duration, carry enabled helper-authored wallClockPadding metadata, pass canonical WAV header/data-frame consistency checks, and cover the CDB decode window before materialization",
-    "earlyCdbAttachSupport": "present in public checkout for clean/staged music stages; lower-level music/decode rows observed in failed live attempts",
-    "latestCleanupHardeningCommit": "9bc9b420",
-    "latestMusicLiveAttempts": [
-      "music-audible-live-20260624-160116 timed out after early exact-PID CDB attach and required manual cleanup before parent cleanup hardening",
-      "music-audible-live-20260624-161657 failed timestamped CDB acceptance because CGame__PlayMusicForCurrentLevel level=100 was absent; no BEA/CDB remained"
-    ],
-    "onlineMultiplayer": "not player-ready; Host/Join remains disabled/unavailable; current slice is audio loopback helper/materializer/contract hardening only",
-    "latestWinuiReleaseCandidate": {
-      "version": "v1.0.7",
-      "status": "published",
-      "sha256": "033d9f65d51e884c7896fcd1180689988743c50ef6c57a6ce0c72f8b4f38c7ae",
-      "byteSize": 246757113,
-      "readinessNote": "release/readiness/winui_zip_release_v1_0_7_2026-06-25.md",
-      "releaseUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.7",
-      "zipUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.7/OnslaughtToolkit-winui-v1.0.7-win-x64.zip",
-      "checksumUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/download/v1.0.7/OnslaughtToolkit-v1.0.7-SHA256SUMS.txt",
-      "publishedAt": "2026-06-25T17:33:53Z",
-      "tagCommit": "f9fb41b1a6090965778f770533367893b957ab98"
-    },
-    "latestWinuiLoreContentPackCandidate": {
-      "status": "published_as_v1_0_7",
-      "documentCount": 943,
-      "zip": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.7-win-x64.zip",
-      "byteSize": 246757113,
-      "sha256": "033d9f65d51e884c7896fcd1180689988743c50ef6c57a6ce0c72f8b4f38c7ae",
-      "readinessNote": "release/readiness/winui_zip_release_v1_0_7_2026-06-25.md"
-    }
+    "musicAudibleOutputProof": false,
+    "musicStatus": "Music producer/materializer/checker infrastructure exists, but there is no accepted live BEA audible-output bundle. See CURRENT_CAPABILITIES.md for current proof-gate detail.",
+    "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint command-source proof and source-bound copied-runtime causality proof are both accepted",
+    "releaseStatus": "v1.0.7 is the current published portable WinUI ZIP; use README.MD and release/readiness/winui_zip_release_v1_0_7_2026-06-25.md for release evidence instead of live state detail.",
+    "staticReClosureBoundary": "Static closure is not runtime, gameplay, visual, online, rebuild, or no-noticeable-difference proof.",
+    "installedGameOriginalBea": "read-only"
   },
-  "nextSteps": [
-    "No Ghidra backup is required for this no-mutation integration slice.",
-    "Keep static RE work paused unless a product/runtime contradiction points back to a specific RE issue.",
-    "Use the next bounded repo slice for the WinUI validation-wrapper short-path guard/docs follow-up."
-  ],
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
     "catalogRows": "29/29 target specimen identity and policy metadata rows"
   },
-  "postReleaseAudit": {
-    "status": "completed_with_no_release_takedown_blocker_found",
-    "consultedAgents": 10,
-    "consultScope": "migration parity, adversarial private/public boundary, release assets, payload/security, stale docs/state, onboarding, validation evidence, first-run WinUI UX, product adversarial review",
-    "acceptedTruth": [
-      "v1.0.7 GitHub release is published and supersedes earlier v1.0.3/v1.0.4/v1.0.6 ZIPs for current user-facing downloads.",
-      "public repo is the primary day-to-day collaboration repo for project-owned source/docs/tools/tests/RE notes/proof summaries/state",
-      "maintainer private-parity inventory passes when run with explicit private root and require-private-root",
-      "remaining private-only tracked delta is accepted hard-payload/scratch-payload material, not missing project source/docs/tools/tests",
-      "tracked public tree has no hard-payload or secret leak according to current gates"
-    ],
-    "nonBlockingFollowups": [
-      "private repo still has active-looking goal/state wording and should eventually be frozen or bannered as archived if kept",
-      "historical source docs may contain maintainer-local provenance markers, but the v1.0.7 lore-pack builder redacts maintainer-local paths and the package probe rejects local/private path text before ZIP acceptance",
-      "Asset Library needs a clearer first-run path for generating/finding a local asset catalog",
-      "Windowed & Mods should move proof jargon/offset/evidence language further behind details/maintainer surfaces",
-      "dynamic patch row controls should get stable AutomationIds derived from patch keys"
-    ]
+  "currentPointers": {
+    "capabilities": "CURRENT_CAPABILITIES.md",
+    "releaseSignoff": "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
+    "reIndex": "reverse-engineering/RE-INDEX.md",
+    "roadmapIndex": "roadmap/ROADMAP-INDEX.md",
+    "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
+    "developerState": "developer_agent_state.json",
+    "documentationState": "documentation_agent_state.json"
   },
   "validation": {
-    "previousReleaseValidationPassed": [
-      "py -3 tools\\winui_lore_pack_builder.py --self-test (PASS; 3 tests)",
-      "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo (PASS; 0 warnings, 0 errors)",
-      "npm run test:winui-primary-lane (PASS; solution build 0 warnings/errors, AppCore 1176/1176, WinUI UI tests 86 passed / 2 skipped catalog-dependent rows)",
-      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~LoreBrowserServiceTests|FullyQualifiedName~AssetCatalogServiceTests\" (PASS; 102 tests)",
-      "py -3 tools\\winui_zip_package_probe_test.py (PASS; 21 tests)",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiProductLaneTests.LoreReader_DebouncesSearchFiltering\" (PASS; 1 test)",
-      "npm run test:winui-notices (PASS; 74 packages)",
-      "npm run test:winui-zip-package-probe (PASS; ZIP 246757113 bytes, SHA-256 5dfa8271456c1356fe560a4face65703f6b9a49df5c3fab6842327d0f43fc49f, 943 Lore pack docs, extracted launch/Home/Lore/Media smokes passed)",
-      "npm run test:winui-zip-release-candidate-probe (PASS; OnslaughtToolkit-winui-v1.0.7-win-x64.zip, 246757113 bytes, SHA-256 033d9f65d51e884c7896fcd1180689988743c50ef6c57a6ce0c72f8b4f38c7ae, 943 Lore pack docs, extracted launch/Home/Lore/Media smokes passed)",
-      "npm run test:doc-commands (PASS; 4243 documented npm commands checked)",
-      "npm run test:md-links (PASS; 3622 markdown files, 6123 local links)",
-      "npm run release:profile-check (PASS; R0=6131 R2=0 R3=3 R4=13177)",
-      "npm run release:curated-check (PASS; selected files 625)",
-      "npm run test:public-allowlist (PASS; public candidate files 19311, submodule candidate files 19495, migration inventory public tracked paths 19311)",
-      "npm run test:repo-hygiene (PASS; repo text hygiene and 18464 explicit text files line-ending check)",
-      "git diff --check (PASS)"
-    ],
-    "activeSliceFocusedPassed": [
-      "py -3 tools\\winui_safe_copy_music_audible_output_materializer_test.py (26 tests)",
-      "npm run test:audio-loopback-capture-helper",
-      "npm run test:winui-safe-copy-music-audible-output-materializer",
-      "npm run test:winui-safe-copy-music-decode-window-correlation-diagnostic",
-      "npm run test:winui-safe-copy-music-audible-output-contract",
-      "npm run test:winui-safe-copy-music-audible-output-live-bundle-executor"
-    ],
-    "activeSliceBroadPassed": [
-      "npm run test:doc-commands",
-      "npm run test:md-links",
-      "npm run release:profile-check",
-      "npm run release:curated-check",
-      "npm run test:hard-payload-safety (PASS; public candidate files checked 19312)",
-      "npm run test:public-allowlist",
-      "npm run test:repo-hygiene",
-      "git diff --check",
-      "state JSON parse"
-    ],
-    "pendingForActiveSlice": []
-  }
+    "stateRefresh": "State-only JSON slimming; no Ghidra mutation, product source change, tool change, release publication, hard payload, or runtime proof change.",
+    "currentGateExpectation": "For this state/doc slice, use JSON parse, stale local path scan, git diff --check, and the required docs/repo safety gates."
+  },
+  "openQuestions": [],
+  "blockers": [],
+  "nextSteps": [
+    "Keep static RE work paused unless a product/runtime contradiction points back to a specific RE issue.",
+    "Use the next bounded repo slice for the WinUI validation-wrapper short-path guard/docs follow-up.",
+    "Keep local Ghidra, proof, copied-runtime, and payload details as maintainer-local descriptors or ignored overlays, not tracked state."
+  ]
 }

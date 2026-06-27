@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-06-27",
   "branch": "main",
-  "currentFocus": "Post-wave closeout and PatchBench static guard commits are integrated on main; the next developer slice is a WinUI validation-wrapper short-path guard/docs follow-up.",
+  "currentFocus": "State batons are slimmed to current-state pointers after the post-wave closeout and PatchBench static guard integration; the next developer slice remains a WinUI validation-wrapper short-path guard/docs follow-up.",
   "currentTruth": {
     "publicMain": {
       "integratedEvidenceCommits": [
@@ -35,6 +35,7 @@
       ]
     },
     "releasePublicationStatus": "No release, tag, package, signing, installer, announcement, hosted workflow, or publication action is part of this integration.",
+    "stateBatonShape": "State files should stay concise current-state handoffs. Completed release-audit history, repeated command logs, and local campaign details belong in canonical docs/readiness notes or local reports, not live state.",
     "runtimeBoundaries": {
       "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint and source-bound copied-runtime proof exists",
       "musicAudibleOutputProof": false,
