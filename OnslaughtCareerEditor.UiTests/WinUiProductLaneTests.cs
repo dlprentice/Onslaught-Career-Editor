@@ -973,14 +973,23 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Not.Contain("PatchBenchHostOnlineSessionButton"));
         Assert.That(pageXaml, Does.Not.Contain("PatchBenchJoinOnlineSessionButton"));
         Assert.That(pageXaml, Does.Not.Contain("PatchBenchPublicMatchmakingButton"));
-        string[] blockedOnlineButtonBlocks = Regex.Matches(pageXaml, "<Button\\b[\\s\\S]*?(?:/>|>)")
+        string[] buttonBlocks = Regex.Matches(pageXaml, "<Button\\b[\\s\\S]*?(?:/>|>)")
             .Select(match => match.Value)
+            .ToArray();
+        string[] blockedOnlineButtonBlocks = buttonBlocks
             .Where(block => Regex.IsMatch(block, "Host online|Join online|Online session|Matchmaking", RegexOptions.IgnoreCase))
+            .ToArray();
+        string[] blockedOnlineButtonContentLabels = buttonBlocks
+            .Select(block => Regex.Match(block, "\\bContent\\s*=\\s*\"([^\"]*)\"", RegexOptions.IgnoreCase))
+            .Where(match => match.Success)
+            .Select(match => match.Groups[1].Value)
+            .Where(label => Regex.IsMatch(label, "\\b(?:Host|Join|Matchmaking)\\b|Online session|Public matchmaking", RegexOptions.IgnoreCase))
             .ToArray();
         string[] blockedOnlineClickHandlers = Regex.Matches(code, "\\b\\w*(?:Host|Join|Matchmaking)\\w*Button_Click\\b")
             .Select(match => match.Value)
             .ToArray();
         Assert.That(blockedOnlineButtonBlocks, Is.Empty, "Windowed & Mods must not grow Host/Join/Matchmaking buttons before readiness flags and proof contract allow them.");
+        Assert.That(blockedOnlineButtonContentLabels, Is.Empty, "Windowed & Mods button labels must not expose Host/Join/Matchmaking actions before readiness flags and proof contract allow them.");
         Assert.That(blockedOnlineClickHandlers, Is.Empty, "Windowed & Mods must not grow Host/Join/Matchmaking click handlers before readiness flags and proof contract allow them.");
         Assert.That(pageXaml, Does.Contain("PatchBenchConfigurationLaunchPresetComboBox"));
         Assert.That(pageXaml, Does.Contain("PatchBenchPersistControllerConfigOption"));
