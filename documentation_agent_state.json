@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-27",
-  "currentFocus": "State batons are slimmed to current-state pointers after the post-wave closeout and PatchBench static guard integration; docs/state preserve accepted evidence and leave a tooling/docs follow-up for WinUI validation-wrapper long-path handling.",
+  "currentFocus": "Accepted wrapper diagnostic, state-slimming, and PatchBench runtime online-button guard source commits are integrated on main; docs/state now point the next slice at PatchBench online-readiness presentation helper/model extraction.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -20,22 +20,28 @@
   },
   "currentDocsTruth": {
     "publicMain": {
-      "integratedEvidenceCommits": [
-        "3fb96d4e09df1cc9712e39a325e4f3500bb7ea9e",
-        "b000fa0be85d99e479a9d885af1ef5acd35e4aaf"
+      "integratedSourceCommits": [
+        "360e57ec8bb5307f2d855a8b03cca5bb8eb3bc40",
+        "c87d399b15ea653921797983c89e187167a42173",
+        "abfa4041a586107c5777f2aed74c5f507eb9dfd9"
       ],
       "nextWriteRequirement": "Re-read live git truth before treating any exact main commit as current; listed commits are accepted evidence only."
     },
     "acceptedWorkerCommits": [
       {
-        "worker": "post-wave-baton-closeout-001",
-        "commit": "3fb96d4e09df1cc9712e39a325e4f3500bb7ea9e",
-        "summary": "Goal/state closeout for the previous modularity wave, with stale pending-push and local campaign path wording removed."
+        "worker": "winui-validation-wrapper-short-path-001",
+        "commit": "360e57ec8bb5307f2d855a8b03cca5bb8eb3bc40",
+        "summary": "Warning-only WinUI validation-wrapper long-path diagnostic and matching docs."
       },
       {
-        "worker": "patchbench-next-seam-001",
-        "commit": "b000fa0be85d99e479a9d885af1ef5acd35e4aaf",
-        "summary": "Static PatchBench/Windowed & Mods guard now rejects literal button labels that would expose Host/Join, matchmaking, or online action wording before proof gates."
+        "worker": "state-baton-slimming-001",
+        "commit": "c87d399b15ea653921797983c89e187167a42173",
+        "summary": "Concise current-state baton refresh."
+      },
+      {
+        "worker": "patchbench-seam-discovery-001",
+        "commit": "abfa4041a586107c5777f2aed74c5f507eb9dfd9",
+        "summary": "PatchBench static guard now rejects future runtime online-action button labels before proof gates."
       }
     ],
     "publicPrimaryRepo": "The public repo is the normal collaboration surface, not a sparse export.",
@@ -48,10 +54,10 @@
         "coordination/RESOURCE_LEASES.md"
       ]
     },
-    "stateReconciliation": "goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json now keep concise current-state pointers and non-claims; completed release-audit detail, repeated command logs, and local campaign paths are not live state.",
-    "validationWrapperFinding": "Classifier evidence says the deep-worktree WinUI build failure is a Windows App SDK/XAML compiler long-path/tooling issue. The next documented slice should harden or document the primary-lane wrapper short-path behavior without product, package-script, release, or runtime changes.",
+    "stateReconciliation": "goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json record the accepted wrapper/state/PatchBench source commits, keep concise current-state pointers and non-claims, and remove local campaign paths from tracked state.",
+    "validationWrapperBoundary": "The WinUI validation-wrapper follow-up is accepted and closed as diagnostic-only docs/tooling.",
     "releasePublicationStatus": "No release, tag, package, signing, installer, announcement, hosted workflow, or publication action is part of this integration.",
-    "claimBoundary": "Docs/state and test-only PatchBench guard integration only; no AppCore, patch catalog row, byte patch, launch argument, safe-copy manifest/signature, runtime proof, release/publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, or original-BEA mutation claim change.",
+    "claimBoundary": "Docs/state, wrapper diagnostics, and test-only PatchBench guard integration only; no AppCore, patch catalog row, byte patch, launch argument, safe-copy manifest/signature, runtime proof, release/publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, or original-BEA mutation claim change.",
     "localOnlyBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, local runtime caches, local campaign logs, active coordination identifiers, raw proof evidence, and local proof paths stay out of tracked docs/state."
   },
   "currentCounters": {
@@ -60,13 +66,13 @@
   },
   "validation": {
     "currentIntegration": "Integration gates cover docs/repo, payload, WinUI, focused PatchBench, broader PatchBench, patch-engine, and primary-lane validation evidence.",
-    "nextSlice": "Prefer a small WinUI validation-wrapper short-path guard/docs follow-up before further PatchBench product work."
+    "nextSlice": "Prefer a small PatchBench online-readiness presentation helper/model extraction before broader BinaryPatchesPage modularity work."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
     "Before the next write, verify live HEAD, origin/main, and remote refs/heads/main.",
-    "Keep the next docs/tooling follow-up limited to WinUI primary-lane wrapper short-path handling unless a separate product slice is authorized.",
+    "Keep the next PatchBench helper/model follow-up presentation-only unless a separate product/service slice is authorized.",
     "Keep product, runtime, release publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, and installed-game mutation claims bounded to accepted evidence."
   ]
 }

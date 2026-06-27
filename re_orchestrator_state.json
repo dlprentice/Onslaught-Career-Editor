@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-27",
-  "currentFocus": "Static RE/Ghidra state is unchanged; no static mutation is active. Use the next repo slice for the WinUI validation-wrapper short-path guard/docs follow-up.",
+  "currentFocus": "Static RE/Ghidra state is unchanged; no static mutation is active. The next repo slice is PatchBench online-readiness presentation helper/model extraction.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -35,13 +35,13 @@
   },
   "validation": {
     "stateRefresh": "State-only JSON slimming; no Ghidra mutation, product source change, tool change, release publication, hard payload, or runtime proof change.",
-    "currentGateExpectation": "For this state/doc slice, use JSON parse, stale local path scan, git diff --check, and the required docs/repo safety gates."
+    "currentGateExpectation": "For this integration, use JSON parse, stale local path scan, git diff --check, required docs/repo safety gates, focused PatchBench tests, patch-engine safety, and canonical WinUI primary-lane validation."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
     "Keep static RE work paused unless a product/runtime contradiction points back to a specific RE issue.",
-    "Use the next bounded repo slice for the WinUI validation-wrapper short-path guard/docs follow-up.",
+    "Use the next bounded repo slice for PatchBench online-readiness presentation helper/model extraction.",
     "Keep local Ghidra, proof, copied-runtime, and payload details as maintainer-local descriptors or ignored overlays, not tracked state."
   ]
 }
