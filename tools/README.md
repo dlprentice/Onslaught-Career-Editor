@@ -1,7 +1,7 @@
 # Tools Surface Map
 
 Status: public-primary orientation note
-Last updated: 2026-06-24
+Last updated: 2026-06-27
 
 `tools/` in this public-primary repo is tracked project tooling for release
 checks, AppCore/WinUI smoke helpers, RE support, runtime proof wrappers, and
@@ -26,6 +26,14 @@ Start with:
 
 Use `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md` for the public source and
 portable app sign-off sequence.
+
+`npm run test:winui-primary-lane` runs `tools/winui_primary_lane_validation.py`
+from the resolved repo/worktree root. On Windows, the wrapper warns when that
+root is long enough that Windows App SDK/XAML compiler intermediate paths may be
+fragile. The warning is diagnostic only: retry path-length diagnostics involving
+generated XAML or intermediate compiler paths from a shorter clone/worktree
+before classifying them, but treat unrelated build and test failures as real
+failures.
 
 ## Legacy Export Helpers
 

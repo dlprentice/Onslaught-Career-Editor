@@ -13,6 +13,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+WINDOWS_XAML_PATH_WARNING_ROOT_LENGTH = 140
 
 COMMANDS = [
     [
@@ -38,6 +39,37 @@ COMMANDS = [
 ]
 
 
+def should_warn_about_windows_xaml_path(
+    repo_root: Path,
+    *,
+    platform_name: str = os.name,
+) -> bool:
+    return (
+        platform_name == "nt"
+        and len(str(repo_root)) >= WINDOWS_XAML_PATH_WARNING_ROOT_LENGTH
+    )
+
+
+def print_windows_xaml_path_warning(repo_root: Path) -> None:
+    print(
+        "warning: WinUI validation is running from a long repo/worktree path "
+        f"({len(str(repo_root))} characters): {repo_root}",
+        file=sys.stderr,
+    )
+    print(
+        "warning: Windows App SDK/XAML compiler intermediate paths can be "
+        "sensitive to long source roots.",
+        file=sys.stderr,
+    )
+    print(
+        "warning: if this run fails with path-length diagnostics involving "
+        "generated XAML or intermediate compiler paths, retry from a shorter "
+        "clone/worktree before classifying the failure; unrelated build/test "
+        "failures remain real.",
+        file=sys.stderr,
+    )
+
+
 def run_command(command: list[str]) -> int:
     print(f"\n$ {' '.join(command)}", flush=True)
     env = os.environ.copy()
@@ -56,7 +88,29 @@ def shutdown_build_servers() -> None:
         )
 
 
-def main() -> int:
+def run_self_test() -> int:
+    short_root = Path("C:/src/Onslaught-Career-Editor")
+    long_root = Path("C:/src/" + ("deep/" * 25) + "Onslaught-Career-Editor")
+
+    assert not should_warn_about_windows_xaml_path(short_root, platform_name="nt")
+    assert should_warn_about_windows_xaml_path(long_root, platform_name="nt")
+    assert not should_warn_about_windows_xaml_path(long_root, platform_name="posix")
+
+    print("self-test: PASS", flush=True)
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = sys.argv[1:] if argv is None else argv
+    if args == ["--self-test"]:
+        return run_self_test()
+    if args:
+        print("usage: winui_primary_lane_validation.py [--self-test]", file=sys.stderr)
+        return 2
+
+    if should_warn_about_windows_xaml_path(REPO_ROOT):
+        print_windows_xaml_path_warning(REPO_ROOT)
+
     try:
         for command in COMMANDS:
             result = run_command(command)

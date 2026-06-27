@@ -1,7 +1,7 @@
 # Public Sign-Off Commands
 
 Status: active source/release validation guide
-Last updated: 2026-06-25
+Last updated: 2026-06-27
 
 Use this guide for the public working repo and app-release signoff. It excludes
 live copied-game launch, raw CDB/debugger, full Ghidra database, second-host, and
@@ -64,6 +64,14 @@ npm run test:winui-patch-engine-safety
 dotnet run --project .\OnslaughtCareerEditor.Cli\OnslaughtCareerEditor.Cli.csproj -- --help
 ```
 <!-- public-package-commands:end -->
+
+`npm run test:winui-primary-lane` runs the WinUI primary-lane wrapper from the
+resolved repo/worktree root. If that root is very long on Windows, the wrapper
+prints a warning because Windows App SDK/XAML compiler intermediate paths can be
+path-length sensitive. The warning does not downgrade failures: only retry
+failures that explicitly mention path-length diagnostics involving generated
+XAML or intermediate compiler paths from a shorter clone/worktree before
+classifying them.
 
 ## Docs And Release-Safety Gates
 
