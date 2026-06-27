@@ -1,13 +1,14 @@
 {
-  "lastUpdated": "2026-06-26",
+  "lastUpdated": "2026-06-27",
   "branch": "main",
-  "currentFocus": "PR-ready modularity wave integration candidate: accepted PR-template and PatchBench safe-copy presentation-helper commits are integrated with state reconciliation; validation gates remain the closeout authority.",
+  "currentFocus": "PR-ready modularity wave accepted on main; next developer slice is one read-first BinaryPatchesPage/PatchBench presentation-only modularity or static guard hardening task.",
   "currentTruth": {
     "publicMain": {
-      "baseBeforeIntegration": "ab90daa299beff655552899a71372678878af1ea",
-      "nextWriteRequirement": "Before any later write, re-read live HEAD, origin/main, and remote refs/heads/main."
+      "previousWaveBase": "ab90daa299beff655552899a71372678878af1ea",
+      "acceptedMainCommitCloseoutEvidence": "e09f042e1dc593b630964182c8259a4321110627",
+      "nextWriteRequirement": "Before any later write, re-read live HEAD, origin/main, and remote refs/heads/main; the exact commit above is closeout evidence, not standing main truth."
     },
-    "integratedWorkerCommits": [
+    "acceptedWorkerCommits": [
       {
         "worker": "collaboration-pr-readiness-001",
         "commit": "3af7d18bd2ae16e9c0e18070f593c80765f0bb1c",
@@ -19,7 +20,7 @@
         "summary": "PatchBench safe-copy canceled/failed/restored/source-changed status copy and No Host/Join receipt fallback copy now live in the presentation helper with static guard coverage."
       }
     ],
-    "patchBenchBoundary": "The PatchBench integration is presentation-only. AppCore receipt construction, patch planning, safe-copy manifests/signatures, launch arguments, process decisions, patch catalog rows, byte data, music behavior, Host/Join availability, online readiness, runtime proof, and release packaging are unchanged.",
+    "patchBenchBoundary": "The accepted PatchBench change is presentation-only. AppCore receipt construction, patch planning, safe-copy manifests/signatures, launch arguments, process decisions, patch catalog rows, byte data, music behavior, Host/Join availability, online readiness, runtime proof, and release packaging are unchanged.",
     "publicPrimaryRepo": "The public repo remains the primary collaboration repo for source, docs, tools, tests, RE notes, wave notes, state batons, agent reports, readiness notes, and compact proof summaries that are non-secret and non-payload.",
     "coordinationPolicy": {
       "status": "durable_policy_on_main",
@@ -30,7 +31,7 @@
         "coordination/RESOURCE_LEASES.md"
       ]
     },
-    "releasePublicationStatus": "No release was built, published, signed, packaged, tagged, pushed as a package, or announced by this integration.",
+    "releasePublicationStatus": "The accepted modularity wave performed no release or package publication action.",
     "runtimeBoundaries": {
       "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint and source-bound copied-runtime proof exists",
       "musicAudibleOutputProof": false,
@@ -40,25 +41,25 @@
     "hardPayloadBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, and local runtime caches stay out of git and release ZIPs; use LOCAL_LAB_OVERLAY.md for local-only placement."
   },
   "activeSlice": {
-    "name": "pr-ready-modularity-wave-integration",
-    "status": "validating",
-    "goal": "validate and close the integrated PR-template and PatchBench presentation-helper wave from the short integration path, then leave a read-first acceptance/follow-up baton",
-    "claimBoundary": "integration, state reconciliation, and local validation only; no release, package, Host/Join, online, runtime, Ghidra, hard-payload, installed-game, original-BEA, patch-row, byte-patch, launch, safe-copy manifest/signature, music, gameplay, visual, rebuild, or no-noticeable-difference claim changes"
+    "name": "binarypatchespage-patchbench-modularity-test-hardening",
+    "status": "ready",
+    "goal": "Run one read-first, presentation-only BinaryPatchesPage/PatchBench modularity or static guard hardening slice.",
+    "claimBoundary": "future slice may touch only the chosen presentation seam and focused tests; no release, package, Host/Join, online, runtime, Ghidra, hard-payload, installed-game, original-BEA, patch-row, byte-patch, launch, safe-copy manifest/signature, music, gameplay, visual, rebuild, or no-noticeable-difference claim changes without a separate authority and evidence gate"
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
     "catalogRows": "29/29 target specimen identity and policy metadata rows"
   },
   "validation": {
-    "currentIntegration": "Run git diff --check, docs/repo hygiene gates, public allowlist, hard-payload safety, build:winui, winui primary lane, winui patch-engine safety, and focused PatchBench static tests from C:\\otk-int-20260626.",
-    "nextSlice": "Use read-only acceptance/review first; add WinUI/AppCore gates before claiming any code or UI behavior change."
+    "previousWaveCloseout": "Final acceptance recorded the PR-template and PatchBench presentation-helper wave as accepted on main at the closeout evidence commit; local campaign report paths are intentionally not tracked here.",
+    "nextSlice": "Use focused PatchBench static tests for presentation-only hardening, and add WinUI/AppCore gates before claiming any code or UI behavior change."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "Run and record the assigned integration validation gates from C:\\otk-int-20260626.",
-    "If validation and origin/main checks pass, commit the integrated result and push HEAD to main under the campaign integration authority.",
-    "After this wave lands, start the next slice with read-only main/state verification before any edit.",
+    "Before writing, verify live HEAD, origin/main, and remote refs/heads/main and re-read the target BinaryPatchesPage/PatchBench files.",
+    "Pick one bounded presentation-only seam in BinaryPatchesPage/PatchBench copy orchestration and harden or test that seam only.",
+    "Run the focused PatchBench static test filter plus lane-relevant gates before claiming the next slice.",
     "Keep package scripts, release publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, and original-BEA mutation claims bounded to accepted evidence."
   ]
 }

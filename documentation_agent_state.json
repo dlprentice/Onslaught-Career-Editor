@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-06-26",
-  "currentFocus": "PR-ready modularity wave integration candidate: collaboration PR-template handoff fields and PatchBench presentation-helper boundary truth are reconciled into docs/state; validation gates remain the closeout authority.",
+  "lastUpdated": "2026-06-27",
+  "currentFocus": "PR-ready modularity wave accepted on main; docs/state now carry sanitized closeout truth and the next handoff is one bounded PatchBench/BinaryPatchesPage presentation-only follow-up.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -20,10 +20,11 @@
   },
   "currentDocsTruth": {
     "publicMain": {
-      "baseBeforeIntegration": "ab90daa299beff655552899a71372678878af1ea",
-      "nextWriteRequirement": "Re-read live git truth before treating any exact main commit as current."
+      "previousWaveBase": "ab90daa299beff655552899a71372678878af1ea",
+      "acceptedMainCommitCloseoutEvidence": "e09f042e1dc593b630964182c8259a4321110627",
+      "nextWriteRequirement": "Re-read live git truth before treating any exact main commit as current; the accepted commit is closeout evidence only."
     },
-    "integratedWorkerCommits": [
+    "acceptedWorkerCommits": [
       {
         "worker": "collaboration-pr-readiness-001",
         "commit": "3af7d18bd2ae16e9c0e18070f593c80765f0bb1c",
@@ -45,8 +46,8 @@
         "coordination/RESOURCE_LEASES.md"
       ]
     },
-    "stateReconciliation": "developer_agent_state.json and documentation_agent_state.json record the accepted wave and current patch catalog counters; re_orchestrator_state.json already had current counters and was left unchanged.",
-    "releasePublicationStatus": "No release was built, published, signed, packaged, tagged, pushed as a package, or announced by this integration.",
+    "stateReconciliation": "developer_agent_state.json, documentation_agent_state.json, and goal.md now record the accepted wave without local campaign report paths; re_orchestrator_state.json has no stale truth directly tied to this wave.",
+    "releasePublicationStatus": "The accepted modularity wave performed no release or package publication action.",
     "claimBoundary": "Docs/state and presentation-helper integration only; no AppCore, patch catalog row, byte patch, launch argument, safe-copy manifest/signature, runtime proof, release/publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, or original-BEA mutation claim change.",
     "localOnlyBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, local runtime caches, local campaign logs, active thread/session IDs, raw proof evidence, and local proof paths stay out of tracked docs/state."
   },
@@ -55,15 +56,15 @@
     "catalogRows": "29/29 target specimen identity and policy metadata rows"
   },
   "validation": {
-    "currentIntegration": "Run the assigned docs/repo, payload, WinUI, patch-engine, and focused PatchBench validation gates from C:\\otk-int-20260626.",
-    "nextSlice": "Use read-only acceptance/review first; add WinUI/AppCore gates before claiming any code or UI behavior change."
+    "previousWaveCloseout": "Final acceptance recorded the PR-template and PatchBench presentation-helper wave as accepted on main at the closeout evidence commit; local campaign report paths are intentionally not tracked here.",
+    "nextSlice": "Use focused PatchBench static tests for presentation-only docs/code hardening, and add WinUI/AppCore gates before claiming any UI or behavior change."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "After this wave lands, start from clean main and verify HEAD, origin/main, and live remote refs/heads/main before writing.",
+    "Before the next write, verify live HEAD, origin/main, and remote refs/heads/main and re-read the target BinaryPatchesPage/PatchBench files.",
     "Keep the PR-template handoff fields aligned with CONTRIBUTING.md and COLLABORATION.md if future collaboration docs move.",
-    "Keep PatchBench user-facing copy plain and presentation-only unless a separate product slice changes behavior with matching AppCore/WinUI validation.",
+    "Keep the next PatchBench follow-up to one presentation-only seam or static guard unless a separate product slice changes behavior with matching AppCore/WinUI validation.",
     "Keep product, runtime, release publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, and installed-game mutation claims bounded to accepted evidence."
   ]
 }

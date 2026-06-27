@@ -1,20 +1,23 @@
 # Active Goal Slice
 
 Status: active
-Last updated: 2026-06-26
+Last updated: 2026-06-27
 Policy: `goal.policy.md`
 
 ## Current Slice
 
-Close the PR-ready modularity wave integration from the short integration path.
-The accepted worker commits are limited to the GitHub PR handoff template and
-PatchBench safe-copy presentation-helper/status-copy guard. Reconcile state
-batons, run the assigned local gates, and push to `main` only if validation is
-green and `origin/main` still equals the assigned base.
+The PR-ready modularity wave is accepted on `main`. The next executable slice is
+a read-first BinaryPatchesPage/PatchBench modularity or static guard hardening
+slice, limited to one presentation-only seam and its focused test coverage.
+Before writing, re-read live git truth and the target files because exact commit
+hashes below are closeout evidence, not standing main truth.
 
 ## Current Truth
 
-- Integration base: `ab90daa299beff655552899a71372678878af1ea`.
+- Closeout evidence: final acceptance recorded `main`, `origin/main`, and live
+  remote `refs/heads/main` at accepted integration commit
+  `e09f042e1dc593b630964182c8259a4321110627` for the previous wave.
+- Previous integration base: `ab90daa299beff655552899a71372678878af1ea`.
 - Accepted worker commit `3af7d18bd2ae16e9c0e18070f593c80765f0bb1c` updates
   `.github/PULL_REQUEST_TEMPLATE.md` with explicit lane/scope, validation,
   private/public boundary, state baton, installed-game/original-`BEA.exe`
@@ -45,16 +48,19 @@ green and `origin/main` still equals the assigned base.
   runtime, gameplay, visual, online, rebuild, or no-noticeable-difference
   proof.
 - Installed game files and original `BEA.exe` remain read-only.
-- No release has been built, published, signed, packaged, tagged, pushed as a
-  package, or announced by this integration.
+- The accepted modularity wave performed no release or package publication
+  action.
 
 ## Evidence Pointers
 
-- Campaign reports:
-  `C:\Users\david\source\.codex-campaigns\Onslaught-Career-Editor\20260626T204205Z-pr-ready-modularity-wave\reports\collaboration-pr-readiness-001.md`,
-  `C:\Users\david\source\.codex-campaigns\Onslaught-Career-Editor\20260626T204205Z-pr-ready-modularity-wave\reports\winui-patchbench-status-guard-001.md`,
-  and
-  `C:\Users\david\source\.codex-campaigns\Onslaught-Career-Editor\20260626T204205Z-pr-ready-modularity-wave\reports\repo-quality-adversarial-review-001.md`.
+- Accepted modularity-wave commits:
+  `3af7d18bd2ae16e9c0e18070f593c80765f0bb1c`,
+  `931af99e8de62ffa5d7c4fc90b8b7a047a0d8b93`, and integration closeout
+  evidence commit `e09f042e1dc593b630964182c8259a4321110627`.
+- Final acceptance summary: the previous wave was accepted with notes only
+  because tracked batons still described already-completed integration work;
+  this baton now records that closeout without tracking local campaign report
+  paths.
 - Coordination contracts: `coordination/README.md`,
   `coordination/WORKSTREAM_CONTRACT.md`,
   `coordination/REPORT_CONTRACT.md`, and
@@ -70,16 +76,19 @@ green and `origin/main` still equals the assigned base.
 
 ## Next Executable Work
 
-1. Finish the assigned integration validation from `C:\otk-int-20260626`.
-2. If validation and remote-base checks pass, commit the integrated result and
-   push `HEAD:main` under the campaign integration authority.
-3. Fast-forward the canonical checkout only after the remote push succeeds and
-   the canonical checkout is clean on `main`.
-4. After this wave lands, use a read-only acceptance/follow-up slice: verify
-   live `main`, `origin/main`, state batons, and the integration reports before
-   any edit.
-5. Keep any next product behavior work separate from this integration; run
-   WinUI/AppCore gates before claiming UI or behavior changes.
+1. Re-read live `HEAD`, `origin/main`, and remote `refs/heads/main`, then inspect
+   `OnslaughtCareerEditor.WinUI/Pages/BinaryPatchesPage.xaml.cs`,
+   `OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyOutcomeText.cs`,
+   `OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyOutcomeTextState.cs`,
+   and the focused PatchBench static tests before editing.
+2. Pick one bounded presentation-only seam in BinaryPatchesPage/PatchBench copy
+   orchestration and either extract/harden that seam or add one static guard;
+   do not change AppCore behavior, patch catalog rows, byte patch data, launch
+   semantics, safe-copy manifests/signatures, process decisions, music behavior,
+   runtime proof, Host/Join, online readiness, release packaging, or hard-payload
+   boundaries.
+3. Run the focused PatchBench test filter plus any lane-relevant WinUI/AppCore
+   and docs/state gates before claiming the slice.
 
 ## Stop Conditions
 
