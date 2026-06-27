@@ -6,34 +6,33 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-The PR-ready modularity wave is accepted on `main`. The next executable slice is
-a read-first BinaryPatchesPage/PatchBench modularity or static guard hardening
-slice, limited to one presentation-only seam and its focused test coverage.
-Before writing, re-read live git truth and the target files because exact commit
-hashes below are closeout evidence, not standing main truth.
+The post-wave closeout and PatchBench maintainability commits are integrated on
+`main`. The next executable slice is a small WinUI validation-wrapper short-path
+guard/docs follow-up for the Windows App SDK/XAML compiler long-path failure
+mode.
+
+Before any later write, re-read live git truth and target files. Exact commit
+hashes below are accepted evidence for this integration, not standing future
+main truth.
 
 ## Current Truth
 
-- Closeout evidence: final acceptance recorded `main`, `origin/main`, and live
-  remote `refs/heads/main` at accepted integration commit
-  `e09f042e1dc593b630964182c8259a4321110627` for the previous wave.
-- Previous integration base: `ab90daa299beff655552899a71372678878af1ea`.
-- Accepted worker commit `3af7d18bd2ae16e9c0e18070f593c80765f0bb1c` updates
-  `.github/PULL_REQUEST_TEMPLATE.md` with explicit lane/scope, validation,
-  private/public boundary, state baton, installed-game/original-`BEA.exe`
-  mutation, and remaining-risk fields.
-- Accepted worker commit `931af99e8de62ffa5d7c4fc90b8b7a047a0d8b93`
-  centralizes PatchBench safe-copy canceled/failed/restored/source-changed
-  status copy and the No Host/Join receipt fallback copy in
-  `PatchBenchSafeCopyOutcomeText`, with static guard coverage.
-- Patch catalog accounting is current at 20 visible options: 9 stable and 11
+- Accepted closeout commit `3fb96d4e09df1cc9712e39a325e4f3500bb7ea9e`
+  reconciles `goal.md`, `developer_agent_state.json`, and
+  `documentation_agent_state.json` for the previous modularity wave and removes
+  stale local-campaign path/pending-push wording.
+- Accepted PatchBench commit `b000fa0be85d99e479a9d885af1ef5acd35e4aaf`
+  hardens a static WinUI guard so literal `Button Content` labels cannot expose
+  Host/Join, matchmaking, or online action wording before the required proof and
+  promotion gates exist.
+- The PatchBench change is test-only. AppCore receipt construction, patch
+  planning, byte patch data, patch catalog rows, launch arguments, safe-copy
+  manifests/signatures, process decisions, music behavior, Host/Join
+  availability, online readiness, runtime proof, and release packaging are
+  unchanged.
+- Patch catalog accounting remains 20 visible options: 9 stable and 11
   experimental; 29/29 catalog rows have target specimen identity and policy
   metadata.
-- The PatchBench integration is presentation-only. AppCore receipt
-  construction, patch planning, byte patch data, patch catalog rows, launch
-  arguments, safe-copy manifests/signatures, process decisions, music behavior,
-  Host/Join availability, online readiness, runtime proof, and release
-  packaging are unchanged.
 - The public repo remains the primary collaboration repo for source, docs,
   tools, tests, RE notes, wave notes, state batons, agent reports, readiness
   notes, and compact proof summaries that are non-secret and non-payload.
@@ -48,19 +47,14 @@ hashes below are closeout evidence, not standing main truth.
   runtime, gameplay, visual, online, rebuild, or no-noticeable-difference
   proof.
 - Installed game files and original `BEA.exe` remain read-only.
-- The accepted modularity wave performed no release or package publication
-  action.
+- No release, tag, package, signing, installer, announcement, hosted workflow,
+  or publication action is part of this integration.
 
 ## Evidence Pointers
 
-- Accepted modularity-wave commits:
-  `3af7d18bd2ae16e9c0e18070f593c80765f0bb1c`,
-  `931af99e8de62ffa5d7c4fc90b8b7a047a0d8b93`, and integration closeout
-  evidence commit `e09f042e1dc593b630964182c8259a4321110627`.
-- Final acceptance summary: the previous wave was accepted with notes only
-  because tracked batons still described already-completed integration work;
-  this baton now records that closeout without tracking local campaign report
-  paths.
+- Accepted integration evidence commits:
+  `3fb96d4e09df1cc9712e39a325e4f3500bb7ea9e` and
+  `b000fa0be85d99e479a9d885af1ef5acd35e4aaf`.
 - Coordination contracts: `coordination/README.md`,
   `coordination/WORKSTREAM_CONTRACT.md`,
   `coordination/REPORT_CONTRACT.md`, and
@@ -76,19 +70,19 @@ hashes below are closeout evidence, not standing main truth.
 
 ## Next Executable Work
 
-1. Re-read live `HEAD`, `origin/main`, and remote `refs/heads/main`, then inspect
-   `OnslaughtCareerEditor.WinUI/Pages/BinaryPatchesPage.xaml.cs`,
-   `OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyOutcomeText.cs`,
-   `OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyOutcomeTextState.cs`,
-   and the focused PatchBench static tests before editing.
-2. Pick one bounded presentation-only seam in BinaryPatchesPage/PatchBench copy
-   orchestration and either extract/harden that seam or add one static guard;
-   do not change AppCore behavior, patch catalog rows, byte patch data, launch
-   semantics, safe-copy manifests/signatures, process decisions, music behavior,
-   runtime proof, Host/Join, online readiness, release packaging, or hard-payload
-   boundaries.
-3. Run the focused PatchBench test filter plus any lane-relevant WinUI/AppCore
-   and docs/state gates before claiming the slice.
+1. Verify live `HEAD`, `origin/main`, and remote `refs/heads/main`, then inspect
+   `tools/winui_primary_lane_validation.py`, `tools/README.md`, and
+   `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md` before editing.
+2. Keep the follow-up limited to the WinUI primary-lane validation wrapper
+   preserving or clearly warning about intentional short invocation roots for
+   Windows App SDK/XAML compiler long-path failures, plus a small documentation
+   note if useful.
+3. Do not change package scripts, product behavior, AppCore semantics, patch
+   catalog rows, byte patch data, launch behavior, safe-copy
+   manifests/signatures, runtime proof, release packaging, Host/Join, online
+   readiness, Ghidra material, installed game files, or original `BEA.exe`.
+4. Run focused wrapper self-tests or direct command-equivalent validation plus
+   docs/state gates before claiming the follow-up slice.
 
 ## Stop Conditions
 

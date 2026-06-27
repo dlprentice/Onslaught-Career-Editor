@@ -1,26 +1,29 @@
 {
   "lastUpdated": "2026-06-27",
   "branch": "main",
-  "currentFocus": "PR-ready modularity wave accepted on main; next developer slice is one read-first BinaryPatchesPage/PatchBench presentation-only modularity or static guard hardening task.",
+  "currentFocus": "Post-wave closeout and PatchBench static guard commits are integrated on main; the next developer slice is a WinUI validation-wrapper short-path guard/docs follow-up.",
   "currentTruth": {
     "publicMain": {
-      "previousWaveBase": "ab90daa299beff655552899a71372678878af1ea",
-      "acceptedMainCommitCloseoutEvidence": "e09f042e1dc593b630964182c8259a4321110627",
-      "nextWriteRequirement": "Before any later write, re-read live HEAD, origin/main, and remote refs/heads/main; the exact commit above is closeout evidence, not standing main truth."
+      "integratedEvidenceCommits": [
+        "3fb96d4e09df1cc9712e39a325e4f3500bb7ea9e",
+        "b000fa0be85d99e479a9d885af1ef5acd35e4aaf"
+      ],
+      "nextWriteRequirement": "Before any later write, re-read live HEAD, origin/main, and remote refs/heads/main; exact hashes in state are accepted evidence, not standing future main truth."
     },
     "acceptedWorkerCommits": [
       {
-        "worker": "collaboration-pr-readiness-001",
-        "commit": "3af7d18bd2ae16e9c0e18070f593c80765f0bb1c",
-        "summary": "PR handoff template now exposes explicit lane/scope, validation, private/public boundary, state-baton, installed-game/original-BEA mutation, and remaining-risk fields."
+        "worker": "post-wave-baton-closeout-001",
+        "commit": "3fb96d4e09df1cc9712e39a325e4f3500bb7ea9e",
+        "summary": "Reconciled goal and state batons for the previous modularity wave, removed stale pending-push/local-campaign wording, and preserved runtime/release/non-payload boundaries."
       },
       {
-        "worker": "winui-patchbench-status-guard-001",
-        "commit": "931af99e8de62ffa5d7c4fc90b8b7a047a0d8b93",
-        "summary": "PatchBench safe-copy canceled/failed/restored/source-changed status copy and No Host/Join receipt fallback copy now live in the presentation helper with static guard coverage."
+        "worker": "patchbench-next-seam-001",
+        "commit": "b000fa0be85d99e479a9d885af1ef5acd35e4aaf",
+        "summary": "Hardened a static WinUI guard so literal PatchBench/Windowed & Mods button labels cannot expose Host/Join, matchmaking, or online action wording before required proof and promotion gates exist."
       }
     ],
-    "patchBenchBoundary": "The accepted PatchBench change is presentation-only. AppCore receipt construction, patch planning, safe-copy manifests/signatures, launch arguments, process decisions, patch catalog rows, byte data, music behavior, Host/Join availability, online readiness, runtime proof, and release packaging are unchanged.",
+    "patchBenchBoundary": "The integrated PatchBench change is test-only. AppCore receipt construction, patch planning, safe-copy manifests/signatures, launch arguments, process decisions, patch catalog rows, byte data, music behavior, Host/Join availability, online readiness, runtime proof, and release packaging are unchanged.",
+    "validationWrapperFinding": "The Windows App SDK/XAML compiler failure observed in a deep campaign worktree is classified as a long-path/tooling issue. The next bounded slice should harden or document the WinUI primary-lane wrapper short-path behavior without changing product code or package scripts.",
     "publicPrimaryRepo": "The public repo remains the primary collaboration repo for source, docs, tools, tests, RE notes, wave notes, state batons, agent reports, readiness notes, and compact proof summaries that are non-secret and non-payload.",
     "coordinationPolicy": {
       "status": "durable_policy_on_main",
@@ -31,7 +34,7 @@
         "coordination/RESOURCE_LEASES.md"
       ]
     },
-    "releasePublicationStatus": "The accepted modularity wave performed no release or package publication action.",
+    "releasePublicationStatus": "No release, tag, package, signing, installer, announcement, hosted workflow, or publication action is part of this integration.",
     "runtimeBoundaries": {
       "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint and source-bound copied-runtime proof exists",
       "musicAudibleOutputProof": false,
@@ -41,25 +44,24 @@
     "hardPayloadBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, and local runtime caches stay out of git and release ZIPs; use LOCAL_LAB_OVERLAY.md for local-only placement."
   },
   "activeSlice": {
-    "name": "binarypatchespage-patchbench-modularity-test-hardening",
+    "name": "winui-validation-wrapper-short-path-guard-docs",
     "status": "ready",
-    "goal": "Run one read-first, presentation-only BinaryPatchesPage/PatchBench modularity or static guard hardening slice.",
-    "claimBoundary": "future slice may touch only the chosen presentation seam and focused tests; no release, package, Host/Join, online, runtime, Ghidra, hard-payload, installed-game, original-BEA, patch-row, byte-patch, launch, safe-copy manifest/signature, music, gameplay, visual, rebuild, or no-noticeable-difference claim changes without a separate authority and evidence gate"
+    "goal": "Add a small tooling/docs guard for the WinUI primary-lane validation wrapper so intentional short invocation roots are preserved or long-path expansion is diagnosed clearly.",
+    "claimBoundary": "future slice is tooling/docs-only unless separately authorized; no package-script, product behavior, release, Host/Join, online, runtime, Ghidra, hard-payload, installed-game, original-BEA, patch-row, byte-patch, launch, safe-copy manifest/signature, music, gameplay, visual, rebuild, or no-noticeable-difference claim changes"
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
     "catalogRows": "29/29 target specimen identity and policy metadata rows"
   },
   "validation": {
-    "previousWaveCloseout": "Final acceptance recorded the PR-template and PatchBench presentation-helper wave as accepted on main at the closeout evidence commit; local campaign report paths are intentionally not tracked here.",
-    "nextSlice": "Use focused PatchBench static tests for presentation-only hardening, and add WinUI/AppCore gates before claiming any code or UI behavior change."
+    "currentIntegration": "Integration gates cover docs/repo safety, JSON parse, stale-path scan, WinUI build, focused and broader PatchBench tests, patch-engine safety, and primary-lane validation.",
+    "nextSlice": "Prefer a small WinUI validation-wrapper short-path guard/docs follow-up; keep it tooling/docs-only unless a separate product slice is authorized."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "Before writing, verify live HEAD, origin/main, and remote refs/heads/main and re-read the target BinaryPatchesPage/PatchBench files.",
-    "Pick one bounded presentation-only seam in BinaryPatchesPage/PatchBench copy orchestration and harden or test that seam only.",
-    "Run the focused PatchBench static test filter plus lane-relevant gates before claiming the next slice.",
+    "Before the next write, verify live HEAD, origin/main, and remote refs/heads/main.",
+    "Use the next slice for a small WinUI validation-wrapper short-path guard/docs follow-up.",
     "Keep package scripts, release publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, and original-BEA mutation claims bounded to accepted evidence."
   ]
 }

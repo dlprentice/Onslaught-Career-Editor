@@ -1,15 +1,15 @@
 {
-  "lastUpdated": "2026-06-25",
-  "currentFocus": "No Ghidra/static mutation; audio loopback wall-clock padding hardening is accepted runtime-proof infrastructure, static RE remains unchanged, and the next active slice is WinUI selected-state UX.",
+  "lastUpdated": "2026-06-27",
+  "currentFocus": "No Ghidra/static mutation in the post-wave closeout and PatchBench integration; static RE remains unchanged, and the next repo slice is the WinUI validation-wrapper short-path guard/docs follow-up.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
     "activeCurrentRisk": "1179/1179 = 100.00%",
     "wave1220CloseoutProbe": "tools/static_reaudit_final_closeout_wave1220.py",
     "measurementFrontDoor": "reverse-engineering/binary-analysis/static-reaudit-measurement-register.md",
-    "latestGhidraReviewBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified",
-    "latestLiveProject": "C:\\Users\\david\\Ghidra\\Projects\\BEA.gpr",
-    "latestLiveStore": "C:\\Users\\david\\Ghidra\\Projects\\BEA.rep\\"
+    "latestGhidraReviewBackup": "maintainer-local; keep full backup paths outside tracked state",
+    "latestLiveProject": "maintainer-local; see LOCAL_LAB_OVERLAY.md for local-only Ghidra placement",
+    "latestLiveStore": "maintainer-local; see LOCAL_LAB_OVERLAY.md for local-only Ghidra placement"
   },
   "publicPrimaryMigration": {
     "status": "validated_public_primary_with_maintainer_local_ignored_overlays",
@@ -49,10 +49,9 @@
     }
   },
   "nextSteps": [
-    "No Ghidra backup is required for this no-mutation runtime-helper slice.",
-    "Commit/push the accepted audio loopback wall-clock padding hardening if final parse/diff/status checks remain green.",
-    "Resume Windowed & Mods selected-state UX as the next bounded product slice.",
-    "Resume static work only if a product/runtime contradiction points back to a specific RE issue."
+    "No Ghidra backup is required for this no-mutation integration slice.",
+    "Keep static RE work paused unless a product/runtime contradiction points back to a specific RE issue.",
+    "Use the next bounded repo slice for the WinUI validation-wrapper short-path guard/docs follow-up."
   ],
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
