@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-06-27",
-  "currentFocus": "Accepted wrapper diagnostic, state-slimming, and PatchBench runtime online-button guard source commits are integrated on main; docs/state now point the next slice at PatchBench online-readiness presentation helper/model extraction.",
+  "lastUpdated": "2026-06-28",
+  "currentFocus": "PatchBench online-readiness helper wave, public-state evidence sanity, and rebuild/spec roadmap indexing are integrated on main; docs/state now point the next slice at DTO-based PatchBench helper-output tests.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -20,28 +20,34 @@
   },
   "currentDocsTruth": {
     "publicMain": {
-      "integratedSourceCommits": [
-        "360e57ec8bb5307f2d855a8b03cca5bb8eb3bc40",
-        "c87d399b15ea653921797983c89e187167a42173",
-        "abfa4041a586107c5777f2aed74c5f507eb9dfd9"
+      "acceptedMergeParents": [
+        "98b9465108b6cf92cd6dcf325bab4a159c5c8ac9",
+        "ba3a22ead9d83692a2199e1288d8f363ec30eb6e",
+        "b675a2fe817fdac50740d0f04b5bc0fdc61d05d3"
       ],
-      "nextWriteRequirement": "Re-read live git truth before treating any exact main commit as current; listed commits are accepted evidence only."
+      "priorIntegrationCommits": [
+        "726e71009d7b5dac9256cfe6917c6f0ecca529cb",
+        "b028cbffcb056a722d71dca3fed4483ca9d48bc1",
+        "6c26f5c74a73fb31f09051de1807653f26fa26ee",
+        "5854f5b4c0d5e56cdd1dd6f2a185fd3cf8a40009"
+      ],
+      "nextWriteRequirement": "Re-read live git truth before treating any exact main commit as current; unmerged local campaign hashes and local campaign paths are not durable public state."
     },
-    "acceptedWorkerCommits": [
+    "acceptedIntegrationEvidence": [
       {
-        "worker": "winui-validation-wrapper-short-path-001",
-        "commit": "360e57ec8bb5307f2d855a8b03cca5bb8eb3bc40",
-        "summary": "Warning-only WinUI validation-wrapper long-path diagnostic and matching docs."
+        "worker": "patchbench-online-readiness-helper-001",
+        "commit": "98b9465108b6cf92cd6dcf325bab4a159c5c8ac9",
+        "summary": "Presentation-only PatchBench online-readiness helper/model extraction."
       },
       {
-        "worker": "state-baton-slimming-001",
-        "commit": "c87d399b15ea653921797983c89e187167a42173",
-        "summary": "Concise current-state baton refresh."
+        "worker": "public-state-evidence-sanity-001",
+        "commit": "ba3a22ead9d83692a2199e1288d8f363ec30eb6e",
+        "summary": "Public state no longer depends on older local-only worker/source hashes."
       },
       {
-        "worker": "patchbench-seam-discovery-001",
-        "commit": "abfa4041a586107c5777f2aed74c5f507eb9dfd9",
-        "summary": "PatchBench static guard now rejects future runtime online-action button labels before proof gates."
+        "worker": "rebuild-spec-audit-followup-001",
+        "commit": "b675a2fe817fdac50740d0f04b5bc0fdc61d05d3",
+        "summary": "ROADMAP-INDEX now lists the static-to-proof rebuild transition backlog."
       }
     ],
     "publicPrimaryRepo": "The public repo is the normal collaboration surface, not a sparse export.",
@@ -54,10 +60,12 @@
         "coordination/RESOURCE_LEASES.md"
       ]
     },
-    "stateReconciliation": "goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json record the accepted wrapper/state/PatchBench source commits, keep concise current-state pointers and non-claims, and remove local campaign paths from tracked state.",
-    "validationWrapperBoundary": "The WinUI validation-wrapper follow-up is accepted and closed as diagnostic-only docs/tooling.",
+    "stateReconciliation": "goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json record the accepted integration wave, keep concise current-state pointers and non-claims, and avoid local campaign paths.",
+    "pathOwnershipIncident": "Repaired helper-worker path-ownership incident is a non-blocking integration note: the accidental canonical static-test edit was reverted before integration and canonical main was clean before this merge.",
+    "crossReviewFollowUp": "Future substantive PatchBench helper changes should add representative DTO-based helper-output tests that catch omitted, swapped, or boundary-losing text-state fields.",
+    "rebuildSpecIndexing": "ROADMAP-INDEX links the active static-to-proof rebuild/spec proof queue; this is discoverability only, not rebuild/runtime/visual/gameplay parity proof.",
     "releasePublicationStatus": "No release, tag, package, signing, installer, announcement, hosted workflow, or publication action is part of this integration.",
-    "claimBoundary": "Docs/state, wrapper diagnostics, and test-only PatchBench guard integration only; no AppCore, patch catalog row, byte patch, launch argument, safe-copy manifest/signature, runtime proof, release/publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, or original-BEA mutation claim change.",
+    "claimBoundary": "Presentation helper extraction, docs/state hash repair, and docs-only roadmap index integration only; no AppCore, patch catalog row, byte patch, launch argument, safe-copy manifest/signature, runtime proof, release/publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, or original-BEA mutation claim change.",
     "localOnlyBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, local runtime caches, local campaign logs, active coordination identifiers, raw proof evidence, and local proof paths stay out of tracked docs/state."
   },
   "currentCounters": {
@@ -65,14 +73,14 @@
     "catalogRows": "29/29 target specimen identity and policy metadata rows"
   },
   "validation": {
-    "currentIntegration": "Integration gates cover docs/repo, payload, WinUI, focused PatchBench, broader PatchBench, patch-engine, and primary-lane validation evidence.",
-    "nextSlice": "Prefer a small PatchBench online-readiness presentation helper/model extraction before broader BinaryPatchesPage modularity work."
+    "currentIntegration": "Integration gates cover docs/repo, payload, WinUI, focused PatchBench, broader PatchBench, patch-engine, hard-payload, and primary-lane validation evidence.",
+    "nextSlice": "Prefer focused DTO-based PatchBench helper-output tests before broader BinaryPatchesPage modularity work; a later docs/checker slice can add a compact rebuild-front-door chain map."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
     "Before the next write, verify live HEAD, origin/main, and remote refs/heads/main.",
-    "Keep the next PatchBench helper/model follow-up presentation-only unless a separate product/service slice is authorized.",
+    "Add representative DTO-based tests for the PatchBench online-readiness helper before substantive helper-output changes.",
     "Keep product, runtime, release publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, and installed-game mutation claims bounded to accepted evidence."
   ]
 }

@@ -1,35 +1,48 @@
 {
-  "lastUpdated": "2026-06-27",
+  "lastUpdated": "2026-06-28",
   "branch": "main",
-  "currentFocus": "Accepted wrapper diagnostic, state-slimming, and PatchBench runtime online-button guard source commits are integrated on main; the next developer slice is a PatchBench online-readiness presentation helper/model extraction.",
+  "currentFocus": "PatchBench online-readiness helper wave is integrated on main; the next developer slice is focused DTO-based helper-output coverage for the new PatchBench presentation helper.",
   "currentTruth": {
     "publicMain": {
-      "integratedSourceCommits": [
-        "360e57ec8bb5307f2d855a8b03cca5bb8eb3bc40",
-        "c87d399b15ea653921797983c89e187167a42173",
-        "abfa4041a586107c5777f2aed74c5f507eb9dfd9"
+      "acceptedMergeParents": [
+        "98b9465108b6cf92cd6dcf325bab4a159c5c8ac9",
+        "ba3a22ead9d83692a2199e1288d8f363ec30eb6e",
+        "b675a2fe817fdac50740d0f04b5bc0fdc61d05d3"
       ],
-      "nextWriteRequirement": "Before any later write, re-read live HEAD, origin/main, and remote refs/heads/main; exact hashes in state are accepted evidence, not standing future main truth."
+      "priorIntegrationCommits": [
+        "726e71009d7b5dac9256cfe6917c6f0ecca529cb",
+        "b028cbffcb056a722d71dca3fed4483ca9d48bc1",
+        "6c26f5c74a73fb31f09051de1807653f26fa26ee",
+        "5854f5b4c0d5e56cdd1dd6f2a185fd3cf8a40009"
+      ],
+      "nextWriteRequirement": "Before any later write, re-read live HEAD, origin/main, and remote refs/heads/main; do not use unmerged local campaign commits or local campaign paths as durable public state."
     },
-    "acceptedWorkerCommits": [
+    "acceptedIntegrationEvidence": [
       {
-        "worker": "winui-validation-wrapper-short-path-001",
-        "commit": "360e57ec8bb5307f2d855a8b03cca5bb8eb3bc40",
-        "summary": "Added a warning-only WinUI validation-wrapper long-path diagnostic plus matching tooling/release docs."
+        "worker": "patchbench-online-readiness-helper-001",
+        "commit": "98b9465108b6cf92cd6dcf325bab4a159c5c8ac9",
+        "summary": "Presentation-only PatchBench online-readiness helper/model extraction. BinaryPatchesPage still owns OnlineMultiplayerReadinessService calls and UI control assignment."
       },
       {
-        "worker": "state-baton-slimming-001",
-        "commit": "c87d399b15ea653921797983c89e187167a42173",
-        "summary": "Slimmed live state batons to concise current-state pointers and removed stale history/log detail."
+        "worker": "public-state-evidence-sanity-001",
+        "commit": "ba3a22ead9d83692a2199e1288d8f363ec30eb6e",
+        "summary": "Tracked goal/state files no longer depend on older local-only worker/source commit hashes or campaign paths."
       },
       {
-        "worker": "patchbench-seam-discovery-001",
-        "commit": "abfa4041a586107c5777f2aed74c5f507eb9dfd9",
-        "summary": "Hardened PatchBench static tests against future runtime Host/Join, matchmaking, online-play, or netplay button labels."
+        "worker": "rebuild-spec-audit-followup-001",
+        "commit": "b675a2fe817fdac50740d0f04b5bc0fdc61d05d3",
+        "summary": "Roadmap index now points to the active static-to-proof rebuild/spec proof queue and non-claim boundaries."
       }
     ],
-    "patchBenchBoundary": "The integrated PatchBench change is test-only. AppCore receipt construction, patch planning, safe-copy manifests/signatures, launch arguments, process decisions, patch catalog rows, byte data, music behavior, Host/Join availability, online readiness, runtime proof, and release packaging are unchanged.",
-    "validationWrapperBoundary": "The WinUI primary-lane wrapper follow-up is accepted as warning-only diagnostics/docs; it does not change package scripts, product behavior, or validation command semantics.",
+    "patchBenchBoundary": "PatchBench helper extraction is presentation-only. AppCore receipt construction, patch planning, safe-copy manifests/signatures, launch arguments, process decisions, patch catalog rows, byte data, music behavior, Host/Join availability, online readiness, runtime proof, and release packaging are unchanged.",
+    "pathOwnershipIncident": {
+      "status": "repaired_non_blocking",
+      "summary": "The helper worker reported an accidental canonical static-test edit, reverted only that edit, reapplied it in the assigned worktree, and canonical main was clean before this integration merge. The final integration report records the post-integration clean status."
+    },
+    "crossReviewNotesHandled": [
+      "Path-ownership repair is preserved as a non-blocking integration note.",
+      "Future substantive PatchBench helper changes should add representative DTO-based helper-output tests that catch omitted, swapped, or boundary-losing text-state fields."
+    ],
     "publicPrimaryRepo": "The public repo remains the primary collaboration repo for source, docs, tools, tests, RE notes, wave notes, state batons, agent reports, readiness notes, and compact proof summaries that are non-secret and non-payload.",
     "coordinationPolicy": {
       "status": "durable_policy_on_main",
@@ -41,7 +54,7 @@
       ]
     },
     "releasePublicationStatus": "No release, tag, package, signing, installer, announcement, hosted workflow, or publication action is part of this integration.",
-    "stateBatonShape": "State files should stay concise current-state handoffs. Completed release-audit history, repeated command logs, and local campaign details belong in canonical docs/readiness notes or local reports, not live state.",
+    "stateBatonShape": "State files should stay concise current-state handoffs. Completed campaign details belong in canonical docs/readiness notes or local reports, not live state.",
     "runtimeBoundaries": {
       "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint and source-bound copied-runtime proof exists",
       "musicAudibleOutputProof": false,
@@ -51,24 +64,24 @@
     "hardPayloadBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, and local runtime caches stay out of git and release ZIPs; use LOCAL_LAB_OVERLAY.md for local-only placement."
   },
   "activeSlice": {
-    "name": "patchbench-online-readiness-presentation-helper",
+    "name": "patchbench-helper-output-dto-tests",
     "status": "ready",
-    "goal": "Extract online-readiness presentation text from RenderOnlineMultiplayerReadiness and RenderOnlineCompanionSessionReadiness into a small presentation helper/model.",
-    "claimBoundary": "presentation-only future slice; no AppCore/service behavior move, Host/Join enablement, online action enablement, release, runtime, Ghidra, hard-payload, installed-game, original-BEA, patch-row, byte-patch, launch, safe-copy manifest/signature, music, gameplay, visual, rebuild, or no-noticeable-difference claim changes"
+    "goal": "Add representative DTO-based tests for PatchBenchOnlineReadinessText.Build and BuildCompanionSession.",
+    "claimBoundary": "test/helper-output coverage only; no AppCore/service behavior move, Host/Join enablement, online action enablement, release, runtime, Ghidra, hard-payload, installed-game, original-BEA, patch-row, byte-patch, launch, safe-copy manifest/signature, music, gameplay, visual, rebuild, or no-noticeable-difference claim changes"
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
     "catalogRows": "29/29 target specimen identity and policy metadata rows"
   },
   "validation": {
-    "currentIntegration": "Integration gates cover docs/repo safety, JSON parse, stale-path scan, WinUI build, focused and broader PatchBench tests, patch-engine safety, and primary-lane validation.",
-    "nextSlice": "Prefer the PatchBench online-readiness presentation helper/model extraction; keep it presentation-only and preserve all online non-claims."
+    "currentIntegration": "Integration gates cover startup refs/cleanliness, git diff --check, JSON parse, stale path/hash scans, docs/repo safety, WinUI build, focused PatchBench tests, patch-engine safety, hard-payload safety, and primary-lane validation.",
+    "nextSlice": "Use focused helper-output tests plus relevant PatchBench/WinUI and repo safety gates; keep all online non-claims intact."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
     "Before the next write, verify live HEAD, origin/main, and remote refs/heads/main.",
-    "Use the next slice for a small PatchBench online-readiness presentation helper/model extraction.",
+    "Add representative DTO-based tests for the PatchBench online-readiness helper before any substantive helper-output change.",
     "Keep package scripts, release publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, and original-BEA mutation claims bounded to accepted evidence."
   ]
 }

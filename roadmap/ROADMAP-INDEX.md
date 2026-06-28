@@ -25,6 +25,7 @@ Ghidra static RE (Steam retail): function-quality queue **6411/6411 = 100.00%** 
 | [three-lane-product-strategy.md](/roadmap/three-lane-product-strategy.md) | Canonical lane strategy and next sequence |
 | [status-current.md](/roadmap/status-current.md) | Current product/release state |
 | [mod-patch-runtime-rebuild-register.md](/roadmap/mod-patch-runtime-rebuild-register.md) | Player-facing mod/patch/runtime/rebuild proof accounting |
+| [static-to-proof-rebuild-transition-backlog.md](/roadmap/static-to-proof-rebuild-transition-backlog.md) | Active static-to-proof rebuild/spec proof queue and non-claim boundaries |
 | [original-binary-online-multiplayer-feasibility.md](/roadmap/original-binary-online-multiplayer-feasibility.md) | Original-binary online proof ladder and non-claims |
 | [repo-structure-and-archive-map.md](/roadmap/repo-structure-and-archive-map.md) | Current active/archive/private layout |
 | [winui-lore-offline-pack-plan.md](/roadmap/winui-lore-offline-pack-plan.md) | Generated full-offline Lore content-pack shape for app ZIP candidates |

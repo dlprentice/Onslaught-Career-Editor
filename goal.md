@@ -1,50 +1,57 @@
 # Active Goal Slice
 
 Status: active
-Last updated: 2026-06-27
+Last updated: 2026-06-28
 Policy: `goal.policy.md`
 
 ## Current Slice
 
-The WinUI validation-wrapper diagnostic, state-baton slimming, and PatchBench
-runtime online-button guard source commits are integrated on `main`. The next
-executable slice is a small BinaryPatchesPage/PatchBench presentation-helper
-slice for online-readiness text.
+The PatchBench online-readiness helper wave is integrated on `main`. It accepts
+the presentation-only helper/model extraction, the public-state evidence sanity
+repair, and the rebuild/spec roadmap-index follow-up as one canonical
+integration.
 
-Before any later write, re-read live git truth and target files. Exact source
-commit hashes below are accepted evidence for this integration, not standing
-future main truth.
+Before any later write, re-read live git truth and target files. The accepted
+worker commits below are merge parents of this integration; do not treat
+unmerged local campaign commits or local campaign paths as durable public truth.
 
 ## Current Truth
 
-- Source commit `360e57ec8bb5307f2d855a8b03cca5bb8eb3bc40` adds a
-  warning-only WinUI validation-wrapper long-path diagnostic plus matching docs.
-- Source commit `c87d399b15ea653921797983c89e187167a42173` slims the live
-  state batons to concise current-state pointers.
-- Source commit `abfa4041a586107c5777f2aed74c5f507eb9dfd9` hardens the
-  PatchBench static guard against future runtime `PatchBench...Button.Content`
-  Host/Join, matchmaking, online-play, or netplay labels.
-- The PatchBench guard change is test-only. AppCore receipt construction,
-  patch planning, byte patch data, patch catalog rows, launch arguments,
-  safe-copy manifests/signatures, process decisions, music behavior, Host/Join
-  availability, online readiness, runtime proof, and release packaging are
-  unchanged.
-- The WinUI validation-wrapper follow-up is accepted and closed for this
-  integration. It remains diagnostic-only and does not change package scripts or
-  product behavior.
-- Patch catalog accounting remains 20 visible options: 9 stable and 11
-  experimental; 29/29 catalog rows have target specimen identity and policy
-  metadata.
-- The public repo remains the primary collaboration repo for source, docs,
-  tools, tests, RE notes, wave notes, state batons, agent reports, readiness
-  notes, and compact proof summaries that are non-secret and non-payload.
+- Accepted merge parent `98b9465108b6cf92cd6dcf325bab4a159c5c8ac9` extracts
+  PatchBench online-readiness and companion-session presentation text into
+  `PatchBenchOnlineReadinessText` plus small text-state records.
+- Accepted merge parent `ba3a22ead9d83692a2199e1288d8f363ec30eb6e` repairs
+  public state pointers so tracked state no longer depends on older local-only
+  worker/source commit hashes.
+- Accepted merge parent `b675a2fe817fdac50740d0f04b5bc0fdc61d05d3` indexes
+  `roadmap/static-to-proof-rebuild-transition-backlog.md` from
+  `roadmap/ROADMAP-INDEX.md`.
+- The PatchBench helper is presentation-only. `BinaryPatchesPage` still owns
+  `OnlineMultiplayerReadinessService` calls and UI control assignment.
+- The helper formats existing DTO/status text only. AppCore receipt
+  construction, patch planning, byte patch data, patch catalog rows, launch
+  arguments, safe-copy manifests/signatures, process decisions, music behavior,
+  Host/Join availability, online readiness, runtime proof, and release
+  packaging are unchanged.
+- Online multiplayer is still not player-ready. Host/Join remains disabled
+  until distinct-endpoint command-source proof and source-bound copied-runtime
+  causality proof are both accepted.
+- The public state/hash repair is documentation/state-only; it does not change
+  product behavior, runtime proof, release packaging, Ghidra material, hard
+  payload posture, installed game files, or original `BEA.exe`.
+- The roadmap-index fix is docs-only and does not claim rebuild parity, visual
+  parity, gameplay proof, runtime proof, or no-noticeable-difference proof.
+- The repaired path-ownership incident from the helper worker remains a
+  non-blocking integration note: the accidental canonical static-test edit was
+  reverted by that worker before integration, and canonical `main` was verified
+  clean before this merge.
+- Cross-review note to preserve: the next substantive PatchBench helper change
+  should add representative DTO-based helper-output tests that fail on omitted,
+  swapped, or boundary-losing text-state fields.
 - Hard payloads remain outside git and release ZIPs: game executables, copied
   executables, copied runtime output, arbitrary saves/options, raw proof logs,
   screenshots or frame dumps, full Ghidra databases, secrets, `.env*`, local
   runtime caches, and build/package output.
-- Online multiplayer is still not player-ready. Host/Join remains disabled
-  until distinct-endpoint command-source proof and source-bound copied-runtime
-  causality proof are both accepted.
 - Runtime audible music output is still not proven. Static RE closure is not
   runtime, gameplay, visual, online, rebuild, or no-noticeable-difference
   proof.
@@ -54,10 +61,16 @@ future main truth.
 
 ## Evidence Pointers
 
-- Accepted source commits for this integration:
-  `360e57ec8bb5307f2d855a8b03cca5bb8eb3bc40`,
-  `c87d399b15ea653921797983c89e187167a42173`, and
-  `abfa4041a586107c5777f2aed74c5f507eb9dfd9`.
+- Accepted merge parents for this integration:
+  `98b9465108b6cf92cd6dcf325bab4a159c5c8ac9`,
+  `ba3a22ead9d83692a2199e1288d8f363ec30eb6e`, and
+  `b675a2fe817fdac50740d0f04b5bc0fdc61d05d3`.
+- Prior public integration commits remain accepted evidence for the wrapper,
+  state-slimming, and PatchBench static online-button guard work:
+  `726e71009d7b5dac9256cfe6917c6f0ecca529cb`,
+  `b028cbffcb056a722d71dca3fed4483ca9d48bc1`,
+  `6c26f5c74a73fb31f09051de1807653f26fa26ee`, and
+  `5854f5b4c0d5e56cdd1dd6f2a185fd3cf8a40009`.
 - Coordination contracts: `coordination/README.md`,
   `coordination/WORKSTREAM_CONTRACT.md`,
   `coordination/REPORT_CONTRACT.md`, and
@@ -74,19 +87,21 @@ future main truth.
 ## Next Executable Work
 
 1. Verify live `HEAD`, `origin/main`, and remote `refs/heads/main`, then inspect
-   `OnslaughtCareerEditor.WinUI/Pages/BinaryPatchesPage.xaml.cs` and the
-   relevant `WinUiProductLaneTests` guards before editing.
-2. Extract online-readiness presentation text from
-   `RenderOnlineMultiplayerReadiness` and
-   `RenderOnlineCompanionSessionReadiness` into a small presentation
-   helper/model.
-3. Keep the slice presentation-only: do not move
+   `OnslaughtCareerEditor.WinUI/Helpers/PatchBenchOnlineReadinessText.cs`,
+   the related text-state records, and the relevant `WinUiProductLaneTests`
+   guards before editing.
+2. Add focused representative DTO-based tests for
+   `PatchBenchOnlineReadinessText.Build` and `BuildCompanionSession` so helper
+   output fails when fields are omitted, swapped, or lose Host/Join unavailable
+   and online non-claim boundaries.
+3. Keep the slice test/helper-output scoped: do not move
    `OnlineMultiplayerReadinessService` behavior, enable Host/Join or online
    actions, change AppCore semantics, patch catalog rows, byte patch data,
    launch behavior, safe-copy manifests/signatures, runtime proof, release
    packaging, Ghidra material, installed game files, or original `BEA.exe`.
-4. Run focused PatchBench/WinUI tests plus the relevant docs/repo safety gates
-   before claiming the helper/model slice.
+4. After that test slice, a safe docs/checker follow-up is a compact
+   rebuild-front-door chain map that aliases long static-to-proof slice names to
+   short proof files and the current selected active scope.
 
 ## Stop Conditions
 
