@@ -140,29 +140,33 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _secondHostReadinessArtifactSummary,
                 _localGamepadReadinessArtifactSummary,
                 _dualSafeCopyTopologyArtifactSummary);
-            OnlineMultiplayerStatusRow? proofClass = summary.StatusRows.FirstOrDefault(row => string.Equals(row.Label, "Current proof class", StringComparison.Ordinal));
+            PatchBenchOnlineReadinessTextState text = PatchBenchOnlineReadinessText.Build(
+                summary,
+                _secondHostReadinessArtifactSummary,
+                _localGamepadReadinessArtifactSummary,
+                _dualSafeCopyTopologyArtifactSummary);
 
-            PatchBenchOnlineReadinessHeadline.Text = "Online play is not available yet";
-            PatchBenchOnlineReadinessSlots.Text = "You can still use local split-screen in a safe copy.";
-            PatchBenchOnlineReadinessMetadataSlots.Text = "There is no Host or Join workflow in this build; larger-player support remains future design work.";
-            PatchBenchOnlineTargetModel.Text = FormatCompanionNetplayTarget(summary.CompanionNetplayTarget);
-            PatchBenchOnlineReadinessProofClass.Text = $"Current test coverage: {proofClass?.Value ?? "not proven"}";
-            PatchBenchOnlineReadinessNextProof.Text = "Next work: prove a real second computer or VM can send a command, then prove that command drives the copied game in the same run.";
-            PatchBenchOnlineReadinessGateDetails.Text = $"Technical gates: {FormatOnlineProofGateSummary(summary)}";
-            PatchBenchOnlineProofLadder.Text = $"Proof ladder (technical status only):{Environment.NewLine}{FormatOnlineProofLadder(summary.ProofLadderRows)}";
-            PatchBenchOnlineCompanionModelDetails.Text = FormatCompanionNetplayDetails(summary.CompanionNetplayTarget);
-            PatchBenchOnlineSecondHostSetupChecklist.Text = $"Setup steps: {FormatSecondHostSetupChecklist(summary.SecondHostSetupSteps)}";
-            PatchBenchOnlineReadinessBlockedActions.Text = $"Unavailable: {string.Join(", ", summary.BlockedActions.Where(action => !action.Enabled).Select(action => action.Label))}";
-            PatchBenchOnlineReadinessBlockedReasons.Text = $"Why unavailable: {string.Join("; ", summary.BlockedActions.Where(action => !action.Enabled).Select(action => $"{action.Label}: {action.Reason}"))}";
-            PatchBenchOnlineLiveAttemptStatus.Text = FormatSecondHostLiveAttemptStatus(summary.SecondHostLiveAttemptReadiness);
-            PatchBenchOnlineLiveAttemptBlockers.Text = FormatSecondHostLiveAttemptBlockers(summary.SecondHostLiveAttemptReadiness);
-            PatchBenchOnlineLiveAttemptCommands.Text = FormatSecondHostLiveAttemptCommands(summary.SecondHostLiveAttemptReadiness);
-            PatchBenchOnlinePromotionLockStatus.Text = FormatOnlinePromotionLockStatus(summary);
-            PatchBenchOnlineReadinessArtifactStatus.Text = FormatSecondHostReadinessArtifactStatus(_secondHostReadinessArtifactSummary);
-            PatchBenchGamepadReadinessArtifactStatus.Text = FormatLocalGamepadReadinessArtifactStatus(_localGamepadReadinessArtifactSummary);
-            PatchBenchDualSafeCopyTopologyArtifactStatus.Text = FormatDualSafeCopyTopologyArtifactStatus(_dualSafeCopyTopologyArtifactSummary);
-            PatchBenchDualSafeCopyTopologyBoundary.Text = "Not online multiplayer: no BEA launch, listener, invitation, remote input, Host/Join controls, distinct endpoint proof, or player-ready netplay.";
-            PatchBenchDualSafeCopyTopologyNextProofs.Text = "Why Host/Join is locked: topology/status only. Host/Join requires both a real VM or second PC command-source proof and source-bound copied-runtime causality in the same run.";
+            PatchBenchOnlineReadinessHeadline.Text = text.Headline;
+            PatchBenchOnlineReadinessSlots.Text = text.Slots;
+            PatchBenchOnlineReadinessMetadataSlots.Text = text.MetadataSlots;
+            PatchBenchOnlineTargetModel.Text = text.TargetModel;
+            PatchBenchOnlineReadinessProofClass.Text = text.ProofClass;
+            PatchBenchOnlineReadinessNextProof.Text = text.NextProof;
+            PatchBenchOnlineReadinessGateDetails.Text = text.GateDetails;
+            PatchBenchOnlineProofLadder.Text = text.ProofLadder;
+            PatchBenchOnlineCompanionModelDetails.Text = text.CompanionModelDetails;
+            PatchBenchOnlineSecondHostSetupChecklist.Text = text.SecondHostSetupChecklist;
+            PatchBenchOnlineReadinessBlockedActions.Text = text.BlockedActions;
+            PatchBenchOnlineReadinessBlockedReasons.Text = text.BlockedReasons;
+            PatchBenchOnlineLiveAttemptStatus.Text = text.LiveAttemptStatus;
+            PatchBenchOnlineLiveAttemptBlockers.Text = text.LiveAttemptBlockers;
+            PatchBenchOnlineLiveAttemptCommands.Text = text.LiveAttemptCommands;
+            PatchBenchOnlinePromotionLockStatus.Text = text.PromotionLockStatus;
+            PatchBenchOnlineReadinessArtifactStatus.Text = text.SecondHostReadinessArtifactStatus;
+            PatchBenchGamepadReadinessArtifactStatus.Text = text.GamepadReadinessArtifactStatus;
+            PatchBenchDualSafeCopyTopologyArtifactStatus.Text = text.DualSafeCopyTopologyArtifactStatus;
+            PatchBenchDualSafeCopyTopologyBoundary.Text = text.DualSafeCopyTopologyBoundary;
+            PatchBenchDualSafeCopyTopologyNextProofs.Text = text.DualSafeCopyTopologyNextProofs;
             RenderOnlineTechnicalDetailsVisibility();
             RenderMaintainerArtifactToolsVisibility();
             RenderOnlineCompanionSessionReadiness(false, null, null);
@@ -178,40 +182,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 contentMatchesCurrentSelection,
                 launchPlan,
                 launchPlanError);
+            PatchBenchOnlineCompanionSessionTextState text = PatchBenchOnlineReadinessText.BuildCompanionSession(summary);
 
-            PatchBenchOnlinePrepActionStatus.Text = BuildOnlinePrepActionStatus(summary);
-            PatchBenchOnlineCompanionSessionStatus.Text = $"Safe copy status: {FormatCompanionSafeCopyStatus(summary.SafeCopyManifestStatus)} Host/Join stay off.";
-            PatchBenchOnlineCompanionLaunchPlan.Text = $"Launch plan: {summary.LaunchPlanPreview}";
-            PatchBenchOnlineCompanionNextProofs.Text = "Next online work: real second-host command test, then source-bound runtime proof for the copied game.";
-            PatchBenchOnlineCompanionNonClaims.Text = $"Current limits: {FormatCompanionLimits(summary.NonClaims)}";
-        }
-
-        private static string BuildOnlinePrepActionStatus(OnlineCompanionSessionReadinessSummary summary)
-        {
-            if (summary.SafeCopyManifestStatus == "safe-copy-launch-plan-ready" && summary.TryableActions.Count > 0)
-            {
-                OnlineMultiplayerTryableAction action = summary.TryableActions[0];
-                return $"Ready safe-copy action: {action.Label}. Launch uses {action.LaunchHint}; this remains local split-screen only, not Host/Join or online proof.";
-            }
-
-            return "Select the local split-screen launch preset, then create and play a safe copy. This is not Host/Join or online proof.";
-        }
-
-        private static string FormatOnlineProofGateSummary(OnlineMultiplayerReadinessSummary summary)
-        {
-            bool commandSourcePending = summary.ProofGateRows.Any(row =>
-                row.Label.Contains("command source", StringComparison.OrdinalIgnoreCase) &&
-                row.Value.Contains("not accepted", StringComparison.OrdinalIgnoreCase));
-            bool runtimeCausalityPending = summary.ProofGateRows.Any(row =>
-                row.Label.Contains("runtime causality", StringComparison.OrdinalIgnoreCase) &&
-                row.Value.Contains("not accepted", StringComparison.OrdinalIgnoreCase));
-
-            if (commandSourcePending && runtimeCausalityPending)
-            {
-                return "real second-host command proof and same-run copied-game runtime proof are both still pending.";
-            }
-
-            return string.Join("; ", summary.ProofGateRows.Select(row => $"{row.Label}: {row.Value}"));
+            PatchBenchOnlinePrepActionStatus.Text = text.PrepActionStatus;
+            PatchBenchOnlineCompanionSessionStatus.Text = text.SessionStatus;
+            PatchBenchOnlineCompanionLaunchPlan.Text = text.LaunchPlan;
+            PatchBenchOnlineCompanionNextProofs.Text = text.NextProofs;
+            PatchBenchOnlineCompanionNonClaims.Text = text.NonClaims;
         }
 
         private void RenderMaintainerArtifactToolsVisibility()
@@ -227,147 +204,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             bool visible = PatchBenchOnlineTechnicalDetailsToggle.IsOn;
             PatchBenchOnlineTechnicalDetailsExpander.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-        }
-
-        private static string FormatCompanionNetplayTarget(OnlineCompanionNetplayTarget target)
-        {
-            return $"Future design sketch; Host/Join unavailable. {target.UserExperience}";
-        }
-
-        private static string FormatCompanionNetplayDetails(OnlineCompanionNetplayTarget target)
-        {
-            return $"Companion model: {target.HostRole} {target.JoinRole} {target.ViewModel} {target.CompanionRequirement} {target.CurrentBoundary}";
-        }
-
-        private static string FormatOnlineProofLadder(IReadOnlyList<OnlineMultiplayerProofLadderRow> rows)
-        {
-            if (rows.Count == 0)
-            {
-                return "No proof-ladder rows are loaded; Host/Join remains unavailable.";
-            }
-
-            return string.Join(Environment.NewLine, rows.Select(row => $"{row.Label}: {row.Status} - {row.Detail}"));
-        }
-
-        private static string FormatSecondHostSetupChecklist(IReadOnlyList<OnlineMultiplayerSetupStep> steps)
-        {
-            return string.Join("; ", steps.Select(step => $"{step.Label} ({step.Status}) - {step.Detail}"));
-        }
-
-        private static string FormatSecondHostLiveAttemptStatus(OnlineSecondHostLiveAttemptReadiness readiness)
-        {
-            string status = readiness.ReadyToRunLiveCommandSource
-                ? "ready to run live command-source candidate; online play is not available in this release and Host/Join remain unavailable"
-                : "not ready for a live command-source run";
-            string blockers = readiness.BlockingReasons.Count == 0
-                ? "no readiness blockers recorded"
-                : string.Join("; ", readiness.BlockingReasons);
-            return $"Second-host live attempt: {status}. Checklist: server command inputs {(readiness.ServerCommandInputsComplete ? "ready" : "incomplete")}; client preflight {(readiness.ClientPreflightProvided ? "provided" : "missing")}; Host/Join controls {(readiness.HostJoinControlsMayBeEnabled ? "eligible for future review" : "locked")}. Blockers: {blockers}.";
-        }
-
-        private static string FormatOnlinePromotionLockStatus(OnlineMultiplayerReadinessSummary summary)
-        {
-            OnlineMultiplayerStatusRow? lockRow = summary.StatusRows.FirstOrDefault(row =>
-                string.Equals(row.Label, "Host/Join promotion lock", StringComparison.Ordinal));
-            return $"{lockRow?.Value ?? "Online play is not player-ready; readiness artifacts cannot enable Host/Join."} Host/Join remain unavailable until a real separate-machine input test also proves copied-game behavior.";
-        }
-
-        private static string FormatSecondHostLiveAttemptBlockers(OnlineSecondHostLiveAttemptReadiness readiness)
-        {
-            return $"Blocked by: {string.Join("; ", readiness.BlockingReasons)}";
-        }
-
-        private static string FormatSecondHostLiveAttemptCommands(OnlineSecondHostLiveAttemptReadiness readiness)
-        {
-            return $"Safe checks: {string.Join("; ", readiness.SafeCommands)}";
-        }
-
-        private static string FormatSecondHostReadinessArtifactStatus(OnlineSecondHostReadinessArtifactSummary? artifact)
-        {
-            if (artifact is null)
-            {
-                return "No second-host readiness summary loaded. Host/Join remain unavailable.";
-            }
-
-            string status = artifact.ReadyToRunLiveCommandSource
-                ? "ready for future live command-source review"
-                : "not ready for a live command-source run";
-            return
-                $"Loaded {artifact.SourceKind} summary: {status}; " +
-                $"server inputs {(artifact.ServerCommandInputsComplete ? "complete" : "incomplete")}; " +
-                $"client preflight {(artifact.ClientPreflightProvided ? "provided" : "missing")}; " +
-                $"network candidates checked: {artifact.CandidatePrivateBindAddressCount + artifact.WslOnHostInterfaceCount}. " +
-                "Online play is not player-ready. Host/Join remain unavailable.";
-        }
-
-        private static string FormatLocalGamepadReadinessArtifactStatus(OnlineLocalGamepadReadinessArtifactSummary? artifact)
-        {
-            if (artifact is null)
-            {
-                return "No physical controller readiness summary loaded. Hardware readiness only; Host/Join remain unavailable.";
-            }
-
-            string readyText = artifact.ReadyForPhysicalGamepadRuntimeAttempt
-                ? "ready for a physical-controller runtime attempt"
-                : "not ready for a physical-controller runtime attempt";
-            return
-                $"Loaded {artifact.SourceKind} summary: status={artifact.Status}; {readyText}; " +
-                $"presentGamepadCandidateCount={artifact.PresentGamepadCandidateCount}; registryGamepadCandidateCount={artifact.RegistryGamepadCandidateCount}; " +
-                $"pnpDeviceCount={artifact.PnpDeviceCount}; joystickRegistryRowCount={artifact.JoystickRegistryRowCount}. " +
-                "hardware preflight only; no BEA DirectInput/runtime proof, visible movement proof, Host/Join, or online proof.";
-        }
-
-        private static string FormatDualSafeCopyTopologyArtifactStatus(OnlineDualSafeCopyTopologyArtifactSummary? artifact)
-        {
-            if (artifact is null)
-            {
-                return "No dual-safe-copy topology summary loaded. Host/Join remain unavailable.";
-            }
-
-            return
-                $"Loaded dual-safe-copy topology summary: descriptor-only same-workstation topology; safeCopyCount={artifact.SafeCopyCount}; roles={string.Join(",", artifact.Roles)}; " +
-                $"sameWorkstationOnly={artifact.SameWorkstationOnly}; samePhysicalMachineOnly={artifact.SamePhysicalMachineOnly}; " +
-                $"root/executable descriptor counts={artifact.SafeCopyRootDescriptorCount}/{artifact.SafeCopyExecutableDescriptorCount}; " +
-                "no BEA launch, CDB attach, listener, invitation, remote input, Host/Join, distinct endpoint proof, or player-ready netplay. " +
-                "Host/Join remain unavailable.";
-        }
-
-        private static string FormatCompanionSafeCopyStatus(string status)
-        {
-            return status switch
-            {
-                "missing-safe-copy" => "create a safe game copy first.",
-                "stale-safe-copy" => "create a fresh safe game copy for the current selections.",
-                "launch-plan-blocked" => "fix the safe-copy launch plan before testing.",
-                "safe-copy-launch-plan-ready" => "safe copy is ready for local launch tests.",
-                _ => status
-            };
-        }
-
-        private static string FormatCompanionLimits(IReadOnlyList<string> nonClaims)
-        {
-            var labels = new List<string>();
-            if (nonClaims.Contains("no listener", StringComparer.OrdinalIgnoreCase))
-            {
-                labels.Add("no network listener");
-            }
-
-            if (nonClaims.Contains("no invitation", StringComparer.OrdinalIgnoreCase))
-            {
-                labels.Add("no invitation");
-            }
-
-            if (nonClaims.Contains("no remote input", StringComparer.OrdinalIgnoreCase))
-            {
-                labels.Add("no remote input");
-            }
-
-            if (nonClaims.Contains("no Host/Join controls", StringComparer.OrdinalIgnoreCase))
-            {
-                labels.Add("no Host/Join controls");
-            }
-
-            return labels.Count == 0 ? string.Join(", ", nonClaims) : string.Join(", ", labels) + ".";
         }
 
         private IEnumerable<BinaryPatchItemModel> AllItems => _allPatchItems;
@@ -1021,7 +857,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 {
                     _secondHostReadinessArtifactSummary = artifact;
                     RenderOnlineMultiplayerReadiness();
-                    OperationLogTextBox.Text = FormatSecondHostReadinessArtifactStatus(artifact);
+                    OperationLogTextBox.Text = PatchBenchOnlineReadinessText.FormatSecondHostReadinessArtifactStatus(artifact);
                     AppStatusService.SetStatus("Windowed & Mods: loaded redacted second-host readiness summary");
                     return;
                 }
@@ -1069,7 +905,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 {
                     _dualSafeCopyTopologyArtifactSummary = artifact;
                     RenderOnlineMultiplayerReadiness();
-                    OperationLogTextBox.Text = FormatDualSafeCopyTopologyArtifactStatus(artifact);
+                    OperationLogTextBox.Text = PatchBenchOnlineReadinessText.FormatDualSafeCopyTopologyArtifactStatus(artifact);
                     AppStatusService.SetStatus("Windowed & Mods: loaded dual-safe-copy topology summary");
                     return;
                 }
@@ -1117,7 +953,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 {
                     _localGamepadReadinessArtifactSummary = artifact;
                     RenderOnlineMultiplayerReadiness();
-                    OperationLogTextBox.Text = FormatLocalGamepadReadinessArtifactStatus(artifact);
+                    OperationLogTextBox.Text = PatchBenchOnlineReadinessText.FormatLocalGamepadReadinessArtifactStatus(artifact);
                     AppStatusService.SetStatus("Windowed & Mods: loaded local physical controller readiness summary");
                     return;
                 }

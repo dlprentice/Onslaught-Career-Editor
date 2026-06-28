@@ -347,6 +347,9 @@ public class WinUiProductLaneTests
         string launchTextHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchLaunchText.cs");
         string menuColorTextHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchMenuColorSelectionText.cs");
         string menuColorKindModel = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchMenuColorSelectionKind.cs");
+        string onlineReadinessText = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchOnlineReadinessText.cs");
+        string onlineReadinessTextState = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchOnlineReadinessTextState.cs");
+        string onlineCompanionSessionTextState = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchOnlineCompanionSessionTextState.cs");
         string patchGroupsHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchPatchGroups.cs");
         string settingsXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "SettingsPage.xaml");
 
@@ -872,10 +875,15 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("RenderOnlineTechnicalDetailsVisibility"));
         Assert.That(code, Does.Contain("PatchBenchOnlineTechnicalDetailsToggle.IsOn"));
         Assert.That(code, Does.Contain("PatchBenchOnlineTechnicalDetailsExpander.Visibility = visible ? Visibility.Visible : Visibility.Collapsed"));
-        Assert.That(code, Does.Contain("You can still use local split-screen in a safe copy."));
-        Assert.That(code, Does.Contain("larger-player support remains future design work."));
-        Assert.That(code, Does.Contain("summary.CompanionNetplayTarget"));
-        Assert.That(code, Does.Contain("FormatCompanionNetplayTarget"));
+        Assert.That(code, Does.Contain("PatchBenchOnlineReadinessText.Build("));
+        Assert.That(code, Does.Contain("PatchBenchOnlineReadinessTextState text"));
+        Assert.That(code, Does.Contain("PatchBenchOnlineReadinessHeadline.Text = text.Headline"));
+        Assert.That(onlineReadinessText, Does.Contain("You can still use local split-screen in a safe copy."));
+        Assert.That(onlineReadinessText, Does.Contain("larger-player support remains future design work."));
+        Assert.That(onlineReadinessText, Does.Contain("summary.CompanionNetplayTarget"));
+        Assert.That(onlineReadinessText, Does.Contain("FormatCompanionNetplayTarget"));
+        Assert.That(onlineReadinessTextState, Does.Contain("internal sealed record PatchBenchOnlineReadinessTextState"));
+        Assert.That(onlineCompanionSessionTextState, Does.Contain("internal sealed record PatchBenchOnlineCompanionSessionTextState"));
         Assert.That(pageXaml, Does.Contain("PatchBenchOnlineReadinessGateDetails"));
         Assert.That(pageXaml, Does.Contain("Proof ladder"));
         Assert.That(pageXaml, Does.Contain("PatchBenchOnlineProofLadder"));
@@ -897,17 +905,17 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("_dualSafeCopyTopologyArtifactSummary"));
         Assert.That(code, Does.Contain("TryLoadDualSafeCopyTopologyArtifact"));
         Assert.That(code, Does.Contain("FormatDualSafeCopyTopologyArtifactStatus"));
-        Assert.That(code, Does.Contain("Loaded dual-safe-copy topology summary"));
+        Assert.That(onlineReadinessText, Does.Contain("Loaded dual-safe-copy topology summary"));
         Assert.That(code, Does.Contain("RenderMaintainerArtifactToolsVisibility"));
         Assert.That(code, Does.Contain("Technical summary loaders are visible. Loading a summary still cannot enable Host/Join or prove online play."));
         Assert.That(code, Does.Contain("Host/Join remain unavailable"));
         Assert.That(pageXaml, Does.Contain("Second-host setup checklist"));
         Assert.That(pageXaml, Does.Contain("PatchBenchOnlineSecondHostSetupChecklist"));
-        Assert.That(code, Does.Contain("summary.SecondHostSetupSteps"));
-        Assert.That(code, Does.Contain("FormatSecondHostSetupChecklist"));
-        Assert.That(code, Does.Contain("summary.ProofLadderRows"));
-        Assert.That(code, Does.Contain("FormatOnlineProofLadder"));
-        Assert.That(code, Does.Contain("OnlineMultiplayerProofLadderRow"));
+        Assert.That(onlineReadinessText, Does.Contain("summary.SecondHostSetupSteps"));
+        Assert.That(onlineReadinessText, Does.Contain("FormatSecondHostSetupChecklist"));
+        Assert.That(onlineReadinessText, Does.Contain("summary.ProofLadderRows"));
+        Assert.That(onlineReadinessText, Does.Contain("FormatOnlineProofLadder"));
+        Assert.That(onlineReadinessText, Does.Contain("OnlineMultiplayerProofLadderRow"));
         Assert.That(pageXaml, Does.Contain("PatchBenchOnlineReadinessBlockedReasons"));
         Assert.That(pageXaml, Does.Contain("PatchBenchOnlineCompanionSessionStatus"));
         Assert.That(pageXaml, Does.Contain("PatchBenchOnlineCompanionLaunchPlan"));
@@ -933,19 +941,20 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("Unavailable in this release: online play, public matchmaking, and native online code."));
         Assert.That(pageXaml, Does.Not.Contain("Host online session"));
         Assert.That(pageXaml, Does.Not.Contain("Join online session"));
-        Assert.That(code, Does.Contain("summary.ProofGateRows"));
-        Assert.That(code, Does.Contain("summary.SecondHostLiveAttemptReadiness"));
-        Assert.That(code, Does.Contain("FormatSecondHostLiveAttemptStatus"));
-        Assert.That(code, Does.Contain("Checklist: server command inputs"));
-        Assert.That(code, Does.Contain("client preflight"));
-        Assert.That(code, Does.Contain("Host/Join controls"));
-        Assert.That(code, Does.Contain("network candidates checked"));
-        Assert.That(code, Does.Contain("FormatSecondHostLiveAttemptBlockers"));
-        Assert.That(code, Does.Contain("FormatSecondHostLiveAttemptCommands"));
+        Assert.That(onlineReadinessText, Does.Contain("summary.ProofGateRows"));
+        Assert.That(onlineReadinessText, Does.Contain("summary.SecondHostLiveAttemptReadiness"));
+        Assert.That(onlineReadinessText, Does.Contain("FormatSecondHostLiveAttemptStatus"));
+        Assert.That(onlineReadinessText, Does.Contain("Checklist: server command inputs"));
+        Assert.That(onlineReadinessText, Does.Contain("client preflight"));
+        Assert.That(onlineReadinessText, Does.Contain("Host/Join controls"));
+        Assert.That(onlineReadinessText, Does.Contain("network candidates checked"));
+        Assert.That(onlineReadinessText, Does.Contain("FormatSecondHostLiveAttemptBlockers"));
+        Assert.That(onlineReadinessText, Does.Contain("FormatSecondHostLiveAttemptCommands"));
         Assert.That(code, Does.Contain("PatchBenchOnlinePromotionLockStatus.Text"));
-        Assert.That(code, Does.Contain("FormatOnlinePromotionLockStatus"));
+        Assert.That(onlineReadinessText, Does.Contain("FormatOnlinePromotionLockStatus"));
         Assert.That(code, Does.Contain("GetCompanionSessionReadiness"));
         Assert.That(code, Does.Contain("RenderOnlineCompanionSessionReadiness"));
+        Assert.That(code, Does.Contain("PatchBenchOnlineReadinessText.BuildCompanionSession("));
         Assert.That(code, Does.Contain("PatchBenchOnlineReadinessGateDetails.Text"));
         Assert.That(code, Does.Contain("PatchBenchOnlineReadinessBlockedReasons.Text"));
         Assert.That(code, Does.Contain("PatchBenchOnlineLiveAttemptStatus.Text"));
@@ -957,17 +966,17 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("TryLoadLocalGamepadReadinessArtifact"));
         Assert.That(code, Does.Contain("FormatLocalGamepadReadinessArtifactStatus"));
         Assert.That(code, Does.Contain("PatchBenchGamepadReadinessArtifactStatus.Text"));
-        Assert.That(code, Does.Contain("hardware preflight only; no BEA DirectInput/runtime proof"));
-        Assert.That(code, Does.Contain("Host/Join remain unavailable."));
+        Assert.That(onlineReadinessText, Does.Contain("hardware preflight only; no BEA DirectInput/runtime proof"));
+        Assert.That(onlineReadinessText, Does.Contain("Host/Join remain unavailable."));
         Assert.That(code, Does.Contain("No listener, invitation, remote input, or Host/Join control is enabled."));
         Assert.That(code, Does.Contain("PatchBenchOnlineCompanionSessionStatus.Text"));
         Assert.That(code, Does.Contain("PatchBenchOnlineCompanionLaunchPlan.Text"));
-        Assert.That(code, Does.Contain("FormatOnlineProofGateSummary"));
-        Assert.That(code, Does.Contain("FormatCompanionSafeCopyStatus"));
-        Assert.That(code, Does.Contain("Next work: prove a real second computer or VM can send a command"));
-        Assert.That(code, Does.Contain("Safe copy status: {FormatCompanionSafeCopyStatus(summary.SafeCopyManifestStatus)} Host/Join stay off."));
-        Assert.That(code, Does.Contain("Next online work: real second-host command test, then source-bound runtime proof for the copied game."));
-        Assert.That(code, Does.Contain("no network listener"));
+        Assert.That(onlineReadinessText, Does.Contain("FormatOnlineProofGateSummary"));
+        Assert.That(onlineReadinessText, Does.Contain("FormatCompanionSafeCopyStatus"));
+        Assert.That(onlineReadinessText, Does.Contain("Next work: prove a real second computer or VM can send a command"));
+        Assert.That(onlineReadinessText, Does.Contain("Safe copy status: {FormatCompanionSafeCopyStatus(summary.SafeCopyManifestStatus)} Host/Join stay off."));
+        Assert.That(onlineReadinessText, Does.Contain("Next online work: real second-host command test, then source-bound runtime proof for the copied game."));
+        Assert.That(onlineReadinessText, Does.Contain("no network listener"));
         Assert.That(code, Does.Not.Contain("Next proof IDs:"));
         Assert.That(code, Does.Not.Contain("Companion session: {summary.SafeCopyManifestStatus}"));
         Assert.That(pageXaml, Does.Not.Contain("PatchBenchHostOnlineSessionButton"));
@@ -1165,6 +1174,7 @@ public class WinUiProductLaneTests
             "PatchBenchChoiceVisualState.cs",
             "PatchBenchLaunchText.cs",
             "PatchBenchMenuColorSelectionText.cs",
+            "PatchBenchOnlineReadinessText.cs",
             "PatchBenchPatchGroups.cs",
             "PatchBenchSafeCopyOutcomeText.cs",
             "PatchBenchSelectedProfileText.cs",
@@ -1217,8 +1227,6 @@ public class WinUiProductLaneTests
             "PatchBenchJoinOnlineSessionButton",
             "PatchBenchPublicMatchmakingButton",
             "OnlineMultiplayerReadinessService",
-            "OnlineCompanionSessionReadinessSummary",
-            "OnlineSecondHost",
             "PublicMatchmaking",
             "OnslaughtToolkit-winui",
             "README.RELEASE",
@@ -1234,6 +1242,9 @@ public class WinUiProductLaneTests
         }
 
         string selectedProfileText = helpers["PatchBenchSelectedProfileText.cs"];
+        string onlineReadinessText = helpers["PatchBenchOnlineReadinessText.cs"];
+        string onlineReadinessTextState = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchOnlineReadinessTextState.cs");
+        string onlineCompanionSessionTextState = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchOnlineCompanionSessionTextState.cs");
         Assert.That(selectedProfileText, Does.Contain("SafeCopyProfilePreset"));
         Assert.That(selectedProfileText, Does.Contain("BinaryPatchPlanBuilder.CompatibilityProfileId"));
         Assert.That(selectedProfileText, Does.Not.Contain("GetSafeCopyProfilePreset"));
@@ -1253,6 +1264,22 @@ public class WinUiProductLaneTests
             Assert.That(text, Does.Not.Contain("BinaryPatchPlanBuilder"), $"{name} should not depend on patch-plan constants.");
             Assert.That(text, Does.Not.Contain("SafeCopyProfilePreset"), $"{name} should not format safe-copy profile catalog data.");
         }
+
+        Assert.That(onlineReadinessText, Does.Contain("internal static class PatchBenchOnlineReadinessText"));
+        Assert.That(onlineReadinessText, Does.Contain("public static PatchBenchOnlineReadinessTextState Build("));
+        Assert.That(onlineReadinessText, Does.Contain("public static PatchBenchOnlineCompanionSessionTextState BuildCompanionSession("));
+        Assert.That(onlineReadinessText, Does.Contain("Online play is not available yet"));
+        Assert.That(onlineReadinessText, Does.Contain("local split-screen"));
+        Assert.That(onlineReadinessText, Does.Contain("There is no Host or Join workflow"));
+        Assert.That(onlineReadinessText, Does.Contain("not Host/Join or online proof"));
+        Assert.That(onlineReadinessText, Does.Contain("distinct endpoint proof"));
+        Assert.That(onlineReadinessText, Does.Contain("source-bound copied-runtime causality"));
+        Assert.That(onlineReadinessText, Does.Not.Contain("PatchBenchOnlineReadinessHeadline.Text"));
+        Assert.That(onlineReadinessText, Does.Not.Contain("PatchBenchOnlinePrepActionStatus.Text"));
+        Assert.That(onlineReadinessTextState, Does.Contain("internal sealed record PatchBenchOnlineReadinessTextState"));
+        Assert.That(onlineReadinessTextState, Does.Contain("string DualSafeCopyTopologyNextProofs"));
+        Assert.That(onlineCompanionSessionTextState, Does.Contain("internal sealed record PatchBenchOnlineCompanionSessionTextState"));
+        Assert.That(onlineCompanionSessionTextState, Does.Contain("string PrepActionStatus"));
     }
     [Test]
     public void PatchBench_CodeRequiresAppOwnedWorkingCopyBeforeApply()
