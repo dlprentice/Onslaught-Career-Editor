@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-06-27",
-  "currentFocus": "Accepted wrapper diagnostic, state-slimming, and PatchBench runtime online-button guard source commits are integrated on main; docs/state now point the next slice at PatchBench online-readiness presentation helper/model extraction.",
+  "lastUpdated": "2026-06-28",
+  "currentFocus": "Accepted wrapper diagnostic, state-slimming, and PatchBench runtime online-button guard public integration commits are on main; docs/state now point the next slice at PatchBench online-readiness presentation helper/model extraction.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -20,28 +20,30 @@
   },
   "currentDocsTruth": {
     "publicMain": {
-      "integratedSourceCommits": [
-        "360e57ec8bb5307f2d855a8b03cca5bb8eb3bc40",
-        "c87d399b15ea653921797983c89e187167a42173",
-        "abfa4041a586107c5777f2aed74c5f507eb9dfd9"
+      "integrationCommits": [
+        "726e71009d7b5dac9256cfe6917c6f0ecca529cb",
+        "b028cbffcb056a722d71dca3fed4483ca9d48bc1",
+        "6c26f5c74a73fb31f09051de1807653f26fa26ee",
+        "5854f5b4c0d5e56cdd1dd6f2a185fd3cf8a40009"
       ],
-      "nextWriteRequirement": "Re-read live git truth before treating any exact main commit as current; listed commits are accepted evidence only."
+      "nextWriteRequirement": "Re-read live git truth before treating any exact main commit as current; local worker source hashes were acceptance evidence only and are not durable public state pointers."
     },
-    "acceptedWorkerCommits": [
+    "acceptedIntegrationEvidence": [
       {
-        "worker": "winui-validation-wrapper-short-path-001",
-        "commit": "360e57ec8bb5307f2d855a8b03cca5bb8eb3bc40",
+        "commit": "726e71009d7b5dac9256cfe6917c6f0ecca529cb",
         "summary": "Warning-only WinUI validation-wrapper long-path diagnostic and matching docs."
       },
       {
-        "worker": "state-baton-slimming-001",
-        "commit": "c87d399b15ea653921797983c89e187167a42173",
+        "commit": "b028cbffcb056a722d71dca3fed4483ca9d48bc1",
         "summary": "Concise current-state baton refresh."
       },
       {
-        "worker": "patchbench-seam-discovery-001",
-        "commit": "abfa4041a586107c5777f2aed74c5f507eb9dfd9",
+        "commit": "6c26f5c74a73fb31f09051de1807653f26fa26ee",
         "summary": "PatchBench static guard now rejects future runtime online-action button labels before proof gates."
+      },
+      {
+        "commit": "5854f5b4c0d5e56cdd1dd6f2a185fd3cf8a40009",
+        "summary": "Integration baton reconciliation after the wrapper, state, and PatchBench changes."
       }
     ],
     "publicPrimaryRepo": "The public repo is the normal collaboration surface, not a sparse export.",

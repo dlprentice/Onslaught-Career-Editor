@@ -1,29 +1,31 @@
 # Active Goal Slice
 
 Status: active
-Last updated: 2026-06-27
+Last updated: 2026-06-28
 Policy: `goal.policy.md`
 
 ## Current Slice
 
 The WinUI validation-wrapper diagnostic, state-baton slimming, and PatchBench
-runtime online-button guard source commits are integrated on `main`. The next
+runtime online-button guard public integration commits are on `main`. The next
 executable slice is a small BinaryPatchesPage/PatchBench presentation-helper
 slice for online-readiness text.
 
-Before any later write, re-read live git truth and target files. Exact source
-commit hashes below are accepted evidence for this integration, not standing
-future main truth.
+Before any later write, re-read live git truth and target files. Public `main`
+integration commits below are durable pointers for this state; local worker
+source commits were acceptance evidence only.
 
 ## Current Truth
 
-- Source commit `360e57ec8bb5307f2d855a8b03cca5bb8eb3bc40` adds a
+- Public main commit `726e71009d7b5dac9256cfe6917c6f0ecca529cb` adds a
   warning-only WinUI validation-wrapper long-path diagnostic plus matching docs.
-- Source commit `c87d399b15ea653921797983c89e187167a42173` slims the live
+- Public main commit `b028cbffcb056a722d71dca3fed4483ca9d48bc1` slims the live
   state batons to concise current-state pointers.
-- Source commit `abfa4041a586107c5777f2aed74c5f507eb9dfd9` hardens the
+- Public main commit `6c26f5c74a73fb31f09051de1807653f26fa26ee` hardens the
   PatchBench static guard against future runtime `PatchBench...Button.Content`
   Host/Join, matchmaking, online-play, or netplay labels.
+- Public main commit `5854f5b4c0d5e56cdd1dd6f2a185fd3cf8a40009` reconciles the
+  integrated state batons after those changes.
 - The PatchBench guard change is test-only. AppCore receipt construction,
   patch planning, byte patch data, patch catalog rows, launch arguments,
   safe-copy manifests/signatures, process decisions, music behavior, Host/Join
@@ -54,10 +56,11 @@ future main truth.
 
 ## Evidence Pointers
 
-- Accepted source commits for this integration:
-  `360e57ec8bb5307f2d855a8b03cca5bb8eb3bc40`,
-  `c87d399b15ea653921797983c89e187167a42173`, and
-  `abfa4041a586107c5777f2aed74c5f507eb9dfd9`.
+- Accepted public main integration commits for this state:
+  `726e71009d7b5dac9256cfe6917c6f0ecca529cb`,
+  `b028cbffcb056a722d71dca3fed4483ca9d48bc1`,
+  `6c26f5c74a73fb31f09051de1807653f26fa26ee`, and
+  `5854f5b4c0d5e56cdd1dd6f2a185fd3cf8a40009`.
 - Coordination contracts: `coordination/README.md`,
   `coordination/WORKSTREAM_CONTRACT.md`,
   `coordination/REPORT_CONTRACT.md`, and

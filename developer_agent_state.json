@@ -1,31 +1,33 @@
 {
-  "lastUpdated": "2026-06-27",
+  "lastUpdated": "2026-06-28",
   "branch": "main",
-  "currentFocus": "Accepted wrapper diagnostic, state-slimming, and PatchBench runtime online-button guard source commits are integrated on main; the next developer slice is a PatchBench online-readiness presentation helper/model extraction.",
+  "currentFocus": "Accepted wrapper diagnostic, state-slimming, and PatchBench runtime online-button guard public integration commits are on main; the next developer slice is a PatchBench online-readiness presentation helper/model extraction.",
   "currentTruth": {
     "publicMain": {
-      "integratedSourceCommits": [
-        "360e57ec8bb5307f2d855a8b03cca5bb8eb3bc40",
-        "c87d399b15ea653921797983c89e187167a42173",
-        "abfa4041a586107c5777f2aed74c5f507eb9dfd9"
+      "integrationCommits": [
+        "726e71009d7b5dac9256cfe6917c6f0ecca529cb",
+        "b028cbffcb056a722d71dca3fed4483ca9d48bc1",
+        "6c26f5c74a73fb31f09051de1807653f26fa26ee",
+        "5854f5b4c0d5e56cdd1dd6f2a185fd3cf8a40009"
       ],
-      "nextWriteRequirement": "Before any later write, re-read live HEAD, origin/main, and remote refs/heads/main; exact hashes in state are accepted evidence, not standing future main truth."
+      "nextWriteRequirement": "Before any later write, re-read live HEAD, origin/main, and remote refs/heads/main; local worker source hashes were acceptance evidence only and are not durable public state pointers."
     },
-    "acceptedWorkerCommits": [
+    "acceptedIntegrationEvidence": [
       {
-        "worker": "winui-validation-wrapper-short-path-001",
-        "commit": "360e57ec8bb5307f2d855a8b03cca5bb8eb3bc40",
-        "summary": "Added a warning-only WinUI validation-wrapper long-path diagnostic plus matching tooling/release docs."
+        "commit": "726e71009d7b5dac9256cfe6917c6f0ecca529cb",
+        "summary": "Warning-only WinUI validation-wrapper long-path diagnostic plus matching tooling/release docs."
       },
       {
-        "worker": "state-baton-slimming-001",
-        "commit": "c87d399b15ea653921797983c89e187167a42173",
-        "summary": "Slimmed live state batons to concise current-state pointers and removed stale history/log detail."
+        "commit": "b028cbffcb056a722d71dca3fed4483ca9d48bc1",
+        "summary": "Concise current-state baton refresh that removed stale history/log detail."
       },
       {
-        "worker": "patchbench-seam-discovery-001",
-        "commit": "abfa4041a586107c5777f2aed74c5f507eb9dfd9",
-        "summary": "Hardened PatchBench static tests against future runtime Host/Join, matchmaking, online-play, or netplay button labels."
+        "commit": "6c26f5c74a73fb31f09051de1807653f26fa26ee",
+        "summary": "PatchBench static tests reject future runtime Host/Join, matchmaking, online-play, or netplay button labels."
+      },
+      {
+        "commit": "5854f5b4c0d5e56cdd1dd6f2a185fd3cf8a40009",
+        "summary": "Integration baton reconciliation after the wrapper, state, and PatchBench changes."
       }
     ],
     "patchBenchBoundary": "The integrated PatchBench change is test-only. AppCore receipt construction, patch planning, safe-copy manifests/signatures, launch arguments, process decisions, patch catalog rows, byte data, music behavior, Host/Join availability, online readiness, runtime proof, and release packaging are unchanged.",
