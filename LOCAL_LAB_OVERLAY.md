@@ -103,10 +103,10 @@ state, tests, or source. Final campaign reports and cleanup manifests normally
 stay local; track only sanitized summaries that are useful to future
 contributors and do not expose private paths or raw payloads.
 
-Assigned scratch volumes, including removable drive-letter scratch such as
-`F:`, can be used for temporary worker scratch when mounted and writable. They
-must not become the only durable copy of source, current proof evidence,
-Ghidra backups, release assets, or other valuable project material.
+Assigned scratch volumes, including removable or drive-letter scratch devices,
+can be used for temporary worker scratch when mounted and writable. They must
+not become the only durable copy of source, current proof evidence, Ghidra
+backups, release assets, or other valuable project material.
 
 Validation and review workers should avoid creating bulky durable outputs
 unless they are necessary evidence. Clean reproducible `bin/`, `obj/`,

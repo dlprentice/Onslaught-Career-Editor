@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-28",
-  "currentFocus": "Static RE/Ghidra state is unchanged. The rebuild front-door chain map is integrated as routing documentation, and the next repo slice remains PatchBench/BinaryPatchesPage test hardening rather than RE mutation.",
+  "currentFocus": "Static RE/Ghidra state is unchanged. The storage-conscious PatchBench routing-guard wave is integrated as product/test/docs work, and the next repo slice remains PatchBench/BinaryPatchesPage presentation modularity rather than RE mutation.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -12,9 +12,15 @@
     "latestLiveStore": "maintainer-local descriptor only; see LOCAL_LAB_OVERLAY.md for local-only Ghidra placement"
   },
   "publicPrimaryBoundary": "The public repo is primary for RE docs, wave notes, scratch text exports, function indexes, static maps, proof summaries, and checkers. Hard payloads, full Ghidra DBs/backups, raw captures, copied executables, secrets, build output, and package output remain local/ignored per LOCAL_LAB_OVERLAY.md.",
+  "storageRetention": {
+    "safeScratchCleanup": "Old local campaign scratch cleanup removed 10.926 GiB and did not delete or mutate tracked repo, proof archives, Ghidra stores, copied game/runtime roots, installed game files, or original BEA.exe.",
+    "ghidraBackups": "Report-only/no-delete retention review kept about 142.295 GiB pending per-family manifest/provenance review; live Ghidra project remains do-not-touch.",
+    "proofArchives": "Report-only/no-delete retention closeout kept about 270.438 GiB pending relative manifest/hash comparison; unknown H: containers remain do-not-touch.",
+    "futureMaintenance": "Stale prunable Git worktree metadata and proof-archive manifest/hash comparison are separate local maintenance tasks, not RE mutation."
+  },
   "runtimeProofBoundary": {
     "musicAudibleOutputProof": false,
-    "musicStatus": "Music producer/materializer/checker infrastructure exists, but there is no accepted live BEA audible-output bundle. See CURRENT_CAPABILITIES.md for current proof-gate detail.",
+    "musicStatus": "Music producer/materializer/checker infrastructure exists, but there is no accepted live BEA audible-output bundle. The next recommended runtime/proof lane is a private Music Audible Output Live Bundle after repo/storage closeout and explicit runtime-proof leasing.",
     "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint command-source proof and source-bound copied-runtime causality proof are both accepted",
     "releaseStatus": "v1.0.7 is the current published portable WinUI ZIP; use README.MD and release/readiness/winui_zip_release_v1_0_7_2026-06-25.md for release evidence instead of live state detail.",
     "staticReClosureBoundary": "Static closure is not runtime, gameplay, visual, online, rebuild, or no-noticeable-difference proof.",
@@ -43,8 +49,9 @@
   "blockers": [],
   "nextSteps": [
     "Keep static RE mutation paused unless a product/runtime contradiction points back to a specific RE issue.",
-    "Use the next bounded repo slice for PatchBench/BinaryPatchesPage test hardening.",
+    "Use the next bounded repo slice for PatchBench/BinaryPatchesPage presentation modularity hardening.",
     "Use the rebuild front-door chain map as routing documentation only; do not claim runtime, visual, gameplay, rebuild, or no-noticeable-difference parity from it.",
+    "Use the future private Music Audible Output Live Bundle prompt only after explicit runtime-proof leasing and storage/proof-root readiness.",
     "Keep local Ghidra, proof, copied-runtime, and payload details as maintainer-local descriptors or ignored overlays, not tracked state."
   ]
 }

@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-28",
-  "currentFocus": "PatchBench DTO helper-output tests and the rebuild front-door chain map are integrated on main; docs/state now point the next executable slice at bounded PatchBench/BinaryPatchesPage test hardening.",
+  "currentFocus": "PatchBench routing guards, shared reflected helper-output test support, and storage hygiene docs are integrated on main; docs/state now point the next executable slice at bounded PatchBench/BinaryPatchesPage presentation modularity hardening.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -20,27 +20,29 @@
     "rebuildFrontDoorChainMap": "roadmap/rebuild-front-door-chain-map.md"
   },
   "currentDocsTruth": {
-    "integratedWave": "Canonical docs/state summarize the PatchBench DTO helper-output tests and rebuild front-door chain map without treating local campaign reports, local worktree paths, or unreachable worker commits as durable public truth.",
-    "stateReconciliation": "goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json record the integrated wave, the next bounded test-hardening slice, and explicit non-claims.",
+    "integratedWave": "Canonical docs/state summarize the PatchBench routing guard, shared reflected WinUI helper-output loader, and storage hygiene docs without treating local campaign reports, local worktree paths, or unreachable worker commits as durable public truth.",
+    "stateReconciliation": "goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json record the integrated wave, the next bounded modularity slice, drive-level storage cleanup summary, retained Ghidra/proof non-deletion status, runtime future recommendation, and explicit non-claims.",
+    "storageHygiene": "LOCAL_LAB_OVERLAY.md explains disposable campaign/build/package scratch, final-report/local-manifest retention, scratch-device non-durability, manifest-required Ghidra/proof pruning, and do-not-touch boundaries for live Ghidra, installed game, original BEA.exe, current proof evidence, and protected backups.",
+    "storageCloseoutSummary": "Public-safe state records only drive-level before/after readings and category totals: 10.926 GiB old local campaign scratch cleaned; Ghidra backups and proof archives retained pending manifest/provenance or hash review.",
     "rebuildFrontDoor": "ROADMAP-INDEX links the compact rebuild-front-door chain map. The map is routing/discoverability only and does not claim runtime, visual, gameplay, rebuild, or no-noticeable-difference parity.",
-    "frontDoorHygiene": "coordination/README.md avoids a literal local campaign-root example, and PUBLIC_SIGNOFF_COMMANDS uses a placeholder private root for maintainer-only parity proof.",
-    "localOnlyBoundary": "LOCAL_LAB_OVERLAY.md maintainer-local Ghidra descriptors remain intentional overlay exceptions. Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, local runtime caches, raw proof evidence, and local proof paths stay out of tracked docs/state unless a public-safe summary is explicitly warranted.",
+    "localOnlyBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, local runtime caches, raw proof evidence, and local proof paths stay out of tracked docs/state unless a public-safe summary is explicitly warranted.",
     "releasePublicationStatus": "No release, tag, package, signing, installer, announcement, hosted workflow, or publication action is part of this integration.",
-    "claimBoundary": "DTO helper-output tests, rebuild routing docs, front-door hygiene, and state reconciliation only; no AppCore, patch catalog row, byte patch, launch argument, safe-copy manifest/signature, runtime proof, release/publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, or original-BEA mutation claim change."
+    "claimBoundary": "Routing guard tests, shared reflected helper-output loading, storage hygiene docs, drive-level storage summary, and state reconciliation only; no AppCore, patch catalog row, byte patch, launch argument, safe-copy manifest/signature, runtime proof, release/publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, or original-BEA mutation claim change."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
     "catalogRows": "29/29 target specimen identity and policy metadata rows"
   },
   "validation": {
-    "currentIntegration": "Integration gates cover docs/repo, payload, WinUI build, focused PatchBench DTO helper-output tests, broader PatchBench/patch-engine safety, hard-payload, and primary-lane validation evidence.",
-    "nextSlice": "Prefer the bounded PatchBench/BinaryPatchesPage test-hardening slice before broader modularity work."
+    "currentIntegration": "Integration gates cover docs/repo, payload, WinUI build, focused PatchBench online-readiness UiTests, broader PatchBench/patch-engine safety, hard-payload, and primary-lane validation evidence.",
+    "nextSlice": "Prefer the bounded PatchBench/BinaryPatchesPage presentation modularity slice before broader page refactors."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
     "Before the next write, verify live HEAD, origin/main, and remote refs/heads/main.",
     "Keep docs and state free of local campaign paths and unreachable worker-commit dependencies.",
-    "Keep product, runtime, release publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, and installed-game mutation claims bounded to accepted evidence."
+    "Keep product, runtime, release publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, and installed-game mutation claims bounded to accepted evidence.",
+    "Keep local metadata cleanup and proof/Ghidra retention pruning as separate scoped maintenance work with manifests, dry-run evidence, and explicit authority."
   ]
 }

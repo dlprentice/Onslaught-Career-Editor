@@ -1,54 +1,75 @@
 {
   "lastUpdated": "2026-06-28",
   "branch": "main",
-  "currentFocus": "PatchBench DTO helper-output and rebuild front-door chain-map wave is integrated on main; the next developer slice is bounded PatchBench/BinaryPatchesPage test hardening.",
+  "currentFocus": "Storage-conscious PatchBench routing-guard wave is integrated on main; the next developer slice is a compact PatchBench/BinaryPatchesPage presentation modularity hardening pass.",
   "currentTruth": {
     "integratedWave": {
-      "summary": "Canonical integration adds DTO/model-output coverage for PatchBenchOnlineReadinessText, adds a compact rebuild front-door chain map, and refreshes front-door/state hygiene without relying on local campaign paths or unreachable worker commits.",
+      "summary": "Canonical integration adds shared reflected WinUI helper-output test support, PatchBench routing guards for BinaryPatchesPage online-readiness rendering, storage hygiene docs, and concise state reconciliation without relying on local campaign paths or unreachable worker commits as durable public truth.",
       "changedFiles": [
+        "OnslaughtCareerEditor.UiTests/ReflectedWinUiTestSupport.cs",
+        "OnslaughtCareerEditor.UiTests/PatchBenchOnlineReadinessRoutingGuardTests.cs",
         "OnslaughtCareerEditor.UiTests/PatchBenchOnlineReadinessTextTests.cs",
-        "roadmap/ROADMAP-INDEX.md",
-        "roadmap/rebuild-front-door-chain-map.md",
-        "coordination/README.md",
-        "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
+        "LOCAL_LAB_OVERLAY.md",
         "goal.md",
         "developer_agent_state.json",
         "documentation_agent_state.json",
         "re_orchestrator_state.json"
       ],
-      "localOverlayClassification": "Maintainer-local Ghidra descriptors in LOCAL_LAB_OVERLAY.md remain intentional overlay exceptions, not campaign truth or release payloads."
+      "routingGuard": "BinaryPatchesPage online-readiness render paths are guarded to collect OnlineMultiplayerReadinessService state before calling PatchBenchOnlineReadinessText.Build and BuildCompanionSession, assign mapped text-state properties to controls, avoid inline literal text assignments in those render paths, and preserve exact-token order assertions that fail when either routing token is missing.",
+      "storagePolicy": "LOCAL_LAB_OVERLAY.md now records that campaign/build/package scratch is disposable after final reports and accepted findings are preserved, scratch devices are not durable sole storage, and Ghidra/proof pruning needs manifest classification."
+    },
+    "storageCloseout": {
+      "safeCleanup": "Old local campaign scratch cleanup removed 10.926 GiB and did not delete or mutate tracked repo files, proof archives, Ghidra stores, copied game/runtime roots, installed game files, or original BEA.exe.",
+      "driveFreeSpaceGiB": {
+        "before": {
+          "C": 225.514,
+          "D": 398.235,
+          "F": 119.242,
+          "G": 90.251,
+          "H": 245.474
+        },
+        "after": {
+          "C": 237.191,
+          "D": 398.235,
+          "F": 119.242,
+          "G": 90.251,
+          "H": 245.474
+        }
+      },
+      "ghidraBackups": "Report-only/no-delete retention review kept about 142.295 GiB pending per-family manifest/provenance review; live project remains do-not-touch.",
+      "proofArchives": "Report-only/no-delete retention closeout kept about 270.438 GiB pending relative manifest/hash comparison; unknown H: containers remain do-not-touch.",
+      "futureLocalMaintenance": "Stale prunable Git worktree metadata remains a separate bounded local maintenance baton; start with dry-run evidence and do not delete branches or broad storage without fresh authority."
     },
     "patchBenchBoundary": "PatchBenchOnlineReadinessText remains presentation-only. BinaryPatchesPage still owns OnlineMultiplayerReadinessService calls and UI control assignment. AppCore receipt construction, patch planning, safe-copy manifests/signatures, launch arguments, process decisions, patch catalog rows, byte data, music behavior, Host/Join availability, online readiness, runtime proof, and release packaging are unchanged.",
-    "testCoverage": "PatchBenchOnlineReadinessTextTests exercises Build and BuildCompanionSession against public-safe DTO/model inputs and guards missing or stale reflected WinUI build output.",
-    "rebuildDocs": "roadmap/rebuild-front-door-chain-map.md now routes static closure, proof-class boundaries, short aliases, selected active rebuild-support scope, and explicit non-claims.",
-    "frontDoorHygiene": "Tracked state/front-door docs no longer carry this wave's local campaign paths; coordination policy uses a generic outside-repo campaign-root description and public signoff uses a private-root placeholder.",
     "runtimeBoundaries": {
       "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint and source-bound copied-runtime proof exists",
       "musicAudibleOutputProof": false,
+      "futureRuntimeRecommendation": "Private Music Audible Output Live Bundle after repo/storage closeout and explicit runtime-proof leasing; original-binary online remains later and topology/material gated.",
       "staticReClosure": "static closure is not runtime, gameplay, visual, online, rebuild, or parity proof",
       "installedGameOriginalBea": "read-only"
     },
     "hardPayloadBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, and local runtime caches stay out of git and release ZIPs."
   },
   "activeSlice": {
-    "name": "patchbench-binarypatchespage-test-hardening",
+    "name": "patchbench-binarypatchespage-presentation-modularity",
     "status": "ready",
-    "goal": "Introduce a small shared UiTests helper for reflected WinUI helper-output loading and add a focused guard that BinaryPatchesPage continues routing online-readiness presentation through PatchBenchOnlineReadinessText without inline Host/Join or online-ready wording.",
-    "claimBoundary": "test/modularity hardening only; no AppCore/service behavior move, Host/Join enablement, online action enablement, release, runtime, Ghidra, hard-payload, installed-game, original-BEA, patch-row, byte-patch, launch, safe-copy manifest/signature, music, gameplay, visual, rebuild, or no-noticeable-difference claim changes"
+    "goal": "Extract one additional presentation-only PatchBench/BinaryPatchesPage text builder where it removes real duplication, then cover the boundary with focused UiTests while preserving current wording, routing, and non-claims.",
+    "claimBoundary": "presentation/testability hardening only; no AppCore/service behavior move, Host/Join enablement, online action enablement, release, runtime, Ghidra, hard-payload, installed-game, original-BEA, patch-row, byte-patch, launch, safe-copy manifest/signature, music, gameplay, visual, rebuild, or no-noticeable-difference claim changes"
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
     "catalogRows": "29/29 target specimen identity and policy metadata rows"
   },
   "validation": {
-    "currentIntegration": "Integration validation uses git diff --check, JSON parse, stale local campaign path scan, docs/link/repo safety gates, WinUI build, focused PatchBench DTO helper-output tests, patch-engine safety, hard-payload safety, and WinUI primary-lane validation.",
-    "nextSlice": "Use focused PatchBench/WinUI tests plus the relevant repo safety gates; rebuild WinUI before reflected helper-output tests."
+    "currentIntegration": "Integration validation uses git diff --check, JSON parse, stale local campaign path scan, docs/link/repo safety gates, WinUI build, focused PatchBench online-readiness UiTests, patch-engine safety, hard-payload safety, and WinUI primary-lane validation.",
+    "nextSlice": "Use focused PatchBench/WinUI tests plus relevant repo safety gates; rebuild WinUI before reflected helper-output tests."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
     "Before the next write, verify live HEAD, origin/main, and remote refs/heads/main.",
-    "Harden PatchBench/BinaryPatchesPage tests with a shared reflected WinUI helper-output loader and a routing guard.",
-    "Keep package scripts, release publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, and original-BEA mutation claims bounded to accepted evidence."
+    "Run a compact PatchBench/BinaryPatchesPage presentation modularity slice with focused routing/helper-output tests.",
+    "Keep package scripts, release publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, and original-BEA mutation claims bounded to accepted evidence.",
+    "Treat stale Git worktree metadata cleanup and proof-archive manifest/hash comparison as separate local maintenance work requiring dry-run evidence and explicit scope."
   ]
 }

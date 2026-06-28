@@ -6,37 +6,54 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-The PatchBench DTO helper-output and rebuild front-door chain-map wave is
-accepted for canonical integration on `main`. The integrated change adds focused
-helper-output tests, adds the rebuild chain map, refreshes current state batons,
-and removes tracked front-door examples that exposed literal local campaign or
-maintainer-private roots.
+The storage-conscious PatchBench routing-guard wave is integrated on `main`.
+The integrated change adds shared reflected WinUI helper-output loading in
+UiTests, guards `BinaryPatchesPage` online-readiness rendering through
+`PatchBenchOnlineReadinessText`, documents storage hygiene boundaries, and
+refreshes canonical state without treating local campaign paths or worker
+worktrees as durable public truth.
 
 Before any later write, re-read live git truth and target files. Do not treat
 local campaign reports, local worktree paths, or unmerged worker commits as
-durable public truth.
+durable public evidence.
 
 ## Current Truth
 
-- `OnslaughtCareerEditor.UiTests/PatchBenchOnlineReadinessTextTests.cs` now
-  exercises `PatchBenchOnlineReadinessText.Build` and
-  `BuildCompanionSession` with DTO/model inputs that preserve Host/Join
-  unavailable wording, online non-claims, command-source-only readiness, gamepad
-  preflight wording, and topology boundaries.
-- The helper-output tests reflect the built WinUI helper assembly and fail
-  clearly when the assembly is missing or stale relative to the helper/model
-  source files. They do not move product behavior into tests and do not claim
-  launch-plan sanitization.
-- `roadmap/rebuild-front-door-chain-map.md` is now the compact static-closure
-  to proof-class routing map, and `roadmap/ROADMAP-INDEX.md` points to it.
-- `coordination/README.md` no longer carries a literal local campaign-root
-  example, and `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md` uses a
-  placeholder for the private-root signoff command.
-- `LOCAL_LAB_OVERLAY.md` still intentionally documents maintainer-local Ghidra
-  descriptors as local-only overlay exceptions. Those paths are not campaign
-  truth and are not release payloads.
-- The PatchBench helper remains presentation-only. `BinaryPatchesPage` still
-  owns `OnlineMultiplayerReadinessService` calls and UI control assignment.
+- `OnslaughtCareerEditor.UiTests/ReflectedWinUiTestSupport.cs` now centralizes
+  reflected WinUI assembly loading, sibling DLL resolution, stale-build checks,
+  public static helper invocation, and string-property reading for helper-output
+  tests.
+- `OnslaughtCareerEditor.UiTests/PatchBenchOnlineReadinessTextTests.cs` uses the
+  shared reflected loader for `PatchBenchOnlineReadinessText.Build` and
+  `BuildCompanionSession` DTO/model output checks.
+- `OnslaughtCareerEditor.UiTests/PatchBenchOnlineReadinessRoutingGuardTests.cs`
+  now guards that `BinaryPatchesPage` collects service state before calling
+  `PatchBenchOnlineReadinessText.Build` and `BuildCompanionSession`, assigns the
+  mapped text-state properties to the expected controls, and does not assign
+  inline string literals in those render paths.
+- The routing guard preserves the repaired exact-token assertions: missing
+  service or helper tokens fail exact-count checks before order comparison.
+- PatchBench button labels and click handlers are guarded against premature
+  Host/Join, matchmaking, online-ready, netplay, or online-action wording while
+  technical boundary text remains allowed.
+- `LOCAL_LAB_OVERLAY.md` now documents storage hygiene and retention: disposable
+  campaign/build/package scratch can be cleaned after final reports and accepted
+  findings are preserved, scratch devices are temporary rather than durable sole
+  storage, and Ghidra/proof pruning requires manifest classification.
+- Public-safe storage closeout summary: old local campaign scratch cleanup
+  removed 10.926 GiB. Drive free-space readings moved from C: 225.514 GiB to
+  237.191 GiB, D: stayed 398.235 GiB, F: stayed 119.242 GiB, G: stayed
+  90.251 GiB, and H: stayed 245.474 GiB.
+- Ghidra backup retention was report-only: about 142.295 GiB of backup material
+  remains retained pending per-family manifest/provenance review. The live
+  Ghidra project remains do-not-touch.
+- Proof archive retention was report-only: about 270.438 GiB of raw proof roots
+  remains retained pending manifest/hash comparison. Unknown H: containers
+  remain do-not-touch.
+- Future runtime/proof recommendation is a private Music Audible Output Live
+  Bundle lane after repo/storage closeout and explicit runtime-proof leasing.
+  Original-binary online proof remains a later distinct-endpoint and
+  source-bound copied-runtime causality rung.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof are both accepted.
@@ -52,6 +69,10 @@ durable public truth.
 
 ## Evidence Pointers
 
+- Routing guard tests:
+  `OnslaughtCareerEditor.UiTests/PatchBenchOnlineReadinessRoutingGuardTests.cs`
+- Shared reflected WinUI test support:
+  `OnslaughtCareerEditor.UiTests/ReflectedWinUiTestSupport.cs`
 - DTO helper-output tests:
   `OnslaughtCareerEditor.UiTests/PatchBenchOnlineReadinessTextTests.cs`
 - PatchBench presentation helper:
@@ -60,6 +81,8 @@ durable public truth.
   `OnslaughtCareerEditor.WinUI/Models/PatchBenchOnlineReadinessTextState.cs`
   and
   `OnslaughtCareerEditor.WinUI/Models/PatchBenchOnlineCompanionSessionTextState.cs`
+- Storage hygiene boundary:
+  `LOCAL_LAB_OVERLAY.md`
 - Rebuild front-door chain map:
   `roadmap/rebuild-front-door-chain-map.md`
 - Static-to-proof queue:
@@ -79,22 +102,23 @@ durable public truth.
 1. Verify live `HEAD`, `origin/main`, and remote `refs/heads/main`, then inspect
    `OnslaughtCareerEditor.WinUI/Pages/BinaryPatchesPage.xaml.cs`,
    `OnslaughtCareerEditor.WinUI/Helpers/PatchBenchOnlineReadinessText.cs`, and
-   `OnslaughtCareerEditor.UiTests/PatchBenchOnlineReadinessTextTests.cs` before
-   editing.
-2. Add one bounded BinaryPatchesPage/PatchBench test-hardening slice: introduce
-   a small shared UiTests helper for reflected WinUI helper-output loading and
-   add a focused guard that `BinaryPatchesPage` still routes online-readiness
-   presentation through `PatchBenchOnlineReadinessText` without reintroducing
-   inline Host/Join or online-ready wording.
-3. Keep the slice test/modularity scoped: do not move
+   the PatchBench UiTests before editing.
+2. Add one compact PatchBench/BinaryPatchesPage modularity slice: extract another
+   presentation-only text builder from page orchestration where it reduces
+   real duplication, then cover the boundary with focused UiTests that preserve
+   existing user-facing wording and non-claims.
+3. Keep the slice scoped to presentation/testability only: do not move
    `OnlineMultiplayerReadinessService` behavior, enable Host/Join or online
    actions, change AppCore semantics, patch catalog rows, byte patch data,
    launch behavior, safe-copy manifests/signatures, runtime proof, release
    packaging, Ghidra material, installed game files, or original `BEA.exe`.
-4. After that hardening slice, the next safe repo-quality follow-up is a
-   compact PatchBench/BinaryPatchesPage modularity slice that separates another
-   presentation-only text builder from page orchestration with equivalent
-   boundary tests.
+4. A separate later local-maintenance baton can address stale prunable Git
+   worktree metadata and proof-archive manifest/hash comparison. That work must
+   start with dry-run evidence, avoid branch deletion unless separately
+   authorized, and must not mutate proof/Ghidra/game/runtime material without
+   explicit manifest authority.
+5. Runtime-proof work should wait until the repo/product slice is closed or
+   explicitly paused and a private proof-root retention plan is leased.
 
 ## Stop Conditions
 
@@ -103,7 +127,7 @@ durable public truth.
   dumps, copied executable output, full Ghidra databases, secrets, `.env*`,
   build output, package output, or local runtime caches.
 - Any claim would promote online readiness, runtime audio proof, gameplay
-  parity, visual parity, release readiness, release publication, or rebuild
-  parity beyond evidence.
+  parity, visual parity, release readiness, release publication, rebuild parity,
+  or no-noticeable-difference parity beyond evidence.
 - Ownership or resource leasing is unclear for a planned write.
 - Required validation fails without a bounded explanation and correction path.
