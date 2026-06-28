@@ -1,7 +1,7 @@
 # Local Lab Overlay
 
 Status: active
-Last updated: 2026-06-24
+Last updated: 2026-06-28
 
 This public repository is the primary day-to-day working checkout. The repo is
 allowed to contain raw project history and working material such as RE notes,
@@ -93,6 +93,34 @@ state batons, RE summaries, or agent reports.
 Large archives can be exposed through ignored junctions instead of duplicated on
 the primary source drive. Keep those junctions under ignored overlay roots such
 as `local-proofs/` or `local-ghidra/`.
+
+## Storage Hygiene And Retention
+
+Local campaign worktrees, bulky worker logs, raw tool transcripts, temporary
+package probes, and generated build/test output are disposable after final
+reports are preserved and accepted findings are folded into tracked docs,
+state, tests, or source. Final campaign reports and cleanup manifests normally
+stay local; track only sanitized summaries that are useful to future
+contributors and do not expose private paths or raw payloads.
+
+Assigned scratch volumes, including removable drive-letter scratch such as
+`F:`, can be used for temporary worker scratch when mounted and writable. They
+must not become the only durable copy of source, current proof evidence,
+Ghidra backups, release assets, or other valuable project material.
+
+Validation and review workers should avoid creating bulky durable outputs
+unless they are necessary evidence. Clean reproducible `bin/`, `obj/`,
+`TestResults/`, package-probe extracts, temporary ZIPs, local package caches,
+and generated validation reports after acceptance when they are not the
+retained proof or final report.
+
+Ghidra backups and proof archives need manifest classification before pruning:
+record the family, timestamp or version, size, reason, and retained
+replacement or summary. Keep the live Ghidra project, installed game folder,
+original `BEA.exe`, latest verified/golden/final backups, and any proof bundle
+that is current evidence for a tracked claim. If classification is ambiguous,
+leave the material in place and report a retention recommendation instead of
+deleting it.
 
 ## Ghidra Note
 
