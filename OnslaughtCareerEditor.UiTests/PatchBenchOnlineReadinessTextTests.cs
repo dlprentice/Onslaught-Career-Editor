@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using NUnit.Framework;
 using Onslaught___Career_Editor;
 
@@ -9,6 +6,13 @@ namespace OnslaughtCareerEditor.UiTests;
 
 public class PatchBenchOnlineReadinessTextTests
 {
+    private static readonly string[] ReflectedOnlineReadinessSourcePaths =
+    [
+        "OnslaughtCareerEditor.WinUI/Helpers/PatchBenchOnlineReadinessText.cs",
+        "OnslaughtCareerEditor.WinUI/Models/PatchBenchOnlineReadinessTextState.cs",
+        "OnslaughtCareerEditor.WinUI/Models/PatchBenchOnlineCompanionSessionTextState.cs",
+    ];
+
     [Test]
     public void Build_MapsReadinessDtoIntoBoundaryTextState()
     {
@@ -267,121 +271,32 @@ public class PatchBenchOnlineReadinessTextTests
         OnlineLocalGamepadReadinessArtifactSummary? gamepadArtifact,
         OnlineDualSafeCopyTopologyArtifactSummary? topologyArtifact)
     {
-        MethodInfo method = GetHelperType().GetRequiredMethod("Build");
-        return method.Invoke(null, new object?[] { summary, secondHostArtifact, gamepadArtifact, topologyArtifact })
-            ?? throw new InvalidOperationException("PatchBenchOnlineReadinessText.Build returned null.");
+        return ReflectedWinUiTestSupport.InvokeRequiredStaticMethod(
+            GetHelperType(),
+            "Build",
+            summary,
+            secondHostArtifact,
+            gamepadArtifact,
+            topologyArtifact);
     }
 
     private static object InvokeBuildCompanionSession(OnlineCompanionSessionReadinessSummary summary)
     {
-        MethodInfo method = GetHelperType().GetRequiredMethod("BuildCompanionSession");
-        return method.Invoke(null, new object?[] { summary })
-            ?? throw new InvalidOperationException("PatchBenchOnlineReadinessText.BuildCompanionSession returned null.");
+        return ReflectedWinUiTestSupport.InvokeRequiredStaticMethod(
+            GetHelperType(),
+            "BuildCompanionSession",
+            summary);
     }
 
     private static Type GetHelperType()
     {
-        Assembly assembly = LoadWinUiAssembly();
-        return assembly.GetType("OnslaughtCareerEditor.WinUI.Helpers.PatchBenchOnlineReadinessText", throwOnError: true)!;
-    }
-
-    private static Assembly LoadWinUiAssembly()
-    {
-        string assemblyPath = ResolveWinUiAssemblyPath();
-        Assert.That(
-            File.Exists(assemblyPath),
-            Is.True,
-            $"WinUI build output not found at {assemblyPath}. Run dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo before this helper-output test.");
-        AssertWinUiAssemblyIsFresh(assemblyPath);
-
-        string assemblyDir = Path.GetDirectoryName(assemblyPath)
-            ?? throw new InvalidOperationException("WinUI assembly path did not include a directory.");
-        AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
-        {
-            string dependencyPath = Path.Combine(assemblyDir, $"{new AssemblyName(args.Name).Name}.dll");
-            return File.Exists(dependencyPath) ? Assembly.LoadFrom(dependencyPath) : null;
-        };
-
-        return Assembly.LoadFrom(assemblyPath);
-    }
-
-    private static void AssertWinUiAssemblyIsFresh(string assemblyPath)
-    {
-        DateTime assemblyWriteTime = File.GetLastWriteTimeUtc(assemblyPath);
-        var missingSources = new List<string>();
-        var staleSources = new List<string>();
-
-        foreach (string sourcePath in ResolveReflectedWinUiSourcePaths())
-        {
-            if (!File.Exists(sourcePath))
-            {
-                missingSources.Add(sourcePath);
-                continue;
-            }
-
-            if (File.GetLastWriteTimeUtc(sourcePath) > assemblyWriteTime)
-            {
-                staleSources.Add(sourcePath);
-            }
-        }
-
-        Assert.That(
-            missingSources,
-            Is.Empty,
-            $"WinUI helper source file(s) needed by this reflection test are missing: {string.Join(", ", missingSources)}");
-        Assert.That(
-            staleSources,
-            Is.Empty,
-            $"WinUI build output at {assemblyPath} is older than reflected helper/model source file(s): {string.Join(", ", staleSources)}. Run dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo before this helper-output test.");
-    }
-
-    private static string[] ResolveReflectedWinUiSourcePaths()
-    {
-        string repoRoot = ResolveRepoRoot();
-        return new[]
-        {
-            Path.Combine(repoRoot, "OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchOnlineReadinessText.cs"),
-            Path.Combine(repoRoot, "OnslaughtCareerEditor.WinUI", "Models", "PatchBenchOnlineReadinessTextState.cs"),
-            Path.Combine(repoRoot, "OnslaughtCareerEditor.WinUI", "Models", "PatchBenchOnlineCompanionSessionTextState.cs"),
-        };
-    }
-
-    private static string ResolveWinUiAssemblyPath()
-    {
-        string? explicitPath = Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_TEST_ASSEMBLY_PATH");
-        if (!string.IsNullOrWhiteSpace(explicitPath))
-        {
-            return explicitPath;
-        }
-
-        return Path.Combine(
-            ResolveRepoRoot(),
-            "OnslaughtCareerEditor.WinUI",
-            "bin",
-            "Debug",
-            "net10.0-windows10.0.19041.0",
-            "win-x64",
-            "OnslaughtCareerEditor.WinUI.dll");
-    }
-
-    private static string ResolveRepoRoot()
-    {
-        return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        return ReflectedWinUiTestSupport.GetRequiredType(
+            "OnslaughtCareerEditor.WinUI.Helpers.PatchBenchOnlineReadinessText",
+            ReflectedOnlineReadinessSourcePaths);
     }
 
     private static string TextProperty(object instance, string propertyName)
     {
-        PropertyInfo property = instance.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)
-            ?? throw new InvalidOperationException($"Missing text-state property {propertyName}.");
-        return (string)(property.GetValue(instance) ?? throw new InvalidOperationException($"Text-state property {propertyName} was null."));
-    }
-}
-
-internal static class PatchBenchOnlineReadinessTextReflectionExtensions
-{
-    public static MethodInfo GetRequiredMethod(this Type type, string methodName)
-    {
-        return type.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public)
-            ?? throw new InvalidOperationException($"Missing public static method {type.FullName}.{methodName}.");
+        return ReflectedWinUiTestSupport.GetStringProperty(instance, propertyName);
     }
 }
