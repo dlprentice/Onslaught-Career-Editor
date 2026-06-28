@@ -69,18 +69,19 @@ public class PatchBenchOnlineReadinessRoutingGuardTests
             ["NonClaims"] = "PatchBenchOnlineCompanionNonClaims",
         };
 
+        AssertTokenAppearsOnceBefore(
+            readinessRender,
+            "OnlineMultiplayerReadinessService.GetCurrentSummary(",
+            "PatchBenchOnlineReadinessText.Build(",
+            "BinaryPatchesPage should collect service state before handing presentation to the helper.");
+        AssertTokenAppearsOnceBefore(
+            companionRender,
+            "OnlineMultiplayerReadinessService.GetCompanionSessionReadiness(",
+            "PatchBenchOnlineReadinessText.BuildCompanionSession(",
+            "BinaryPatchesPage should collect companion-session state before handing presentation to the helper.");
+
         Assert.Multiple(() =>
         {
-            Assert.That(CountOccurrences(readinessRender, "PatchBenchOnlineReadinessText.Build("), Is.EqualTo(1));
-            Assert.That(CountOccurrences(companionRender, "PatchBenchOnlineReadinessText.BuildCompanionSession("), Is.EqualTo(1));
-            Assert.That(
-                readinessRender.IndexOf("OnlineMultiplayerReadinessService.GetCurrentSummary(", StringComparison.Ordinal),
-                Is.LessThan(readinessRender.IndexOf("PatchBenchOnlineReadinessText.Build(", StringComparison.Ordinal)),
-                "BinaryPatchesPage should collect service state before handing presentation to the helper.");
-            Assert.That(
-                companionRender.IndexOf("OnlineMultiplayerReadinessService.GetCompanionSessionReadiness(", StringComparison.Ordinal),
-                Is.LessThan(companionRender.IndexOf("PatchBenchOnlineReadinessText.BuildCompanionSession(", StringComparison.Ordinal)),
-                "BinaryPatchesPage should collect companion-session state before handing presentation to the helper.");
             Assert.That(
                 readinessControlsByProperty.Keys.OrderBy(name => name, StringComparer.Ordinal),
                 Is.EqualTo(GetPublicStringPropertyNames(readinessStateType).OrderBy(name => name, StringComparer.Ordinal)));
@@ -154,6 +155,18 @@ public class PatchBenchOnlineReadinessRoutingGuardTests
         });
     }
 
+    [Test]
+    public void RoutingGuardTokenOrderCheck_FailsWhenEarlierTokenIsMissing()
+    {
+        const string earlierToken = "OnlineMultiplayerReadinessService.GetCurrentSummary(";
+        const string laterToken = "PatchBenchOnlineReadinessText.Build(";
+
+        AssertionException? exception = Assert.Throws<AssertionException>(() =>
+            AssertTokenAppearsOnceBefore(laterToken, earlierToken, laterToken, "sample routing guard"));
+
+        Assert.That(exception!.Message, Does.Contain("Expected exactly one earlier routing token"));
+    }
+
     private static string[] GetPublicStringPropertyNames(Type type)
     {
         return type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
@@ -176,6 +189,20 @@ public class PatchBenchOnlineReadinessRoutingGuardTests
             assignmentLocations,
             Is.Empty,
             $"BinaryPatchesPage should not assign inline string literals in the {surfaceName}; route normal online-readiness copy through PatchBenchOnlineReadinessText.");
+    }
+
+    private static void AssertTokenAppearsOnceBefore(string source, string earlierToken, string laterToken, string message)
+    {
+        int earlierCount = CountOccurrences(source, earlierToken);
+        int laterCount = CountOccurrences(source, laterToken);
+        Assert.That(earlierCount, Is.EqualTo(1), $"Expected exactly one earlier routing token: {earlierToken}");
+        Assert.That(laterCount, Is.EqualTo(1), $"Expected exactly one later routing token: {laterToken}");
+
+        int earlierIndex = source.IndexOf(earlierToken, StringComparison.Ordinal);
+        int laterIndex = source.IndexOf(laterToken, StringComparison.Ordinal);
+        Assert.That(earlierIndex, Is.GreaterThanOrEqualTo(0), $"Missing earlier routing token: {earlierToken}");
+        Assert.That(laterIndex, Is.GreaterThanOrEqualTo(0), $"Missing later routing token: {laterToken}");
+        Assert.That(earlierIndex, Is.LessThan(laterIndex), message);
     }
 
     private static int CountOccurrences(string source, string token)
