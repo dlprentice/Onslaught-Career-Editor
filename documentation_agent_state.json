@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-28",
-  "currentFocus": "PatchBench online-readiness helper wave, public-state evidence sanity, and rebuild/spec roadmap indexing are integrated on main; docs/state now point the next slice at DTO-based PatchBench helper-output tests.",
+  "currentFocus": "PatchBench DTO helper-output tests and the rebuild front-door chain map are integrated on main; docs/state now point the next executable slice at bounded PatchBench/BinaryPatchesPage test hardening.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -16,71 +16,31 @@
     "capabilities": "CURRENT_CAPABILITIES.md",
     "releaseSignoff": "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
     "reIndex": "reverse-engineering/RE-INDEX.md",
-    "roadmapIndex": "roadmap/ROADMAP-INDEX.md"
+    "roadmapIndex": "roadmap/ROADMAP-INDEX.md",
+    "rebuildFrontDoorChainMap": "roadmap/rebuild-front-door-chain-map.md"
   },
   "currentDocsTruth": {
-    "publicMain": {
-      "acceptedMergeParents": [
-        "98b9465108b6cf92cd6dcf325bab4a159c5c8ac9",
-        "ba3a22ead9d83692a2199e1288d8f363ec30eb6e",
-        "b675a2fe817fdac50740d0f04b5bc0fdc61d05d3"
-      ],
-      "priorIntegrationCommits": [
-        "726e71009d7b5dac9256cfe6917c6f0ecca529cb",
-        "b028cbffcb056a722d71dca3fed4483ca9d48bc1",
-        "6c26f5c74a73fb31f09051de1807653f26fa26ee",
-        "5854f5b4c0d5e56cdd1dd6f2a185fd3cf8a40009"
-      ],
-      "nextWriteRequirement": "Re-read live git truth before treating any exact main commit as current; unmerged local campaign hashes and local campaign paths are not durable public state."
-    },
-    "acceptedIntegrationEvidence": [
-      {
-        "worker": "patchbench-online-readiness-helper-001",
-        "commit": "98b9465108b6cf92cd6dcf325bab4a159c5c8ac9",
-        "summary": "Presentation-only PatchBench online-readiness helper/model extraction."
-      },
-      {
-        "worker": "public-state-evidence-sanity-001",
-        "commit": "ba3a22ead9d83692a2199e1288d8f363ec30eb6e",
-        "summary": "Public state no longer depends on older local-only worker/source hashes."
-      },
-      {
-        "worker": "rebuild-spec-audit-followup-001",
-        "commit": "b675a2fe817fdac50740d0f04b5bc0fdc61d05d3",
-        "summary": "ROADMAP-INDEX now lists the static-to-proof rebuild transition backlog."
-      }
-    ],
-    "publicPrimaryRepo": "The public repo is the normal collaboration surface, not a sparse export.",
-    "coordinationPolicy": {
-      "status": "durable_policy_on_main",
-      "docs": [
-        "coordination/README.md",
-        "coordination/WORKSTREAM_CONTRACT.md",
-        "coordination/REPORT_CONTRACT.md",
-        "coordination/RESOURCE_LEASES.md"
-      ]
-    },
-    "stateReconciliation": "goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json record the accepted integration wave, keep concise current-state pointers and non-claims, and avoid local campaign paths.",
-    "pathOwnershipIncident": "Repaired helper-worker path-ownership incident is a non-blocking integration note: the accidental canonical static-test edit was reverted before integration and canonical main was clean before this merge.",
-    "crossReviewFollowUp": "Future substantive PatchBench helper changes should add representative DTO-based helper-output tests that catch omitted, swapped, or boundary-losing text-state fields.",
-    "rebuildSpecIndexing": "ROADMAP-INDEX links the active static-to-proof rebuild/spec proof queue; this is discoverability only, not rebuild/runtime/visual/gameplay parity proof.",
+    "integratedWave": "Canonical docs/state summarize the PatchBench DTO helper-output tests and rebuild front-door chain map without treating local campaign reports, local worktree paths, or unreachable worker commits as durable public truth.",
+    "stateReconciliation": "goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json record the integrated wave, the next bounded test-hardening slice, and explicit non-claims.",
+    "rebuildFrontDoor": "ROADMAP-INDEX links the compact rebuild-front-door chain map. The map is routing/discoverability only and does not claim runtime, visual, gameplay, rebuild, or no-noticeable-difference parity.",
+    "frontDoorHygiene": "coordination/README.md avoids a literal local campaign-root example, and PUBLIC_SIGNOFF_COMMANDS uses a placeholder private root for maintainer-only parity proof.",
+    "localOnlyBoundary": "LOCAL_LAB_OVERLAY.md maintainer-local Ghidra descriptors remain intentional overlay exceptions. Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, local runtime caches, raw proof evidence, and local proof paths stay out of tracked docs/state unless a public-safe summary is explicitly warranted.",
     "releasePublicationStatus": "No release, tag, package, signing, installer, announcement, hosted workflow, or publication action is part of this integration.",
-    "claimBoundary": "Presentation helper extraction, docs/state hash repair, and docs-only roadmap index integration only; no AppCore, patch catalog row, byte patch, launch argument, safe-copy manifest/signature, runtime proof, release/publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, or original-BEA mutation claim change.",
-    "localOnlyBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, local runtime caches, local campaign logs, active coordination identifiers, raw proof evidence, and local proof paths stay out of tracked docs/state."
+    "claimBoundary": "DTO helper-output tests, rebuild routing docs, front-door hygiene, and state reconciliation only; no AppCore, patch catalog row, byte patch, launch argument, safe-copy manifest/signature, runtime proof, release/publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, or original-BEA mutation claim change."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
     "catalogRows": "29/29 target specimen identity and policy metadata rows"
   },
   "validation": {
-    "currentIntegration": "Integration gates cover docs/repo, payload, WinUI, focused PatchBench, broader PatchBench, patch-engine, hard-payload, and primary-lane validation evidence.",
-    "nextSlice": "Prefer focused DTO-based PatchBench helper-output tests before broader BinaryPatchesPage modularity work; a later docs/checker slice can add a compact rebuild-front-door chain map."
+    "currentIntegration": "Integration gates cover docs/repo, payload, WinUI build, focused PatchBench DTO helper-output tests, broader PatchBench/patch-engine safety, hard-payload, and primary-lane validation evidence.",
+    "nextSlice": "Prefer the bounded PatchBench/BinaryPatchesPage test-hardening slice before broader modularity work."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
     "Before the next write, verify live HEAD, origin/main, and remote refs/heads/main.",
-    "Add representative DTO-based tests for the PatchBench online-readiness helper before substantive helper-output changes.",
+    "Keep docs and state free of local campaign paths and unreachable worker-commit dependencies.",
     "Keep product, runtime, release publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, and installed-game mutation claims bounded to accepted evidence."
   ]
 }

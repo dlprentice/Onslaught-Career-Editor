@@ -6,9 +6,8 @@ Last updated: 2026-06-26
 Use this directory for durable, public-safe policy for coordinated multi-thread
 campaigns. It is not a campaign log. Active thread IDs, session IDs, raw logs,
 temporary ownership locks, process IDs, local proof paths, and worker scratch
-material stay in an ignored local campaign root such as
-an outside-repo `.codex-campaigns/Onslaught-Career-Editor/<campaign-id>/`
-folder chosen by the coordinator.
+material stay in an ignored outside-repo campaign root chosen by the
+coordinator.
 
 ## Role Model
 

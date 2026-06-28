@@ -97,7 +97,7 @@ hide normal RE notes, state batons, agent reports, or proof summaries.
 payload scan, and the public-primary migration/hash inventory for the current
 public checkout. That public gate can run without the archived private checkout;
 maintainer private-parity proof must run
-`py -3 tools\public_primary_migration_inventory.py --check --private-root C:\Users\david\source\Onslaught-Career-Editor-private --require-private-root`.
+`py -3 tools\public_primary_migration_inventory.py --check --private-root <private-root> --require-private-root`.
 Keep
 `npm run test:public-submodule-payload-safety` available as a focused diagnostic
 when a submodule boundary changes.
