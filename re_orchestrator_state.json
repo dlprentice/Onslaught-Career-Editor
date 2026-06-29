@@ -1,68 +1,70 @@
 {
   "lastUpdated": "2026-06-29",
-  "currentFocus": "Static RE/Ghidra state is unchanged. The PatchBenchLaunchPresetText / consult-contract wave is accepted on main; this is not RE mutation, storage deletion, or live proof execution.",
+  "currentFocus": "Static RE/Ghidra state remains unchanged by the projection/storage/consult integration; storage taxonomy is read-only/no-delete and runtime proof remains private pre-arm-only.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
     "activeCurrentRisk": "1179/1179 = 100.00%",
-    "wave1220CloseoutProbe": "tools/static_reaudit_final_closeout_wave1220.py",
-    "measurementFrontDoor": "reverse-engineering/binary-analysis/static-reaudit-measurement-register.md",
-    "latestGhidraReviewBackup": "maintainer-local descriptor only; keep full backup paths outside tracked state",
-    "latestLiveProject": "maintainer-local descriptor only; see LOCAL_LAB_OVERLAY.md for local-only Ghidra placement",
-    "latestLiveStore": "maintainer-local descriptor only; see LOCAL_LAB_OVERLAY.md for local-only Ghidra placement"
+    "measurementFrontDoor": "reverse-engineering/binary-analysis/static-reaudit-measurement-register.md"
   },
-  "publicPrimaryBoundary": "The public repo is primary for RE docs, wave notes, scratch text exports, function indexes, static maps, proof summaries, and checkers. Hard payloads, full Ghidra DBs/backups, raw captures, copied executables, secrets, build output, package output, local proof paths, and raw manifests remain local/ignored per LOCAL_LAB_OVERLAY.md.",
+  "publicPrimaryBoundary": "The public repo may track RE docs, wave notes, scratch text exports, function indexes, static maps, proof summaries, checkers, and state batons. Hard payloads, full Ghidra databases/backups, raw captures, copied executables, secrets, build output, package output, local proof paths, raw manifests, and local campaign/worktree paths remain out of tracked state.",
   "storageRetention": {
-    "inventory": "This wave's storage inventory was partial-bounded and metadata-only; it was not deletion authorization.",
-    "inventoryFreeSpaceGiB": {
-      "C": 239.393,
-      "D": 398.235,
-      "F": 119.241,
-      "G": 90.251,
-      "H": 215.842
-    },
-    "ghidraBackups": "Ghidra retention deleted 0 files and retained all reviewed Ghidra backup/live/unknown rows; future pruning needs explicit deletion authority plus per-family manifest/provenance and supersession review.",
-    "proofArchives": "Proof archive retention deleted 0 files and retained all reviewed proof-related rows; future pruning needs explicit deletion authority plus proof-family manifest/hash/provenance review and retained replacement or summary evidence.",
-    "gitMetadata": "Stale local Git administrative worktree metadata cleanup pruned 23 stale metadata records after dry-run; no branches, remote refs, physical directories, tracked source, final reports, proof/Ghidra/game/release material, hard payloads, or secrets were deleted.",
-    "currentWaveDeletionClassification": "High-confidence deletion candidates remain 0 rows, authorized reclaimed storage remains 0 GiB, and no storage deletion or mutation was performed in this wave. Retained Ghidra/proof GiB values are review-pool metrics only, not deletion eligibility.",
-    "futureMaintenance": "Ghidra/proof taxonomy, proof manifest/hash comparison, branch cleanup, and physical scratch cleanup are separate local maintenance tasks, not RE mutation."
+    "mode": "read-only/no-delete",
+    "highConfidenceDeletionCandidates": 0,
+    "deletionPerformed": false,
+    "authorizedReclaimedGiB": 0,
+    "futureReviewBands": "Medium and low values are non-authorized logical review ceilings only, not reclaimable storage and not deletion budgets.",
+    "blockers": [
+      "authority",
+      "resource lease",
+      "point-in-time manifest completeness",
+      "Ghidra provenance",
+      "proof dependency and reference review",
+      "containment and independent-storage calculation",
+      "hard-payload boundary",
+      "unknown containers",
+      "rollback/quarantine plan",
+      "candidate-specific consult evidence",
+      "stale manifest expiry",
+      "retained-summary fidelity"
+    ],
+    "futureMaintenance": "Only future read-only manifest/hash/reference work is safe until a separate task grants explicit deletion authority and candidate-specific evidence."
   },
   "runtimeProofBoundary": {
     "musicAudibleOutputProof": false,
-    "musicStatus": "Music live-bundle readiness tooling is integrated as fail-closed/pre-arm only. Producer coverage can be complete, but the public gate reports readyToRunLiveAttempt=false, liveArmAllowed=false, runtimeAudibleOutputProof=false, and preArmReadiness.status=prearm-readiness-not-proven. There is no accepted live BEA audible-output bundle; future live execution must wait on explicit authority, leases, an empty isolated proof root, no preexisting BEA/CDB processes, and capture span/flush/decode-window readiness.",
-    "musicFollowupScope": "Read-only follow-up adds no runtime proof. Producer coverage is schema/producer coverage only, pre-arm permission is permission to attempt only, public gate roots are not root-readiness proof, and executor receipts/stdout remain private.",
+    "readyToRunLiveAttempt": false,
+    "liveArmAllowed": false,
+    "preArmReadinessStatus": "prearm-readiness-not-proven",
+    "musicStatus": "Music live-bundle readiness remains fail-closed and private pre-arm-only. Producer coverage or tooling availability is not live authority and not audible-output proof.",
     "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint command-source proof and source-bound copied-runtime causality proof are both accepted",
-    "releaseStatus": "v1.0.7 is the current published portable WinUI ZIP; use README.MD and release/readiness/winui_zip_release_v1_0_7_2026-06-25.md for release evidence instead of live state detail.",
     "staticReClosureBoundary": "Static closure is not runtime, gameplay, visual, online, rebuild, or no-noticeable-difference proof.",
     "installedGameOriginalBea": "read-only"
+  },
+  "patchBenchProjectionBoundary": "The accepted primitive projection contract is docs-only and does not alter RE state, runtime proof, Ghidra storage, AppCore behavior, launch behavior, or patch/catalog semantics.",
+  "currentPointers": {
+    "activeGoal": "goal.md",
+    "developerState": "developer_agent_state.json",
+    "documentationState": "documentation_agent_state.json",
+    "roadmapIndex": "roadmap/ROADMAP-INDEX.md",
+    "primitiveProjectionContract": "roadmap/patchbench-primitive-projection-contract.md",
+    "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
+    "reIndex": "reverse-engineering/RE-INDEX.md"
+  },
+  "validation": {
+    "stateRefresh": "Integration state refresh only; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, or original-BEA mutation.",
+    "currentGateExpectation": "Use JSON parse, stale local path/campaign marker scans, passive process census, git diff --check, focused PatchBench WinUI tests, required docs/repo safety gates, and public payload checks.",
+    "latestIntegration": "Required docs/repo/payload gates, WinUI build, focused launch-preset UiTests, and patch-engine safety passed. The primary WinUI lane is not green because one native UIA smoke failed with FlaUI Mouse.SendInput Access denied; this is recorded as an environment validation exception and not as runtime proof."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
     "catalogRows": "29/29 target specimen identity and policy metadata rows"
   },
-  "currentPointers": {
-    "capabilities": "CURRENT_CAPABILITIES.md",
-    "releaseSignoff": "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
-    "reIndex": "reverse-engineering/RE-INDEX.md",
-    "roadmapIndex": "roadmap/ROADMAP-INDEX.md",
-    "rebuildFrontDoorChainMap": "roadmap/rebuild-front-door-chain-map.md",
-    "staticToProofRebuildBacklog": "roadmap/static-to-proof-rebuild-transition-backlog.md",
-    "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
-    "developerState": "developer_agent_state.json",
-    "documentationState": "documentation_agent_state.json",
-    "activeGoal": "goal.md"
-  },
-  "validation": {
-    "stateRefresh": "Integration state refresh only; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, or original-BEA mutation.",
-    "currentGateExpectation": "For this integration, use JSON parse, stale local campaign path scans, passive process census, git diff --check, focused PatchBench WinUI tests, required docs/repo safety gates, and public payload checks."
-  },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
     "Keep static RE mutation paused unless a product/runtime contradiction points back to a specific RE issue.",
-    "Treat PatchBenchLaunchPresetText as integrated presentation-only UI work; future PatchBench receipt/source-summary extraction needs primitive projection design before implementation.",
-    "Use the rebuild front-door chain map as routing documentation only; do not claim runtime, visual, gameplay, rebuild, or no-noticeable-difference parity from it.",
+    "Use the primitive projection contract only as a design boundary until primitive-state/helper-boundary tests reject AppCore DTOs, raw paths, File/Directory/Path, service/process/launch/catalog tokens, proof IDs, and Host/Join action strings before any future receipt helper extraction.",
     "Do not run live BEA/CDB/audio proof without explicit runtime-proof authority, leases, private proof-root readiness, arm phrase, and cleanup validation.",
-    "Keep local Ghidra, proof, copied-runtime, and payload details as maintainer-local descriptors or ignored overlays, not tracked state."
+    "Do not delete Ghidra/proof material without a future candidate-specific manifest, retained alternative, dry-run, consults, authority, and acceptance."
   ]
 }

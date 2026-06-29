@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-29",
-  "currentFocus": "PatchBenchLaunchPresetText presentation extraction and consult evidence contract are accepted on main; docs/state now point the next executable UI slice at optional routing-test hardening or primitive projection design.",
+  "currentFocus": "Docs/state now reflect the accepted docs-only primitive projection contract, test-only launch-preset guard hardening, no-delete storage taxonomy, and private pre-arm-only runtime baton.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -13,46 +13,33 @@
     "securityGuide": "SECURITY.md",
     "collaborationGuide": "COLLABORATION.md",
     "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
-    "capabilities": "CURRENT_CAPABILITIES.md",
-    "releaseSignoff": "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
-    "reIndex": "reverse-engineering/RE-INDEX.md",
     "roadmapIndex": "roadmap/ROADMAP-INDEX.md",
-    "rebuildFrontDoorChainMap": "roadmap/rebuild-front-door-chain-map.md"
+    "primitiveProjectionContract": "roadmap/patchbench-primitive-projection-contract.md"
   },
   "currentDocsTruth": {
-    "integratedWave": "Canonical docs/state summarize the accepted-on-main music live-bundle readiness hardening, the adversarial status-lock correction, PatchBenchLaunchPresetText presentation extraction, consult evidence reporting contract, storage-retention no-delete results, and stale Git administrative metadata pruning without treating local campaign reports, local worktree paths, raw manifests, or unmerged worker commits as durable public truth.",
-    "stateReconciliation": "goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json record the music live-bundle fail-closed/pre-arm state, partial-bounded storage inventory, Ghidra/proof no-delete closeout, scoped consult-compliance finding, completed PatchBenchLaunchPresetText seam, consult evidence reporting contract, and explicit non-claims.",
-    "musicLiveBundleReadiness": "The public gate is fail-closed/pre-arm only: producerCoverageComplete=true can coexist with readyToRunLiveAttempt=false, liveArmAllowed=false, runtimeAudibleOutputProof=false, and preArmReadiness.status=prearm-readiness-not-proven. The armed executor requires a private accepted pre-arm readiness JSON before live delegation, and top-level gate status is value-locked after adversarial correction. Read-only follow-up adds no runtime proof; producer coverage is schema/producer coverage only, pre-arm permission is permission to attempt only, public gate root arguments are not root-readiness proof, and executor receipts/stdout stay private.",
-    "patchBenchPresentation": "PatchBenchSafeCopyOutcomeText owns safe-copy music replacement status-line copy for default, not-ready, progress, staged, restore, and failure states. PatchBenchLaunchPresetText owns launch/control preset automation names and status-message text. BinaryPatchesPage routes those presentation strings through helpers while keeping launch option tuples, selection state, matching logic, launch argument construction, safe-copy launch planning, service calls, process control, patch/catalog semantics, Host/Join/online claims, runtime proof boundaries, operation logs, AppStatusService updates, and UI assignment in the page.",
-    "storageCloseoutSummary": "Public-safe state records only category outcomes: current high-confidence deletion candidates 0 rows, current authorized reclaimed storage 0 GiB, no storage deletion or mutation, Ghidra backup deletion 0 files, proof archive deletion 0 files, and stale Git administrative worktree metadata 23 records pruned after dry-run. Retained review-pool sizes are informational and not deletion eligibility or unique reclaimable storage.",
-    "storagePolicyDocs": "No tracked storage policy edit was needed. LOCAL_LAB_OVERLAY.md and coordination docs already cover local-only campaign manifests, scratch non-durability, and manifest/classification requirements before Ghidra/proof pruning.",
-    "runtimeProofRecommendation": "Music live-bundle tooling remains fail-closed. Future private live execution waits on explicit authority, leases, empty isolated proof root, no preexisting BEA/CDB processes, and capture span/flush/decode-window readiness proven by the private pre-arm artifact and executor path.",
-    "consultCompliance": "Scoped only: recent inspected June 29 non-trivial worker outputs had no clear skipped Cursor lane, but report-shape and sanitized-context evidence gaps prevent any blanket campaign-wide compliance claim. REPORT_CONTRACT now requires explicit Consult Evidence entries for mandated Codex and Cursor lanes, accepted/rejected findings, unresolved dissent, and CONSULT_UNAVAILABLE reasons without raw prompt/log/local-path leakage.",
-    "patchBenchNextSeam": "PatchBenchLaunchPresetText / consult-contract wave is accepted on main. PatchBenchLaunchPresetText is complete as a presentation-only seam; optional next UI work is page-routing/literal reintroduction test hardening, or a primitive projection design before any receipt/source-summary helper extraction.",
-    "rebuildFrontDoor": "ROADMAP-INDEX links the compact rebuild-front-door chain map. The map is routing/discoverability only and does not claim runtime, visual, gameplay, rebuild, or no-noticeable-difference parity.",
-    "localOnlyBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, local runtime caches, local proof paths, raw proof evidence, and raw local manifests stay out of tracked docs/state unless a public-safe summary is explicitly warranted.",
-    "releasePublicationStatus": "No release, tag, package, signing, installer, announcement, hosted workflow, or publication action is part of this integration.",
-    "claimBoundary": "Music readiness gate/executor hardening, readiness note, presentation-helper extraction, consult evidence report-contract wording, storage no-delete summary, stale Git metadata pruning summary, and state reconciliation only; no AppCore, patch catalog row, byte patch, launch argument behavior, safe-copy manifest/signature, runtime proof, release/publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, or original-BEA mutation claim change."
+    "projectionContract": "The primitive projection note is a public-safe design contract for future PatchBench receipt/source-summary presentation helpers. It is not behavior movement, helper extraction approval, AppCore ownership movement, runtime proof, release readiness, or online-readiness evidence.",
+    "roadmapIndex": "ROADMAP-INDEX routes readers to the existing primitive projection contract and refreshes metadata for the integrated design-only row.",
+    "launchPresetHardening": "WinUiProductLaneTests launch-preset changes are static presentation-boundary guards only. They protect helper routing and literal placement; they do not prove native UIA behavior or runtime launch behavior.",
+    "storageSummary": "Storage taxonomy is summarized only as read-only/no-delete: high-confidence deletion candidates 0, deletion performed false, authorized reclaimed storage 0 GiB. Future medium/low values are non-authorized logical review ceilings only and should not be presented as reclaimable storage.",
+    "runtimeProofBaton": "Runtime music proof remains private pre-arm readiness only with readyToRunLiveAttempt=false, liveArmAllowed=false, runtimeAudibleOutputProof=false, and preArmReadiness.status=prearm-readiness-not-proven.",
+    "consultEvidence": "The early consult-evidence smoke is stale because it ran before terminal reports existed. Integration supersedes it with an audit of accepted terminal worker/reviewer reports and the required six-lane consult matrix, without copying local reports into tracked docs/state.",
+    "rejectedEvidence": "Superseded recovery outputs are not canonical. Do not copy their local reports into tracked docs/state.",
+    "localOnlyBoundary": "Tracked docs/state must not include local campaign paths, worktree paths, thread IDs, raw reports, raw manifests, raw proof paths, raw Ghidra paths, hard payload names beyond policy categories, secrets, or private evidence dumps.",
+    "claimBoundary": "No AppCore behavior, launch argument behavior, selected-state logic, safe-copy planning, process control, patch catalog row, byte patch, Host/Join availability, online readiness, runtime proof, release/publication, gameplay, visual parity, rebuild parity, no-noticeable-difference parity, Ghidra mutation, hard-payload, installed-game, or original-BEA mutation claim changed."
+  },
+  "validation": {
+    "expectation": "Use docs/repo/payload gates plus WinUI/focused tests required by the accepted test-only change.",
+    "latestIntegration": "Docs/repo/payload gates, WinUI build, focused launch-preset UiTests, and patch-engine safety passed. npm run test:winui-primary-lane is not green because one native UIA smoke failed with FlaUI Mouse.SendInput Access denied after build and AppCore success; do not describe the primary lane as passing."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
-    "catalogRows": "29/29 target specimen identity and policy metadata rows",
-    "staleGitAdministrativeWorktreeMetadataPruned": 23,
-    "ghidraBackupFilesDeletedThisWave": 0,
-    "proofArchiveFilesDeletedThisWave": 0
-  },
-  "validation": {
-    "currentIntegration": "Integration gates cover focused PatchBench WinUI/AppCore-safe checks, edited JSON parse, git diff --check, docs/repo, hard-payload, and public allowlist validation.",
-    "nextSlice": "Prefer focused WinUI helper-output/static tests for optional PatchBenchLaunchPresetText routing hardening; live music execution needs separate authority, leases, private proof-root readiness, and stop conditions."
+    "catalogRows": "29/29 target specimen identity and policy metadata rows"
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "Before the next write, verify live HEAD, origin/main, and remote refs/heads/main.",
-    "Keep docs and state free of local campaign paths, raw manifests, and unmerged worker-commit dependencies.",
-    "Keep the next docs write executable: update state only if a new PatchBench routing test/projection design or storage/proof authority change is assigned.",
-    "Keep product, runtime, release publication, Host/Join, online readiness, runtime audio proof, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, and installed-game mutation claims bounded to accepted evidence.",
-    "Use optional PatchBenchLaunchPresetText routing/literal-reintroduction test hardening only if future launch-preset work needs it; defer receipt/source-summary helpers until primitive projection design is accepted.",
-    "Keep local Ghidra/proof taxonomy, proof manifest/hash comparison, branch cleanup, and physical scratch cleanup as separate scoped maintenance work with manifests, dry-run evidence, and explicit authority."
+    "For docs, keep the next baton executable: primitive-state/helper-boundary tests that reject AppCore DTOs, raw paths, File/Directory/Path, service/process/launch/catalog tokens, proof IDs, and Host/Join action strings before receipt helper extraction.",
+    "For storage, document only retained/no-delete status until a future manifest-backed authority changes it.",
+    "For runtime proof, keep public docs at private pre-arm-only/no-live-execution unless accepted proof evidence changes."
   ]
 }
