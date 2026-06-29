@@ -1381,6 +1381,30 @@ public class WinUiProductLaneTests
         Assert.That(launchPresetText, Does.Contain("control diagnostics swapped alternate config 4 selected"));
         Assert.That(launchPresetText, Does.Contain("high detail launch preset selected"));
         Assert.That(launchPresetText, Does.Contain("launch options cleared"));
+        string[] launchPresetStatusLiterals =
+        {
+            "admin level preset campaign training world 100 selected",
+            "admin level preset final campaign world 800 selected",
+            "admin level preset local multiplayer world 850 selected",
+            "admin level preset local multiplayer world 851 selected",
+            "local multiplayer level 850 launch probe selected",
+            "quiet capture launch preset selected",
+            "high detail launch preset selected",
+            "control diagnostics baseline config 1 selected",
+            "control diagnostics sensitivity test config 1 selected",
+            "control diagnostics swapped config 2 selected",
+            "control diagnostics alternate config 3 selected",
+            "control diagnostics swapped alternate config 4 selected",
+            "launch options cleared",
+        };
+        foreach (string literal in launchPresetStatusLiterals)
+        {
+            Assert.That(
+                code,
+                Does.Not.Contain($"\"{literal}\""),
+                $"Launch preset status literal should route through PatchBenchLaunchPresetText: {literal}");
+        }
+
         Assert.That(code, Does.Contain("TextureRamLimitMb: HighDetailTextureRamLimitMb"));
         Assert.That(code, Does.Contain("PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex = Math.Clamp(preset.ControllerConfigurationIndex, 0, 4)"));
         Assert.That(code, Does.Contain("PatchBenchShowDebugTraceLaunchOption.IsChecked = false"));
@@ -1420,10 +1444,21 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("ReferenceEquals(sender, PatchBenchMouseSensitivityPresetComboBox)"));
         Assert.That(code, Does.Not.Contain("ReferenceEquals(sender, PatchBenchIncludeSavegamesOption)"));
         Assert.That(code, Does.Not.Contain("ReferenceEquals(sender, PatchBenchCreateMusicSwapPresetComboBox)"));
-        Assert.That(launchPresetVisualState, Does.Contain("PatchBenchChoiceVisualState.Bind(PatchBenchQuietCaptureLaunchPresetButton"));
-        Assert.That(launchPresetVisualState, Does.Contain("PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig4PresetButton"));
-        Assert.That(launchPresetVisualState, Does.Contain("PatchBenchLaunchPresetText.BuildQuietCaptureChoiceState("));
-        Assert.That(launchPresetVisualState, Does.Contain("PatchBenchLaunchPresetText.BuildControlConfig4ChoiceState("));
+        string[] launchPresetVisualBindings =
+        {
+            "PatchBenchChoiceVisualState.Bind(PatchBenchQuietCaptureLaunchPresetButton, PatchBenchLaunchPresetText.BuildQuietCaptureChoiceState(",
+            "PatchBenchChoiceVisualState.Bind(PatchBenchHighDetailLaunchPresetButton, PatchBenchLaunchPresetText.BuildHighDetailChoiceState(",
+            "PatchBenchChoiceVisualState.Bind(PatchBenchControlBaselinePresetButton, PatchBenchLaunchPresetText.BuildControlBaselineChoiceState(",
+            "PatchBenchChoiceVisualState.Bind(PatchBenchControlSharpenedPresetButton, PatchBenchLaunchPresetText.BuildControlSharpenedChoiceState(",
+            "PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig2PresetButton, PatchBenchLaunchPresetText.BuildControlConfig2ChoiceState(",
+            "PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig3PresetButton, PatchBenchLaunchPresetText.BuildControlConfig3ChoiceState(",
+            "PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig4PresetButton, PatchBenchLaunchPresetText.BuildControlConfig4ChoiceState(",
+        };
+        foreach (string binding in launchPresetVisualBindings)
+        {
+            Assert.That(launchPresetVisualState, Does.Contain(binding));
+        }
+
         Assert.That(launchPresetVisualState, Does.Not.Contain("BuildSelectedLaunchArguments"));
         Assert.That(launchPresetVisualState, Does.Not.Contain("BuildSafeCopyContentSignature"));
         Assert.That(launchPresetVisualState, Does.Not.Contain("RefreshCopiedProfileLaunchPlanPreview"));
