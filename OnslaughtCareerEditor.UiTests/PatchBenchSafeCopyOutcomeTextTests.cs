@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using NUnit.Framework;
 
 namespace OnslaughtCareerEditor.UiTests;
@@ -21,6 +22,14 @@ public class PatchBenchSafeCopyOutcomeTextTests
             Assert.That(
                 InvokeString("BuildDefaultMusicReplacementStatus"),
                 Is.EqualTo("No music swap staged. Staging only; in-game playback is still experimental and unproven."));
+            Assert.That(
+                InvokeString("BuildMusicReplacementStatus", (object?)null),
+                Is.EqualTo("Safe copy ready for music replacement staging. Staging only; in-game playback is still experimental and unproven."));
+            Assert.That(
+                InvokeString(
+                    "BuildMusicReplacementStatus",
+                    CreateMusicSwapTextState("BEA_03(Master).ogg", "backup/BEA_03(Master).ogg")),
+                Is.EqualTo("Safe-copy track swap staged for BEA_03(Master).ogg. Restore before staging another swap. In-game playback is still experimental and unproven."));
             Assert.That(
                 InvokeString("BuildMusicSwapInputsMissingStatus"),
                 Is.EqualTo("Prepare a safe game copy and select two safe-copy tracks before staging a swap."));
@@ -78,6 +87,21 @@ public class PatchBenchSafeCopyOutcomeTextTests
             GetHelperType(),
             methodName,
             arguments);
+    }
+
+    private static object CreateMusicSwapTextState(string targetMusicFileName, string backupRelativePath)
+    {
+        Type textStateType = ReflectedWinUiTestSupport.GetRequiredType(
+            "OnslaughtCareerEditor.WinUI.Models.PatchBenchSafeCopyMusicSwapTextState",
+            ReflectedSafeCopyOutcomeSourcePaths);
+
+        return Activator.CreateInstance(
+            textStateType,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+            binder: null,
+            args: [targetMusicFileName, backupRelativePath],
+            culture: null)
+            ?? throw new InvalidOperationException($"Could not create {textStateType.FullName}.");
     }
 
     private static Type GetHelperType()

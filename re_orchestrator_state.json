@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-06-28",
-  "currentFocus": "Static RE/Ghidra state is unchanged. The storage-conscious PatchBench routing-guard wave is integrated as product/test/docs work, and the next repo slice remains PatchBench/BinaryPatchesPage presentation modularity rather than RE mutation.",
+  "lastUpdated": "2026-06-29",
+  "currentFocus": "Static RE/Ghidra state is unchanged. The retention/PatchBench wave integrated product/test state and storage-retention no-delete results; the next runtime-facing slice is gated Music Audible Output Live Bundle prompt/readiness, not RE mutation or live proof execution.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -11,16 +11,24 @@
     "latestLiveProject": "maintainer-local descriptor only; see LOCAL_LAB_OVERLAY.md for local-only Ghidra placement",
     "latestLiveStore": "maintainer-local descriptor only; see LOCAL_LAB_OVERLAY.md for local-only Ghidra placement"
   },
-  "publicPrimaryBoundary": "The public repo is primary for RE docs, wave notes, scratch text exports, function indexes, static maps, proof summaries, and checkers. Hard payloads, full Ghidra DBs/backups, raw captures, copied executables, secrets, build output, and package output remain local/ignored per LOCAL_LAB_OVERLAY.md.",
+  "publicPrimaryBoundary": "The public repo is primary for RE docs, wave notes, scratch text exports, function indexes, static maps, proof summaries, and checkers. Hard payloads, full Ghidra DBs/backups, raw captures, copied executables, secrets, build output, package output, local proof paths, and raw manifests remain local/ignored per LOCAL_LAB_OVERLAY.md.",
   "storageRetention": {
-    "safeScratchCleanup": "Old local campaign scratch cleanup removed 10.926 GiB and did not delete or mutate tracked repo, proof archives, Ghidra stores, copied game/runtime roots, installed game files, or original BEA.exe.",
-    "ghidraBackups": "Report-only/no-delete retention review kept about 142.295 GiB pending per-family manifest/provenance review; live Ghidra project remains do-not-touch.",
-    "proofArchives": "Report-only/no-delete retention closeout kept about 270.438 GiB pending relative manifest/hash comparison; unknown H: containers remain do-not-touch.",
-    "futureMaintenance": "Stale prunable Git worktree metadata and proof-archive manifest/hash comparison are separate local maintenance tasks, not RE mutation."
+    "inventory": "This wave's storage inventory was partial-bounded and metadata-only; it was not deletion authorization.",
+    "inventoryFreeSpaceGiB": {
+      "C": 239.393,
+      "D": 398.235,
+      "F": 119.241,
+      "G": 90.251,
+      "H": 215.842
+    },
+    "ghidraBackups": "Ghidra retention deleted 0 files and retained all reviewed Ghidra backup/live/unknown rows; future pruning needs explicit deletion authority plus per-family manifest/provenance and supersession review.",
+    "proofArchives": "Proof archive retention deleted 0 files and retained all reviewed proof-related rows; future pruning needs explicit deletion authority plus proof-family manifest/hash/provenance review and retained replacement or summary evidence.",
+    "gitMetadata": "Stale local Git administrative worktree metadata cleanup pruned 23 stale metadata records after dry-run; no branches, remote refs, physical directories, tracked source, final reports, proof/Ghidra/game/release material, hard payloads, or secrets were deleted.",
+    "futureMaintenance": "Ghidra/proof taxonomy, proof manifest/hash comparison, branch cleanup, and physical scratch cleanup are separate local maintenance tasks, not RE mutation."
   },
   "runtimeProofBoundary": {
     "musicAudibleOutputProof": false,
-    "musicStatus": "Music producer/materializer/checker infrastructure exists, but there is no accepted live BEA audible-output bundle. The next recommended runtime/proof lane is a private Music Audible Output Live Bundle after repo/storage closeout and explicit runtime-proof leasing.",
+    "musicStatus": "Music producer/materializer/checker infrastructure exists, but there is no accepted live BEA audible-output bundle. The next recommended runtime-facing lane is gated private Music Audible Output Live Bundle prompt/readiness: live execution must wait on explicit leases, empty isolated proof root, no preexisting BEA/CDB processes, and capture span/flush/decode-window readiness.",
     "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint command-source proof and source-bound copied-runtime causality proof are both accepted",
     "releaseStatus": "v1.0.7 is the current published portable WinUI ZIP; use README.MD and release/readiness/winui_zip_release_v1_0_7_2026-06-25.md for release evidence instead of live state detail.",
     "staticReClosureBoundary": "Static closure is not runtime, gameplay, visual, online, rebuild, or no-noticeable-difference proof.",
@@ -39,7 +47,8 @@
     "staticToProofRebuildBacklog": "roadmap/static-to-proof-rebuild-transition-backlog.md",
     "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
     "developerState": "developer_agent_state.json",
-    "documentationState": "documentation_agent_state.json"
+    "documentationState": "documentation_agent_state.json",
+    "activeGoal": "goal.md"
   },
   "validation": {
     "stateRefresh": "Integration state refresh only; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, product behavior change, release publication, installed-game mutation, or original-BEA mutation.",
@@ -49,9 +58,9 @@
   "blockers": [],
   "nextSteps": [
     "Keep static RE mutation paused unless a product/runtime contradiction points back to a specific RE issue.",
-    "Use the next bounded repo slice for PatchBench/BinaryPatchesPage presentation modularity hardening.",
+    "Use the next bounded repo slice for gated Music Audible Output Live Bundle prompt/readiness hardening with capture-window preflight stop conditions.",
     "Use the rebuild front-door chain map as routing documentation only; do not claim runtime, visual, gameplay, rebuild, or no-noticeable-difference parity from it.",
-    "Use the future private Music Audible Output Live Bundle prompt only after explicit runtime-proof leasing and storage/proof-root readiness.",
+    "Do not run live BEA/CDB/audio proof without explicit runtime-proof authority, leases, private proof-root readiness, arm phrase, and cleanup validation.",
     "Keep local Ghidra, proof, copied-runtime, and payload details as maintainer-local descriptors or ignored overlays, not tracked state."
   ]
 }

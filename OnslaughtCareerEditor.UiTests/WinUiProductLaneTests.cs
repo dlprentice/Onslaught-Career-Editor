@@ -1489,8 +1489,10 @@ public class WinUiProductLaneTests
         Assert.That(safeCopyOutcomeText, Does.Contain("Music swap: no copied-track swap staged during safe-copy creation."));
         Assert.That(safeCopyOutcomeText, Does.Contain("Play will run BEA.exe from safe copy folder:"));
         Assert.That(safeCopyOutcomeText, Does.Contain("Only the copied BEA.exe was patched; no game process was started."));
-        Assert.That(safeCopyOutcomeText, Does.Contain("MusicPlaybackBoundary = \"in-game playback is still experimental and unproven.\""));
-        Assert.That(safeCopyOutcomeText, Does.Contain("Staging only; {MusicPlaybackBoundary}"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("MusicPlaybackBoundary = \"in-game playback is still experimental and unproven\""));
+        Assert.That(safeCopyOutcomeText, Does.Contain("MusicPlaybackBoundaryClause = MusicPlaybackBoundary + \".\""));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Restore before staging another swap. {MusicPlaybackBoundarySentence}"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Staging only; {MusicPlaybackBoundaryClause}"));
         Assert.That(safeCopyOutcomeText, Does.Contain("public static string BuildDefaultMusicReplacementStatus()"));
         Assert.That(safeCopyOutcomeText, Does.Contain("public static string BuildMusicStagedStatus(string targetMusicFileName, bool copiedTrackSwap)"));
         Assert.That(safeCopyOutcomeText, Does.Contain("public static string BuildMusicRestoreResultStatus(string targetMusicFileName, bool success)"));
@@ -1628,7 +1630,7 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("Stop can close or force-close the copied game after a timeout."));
         Assert.That(code, Does.Not.Contain("windowed rendering parity"));
         Assert.That(code, Does.Not.Contain("Private save folders are not copied by this preflight."));
-        Assert.That(safeCopyOutcomeText, Does.Contain("MusicPlaybackBoundary = \"in-game playback is still experimental and unproven.\""));
+        Assert.That(safeCopyOutcomeText, Does.Contain("MusicPlaybackBoundary = \"in-game playback is still experimental and unproven\""));
         Assert.That(code, Does.Contain("The original BEA.exe stays unchanged"));
         Assert.That(code, Does.Not.Contain("PatchBenchCopiedProfileLaunchPlan.Text.Trim"));
         Assert.That(code, Does.Not.Contain("PatchBenchCopiedProfileLaunchPlan.Text.Split"));

@@ -5,11 +5,13 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
     internal static class PatchBenchSafeCopyOutcomeText
     {
         public const string HostJoinReceiptBoundary = "No Host/Join or online multiplayer";
-        private const string MusicPlaybackBoundary = "in-game playback is still experimental and unproven.";
+        private const string MusicPlaybackBoundary = "in-game playback is still experimental and unproven";
+        private const string MusicPlaybackBoundaryClause = MusicPlaybackBoundary + ".";
+        private static string MusicPlaybackBoundarySentence => char.ToUpperInvariant(MusicPlaybackBoundary[0]) + MusicPlaybackBoundary[1..] + ".";
 
         public static string BuildDefaultMusicReplacementStatus()
         {
-            return $"No music swap staged. Staging only; {MusicPlaybackBoundary}";
+            return $"No music swap staged. Staging only; {MusicPlaybackBoundaryClause}";
         }
 
         public static string BuildCanceledSummary()
@@ -95,8 +97,8 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public static string BuildMusicReplacementStatus(PatchBenchSafeCopyMusicSwapTextState? musicSwap)
         {
             return musicSwap is null
-                ? $"Safe copy ready for music replacement staging. Staging only; {MusicPlaybackBoundary}"
-                : $"Safe-copy track swap staged for {musicSwap.TargetMusicFileName}. Restore before staging another swap. In-game playback is still experimental and unproven.";
+                ? $"Safe copy ready for music replacement staging. Staging only; {MusicPlaybackBoundaryClause}"
+                : $"Safe-copy track swap staged for {musicSwap.TargetMusicFileName}. Restore before staging another swap. {MusicPlaybackBoundarySentence}";
         }
 
         public static string BuildMusicSwapInputsMissingStatus()
@@ -134,8 +136,8 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public static string BuildMusicStagedStatus(string targetMusicFileName, bool copiedTrackSwap)
         {
             return copiedTrackSwap
-                ? $"Safe-copy track swap staged for {targetMusicFileName}. Staging only; {MusicPlaybackBoundary}"
-                : $"Copied music bytes staged for {targetMusicFileName}. Staging only; {MusicPlaybackBoundary}";
+                ? $"Safe-copy track swap staged for {targetMusicFileName}. Staging only; {MusicPlaybackBoundaryClause}"
+                : $"Copied music bytes staged for {targetMusicFileName}. Staging only; {MusicPlaybackBoundaryClause}";
         }
 
         public static string BuildMusicStagingFailedStatus()
@@ -161,7 +163,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public static string BuildMusicRestoreResultStatus(string targetMusicFileName, bool success)
         {
             return success
-                ? $"Music backup restored for {targetMusicFileName}. Staging only; {MusicPlaybackBoundary}"
+                ? $"Music backup restored for {targetMusicFileName}. Staging only; {MusicPlaybackBoundaryClause}"
                 : "Safe-copy music backup was not restored.";
         }
 

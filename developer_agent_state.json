@@ -1,75 +1,73 @@
 {
-  "lastUpdated": "2026-06-28",
+  "lastUpdated": "2026-06-29",
   "branch": "main",
-  "currentFocus": "Storage-conscious PatchBench routing-guard wave is integrated on main; the next developer slice is a compact PatchBench/BinaryPatchesPage presentation modularity hardening pass.",
+  "currentFocus": "Retention/PatchBench integration wave is integrated on main; the next developer slice is gated Music Audible Output Live Bundle prompt/readiness hardening, not live proof execution.",
   "currentTruth": {
     "integratedWave": {
-      "summary": "Canonical integration adds shared reflected WinUI helper-output test support, PatchBench routing guards for BinaryPatchesPage online-readiness rendering, storage hygiene docs, and concise state reconciliation without relying on local campaign paths or unreachable worker commits as durable public truth.",
+      "summary": "Canonical integration accepts the PatchBench presentation modularity slice, keeps storage retention as no-delete for Ghidra/proof archives, records local stale Git administrative metadata pruning, and reconciles state without relying on local campaign paths or unmerged worker commits as durable truth.",
       "changedFiles": [
-        "OnslaughtCareerEditor.UiTests/ReflectedWinUiTestSupport.cs",
-        "OnslaughtCareerEditor.UiTests/PatchBenchOnlineReadinessRoutingGuardTests.cs",
-        "OnslaughtCareerEditor.UiTests/PatchBenchOnlineReadinessTextTests.cs",
-        "LOCAL_LAB_OVERLAY.md",
+        "OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyOutcomeText.cs",
+        "OnslaughtCareerEditor.WinUI/Pages/BinaryPatchesPage.xaml.cs",
+        "OnslaughtCareerEditor.UiTests/PatchBenchSafeCopyOutcomeTextTests.cs",
+        "OnslaughtCareerEditor.UiTests/WinUiProductLaneTests.cs",
         "goal.md",
         "developer_agent_state.json",
         "documentation_agent_state.json",
         "re_orchestrator_state.json"
       ],
-      "routingGuard": "BinaryPatchesPage online-readiness render paths are guarded to collect OnlineMultiplayerReadinessService state before calling PatchBenchOnlineReadinessText.Build and BuildCompanionSession, assign mapped text-state properties to controls, avoid inline literal text assignments in those render paths, and preserve exact-token order assertions that fail when either routing token is missing.",
-      "storagePolicy": "LOCAL_LAB_OVERLAY.md now records that campaign/build/package scratch is disposable after final reports and accepted findings are preserved, scratch devices are not durable sole storage, and Ghidra/proof pruning needs manifest classification."
+      "patchBenchMusicStatus": "BinaryPatchesPage music replacement status-line assignments now route through PatchBenchSafeCopyOutcomeText for default, not-ready, progress, staged, restore, and failure states. The helper remains presentation-only and accepts primitive string/bool state.",
+      "tests": "PatchBenchSafeCopyOutcomeTextTests asserts exact reflected helper output for the moved music status strings. WinUiProductLaneTests guards page-to-helper routing, helper behavior boundaries, and absence of prior inline status literals.",
+      "storagePolicy": "No tracked storage policy edit was needed; existing LOCAL_LAB_OVERLAY and coordination policy already cover campaign scratch disposal, scratch-volume non-durability, and manifest/classification requirements for Ghidra/proof pruning."
     },
     "storageCloseout": {
-      "safeCleanup": "Old local campaign scratch cleanup removed 10.926 GiB and did not delete or mutate tracked repo files, proof archives, Ghidra stores, copied game/runtime roots, installed game files, or original BEA.exe.",
-      "driveFreeSpaceGiB": {
-        "before": {
-          "C": 225.514,
-          "D": 398.235,
-          "F": 119.242,
-          "G": 90.251,
-          "H": 245.474
-        },
-        "after": {
-          "C": 237.191,
-          "D": 398.235,
-          "F": 119.242,
-          "G": 90.251,
-          "H": 245.474
-        }
+      "inventory": "Storage inventory was partial-bounded and metadata-only, not deletion authorization.",
+      "inventoryFreeSpaceGiB": {
+        "C": 239.393,
+        "D": 398.235,
+        "F": 119.241,
+        "G": 90.251,
+        "H": 215.842
       },
-      "ghidraBackups": "Report-only/no-delete retention review kept about 142.295 GiB pending per-family manifest/provenance review; live project remains do-not-touch.",
-      "proofArchives": "Report-only/no-delete retention closeout kept about 270.438 GiB pending relative manifest/hash comparison; unknown H: containers remain do-not-touch.",
-      "futureLocalMaintenance": "Stale prunable Git worktree metadata remains a separate bounded local maintenance baton; start with dry-run evidence and do not delete branches or broad storage without fresh authority."
+      "scratchCleanup": "Safe scratch/build/worktree cleanup candidate pool was effectively 0 GiB for this wave.",
+      "ghidraBackups": "Ghidra backup retention deleted 0 files and retained all reviewed Ghidra backup/live/unknown rows; the reviewed backup pool was about 142.295 GiB and remained blocked by hard-retain markers, ambiguous family taxonomy, missing supersession proof, and absent deletion approval.",
+      "proofArchives": "Proof archive retention deleted 0 files and retained all reviewed proof-related rows; the reviewed proof-unknown pool was about 0.565 GiB and remained blocked by partial metadata-only inventory and missing stale/duplicate/supersession proof.",
+      "gitMetadata": "Stale local Git administrative worktree metadata cleanup pruned 23 stale metadata records after dry-run evidence. It deleted no branches, remote refs, physical directories, tracked source, final reports, proof/Ghidra/game/release material, hard payloads, or secrets.",
+      "futureLocalMaintenance": "Ghidra/proof family taxonomy, proof manifest/hash comparison, branch cleanup, and physical scratch cleanup remain separate local maintenance tasks requiring explicit scope, dry-run evidence, and deletion authority."
     },
-    "patchBenchBoundary": "PatchBenchOnlineReadinessText remains presentation-only. BinaryPatchesPage still owns OnlineMultiplayerReadinessService calls and UI control assignment. AppCore receipt construction, patch planning, safe-copy manifests/signatures, launch arguments, process decisions, patch catalog rows, byte data, music behavior, Host/Join availability, online readiness, runtime proof, and release packaging are unchanged.",
+    "patchBenchBoundary": "PatchBenchSafeCopyOutcomeText remains presentation-only. BinaryPatchesPage still owns service calls, UI control assignment, operation logs, AppStatusService status, AppCore receipt construction, patch planning, safe-copy manifests/signatures, launch arguments, process decisions, patch catalog rows, byte data, music behavior, Host/Join availability, online readiness, runtime proof, and release packaging are unchanged.",
     "runtimeBoundaries": {
       "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint and source-bound copied-runtime proof exists",
       "musicAudibleOutputProof": false,
-      "futureRuntimeRecommendation": "Private Music Audible Output Live Bundle after repo/storage closeout and explicit runtime-proof leasing; original-binary online remains later and topology/material gated.",
+      "futureRuntimeRecommendation": "Next runtime-proof family is a gated private Music Audible Output Live Bundle prompt/readiness lane. Prompt authoring may proceed, but live execution must stop unless storage closeout, explicit leases, an empty isolated proof root, no preexisting BEA/CDB processes, and capture span/flush/decode-window readiness are proven.",
       "staticReClosure": "static closure is not runtime, gameplay, visual, online, rebuild, or parity proof",
       "installedGameOriginalBea": "read-only"
     },
-    "hardPayloadBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, and local runtime caches stay out of git and release ZIPs."
+    "hardPayloadBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, local proof paths, raw manifests, and local runtime caches stay out of git and release ZIPs."
   },
   "activeSlice": {
-    "name": "patchbench-binarypatchespage-presentation-modularity",
+    "name": "music-audible-output-live-bundle-readiness",
     "status": "ready",
-    "goal": "Extract one additional presentation-only PatchBench/BinaryPatchesPage text builder where it removes real duplication, then cover the boundary with focused UiTests while preserving current wording, routing, and non-claims.",
-    "claimBoundary": "presentation/testability hardening only; no AppCore/service behavior move, Host/Join enablement, online action enablement, release, runtime, Ghidra, hard-payload, installed-game, original-BEA, patch-row, byte-patch, launch, safe-copy manifest/signature, music, gameplay, visual, rebuild, or no-noticeable-difference claim changes"
+    "goal": "Author or harden the gated private Music Audible Output Live Bundle prompt/readiness artifact and add static/self-test coverage where useful for the capture-span/decode-window preflight that must stop before any live arm when coverage is not proven.",
+    "claimBoundary": "prompt/readiness and non-live tooling only; no BEA launch, CDB attach, audio capture, copied executable mutation, proof archive mutation/deletion, Ghidra mutation, AppCore patch behavior change, Host/Join enablement, online action enablement, release, package, installed-game, original-BEA, runtime audio proof, gameplay, visual, rebuild, or no-noticeable-difference claim changes"
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
-    "catalogRows": "29/29 target specimen identity and policy metadata rows"
+    "catalogRows": "29/29 target specimen identity and policy metadata rows",
+    "staleGitAdministrativeWorktreeMetadataPruned": 23,
+    "ghidraBackupFilesDeletedThisWave": 0,
+    "proofArchiveFilesDeletedThisWave": 0
   },
   "validation": {
-    "currentIntegration": "Integration validation uses git diff --check, JSON parse, stale local campaign path scan, docs/link/repo safety gates, WinUI build, focused PatchBench online-readiness UiTests, patch-engine safety, hard-payload safety, and WinUI primary-lane validation.",
-    "nextSlice": "Use focused PatchBench/WinUI tests plus relevant repo safety gates; rebuild WinUI before reflected helper-output tests."
+    "currentIntegration": "Integration validation uses git diff --check, JSON parse, stale local campaign path scan, docs/repo safety gates, WinUI build, focused PatchBench safe-copy helper-output/static UiTests, patch-engine safety, hard-payload safety, and WinUI primary-lane validation.",
+    "nextSlice": "Use static/self-test prompt/readiness gates first. Do not run live BEA/CDB/audio proof unless a later prompt explicitly grants runtime-proof authority, leases, arm phrase, private proof root, and stop conditions."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
     "Before the next write, verify live HEAD, origin/main, and remote refs/heads/main.",
-    "Run a compact PatchBench/BinaryPatchesPage presentation modularity slice with focused routing/helper-output tests.",
-    "Keep package scripts, release publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, and original-BEA mutation claims bounded to accepted evidence.",
-    "Treat stale Git worktree metadata cleanup and proof-archive manifest/hash comparison as separate local maintenance work requiring dry-run evidence and explicit scope."
+    "Inspect the music audible-output live-bundle runner, gate, materializer, capture, and correlation checkers before editing.",
+    "Run a bounded gated Music Audible Output Live Bundle prompt/readiness hardening slice focused on capture-window preflight and fail-closed stops.",
+    "Keep package scripts, release publication, Host/Join, online readiness, runtime audio proof, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, original-BEA, proof archive deletion, and raw private-path claims bounded to accepted evidence.",
+    "Treat Ghidra/proof taxonomy, proof manifest/hash comparison, branch cleanup, and physical scratch cleanup as separate local maintenance work requiring explicit authority."
   ]
 }

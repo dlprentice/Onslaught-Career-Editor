@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-06-28",
-  "currentFocus": "PatchBench routing guards, shared reflected helper-output test support, and storage hygiene docs are integrated on main; docs/state now point the next executable slice at bounded PatchBench/BinaryPatchesPage presentation modularity hardening.",
+  "lastUpdated": "2026-06-29",
+  "currentFocus": "PatchBench safe-copy music status presentation extraction and storage-retention no-delete closeout are integrated on main; docs/state now point the next executable slice at gated Music Audible Output Live Bundle prompt/readiness hardening.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -20,29 +20,35 @@
     "rebuildFrontDoorChainMap": "roadmap/rebuild-front-door-chain-map.md"
   },
   "currentDocsTruth": {
-    "integratedWave": "Canonical docs/state summarize the PatchBench routing guard, shared reflected WinUI helper-output loader, and storage hygiene docs without treating local campaign reports, local worktree paths, or unreachable worker commits as durable public truth.",
-    "stateReconciliation": "goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json record the integrated wave, the next bounded modularity slice, drive-level storage cleanup summary, retained Ghidra/proof non-deletion status, runtime future recommendation, and explicit non-claims.",
-    "storageHygiene": "LOCAL_LAB_OVERLAY.md explains disposable campaign/build/package scratch, final-report/local-manifest retention, scratch-device non-durability, manifest-required Ghidra/proof pruning, and do-not-touch boundaries for live Ghidra, installed game, original BEA.exe, current proof evidence, and protected backups.",
-    "storageCloseoutSummary": "Public-safe state records only drive-level before/after readings and category totals: 10.926 GiB old local campaign scratch cleaned; Ghidra backups and proof archives retained pending manifest/provenance or hash review.",
+    "integratedWave": "Canonical docs/state summarize the accepted PatchBench safe-copy music status presentation extraction, storage-retention no-delete results, stale Git administrative metadata pruning, and gated music-proof prompt/readiness recommendation without treating local campaign reports, local worktree paths, raw manifests, or unmerged worker commits as durable public truth.",
+    "stateReconciliation": "goal.md, developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json record the integrated code/test slice, the next gated music readiness slice, partial-bounded storage inventory, Ghidra/proof no-delete closeout, local stale Git metadata pruning, and explicit non-claims.",
+    "patchBenchPresentation": "PatchBenchSafeCopyOutcomeText now owns safe-copy music replacement status-line copy for default, not-ready, progress, staged, restore, and failure states. BinaryPatchesPage routes the status text through the helper while keeping service calls, operation logs, AppStatusService updates, and UI assignment in the page.",
+    "storageCloseoutSummary": "Public-safe state records only drive-level inventory readings and category outcomes: Ghidra backup deletion 0 files, proof archive deletion 0 files, and stale Git administrative worktree metadata 23 records pruned after dry-run. Retained review-pool sizes are informational and not deletion eligibility.",
+    "storagePolicyDocs": "No tracked storage policy edit was needed. LOCAL_LAB_OVERLAY.md and coordination docs already cover local-only campaign manifests, scratch non-durability, and manifest/classification requirements before Ghidra/proof pruning.",
+    "runtimeProofRecommendation": "The next runtime-proof family is a gated private Music Audible Output Live Bundle prompt/readiness lane. Prompt authoring may proceed, but live execution waits on explicit leases, empty isolated proof root, no preexisting BEA/CDB processes, and capture span/flush/decode-window readiness.",
     "rebuildFrontDoor": "ROADMAP-INDEX links the compact rebuild-front-door chain map. The map is routing/discoverability only and does not claim runtime, visual, gameplay, rebuild, or no-noticeable-difference parity.",
-    "localOnlyBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, local runtime caches, raw proof evidence, and local proof paths stay out of tracked docs/state unless a public-safe summary is explicitly warranted.",
+    "localOnlyBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, local runtime caches, local proof paths, raw proof evidence, and raw local manifests stay out of tracked docs/state unless a public-safe summary is explicitly warranted.",
     "releasePublicationStatus": "No release, tag, package, signing, installer, announcement, hosted workflow, or publication action is part of this integration.",
-    "claimBoundary": "Routing guard tests, shared reflected helper-output loading, storage hygiene docs, drive-level storage summary, and state reconciliation only; no AppCore, patch catalog row, byte patch, launch argument, safe-copy manifest/signature, runtime proof, release/publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, or original-BEA mutation claim change."
+    "claimBoundary": "Presentation-helper extraction, focused helper-output/static tests, storage no-delete summary, stale Git metadata pruning summary, and state reconciliation only; no AppCore, patch catalog row, byte patch, launch argument, safe-copy manifest/signature, runtime proof, release/publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, or original-BEA mutation claim change."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
-    "catalogRows": "29/29 target specimen identity and policy metadata rows"
+    "catalogRows": "29/29 target specimen identity and policy metadata rows",
+    "staleGitAdministrativeWorktreeMetadataPruned": 23,
+    "ghidraBackupFilesDeletedThisWave": 0,
+    "proofArchiveFilesDeletedThisWave": 0
   },
   "validation": {
-    "currentIntegration": "Integration gates cover docs/repo, payload, WinUI build, focused PatchBench online-readiness UiTests, broader PatchBench/patch-engine safety, hard-payload, and primary-lane validation evidence.",
-    "nextSlice": "Prefer the bounded PatchBench/BinaryPatchesPage presentation modularity slice before broader page refactors."
+    "currentIntegration": "Integration gates cover docs/repo, payload, WinUI build, focused PatchBench safe-copy music status helper-output/static UiTests, broader PatchBench/patch-engine safety, hard-payload, and primary-lane validation evidence.",
+    "nextSlice": "Prefer gated music audible-output prompt/readiness hardening before any live runtime proof attempt; live execution needs separate authority, leases, private proof-root readiness, and stop conditions."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
     "Before the next write, verify live HEAD, origin/main, and remote refs/heads/main.",
-    "Keep docs and state free of local campaign paths and unreachable worker-commit dependencies.",
-    "Keep product, runtime, release publication, Host/Join, online readiness, runtime audio, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, and installed-game mutation claims bounded to accepted evidence.",
-    "Keep local metadata cleanup and proof/Ghidra retention pruning as separate scoped maintenance work with manifests, dry-run evidence, and explicit authority."
+    "Keep docs and state free of local campaign paths, raw manifests, and unmerged worker-commit dependencies.",
+    "Keep product, runtime, release publication, Host/Join, online readiness, runtime audio proof, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, and installed-game mutation claims bounded to accepted evidence.",
+    "Use the next slice for gated Music Audible Output Live Bundle prompt/readiness hardening with capture-window preflight stop conditions.",
+    "Keep local Ghidra/proof taxonomy, proof manifest/hash comparison, branch cleanup, and physical scratch cleanup as separate scoped maintenance work with manifests, dry-run evidence, and explicit authority."
   ]
 }
