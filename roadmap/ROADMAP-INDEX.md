@@ -30,6 +30,7 @@ Ghidra static RE (Steam retail): function-quality queue **6411/6411 = 100.00%** 
 | [original-binary-online-multiplayer-feasibility.md](/roadmap/original-binary-online-multiplayer-feasibility.md) | Original-binary online proof ladder and non-claims |
 | [repo-structure-and-archive-map.md](/roadmap/repo-structure-and-archive-map.md) | Current active/archive/private layout |
 | [winui-lore-offline-pack-plan.md](/roadmap/winui-lore-offline-pack-plan.md) | Generated full-offline Lore content-pack shape for app ZIP candidates |
+| [patchbench-primitive-projection-contract.md](/roadmap/patchbench-primitive-projection-contract.md) | Primitive receipt/source-summary presentation boundary for future PatchBench helper extraction |
 | [resolved-archive.md](/roadmap/resolved-archive.md) | Historical completed work |
 | [goals/2026-05-01-ralph-loop-agentic-re-master-goal.md](/roadmap/goals/2026-05-01-ralph-loop-agentic-re-master-goal.md) | Completed Ralph-loop agentic RE operating-model goal contract |
 | [interaction-audit/2026-05-01-ui-action-inventory.md](/roadmap/interaction-audit/2026-05-01-ui-action-inventory.md) | Historical UI action inventory |
