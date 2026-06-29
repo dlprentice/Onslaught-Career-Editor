@@ -18,6 +18,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = "winui-safe-copy-music-audible-output-live-bundle-gate.v1"
+GATE_STATUS = "producer-coverage-complete-prearm-readiness-required"
 PRESET_ID = "use-bea02-for-bea04"
 TARGET = "BEA_04(Master).ogg"
 REPLACEMENT = "BEA_02(Master).ogg"
@@ -258,7 +259,7 @@ def build_gate(*, artifact_root: Path, source_root: Path) -> dict[str, Any]:
     gaps = unresolved_producer_gaps()
     return {
         "schemaVersion": SCHEMA,
-        "status": "producer-coverage-complete-prearm-readiness-required",
+        "status": GATE_STATUS,
         "presetId": PRESET_ID,
         "target": TARGET,
         "replacement": REPLACEMENT,
@@ -289,6 +290,7 @@ def build_gate(*, artifact_root: Path, source_root: Path) -> dict[str, Any]:
 
 def validate_gate(payload: dict[str, Any]) -> dict[str, Any]:
     require(payload.get("schemaVersion") == SCHEMA, "gate schema mismatch")
+    require(payload.get("status") == GATE_STATUS, "gate status changed")
     require_exact_keys(
         payload,
         {

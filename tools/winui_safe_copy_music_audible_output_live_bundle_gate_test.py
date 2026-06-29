@@ -132,6 +132,11 @@ class MusicAudibleOutputLiveBundleGateTests(unittest.TestCase):
         with self.assertRaises(gate.MusicAudibleOutputLiveBundleGateError):
             gate.validate_gate(extra_claim)
 
+        proof_like_status = copy.deepcopy(payload)
+        proof_like_status["status"] = "producer-coverage-complete-live-proof-ready"
+        with self.assertRaises(gate.MusicAudibleOutputLiveBundleGateError):
+            gate.validate_gate(proof_like_status)
+
         missing_lease = copy.deepcopy(payload)
         missing_lease["preArmReadiness"]["requiredResourceLeases"].remove("proof-root")
         with self.assertRaises(gate.MusicAudibleOutputLiveBundleGateError):
