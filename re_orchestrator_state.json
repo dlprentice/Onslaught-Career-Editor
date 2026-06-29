@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-29",
-  "currentFocus": "Static RE/Ghidra state is unchanged. The current repo wave integrates PatchBenchLaunchPresetText presentation-only extraction and consult evidence reporting; this is not RE mutation, storage deletion, or live proof execution.",
+  "currentFocus": "Static RE/Ghidra state is unchanged. The PatchBenchLaunchPresetText / consult-contract wave is accepted on main; this is not RE mutation, storage deletion, or live proof execution.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",

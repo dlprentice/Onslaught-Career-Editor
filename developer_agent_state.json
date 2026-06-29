@@ -1,10 +1,10 @@
 {
   "lastUpdated": "2026-06-29",
   "branch": "main",
-  "currentFocus": "PatchBenchLaunchPresetText presentation helper and consult evidence contract are integrated; the next developer slice is optional PatchBench page-routing test hardening or primitive projection design before receipt/source-summary extraction.",
+  "currentFocus": "PatchBenchLaunchPresetText presentation helper and consult evidence contract are accepted on main; the next developer slice is optional PatchBench page-routing test hardening or primitive projection design before receipt/source-summary extraction.",
   "currentTruth": {
     "integratedWave": {
-      "summary": "Canonical integration accepts the music live-bundle readiness hardening, PatchBenchLaunchPresetText presentation extraction, and consult evidence reporting contract while preserving storage no-delete truths.",
+      "summary": "Accepted on main at 04e03e92, the canonical integration accepts the music live-bundle readiness hardening, PatchBenchLaunchPresetText presentation extraction, and consult evidence reporting contract while preserving storage no-delete truths.",
       "changedFiles": [
         "release/readiness/winui_music_live_bundle_prearm_readiness_2026-06-29.md",
         "tools/run_winui_safe_copy_music_audible_output_live_bundle.py",
@@ -24,7 +24,7 @@
         "re_orchestrator_state.json"
       ],
       "patchBenchMusicStatus": "BinaryPatchesPage music replacement status-line assignments now route through PatchBenchSafeCopyOutcomeText for default, not-ready, progress, staged, restore, and failure states. The helper remains presentation-only and accepts primitive string/bool state.",
-      "patchBenchLaunchPresetText": "BinaryPatchesPage launch/control preset automation names and status-message text now route through PatchBenchLaunchPresetText. The helper remains presentation-only; launch option tuples, selected-state mutation, launch argument construction, safe-copy launch planning, service calls, process control, and Host/Join boundaries remain in BinaryPatchesPage.",
+      "patchBenchLaunchPresetText": "BinaryPatchesPage launch/control preset automation names and status-message text now route through PatchBenchLaunchPresetText. The helper remains presentation-only; launch option tuples, selection state, matching logic, launch argument construction, safe-copy launch planning, service calls, process control, patch/catalog semantics, Host/Join/online claims, and runtime proof boundaries remain in BinaryPatchesPage.",
       "tests": "PatchBenchSafeCopyOutcomeTextTests and PatchBenchLaunchPresetTextTests assert exact reflected helper output for moved presentation strings. WinUiProductLaneTests guards page-to-helper routing, helper behavior boundaries, and absence of prior inline status literals.",
       "consultReportContract": "coordination/REPORT_CONTRACT.md now requires explicit Consult Evidence entries for mandated Codex specialist, Codex adversarial, cursor-agent composer-2.5-fast, and cursor-agent gemini-3.1-pro lanes, including accepted/rejected findings and CONSULT_UNAVAILABLE reasons without raw prompt/log/local-path leakage.",
       "adversarialReviewDisposition": "PatchBench and storage/consult adversarial reviews accepted integration with P3-only notes: optional future launch-preset page-routing/static guard hardening, retained-pool GiB overclaim avoidance, future deletion manifest rigor, music pre-arm wording clarity, and future consult-model maintenance.",
@@ -68,9 +68,9 @@
   "consultCompliance": "Scoped only: inspected recent June 29 non-trivial worker outputs had no clear skipped Cursor lane; REPORT_CONTRACT now requires explicit per-lane Consult Evidence for mandated Codex and Cursor consults, but this remains a reporting-contract improvement rather than a blanket campaign-wide compliance claim.",
   "activeSlice": {
     "name": "patchbench-launch-preset-text-and-consult-contract",
-    "status": "integrated-awaiting-final-acceptance",
-    "goal": "PatchBenchLaunchPresetText extracts launch/control preset automation names and status-message text as a pure presentation helper; consult report evidence requirements are now explicit in REPORT_CONTRACT.",
-    "claimBoundary": "presentation-only WinUI helper and coordination documentation only; launch option tuples, selection state, matching logic, launch arguments, safe-copy launch planning, service calls, process control, patch/catalog semantics, Host/Join/online claims, storage deletion, and runtime proof boundaries remain unchanged"
+    "status": "accepted-on-main",
+    "goal": "PatchBenchLaunchPresetText / consult-contract wave is accepted on main at 04e03e92; PatchBenchLaunchPresetText extracts launch/control preset automation names and status-message text as a pure presentation helper, and consult report evidence requirements are explicit in REPORT_CONTRACT.",
+    "claimBoundary": "presentation-only WinUI helper and coordination documentation only; BinaryPatchesPage still owns launch option tuples, selection state, matching logic, launch argument construction, safe-copy launch planning, service calls, process control, patch/catalog semantics, Host/Join/online claims, and runtime proof boundaries. No storage deletion boundary changed."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -89,7 +89,7 @@
     "Before the next write, verify live HEAD, origin/main, and remote refs/heads/main.",
     "Optionally harden PatchBenchLaunchPresetText page-routing/literal reintroduction tests if future work touches the launch preset surface.",
     "Design a primitive projection contract before any receipt/source-summary helper extraction; keep behavior and AppCore receipts in the page/AppCore owners until then.",
-    "Keep push withheld until coordinator final acceptance authorizes it.",
+    "Use the next write for focused PatchBench test hardening or primitive projection design, not more closeout bookkeeping for this completed wave.",
     "Keep package scripts, release publication, Host/Join, online readiness, runtime audio proof, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, original-BEA, proof archive deletion, and raw private-path claims bounded to accepted evidence.",
     "Treat Ghidra/proof taxonomy, proof manifest/hash comparison, branch cleanup, and physical scratch cleanup as separate local maintenance work requiring explicit authority."
   ]

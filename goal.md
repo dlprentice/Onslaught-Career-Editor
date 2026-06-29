@@ -7,11 +7,14 @@ Policy: `goal.policy.md`
 ## Current Slice
 
 The PatchBench launch-preset presentation and consult-contract integration wave
-is integrated in the current branch pending final acceptance. The accepted
-worker changes extract launch/control preset automation names and status-message
-text into `PatchBenchLaunchPresetText` as a presentation-only helper, and update
-the report contract so mandated consult evidence is explicit and public-safe.
-The prior music live-bundle fail-closed/pre-arm truth remains unchanged.
+is accepted on `main` at `04e03e92` (`Record launch preset integration state`).
+Final acceptance evidence confirms the commit stack `0c9e6f8c`, `6f423ef3`,
+and `04e03e92` with `origin/main` and remote `refs/heads/main` at the reviewed
+commit. The accepted worker changes extract launch/control preset automation
+names and status-message text into `PatchBenchLaunchPresetText` as a
+presentation-only helper, and update the report contract so mandated consult
+evidence is explicit and public-safe. The prior music live-bundle
+fail-closed/pre-arm truth remains unchanged.
 
 Before any later write, re-read live git truth and target files. Do not treat
 local campaign reports, local worktree paths, raw manifests, or unmerged worker
