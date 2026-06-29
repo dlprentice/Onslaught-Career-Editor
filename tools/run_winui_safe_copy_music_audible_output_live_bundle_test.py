@@ -499,7 +499,12 @@ class MusicAudibleOutputLiveBundleExecutorTests(unittest.TestCase):
             )
             self.assertEqual(
                 live_bundle.process_attempt_match(
-                    {"Name": "cdb.exe", "ProcessId": 202, "ExecutablePath": r"C:\Debuggers\x86\cdb.exe", "CommandLine": f'-logo "{layout.stage("cleanBaseline").raw_cdb_log}"'},
+                    {
+                        "Name": "cdb.exe",
+                        "ProcessId": 202,
+                        "ExecutablePath": str(root / "debuggers" / "cdb.exe"),
+                        "CommandLine": f'-logo "{layout.stage("cleanBaseline").raw_cdb_log}"',
+                    },
                     layout,
                 ),
                 "commandLine",
@@ -512,7 +517,12 @@ class MusicAudibleOutputLiveBundleExecutorTests(unittest.TestCase):
             )
             self.assertIsNone(
                 live_bundle.process_attempt_match(
-                    {"Name": "cdb.exe", "ProcessId": 404, "ExecutablePath": r"C:\Debuggers\x86\cdb.exe", "CommandLine": f'-logo "{layout.root}\\other\\windbg.log"'},
+                    {
+                        "Name": "cdb.exe",
+                        "ProcessId": 404,
+                        "ExecutablePath": str(root / "debuggers" / "cdb.exe"),
+                        "CommandLine": f'-logo "{layout.root / "other" / "windbg.log"}"',
+                    },
                     layout,
                 )
             )
@@ -534,9 +544,20 @@ class MusicAudibleOutputLiveBundleExecutorTests(unittest.TestCase):
 
             rows = [
                 {"Name": "BEA.exe", "ProcessId": 101, "ExecutablePath": str(copied_exe), "CommandLine": "", "CreationDate": "20260624120000.000000-000"},
-                {"Name": "cdb.exe", "ProcessId": 202, "ExecutablePath": r"C:\Debuggers\x86\cdb.exe", "CommandLine": f'-logo "{layout.stage("cleanBaseline").raw_cdb_log}"', "CreationDate": "20260624120001.000000-000"},
+                {
+                    "Name": "cdb.exe",
+                    "ProcessId": 202,
+                    "ExecutablePath": str(root / "debuggers" / "cdb.exe"),
+                    "CommandLine": f'-logo "{layout.stage("cleanBaseline").raw_cdb_log}"',
+                    "CreationDate": "20260624120001.000000-000",
+                },
                 {"Name": "BEA.exe", "ProcessId": 303, "ExecutablePath": str(root / "other" / "BEA.exe"), "CommandLine": ""},
-                {"Name": "cdb.exe", "ProcessId": 404, "ExecutablePath": r"C:\Debuggers\x86\cdb.exe", "CommandLine": "-logo C:\\other\\windbg.log"},
+                {
+                    "Name": "cdb.exe",
+                    "ProcessId": 404,
+                    "ExecutablePath": str(root / "debuggers" / "cdb.exe"),
+                    "CommandLine": f"-logo {root / 'other' / 'windbg.log'}",
+                },
             ]
             by_pid = {row["ProcessId"]: row for row in rows}
 
@@ -585,7 +606,9 @@ class MusicAudibleOutputLiveBundleExecutorTests(unittest.TestCase):
             def process_check() -> None:
                 process_checks.append("checked")
                 if len(process_checks) == 2:
-                    raise live_bundle.LiveBundleError("Refusing live bundle attempt while BEA/CDB processes exist: C:\\secret\\BEA.exe")
+                    raise live_bundle.LiveBundleError(
+                        f"Refusing live bundle attempt while BEA/CDB processes exist: {root / 'private' / 'BEA.exe'}"
+                    )
 
             with (
                 mock.patch.object(live_bundle, "ensure_no_bea_or_cdb_processes", side_effect=process_check),
@@ -606,7 +629,7 @@ class MusicAudibleOutputLiveBundleExecutorTests(unittest.TestCase):
             self.assertEqual(receipt["status"], "failed")
             self.assertEqual(receipt["error"], "materializer failed")
             self.assertIn("finalProcessCheckError", receipt)
-            self.assertNotIn("C:\\secret", receipt["finalProcessCheckError"])
+            self.assertNotIn(str(root / "private"), receipt["finalProcessCheckError"])
             self.assertEqual(receipt["failureProcessCleanup"]["matchedProcessCount"], 0)
 
     def test_run_live_bundle_checks_no_bea_or_cdb_after_failure(self) -> None:

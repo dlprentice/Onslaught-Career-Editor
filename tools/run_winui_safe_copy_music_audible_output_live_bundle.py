@@ -31,8 +31,6 @@ import winui_safe_copy_music_timestamped_cdb_log_producer as timestamp_producer
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE_ROOT_DEFAULT = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Battle Engine Aquila")
-PRIVATE_ROOT_DEFAULT = Path(r"G:\OnslaughtRuntimeProofArchive\winui-safe-copy-live-runtime")
 ARM_PHRASE = "RUN PRIVATE MUSIC AUDIBLE LIVE BUNDLE"
 LIVE_ARM = "LAUNCH SAFE COPY BEA"
 CDB_ARM = "ATTACH CDB TO SAFE COPY BEA"
@@ -1248,7 +1246,7 @@ def _timestamped_fixture_log() -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--artifact-root", type=Path, default=None)
-    parser.add_argument("--source-root", type=Path, default=SOURCE_ROOT_DEFAULT)
+    parser.add_argument("--source-root", type=Path, default=None)
     parser.add_argument("--prearm-readiness-json", type=Path, default=None)
     parser.add_argument("--audio-duration-ms", type=int, default=DEFAULT_LIVE_AUDIO_DURATION_MS)
     parser.add_argument("--live-timeout-seconds", type=int, default=24)
@@ -1266,9 +1264,8 @@ def main() -> int:
         validate_live_attempt_audio_duration(args.audio_duration_ms)
         require(5 <= args.live_timeout_seconds <= 120, "--live-timeout-seconds must be between 5 and 120.")
         artifact_root = args.artifact_root
-        if artifact_root is None:
-            stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d-%H%M%S")
-            artifact_root = PRIVATE_ROOT_DEFAULT / f"music-audible-live-{stamp}"
+        require(artifact_root is not None, "Provide --artifact-root for a private ignored proof root or use --self-test.")
+        require(args.source_root is not None, "Provide --source-root for the read-only copied/source game root or use --self-test.")
         require(
             args.prearm_readiness_json is not None,
             "Provide --prearm-readiness-json for a private accepted pre-arm readiness artifact.",

@@ -442,7 +442,7 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--artifact-root", type=Path, default=None)
-    parser.add_argument("--source-root", type=Path, default=Path(r"C:\Program Files (x86)\Steam\steamapps\common\Battle Engine Aquila"))
+    parser.add_argument("--source-root", type=Path, default=None)
     parser.add_argument("--output-json", type=Path, default=None)
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
@@ -453,6 +453,7 @@ def main() -> int:
             print("live-bundle-gate self-test passed")
             return 0
         require(args.artifact_root is not None, "Provide --artifact-root or --self-test.")
+        require(args.source_root is not None, "Provide --source-root or --self-test.")
         payload = build_gate(artifact_root=args.artifact_root, source_root=args.source_root)
         summary = validate_gate(payload)
         if args.output_json is not None:

@@ -97,8 +97,7 @@ class MusicAudibleOutputLiveBundleGateTests(unittest.TestCase):
         serialized = json_dump(payload)
         self.assertNotIn("Program Files", serialized)
         self.assertNotIn("steamapps", serialized)
-        self.assertNotIn("G:\\", serialized)
-        self.assertNotIn("C:\\", serialized)
+        self.assertNotRegex(serialized, r"[A-Z]:\\")
 
     def test_gate_rejects_proof_claims_and_reintroduced_producer_gaps(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
