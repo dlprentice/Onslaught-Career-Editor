@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-29",
-  "currentFocus": "Static RE/Ghidra state is unchanged. The retention/PatchBench wave integrated product/test state and storage-retention no-delete results; the next runtime-facing slice is gated Music Audible Output Live Bundle prompt/readiness, not RE mutation or live proof execution.",
+  "currentFocus": "Static RE/Ghidra state is unchanged. The music live-bundle readiness wave integrated fail-closed/pre-arm tooling and storage no-delete taxonomy; the next repo slice is PatchBenchLaunchPresetText presentation-only extraction, not RE mutation or live proof execution.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -28,7 +28,7 @@
   },
   "runtimeProofBoundary": {
     "musicAudibleOutputProof": false,
-    "musicStatus": "Music producer/materializer/checker infrastructure exists, but there is no accepted live BEA audible-output bundle. The next recommended runtime-facing lane is gated private Music Audible Output Live Bundle prompt/readiness: live execution must wait on explicit leases, empty isolated proof root, no preexisting BEA/CDB processes, and capture span/flush/decode-window readiness.",
+    "musicStatus": "Music live-bundle readiness tooling is integrated as fail-closed/pre-arm only. Producer coverage can be complete, but the public gate reports readyToRunLiveAttempt=false, liveArmAllowed=false, runtimeAudibleOutputProof=false, and preArmReadiness.status=prearm-readiness-not-proven. There is no accepted live BEA audible-output bundle; future live execution must wait on explicit authority, leases, an empty isolated proof root, no preexisting BEA/CDB processes, and capture span/flush/decode-window readiness.",
     "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint command-source proof and source-bound copied-runtime causality proof are both accepted",
     "releaseStatus": "v1.0.7 is the current published portable WinUI ZIP; use README.MD and release/readiness/winui_zip_release_v1_0_7_2026-06-25.md for release evidence instead of live state detail.",
     "staticReClosureBoundary": "Static closure is not runtime, gameplay, visual, online, rebuild, or no-noticeable-difference proof.",
@@ -52,13 +52,13 @@
   },
   "validation": {
     "stateRefresh": "Integration state refresh only; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, product behavior change, release publication, installed-game mutation, or original-BEA mutation.",
-    "currentGateExpectation": "For this integration, use JSON parse, stale local campaign path scans, git diff --check, required docs/repo safety gates, focused PatchBench tests, patch-engine safety, and canonical WinUI primary-lane validation."
+    "currentGateExpectation": "For this integration, use JSON parse, stale local campaign path scans, passive process census, git diff --check, focused music live-bundle Python/npm gates, required docs/repo safety gates, and public payload checks."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
     "Keep static RE mutation paused unless a product/runtime contradiction points back to a specific RE issue.",
-    "Use the next bounded repo slice for gated Music Audible Output Live Bundle prompt/readiness hardening with capture-window preflight stop conditions.",
+    "Use the next bounded repo slice for PatchBenchLaunchPresetText as a behavior-free presentation helper for launch/control preset names and status-message text.",
     "Use the rebuild front-door chain map as routing documentation only; do not claim runtime, visual, gameplay, rebuild, or no-noticeable-difference parity from it.",
     "Do not run live BEA/CDB/audio proof without explicit runtime-proof authority, leases, private proof-root readiness, arm phrase, and cleanup validation.",
     "Keep local Ghidra, proof, copied-runtime, and payload details as maintainer-local descriptors or ignored overlays, not tracked state."

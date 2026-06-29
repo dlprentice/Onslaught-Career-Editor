@@ -6,13 +6,11 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-The retention/PatchBench integration wave is integrated on `main`. The accepted
-PatchBench presentation slice moved safe-copy music replacement status-line copy
-out of `BinaryPatchesPage` and into the presentation-only
-`PatchBenchSafeCopyOutcomeText` helper, with focused reflected helper-output and
-static routing tests. Canonical state now records the storage-retention closeout
-as no-delete for Ghidra/proof archives and local-only Git administrative
-metadata pruning.
+The music live-bundle readiness integration wave is integrated on local `main`.
+The accepted worker changes harden the public music live-bundle gate as
+fail-closed/pre-arm tooling and require a private accepted pre-arm readiness JSON
+before the armed executor can delegate to the live runner. The adversarial
+status-lock correction is included.
 
 Before any later write, re-read live git truth and target files. Do not treat
 local campaign reports, local worktree paths, raw manifests, or unmerged worker
@@ -20,6 +18,34 @@ commits as durable public evidence.
 
 ## Current Truth
 
+- Music live-bundle readiness tooling is public-safe, fail-closed, and pre-arm
+  only. Producer coverage can be complete, but the public gate does not
+  authorize a live arm, BEA launch, CDB attach, audio capture, or runtime proof.
+- The gate now reports `producerCoverageComplete=true`,
+  `readyToRunLiveAttempt=false`, `liveArmAllowed=false`, and
+  `runtimeAudibleOutputProof=false`, with
+  `preArmReadiness.status=prearm-readiness-not-proven`.
+- The armed executor requires a private accepted
+  `winui-safe-copy-music-audible-output-live-bundle-prearm-readiness.v1` JSON
+  through `--prearm-readiness-json` before it can call the live bundle runner.
+  That artifact is a private pre-arm authority/lease/readiness contract, not a
+  public proof artifact or an audible-output proof by itself.
+- The top-level music live-bundle gate `status` is value-locked after
+  adversarial review; proof-like status text is rejected by the gate validator.
+- No runtime music proof exists from this wave. Do not claim audible output,
+  gameplay behavior, source-bound runtime causality, all-cue coverage, online
+  readiness, release readiness, rebuild parity, or no-noticeable-difference
+  parity from this slice.
+- Consult compliance is scoped: recent inspected June 29 non-trivial worker
+  outputs had no clear skipped Cursor lane, but report-shape and
+  sanitized-context evidence gaps mean there is no blanket campaign-wide
+  compliance claim.
+- Ghidra/proof storage taxonomy remains read-only/no-delete. Current accepted
+  cleanup is 0 GiB; future storage work is manifest/hash/provenance review only
+  until separately authorized.
+- The next compact PatchBench presentation seam is `PatchBenchLaunchPresetText`
+  as a pure presentation helper. Defer receipt/source-summary helpers until a
+  primitive projection design is accepted.
 - `PatchBenchSafeCopyOutcomeText` owns the safe-copy music replacement status
   messages used for default, not-ready, progress, staged, restore, and failure
   states. The helper remains presentation-only and accepts primitive string/bool
@@ -61,11 +87,10 @@ commits as durable public evidence.
 - Fresh storage inventory free-space readings for this wave were C: 239.393 GiB,
   D: 398.235 GiB, F: 119.241 GiB, G: 90.251 GiB, and H: 215.842 GiB. No Ghidra
   or proof archive storage reclamation is claimed.
-- Future runtime/proof recommendation is a gated private Music Audible Output
-  Live Bundle prompt/readiness lane. Prompt authoring can proceed, but live
-  execution must stop unless storage closeout, exclusive leases, an empty
-  isolated proof root, no preexisting BEA/CDB processes, and capture
-  span/flush/decode-window readiness are proven.
+- Future private live execution must stop unless explicit authority, exclusive
+  leases, an empty isolated proof root, no preexisting BEA/CDB processes, and
+  capture-span/flush/decode-window readiness are proven in the private pre-arm
+  artifact and checked by the executor path.
 - Online multiplayer is still not player-ready. Host/Join remains disabled
   until distinct-endpoint command-source proof and source-bound copied-runtime
   causality proof are both accepted.
@@ -81,6 +106,14 @@ commits as durable public evidence.
 
 ## Evidence Pointers
 
+- Music live-bundle pre-arm readiness note:
+  `release/readiness/winui_music_live_bundle_prearm_readiness_2026-06-29.md`
+- Music live-bundle public gate and tests:
+  `tools/winui_safe_copy_music_audible_output_live_bundle_gate.py` and
+  `tools/winui_safe_copy_music_audible_output_live_bundle_gate_test.py`
+- Music live-bundle executor and tests:
+  `tools/run_winui_safe_copy_music_audible_output_live_bundle.py` and
+  `tools/run_winui_safe_copy_music_audible_output_live_bundle_test.py`
 - Safe-copy music status helper:
   `OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyOutcomeText.cs`
 - Safe-copy music status helper-output tests:
@@ -116,26 +149,19 @@ commits as durable public evidence.
 ## Next Executable Work
 
 1. Verify live `HEAD`, `origin/main`, and remote `refs/heads/main`, then inspect
-   the music audible-output readiness docs and tools before editing:
-   `tools/run_winui_safe_copy_music_audible_output_live_bundle.py`,
-   `tools/winui_safe_copy_music_audible_output_live_bundle_gate.py`,
-   `tools/winui_safe_copy_music_audible_output_materializer.py`, and the
-   related music capture/correlation checkers.
-2. Run one bounded gated Music Audible Output Live Bundle prompt/readiness slice:
-   author or harden the fail-closed private prompt/readiness artifact and, where
-   useful, add static/self-test coverage for the capture-span/decode-window
-   preflight that must stop before any live arm when coverage is not proven.
-3. Keep the slice scoped to prompt/readiness and non-live tooling: do not launch
-   BEA, attach CDB, capture audio, mutate copied executables, mutate proof
-   archives, delete proof/Ghidra material, change AppCore patch behavior, enable
-   Host/Join or online actions, package a release, or mutate installed game
-   files/original `BEA.exe`.
-4. If prompt/readiness work needs private local paths or raw proof material, keep
-   them in ignored local artifacts with placeholders in tracked docs/state.
-5. A separate later local-maintenance baton can address Ghidra/proof family
-   taxonomy, proof-archive manifest/hash comparison, branch cleanup, or scratch
-   cleanup. That work must start with dry-run evidence, explicit scope, and
-   deletion authority.
+   `BinaryPatchesPage`, existing `PatchBench*Text` helpers, and focused WinUI
+   tests before editing.
+2. Implement a bounded `PatchBenchLaunchPresetText` presentation-only helper for
+   launch/control preset automation names and status-message text.
+3. Keep all launch option tuples, selection state, matching logic, launch
+   argument construction, safe-copy launch planning, service calls, process
+   control, patch/catalog semantics, Host/Join/online claims, and runtime proof
+   boundaries in `BinaryPatchesPage`.
+4. Defer safe-copy receipt/source-summary helper extraction until a primitive
+   projection design is accepted.
+5. Treat Ghidra/proof taxonomy, proof manifest/hash comparison, branch cleanup,
+   and physical scratch cleanup as separate local-maintenance work requiring
+   explicit authority, dry-run evidence, and no-delete/default-retain review.
 
 ## Stop Conditions
 
