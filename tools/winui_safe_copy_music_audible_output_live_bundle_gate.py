@@ -24,6 +24,14 @@ REPLACEMENT = "BEA_02(Master).ogg"
 LEVEL_ID = 100
 PRIVATE_PROOF_ROOT_HINT = "<private-proof-root>"
 READ_ONLY_SOURCE_ROOT_HINT = "<read-only-source-game-root>"
+ARM_PHRASE = "RUN PRIVATE MUSIC AUDIBLE LIVE BUNDLE"
+PRIVATE_PREARM_SCHEMA = "winui-safe-copy-music-audible-output-live-bundle-prearm-readiness.v1"
+REQUIRED_RESOURCE_LEASES: tuple[str, ...] = (
+    "bea-runtime",
+    "cdb-debugger",
+    "audio-loopback",
+    "proof-root",
+)
 RUNTIME_PROOF_FALSE_KEYS = (
     "runtimeAudibleOutputProof",
     "allMusicCuesProof",
@@ -137,6 +145,11 @@ def require(condition: bool, message: str) -> None:
         raise MusicAudibleOutputLiveBundleGateError(message)
 
 
+def require_exact_keys(value: dict[str, Any], expected: set[str], *, label: str) -> None:
+    actual = set(value)
+    require(actual == expected, f"{label} keys changed: expected {sorted(expected)}, got {sorted(actual)}")
+
+
 def relative_hint(root: Path, *parts: str) -> str:
     return str(Path("<private-proof-root>", *parts))
 
@@ -191,11 +204,61 @@ def promotion_command_template() -> list[str]:
     return command
 
 
+def pre_arm_readiness() -> dict[str, Any]:
+    return {
+        "status": "prearm-readiness-not-proven",
+        "runtimeProofAuthority": {
+            "explicitRuntimeProofAuthorityRequired": True,
+            "requiredArmPhrase": ARM_PHRASE,
+            "privatePrearmReadinessSchema": PRIVATE_PREARM_SCHEMA,
+            "authorityMustBeRecordedBeforeLiveExecution": True,
+            "noAuthorityFromThisGate": True,
+        },
+        "requiredResourceLeases": list(REQUIRED_RESOURCE_LEASES),
+        "processPreflight": {
+            "noPreexistingBeaOrCdbRequired": True,
+            "passiveProcessCensusOnly": True,
+            "unknownProcessOwnerBlocksLiveAttempt": True,
+        },
+        "proofRootPreflight": {
+            "emptyIsolatedPrivateProofRootRequired": True,
+            "mustNotOverlapReadOnlySourceRoot": True,
+            "localIgnoredRawProofOnly": True,
+        },
+        "sourceMutationPolicy": {
+            "copiedProfileAndAppOwnedArtifactRootsOnly": True,
+            "installedGameAndOriginalBeaReadOnly": True,
+        },
+        "captureSpanDecodeWindowPreflight": {
+            "captureStartedUtcStopwatchAlignmentRequired": True,
+            "wavWallClockDurationMustCoverCdbDecodeWindow": True,
+            "helperAuthoredWallClockPaddingMetadataRequired": True,
+            "capturedBytesPlusSilencePaddingBytesMustEqualBytesRecorded": True,
+            "canonicalWavHeaderAndDataFrameConsistencyRequired": True,
+            "outOfRangeDecodeWindowRejectedByMaterializer": True,
+        },
+        "rawProofPolicy": {
+            "rawProofArtifactsStayLocalIgnored": True,
+            "privatePathsMustNotBePublished": True,
+        },
+        "readinessFailurePolicy": {
+            "proofBooleanForcedFalse": "runtimeAudibleOutputProof",
+            "forbiddenFailureClaimText": [
+                "audible-output proof",
+                "runtime audio proof",
+                "player-ready online",
+                "release ready",
+            ],
+            "readinessFailureCannotClaimAudibleOutput": True,
+        },
+    }
+
+
 def build_gate(*, artifact_root: Path, source_root: Path) -> dict[str, Any]:
     gaps = unresolved_producer_gaps()
     return {
         "schemaVersion": SCHEMA,
-        "status": "producer-coverage-complete-ready-for-private-live-attempt-after-preflight",
+        "status": "producer-coverage-complete-prearm-readiness-required",
         "presetId": PRESET_ID,
         "target": TARGET,
         "replacement": REPLACEMENT,
@@ -207,8 +270,11 @@ def build_gate(*, artifact_root: Path, source_root: Path) -> dict[str, Any]:
             "WAV paths, and copied-game paths must stay in private raw artifacts only."
         ),
         "runtimeAudibleOutputProof": False,
-        "readyToRunLiveAttempt": True,
+        "producerCoverageComplete": True,
+        "readyToRunLiveAttempt": False,
+        "liveArmAllowed": False,
         "proofBooleans": proof_booleans(),
+        "preArmReadiness": pre_arm_readiness(),
         "requiredRawInputs": required_raw_inputs(),
         "unresolvedProducerGaps": gaps,
         "producerGapBlocksLiveAttempt": bool(gaps),
@@ -223,12 +289,41 @@ def build_gate(*, artifact_root: Path, source_root: Path) -> dict[str, Any]:
 
 def validate_gate(payload: dict[str, Any]) -> dict[str, Any]:
     require(payload.get("schemaVersion") == SCHEMA, "gate schema mismatch")
+    require_exact_keys(
+        payload,
+        {
+            "schemaVersion",
+            "status",
+            "presetId",
+            "target",
+            "replacement",
+            "levelId",
+            "artifactRootHint",
+            "sourceRootHint",
+            "privatePathPolicy",
+            "runtimeAudibleOutputProof",
+            "producerCoverageComplete",
+            "readyToRunLiveAttempt",
+            "liveArmAllowed",
+            "proofBooleans",
+            "preArmReadiness",
+            "requiredRawInputs",
+            "unresolvedProducerGaps",
+            "producerGapBlocksLiveAttempt",
+            "preflightCommands",
+            "promotionCommandTemplate",
+            "claimBoundary",
+        },
+        label="gate",
+    )
     require(payload.get("presetId") == PRESET_ID, "preset id changed")
     require(payload.get("target") == TARGET, "target changed")
     require(payload.get("replacement") == REPLACEMENT, "replacement changed")
     require(payload.get("levelId") == LEVEL_ID, "level id changed")
     require(payload.get("runtimeAudibleOutputProof") is False, "gate must not claim runtime audible output proof")
-    require(payload.get("readyToRunLiveAttempt") is True, "gate should mark the private live attempt ready after producer coverage is complete")
+    require(payload.get("producerCoverageComplete") is True, "producer coverage must remain complete")
+    require(payload.get("readyToRunLiveAttempt") is False, "gate must not mark a live attempt ready before runtime pre-arm proof")
+    require(payload.get("liveArmAllowed") is False, "gate output must not authorize a live arm")
     for forbidden in ("artifactRoot", "sourceRoot", "preferredPrivateRuntimeProofRoot"):
         require(forbidden not in payload, f"gate must not emit private path field: {forbidden}")
     require(payload.get("artifactRootHint") == relative_hint(ROOT, "music-audible-live"), "artifact root hint changed")
@@ -238,6 +333,52 @@ def validate_gate(payload: dict[str, Any]) -> dict[str, Any]:
     require(isinstance(proof_flags, dict), "proofBooleans missing")
     for key in RUNTIME_PROOF_FALSE_KEYS:
         require(proof_flags.get(key) is False, f"proof boolean must remain false: {key}")
+
+    prearm = payload.get("preArmReadiness")
+    require(isinstance(prearm, dict), "preArmReadiness missing")
+    require(prearm.get("status") == "prearm-readiness-not-proven", "pre-arm readiness must remain unproven in the public gate")
+    authority = prearm.get("runtimeProofAuthority")
+    require(isinstance(authority, dict), "runtimeProofAuthority missing")
+    require(authority.get("explicitRuntimeProofAuthorityRequired") is True, "runtime-proof authority requirement missing")
+    require(authority.get("requiredArmPhrase") == ARM_PHRASE, "runtime-proof arm phrase changed")
+    require(authority.get("privatePrearmReadinessSchema") == PRIVATE_PREARM_SCHEMA, "private pre-arm readiness schema changed")
+    require(authority.get("noAuthorityFromThisGate") is True, "gate must not grant runtime-proof authority")
+    require(prearm.get("requiredResourceLeases") == list(REQUIRED_RESOURCE_LEASES), "required resource leases changed")
+    process = prearm.get("processPreflight")
+    require(isinstance(process, dict), "processPreflight missing")
+    require(process.get("noPreexistingBeaOrCdbRequired") is True, "BEA/CDB process preflight missing")
+    require(process.get("passiveProcessCensusOnly") is True, "process preflight must remain passive")
+    proof_root = prearm.get("proofRootPreflight")
+    require(isinstance(proof_root, dict), "proofRootPreflight missing")
+    require(proof_root.get("emptyIsolatedPrivateProofRootRequired") is True, "empty private proof-root preflight missing")
+    require(proof_root.get("mustNotOverlapReadOnlySourceRoot") is True, "source/proof-root non-overlap preflight missing")
+    require(proof_root.get("localIgnoredRawProofOnly") is True, "raw proof local/ignored policy missing")
+    mutation = prearm.get("sourceMutationPolicy")
+    require(isinstance(mutation, dict), "sourceMutationPolicy missing")
+    require(mutation.get("copiedProfileAndAppOwnedArtifactRootsOnly") is True, "copied/app-owned roots policy missing")
+    require(mutation.get("installedGameAndOriginalBeaReadOnly") is True, "installed game/original BEA read-only policy missing")
+    capture_span = prearm.get("captureSpanDecodeWindowPreflight")
+    require(isinstance(capture_span, dict), "captureSpanDecodeWindowPreflight missing")
+    for key in (
+        "captureStartedUtcStopwatchAlignmentRequired",
+        "wavWallClockDurationMustCoverCdbDecodeWindow",
+        "helperAuthoredWallClockPaddingMetadataRequired",
+        "capturedBytesPlusSilencePaddingBytesMustEqualBytesRecorded",
+        "canonicalWavHeaderAndDataFrameConsistencyRequired",
+        "outOfRangeDecodeWindowRejectedByMaterializer",
+    ):
+        require(capture_span.get(key) is True, f"capture-span preflight missing: {key}")
+    raw_policy = prearm.get("rawProofPolicy")
+    require(isinstance(raw_policy, dict), "rawProofPolicy missing")
+    require(raw_policy.get("rawProofArtifactsStayLocalIgnored") is True, "raw proof local/ignored policy missing")
+    require(raw_policy.get("privatePathsMustNotBePublished") is True, "private path publication guard missing")
+    failure_policy = prearm.get("readinessFailurePolicy")
+    require(isinstance(failure_policy, dict), "readinessFailurePolicy missing")
+    require(failure_policy.get("proofBooleanForcedFalse") == "runtimeAudibleOutputProof", "readiness failure must force runtimeAudibleOutputProof false")
+    forbidden_failure_text = failure_policy.get("forbiddenFailureClaimText")
+    require(isinstance(forbidden_failure_text, list), "forbiddenFailureClaimText missing")
+    require("audible-output proof" in forbidden_failure_text, "readiness failure must forbid audible-output proof wording")
+    require(failure_policy.get("readinessFailureCannotClaimAudibleOutput") is True, "readiness failure non-claim policy missing")
 
     raw_inputs = payload.get("requiredRawInputs")
     require(isinstance(raw_inputs, list), "requiredRawInputs missing")
@@ -275,7 +416,9 @@ def validate_gate(payload: dict[str, Any]) -> dict[str, Any]:
         "schema": SCHEMA,
         "requiredRawInputCount": len(raw_inputs),
         "unresolvedProducerGapCount": len(gaps),
-        "readyToRunLiveAttempt": True,
+        "producerCoverageComplete": True,
+        "readyToRunLiveAttempt": False,
+        "liveArmAllowed": False,
         "runtimeAudibleOutputProof": False,
     }
 

@@ -7,6 +7,7 @@ import datetime as dt
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -18,6 +19,55 @@ import winui_safe_copy_music_timestamped_cdb_log_producer as timestamp_producer
 
 
 EXPECTED_AUDIO_CAPTURE_STARTUP_MARGIN_MS = 15000
+
+
+def prearm_readiness_payload() -> dict[str, object]:
+    return {
+        "schemaVersion": "winui-safe-copy-music-audible-output-live-bundle-prearm-readiness.v1",
+        "status": "accepted-private-prearm-readiness",
+        "runtimeAudibleOutputProof": False,
+        "liveArmAllowedByPrearm": True,
+        "runtimeProofAuthority": {
+            "explicitRuntimeProofAuthorityRecorded": True,
+            "requiredArmPhrase": "RUN PRIVATE MUSIC AUDIBLE LIVE BUNDLE",
+        },
+        "resourceLeases": {
+            "bea-runtime": True,
+            "cdb-debugger": True,
+            "audio-loopback": True,
+            "proof-root": True,
+        },
+        "processPreflight": {
+            "noPreexistingBeaOrCdb": True,
+            "passiveProcessCensusOnly": True,
+        },
+        "proofRootPreflight": {
+            "emptyIsolatedPrivateProofRoot": True,
+            "mustNotOverlapReadOnlySourceRoot": True,
+            "localIgnoredRawProofOnly": True,
+        },
+        "sourceMutationPolicy": {
+            "copiedProfileAndAppOwnedArtifactRootsOnly": True,
+            "installedGameAndOriginalBeaReadOnly": True,
+        },
+        "captureSpanDecodeWindowPreflight": {
+            "captureStartedUtcStopwatchAlignmentVerified": True,
+            "wavWallClockDurationCoversCdbDecodeWindow": True,
+            "helperAuthoredWallClockPaddingMetadataPresent": True,
+            "capturedBytesPlusSilencePaddingBytesEqualsBytesRecorded": True,
+            "canonicalWavHeaderAndDataFrameConsistencyVerified": True,
+            "outOfRangeDecodeWindowRejectedBeforeProofClaim": True,
+        },
+        "rawProofPolicy": {
+            "rawProofArtifactsStayLocalIgnored": True,
+            "privatePathsNotForTrackedDocs": True,
+        },
+        "readinessFailurePolicy": {
+            "runtimeAudibleOutputProofForcedFalseOnFailure": True,
+            "readinessFailureCannotClaimAudibleOutput": True,
+        },
+        "claimBoundary": "Private pre-arm readiness only; not runtime audible-output proof.",
+    }
 
 
 def cdb_live_payload(
@@ -586,6 +636,56 @@ class MusicAudibleOutputLiveBundleExecutorTests(unittest.TestCase):
                     )
 
             self.assertEqual(process_checks, ["checked", "checked"])
+
+    def test_private_prearm_readiness_fixture_allows_static_validation_only(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            prearm = Path(temp_dir) / "prearm.json"
+            prearm.write_text(json.dumps(prearm_readiness_payload()), encoding="utf-8")
+
+            summary = live_bundle.validate_private_prearm_readiness(prearm)
+
+            self.assertEqual("accepted-private-prearm-readiness", summary["status"])
+            self.assertFalse(summary["runtimeAudibleOutputProof"])
+            self.assertTrue(summary["liveArmAllowedByPrearm"])
+
+    def test_private_prearm_readiness_rejects_missing_lease(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            payload = prearm_readiness_payload()
+            payload["resourceLeases"]["audio-loopback"] = False
+            prearm = Path(temp_dir) / "prearm.json"
+            prearm.write_text(json.dumps(payload), encoding="utf-8")
+
+            with self.assertRaises(live_bundle.LiveBundleError):
+                live_bundle.validate_private_prearm_readiness(prearm)
+
+    def test_main_requires_private_prearm_readiness_before_live_run(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            source_root = root / "source"
+            source_root.mkdir()
+            artifact_root = root / "bundle"
+            argv = [
+                "run_winui_safe_copy_music_audible_output_live_bundle.py",
+                "--artifact-root",
+                str(artifact_root),
+                "--source-root",
+                str(source_root),
+                "--audio-duration-ms",
+                "60000",
+                "--live-timeout-seconds",
+                "5",
+                "--arm-live-bundle",
+                "RUN PRIVATE MUSIC AUDIBLE LIVE BUNDLE",
+            ]
+
+            with (
+                mock.patch.object(sys, "argv", argv),
+                mock.patch.object(live_bundle, "run_live_bundle") as run_mock,
+            ):
+                exit_code = live_bundle.main()
+
+            self.assertEqual(2, exit_code)
+            run_mock.assert_not_called()
 
     def test_self_test_passes_without_live_processes(self) -> None:
         live_bundle.self_test()

@@ -39,6 +39,14 @@ CDB_ARM = "ATTACH CDB TO SAFE COPY BEA"
 AUDIO_ARM = "CAPTURE LOOPBACK AUDIO"
 CORRELATION_ARM = "BUILD CAPTURE SOURCE CORRELATION"
 EXTERNAL_LIVE_ROOT_ARM = "ALLOW EXTERNAL LIVE SMOKE ARTIFACT ROOT"
+PREARM_SCHEMA = "winui-safe-copy-music-audible-output-live-bundle-prearm-readiness.v1"
+PREARM_ACCEPTED_STATUS = "accepted-private-prearm-readiness"
+REQUIRED_RESOURCE_LEASES = (
+    "bea-runtime",
+    "cdb-debugger",
+    "audio-loopback",
+    "proof-root",
+)
 LEVEL_ID = 100
 PRESET_ID = "use-bea02-for-bea04"
 TARGET = "BEA_04(Master).ogg"
@@ -863,9 +871,119 @@ def nested_dict(value: Any, *, label: str) -> dict[str, Any]:
     return value
 
 
+def require_exact_keys(value: dict[str, Any], expected: set[str], *, label: str) -> None:
+    actual = set(value)
+    require(actual == expected, f"{label} keys changed: expected {sorted(expected)}, got {sorted(actual)}")
+
+
+def require_true(value: dict[str, Any], key: str, *, label: str) -> None:
+    require(value.get(key) is True, f"{label}.{key} must be true.")
+
+
 def positive_int(value: Any, *, label: str) -> int:
     require(isinstance(value, int) and value > 0, f"{label} must be a positive integer.")
     return value
+
+
+def validate_private_prearm_readiness(path: Path) -> dict[str, Any]:
+    require(path.is_file(), "Provide --prearm-readiness-json for a private accepted pre-arm readiness artifact.")
+    payload = read_json(path)
+    require_exact_keys(
+        payload,
+        {
+            "schemaVersion",
+            "status",
+            "runtimeAudibleOutputProof",
+            "liveArmAllowedByPrearm",
+            "runtimeProofAuthority",
+            "resourceLeases",
+            "processPreflight",
+            "proofRootPreflight",
+            "sourceMutationPolicy",
+            "captureSpanDecodeWindowPreflight",
+            "rawProofPolicy",
+            "readinessFailurePolicy",
+            "claimBoundary",
+        },
+        label="prearm",
+    )
+    require(payload.get("schemaVersion") == PREARM_SCHEMA, "Private pre-arm readiness schema changed.")
+    require(payload.get("status") == PREARM_ACCEPTED_STATUS, "Private pre-arm readiness status is not accepted.")
+    require(payload.get("runtimeAudibleOutputProof") is False, "Private pre-arm readiness must not claim runtime audible output.")
+    require(payload.get("liveArmAllowedByPrearm") is True, "Private pre-arm readiness must explicitly allow the live arm.")
+
+    authority = nested_dict(payload.get("runtimeProofAuthority"), label="runtimeProofAuthority")
+    require_exact_keys(authority, {"explicitRuntimeProofAuthorityRecorded", "requiredArmPhrase"}, label="runtimeProofAuthority")
+    require_true(authority, "explicitRuntimeProofAuthorityRecorded", label="runtimeProofAuthority")
+    require(authority.get("requiredArmPhrase") == ARM_PHRASE, "Private pre-arm readiness arm phrase mismatch.")
+
+    leases = nested_dict(payload.get("resourceLeases"), label="resourceLeases")
+    require_exact_keys(leases, set(REQUIRED_RESOURCE_LEASES), label="resourceLeases")
+    for lease in REQUIRED_RESOURCE_LEASES:
+        require_true(leases, lease, label="resourceLeases")
+
+    process = nested_dict(payload.get("processPreflight"), label="processPreflight")
+    require_exact_keys(process, {"noPreexistingBeaOrCdb", "passiveProcessCensusOnly"}, label="processPreflight")
+    require_true(process, "noPreexistingBeaOrCdb", label="processPreflight")
+    require_true(process, "passiveProcessCensusOnly", label="processPreflight")
+
+    proof_root = nested_dict(payload.get("proofRootPreflight"), label="proofRootPreflight")
+    require_exact_keys(
+        proof_root,
+        {"emptyIsolatedPrivateProofRoot", "mustNotOverlapReadOnlySourceRoot", "localIgnoredRawProofOnly"},
+        label="proofRootPreflight",
+    )
+    for key in proof_root:
+        require_true(proof_root, key, label="proofRootPreflight")
+
+    mutation = nested_dict(payload.get("sourceMutationPolicy"), label="sourceMutationPolicy")
+    require_exact_keys(
+        mutation,
+        {"copiedProfileAndAppOwnedArtifactRootsOnly", "installedGameAndOriginalBeaReadOnly"},
+        label="sourceMutationPolicy",
+    )
+    for key in mutation:
+        require_true(mutation, key, label="sourceMutationPolicy")
+
+    capture_span = nested_dict(payload.get("captureSpanDecodeWindowPreflight"), label="captureSpanDecodeWindowPreflight")
+    require_exact_keys(
+        capture_span,
+        {
+            "captureStartedUtcStopwatchAlignmentVerified",
+            "wavWallClockDurationCoversCdbDecodeWindow",
+            "helperAuthoredWallClockPaddingMetadataPresent",
+            "capturedBytesPlusSilencePaddingBytesEqualsBytesRecorded",
+            "canonicalWavHeaderAndDataFrameConsistencyVerified",
+            "outOfRangeDecodeWindowRejectedBeforeProofClaim",
+        },
+        label="captureSpanDecodeWindowPreflight",
+    )
+    for key in capture_span:
+        require_true(capture_span, key, label="captureSpanDecodeWindowPreflight")
+
+    raw_policy = nested_dict(payload.get("rawProofPolicy"), label="rawProofPolicy")
+    require_exact_keys(raw_policy, {"rawProofArtifactsStayLocalIgnored", "privatePathsNotForTrackedDocs"}, label="rawProofPolicy")
+    for key in raw_policy:
+        require_true(raw_policy, key, label="rawProofPolicy")
+
+    failure_policy = nested_dict(payload.get("readinessFailurePolicy"), label="readinessFailurePolicy")
+    require_exact_keys(
+        failure_policy,
+        {"runtimeAudibleOutputProofForcedFalseOnFailure", "readinessFailureCannotClaimAudibleOutput"},
+        label="readinessFailurePolicy",
+    )
+    for key in failure_policy:
+        require_true(failure_policy, key, label="readinessFailurePolicy")
+
+    claim_boundary = str(payload.get("claimBoundary", "")).lower()
+    require("not runtime audible-output proof" in claim_boundary, "Private pre-arm readiness claim boundary must preserve the non-claim.")
+    return {
+        "schemaVersion": PREARM_SCHEMA,
+        "status": PREARM_ACCEPTED_STATUS,
+        "runtimeAudibleOutputProof": False,
+        "liveArmAllowedByPrearm": True,
+        "resourceLeaseCount": len(REQUIRED_RESOURCE_LEASES),
+    }
 
 
 def validate_live_stage_cdb_cleanup(stage: StagePaths) -> None:
@@ -1066,6 +1184,52 @@ def self_test() -> None:
             allowed_output_root=root / "out",
             role="cleanBaseline",
         )
+        prearm = root / "prearm.json"
+        write_json(
+            prearm,
+            {
+                "schemaVersion": PREARM_SCHEMA,
+                "status": PREARM_ACCEPTED_STATUS,
+                "runtimeAudibleOutputProof": False,
+                "liveArmAllowedByPrearm": True,
+                "runtimeProofAuthority": {
+                    "explicitRuntimeProofAuthorityRecorded": True,
+                    "requiredArmPhrase": ARM_PHRASE,
+                },
+                "resourceLeases": {lease: True for lease in REQUIRED_RESOURCE_LEASES},
+                "processPreflight": {
+                    "noPreexistingBeaOrCdb": True,
+                    "passiveProcessCensusOnly": True,
+                },
+                "proofRootPreflight": {
+                    "emptyIsolatedPrivateProofRoot": True,
+                    "mustNotOverlapReadOnlySourceRoot": True,
+                    "localIgnoredRawProofOnly": True,
+                },
+                "sourceMutationPolicy": {
+                    "copiedProfileAndAppOwnedArtifactRootsOnly": True,
+                    "installedGameAndOriginalBeaReadOnly": True,
+                },
+                "captureSpanDecodeWindowPreflight": {
+                    "captureStartedUtcStopwatchAlignmentVerified": True,
+                    "wavWallClockDurationCoversCdbDecodeWindow": True,
+                    "helperAuthoredWallClockPaddingMetadataPresent": True,
+                    "capturedBytesPlusSilencePaddingBytesEqualsBytesRecorded": True,
+                    "canonicalWavHeaderAndDataFrameConsistencyVerified": True,
+                    "outOfRangeDecodeWindowRejectedBeforeProofClaim": True,
+                },
+                "rawProofPolicy": {
+                    "rawProofArtifactsStayLocalIgnored": True,
+                    "privatePathsNotForTrackedDocs": True,
+                },
+                "readinessFailurePolicy": {
+                    "runtimeAudibleOutputProofForcedFalseOnFailure": True,
+                    "readinessFailureCannotClaimAudibleOutput": True,
+                },
+                "claimBoundary": "Private pre-arm readiness only; not runtime audible-output proof.",
+            },
+        )
+        validate_private_prearm_readiness(prearm)
         final_check.self_test()
 
 
@@ -1085,6 +1249,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--artifact-root", type=Path, default=None)
     parser.add_argument("--source-root", type=Path, default=SOURCE_ROOT_DEFAULT)
+    parser.add_argument("--prearm-readiness-json", type=Path, default=None)
     parser.add_argument("--audio-duration-ms", type=int, default=DEFAULT_LIVE_AUDIO_DURATION_MS)
     parser.add_argument("--live-timeout-seconds", type=int, default=24)
     parser.add_argument("--arm-live-bundle", default="")
@@ -1104,6 +1269,11 @@ def main() -> int:
         if artifact_root is None:
             stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d-%H%M%S")
             artifact_root = PRIVATE_ROOT_DEFAULT / f"music-audible-live-{stamp}"
+        require(
+            args.prearm_readiness_json is not None,
+            "Provide --prearm-readiness-json for a private accepted pre-arm readiness artifact.",
+        )
+        validate_private_prearm_readiness(args.prearm_readiness_json)
         receipt = run_live_bundle(
             layout=build_layout(artifact_root),
             source_root=args.source_root.resolve(),

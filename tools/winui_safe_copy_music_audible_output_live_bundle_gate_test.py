@@ -14,7 +14,7 @@ import winui_safe_copy_music_audible_output_live_bundle_gate as gate
 
 
 class MusicAudibleOutputLiveBundleGateTests(unittest.TestCase):
-    def test_gate_records_required_inputs_and_marks_live_attempt_ready_after_producer_coverage(self) -> None:
+    def test_gate_records_required_inputs_and_blocks_live_arm_until_runtime_preflight(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             payload = gate.build_gate(
                 artifact_root=Path(temp_dir) / "music-audible-live",
@@ -25,7 +25,38 @@ class MusicAudibleOutputLiveBundleGateTests(unittest.TestCase):
 
         self.assertEqual("winui-safe-copy-music-audible-output-live-bundle-gate.v1", payload["schemaVersion"])
         self.assertFalse(payload["runtimeAudibleOutputProof"])
-        self.assertTrue(payload["readyToRunLiveAttempt"])
+        self.assertTrue(payload["producerCoverageComplete"])
+        self.assertFalse(payload["readyToRunLiveAttempt"])
+        self.assertFalse(payload["liveArmAllowed"])
+        self.assertEqual("prearm-readiness-not-proven", payload["preArmReadiness"]["status"])
+        self.assertEqual(
+            "RUN PRIVATE MUSIC AUDIBLE LIVE BUNDLE",
+            payload["preArmReadiness"]["runtimeProofAuthority"]["requiredArmPhrase"],
+        )
+        self.assertEqual(
+            "winui-safe-copy-music-audible-output-live-bundle-prearm-readiness.v1",
+            payload["preArmReadiness"]["runtimeProofAuthority"]["privatePrearmReadinessSchema"],
+        )
+        self.assertTrue(payload["preArmReadiness"]["runtimeProofAuthority"]["explicitRuntimeProofAuthorityRequired"])
+        self.assertEqual(
+            ["bea-runtime", "cdb-debugger", "audio-loopback", "proof-root"],
+            payload["preArmReadiness"]["requiredResourceLeases"],
+        )
+        self.assertTrue(payload["preArmReadiness"]["processPreflight"]["noPreexistingBeaOrCdbRequired"])
+        self.assertTrue(payload["preArmReadiness"]["processPreflight"]["passiveProcessCensusOnly"])
+        self.assertTrue(payload["preArmReadiness"]["proofRootPreflight"]["emptyIsolatedPrivateProofRootRequired"])
+        self.assertTrue(payload["preArmReadiness"]["proofRootPreflight"]["localIgnoredRawProofOnly"])
+        self.assertTrue(payload["preArmReadiness"]["sourceMutationPolicy"]["installedGameAndOriginalBeaReadOnly"])
+        capture_span = payload["preArmReadiness"]["captureSpanDecodeWindowPreflight"]
+        self.assertTrue(capture_span["captureStartedUtcStopwatchAlignmentRequired"])
+        self.assertTrue(capture_span["wavWallClockDurationMustCoverCdbDecodeWindow"])
+        self.assertTrue(capture_span["helperAuthoredWallClockPaddingMetadataRequired"])
+        self.assertTrue(capture_span["capturedBytesPlusSilencePaddingBytesMustEqualBytesRecorded"])
+        self.assertTrue(capture_span["canonicalWavHeaderAndDataFrameConsistencyRequired"])
+        self.assertTrue(capture_span["outOfRangeDecodeWindowRejectedByMaterializer"])
+        failure_policy = payload["preArmReadiness"]["readinessFailurePolicy"]
+        self.assertEqual("runtimeAudibleOutputProof", failure_policy["proofBooleanForcedFalse"])
+        self.assertIn("audible-output proof", failure_policy["forbiddenFailureClaimText"])
         self.assertEqual(13, summary["requiredRawInputCount"])
         self.assertEqual(0, summary["unresolvedProducerGapCount"])
         self.assertFalse(payload["producerGapBlocksLiveAttempt"])
@@ -90,6 +121,21 @@ class MusicAudibleOutputLiveBundleGateTests(unittest.TestCase):
         blocked["producerGapBlocksLiveAttempt"] = True
         with self.assertRaises(gate.MusicAudibleOutputLiveBundleGateError):
             gate.validate_gate(blocked)
+
+        falsely_armed = copy.deepcopy(payload)
+        falsely_armed["liveArmAllowed"] = True
+        with self.assertRaises(gate.MusicAudibleOutputLiveBundleGateError):
+            gate.validate_gate(falsely_armed)
+
+        extra_claim = copy.deepcopy(payload)
+        extra_claim["runtimeAudioProof"] = True
+        with self.assertRaises(gate.MusicAudibleOutputLiveBundleGateError):
+            gate.validate_gate(extra_claim)
+
+        missing_lease = copy.deepcopy(payload)
+        missing_lease["preArmReadiness"]["requiredResourceLeases"].remove("proof-root")
+        with self.assertRaises(gate.MusicAudibleOutputLiveBundleGateError):
+            gate.validate_gate(missing_lease)
 
     def test_cli_self_test_passes(self) -> None:
         result = subprocess.run(
