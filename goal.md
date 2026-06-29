@@ -6,11 +6,12 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-The music live-bundle readiness integration wave is integrated on local `main`.
-The accepted worker changes harden the public music live-bundle gate as
-fail-closed/pre-arm tooling and require a private accepted pre-arm readiness JSON
-before the armed executor can delegate to the live runner. The adversarial
-status-lock correction is included.
+The PatchBench launch-preset presentation and consult-contract integration wave
+is integrated in the current branch pending final acceptance. The accepted
+worker changes extract launch/control preset automation names and status-message
+text into `PatchBenchLaunchPresetText` as a presentation-only helper, and update
+the report contract so mandated consult evidence is explicit and public-safe.
+The prior music live-bundle fail-closed/pre-arm truth remains unchanged.
 
 Before any later write, re-read live git truth and target files. Do not treat
 local campaign reports, local worktree paths, raw manifests, or unmerged worker
@@ -30,6 +31,10 @@ commits as durable public evidence.
   through `--prearm-readiness-json` before it can call the live bundle runner.
   That artifact is a private pre-arm authority/lease/readiness contract, not a
   public proof artifact or an audible-output proof by itself.
+- Read-only music follow-up adds no runtime proof. Future prompts must treat
+  producer coverage as schema/producer coverage only, pre-arm permission as
+  permission to attempt only, public gate root arguments as non-proof, and
+  executor receipts/stdout as private artifacts.
 - The top-level music live-bundle gate `status` is value-locked after
   adversarial review; proof-like status text is rejected by the gate validator.
 - No runtime music proof exists from this wave. Do not claim audible output,
@@ -40,25 +45,39 @@ commits as durable public evidence.
   outputs had no clear skipped Cursor lane, but report-shape and
   sanitized-context evidence gaps mean there is no blanket campaign-wide
   compliance claim.
-- Ghidra/proof storage taxonomy remains read-only/no-delete. Current accepted
-  cleanup is 0 GiB; future storage work is manifest/hash/provenance review only
-  until separately authorized.
-- The next compact PatchBench presentation seam is `PatchBenchLaunchPresetText`
-  as a pure presentation helper. Defer receipt/source-summary helpers until a
-  primitive projection design is accepted.
+- Ghidra/proof storage taxonomy remains read-only/no-delete. Current
+  high-confidence deletion candidate count is 0, current authorized reclaimed
+  storage is 0 GiB, and no storage deletion or mutation was performed. Future
+  storage work is manifest/hash/provenance review only until separately
+  authorized.
+- `PatchBenchLaunchPresetText` is now the compact PatchBench presentation seam
+  for launch/control preset automation names and status-message text. Defer
+  receipt/source-summary helpers until a primitive projection design is
+  accepted.
+- `coordination/REPORT_CONTRACT.md` now requires explicit `Consult Evidence`
+  entries for mandated Codex specialist, Codex adversarial, `cursor-agent
+  composer-2.5-fast`, and `cursor-agent gemini-3.1-pro` lanes, including
+  accepted/rejected findings, unresolved dissent, and `CONSULT_UNAVAILABLE`
+  reasons without raw prompt, raw log, local path, active campaign ID, secret,
+  private proof artifact, or full local report leakage into tracked docs.
 - `PatchBenchSafeCopyOutcomeText` owns the safe-copy music replacement status
   messages used for default, not-ready, progress, staged, restore, and failure
   states. The helper remains presentation-only and accepts primitive string/bool
   state for the moved status copy.
+- `PatchBenchLaunchPresetText` owns the launch/control preset automation names
+  and status-message text. The helper remains presentation-only and returns
+  primitive strings plus `PatchBenchSelectedChoiceState`.
 - `BinaryPatchesPage` still owns service calls, orchestration, UI control
-  assignment, operation-log text, and `AppStatusService` status updates. The
-  music status-line assignments now route through `PatchBenchSafeCopyOutcomeText`
+  assignment, operation-log text, `AppStatusService` status updates, launch
+  option tuples, selected-state mutation, matching logic, launch argument
+  construction, safe-copy launch planning, and process control. The music and
+  launch-preset status-line assignments now route through presentation helpers
   without changing AppCore behavior, patch catalogs, byte data, launch behavior,
   safe-copy manifests/signatures, or process control.
-- `PatchBenchSafeCopyOutcomeTextTests` asserts exact reflected helper output for
-  the moved music replacement status states. `WinUiProductLaneTests` guards page
-  routing, helper boundaries, and the absence of the previous inline status
-  literals.
+- `PatchBenchSafeCopyOutcomeTextTests` and `PatchBenchLaunchPresetTextTests`
+  assert exact reflected helper output for the moved presentation states.
+  `WinUiProductLaneTests` guards page routing, helper boundaries, and the
+  absence of the previous inline status literals.
 - The previous PatchBench online-readiness routing guard remains in force:
   `BinaryPatchesPage` collects service state before calling
   `PatchBenchOnlineReadinessText.Build` and `BuildCompanionSession`, maps text
@@ -118,6 +137,10 @@ commits as durable public evidence.
   `OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyOutcomeText.cs`
 - Safe-copy music status helper-output tests:
   `OnslaughtCareerEditor.UiTests/PatchBenchSafeCopyOutcomeTextTests.cs`
+- Launch/control preset presentation helper:
+  `OnslaughtCareerEditor.WinUI/Helpers/PatchBenchLaunchPresetText.cs`
+- Launch/control preset helper-output tests:
+  `OnslaughtCareerEditor.UiTests/PatchBenchLaunchPresetTextTests.cs`
 - PatchBench page routing/static guard tests:
   `OnslaughtCareerEditor.UiTests/WinUiProductLaneTests.cs`
 - PatchBench page orchestration:
@@ -151,14 +174,16 @@ commits as durable public evidence.
 1. Verify live `HEAD`, `origin/main`, and remote `refs/heads/main`, then inspect
    `BinaryPatchesPage`, existing `PatchBench*Text` helpers, and focused WinUI
    tests before editing.
-2. Implement a bounded `PatchBenchLaunchPresetText` presentation-only helper for
-   launch/control preset automation names and status-message text.
+2. If future launch-preset work touches this surface, optionally harden
+   page-routing or literal-reintroduction tests around
+   `PatchBenchLaunchPresetText`.
 3. Keep all launch option tuples, selection state, matching logic, launch
    argument construction, safe-copy launch planning, service calls, process
    control, patch/catalog semantics, Host/Join/online claims, and runtime proof
    boundaries in `BinaryPatchesPage`.
-4. Defer safe-copy receipt/source-summary helper extraction until a primitive
-   projection design is accepted.
+4. Design a primitive projection contract before safe-copy receipt/source-summary
+   helper extraction; do not move behavior or AppCore receipt construction into
+   a presentation helper.
 5. Treat Ghidra/proof taxonomy, proof manifest/hash comparison, branch cleanup,
    and physical scratch cleanup as separate local-maintenance work requiring
    explicit authority, dry-run evidence, and no-delete/default-retain review.

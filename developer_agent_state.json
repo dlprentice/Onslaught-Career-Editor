@@ -1,10 +1,10 @@
 {
   "lastUpdated": "2026-06-29",
   "branch": "main",
-  "currentFocus": "Music live-bundle readiness integration is on local main; the next developer slice is PatchBenchLaunchPresetText as a presentation-only helper.",
+  "currentFocus": "PatchBenchLaunchPresetText presentation helper and consult evidence contract are integrated; the next developer slice is optional PatchBench page-routing test hardening or primitive projection design before receipt/source-summary extraction.",
   "currentTruth": {
     "integratedWave": {
-      "summary": "Canonical integration accepts the music live-bundle readiness hardening, including the adversarial status-lock correction, while preserving prior PatchBench presentation and storage no-delete truths.",
+      "summary": "Canonical integration accepts the music live-bundle readiness hardening, PatchBenchLaunchPresetText presentation extraction, and consult evidence reporting contract while preserving storage no-delete truths.",
       "changedFiles": [
         "release/readiness/winui_music_live_bundle_prearm_readiness_2026-06-29.md",
         "tools/run_winui_safe_copy_music_audible_output_live_bundle.py",
@@ -12,16 +12,22 @@
         "tools/winui_safe_copy_music_audible_output_live_bundle_gate.py",
         "tools/winui_safe_copy_music_audible_output_live_bundle_gate_test.py",
         "OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyOutcomeText.cs",
+        "OnslaughtCareerEditor.WinUI/Helpers/PatchBenchLaunchPresetText.cs",
         "OnslaughtCareerEditor.WinUI/Pages/BinaryPatchesPage.xaml.cs",
         "OnslaughtCareerEditor.UiTests/PatchBenchSafeCopyOutcomeTextTests.cs",
+        "OnslaughtCareerEditor.UiTests/PatchBenchLaunchPresetTextTests.cs",
         "OnslaughtCareerEditor.UiTests/WinUiProductLaneTests.cs",
+        "coordination/REPORT_CONTRACT.md",
         "goal.md",
         "developer_agent_state.json",
         "documentation_agent_state.json",
         "re_orchestrator_state.json"
       ],
       "patchBenchMusicStatus": "BinaryPatchesPage music replacement status-line assignments now route through PatchBenchSafeCopyOutcomeText for default, not-ready, progress, staged, restore, and failure states. The helper remains presentation-only and accepts primitive string/bool state.",
-      "tests": "PatchBenchSafeCopyOutcomeTextTests asserts exact reflected helper output for the moved music status strings. WinUiProductLaneTests guards page-to-helper routing, helper behavior boundaries, and absence of prior inline status literals.",
+      "patchBenchLaunchPresetText": "BinaryPatchesPage launch/control preset automation names and status-message text now route through PatchBenchLaunchPresetText. The helper remains presentation-only; launch option tuples, selected-state mutation, launch argument construction, safe-copy launch planning, service calls, process control, and Host/Join boundaries remain in BinaryPatchesPage.",
+      "tests": "PatchBenchSafeCopyOutcomeTextTests and PatchBenchLaunchPresetTextTests assert exact reflected helper output for moved presentation strings. WinUiProductLaneTests guards page-to-helper routing, helper behavior boundaries, and absence of prior inline status literals.",
+      "consultReportContract": "coordination/REPORT_CONTRACT.md now requires explicit Consult Evidence entries for mandated Codex specialist, Codex adversarial, cursor-agent composer-2.5-fast, and cursor-agent gemini-3.1-pro lanes, including accepted/rejected findings and CONSULT_UNAVAILABLE reasons without raw prompt/log/local-path leakage.",
+      "adversarialReviewDisposition": "PatchBench and storage/consult adversarial reviews accepted integration with P3-only notes: optional future launch-preset page-routing/static guard hardening, retained-pool GiB overclaim avoidance, future deletion manifest rigor, music pre-arm wording clarity, and future consult-model maintenance.",
       "storagePolicy": "No tracked storage policy edit was needed; existing LOCAL_LAB_OVERLAY and coordination policy already cover campaign scratch disposal, scratch-volume non-durability, and manifest/classification requirements for Ghidra/proof pruning."
     },
     "musicLiveBundleReadiness": {
@@ -29,6 +35,7 @@
       "gateTruth": "Producer coverage can be complete, but the public gate reports readyToRunLiveAttempt=false, liveArmAllowed=false, runtimeAudibleOutputProof=false, and preArmReadiness.status=prearm-readiness-not-proven.",
       "executorTruth": "The armed executor requires a private accepted winui-safe-copy-music-audible-output-live-bundle-prearm-readiness.v1 JSON through --prearm-readiness-json before live delegation. That private artifact can authorize a live attempt only after real pre-arm authority and readiness checks; it is not runtime audible-output proof by itself.",
       "statusLock": "Top-level gate status is value-locked to producer-coverage-complete-prearm-readiness-required after adversarial correction.",
+      "followupScope": "Read-only follow-up adds no runtime proof. Future prompts must treat producerCoverageComplete as schema/producer coverage only, pre-arm permission as permission to attempt only, public gate root arguments as non-proof, and executor receipts/stdout as private artifacts.",
       "nonClaims": "No BEA launch, CDB attach, audio capture, copied executable mutation, installed-game/original-BEA mutation, runtime audible-output proof, gameplay behavior, runtime causality, online readiness, release readiness, rebuild parity, or no-noticeable-difference proof exists from this wave."
     },
     "storageCloseout": {
@@ -44,6 +51,7 @@
       "ghidraBackups": "Ghidra backup retention deleted 0 files and retained all reviewed Ghidra backup/live/unknown rows; the reviewed backup pool was about 142.295 GiB and remained blocked by hard-retain markers, ambiguous family taxonomy, missing supersession proof, and absent deletion approval.",
       "proofArchives": "Proof archive retention deleted 0 files and retained all reviewed proof-related rows; the reviewed proof-unknown pool was about 0.565 GiB and remained blocked by partial metadata-only inventory and missing stale/duplicate/supersession proof.",
       "gitMetadata": "Stale local Git administrative worktree metadata cleanup pruned 23 stale metadata records after dry-run evidence. It deleted no branches, remote refs, physical directories, tracked source, final reports, proof/Ghidra/game/release material, hard payloads, or secrets.",
+      "currentWaveDeletionClassification": "Current high-confidence deletion candidates: 0 rows. Current authorized reclaimed storage: 0 GiB. No storage deletion or mutation was performed in this wave; retained Ghidra/proof GiB values are approximate review-pool metrics only, not unique reclaimable storage.",
       "futureLocalMaintenance": "Ghidra/proof family taxonomy, proof manifest/hash comparison, branch cleanup, and physical scratch cleanup remain separate local maintenance tasks requiring explicit scope, dry-run evidence, and deletion authority.",
       "currentAcceptedCleanupGiB": 0
     },
@@ -57,12 +65,12 @@
     },
     "hardPayloadBoundary": "Hard payloads, screenshots/frame dumps, raw proof logs, copied executables, full Ghidra databases, secrets, .env* files, build output, package output, local proof paths, raw manifests, and local runtime caches stay out of git and release ZIPs."
   },
-  "consultCompliance": "Scoped only: inspected recent June 29 non-trivial worker outputs had no clear skipped Cursor lane, but report-shape and sanitized-context evidence gaps prevent any blanket campaign-wide compliance claim.",
+  "consultCompliance": "Scoped only: inspected recent June 29 non-trivial worker outputs had no clear skipped Cursor lane; REPORT_CONTRACT now requires explicit per-lane Consult Evidence for mandated Codex and Cursor consults, but this remains a reporting-contract improvement rather than a blanket campaign-wide compliance claim.",
   "activeSlice": {
-    "name": "patchbench-launch-preset-text",
-    "status": "ready",
-    "goal": "Extract launch/control preset automation names and status-message text into PatchBenchLaunchPresetText as a pure presentation helper.",
-    "claimBoundary": "presentation-only WinUI helper; keep launch option tuples, selection state, matching logic, launch arguments, safe-copy launch planning, service calls, process control, patch/catalog semantics, Host/Join/online claims, and runtime proof boundaries in BinaryPatchesPage; defer receipt/source-summary helpers until primitive projection design is accepted"
+    "name": "patchbench-launch-preset-text-and-consult-contract",
+    "status": "integrated-awaiting-final-acceptance",
+    "goal": "PatchBenchLaunchPresetText extracts launch/control preset automation names and status-message text as a pure presentation helper; consult report evidence requirements are now explicit in REPORT_CONTRACT.",
+    "claimBoundary": "presentation-only WinUI helper and coordination documentation only; launch option tuples, selection state, matching logic, launch arguments, safe-copy launch planning, service calls, process control, patch/catalog semantics, Host/Join/online claims, storage deletion, and runtime proof boundaries remain unchanged"
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -72,15 +80,16 @@
     "proofArchiveFilesDeletedThisWave": 0
   },
   "validation": {
-    "currentIntegration": "Integration validation uses focused music live-bundle py_compile and npm gates, JSON parse for edited state files, passive process censuses, git diff --check, and docs/repo/payload safety gates.",
-    "nextSlice": "Use focused WinUI helper-output/static tests for PatchBenchLaunchPresetText. Do not run live BEA/CDB/audio proof unless a later prompt explicitly grants runtime-proof authority, leases, arm phrase, private proof root, and stop conditions."
+    "currentIntegration": "Integration validation uses focused PatchBench WinUI/AppCore-safe gates, JSON parse for edited state files, git diff --check, docs/repo safety gates, hard-payload safety, and public allowlist checks.",
+    "nextSlice": "Use focused WinUI helper-output/static tests for any optional PatchBenchLaunchPresetText page-routing hardening. Do not run live BEA/CDB/audio proof unless a later prompt explicitly grants runtime-proof authority, leases, arm phrase, private proof root, and stop conditions."
   },
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
     "Before the next write, verify live HEAD, origin/main, and remote refs/heads/main.",
-    "Implement PatchBenchLaunchPresetText as a behavior-free presentation helper and focused tests.",
-    "Keep receipt/source-summary helper work deferred until primitive projection design is accepted.",
+    "Optionally harden PatchBenchLaunchPresetText page-routing/literal reintroduction tests if future work touches the launch preset surface.",
+    "Design a primitive projection contract before any receipt/source-summary helper extraction; keep behavior and AppCore receipts in the page/AppCore owners until then.",
+    "Keep push withheld until coordinator final acceptance authorizes it.",
     "Keep package scripts, release publication, Host/Join, online readiness, runtime audio proof, gameplay, visual, rebuild, no-noticeable-difference, Ghidra, hard-payload, installed-game, original-BEA, proof archive deletion, and raw private-path claims bounded to accepted evidence.",
     "Treat Ghidra/proof taxonomy, proof manifest/hash comparison, branch cleanup, and physical scratch cleanup as separate local maintenance work requiring explicit authority."
   ]
