@@ -5,6 +5,12 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
     internal static class PatchBenchSafeCopyOutcomeText
     {
         public const string HostJoinReceiptBoundary = "No Host/Join or online multiplayer";
+        private const string MusicPlaybackBoundary = "in-game playback is still experimental and unproven.";
+
+        public static string BuildDefaultMusicReplacementStatus()
+        {
+            return $"No music swap staged. Staging only; {MusicPlaybackBoundary}";
+        }
 
         public static string BuildCanceledSummary()
         {
@@ -89,8 +95,79 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public static string BuildMusicReplacementStatus(PatchBenchSafeCopyMusicSwapTextState? musicSwap)
         {
             return musicSwap is null
-                ? "Safe copy ready for music replacement staging. Staging only; in-game playback is still experimental and unproven."
+                ? $"Safe copy ready for music replacement staging. Staging only; {MusicPlaybackBoundary}"
                 : $"Safe-copy track swap staged for {musicSwap.TargetMusicFileName}. Restore before staging another swap. In-game playback is still experimental and unproven.";
+        }
+
+        public static string BuildMusicSwapInputsMissingStatus()
+        {
+            return "Prepare a safe game copy and select two safe-copy tracks before staging a swap.";
+        }
+
+        public static string BuildMusicPresetMissingSafeCopyStatus()
+        {
+            return "Prepare a safe game copy before staging a music preset.";
+        }
+
+        public static string BuildMusicPresetFailedStatus()
+        {
+            return "Safe-copy music preset staging failed.";
+        }
+
+        public static string BuildMusicStagingBlockedStatus()
+        {
+            return "Stop the managed safe copy before staging copied music bytes.";
+        }
+
+        public static string BuildMusicStagingMissingSafeCopyStatus()
+        {
+            return "Prepare a safe game copy before staging copied music bytes.";
+        }
+
+        public static string BuildMusicStagingProgressStatus(bool copiedTrackSwap)
+        {
+            return copiedTrackSwap
+                ? "Staging safe-copy music swap..."
+                : "Staging copied music bytes...";
+        }
+
+        public static string BuildMusicStagedStatus(string targetMusicFileName, bool copiedTrackSwap)
+        {
+            return copiedTrackSwap
+                ? $"Safe-copy track swap staged for {targetMusicFileName}. Staging only; {MusicPlaybackBoundary}"
+                : $"Copied music bytes staged for {targetMusicFileName}. Staging only; {MusicPlaybackBoundary}";
+        }
+
+        public static string BuildMusicStagingFailedStatus()
+        {
+            return "Copied music byte staging failed.";
+        }
+
+        public static string BuildMusicRestoreBlockedStatus()
+        {
+            return "Stop the managed safe copy before restoring music backup.";
+        }
+
+        public static string BuildMusicRestoreMissingSafeCopyStatus()
+        {
+            return "Prepare a safe game copy before restoring music backup.";
+        }
+
+        public static string BuildMusicRestoreProgressStatus()
+        {
+            return "Restoring safe-copy music backup...";
+        }
+
+        public static string BuildMusicRestoreResultStatus(string targetMusicFileName, bool success)
+        {
+            return success
+                ? $"Music backup restored for {targetMusicFileName}. Staging only; {MusicPlaybackBoundary}"
+                : "Safe-copy music backup was not restored.";
+        }
+
+        public static string BuildMusicRestoreFailedStatus()
+        {
+            return "Safe-copy music backup restore failed.";
         }
 
         private static string BuildSavegamesSummary(bool copiedSavegames)

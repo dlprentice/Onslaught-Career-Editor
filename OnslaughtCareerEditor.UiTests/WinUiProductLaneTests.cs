@@ -1438,6 +1438,9 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("GameProfileMusicReplacementResult? createMusicSwapResult = result.MusicSwapResult"));
         Assert.That(code, Does.Contain("BuildSafeCopyMusicSwapTextState(createMusicSwapResult)"));
         Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicReplacementStatus(outcomeText.MusicSwap)"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildDefaultMusicReplacementStatus()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicStagedStatus("));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicRestoreResultStatus("));
         Assert.That(code, Does.Contain("createMusicSwapPreset="));
         Assert.That(code, Does.Contain("GetSelectedCreateMusicSwapPresetId"));
         Assert.That(code, Does.Contain("MatchSelectableSafeCopyProfileId"));
@@ -1486,7 +1489,11 @@ public class WinUiProductLaneTests
         Assert.That(safeCopyOutcomeText, Does.Contain("Music swap: no copied-track swap staged during safe-copy creation."));
         Assert.That(safeCopyOutcomeText, Does.Contain("Play will run BEA.exe from safe copy folder:"));
         Assert.That(safeCopyOutcomeText, Does.Contain("Only the copied BEA.exe was patched; no game process was started."));
-        Assert.That(safeCopyOutcomeText, Does.Contain("Staging only; in-game playback is still experimental and unproven."));
+        Assert.That(safeCopyOutcomeText, Does.Contain("MusicPlaybackBoundary = \"in-game playback is still experimental and unproven.\""));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Staging only; {MusicPlaybackBoundary}"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("public static string BuildDefaultMusicReplacementStatus()"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("public static string BuildMusicStagedStatus(string targetMusicFileName, bool copiedTrackSwap)"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("public static string BuildMusicRestoreResultStatus(string targetMusicFileName, bool success)"));
         Assert.That(safeCopyOutcomeText, Does.Not.Contain("GameProfile"));
         Assert.That(safeCopyOutcomeText, Does.Not.Contain("BuildSelectedLaunchArguments"));
         Assert.That(safeCopyOutcomeText, Does.Not.Contain("BuildSafeCopyContentSignature"));
@@ -1621,7 +1628,7 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("Stop can close or force-close the copied game after a timeout."));
         Assert.That(code, Does.Not.Contain("windowed rendering parity"));
         Assert.That(code, Does.Not.Contain("Private save folders are not copied by this preflight."));
-        Assert.That(code, Does.Contain("Staging only; in-game playback is still experimental and unproven."));
+        Assert.That(safeCopyOutcomeText, Does.Contain("MusicPlaybackBoundary = \"in-game playback is still experimental and unproven.\""));
         Assert.That(code, Does.Contain("The original BEA.exe stays unchanged"));
         Assert.That(code, Does.Not.Contain("PatchBenchCopiedProfileLaunchPlan.Text.Trim"));
         Assert.That(code, Does.Not.Contain("PatchBenchCopiedProfileLaunchPlan.Text.Split"));
@@ -1670,6 +1677,20 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildSourceChangedSummary("));
         Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildSourceChangedReceipt("));
         Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildSourceChangedLaunchStatus("));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildDefaultMusicReplacementStatus()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicSwapInputsMissingStatus()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicPresetMissingSafeCopyStatus()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicPresetFailedStatus()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicStagingBlockedStatus()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicStagingMissingSafeCopyStatus()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicStagingProgressStatus(copiedTrackSwap)"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicStagedStatus(result.TargetMusicFileName, copiedTrackSwap)"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicStagingFailedStatus()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicRestoreBlockedStatus()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicRestoreMissingSafeCopyStatus()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicRestoreProgressStatus()"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicRestoreResultStatus(result.TargetMusicFileName, result.Success)"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.BuildMusicRestoreFailedStatus()"));
 
         Assert.That(safeCopyOutcomeText, Does.Contain("public const string HostJoinReceiptBoundary = \"No Host/Join or online multiplayer\";"));
         Assert.That(safeCopyOutcomeText, Does.Contain("Safe copy creation canceled."));
@@ -1678,9 +1699,18 @@ public class WinUiProductLaneTests
         Assert.That(safeCopyOutcomeText, Does.Contain("Safe copy preparation failed before a receipt could be written. The installed game was not changed."));
         Assert.That(safeCopyOutcomeText, Does.Contain("Tracked safe-copy process restored from the app launch record. Create a new safe copy to write a fresh receipt for the current selections."));
         Assert.That(safeCopyOutcomeText, Does.Contain("Source changed while a safe copy process is still tracked. Stop it and create a new safe copy to write a fresh receipt."));
+        Assert.That(safeCopyOutcomeText, Does.Contain("No music swap staged. Staging only;"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Safe-copy track swap staged for {targetMusicFileName}. Staging only;"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Copied music bytes staged for {targetMusicFileName}. Staging only;"));
+        Assert.That(safeCopyOutcomeText, Does.Contain("Music backup restored for {targetMusicFileName}. Staging only;"));
 
         Assert.That(code, Does.Not.Contain("\"Safe copy creation canceled.\""));
         Assert.That(code, Does.Not.Contain("\"Safe copy preparation failed before a receipt could be written. The installed game was not changed.\""));
+        Assert.That(code, Does.Not.Contain("private const string DefaultMusicReplacementStatus"));
+        Assert.That(code, Does.Not.Contain("\"No music swap staged. Staging only; in-game playback is still experimental and unproven.\""));
+        Assert.That(code, Does.Not.Contain("\"Safe-copy track swap staged for {result.TargetMusicFileName}. Staging only; in-game playback is still experimental and unproven.\""));
+        Assert.That(code, Does.Not.Contain("\"Copied music bytes staged for {result.TargetMusicFileName}. Staging only; in-game playback is still experimental and unproven.\""));
+        Assert.That(code, Does.Not.Contain("\"Music backup restored for {result.TargetMusicFileName}. Staging only; in-game playback is still experimental and unproven.\""));
         Assert.That(code, Does.Not.Contain("const string hostJoinBoundary = \"No Host/Join or online multiplayer\";"));
     }
 

@@ -102,7 +102,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private bool _isRestoringMusicReplacement;
         private bool _isApplyingLaunchPreset;
         private LaunchPresetChoice _selectedLaunchPresetChoice = LaunchPresetChoice.None;
-        private const string DefaultMusicReplacementStatus = "No music swap staged. Staging only; in-game playback is still experimental and unproven.";
 
         public BinaryPatchesPage()
         {
@@ -1595,7 +1594,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 PatchBenchCopiedProfileReceipt.Text = PatchBenchSafeCopyOutcomeText.BuildFailedReceipt();
                 PatchBenchCopiedProfileLaunchPlan.Text = string.Empty;
                 PatchBenchCopiedProfileLaunchStatus.Text = PatchBenchLaunchText.BuildBoundary("No safe copy launch attempted.");
-                PatchBenchMusicReplacementStatus.Text = DefaultMusicReplacementStatus;
+                PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildDefaultMusicReplacementStatus();
                 OperationLogTextBox.Text = $"Could not prepare safe game copy: {ex.Message}";
                 AppStatusService.SetStatus("Windowed & Mods: safe copy preparation failed");
             }
@@ -1747,7 +1746,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 PatchBenchMusicReplacementTrackComboBox.SelectedItem is not string replacementFileName ||
                 string.IsNullOrWhiteSpace(_lastCopiedProfileRoot))
             {
-                PatchBenchMusicReplacementStatus.Text = "Prepare a safe game copy and select two safe-copy tracks before staging a swap.";
+                PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicSwapInputsMissingStatus();
                 AppStatusService.SetStatus("Windowed & Mods: safe-copy music swap not ready");
                 UpdateControlState();
                 return;
@@ -1776,7 +1775,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (string.IsNullOrWhiteSpace(_lastCopiedProfileRoot))
             {
-                PatchBenchMusicReplacementStatus.Text = "Prepare a safe game copy before staging a music preset.";
+                PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicPresetMissingSafeCopyStatus();
                 AppStatusService.SetStatus("Windowed & Mods: music preset not ready");
                 UpdateControlState();
                 return;
@@ -1797,7 +1796,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                PatchBenchMusicReplacementStatus.Text = "Safe-copy music preset staging failed.";
+                PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicPresetFailedStatus();
                 OperationLogTextBox.Text = $"Could not stage safe-copy music preset: {ex.Message}";
                 AppStatusService.SetStatus("Windowed & Mods: music preset staging failed");
                 UpdateControlState();
@@ -1808,7 +1807,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (_managedCopiedProfileProcess is not null)
             {
-                PatchBenchMusicReplacementStatus.Text = "Stop the managed safe copy before staging copied music bytes.";
+                PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicStagingBlockedStatus();
                 AppStatusService.SetStatus("Windowed & Mods: stop safe copy before music staging");
                 UpdateControlState();
                 return;
@@ -1816,7 +1815,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             if (!TryBuildCopiedProfileLaunchPlan(_lastCopiedProfileRoot, out _, out string? validationError))
             {
-                PatchBenchMusicReplacementStatus.Text = "Prepare a safe game copy before staging copied music bytes.";
+                PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicStagingMissingSafeCopyStatus();
                 OperationLogTextBox.Text = validationError ?? "Prepare a safe game copy before staging copied music bytes.";
                 AppStatusService.SetStatus("Windowed & Mods: music staging not ready");
                 UpdateControlState();
@@ -1827,9 +1826,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchStageCopiedTrackSwapButton.IsEnabled = false;
             PatchBenchStageMusicReplacementButton.IsEnabled = false;
             PatchBenchRestoreMusicReplacementButton.IsEnabled = false;
-            PatchBenchMusicReplacementStatus.Text = copiedTrackSwap
-                ? "Staging safe-copy music swap..."
-                : "Staging copied music bytes...";
+            PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicStagingProgressStatus(copiedTrackSwap);
             OperationLogTextBox.Text = copiedTrackSwap
                 ? "Copying one safe-copy OGG track over another safe-copy OGG track. The original install stays unchanged."
                 : "Staging one replacement OGG into the safe copy. The original install stays unchanged.";
@@ -1847,9 +1844,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
                 _lastMusicReplacementResult = result;
                 PatchBenchMusicReplacementStatus.Text =
-                    copiedTrackSwap
-                        ? $"Safe-copy track swap staged for {result.TargetMusicFileName}. Staging only; in-game playback is still experimental and unproven."
-                        : $"Copied music bytes staged for {result.TargetMusicFileName}. Staging only; in-game playback is still experimental and unproven.";
+                    PatchBenchSafeCopyOutcomeText.BuildMusicStagedStatus(result.TargetMusicFileName, copiedTrackSwap);
                 OperationLogTextBox.Text =
                     (copiedTrackSwap ? "Safe-copy track swap staged.\n" : "Copied music bytes staged.\n") +
                     $"Target: {result.TargetRelativePath}\n" +
@@ -1861,7 +1856,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                PatchBenchMusicReplacementStatus.Text = "Copied music byte staging failed.";
+                PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicStagingFailedStatus();
                 OperationLogTextBox.Text = $"Could not stage copied music bytes: {ex.Message}";
                 AppStatusService.SetStatus("Windowed & Mods: copied music byte staging failed");
             }
@@ -1876,7 +1871,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (_managedCopiedProfileProcess is not null)
             {
-                PatchBenchMusicReplacementStatus.Text = "Stop the managed safe copy before restoring music backup.";
+                PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicRestoreBlockedStatus();
                 AppStatusService.SetStatus("Windowed & Mods: stop safe copy before music restore");
                 UpdateControlState();
                 return;
@@ -1885,7 +1880,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (string.IsNullOrWhiteSpace(_lastCopiedProfileRoot) ||
                 !HasMusicReplacementManifest(_lastCopiedProfileRoot))
             {
-                PatchBenchMusicReplacementStatus.Text = "Prepare a safe game copy before restoring music backup.";
+                PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicRestoreMissingSafeCopyStatus();
                 OperationLogTextBox.Text = "Prepare a safe game copy with staged copied music bytes before restoring music backup.";
                 AppStatusService.SetStatus("Windowed & Mods: music restore not ready");
                 UpdateControlState();
@@ -1896,7 +1891,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchStageCopiedTrackSwapButton.IsEnabled = false;
             PatchBenchStageMusicReplacementButton.IsEnabled = false;
             PatchBenchRestoreMusicReplacementButton.IsEnabled = false;
-            PatchBenchMusicReplacementStatus.Text = "Restoring safe-copy music backup...";
+            PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicRestoreProgressStatus();
             OperationLogTextBox.Text = "Restoring music from the safe copy backup. The original install stays unchanged.";
             AppStatusService.SetStatus("Windowed & Mods: restoring music backup");
 
@@ -1919,15 +1914,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 }
 
                 PatchBenchMusicReplacementStatus.Text =
-                    result.Success
-                        ? $"Music backup restored for {result.TargetMusicFileName}. Staging only; in-game playback is still experimental and unproven."
-                        : "Safe-copy music backup was not restored.";
+                    PatchBenchSafeCopyOutcomeText.BuildMusicRestoreResultStatus(result.TargetMusicFileName, result.Success);
                 OperationLogTextBox.Text = result.Message;
                 AppStatusService.SetStatus(result.Success ? "Windowed & Mods: music backup restored" : "Windowed & Mods: music restore failed");
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                PatchBenchMusicReplacementStatus.Text = "Safe-copy music backup restore failed.";
+                PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicRestoreFailedStatus();
                 OperationLogTextBox.Text = $"Could not restore safe-copy music backup: {ex.Message}";
                 AppStatusService.SetStatus("Windowed & Mods: music backup restore failed");
             }
@@ -2335,7 +2328,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchCopiedProfileReceipt.Text = PatchBenchSafeCopyOutcomeText.BuildSourceChangedReceipt(hasTrackedSafeCopyLaunch);
             PatchBenchCopiedProfileLaunchPlan.Text = string.Empty;
             PatchBenchCopiedProfileLaunchStatus.Text = PatchBenchSafeCopyOutcomeText.BuildSourceChangedLaunchStatus(hasTrackedSafeCopyLaunch);
-            PatchBenchMusicReplacementStatus.Text = DefaultMusicReplacementStatus;
+            PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildDefaultMusicReplacementStatus();
             ClearMusicTrackChoices();
         }
 
