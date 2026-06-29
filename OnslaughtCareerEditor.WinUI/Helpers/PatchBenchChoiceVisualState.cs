@@ -26,6 +26,13 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                     isSelected));
         }
 
+        public static PatchBenchChoiceButtonBinding Bind(
+            Button button,
+            PatchBenchSelectedChoiceState state)
+        {
+            return new PatchBenchChoiceButtonBinding(button, state);
+        }
+
         public static void Apply(
             IEnumerable<PatchBenchChoiceButtonBinding> bindings,
             Style selectedStyle,

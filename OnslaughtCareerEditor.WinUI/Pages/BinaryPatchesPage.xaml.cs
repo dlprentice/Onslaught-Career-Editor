@@ -48,10 +48,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         };
         private static readonly AdminLevelPreset[] s_adminLevelPresets =
         {
-            new("100", "admin level preset campaign training world 100 selected"),
-            new("800", "admin level preset final campaign world 800 selected"),
-            new("850", "admin level preset local multiplayer world 850 selected"),
-            new("851", "admin level preset local multiplayer world 851 selected"),
+            new("100", PatchBenchLaunchPresetText.BuildAdminLevelPresetTrainingWorld100StatusMessage()),
+            new("800", PatchBenchLaunchPresetText.BuildAdminLevelPresetFinalWorld800StatusMessage()),
+            new("850", PatchBenchLaunchPresetText.BuildAdminLevelPresetLocalMultiplayerWorld850StatusMessage()),
+            new("851", PatchBenchLaunchPresetText.BuildAdminLevelPresetLocalMultiplayerWorld851StatusMessage()),
         };
         private sealed record AdminLevelPreset(string LevelId, string StatusMessage);
         private enum LaunchPresetChoice
@@ -402,13 +402,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchChoiceVisualState.ApplyPatchBenchChoiceStyles(
                 new[]
                 {
-                    PatchBenchChoiceVisualState.Bind(PatchBenchQuietCaptureLaunchPresetButton, "Set quiet capture launch options for safe copy", "Selected: quiet capture launch preset", _selectedLaunchPresetChoice == LaunchPresetChoice.QuietCapture),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchHighDetailLaunchPresetButton, "Set high detail launch options for safe copy", "Selected: high detail launch preset", _selectedLaunchPresetChoice == LaunchPresetChoice.HighDetail),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchControlBaselinePresetButton, "Set control diagnostics baseline config 1", "Selected: control diagnostics baseline config 1", _selectedLaunchPresetChoice == LaunchPresetChoice.ControlBaseline),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchControlSharpenedPresetButton, "Set control diagnostics sensitivity test config 1", "Selected: control diagnostics sensitivity test config 1", _selectedLaunchPresetChoice == LaunchPresetChoice.ControlSharpened),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig2PresetButton, "Set control diagnostics swapped sticks config 2", "Selected: control diagnostics swapped config 2", _selectedLaunchPresetChoice == LaunchPresetChoice.ControlConfig2),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig3PresetButton, "Set control diagnostics alternate morph jets config 3", "Selected: control diagnostics alternate morph jets config 3", _selectedLaunchPresetChoice == LaunchPresetChoice.ControlConfig3),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig4PresetButton, "Set control diagnostics swapped alternate config 4", "Selected: control diagnostics swapped alternate config 4", _selectedLaunchPresetChoice == LaunchPresetChoice.ControlConfig4),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchQuietCaptureLaunchPresetButton, PatchBenchLaunchPresetText.BuildQuietCaptureChoiceState(_selectedLaunchPresetChoice == LaunchPresetChoice.QuietCapture)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchHighDetailLaunchPresetButton, PatchBenchLaunchPresetText.BuildHighDetailChoiceState(_selectedLaunchPresetChoice == LaunchPresetChoice.HighDetail)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchControlBaselinePresetButton, PatchBenchLaunchPresetText.BuildControlBaselineChoiceState(_selectedLaunchPresetChoice == LaunchPresetChoice.ControlBaseline)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchControlSharpenedPresetButton, PatchBenchLaunchPresetText.BuildControlSharpenedChoiceState(_selectedLaunchPresetChoice == LaunchPresetChoice.ControlSharpened)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig2PresetButton, PatchBenchLaunchPresetText.BuildControlConfig2ChoiceState(_selectedLaunchPresetChoice == LaunchPresetChoice.ControlConfig2)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig3PresetButton, PatchBenchLaunchPresetText.BuildControlConfig3ChoiceState(_selectedLaunchPresetChoice == LaunchPresetChoice.ControlConfig3)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig4PresetButton, PatchBenchLaunchPresetText.BuildControlConfig4ChoiceState(_selectedLaunchPresetChoice == LaunchPresetChoice.ControlConfig4)),
                 },
                 Resources);
         }
@@ -796,7 +796,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 InvertWalkerY: false,
                 InvertFlightY: false,
                 TextureRamLimitMb: string.Empty,
-                StatusMessage: "local multiplayer level 850 launch probe selected"));
+                StatusMessage: PatchBenchLaunchPresetText.BuildLocalMultiplayerProbeStatusMessage()));
             PatchBenchOnlinePrepActionStatus.Text = "Local split-screen launch preset selected. Next: create a safe copy, then play that safe copy. This is not Host/Join or online play.";
             OperationLogTextBox.Text = "Local split-screen preset selected: -skipfmv -level 850. Create safe copy next, then Play safe copy. No listener, invitation, remote input, or Host/Join control is enabled.";
         }
@@ -1012,7 +1012,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 InvertWalkerY: false,
                 InvertFlightY: false,
                 TextureRamLimitMb: string.Empty,
-                StatusMessage: "quiet capture launch preset selected"));
+                StatusMessage: PatchBenchLaunchPresetText.BuildQuietCaptureStatusMessage()));
         }
 
         private void ControlBaselinePresetButton_Click(object sender, RoutedEventArgs e)
@@ -1032,7 +1032,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 InvertWalkerY: false,
                 InvertFlightY: false,
                 TextureRamLimitMb: string.Empty,
-                StatusMessage: "control diagnostics baseline config 1 selected"));
+                StatusMessage: PatchBenchLaunchPresetText.BuildControlBaselineStatusMessage()));
         }
 
         private void ControlSharpenedPresetButton_Click(object sender, RoutedEventArgs e)
@@ -1052,28 +1052,28 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 InvertWalkerY: false,
                 InvertFlightY: false,
                 TextureRamLimitMb: string.Empty,
-                StatusMessage: "control diagnostics sensitivity test config 1 selected"));
+                StatusMessage: PatchBenchLaunchPresetText.BuildControlSharpenedStatusMessage()));
         }
 
         private void ControlConfig2PresetButton_Click(object sender, RoutedEventArgs e)
         {
             ApplyLaunchPreset(LaunchPresetChoice.ControlConfig2, BuildPersistedControlDiagnosticPreset(
                 controllerConfigurationIndex: 2,
-                statusMessage: "control diagnostics swapped config 2 selected"));
+                statusMessage: PatchBenchLaunchPresetText.BuildControlConfig2StatusMessage()));
         }
 
         private void ControlConfig3PresetButton_Click(object sender, RoutedEventArgs e)
         {
             ApplyLaunchPreset(LaunchPresetChoice.ControlConfig3, BuildPersistedControlDiagnosticPreset(
                 controllerConfigurationIndex: 3,
-                statusMessage: "control diagnostics alternate config 3 selected"));
+                statusMessage: PatchBenchLaunchPresetText.BuildControlConfig3StatusMessage()));
         }
 
         private void ControlConfig4PresetButton_Click(object sender, RoutedEventArgs e)
         {
             ApplyLaunchPreset(LaunchPresetChoice.ControlConfig4, BuildPersistedControlDiagnosticPreset(
                 controllerConfigurationIndex: 4,
-                statusMessage: "control diagnostics swapped alternate config 4 selected"));
+                statusMessage: PatchBenchLaunchPresetText.BuildControlConfig4StatusMessage()));
         }
 
         private static LaunchPresetSelection BuildPersistedControlDiagnosticPreset(int controllerConfigurationIndex, string statusMessage)
@@ -1113,7 +1113,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 InvertWalkerY: false,
                 InvertFlightY: false,
                 TextureRamLimitMb: HighDetailTextureRamLimitMb,
-                StatusMessage: "high detail launch preset selected"));
+                StatusMessage: PatchBenchLaunchPresetText.BuildHighDetailStatusMessage()));
         }
 
         private void ClearLaunchOptionsButton_Click(object sender, RoutedEventArgs e)
@@ -1134,7 +1134,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 InvertWalkerY: false,
                 InvertFlightY: false,
                 TextureRamLimitMb: string.Empty,
-                StatusMessage: "launch options cleared"));
+                StatusMessage: PatchBenchLaunchPresetText.BuildClearLaunchOptionsStatusMessage()));
         }
 
         private void ApplyLaunchPreset(LaunchPresetChoice selectedChoice, LaunchPresetSelection preset)

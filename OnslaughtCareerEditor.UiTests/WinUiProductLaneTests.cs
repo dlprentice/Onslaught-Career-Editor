@@ -344,6 +344,7 @@ public class WinUiProductLaneTests
         string pageXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml");
         string code = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs");
         string itemModel = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "BinaryPatchItemModel.cs");
+        string launchPresetText = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchLaunchPresetText.cs");
         string launchTextHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchLaunchText.cs");
         string menuColorTextHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchMenuColorSelectionText.cs");
         string menuColorKindModel = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchMenuColorSelectionKind.cs");
@@ -435,13 +436,13 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("IsLaunchPresetOwnedCheckBox"));
         Assert.That(code, Does.Contain("IsLaunchPresetOwnedComboBox"));
         Assert.That(code, Does.Contain("IsLaunchPresetOwnedTextBox"));
-        Assert.That(code, Does.Contain("Selected: quiet capture launch preset"));
-        Assert.That(code, Does.Contain("Selected: high detail launch preset"));
-        Assert.That(code, Does.Contain("Selected: control diagnostics baseline config 1"));
-        Assert.That(code, Does.Contain("Selected: control diagnostics sensitivity test config 1"));
-        Assert.That(code, Does.Contain("Selected: control diagnostics swapped config 2"));
-        Assert.That(code, Does.Contain("Selected: control diagnostics alternate morph jets config 3"));
-        Assert.That(code, Does.Contain("Selected: control diagnostics swapped alternate config 4"));
+        Assert.That(launchPresetText, Does.Contain("Selected: quiet capture launch preset"));
+        Assert.That(launchPresetText, Does.Contain("Selected: high detail launch preset"));
+        Assert.That(launchPresetText, Does.Contain("Selected: control diagnostics baseline config 1"));
+        Assert.That(launchPresetText, Does.Contain("Selected: control diagnostics sensitivity test config 1"));
+        Assert.That(launchPresetText, Does.Contain("Selected: control diagnostics swapped config 2"));
+        Assert.That(launchPresetText, Does.Contain("Selected: control diagnostics alternate morph jets config 3"));
+        Assert.That(launchPresetText, Does.Contain("Selected: control diagnostics swapped alternate config 4"));
         Assert.That(pageXaml, Does.Contain("x:Name=\"PatchBenchQuietCaptureLaunchPresetButton\""));
         Assert.That(pageXaml, Does.Contain("x:Name=\"PatchBenchHighDetailLaunchPresetButton\""));
         Assert.That(pageXaml, Does.Contain("x:Name=\"PatchBenchControlBaselinePresetButton\""));
@@ -1172,6 +1173,7 @@ public class WinUiProductLaneTests
         string[] expectedHelperFiles =
         {
             "PatchBenchChoiceVisualState.cs",
+            "PatchBenchLaunchPresetText.cs",
             "PatchBenchLaunchText.cs",
             "PatchBenchMenuColorSelectionText.cs",
             "PatchBenchOnlineReadinessText.cs",
@@ -1242,6 +1244,7 @@ public class WinUiProductLaneTests
         }
 
         string selectedProfileText = helpers["PatchBenchSelectedProfileText.cs"];
+        string launchPresetText = helpers["PatchBenchLaunchPresetText.cs"];
         string onlineReadinessText = helpers["PatchBenchOnlineReadinessText.cs"];
         string onlineReadinessTextState = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchOnlineReadinessTextState.cs");
         string onlineCompanionSessionTextState = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchOnlineCompanionSessionTextState.cs");
@@ -1264,6 +1267,19 @@ public class WinUiProductLaneTests
             Assert.That(text, Does.Not.Contain("BinaryPatchPlanBuilder"), $"{name} should not depend on patch-plan constants.");
             Assert.That(text, Does.Not.Contain("SafeCopyProfilePreset"), $"{name} should not format safe-copy profile catalog data.");
         }
+
+        Assert.That(launchPresetText, Does.Contain("internal static class PatchBenchLaunchPresetText"));
+        Assert.That(launchPresetText, Does.Contain("public static PatchBenchSelectedChoiceState BuildQuietCaptureChoiceState(bool isSelected)"));
+        Assert.That(launchPresetText, Does.Contain("public static PatchBenchSelectedChoiceState BuildControlConfig4ChoiceState(bool isSelected)"));
+        Assert.That(launchPresetText, Does.Contain("public static string BuildAdminLevelPresetTrainingWorld100StatusMessage()"));
+        Assert.That(launchPresetText, Does.Contain("public static string BuildClearLaunchOptionsStatusMessage()"));
+        Assert.That(launchPresetText, Does.Contain("Set quiet capture launch options for safe copy"));
+        Assert.That(launchPresetText, Does.Contain("Selected: control diagnostics swapped alternate config 4"));
+        Assert.That(launchPresetText, Does.Contain("control diagnostics alternate config 3 selected"));
+        Assert.That(launchPresetText, Does.Not.Contain("LaunchPresetChoice"));
+        Assert.That(launchPresetText, Does.Not.Contain("LaunchPresetSelection"));
+        Assert.That(launchPresetText, Does.Not.Contain("PatchBenchQuietCaptureLaunchPresetButton"));
+        Assert.That(launchPresetText, Does.Not.Contain("PatchBenchConfigurationLaunchPresetComboBox"));
 
         Assert.That(onlineReadinessText, Does.Contain("internal static class PatchBenchOnlineReadinessText"));
         Assert.That(onlineReadinessText, Does.Contain("public static PatchBenchOnlineReadinessTextState Build("));
@@ -1289,6 +1305,7 @@ public class WinUiProductLaneTests
         string itemModel = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "BinaryPatchItemModel.cs");
         string patchGroupsHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchPatchGroups.cs");
         string launchTextHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchLaunchText.cs");
+        string launchPresetText = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchLaunchPresetText.cs");
         string safeCopyOutcomeText = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchSafeCopyOutcomeText.cs");
         string selectedProfileText = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchSelectedProfileText.cs");
         string safeCopyOutcomeTextState = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchSafeCopyOutcomeTextState.cs");
@@ -1356,14 +1373,14 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("private sealed record LaunchPresetSelection"));
         Assert.That(code, Does.Contain("ApplyLaunchPreset("));
         Assert.That(code, Does.Contain("HighDetailTextureRamLimitMb = \"256\""));
-        Assert.That(code, Does.Contain("quiet capture launch preset selected"));
-        Assert.That(code, Does.Contain("control diagnostics baseline config 1 selected"));
-        Assert.That(code, Does.Contain("control diagnostics sensitivity test config 1 selected"));
-        Assert.That(code, Does.Contain("control diagnostics swapped config 2 selected"));
-        Assert.That(code, Does.Contain("control diagnostics alternate config 3 selected"));
-        Assert.That(code, Does.Contain("control diagnostics swapped alternate config 4 selected"));
-        Assert.That(code, Does.Contain("high detail launch preset selected"));
-        Assert.That(code, Does.Contain("launch options cleared"));
+        Assert.That(launchPresetText, Does.Contain("quiet capture launch preset selected"));
+        Assert.That(launchPresetText, Does.Contain("control diagnostics baseline config 1 selected"));
+        Assert.That(launchPresetText, Does.Contain("control diagnostics sensitivity test config 1 selected"));
+        Assert.That(launchPresetText, Does.Contain("control diagnostics swapped config 2 selected"));
+        Assert.That(launchPresetText, Does.Contain("control diagnostics alternate config 3 selected"));
+        Assert.That(launchPresetText, Does.Contain("control diagnostics swapped alternate config 4 selected"));
+        Assert.That(launchPresetText, Does.Contain("high detail launch preset selected"));
+        Assert.That(launchPresetText, Does.Contain("launch options cleared"));
         Assert.That(code, Does.Contain("TextureRamLimitMb: HighDetailTextureRamLimitMb"));
         Assert.That(code, Does.Contain("PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex = Math.Clamp(preset.ControllerConfigurationIndex, 0, 4)"));
         Assert.That(code, Does.Contain("PatchBenchShowDebugTraceLaunchOption.IsChecked = false"));
@@ -1405,6 +1422,8 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Not.Contain("ReferenceEquals(sender, PatchBenchCreateMusicSwapPresetComboBox)"));
         Assert.That(launchPresetVisualState, Does.Contain("PatchBenchChoiceVisualState.Bind(PatchBenchQuietCaptureLaunchPresetButton"));
         Assert.That(launchPresetVisualState, Does.Contain("PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig4PresetButton"));
+        Assert.That(launchPresetVisualState, Does.Contain("PatchBenchLaunchPresetText.BuildQuietCaptureChoiceState("));
+        Assert.That(launchPresetVisualState, Does.Contain("PatchBenchLaunchPresetText.BuildControlConfig4ChoiceState("));
         Assert.That(launchPresetVisualState, Does.Not.Contain("BuildSelectedLaunchArguments"));
         Assert.That(launchPresetVisualState, Does.Not.Contain("BuildSafeCopyContentSignature"));
         Assert.That(launchPresetVisualState, Does.Not.Contain("RefreshCopiedProfileLaunchPlanPreview"));
@@ -1557,7 +1576,7 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("PatchBenchNoRumbleLaunchOption"));
         Assert.That(code, Does.Contain("PatchBenchLevelLaunchOption"));
         Assert.That(code, Does.Contain("PatchBenchAdminLevelPresetComboBox"));
-        Assert.That(code, Does.Contain("admin level preset final campaign world 800 selected"));
+        Assert.That(launchPresetText, Does.Contain("admin level preset final campaign world 800 selected"));
         Assert.That(code, Does.Contain("LocalMultiplayerProbeLevelId = \"850\""));
         Assert.That(code, Does.Contain("LocalMultiplayerProbeButton_Click"));
         Assert.That(code, Does.Contain("PatchBenchConfigurationLaunchPresetComboBox"));
