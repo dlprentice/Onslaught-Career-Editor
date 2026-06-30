@@ -1,66 +1,44 @@
 {
-  "lastUpdated": "2026-06-29",
-  "currentFocus": "Projection/storage/consult integration: docs-only primitive projection contract and test-only launch-preset guard hardening are integrated with public-safe non-claims.",
+  "lastUpdated": "2026-06-30",
+  "currentFocus": "Receipt-boundary integration: test-only PatchBench primitive projection static guards are integrated; next work is formatter behavior/redaction and Host/Join exactly-once tests before extraction.",
   "currentTruth": {
     "integratedWave": {
-      "summary": "Accepted tracked changes are limited to the PatchBench primitive projection roadmap contract, ROADMAP-INDEX routing metadata, and static WinUiProductLaneTests launch-preset guard hardening.",
+      "summary": "Accepted tracked changes add PatchBenchPrimitiveProjectionBoundaryTests as static UiTests guard coverage for future receipt/source presentation helper boundaries.",
       "acceptedArtifactFiles": [
-        "roadmap/ROADMAP-INDEX.md",
-        "roadmap/patchbench-primitive-projection-contract.md",
-        "OnslaughtCareerEditor.UiTests/WinUiProductLaneTests.cs"
+        "OnslaughtCareerEditor.UiTests/PatchBenchPrimitiveProjectionBoundaryTests.cs"
       ],
       "stateRefreshFiles": [
         "goal.md",
         "developer_agent_state.json",
         "documentation_agent_state.json",
-        "re_orchestrator_state.json",
-        "roadmap/ROADMAP-INDEX.md"
+        "re_orchestrator_state.json"
       ],
       "acceptedOutputs": [
-        "Projection design accepted as docs-only primitive presentation contract.",
-        "Launch-preset routing/literal reintroduction hardening accepted as test-only static coverage."
+        "Test-only static guard coverage with recursive Helpers/Models discovery, path-keyed boundary profiles, profile-scoped sensitive identifier checks, broad GameProfile* rejection for receipt/source projection, hostile static samples, output leak sentinels, and page ownership tripwires."
       ],
-      "rejectedOutputs": [
-        "Late duplicate projection recovery output rejected as duplicate evidence.",
-        "Launch-preset recovery lane superseded with no accepted output."
+      "deferredOutputs": [
+        "Formatter output/redaction behavior and Host/Join exactly-once rendering proof remain future extraction gates.",
+        "Source-summary extraction remains blocked until path/redaction projection is explicitly tested."
       ]
     },
-    "patchBenchProjection": {
-      "status": "design-only",
-      "allowedHelperInputs": "Display-safe primitives and primitive records only: strings, booleans, counts, small enums, nullable primitive fields, and sanitized display lists.",
-      "binaryPatchesPageOwns": [
-        "page projection",
-        "File/Path checks",
-        "service calls",
-        "UI assignment",
-        "operation-log text",
-        "AppStatusService updates",
-        "launch option tuples",
-        "selected-state mutation",
-        "matching logic",
-        "UI launch argument selection and launch orchestration",
-        "safe-copy launch planning handoff",
-        "process control",
-        "patch/catalog semantics",
-        "source-summary decisions",
-        "Host/Join fallback ownership",
-        "online claim boundaries",
-        "runtime-proof boundaries"
+    "patchBenchReceiptBoundary": {
+      "status": "test-only static guard integrated",
+      "scope": "PatchBench*.cs files under WinUI Helpers and Models plus BinaryPatchesPage ownership tripwires.",
+      "summary": "The repaired guard addresses prior adversarial gaps in filename routing, sensitive primitive/member leakage, record/member parsing, incomplete GameProfile* coverage, and non-recursive helper/model discovery at the static source-test layer.",
+      "limits": [
+        "No receipt/source helper extraction was performed.",
+        "No production behavior, AppCore receipt semantics, file I/O, launch planning, process control, patch/catalog semantics, Host/Join behavior, online readiness, runtime proof, UIA proof, release work, or publication changed.",
+        "Static regex/source guards are not formatter output proof, dynamic runtime string interpolation proof, or runtime behavior proof.",
+        "Cross-file primitive record/enum support is covered by synthetic samples; a future real split receipt/source extraction must wire and validate those files under the receipt/source profile before claiming extraction readiness.",
+        "BinaryPatchesPage is protected by explicit token tripwires, not by the helper/model profile scanner."
       ],
-      "appCoreOwns": [
-        "receipt truth",
-        "receipt construction",
-        "patch planning",
-        "copied-profile safety",
-        "save/options correctness",
-        "core redaction or behavior contracts"
-      ],
-      "nonClaims": "No helper extraction, behavior movement, AppCore ownership movement, file I/O movement, launch planning movement, process-control movement, Host/Join enablement, online-readiness promotion, runtime proof, release work, or broad page split."
-    },
-    "launchPresetHardening": {
-      "status": "test-only static presentation-boundary coverage",
-      "summary": "WinUiProductLaneTests now guards against reintroducing canonical launch-preset status literals into BinaryPatchesPage and against drifting expected launch-preset button-to-helper visual bindings.",
-      "nonClaims": "No launch argument construction, selected-state logic, safe-copy planning, process control, AppCore behavior, user-visible product behavior, Host/Join availability, online readiness, runtime proof, UIA proof, release readiness, or publication changed."
+      "futureExtractionGates": [
+        "Receipt formatter output layout tests for headline, label/value rows, sections, bullets, and trimming.",
+        "Hostile path, proof-id, manifest, and command-preview output sentinel tests.",
+        "Online-ready wording rejection.",
+        "Host/Join boundary rendering exactly once.",
+        "Page projection from AppCore receipt DTOs into WinUI-local primitive state before calling any helper."
+      ]
     },
     "storageTaxonomy": {
       "mode": "read-only/no-delete",
@@ -78,7 +56,7 @@
         "containment-aware independent-storage calculation",
         "dry-run evidence",
         "rollback/quarantine plan",
-        "normal and adversarial consults",
+        "workspace-safe normal and adversarial consults",
         "independent acceptance"
       ]
     },
@@ -94,6 +72,7 @@
         "audio capture",
         "live runtime proof",
         "runtime audible-output proof",
+        "all-cue proof",
         "proof archive write",
         "copied executable mutation",
         "installed-game mutation",
@@ -108,28 +87,30 @@
       ]
     },
     "consultCompliance": {
-      "status": "integration-audited for accepted reports",
-      "summary": "The early consult-evidence smoke ran before terminal worker reports existed and is superseded by integration audit of terminal reports. Per integration audit, accepted non-trivial terminal reports for this wave include the required six-lane Codex/Cursor normal and adversarial consult matrix. This is not a blanket campaign-wide compliance claim beyond inspected accepted outputs."
+      "status": "split matrix recorded; no blanket wave-level completion claim",
+      "summary": "The receipt-boundary write worker and repair lanes are six-lane complete; storage and runtime read-only reports are six-lane complete; the next-helper read-only report is fallback-compliant but matrix-incomplete; the consult-compliance smoke had tainted/unavailable lanes and is not independent sanitization verification.",
+      "sanitizationBoundary": "External context sanitization is report-attested only unless raw prompts and outputs are separately audited.",
+      "safeWording": "Use no recorded blocking dissent among completed lanes; do not treat unavailable or tainted lanes as successful."
     },
     "hardPayloadBoundary": "No game assets, copied executables, arbitrary saves/options, screenshots/frame dumps, raw CDB logs, raw proof bundles, full Ghidra databases/backups, secrets, .env files, build output, package output, local proof paths, raw manifests, thread IDs, or local campaign/worktree paths belong in tracked state or docs.",
     "installedGameOriginalBea": "read-only; no mutation performed or authorized"
   },
   "validation": {
-    "expectation": "Integration validation must include edited JSON parsing, git diff --check, stale local path/campaign marker scan over tracked goal/state/front-door docs, docs/repo/payload gates, WinUI build, focused launch-preset tests, patch-engine safety, and primary-lane disposition.",
+    "expectation": "Integration validation must include JSON parsing, git diff --check, stale local path/campaign marker scans over tracked goal/state/front-door docs, focused PatchBenchPrimitiveProjectionBoundaryTests, WinUI build, patch-engine safety, docs/repo/payload gates, and primary-lane disposition.",
     "latestIntegration": [
       "JSON parse for edited state files: PASS",
       "git diff --check: PASS",
-      "stale local path/thread/campaign marker scan over tracked promotion files: PASS",
+      "stale local path/campaign marker scan over edited promotion files: PASS",
+      "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo: PASS",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --filter PatchBenchPrimitiveProjectionBoundaryTests --nologo: PASS, 11 passed",
+      "npm run test:winui-patch-engine-safety: PASS",
       "npm run test:doc-commands: PASS",
       "npm run test:md-links: PASS",
       "npm run test:repo-hygiene: PASS",
       "npm run test:public-allowlist: PASS",
       "npm run test:hard-payload-safety: PASS",
-      "dotnet build .\\OnslaughtCareerEditor.WinUI.slnx --nologo: PASS",
-      "focused PatchBenchLaunchPresetTextTests/WinUiProductLaneTests UiTests: PASS",
-      "npm run test:winui-patch-engine-safety: PASS after restoring required patch-catalog counters in state batons"
-    ],
-    "primaryLaneNote": "npm run test:winui-primary-lane is not green: build passed and AppCore tests passed, then one native UIA smoke failed with FlaUI Mouse.SendInput Access denied; UiTests subtotal was 96 passed, 1 failed, 2 skipped. Treat as an environment validation exception for this static docs/test integration, not runtime proof."
+      "npm run test:winui-primary-lane: PASS; build passed, AppCore 1178 passed, UiTests 108 passed and 2 skipped"
+    ]
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -138,8 +119,8 @@
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "Add primitive-state/helper-boundary tests that reject AppCore receipt DTOs, raw paths, File/Directory/Path, service/process/launch/catalog tokens, proof IDs, and Host/Join action strings before any receipt display helper extraction.",
-    "Keep source-summary extraction deferred until path/redaction projection is explicitly tested.",
+    "Add formatter behavior tests for receipt layout, hostile path/proof-id/command-preview output sentinels, online-ready wording rejection, and Host/Join exactly-once rendering before receipt helper extraction.",
+    "Keep source-summary extraction deferred until path/redaction projection tests exist.",
     "Keep storage work read-only until future deletion authority and candidate-specific evidence exist.",
     "Keep runtime music proof at private pre-arm readiness only unless a future task grants explicit runtime-proof authority and leases."
   ]

@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-06-29",
-  "currentFocus": "Static RE/Ghidra state remains unchanged by the projection/storage/consult integration; storage taxonomy is read-only/no-delete and runtime proof remains private pre-arm-only.",
+  "lastUpdated": "2026-06-30",
+  "currentFocus": "Static RE/Ghidra state remains unchanged by receipt-boundary integration; PatchBench static guard tests are integrated, storage remains read-only/no-delete, and runtime proof remains private pre-arm-only.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -8,6 +8,11 @@
     "measurementFrontDoor": "reverse-engineering/binary-analysis/static-reaudit-measurement-register.md"
   },
   "publicPrimaryBoundary": "The public repo may track RE docs, wave notes, scratch text exports, function indexes, static maps, proof summaries, checkers, and state batons. Hard payloads, full Ghidra databases/backups, raw captures, copied executables, secrets, build output, package output, local proof paths, raw manifests, and local campaign/worktree paths remain out of tracked state.",
+  "patchBenchProjectionBoundary": {
+    "status": "test-only static guard integrated; no RE/runtime behavior changed",
+    "summary": "PatchBenchPrimitiveProjectionBoundaryTests now guards future receipt/source helper boundaries at the static source-test layer. This does not alter RE state, runtime proof, Ghidra storage, AppCore behavior, launch behavior, or patch/catalog semantics.",
+    "futureGate": "Formatter output/redaction and Host/Join exactly-once behavior proof remain future extraction gates before any receipt helper extraction."
+  },
   "storageRetention": {
     "mode": "read-only/no-delete",
     "highConfidenceDeletionCandidates": 0,
@@ -40,20 +45,26 @@
     "staticReClosureBoundary": "Static closure is not runtime, gameplay, visual, online, rebuild, or no-noticeable-difference proof.",
     "installedGameOriginalBea": "read-only"
   },
-  "patchBenchProjectionBoundary": "The accepted primitive projection contract is docs-only and does not alter RE state, runtime proof, Ghidra storage, AppCore behavior, launch behavior, or patch/catalog semantics.",
   "currentPointers": {
     "activeGoal": "goal.md",
     "developerState": "developer_agent_state.json",
     "documentationState": "documentation_agent_state.json",
     "roadmapIndex": "roadmap/ROADMAP-INDEX.md",
     "primitiveProjectionContract": "roadmap/patchbench-primitive-projection-contract.md",
+    "receiptBoundaryTests": "OnslaughtCareerEditor.UiTests/PatchBenchPrimitiveProjectionBoundaryTests.cs",
     "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
     "reIndex": "reverse-engineering/RE-INDEX.md"
   },
   "validation": {
     "stateRefresh": "Integration state refresh only; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, or original-BEA mutation.",
-    "currentGateExpectation": "Use JSON parse, stale local path/campaign marker scans, passive process census, git diff --check, focused PatchBench WinUI tests, required docs/repo safety gates, and public payload checks.",
-    "latestIntegration": "Required docs/repo/payload gates, WinUI build, focused launch-preset UiTests, and patch-engine safety passed. The primary WinUI lane is not green because one native UIA smoke failed with FlaUI Mouse.SendInput Access denied; this is recorded as an environment validation exception and not as runtime proof."
+    "currentGateExpectation": "Use JSON parse, stale local path/campaign marker scans, git diff --check, focused PatchBench WinUI tests, required docs/repo safety gates, and public payload checks.",
+    "latestIntegration": [
+      "JSON parse for edited state files: PASS",
+      "git diff --check: PASS",
+      "stale local path/campaign marker scan over edited promotion files: PASS",
+      "focused PatchBenchPrimitiveProjectionBoundaryTests: PASS, 11 passed",
+      "WinUI build, patch-engine safety, docs/repo/payload gates, and winui-primary-lane: PASS"
+    ]
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -63,7 +74,7 @@
   "blockers": [],
   "nextSteps": [
     "Keep static RE mutation paused unless a product/runtime contradiction points back to a specific RE issue.",
-    "Use the primitive projection contract only as a design boundary until primitive-state/helper-boundary tests reject AppCore DTOs, raw paths, File/Directory/Path, service/process/launch/catalog tokens, proof IDs, and Host/Join action strings before any future receipt helper extraction.",
+    "Use the primitive projection contract and static guard tests as pre-extraction boundaries only; do not claim formatter output/redaction, runtime proof, or Host/Join behavior proof until future behavior tests and accepted evidence exist.",
     "Do not run live BEA/CDB/audio proof without explicit runtime-proof authority, leases, private proof-root readiness, arm phrase, and cleanup validation.",
     "Do not delete Ghidra/proof material without a future candidate-specific manifest, retained alternative, dry-run, consults, authority, and acceptance."
   ]
