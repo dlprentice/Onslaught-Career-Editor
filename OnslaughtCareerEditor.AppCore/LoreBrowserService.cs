@@ -13,6 +13,10 @@ namespace Onslaught___Career_Editor
         private const string LorePackContentFileName = "onslaught-lore.v1.jsonl";
         private const string LorePackSourcePrefix = "lore-pack://";
         private const string LorePackNavigationScheme = "onslaught-lore";
+        private const string InvalidLorePackDocumentPathMessage = "Lore content pack contains an invalid document path.";
+        private const string DuplicateLorePackDocumentIdMessage = "Lore content pack contains duplicate document identifiers.";
+        private const string DuplicateLorePackDocumentPathMessage = "Lore content pack contains duplicate document paths.";
+        private const string LorePackContentHashMismatchMessage = "Lore content pack content hash mismatch.";
 
         private static readonly Regex BookEntryRegex = new(@"^(?<indent>\s*)-\s+(?<content>.+?)\s*$", RegexOptions.Compiled);
         private static readonly Regex MarkdownLinkRegex = new(@"\[(?<title>[^\]]+)\]\((?<path>[^)]+)\)", RegexOptions.Compiled);
@@ -34,6 +38,7 @@ namespace Onslaught___Career_Editor
             string projectRoot = FindProjectRoot(startDirectory)
                 ?? throw new DirectoryNotFoundException("Could not locate repo root containing lore-book or lore-pack.");
 
+            _contentPack = null;
             if (TryLoadContentPack(projectRoot, out LoreContentPack? contentPack, out List<LoreTreeItem> packRootItems, out Dictionary<string, LoreDocument> packDocumentMap))
             {
                 _contentPack = contentPack;
@@ -46,8 +51,6 @@ namespace Onslaught___Career_Editor
                     ?? packDocuments.FirstOrDefault();
                 return new LoreIndex(projectRoot, packDocuments, CloneTree(packRootItems), true, packHome, "content-pack");
             }
-
-            _contentPack = null;
             string loreBookDirectory = Path.Combine(projectRoot, "lore-book");
             if (!Directory.Exists(loreBookDirectory))
             {
@@ -428,8 +431,18 @@ namespace Onslaught___Career_Editor
                     continue;
                 }
 
-                string normalizedRelativePath = NormalizeRelativePath(row.RelativePath);
                 string id = row.Id.Trim();
+                string normalizedRelativePath = ValidateLorePackRelativePath(row.RelativePath);
+                if (documentsById.ContainsKey(id))
+                {
+                    throw new InvalidDataException(DuplicateLorePackDocumentIdMessage);
+                }
+
+                if (documentsByRelativePath.ContainsKey(normalizedRelativePath))
+                {
+                    throw new InvalidDataException(DuplicateLorePackDocumentPathMessage);
+                }
+
                 string title = string.IsNullOrWhiteSpace(row.Title)
                     ? Path.GetFileNameWithoutExtension(normalizedRelativePath).Replace('-', ' ')
                     : row.Title.Trim();
@@ -437,7 +450,7 @@ namespace Onslaught___Career_Editor
                 if (!string.IsNullOrWhiteSpace(row.Sha256) &&
                     !sha256.Equals(row.Sha256, StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new InvalidDataException($"Lore pack content hash mismatch for {normalizedRelativePath}.");
+                    throw new InvalidDataException(LorePackContentHashMismatchMessage);
                 }
 
                 int order = orderById.TryGetValue(id, out int foundOrder) ? foundOrder : documentsById.Count;
@@ -468,6 +481,43 @@ namespace Onslaught___Career_Editor
             }
 
             return true;
+        }
+
+        private static string ValidateLorePackRelativePath(string relativePath)
+        {
+            if (string.IsNullOrWhiteSpace(relativePath))
+            {
+                throw new InvalidDataException(InvalidLorePackDocumentPathMessage);
+            }
+
+            if (!string.Equals(relativePath, relativePath.Trim(), StringComparison.Ordinal))
+            {
+                throw new InvalidDataException(InvalidLorePackDocumentPathMessage);
+            }
+
+            if (relativePath.Any(static character => char.IsControl(character)))
+            {
+                throw new InvalidDataException(InvalidLorePackDocumentPathMessage);
+            }
+
+            if (relativePath.Contains('\\', StringComparison.Ordinal) ||
+                relativePath.StartsWith("/", StringComparison.Ordinal) ||
+                relativePath.Contains(':', StringComparison.Ordinal))
+            {
+                throw new InvalidDataException(InvalidLorePackDocumentPathMessage);
+            }
+
+            string[] parts = relativePath.Split('/');
+            if (parts.Any(static part =>
+                    part.Length == 0 ||
+                    part.Equals(".", StringComparison.Ordinal) ||
+                    part.Equals("..", StringComparison.Ordinal) ||
+                    !string.Equals(part, part.Trim(), StringComparison.Ordinal)))
+            {
+                throw new InvalidDataException(InvalidLorePackDocumentPathMessage);
+            }
+
+            return relativePath;
         }
 
         private static Dictionary<string, int> LoadPackOrder(string indexPath)

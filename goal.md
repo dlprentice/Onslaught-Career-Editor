@@ -6,80 +6,101 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-The receipt-boundary integration wave has accepted a test-only PatchBench
-primitive projection guard:
+The parallel rebuild/lore/WinUI integration wave has folded in four bounded
+tracked improvements:
 
-- `OnslaughtCareerEditor.UiTests/PatchBenchPrimitiveProjectionBoundaryTests.cs`
-  now guards future PatchBench receipt/source presentation helpers with
-  recursive helper/model discovery, path-keyed boundary profiles, profile-scoped
-  sensitive identifier checks, broad `GameProfile*` rejection for receipt/source
-  projection surfaces, hostile static samples, output leak sentinels, and page
-  ownership tripwires.
+- PatchBench now has pre-extraction receipt formatter behavior tests and an
+  unwired primitive formatter scaffold:
+  `OnslaughtCareerEditor.UiTests/PatchBenchSafeCopyReceiptTextTests.cs`,
+  `OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyReceiptText.cs`, and
+  `OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyReceiptTextState.cs`.
+- Public-safe RE/rebuild work now has a materialized
+  `tmm-arm4-readiness-gate` proof-plan slot and checker:
+  `reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md`
+  and `tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py`.
+- Lore pack building/checking now fails closed on unsafe or inconsistent
+  `relativePath` metadata, and AppCore content-pack loading now fails closed on
+  unsafe loaded document paths, duplicate ids/paths, content hash mismatch, and
+  stale-pack retention without echoing row-controlled path/id values through
+  current AppCore content-pack load exceptions.
+- The WinUI shell now restores a persisted `LastTab` value of `0` back to Save
+  Lab, with source-level product-lane coverage.
 
-The next executable product slice is formatter behavior coverage before any
-receipt helper extraction: add focused tests for receipt output layout,
-hostile path/proof-id/command-preview redaction boundaries, online-ready wording
-rejection, and Host/Join boundary rendering exactly once. Do not extract the
-receipt formatter until those behavior tests exist and pass. Do not extract
-source-summary helpers until path/redaction projection is explicitly tested.
+The next executable product slice is PatchBench receipt extraction readiness
+hardening before any live page wiring: add focused tests for concatenated or
+interpolated forbidden output sentinels, decide and encode the manifest-filename
+display policy, cover Host/Join partial/variant boundary cases, and add
+page-versus-helper parity tests with documented intentional deltas. Only after
+those tests are green should a later slice project AppCore receipt DTOs into
+WinUI-local primitive state and consider wiring the helper.
 
 ## Current Truth
 
-- `roadmap/patchbench-primitive-projection-contract.md` remains the design-only
-  primitive presentation contract. It is not behavior movement, extraction
-  approval, AppCore ownership movement, runtime proof, or release evidence.
-- `PatchBenchPrimitiveProjectionBoundaryTests` is test-only static guard
-  coverage. It is not formatter output proof, UIA proof, runtime proof,
-  Host/Join behavior proof, or extraction readiness by itself.
-- The current boundary scanner covers `PatchBench*.cs` files under WinUI
-  `Helpers/` and `Models/`. `BinaryPatchesPage` remains protected by explicit
-  ownership tripwires, not by the helper/model profile scanner.
-- Cross-file primitive record/enum support is covered by synthetic guard
-  samples. A future real receipt/source extraction that splits primitive models
-  across files must wire and validate those files under the receipt/source
-  profile before claiming extraction readiness.
-- `BinaryPatchesPage` still owns page projection, File/Path checks, service
-  calls, UI assignment, operation-log text, `AppStatusService` updates, launch
-  option tuples, selected-state mutation, matching logic, launch argument
-  construction, safe-copy launch planning, process control, patch/catalog
-  semantics, source-summary decisions, Host/Join fallback ownership, online
-  claim boundaries, and runtime-proof boundaries.
+- `PatchBenchSafeCopyReceiptText` is an unwired WinUI-local primitive scaffold.
+  It is a contract/test target only. It is not a live production formatter,
+  not extraction completion, and not runtime hostile-value rejection proof.
+- `BinaryPatchesPage` still owns page receipt projection, receipt DTO
+  consumption, File/Path/I/O, service calls, UI assignment, operation-log text,
+  `AppStatusService` updates, launch option tuples, selected-state mutation,
+  matching logic, launch argument construction, safe-copy launch planning,
+  process control, patch/catalog semantics, source-summary decisions,
+  Host/Join fallback ownership, online claim boundaries, and runtime-proof
+  boundaries.
 - AppCore still owns receipt truth, receipt construction, patch planning,
-  copied-profile safety, save/options correctness, and core redaction or
-  behavior contracts.
+  copied-profile safety, save/options correctness, and core behavior contracts.
 - Future PatchBench presentation helpers may receive only display-safe
   primitive or primitive-record values: strings, booleans, counts, small enums,
   nullable primitive fields, and sanitized display lists.
-- The prior adversarial receipt-boundary findings for filename routing,
-  sensitive primitive/member leakage, record/member parsing, incomplete
-  `GameProfile*` result coverage, and non-recursive helper/model discovery are
-  addressed at the static guard layer. Formatter output/redaction and Host/Join
-  exactly-once behavior proof remain future extraction gates.
+- The static primitive projection guard now covers the new receipt helper/model
+  split and still protects `PatchBench*.cs` files under WinUI `Helpers/` and
+  `Models/`. `BinaryPatchesPage` remains protected by explicit ownership
+  tripwires.
+- The PatchBench reviewer left one non-blocking future caveat: static
+  output-leak sentinels need concatenation/interpolation adversarial samples,
+  and the manifest filename policy must be made explicit before helper wiring.
+- The `tmm-arm4-readiness-gate` artifact is a public-safe proof-plan and
+  continuity checker only. It is not readiness-gate execution, command arming,
+  importer execution, generated payload output, private asset read, runtime
+  proof, visual/gameplay proof, rebuild parity, runtime parity, or
+  no-noticeable-difference parity.
+- Lore pack `relativePath` metadata hardening is metadata integrity and
+  public/private-boundary hardening. Builder/checker validation owns
+  index/content relativePath equality today; AppCore loading validates loaded
+  document metadata and generic failure messages. This is not release
+  readiness, broad ZIP packaging parity, or a proven filesystem traversal
+  vulnerability fix.
+- Lore package ZIP probe parity remains a next hardening candidate:
+  `tools/winui_zip_package_probe.py` should eventually enforce the same
+  `relativePath` grammar.
+- The WinUI UX audit resolved only Save Lab route restoration for persisted
+  tab `0`. Residual UX/copy debt remains open, including Asset Library path
+  redaction, PatchBench proof/CDB/manifest/offset wording, online diagnostic
+  placement, first-run clarity, accessibility labeling/live-region risks, and
+  broader Home/About/Save Lab copy polish.
 - Storage taxonomy remains read-only/no-delete. High-confidence deletion
-  candidates are 0, deletion performed is false, and authorized reclaimed
-  storage is 0 GiB.
-- Future medium/low storage values are non-authorized logical review ceilings
-  only. They are not reclaimable storage, not unique physical-size estimates,
-  and not deletion budgets. Future deletion still requires explicit authority,
-  candidate-specific evidence, retained alternatives, dry-run/quarantine and
-  rollback proof, workspace-safe consults, and independent acceptance.
-- Runtime proof remains private pre-arm readiness only. Public runtime flags
+  candidates are 0, deletion performed is false, authorized reclaimed storage
+  is 0 GiB, and actual reclaimed storage is 0 GiB.
+- Future medium/low storage review values are non-authorized logical review
+  ceilings only. They are not reclaimable storage, unique physical-size
+  estimates, candidate pools, urgency signals, cleanup targets, or deletion
+  budgets.
+- Future storage deletion still requires explicit authority, scoped lease,
+  exact private manifest row ids and digest, retained alternatives,
+  reference/hash/provenance review, containment and unique-size proof, dry-run,
+  quarantine/rollback/restore proof, candidate-specific consults, and
+  independent acceptance.
+- Runtime proof remains private pre-arm/no-live only. Public runtime flags
   remain `readyToRunLiveAttempt=false`, `liveArmAllowed=false`,
   `runtimeAudibleOutputProof=false`, and
   `preArmReadiness.status=prearm-readiness-not-proven`.
-- No live execution, BEA launch, CDB attach, audio capture, proof archive
-  write, copied executable mutation, Ghidra mutation/read-back,
-  installed-game mutation, original `BEA.exe` mutation, runtime audible-output
-  proof, all-cue proof, release readiness, gameplay proof, rebuild proof, or
-  parity proof is claimed.
-- Consult compliance must stay split: the receipt-boundary write worker and
-  repair lanes are six-lane complete; storage and runtime read-only reports are
-  six-lane complete; the next-helper read-only report is fallback-compliant but
-  matrix-incomplete; the consult-compliance smoke had tainted/unavailable lanes
-  and is not independent sanitization verification.
-- External consult sanitization is report-attested only unless raw prompts and
-  outputs are separately audited. Use "no recorded blocking dissent among
-  completed lanes," not blanket no-dissent wording.
+- Producer coverage for music proof is not live authority, proof readiness, or
+  audible-output proof. Future live work needs separate explicit private
+  authority, leases, freshness/root/process-census binding, no stale readiness
+  replay, and no public arm phrase or runnable live command leakage.
+- Consult compliance for this wave is report-attested and sanitized-bundle
+  scanned only. It is not raw prompt/output reconstruction or exact Cursor
+  command-line proof. Use "no recorded blocking dissent among completed lanes,"
+  not blanket no-dissent wording.
 - Online multiplayer remains not player-ready. Host/Join stays disabled or
   unavailable until distinct-endpoint command-source proof and source-bound
   copied-runtime causality proof are both accepted.
@@ -91,18 +112,28 @@ source-summary helpers until path/redaction projection is explicitly tested.
   runtime caches, build output, and package output.
 - Installed game files and original `BEA.exe` remain read-only.
 - No release, tag, package, signing, installer, announcement, hosted workflow,
-  or publication action is part of this integration.
+  publication, or push action is part of this integration.
 
 ## Evidence Pointers
 
-- Receipt/source static guard tests:
+- PatchBench receipt behavior tests:
+  `OnslaughtCareerEditor.UiTests/PatchBenchSafeCopyReceiptTextTests.cs`
+- Primitive projection guard:
   `OnslaughtCareerEditor.UiTests/PatchBenchPrimitiveProjectionBoundaryTests.cs`
-- Primitive projection contract:
-  `roadmap/patchbench-primitive-projection-contract.md`
+- Primitive receipt scaffold:
+  `OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyReceiptText.cs`
 - PatchBench page orchestration:
   `OnslaughtCareerEditor.WinUI/Pages/BinaryPatchesPage.xaml.cs`
-- Launch/control preset presentation helper:
-  `OnslaughtCareerEditor.WinUI/Helpers/PatchBenchLaunchPresetText.cs`
+- RE/rebuild readiness-gate proof plan:
+  `reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md`
+- RE/rebuild readiness-gate checker:
+  `tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py`
+- Lore pack loader:
+  `OnslaughtCareerEditor.AppCore/LoreBrowserService.cs`
+- Lore pack builder/checker:
+  `tools/winui_lore_pack_builder.py`
+- Save Lab route persistence:
+  `OnslaughtCareerEditor.WinUI/MainWindow.xaml.cs`
 - Runtime pre-arm readiness note:
   `release/readiness/winui_music_live_bundle_prearm_readiness_2026-06-29.md`
 - Storage hygiene boundary:
@@ -116,25 +147,30 @@ source-summary helpers until path/redaction projection is explicitly tested.
 
 ## Next Executable Work
 
-1. Add receipt formatter behavior tests before extraction. Cover headline,
-   label/value rows, section headings, bullet formatting, trimming,
-   hostile path/proof-id/command-preview output sentinels, online-ready wording
-   rejection, and Host/Join boundary rendering exactly once.
-2. Keep `GameProfilePreflightService.BuildPrepareReceipt`, AppCore receipt DTO
-   consumption, Host/Join fallback normalization, File/Path/I/O, launch
-   planning, process control, catalog semantics, online boundaries, and runtime
-   proof boundaries out of presentation helpers.
-3. Extract a narrow receipt formatter only after the behavior tests and static
-   boundary tests are green, using WinUI-local primitive state.
-4. Keep source-summary extraction deferred until raw path and catalog reads are
-   projected by the page and path/redaction projection tests exist.
-5. For storage, do only read-only manifest/hash/reference work until a future
+1. PatchBench next: add tests for concatenated/interpolated forbidden sentinels,
+   manifest filename policy, Host/Join partial/variant boundary cases, and
+   page-versus-helper parity before any helper wiring.
+2. PatchBench follow-up after those tests pass: project AppCore receipt DTOs
+   into WinUI-local primitive state and consider wiring the helper without
+   moving File/Path/I/O, receipt construction, launch planning, process
+   control, catalog semantics, online boundaries, or runtime-proof boundaries.
+3. Lore next: add ZIP package probe parity for lore-pack `relativePath`
+   validation, keep user-visible load errors generic, and decide whether
+   AppCore should also enforce index/content relativePath equality instead of
+   leaving that to builder/check tooling.
+4. RE/rebuild next: run only public-safe checker/proof-plan advancement until a
+   separate task grants explicit readiness-gate authority; do not treat
+   `tmm-arm4-readiness-gate` as executed.
+5. WinUI UX next: address one residual high-confidence path-redaction,
+   proof-jargon, first-run, or accessibility issue at a time with focused
+   tests/build evidence.
+6. Storage next: do only read-only manifest/hash/reference work until a future
    task records explicit deletion authority, candidate-specific retained
    alternatives, dry-run evidence, consults, rollback/quarantine plan, and
    independent acceptance.
-6. For runtime music proof, the only safe next baton is private pre-arm
-   readiness under separate explicit authority. Do not issue a live arm phrase
-   or run BEA/CDB/audio/live proof from this public baton.
+7. Runtime next: keep music proof as private pre-arm checklist-only work unless
+   a future task grants explicit runtime-proof authority, leases, private proof
+   root readiness, arm phrase handling, and cleanup validation.
 
 ## Stop Conditions
 
@@ -142,7 +178,8 @@ source-summary helpers until path/redaction projection is explicitly tested.
 - Any tracked file would add hard payloads, raw proof logs, screenshots/frame
   dumps, copied executable output, full Ghidra databases, secrets, `.env*`,
   build output, package output, local runtime caches, raw local proof paths, raw
-  manifests, thread IDs, or local campaign/worktree paths.
+  manifests, thread IDs, local campaign/worktree paths, or private proof
+  artifacts.
 - Any claim would promote online readiness, Host/Join availability, runtime
   audio proof, gameplay parity, visual parity, release readiness, release
   publication, rebuild parity, or no-noticeable-difference parity beyond

@@ -115,6 +115,98 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Equal("deep", filtered[0].Title);
         }
 
+        [Theory]
+        [InlineData("C:/Users/Alice/private.md", "C:", "Users")]
+        [InlineData(@"C:\Users\Alice\private.md", @"C:\", "Users")]
+        [InlineData(@"\\server\share\private.md", @"\\server", "share")]
+        [InlineData("../private.md", "..", "private.md")]
+        [InlineData("safe/../../private.md", "..", "private.md")]
+        [InlineData(@"safe\private.md", @"\", "private.md")]
+        [InlineData("safe//private.md", "safe//", "private.md")]
+        public void LoadIndex_RejectsMalformedLorePackRelativePathsWithoutEchoingInput(
+            string relativePath,
+            string firstForbiddenToken,
+            string secondForbiddenToken)
+        {
+            WriteLorePackRows(new LorePackFixtureRow("doc-LEAKPROBE", relativePath, "# Unsafe"));
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(
+                ex,
+                "invalid document path",
+                relativePath,
+                firstForbiddenToken,
+                secondForbiddenToken,
+                "LEAKPROBE");
+        }
+
+        [Fact]
+        public void LoadIndex_RejectsDuplicateLorePackIdWithoutEchoingId()
+        {
+            const string maliciousId = @"C:\Users\Alice\duplicate-id";
+            WriteLorePackRows(
+                new LorePackFixtureRow(maliciousId, "One.md", "# One"),
+                new LorePackFixtureRow(maliciousId, "Two.md", "# Two"));
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "duplicate document identifiers", maliciousId, "C:", "Users", "duplicate-id");
+        }
+
+        [Fact]
+        public void LoadIndex_RejectsDuplicateLorePackRelativePathWithoutEchoingPathOrId()
+        {
+            const string duplicatePath = "safe/DuplicateLeakProbe.md";
+            WriteLorePackRows(
+                new LorePackFixtureRow("doc-one", duplicatePath, "# One"),
+                new LorePackFixtureRow("doc-two", duplicatePath, "# Two"));
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "duplicate document paths", duplicatePath, "DuplicateLeakProbe", "doc-two");
+        }
+
+        [Fact]
+        public void LoadIndex_RejectsDuplicateLorePackRelativePathCaseInsensitive()
+        {
+            WriteLorePackRows(
+                new LorePackFixtureRow("doc-one", "safe/CaseProbe.md", "# One"),
+                new LorePackFixtureRow("doc-two", "safe/caseprobe.md", "# Two"));
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "duplicate document paths", "CaseProbe", "caseprobe", "doc-two");
+        }
+
+        [Fact]
+        public void LoadIndex_RejectsLorePackHashMismatchWithoutEchoingPath()
+        {
+            const string relativePath = "safe/HashLeakProbe.md";
+            WriteLorePackRows(new LorePackFixtureRow("doc-hash", relativePath, "# Hash", "bad-hash"));
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "hash mismatch", relativePath, "HashLeakProbe", "doc-hash");
+        }
+
+        [Fact]
+        public void LoadIndex_ClearsPreviousLorePackWhenNextPackFailsClosed()
+        {
+            LoreBrowserService service = new();
+            WriteLorePackRows(new LorePackFixtureRow("doc-valid", "Valid.md", "# Valid"));
+            LoreIndex index = service.LoadIndex(_repoRoot);
+            string validSourcePath = Assert.Single(index.Documents).FilePath;
+            Assert.True(service.DocumentExists(validSourcePath));
+
+            const string invalidPath = "../LeakProbe.md";
+            WriteLorePackRows(new LorePackFixtureRow("doc-invalid", invalidPath, "# Invalid"));
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => service.LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "invalid document path", invalidPath, "LeakProbe", "..");
+            Assert.False(service.DocumentExists(validSourcePath));
+        }
+
         [Fact]
         public void RenderDocument_RewritesPackedInternalLinksToReaderNavigation()
         {
@@ -281,6 +373,61 @@ See the [reference](https://example.com/reference).
                 Encoding.UTF8);
         }
 
+        private void WriteLorePackRows(params LorePackFixtureRow[] documents)
+        {
+            string packDirectory = Path.Combine(_repoRoot, "lore-pack");
+            Directory.CreateDirectory(packDirectory);
+            var indexRows = documents.Select((doc, index) =>
+            {
+                string sha256 = doc.Sha256Override ?? Sha256Text(doc.Content);
+                return new
+                {
+                    id = doc.Id,
+                    relativePath = doc.RelativePath,
+                    title = ResolveTitle(doc.Content, doc.RelativePath),
+                    sha256,
+                    byteLength = Encoding.UTF8.GetByteCount(doc.Content),
+                    order = index
+                };
+            }).ToArray();
+            var contentRows = documents.Select(doc =>
+            {
+                string sha256 = doc.Sha256Override ?? Sha256Text(doc.Content);
+                return JsonSerializer.Serialize(new
+                {
+                    id = doc.Id,
+                    relativePath = doc.RelativePath,
+                    title = ResolveTitle(doc.Content, doc.RelativePath),
+                    sha256,
+                    byteLength = Encoding.UTF8.GetByteCount(doc.Content),
+                    content = doc.Content
+                });
+            });
+            File.WriteAllText(
+                Path.Combine(packDirectory, "onslaught-lore.v1.index.json"),
+                JsonSerializer.Serialize(new
+                {
+                    schema = "onslaught-lore-pack.v1",
+                    sourceRoot = "lore-book",
+                    documentCount = documents.Length,
+                    documents = indexRows
+                }),
+                Encoding.UTF8);
+            File.WriteAllText(
+                Path.Combine(packDirectory, "onslaught-lore.v1.jsonl"),
+                string.Join(Environment.NewLine, contentRows) + Environment.NewLine,
+                Encoding.UTF8);
+        }
+
+        private static void AssertSafeLorePackException(InvalidDataException ex, string expectedFragment, params string[] forbiddenTokens)
+        {
+            Assert.Contains(expectedFragment, ex.Message, StringComparison.OrdinalIgnoreCase);
+            foreach (string token in forbiddenTokens.Where(static value => !string.IsNullOrWhiteSpace(value)))
+            {
+                Assert.DoesNotContain(token, ex.Message, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
         private static string Sha256Text(string value)
         {
             return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
@@ -295,6 +442,8 @@ See the [reference](https://example.com/reference).
                 ? Path.GetFileNameWithoutExtension(relativePath)
                 : heading.TrimStart('#', ' ');
         }
+
+        private sealed record LorePackFixtureRow(string Id, string RelativePath, string Content, string? Sha256Override = null);
 
         public void Dispose()
         {

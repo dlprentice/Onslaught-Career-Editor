@@ -64,7 +64,7 @@ names are too long.
 | `tmm-implementation-readiness` | [texture-mesh-material-sidecar-importer-implementation-readiness-gate-proof-plan.md](../reverse-engineering/game-assets/texture-mesh-material-sidecar-importer-implementation-readiness-gate-proof-plan.md) | Public-safe importer implementation readiness gate. |
 | `tmm-private-inventory-preflight` | [texture-mesh-material-sidecar-importer-private-corpus-read-only-inventory-preflight-proof-plan.md](../reverse-engineering/game-assets/texture-mesh-material-sidecar-importer-private-corpus-read-only-inventory-preflight-proof-plan.md) | Redacted private-corpus inventory preflight. |
 | `tmm-arm4-validation` | [texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.md](../reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.md) | Latest completed public-safe command arm-checklist validation proof. |
-| `tmm-arm4-readiness-gate` | Selected next scope in [static-to-proof-rebuild-transition-backlog.md](static-to-proof-rebuild-transition-backlog.md) | Current active selected slice; proof file is not materialized yet. |
+| `tmm-arm4-readiness-gate` | [texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md](../reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md) | Current active proof-plan slot; continuity guard only, not completed readiness-gate execution or rebuild proof. |
 
 ## Current Active Scope
 
@@ -74,11 +74,11 @@ The selected active static-to-proof slice is:
 - Full slice: `Texture / Mesh Material Sidecar Importer Private Corpus Real Importer Dry-Run Harness Command Arm Checklist Command Arm Checklist Command Arm Checklist Command Arm Checklist Readiness Gate Proof Plan`
 - Scope token: `texture-mesh-material-sidecar-importer-private-corpus-real-importer-dry-run-harness-command-arm-checklist-command-arm-checklist-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan`
 - Source evidence: completed `tmm-arm4-validation`
-- Current status: selected next scope; not yet a completed proof file
+- Current status: proof-plan slot materialized; not yet a completed proof file
 
-The next safe rebuild-support artifact is therefore a public-safe
-`tmm-arm4-readiness-gate` proof plan/artifact slot that consumes the completed
-validation rows and keeps command arming, shell dispatch, importer execution,
-private asset reads, generated asset output, BEA launch, Ghidra mutation,
-runtime proof, rebuild parity, and no-noticeable-difference claims out of
-scope.
+The next safe rebuild-support artifact is therefore the public-safe
+`tmm-arm4-readiness-gate` proof plan/artifact slot linked above. It consumes the
+completed validation rows only as public-safe source evidence and keeps command
+arming, shell dispatch, importer execution, private asset reads, generated asset
+output, BEA launch, Ghidra mutation, runtime proof, rebuild parity, and
+no-noticeable-difference claims out of scope.

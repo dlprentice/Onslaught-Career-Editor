@@ -95,6 +95,7 @@ namespace OnslaughtCareerEditor.WinUI
             int lastTab = AppConfig.Load().LastTab;
             return lastTab switch
             {
+                0 => "saves",
                 1 => "media",
                 2 => "lore",
                 3 => "binary",
@@ -133,6 +134,7 @@ namespace OnslaughtCareerEditor.WinUI
             config.LastTab = tag switch
             {
                 "home" => -1,
+                "saves" => 0,
                 "media" => 1,
                 "assets" => 6,
                 "lore" => 2,

@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-06-30",
-  "currentFocus": "Static RE/Ghidra state remains unchanged by receipt-boundary integration; PatchBench static guard tests are integrated, storage remains read-only/no-delete, and runtime proof remains private pre-arm-only.",
+  "currentFocus": "Static RE/Ghidra closure remains unchanged; public-safe rebuild support advanced only by materializing the tmm-arm4-readiness-gate proof-plan/checker slot, while PatchBench/Lore/WinUI integration preserved runtime, rebuild, storage, and payload non-claims.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -8,17 +8,49 @@
     "measurementFrontDoor": "reverse-engineering/binary-analysis/static-reaudit-measurement-register.md"
   },
   "publicPrimaryBoundary": "The public repo may track RE docs, wave notes, scratch text exports, function indexes, static maps, proof summaries, checkers, and state batons. Hard payloads, full Ghidra databases/backups, raw captures, copied executables, secrets, build output, package output, local proof paths, raw manifests, and local campaign/worktree paths remain out of tracked state.",
+  "rebuildReadiness": {
+    "status": "tmm-arm4-readiness-gate proof-plan/checker slot materialized",
+    "alias": "tmm-arm4-readiness-gate",
+    "proofPlan": "reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md",
+    "checker": "tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py",
+    "sourceBoundary": "The checker consumes only tracked public-safe files and validates source continuity, expected counters, front-door links, fail-closed public-boundary wording, and non-claims.",
+    "nonClaims": [
+      "readiness-gate execution",
+      "command arming",
+      "shell dispatch",
+      "importer execution",
+      "private asset read",
+      "private manifest read",
+      "generated payload",
+      "BEA launch",
+      "CDB attach",
+      "Ghidra mutation or read-back",
+      "runtime proof",
+      "visual proof",
+      "gameplay proof",
+      "runtime parity",
+      "rebuild parity",
+      "no-noticeable-difference parity"
+    ],
+    "futureGate": "A later readiness-gate proof needs a separate bounded assignment and must not reuse this checker as a generic gate without updating the bound source proof and expected counters."
+  },
   "patchBenchProjectionBoundary": {
-    "status": "test-only static guard integrated; no RE/runtime behavior changed",
-    "summary": "PatchBenchPrimitiveProjectionBoundaryTests now guards future receipt/source helper boundaries at the static source-test layer. This does not alter RE state, runtime proof, Ghidra storage, AppCore behavior, launch behavior, or patch/catalog semantics.",
-    "futureGate": "Formatter output/redaction and Host/Join exactly-once behavior proof remain future extraction gates before any receipt helper extraction."
+    "status": "pre-extraction behavior tests/scaffold integrated; no RE/runtime behavior changed",
+    "summary": "PatchBench receipt behavior tests and an unwired primitive formatter scaffold are integrated. This does not alter RE state, runtime proof, Ghidra storage, AppCore receipt construction, launch behavior, or patch/catalog semantics.",
+    "futureGate": "Before helper wiring, add concatenated/interpolated sentinel tests, explicit manifest filename policy, Host/Join variant coverage, and page-versus-helper parity tests."
+  },
+  "lorePackBoundary": {
+    "status": "metadata integrity hardening integrated",
+    "summary": "Lore pack relativePath index/content equality now fails closed in builder/check tooling. AppCore content-pack loading validates loaded document paths, duplicate ids/paths, hash mismatch, stale pack retention, and generic row-controlled error messages.",
+    "futureGate": "ZIP package probe parity for the same relativePath grammar remains open, along with a future decision on whether AppCore should also enforce index/content relativePath equality."
   },
   "storageRetention": {
     "mode": "read-only/no-delete",
     "highConfidenceDeletionCandidates": 0,
     "deletionPerformed": false,
     "authorizedReclaimedGiB": 0,
-    "futureReviewBands": "Medium and low values are non-authorized logical review ceilings only, not reclaimable storage and not deletion budgets.",
+    "actualReclaimedGiB": 0,
+    "futureReviewBands": "Medium and low values are non-authorized logical review ceilings only, not reclaimable storage, candidate pools, unique physical-size estimates, urgency signals, or deletion budgets.",
     "blockers": [
       "authority",
       "resource lease",
@@ -40,6 +72,7 @@
     "readyToRunLiveAttempt": false,
     "liveArmAllowed": false,
     "preArmReadinessStatus": "prearm-readiness-not-proven",
+    "producerCoverageCompleteIsAuthority": false,
     "musicStatus": "Music live-bundle readiness remains fail-closed and private pre-arm-only. Producer coverage or tooling availability is not live authority and not audible-output proof.",
     "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint command-source proof and source-bound copied-runtime causality proof are both accepted",
     "staticReClosureBoundary": "Static closure is not runtime, gameplay, visual, online, rebuild, or no-noticeable-difference proof.",
@@ -50,20 +83,26 @@
     "developerState": "developer_agent_state.json",
     "documentationState": "documentation_agent_state.json",
     "roadmapIndex": "roadmap/ROADMAP-INDEX.md",
+    "rebuildProofPlan": "reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md",
+    "rebuildChecker": "tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py",
     "primitiveProjectionContract": "roadmap/patchbench-primitive-projection-contract.md",
-    "receiptBoundaryTests": "OnslaughtCareerEditor.UiTests/PatchBenchPrimitiveProjectionBoundaryTests.cs",
+    "receiptBehaviorTests": "OnslaughtCareerEditor.UiTests/PatchBenchSafeCopyReceiptTextTests.cs",
     "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
     "reIndex": "reverse-engineering/RE-INDEX.md"
   },
   "validation": {
     "stateRefresh": "Integration state refresh only; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, or original-BEA mutation.",
-    "currentGateExpectation": "Use JSON parse, stale local path/campaign marker scans, git diff --check, focused PatchBench WinUI tests, required docs/repo safety gates, and public payload checks.",
+    "currentGateExpectation": "Use JSON parse, stale local path/campaign marker scans, git diff --check, focused PatchBench/Lore/RE checks, docs/repo safety gates, public payload checks, and winui-primary-lane disposition.",
     "latestIntegration": [
+      "git diff --check HEAD: PASS",
       "JSON parse for edited state files: PASS",
-      "git diff --check: PASS",
-      "stale local path/campaign marker scan over edited promotion files: PASS",
-      "focused PatchBenchPrimitiveProjectionBoundaryTests: PASS, 11 passed",
-      "WinUI build, patch-engine safety, docs/repo/payload gates, and winui-primary-lane: PASS"
+      "stale concrete campaign/worktree/thread marker scan over tracked goal/state/front-door docs: PASS",
+      "py -3 -m py_compile tools\\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py: PASS",
+      "py -3 tools\\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py --self-test --check: PASS",
+      "py -3 tools\\winui_lore_pack_builder.py --self-test: PASS, 6 tests",
+      "focused PatchBench/WinUI product tests: PASS, 44 passed",
+      "focused AppCore Lore tests: PASS, 21 passed",
+      "WinUI build, AppCore full tests, WinUI full tests, patch-engine safety, docs/repo/payload gates, and winui-primary-lane: PASS; final primary lane UiTests count is 115 passed and 2 skipped"
     ]
   },
   "currentCounters": {
@@ -74,8 +113,9 @@
   "blockers": [],
   "nextSteps": [
     "Keep static RE mutation paused unless a product/runtime contradiction points back to a specific RE issue.",
-    "Use the primitive projection contract and static guard tests as pre-extraction boundaries only; do not claim formatter output/redaction, runtime proof, or Host/Join behavior proof until future behavior tests and accepted evidence exist.",
-    "Do not run live BEA/CDB/audio proof without explicit runtime-proof authority, leases, private proof-root readiness, arm phrase, and cleanup validation.",
+    "Treat tmm-arm4-readiness-gate as proof-plan/checker support only; do not claim readiness-gate execution, runtime proof, or rebuild parity.",
+    "Use the primitive projection contract and PatchBench receipt behavior tests as pre-extraction boundaries only; do not claim live receipt rendering safety until future wiring/parity tests exist.",
+    "Do not run live BEA/CDB/audio proof without explicit runtime-proof authority, leases, private proof-root readiness, arm phrase handling, and cleanup validation.",
     "Do not delete Ghidra/proof material without a future candidate-specific manifest, retained alternative, dry-run, consults, authority, and acceptance."
   ]
 }

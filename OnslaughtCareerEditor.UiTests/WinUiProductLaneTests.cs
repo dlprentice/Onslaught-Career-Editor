@@ -41,6 +41,37 @@ public class WinUiProductLaneTests
     }
 
     [Test]
+    public void ShellRoutePersistence_RestoresPersistedSaveLabTab()
+    {
+        string shellCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "MainWindow.xaml.cs");
+        string restoreSwitch = ExtractCodeSlice(
+            shellCode,
+            "int lastTab = AppConfig.Load().LastTab;",
+            "private void ShellNavigationView_SelectionChanged");
+        string persistenceSwitch = ExtractCodeSlice(
+            shellCode,
+            "config.LastTab = tag switch",
+            "config.Save();");
+
+        Assert.That(restoreSwitch, Does.Contain("0 => \"saves\""));
+        Assert.That(persistenceSwitch, Does.Contain("\"saves\" => 0"));
+    }
+
+    [Test]
+    public void ShellRoutePersistence_DefaultConfigStillStartsAtHome()
+    {
+        string configCode = ReadRepoFile("OnslaughtCareerEditor.AppCore", "AppConfig.cs");
+        string shellCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "MainWindow.xaml.cs");
+        string restoreSwitch = ExtractCodeSlice(
+            shellCode,
+            "int lastTab = AppConfig.Load().LastTab;",
+            "private void ShellNavigationView_SelectionChanged");
+
+        Assert.That(configCode, Does.Contain("public int LastTab { get; set; } = -1;"));
+        Assert.That(restoreSwitch, Does.Contain("_ => \"home\""));
+    }
+
+    [Test]
     public void MainWindow_StartsMaximizedForBroadWorkspace()
     {
         string appCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "App.xaml.cs");
@@ -1179,6 +1210,7 @@ public class WinUiProductLaneTests
             "PatchBenchOnlineReadinessText.cs",
             "PatchBenchPatchGroups.cs",
             "PatchBenchSafeCopyOutcomeText.cs",
+            "PatchBenchSafeCopyReceiptText.cs",
             "PatchBenchSelectedProfileText.cs",
         };
         string[] actualHelperFiles = Directory.GetFiles(helperRoot, "PatchBench*.cs")

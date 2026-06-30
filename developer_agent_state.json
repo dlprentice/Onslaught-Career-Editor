@@ -1,11 +1,20 @@
 {
   "lastUpdated": "2026-06-30",
-  "currentFocus": "Receipt-boundary integration: test-only PatchBench primitive projection static guards are integrated; next work is formatter behavior/redaction and Host/Join exactly-once tests before extraction.",
+  "currentFocus": "Parallel rebuild/lore/WinUI integration: accepted PatchBench receipt behavior tests/scaffold, TMM ARM4 readiness proof-plan checker, Lore pack metadata hardening, and Save Lab route persistence are staged; next work is PatchBench extraction readiness hardening before any live page wiring.",
   "currentTruth": {
     "integratedWave": {
-      "summary": "Accepted tracked changes add PatchBenchPrimitiveProjectionBoundaryTests as static UiTests guard coverage for future receipt/source presentation helper boundaries.",
+      "summary": "The integrated wave adds bounded code/test/docs/tooling improvements and folds read-only storage/runtime/process findings into canonical state without promoting runtime, release, online, rebuild, storage-delete, or payload claims.",
       "acceptedArtifactFiles": [
-        "OnslaughtCareerEditor.UiTests/PatchBenchPrimitiveProjectionBoundaryTests.cs"
+        "OnslaughtCareerEditor.UiTests/PatchBenchSafeCopyReceiptTextTests.cs",
+        "OnslaughtCareerEditor.UiTests/PatchBenchPrimitiveProjectionBoundaryTests.cs",
+        "OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyReceiptText.cs",
+        "OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyReceiptTextState.cs",
+        "OnslaughtCareerEditor.WinUI/MainWindow.xaml.cs",
+        "OnslaughtCareerEditor.AppCore/LoreBrowserService.cs",
+        "OnslaughtCareerEditor.AppCore.Tests/LoreBrowserServiceTests.cs",
+        "tools/winui_lore_pack_builder.py",
+        "tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py",
+        "reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md"
       ],
       "stateRefreshFiles": [
         "goal.md",
@@ -14,30 +23,65 @@
         "re_orchestrator_state.json"
       ],
       "acceptedOutputs": [
-        "Test-only static guard coverage with recursive Helpers/Models discovery, path-keyed boundary profiles, profile-scoped sensitive identifier checks, broad GameProfile* rejection for receipt/source projection, hostile static samples, output leak sentinels, and page ownership tripwires."
+        "Pre-extraction PatchBench receipt layout/redaction/Host-Join behavior tests plus an unwired primitive formatter scaffold.",
+        "Public-safe TMM ARM4 readiness-gate proof-plan slot and checker.",
+        "Lore builder/checker relativePath equality plus AppCore loaded-document path, duplicate id/path, hash-mismatch, stale-state, and generic pack-load error hardening.",
+        "WinUI shell route persistence fix for Save Lab persisted tab 0."
       ],
       "deferredOutputs": [
-        "Formatter output/redaction behavior and Host/Join exactly-once rendering proof remain future extraction gates.",
-        "Source-summary extraction remains blocked until path/redaction projection is explicitly tested."
+        "No live PatchBench page wiring to the new receipt scaffold.",
+        "No completed readiness-gate execution, runtime proof, rebuild parity, release work, storage deletion, or Host/Join enablement.",
+        "Lore ZIP package probe relativePath parity remains future work.",
+        "WinUI UX audit residual path-redaction, proof-jargon, first-run, and accessibility items remain future work."
       ]
     },
     "patchBenchReceiptBoundary": {
-      "status": "test-only static guard integrated",
-      "scope": "PatchBench*.cs files under WinUI Helpers and Models plus BinaryPatchesPage ownership tripwires.",
-      "summary": "The repaired guard addresses prior adversarial gaps in filename routing, sensitive primitive/member leakage, record/member parsing, incomplete GameProfile* coverage, and non-recursive helper/model discovery at the static source-test layer.",
+      "status": "pre-extraction behavior tests and unwired primitive scaffold integrated",
+      "scope": "WinUI-local primitive receipt display contract plus static source guards; BinaryPatchesPage remains the live page formatter owner.",
+      "summary": "PatchBench receipt tests cover layout, headline, label/value rows, section headings, bullet formatting, whitespace normalization, hostile display values, online-ready wording rejection, and existing Host/Join fallback append/no-duplicate behavior.",
       "limits": [
-        "No receipt/source helper extraction was performed.",
-        "No production behavior, AppCore receipt semantics, file I/O, launch planning, process control, patch/catalog semantics, Host/Join behavior, online readiness, runtime proof, UIA proof, release work, or publication changed.",
-        "Static regex/source guards are not formatter output proof, dynamic runtime string interpolation proof, or runtime behavior proof.",
-        "Cross-file primitive record/enum support is covered by synthetic samples; a future real split receipt/source extraction must wire and validate those files under the receipt/source profile before claiming extraction readiness.",
-        "BinaryPatchesPage is protected by explicit token tripwires, not by the helper/model profile scanner."
+        "No production page wiring to PatchBenchSafeCopyReceiptText.",
+        "No AppCore receipt construction or behavior change.",
+        "No source-summary extraction.",
+        "No File/Path/I/O, launch planning, process control, patch/catalog semantics, online behavior, runtime proof, or Host/Join enablement moved.",
+        "The scaffold is not runtime hostile-value rejection proof and not extraction readiness by itself."
       ],
       "futureExtractionGates": [
-        "Receipt formatter output layout tests for headline, label/value rows, sections, bullets, and trimming.",
-        "Hostile path, proof-id, manifest, and command-preview output sentinel tests.",
-        "Online-ready wording rejection.",
-        "Host/Join boundary rendering exactly once.",
-        "Page projection from AppCore receipt DTOs into WinUI-local primitive state before calling any helper."
+        "Concatenated/interpolated forbidden output sentinel tests.",
+        "Explicit manifest filename display policy.",
+        "Host/Join partial, punctuation, and case-variant boundary tests.",
+        "Page-versus-helper parity tests with documented intentional deltas.",
+        "Mapper tests from AppCore receipt DTOs into WinUI-local primitive state before any helper wiring."
+      ]
+    },
+    "rebuildReadiness": {
+      "status": "public-safe proof-plan/checker slot materialized",
+      "alias": "tmm-arm4-readiness-gate",
+      "checker": "tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py",
+      "proofPlan": "reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md",
+      "limits": [
+        "No readiness-gate execution.",
+        "No command arming, shell dispatch, importer execution, private asset read, generated payload, runtime proof, visual/gameplay proof, rebuild parity, runtime parity, or no-noticeable-difference parity."
+      ]
+    },
+    "lorePackBoundary": {
+      "status": "metadata integrity hardening integrated",
+      "summary": "Lore pack builder/checker rejects unsafe relativePath values and index/content mismatches. AppCore loader rejects unsafe loaded document paths, duplicate ids, duplicate case-insensitive paths, hash mismatch, and stale pack retention after invalid loads.",
+      "errorDisplayBoundary": "Current AppCore content-pack load InvalidDataException messages are generic for row-controlled relativePath/id/hash mismatch cases that can surface through LorePage status text.",
+      "limits": [
+        "Not release readiness.",
+        "Not broad ZIP package probe parity.",
+        "Not a proven filesystem traversal vulnerability fix.",
+        "Not a broad WinUI exception-display redesign."
+      ],
+      "nextHardening": "Add ZIP package probe parity for the same lore-pack relativePath grammar, and decide whether AppCore should also enforce index/content relativePath equality rather than leaving that to builder/check tooling."
+    },
+    "winuiRoutePersistence": {
+      "status": "Save Lab persisted route restored",
+      "summary": "MainWindow restores LastTab=0 to the Save Lab route and tests the route round trip.",
+      "limits": [
+        "No broad UX redesign.",
+        "No screenshot, UIA, accessibility compliance, release readiness, or runtime proof claim."
       ]
     },
     "storageTaxonomy": {
@@ -45,23 +89,24 @@
       "highConfidenceDeletionCandidates": 0,
       "deletionPerformed": false,
       "authorizedReclaimedGiB": 0,
-      "futureReviewValues": "Medium and low values are non-authorized logical review ceilings only; they are not reclaimable storage, unique physical-size estimates, or cleanup budgets.",
+      "actualReclaimedGiB": 0,
+      "futureReviewValues": "Medium and low values are non-authorized logical review ceilings only; they are not reclaimable storage, unique physical-size estimates, candidate pools, cleanup targets, urgency signals, or deletion budgets.",
       "futureDeletionRequires": [
         "explicit authority",
         "scoped write lease",
-        "private exact-path candidate manifest",
-        "redacted public-safe summary",
-        "candidate-specific retained alternative",
+        "private exact manifest row ids and digest",
+        "candidate-specific retained alternatives",
         "reference/hash/provenance review",
-        "containment-aware independent-storage calculation",
+        "containment-aware unique physical-size accounting",
         "dry-run evidence",
-        "rollback/quarantine plan",
-        "workspace-safe normal and adversarial consults",
+        "same-volume quarantine by default with rollback and restore proof",
+        "candidate-specific normal and adversarial consults",
         "independent acceptance"
       ]
     },
     "runtimeProofBoundary": {
-      "status": "private pre-arm readiness only; no-live-execution",
+      "status": "private pre-arm checklist-only; no-live-execution",
+      "producerCoverageCompleteIsAuthority": false,
       "readyToRunLiveAttempt": false,
       "liveArmAllowed": false,
       "runtimeAudibleOutputProof": false,
@@ -87,29 +132,45 @@
       ]
     },
     "consultCompliance": {
-      "status": "split matrix recorded; no blanket wave-level completion claim",
-      "summary": "The receipt-boundary write worker and repair lanes are six-lane complete; storage and runtime read-only reports are six-lane complete; the next-helper read-only report is fallback-compliant but matrix-incomplete; the consult-compliance smoke had tainted/unavailable lanes and is not independent sanitization verification.",
-      "sanitizationBoundary": "External context sanitization is report-attested only unless raw prompts and outputs are separately audited.",
-      "safeWording": "Use no recorded blocking dissent among completed lanes; do not treat unavailable or tainted lanes as successful."
+      "status": "integration consults complete; worker consult evidence accepted with caveats",
+      "summary": "Worker reports record required Codex and Cursor lanes for the accepted write/read-only work. Integration review used Codex normal, Codex adversarial, composer-2.5-fast normal/adversarial, and gemini-3.1-pro normal/adversarial lanes. Process evidence is report-attested and sanitized-bundle scanned, not raw prompt/output reconstruction.",
+      "acceptedIntegrationFindings": [
+        "Narrowed Lore state wording so index/content relativePath mismatch enforcement is attributed to builder/check tooling, not AppCore loading.",
+        "Added a source-level default-route regression test proving AppConfig LastTab defaults to Home while persisted 0 restores Save Lab.",
+        "Kept PatchBench helper unwired and carried Host/Join parity, manifest policy, and sentinel hardening as future gates.",
+        "Kept TMM ARM4, storage, runtime, release, Host/Join, and online non-claims explicit."
+      ],
+      "deferredIntegrationFindings": [
+        "Lore ZIP probe parity and optional AppCore index/content relativePath enforcement are future hardening tasks.",
+        "Receipt display filtering remains defense-in-depth until future page/helper parity and wiring tests exist.",
+        "TMM front-door full-file scan hardening is future checker polish, not a current integration blocker."
+      ],
+      "safeWording": "Use no recorded blocking dissent among completed lanes; do not treat unavailable, timed-out, tainted, or retried lanes as stronger evidence than recorded."
     },
     "hardPayloadBoundary": "No game assets, copied executables, arbitrary saves/options, screenshots/frame dumps, raw CDB logs, raw proof bundles, full Ghidra databases/backups, secrets, .env files, build output, package output, local proof paths, raw manifests, thread IDs, or local campaign/worktree paths belong in tracked state or docs.",
     "installedGameOriginalBea": "read-only; no mutation performed or authorized"
   },
   "validation": {
-    "expectation": "Integration validation must include JSON parsing, git diff --check, stale local path/campaign marker scans over tracked goal/state/front-door docs, focused PatchBenchPrimitiveProjectionBoundaryTests, WinUI build, patch-engine safety, docs/repo/payload gates, and primary-lane disposition.",
+    "expectation": "Integration validation must include JSON parsing, git diff --check, stale local path/campaign marker scan over tracked goal/state/front-door docs, focused PatchBench/Lore/RE checks, docs/repo/payload gates, WinUI/AppCore/UiTests gates, winui-patch-engine-safety, and winui-primary-lane disposition.",
     "latestIntegration": [
-      "JSON parse for edited state files: PASS",
-      "git diff --check: PASS",
-      "stale local path/campaign marker scan over edited promotion files: PASS",
-      "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo: PASS",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --filter PatchBenchPrimitiveProjectionBoundaryTests --nologo: PASS, 11 passed",
-      "npm run test:winui-patch-engine-safety: PASS",
-      "npm run test:doc-commands: PASS",
-      "npm run test:md-links: PASS",
-      "npm run test:repo-hygiene: PASS",
-      "npm run test:public-allowlist: PASS",
-      "npm run test:hard-payload-safety: PASS",
-      "npm run test:winui-primary-lane: PASS; build passed, AppCore 1178 passed, UiTests 108 passed and 2 skipped"
+      "git diff --check HEAD: PASS",
+      "JSON parse for developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json: PASS",
+      "stale concrete campaign/worktree/thread marker scan over tracked goal/state/front-door docs: PASS",
+      "py -3 -m py_compile tools\\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py: PASS",
+      "py -3 tools\\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py --self-test --check: PASS",
+      "py -3 tools\\winui_lore_pack_builder.py --self-test: PASS, 6 tests",
+      "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo: PASS, 0 warnings, 0 errors",
+      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter FullyQualifiedName~LoreBrowserServiceTests: PASS, 21 passed",
+      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter PatchBenchSafeCopyReceiptTextTests|PatchBenchPrimitiveProjectionBoundaryTests|WinUiProductLaneTests: PASS, 44 passed",
+      "npm run test:winui-patch-engine-safety: PASS, 32 BinaryPatch tests plus catalog accounting PASS",
+      "npm run test:appcore: PASS, 1190 passed",
+      "npm run test:winui: PASS, 115 passed and 2 skipped",
+      "npm run test:doc-commands: PASS, 4298 documented npm commands checked",
+      "npm run test:md-links: PASS, 3644 Markdown files scanned and 6164 local links checked",
+      "npm run test:repo-hygiene: PASS, 18515 explicit text files checked",
+      "npm run test:hard-payload-safety: PASS, 19362 public candidate files checked",
+      "npm run test:public-allowlist: PASS, hard-payload, submodule payload, and migration inventory gates passed",
+      "npm run test:winui-primary-lane: PASS, solution build passed, AppCore 1190 passed, UiTests 115 passed and 2 skipped"
     ]
   },
   "currentCounters": {
@@ -119,9 +180,11 @@
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "Add formatter behavior tests for receipt layout, hostile path/proof-id/command-preview output sentinels, online-ready wording rejection, and Host/Join exactly-once rendering before receipt helper extraction.",
-    "Keep source-summary extraction deferred until path/redaction projection tests exist.",
-    "Keep storage work read-only until future deletion authority and candidate-specific evidence exist.",
-    "Keep runtime music proof at private pre-arm readiness only unless a future task grants explicit runtime-proof authority and leases."
+    "PatchBench: add concatenation/interpolation sentinel, manifest filename policy, Host/Join variant, and page-versus-helper parity tests before any helper wiring.",
+    "Lore: add ZIP package probe relativePath parity and decide AppCore index/content equality enforcement.",
+    "RE/rebuild: keep tmm-arm4-readiness-gate as proof-plan/checker support only until separate readiness-gate authority exists.",
+    "WinUI UX: address one residual path-redaction, proof-jargon, first-run, or accessibility item at a time.",
+    "Storage: remain read-only until future deletion authority and candidate-specific evidence exist.",
+    "Runtime: remain private pre-arm/no-live unless a future task grants explicit runtime-proof authority and leases."
   ]
 }

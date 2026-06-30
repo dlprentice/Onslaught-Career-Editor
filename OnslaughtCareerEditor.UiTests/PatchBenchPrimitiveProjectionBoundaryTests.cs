@@ -18,6 +18,7 @@ public class PatchBenchPrimitiveProjectionBoundaryTests
         new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchMenuColorSelectionText.cs", BoundaryProfile.MenuColorSelection),
         new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchOnlineReadinessText.cs", BoundaryProfile.OnlineReadiness),
         new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchPatchGroups.cs", BoundaryProfile.PatchGroups),
+        new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyReceiptText.cs", BoundaryProfile.ReceiptSourceProjection),
         new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyOutcomeText.cs", BoundaryProfile.SafeCopyOutcome),
         new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSelectedProfileText.cs", BoundaryProfile.SelectedProfile),
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchLaunchReadinessTextResult.cs", BoundaryProfile.LaunchReadiness),
@@ -28,6 +29,7 @@ public class PatchBenchPrimitiveProjectionBoundaryTests
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyControlOptionsTextState.cs", BoundaryProfile.SafeCopyOutcome),
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyMusicSwapTextState.cs", BoundaryProfile.SafeCopyOutcome),
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyOutcomeTextState.cs", BoundaryProfile.SafeCopyOutcome),
+        new("OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyReceiptTextState.cs", BoundaryProfile.ReceiptSourceProjection),
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchSelectedChoiceState.cs", BoundaryProfile.ChoiceVisualBinding),
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchSelectedProfileTextState.cs", BoundaryProfile.SelectedProfile),
     ];
@@ -46,10 +48,21 @@ public class PatchBenchPrimitiveProjectionBoundaryTests
     public void PatchBenchPresentationFiles_FollowTheirBoundaryProfiles()
     {
         IReadOnlyDictionary<string, BoundaryProfile> profiles = BuildBoundaryProfileMap();
+        Dictionary<string, string> sourcesByPath = profiles.ToDictionary(
+            pair => pair.Key,
+            pair => ReadRepoFile(pair.Key),
+            StringComparer.OrdinalIgnoreCase);
+        ISet<string> receiptProjectionTypes = BuildProjectionTypeSet(
+            sourcesByPath
+                .Where(pair => profiles[pair.Key] == BoundaryProfile.ReceiptSourceProjection)
+                .Select(pair => pair.Value));
+
         foreach ((string relativePath, BoundaryProfile profile) in profiles.OrderBy(pair => pair.Key, StringComparer.Ordinal))
         {
-            string source = ReadRepoFile(relativePath);
-            AssertNoBoundaryViolations(source, relativePath, profile);
+            ISet<string> allowedProjectionTypes = profile == BoundaryProfile.ReceiptSourceProjection
+                ? receiptProjectionTypes
+                : BuildProjectionTypeSet([sourcesByPath[relativePath]]);
+            AssertNoBoundaryViolations(sourcesByPath[relativePath], relativePath, profile, allowedProjectionTypes);
         }
     }
 
@@ -242,8 +255,7 @@ public class PatchBenchPrimitiveProjectionBoundaryTests
             ["OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyReceiptText.cs"] = """
                 internal static class PatchBenchSafeCopyReceiptText
                 {
-                    public const string HostJoinReceiptBoundary = "No Host/Join or online multiplayer";
-                    public static string Build(PatchBenchSafeCopyReceiptTextState state) => state.Headline + HostJoinReceiptBoundary;
+                    public static string Build(PatchBenchSafeCopyReceiptTextState state) => state.Headline;
                 }
                 """,
             ["OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyReceiptTextState.cs"] = """
@@ -251,16 +263,10 @@ public class PatchBenchPrimitiveProjectionBoundaryTests
                     string Headline,
                     IReadOnlyList<PatchBenchReceiptLineTextState> Lines,
                     IReadOnlyList<string> IncludedChanges,
-                    IReadOnlyList<string> StillNotIncluded,
-                    PatchBenchReceiptTone Tone,
-                    bool CopiedSavegames,
-                    int FilesCopied);
+                    IReadOnlyList<string> StillNotIncluded);
                 """,
             ["OnslaughtCareerEditor.WinUI/Models/PatchBenchReceiptLineTextState.cs"] = """
                 internal sealed record PatchBenchReceiptLineTextState(string Label, string Value);
-                """,
-            ["OnslaughtCareerEditor.WinUI/Models/PatchBenchReceiptTone.cs"] = """
-                internal enum PatchBenchReceiptTone { Ready, Warning }
                 """,
         };
 
@@ -427,7 +433,16 @@ public class PatchBenchPrimitiveProjectionBoundaryTests
 
     private static void AssertNoBoundaryViolations(string source, string sourceName, BoundaryProfile profile)
     {
-        string[] failures = FindBoundaryViolations(source, profile, BuildProjectionTypeSet([source]));
+        AssertNoBoundaryViolations(source, sourceName, profile, BuildProjectionTypeSet([source]));
+    }
+
+    private static void AssertNoBoundaryViolations(
+        string source,
+        string sourceName,
+        BoundaryProfile profile,
+        ISet<string> allowedProjectionTypes)
+    {
+        string[] failures = FindBoundaryViolations(source, profile, allowedProjectionTypes);
         Assert.That(
             failures,
             Is.Empty,
@@ -761,7 +776,7 @@ public class PatchBenchPrimitiveProjectionBoundaryTests
     private static string NormalizeTypeWhitespace(string typeName)
     {
         string clean = Regex.Replace(typeName.Trim(), @"\s+", " ");
-        string[] modifiers = ["static ", "readonly ", "const ", "sealed ", "partial "];
+        string[] modifiers = ["static ", "readonly ", "const ", "sealed ", "partial ", "params "];
         bool removed;
         do
         {

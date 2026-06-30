@@ -126,6 +126,26 @@ def normalize_lore_relative(path: Path) -> str:
     return path.as_posix().lstrip("./")
 
 
+def validate_lore_pack_relative_path(value: object) -> str:
+    if not isinstance(value, str) or not value:
+        raise ValueError("Lore pack relativePath is missing")
+    if value.strip() != value:
+        raise ValueError(f"Lore pack relativePath has unsafe whitespace: {value!r}")
+    if "\\" in value:
+        raise ValueError(f"Lore pack relativePath uses backslashes: {value!r}")
+    if value.startswith("/"):
+        raise ValueError(f"Lore pack relativePath is absolute: {value!r}")
+    if ":" in value:
+        raise ValueError(f"Lore pack relativePath contains a URI or drive marker: {value!r}")
+    if any(ord(character) < 32 or ord(character) == 127 for character in value):
+        raise ValueError(f"Lore pack relativePath contains a control character: {value!r}")
+
+    parts = value.split("/")
+    if any(part in {"", ".", ".."} or part.strip() != part for part in parts):
+        raise ValueError(f"Lore pack relativePath has unsafe path segments: {value!r}")
+    return value
+
+
 def resolve_source_candidate(root: Path, lore_root: Path, source_relative: str, path_part: str) -> Path:
     normalized = path_part.replace("\\", "/")
     if normalized.startswith("/"):
@@ -255,7 +275,7 @@ def build_lore_pack(root: Path = ROOT, output_dir: Path | None = None, *, use_gi
     if not documents:
         raise RuntimeError("no Lore text documents found")
     packable_relative_paths = {
-        normalize_lore_relative(path.relative_to(lore_root)).lower()
+        validate_lore_pack_relative_path(normalize_lore_relative(path.relative_to(lore_root))).lower()
         for path in documents
     }
 
@@ -264,7 +284,7 @@ def build_lore_pack(root: Path = ROOT, output_dir: Path | None = None, *, use_gi
     content_lines: list[str] = []
 
     for order, source in enumerate(documents):
-        relative_path = source.relative_to(lore_root).as_posix()
+        relative_path = validate_lore_pack_relative_path(source.relative_to(lore_root).as_posix())
         raw_content = sanitize_pack_content(source.read_text(encoding="utf-8", errors="replace"))
         if source.suffix.lower() in MARKDOWN_SUFFIXES:
             raw_content = rewrite_pack_links(root, lore_root, relative_path, raw_content, packable_relative_paths)
@@ -310,7 +330,26 @@ def check_lore_pack(pack_dir: Path) -> dict[str, object]:
     index = json.loads(index_path.read_text(encoding="utf-8"))
     if index.get("schema") != SCHEMA:
         raise ValueError("Lore pack schema mismatch")
-    expected = {item["id"]: item for item in index.get("documents", [])}
+    expected: dict[str, dict[str, object]] = {}
+    indexed_relative_paths: set[str] = set()
+    for item_number, item in enumerate(index.get("documents", []), start=1):
+        if not isinstance(item, dict):
+            raise ValueError(f"index document {item_number} is not an object")
+        doc_id = item.get("id")
+        if not isinstance(doc_id, str) or not doc_id.strip():
+            raise ValueError(f"index document {item_number} is missing id")
+        if doc_id in expected:
+            raise ValueError(f"duplicate Lore pack document id: {doc_id}")
+        relative_path = validate_lore_pack_relative_path(item.get("relativePath"))
+        relative_key = relative_path.lower()
+        if relative_key in indexed_relative_paths:
+            raise ValueError(f"duplicate Lore pack relativePath: {relative_path}")
+        indexed_relative_paths.add(relative_key)
+        item["relativePath"] = relative_path
+        expected[doc_id] = item
+    if index.get("documentCount") != len(expected):
+        raise ValueError("Lore pack documentCount does not match index rows")
+
     seen: set[str] = set()
     for line_number, line in enumerate(content_path.read_text(encoding="utf-8").splitlines(), start=1):
         if not line.strip():
@@ -319,6 +358,11 @@ def check_lore_pack(pack_dir: Path) -> dict[str, object]:
         doc_id = row.get("id")
         if doc_id not in expected:
             raise ValueError(f"content row {line_number} has unknown id {doc_id!r}")
+        if doc_id in seen:
+            raise ValueError(f"content row {line_number} duplicates id {doc_id!r}")
+        relative_path = validate_lore_pack_relative_path(row.get("relativePath"))
+        if relative_path != expected[doc_id].get("relativePath"):
+            raise ValueError(f"content row {line_number} relativePath does not match index")
         content = row.get("content")
         if not isinstance(content, str):
             raise ValueError(f"content row {line_number} is missing text content")
@@ -388,6 +432,80 @@ class LorePackBuilderTests(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 build_lore_pack(root, root / LORE_PACK_DIR, use_git=False)
+
+    def test_rejects_unsafe_lore_pack_relative_paths(self) -> None:
+        unsafe_paths = (
+            "",
+            " ",
+            "Start.md ",
+            "../secret.md",
+            "chapter/../secret.md",
+            "chapter/./intro.md",
+            "/absolute.md",
+            "C:/local.md",
+            "C:\\local.md",
+            "\\\\server\\share\\doc.md",
+            "chapter//intro.md",
+            "chapter/intro.md/",
+            "chapter\tintro.md",
+            "chapter:alternate.md",
+        )
+
+        for relative_path in unsafe_paths:
+            with self.subTest(relative_path=relative_path):
+                with self.assertRaises(ValueError):
+                    validate_lore_pack_relative_path(relative_path)
+
+        self.assertEqual(validate_lore_pack_relative_path("chapter/intro.md"), "chapter/intro.md")
+        self.assertEqual(validate_lore_pack_relative_path("deep/nested/doc.txt"), "deep/nested/doc.txt")
+        self.assertEqual(validate_lore_pack_relative_path("file-with-dashes.md"), "file-with-dashes.md")
+
+    def test_check_rejects_unsafe_lore_pack_relative_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            pack_dir = Path(temp_root) / LORE_PACK_DIR
+            self.write_lore_pack_fixture(pack_dir, relative_path="../secret.md")
+
+            with self.assertRaises(ValueError):
+                check_lore_pack(pack_dir)
+
+    def test_check_rejects_lore_pack_relative_path_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            pack_dir = Path(temp_root) / LORE_PACK_DIR
+            self.write_lore_pack_fixture(pack_dir, relative_path="Start.md", content_relative_path="Other.md")
+
+            with self.assertRaises(ValueError):
+                check_lore_pack(pack_dir)
+
+    @staticmethod
+    def write_lore_pack_fixture(pack_dir: Path, *, relative_path: str, content_relative_path: str | None = None) -> None:
+        pack_dir.mkdir(parents=True)
+        content = "# Start\n\nSynthetic fixture.\n"
+        digest = sha256_text(content)
+        row = {
+            "id": "doc-000001",
+            "relativePath": content_relative_path or relative_path,
+            "title": "Start",
+            "sha256": digest,
+            "byteLength": len(content.encode("utf-8")),
+            "content": content,
+        }
+        index = {
+            "schema": SCHEMA,
+            "sourceRoot": LORE_BOOK_DIR,
+            "documentCount": 1,
+            "documents": [
+                {
+                    "id": "doc-000001",
+                    "relativePath": relative_path,
+                    "title": "Start",
+                    "sha256": digest,
+                    "byteLength": len(content.encode("utf-8")),
+                    "order": 0,
+                }
+            ],
+        }
+        (pack_dir / INDEX_FILE_NAME).write_text(json.dumps(index), encoding="utf-8")
+        (pack_dir / CONTENT_FILE_NAME).write_text(json.dumps(row) + "\n", encoding="utf-8")
 
 
 def main() -> int:
