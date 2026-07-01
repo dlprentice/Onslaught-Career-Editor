@@ -1,7 +1,7 @@
 # Local Lab Overlay
 
 Status: active
-Last updated: 2026-06-28
+Last updated: 2026-06-30
 
 This public repository is the primary day-to-day working checkout. The repo is
 allowed to contain raw project history and working material such as RE notes,
@@ -129,15 +129,12 @@ maintainer-local path, but the repo should receive deterministic exports,
 scripts, markdown, JSON, TSV, and ledger files instead of binary Ghidra project
 stores.
 
-Current maintainer-local live project on this workstation:
-
-- Project file: `C:\Users\david\Ghidra\Projects\BEA.gpr`
-- Project store: `C:\Users\david\Ghidra\Projects\BEA.rep\`
-- Latest verified historical backup pointer: `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`
-
-Public clones do not need this database to build or test the app. Use the
-tracked Ghidra scripts, exports, ledgers, and RE docs for source work; use the
-live Ghidra project only for maintainer-local mutation or read-back proof.
+Maintainer-local live Ghidra project and backup locations are
+private/local-only. Keep exact project and backup paths outside tracked docs in
+ignored local overlay notes or maintainer-private manifests. Public clones do
+not need a Ghidra database to build or test the app. Use the tracked Ghidra
+scripts, exports, ledgers, and RE docs for source work; use a local Ghidra
+project for maintainer-local investigation, mutation, or read-back proof.
 
 ### Ghidra Distribution Options
 
