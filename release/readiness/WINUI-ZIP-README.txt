@@ -33,8 +33,9 @@ First run
 - Asset Library needs a generated local asset catalog. It does not browse raw
   game files directly; choose a folder containing asset_catalog\catalog.json or
   catalog.json after generating/exporting assets locally. Catalog generation is
-  a source/lab workflow documented in reverse-engineering\game-assets\; this
-  portable app ZIP only loads an existing generated catalog.
+  a source-repository/lab workflow documented at
+  https://github.com/dlprentice/Onslaught-Career-Editor/tree/main/reverse-engineering/game-assets;
+  this portable app ZIP only loads an existing generated catalog.
 - Lore rendering uses the Microsoft Edge WebView2 Runtime. Current Windows
   systems usually already have it; if the Lore page cannot initialize on a
   fresh machine, install or repair WebView2 and keep the extracted files
