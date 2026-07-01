@@ -63,11 +63,14 @@ PLAN_FILE_NAME = "texture-mesh-material-sidecar-command-arm-checklist-command-ar
 PREMATURE_RESULT_JSON_FILE_NAMES = (
     "texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.v1.json",
     "texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof.v1.json",
+    "texture-mesh-material-sidecar-command-arm-checklist-readiness-gate-proof-plan.v1.json",
+    "texture-mesh-material-sidecar-command-arm-checklist-readiness-gate-proof.v1.json",
 )
 WRONG_READINESS_GATE_ARTIFACT_FILE_NAMES = (
     "texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof.md",
     "texture-mesh-material-sidecar-importer-private-corpus-real-importer-dry-run-harness-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md",
     "texture-mesh-material-sidecar-command-arm-checklist-readiness-gate-proof.md",
+    "texture-mesh-material-sidecar-command-arm-checklist-readiness-gate-proof-plan.md",
 )
 
 EXPECTED_CONTRACT_COUNTS = {
@@ -82,6 +85,7 @@ EXPECTED_CONTRACT_COUNTS = {
     "armedCommandRowCount": 0,
     "executedCommandRowCount": 0,
     "shellDispatchedCommandRowCount": 0,
+    "readyForLaterCommandArmChecklistReadinessGateRowCount": 99,
     "consumerArchiveTotalCount": 301,
     "unknownAyaArchiveClassCount": 0,
 }
@@ -127,10 +131,14 @@ REQUIRED_PLAN_TOKENS = (
     "`armedCommandRowCount`",
     "`executedCommandRowCount`",
     "`shellDispatchedCommandRowCount`",
+    "`readyForLaterCommandArmChecklistReadinessGateRowCount`",
     "`consumerArchiveTotalCount`",
     "`unknownAyaArchiveClassCount`",
     "`publicLeakCheck`",
     "`realImporterExecuted`",
+    "`beLaunch`",
+    "`ghidraMutation`",
+    "`godotWork`",
     "`actualAssetImportRows`",
     "`generatedAssetRows`",
     "`rawPathRows`",
@@ -140,6 +148,13 @@ REQUIRED_PLAN_TOKENS = (
     "`rawCommandArgumentRows`",
     "`publishedCommandArgumentRows`",
     "`rawCommandDryRunTraceRows`",
+    "`privateAssetContentRead`",
+    "`privateArchiveBytesRead`",
+    "`rawPrivateManifestConsumed`",
+    "`rawPrivateManifestRows`",
+    "`commandExecutionRows`",
+    "`commandShellDispatchRows`",
+    "`outputArtifactRows`",
     "no private asset reads",
     "no raw private manifest reads",
     "no command arming",
@@ -189,6 +204,19 @@ GAME_ASSETS_SLOT_TOKENS = (
     "armedCommandRowCount=0",
     "executedCommandRowCount=0",
     "shellDispatchedCommandRowCount=0",
+)
+
+ALIAS_TABLE_ROW_TOKENS = (
+    ALIAS,
+    PLAN_FILE_NAME,
+    "Current active proof-plan slot",
+    "continuity guard only",
+    "not readiness-gate execution",
+    "not readiness-gate proof completion",
+    "no runtime proof",
+    "rebuild proof",
+    "rebuild parity",
+    "no-noticeable-difference proof",
 )
 
 ROUTING_INDEX_TOKENS = (
@@ -311,12 +339,17 @@ def check_continuity_block(text: str, label: str, required_tokens: tuple[str, ..
     require(text.strip() != "", f"{label} active block is empty")
     for token in required_tokens:
         require(token in text, f"{label} missing required token: {token}")
+    check_artifact_name_boundaries(text, label)
+    require("proof file is not materialized yet" not in text, f"{label} still says proof file is not materialized")
+    check_forbidden_text(text, label)
+
+
+def check_artifact_name_boundaries(text: str, label: str) -> None:
+    """Reject stale or premature readiness-gate artifact names in scoped text."""
     for artifact_name in WRONG_READINESS_GATE_ARTIFACT_FILE_NAMES:
         require(artifact_name not in text, f"{label} promotes wrong readiness-gate artifact: {artifact_name}")
     for result_json_name in PREMATURE_RESULT_JSON_FILE_NAMES:
         require(result_json_name not in text, f"{label} references premature readiness-gate result JSON: {result_json_name}")
-    require("proof file is not materialized yet" not in text, f"{label} still says proof file is not materialized")
-    check_forbidden_text(text, label)
 
 
 def section_after_heading(text: str, heading: str, label: str) -> str:
@@ -351,7 +384,7 @@ def require_plan_link(block: str, base_path: Path, label: str) -> None:
     require(matching_links, f"{label} missing Markdown link to {PLAN_FILE_NAME}")
     for link, clean_link in normalized_links:
         name = Path(clean_link).name
-        if "readiness-gate" in name and name.endswith(".md"):
+        if "readiness-gate" in name:
             require(name == PLAN_FILE_NAME, f"{label} links wrong readiness-gate artifact: {link}")
     for link in matching_links:
         clean_link = link.split("#", 1)[0]
@@ -398,6 +431,7 @@ def check_source_proof(source: Mapping[str, Any]) -> None:
 
 def check_plan_text(plan_text: str, source: Mapping[str, Any]) -> None:
     check_forbidden_text(plan_text, PLAN_FILE_NAME)
+    check_artifact_name_boundaries(plan_text, PLAN_FILE_NAME)
     for token in REQUIRED_PLAN_TOKENS:
         require(token in plan_text, f"plan missing required token: {token}")
 
@@ -407,6 +441,9 @@ def check_plan_text(plan_text: str, source: Mapping[str, Any]) -> None:
     guard_table_checks = {
         "publicLeakCheck": "PASS",
         "realImporterExecuted": "false",
+        "beLaunch": "false",
+        "ghidraMutation": "false",
+        "godotWork": "false",
         "actualAssetImportRows": "0",
         "generatedAssetRows": "0",
         "rawPathRows": "0",
@@ -416,6 +453,13 @@ def check_plan_text(plan_text: str, source: Mapping[str, Any]) -> None:
         "rawCommandArgumentRows": "0",
         "publishedCommandArgumentRows": "0",
         "rawCommandDryRunTraceRows": "0",
+        "privateAssetContentRead": "false",
+        "privateArchiveBytesRead": "false",
+        "rawPrivateManifestConsumed": "false",
+        "rawPrivateManifestRows": "0",
+        "commandExecutionRows": "0",
+        "commandShellDispatchRows": "0",
+        "outputArtifactRows": "0",
     }
     for key, expected in guard_table_checks.items():
         require(f"| `{key}` | `{expected}` |" in plan_text, f"plan missing guard row: {key}")
@@ -444,6 +488,15 @@ def check_front_door_docs() -> None:
     )
     check_continuity_block(chain_block, str(CHAIN_MAP.relative_to(ROOT)), ACTIVE_SLOT_TOKENS)
     require_plan_link(chain_block, CHAIN_MAP, str(CHAIN_MAP.relative_to(ROOT)))
+    alias_rows = [
+        row
+        for row in chain.splitlines()
+        if row.startswith("| `") and f"`{ALIAS}`" in row
+    ]
+    require(len(alias_rows) == 1, f"{CHAIN_MAP.relative_to(ROOT)} must have exactly one {ALIAS} alias table row")
+    alias_row = alias_rows[0]
+    check_continuity_block(alias_row, f"{CHAIN_MAP.relative_to(ROOT)} alias row", ALIAS_TABLE_ROW_TOKENS)
+    require_plan_link(alias_row, CHAIN_MAP, f"{CHAIN_MAP.relative_to(ROOT)} alias row")
 
     backlog_active = first_paragraph_after_heading(
         backlog,
@@ -479,6 +532,7 @@ def run_check() -> None:
 def run_self_test() -> None:
     check_forbidden_text("This has no command arming and no rebuild parity.", "self-test clean")
     check_forbidden_text("This does not complete a readiness-gate proof.", "self-test negative readiness-gate proof wording")
+    check_forbidden_text("This is not a completed readiness-gate proof.", "self-test completed proof negation wording")
     try:
         check_forbidden_text(r"C:\\Users\\example\\secret", "self-test path")
     except ReadinessPlanProbeError:
@@ -563,27 +617,40 @@ def run_self_test() -> None:
     else:
         raise ReadinessPlanProbeError("self-test failed to catch positive parity overclaim")
 
-    try:
-        check_continuity_block(
-            f"{good_block} {WRONG_READINESS_GATE_ARTIFACT_FILE_NAMES[0]}",
-            "self-test wrong readiness artifact",
-            ACTIVE_SLOT_TOKENS,
-        )
-    except ReadinessPlanProbeError:
-        pass
-    else:
-        raise ReadinessPlanProbeError("self-test failed to catch wrong readiness artifact")
+    for artifact_name in WRONG_READINESS_GATE_ARTIFACT_FILE_NAMES:
+        try:
+            check_continuity_block(
+                f"{good_block} {artifact_name}",
+                f"self-test wrong readiness artifact {artifact_name}",
+                ACTIVE_SLOT_TOKENS,
+            )
+        except ReadinessPlanProbeError:
+            pass
+        else:
+            raise ReadinessPlanProbeError(f"self-test failed to catch wrong readiness artifact: {artifact_name}")
+
+    for result_json_name in PREMATURE_RESULT_JSON_FILE_NAMES:
+        try:
+            check_continuity_block(
+                f"{good_block} {result_json_name}",
+                f"self-test premature result JSON {result_json_name}",
+                ACTIVE_SLOT_TOKENS,
+            )
+        except ReadinessPlanProbeError:
+            pass
+        else:
+            raise ReadinessPlanProbeError(f"self-test failed to catch premature result JSON: {result_json_name}")
 
     try:
         check_continuity_block(
-            f"{good_block} {PREMATURE_RESULT_JSON_FILE_NAMES[1]}",
-            "self-test premature result JSON",
+            f"{good_block} proof file is not materialized yet",
+            "self-test stale proof materialization wording",
             ACTIVE_SLOT_TOKENS,
         )
     except ReadinessPlanProbeError:
         pass
     else:
-        raise ReadinessPlanProbeError("self-test failed to catch premature result JSON")
+        raise ReadinessPlanProbeError("self-test failed to catch stale proof materialization wording")
 
 
 def main() -> int:

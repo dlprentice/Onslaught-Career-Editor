@@ -43,10 +43,14 @@ plan:
 | `armedCommandRowCount` | `0` |
 | `executedCommandRowCount` | `0` |
 | `shellDispatchedCommandRowCount` | `0` |
+| `readyForLaterCommandArmChecklistReadinessGateRowCount` | `99` |
 | `consumerArchiveTotalCount` | `301` |
 | `unknownAyaArchiveClassCount` | `0` |
 | `publicLeakCheck` | `PASS` |
 | `realImporterExecuted` | `false` |
+| `beLaunch` | `false` |
+| `ghidraMutation` | `false` |
+| `godotWork` | `false` |
 | `actualAssetImportRows` | `0` |
 | `generatedAssetRows` | `0` |
 | `rawPathRows` | `0` |
@@ -56,6 +60,13 @@ plan:
 | `rawCommandArgumentRows` | `0` |
 | `publishedCommandArgumentRows` | `0` |
 | `rawCommandDryRunTraceRows` | `0` |
+| `privateAssetContentRead` | `false` |
+| `privateArchiveBytesRead` | `false` |
+| `rawPrivateManifestConsumed` | `false` |
+| `rawPrivateManifestRows` | `0` |
+| `commandExecutionRows` | `0` |
+| `commandShellDispatchRows` | `0` |
+| `outputArtifactRows` | `0` |
 
 The readiness-gate proof plan may only describe those counters and the next
 fail-closed checks. It must not introduce raw private rows, payload locations,
