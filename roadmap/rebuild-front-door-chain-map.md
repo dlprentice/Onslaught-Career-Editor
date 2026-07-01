@@ -1,7 +1,7 @@
 # Rebuild Front-Door Chain Map
 
 Status: active routing map
-Last updated: 2026-06-28
+Last updated: 2026-06-30
 
 This is a compact navigation map from static closure to the current
 static-to-proof rebuild-support scope. It is not a runtime proof, visual QA
@@ -64,21 +64,24 @@ names are too long.
 | `tmm-implementation-readiness` | [texture-mesh-material-sidecar-importer-implementation-readiness-gate-proof-plan.md](../reverse-engineering/game-assets/texture-mesh-material-sidecar-importer-implementation-readiness-gate-proof-plan.md) | Public-safe importer implementation readiness gate. |
 | `tmm-private-inventory-preflight` | [texture-mesh-material-sidecar-importer-private-corpus-read-only-inventory-preflight-proof-plan.md](../reverse-engineering/game-assets/texture-mesh-material-sidecar-importer-private-corpus-read-only-inventory-preflight-proof-plan.md) | Redacted private-corpus inventory preflight. |
 | `tmm-arm4-validation` | [texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.md](../reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.md) | Latest completed public-safe command arm-checklist validation proof. |
-| `tmm-arm4-readiness-gate` | [texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md](../reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md) | Current active proof-plan slot; continuity guard only, not completed readiness-gate execution or rebuild proof. |
+| `tmm-arm4-readiness-gate` | [texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md](../reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md) | Current active proof-plan slot; continuity guard only, not readiness-gate execution or completed readiness-gate proof; no runtime proof, rebuild proof, rebuild parity, or no-noticeable-difference proof. |
 
 ## Current Active Scope
 
 The selected active static-to-proof slice is:
 
-- Alias: `tmm-arm4-readiness-gate`
+- Alias: [`tmm-arm4-readiness-gate`](../reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md)
 - Full slice: `Texture / Mesh Material Sidecar Importer Private Corpus Real Importer Dry-Run Harness Command Arm Checklist Command Arm Checklist Command Arm Checklist Command Arm Checklist Readiness Gate Proof Plan`
 - Scope token: `texture-mesh-material-sidecar-importer-private-corpus-real-importer-dry-run-harness-command-arm-checklist-command-arm-checklist-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan`
-- Source evidence: completed `tmm-arm4-validation`
-- Current status: proof-plan slot materialized; not yet a completed proof file
+- Source evidence: completed `tmm-arm4-validation`, backed by
+  `texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.v1.json`
+- Current status: proof-plan slot materialized; continuity guard only; not readiness-gate execution; not a completed readiness-gate proof
+- Non-claims: this slot claims no runtime proof, no rebuild parity, and no no-noticeable-difference proof
 
 The next safe rebuild-support artifact is therefore the public-safe
 `tmm-arm4-readiness-gate` proof plan/artifact slot linked above. It consumes the
 completed validation rows only as public-safe source evidence and keeps command
 arming, shell dispatch, importer execution, private asset reads, generated asset
 output, BEA launch, Ghidra mutation, runtime proof, rebuild parity, and
-no-noticeable-difference claims out of scope.
+no-noticeable-difference claims out of scope. It claims no runtime proof, no
+rebuild parity, and no no-noticeable-difference proof.

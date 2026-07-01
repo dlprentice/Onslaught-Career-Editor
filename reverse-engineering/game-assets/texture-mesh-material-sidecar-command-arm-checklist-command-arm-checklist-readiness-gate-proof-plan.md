@@ -21,8 +21,7 @@ proof must satisfy before any separate command-arm boundary lane can be chosen.
 
 Machine proof JSON, a readiness-gate generator, command arming, shell dispatch,
 real importer execution, generated payload output, runtime proof, and rebuild
-parity remain separate later gates. This plan is not a completed
-readiness-gate proof; specifically, it is not a completed readiness-gate proof.
+parity remain separate later gates. This artifact is not a completed readiness-gate proof.
 
 ## Source Continuity
 
@@ -54,6 +53,9 @@ plan:
 | `rawFilenameRows` | `0` |
 | `rawHashRows` | `0` |
 | `byteLengthRows` | `0` |
+| `rawCommandArgumentRows` | `0` |
+| `publishedCommandArgumentRows` | `0` |
+| `rawCommandDryRunTraceRows` | `0` |
 
 The readiness-gate proof plan may only describe those counters and the next
 fail-closed checks. It must not introduce raw private rows, payload locations,
@@ -71,13 +73,15 @@ A later completed readiness-gate proof must, at minimum:
   `shellDispatchedCommandRowCount=0`;
 - preserve `realImporterExecuted=false`, `actualAssetImportRows=0`,
   `generatedAssetRows=0`, `rawPathRows=0`, `rawFilenameRows=0`,
-  `rawHashRows=0`, and `byteLengthRows=0`;
+  `rawHashRows=0`, `byteLengthRows=0`, `rawCommandArgumentRows=0`,
+  `publishedCommandArgumentRows=0`, and `rawCommandDryRunTraceRows=0`;
 - verify `publicLeakCheck=PASS`;
 - reject any private asset content read, raw private manifest consumption,
-  command arming, shell dispatch, importer execution, generated payload output,
-  BEA launch, CDB attach, Ghidra mutation or read-back, product UI work,
+  private command arguments or raw shell-trace publication, command arming, shell
+  dispatch, importer execution, generated payload output, BEA launch, CDB
+  attach, Ghidra mutation or read-back, product UI work,
   renderer/rebuild implementation, runtime proof, visual parity, gameplay
-  proof, rebuild parity, runtime parity, or no no-noticeable-difference parity
+  proof, rebuild parity, runtime parity, or any no-noticeable-difference parity
   claim;
 - select only a later explicit command-arm boundary lane after those checks pass.
 
@@ -89,6 +93,8 @@ This artifact makes only a public-safe planning and continuity claim. It is:
 - no private asset bytes;
 - no raw private manifest reads;
 - no raw private manifest consumption in public scope;
+- no private command arguments;
+- no shell traces;
 - no command arming;
 - no shell dispatch;
 - no command execution;
@@ -134,11 +140,12 @@ The plan and checker fail closed if any of the following is observed:
 Run the plan checker from the repo root:
 
 ```powershell
-py -3 tools\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py --check
+py -3 tools\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py --self-test --check
 ```
 
 The checker reads only tracked public-safe files: this Markdown file, the
 tracked validation proof JSON, and the front-door index/map docs that link this
-slot. It does not discover local game folders, inspect private asset manifests,
-resolve private paths, stat payload files, run BEA, attach CDB, launch Ghidra,
-or write generated assets.
+slot. Its front-door checks apply only to the active proof-plan slot
+representation, not entire historical ledger files. It does not discover local
+game folders, inspect private asset manifests, resolve private paths, stat
+payload files, run BEA, attach CDB, launch Ghidra, or write generated assets.

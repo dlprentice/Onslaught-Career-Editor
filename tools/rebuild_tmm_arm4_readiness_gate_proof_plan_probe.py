@@ -2,10 +2,11 @@
 """Validate the public-safe TMM ARM4 readiness-gate proof-plan slot.
 
 This checker consumes only tracked public-safe files: the Markdown proof plan,
-the ARM4 validation proof JSON, and front-door index/map docs that link the
-plan slot. It does not discover private corpus paths, read private assets or
-manifests, arm commands, dispatch shells, execute importers, launch
-BEA/CDB/Ghidra, or write generated payloads.
+the ARM4 validation proof JSON, and scoped active-slot front-door echoes that
+link the plan slot. It does not validate entire historical ledger files for
+public safety, discover private corpus paths, read private assets or manifests,
+arm commands, dispatch shells, execute importers, launch BEA/CDB/Ghidra, or
+write generated payloads.
 """
 
 from __future__ import annotations
@@ -32,6 +33,9 @@ SOURCE_PROOF = (
     / "texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.v1.json"
 )
 CHAIN_MAP = ROOT / "roadmap" / "rebuild-front-door-chain-map.md"
+STATIC_BACKLOG = ROOT / "roadmap" / "static-to-proof-rebuild-transition-backlog.md"
+ROADMAP_INDEX = ROOT / "roadmap" / "ROADMAP-INDEX.md"
+RE_INDEX = ROOT / "reverse-engineering" / "RE-INDEX.md"
 GAME_ASSETS_INDEX = ROOT / "reverse-engineering" / "game-assets" / "_index.md"
 
 ALIAS = "tmm-arm4-readiness-gate"
@@ -56,6 +60,11 @@ SOURCE_CONTRACT_KEY = (
 )
 SOURCE_FILE_NAME = "texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.v1.json"
 PLAN_FILE_NAME = "texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md"
+PLAN_RESULT_JSON_FILE_NAME = "texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.v1.json"
+WRONG_SIBLING_PLAN_FILE_NAMES = (
+    "texture-mesh-material-sidecar-importer-private-corpus-real-importer-dry-run-harness-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md",
+    "texture-mesh-material-sidecar-command-arm-checklist-readiness-gate-proof.md",
+)
 
 EXPECTED_CONTRACT_COUNTS = {
     "commandArmChecklistRowsConsumed": 99,
@@ -84,6 +93,9 @@ EXPECTED_GUARDS = {
     "rawFilenameRows": 0,
     "rawHashRows": 0,
     "byteLengthRows": 0,
+    "rawCommandArgumentRows": 0,
+    "publishedCommandArgumentRows": 0,
+    "rawCommandDryRunTraceRows": 0,
     "privateAssetContentRead": False,
     "privateArchiveBytesRead": False,
     "rawPrivateManifestConsumed": False,
@@ -121,6 +133,9 @@ REQUIRED_PLAN_TOKENS = (
     "`rawFilenameRows`",
     "`rawHashRows`",
     "`byteLengthRows`",
+    "`rawCommandArgumentRows`",
+    "`publishedCommandArgumentRows`",
+    "`rawCommandDryRunTraceRows`",
     "no private asset reads",
     "no raw private manifest reads",
     "no command arming",
@@ -140,14 +155,49 @@ REQUIRED_PLAN_TOKENS = (
     "not a completed readiness-gate proof",
 )
 
+ACTIVE_SLOT_TOKENS = (
+    ALIAS,
+    THIS_SLICE,
+    THIS_SCOPE,
+    PLAN_FILE_NAME,
+    SOURCE_FILE_NAME,
+    "proof-plan",
+    "continuity",
+    "not readiness-gate execution",
+    "no runtime proof",
+    "no rebuild parity",
+    "no no-noticeable-difference",
+)
+
+GAME_ASSETS_SLOT_TOKENS = (
+    ALIAS,
+    THIS_SLICE,
+    PLAN_FILE_NAME,
+    "proof-plan slot",
+    "continuity guard only",
+    "not readiness-gate execution",
+    "no runtime proof",
+    "no rebuild parity",
+    "no no-noticeable-difference",
+    "commandArmChecklistRowsConsumed=99",
+    "armedCommandRowCount=0",
+    "executedCommandRowCount=0",
+    "shellDispatchedCommandRowCount=0",
+)
+
+ROUTING_INDEX_TOKENS = (
+    "rebuild-front-door-chain-map.md",
+    "static-to-proof-rebuild-transition-backlog.md",
+)
+
 FORBIDDEN_PUBLIC_PATTERNS = (
     (re.compile(r"\b[A-Za-z]:[\\/]"), "machine-local absolute path"),
     (re.compile(r"\b[a-fA-F0-9]{64}\b"), "raw digest-like value"),
     (re.compile(r"(?i)c:[\\/]users"), "user profile path"),
     (re.compile(r"(?i)program files"), "installed game path"),
     (re.compile(r"(?i)steamapps"), "installed game path"),
-    (re.compile(r"(?i)\bgame[\\/]"), "private game mirror path"),
-    (re.compile(r"(?i)\bmedia[\\/]"), "private media path"),
+    (re.compile(r"(?i)(?<![A-Za-z0-9-])(?:local-)?game[\\/]"), "private game mirror path"),
+    (re.compile(r"(?i)(?<![A-Za-z0-9-])(?:local-)?media[\\/]"), "private media path"),
     (re.compile(r"(?i)private_runtime_evidence"), "private runtime evidence marker"),
     (re.compile(r"(?i)capturepath|framepath|capturehash|framebytelength"), "private frame locator field"),
     (re.compile(r"(?i)\.private\.png"), "private frame filename"),
@@ -170,6 +220,8 @@ FORBIDDEN_OVERCLAIMS = (
     "private importer dry-run complete",
     "real importer dry-run complete",
     "readiness gate executed",
+    "readiness-gate executed",
+    "readiness-gate complete",
     "readinessgateexecuted=true",
     "complete public-safe readiness gate",
     "cleared to arm",
@@ -181,12 +233,14 @@ FORBIDDEN_OVERCLAIMS = (
     "runtime texture pixels proven",
     "runtime mesh loading proven",
     "runtime direct3d upload proven",
+    "runtime proof complete",
     "material visual correctness proven",
     "asset format completeness proven",
     "visual qa complete",
     "godot parity proven",
     "rebuild implementation complete",
     "rebuild parity proven",
+    "rebuild parity achieved",
     "no-noticeable-difference parity proven",
 )
 
@@ -229,18 +283,56 @@ def check_forbidden_text(text: str, label: str) -> None:
         require(phrase not in lower, f"{label} contains forbidden overclaim phrase: {phrase}")
 
 
-def windows_around_token(text: str, token: str, radius: int = 1200) -> list[str]:
-    windows: list[str] = []
-    offset = 0
-    while True:
-        index = text.find(token, offset)
-        if index == -1:
-            break
-        start = max(0, index - radius)
-        end = min(len(text), index + len(token) + radius)
-        windows.append(text[start:end])
-        offset = index + len(token)
-    return windows
+def check_continuity_block(text: str, label: str, required_tokens: tuple[str, ...]) -> None:
+    """Validate one active front-door continuity block."""
+    require(text.strip() != "", f"{label} active block is empty")
+    for token in required_tokens:
+        require(token in text, f"{label} missing required token: {token}")
+    for sibling in WRONG_SIBLING_PLAN_FILE_NAMES:
+        require(sibling not in text, f"{label} promotes wrong sibling plan: {sibling}")
+    require(PLAN_RESULT_JSON_FILE_NAME not in text, f"{label} references premature readiness-gate result JSON")
+    require("proof file is not materialized yet" not in text, f"{label} still says proof file is not materialized")
+    check_forbidden_text(text, label)
+
+
+def section_after_heading(text: str, heading: str, label: str) -> str:
+    match = re.search(rf"(?m)^{re.escape(heading)}\s*$", text)
+    require(match is not None, f"{label} missing heading: {heading}")
+    tail_start = match.end()
+    next_heading = re.search(r"(?m)^##\s+", text[tail_start:])
+    tail_end = tail_start + next_heading.start() if next_heading else len(text)
+    section = text[tail_start:tail_end].strip()
+    require(section != "", f"{label} section is empty after {heading}")
+    return section
+
+
+def first_paragraph_after_heading(text: str, heading: str, label: str) -> str:
+    section = section_after_heading(text, heading, label)
+    match = re.match(r"(.+?)(?:\n\s*\n|$)", section, re.S)
+    require(match is not None, f"{label} missing first paragraph after {heading}")
+    return match.group(1)
+
+
+def first_paragraph_with_token(text: str, token: str, label: str) -> str:
+    for paragraph in re.split(r"\n\s*\n", text):
+        if token in paragraph:
+            return paragraph
+    raise ReadinessPlanProbeError(f"{label} missing paragraph containing token: {token}")
+
+
+def require_plan_link(block: str, base_path: Path, label: str) -> None:
+    links = re.findall(r"\[[^\]]+\]\(([^)]+)\)", block)
+    normalized_links = [(link, link.split("#", 1)[0]) for link in links]
+    matching_links = [link for link, clean_link in normalized_links if Path(clean_link).name == PLAN_FILE_NAME]
+    require(matching_links, f"{label} missing Markdown link to {PLAN_FILE_NAME}")
+    for link, clean_link in normalized_links:
+        name = Path(clean_link).name
+        if "readiness-gate" in name and name.endswith(".md"):
+            require(name == PLAN_FILE_NAME, f"{label} links wrong readiness-gate artifact: {link}")
+    for link in matching_links:
+        clean_link = link.split("#", 1)[0]
+        target = (base_path.parent / clean_link).resolve()
+        require(target == PLAN.resolve(), f"{label} plan link resolves to wrong target: {link}")
 
 
 def check_source_proof(source: Mapping[str, Any]) -> None:
@@ -296,6 +388,9 @@ def check_plan_text(plan_text: str, source: Mapping[str, Any]) -> None:
         "rawFilenameRows": "0",
         "rawHashRows": "0",
         "byteLengthRows": "0",
+        "rawCommandArgumentRows": "0",
+        "publishedCommandArgumentRows": "0",
+        "rawCommandDryRunTraceRows": "0",
     }
     for key, expected in guard_table_checks.items():
         require(f"| `{key}` | `{expected}` |" in plan_text, f"plan missing guard row: {key}")
@@ -312,13 +407,41 @@ def check_plan_text(plan_text: str, source: Mapping[str, Any]) -> None:
 
 def check_front_door_docs() -> None:
     chain = read_text(CHAIN_MAP)
+    backlog = read_text(STATIC_BACKLOG)
+    roadmap_index = read_text(ROADMAP_INDEX)
+    re_index = read_text(RE_INDEX)
     index = read_text(GAME_ASSETS_INDEX)
-    for label, text in ((str(CHAIN_MAP.relative_to(ROOT)), chain), (str(GAME_ASSETS_INDEX.relative_to(ROOT)), index)):
-        require(PLAN_FILE_NAME in text, f"{label} missing plan link")
-        require(ALIAS in text, f"{label} missing alias")
-        for window_index, window in enumerate(windows_around_token(text, PLAN_FILE_NAME), start=1):
-            check_forbidden_text(window, f"{label} plan-link window {window_index}")
-    require("proof file is not materialized yet" not in chain, "chain map still says proof file is not materialized")
+
+    chain_block = section_after_heading(
+        chain,
+        "## Current Active Scope",
+        str(CHAIN_MAP.relative_to(ROOT)),
+    )
+    check_continuity_block(chain_block, str(CHAIN_MAP.relative_to(ROOT)), ACTIVE_SLOT_TOKENS)
+    require_plan_link(chain_block, CHAIN_MAP, str(CHAIN_MAP.relative_to(ROOT)))
+
+    backlog_active = first_paragraph_after_heading(
+        backlog,
+        "## Active Proof Slice",
+        str(STATIC_BACKLOG.relative_to(ROOT)),
+    )
+    require(
+        backlog.count("The selected active static-to-proof slice is ") == 1,
+        "static backlog must have exactly one selected active static-to-proof slice paragraph",
+    )
+    check_continuity_block(backlog_active, str(STATIC_BACKLOG.relative_to(ROOT)), ACTIVE_SLOT_TOKENS)
+    require_plan_link(backlog_active, STATIC_BACKLOG, str(STATIC_BACKLOG.relative_to(ROOT)))
+
+    re_index_block = first_paragraph_with_token(re_index, ALIAS, str(RE_INDEX.relative_to(ROOT)))
+    check_continuity_block(re_index_block, str(RE_INDEX.relative_to(ROOT)), ACTIVE_SLOT_TOKENS)
+    require_plan_link(re_index_block, RE_INDEX, str(RE_INDEX.relative_to(ROOT)))
+
+    game_assets_block = first_paragraph_with_token(index, ALIAS, str(GAME_ASSETS_INDEX.relative_to(ROOT)))
+    check_continuity_block(game_assets_block, str(GAME_ASSETS_INDEX.relative_to(ROOT)), GAME_ASSETS_SLOT_TOKENS)
+    require_plan_link(game_assets_block, GAME_ASSETS_INDEX, str(GAME_ASSETS_INDEX.relative_to(ROOT)))
+
+    for token in ROUTING_INDEX_TOKENS:
+        require(token in roadmap_index, f"{ROADMAP_INDEX.relative_to(ROOT)} missing routing token: {token}")
 
 
 def run_check() -> None:
@@ -344,6 +467,24 @@ def run_self_test() -> None:
     else:
         raise ReadinessPlanProbeError("self-test failed to catch overclaim")
 
+    check_forbidden_text("installed-game/original-executable mutation remains a non-claim.", "self-test hyphenated boundary")
+
+    for bad_text, label in (
+        ("game/BEA.exe", "self-test game mirror path"),
+        ("local-game/BEA.exe", "self-test local game mirror path"),
+        ("media/private.wav", "self-test media path"),
+        ("local-media/private.wav", "self-test local media path"),
+        ("a" * 64, "self-test raw digest"),
+        ("runtime proof complete", "self-test runtime overclaim"),
+        ("rebuild parity achieved", "self-test parity overclaim"),
+    ):
+        try:
+            check_forbidden_text(bad_text, label)
+        except ReadinessPlanProbeError:
+            pass
+        else:
+            raise ReadinessPlanProbeError(f"self-test failed to catch {label}")
+
     try:
         for token in REQUIRED_PLAN_TOKENS:
             require(token in "not enough context", f"plan missing required token: {token}")
@@ -351,6 +492,55 @@ def run_self_test() -> None:
         pass
     else:
         raise ReadinessPlanProbeError("self-test failed to catch missing token")
+
+    try:
+        check_continuity_block("Status: public-safe proof-plan slot only.", "self-test missing alias", (ALIAS,))
+    except ReadinessPlanProbeError:
+        pass
+    else:
+        raise ReadinessPlanProbeError("self-test failed to catch missing active alias")
+
+    try:
+        check_continuity_block(
+            f"{ALIAS} {PLAN_FILE_NAME} {THIS_SCOPE} complete public-safe readiness gate",
+            "self-test scoped overclaim",
+            (ALIAS, PLAN_FILE_NAME, THIS_SCOPE),
+        )
+    except ReadinessPlanProbeError:
+        pass
+    else:
+        raise ReadinessPlanProbeError("self-test failed to catch scoped overclaim")
+
+    good_block = (
+        f"{ALIAS} {THIS_SLICE} {THIS_SCOPE} {PLAN_FILE_NAME} {SOURCE_FILE_NAME} "
+        "proof-plan continuity guard only; not readiness-gate execution; "
+        "no runtime proof; no rebuild parity; no no-noticeable-difference parity."
+    )
+    check_continuity_block(good_block, "self-test good active block", ACTIVE_SLOT_TOKENS)
+
+    try:
+        check_continuity_block(
+            f"{ALIAS} {THIS_SLICE} {THIS_SCOPE} {PLAN_FILE_NAME} {SOURCE_FILE_NAME} "
+            "proof-plan continuity guard only; not readiness-gate execution; "
+            "no runtime proof; rebuild parity achieved; no no-noticeable-difference parity.",
+            "self-test positive parity",
+            ACTIVE_SLOT_TOKENS,
+        )
+    except ReadinessPlanProbeError:
+        pass
+    else:
+        raise ReadinessPlanProbeError("self-test failed to catch positive parity overclaim")
+
+    try:
+        check_continuity_block(
+            f"{good_block} {WRONG_SIBLING_PLAN_FILE_NAMES[0]}",
+            "self-test wrong sibling",
+            ACTIVE_SLOT_TOKENS,
+        )
+    except ReadinessPlanProbeError:
+        pass
+    else:
+        raise ReadinessPlanProbeError("self-test failed to catch wrong sibling plan")
 
 
 def main() -> int:
@@ -368,11 +558,11 @@ def main() -> int:
         if args.check:
             run_check()
     except ReadinessPlanProbeError as exc:
-        print("TMM ARM4 readiness-gate proof-plan probe: FAIL")
+        print("TMM ARM4 readiness-gate proof-plan continuity probe: FAIL")
         print(f"- {exc}")
         return 1
 
-    print("TMM ARM4 readiness-gate proof-plan probe: PASS")
+    print("TMM ARM4 readiness-gate proof-plan continuity probe: PASS")
     return 0
 
 
