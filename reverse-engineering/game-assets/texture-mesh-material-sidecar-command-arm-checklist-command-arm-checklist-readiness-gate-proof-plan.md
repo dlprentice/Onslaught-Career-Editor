@@ -21,7 +21,7 @@ proof must satisfy before any separate command-arm boundary lane can be chosen.
 
 Machine proof JSON, a readiness-gate generator, command arming, shell dispatch,
 real importer execution, generated payload output, runtime proof, and rebuild
-parity remain separate later gates. This artifact is not a completed readiness-gate proof.
+parity remain separate later gates. This artifact does not complete a readiness-gate proof.
 
 ## Source Continuity
 
@@ -63,7 +63,8 @@ hashes, byte lengths, command arguments, shell traces, or generated asset output
 
 ## Required Later Readiness-Gate Checks
 
-A later completed readiness-gate proof must, at minimum:
+A later readiness-gate proof, if separately authorized and completed, must at
+minimum:
 
 - load the public-safe ARM4 validation proof listed above;
 - verify the validation proof status is `PASS`;
@@ -104,6 +105,8 @@ This artifact makes only a public-safe planning and continuity claim. It is:
 - no BEA launch;
 - no CDB;
 - no Ghidra mutation or read-back;
+- no installed game mutation;
+- no original BEA.exe mutation;
 - no product code change;
 - no patch catalog change;
 - no state baton edit;
@@ -128,12 +131,14 @@ The plan and checker fail closed if any of the following is observed:
 - any expected source counter differs from the table above;
 - any command row is armed, executed, or shell-dispatched;
 - any importer execution, asset import, generated payload, raw path, raw
-  filename, raw hash, or byte-length counter is nonzero;
+  filename, raw hash, byte-length, raw command argument, published command
+  argument, or raw command dry-run trace counter is nonzero;
 - `publicLeakCheck` is not `PASS`;
 - the plan text contains private paths, generated payload names, raw hashes,
   command arguments, shell traces, or positive runtime/rebuild/parity claims;
-- the plan is described as a completed readiness-gate proof instead of a
-  public-safe proof-plan slot.
+- the plan omits public-safe proof-plan slot wording or claims gate execution,
+  gate completion, command arming, importer execution, runtime proof, or rebuild
+  proof instead.
 
 ## Checker
 
@@ -145,7 +150,9 @@ py -3 tools\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py --self-test --ch
 
 The checker reads only tracked public-safe files: this Markdown file, the
 tracked validation proof JSON, and the front-door index/map docs that link this
-slot. Its front-door checks apply only to the active proof-plan slot
+slot. It scans the tracked validation JSON text for private-path, raw-digest,
+payload-extension, and overclaim markers before validating its structured
+counters. Its front-door checks apply only to the active proof-plan slot
 representation, not entire historical ledger files. It does not discover local
 game folders, inspect private asset manifests, resolve private paths, stat
 payload files, run BEA, attach CDB, launch Ghidra, or write generated assets.

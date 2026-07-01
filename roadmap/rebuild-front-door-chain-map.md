@@ -64,7 +64,7 @@ names are too long.
 | `tmm-implementation-readiness` | [texture-mesh-material-sidecar-importer-implementation-readiness-gate-proof-plan.md](../reverse-engineering/game-assets/texture-mesh-material-sidecar-importer-implementation-readiness-gate-proof-plan.md) | Public-safe importer implementation readiness gate. |
 | `tmm-private-inventory-preflight` | [texture-mesh-material-sidecar-importer-private-corpus-read-only-inventory-preflight-proof-plan.md](../reverse-engineering/game-assets/texture-mesh-material-sidecar-importer-private-corpus-read-only-inventory-preflight-proof-plan.md) | Redacted private-corpus inventory preflight. |
 | `tmm-arm4-validation` | [texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.md](../reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.md) | Latest completed public-safe command arm-checklist validation proof. |
-| `tmm-arm4-readiness-gate` | [texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md](../reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md) | Current active proof-plan slot; continuity guard only, not readiness-gate execution or completed readiness-gate proof; no runtime proof, rebuild proof, rebuild parity, or no-noticeable-difference proof. |
+| `tmm-arm4-readiness-gate` | [texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md](../reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md) | Current active proof-plan slot; continuity guard only, not readiness-gate execution and not readiness-gate proof completion; no runtime proof, rebuild proof, rebuild parity, or no-noticeable-difference proof. |
 
 ## Current Active Scope
 
@@ -75,7 +75,7 @@ The selected active static-to-proof slice is:
 - Scope token: `texture-mesh-material-sidecar-importer-private-corpus-real-importer-dry-run-harness-command-arm-checklist-command-arm-checklist-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan`
 - Source evidence: completed `tmm-arm4-validation`, backed by
   `texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.v1.json`
-- Current status: proof-plan slot materialized; continuity guard only; not readiness-gate execution; not a completed readiness-gate proof
+- Current status: proof-plan slot materialized; continuity guard only; not readiness-gate execution; not readiness-gate proof completion
 - Non-claims: this slot claims no runtime proof, no rebuild parity, and no no-noticeable-difference proof
 
 The next safe rebuild-support artifact is therefore the public-safe
