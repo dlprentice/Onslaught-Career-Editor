@@ -1258,6 +1258,32 @@ public class WinUiProductLaneTests
     }
 
     [Test]
+    public void PatchBench_GroupScanSummaryIsSourceBackedAndBound()
+    {
+        string pageXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml");
+        string patchGroupsHelper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchPatchGroups.cs");
+        string groupModel = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "BinaryPatchGroupModel.cs");
+
+        Assert.That(patchGroupsHelper, Does.Contain("new BinaryPatchGroupModel(title, description, BuildScanSummary(groupItems), groupItems)"));
+        Assert.That(patchGroupsHelper, Does.Contain("private static string BuildScanSummary(IReadOnlyCollection<BinaryPatchItemModel> groupItems)"));
+        Assert.That(patchGroupsHelper, Does.Contain("item.Spec.Track"));
+        Assert.That(patchGroupsHelper, Does.Contain("Visible rows: {groupItems.Count} {optionLabel}"));
+        Assert.That(patchGroupsHelper, Does.Contain("all experimental"));
+        Assert.That(patchGroupsHelper, Does.Contain("including {string.Join(\" and \", trackSummaries)}"));
+        Assert.That(patchGroupsHelper, Does.Contain("Copied targets only; installed game stays read-only."));
+        Assert.That(patchGroupsHelper, Does.Contain("Open row details for checks and remaining limits."));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("Process"));
+        Assert.That(patchGroupsHelper, Does.Not.Contain("File."));
+
+        Assert.That(groupModel, Does.Contain("string scanSummary"));
+        Assert.That(groupModel, Does.Contain("ScanSummary = scanSummary;"));
+        Assert.That(groupModel, Does.Contain("public string ScanSummary { get; }"));
+
+        Assert.That(pageXaml, Does.Contain("x:DataType=\"models:BinaryPatchGroupModel\""));
+        Assert.That(pageXaml, Does.Contain("Text=\"{Binding ScanSummary}\""));
+    }
+
+    [Test]
     public void PatchBench_PresentationHelpersStayBehaviorFree()
     {
         string helperRoot = Path.Combine(TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Helpers");

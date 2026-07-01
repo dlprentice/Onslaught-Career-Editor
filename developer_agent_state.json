@@ -1,99 +1,80 @@
 {
   "lastUpdated": "2026-07-01",
-  "currentFocus": "Failed-wave rescue integration is accepted, pushed, and synced on main at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb; next executable work is PatchBench pre-wiring boundary coverage.",
+  "currentFocus": "Chief epic rebuild/Ghidra/Lore/WinUI integration is validated in the worktree from accepted worker source commits; safe push and local integration reporting are still pending.",
   "currentTruth": {
-    "rescueIntegration": {
-      "status": "accepted-pushed-synced-on-main",
-      "finalHead": "78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb",
-      "refs": "HEAD, origin/main, and live refs/heads/main matched finalHead with divergence 0 0 after push.",
-      "acceptedCommits": [
-        "66e38d62feb6d2a059f57830a3ef0c8b4c85dcd1",
-        "5014014b3686c2ab7cf3baf854b8401b9e8e1907",
-        "e0f5a40f96be4e02c9b1b5107f18de56dc436443",
-        "aa5617367eadc2110243672e8300240f9edbc3f2",
-        "af5bef90d3cae2b504fd417f72707dfe240ff47e",
-        "835b77a108736976c9d15d5f4061ccd54e5a907c"
+    "integrationWave": {
+      "status": "validated-in-worktree-pending-safe-push",
+      "base": "5b1d7eb75ac592f754766b490c20edbc71c069c4",
+      "acceptedSourceCommits": [
+        "cd7d7bf928c32234e3e59d5021b695c7aeabb63d",
+        "301b81a5baba1d5fb870890903961c16eaead5bf",
+        "930c2cf3cdd8d4376bfabf579565de96cb98323d",
+        "98b39b84e2251b775b407d0d2984fc8f9c197409",
+        "1ad0f0cc3f1ba7a796d0c94dc00a5dc69bbd182f",
+        "e24c9e6ca7b6a2795ac27144dc575a5ced1ef6b7",
+        "5d13adeb70e1aa2d1bfdcbdf39d639b2811e9c27",
+        "af8136583eb2de60672e77ea1c21c7bc827fbaac",
+        "821fe61f5d192b6a08c0107dd87266139aeb8ffb"
       ],
-      "stateRefresh": "This file, documentation_agent_state.json, re_orchestrator_state.json, and goal.md were reconciled as the closeout baton set.",
-      "validationCloseout": "Final serial validation passed in the integration closeout; local integration and acceptance reports recorded the evidence."
-    },
-    "docsGovernanceBoundary": {
-      "status": "accepted",
-      "summary": "LOCAL_LAB_OVERLAY.md no longer tracks exact private Ghidra project/store/backup pointers; it keeps public overlay guidance and private-path boundaries.",
-      "limits": [
-        "Does not erase earlier git history.",
-        "Does not publish private path manifests.",
-        "Does not authorize Ghidra, installed-game, or original-executable mutation."
+      "reportOnlyLanes": [
+        "W2 superseded PatchBench helper parity",
+        "W4 static sentinel",
+        "W5 storage/Ghidra backup safety",
+        "W12 runtime-proof baton",
+        "W13 consult compliance"
       ]
     },
-    "rebuildReadiness": {
-      "status": "public-safe proof-plan/checker continuity hardening integrated",
-      "alias": "tmm-arm4-readiness-gate",
-      "checker": "tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py",
-      "proofPlan": "reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md",
+    "patchBench": {
+      "status": "tests-and-presentation-hardening-integrated",
+      "summary": "PatchBench receipt boundary tests and group scan summaries are integrated. Integration added focused ScanSummary source/binding coverage.",
       "limits": [
-        "No readiness-gate execution.",
-        "No command arming, shell dispatch, importer execution, private asset read, generated payload output, runtime proof, visual/gameplay proof, rebuild parity, runtime parity, or no-noticeable-difference parity."
+        "PatchBenchSafeCopyReceiptText remains unwired.",
+        "BinaryPatchesPage and AppCore still own live receipt projection, I/O, launch planning, process control, catalog semantics, Host/Join fallback, online boundaries, and runtime-proof boundaries."
       ]
     },
-    "lorePackBoundary": {
-      "status": "fail-closed hardening integrated",
-      "summary": "Lore pack loading fails closed for unsafe loaded document paths, duplicate ids/paths, hash mismatch, incomplete pack signals, empty packs, and malformed content-pack document ids while keeping user-facing load failures generic.",
+    "lore": {
+      "status": "reviewer-c-follow-up-integrated",
+      "summary": "Lore ZIP/package probe and AppCore tests cover above-root packed links, AppCore-compatible document-id grammar, and case-variant content-id hash lookup.",
       "limits": [
-        "Not release readiness.",
-        "Not broad ZIP package probe parity.",
-        "Not a complete filesystem traversal vulnerability fix.",
+        "Not broad release readiness.",
+        "Not a complete filesystem traversal proof.",
         "Not runtime UI proof."
-      ],
-      "nextHardening": "Add ZIP package probe relativePath parity and decide whether AppCore should enforce index/content relativePath equality in addition to builder/check tooling."
+      ]
     },
-    "assetLibraryBoundary": {
-      "status": "bounded WinUI path/accessibility source improvement integrated",
-      "summary": "Passive material-package status summarizes the output root while explicit Open/Copy full-path actions remain; source tests guard Asset Library's single polite live-region scope.",
+    "rebuildAndOriginalMapping": {
+      "status": "public-safe-continuity-and-crosswalk-integrated",
+      "summary": "TMM ARM4 readiness-gate continuity was hardened, and the original-system crosswalk was added with refreshed date metadata.",
       "limits": [
-        "Not a broad Asset Library redesign.",
-        "Not runtime UIA or screen-reader proof.",
-        "Not broad proof-jargon cleanup."
+        "No command arming, importer execution, private asset read, generated payload output, runtime proof, rebuild parity, visual/gameplay parity, or no-noticeable-difference proof.",
+        "Static Wave1200 accounting support-file blocker remains unless fixed and rerun.",
+        "Docsync/mirror drift remains unless fixed and rerun."
       ]
     },
-    "patchBenchReceiptBoundary": {
-      "status": "unchanged from prior accepted wave",
-      "summary": "PatchBenchSafeCopyReceiptText remains an unwired primitive formatter scaffold with tests only; BinaryPatchesPage still owns live receipt projection and page behavior.",
-      "futureExtractionGates": [
-        "Concatenated/interpolated forbidden output sentinel tests.",
-        "Explicit manifest filename display policy.",
-        "Host/Join partial, punctuation, and case-variant boundary tests.",
-        "Page-versus-helper parity tests with documented intentional deltas.",
-        "Mapper tests from AppCore receipt DTOs into WinUI-local primitive state before any helper wiring."
+    "winuiUxAndReleaseDocs": {
+      "status": "bounded-copy-and-docs-improvements-integrated",
+      "summary": "Home/About user-facing boundaries, release ZIP README copy, collaboration wording, and readiness checklist posture were updated.",
+      "limits": [
+        "No runtime screen-reader or visual proof.",
+        "No release publication, signing, installer/MSIX/Store work, upload, tag, or announcement."
       ]
     },
-    "runtimeAndReleaseBoundary": {
-      "readyToRunLiveAttempt": false,
-      "liveArmAllowed": false,
-      "runtimeAudibleOutputProof": false,
+    "hardPayloadBoundary": "No hard payloads, secrets, raw local campaign paths, raw storage manifests, private proof paths, screenshots/frame dumps, copied executables, full Ghidra databases, .env files, build output, package output, or local runtime caches belong in tracked docs/state.",
+    "nonMutations": {
+      "installedGameOriginalBea": false,
+      "beaCdbAudioRuntimeProof": false,
+      "ghidraMutation": false,
+      "hostJoinEnablement": false,
       "releasePublication": false,
-      "onlineMultiplayer": "not player-ready; Host/Join remains disabled or unavailable until distinct-endpoint command-source proof and source-bound copied-runtime causality proof are both accepted",
-      "installedGameOriginalBea": "read-only; no mutation performed or authorized"
-    },
-    "hardPayloadBoundary": "No game assets, copied executables, arbitrary saves/options, screenshots/frame dumps, raw CDB logs, raw proof bundles, full Ghidra databases/backups, secrets, .env files, build output, package output, local proof paths, raw manifests, thread IDs, or local campaign/worktree paths belong in tracked state or docs."
+      "storageDeletion": false
+    }
   },
   "validation": {
-    "expectation": [
-      "git diff --check",
-      "JSON parse for edited state files",
-      "RE checker compile and self-test/check",
-      "focused LoreBrowserServiceTests",
-      "WinUI solution build",
-      "focused Lore UI product-lane tests",
-      "focused Asset Library/accessibility UI test pair",
-      "npm run test:repo-hygiene",
-      "npm run test:doc-commands",
-      "npm run test:md-links",
-      "npm run test:hard-payload-safety",
-      "npm run test:public-allowlist",
-      "npm run test:winui-primary-lane"
-    ],
-    "latestIntegration": "Final closeout evidence accepted: serial validation passed, main was pushed, refs synced at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb, divergence was 0 0, and hard-payload/security gates passed."
+    "latestIntegration": "Merged-tree validation passed for diff whitespace, state JSON, sanitized state/front-door scan, rebuild continuity probe, Lore ZIP probe tests, Lore builder self-test, full LoreBrowserServiceTests, WinUI build, focused W1/W8/W9 UiTests, patch-engine safety, WinUI primary-lane, ZIP package probe without optional Media smoke, docs commands, Markdown links, repo hygiene retry, public allowlist, and hard-payload safety.",
+    "knownUnclaimedGates": [
+      "Static Wave1200 accounting support-file gate health is not claimed.",
+      "Docsync/mirror health is not claimed.",
+      "Optional representative Media smoke in npm run test:winui-zip-release-candidate-probe is not claimed; extracted-app audio row selection stayed at No track selected. The same ZIP probe without optional Media smoke passed."
+    ]
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -102,10 +83,9 @@
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "PatchBench: add sentinel, manifest filename, Host/Join variant, and page-versus-helper parity tests before any helper wiring.",
-    "Lore: add ZIP package probe relativePath parity and decide AppCore index/content equality enforcement.",
-    "RE/rebuild: keep tmm-arm4-readiness-gate as proof-plan/checker support only until separate readiness-gate authority exists.",
-    "WinUI UX: address one residual path-redaction, proof-jargon, first-run, or accessibility item at a time.",
-    "Runtime/storage/release: remain no-live, no-delete, and no-publication unless a future task grants explicit authority and evidence gates."
+    "Commit the integrated merge/state/test/date changes.",
+    "Recheck live remote main before safe push.",
+    "Write local integration reports with final push hash and remaining debts.",
+    "Hand off to fresh read-only acceptance if the campaign continues."
   ]
 }

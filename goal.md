@@ -1,172 +1,168 @@
 # Active Goal Slice
 
-Status: active
+Status: validated integration, push pending
 Last updated: 2026-07-01
 Policy: `goal.policy.md`
 
 ## Current Slice
 
-The failed-wave rescue integration is accepted, pushed, and synced on `main` at
-`78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb`. The current executable slice is
-PatchBench pre-wiring boundary coverage: add the remaining sentinel, manifest
-filename, Host/Join variant, and page-versus-helper parity tests before any
-helper wiring or AppCore DTO projection.
+The chief epic rebuild/Ghidra/Lore/WinUI wave has been integrated and validated
+in this worktree from the accepted worker source commits. Final source push and
+campaign integration reporting are still pending until the safe remote recheck,
+commit, and push complete.
 
-The accepted rescue closeout folded this bounded work into public `main`:
+Accepted source commits integrated by cherry-pick:
 
-- Private Ghidra project/store/backup pointers were removed from the tracked
-  local overlay guide while public/local boundaries stayed intact.
-- The public-safe `tmm-arm4-readiness-gate` proof-plan/checker path was
-  hardened for active-slot continuity, fail-closed wording, and overclaim
-  guards.
-- Lore content-pack loading now fails closed for incomplete or empty pack
-  signals and malformed generated document ids, while keeping user-facing load
-  failures generic.
-- Asset Library passive material-package status now summarizes the output root
-  while explicit Open/Copy full-path actions remain, and source tests guard the
-  page's polite live-region scope.
+- W1 PatchBench prewiring: `cd7d7bf928c32234e3e59d5021b695c7aeabb63d`
+- W3 clean-room rebuild continuity: `301b81a5baba1d5fb870890903961c16eaead5bf`
+- W6 original-system mapping: `930c2cf3cdd8d4376bfabf579565de96cb98323d`
+- W7 Lore hardening: `98b39b84e2251b775b407d0d2984fc8f9c197409`
+- W7 blocker fix follow-up: `1ad0f0cc3f1ba7a796d0c94dc00a5dc69bbd182f`
+- W8 WinUI UX/accessibility: `e24c9e6ca7b6a2795ac27144dc575a5ced1ef6b7`
+- W9 patch/mod quality: `5d13adeb70e1aa2d1bfdcbdf39d639b2811e9c27`
+- W10 release ZIP docs: `af8136583eb2de60672e77ea1c21c7bc827fbaac`
+- W11 docs governance: `821fe61f5d192b6a08c0107dd87266139aeb8ffb`
 
-Final serial validation passed, `origin/main` was pushed, and local `HEAD`,
-`origin/main`, and live remote `refs/heads/main` all resolved to
-`78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb` with divergence `0 0`.
+Report-only lanes remain campaign evidence, not source commits: W2 superseded
+PatchBench parity, W4 static sentinel, W5 storage/Ghidra backup safety, W12
+runtime-proof baton, and W13 consult compliance.
 
 ## Current Truth
 
-- The failed-wave rescue wave is closed on `main`. Final validation passed,
-  refs are synced, hard-payload/security gates passed, and no BEA/CDB/audio,
-  Ghidra, runtime proof, installed-game/original `BEA.exe`, storage deletion,
-  release/publication, or Host/Join enablement mutation was performed.
-- `PatchBenchSafeCopyReceiptText` remains an unwired WinUI-local primitive
-  scaffold. It is a contract/test target only, not a live production formatter,
-  extraction completion, or runtime hostile-value rejection proof.
-- `BinaryPatchesPage` still owns live page receipt projection, AppCore receipt
-  DTO consumption, File/Path/I/O, service calls, UI assignment, operation-log
-  text, `AppStatusService` updates, launch option tuples, selected-state
-  mutation, matching logic, launch argument construction, safe-copy launch
-  planning, process control, patch/catalog semantics, source-summary decisions,
-  Host/Join fallback ownership, online claim boundaries, and runtime-proof
-  boundaries.
-- The PatchBench next gate remains: add concatenated/interpolated forbidden
-  sentinel tests, decide and encode manifest filename display policy, cover
-  Host/Join partial/variant boundaries, and add page-versus-helper parity tests
-  before any helper wiring.
-- The `tmm-arm4-readiness-gate` artifact is a public-safe proof-plan/checker
-  continuity guard only. It is not readiness-gate execution, command arming,
-  shell dispatch, importer execution, private asset read, generated payload
-  output, runtime proof, visual/gameplay proof, rebuild parity, runtime parity,
-  or no-noticeable-difference parity.
-- Lore pack relativePath index/content equality is still owned by builder/check
-  tooling today. AppCore content-pack loading validates loaded document
-  metadata, incomplete/empty pack signals, malformed generated ids, duplicate
-  ids/paths, hash mismatch, and stale pack retention boundaries.
-- Lore package ZIP probe parity remains a next hardening candidate:
-  `tools/winui_zip_package_probe.py` should eventually enforce the same
-  `relativePath` grammar.
-- Lore hardening is not release readiness, broad ZIP packaging parity, runtime
-  UI proof, or a complete filesystem traversal vulnerability fix.
-- Asset Library path/accessibility work is a bounded source/test improvement:
-  passive status summarizes the output root, explicit full-path Open/Copy
-  actions remain, and the page has a single source-declared polite live region.
-  This is not a runtime UIA/screen-reader proof or broad UX redesign.
-- WinUI residual UX/copy debt remains open, including broader path redaction,
-  PatchBench proof/CDB/manifest/offset wording, online diagnostic placement,
-  first-run clarity, accessibility labeling/live-region risks, and Home/About/
-  Save Lab copy polish.
-- Storage taxonomy remains read-only/no-delete. High-confidence deletion
-  candidates are 0, deletion performed is false, authorized reclaimed storage is
-  0 GiB, and actual reclaimed storage is 0 GiB.
-- Runtime proof remains private pre-arm/no-live only. Public runtime flags remain
-  `readyToRunLiveAttempt=false`, `liveArmAllowed=false`,
-  `runtimeAudibleOutputProof=false`, and
-  `preArmReadiness.status=prearm-readiness-not-proven`.
-- Online multiplayer remains not player-ready. Host/Join stays disabled or
-  unavailable until distinct-endpoint command-source proof and source-bound
-  copied-runtime causality proof are both accepted.
-- Static RE closure is not runtime, gameplay, visual, online, rebuild, or
+- PatchBench now has pre-wiring receipt boundary tests and a behavior-free
+  helper scaffold. It remains unwired; live page receipt projection, File/Path
+  I/O, launch planning, process control, catalog semantics, Host/Join fallback,
+  online boundaries, and runtime-proof boundaries stay in the page/AppCore
+  owners.
+- Patch/mod grouping now shows bounded group scan summaries sourced from visible
+  rows and tracks. Integration added focused source/binding coverage for
+  `ScanSummary`.
+- Lore ZIP/package hardening includes the Reviewer C follow-up. AppCore and the
+  ZIP probe now align on above-root packed links, document-id grammar, and
+  case-variant content-id hash lookup. This is not broad release readiness or a
+  complete filesystem traversal proof.
+- The rebuild/readiness-gate update is public-safe continuity hardening only.
+  It is not command arming, importer execution, private asset reading,
+  generated payload output, runtime proof, rebuild parity, visual/gameplay
+  parity, or no-noticeable-difference proof.
+- Original-system mapping is a public-safe crosswalk. Source names are candidate
+  owners; retail binary/save/runtime evidence remains the higher authority for
+  behavior.
+- WinUI Home/About copy and static accessibility/product-lane tests improved
+  user-facing boundaries. This is not runtime screen-reader, visual, BEA, CDB,
+  audio, or gameplay proof.
+- Release ZIP docs were clarified without publication, signing, installer, MSIX,
+  Store, upload, tag, release asset, or announcement work.
+- Docs governance removed stale readiness wording and keeps the current public
+  signoff route separate from historical checklists.
+- Storage/Ghidra backup details remain local campaign evidence only. Tracked
+  docs/state should retain only sanitized conclusions: no deletion in source,
+  no live Ghidra mutation, and no raw storage manifests or private paths.
+
+## Known Non-Claims
+
+- No installed game folder or original `BEA.exe` mutation.
+- No BEA/CDB/audio launch, live runtime proof, audible-output proof, or visual
+  gameplay proof.
+- No Host/Join enablement, player-ready online, public matchmaking, or online
+  capability promotion.
+- No release publication, signing, installer/MSIX/Store work, GitHub Release
+  upload, tag, or announcement.
+- No Ghidra project mutation or fresh decompiler/read-back verification.
+- No static-accounting gate health claim while the Wave1200 support-file
+  blocker remains unresolved.
+- No docsync/mirror health claim while the pre-existing mirror drift remains
+  unresolved or unwaived.
+- No rebuild parity, runtime parity, visual/gameplay parity, or
   no-noticeable-difference proof.
-- Hard payloads remain outside git and release ZIPs: game executables, copied
-  executables, copied runtime output, arbitrary saves/options, raw proof logs,
-  screenshots or frame dumps, full Ghidra databases, secrets, `.env*`, local
-  runtime caches, build output, and package output.
-- Installed game files and original `BEA.exe` remain read-only.
-- No release, tag, package, signing, installer, announcement, hosted workflow,
-  publication, runtime proof, storage deletion, Ghidra mutation/read-back, or
-  Host/Join enablement is part of this integration.
+
+## Validation Status
+
+Merged-tree validation passed for the source and package checks required by the
+integrated changes:
+
+- `git diff --check`
+- state JSON parse and targeted local-campaign/private-drive pattern scan
+- `py -3 tools\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py --self-test --check`
+- `py -3 tools\winui_zip_package_probe_test.py`
+- `py -3 tools\winui_lore_pack_builder.py --self-test`
+- full `LoreBrowserServiceTests`
+- `npm run build:winui`
+- focused W1/W8/W9 UiTests, including integration-added `ScanSummary` coverage
+- `npm run test:winui-patch-engine-safety`
+- `npm run test:winui-primary-lane`
+- ZIP package probe without optional representative Media smoke
+- `npm run test:doc-commands`
+- `npm run test:md-links`
+- `npm run test:repo-hygiene` after a timeout retry
+- `npm run test:public-allowlist`
+- `npm run test:hard-payload-safety`
+
+Push verification will be recorded in the local integration report after the
+safe remote recheck. Do not treat this slice as source-pushed until that report
+and the final response name the pushed commit.
+
+Known pre-existing or intentionally unclaimed gates:
+
+- Static Wave1200 accounting support-file blocker remains unless explicitly
+  fixed and rerun.
+- `tools/docsync_check.py` mirror drift remains unless explicitly fixed and
+  rerun.
+- `npm run test:winui-zip-release-candidate-probe` remains unclaimed because
+  the optional representative Media smoke failed on extracted-app audio row
+  selection; the same ZIP probe without optional Media smoke passed.
 
 ## Evidence Pointers
 
-- PatchBench receipt behavior tests:
-  `OnslaughtCareerEditor.UiTests/PatchBenchSafeCopyReceiptTextTests.cs`
-- Primitive projection guard:
-  `OnslaughtCareerEditor.UiTests/PatchBenchPrimitiveProjectionBoundaryTests.cs`
-- Primitive receipt scaffold:
-  `OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyReceiptText.cs`
-- PatchBench page orchestration:
-  `OnslaughtCareerEditor.WinUI/Pages/BinaryPatchesPage.xaml.cs`
-- RE/rebuild readiness-gate proof plan:
-  `reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md`
-- RE/rebuild readiness-gate checker:
-  `tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py`
-- Lore pack loader:
-  `OnslaughtCareerEditor.AppCore/LoreBrowserService.cs`
-- Lore pack builder/checker:
-  `tools/winui_lore_pack_builder.py`
-- Asset Library page:
-  `OnslaughtCareerEditor.WinUI/Pages/AssetLibraryPage.xaml`
-- Asset Library source tests:
-  `OnslaughtCareerEditor.UiTests/WinUiProductLaneTests.cs` and
+- PatchBench receipt and group-summary tests:
+  `OnslaughtCareerEditor.UiTests/PatchBenchSafeCopyReceiptTextTests.cs` and
+  `OnslaughtCareerEditor.UiTests/WinUiProductLaneTests.cs`
+- PatchBench helpers and models:
+  `OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyReceiptText.cs`,
+  `OnslaughtCareerEditor.WinUI/Helpers/PatchBenchPatchGroups.cs`, and
+  `OnslaughtCareerEditor.WinUI/Models/BinaryPatchGroupModel.cs`
+- Lore pack loader and probes:
+  `OnslaughtCareerEditor.AppCore/LoreBrowserService.cs`,
+  `tools/winui_zip_package_probe.py`, and
+  `tools/winui_zip_package_probe_test.py`
+- Rebuild readiness-gate continuity:
+  `tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py` and the linked
+  proof-plan under `reverse-engineering/game-assets/`
+- Original-system crosswalk:
+  `roadmap/rebuild-front-door-chain-map.md`
+- WinUI UX/accessibility surfaces:
+  `OnslaughtCareerEditor.WinUI/Pages/HomePage.xaml`,
+  `OnslaughtCareerEditor.WinUI/Pages/AboutPage.xaml`, and
   `OnslaughtCareerEditor.UiTests/WinUiAccessibilityAuditTests.cs`
-- Runtime pre-arm readiness note:
-  `release/readiness/winui_music_live_bundle_prearm_readiness_2026-06-29.md`
-- Storage hygiene boundary:
-  `LOCAL_LAB_OVERLAY.md`
-- Coordination contracts:
-  `coordination/README.md`, `coordination/WORKSTREAM_CONTRACT.md`,
-  `coordination/REPORT_CONTRACT.md`, and `coordination/RESOURCE_LEASES.md`
-- Canonical state batons:
-  `developer_agent_state.json`, `documentation_agent_state.json`, and
-  `re_orchestrator_state.json`
+- Release/docs governance:
+  `release/readiness/WINUI-ZIP-README.txt`,
+  `release/readiness/release_readiness_checklist.md`, and `COLLABORATION.md`
 
 ## Next Executable Work
 
-1. PatchBench next: add tests for concatenated/interpolated forbidden
-   sentinels, manifest filename policy, Host/Join partial/variant boundary
-   cases, and page-versus-helper parity before any helper wiring.
-2. PatchBench follow-up after those tests pass: project AppCore receipt DTOs
-   into WinUI-local primitive state and consider wiring the helper without
-   moving File/Path/I/O, receipt construction, launch planning, process
-   control, catalog semantics, online boundaries, or runtime-proof boundaries.
-3. Lore next: add ZIP package probe parity for lore-pack `relativePath`
-   validation, keep user-visible load errors generic, and decide whether
-   AppCore should also enforce index/content relativePath equality instead of
-   leaving that to builder/check tooling.
-4. RE/rebuild next: run only public-safe checker/proof-plan advancement until a
-   separate task grants explicit readiness-gate authority; do not treat
-   `tmm-arm4-readiness-gate` as executed.
-5. WinUI UX next: address one residual high-confidence path-redaction,
-   proof-jargon, first-run, or accessibility issue at a time with focused
-   tests/build evidence.
-6. Storage next: do only read-only manifest/hash/reference work until a future
-   task records explicit deletion authority, candidate-specific retained
-   alternatives, dry-run evidence, consults, rollback/quarantine plan, and
-   independent acceptance.
-7. Runtime next: keep music proof as private pre-arm checklist-only work unless
-   a future task grants explicit runtime-proof authority, leases, private proof
-   root readiness, arm phrase handling, and cleanup validation.
+1. Finish this integration closeout: recheck live remote `main`, commit,
+   safe-push, verify remote refs, and write the local integration report.
+2. Run a fresh read-only acceptance pass for the integrated wave if the campaign
+   continues with a separate acceptance owner.
+3. After acceptance, continue PatchBench only with tests first: decide whether
+   any helper wiring is still desirable, preserve page/AppCore ownership of
+   behavior, and keep Host/Join and runtime-proof boundaries unchanged.
+4. Continue Lore with bounded ZIP/package parity hardening only; do not promote
+   it to broad release or traversal-proof claims.
+5. Continue RE/rebuild with public-safe proof-plan/checker work until separate
+   authority grants live Ghidra mutation, runtime proof, private asset reads, or
+   importer execution.
 
 ## Stop Conditions
 
-- Any step would mutate the installed game folder or original `BEA.exe`.
-- Any tracked file would add hard payloads, raw proof logs, screenshots/frame
-  dumps, copied executable output, full Ghidra databases, secrets, `.env*`,
-  build output, package output, local runtime caches, raw local proof paths,
-  raw manifests, thread IDs, local campaign/worktree paths, or private proof
-  artifacts.
-- Any claim would promote online readiness, Host/Join availability, runtime
-  audio proof, gameplay parity, visual parity, release readiness, release
-  publication, rebuild parity, complete traversal protection, runtime
-  screen-reader proof, or no-noticeable-difference parity beyond accepted
-  evidence.
-- Storage work would move, quarantine, delete, or reclaim material without the
-  required future authority and candidate-specific evidence.
-- Required validation fails without a bounded explanation and correction path.
+- Remote `main` changes away from the verified safe base or this integration
+  ancestry before push.
+- A validation failure affects integrated behavior and cannot be bounded as
+  pre-existing or out of scope.
+- Any tracked file would add hard payloads, secrets, raw local campaign paths,
+  raw storage manifests, private proof paths, thread IDs, screenshots/frame
+  dumps, copied executables, full Ghidra databases, `.env*`, build output, or
+  package output.
+- Any work would mutate installed game files, original `BEA.exe`, live Ghidra
+  projects, release assets, or runtime proof state without separate explicit
+  authority.

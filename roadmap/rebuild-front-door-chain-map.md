@@ -1,7 +1,7 @@
 # Rebuild Front-Door Chain Map
 
 Status: active routing map
-Last updated: 2026-06-30
+Last updated: 2026-07-01
 
 This is a compact navigation map from static closure to the current
 static-to-proof rebuild-support scope. It is not a runtime proof, visual QA

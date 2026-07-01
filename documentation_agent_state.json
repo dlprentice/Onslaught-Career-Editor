@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-01",
-  "currentFocus": "Docs/state now describe the failed-wave rescue as accepted, pushed, and synced on main at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb, with runtime/release/online non-claims preserved.",
+  "currentFocus": "Documentation/state now track the chief epic rebuild/Ghidra/Lore/WinUI integration as validated in the worktree pending safe push and local integration report, with runtime/release/payload non-claims preserved.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -11,26 +11,22 @@
     "agentGuide": "AGENTS.md",
     "contributorGuide": "CONTRIBUTING.md",
     "securityGuide": "SECURITY.md",
-    "collaborationGuide": "COLLABORATION.md",
-    "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
-    "roadmapIndex": "roadmap/ROADMAP-INDEX.md",
-    "rebuildProofPlan": "reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md",
-    "rebuildChecker": "tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py",
-    "lorePackLoader": "OnslaughtCareerEditor.AppCore/LoreBrowserService.cs",
-    "assetLibraryPage": "OnslaughtCareerEditor.WinUI/Pages/AssetLibraryPage.xaml"
+    "collaborationGuide": "COLLABORATION.md"
   },
   "currentDocsTruth": {
-    "docsGovernance": "LOCAL_LAB_OVERLAY.md keeps exact private Ghidra project/store/backup locations out of tracked docs while preserving public overlay rules.",
-    "rebuildProofPlan": "The tmm-arm4-readiness-gate proof-plan/checker is public-safe continuity evidence only. It is not readiness-gate execution, command arming, importer execution, generated payload output, private asset read, runtime proof, visual/gameplay proof, rebuild parity, runtime parity, or no-noticeable-difference parity.",
-    "lorePackIntegrity": "Lore pack builder/check tooling owns relativePath index/content equality today. AppCore content-pack loading validates unsafe loaded paths, duplicate ids/paths, hash mismatch, incomplete/empty pack signals, malformed generated ids, and stale-pack retention boundaries with generic error text for row-controlled values.",
-    "assetLibraryUx": "Asset Library passive material-package status summarizes the output root and keeps explicit Open/Copy full-path actions. Source tests guard one polite live region on the Asset Library page; this is not runtime screen-reader proof.",
-    "patchBenchReceiptBehavior": "PatchBenchSafeCopyReceiptText remains an unwired primitive receipt formatter scaffold. BinaryPatchesPage still owns live receipt projection, File/Path/I/O, launch planning, process control, patch/catalog semantics, Host/Join fallback, online boundaries, and runtime-proof boundaries.",
-    "claimBoundary": "No AppCore receipt construction, launch argument behavior, safe-copy planning, process control, patch catalog row, byte patch, Host/Join availability, online readiness, runtime proof, release/publication, gameplay, visual parity, rebuild parity, no-noticeable-difference parity, Ghidra mutation, hard payload, installed-game, or original-BEA mutation claim changed."
+    "integratedWave": "Accepted worker source commits are integrated in the worktree; report-only lanes remain campaign evidence and should be summarized only in sanitized form.",
+    "patchBench": "PatchBench receipt helper work remains pre-wiring and test-backed. Group scan summaries are sourced from visible rows/tracks and bound in the grouped patch UI.",
+    "lore": "Lore package hardening includes Reviewer C's follow-up; AppCore and the ZIP probe now align for above-root packed links, document-id grammar, and case-variant content-id hash lookup.",
+    "rebuild": "The TMM ARM4 readiness-gate artifact is public-safe continuity evidence only, not command execution, importer execution, runtime proof, rebuild parity, visual/gameplay parity, or no-noticeable-difference proof.",
+    "originalSystemMapping": "The original-system crosswalk is a rebuild mapping companion. Source names are candidate owners; retail binary/save/runtime proof remains higher authority for behavior.",
+    "releaseDocs": "ZIP/readiness documentation changed without release publication, signing, installer, MSIX, Store, upload, tag, or announcement authority.",
+    "storageAndGhidra": "Storage and Ghidra backup details remain local campaign evidence. Tracked docs/state should not contain raw storage paths, backup paths, manifests, hashes, or private proof artifacts.",
+    "knownGateDebt": "Static Wave1200 support-file and docsync/mirror drift are not claimed healthy unless separately fixed and rerun."
   },
   "validation": {
-    "latestIntegration": "Final integration closeout evidence is accepted: serial docs/repo/payload, RE, Lore, WinUI, and state JSON gates passed in the integration closeout; HEAD, origin/main, and live refs/heads/main matched 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb with divergence 0 0.",
-    "hardPayloadSecurity": "Passed; no hard payloads, secrets, raw local proof paths, full Ghidra databases, copied executables, arbitrary saves/options, screenshots/frame dumps, build output, package output, or local runtime caches were added.",
-    "nonMutations": "No installed-game/original BEA.exe, BEA/CDB/audio, Ghidra mutation/read-back, runtime proof, release/publication, storage deletion, or Host/Join enablement mutation was performed."
+    "latestIntegration": "Merged-tree docs/repo/public/hard-payload, Lore, WinUI, ZIP-without-optional-Media, and JSON validation passed before source push.",
+    "hardPayloadSecurity": "No hard payload, secret, raw local campaign path, storage manifest, private proof path, copied executable, screenshot/frame dump, full Ghidra database, build output, package output, or local runtime cache should be added.",
+    "nonMutations": "No installed-game/original BEA.exe, BEA/CDB/audio, live runtime proof, Ghidra mutation, Host/Join enablement, storage deletion, or release/publication mutation is part of this integration."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -39,10 +35,9 @@
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "Keep next docs/product baton executable: PatchBench sentinel/manifest/Host-Join/parity tests before helper wiring.",
-    "Track Lore ZIP probe parity and AppCore index/content equality enforcement as bounded hardening tasks.",
-    "Carry Asset Library and broader WinUI UX residuals as future slices without implying runtime accessibility proof.",
-    "For storage, document only retained/no-delete status until a future manifest-backed authority changes it.",
-    "For runtime proof, keep public docs at private pre-arm-only/no-live-execution unless accepted proof evidence changes."
+    "Record final push verification in local integration reports.",
+    "Keep tracked summaries sanitized and avoid copying raw campaign reports.",
+    "After acceptance, continue with PatchBench helper wiring only if tests preserve current behavior ownership.",
+    "Carry Lore ZIP/package parity, static Wave1200 support-file repair, and docsync/mirror drift as bounded future work."
   ]
 }
