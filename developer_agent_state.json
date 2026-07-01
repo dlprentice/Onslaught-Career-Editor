@@ -1,51 +1,62 @@
 {
-  "lastUpdated": "2026-06-30",
-  "currentFocus": "Parallel rebuild/lore/WinUI integration: accepted PatchBench receipt behavior tests/scaffold, TMM ARM4 readiness proof-plan checker, Lore pack metadata hardening, and Save Lab route persistence are staged; next work is PatchBench extraction readiness hardening before any live page wiring.",
+  "lastUpdated": "2026-07-01",
+  "currentFocus": "Failed-wave rescue integration: accepted docs-governance, RE ARM4 proof-plan/checker, Lore content-pack fail-closed, and Asset Library path/accessibility commits are integrated on main for final serial validation and remote sync.",
   "currentTruth": {
-    "integratedWave": {
-      "summary": "The integrated wave adds bounded code/test/docs/tooling improvements and folds read-only storage/runtime/process findings into canonical state without promoting runtime, release, online, rebuild, storage-delete, or payload claims.",
-      "acceptedArtifactFiles": [
-        "OnslaughtCareerEditor.UiTests/PatchBenchSafeCopyReceiptTextTests.cs",
-        "OnslaughtCareerEditor.UiTests/PatchBenchPrimitiveProjectionBoundaryTests.cs",
-        "OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyReceiptText.cs",
-        "OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyReceiptTextState.cs",
-        "OnslaughtCareerEditor.WinUI/MainWindow.xaml.cs",
-        "OnslaughtCareerEditor.AppCore/LoreBrowserService.cs",
-        "OnslaughtCareerEditor.AppCore.Tests/LoreBrowserServiceTests.cs",
-        "tools/winui_lore_pack_builder.py",
-        "tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py",
-        "reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md"
+    "rescueIntegration": {
+      "status": "integrated-on-main-awaiting-final-closeout",
+      "acceptedCommits": [
+        "66e38d62feb6d2a059f57830a3ef0c8b4c85dcd1",
+        "5014014b3686c2ab7cf3baf854b8401b9e8e1907",
+        "e0f5a40f96be4e02c9b1b5107f18de56dc436443",
+        "aa5617367eadc2110243672e8300240f9edbc3f2",
+        "af5bef90d3cae2b504fd417f72707dfe240ff47e",
+        "835b77a108736976c9d15d5f4061ccd54e5a907c"
       ],
-      "stateRefreshFiles": [
-        "goal.md",
-        "developer_agent_state.json",
-        "documentation_agent_state.json",
-        "re_orchestrator_state.json"
+      "stateRefresh": "This file, documentation_agent_state.json, re_orchestrator_state.json, and goal.md were reconciled as the integration-owned baton set.",
+      "validationCloseout": "Final pass/fail evidence belongs to the local integration report and validation matrix after the post-state serial gate run."
+    },
+    "docsGovernanceBoundary": {
+      "status": "accepted",
+      "summary": "LOCAL_LAB_OVERLAY.md no longer tracks exact private Ghidra project/store/backup pointers; it keeps public overlay guidance and private-path boundaries.",
+      "limits": [
+        "Does not erase earlier git history.",
+        "Does not publish private path manifests.",
+        "Does not authorize Ghidra, installed-game, or original-executable mutation."
+      ]
+    },
+    "rebuildReadiness": {
+      "status": "public-safe proof-plan/checker continuity hardening integrated",
+      "alias": "tmm-arm4-readiness-gate",
+      "checker": "tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py",
+      "proofPlan": "reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md",
+      "limits": [
+        "No readiness-gate execution.",
+        "No command arming, shell dispatch, importer execution, private asset read, generated payload output, runtime proof, visual/gameplay proof, rebuild parity, runtime parity, or no-noticeable-difference parity."
+      ]
+    },
+    "lorePackBoundary": {
+      "status": "fail-closed hardening integrated",
+      "summary": "Lore pack loading fails closed for unsafe loaded document paths, duplicate ids/paths, hash mismatch, incomplete pack signals, empty packs, and malformed content-pack document ids while keeping user-facing load failures generic.",
+      "limits": [
+        "Not release readiness.",
+        "Not broad ZIP package probe parity.",
+        "Not a complete filesystem traversal vulnerability fix.",
+        "Not runtime UI proof."
       ],
-      "acceptedOutputs": [
-        "Pre-extraction PatchBench receipt layout/redaction/Host-Join behavior tests plus an unwired primitive formatter scaffold.",
-        "Public-safe TMM ARM4 readiness-gate proof-plan slot and checker.",
-        "Lore builder/checker relativePath equality plus AppCore loaded-document path, duplicate id/path, hash-mismatch, stale-state, and generic pack-load error hardening.",
-        "WinUI shell route persistence fix for Save Lab persisted tab 0."
-      ],
-      "deferredOutputs": [
-        "No live PatchBench page wiring to the new receipt scaffold.",
-        "No completed readiness-gate execution, runtime proof, rebuild parity, release work, storage deletion, or Host/Join enablement.",
-        "Lore ZIP package probe relativePath parity remains future work.",
-        "WinUI UX audit residual path-redaction, proof-jargon, first-run, and accessibility items remain future work."
+      "nextHardening": "Add ZIP package probe relativePath parity and decide whether AppCore should enforce index/content relativePath equality in addition to builder/check tooling."
+    },
+    "assetLibraryBoundary": {
+      "status": "bounded WinUI path/accessibility source improvement integrated",
+      "summary": "Passive material-package status summarizes the output root while explicit Open/Copy full-path actions remain; source tests guard Asset Library's single polite live-region scope.",
+      "limits": [
+        "Not a broad Asset Library redesign.",
+        "Not runtime UIA or screen-reader proof.",
+        "Not broad proof-jargon cleanup."
       ]
     },
     "patchBenchReceiptBoundary": {
-      "status": "pre-extraction behavior tests and unwired primitive scaffold integrated",
-      "scope": "WinUI-local primitive receipt display contract plus static source guards; BinaryPatchesPage remains the live page formatter owner.",
-      "summary": "PatchBench receipt tests cover layout, headline, label/value rows, section headings, bullet formatting, whitespace normalization, hostile display values, online-ready wording rejection, and existing Host/Join fallback append/no-duplicate behavior.",
-      "limits": [
-        "No production page wiring to PatchBenchSafeCopyReceiptText.",
-        "No AppCore receipt construction or behavior change.",
-        "No source-summary extraction.",
-        "No File/Path/I/O, launch planning, process control, patch/catalog semantics, online behavior, runtime proof, or Host/Join enablement moved.",
-        "The scaffold is not runtime hostile-value rejection proof and not extraction readiness by itself."
-      ],
+      "status": "unchanged from prior accepted wave",
+      "summary": "PatchBenchSafeCopyReceiptText remains an unwired primitive formatter scaffold with tests only; BinaryPatchesPage still owns live receipt projection and page behavior.",
       "futureExtractionGates": [
         "Concatenated/interpolated forbidden output sentinel tests.",
         "Explicit manifest filename display policy.",
@@ -54,124 +65,33 @@
         "Mapper tests from AppCore receipt DTOs into WinUI-local primitive state before any helper wiring."
       ]
     },
-    "rebuildReadiness": {
-      "status": "public-safe proof-plan/checker slot materialized",
-      "alias": "tmm-arm4-readiness-gate",
-      "checker": "tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py",
-      "proofPlan": "reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md",
-      "limits": [
-        "No readiness-gate execution.",
-        "No command arming, shell dispatch, importer execution, private asset read, generated payload, runtime proof, visual/gameplay proof, rebuild parity, runtime parity, or no-noticeable-difference parity."
-      ]
-    },
-    "lorePackBoundary": {
-      "status": "metadata integrity hardening integrated",
-      "summary": "Lore pack builder/checker rejects unsafe relativePath values and index/content mismatches. AppCore loader rejects unsafe loaded document paths, duplicate ids, duplicate case-insensitive paths, hash mismatch, and stale pack retention after invalid loads.",
-      "errorDisplayBoundary": "Current AppCore content-pack load InvalidDataException messages are generic for row-controlled relativePath/id/hash mismatch cases that can surface through LorePage status text.",
-      "limits": [
-        "Not release readiness.",
-        "Not broad ZIP package probe parity.",
-        "Not a proven filesystem traversal vulnerability fix.",
-        "Not a broad WinUI exception-display redesign."
-      ],
-      "nextHardening": "Add ZIP package probe parity for the same lore-pack relativePath grammar, and decide whether AppCore should also enforce index/content relativePath equality rather than leaving that to builder/check tooling."
-    },
-    "winuiRoutePersistence": {
-      "status": "Save Lab persisted route restored",
-      "summary": "MainWindow restores LastTab=0 to the Save Lab route and tests the route round trip.",
-      "limits": [
-        "No broad UX redesign.",
-        "No screenshot, UIA, accessibility compliance, release readiness, or runtime proof claim."
-      ]
-    },
-    "storageTaxonomy": {
-      "mode": "read-only/no-delete",
-      "highConfidenceDeletionCandidates": 0,
-      "deletionPerformed": false,
-      "authorizedReclaimedGiB": 0,
-      "actualReclaimedGiB": 0,
-      "futureReviewValues": "Medium and low values are non-authorized logical review ceilings only; they are not reclaimable storage, unique physical-size estimates, candidate pools, cleanup targets, urgency signals, or deletion budgets.",
-      "futureDeletionRequires": [
-        "explicit authority",
-        "scoped write lease",
-        "private exact manifest row ids and digest",
-        "candidate-specific retained alternatives",
-        "reference/hash/provenance review",
-        "containment-aware unique physical-size accounting",
-        "dry-run evidence",
-        "same-volume quarantine by default with rollback and restore proof",
-        "candidate-specific normal and adversarial consults",
-        "independent acceptance"
-      ]
-    },
-    "runtimeProofBoundary": {
-      "status": "private pre-arm checklist-only; no-live-execution",
-      "producerCoverageCompleteIsAuthority": false,
+    "runtimeAndReleaseBoundary": {
       "readyToRunLiveAttempt": false,
       "liveArmAllowed": false,
       "runtimeAudibleOutputProof": false,
-      "preArmReadinessStatus": "prearm-readiness-not-proven",
-      "nonClaims": [
-        "BEA launch",
-        "CDB attach",
-        "audio capture",
-        "live runtime proof",
-        "runtime audible-output proof",
-        "all-cue proof",
-        "proof archive write",
-        "copied executable mutation",
-        "installed-game mutation",
-        "original BEA.exe mutation",
-        "Ghidra mutation or read-back",
-        "Host/Join availability",
-        "online readiness",
-        "gameplay proof",
-        "release readiness",
-        "rebuild parity",
-        "no-noticeable-difference parity"
-      ]
+      "releasePublication": false,
+      "onlineMultiplayer": "not player-ready; Host/Join remains disabled or unavailable until distinct-endpoint command-source proof and source-bound copied-runtime causality proof are both accepted",
+      "installedGameOriginalBea": "read-only; no mutation performed or authorized"
     },
-    "consultCompliance": {
-      "status": "integration consults complete; worker consult evidence accepted with caveats",
-      "summary": "Worker reports record required Codex and Cursor lanes for the accepted write/read-only work. Integration review used Codex normal, Codex adversarial, composer-2.5-fast normal/adversarial, and gemini-3.1-pro normal/adversarial lanes. Process evidence is report-attested and sanitized-bundle scanned, not raw prompt/output reconstruction.",
-      "acceptedIntegrationFindings": [
-        "Narrowed Lore state wording so index/content relativePath mismatch enforcement is attributed to builder/check tooling, not AppCore loading.",
-        "Added a source-level default-route regression test proving AppConfig LastTab defaults to Home while persisted 0 restores Save Lab.",
-        "Kept PatchBench helper unwired and carried Host/Join parity, manifest policy, and sentinel hardening as future gates.",
-        "Kept TMM ARM4, storage, runtime, release, Host/Join, and online non-claims explicit."
-      ],
-      "deferredIntegrationFindings": [
-        "Lore ZIP probe parity and optional AppCore index/content relativePath enforcement are future hardening tasks.",
-        "Receipt display filtering remains defense-in-depth until future page/helper parity and wiring tests exist.",
-        "TMM front-door full-file scan hardening is future checker polish, not a current integration blocker."
-      ],
-      "safeWording": "Use no recorded blocking dissent among completed lanes; do not treat unavailable, timed-out, tainted, or retried lanes as stronger evidence than recorded."
-    },
-    "hardPayloadBoundary": "No game assets, copied executables, arbitrary saves/options, screenshots/frame dumps, raw CDB logs, raw proof bundles, full Ghidra databases/backups, secrets, .env files, build output, package output, local proof paths, raw manifests, thread IDs, or local campaign/worktree paths belong in tracked state or docs.",
-    "installedGameOriginalBea": "read-only; no mutation performed or authorized"
+    "hardPayloadBoundary": "No game assets, copied executables, arbitrary saves/options, screenshots/frame dumps, raw CDB logs, raw proof bundles, full Ghidra databases/backups, secrets, .env files, build output, package output, local proof paths, raw manifests, thread IDs, or local campaign/worktree paths belong in tracked state or docs."
   },
   "validation": {
-    "expectation": "Integration validation must include JSON parsing, git diff --check, stale local path/campaign marker scan over tracked goal/state/front-door docs, focused PatchBench/Lore/RE checks, docs/repo/payload gates, WinUI/AppCore/UiTests gates, winui-patch-engine-safety, and winui-primary-lane disposition.",
-    "latestIntegration": [
-      "git diff --check HEAD: PASS",
-      "JSON parse for developer_agent_state.json, documentation_agent_state.json, and re_orchestrator_state.json: PASS",
-      "stale concrete campaign/worktree/thread marker scan over tracked goal/state/front-door docs: PASS",
-      "py -3 -m py_compile tools\\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py: PASS",
-      "py -3 tools\\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py --self-test --check: PASS",
-      "py -3 tools\\winui_lore_pack_builder.py --self-test: PASS, 6 tests",
-      "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo: PASS, 0 warnings, 0 errors",
-      "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter FullyQualifiedName~LoreBrowserServiceTests: PASS, 21 passed",
-      "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter PatchBenchSafeCopyReceiptTextTests|PatchBenchPrimitiveProjectionBoundaryTests|WinUiProductLaneTests: PASS, 44 passed",
-      "npm run test:winui-patch-engine-safety: PASS, 32 BinaryPatch tests plus catalog accounting PASS",
-      "npm run test:appcore: PASS, 1190 passed",
-      "npm run test:winui: PASS, 115 passed and 2 skipped",
-      "npm run test:doc-commands: PASS, 4298 documented npm commands checked",
-      "npm run test:md-links: PASS, 3644 Markdown files scanned and 6164 local links checked",
-      "npm run test:repo-hygiene: PASS, 18515 explicit text files checked",
-      "npm run test:hard-payload-safety: PASS, 19362 public candidate files checked",
-      "npm run test:public-allowlist: PASS, hard-payload, submodule payload, and migration inventory gates passed",
-      "npm run test:winui-primary-lane: PASS, solution build passed, AppCore 1190 passed, UiTests 115 passed and 2 skipped"
-    ]
+    "expectation": [
+      "git diff --check",
+      "JSON parse for edited state files",
+      "RE checker compile and self-test/check",
+      "focused LoreBrowserServiceTests",
+      "WinUI solution build",
+      "focused Lore UI product-lane tests",
+      "focused Asset Library/accessibility UI test pair",
+      "npm run test:repo-hygiene",
+      "npm run test:doc-commands",
+      "npm run test:md-links",
+      "npm run test:hard-payload-safety",
+      "npm run test:public-allowlist",
+      "npm run test:winui-primary-lane"
+    ],
+    "latestIntegration": "Pending final serial closeout evidence after this state refresh."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -180,11 +100,11 @@
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "PatchBench: add concatenation/interpolation sentinel, manifest filename policy, Host/Join variant, and page-versus-helper parity tests before any helper wiring.",
+    "Run and record the final serial validation matrix on the integrated tree before push.",
+    "PatchBench: add sentinel, manifest filename, Host/Join variant, and page-versus-helper parity tests before any helper wiring.",
     "Lore: add ZIP package probe relativePath parity and decide AppCore index/content equality enforcement.",
     "RE/rebuild: keep tmm-arm4-readiness-gate as proof-plan/checker support only until separate readiness-gate authority exists.",
     "WinUI UX: address one residual path-redaction, proof-jargon, first-run, or accessibility item at a time.",
-    "Storage: remain read-only until future deletion authority and candidate-specific evidence exist.",
-    "Runtime: remain private pre-arm/no-live unless a future task grants explicit runtime-proof authority and leases."
+    "Runtime/storage/release: remain no-live, no-delete, and no-publication unless a future task grants explicit authority and evidence gates."
   ]
 }

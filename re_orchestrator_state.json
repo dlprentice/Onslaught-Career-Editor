@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-06-30",
-  "currentFocus": "Static RE/Ghidra closure remains unchanged; public-safe rebuild support advanced only by materializing the tmm-arm4-readiness-gate proof-plan/checker slot, while PatchBench/Lore/WinUI integration preserved runtime, rebuild, storage, and payload non-claims.",
+  "lastUpdated": "2026-07-01",
+  "currentFocus": "Static RE/Ghidra closure remains unchanged; the failed-wave rescue integrated only public-safe tmm-arm4-readiness-gate proof-plan/checker continuity hardening and preserved runtime, rebuild, storage, payload, and release non-claims.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -9,7 +9,7 @@
   },
   "publicPrimaryBoundary": "The public repo may track RE docs, wave notes, scratch text exports, function indexes, static maps, proof summaries, checkers, and state batons. Hard payloads, full Ghidra databases/backups, raw captures, copied executables, secrets, build output, package output, local proof paths, raw manifests, and local campaign/worktree paths remain out of tracked state.",
   "rebuildReadiness": {
-    "status": "tmm-arm4-readiness-gate proof-plan/checker slot materialized",
+    "status": "tmm-arm4-readiness-gate proof-plan/checker continuity hardening integrated",
     "alias": "tmm-arm4-readiness-gate",
     "proofPlan": "reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md",
     "checker": "tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py",
@@ -34,15 +34,9 @@
     ],
     "futureGate": "A later readiness-gate proof needs a separate bounded assignment and must not reuse this checker as a generic gate without updating the bound source proof and expected counters."
   },
-  "patchBenchProjectionBoundary": {
-    "status": "pre-extraction behavior tests/scaffold integrated; no RE/runtime behavior changed",
-    "summary": "PatchBench receipt behavior tests and an unwired primitive formatter scaffold are integrated. This does not alter RE state, runtime proof, Ghidra storage, AppCore receipt construction, launch behavior, or patch/catalog semantics.",
-    "futureGate": "Before helper wiring, add concatenated/interpolated sentinel tests, explicit manifest filename policy, Host/Join variant coverage, and page-versus-helper parity tests."
-  },
-  "lorePackBoundary": {
-    "status": "metadata integrity hardening integrated",
-    "summary": "Lore pack relativePath index/content equality now fails closed in builder/check tooling. AppCore content-pack loading validates loaded document paths, duplicate ids/paths, hash mismatch, stale pack retention, and generic row-controlled error messages.",
-    "futureGate": "ZIP package probe parity for the same relativePath grammar remains open, along with a future decision on whether AppCore should also enforce index/content relativePath equality."
+  "loreAndWinuiBoundaries": {
+    "lore": "Lore pack fail-closed hardening is integrated but does not prove release readiness, broad ZIP package probe parity, complete traversal protection, runtime UI proof, or package publication.",
+    "assetLibrary": "Asset Library source tests guard passive path summary and polite live-region scope, not runtime UIA/screen-reader behavior."
   },
   "storageRetention": {
     "mode": "read-only/no-delete",
@@ -50,22 +44,7 @@
     "deletionPerformed": false,
     "authorizedReclaimedGiB": 0,
     "actualReclaimedGiB": 0,
-    "futureReviewBands": "Medium and low values are non-authorized logical review ceilings only, not reclaimable storage, candidate pools, unique physical-size estimates, urgency signals, or deletion budgets.",
-    "blockers": [
-      "authority",
-      "resource lease",
-      "point-in-time manifest completeness",
-      "Ghidra provenance",
-      "proof dependency and reference review",
-      "containment and independent-storage calculation",
-      "hard-payload boundary",
-      "unknown containers",
-      "rollback/quarantine plan",
-      "candidate-specific consult evidence",
-      "stale manifest expiry",
-      "retained-summary fidelity"
-    ],
-    "futureMaintenance": "Only future read-only manifest/hash/reference work is safe until a separate task grants explicit deletion authority and candidate-specific evidence."
+    "futureReviewBands": "Medium and low values are non-authorized logical review ceilings only, not reclaimable storage, candidate pools, unique physical-size estimates, urgency signals, or deletion budgets."
   },
   "runtimeProofBoundary": {
     "musicAudibleOutputProof": false,
@@ -85,25 +64,13 @@
     "roadmapIndex": "roadmap/ROADMAP-INDEX.md",
     "rebuildProofPlan": "reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md",
     "rebuildChecker": "tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py",
-    "primitiveProjectionContract": "roadmap/patchbench-primitive-projection-contract.md",
-    "receiptBehaviorTests": "OnslaughtCareerEditor.UiTests/PatchBenchSafeCopyReceiptTextTests.cs",
     "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
     "reIndex": "reverse-engineering/RE-INDEX.md"
   },
   "validation": {
     "stateRefresh": "Integration state refresh only; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, or original-BEA mutation.",
-    "currentGateExpectation": "Use JSON parse, stale local path/campaign marker scans, git diff --check, focused PatchBench/Lore/RE checks, docs/repo safety gates, public payload checks, and winui-primary-lane disposition.",
-    "latestIntegration": [
-      "git diff --check HEAD: PASS",
-      "JSON parse for edited state files: PASS",
-      "stale concrete campaign/worktree/thread marker scan over tracked goal/state/front-door docs: PASS",
-      "py -3 -m py_compile tools\\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py: PASS",
-      "py -3 tools\\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py --self-test --check: PASS",
-      "py -3 tools\\winui_lore_pack_builder.py --self-test: PASS, 6 tests",
-      "focused PatchBench/WinUI product tests: PASS, 44 passed",
-      "focused AppCore Lore tests: PASS, 21 passed",
-      "WinUI build, AppCore full tests, WinUI full tests, patch-engine safety, docs/repo/payload gates, and winui-primary-lane: PASS; final primary lane UiTests count is 115 passed and 2 skipped"
-    ]
+    "currentGateExpectation": "Use JSON parse, state/content denylist scans, git diff --check, RE checker compile/self-test/check, focused Lore and WinUI checks, docs/repo safety gates, public payload checks, and winui-primary-lane before push.",
+    "latestIntegration": "Pending final serial closeout evidence after this state refresh."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -114,7 +81,7 @@
   "nextSteps": [
     "Keep static RE mutation paused unless a product/runtime contradiction points back to a specific RE issue.",
     "Treat tmm-arm4-readiness-gate as proof-plan/checker support only; do not claim readiness-gate execution, runtime proof, or rebuild parity.",
-    "Use the primitive projection contract and PatchBench receipt behavior tests as pre-extraction boundaries only; do not claim live receipt rendering safety until future wiring/parity tests exist.",
+    "Use PatchBench and Asset Library source tests as bounded source guards only; do not claim live runtime UI/accessibility proof from them.",
     "Do not run live BEA/CDB/audio proof without explicit runtime-proof authority, leases, private proof-root readiness, arm phrase handling, and cleanup validation.",
     "Do not delete Ghidra/proof material without a future candidate-specific manifest, retained alternative, dry-run, consults, authority, and acceptance."
   ]

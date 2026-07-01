@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-06-30",
-  "currentFocus": "Docs/state now reflect the parallel integration wave: PatchBench receipt behavior tests before extraction, public-safe TMM ARM4 proof-plan/checker progress, Lore pack metadata integrity hardening, Save Lab route persistence, storage no-delete, runtime private pre-arm-only, and report-attested consult compliance.",
+  "lastUpdated": "2026-07-01",
+  "currentFocus": "Docs/state now describe the failed-wave rescue integration: private Ghidra path redaction, ARM4 proof-plan/checker hardening, Lore pack fail-closed behavior, and bounded Asset Library path/accessibility improvements, with runtime/release/online non-claims preserved.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -14,50 +14,22 @@
     "collaborationGuide": "COLLABORATION.md",
     "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
     "roadmapIndex": "roadmap/ROADMAP-INDEX.md",
-    "primitiveProjectionContract": "roadmap/patchbench-primitive-projection-contract.md",
-    "receiptBehaviorTests": "OnslaughtCareerEditor.UiTests/PatchBenchSafeCopyReceiptTextTests.cs",
-    "receiptBoundaryTests": "OnslaughtCareerEditor.UiTests/PatchBenchPrimitiveProjectionBoundaryTests.cs",
     "rebuildProofPlan": "reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md",
     "rebuildChecker": "tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py",
     "lorePackLoader": "OnslaughtCareerEditor.AppCore/LoreBrowserService.cs",
-    "lorePackBuilder": "tools/winui_lore_pack_builder.py"
+    "assetLibraryPage": "OnslaughtCareerEditor.WinUI/Pages/AssetLibraryPage.xaml"
   },
   "currentDocsTruth": {
-    "patchBenchReceiptBehavior": "PatchBenchSafeCopyReceiptTextTests is integrated as pre-extraction behavior coverage for a WinUI-local primitive receipt formatter scaffold. The scaffold is unwired and proves only the forward contract: layout, normalization, hostile display-value fail-closed checks, online-ready wording rejection, and existing page Host/Join append/no-duplicate characterization.",
-    "patchBenchExtractionBoundary": "BinaryPatchesPage remains the live owner of receipt projection, AppCore receipt DTO consumption, File/Path/I/O, launch planning, process control, patch/catalog semantics, Host/Join fallback, online boundaries, and runtime-proof boundaries. No helper wiring or source-summary extraction is complete.",
-    "patchBenchNextBaton": "Before wiring the helper, add tests for concatenated/interpolated forbidden sentinels, manifest filename policy, Host/Join partial/variant boundaries, and page-versus-helper parity with documented intentional deltas.",
-    "primitiveProjectionBoundary": "The primitive projection guard now includes the new receipt helper/model split under the strict receipt/source projection profile. It remains static source-test coverage, not runtime proof or extraction readiness by itself.",
-    "rebuildProofPlan": "The tmm-arm4-readiness-gate proof-plan/checker slot is materialized as public-safe planning and continuity evidence only. It is not readiness-gate execution, command arming, importer execution, generated payload output, private asset read, runtime proof, visual/gameplay proof, rebuild parity, runtime parity, or no-noticeable-difference parity.",
-    "lorePackIntegrity": "Lore pack relativePath index/content equality is validated by builder/check tooling. AppCore content-pack loading validates loaded document paths, duplicate ids/paths, hash mismatch, and stale pack retention after invalid loads with generic error text for row-controlled relativePath/id/hash values that LorePage can surface.",
-    "loreNextBaton": "ZIP package probe parity for the same lore-pack relativePath grammar remains open, and a future slice should decide whether AppCore also enforces index/content relativePath equality instead of leaving that to builder/check tooling. Do not describe the Lore hardening as release readiness or a broad filesystem traversal fix.",
-    "winuiUxSummary": "The WinUI UX lane fixed only persisted Save Lab route restoration for LastTab=0. Residual UX/copy/accessibility work remains open and should be handled one small slice at a time.",
-    "storageSummary": "Storage taxonomy is summarized only as read-only/no-delete: high-confidence deletion candidates 0, deletion performed false, authorized reclaimed storage 0 GiB, actual reclaimed storage 0 GiB. Future medium/low logical values must not appear in durable state as budgets, targets, urgency, candidate pools, or reclaimable storage.",
-    "runtimeProofBaton": "Runtime music proof remains private pre-arm checklist-only/no-live with readyToRunLiveAttempt=false, liveArmAllowed=false, runtimeAudibleOutputProof=false, and preArmReadiness.status=prearm-readiness-not-proven. Producer coverage is not live authority or proof readiness.",
-    "consultEvidence": "Consult evidence for workers and this integration is accepted with caveats. Integration review used Codex normal, Codex adversarial, composer-2.5-fast normal/adversarial, and gemini-3.1-pro normal/adversarial lanes. Evidence remains report-attested and sanitized-bundle scanned, not raw prompt/output reconstruction or exact Cursor command-line proof.",
-    "externalSanitization": "Do not copy raw prompts, local campaign paths, thread IDs, raw reports, private proof paths, local manifests, or exact local storage/proof paths into tracked docs/state.",
-    "claimBoundary": "No AppCore receipt construction, launch argument behavior, selected-state logic beyond Save Lab route restore, safe-copy planning, process control, patch catalog row, byte patch, Host/Join availability, online readiness, runtime proof, release/publication, gameplay, visual parity, rebuild parity, no-noticeable-difference parity, Ghidra mutation, hard payload, installed-game, or original-BEA mutation claim changed."
+    "docsGovernance": "LOCAL_LAB_OVERLAY.md keeps exact private Ghidra project/store/backup locations out of tracked docs while preserving public overlay rules.",
+    "rebuildProofPlan": "The tmm-arm4-readiness-gate proof-plan/checker is public-safe continuity evidence only. It is not readiness-gate execution, command arming, importer execution, generated payload output, private asset read, runtime proof, visual/gameplay proof, rebuild parity, runtime parity, or no-noticeable-difference parity.",
+    "lorePackIntegrity": "Lore pack builder/check tooling owns relativePath index/content equality today. AppCore content-pack loading validates unsafe loaded paths, duplicate ids/paths, hash mismatch, incomplete/empty pack signals, malformed generated ids, and stale-pack retention boundaries with generic error text for row-controlled values.",
+    "assetLibraryUx": "Asset Library passive material-package status summarizes the output root and keeps explicit Open/Copy full-path actions. Source tests guard one polite live region on the Asset Library page; this is not runtime screen-reader proof.",
+    "patchBenchReceiptBehavior": "PatchBenchSafeCopyReceiptText remains an unwired primitive receipt formatter scaffold. BinaryPatchesPage still owns live receipt projection, File/Path/I/O, launch planning, process control, patch/catalog semantics, Host/Join fallback, online boundaries, and runtime-proof boundaries.",
+    "claimBoundary": "No AppCore receipt construction, launch argument behavior, safe-copy planning, process control, patch catalog row, byte patch, Host/Join availability, online readiness, runtime proof, release/publication, gameplay, visual parity, rebuild parity, no-noticeable-difference parity, Ghidra mutation, hard payload, installed-game, or original-BEA mutation claim changed."
   },
   "validation": {
-    "expectation": "Use docs/repo/payload gates plus focused PatchBench/Lore/RE checks and WinUI/AppCore/UiTests gates required by the accepted changes.",
-    "latestIntegration": [
-      "git diff --check HEAD: PASS",
-      "JSON parse for edited state files: PASS",
-      "stale concrete campaign/worktree/thread marker scan over tracked goal/state/front-door docs: PASS",
-      "RE checker compile and self-test/check: PASS",
-      "Lore builder self-test: PASS, 6 tests",
-      "WinUI project build: PASS, 0 warnings, 0 errors",
-      "Focused AppCore LoreBrowserServiceTests: PASS, 21 passed",
-      "Focused PatchBench/WinUiProductLaneTests: PASS, 44 passed",
-      "npm run test:winui-patch-engine-safety: PASS",
-      "npm run test:appcore: PASS, 1190 passed",
-      "npm run test:winui: PASS, 115 passed and 2 skipped",
-      "npm run test:doc-commands: PASS, 4298 documented npm commands checked",
-      "npm run test:md-links: PASS, 3644 Markdown files scanned and 6164 local links checked",
-      "npm run test:repo-hygiene: PASS",
-      "npm run test:hard-payload-safety: PASS, 19362 public candidate files checked",
-      "npm run test:public-allowlist: PASS",
-      "npm run test:winui-primary-lane: PASS, solution build passed, AppCore 1190 passed, UiTests 115 passed and 2 skipped"
-    ]
+    "expectation": "Final integration closeout must run the serial docs/repo/payload, RE, Lore, WinUI, and state JSON gates on the integrated tree before push.",
+    "latestIntegration": "Pending final serial closeout evidence after this state refresh."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -66,9 +38,9 @@
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "Keep the next docs/product baton executable: PatchBench sentinel/manifest/Host-Join/parity tests before helper wiring.",
+    "Keep next docs/product baton executable: PatchBench sentinel/manifest/Host-Join/parity tests before helper wiring.",
     "Track Lore ZIP probe parity and AppCore index/content equality enforcement as bounded hardening tasks.",
-    "Carry WinUI UX residuals as future slices without implying the UX audit broadly fixed the app.",
+    "Carry Asset Library and broader WinUI UX residuals as future slices without implying runtime accessibility proof.",
     "For storage, document only retained/no-delete status until a future manifest-backed authority changes it.",
     "For runtime proof, keep public docs at private pre-arm-only/no-live-execution unless accepted proof evidence changes."
   ]
