@@ -265,6 +265,39 @@ public class WinUiProductLaneTests
     }
 
     [Test]
+    public void AssetLibrary_MaterialPackageStatusSummarizesOutputRootAndKeepsFullPathActions()
+    {
+        string assetXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "AssetLibraryPage.xaml");
+        string assetCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "AssetLibraryPage.xaml.cs");
+        string completedStatusSlice = ExtractCodeSlice(
+            assetCode,
+            "if (result != null)",
+            "else if (outputExists && workOrder != null)");
+        string prepareSlice = ExtractCodeSlice(
+            assetCode,
+            "private async void PrepareMaterialPackageButton_Click",
+            "private void OpenMaterialPackageButton_Click");
+        string openSlice = ExtractCodeSlice(
+            assetCode,
+            "private void OpenMaterialPackageButton_Click",
+            "private void CopyMaterialPackagePathButton_Click");
+        string copySlice = ExtractCodeSlice(
+            assetCode,
+            "private void CopyMaterialPackagePathButton_Click",
+            "private static string BuildModelUvMappingText");
+
+        Assert.That(assetXaml, Does.Contain("AssetMaterialPackageOutputStatus"));
+        Assert.That(assetXaml, Does.Contain("AssetOpenMaterialPackageButton"));
+        Assert.That(assetXaml, Does.Contain("AssetCopyMaterialPackagePathButton"));
+        Assert.That(prepareSlice, Does.Contain("Preparing material package: {BuildPathSummary(_materialPackageOutputRoot)}"));
+        Assert.That(prepareSlice, Does.Not.Contain("Preparing material package under {_materialPackageOutputRoot}"));
+        Assert.That(completedStatusSlice, Does.Contain("Package folder: {BuildPathSummary(_materialPackageOutputRoot)}"));
+        Assert.That(completedStatusSlice, Does.Not.Contain("Package root: {_materialPackageOutputRoot}"));
+        Assert.That(openSlice, Does.Contain("Process.Start(new ProcessStartInfo(_materialPackageOutputRoot)"));
+        Assert.That(copySlice, Does.Contain("data.SetText(_materialPackageOutputRoot);"));
+    }
+
+    [Test]
     public void LoreReader_DebouncesSearchFiltering()
     {
         string loreCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "LorePage.xaml.cs");

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using NUnit.Framework;
 
 namespace OnslaughtCareerEditor.UiTests;
@@ -451,6 +452,38 @@ public class WinUiAccessibilityAuditTests
     }
 
     [Test]
+    public void AssetLibrary_GoodieSaveStateStatusIsOnlyPoliteLiveRegion()
+    {
+        string xaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "AssetLibraryPage.xaml");
+        XDocument document = XDocument.Parse(xaml);
+
+        XElement goodieStatus = ExtractControlElementByAutomationId(document, "AssetGoodieSaveStateStatus");
+        Assert.That((string?)goodieStatus.Attribute("AutomationProperties.LiveSetting"), Is.EqualTo("Polite"));
+
+        string[] politeLiveRegionIds = document.Descendants()
+            .Where(element => (string?)element.Attribute("AutomationProperties.LiveSetting") == "Polite")
+            .Select(element => (string?)element.Attribute("AutomationProperties.AutomationId") ?? "<missing AutomationId>")
+            .ToArray();
+        Assert.That(politeLiveRegionIds, Is.EqualTo(new[] { "AssetGoodieSaveStateStatus" }));
+
+        string[] nonLiveStatusIds =
+        [
+            "AssetCatalogStatus",
+            "AssetModelWireframeStatus",
+            "AssetModelMetadataStatus",
+            "AssetMaterialPackageOutputStatus"
+        ];
+
+        foreach (string automationId in nonLiveStatusIds)
+        {
+            XElement element = ExtractControlElementByAutomationId(document, automationId);
+            Assert.That(element.Attribute("AutomationProperties.LiveSetting"), Is.Null, $"{automationId} should not be a live region.");
+        }
+
+        Assert.That(xaml, Does.Not.Contain("AutomationProperties.LiveSetting=\"Assertive\""));
+    }
+
+    [Test]
     public void WinUiXamlAutomationIds_AreUnique()
     {
         string winUiRoot = Path.Combine(TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI");
@@ -510,6 +543,14 @@ public class WinUiAccessibilityAuditTests
         }
 
         Assert.That(expectedAccessKeys.Values, Is.Unique, "Shell access keys should stay unique.");
+    }
+
+    private static XElement ExtractControlElementByAutomationId(XDocument document, string automationId)
+    {
+        XElement? element = document.Descendants()
+            .SingleOrDefault(candidate => (string?)candidate.Attribute("AutomationProperties.AutomationId") == automationId);
+        Assert.That(element, Is.Not.Null, $"Missing XAML element with AutomationId {automationId}.");
+        return element!;
     }
 
     private static string ReadRepoFile(params string[] relativeParts)

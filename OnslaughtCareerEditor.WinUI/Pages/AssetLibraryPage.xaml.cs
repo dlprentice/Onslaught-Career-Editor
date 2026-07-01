@@ -982,7 +982,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     $"{BuildMaterialPackageRebuildMeshImportSummary(rebuildMeshImport)} " +
                     $"{BuildMaterialPackageWorkOrderSidecarSummary(result)} " +
                     $"{BuildMaterialPackageImporterDryRunSidecarSummary(result)} " +
-                    $"Package root: {_materialPackageOutputRoot}";
+                    $"Package folder: {BuildPathSummary(_materialPackageOutputRoot)}";
             }
             else if (outputExists && workOrder != null)
             {
@@ -1245,7 +1245,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             PrepareMaterialPackageButton.IsEnabled = false;
-            MaterialPackageOutputStatusTextBlock.Text = $"Preparing material package under {_materialPackageOutputRoot}...";
+            MaterialPackageOutputStatusTextBlock.Text = $"Preparing material package: {BuildPathSummary(_materialPackageOutputRoot)}...";
             AppStatusService.SetStatus("Asset Library: preparing material package");
 
             try

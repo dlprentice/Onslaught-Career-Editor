@@ -121,6 +121,7 @@
                                    FontWeight="SemiBold" />
                         <TextBlock x:Name="GoodieSaveStateStatusTextBlock"
                                    AutomationProperties.AutomationId="AssetGoodieSaveStateStatus"
+                                   AutomationProperties.LiveSetting="Polite"
                                    Style="{StaticResource SectionBodyTextStyle}"
                                    Text="Optional: load a copied .bes save to show locked, newly unlocked, and viewed Goodies states." />
                     </StackPanel>
