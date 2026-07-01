@@ -13,6 +13,7 @@
             <StackPanel Spacing="6">
                 <TextBlock Text="Start Here"
                            AutomationProperties.AutomationId="HomePageTitle"
+                           AutomationProperties.HeadingLevel="Level1"
                            Style="{StaticResource SectionTitleTextStyle}" />
                 <TextBlock Text="Choose the task you want to work on. File-changing workflows are copy-first, and the configured game install is treated as source material."
                            AutomationProperties.AutomationId="HomePagePurpose"
@@ -36,6 +37,8 @@
                         Margin="0">
                     <StackPanel Spacing="12">
                         <TextBlock Text="Edit saves and options"
+                                   AutomationProperties.AutomationId="HomeSaveOptionsTitle"
+                                   AutomationProperties.HeadingLevel="Level2"
                                    FontSize="22"
                                    FontWeight="SemiBold" />
                         <TextBlock Text="Inspect existing .bes career saves and defaultoptions.bea snapshots, then write patched copies while preserving unknown regions."
@@ -67,6 +70,8 @@
                         Margin="0">
                     <StackPanel Spacing="10">
                         <TextBlock Text="Setup"
+                                   AutomationProperties.AutomationId="HomeSetupTitle"
+                                   AutomationProperties.HeadingLevel="Level2"
                                    FontSize="18"
                                    FontWeight="SemiBold" />
                         <TextBlock x:Name="SetupStatusTextBlock"
@@ -97,6 +102,8 @@
                             Margin="0">
                         <StackPanel Spacing="10">
                             <TextBlock Text="Browse media"
+                                       AutomationProperties.AutomationId="HomeMediaTitle"
+                                       AutomationProperties.HeadingLevel="Level2"
                                        FontSize="18"
                                        FontWeight="SemiBold" />
                             <TextBlock Text="Preview installed audio and video in the Windows app."
@@ -115,6 +122,8 @@
                             Margin="0">
                         <StackPanel Spacing="10">
                             <TextBlock Text="Read lore"
+                                       AutomationProperties.AutomationId="HomeLoreTitle"
+                                       AutomationProperties.HeadingLevel="Level2"
                                        FontSize="18"
                                        FontWeight="SemiBold" />
                             <TextBlock Text="Open the curated preservation library and roadmap mirrors."
@@ -133,6 +142,8 @@
                             Margin="0">
                         <StackPanel Spacing="10">
                             <TextBlock Text="Try patches and mods"
+                                       AutomationProperties.AutomationId="HomePatchModsTitle"
+                                       AutomationProperties.HeadingLevel="Level2"
                                        FontSize="18"
                                        FontWeight="SemiBold" />
                             <TextBlock Text="Create a playable copied game, choose windowed or graphics patches, set launch modifiers, and stage one music replacement inside that copied folder."
@@ -151,6 +162,8 @@
                             Margin="0">
                         <StackPanel Spacing="10">
                             <TextBlock Text="Review asset catalogs"
+                                       AutomationProperties.AutomationId="HomeAssetCatalogsTitle"
+                                       AutomationProperties.HeadingLevel="Level2"
                                        FontSize="18"
                                        FontWeight="SemiBold" />
                             <TextBlock Text="Open a generated local catalog to review extracted texture previews, mesh exports, and Goodies links."
@@ -168,10 +181,12 @@
                             Style="{StaticResource SectionCardStyle}"
                             Margin="0">
                         <StackPanel Spacing="10">
-                            <TextBlock Text="Current release posture"
+                            <TextBlock Text="What stays unchanged"
+                                       AutomationProperties.AutomationId="HomeSafetyPostureTitle"
+                                       AutomationProperties.HeadingLevel="Level2"
                                        FontSize="18"
                                        FontWeight="SemiBold" />
-                            <TextBlock Text="WinUI is the primary app lane. Electron, WPF, and the old Python GUI/CLI remain archived reference surfaces."
+                            <TextBlock Text="The installed game and original BEA.exe stay unchanged. Use copied-game workflows for patching and local split-screen testing; online play is not available in this release."
                                        Style="{StaticResource SectionBodyTextStyle}" />
                         </StackPanel>
                     </Border>
@@ -182,9 +197,11 @@
                             Margin="0">
                         <StackPanel Spacing="10">
                             <TextBlock Text="Project notes"
+                                       AutomationProperties.AutomationId="HomeProjectNotesTitle"
+                                       AutomationProperties.HeadingLevel="Level2"
                                        FontSize="18"
                                        FontWeight="SemiBold" />
-                            <TextBlock Text="See the About page for capabilities, retail behavior notes, and release guidance pointers."
+                            <TextBlock Text="See the About page for capabilities, retail behavior notes, and contributor pointers."
                                        Style="{StaticResource SectionBodyTextStyle}" />
                             <Button Content="Open About"
                                     AutomationProperties.AutomationId="HomeOpenAboutButton"

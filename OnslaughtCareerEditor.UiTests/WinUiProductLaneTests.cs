@@ -17,8 +17,13 @@ public class WinUiProductLaneTests
 
         Assert.That(xaml, Does.Contain("primary user-facing Windows product lane"));
         Assert.That(xaml, Does.Contain("Maintainer infrastructure and historical app references remain separate"));
+        Assert.That(xaml, Does.Contain("retail Battle Engine Aquila saves, options, media, and copied-game workflows"));
+        Assert.That(xaml, Does.Contain("patching a copied game does not modify your installed game"));
         Assert.That(xaml, Does.Not.Contain("legacy reference"));
         Assert.That(xaml, Does.Not.Contain("active product direction is the Electron workbench"));
+        Assert.That(xaml, Does.Not.Contain("static RE evidence"));
+        Assert.That(xaml, Does.Not.Contain("Stuart source"));
+        Assert.That(xaml, Does.Not.Contain("parity guidance"));
     }
 
     [Test]
@@ -38,6 +43,10 @@ public class WinUiProductLaneTests
         Assert.That(homeXaml, Does.Contain("Open Lore"));
         Assert.That(homeXaml, Does.Contain("Open Windowed &amp; Mods"));
         Assert.That(homeXaml, Does.Contain("configured game install is treated as source material"));
+        Assert.That(homeXaml, Does.Contain("What stays unchanged"));
+        Assert.That(homeXaml, Does.Contain("installed game and original BEA.exe stay unchanged"));
+        Assert.That(homeXaml, Does.Contain("online play is not available in this release"));
+        Assert.That(homeXaml, Does.Not.Contain("Electron, WPF, and the old Python GUI/CLI"));
     }
 
     [Test]

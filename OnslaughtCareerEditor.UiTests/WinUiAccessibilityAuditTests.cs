@@ -298,6 +298,51 @@ public class WinUiAccessibilityAuditTests
     }
 
     [Test]
+    public void HomeAndAboutOrientationHeadings_ExposeSemanticHeadingLevels()
+    {
+        Dictionary<string, (string RelativePath, string ExpectedLevel)[]> expectedHeadingsByFile = new()
+        {
+            ["OnslaughtCareerEditor.WinUI/Pages/HomePage.xaml"] =
+            [
+                ("HomePageTitle", "Level1"),
+                ("HomeSaveOptionsTitle", "Level2"),
+                ("HomeSetupTitle", "Level2"),
+                ("HomeMediaTitle", "Level2"),
+                ("HomeLoreTitle", "Level2"),
+                ("HomePatchModsTitle", "Level2"),
+                ("HomeAssetCatalogsTitle", "Level2"),
+                ("HomeSafetyPostureTitle", "Level2"),
+                ("HomeProjectNotesTitle", "Level2")
+            ],
+            ["OnslaughtCareerEditor.WinUI/Pages/AboutPage.xaml"] =
+            [
+                ("AboutPageTitle", "Level1"),
+                ("AboutCoreCapabilitiesTitle", "Level2"),
+                ("AboutProjectNotesTitle", "Level2"),
+                ("AboutRetailBehaviorTitle", "Level2"),
+                ("AboutVersionTitle", "Level2")
+            ]
+        };
+
+        List<string> missing = [];
+        foreach ((string relativePath, (string AutomationId, string ExpectedLevel)[] expectedHeadings) in expectedHeadingsByFile)
+        {
+            XDocument document = XDocument.Parse(ReadRepoFile(relativePath.Split('/')));
+            foreach ((string automationId, string expectedLevel) in expectedHeadings)
+            {
+                XElement element = ExtractControlElementByAutomationId(document, automationId);
+                string? actualLevel = (string?)element.Attribute("AutomationProperties.HeadingLevel");
+                if (!string.Equals(actualLevel, expectedLevel, System.StringComparison.Ordinal))
+                {
+                    missing.Add($"{relativePath}: {automationId} expected {expectedLevel}, found {actualLevel ?? "<missing>"}");
+                }
+            }
+        }
+
+        Assert.That(missing, Is.Empty, "Home and About orientation headings should expose semantic heading levels for screen-reader navigation.");
+    }
+
+    [Test]
     public void WinUiPageButtons_ExposeAutomationIds()
     {
         string pagesRoot = Path.Combine(TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages");

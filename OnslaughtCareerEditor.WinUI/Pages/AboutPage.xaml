@@ -12,6 +12,7 @@
         <StackPanel Padding="20,18,20,24">
             <TextBlock Text="About Onslaught Toolkit"
                        AutomationProperties.AutomationId="AboutPageTitle"
+                       AutomationProperties.HeadingLevel="Level1"
                        Style="{StaticResource SectionTitleTextStyle}" />
             <TextBlock Margin="0,6,0,14"
                        AutomationProperties.AutomationId="AboutProductSummary"
@@ -22,6 +23,7 @@
                 <StackPanel Spacing="10">
                     <TextBlock Text="Core capabilities"
                                AutomationProperties.AutomationId="AboutCoreCapabilitiesTitle"
+                               AutomationProperties.HeadingLevel="Level2"
                                FontSize="18"
                                FontWeight="SemiBold" />
                     <TextBlock Text="- Save Lab: inspect .bes career saves, patch copied outputs, and preserve unknown regions."
@@ -39,14 +41,15 @@
                 <StackPanel Spacing="10">
                     <TextBlock Text="Project notes"
                                AutomationProperties.AutomationId="AboutProjectNotesTitle"
+                               AutomationProperties.HeadingLevel="Level2"
                                FontSize="18"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="This app targets retail behavior and uses static RE evidence, with Stuart source used as supporting parity guidance where applicable."
+                    <TextBlock Text="This app is for retail Battle Engine Aquila saves, options, media, and copied-game workflows. It reads existing files and writes copied outputs; patching a copied game does not modify your installed game."
                                Style="{StaticResource SectionBodyTextStyle}" />
                     <TextBlock Text="This WinUI app is the primary user-facing Windows product lane. Maintainer infrastructure and historical app references remain separate from this user app."
                                AutomationProperties.AutomationId="AboutProductLaneNote"
                                Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="Build/runtime docs and release guidance live in the repo roadmap and release-readiness runbooks."
+                    <TextBlock Text="Contributor setup and technical notes are documented with the source project, not required for normal app use."
                                Style="{StaticResource SectionBodyTextStyle}" />
                 </StackPanel>
             </Border>
@@ -55,6 +58,7 @@
                 <StackPanel Spacing="10">
                     <TextBlock Text="Retail behavior notes"
                                AutomationProperties.AutomationId="AboutRetailBehaviorTitle"
+                               AutomationProperties.HeadingLevel="Level2"
                                FontSize="18"
                                FontWeight="SemiBold" />
                     <TextBlock Text="The retail executable and retail-generated save/options files remain authoritative. The app is designed to patch existing files carefully instead of inventing new ones."
@@ -69,6 +73,8 @@
             <Border Style="{StaticResource SectionCardStyle}">
                 <StackPanel Spacing="8">
                     <TextBlock Text="Version"
+                               AutomationProperties.AutomationId="AboutVersionTitle"
+                               AutomationProperties.HeadingLevel="Level2"
                                FontSize="18"
                                FontWeight="SemiBold" />
                     <TextBlock x:Name="VersionTextBlock"
