@@ -93,6 +93,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             }
 
             string lower = value.ToLowerInvariant();
+            string compact = BuildCompactDisplayToken(lower);
             return ContainsDriveRoot(value) ||
                 ContainsRepeatedSeparator(value) ||
                 ContainsSeparated(lower, "users") ||
@@ -101,7 +102,8 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 lower.Contains("/mnt/", StringComparison.Ordinal) ||
                 lower.Contains("program files", StringComparison.Ordinal) ||
                 lower.Contains("steamapps", StringComparison.Ordinal) ||
-                UnsafeFragments.Any(fragment => lower.Contains(fragment, StringComparison.Ordinal));
+                UnsafeFragments.Any(fragment => lower.Contains(fragment, StringComparison.Ordinal)) ||
+                UnsafeCompactFragments.Any(fragment => compact.Contains(fragment, StringComparison.Ordinal));
         }
 
         private static bool ContainsDriveRoot(string value)
@@ -130,6 +132,20 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             }
 
             return false;
+        }
+
+        private static string BuildCompactDisplayToken(string value)
+        {
+            var builder = new StringBuilder(value.Length);
+            foreach (char current in value)
+            {
+                if (char.IsLetterOrDigit(current))
+                {
+                    builder.Append(current);
+                }
+            }
+
+            return builder.ToString();
         }
 
         private static bool ContainsSeparated(string value, string token)
@@ -170,6 +186,34 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             Join("net", "play"),
             Join("host/join ", "available"),
             Join("host/join ", "enabled"),
+        ];
+
+        private static readonly string[] UnsafeCompactFragments =
+        [
+            Join("proof", "id"),
+            Join("proof", "root"),
+            Join("runtime", "proof"),
+            Join("start", "process"),
+            Join("command", "preview"),
+            Join("source", "path"),
+            Join("manifest", "path"),
+            Join("target", "game", "root"),
+            Join("target", "executable", "path"),
+            Join("online", "ready"),
+            Join("online", "session"),
+            Join("online", "play", "ready"),
+            Join("online", "play", "available"),
+            Join("public", "matchmaking"),
+            Join("net", "play"),
+            Join("enable", "host"),
+            Join("enable", "join"),
+            Join("host", "join", "available"),
+            Join("host", "join", "enabled"),
+            Join("host", "join", "ready"),
+            Join("host", "and", "join", "available"),
+            Join("host", "and", "join", "enabled"),
+            Join("host", "and", "join", "ready"),
+            Join("onslaught", "profile", "manifest", "json"),
         ];
     }
 }

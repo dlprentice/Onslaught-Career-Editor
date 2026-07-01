@@ -10,7 +10,8 @@ namespace OnslaughtCareerEditor.UiTests;
 
 public class PatchBenchSafeCopyReceiptTextTests
 {
-    private const string HostJoinBoundary = "No Host/Join or online multiplayer";
+    private static readonly Lazy<string> HostJoinBoundaryValue = new(GetHostJoinBoundaryFromOutcomeHelper);
+    private static string HostJoinBoundary => HostJoinBoundaryValue.Value;
 
     private static readonly string[] ReflectedReceiptTextSourcePaths =
     [
@@ -79,6 +80,10 @@ public class PatchBenchSafeCopyReceiptTextTests
             "ManifestPath",
             "TargetGameRoot",
             "TargetExecutablePath",
+            "source path",
+            "manifest path",
+            "target game root",
+            "target executable path",
         ];
 
         foreach (string hostileValue in hostileValues)
@@ -95,18 +100,105 @@ public class PatchBenchSafeCopyReceiptTextTests
     }
 
     [Test]
+    public void Build_RejectsRuntimeAssembledForbiddenSentinelsAcrossAllFields()
+    {
+        string proof = "proof";
+        string command = "command";
+        string preview = "preview";
+        string source = "source";
+        string manifest = "manifest";
+        string target = "target";
+        string online = "online";
+        string host = "Host";
+        string join = "Join";
+        string[] hostileValues =
+        [
+            string.Concat(proof, " ", "id"),
+            $"{proof}{"-"}root",
+            string.Concat("runtime", " ", proof),
+            $"{command} {preview}",
+            string.Concat("Start", " ", "Process"),
+            $"{source} {"path"}",
+            string.Concat(manifest, " ", "path"),
+            $"{target} {"game"} {"root"}",
+            $"{target} {"executable"} {"path"}",
+            string.Concat(online, " ", "ready"),
+            $"{host} {" / "} {join} enabled",
+            $"{host}{"-"}{join} available",
+        ];
+
+        foreach (string hostileValue in hostileValues)
+        {
+            foreach ((string field, object state) in CreateStatesWithHostileValue(hostileValue))
+            {
+                Exception? exception = CaptureBuildException(state);
+                Assert.That(
+                    exception,
+                    Is.TypeOf<ArgumentException>(),
+                    $"{field} should reject runtime-assembled hostile receipt text: {hostileValue}");
+            }
+        }
+    }
+
+    [Test]
+    public void Build_EnforcesManifestFilenameDisplayPolicy()
+    {
+        string[] unsafeManifestFilenameValues =
+        [
+            "onslaught-profile-manifest.json",
+            "Profile manifest: onslaught-profile-manifest.json",
+            "Manifest file onslaught-profile-manifest.json",
+        ];
+
+        foreach (string unsafeManifestFilenameValue in unsafeManifestFilenameValues)
+        {
+            foreach ((string field, object state) in CreateStatesWithHostileValue(unsafeManifestFilenameValue))
+            {
+                Exception? exception = CaptureBuildException(state);
+                Assert.That(
+                    exception,
+                    Is.TypeOf<ArgumentException>(),
+                    $"{field} should reject raw manifest filename display text: {unsafeManifestFilenameValue}");
+            }
+        }
+
+        string output = InvokeBuild(CreateState(
+            "Safe copy ready",
+            [("Profile manifest", "written for the safe copy")],
+            ["Safe-copy profile manifest was written."],
+            [$"{HostJoinBoundary}."]));
+
+        Assert.That(output, Does.Contain("Profile manifest: written for the safe copy"));
+    }
+
+    [Test]
     public void Build_RejectsOnlineReadyPromotionWordingButPreservesBoundaryLimits()
     {
         string[] unsafeOnlineValues =
         [
             "online-ready",
+            "online ready",
+            "OnlineReady",
+            "online_ready",
+            "online play ready",
+            "online play available",
             "Online session is ready",
+            "online session ready",
             "enable Host now",
             "enable Join now",
+            "Enable: Host now",
+            "Enable: Join now",
             "Public matchmaking available",
+            "public-matchmaking available",
+            "PublicMatchmaking ready",
             "netplay ready",
+            "net play ready",
             "Host/Join available",
             "Host/Join enabled",
+            "HOST/JOIN AVAILABLE",
+            "Host / Join enabled",
+            "Host-Join ready",
+            "Host and Join available",
         ];
 
         foreach (string unsafeOnlineValue in unsafeOnlineValues)
@@ -135,6 +227,135 @@ public class PatchBenchSafeCopyReceiptTextTests
             Assert.That(output, Does.Contain("No installed-game mutation."));
             Assert.That(output, Does.Contain("Original BEA.exe remains read-only."));
         });
+    }
+
+    [Test]
+    public void Build_RejectsProofAndCommandPreviewVariants()
+    {
+        string[] unsafeValues =
+        [
+            "proof-id",
+            "PROOF-ID",
+            "proof_id",
+            "proof id",
+            "ProofId",
+            "proof-root",
+            "proof root",
+            "ProofRoot",
+            "runtime-proof",
+            "runtime proof",
+            "CommandPreview",
+            "commandpreview",
+            "command-preview",
+            "command preview",
+            "Command Preview: launch preview",
+            "Start-Process",
+            "Start Process",
+        ];
+
+        foreach (string unsafeValue in unsafeValues)
+        {
+            foreach ((string field, object state) in CreateStatesWithHostileValue(unsafeValue))
+            {
+                Exception? exception = CaptureBuildException(state);
+                Assert.That(
+                    exception,
+                    Is.TypeOf<ArgumentException>(),
+                    $"{field} should reject proof/command sentinel variant: {unsafeValue}");
+            }
+        }
+    }
+
+    [Test]
+    public void Build_AllowsBenignHostJoinPartialWordsAndNegativeBoundaryCopy()
+    {
+        string output = InvokeBuild(CreateState(
+            "Safe copy ready",
+            [("Profile", "Enhanced Profile Preview")],
+            [
+                "Windowed mode ready",
+                "ghost marker removed from the safe-copy note",
+                "joinery wording is unrelated to online actions.",
+            ],
+            [
+                $"{HostJoinBoundary}.",
+                "Host/Join remain unavailable.",
+                "No installed-game mutation.",
+            ]));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(output, Does.Contain("ghost marker"));
+            Assert.That(output, Does.Contain("joinery wording"));
+            Assert.That(output, Does.Contain($"{HostJoinBoundary}."));
+            Assert.That(output, Does.Contain("Host/Join remain unavailable."));
+        });
+    }
+
+    [Test]
+    public void PageFormatter_MatchesHelperForNormalizedReceiptWhenBoundaryPresent()
+    {
+        var receipt = new GameProfilePrepareReceipt(
+            "Safe copy ready",
+            [
+                new GameProfileReceiptLine("Profile", "Enhanced Profile Preview"),
+                new GameProfileReceiptLine("Launch modifiers", "-skipfmv -level 850"),
+            ],
+            [
+                "Windowed mode ready",
+                "Savegames copied into this safe copy only; source savegames remain read-only.",
+            ],
+            [
+                $"{HostJoinBoundary}.",
+                "No installed-game mutation.",
+            ]);
+        object helperState = CreateState(
+            receipt.Headline,
+            receipt.Lines.Select(line => (line.Label, line.Value)).ToArray(),
+            receipt.IncludedChanges.ToArray(),
+            receipt.StillNotIncluded.ToArray());
+
+        string pageOutput = InvokePageReceiptFormatter(receipt);
+        string helperOutput = InvokeBuild(helperState);
+
+        Assert.That(helperOutput, Is.EqualTo(pageOutput));
+    }
+
+    [Test]
+    public void PageFormatterAndHelper_DocumentHostJoinBoundaryInjectionDeltaBeforeWiring()
+    {
+        var missingBoundaryReceipt = new GameProfilePrepareReceipt(
+            "Safe copy ready",
+            [new GameProfileReceiptLine("Profile", "Enhanced Profile Preview")],
+            ["Windowed mode ready"],
+            ["No installed-game mutation."]);
+        object helperStateWithoutBoundary = CreateState(
+            missingBoundaryReceipt.Headline,
+            missingBoundaryReceipt.Lines.Select(line => (line.Label, line.Value)).ToArray(),
+            missingBoundaryReceipt.IncludedChanges.ToArray(),
+            missingBoundaryReceipt.StillNotIncluded.ToArray());
+        object helperStateWithBoundary = CreateState(
+            missingBoundaryReceipt.Headline,
+            missingBoundaryReceipt.Lines.Select(line => (line.Label, line.Value)).ToArray(),
+            missingBoundaryReceipt.IncludedChanges.ToArray(),
+            [.. missingBoundaryReceipt.StillNotIncluded, $"{HostJoinBoundary}."]);
+
+        string pageOutput = InvokePageReceiptFormatter(missingBoundaryReceipt);
+        string helperOutputWithoutBoundary = InvokeBuild(helperStateWithoutBoundary);
+        string helperOutputWithBoundary = InvokeBuild(helperStateWithBoundary);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(CountOccurrences(pageOutput, HostJoinBoundary), Is.EqualTo(1));
+            Assert.That(CountOccurrences(helperOutputWithoutBoundary, HostJoinBoundary), Is.EqualTo(0));
+            Assert.That(helperOutputWithBoundary, Is.EqualTo(pageOutput));
+        });
+    }
+
+    [Test]
+    public void HostJoinBoundaryConstant_ComesFromSafeCopyOutcomeHelper()
+    {
+        Assert.That(HostJoinBoundary, Is.EqualTo("No Host/Join or online multiplayer"));
     }
 
     [Test]
@@ -281,6 +502,17 @@ public class PatchBenchSafeCopyReceiptTextTests
         return ReflectedWinUiTestSupport.GetRequiredType(
             "OnslaughtCareerEditor.WinUI.Helpers.PatchBenchSafeCopyReceiptText",
             ReflectedReceiptTextSourcePaths);
+    }
+
+    private static string GetHostJoinBoundaryFromOutcomeHelper()
+    {
+        Type type = ReflectedWinUiTestSupport.GetRequiredType(
+            "OnslaughtCareerEditor.WinUI.Helpers.PatchBenchSafeCopyOutcomeText",
+            ReflectedPageFormatterSourcePaths);
+        FieldInfo field = type.GetField("HostJoinReceiptBoundary", BindingFlags.Static | BindingFlags.Public)
+            ?? throw new InvalidOperationException("Missing PatchBenchSafeCopyOutcomeText.HostJoinReceiptBoundary.");
+        return (string)(field.GetRawConstantValue()
+            ?? throw new InvalidOperationException("PatchBenchSafeCopyOutcomeText.HostJoinReceiptBoundary was null."));
     }
 
     private static void AssertNoOwnershipTokens(string source, string label)
