@@ -1230,7 +1230,29 @@ namespace Onslaught___Career_Editor
                 normalized = normalized.Replace("//", "/", StringComparison.Ordinal);
             }
 
-            return normalized;
+            List<string> parts = new();
+            foreach (string part in normalized.Split('/', StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (part.Equals(".", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (part.Equals("..", StringComparison.Ordinal))
+                {
+                    if (parts.Count == 0)
+                    {
+                        return string.Empty;
+                    }
+
+                    parts.RemoveAt(parts.Count - 1);
+                    continue;
+                }
+
+                parts.Add(part);
+            }
+
+            return string.Join("/", parts);
         }
 
         private static string FormatTreeSegment(string value)

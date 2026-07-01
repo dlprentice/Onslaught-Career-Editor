@@ -780,18 +780,47 @@ def inspect_lore_pack_texts(pack_texts: dict[str, str], prefix: str) -> list[Che
         index = json.loads(pack_texts[LORE_PACK_INDEX_FILE])
         if index.get("schema") != winui_lore_pack_builder.SCHEMA:
             findings.append("schema mismatch")
-        expected_rows = {
-            item.get("id"): item
-            for item in index.get("documents", [])
-            if isinstance(item, dict) and item.get("id")
-        }
-        if index.get("documentCount") != len(expected_rows):
+        documents = index.get("documents")
+        if not isinstance(documents, list):
+            documents = []
+            findings.append("index documents are missing or invalid")
+        if index.get("documentCount") != len(documents):
             findings.append("documentCount does not match index row count")
-        available_paths = {
-            normalize_pack_relative_path(str(item.get("relativePath"))).lower()
-            for item in expected_rows.values()
-            if isinstance(item.get("relativePath"), str)
-        }
+
+        expected_rows: dict[str, dict[str, object]] = {}
+        expected_row_keys: set[str] = set()
+        indexed_relative_paths: set[str] = set()
+        for item_number, item in enumerate(documents, start=1):
+            if not isinstance(item, dict):
+                findings.append(f"index row {item_number} is invalid")
+                continue
+
+            doc_id = item.get("id")
+            if not isinstance(doc_id, str) or not doc_id.strip():
+                findings.append(f"index row {item_number} is missing id")
+                continue
+
+            doc_key = doc_id.lower()
+            if doc_key in expected_row_keys:
+                findings.append(f"index row {item_number} duplicates id")
+                continue
+
+            relative_path = validate_probe_relative_path(item.get("relativePath"), f"index row {item_number}", findings)
+            if relative_path is None:
+                continue
+
+            relative_key = relative_path.lower()
+            if relative_key in indexed_relative_paths:
+                findings.append(f"index row {item_number} duplicates relativePath")
+                continue
+
+            expected_row_keys.add(doc_key)
+            indexed_relative_paths.add(relative_key)
+            expected_row = dict(item)
+            expected_row["relativePath"] = relative_path
+            expected_rows[doc_key] = expected_row
+
+        available_paths = set(indexed_relative_paths)
         seen_rows: set[str] = set()
         for line_number, line in enumerate(pack_texts[LORE_PACK_CONTENT_FILE].splitlines(), start=1):
             if not line.strip():
@@ -800,23 +829,32 @@ def inspect_lore_pack_texts(pack_texts: dict[str, str], prefix: str) -> list[Che
             allowed_keys = {"id", "relativePath", "title", "sha256", "byteLength", "content"}
             extra_keys = sorted(set(row) - allowed_keys)
             if extra_keys:
-                findings.append(f"row {line_number} has unexpected keys {extra_keys[:4]}")
+                findings.append(f"row {line_number} has unexpected keys")
                 continue
             doc_id = row.get("id")
-            if doc_id not in expected_rows:
-                findings.append(f"row {line_number} has unknown id {doc_id!r}")
+            if not isinstance(doc_id, str) or not doc_id.strip():
+                findings.append(f"row {line_number} is missing id")
+                continue
+            doc_key = doc_id.lower()
+            if doc_key not in expected_rows:
+                findings.append(f"row {line_number} has unknown id")
+                continue
+            if doc_key in seen_rows:
+                findings.append(f"row {line_number} duplicates id")
                 continue
             content = row.get("content")
-            relative_path = row.get("relativePath")
-            if not isinstance(content, str) or not isinstance(relative_path, str):
-                findings.append(f"row {line_number} missing content or relativePath")
+            if not isinstance(content, str):
+                findings.append(f"row {line_number} is missing text content")
+                continue
+            relative_path = validate_probe_relative_path(row.get("relativePath"), f"row {line_number}", findings)
+            if relative_path is None:
                 continue
             content_byte_length = len(content.encode("utf-8"))
-            expected_row = expected_rows[doc_id]
+            expected_row = expected_rows[doc_key]
             if row.get("byteLength") != content_byte_length or expected_row.get("byteLength") != content_byte_length:
                 findings.append(f"row {line_number} byteLength mismatch")
                 continue
-            if normalize_pack_relative_path(relative_path) != normalize_pack_relative_path(str(expected_row.get("relativePath", ""))):
+            if relative_path != expected_row.get("relativePath"):
                 findings.append(f"row {line_number} relativePath mismatch")
                 continue
             if has_payload_like_lore_pack_text(relative_path) or has_payload_like_lore_pack_text(content):
@@ -835,14 +873,14 @@ def inspect_lore_pack_texts(pack_texts: dict[str, str], prefix: str) -> list[Che
                 if resolve_pack_link_candidate(relative_path, path_part, available_paths) is None:
                     unresolved_links.append(target)
             if unresolved_links:
-                findings.append(f"row {line_number} has unresolved packed links: {', '.join(unresolved_links[:4])}")
+                findings.append(f"row {line_number} has unresolved packed links")
                 continue
-            seen_rows.add(str(doc_id))
+            seen_rows.add(doc_key)
         missing_rows = sorted(set(expected_rows) - seen_rows)
         if missing_rows:
-            findings.append("missing content rows: " + ", ".join(missing_rows[:8]))
+            findings.append(f"missing content rows: {len(missing_rows)}")
     except Exception as exc:
-        findings.append(str(exc))
+        findings.append("Lore pack validation raised an unexpected error")
 
     return [
         CheckResult(
@@ -853,6 +891,14 @@ def inspect_lore_pack_texts(pack_texts: dict[str, str], prefix: str) -> list[Che
             else "Lore pack validation failed: " + "; ".join(findings[:8]),
         )
     ]
+
+
+def validate_probe_relative_path(value: object, context: str, findings: list[str]) -> str | None:
+    try:
+        return winui_lore_pack_builder.validate_lore_pack_relative_path(value)
+    except ValueError:
+        findings.append(f"{context} has invalid relativePath")
+        return None
 
 
 def has_payload_like_lore_pack_text(value: str) -> bool:

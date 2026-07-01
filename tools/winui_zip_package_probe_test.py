@@ -238,6 +238,147 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
 
             self.assertIn("bundle_lore_pack", failures)
 
+    def test_lore_pack_inspection_rejects_invalid_index_relative_path_without_echoing_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(bundle_dir, relative_path="./SecretLeakProbe.md")
+
+            lore_pack_result = self._lore_pack_result(bundle_dir)
+
+            self.assertEqual(lore_pack_result.status, "FAIL")
+            self.assertIn("invalid relativePath", lore_pack_result.summary)
+            self.assertNotIn("./SecretLeakProbe.md", lore_pack_result.summary)
+            self.assertNotIn("SecretLeakProbe", lore_pack_result.summary)
+
+    def test_lore_pack_inspection_rejects_invalid_content_relative_path_without_echoing_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(
+                bundle_dir,
+                relative_path="Start-Here.md",
+                content_relative_path="folder/../SecretLeakProbe.md",
+            )
+
+            lore_pack_result = self._lore_pack_result(bundle_dir)
+
+            self.assertEqual(lore_pack_result.status, "FAIL")
+            self.assertIn("invalid relativePath", lore_pack_result.summary)
+            self.assertNotIn("folder/../SecretLeakProbe.md", lore_pack_result.summary)
+            self.assertNotIn("SecretLeakProbe", lore_pack_result.summary)
+
+    def test_lore_pack_inspection_rejects_content_relative_path_mismatch_after_validation(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(
+                bundle_dir,
+                relative_path="folder/Start-Here.md",
+                content_relative_path="folder/Other.md",
+            )
+
+            lore_pack_result = self._lore_pack_result(bundle_dir)
+
+            self.assertEqual(lore_pack_result.status, "FAIL")
+            self.assertIn("relativePath mismatch", lore_pack_result.summary)
+            self.assertNotIn("folder/Other.md", lore_pack_result.summary)
+
+    def test_lore_pack_inspection_rejects_dot_segment_content_relative_path_without_echoing_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(
+                bundle_dir,
+                relative_path="folder/Start-Here.md",
+                content_relative_path="folder/./SecretLeakProbe.md",
+            )
+
+            lore_pack_result = self._lore_pack_result(bundle_dir)
+
+            self.assertEqual(lore_pack_result.status, "FAIL")
+            self.assertIn("invalid relativePath", lore_pack_result.summary)
+            self.assertNotIn("folder/./SecretLeakProbe.md", lore_pack_result.summary)
+            self.assertNotIn("SecretLeakProbe", lore_pack_result.summary)
+
+    def test_lore_pack_inspection_rejects_duplicate_index_id(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(bundle_dir)
+            index_path = bundle_dir / "lore-pack" / "onslaught-lore.v1.index.json"
+            index = json.loads(index_path.read_text(encoding="utf-8"))
+            duplicate = dict(index["documents"][0])
+            duplicate["relativePath"] = "Second.md"
+            index["documents"].append(duplicate)
+            index["documentCount"] = 2
+            index_path.write_text(json.dumps(index), encoding="utf-8")
+
+            failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
+
+            self.assertIn("bundle_lore_pack", failures)
+
+    def test_lore_pack_inspection_rejects_duplicate_index_relative_path_case_insensitive(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(bundle_dir)
+            index_path = bundle_dir / "lore-pack" / "onslaught-lore.v1.index.json"
+            index = json.loads(index_path.read_text(encoding="utf-8"))
+            duplicate = dict(index["documents"][0])
+            duplicate["id"] = "doc-000002"
+            duplicate["relativePath"] = "start-here.md"
+            index["documents"].append(duplicate)
+            index["documentCount"] = 2
+            index_path.write_text(json.dumps(index), encoding="utf-8")
+
+            failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
+
+            self.assertIn("bundle_lore_pack", failures)
+
+    def test_lore_pack_inspection_rejects_duplicate_content_id(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(bundle_dir)
+            content_path = bundle_dir / "lore-pack" / "onslaught-lore.v1.jsonl"
+            row = content_path.read_text(encoding="utf-8").strip()
+            content_path.write_text(row + "\n" + row + "\n", encoding="utf-8")
+
+            failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
+
+            self.assertIn("bundle_lore_pack", failures)
+
+    def test_lore_pack_inspection_accepts_dot_segment_packed_links_for_runtime_navigation(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_two_row_lore_pack_payload(
+                bundle_dir,
+                ("doc-000001", "folder/Start.md", "# Start\n\n[Other](./Other.md)\n"),
+                ("doc-000002", "folder/Other.md", "# Other\n\nSynthetic fixture.\n"),
+            )
+
+            lore_pack_result = self._lore_pack_result(bundle_dir)
+
+            self.assertEqual(lore_pack_result.status, "PASS")
+
     def test_lore_pack_inspection_rejects_byte_length_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:
             root = Path(temp_root)
@@ -472,13 +613,23 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             path.write_text(relative_path, encoding="utf-8")
         self._write_lore_pack_payload(bundle_dir)
 
-    def _write_lore_pack_payload(self, bundle_dir: Path, *, content: str = "# Start\n\nSynthetic fixture.\n") -> None:
+    def _lore_pack_result(self, bundle_dir: Path) -> probe.CheckResult:
+        return next(item for item in probe.inspect_folder(bundle_dir, "bundle") if item.key == "bundle_lore_pack")
+
+    def _write_lore_pack_payload(
+        self,
+        bundle_dir: Path,
+        *,
+        content: str = "# Start\n\nSynthetic fixture.\n",
+        relative_path: str = "Start-Here.md",
+        content_relative_path: str | None = None,
+    ) -> None:
         pack_dir = bundle_dir / "lore-pack"
         pack_dir.mkdir(parents=True, exist_ok=True)
         digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
         row = {
             "id": "doc-000001",
-            "relativePath": "Start-Here.md",
+            "relativePath": content_relative_path or relative_path,
             "title": "Start",
             "sha256": digest,
             "byteLength": len(content.encode("utf-8")),
@@ -491,7 +642,7 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             "documents": [
                 {
                     "id": row["id"],
-                    "relativePath": row["relativePath"],
+                    "relativePath": relative_path,
                     "title": row["title"],
                     "sha256": row["sha256"],
                     "byteLength": row["byteLength"],
@@ -501,6 +652,45 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
         }
         (pack_dir / "onslaught-lore.v1.index.json").write_text(json.dumps(index), encoding="utf-8")
         (pack_dir / "onslaught-lore.v1.jsonl").write_text(json.dumps(row) + "\n", encoding="utf-8")
+
+    def _write_two_row_lore_pack_payload(self, bundle_dir: Path, *documents: tuple[str, str, str]) -> None:
+        pack_dir = bundle_dir / "lore-pack"
+        pack_dir.mkdir(parents=True, exist_ok=True)
+        index_rows = []
+        content_rows = []
+        for order, (doc_id, relative_path, content) in enumerate(documents):
+            digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
+            byte_length = len(content.encode("utf-8"))
+            index_rows.append(
+                {
+                    "id": doc_id,
+                    "relativePath": relative_path,
+                    "title": "Start" if order == 0 else "Other",
+                    "sha256": digest,
+                    "byteLength": byte_length,
+                    "order": order,
+                }
+            )
+            content_rows.append(
+                json.dumps(
+                    {
+                        "id": doc_id,
+                        "relativePath": relative_path,
+                        "title": "Start" if order == 0 else "Other",
+                        "sha256": digest,
+                        "byteLength": byte_length,
+                        "content": content,
+                    }
+                )
+            )
+        index = {
+            "schema": "onslaught-lore-pack.v1",
+            "sourceRoot": "lore-book",
+            "documentCount": len(index_rows),
+            "documents": index_rows,
+        }
+        (pack_dir / "onslaught-lore.v1.index.json").write_text(json.dumps(index), encoding="utf-8")
+        (pack_dir / "onslaught-lore.v1.jsonl").write_text("\n".join(content_rows) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

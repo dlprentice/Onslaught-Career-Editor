@@ -675,6 +675,33 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void RenderDocument_RewritesPackedDotSegmentLinksToReaderNavigation()
+        {
+            CreateLoreBookSkeleton();
+            WriteLorePack(
+                ("Start-Here.md", "# Start\n\nHome document."),
+                ("deep/Deep.md", "# Deep\n\nSee [Home](../Start-Here.md#top) and [Peer](./Peer.md)."),
+                ("deep/Peer.md", "# Peer\n\nSibling document."));
+
+            LoreBrowserService service = new();
+            LoreIndex index = service.LoadIndex(_repoRoot);
+            LoreDocument deep = Assert.Single(index.Documents, doc => doc.RelativePath == "deep/Deep.md");
+
+            RenderedLoreDocument rendered = service.RenderDocument(deep.FilePath);
+            string html = File.ReadAllText(new Uri(rendered.DisplayUri).LocalPath);
+            string? homeTarget = service.ResolveInternalTarget(deep.FilePath, "../Start-Here.md#top");
+            string? peerTarget = service.ResolveInternalTarget(deep.FilePath, "./Peer.md");
+
+            Assert.Contains("onslaught-lore://document/", html);
+            Assert.NotNull(homeTarget);
+            Assert.NotNull(peerTarget);
+            Assert.StartsWith("lore-pack://", homeTarget!, StringComparison.OrdinalIgnoreCase);
+            Assert.StartsWith("lore-pack://", peerTarget!, StringComparison.OrdinalIgnoreCase);
+            Assert.True(service.DocumentExists(homeTarget!));
+            Assert.True(service.DocumentExists(peerTarget!));
+        }
+
+        [Fact]
         public void RenderDocument_CreatesStyledHtmlOutput()
         {
             string loreBook = CreateLoreBookSkeleton();
