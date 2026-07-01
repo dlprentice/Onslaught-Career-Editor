@@ -29,7 +29,7 @@ automation, or workflow scaffolding.
 | WinUI app | `OnslaughtCareerEditor.WinUI/`, `OnslaughtCareerEditor.UiTests/` | `npm run build:winui`, `npm run test:winui`, `npm run test:winui-primary-lane` |
 | AppCore / CLI | `OnslaughtCareerEditor.AppCore/`, `OnslaughtCareerEditor.Cli/`, tests | `npm run test:appcore`, `npm run build:cli` |
 | Patch / mod safety | `patches/`, AppCore patch services, WinUI patch surfaces | `npm run test:winui-patch-engine-safety`, `npm run test:winui-safe-copy-preflight` |
-| Docs / release safety | `README.MD`, `CONTRIBUTING.md`, `release/readiness/`, `roadmap/`, `reverse-engineering/` | `npm run test:doc-commands`, `npm run test:md-links`, `npm run test:public-allowlist`, `npm run test:repo-hygiene` |
+| Docs / release safety | `README.MD`, `CONTRIBUTING.md`, `release/readiness/`, `roadmap/`, `reverse-engineering/` | `npm run test:doc-commands`, `npm run test:md-links`, `npm run test:public-allowlist`, `npm run test:repo-hygiene`, `npm run test:winui-notices` |
 | RE docs / proof summaries | `reverse-engineering/`, `lore/`, `lore-book/`, `release/readiness/`, state batons | docs/release safety gates |
 
 <!-- public-package-commands:start -->
@@ -38,6 +38,7 @@ npm run test:doc-commands
 npm run test:md-links
 npm run test:public-allowlist
 npm run test:repo-hygiene
+npm run test:winui-notices
 ```
 <!-- public-package-commands:end -->
 
