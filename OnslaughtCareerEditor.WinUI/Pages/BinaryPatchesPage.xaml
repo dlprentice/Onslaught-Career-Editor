@@ -438,6 +438,9 @@
                                                     <TextBlock Text="{Binding Description}"
                                                                Margin="0,6,0,0"
                                                                Style="{StaticResource SectionBodyTextStyle}" />
+                                                    <TextBlock Text="{Binding ScanSummary}"
+                                                               Margin="0,6,0,0"
+                                                               Style="{StaticResource SectionBodyTextStyle}" />
                                                 </StackPanel>
 
                                                 <ItemsControl ItemsSource="{Binding Items}">

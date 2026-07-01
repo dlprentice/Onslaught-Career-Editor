@@ -19,7 +19,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                     .ToList();
                 if (groupItems.Count > 0)
                 {
-                    groups.Add(new BinaryPatchGroupModel(title, description, groupItems));
+                    groups.Add(new BinaryPatchGroupModel(title, description, BuildScanSummary(groupItems), groupItems));
                 }
             }
 
@@ -56,6 +56,41 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             }
 
             return groups;
+        }
+
+        private static string BuildScanSummary(IReadOnlyCollection<BinaryPatchItemModel> groupItems)
+        {
+            int experimentalCount = groupItems.Count(item =>
+                string.Equals(item.Spec.Track, "Experimental", StringComparison.OrdinalIgnoreCase));
+            int otherTrackCount = groupItems.Count(item =>
+                !string.Equals(item.Spec.Track, "Stable", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(item.Spec.Track, "Experimental", StringComparison.OrdinalIgnoreCase));
+            string optionLabel = groupItems.Count == 1 ? "option" : "options";
+            var trackSummaries = new List<string>();
+            if (experimentalCount == groupItems.Count)
+            {
+                trackSummaries.Add("all experimental");
+            }
+            else if (experimentalCount > 0)
+            {
+                trackSummaries.Add($"{experimentalCount} experimental");
+            }
+
+            if (otherTrackCount > 0)
+            {
+                string otherLabel = otherTrackCount == 1 ? "other track" : "other tracks";
+                trackSummaries.Add($"{otherTrackCount} {otherLabel}");
+            }
+
+            string trackSummary = trackSummaries.Count == 0
+                ? string.Empty
+                : experimentalCount == groupItems.Count && otherTrackCount == 0
+                    ? ", all experimental"
+                    : $", including {string.Join(" and ", trackSummaries)}";
+
+            return $"Visible rows: {groupItems.Count} {optionLabel}{trackSummary}. " +
+                "Copied targets only; installed game stays read-only. " +
+                "Open row details for checks and remaining limits.";
         }
     }
 }
