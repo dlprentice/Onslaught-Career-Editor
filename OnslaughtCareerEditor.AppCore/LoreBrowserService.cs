@@ -14,6 +14,7 @@ namespace Onslaught___Career_Editor
         private const string LorePackSourcePrefix = "lore-pack://";
         private const string LorePackNavigationScheme = "onslaught-lore";
         private const string MissingLoreBookMessage = "Lore book directory not found.";
+        private const string InvalidLorePackDocumentIdMessage = "Lore content pack contains an invalid document identifier.";
         private const string InvalidLorePackDocumentPathMessage = "Lore content pack contains an invalid document path.";
         private const string InvalidLorePackIndexMessage = "Lore content pack index is invalid.";
         private const string InvalidLorePackContentMessage = "Lore content pack content is invalid.";
@@ -257,8 +258,8 @@ namespace Onslaught___Career_Editor
             while (directory != null)
             {
                 string loreBook = Path.Combine(directory.FullName, "lore-book");
-                string lorePack = Path.Combine(directory.FullName, LorePackDirectoryName, LorePackIndexFileName);
-                if (Directory.Exists(loreBook) || File.Exists(lorePack))
+                string lorePack = Path.Combine(directory.FullName, LorePackDirectoryName);
+                if (Directory.Exists(loreBook) || Directory.Exists(lorePack))
                 {
                     return directory.FullName;
                 }
@@ -409,9 +410,22 @@ namespace Onslaught___Career_Editor
             string packDirectory = Path.Combine(projectRoot, LorePackDirectoryName);
             string indexPath = Path.Combine(packDirectory, LorePackIndexFileName);
             string contentPath = Path.Combine(packDirectory, LorePackContentFileName);
-            if (!File.Exists(indexPath) || !File.Exists(contentPath))
+            bool hasPackDirectory = Directory.Exists(packDirectory);
+            bool hasPackIndex = File.Exists(indexPath);
+            bool hasPackContent = File.Exists(contentPath);
+            if (!hasPackDirectory && !hasPackIndex && !hasPackContent)
             {
                 return false;
+            }
+
+            if (!hasPackIndex)
+            {
+                throw new InvalidDataException(InvalidLorePackIndexMessage);
+            }
+
+            if (!hasPackContent)
+            {
+                throw new InvalidDataException(InvalidLorePackContentMessage);
             }
 
             IReadOnlyDictionary<string, LorePackIndexEntry> indexById = LoadPackIndex(indexPath);
@@ -432,9 +446,9 @@ namespace Onslaught___Career_Editor
                         line,
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 }
-                catch (JsonException ex)
+                catch (JsonException)
                 {
-                    throw new InvalidDataException(InvalidLorePackContentMessage, ex);
+                    throw new InvalidDataException(InvalidLorePackContentMessage);
                 }
 
                 if (row == null ||
@@ -447,7 +461,7 @@ namespace Onslaught___Career_Editor
                     throw new InvalidDataException(InvalidLorePackContentMessage);
                 }
 
-                string id = row.Id.Trim();
+                string id = ValidateLorePackDocumentId(row.Id);
                 string normalizedRelativePath = ValidateLorePackRelativePath(row.RelativePath);
                 if (!indexById.TryGetValue(id, out LorePackIndexEntry? indexEntry))
                 {
@@ -494,7 +508,7 @@ namespace Onslaught___Career_Editor
 
             if (documentsById.Count == 0)
             {
-                return false;
+                throw new InvalidDataException(InvalidLorePackIndexMessage);
             }
 
             pack = new LoreContentPack(documentsById, documentsByRelativePath);
@@ -514,6 +528,18 @@ namespace Onslaught___Career_Editor
             }
 
             return true;
+        }
+
+        private static string ValidateLorePackDocumentId(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id) ||
+                !string.Equals(id, id.Trim(), StringComparison.Ordinal) ||
+                !LORE_PACK_DOCUMENT_ID_REGEX().IsMatch(id))
+            {
+                throw new InvalidDataException(InvalidLorePackDocumentIdMessage);
+            }
+
+            return id;
         }
 
         private static string ValidateLorePackRelativePath(string relativePath)
@@ -607,7 +633,7 @@ namespace Onslaught___Career_Editor
                     throw new InvalidDataException(InvalidLorePackIndexMessage);
                 }
 
-                string normalizedId = id.Trim();
+                string normalizedId = ValidateLorePackDocumentId(id);
                 string normalizedRelativePath = ValidateLorePackRelativePath(relativePathElement.GetString() ?? string.Empty);
                 if (indexById.ContainsKey(normalizedId))
                 {
@@ -635,9 +661,9 @@ namespace Onslaught___Career_Editor
             {
                 return JsonDocument.Parse(File.ReadAllText(indexPath, Encoding.UTF8));
             }
-            catch (JsonException ex)
+            catch (JsonException)
             {
-                throw new InvalidDataException(InvalidLorePackIndexMessage, ex);
+                throw new InvalidDataException(InvalidLorePackIndexMessage);
             }
         }
 
@@ -839,6 +865,9 @@ namespace Onslaught___Career_Editor
 
         [GeneratedRegex(@"(?<prefix>\[[^\]]+\]\()(?<target>[^)]+)(?<suffix>\))", RegexOptions.Compiled)]
         private static partial Regex LORE_BOOK_MARKDOWN_LINK_REGEX();
+
+        [GeneratedRegex(@"^[A-Za-z0-9][A-Za-z0-9._-]*$", RegexOptions.Compiled)]
+        private static partial Regex LORE_PACK_DOCUMENT_ID_REGEX();
 
         private static IReadOnlyList<LoreTreeItem> CloneTree(IReadOnlyList<LoreTreeItem> rootItems)
         {

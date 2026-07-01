@@ -69,17 +69,90 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
-        public void LoadIndex_MissingFallbackLoreBookDoesNotEchoResolvedDirectory()
+        public void LoadIndex_IncompleteLorePackWithoutLoreBookFailsClosedWithoutEchoingResolvedDirectory()
         {
             string packDirectory = Path.Combine(_repoRoot, "lore-pack");
             Directory.CreateDirectory(packDirectory);
             File.WriteAllText(Path.Combine(packDirectory, "onslaught-lore.v1.index.json"), "{}", Encoding.UTF8);
 
-            DirectoryNotFoundException ex = Assert.Throws<DirectoryNotFoundException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
 
-            Assert.Equal("Lore book directory not found.", ex.Message);
+            Assert.Equal("Lore content pack content is invalid.", ex.Message);
             Assert.DoesNotContain(_repoRoot, ex.Message, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("lore-book", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void LoadIndex_IncompleteLorePackDoesNotFallbackToLoreBook()
+        {
+            string loreBook = CreateLoreBookSkeleton();
+            File.WriteAllText(Path.Combine(loreBook, "BOOK.md"), "- [Fallback](Fallback.md)");
+            File.WriteAllText(Path.Combine(loreBook, "Fallback.md"), "# Fallback");
+            string packDirectory = Path.Combine(_repoRoot, "lore-pack");
+            Directory.CreateDirectory(packDirectory);
+            File.WriteAllText(
+                Path.Combine(packDirectory, "onslaught-lore.v1.index.json"),
+                JsonSerializer.Serialize(new
+                {
+                    schema = "onslaught-lore-pack.v1",
+                    sourceRoot = "lore-book",
+                    documentCount = 1,
+                    documents = new[]
+                    {
+                        new
+                        {
+                            id = "doc-start",
+                            relativePath = "Start.md",
+                            title = "Start",
+                            sha256 = Sha256Text("# Start"),
+                            byteLength = Encoding.UTF8.GetByteCount("# Start"),
+                            order = 0
+                        }
+                    }
+                }),
+                Encoding.UTF8);
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "content is invalid", "Fallback.md", loreBook);
+        }
+
+        [Fact]
+        public void LoadIndex_ContentOnlyLorePackDoesNotFallbackToLoreBook()
+        {
+            string loreBook = CreateLoreBookSkeleton();
+            File.WriteAllText(Path.Combine(loreBook, "BOOK.md"), "- [Fallback](Fallback.md)");
+            File.WriteAllText(Path.Combine(loreBook, "Fallback.md"), "# Fallback");
+            string packDirectory = Path.Combine(_repoRoot, "lore-pack");
+            Directory.CreateDirectory(packDirectory);
+            File.WriteAllText(
+                Path.Combine(packDirectory, "onslaught-lore.v1.jsonl"),
+                SerializeLorePackContentRow("doc-start", "Start.md", "# Start") + Environment.NewLine,
+                Encoding.UTF8);
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "index is invalid", "Fallback.md", loreBook);
+        }
+
+        [Fact]
+        public void LoadIndex_EmptyLorePackDoesNotFallbackToLoreBook()
+        {
+            string loreBook = CreateLoreBookSkeleton();
+            File.WriteAllText(Path.Combine(loreBook, "BOOK.md"), "- [Fallback](Fallback.md)");
+            File.WriteAllText(Path.Combine(loreBook, "Fallback.md"), "# Fallback");
+            WriteLorePackFixture(
+                new
+                {
+                    schema = "onslaught-lore-pack.v1",
+                    sourceRoot = "lore-book",
+                    documentCount = 0,
+                    documents = Array.Empty<object>()
+                });
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "index is invalid", "Fallback.md", loreBook);
         }
 
 
@@ -158,18 +231,35 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         [Fact]
         public void LoadIndex_RejectsDuplicateLorePackIdWithoutEchoingId()
         {
-            const string maliciousId = @"C:\Users\Alice\duplicate-id";
+            const string maliciousId = "doc-duplicate-id-leak";
             WriteLorePackRows(
                 new LorePackFixtureRow(maliciousId, "One.md", "# One"),
                 new LorePackFixtureRow(maliciousId, "Two.md", "# Two"));
 
             InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
 
-            AssertSafeLorePackException(ex, "duplicate document identifiers", maliciousId, "C:", "Users", "duplicate-id");
+            AssertSafeLorePackException(ex, "duplicate document identifiers", maliciousId, "duplicate-id-leak");
+        }
+
+        [Theory]
+        [InlineData("doc-fragment#LEAK", "fragment", "LEAK")]
+        [InlineData("doc/path/LEAK", "path", "LEAK")]
+        [InlineData("doc:LEAK", "doc:", "LEAK")]
+        [InlineData(" doc-LEAK ", "doc-LEAK", "LEAK")]
+        public void LoadIndex_RejectsMalformedLorePackDocumentIdWithoutEchoingId(
+            string documentId,
+            string firstForbiddenToken,
+            string secondForbiddenToken)
+        {
+            WriteLorePackRows(new LorePackFixtureRow(documentId, "Start.md", "# Start"));
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "invalid document identifier", firstForbiddenToken, secondForbiddenToken);
         }
 
         [Fact]
-        public void LoadIndex_RejectsDuplicateLorePackIndexIdAfterTrimWithoutEchoingId()
+        public void LoadIndex_RejectsDuplicateLorePackIndexIdCaseInsensitiveWithoutEchoingId()
         {
             string content = "# One";
             string digest = Sha256Text(content);
@@ -192,7 +282,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                         },
                         new
                         {
-                            id = " doc-trim-leak ",
+                            id = "DOC-TRIM-LEAK",
                             relativePath = "Two.md",
                             title = "Two",
                             sha256 = digest,
@@ -331,11 +421,11 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                         }
                     }
                 },
-                SerializeLorePackContentRow(@"doc-UNKNOWN-C:\Users\Alice", "Extra.md", extraContent));
+                SerializeLorePackContentRow("doc-unknown-leak", "Extra.md", extraContent));
 
             InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
 
-            AssertSafeLorePackException(ex, "index and content do not match", "UNKNOWN", "C:", "Users", "Alice");
+            AssertSafeLorePackException(ex, "index and content do not match", "unknown-leak");
         }
 
         [Fact]
@@ -390,7 +480,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     {
                         new
                         {
-                            id = @"doc-MISSING-C:\Users\Alice",
+                            id = "doc-missing-leak",
                             relativePath = "Missing.md",
                             title = "Missing",
                             sha256 = digest,
@@ -402,7 +492,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
             InvalidDataException ex = Assert.Throws<InvalidDataException>(() => service.LoadIndex(_repoRoot));
 
-            AssertSafeLorePackException(ex, "index and content do not match", "MISSING", "C:", "Users", "Alice");
+            AssertSafeLorePackException(ex, "index and content do not match", "missing-leak");
             Assert.False(service.DocumentExists(validSourcePath));
         }
 
