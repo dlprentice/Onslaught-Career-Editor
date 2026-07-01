@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-01",
-  "currentFocus": "Static RE/Ghidra closure remains unchanged; the failed-wave rescue integrated only public-safe tmm-arm4-readiness-gate proof-plan/checker continuity hardening and preserved runtime, rebuild, storage, payload, and release non-claims.",
+  "currentFocus": "Static RE/Ghidra closure remains unchanged; the failed-wave rescue is accepted, pushed, and synced on main at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb after integrating only public-safe tmm-arm4-readiness-gate proof-plan/checker continuity hardening and preserving runtime, rebuild, storage, payload, and release non-claims.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -69,8 +69,7 @@
   },
   "validation": {
     "stateRefresh": "Integration state refresh only; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, or original-BEA mutation.",
-    "currentGateExpectation": "Use JSON parse, state/content denylist scans, git diff --check, RE checker compile/self-test/check, focused Lore and WinUI checks, docs/repo safety gates, public payload checks, and winui-primary-lane before push.",
-    "latestIntegration": "Pending final serial closeout evidence after this state refresh."
+    "latestIntegration": "Final rescue closeout evidence accepted: JSON parse, state/content denylist scans, git diff --check, RE checker compile/self-test/check, focused Lore and WinUI checks, docs/repo safety gates, public payload checks, and winui-primary-lane passed in the integration closeout; HEAD, origin/main, and live refs/heads/main matched 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb with divergence 0 0."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",

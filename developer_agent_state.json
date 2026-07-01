@@ -1,9 +1,11 @@
 {
   "lastUpdated": "2026-07-01",
-  "currentFocus": "Failed-wave rescue integration: accepted docs-governance, RE ARM4 proof-plan/checker, Lore content-pack fail-closed, and Asset Library path/accessibility commits are integrated on main for final serial validation and remote sync.",
+  "currentFocus": "Failed-wave rescue integration is accepted, pushed, and synced on main at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb; next executable work is PatchBench pre-wiring boundary coverage.",
   "currentTruth": {
     "rescueIntegration": {
-      "status": "integrated-on-main-awaiting-final-closeout",
+      "status": "accepted-pushed-synced-on-main",
+      "finalHead": "78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb",
+      "refs": "HEAD, origin/main, and live refs/heads/main matched finalHead with divergence 0 0 after push.",
       "acceptedCommits": [
         "66e38d62feb6d2a059f57830a3ef0c8b4c85dcd1",
         "5014014b3686c2ab7cf3baf854b8401b9e8e1907",
@@ -12,8 +14,8 @@
         "af5bef90d3cae2b504fd417f72707dfe240ff47e",
         "835b77a108736976c9d15d5f4061ccd54e5a907c"
       ],
-      "stateRefresh": "This file, documentation_agent_state.json, re_orchestrator_state.json, and goal.md were reconciled as the integration-owned baton set.",
-      "validationCloseout": "Final pass/fail evidence belongs to the local integration report and validation matrix after the post-state serial gate run."
+      "stateRefresh": "This file, documentation_agent_state.json, re_orchestrator_state.json, and goal.md were reconciled as the closeout baton set.",
+      "validationCloseout": "Final serial validation passed in the integration closeout; local integration and acceptance reports recorded the evidence."
     },
     "docsGovernanceBoundary": {
       "status": "accepted",
@@ -91,7 +93,7 @@
       "npm run test:public-allowlist",
       "npm run test:winui-primary-lane"
     ],
-    "latestIntegration": "Pending final serial closeout evidence after this state refresh."
+    "latestIntegration": "Final closeout evidence accepted: serial validation passed, main was pushed, refs synced at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb, divergence was 0 0, and hard-payload/security gates passed."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -100,7 +102,6 @@
   "openQuestions": [],
   "blockers": [],
   "nextSteps": [
-    "Run and record the final serial validation matrix on the integrated tree before push.",
     "PatchBench: add sentinel, manifest filename, Host/Join variant, and page-versus-helper parity tests before any helper wiring.",
     "Lore: add ZIP package probe relativePath parity and decide AppCore index/content equality enforcement.",
     "RE/rebuild: keep tmm-arm4-readiness-gate as proof-plan/checker support only until separate readiness-gate authority exists.",

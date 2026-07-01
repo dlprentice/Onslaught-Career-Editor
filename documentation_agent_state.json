@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-01",
-  "currentFocus": "Docs/state now describe the failed-wave rescue integration: private Ghidra path redaction, ARM4 proof-plan/checker hardening, Lore pack fail-closed behavior, and bounded Asset Library path/accessibility improvements, with runtime/release/online non-claims preserved.",
+  "currentFocus": "Docs/state now describe the failed-wave rescue as accepted, pushed, and synced on main at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb, with runtime/release/online non-claims preserved.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -28,8 +28,9 @@
     "claimBoundary": "No AppCore receipt construction, launch argument behavior, safe-copy planning, process control, patch catalog row, byte patch, Host/Join availability, online readiness, runtime proof, release/publication, gameplay, visual parity, rebuild parity, no-noticeable-difference parity, Ghidra mutation, hard payload, installed-game, or original-BEA mutation claim changed."
   },
   "validation": {
-    "expectation": "Final integration closeout must run the serial docs/repo/payload, RE, Lore, WinUI, and state JSON gates on the integrated tree before push.",
-    "latestIntegration": "Pending final serial closeout evidence after this state refresh."
+    "latestIntegration": "Final integration closeout evidence is accepted: serial docs/repo/payload, RE, Lore, WinUI, and state JSON gates passed in the integration closeout; HEAD, origin/main, and live refs/heads/main matched 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb with divergence 0 0.",
+    "hardPayloadSecurity": "Passed; no hard payloads, secrets, raw local proof paths, full Ghidra databases, copied executables, arbitrary saves/options, screenshots/frame dumps, build output, package output, or local runtime caches were added.",
+    "nonMutations": "No installed-game/original BEA.exe, BEA/CDB/audio, Ghidra mutation/read-back, runtime proof, release/publication, storage deletion, or Host/Join enablement mutation was performed."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",

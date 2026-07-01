@@ -6,8 +6,13 @@ Policy: `goal.policy.md`
 
 ## Current Slice
 
-The failed-wave rescue integration has folded the accepted rescue work into
-local `main` for final serial validation and remote sync:
+The failed-wave rescue integration is accepted, pushed, and synced on `main` at
+`78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb`. The current executable slice is
+PatchBench pre-wiring boundary coverage: add the remaining sentinel, manifest
+filename, Host/Join variant, and page-versus-helper parity tests before any
+helper wiring or AppCore DTO projection.
+
+The accepted rescue closeout folded this bounded work into public `main`:
 
 - Private Ghidra project/store/backup pointers were removed from the tracked
   local overlay guide while public/local boundaries stayed intact.
@@ -21,12 +26,16 @@ local `main` for final serial validation and remote sync:
   while explicit Open/Copy full-path actions remain, and source tests guard the
   page's polite live-region scope.
 
-This slice is not terminal until the integrated tree passes the final serial
-validation matrix, pushes to `origin/main`, and verifies local `HEAD`,
-`origin/main`, and live remote `refs/heads/main` are identical.
+Final serial validation passed, `origin/main` was pushed, and local `HEAD`,
+`origin/main`, and live remote `refs/heads/main` all resolved to
+`78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb` with divergence `0 0`.
 
 ## Current Truth
 
+- The failed-wave rescue wave is closed on `main`. Final validation passed,
+  refs are synced, hard-payload/security gates passed, and no BEA/CDB/audio,
+  Ghidra, runtime proof, installed-game/original `BEA.exe`, storage deletion,
+  release/publication, or Host/Join enablement mutation was performed.
 - `PatchBenchSafeCopyReceiptText` remains an unwired WinUI-local primitive
   scaffold. It is a contract/test target only, not a live production formatter,
   extraction completion, or runtime hostile-value rejection proof.
@@ -120,30 +129,28 @@ validation matrix, pushes to `origin/main`, and verifies local `HEAD`,
 
 ## Next Executable Work
 
-1. Finalize this rescue only after final serial validation passes and remote
-   sync is verified.
-2. PatchBench next: add tests for concatenated/interpolated forbidden
+1. PatchBench next: add tests for concatenated/interpolated forbidden
    sentinels, manifest filename policy, Host/Join partial/variant boundary
    cases, and page-versus-helper parity before any helper wiring.
-3. PatchBench follow-up after those tests pass: project AppCore receipt DTOs
+2. PatchBench follow-up after those tests pass: project AppCore receipt DTOs
    into WinUI-local primitive state and consider wiring the helper without
    moving File/Path/I/O, receipt construction, launch planning, process
    control, catalog semantics, online boundaries, or runtime-proof boundaries.
-4. Lore next: add ZIP package probe parity for lore-pack `relativePath`
+3. Lore next: add ZIP package probe parity for lore-pack `relativePath`
    validation, keep user-visible load errors generic, and decide whether
    AppCore should also enforce index/content relativePath equality instead of
    leaving that to builder/check tooling.
-5. RE/rebuild next: run only public-safe checker/proof-plan advancement until a
+4. RE/rebuild next: run only public-safe checker/proof-plan advancement until a
    separate task grants explicit readiness-gate authority; do not treat
    `tmm-arm4-readiness-gate` as executed.
-6. WinUI UX next: address one residual high-confidence path-redaction,
+5. WinUI UX next: address one residual high-confidence path-redaction,
    proof-jargon, first-run, or accessibility issue at a time with focused
    tests/build evidence.
-7. Storage next: do only read-only manifest/hash/reference work until a future
+6. Storage next: do only read-only manifest/hash/reference work until a future
    task records explicit deletion authority, candidate-specific retained
    alternatives, dry-run evidence, consults, rollback/quarantine plan, and
    independent acceptance.
-8. Runtime next: keep music proof as private pre-arm checklist-only work unless
+7. Runtime next: keep music proof as private pre-arm checklist-only work unless
    a future task grants explicit runtime-proof authority, leases, private proof
    root readiness, arm phrase handling, and cleanup validation.
 
