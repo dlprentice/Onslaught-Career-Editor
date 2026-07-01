@@ -363,6 +363,48 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
 
             self.assertIn("bundle_lore_pack", failures)
 
+    def test_lore_pack_inspection_rejects_invalid_index_document_id_without_echoing_id(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(bundle_dir, doc_id="doc/path/SecretLeakProbe")
+
+            lore_pack_result = self._lore_pack_result(bundle_dir)
+
+            self.assertEqual(lore_pack_result.status, "FAIL")
+            self.assertIn("invalid id", lore_pack_result.summary)
+            self.assertNotIn("doc/path/SecretLeakProbe", lore_pack_result.summary)
+            self.assertNotIn("SecretLeakProbe", lore_pack_result.summary)
+
+    def test_lore_pack_inspection_rejects_invalid_content_document_id_without_echoing_id(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(bundle_dir, doc_id="doc-000001", content_doc_id="doc:SecretLeakProbe")
+
+            lore_pack_result = self._lore_pack_result(bundle_dir)
+
+            self.assertEqual(lore_pack_result.status, "FAIL")
+            self.assertIn("invalid id", lore_pack_result.summary)
+            self.assertNotIn("doc:SecretLeakProbe", lore_pack_result.summary)
+            self.assertNotIn("SecretLeakProbe", lore_pack_result.summary)
+
+    def test_lore_pack_inspection_accepts_case_variant_content_id(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_lore_pack_payload(bundle_dir, doc_id="doc-000001", content_doc_id="DOC-000001")
+
+            lore_pack_result = self._lore_pack_result(bundle_dir)
+
+            self.assertEqual(lore_pack_result.status, "PASS")
+
     def test_lore_pack_inspection_accepts_dot_segment_packed_links_for_runtime_navigation(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:
             root = Path(temp_root)
@@ -378,6 +420,24 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             lore_pack_result = self._lore_pack_result(bundle_dir)
 
             self.assertEqual(lore_pack_result.status, "PASS")
+
+    def test_lore_pack_inspection_rejects_above_root_packed_links_without_echoing_target(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_two_row_lore_pack_payload(
+                bundle_dir,
+                ("doc-000001", "Start.md", "# Start\n\n[Deep](../Deep.md)\n"),
+                ("doc-000002", "Deep.md", "# Deep\n\nSynthetic fixture.\n"),
+            )
+
+            lore_pack_result = self._lore_pack_result(bundle_dir)
+
+            self.assertEqual(lore_pack_result.status, "FAIL")
+            self.assertIn("unresolved packed links", lore_pack_result.summary)
+            self.assertNotIn("../Deep.md", lore_pack_result.summary)
 
     def test_lore_pack_inspection_rejects_byte_length_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:
@@ -623,12 +683,14 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
         content: str = "# Start\n\nSynthetic fixture.\n",
         relative_path: str = "Start-Here.md",
         content_relative_path: str | None = None,
+        doc_id: str = "doc-000001",
+        content_doc_id: str | None = None,
     ) -> None:
         pack_dir = bundle_dir / "lore-pack"
         pack_dir.mkdir(parents=True, exist_ok=True)
         digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
         row = {
-            "id": "doc-000001",
+            "id": content_doc_id or doc_id,
             "relativePath": content_relative_path or relative_path,
             "title": "Start",
             "sha256": digest,
@@ -641,7 +703,7 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             "documentCount": 1,
             "documents": [
                 {
-                    "id": row["id"],
+                    "id": doc_id,
                     "relativePath": relative_path,
                     "title": row["title"],
                     "sha256": row["sha256"],

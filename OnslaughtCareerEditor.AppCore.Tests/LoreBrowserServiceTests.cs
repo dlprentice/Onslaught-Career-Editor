@@ -702,6 +702,26 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void RenderDocument_DoesNotResolvePackedLinksAbovePackRoot()
+        {
+            CreateLoreBookSkeleton();
+            WriteLorePack(
+                ("Start-Here.md", "# Start\n\nSee [Deep](../Deep.md)."),
+                ("Deep.md", "# Deep\n\nRoot document."));
+
+            LoreBrowserService service = new();
+            LoreIndex index = service.LoadIndex(_repoRoot);
+            LoreDocument start = Assert.Single(index.Documents, doc => doc.RelativePath == "Start-Here.md");
+
+            RenderedLoreDocument rendered = service.RenderDocument(start.FilePath);
+            string html = File.ReadAllText(new Uri(rendered.DisplayUri).LocalPath);
+            string? target = service.ResolveInternalTarget(start.FilePath, "../Deep.md");
+
+            Assert.Null(target);
+            Assert.DoesNotContain("onslaught-lore://document/", html);
+        }
+
+        [Fact]
         public void RenderDocument_CreatesStyledHtmlOutput()
         {
             string loreBook = CreateLoreBookSkeleton();

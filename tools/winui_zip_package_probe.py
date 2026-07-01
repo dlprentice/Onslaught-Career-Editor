@@ -52,6 +52,7 @@ LORE_PACK_CONTENT_FILE = f"{LORE_PACK_DIR}/{winui_lore_pack_builder.CONTENT_FILE
 LORE_BOOK_SOURCE = ROOT / LORE_BOOK_DIR
 LORE_BOOK_LINK_REGEX = re.compile(r"\[[^\]]+\]\((?P<target>[^)]+)\)")
 LORE_BOOK_MARKDOWN_LINK_REGEX = re.compile(r"(?P<prefix>\[[^\]]+\]\()(?P<target>[^)]+)(?P<suffix>\))")
+LORE_PACK_DOCUMENT_ID_REGEX = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 GITHUB_SOURCE_BLOB_BASE = "https://github.com/dlprentice/Onslaught-Career-Editor/blob/main"
 GITHUB_SOURCE_SEARCH_BASE = "https://github.com/dlprentice/Onslaught-Career-Editor/search"
 PACKAGED_LORE_FORBIDDEN_CLAIMS = (
@@ -709,7 +710,8 @@ def normalize_pack_relative_path(path: str) -> str:
         if part == "..":
             if parts:
                 parts.pop()
-            continue
+                continue
+            return ""
         parts.append(part)
     return "/".join(parts)
 
@@ -795,9 +797,8 @@ def inspect_lore_pack_texts(pack_texts: dict[str, str], prefix: str) -> list[Che
                 findings.append(f"index row {item_number} is invalid")
                 continue
 
-            doc_id = item.get("id")
-            if not isinstance(doc_id, str) or not doc_id.strip():
-                findings.append(f"index row {item_number} is missing id")
+            doc_id = validate_probe_document_id(item.get("id"), f"index row {item_number}", findings)
+            if doc_id is None:
                 continue
 
             doc_key = doc_id.lower()
@@ -831,9 +832,8 @@ def inspect_lore_pack_texts(pack_texts: dict[str, str], prefix: str) -> list[Che
             if extra_keys:
                 findings.append(f"row {line_number} has unexpected keys")
                 continue
-            doc_id = row.get("id")
-            if not isinstance(doc_id, str) or not doc_id.strip():
-                findings.append(f"row {line_number} is missing id")
+            doc_id = validate_probe_document_id(row.get("id"), f"row {line_number}", findings)
+            if doc_id is None:
                 continue
             doc_key = doc_id.lower()
             if doc_key not in expected_rows:
@@ -861,7 +861,7 @@ def inspect_lore_pack_texts(pack_texts: dict[str, str], prefix: str) -> list[Che
                 findings.append(f"row {line_number} contains payload-like/local/private text")
                 continue
             digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
-            if digest != row.get("sha256") or digest != expected_rows[doc_id].get("sha256"):
+            if digest != row.get("sha256") or digest != expected_row.get("sha256"):
                 findings.append(f"row {line_number} hash mismatch")
                 continue
             unresolved_links: list[str] = []
@@ -891,6 +891,13 @@ def inspect_lore_pack_texts(pack_texts: dict[str, str], prefix: str) -> list[Che
             else "Lore pack validation failed: " + "; ".join(findings[:8]),
         )
     ]
+
+
+def validate_probe_document_id(value: object, context: str, findings: list[str]) -> str | None:
+    if not isinstance(value, str) or not value.strip() or value.strip() != value or not LORE_PACK_DOCUMENT_ID_REGEX.fullmatch(value):
+        findings.append(f"{context} has invalid id")
+        return None
+    return value
 
 
 def validate_probe_relative_path(value: object, context: str, findings: list[str]) -> str | None:
