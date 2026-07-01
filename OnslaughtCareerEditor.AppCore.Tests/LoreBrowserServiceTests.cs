@@ -68,6 +68,20 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Equal("Packaged Home", index.HomeDocument!.Title);
         }
 
+        [Fact]
+        public void LoadIndex_MissingFallbackLoreBookDoesNotEchoResolvedDirectory()
+        {
+            string packDirectory = Path.Combine(_repoRoot, "lore-pack");
+            Directory.CreateDirectory(packDirectory);
+            File.WriteAllText(Path.Combine(packDirectory, "onslaught-lore.v1.index.json"), "{}", Encoding.UTF8);
+
+            DirectoryNotFoundException ex = Assert.Throws<DirectoryNotFoundException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            Assert.Equal("Lore book directory not found.", ex.Message);
+            Assert.DoesNotContain(_repoRoot, ex.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("lore-book", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
 
         [Fact]
         public void FilterTree_MatchesDocumentTextAndKeepsBranch()
@@ -155,6 +169,46 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void LoadIndex_RejectsDuplicateLorePackIndexIdAfterTrimWithoutEchoingId()
+        {
+            string content = "# One";
+            string digest = Sha256Text(content);
+            WriteLorePackFixture(
+                new
+                {
+                    schema = "onslaught-lore-pack.v1",
+                    sourceRoot = "lore-book",
+                    documentCount = 2,
+                    documents = new[]
+                    {
+                        new
+                        {
+                            id = "doc-trim-leak",
+                            relativePath = "One.md",
+                            title = "One",
+                            sha256 = digest,
+                            byteLength = Encoding.UTF8.GetByteCount(content),
+                            order = 0
+                        },
+                        new
+                        {
+                            id = " doc-trim-leak ",
+                            relativePath = "Two.md",
+                            title = "Two",
+                            sha256 = digest,
+                            byteLength = Encoding.UTF8.GetByteCount(content),
+                            order = 1
+                        }
+                    }
+                },
+                SerializeLorePackContentRow("doc-trim-leak", "One.md", content));
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "duplicate document identifiers", "doc-trim-leak");
+        }
+
+        [Fact]
         public void LoadIndex_RejectsDuplicateLorePackRelativePathWithoutEchoingPathOrId()
         {
             const string duplicatePath = "safe/DuplicateLeakProbe.md";
@@ -188,6 +242,307 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
 
             AssertSafeLorePackException(ex, "hash mismatch", relativePath, "HashLeakProbe", "doc-hash");
+        }
+
+        [Fact]
+        public void LoadIndex_RejectsLorePackIndexSchemaMismatchWithoutEchoingInput()
+        {
+            string content = "# Start";
+            string digest = Sha256Text(content);
+            WriteLorePackFixture(
+                new
+                {
+                    schema = @"onslaught-lore-pack.v0-C:\Users\Alice",
+                    sourceRoot = "lore-book",
+                    documentCount = 1,
+                    documents = new[]
+                    {
+                        new
+                        {
+                            id = "doc-start",
+                            relativePath = "Start.md",
+                            title = "Start",
+                            sha256 = digest,
+                            byteLength = Encoding.UTF8.GetByteCount(content),
+                            order = 0
+                        }
+                    }
+                },
+                SerializeLorePackContentRow("doc-start", "Start.md", content));
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            Assert.Equal("Lore content pack index is invalid.", ex.Message);
+        }
+
+        [Fact]
+        public void LoadIndex_RejectsLorePackIndexDocumentCountMismatch()
+        {
+            string content = "# Start";
+            string digest = Sha256Text(content);
+            WriteLorePackFixture(
+                new
+                {
+                    schema = "onslaught-lore-pack.v1",
+                    sourceRoot = "lore-book",
+                    documentCount = 2,
+                    documents = new[]
+                    {
+                        new
+                        {
+                            id = "doc-start",
+                            relativePath = "Start.md",
+                            title = "Start",
+                            sha256 = digest,
+                            byteLength = Encoding.UTF8.GetByteCount(content),
+                            order = 0
+                        }
+                    }
+                },
+                SerializeLorePackContentRow("doc-start", "Start.md", content));
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            Assert.Equal("Lore content pack index is invalid.", ex.Message);
+        }
+
+        [Fact]
+        public void LoadIndex_RejectsLorePackContentRowUnknownToIndexWithoutEchoingId()
+        {
+            string indexedContent = "# Start";
+            string indexedDigest = Sha256Text(indexedContent);
+            string extraContent = "# Extra";
+            WriteLorePackFixture(
+                new
+                {
+                    schema = "onslaught-lore-pack.v1",
+                    sourceRoot = "lore-book",
+                    documentCount = 1,
+                    documents = new[]
+                    {
+                        new
+                        {
+                            id = "doc-start",
+                            relativePath = "Start.md",
+                            title = "Start",
+                            sha256 = indexedDigest,
+                            byteLength = Encoding.UTF8.GetByteCount(indexedContent),
+                            order = 0
+                        }
+                    }
+                },
+                SerializeLorePackContentRow(@"doc-UNKNOWN-C:\Users\Alice", "Extra.md", extraContent));
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "index and content do not match", "UNKNOWN", "C:", "Users", "Alice");
+        }
+
+        [Fact]
+        public void LoadIndex_RejectsLorePackIndexContentRelativePathMismatchWithoutEchoingPath()
+        {
+            string content = "# Start";
+            string digest = Sha256Text(content);
+            WriteLorePackFixture(
+                new
+                {
+                    schema = "onslaught-lore-pack.v1",
+                    sourceRoot = "lore-book",
+                    documentCount = 1,
+                    documents = new[]
+                    {
+                        new
+                        {
+                            id = "doc-start",
+                            relativePath = "IndexPathLeak.md",
+                            title = "Start",
+                            sha256 = digest,
+                            byteLength = Encoding.UTF8.GetByteCount(content),
+                            order = 0
+                        }
+                    }
+                },
+                SerializeLorePackContentRow("doc-start", "ContentPathLeak.md", content));
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "index and content do not match", "IndexPathLeak", "ContentPathLeak", "doc-start");
+        }
+
+        [Fact]
+        public void LoadIndex_RejectsMissingLorePackContentRowsWithoutRetainingPreviousPack()
+        {
+            LoreBrowserService service = new();
+            WriteLorePackRows(new LorePackFixtureRow("doc-valid", "Valid.md", "# Valid"));
+            LoreIndex index = service.LoadIndex(_repoRoot);
+            string validSourcePath = Assert.Single(index.Documents).FilePath;
+            Assert.True(service.DocumentExists(validSourcePath));
+
+            string content = "# Missing";
+            string digest = Sha256Text(content);
+            WriteLorePackFixture(
+                new
+                {
+                    schema = "onslaught-lore-pack.v1",
+                    sourceRoot = "lore-book",
+                    documentCount = 1,
+                    documents = new[]
+                    {
+                        new
+                        {
+                            id = @"doc-MISSING-C:\Users\Alice",
+                            relativePath = "Missing.md",
+                            title = "Missing",
+                            sha256 = digest,
+                            byteLength = Encoding.UTF8.GetByteCount(content),
+                            order = 0
+                        }
+                    }
+                });
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => service.LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "index and content do not match", "MISSING", "C:", "Users", "Alice");
+            Assert.False(service.DocumentExists(validSourcePath));
+        }
+
+        [Fact]
+        public void LoadIndex_RejectsDuplicateLorePackIndexRelativePathWithoutEchoingPathOrId()
+        {
+            string content = "# One";
+            string digest = Sha256Text(content);
+            WriteLorePackFixture(
+                new
+                {
+                    schema = "onslaught-lore-pack.v1",
+                    sourceRoot = "lore-book",
+                    documentCount = 2,
+                    documents = new[]
+                    {
+                        new
+                        {
+                            id = "doc-one",
+                            relativePath = "safe/DuplicateIndexLeak.md",
+                            title = "One",
+                            sha256 = digest,
+                            byteLength = Encoding.UTF8.GetByteCount(content),
+                            order = 0
+                        },
+                        new
+                        {
+                            id = "doc-two-leak",
+                            relativePath = "safe/duplicateindexleak.md",
+                            title = "Two",
+                            sha256 = digest,
+                            byteLength = Encoding.UTF8.GetByteCount(content),
+                            order = 1
+                        }
+                    }
+                },
+                SerializeLorePackContentRow("doc-one", "safe/DuplicateIndexLeak.md", content));
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "duplicate document paths", "DuplicateIndexLeak", "doc-two-leak");
+        }
+
+        [Fact]
+        public void LoadIndex_RejectsLorePackIndexHashMismatchWithoutEchoingHash()
+        {
+            string content = "# Start";
+            WriteLorePackFixture(
+                new
+                {
+                    schema = "onslaught-lore-pack.v1",
+                    sourceRoot = "lore-book",
+                    documentCount = 1,
+                    documents = new[]
+                    {
+                        new
+                        {
+                            id = "doc-start",
+                            relativePath = "Start.md",
+                            title = "Start",
+                            sha256 = "bad-hash-leak",
+                            byteLength = Encoding.UTF8.GetByteCount(content),
+                            order = 0
+                        }
+                    }
+                },
+                SerializeLorePackContentRow("doc-start", "Start.md", content));
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "hash mismatch", "bad-hash-leak", "doc-start");
+        }
+
+        [Fact]
+        public void LoadIndex_RejectsMalformedLorePackContentJsonWithoutEchoingPayload()
+        {
+            string content = "# Start";
+            string digest = Sha256Text(content);
+            WriteLorePackFixture(
+                new
+                {
+                    schema = "onslaught-lore-pack.v1",
+                    sourceRoot = "lore-book",
+                    documentCount = 1,
+                    documents = new[]
+                    {
+                        new
+                        {
+                            id = "doc-start",
+                            relativePath = "Start.md",
+                            title = "Start",
+                            sha256 = digest,
+                            byteLength = Encoding.UTF8.GetByteCount(content),
+                            order = 0
+                        }
+                    }
+                },
+                "{\"id\":\"doc-start\",\"relativePath\":\"C:\\\\Users\\\\Alice\\\\Leak.md\"");
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "content is invalid", "C:", "Users", "Alice", "Leak.md");
+        }
+
+        [Fact]
+        public void LoadIndex_RejectsLorePackContentRowMissingByteLengthWithoutEchoingContent()
+        {
+            string content = "# Byte Length Probe";
+            string digest = Sha256Text(content);
+            WriteLorePackFixture(
+                new
+                {
+                    schema = "onslaught-lore-pack.v1",
+                    sourceRoot = "lore-book",
+                    documentCount = 1,
+                    documents = new[]
+                    {
+                        new
+                        {
+                            id = "doc-byte-length",
+                            relativePath = "ByteLength.md",
+                            title = "Byte Length",
+                            sha256 = digest,
+                            byteLength = Encoding.UTF8.GetByteCount(content),
+                            order = 0
+                        }
+                    }
+                },
+                JsonSerializer.Serialize(new
+                {
+                    id = "doc-byte-length",
+                    relativePath = "ByteLength.md",
+                    title = "Byte Length",
+                    sha256 = digest,
+                    content = @"C:\Users\Alice\ByteLengthLeak"
+                }));
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "content is invalid", "C:", "Users", "Alice", "ByteLengthLeak");
         }
 
         [Fact]
@@ -417,6 +772,35 @@ See the [reference](https://example.com/reference).
                 Path.Combine(packDirectory, "onslaught-lore.v1.jsonl"),
                 string.Join(Environment.NewLine, contentRows) + Environment.NewLine,
                 Encoding.UTF8);
+        }
+
+        private void WriteLorePackFixture(object index, params string[] contentLines)
+        {
+            string packDirectory = Path.Combine(_repoRoot, "lore-pack");
+            Directory.CreateDirectory(packDirectory);
+            File.WriteAllText(
+                Path.Combine(packDirectory, "onslaught-lore.v1.index.json"),
+                JsonSerializer.Serialize(index),
+                Encoding.UTF8);
+            File.WriteAllText(
+                Path.Combine(packDirectory, "onslaught-lore.v1.jsonl"),
+                contentLines.Length == 0
+                    ? string.Empty
+                    : string.Join(Environment.NewLine, contentLines) + Environment.NewLine,
+                Encoding.UTF8);
+        }
+
+        private static string SerializeLorePackContentRow(string id, string relativePath, string content)
+        {
+            return JsonSerializer.Serialize(new
+            {
+                id,
+                relativePath,
+                title = ResolveTitle(content, relativePath),
+                sha256 = Sha256Text(content),
+                byteLength = Encoding.UTF8.GetByteCount(content),
+                content
+            });
         }
 
         private static void AssertSafeLorePackException(InvalidDataException ex, string expectedFragment, params string[] forbiddenTokens)

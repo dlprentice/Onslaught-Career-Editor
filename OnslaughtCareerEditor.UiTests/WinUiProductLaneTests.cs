@@ -276,6 +276,24 @@ public class WinUiProductLaneTests
     }
 
     [Test]
+    public void LoreReader_FailureSurfacesDoNotExposeRawExceptionMessages()
+    {
+        string loreCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "LorePage.xaml.cs");
+
+        Assert.That(loreCode, Does.Contain("LoreLibraryLoadFailureMessage"));
+        Assert.That(loreCode, Does.Contain("LoreDocumentLoadFailureMessage"));
+        Assert.That(loreCode, Does.Contain("LoreNavigationFailureMessage"));
+        Assert.That(loreCode, Does.Contain("IsScriptEnabled = false"));
+        Assert.That(loreCode, Does.Contain("LoreDocumentTooltipFallback"));
+        Assert.That(loreCode, Does.Not.Contain("catch (Exception"));
+        Assert.That(loreCode, Does.Not.Contain(".Message"));
+        Assert.That(loreCode, Does.Not.Contain(".ToString("));
+        Assert.That(loreCode, Does.Not.Match(@"ShowReaderPlaceholder\([^;]*\bex\b"));
+        Assert.That(loreCode, Does.Not.Match(@"(?:CurrentPathTextBlock|PaneStateTextBlock)\.Text\s*=\s*ex\b"));
+        Assert.That(loreCode, Does.Not.Contain("return sourcePath;"));
+    }
+
+    [Test]
     public void WinUiPublish_CopiesThirdPartyNoticesIntoPublishOutput()
     {
         string project = ReadRepoFile("OnslaughtCareerEditor.WinUI", "OnslaughtCareerEditor.WinUI.csproj");

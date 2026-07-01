@@ -13,10 +13,15 @@ namespace Onslaught___Career_Editor
         private const string LorePackContentFileName = "onslaught-lore.v1.jsonl";
         private const string LorePackSourcePrefix = "lore-pack://";
         private const string LorePackNavigationScheme = "onslaught-lore";
+        private const string MissingLoreBookMessage = "Lore book directory not found.";
         private const string InvalidLorePackDocumentPathMessage = "Lore content pack contains an invalid document path.";
+        private const string InvalidLorePackIndexMessage = "Lore content pack index is invalid.";
+        private const string InvalidLorePackContentMessage = "Lore content pack content is invalid.";
+        private const string LorePackIndexContentMismatchMessage = "Lore content pack index and content do not match.";
         private const string DuplicateLorePackDocumentIdMessage = "Lore content pack contains duplicate document identifiers.";
         private const string DuplicateLorePackDocumentPathMessage = "Lore content pack contains duplicate document paths.";
         private const string LorePackContentHashMismatchMessage = "Lore content pack content hash mismatch.";
+        private const string LorePackSchema = "onslaught-lore-pack.v1";
 
         private static readonly Regex BookEntryRegex = new(@"^(?<indent>\s*)-\s+(?<content>.+?)\s*$", RegexOptions.Compiled);
         private static readonly Regex MarkdownLinkRegex = new(@"\[(?<title>[^\]]+)\]\((?<path>[^)]+)\)", RegexOptions.Compiled);
@@ -54,7 +59,7 @@ namespace Onslaught___Career_Editor
             string loreBookDirectory = Path.Combine(projectRoot, "lore-book");
             if (!Directory.Exists(loreBookDirectory))
             {
-                throw new DirectoryNotFoundException($"Lore book directory not found: {loreBookDirectory}");
+                throw new DirectoryNotFoundException(MissingLoreBookMessage);
             }
 
             bool usingLoreBook = TryLoadBookIndex(loreBookDirectory, out List<LoreTreeItem> rootItems, out Dictionary<string, LoreDocument> documentMap);
@@ -409,7 +414,7 @@ namespace Onslaught___Career_Editor
                 return false;
             }
 
-            Dictionary<string, int> orderById = LoadPackOrder(indexPath);
+            IReadOnlyDictionary<string, LorePackIndexEntry> indexById = LoadPackIndex(indexPath);
             Dictionary<string, LorePackDocument> documentsById = new(StringComparer.OrdinalIgnoreCase);
             Dictionary<string, LorePackDocument> documentsByRelativePath = new(StringComparer.OrdinalIgnoreCase);
 
@@ -420,19 +425,40 @@ namespace Onslaught___Career_Editor
                     continue;
                 }
 
-                LorePackLine? row = JsonSerializer.Deserialize<LorePackLine>(
-                    line,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                LorePackLine? row;
+                try
+                {
+                    row = JsonSerializer.Deserialize<LorePackLine>(
+                        line,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                }
+                catch (JsonException ex)
+                {
+                    throw new InvalidDataException(InvalidLorePackContentMessage, ex);
+                }
+
                 if (row == null ||
                     string.IsNullOrWhiteSpace(row.Id) ||
                     string.IsNullOrWhiteSpace(row.RelativePath) ||
+                    string.IsNullOrWhiteSpace(row.Sha256) ||
+                    !row.ByteLength.HasValue ||
                     row.Content == null)
                 {
-                    continue;
+                    throw new InvalidDataException(InvalidLorePackContentMessage);
                 }
 
                 string id = row.Id.Trim();
                 string normalizedRelativePath = ValidateLorePackRelativePath(row.RelativePath);
+                if (!indexById.TryGetValue(id, out LorePackIndexEntry? indexEntry))
+                {
+                    throw new InvalidDataException(LorePackIndexContentMismatchMessage);
+                }
+
+                if (!normalizedRelativePath.Equals(indexEntry.RelativePath, StringComparison.Ordinal))
+                {
+                    throw new InvalidDataException(LorePackIndexContentMismatchMessage);
+                }
+
                 if (documentsById.ContainsKey(id))
                 {
                     throw new InvalidDataException(DuplicateLorePackDocumentIdMessage);
@@ -447,16 +473,23 @@ namespace Onslaught___Career_Editor
                     ? Path.GetFileNameWithoutExtension(normalizedRelativePath).Replace('-', ' ')
                     : row.Title.Trim();
                 string sha256 = ComputeContentSha256(row.Content);
-                if (!string.IsNullOrWhiteSpace(row.Sha256) &&
-                    !sha256.Equals(row.Sha256, StringComparison.OrdinalIgnoreCase))
+                int byteLength = Encoding.UTF8.GetByteCount(row.Content);
+                if (!sha256.Equals(row.Sha256, StringComparison.OrdinalIgnoreCase) ||
+                    !sha256.Equals(indexEntry.Sha256, StringComparison.OrdinalIgnoreCase) ||
+                    row.ByteLength.Value != byteLength ||
+                    indexEntry.ByteLength != byteLength)
                 {
                     throw new InvalidDataException(LorePackContentHashMismatchMessage);
                 }
 
-                int order = orderById.TryGetValue(id, out int foundOrder) ? foundOrder : documentsById.Count;
-                LorePackDocument document = new(id, normalizedRelativePath, title, row.Content, sha256, row.Content.Length, order);
+                LorePackDocument document = new(id, normalizedRelativePath, title, row.Content, sha256, byteLength, indexEntry.Order);
                 documentsById[id] = document;
                 documentsByRelativePath[normalizedRelativePath] = document;
+            }
+
+            if (indexById.Count != documentsById.Count)
+            {
+                throw new InvalidDataException(LorePackIndexContentMismatchMessage);
             }
 
             if (documentsById.Count == 0)
@@ -520,38 +553,92 @@ namespace Onslaught___Career_Editor
             return relativePath;
         }
 
-        private static Dictionary<string, int> LoadPackOrder(string indexPath)
+        private static IReadOnlyDictionary<string, LorePackIndexEntry> LoadPackIndex(string indexPath)
         {
-            Dictionary<string, int> orderById = new(StringComparer.OrdinalIgnoreCase);
-            using JsonDocument document = JsonDocument.Parse(File.ReadAllText(indexPath, Encoding.UTF8));
+            Dictionary<string, LorePackIndexEntry> indexById = new(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> relativePaths = new(StringComparer.OrdinalIgnoreCase);
+            using JsonDocument document = ParseLorePackIndex(indexPath);
+            if (!document.RootElement.TryGetProperty("schema", out JsonElement schemaElement) ||
+                schemaElement.ValueKind != JsonValueKind.String ||
+                !LorePackSchema.Equals(schemaElement.GetString(), StringComparison.Ordinal))
+            {
+                throw new InvalidDataException(InvalidLorePackIndexMessage);
+            }
+
             if (!document.RootElement.TryGetProperty("documents", out JsonElement documents) ||
                 documents.ValueKind != JsonValueKind.Array)
             {
-                return orderById;
+                throw new InvalidDataException(InvalidLorePackIndexMessage);
+            }
+
+            if (!document.RootElement.TryGetProperty("documentCount", out JsonElement countElement) ||
+                !countElement.TryGetInt32(out int documentCount) ||
+                documentCount != documents.GetArrayLength())
+            {
+                throw new InvalidDataException(InvalidLorePackIndexMessage);
             }
 
             int fallbackOrder = 0;
             foreach (JsonElement item in documents.EnumerateArray())
             {
-                if (!item.TryGetProperty("id", out JsonElement idElement))
+                if (item.ValueKind != JsonValueKind.Object ||
+                    !item.TryGetProperty("id", out JsonElement idElement) ||
+                    !item.TryGetProperty("relativePath", out JsonElement relativePathElement) ||
+                    !item.TryGetProperty("sha256", out JsonElement shaElement) ||
+                    !item.TryGetProperty("byteLength", out JsonElement byteLengthElement))
                 {
-                    continue;
+                    throw new InvalidDataException(InvalidLorePackIndexMessage);
+                }
+
+                if (idElement.ValueKind != JsonValueKind.String ||
+                    relativePathElement.ValueKind != JsonValueKind.String ||
+                    shaElement.ValueKind != JsonValueKind.String)
+                {
+                    throw new InvalidDataException(InvalidLorePackIndexMessage);
                 }
 
                 string? id = idElement.GetString();
-                if (string.IsNullOrWhiteSpace(id))
+                string? sha256 = shaElement.GetString();
+                if (string.IsNullOrWhiteSpace(id) ||
+                    string.IsNullOrWhiteSpace(sha256) ||
+                    !byteLengthElement.TryGetInt32(out int byteLength) ||
+                    byteLength < 0)
                 {
-                    continue;
+                    throw new InvalidDataException(InvalidLorePackIndexMessage);
+                }
+
+                string normalizedId = id.Trim();
+                string normalizedRelativePath = ValidateLorePackRelativePath(relativePathElement.GetString() ?? string.Empty);
+                if (indexById.ContainsKey(normalizedId))
+                {
+                    throw new InvalidDataException(DuplicateLorePackDocumentIdMessage);
+                }
+
+                if (!relativePaths.Add(normalizedRelativePath))
+                {
+                    throw new InvalidDataException(DuplicateLorePackDocumentPathMessage);
                 }
 
                 int order = item.TryGetProperty("order", out JsonElement orderElement) && orderElement.TryGetInt32(out int parsedOrder)
                     ? parsedOrder
                     : fallbackOrder;
-                orderById[id] = order;
+                indexById[normalizedId] = new LorePackIndexEntry(normalizedId, normalizedRelativePath, sha256.Trim(), byteLength, order);
                 fallbackOrder++;
             }
 
-            return orderById;
+            return indexById;
+        }
+
+        private static JsonDocument ParseLorePackIndex(string indexPath)
+        {
+            try
+            {
+                return JsonDocument.Parse(File.ReadAllText(indexPath, Encoding.UTF8));
+            }
+            catch (JsonException ex)
+            {
+                throw new InvalidDataException(InvalidLorePackIndexMessage, ex);
+            }
         }
 
         private static void AddPackedDocumentToTree(List<LoreTreeItem> rootItems, LoreDocument document)
@@ -1136,6 +1223,13 @@ namespace Onslaught___Career_Editor
             IReadOnlyDictionary<string, LorePackDocument> DocumentsById,
             IReadOnlyDictionary<string, LorePackDocument> DocumentsByRelativePath);
 
+        private sealed record LorePackIndexEntry(
+            string Id,
+            string RelativePath,
+            string Sha256,
+            int ByteLength,
+            int Order);
+
         private sealed record LorePackDocument(
             string Id,
             string RelativePath,
@@ -1152,7 +1246,7 @@ namespace Onslaught___Career_Editor
             public string Title { get; set; } = string.Empty;
             public string Content { get; set; } = string.Empty;
             public string Sha256 { get; set; } = string.Empty;
-            public int ByteLength { get; set; }
+            public int? ByteLength { get; set; }
         }
     }
 
