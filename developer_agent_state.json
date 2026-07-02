@@ -1,10 +1,12 @@
 {
-  "lastUpdated": "2026-07-01",
-  "currentFocus": "Chief epic rebuild/Ghidra/Lore/WinUI integration is validated in the worktree from accepted worker source commits; safe push and local integration reporting are still pending.",
+  "lastUpdated": "2026-07-02",
+  "currentFocus": "Chief epic rebuild/Ghidra/Lore/WinUI integration is accepted and pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60; the active baton is now the next executable standing wave with known debts preserved.",
   "currentTruth": {
     "integrationWave": {
-      "status": "validated-in-worktree-pending-safe-push",
+      "status": "accepted-and-pushed",
       "base": "5b1d7eb75ac592f754766b490c20edbc71c069c4",
+      "pushedCommit": "a9fe757e238a237eac8aa8f7f4e12d1bad57ec60",
+      "preStateUpdateRefProof": "HEAD, origin/main, and live remote refs/heads/main matched a9fe757e238a237eac8aa8f7f4e12d1bad57ec60 with divergence 0 0 before this state-only baton update.",
       "acceptedSourceCommits": [
         "cd7d7bf928c32234e3e59d5021b695c7aeabb63d",
         "301b81a5baba1d5fb870890903961c16eaead5bf",
@@ -69,7 +71,7 @@
     }
   },
   "validation": {
-    "latestIntegration": "Merged-tree validation passed for diff whitespace, state JSON, sanitized state/front-door scan, rebuild continuity probe, Lore ZIP probe tests, Lore builder self-test, full LoreBrowserServiceTests, WinUI build, focused W1/W8/W9 UiTests, patch-engine safety, WinUI primary-lane, ZIP package probe without optional Media smoke, docs commands, Markdown links, repo hygiene retry, public allowlist, and hard-payload safety.",
+    "latestIntegration": "Merged-tree validation passed for diff whitespace, state JSON, sanitized state/front-door scan, rebuild continuity probe, Lore ZIP probe tests, Lore builder self-test, full LoreBrowserServiceTests, WinUI build, focused W1/W8/W9 UiTests, patch-engine safety, WinUI primary-lane, ZIP package probe without optional Media smoke, docs commands, Markdown links, repo hygiene retry, public allowlist, and hard-payload safety. The accepted source wave was pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60 before this state-only baton update.",
     "knownUnclaimedGates": [
       "Static Wave1200 accounting support-file gate health is not claimed.",
       "Docsync/mirror health is not claimed.",
@@ -81,11 +83,15 @@
     "catalogRows": "29/29 target specimen identity and policy metadata rows"
   },
   "openQuestions": [],
-  "blockers": [],
+  "blockers": [
+    "Static Wave1200 accounting support-file blocker remains unresolved unless explicitly fixed and rerun.",
+    "Docsync mirror drift remains unresolved unless explicitly fixed and rerun.",
+    "Optional representative Media smoke audio-row selection remains unclaimed unless separately authorized and proven."
+  ],
   "nextSteps": [
-    "Commit the integrated merge/state/test/date changes.",
-    "Recheck live remote main before safe push.",
-    "Write local integration reports with final push hash and remaining debts.",
-    "Hand off to fresh read-only acceptance if the campaign continues."
+    "Repair or explicitly bound the Static Wave1200 accounting support-file blocker with the relevant static-accounting gate before claiming health.",
+    "Reconcile or intentionally document tools/docsync_check.py mirror drift before claiming docsync or mirror health.",
+    "Decide whether to run the optional representative Media smoke audio-row selection in a separately authorized runtime-proof lane; leave it unclaimed otherwise.",
+    "Continue PatchBench only with tests first while preserving page/AppCore ownership, Host/Join disablement, and runtime-proof boundaries."
   ]
 }

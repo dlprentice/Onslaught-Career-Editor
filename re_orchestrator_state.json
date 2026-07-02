@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-07-01",
-  "currentFocus": "Static RE/Ghidra closure remains unchanged; the failed-wave rescue is accepted, pushed, and synced on main at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb after integrating only public-safe tmm-arm4-readiness-gate proof-plan/checker continuity hardening and preserving runtime, rebuild, storage, payload, and release non-claims.",
+  "lastUpdated": "2026-07-02",
+  "currentFocus": "Static RE/Ghidra closure remains unchanged; the latest chief epic source wave is accepted and pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60. The earlier failed-wave rescue at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remains historical RE continuity evidence only, with runtime, rebuild, storage, payload, and release non-claims preserved.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -69,15 +69,20 @@
   },
   "validation": {
     "stateRefresh": "Integration state refresh only; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, or original-BEA mutation.",
-    "latestIntegration": "Final rescue closeout evidence accepted: JSON parse, state/content denylist scans, git diff --check, RE checker compile/self-test/check, focused Lore and WinUI checks, docs/repo safety gates, public payload checks, and winui-primary-lane passed in the integration closeout; HEAD, origin/main, and live refs/heads/main matched 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb with divergence 0 0."
+    "latestIntegration": "Current source-ref evidence: HEAD, origin/main, and live refs/heads/main matched a9fe757e238a237eac8aa8f7f4e12d1bad57ec60 with divergence 0 0 before this state-only baton update. Earlier rescue closeout evidence at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remains historical and does not imply fresh Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, original-BEA mutation, or storage deletion."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
     "catalogRows": "29/29 target specimen identity and policy metadata rows"
   },
   "openQuestions": [],
-  "blockers": [],
+  "blockers": [
+    "Static Wave1200 accounting support-file blocker remains unresolved unless explicitly fixed and rerun.",
+    "Docsync mirror drift remains unresolved unless explicitly fixed and rerun.",
+    "Optional representative Media smoke audio-row selection remains unclaimed unless separately authorized and proven."
+  ],
   "nextSteps": [
+    "Repair or explicitly bound the Static Wave1200 accounting support-file blocker with the relevant static-accounting gate before claiming health.",
     "Keep static RE mutation paused unless a product/runtime contradiction points back to a specific RE issue.",
     "Treat tmm-arm4-readiness-gate as proof-plan/checker support only; do not claim readiness-gate execution, runtime proof, or rebuild parity.",
     "Use PatchBench and Asset Library source tests as bounded source guards only; do not claim live runtime UI/accessibility proof from them.",

@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-07-01",
-  "currentFocus": "Documentation/state now track the chief epic rebuild/Ghidra/Lore/WinUI integration as validated in the worktree pending safe push and local integration report, with runtime/release/payload non-claims preserved.",
+  "lastUpdated": "2026-07-02",
+  "currentFocus": "Documentation/state now track the chief epic rebuild/Ghidra/Lore/WinUI integration as accepted and pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60, with runtime/release/payload non-claims and standing debts preserved.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -14,7 +14,7 @@
     "collaborationGuide": "COLLABORATION.md"
   },
   "currentDocsTruth": {
-    "integratedWave": "Accepted worker source commits are integrated in the worktree; report-only lanes remain campaign evidence and should be summarized only in sanitized form.",
+    "integratedWave": "Accepted worker source commits were integrated and pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60; report-only lanes remain campaign evidence and should be summarized only in sanitized form.",
     "patchBench": "PatchBench receipt helper work remains pre-wiring and test-backed. Group scan summaries are sourced from visible rows/tracks and bound in the grouped patch UI.",
     "lore": "Lore package hardening includes Reviewer C's follow-up; AppCore and the ZIP probe now align for above-root packed links, document-id grammar, and case-variant content-id hash lookup.",
     "rebuild": "The TMM ARM4 readiness-gate artifact is public-safe continuity evidence only, not command execution, importer execution, runtime proof, rebuild parity, visual/gameplay parity, or no-noticeable-difference proof.",
@@ -24,7 +24,7 @@
     "knownGateDebt": "Static Wave1200 support-file and docsync/mirror drift are not claimed healthy unless separately fixed and rerun."
   },
   "validation": {
-    "latestIntegration": "Merged-tree docs/repo/public/hard-payload, Lore, WinUI, ZIP-without-optional-Media, and JSON validation passed before source push.",
+    "latestIntegration": "Merged-tree docs/repo/public/hard-payload, Lore, WinUI, ZIP-without-optional-Media, and JSON validation passed before the accepted source wave was pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60.",
     "hardPayloadSecurity": "No hard payload, secret, raw local campaign path, storage manifest, private proof path, copied executable, screenshot/frame dump, full Ghidra database, build output, package output, or local runtime cache should be added.",
     "nonMutations": "No installed-game/original BEA.exe, BEA/CDB/audio, live runtime proof, Ghidra mutation, Host/Join enablement, storage deletion, or release/publication mutation is part of this integration."
   },
@@ -33,11 +33,14 @@
     "catalogRows": "29/29 target specimen identity and policy metadata rows"
   },
   "openQuestions": [],
-  "blockers": [],
+  "blockers": [
+    "Static Wave1200 accounting support-file blocker remains unresolved unless explicitly fixed and rerun.",
+    "Docsync mirror drift remains unresolved unless explicitly fixed and rerun.",
+    "Optional representative Media smoke audio-row selection remains unclaimed unless separately authorized and proven."
+  ],
   "nextSteps": [
-    "Record final push verification in local integration reports.",
     "Keep tracked summaries sanitized and avoid copying raw campaign reports.",
-    "After acceptance, continue with PatchBench helper wiring only if tests preserve current behavior ownership.",
+    "Continue with PatchBench helper wiring only if tests preserve current behavior ownership.",
     "Carry Lore ZIP/package parity, static Wave1200 support-file repair, and docsync/mirror drift as bounded future work."
   ]
 }

@@ -1,15 +1,15 @@
 # Active Goal Slice
 
-Status: validated integration, push pending
-Last updated: 2026-07-01
+Status: accepted and pushed integration; standing wave ready
+Last updated: 2026-07-02
 Policy: `goal.policy.md`
 
 ## Current Slice
 
-The chief epic rebuild/Ghidra/Lore/WinUI wave has been integrated and validated
-in this worktree from the accepted worker source commits. Final source push and
-campaign integration reporting are still pending until the safe remote recheck,
-commit, and push complete.
+The chief epic rebuild/Ghidra/Lore/WinUI wave has been integrated, accepted, and
+pushed from the accepted worker source commits. Pre-state-update source-ref proof
+showed the wave tip `a9fe757e238a237eac8aa8f7f4e12d1bad57ec60` matched
+`HEAD`, `origin/main`, and live remote `refs/heads/main` with divergence `0 0`.
 
 Accepted source commits integrated by cherry-pick:
 
@@ -98,9 +98,9 @@ integrated changes:
 - `npm run test:public-allowlist`
 - `npm run test:hard-payload-safety`
 
-Push verification will be recorded in the local integration report after the
-safe remote recheck. Do not treat this slice as source-pushed until that report
-and the final response name the pushed commit.
+Phase 0 stale-baton correction is state-only. The `a9fe757e238a237eac8aa8f7f4e12d1bad57ec60`
+proof confirms the previous source wave was already pushed and accepted; it is
+not fresh runtime, release, Ghidra, static-accounting, or storage proof.
 
 Known pre-existing or intentionally unclaimed gates:
 
@@ -140,16 +140,19 @@ Known pre-existing or intentionally unclaimed gates:
 
 ## Next Executable Work
 
-1. Finish this integration closeout: recheck live remote `main`, commit,
-   safe-push, verify remote refs, and write the local integration report.
-2. Run a fresh read-only acceptance pass for the integrated wave if the campaign
-   continues with a separate acceptance owner.
-3. After acceptance, continue PatchBench only with tests first: decide whether
-   any helper wiring is still desirable, preserve page/AppCore ownership of
-   behavior, and keep Host/Join and runtime-proof boundaries unchanged.
-4. Continue Lore with bounded ZIP/package parity hardening only; do not promote
+1. Repair or explicitly bound the Static Wave1200 accounting support-file
+   blocker with the relevant static-accounting gate before claiming health.
+2. Reconcile or intentionally document `tools/docsync_check.py` mirror drift
+   before claiming docsync or mirror health.
+3. Decide whether to run the optional representative Media smoke audio-row
+   selection in a separately authorized runtime-proof lane; leave it unclaimed
+   otherwise.
+4. Continue PatchBench only with tests first: decide whether any helper wiring
+   is still desirable, preserve page/AppCore ownership of behavior, and keep
+   Host/Join and runtime-proof boundaries unchanged.
+5. Continue Lore with bounded ZIP/package parity hardening only; do not promote
    it to broad release or traversal-proof claims.
-5. Continue RE/rebuild with public-safe proof-plan/checker work until separate
+6. Continue RE/rebuild with public-safe proof-plan/checker work until separate
    authority grants live Ghidra mutation, runtime proof, private asset reads, or
    importer execution.
 
