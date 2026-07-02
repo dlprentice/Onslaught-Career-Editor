@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-02",
-  "currentFocus": "Documentation/state now track the chief epic rebuild/Ghidra/Lore/WinUI integration as accepted and pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60, with runtime/release/payload non-claims and standing debts preserved.",
+  "currentFocus": "Documentation/state now track the chief epic rebuild/Ghidra/Lore/WinUI integration as accepted and pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60, plus a source-only internal tooling vocabulary map reconciliation with runtime/release/payload non-claims and standing debts preserved.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -18,13 +18,13 @@
     "patchBench": "PatchBench receipt helper work remains pre-wiring and test-backed. Group scan summaries are sourced from visible rows/tracks and bound in the grouped patch UI.",
     "lore": "Lore package hardening includes Reviewer C's follow-up; AppCore and the ZIP probe now align for above-root packed links, document-id grammar, and case-variant content-id hash lookup.",
     "rebuild": "The TMM ARM4 readiness-gate artifact is public-safe continuity evidence only, not command execution, importer execution, runtime proof, rebuild parity, visual/gameplay parity, or no-noticeable-difference proof.",
-    "originalSystemMapping": "The original-system crosswalk is a rebuild mapping companion. Source names are candidate owners; retail binary/save/runtime proof remains higher authority for behavior.",
+    "originalSystemMapping": "The original-system crosswalk is a rebuild mapping companion. Source names are candidate owners; retail binary/save/runtime proof remains higher authority for behavior. The source-only internal tooling vocabulary map is context-only planning input, not readiness evidence or command/runtime proof.",
     "releaseDocs": "ZIP/readiness documentation changed without release publication, signing, installer, MSIX, Store, upload, tag, or announcement authority.",
     "storageAndGhidra": "Storage and Ghidra backup details remain local campaign evidence. Tracked docs/state should not contain raw storage paths, backup paths, manifests, hashes, or private proof artifacts.",
     "knownGateDebt": "Static Wave1200 support-file and docsync/mirror drift are not claimed healthy unless separately fixed and rerun."
   },
   "validation": {
-    "latestIntegration": "Merged-tree docs/repo/public/hard-payload, Lore, WinUI, ZIP-without-optional-Media, and JSON validation passed before the accepted source wave was pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60.",
+    "latestIntegration": "Merged-tree docs/repo/public/hard-payload, Lore, WinUI, ZIP-without-optional-Media, and JSON validation passed before the accepted source wave was pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60. The source-only internal tooling vocabulary map reconciliation passed diff whitespace, docs commands, Markdown links, repo hygiene, hard-payload safety, and public allowlist after a timeout retry.",
     "hardPayloadSecurity": "No hard payload, secret, raw local campaign path, storage manifest, private proof path, copied executable, screenshot/frame dump, full Ghidra database, build output, package output, or local runtime cache should be added.",
     "nonMutations": "No installed-game/original BEA.exe, BEA/CDB/audio, live runtime proof, Ghidra mutation, Host/Join enablement, storage deletion, or release/publication mutation is part of this integration."
   },
@@ -41,6 +41,7 @@
   "nextSteps": [
     "Keep tracked summaries sanitized and avoid copying raw campaign reports.",
     "Continue with PatchBench helper wiring only if tests preserve current behavior ownership.",
-    "Carry Lore ZIP/package parity, static Wave1200 support-file repair, and docsync/mirror drift as bounded future work."
+    "Carry Lore ZIP/package parity, static Wave1200 support-file repair, and docsync/mirror drift as bounded future work.",
+    "Use the source-only internal tooling vocabulary map only as a context index for a future bounded proof-plan/checker question."
   ]
 }

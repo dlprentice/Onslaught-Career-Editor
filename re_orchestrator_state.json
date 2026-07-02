@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-02",
-  "currentFocus": "Static RE/Ghidra closure remains unchanged; the latest chief epic source wave is accepted and pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60. The earlier failed-wave rescue at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remains historical RE continuity evidence only, with runtime, rebuild, storage, payload, and release non-claims preserved.",
+  "currentFocus": "Static RE/Ghidra closure remains unchanged; the latest chief epic source wave is accepted and pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60, and a source-only internal tooling vocabulary map was reconciled as context-only clean-room planning input. The earlier failed-wave rescue at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remains historical RE continuity evidence only, with runtime, rebuild, storage, payload, and release non-claims preserved.",
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -33,6 +33,12 @@
       "no-noticeable-difference parity"
     ],
     "futureGate": "A later readiness-gate proof needs a separate bounded assignment and must not reuse this checker as a generic gate without updating the bound source proof and expected counters."
+  },
+  "sourceOnlyVocabularyMap": {
+    "status": "context-only planning input",
+    "path": "reverse-engineering/source-code/original-system-internal-tooling-vocabulary-map.md",
+    "boundary": "Source/internal tool names, flags, developer-menu labels, resource tags, and pipeline vocabulary are candidate terms only. Retail binary/save/runtime evidence remains higher authority before any behavior, command, importer, generated-output, runtime, rebuild, or parity claim.",
+    "validation": "Reconciliation passed diff whitespace, docs commands, Markdown links, repo hygiene, hard-payload safety, and public allowlist after a timeout retry."
   },
   "loreAndWinuiBoundaries": {
     "lore": "Lore pack fail-closed hardening is integrated but does not prove release readiness, broad ZIP package probe parity, complete traversal protection, runtime UI proof, or package publication.",
@@ -69,7 +75,7 @@
   },
   "validation": {
     "stateRefresh": "Integration state refresh only; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, or original-BEA mutation.",
-    "latestIntegration": "Current source-ref evidence: HEAD, origin/main, and live refs/heads/main matched a9fe757e238a237eac8aa8f7f4e12d1bad57ec60 with divergence 0 0 before this state-only baton update. Earlier rescue closeout evidence at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remains historical and does not imply fresh Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, original-BEA mutation, or storage deletion."
+    "latestIntegration": "Current source-ref evidence: HEAD, origin/main, and live refs/heads/main matched a9fe757e238a237eac8aa8f7f4e12d1bad57ec60 with divergence 0 0 before the state-only baton update. Earlier rescue closeout evidence at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remains historical and does not imply fresh Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, original-BEA mutation, or storage deletion. The source-only vocabulary map reconciliation is documentation context only and does not change static closure counters."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -87,6 +93,7 @@
     "Treat tmm-arm4-readiness-gate as proof-plan/checker support only; do not claim readiness-gate execution, runtime proof, or rebuild parity.",
     "Use PatchBench and Asset Library source tests as bounded source guards only; do not claim live runtime UI/accessibility proof from them.",
     "Do not run live BEA/CDB/audio proof without explicit runtime-proof authority, leases, private proof-root readiness, arm phrase handling, and cleanup validation.",
-    "Do not delete Ghidra/proof material without a future candidate-specific manifest, retained alternative, dry-run, consults, authority, and acceptance."
+    "Do not delete Ghidra/proof material without a future candidate-specific manifest, retained alternative, dry-run, consults, authority, and acceptance.",
+    "Use the source-only internal tooling vocabulary map only to choose one bounded future question with a named higher-authority proof class."
   ]
 }

@@ -1,6 +1,6 @@
 # Active Goal Slice
 
-Status: accepted and pushed integration; standing wave ready
+Status: standing wave active; source-only RE map reconciliation
 Last updated: 2026-07-02
 Policy: `goal.policy.md`
 
@@ -48,6 +48,10 @@ runtime-proof baton, and W13 consult compliance.
 - Original-system mapping is a public-safe crosswalk. Source names are candidate
   owners; retail binary/save/runtime evidence remains the higher authority for
   behavior.
+- The source-only internal tooling vocabulary map is public-safe planning
+  context for future clean-room questions. It is not readiness-gate execution,
+  command arming, importer execution, generated payload output, runtime proof,
+  rebuild parity, or no-noticeable-difference proof.
 - WinUI Home/About copy and static accessibility/product-lane tests improved
   user-facing boundaries. This is not runtime screen-reader, visual, BEA, CDB,
   audio, or gameplay proof.
@@ -98,6 +102,16 @@ integrated changes:
 - `npm run test:public-allowlist`
 - `npm run test:hard-payload-safety`
 
+The source-only internal tooling vocabulary map reconciliation additionally
+passed:
+
+- `git diff --check`
+- `npm run test:doc-commands`
+- `npm run test:md-links`
+- `npm run test:repo-hygiene`
+- `npm run test:hard-payload-safety`
+- `npm run test:public-allowlist` after a timeout retry
+
 Phase 0 stale-baton correction is state-only. The `a9fe757e238a237eac8aa8f7f4e12d1bad57ec60`
 proof confirms the previous source wave was already pushed and accepted; it is
 not fresh runtime, release, Ghidra, static-accounting, or storage proof.
@@ -130,6 +144,8 @@ Known pre-existing or intentionally unclaimed gates:
   proof-plan under `reverse-engineering/game-assets/`
 - Original-system crosswalk:
   `roadmap/rebuild-front-door-chain-map.md`
+- Source-only internal tooling vocabulary map:
+  `reverse-engineering/source-code/original-system-internal-tooling-vocabulary-map.md`
 - WinUI UX/accessibility surfaces:
   `OnslaughtCareerEditor.WinUI/Pages/HomePage.xaml`,
   `OnslaughtCareerEditor.WinUI/Pages/AboutPage.xaml`, and
@@ -155,6 +171,8 @@ Known pre-existing or intentionally unclaimed gates:
 6. Continue RE/rebuild with public-safe proof-plan/checker work until separate
    authority grants live Ghidra mutation, runtime proof, private asset reads, or
    importer execution.
+7. Use the internal tooling vocabulary map only to pick one bounded future
+   question with an explicit higher-authority proof class.
 
 ## Stop Conditions
 
