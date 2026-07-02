@@ -702,7 +702,7 @@ def read_zip_lore_pack_texts(package: zipfile.ZipFile) -> dict[str, str]:
     return texts
 
 
-def normalize_pack_relative_path(path: str) -> str:
+def normalize_pack_relative_path(path: str) -> str | None:
     parts: list[str] = []
     for part in PurePosixPath(path.replace("\\", "/")).parts:
         if part in ("", "."):
@@ -711,7 +711,7 @@ def normalize_pack_relative_path(path: str) -> str:
             if parts:
                 parts.pop()
                 continue
-            return ""
+            return None
         parts.append(part)
     return "/".join(parts)
 
@@ -722,7 +722,10 @@ def resolve_pack_link_candidate(source_relative_path: str, target: str, availabl
         candidate = normalize_pack_relative_path(normalized_target.lstrip("/"))
     else:
         source_parent = PurePosixPath(source_relative_path).parent.as_posix()
-        candidate = normalize_pack_relative_path(f"{source_parent}/{normalized_target}")
+        prefix = "" if source_parent == "." else f"{source_parent}/"
+        candidate = normalize_pack_relative_path(f"{prefix}{normalized_target}")
+    if candidate is None:
+        return None
 
     candidate_without_suffix = str(PurePosixPath(candidate).with_suffix("")) if PurePosixPath(candidate).suffix else candidate
     candidates = (
@@ -738,7 +741,7 @@ def resolve_pack_link_candidate(source_relative_path: str, target: str, availabl
     )
     for item in candidates:
         normalized = normalize_pack_relative_path(item)
-        if normalized.lower() in available_paths:
+        if normalized is not None and normalized.lower() in available_paths:
             return normalized
     return None
 
@@ -827,6 +830,9 @@ def inspect_lore_pack_texts(pack_texts: dict[str, str], prefix: str) -> list[Che
             if not line.strip():
                 continue
             row = json.loads(line)
+            if not isinstance(row, dict):
+                findings.append(f"row {line_number} is invalid")
+                continue
             allowed_keys = {"id", "relativePath", "title", "sha256", "byteLength", "content"}
             extra_keys = sorted(set(row) - allowed_keys)
             if extra_keys:

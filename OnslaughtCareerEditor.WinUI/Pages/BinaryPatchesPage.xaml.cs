@@ -2162,34 +2162,65 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private static string BuildSafeCopyReceiptText(GameProfilePrepareReceipt receipt)
         {
+            return PatchBenchSafeCopyReceiptText.Build(BuildSafeCopyReceiptTextState(receipt));
+        }
+
+        private static PatchBenchSafeCopyReceiptTextState BuildSafeCopyReceiptTextState(GameProfilePrepareReceipt receipt)
+        {
+            ArgumentNullException.ThrowIfNull(receipt);
+
+            return new PatchBenchSafeCopyReceiptTextState(
+                receipt.Headline,
+                receipt.Lines.Select(line => new PatchBenchReceiptLineTextState(line.Label, line.Value)).ToArray(),
+                receipt.IncludedChanges.ToArray(),
+                BuildStillNotIncludedLimits(receipt.StillNotIncluded));
+        }
+
+        private static string[] BuildStillNotIncludedLimits(IReadOnlyList<string> stillNotIncluded)
+        {
+            string[] limits = stillNotIncluded.ToArray();
             string hostJoinBoundary = PatchBenchSafeCopyOutcomeText.HostJoinReceiptBoundary;
-            var builder = new StringBuilder();
-            builder.AppendLine(receipt.Headline);
-            foreach (GameProfileReceiptLine line in receipt.Lines)
+            return limits.Any(limit => IsCanonicalHostJoinBoundaryLimit(limit, hostJoinBoundary))
+                ? limits
+                : [.. limits, $"{hostJoinBoundary}."];
+        }
+
+        private static bool IsCanonicalHostJoinBoundaryLimit(string limit, string hostJoinBoundary)
+        {
+            return string.Equals(
+                NormalizeReceiptBoundaryText(limit),
+                NormalizeReceiptBoundaryText(hostJoinBoundary),
+                StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string NormalizeReceiptBoundaryText(string value)
+        {
+            var builder = new StringBuilder(value.Length);
+            bool pendingSpace = false;
+            foreach (char current in value.Trim())
             {
-                builder.AppendLine($"{line.Label}: {line.Value}");
+                if (char.IsWhiteSpace(current))
+                {
+                    pendingSpace = true;
+                    continue;
+                }
+
+                if (pendingSpace && builder.Length > 0)
+                {
+                    builder.Append(' ');
+                }
+
+                builder.Append(current);
+                pendingSpace = false;
             }
 
-            builder.AppendLine();
-            builder.AppendLine("Included changes");
-            foreach (string change in receipt.IncludedChanges)
+            string normalized = builder.ToString();
+            while (normalized.EndsWith(".", StringComparison.Ordinal))
             {
-                builder.AppendLine($"- {change}");
+                normalized = normalized[..^1].TrimEnd();
             }
 
-            builder.AppendLine();
-            builder.AppendLine("Still not included");
-            foreach (string limit in receipt.StillNotIncluded)
-            {
-                builder.AppendLine($"- {limit}");
-            }
-
-            if (!receipt.StillNotIncluded.Any(limit => limit.Contains(hostJoinBoundary, StringComparison.OrdinalIgnoreCase)))
-            {
-                builder.AppendLine($"- {hostJoinBoundary}.");
-            }
-
-            return builder.ToString().TrimEnd();
+            return normalized;
         }
 
         private static string BuildHiddenPatchDisplayName(BinaryPatchSpec spec)

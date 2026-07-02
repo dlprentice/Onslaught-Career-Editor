@@ -326,7 +326,7 @@ public class PatchBenchPrimitiveProjectionBoundaryTests
     }
 
     [Test]
-    public void BinaryPatchesPage_KeepsReceiptAndSourceSummaryOwnershipUntilPrimitiveExtraction()
+    public void BinaryPatchesPage_KeepsReceiptAndSourceSummaryOwnershipAtPrimitiveMapperBoundary()
     {
         string page = ReadRepoFile("OnslaughtCareerEditor.WinUI/Pages/BinaryPatchesPage.xaml.cs");
 
@@ -337,9 +337,12 @@ public class PatchBenchPrimitiveProjectionBoundaryTests
             Assert.That(page, Does.Contain("RenderSafeCopyReceipt(receipt);"));
             Assert.That(page, Does.Contain("private void RenderSafeCopyReceipt(GameProfilePrepareReceipt receipt)"));
             Assert.That(page, Does.Contain("private static string BuildSafeCopyReceiptText(GameProfilePrepareReceipt receipt)"));
-            Assert.That(page, Does.Contain("foreach (GameProfileReceiptLine line in receipt.Lines)"));
-            Assert.That(page, Does.Contain("receipt.StillNotIncluded.Any(limit => limit.Contains(hostJoinBoundary, StringComparison.OrdinalIgnoreCase))"));
-            Assert.That(page, Does.Contain("builder.AppendLine($\"- {hostJoinBoundary}.\");"));
+            Assert.That(page, Does.Contain("PatchBenchSafeCopyReceiptText.Build(BuildSafeCopyReceiptTextState(receipt))"));
+            Assert.That(page, Does.Contain("private static PatchBenchSafeCopyReceiptTextState BuildSafeCopyReceiptTextState(GameProfilePrepareReceipt receipt)"));
+            Assert.That(page, Does.Contain("new PatchBenchReceiptLineTextState(line.Label, line.Value)"));
+            Assert.That(page, Does.Contain("BuildStillNotIncludedLimits(receipt.StillNotIncluded)"));
+            Assert.That(page, Does.Contain("PatchBenchSafeCopyOutcomeText.HostJoinReceiptBoundary"));
+            Assert.That(page, Does.Not.Contain("builder.AppendLine($\"- {hostJoinBoundary}.\""));
             Assert.That(page, Does.Contain("private static string BuildSourceExecutableSummary(string path)"));
             Assert.That(page, Does.Contain("private static string BuildSafeCopySourceStatus(string path)"));
             Assert.That(page, Does.Contain("private static string BuildSafeCopyProfileCatalogStatus()"));
@@ -360,6 +363,24 @@ public class PatchBenchPrimitiveProjectionBoundaryTests
             "GameProfilePreflightService.BuildPrepareReceipt(",
             "RenderSafeCopyReceipt(receipt);",
             "AppCore receipt construction must stay page-owned before receipt text rendering.");
+
+        string mapperSlice = ExtractCodeSlice(
+            page,
+            "private static PatchBenchSafeCopyReceiptTextState BuildSafeCopyReceiptTextState(GameProfilePrepareReceipt receipt)",
+            "private static string[] BuildStillNotIncludedLimits");
+        Assert.Multiple(() =>
+        {
+            Assert.That(mapperSlice, Does.Not.Contain("File."));
+            Assert.That(mapperSlice, Does.Not.Contain("Path."));
+            Assert.That(mapperSlice, Does.Not.Contain("Directory."));
+            Assert.That(mapperSlice, Does.Not.Contain("Process"));
+            Assert.That(mapperSlice, Does.Not.Contain("Task"));
+            Assert.That(mapperSlice, Does.Not.Contain("LaunchPlan"));
+            Assert.That(mapperSlice, Does.Not.Contain("CommandPreview"));
+            Assert.That(mapperSlice, Does.Not.Contain("OnlineMultiplayerReadinessService"));
+            Assert.That(mapperSlice, Does.Not.Contain("HostOnlineSession"));
+            Assert.That(mapperSlice, Does.Not.Contain("JoinOnlineSession"));
+        });
     }
 
     [Test]

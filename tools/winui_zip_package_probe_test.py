@@ -439,6 +439,92 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             self.assertIn("unresolved packed links", lore_pack_result.summary)
             self.assertNotIn("../Deep.md", lore_pack_result.summary)
 
+    def test_lore_pack_inspection_accepts_encoded_in_root_dot_segment_packed_link(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_two_row_lore_pack_payload(
+                bundle_dir,
+                ("doc-000001", "folder/Start.md", "# Start\n\n[Other](%2e%2e/Other.md)\n"),
+                ("doc-000002", "Other.md", "# Other\n\nSynthetic fixture.\n"),
+            )
+
+            lore_pack_result = self._lore_pack_result(bundle_dir)
+
+            self.assertEqual(lore_pack_result.status, "PASS")
+
+    def test_lore_pack_inspection_rejects_encoded_above_root_packed_link_without_echoing_target(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_two_row_lore_pack_payload(
+                bundle_dir,
+                ("doc-000001", "Start.md", "# Start\n\n[Deep](%2e%2e/SecretLeakProbe.md)\n"),
+                ("doc-000002", "SecretLeakProbe.md", "# Deep\n\nSynthetic fixture.\n"),
+            )
+
+            lore_pack_result = self._lore_pack_result(bundle_dir)
+
+            self.assertEqual(lore_pack_result.status, "FAIL")
+            self.assertIn("unresolved packed links", lore_pack_result.summary)
+            self.assertNotIn("%2e%2e/SecretLeakProbe.md", lore_pack_result.summary)
+            self.assertNotIn("SecretLeakProbe", lore_pack_result.summary)
+
+    def test_lore_pack_inspection_rejects_above_root_root_index_fallback_link(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_two_row_lore_pack_payload(
+                bundle_dir,
+                ("doc-000001", "Start.md", "# Start\n\n[Index](../_index.md)\n"),
+                ("doc-000002", "_index.md", "# Index\n\nSynthetic fixture.\n"),
+            )
+
+            lore_pack_result = self._lore_pack_result(bundle_dir)
+
+            self.assertEqual(lore_pack_result.status, "FAIL")
+            self.assertIn("unresolved packed links", lore_pack_result.summary)
+            self.assertNotIn("../_index.md", lore_pack_result.summary)
+
+    def test_lore_pack_inspection_rejects_above_root_suffix_fallback_link(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            self._write_two_row_lore_pack_payload(
+                bundle_dir,
+                ("doc-000001", "Start.md", "# Start\n\n[Suffix](../SecretLeakProbe)\n"),
+                ("doc-000002", ".md", "# Hidden Suffix Fallback\n\nSynthetic fixture.\n"),
+            )
+
+            lore_pack_result = self._lore_pack_result(bundle_dir)
+
+            self.assertEqual(lore_pack_result.status, "FAIL")
+            self.assertIn("unresolved packed links", lore_pack_result.summary)
+            self.assertNotIn("../SecretLeakProbe", lore_pack_result.summary)
+
+    def test_lore_pack_inspection_rejects_non_object_content_row_generically(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            bundle_dir = root / "bundle"
+            self._write_publish_payload(bundle_dir / "app")
+            self._write_required_root_payload(bundle_dir)
+            content_path = bundle_dir / "lore-pack" / "onslaught-lore.v1.jsonl"
+            content_path.write_text(json.dumps(["SecretLeakProbe"]) + "\n", encoding="utf-8")
+
+            lore_pack_result = self._lore_pack_result(bundle_dir)
+
+            self.assertEqual(lore_pack_result.status, "FAIL")
+            self.assertIn("row 1 is invalid", lore_pack_result.summary)
+            self.assertNotIn("SecretLeakProbe", lore_pack_result.summary)
+
     def test_lore_pack_inspection_rejects_byte_length_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:
             root = Path(temp_root)

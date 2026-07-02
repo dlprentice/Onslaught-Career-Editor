@@ -22,7 +22,9 @@ public class PatchBenchSafeCopyReceiptTextTests
     private static readonly string[] ReflectedPageFormatterSourcePaths =
     [
         "OnslaughtCareerEditor.WinUI/Pages/BinaryPatchesPage.xaml.cs",
+        "OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyReceiptText.cs",
         "OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyOutcomeText.cs",
+        "OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyReceiptTextState.cs",
     ];
 
     [Test]
@@ -125,6 +127,18 @@ public class PatchBenchSafeCopyReceiptTextTests
             string.Concat(online, " ", "ready"),
             $"{host} {" / "} {join} enabled",
             $"{host}{"-"}{join} available",
+            $"{source}Path",
+            $"{manifest}Path",
+            $"{proof}Id",
+            $"{target}GameRoot",
+            $"{target}ExecutablePath",
+            string.Concat("public", " ", "matchmaking"),
+            $"{online} {"multiplayer"} {"available"}",
+            $"{online} {"multiplayer"} {"enabled"}",
+            $"{online} {"multiplayer"} {"supported"}",
+            string.Concat("net", " ", "play"),
+            string.Concat("onslaught", "-", "profile", "-", "manifest", ".json"),
+            string.Concat("Onslaught", " ", "Profile", " ", "Manifest", " ", "Json"),
         ];
 
         foreach (string hostileValue in hostileValues)
@@ -141,13 +155,48 @@ public class PatchBenchSafeCopyReceiptTextTests
     }
 
     [Test]
+    public void Build_RejectsForbiddenSentinelsAssembledAcrossReceiptLineLabelAndValue()
+    {
+        (string Label, string Value)[] hostileLines =
+        [
+            ("Manifest", "path"),
+            ("Proof", "id"),
+            ("Command", "preview"),
+            ("Target game", "root"),
+            ("Target executable", "path"),
+            ("Host/Join", "enabled"),
+            ("Host and Join", "ready"),
+            ("Online multiplayer", "available"),
+            ("Public", "matchmaking"),
+            ("Net", "play"),
+        ];
+
+        foreach ((string label, string value) in hostileLines)
+        {
+            object state = CreateState(
+                "Safe copy ready",
+                [(label, value)],
+                ["Windowed mode ready"],
+                [$"{HostJoinBoundary}."]);
+
+            Exception? exception = CaptureBuildException(state);
+            Assert.That(
+                exception,
+                Is.TypeOf<ArgumentException>(),
+                $"receipt line should reject unsafe assembled display text: {label}: {value}");
+        }
+    }
+
+    [Test]
     public void Build_EnforcesManifestFilenameDisplayPolicy()
     {
         string[] unsafeManifestFilenameValues =
         [
             "onslaught-profile-manifest.json",
+            string.Concat("onslaught-profile-manifest", ".json"),
             "Profile manifest: onslaught-profile-manifest.json",
             "Manifest file onslaught-profile-manifest.json",
+            string.Concat("Onslaught", " ", "Profile", " ", "Manifest", " ", "Json"),
         ];
 
         foreach (string unsafeManifestFilenameValue in unsafeManifestFilenameValues)
@@ -191,14 +240,27 @@ public class PatchBenchSafeCopyReceiptTextTests
             "Public matchmaking available",
             "public-matchmaking available",
             "PublicMatchmaking ready",
+            "Online multiplayer available",
+            "Online multiplayer enabled",
+            "Online multiplayer supported",
+            "Online multiplayer unlocked",
+            "multiplayer ready",
             "netplay ready",
             "net play ready",
             "Host/Join available",
             "Host/Join enabled",
+            "Host/Join ready",
+            "Host/Join supported",
+            "Host/Join unlocked",
             "HOST/JOIN AVAILABLE",
             "Host / Join enabled",
             "Host-Join ready",
             "Host and Join available",
+            "Host and Join enabled",
+            "Host and Join supported",
+            "Host game available",
+            "Join game available",
+            "LAN play available",
         ];
 
         foreach (string unsafeOnlineValue in unsafeOnlineValues)
@@ -353,6 +415,167 @@ public class PatchBenchSafeCopyReceiptTextTests
     }
 
     [Test]
+    public void PageReceiptMapper_MapsAppCoreReceiptToPrimitiveStateAndInjectsBoundary()
+    {
+        var receipt = new GameProfilePrepareReceipt(
+            "Safe copy ready",
+            [
+                new GameProfileReceiptLine("Profile", "Enhanced Profile Preview"),
+                new GameProfileReceiptLine("Launch modifiers", "-skipfmv -level 850"),
+            ],
+            [
+                "Windowed mode ready",
+                "Savegames copied into this safe copy only; source savegames remain read-only.",
+            ],
+            [
+                "No installed-game mutation.",
+                "Original BEA.exe remains read-only.",
+            ]);
+
+        object state = InvokePageReceiptMapper(receipt);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(GetStringProperty(state, "Headline"), Is.EqualTo("Safe copy ready"));
+            Assert.That(
+                GetLinePairs(state),
+                Is.EqualTo(new[]
+                {
+                    ("Profile", "Enhanced Profile Preview"),
+                    ("Launch modifiers", "-skipfmv -level 850"),
+                }));
+            Assert.That(
+                GetStringListProperty(state, "IncludedChanges"),
+                Is.EqualTo(new[]
+                {
+                    "Windowed mode ready",
+                    "Savegames copied into this safe copy only; source savegames remain read-only.",
+                }));
+            Assert.That(
+                GetStringListProperty(state, "StillNotIncluded"),
+                Is.EqualTo(new[]
+                {
+                    "No installed-game mutation.",
+                    "Original BEA.exe remains read-only.",
+                    $"{HostJoinBoundary}.",
+                }));
+        });
+    }
+
+    [Test]
+    public void PageReceiptMapper_DoesNotDuplicateCanonicalHostJoinBoundaryAndKeepsPartialNegativeLimits()
+    {
+        string[] canonicalBoundaryVariants =
+        [
+            HostJoinBoundary,
+            $"{HostJoinBoundary}.",
+            $"  {HostJoinBoundary.ToUpperInvariant()}.  ",
+        ];
+
+        foreach (string canonicalBoundaryVariant in canonicalBoundaryVariants)
+        {
+            object mappedState = InvokePageReceiptMapper(new GameProfilePrepareReceipt(
+                "Safe copy ready",
+                [new GameProfileReceiptLine("Profile", "Enhanced Profile Preview")],
+                ["Windowed mode ready"],
+                [canonicalBoundaryVariant]));
+
+            Assert.That(
+                CountOccurrences(string.Join("\n", GetStringListProperty(mappedState, "StillNotIncluded")), HostJoinBoundary),
+                Is.EqualTo(1),
+                $"canonical boundary variant should not duplicate: {canonicalBoundaryVariant}");
+        }
+
+        object partialState = InvokePageReceiptMapper(new GameProfilePrepareReceipt(
+            "Safe copy ready",
+            [new GameProfileReceiptLine("Profile", "Enhanced Profile Preview")],
+            ["Windowed mode ready"],
+            [
+                "Host/Join remain unavailable.",
+                "No Host/Join or online multiplayer planned.",
+            ]));
+
+        Assert.That(
+            GetStringListProperty(partialState, "StillNotIncluded"),
+            Is.EqualTo(new[]
+            {
+                "Host/Join remain unavailable.",
+                "No Host/Join or online multiplayer planned.",
+                $"{HostJoinBoundary}.",
+            }));
+    }
+
+    [Test]
+    public void PageFormatter_MatchesHelperForMappedReceiptWhenBoundaryMissingAndPresent()
+    {
+        GameProfilePrepareReceipt[] receipts =
+        [
+            new(
+                "  Safe copy ready \r\n",
+                [
+                    new GameProfileReceiptLine(" Profile ", " Enhanced Profile Preview\t"),
+                    new GameProfileReceiptLine("Launch modifiers", "  -skipfmv   -level 850  "),
+                ],
+                [
+                    " Windowed mode ready ",
+                    " Savegames copied into this safe copy only; source savegames remain read-only. ",
+                ],
+                [
+                    "No installed-game mutation.",
+                    "Original BEA.exe remains read-only.",
+                ]),
+            new(
+                "Safe copy ready",
+                [new GameProfileReceiptLine("Profile", "Enhanced Profile Preview")],
+                ["Windowed mode ready"],
+                [$"{HostJoinBoundary}.", "No installed-game mutation."]),
+        ];
+
+        foreach (GameProfilePrepareReceipt receipt in receipts)
+        {
+            object mappedState = InvokePageReceiptMapper(receipt);
+            Assert.That(InvokePageReceiptFormatter(receipt), Is.EqualTo(InvokeBuild(mappedState)));
+        }
+    }
+
+    [Test]
+    public void PageFormatter_FailsClosedForUnsafeReceiptDisplayValues()
+    {
+        GameProfilePrepareReceipt[] unsafeReceipts =
+        [
+            new(
+                "Safe copy ready",
+                [new GameProfileReceiptLine("Manifest", "path")],
+                ["Windowed mode ready"],
+                [$"{HostJoinBoundary}."]),
+            new(
+                "Safe copy ready",
+                [new GameProfileReceiptLine("Profile", "Enhanced Profile Preview")],
+                [string.Concat("proof", " ", "id")],
+                [$"{HostJoinBoundary}."]),
+            new(
+                "Safe copy ready",
+                [new GameProfileReceiptLine("Profile", "Enhanced Profile Preview")],
+                ["Windowed mode ready"],
+                [string.Concat("onslaught-profile-manifest", ".json")]),
+            new(
+                "Safe copy ready",
+                [new GameProfileReceiptLine("Profile", "Enhanced Profile Preview")],
+                ["Windowed mode ready"],
+                ["Host / Join enabled"]),
+        ];
+
+        foreach (GameProfilePrepareReceipt unsafeReceipt in unsafeReceipts)
+        {
+            Exception? exception = CapturePageFormatterException(unsafeReceipt);
+            Assert.That(
+                exception,
+                Is.TypeOf<ArgumentException>(),
+                $"page formatter should fail closed for unsafe receipt value: {unsafeReceipt}");
+        }
+    }
+
+    [Test]
     public void HostJoinBoundaryConstant_ComesFromSafeCopyOutcomeHelper()
     {
         Assert.That(HostJoinBoundary, Is.EqualTo("No Host/Join or online multiplayer"));
@@ -382,7 +605,7 @@ public class PatchBenchSafeCopyReceiptTextTests
     }
 
     [Test]
-    public void ReceiptFormatterScaffold_StaysPrimitiveUnwiredAndBehaviorFree()
+    public void ReceiptFormatterWiring_UsesPageOwnedMapperAndPrimitiveHelper()
     {
         string helper = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchSafeCopyReceiptText.cs");
         string model = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Models", "PatchBenchSafeCopyReceiptTextState.cs");
@@ -390,7 +613,10 @@ public class PatchBenchSafeCopyReceiptTextTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(page, Does.Not.Contain("PatchBenchSafeCopyReceiptText.Build("));
+            Assert.That(page, Does.Contain("PatchBenchSafeCopyReceiptText.Build(BuildSafeCopyReceiptTextState(receipt))"));
+            Assert.That(page, Does.Contain("private static PatchBenchSafeCopyReceiptTextState BuildSafeCopyReceiptTextState(GameProfilePrepareReceipt receipt)"));
+            Assert.That(page, Does.Contain("new PatchBenchReceiptLineTextState(line.Label, line.Value)"));
+            Assert.That(page, Does.Contain("BuildStillNotIncludedLimits(receipt.StillNotIncluded)"));
             Assert.That(page, Does.Contain("GameProfilePreflightService.BuildPrepareReceipt("));
             AssertNoOwnershipTokens(helper, "receipt helper");
             AssertNoOwnershipTokens(model, "receipt model");
@@ -495,6 +721,59 @@ public class PatchBenchSafeCopyReceiptTextTests
             ?? throw new InvalidOperationException("Missing BinaryPatchesPage.BuildSafeCopyReceiptText.");
         return (string)(method.Invoke(null, [receipt])
             ?? throw new InvalidOperationException("BinaryPatchesPage.BuildSafeCopyReceiptText returned null."));
+    }
+
+    private static object InvokePageReceiptMapper(GameProfilePrepareReceipt receipt)
+    {
+        Type pageType = ReflectedWinUiTestSupport.GetRequiredType(
+            "OnslaughtCareerEditor.WinUI.Pages.BinaryPatchesPage",
+            ReflectedPageFormatterSourcePaths);
+        MethodInfo method = pageType.GetMethod("BuildSafeCopyReceiptTextState", BindingFlags.Static | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("Missing BinaryPatchesPage.BuildSafeCopyReceiptTextState.");
+        return method.Invoke(null, [receipt])
+            ?? throw new InvalidOperationException("BinaryPatchesPage.BuildSafeCopyReceiptTextState returned null.");
+    }
+
+    private static Exception? CapturePageFormatterException(GameProfilePrepareReceipt receipt)
+    {
+        try
+        {
+            _ = InvokePageReceiptFormatter(receipt);
+            return null;
+        }
+        catch (TargetInvocationException ex)
+        {
+            return ex.InnerException ?? ex;
+        }
+    }
+
+    private static string GetStringProperty(object instance, string propertyName)
+    {
+        return ReflectedWinUiTestSupport.GetStringProperty(instance, propertyName);
+    }
+
+    private static string[] GetStringListProperty(object instance, string propertyName)
+    {
+        PropertyInfo property = instance.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)
+            ?? throw new InvalidOperationException($"Missing text-state property {propertyName}.");
+        object value = property.GetValue(instance)
+            ?? throw new InvalidOperationException($"Text-state property {propertyName} was null.");
+        return ((System.Collections.IEnumerable)value)
+            .Cast<object>()
+            .Select(item => (string)item)
+            .ToArray();
+    }
+
+    private static (string Label, string Value)[] GetLinePairs(object instance)
+    {
+        PropertyInfo property = instance.GetType().GetProperty("Lines", BindingFlags.Instance | BindingFlags.Public)
+            ?? throw new InvalidOperationException("Missing text-state property Lines.");
+        object value = property.GetValue(instance)
+            ?? throw new InvalidOperationException("Text-state property Lines was null.");
+        return ((System.Collections.IEnumerable)value)
+            .Cast<object>()
+            .Select(line => (GetStringProperty(line, "Label"), GetStringProperty(line, "Value")))
+            .ToArray();
     }
 
     private static Type GetHelperType()

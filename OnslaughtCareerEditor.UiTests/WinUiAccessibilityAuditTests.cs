@@ -211,6 +211,7 @@ public class WinUiAccessibilityAuditTests
                 "AboutProductSummary",
                 "AboutCoreCapabilitiesTitle",
                 "AboutProjectNotesTitle",
+                "AboutGameInstallBoundaryNote",
                 "AboutProductLaneNote",
                 "AboutRetailBehaviorTitle",
                 "AboutVersionText"

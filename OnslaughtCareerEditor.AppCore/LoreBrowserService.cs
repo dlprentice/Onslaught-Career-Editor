@@ -511,6 +511,8 @@ namespace Onslaught___Career_Editor
                 throw new InvalidDataException(InvalidLorePackIndexMessage);
             }
 
+            ValidatePackedMarkdownLinks(documentsById.Values, documentsByRelativePath);
+
             pack = new LoreContentPack(documentsById, documentsByRelativePath);
             foreach (LorePackDocument packedDocument in documentsById.Values.OrderBy(static doc => doc.Order).ThenBy(static doc => doc.RelativePath, StringComparer.OrdinalIgnoreCase))
             {
@@ -796,9 +798,10 @@ namespace Onslaught___Career_Editor
                 return null;
             }
 
-            string candidate = target.StartsWith("/", StringComparison.Ordinal)
-                ? target.TrimStart('/')
-                : Path.Combine(Path.GetDirectoryName(currentDocument.RelativePath) ?? string.Empty, target).Replace('\\', '/');
+            string decodedTarget = DecodeLoreLinkPathPart(target);
+            string candidate = decodedTarget.StartsWith("/", StringComparison.Ordinal)
+                ? decodedTarget.TrimStart('/')
+                : Path.Combine(Path.GetDirectoryName(currentDocument.RelativePath) ?? string.Empty, decodedTarget).Replace('\\', '/');
 
             LorePackDocument? resolved = ResolvePackedRelativeDocument(candidate);
             return resolved == null ? null : ToLorePackSourcePath(resolved.Id);
@@ -811,7 +814,16 @@ namespace Onslaught___Career_Editor
                 return null;
             }
 
-            string normalized = NormalizeRelativePath(candidate);
+            return ResolvePackedRelativeDocument(candidate, _contentPack.DocumentsByRelativePath);
+        }
+
+        private static LorePackDocument? ResolvePackedRelativeDocument(string candidate, IReadOnlyDictionary<string, LorePackDocument> documentsByRelativePath)
+        {
+            if (!TryNormalizeRelativePath(candidate, out string normalized))
+            {
+                return null;
+            }
+
             string[] candidates =
             {
                 normalized,
@@ -824,13 +836,57 @@ namespace Onslaught___Career_Editor
 
             foreach (string item in candidates)
             {
-                if (_contentPack.DocumentsByRelativePath.TryGetValue(NormalizeRelativePath(item), out LorePackDocument? document))
+                if (TryNormalizeRelativePath(item, out string candidateKey) &&
+                    documentsByRelativePath.TryGetValue(candidateKey, out LorePackDocument? document))
                 {
                     return document;
                 }
             }
 
             return null;
+        }
+
+        private static void ValidatePackedMarkdownLinks(IEnumerable<LorePackDocument> documents, IReadOnlyDictionary<string, LorePackDocument> documentsByRelativePath)
+        {
+            foreach (LorePackDocument document in documents)
+            {
+                foreach (Match match in LORE_BOOK_MARKDOWN_LINK_REGEX().Matches(document.Content))
+                {
+                    string target = match.Groups["target"].Value.Trim();
+                    string pathPart = DecodeLoreLinkPathPart(RemoveAnchor(target));
+                    if (string.IsNullOrWhiteSpace(pathPart) ||
+                        pathPart.StartsWith("#", StringComparison.Ordinal) ||
+                        IsExternalLoreLinkTarget(pathPart))
+                    {
+                        continue;
+                    }
+
+                    string candidate = pathPart.StartsWith("/", StringComparison.Ordinal)
+                        ? pathPart.TrimStart('/')
+                        : Path.Combine(Path.GetDirectoryName(document.RelativePath) ?? string.Empty, pathPart).Replace('\\', '/');
+                    if (ResolvePackedRelativeDocument(candidate, documentsByRelativePath) == null)
+                    {
+                        throw new InvalidDataException(InvalidLorePackContentMessage);
+                    }
+                }
+            }
+        }
+
+        private static bool IsExternalLoreLinkTarget(string value)
+        {
+            return Regex.IsMatch(value, @"^[a-zA-Z][a-zA-Z0-9+.-]*:", RegexOptions.CultureInvariant);
+        }
+
+        private static string DecodeLoreLinkPathPart(string value)
+        {
+            try
+            {
+                return Uri.UnescapeDataString(value);
+            }
+            catch (UriFormatException)
+            {
+                return value;
+            }
         }
 
         private string RewritePackedMarkdownLinks(LorePackDocument document)
@@ -1224,14 +1280,21 @@ namespace Onslaught___Career_Editor
 
         private static string NormalizeRelativePath(string value)
         {
-            string normalized = value.Replace('\\', '/').Trim().TrimStart('/');
-            while (normalized.Contains("//", StringComparison.Ordinal))
+            return TryNormalizeRelativePath(value, out string normalized)
+                ? normalized
+                : string.Empty;
+        }
+
+        private static bool TryNormalizeRelativePath(string value, out string normalized)
+        {
+            string current = value.Replace('\\', '/').Trim().TrimStart('/');
+            while (current.Contains("//", StringComparison.Ordinal))
             {
-                normalized = normalized.Replace("//", "/", StringComparison.Ordinal);
+                current = current.Replace("//", "/", StringComparison.Ordinal);
             }
 
             List<string> parts = new();
-            foreach (string part in normalized.Split('/', StringSplitOptions.RemoveEmptyEntries))
+            foreach (string part in current.Split('/', StringSplitOptions.RemoveEmptyEntries))
             {
                 if (part.Equals(".", StringComparison.Ordinal))
                 {
@@ -1242,7 +1305,8 @@ namespace Onslaught___Career_Editor
                 {
                     if (parts.Count == 0)
                     {
-                        return string.Empty;
+                        normalized = string.Empty;
+                        return false;
                     }
 
                     parts.RemoveAt(parts.Count - 1);
@@ -1252,7 +1316,8 @@ namespace Onslaught___Career_Editor
                 parts.Add(part);
             }
 
-            return string.Join("/", parts);
+            normalized = string.Join("/", parts);
+            return true;
         }
 
         private static string FormatTreeSegment(string value)

@@ -429,6 +429,42 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void LoadIndex_AcceptsCaseVariantLorePackContentId()
+        {
+            string content = "# Start";
+            string digest = Sha256Text(content);
+            WriteLorePackFixture(
+                new
+                {
+                    schema = "onslaught-lore-pack.v1",
+                    sourceRoot = "lore-book",
+                    documentCount = 1,
+                    documents = new[]
+                    {
+                        new
+                        {
+                            id = "doc-start",
+                            relativePath = "Start.md",
+                            title = "Start",
+                            sha256 = digest,
+                            byteLength = Encoding.UTF8.GetByteCount(content),
+                            order = 0
+                        }
+                    }
+                },
+                SerializeLorePackContentRow("DOC-START", "Start.md", content));
+
+            LoreBrowserService service = new();
+            LoreIndex index = service.LoadIndex(_repoRoot);
+            LoreDocument document = Assert.Single(index.Documents);
+
+            Assert.True(index.UsingContentPack);
+            Assert.Equal("Start.md", document.RelativePath);
+            Assert.True(service.DocumentExists("lore-pack://doc-start"));
+            Assert.True(service.DocumentExists("lore-pack://DOC-START"));
+        }
+
+        [Fact]
         public void LoadIndex_RejectsLorePackIndexContentRelativePathMismatchWithoutEchoingPath()
         {
             string content = "# Start";
@@ -702,23 +738,74 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
-        public void RenderDocument_DoesNotResolvePackedLinksAbovePackRoot()
+        public void RenderDocument_RewritesPackedEncodedDotSegmentLinksToReaderNavigation()
+        {
+            CreateLoreBookSkeleton();
+            WriteLorePack(
+                ("Start-Here.md", "# Start\n\nHome document."),
+                ("deep/Deep.md", "# Deep\n\nSee [Home](%2e%2e/Start-Here.md#top) and [Peer](%2e/Peer.md)."),
+                ("deep/Peer.md", "# Peer\n\nSibling document."));
+
+            LoreBrowserService service = new();
+            LoreIndex index = service.LoadIndex(_repoRoot);
+            LoreDocument deep = Assert.Single(index.Documents, doc => doc.RelativePath == "deep/Deep.md");
+
+            RenderedLoreDocument rendered = service.RenderDocument(deep.FilePath);
+            string html = File.ReadAllText(new Uri(rendered.DisplayUri).LocalPath);
+            string? homeTarget = service.ResolveInternalTarget(deep.FilePath, "%2e%2e/Start-Here.md#top");
+            string? peerTarget = service.ResolveInternalTarget(deep.FilePath, "%2e/Peer.md");
+
+            Assert.Contains("onslaught-lore://document/", html);
+            Assert.NotNull(homeTarget);
+            Assert.NotNull(peerTarget);
+            Assert.StartsWith("lore-pack://", homeTarget!, StringComparison.OrdinalIgnoreCase);
+            Assert.StartsWith("lore-pack://", peerTarget!, StringComparison.OrdinalIgnoreCase);
+            Assert.True(service.DocumentExists(homeTarget!));
+            Assert.True(service.DocumentExists(peerTarget!));
+        }
+
+        [Fact]
+        public void LoadIndex_RejectsPackedLinksAbovePackRootWithoutEchoingTarget()
         {
             CreateLoreBookSkeleton();
             WriteLorePack(
                 ("Start-Here.md", "# Start\n\nSee [Deep](../Deep.md)."),
                 ("Deep.md", "# Deep\n\nRoot document."));
 
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "content is invalid", "../Deep.md", "Deep.md");
+        }
+
+        [Fact]
+        public void LoadIndex_RejectsEncodedPackedLinksAbovePackRootWithoutEchoingTarget()
+        {
+            CreateLoreBookSkeleton();
+            WriteLorePack(
+                ("Start-Here.md", "# Start\n\nSee [Deep](%2e%2e/SecretLeakProbe.md)."),
+                ("SecretLeakProbe.md", "# Secret Leak Probe\n\nRoot document."));
+
+            InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
+
+            AssertSafeLorePackException(ex, "content is invalid", "%2e%2e/SecretLeakProbe.md", "SecretLeakProbe");
+        }
+
+        [Fact]
+        public void ResolveInternalTarget_DoesNotResolveAboveRootPackedLinksThroughRootIndexFallback()
+        {
+            CreateLoreBookSkeleton();
+            WriteLorePack(
+                ("Start-Here.md", "# Start\n\nHome document."),
+                ("deep/Deep.md", "# Deep\n\nDeep document."),
+                ("_index.md", "# Root Index\n\nRoot fallback document."));
+
             LoreBrowserService service = new();
             LoreIndex index = service.LoadIndex(_repoRoot);
-            LoreDocument start = Assert.Single(index.Documents, doc => doc.RelativePath == "Start-Here.md");
+            LoreDocument deep = Assert.Single(index.Documents, doc => doc.RelativePath == "deep/Deep.md");
 
-            RenderedLoreDocument rendered = service.RenderDocument(start.FilePath);
-            string html = File.ReadAllText(new Uri(rendered.DisplayUri).LocalPath);
-            string? target = service.ResolveInternalTarget(start.FilePath, "../Deep.md");
+            string? target = service.ResolveInternalTarget(deep.FilePath, "../../_index.md");
 
             Assert.Null(target);
-            Assert.DoesNotContain("onslaught-lore://document/", html);
         }
 
         [Fact]

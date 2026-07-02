@@ -1,15 +1,19 @@
 # Active Goal Slice
 
-Status: standing wave active; source-only RE map reconciliation
+Status: closed; automations stopped; PatchBench, WinUI UX, and Lore integrated
 Last updated: 2026-07-02
 Policy: `goal.policy.md`
 
 ## Current Slice
 
 The chief epic rebuild/Ghidra/Lore/WinUI wave has been integrated, accepted, and
-pushed from the accepted worker source commits. Pre-state-update source-ref proof
-showed the wave tip `a9fe757e238a237eac8aa8f7f4e12d1bad57ec60` matched
-`HEAD`, `origin/main`, and live remote `refs/heads/main` with divergence `0 0`.
+pushed from the accepted worker source commits. A final closeout continuation
+then integrated the accepted PatchBench receipt-helper wiring, static WinUI
+About game-install boundary copy, and Lore ZIP/package parity hardening. The
+standing-loop automations were deleted, and no new recurring loop is authorized.
+Pre-state-update source-ref proof showed the earlier wave tip
+`a9fe757e238a237eac8aa8f7f4e12d1bad57ec60` matched `HEAD`, `origin/main`, and
+live remote `refs/heads/main` with divergence `0 0`.
 
 Accepted source commits integrated by cherry-pick:
 
@@ -27,20 +31,28 @@ Report-only lanes remain campaign evidence, not source commits: W2 superseded
 PatchBench parity, W4 static sentinel, W5 storage/Ghidra backup safety, W12
 runtime-proof baton, and W13 consult compliance.
 
+Accepted closeout source commits integrated by cherry-pick:
+
+- PatchBench receipt helper wiring: `c7d4f2c3425fc22cac5cedf3493d5f9793e7db8e`
+- WinUI About game-install boundary copy: `651c9b0a564f4d6803fac085b2a40d0c8b93bb69`
+- Lore ZIP/package parity hardening: `84a9fd123269a48773a9da60f1f621fd0f52d2d5`
+
 ## Current Truth
 
-- PatchBench now has pre-wiring receipt boundary tests and a behavior-free
-  helper scaffold. It remains unwired; live page receipt projection, File/Path
-  I/O, launch planning, process control, catalog semantics, Host/Join fallback,
-  online boundaries, and runtime-proof boundaries stay in the page/AppCore
-  owners.
+- PatchBench receipt rendering now runs through a primitive helper via a
+  page-owned mapper from the AppCore safe-copy receipt DTO. Live AppCore receipt
+  construction, File/Path I/O, launch planning, process control, catalog
+  semantics, Host/Join boundary injection/fallback, online boundaries, and
+  runtime-proof boundaries stay in the page/AppCore owners.
 - Patch/mod grouping now shows bounded group scan summaries sourced from visible
   rows and tracks. Integration added focused source/binding coverage for
   `ScanSummary`.
-- Lore ZIP/package hardening includes the Reviewer C follow-up. AppCore and the
-  ZIP probe now align on above-root packed links, document-id grammar, and
-  case-variant content-id hash lookup. This is not broad release readiness or a
-  complete filesystem traversal proof.
+- Lore ZIP/package hardening includes the Reviewer C follow-up and the closeout
+  parity worker. AppCore, the builder checker, and the ZIP probe now align on
+  above-root and encoded above-root packed links, document-id grammar,
+  case-variant content-id lookup, exact `relativePath` equality, generic
+  public-safe failures, and non-object JSONL handling. This is not broad
+  release readiness or a complete filesystem traversal proof.
 - The rebuild/readiness-gate update is public-safe continuity hardening only.
   It is not command arming, importer execution, private asset reading,
   generated payload output, runtime proof, rebuild parity, visual/gameplay
@@ -55,6 +67,10 @@ runtime-proof baton, and W13 consult compliance.
 - WinUI Home/About copy and static accessibility/product-lane tests improved
   user-facing boundaries. This is not runtime screen-reader, visual, BEA, CDB,
   audio, or gameplay proof.
+- The About page now explicitly says the app does not include the game itself
+  and uses the configured retail install as read-only source material when
+  needed. This is static copy and test coverage only, not runtime UIA or visual
+  proof.
 - Release ZIP docs were clarified without publication, signing, installer, MSIX,
   Store, upload, tag, release asset, or announcement work.
 - Docs governance removed stale readiness wording and keeps the current public
@@ -112,6 +128,21 @@ passed:
 - `npm run test:hard-payload-safety`
 - `npm run test:public-allowlist` after a timeout retry
 
+The PatchBench and WinUI UX integration additionally passed:
+
+- `git diff --check`
+- `npm run build:winui`
+- focused PatchBench receipt/boundary tests
+- focused About/accessibility tests
+- `npm run test:winui-patch-engine-safety`
+- `npm run test:winui-primary-lane`
+
+The final closeout Lore integration additionally passed in the root tree:
+
+- `py -3 tools\winui_lore_pack_builder.py --self-test`
+- `py -3 tools\winui_zip_package_probe_test.py`
+- `npm run test:appcore`
+
 Phase 0 stale-baton correction is state-only. The `a9fe757e238a237eac8aa8f7f4e12d1bad57ec60`
 proof confirms the previous source wave was already pushed and accepted; it is
 not fresh runtime, release, Ghidra, static-accounting, or storage proof.
@@ -156,22 +187,24 @@ Known pre-existing or intentionally unclaimed gates:
 
 ## Next Executable Work
 
-1. Repair or explicitly bound the Static Wave1200 accounting support-file
+1. Do not continue the standing automation loop without a new explicit request.
+   All known loop automations were deleted during closeout.
+2. Repair or explicitly bound the Static Wave1200 accounting support-file
    blocker with the relevant static-accounting gate before claiming health.
-2. Reconcile or intentionally document `tools/docsync_check.py` mirror drift
+3. Reconcile or intentionally document `tools/docsync_check.py` mirror drift
    before claiming docsync or mirror health.
-3. Decide whether to run the optional representative Media smoke audio-row
+4. Decide whether to run the optional representative Media smoke audio-row
    selection in a separately authorized runtime-proof lane; leave it unclaimed
    otherwise.
-4. Continue PatchBench only with tests first: decide whether any helper wiring
-   is still desirable, preserve page/AppCore ownership of behavior, and keep
-   Host/Join and runtime-proof boundaries unchanged.
-5. Continue Lore with bounded ZIP/package parity hardening only; do not promote
+5. Review the accepted PatchBench wiring during future PatchBench work by
+   preserving page/AppCore ownership of behavior and keeping Host/Join and
+   runtime-proof boundaries unchanged.
+6. Continue Lore with bounded ZIP/package parity hardening only; do not promote
    it to broad release or traversal-proof claims.
-6. Continue RE/rebuild with public-safe proof-plan/checker work until separate
+7. Continue RE/rebuild with public-safe proof-plan/checker work until separate
    authority grants live Ghidra mutation, runtime proof, private asset reads, or
    importer execution.
-7. Use the internal tooling vocabulary map only to pick one bounded future
+8. Use the internal tooling vocabulary map only to pick one bounded future
    question with an explicit higher-authority proof class.
 
 ## Stop Conditions

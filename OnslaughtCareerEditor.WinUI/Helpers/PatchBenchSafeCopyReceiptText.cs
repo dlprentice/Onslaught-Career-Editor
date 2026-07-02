@@ -25,7 +25,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             builder.AppendLine(headline);
             foreach (PatchBenchReceiptLineTextState line in lines)
             {
-                builder.AppendLine($"{line.Label}: {line.Value}");
+                string lineText = $"{line.Label}: {line.Value}";
+                ThrowIfUnsafeDisplayValue(lineText, nameof(state));
+                builder.AppendLine(lineText);
             }
 
             builder.AppendLine();
@@ -42,7 +44,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 builder.AppendLine($"- {limit}");
             }
 
-            return builder.ToString().TrimEnd();
+            string output = builder.ToString().TrimEnd();
+            ThrowIfUnsafeDisplayValue(output, nameof(state));
+            return output;
         }
 
         private static string[] NormalizeList(IReadOnlyList<string>? values)
@@ -77,12 +81,16 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             }
 
             string normalized = builder.ToString();
-            if (ContainsUnsafeDisplayValue(normalized))
-            {
-                throw new ArgumentException("Receipt text contains unsafe display value.", nameof(value));
-            }
-
+            ThrowIfUnsafeDisplayValue(normalized, nameof(value));
             return normalized;
+        }
+
+        private static void ThrowIfUnsafeDisplayValue(string value, string? parameterName)
+        {
+            if (ContainsUnsafeDisplayValue(value))
+            {
+                throw new ArgumentException("Receipt text contains unsafe display value.", parameterName);
+            }
         }
 
         private static bool ContainsUnsafeDisplayValue(string value)
@@ -203,16 +211,29 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             Join("online", "session"),
             Join("online", "play", "ready"),
             Join("online", "play", "available"),
+            Join("online", "multiplayer", "ready"),
+            Join("online", "multiplayer", "available"),
+            Join("online", "multiplayer", "enabled"),
+            Join("online", "multiplayer", "supported"),
+            Join("online", "multiplayer", "unlocked"),
+            Join("multiplayer", "ready"),
             Join("public", "matchmaking"),
             Join("net", "play"),
+            Join("lan", "play", "available"),
             Join("enable", "host"),
             Join("enable", "join"),
+            Join("host", "game", "available"),
+            Join("join", "game", "available"),
             Join("host", "join", "available"),
             Join("host", "join", "enabled"),
             Join("host", "join", "ready"),
+            Join("host", "join", "supported"),
+            Join("host", "join", "unlocked"),
             Join("host", "and", "join", "available"),
             Join("host", "and", "join", "enabled"),
             Join("host", "and", "join", "ready"),
+            Join("host", "and", "join", "supported"),
+            Join("host", "and", "join", "unlocked"),
             Join("onslaught", "profile", "manifest", "json"),
         ];
     }

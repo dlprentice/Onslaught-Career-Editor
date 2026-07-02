@@ -16,6 +16,9 @@ public class WinUiProductLaneTests
         string xaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "AboutPage.xaml");
 
         Assert.That(xaml, Does.Contain("primary user-facing Windows product lane"));
+        Assert.That(xaml, Does.Contain("AboutGameInstallBoundaryNote"));
+        Assert.That(xaml, Does.Contain("does not include the Battle Engine Aquila game itself"));
+        Assert.That(xaml, Does.Contain("reads your configured game install as read-only input"));
         Assert.That(xaml, Does.Contain("Maintainer infrastructure and historical app references remain separate"));
         Assert.That(xaml, Does.Contain("retail Battle Engine Aquila saves, options, media, and copied-game workflows"));
         Assert.That(xaml, Does.Contain("patching a copied game does not modify your installed game"));
@@ -1815,6 +1818,7 @@ public class WinUiProductLaneTests
     {
         string xaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml");
         string code = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs");
+        string safeCopyReceiptText = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchSafeCopyReceiptText.cs");
         string safeCopyOutcomeText = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchSafeCopyOutcomeText.cs");
 
         Assert.That(xaml, Does.Contain("PatchBenchCopiedProfileReceiptExpander"));
@@ -1824,9 +1828,11 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("GameProfilePreflightService.BuildPrepareReceipt"));
         Assert.That(code, Does.Contain("RenderSafeCopyReceipt"));
         Assert.That(code, Does.Contain("BuildSafeCopyReceiptText"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyReceiptText.Build(BuildSafeCopyReceiptTextState(receipt))"));
+        Assert.That(code, Does.Contain("BuildStillNotIncludedLimits(receipt.StillNotIncluded)"));
         Assert.That(code, Does.Contain("PatchBenchCopiedProfileReceipt.Text"));
-        Assert.That(code, Does.Contain("Included changes"));
-        Assert.That(code, Does.Contain("Still not included"));
+        Assert.That(safeCopyReceiptText, Does.Contain("Included changes"));
+        Assert.That(safeCopyReceiptText, Does.Contain("Still not included"));
         Assert.That(safeCopyOutcomeText, Does.Contain("No Host/Join or online multiplayer"));
         Assert.That(safeCopyOutcomeText, Does.Contain("Play will run BEA.exe from safe copy folder"));
         Assert.That(code, Does.Not.Contain("Play will run BEA.exe from safe copy: {result.TargetGameRoot}"));

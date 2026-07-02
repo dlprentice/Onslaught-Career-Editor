@@ -1,6 +1,16 @@
 {
   "lastUpdated": "2026-07-02",
-  "currentFocus": "Static RE/Ghidra closure remains unchanged; the latest chief epic source wave is accepted and pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60, and a source-only internal tooling vocabulary map was reconciled as context-only clean-room planning input. The earlier failed-wave rescue at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remains historical RE continuity evidence only, with runtime, rebuild, storage, payload, and release non-claims preserved.",
+  "currentFocus": "Static RE/Ghidra closure remains unchanged; the latest chief epic source wave is accepted and pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60, the closeout continuation integrated PatchBench/WinUI/Lore work, and loop automations were stopped. The source-only internal tooling vocabulary map remains context-only clean-room planning input, and the earlier failed-wave rescue at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remains historical RE continuity evidence only, with runtime, rebuild, storage, payload, and release non-claims preserved.",
+  "campaignCloseout": {
+    "status": "loop-stopped",
+    "summary": "Known standing-loop automations were deleted during closeout. No recurring continuation is authorized from this state.",
+    "nonClaims": [
+      "No Ghidra mutation",
+      "No storage deletion",
+      "No runtime proof",
+      "No release publication"
+    ]
+  },
   "staticClosure": {
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
@@ -50,7 +60,8 @@
     "deletionPerformed": false,
     "authorizedReclaimedGiB": 0,
     "actualReclaimedGiB": 0,
-    "futureReviewBands": "Medium and low values are non-authorized logical review ceilings only, not reclaimable storage, candidate pools, unique physical-size estimates, urgency signals, or deletion budgets."
+    "futureReviewBands": "Medium and low values are non-authorized logical review ceilings only, not reclaimable storage, candidate pools, unique physical-size estimates, urgency signals, or deletion budgets.",
+    "latestCampaignReports": "Recent storage/Ghidra report-only lanes retained all classified material, reclaimed 0 bytes, performed no mutation, and found no deletion-safe source/proof candidate. Live Ghidra endpoint review was unavailable, so the sentinel used tracked static evidence only."
   },
   "runtimeProofBoundary": {
     "musicAudibleOutputProof": false,
