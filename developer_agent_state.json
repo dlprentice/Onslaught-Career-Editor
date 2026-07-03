@@ -93,9 +93,12 @@
     },
     "latestStorageSentinel": {
       "date": "2026-07-03",
+      "lastRunLocal": "2026-07-03 07:21 -04:00",
       "mode": "read-only/no-delete",
-      "summary": "Onslaught Storage/Ghidra Sentinel inventoried repo overlays, source scratch, external Ghidra backup/proof/archive roots, and before/after free space. No cleanup was performed.",
+      "summary": "Onslaught Storage/Ghidra Sentinel reran bounded inventory of repo overlays, source scratch, external Ghidra backup/proof/archive roots, and before/after free space. No cleanup was performed.",
       "retainedEvidence": "External Ghidra backups, runtime proof archives, source-scratch archives, local ROM/input payloads, copied-game mirror material, and generated proof reports remain retained.",
+      "currentAuthorizedReclaimGiB": 0.0,
+      "inventorySummary": "Runtime proof archives and external Ghidra backups remain the dominant footprints; source-scratch archives, repo generated proof reports, local ROM/input payloads, and copied-game mirror material remain retained review pools.",
       "blockers": [
         "No candidate-specific cleanup manifest with retained replacement/summary was found.",
         "Current state records zero high-confidence deletion candidates and no deletion authority for Ghidra/proof/runtime state.",
