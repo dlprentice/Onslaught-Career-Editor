@@ -65,7 +65,14 @@
     "authorizedReclaimedGiB": 0,
     "actualReclaimedGiB": 0,
     "futureReviewBands": "Medium and low values are non-authorized logical review ceilings only, not reclaimable storage, candidate pools, unique physical-size estimates, urgency signals, or deletion budgets.",
-    "latestCampaignReports": "Recent storage/Ghidra report-only lanes retained all classified material, reclaimed 0 bytes, performed no mutation, and found no deletion-safe source/proof candidate. Live Ghidra endpoint review was unavailable, so the sentinel used tracked static evidence only."
+    "latestCampaignReports": "Recent storage/Ghidra report-only lanes retained all classified material, reclaimed 0 bytes, performed no mutation, and found no deletion-safe source/proof candidate. Live Ghidra endpoint review was unavailable, so the sentinel used tracked static evidence only.",
+    "latestSentinelRun": {
+      "date": "2026-07-03",
+      "inventorySummary": "Repo-local non-junction overlays/scratch measured about 27.4 GiB; external proof archive about 267.15 GiB; external Ghidra backups about 142.29 GiB plus small pre-cleanup backups; external source archive about 9.78 GiB.",
+      "deletionCandidates": "High-confidence deletion candidates: 0. Review-only candidates are generated ZIP probe extracts and local proof build outputs, but they are blocked by current evidence and acceptance status.",
+      "freeSpaceBeforeAfter": "No cleanup; free space unchanged within measurement precision: C 258.13 GiB, D 398.24 GiB, F 118.85 GiB, G 504.36 GiB, H 215.84 GiB.",
+      "blockers": "Deletion requires a candidate-specific manifest, retained replacement or summary, proof that the item is not current evidence, dry-run/review acceptance, and explicit cleanup authority."
+    }
   },
   "runtimeProofBoundary": {
     "musicAudibleOutputProof": false,

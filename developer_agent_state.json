@@ -90,6 +90,17 @@
       "hostJoinEnablement": false,
       "releasePublication": false,
       "storageDeletion": false
+    },
+    "latestStorageSentinel": {
+      "date": "2026-07-03",
+      "mode": "read-only/no-delete",
+      "summary": "Onslaught Storage/Ghidra Sentinel inventoried repo overlays, source scratch, external Ghidra backup/proof/archive roots, and before/after free space. No cleanup was performed.",
+      "retainedEvidence": "External Ghidra backups, runtime proof archives, source-scratch archives, local ROM/input payloads, copied-game mirror material, and generated proof reports remain retained.",
+      "blockers": [
+        "No candidate-specific cleanup manifest with retained replacement/summary was found.",
+        "Current state records zero high-confidence deletion candidates and no deletion authority for Ghidra/proof/runtime state.",
+        "Generated ZIP/proof outputs still overlap accepted or unclaimed evidence and need acceptance-specific review before pruning."
+      ]
     }
   },
   "validation": {
