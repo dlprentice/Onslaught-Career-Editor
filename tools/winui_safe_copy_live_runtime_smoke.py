@@ -24,9 +24,10 @@ EXTERNAL_ARTIFACT_ROOT_ARM_PHRASE = "ALLOW EXTERNAL LIVE SMOKE ARTIFACT ROOT"
 EXTERNAL_PROFILES_ROOT_ARM_PHRASE = "ALLOW EXTERNAL LIVE SMOKE PROFILES ROOT"
 ARTIFACT_BASE_ENV = "ONSLAUGHT_LIVE_RUNTIME_ARTIFACT_BASE"
 ARTIFACT_BASE_ARM_ENV = "ONSLAUGHT_LIVE_RUNTIME_ARTIFACT_BASE_ARM"
-# Env-selected default artifact roots are intentionally code-pinned. Other
-# one-off external roots must use --artifact-root plus the explicit CLI arm.
-APPROVED_EXTERNAL_ARTIFACT_BASE_PARENTS = (Path(r"G:\OnslaughtRuntimeProofArchive"),)
+APPROVED_ARTIFACT_BASE_PARENTS_ENV = "ONSLAUGHT_LIVE_RUNTIME_APPROVED_ARTIFACT_BASE_PARENTS"
+# Env-selected default artifact roots are intentionally locally configured.
+# Other one-off external roots must use --artifact-root plus the explicit CLI arm.
+APPROVED_EXTERNAL_ARTIFACT_BASE_PARENTS: tuple[Path, ...] = ()
 CDB_OBSERVER_ARM_PHRASE = "ATTACH CDB TO SAFE COPY BEA"
 RUNNER_MARKER = ".winui-safe-copy-live-runtime-runner"
 REPARSE_POINT_FLAG = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
@@ -1456,8 +1457,17 @@ def is_same_or_under(path: Path, root: Path) -> bool:
     return resolved_path == resolved_root or resolved_root in resolved_path.parents
 
 
+def configured_approved_external_artifact_base_parents() -> tuple[Path, ...]:
+    configured = tuple(
+        Path(value.strip().strip('"'))
+        for value in os.environ.get(APPROVED_ARTIFACT_BASE_PARENTS_ENV, "").split(os.pathsep)
+        if value.strip()
+    )
+    return APPROVED_EXTERNAL_ARTIFACT_BASE_PARENTS + configured
+
+
 def is_approved_external_artifact_parent(parent: Path) -> bool:
-    return any(is_same_or_under(parent, approved) for approved in APPROVED_EXTERNAL_ARTIFACT_BASE_PARENTS)
+    return any(is_same_or_under(parent, approved) for approved in configured_approved_external_artifact_base_parents())
 
 
 def paths_overlap(left: Path, right: Path) -> bool:
@@ -1665,9 +1675,10 @@ def main() -> int:
     if env_external_artifact_armed:
         artifact_parent = artifact_parent_raw.resolve()
         if not is_approved_external_artifact_parent(artifact_parent):
-            approved_roots = ", ".join(str(parent) for parent in APPROVED_EXTERNAL_ARTIFACT_BASE_PARENTS)
+            approved_roots = configured_approved_external_artifact_base_parents()
+            approved_roots_display = ", ".join(str(parent) for parent in approved_roots) or f"none configured via {APPROVED_ARTIFACT_BASE_PARENTS_ENV}"
             print(
-                f"Refusing {ARTIFACT_BASE_ENV} outside approved private archive parent(s): {approved_roots}. Use explicit --artifact-root with --arm-external-artifact-root for other one-off roots.",
+                f"Refusing {ARTIFACT_BASE_ENV} outside configured approved private artifact parent(s): {approved_roots_display}. Use explicit --artifact-root with --arm-external-artifact-root for other one-off roots.",
                 file=sys.stderr,
             )
             return 2

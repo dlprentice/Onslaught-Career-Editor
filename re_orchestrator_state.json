@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-03",
-  "currentFocus": "Static RE/Ghidra closure remains unchanged. Current source-safe standing-wave work replayed the accepted original-system vocabulary map checker onto the storage-sentinel-refreshed origin/main tip with canonical/Lore parity, tracked-Markdown link validation, overclaim guards, and preserved runtime, rebuild, storage, payload, Ghidra, and release non-claims.",
+  "currentFocus": "Static RE/Ghidra closure remains unchanged. Current source-safe standing-wave work replayed the accepted original-system vocabulary map checker onto the storage-sentinel-refreshed origin/main tip with canonical/Lore parity, tracked-Markdown link validation, overclaim guards, and preserved runtime, rebuild, payload, Ghidra, and release non-claims. On 2026-07-03, user-authorized storage cleanup created a verified/read-back live-project Ghidra backup under ignored local storage, removed legacy external Ghidra/source/proof archive roots, and intensified recurring bounded RE automation cadence.",
   "campaignPosture": {
     "status": "restored-wave-accepted-remediated",
     "summary": "The prior closeout recorded deleted standing-loop automations. That stop posture is superseded by the 2026-07-02 user request restoring automations. The first restored wave was integrated and pushed at 898e583efdff86847c0a55dca15f2ac088e43fc1; read-only acceptance then required sanitizing exact maintainer-local Ghidra project/backup paths from current tracked runbook wording.",
@@ -10,7 +10,7 @@
     ],
     "nonClaims": [
       "No Ghidra mutation",
-      "No storage deletion",
+      "2026-07-03 storage cleanup performed under explicit user direction",
       "No runtime proof",
       "No release publication"
     ]
@@ -60,19 +60,19 @@
     "assetLibrary": "Asset Library source tests guard passive path summary and polite live-region scope, not runtime UIA/screen-reader behavior."
   },
   "storageRetention": {
-    "mode": "read-only/no-delete",
-    "highConfidenceDeletionCandidates": 0,
-    "deletionPerformed": false,
-    "authorizedReclaimedGiB": 0,
-    "actualReclaimedGiB": 0,
+    "mode": "user-authorized-cleanup-complete",
+    "highConfidenceDeletionCandidates": 3,
+    "deletionPerformed": true,
+    "authorizedReclaimedGiB": 419.61,
+    "actualReclaimedGiB": 419.61,
     "futureReviewBands": "Medium and low values are non-authorized logical review ceilings only, not reclaimable storage, candidate pools, unique physical-size estimates, urgency signals, or deletion budgets.",
-    "latestCampaignReports": "Recent storage/Ghidra report-only lanes retained all classified material, reclaimed 0 bytes, performed no mutation, and found no deletion-safe source/proof candidate. Live Ghidra endpoint review was unavailable, so the sentinel used tracked static evidence only.",
+    "latestCampaignReports": "Earlier storage/Ghidra report-only lanes retained all classified material. On 2026-07-03, user explicitly authorized moving future backups/proofs to the ignored removable-root posture, taking a fresh verified/read-back live-project Ghidra backup, deleting legacy external Ghidra/source/proof archive roots, and clearing superseded removable-root scratch.",
     "latestSentinelRun": {
       "date": "2026-07-03",
-      "inventorySummary": "Repo-local non-junction overlays/scratch measured about 27.4 GiB; external proof archive about 267.15 GiB; external Ghidra backups about 142.29 GiB plus small pre-cleanup backups; external source archive about 9.78 GiB.",
-      "deletionCandidates": "High-confidence deletion candidates: 0. Review-only candidates are generated ZIP probe extracts and local proof build outputs, but they are blocked by current evidence and acceptance status.",
-      "freeSpaceBeforeAfter": "No cleanup; free space unchanged within measurement precision: C 258.13 GiB, D 398.24 GiB, F 118.85 GiB, G 504.36 GiB, H 215.84 GiB.",
-      "blockers": "Deletion requires a candidate-specific manifest, retained replacement or summary, proof that the item is not current evidence, dry-run/review acceptance, and explicit cleanup authority."
+      "inventorySummary": "Legacy external Ghidra backups, source-scratch archive, and runtime proof archive were deleted after local manifests. Removable scratch retains the fresh verified/read-back live-project Ghidra backup id BEA_20260703-152228Z_live_project_backup_verified plus ignored local cleanup manifests/policy.",
+      "deletionCandidates": "Completed: legacy external Ghidra backup root, old source-scratch/public-candidate archive root, legacy raw WinUI safe-copy runtime proof archive root, and superseded removable-root pre-cleanup/scratch folders.",
+      "freeSpaceBeforeAfter": "After cleanup: external archive drive free about 928.14 GiB and removable scratch free about 119.07 GiB. Reclaimed storage recorded at about 419.61 GiB across deleted legacy roots and superseded scratch.",
+      "blockers": "Raw historical runtime proof bundles are intentionally no longer retained. Future proof audits must rely on tracked summaries/validators/recreation steps or regenerate bounded temporary proof output. Future destructive cleanup still requires candidate-specific local manifests and retained replacement/summary decisions."
     }
   },
   "runtimeProofBoundary": {
@@ -97,8 +97,8 @@
     "reIndex": "reverse-engineering/RE-INDEX.md"
   },
   "validation": {
-    "stateRefresh": "Source-safe vocabulary checker reconciliation state refresh only; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, original-BEA mutation, or storage deletion.",
-    "latestIntegration": "Current source-safe vocabulary-map checker reconciliation replayed accepted worker commit f1c98fa423a787cb2f3160b7c046e912aa9030f9 onto the storage-sentinel-refreshed origin/main tip as 30fc408f. The prior accepted wave passed root/source consult, adversarial safety consult, active-wave consult, W1 implementation, spec re-review, and code-quality re-review after the tracked-Markdown link guard fix. Reconciliation validation passed py -3 tools\\original_system_internal_tooling_vocabulary_map_probe.py --self-test, py -3 tools\\original_system_internal_tooling_vocabulary_map_probe.py --check, npm run test:original-system-internal-tooling-vocabulary-map, git diff --check, state JSON parse, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene, npm run test:hard-payload-safety, and npm run test:public-allowlist. Earlier restored-wave integration brought in accepted worker commits for restored-loop batons, Wave1200 public-source accounting support, and docsync mirror reconciliation. Acceptance remediation sanitized exact maintainer-local Ghidra project/backup path wording from current tracked runbook surfaces and passed diff whitespace, state JSON parse, scoped current-runbook/state local-path scan, docsync, docs commands, Markdown links, Wave1200/static-accounting/progress gates, repo hygiene, hard-payload safety, and public allowlist. Earlier source-ref evidence at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60 and rescue closeout evidence at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remain historical and do not imply fresh Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, original-BEA mutation, or storage deletion."
+    "stateRefresh": "Source-safe vocabulary checker reconciliation plus 2026-07-03 storage/automation state refresh; storage cleanup occurred under explicit user direction; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, or original-BEA mutation occurred.",
+    "latestIntegration": "Current source-safe vocabulary-map checker reconciliation replayed accepted worker commit f1c98fa423a787cb2f3160b7c046e912aa9030f9 onto the storage-sentinel-refreshed origin/main tip as 30fc408f. The prior accepted wave passed root/source consult, adversarial safety consult, active-wave consult, W1 implementation, spec re-review, and code-quality re-review after the tracked-Markdown link guard fix. Reconciliation validation passed py -3 tools\\original_system_internal_tooling_vocabulary_map_probe.py --self-test, py -3 tools\\original_system_internal_tooling_vocabulary_map_probe.py --check, npm run test:original-system-internal-tooling-vocabulary-map, git diff --check, state JSON parse, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene, npm run test:hard-payload-safety, and npm run test:public-allowlist. Earlier restored-wave integration brought in accepted worker commits for restored-loop batons, Wave1200 public-source accounting support, and docsync mirror reconciliation. Acceptance remediation sanitized exact maintainer-local Ghidra project/backup path wording from current tracked runbook surfaces and passed diff whitespace, state JSON parse, scoped current-runbook/state local-path scan, docsync, docs commands, Markdown links, Wave1200/static-accounting/progress gates, repo hygiene, hard-payload safety, and public allowlist. Earlier source-ref evidence at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60 and rescue closeout evidence at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remain historical and do not imply fresh Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, or original-BEA mutation. The 2026-07-03 storage/automation closeout passed state JSON parse, focused live-runtime helper unit tests, docs commands, Markdown links, repo hygiene, hard-payload safety, and public allowlist after final scoped diff review."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -109,11 +109,12 @@
     "Optional representative Media smoke audio-row selection remains unclaimed unless separately authorized and proven."
   ],
   "nextSteps": [
+    "Verify git refs after this storage/automation closeout is pushed before launching another slice.",
     "Keep static RE mutation paused unless a product/runtime contradiction points back to a specific RE issue.",
     "Treat tmm-arm4-readiness-gate as proof-plan/checker support only; do not claim readiness-gate execution, runtime proof, or rebuild parity.",
     "Use PatchBench and Asset Library source tests as bounded source guards only; do not claim live runtime UI/accessibility proof from them.",
     "Do not run live BEA/CDB/audio proof without explicit runtime-proof authority, leases, private proof-root readiness, arm phrase handling, and cleanup validation.",
-    "Do not delete Ghidra/proof material without a future candidate-specific manifest, retained alternative, dry-run, consults, authority, and acceptance.",
+    "Do not delete future Ghidra/proof material without a candidate-specific local manifest, retained alternative or structured summary, consults where warranted, explicit authority, and acceptance.",
     "Use the source-only internal tooling vocabulary map only to choose one bounded future question with a named higher-authority proof class; keep the new checker as a public-source boundary guard, not proof authority."
   ]
 }

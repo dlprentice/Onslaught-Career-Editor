@@ -162,8 +162,9 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn('profiles_root_raw = Path(args.profiles_root) if args.profiles_root else artifact_root_raw / "GameProfiles"', text)
         self.assertIn("and not explicit_artifact_root", text)
         self.assertIn("artifact_base_arm_env == EXTERNAL_ARTIFACT_ROOT_ARM_PHRASE", text)
-        self.assertIn('APPROVED_EXTERNAL_ARTIFACT_BASE_PARENTS = (Path(r"G:\\OnslaughtRuntimeProofArchive"),)', text)
-        self.assertIn("outside approved private archive parent", text)
+        self.assertIn('APPROVED_ARTIFACT_BASE_PARENTS_ENV = "ONSLAUGHT_LIVE_RUNTIME_APPROVED_ARTIFACT_BASE_PARENTS"', text)
+        self.assertIn("configured_approved_external_artifact_base_parents", text)
+        self.assertIn("outside configured approved private artifact parent", text)
         self.assertIn("Refusing external artifact root without --arm-external-artifact-root", text)
         self.assertIn("ONSLAUGHT_LIVE_RUNTIME_ARTIFACT_BASE_ARM", text)
 
@@ -183,28 +184,28 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
             self.assertFalse(env_armed)
             self.assertEqual(artifact_parent, module.ROOT / "subagents" / "winui-safe-copy-live-runtime")
 
-        with patch.dict("os.environ", {module.ARTIFACT_BASE_ENV: r"G:\OnslaughtRuntimeProofArchive\winui-safe-copy-live-runtime"}, clear=True):
+        with patch.dict("os.environ", {module.ARTIFACT_BASE_ENV: r"Z:\ConfiguredScratch\winui-safe-copy-live-runtime"}, clear=True):
             artifact_root, profiles_root, armed, env_armed, artifact_parent = module.select_artifact_root_inputs(args, "stamp")
-            self.assertEqual(artifact_root, Path(r"G:\OnslaughtRuntimeProofArchive\winui-safe-copy-live-runtime") / "stamp")
+            self.assertEqual(artifact_root, Path(r"Z:\ConfiguredScratch\winui-safe-copy-live-runtime") / "stamp")
             self.assertEqual(profiles_root, artifact_root / "GameProfiles")
             self.assertFalse(armed)
             self.assertFalse(env_armed)
-            self.assertEqual(artifact_parent, Path(r"G:\OnslaughtRuntimeProofArchive\winui-safe-copy-live-runtime"))
+            self.assertEqual(artifact_parent, Path(r"Z:\ConfiguredScratch\winui-safe-copy-live-runtime"))
 
         with patch.dict(
             "os.environ",
             {
-                module.ARTIFACT_BASE_ENV: r"G:\OnslaughtRuntimeProofArchive\winui-safe-copy-live-runtime",
+                module.ARTIFACT_BASE_ENV: r"Z:\ConfiguredScratch\winui-safe-copy-live-runtime",
                 module.ARTIFACT_BASE_ARM_ENV: module.EXTERNAL_ARTIFACT_ROOT_ARM_PHRASE,
             },
             clear=True,
         ):
             artifact_root, profiles_root, armed, env_armed, artifact_parent = module.select_artifact_root_inputs(args, "stamp")
-            self.assertEqual(artifact_root, Path(r"G:\OnslaughtRuntimeProofArchive\winui-safe-copy-live-runtime") / "stamp")
+            self.assertEqual(artifact_root, Path(r"Z:\ConfiguredScratch\winui-safe-copy-live-runtime") / "stamp")
             self.assertEqual(profiles_root, artifact_root / "GameProfiles")
             self.assertTrue(armed)
             self.assertTrue(env_armed)
-            self.assertEqual(artifact_parent, Path(r"G:\OnslaughtRuntimeProofArchive\winui-safe-copy-live-runtime"))
+            self.assertEqual(artifact_parent, Path(r"Z:\ConfiguredScratch\winui-safe-copy-live-runtime"))
 
     def test_env_artifact_base_arm_does_not_authorize_explicit_external_artifact_root(self) -> None:
         module = self.live_smoke_module()
@@ -217,7 +218,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         with patch.dict(
             "os.environ",
             {
-                module.ARTIFACT_BASE_ENV: r"G:\OnslaughtRuntimeProofArchive\winui-safe-copy-live-runtime",
+                module.ARTIFACT_BASE_ENV: r"Z:\ConfiguredScratch\winui-safe-copy-live-runtime",
                 module.ARTIFACT_BASE_ARM_ENV: module.EXTERNAL_ARTIFACT_ROOT_ARM_PHRASE,
             },
             clear=True,
@@ -227,7 +228,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
             self.assertEqual(profiles_root, artifact_root / "GameProfiles")
             self.assertFalse(armed)
             self.assertFalse(env_armed)
-            self.assertEqual(artifact_parent, Path(r"G:\OnslaughtRuntimeProofArchive\winui-safe-copy-live-runtime"))
+            self.assertEqual(artifact_parent, Path(r"Z:\ConfiguredScratch\winui-safe-copy-live-runtime"))
 
         args.arm_external_artifact_root = module.EXTERNAL_ARTIFACT_ROOT_ARM_PHRASE
         with patch.dict("os.environ", {}, clear=True):
@@ -241,21 +242,29 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
     def test_approved_external_artifact_parent_rejects_unapproved_roots(self) -> None:
         module = self.live_smoke_module()
 
-        self.assertTrue(
-            module.is_approved_external_artifact_parent(
-                Path(r"G:\OnslaughtRuntimeProofArchive\winui-safe-copy-live-runtime")
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertFalse(
+                module.is_approved_external_artifact_parent(
+                    Path(r"G:\OnslaughtRuntimeProofArchive\winui-safe-copy-live-runtime")
+                )
             )
-        )
-        self.assertTrue(
-            module.is_approved_external_artifact_parent(
-                Path(r"G:\OnslaughtRuntimeProofArchive\winui-safe-copy-live-runtime\run")
+
+        with patch.dict("os.environ", {module.APPROVED_ARTIFACT_BASE_PARENTS_ENV: r"Z:\ConfiguredScratch"}, clear=True):
+            self.assertTrue(
+                module.is_approved_external_artifact_parent(
+                    Path(r"Z:\ConfiguredScratch\winui-safe-copy-live-runtime")
+                )
             )
-        )
-        self.assertFalse(
-            module.is_approved_external_artifact_parent(
-                Path(r"D:\SomeOtherRuntimeRoot\winui-safe-copy-live-runtime")
+            self.assertTrue(
+                module.is_approved_external_artifact_parent(
+                    Path(r"Z:\ConfiguredScratch\winui-safe-copy-live-runtime\run")
+                )
             )
-        )
+            self.assertFalse(
+                module.is_approved_external_artifact_parent(
+                    Path(r"D:\SomeOtherRuntimeRoot\winui-safe-copy-live-runtime")
+                )
+            )
 
     def test_generated_runner_materializes_control_options_with_narrow_claims(self) -> None:
         text = self.script_text()

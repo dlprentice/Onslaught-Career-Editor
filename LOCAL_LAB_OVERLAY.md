@@ -108,6 +108,15 @@ can be used for temporary worker scratch when mounted and writable. They must
 not become the only durable copy of source, current proof evidence, Ghidra
 backups, release assets, or other valuable project material.
 
+The active maintainer-local storage posture is to route new backup-producing
+Ghidra work and bulky temporary proof outputs to a locally configured ignored
+scratch/backup root, not to hard-coded legacy archive roots. Keep exact drive
+letters, volume identity, per-run paths, cleanup manifests, and deletion
+decisions in ignored local policy notes or maintainer-private manifests.
+Tracked docs and tools should record only sanitized conclusions, proof IDs,
+reproduction steps, ledger entries, and configurable environment-variable
+names.
+
 Validation and review workers should avoid creating bulky durable outputs
 unless they are necessary evidence. Clean reproducible `bin/`, `obj/`,
 `TestResults/`, package-probe extracts, temporary ZIPs, local package caches,
