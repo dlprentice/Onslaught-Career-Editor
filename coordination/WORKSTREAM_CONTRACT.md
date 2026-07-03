@@ -1,7 +1,7 @@
 # Workstream Contract
 
 Status: active
-Last updated: 2026-06-26
+Last updated: 2026-07-03
 
 This contract applies when a coordinator assigns independent workers,
 reviewers, an integration owner, and an acceptance reviewer across one campaign.
@@ -57,6 +57,13 @@ Each write worker receives a self-contained assignment that names:
 - required consult/review, or explicit none with rationale
 - report paths and commit authority
 - stop conditions and integration dependencies
+- terminal record: exactly one of `ADVANCEMENT` or `BLOCKED_*`
+- acceptance owner or review lane separate from the producing worker
+
+For automation, storage, Ghidra/headless, proof-retention, or campaign-posture
+work, the assignment must also cite
+[AUTOMATION_STORAGE_GHIDRA_POSTURE.md](AUTOMATION_STORAGE_GHIDRA_POSTURE.md)
+and say whether the slice is real project advancement or hygiene-only.
 
 The worker parent thread is the writer. Subagents advise unless explicitly
 assigned an isolated non-overlapping write task.
@@ -77,6 +84,11 @@ Non-integration workers may recommend these updates in local reports, but do
 not write or commit them. Only the integration owner writes canonical state for
 the campaign wave.
 
+Recurring automation writers must re-read canonical state and leases immediately
+before editing or committing if another active lane may have changed them. If
+the state epoch, base commit, lease owner, or active slice changed since the
+assignment was read, stop and route to the coordinator or integration owner.
+
 ## Stop Conditions
 
 Stop and escalate when:
@@ -92,3 +104,45 @@ Stop and escalate when:
 - a claim would exceed evidence, especially around online readiness, runtime
   audio, gameplay parity, release packaging, or static RE proof
 - validation cannot be run and no bounded fallback evidence is available
+- a lane cannot produce an accepted `ADVANCEMENT` or well-formed `BLOCKED_*`
+  closeout record
+- required consults are unavailable for privileged, release, runtime, live
+  Ghidra mutation, destructive cleanup, account/provider, or paid-spend work
+
+## Advancement Boundary
+
+A worker cycle must end in exactly one of `ADVANCEMENT` or a well-formed
+`BLOCKED_*` record. A worker may report real project advancement only when a
+bounded source, docs, checker, proof-plan, policy, or state change has been
+accepted under a named evidence class. Hygiene-only work such as status checks,
+storage inventory, re-reading, mirror refresh, or passing validation gates is
+useful but must be labeled as hygiene-only unless it removes a named blocker
+and names the next advancement slice.
+
+Hygiene-only slices may run only to clear a named blocker or preserve an active
+claim boundary. They must name the blocked lane or next executable advancement
+slice they unblock. The producing lane cannot self-accept its own advancement
+claim.
+
+A `BLOCKED_*` record must include `code`, `evidence`, `prior_attempt`, `owner`,
+`next_action`, `retry_after` no later than 24 hours, and `duplicate_check`.
+Unresolved adversarial blocker findings also force a blocked terminal record
+unless the coordinator or integration owner records an explicit override.
+
+## Nontrivial Work And Authority
+
+Treat product, source, test, tooling, docs, state, or policy work beyond a
+typo-only fix as nontrivial. RE maps, Ghidra/headless, proof, storage, release,
+runtime, account, spend, disputed, broad, or high-collision work is always
+nontrivial.
+
+Nontrivial work requires Codex normal/adversarial, Cursor Agent
+`composer-2.5-fast` normal/adversarial, and Grok Build normal/adversarial
+consult evidence unless a lane is unavailable with exact reason and Codex-root
+verification or coordinator/integration-owner override.
+
+Runtime proof, live Ghidra mutation, destructive cleanup, release,
+external-account action, and spend require a structured baton authority naming
+the action family, allowed and forbidden commands, leases, proof/storage root
+policy, validation gates, cleanup/rollback, expiration, and spend cap when
+applicable.

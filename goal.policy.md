@@ -1,7 +1,7 @@
 # Goal Policy
 
 Status: active public-primary charter
-Last updated: 2026-06-26
+Last updated: 2026-07-03
 
 This file is the durable charter for repo `/goal` loops. It should change
 rarely. The mutable current slice lives in `goal.md`.
@@ -45,11 +45,24 @@ proof summaries, and reproducible checkers instead of shipping the payloads.
   frames, caches, and test saves.
 - Codex root remains final owner of edits, validation, state updates, commits,
   pushes, publication, and acceptance.
-- Use bounded normal/adversarial consults for meaningful planning, UI/UX, copy,
-  release readiness, repo tidiness, collaboration readiness, and broad/risky
-  work when safe and available. If a lane is unavailable, usage-limited, unsafe
-  to brief, or disproportionate for tiny/urgent work, record that and continue
-  with Codex-root verification.
+- Every nontrivial operation requires bounded consult evidence before terminal
+  success: Codex normal review, Codex adversarial review, Cursor Agent
+  `composer-2.5-fast` normal/adversarial review, and Grok Build
+  normal/adversarial review. Nontrivial means any product behavior, shared
+  AppCore/WinUI/CLI/tooling contract, package script, coordination policy,
+  canonical state, release posture, runtime/RE proof claim, storage/Ghidra
+  posture, cross-file docs truth, disputed scope, or work beyond typo/format
+  cleanup. If a required lane is unavailable, usage-limited, unsafe to brief,
+  or locally failing, record `CONSULT_UNAVAILABLE:<lane>:<reason>` plus the
+  exact tool/command reason. Continue only for non-authority, non-release,
+  non-runtime, non-destructive work after Codex-root verification or an
+  explicit coordinator/integration-owner override.
+- Runtime proof, live Ghidra mutation/read-back, destructive cleanup,
+  release/publication, account/provider action, and paid spend require explicit
+  baton authority naming the action family, allowed commands, forbidden
+  commands, resource leases, proof/storage root policy, validation gates,
+  cleanup/rollback, expiration, and maximum spend if applicable. Absence of any
+  field means no authority.
 - Coordinated multi-thread campaigns use the additional contract in
   [coordination/README.md](coordination/README.md): the coordinator is a control
   plane, workers own only leased scopes in isolated worktrees, reviewers and
@@ -81,6 +94,25 @@ Use `goal.md` as the current mutable baton:
 6. Update docs/state/evidence/accounting.
 7. Rewrite `goal.md` to the next safe executable slice after a green closeout.
 8. Commit/push the green wave when authorized.
+
+Every automation, worker, or `/goal` cycle must close with exactly one primary
+deliverable:
+
+- `ADVANCEMENT`: an accepted bounded source, docs, checker, proof-plan, policy,
+  state, RE map, Ghidra/static-analysis, integration, or push artifact under a
+  named evidence class. Acceptance must come from a different lane, integration
+  owner, acceptance owner, or human gate; the producing lane cannot self-accept
+  terminal success.
+- `BLOCKED_<root-cause-slug>_<yyyymmdd-hhmm>`: a well-formed blocker record
+  with `code`, `evidence`, `prior_attempt`, `owner`, `next_action`,
+  `retry_after` no later than 24 hours, and `duplicate_check`. Repeating the
+  same blocker without a new attempt or owner escalation is not progress.
+
+Hygiene-only activity such as status checks, re-reading files, mirror refresh,
+or validation gates does not count as advancement unless it removes a named
+blocker and records the next real advancement slice it unblocked. If no concrete
+advancement is available, record a well-formed blocker instead of widening
+scope or repeating status work.
 
 Do not mark a broad goal complete unless the actual charter requirements are
 proven complete. If the current work is only a slice, close the slice and
