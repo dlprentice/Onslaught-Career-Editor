@@ -1,9 +1,13 @@
 {
-  "lastUpdated": "2026-07-02",
-  "currentFocus": "Static RE/Ghidra closure remains unchanged; the latest chief epic source wave is accepted and pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60, the closeout continuation integrated PatchBench/WinUI/Lore work, and loop automations were stopped. The source-only internal tooling vocabulary map remains context-only clean-room planning input, and the earlier failed-wave rescue at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remains historical RE continuity evidence only, with runtime, rebuild, storage, payload, and release non-claims preserved.",
-  "campaignCloseout": {
-    "status": "loop-stopped",
-    "summary": "Known standing-loop automations were deleted during closeout. No recurring continuation is authorized from this state.",
+  "lastUpdated": "2026-07-03",
+  "currentFocus": "Static RE/Ghidra closure remains unchanged; standing-loop automations were restored by user request on 2026-07-02 and the first restored wave integrated the Static Wave1200 public-source accounting fix/boundary plus docsync mirror reconciliation. Runtime, rebuild, storage, payload, and release non-claims remain preserved.",
+  "campaignPosture": {
+    "status": "restored-wave-integrated",
+    "summary": "The prior closeout recorded deleted standing-loop automations. That stop posture is superseded by the 2026-07-02 user request restoring automations. The first restored wave is integrated in source and pending root validation/push.",
+    "integratedRestoredWave": [
+      "Static Wave1200 public-source accounting fix/boundary",
+      "docsync mirror drift reconciliation"
+    ],
     "nonClaims": [
       "No Ghidra mutation",
       "No storage deletion",
@@ -86,7 +90,7 @@
   },
   "validation": {
     "stateRefresh": "Integration state refresh only; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, or original-BEA mutation.",
-    "latestIntegration": "Current source-ref evidence: HEAD, origin/main, and live refs/heads/main matched a9fe757e238a237eac8aa8f7f4e12d1bad57ec60 with divergence 0 0 before the state-only baton update. Earlier rescue closeout evidence at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remains historical and does not imply fresh Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, original-BEA mutation, or storage deletion. The source-only vocabulary map reconciliation is documentation context only and does not change static closure counters."
+    "latestIntegration": "Current restored-wave integration brings in accepted worker commits for restored-loop batons, Wave1200 public-source accounting support, and docsync mirror reconciliation. Earlier source-ref evidence at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60 and rescue closeout evidence at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remain historical and do not imply fresh Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, original-BEA mutation, or storage deletion."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -94,12 +98,10 @@
   },
   "openQuestions": [],
   "blockers": [
-    "Static Wave1200 accounting support-file blocker remains unresolved unless explicitly fixed and rerun.",
-    "Docsync mirror drift remains unresolved unless explicitly fixed and rerun.",
     "Optional representative Media smoke audio-row selection remains unclaimed unless separately authorized and proven."
   ],
   "nextSteps": [
-    "Repair or explicitly bound the Static Wave1200 accounting support-file blocker with the relevant static-accounting gate before claiming health.",
+    "Finish root validation and push verification for the restored-wave integration before launching another slice.",
     "Keep static RE mutation paused unless a product/runtime contradiction points back to a specific RE issue.",
     "Treat tmm-arm4-readiness-gate as proof-plan/checker support only; do not claim readiness-gate execution, runtime proof, or rebuild parity.",
     "Use PatchBench and Asset Library source tests as bounded source guards only; do not claim live runtime UI/accessibility proof from them.",

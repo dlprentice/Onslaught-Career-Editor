@@ -12,7 +12,7 @@ itself is not an Asset Library catalog.
 
 Current extraction workflow: [extraction-pipeline.md](extraction-pipeline.md)
 
-Local overlay rules: [../../LOCAL_LAB_OVERLAY.md](../../LOCAL_LAB_OVERLAY.md)
+Local overlay rules: [LOCAL_LAB_OVERLAY.md](/LOCAL_LAB_OVERLAY.md)
 
 The public repo tracks tools, docs, contracts, and public-safe summaries. It does
 not track extracted game assets, copied executables, private proof captures, or

@@ -1,17 +1,27 @@
 # Active Goal Slice
 
-Status: closed; automations stopped; PatchBench, WinUI UX, and Lore integrated
-Last updated: 2026-07-02
+Status: active; automations restored; Wave1200 and docsync closeout integrated
+Last updated: 2026-07-03
 Policy: `goal.policy.md`
 
 ## Current Slice
 
-The chief epic rebuild/Ghidra/Lore/WinUI wave has been integrated, accepted, and
-pushed from the accepted worker source commits. A final closeout continuation
-then integrated the accepted PatchBench receipt-helper wiring, static WinUI
-About game-install boundary copy, and Lore ZIP/package parity hardening. The
-standing-loop automations were deleted, and no new recurring loop is authorized.
-Pre-state-update source-ref proof showed the earlier wave tip
+As of the restored 2026-07-02 standing-loop request, the first active wave has
+been integrated from accepted worker commits. This supersedes the prior closeout
+stop posture as current operational truth; the closeout details below remain
+historical evidence and non-claim context only. The Wave1200 static-accounting
+support-file blocker is fixed for the tracked public-source gate and explicitly
+bounded for absent old/private materialized support packets. The docsync mirror
+drift blocker is fixed by refreshing protected mirrors and rerunning docsync.
+
+The previous chief epic rebuild/Ghidra/Lore/WinUI wave was integrated,
+accepted, and pushed from the accepted worker source commits. A final closeout
+continuation then integrated the accepted PatchBench receipt-helper wiring,
+static WinUI About game-install boundary copy, and Lore ZIP/package parity
+hardening. During that prior closeout, standing-loop automations were deleted;
+that stop posture is no longer the current operational state after the
+2026-07-02 user restoration request. Pre-state-update source-ref proof showed
+the earlier wave tip
 `a9fe757e238a237eac8aa8f7f4e12d1bad57ec60` matched `HEAD`, `origin/main`, and
 live remote `refs/heads/main` with divergence `0 0`.
 
@@ -36,6 +46,14 @@ Accepted closeout source commits integrated by cherry-pick:
 - PatchBench receipt helper wiring: `c7d4f2c3425fc22cac5cedf3493d5f9793e7db8e`
 - WinUI About game-install boundary copy: `651c9b0a564f4d6803fac085b2a40d0c8b93bb69`
 - Lore ZIP/package parity hardening: `84a9fd123269a48773a9da60f1f621fd0f52d2d5`
+
+Accepted restored-wave source commits integrated by cherry-pick:
+
+- Restored-loop baton update: `dbafaa078b2470ca5cc5404a4da90d4adc50e217`
+- Static Wave1200 public-source support-file accounting fix/boundary:
+  `a6e80814377fac043aa1d605c0d1dc1a58347654`
+- Dsync mirror drift reconciliation:
+  `37d34b1d`
 
 ## Current Truth
 
@@ -78,6 +96,12 @@ Accepted closeout source commits integrated by cherry-pick:
 - Storage/Ghidra backup details remain local campaign evidence only. Tracked
   docs/state should retain only sanitized conclusions: no deletion in source,
   no live Ghidra mutation, and no raw storage manifests or private paths.
+- Static Wave1200 accounting now runs from tracked public-source accounting
+  evidence instead of import-time reads from absent old support-packet files.
+  This fixes the public-source gate and does not claim fresh Ghidra export TSV,
+  live Ghidra, runtime, rebuild, gameplay, or no-noticeable-difference proof.
+- Dsync mirror drift is reconciled by refreshing the protected `lore-book`
+  mirrors and making the canonical game-assets index link mirror-location-safe.
 
 ## Known Non-Claims
 
@@ -89,10 +113,11 @@ Accepted closeout source commits integrated by cherry-pick:
 - No release publication, signing, installer/MSIX/Store work, GitHub Release
   upload, tag, or announcement.
 - No Ghidra project mutation or fresh decompiler/read-back verification.
-- No static-accounting gate health claim while the Wave1200 support-file
-  blocker remains unresolved.
-- No docsync/mirror health claim while the pre-existing mirror drift remains
-  unresolved or unwaived.
+- No materialized old/private support-packet validation claim for absent
+  Wave911/Wave1108 TSV packets.
+- No fresh Ghidra export, live Ghidra, runtime, rebuild, gameplay, or
+  no-noticeable-difference proof from the Wave1200 public-source accounting
+  fix.
 - No rebuild parity, runtime parity, visual/gameplay parity, or
   no-noticeable-difference proof.
 
@@ -143,16 +168,27 @@ The final closeout Lore integration additionally passed in the root tree:
 - `py -3 tools\winui_zip_package_probe_test.py`
 - `npm run test:appcore`
 
+The restored standing-wave integration additionally passed in worker worktrees
+before root integration:
+
+- restored-loop baton JSON parse, safety scan, `git diff --check`,
+  `npm run test:doc-commands`, and `npm run test:md-links`
+- `npm run test:wave1200-residual-unwind-current-risk-supersession`
+- `npm run test:static-reaudit-accounting-guard`
+- `npm run test:ghidra-static-reaudit-progress`
+- `py -3 tools\docsync_check.py`
+- `npm run test:doc-commands`
+- `npm run test:md-links`
+- `npm run test:repo-hygiene`
+- `npm run test:hard-payload-safety`
+- `npm run test:public-allowlist` after timeout retry where needed
+
 Phase 0 stale-baton correction is state-only. The `a9fe757e238a237eac8aa8f7f4e12d1bad57ec60`
 proof confirms the previous source wave was already pushed and accepted; it is
 not fresh runtime, release, Ghidra, static-accounting, or storage proof.
 
 Known pre-existing or intentionally unclaimed gates:
 
-- Static Wave1200 accounting support-file blocker remains unless explicitly
-  fixed and rerun.
-- `tools/docsync_check.py` mirror drift remains unless explicitly fixed and
-  rerun.
 - `npm run test:winui-zip-release-candidate-probe` remains unclaimed because
   the optional representative Media smoke failed on extracted-app audio row
   selection; the same ZIP probe without optional Media smoke passed.
@@ -187,24 +223,21 @@ Known pre-existing or intentionally unclaimed gates:
 
 ## Next Executable Work
 
-1. Do not continue the standing automation loop without a new explicit request.
-   All known loop automations were deleted during closeout.
-2. Repair or explicitly bound the Static Wave1200 accounting support-file
-   blocker with the relevant static-accounting gate before claiming health.
-3. Reconcile or intentionally document `tools/docsync_check.py` mirror drift
-   before claiming docsync or mirror health.
-4. Decide whether to run the optional representative Media smoke audio-row
+1. Continue the restored standing loop under the 2026-07-02 user request. Pick
+   the next bounded source-safe slice only after this integration is pushed and
+   verified.
+2. Decide whether to run the optional representative Media smoke audio-row
    selection in a separately authorized runtime-proof lane; leave it unclaimed
    otherwise.
-5. Review the accepted PatchBench wiring during future PatchBench work by
+3. Review the accepted PatchBench wiring during future PatchBench work by
    preserving page/AppCore ownership of behavior and keeping Host/Join and
    runtime-proof boundaries unchanged.
-6. Continue Lore with bounded ZIP/package parity hardening only; do not promote
+4. Continue Lore with bounded ZIP/package parity hardening only; do not promote
    it to broad release or traversal-proof claims.
-7. Continue RE/rebuild with public-safe proof-plan/checker work until separate
+5. Continue RE/rebuild with public-safe proof-plan/checker work until separate
    authority grants live Ghidra mutation, runtime proof, private asset reads, or
    importer execution.
-8. Use the internal tooling vocabulary map only to pick one bounded future
+6. Use the internal tooling vocabulary map only to pick one bounded future
    question with an explicit higher-authority proof class.
 
 ## Stop Conditions

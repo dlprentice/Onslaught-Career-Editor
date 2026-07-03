@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-07-02",
-  "currentFocus": "Documentation/state now track the chief epic rebuild/Ghidra/Lore/WinUI integration, source-only internal tooling vocabulary map reconciliation, PatchBench receipt helper wiring, static About game-install boundary copy, Lore ZIP/package parity hardening, and stopped loop automations with runtime/release/payload non-claims and standing debts preserved.",
+  "lastUpdated": "2026-07-03",
+  "currentFocus": "Documentation/state now track that standing-loop automations were restored by user request on 2026-07-02 and the first restored wave integrated Static Wave1200 public-source accounting fix/boundary plus docsync mirror drift reconciliation, with prior integration facts and non-claims preserved.",
   "sourceOfTruth": {
     "activeGoal": "goal.md",
     "policy": "goal.policy.md",
@@ -22,11 +22,12 @@
     "winuiUx": "About page copy now clarifies that the app does not include the game itself and reads the configured retail install as read-only source material when needed. This is static copy/test coverage, not runtime UIA or visual proof.",
     "releaseDocs": "ZIP/readiness documentation changed without release publication, signing, installer, MSIX, Store, upload, tag, or announcement authority.",
     "storageAndGhidra": "Latest report-only storage/Ghidra lanes performed no deletion, no quarantine, no compression, no dedupe, no live Ghidra mutation, and no tracked-source edits. Ghidra live endpoint review was unavailable and the sentinel used tracked static evidence only.",
-    "loopCloseout": "Known standing-loop automations were deleted during closeout: chief thread heartbeat, standing wave launcher, storage/Ghidra sentinel, Ghidra/RE sentinel, and validation/drift sentinel.",
-    "knownGateDebt": "Static Wave1200 support-file and docsync/mirror drift are not claimed healthy unless separately fixed and rerun."
+    "loopRestoration": "The prior closeout recorded deleted standing-loop automations. That stop posture is superseded by the 2026-07-02 user request restoring automations and launching the active wave.",
+    "restoredWaveIntegration": "The first restored wave integrated the restored-loop baton, Static Wave1200 public-source accounting fix/boundary, and docsync mirror drift reconciliation.",
+    "knownGateDebt": "Optional representative Media smoke remains unclaimed; absent old/private materialized Wave911/Wave1108 TSV support packets are explicitly not claimed validated."
   },
   "validation": {
-    "latestIntegration": "Merged-tree docs/repo/public/hard-payload, Lore, WinUI, ZIP-without-optional-Media, and JSON validation passed before the accepted source wave was pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60. The source-only internal tooling vocabulary map reconciliation passed diff whitespace, docs commands, Markdown links, repo hygiene, hard-payload safety, and public allowlist after a timeout retry. The PatchBench/WinUI UX continuation passed diff whitespace, WinUI build, focused PatchBench and About/accessibility tests, patch-engine safety, and WinUI primary-lane validation. The closeout Lore integration passed builder self-test, ZIP probe tests, and full AppCore in the root tree.",
+    "latestIntegration": "Merged-tree docs/repo/public/hard-payload, Lore, WinUI, ZIP-without-optional-Media, and JSON validation passed before the accepted source wave was pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60. The source-only internal tooling vocabulary map reconciliation passed diff whitespace, docs commands, Markdown links, repo hygiene, hard-payload safety, and public allowlist after a timeout retry. The PatchBench/WinUI UX continuation passed diff whitespace, WinUI build, focused PatchBench and About/accessibility tests, patch-engine safety, and WinUI primary-lane validation. The closeout Lore integration passed builder self-test, ZIP probe tests, and full AppCore in the root tree. The restored-loop worker lanes passed baton JSON/safety/docs checks, Wave1200/static-accounting/progress gates, docsync, docs/links, repo hygiene, hard-payload safety, and public allowlist before root integration.",
     "hardPayloadSecurity": "No hard payload, secret, raw local campaign path, storage manifest, private proof path, copied executable, screenshot/frame dump, full Ghidra database, build output, package output, or local runtime cache should be added.",
     "nonMutations": "No installed-game/original BEA.exe, BEA/CDB/audio, live runtime proof, Ghidra mutation, Host/Join enablement, storage deletion, or release/publication mutation is part of this integration."
   },
@@ -36,15 +37,13 @@
   },
   "openQuestions": [],
   "blockers": [
-    "Static Wave1200 accounting support-file blocker remains unresolved unless explicitly fixed and rerun.",
-    "Docsync mirror drift remains unresolved unless explicitly fixed and rerun.",
     "Optional representative Media smoke audio-row selection remains unclaimed unless separately authorized and proven."
   ],
   "nextSteps": [
-    "Do not continue the standing automation loop without a new explicit request.",
+    "Finish root validation and push verification for the restored-wave integration before launching another slice.",
     "Keep tracked summaries sanitized and avoid copying raw campaign reports.",
     "Continue with PatchBench helper wiring only if tests preserve current behavior ownership.",
-    "Carry Lore ZIP/package parity, static Wave1200 support-file repair, and docsync/mirror drift as bounded future work.",
+    "Carry Lore ZIP/package parity and optional representative Media smoke as bounded future work.",
     "Keep the PatchBench receipt helper described as primitive formatting/fail-closed display validation only; do not promote it to AppCore receipt construction ownership.",
     "Use the source-only internal tooling vocabulary map only as a context index for a future bounded proof-plan/checker question."
   ]

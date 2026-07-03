@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-07-02",
-  "currentFocus": "Standing-wave closeout integrated the source-only internal tooling vocabulary map, PatchBench receipt rendering, static About game-install boundary copy, and Lore ZIP/package parity hardening; recurring loop automations were deleted and known debts remain preserved.",
+  "lastUpdated": "2026-07-03",
+  "currentFocus": "Standing loop restored by user request on 2026-07-02; first restored wave integrated the restored-loop baton, Static Wave1200 public-source accounting fix/boundary, and docsync mirror drift reconciliation while prior non-claims remain preserved.",
   "currentTruth": {
     "integrationWave": {
       "status": "accepted-and-pushed",
@@ -26,10 +26,15 @@
         "W13 consult compliance"
       ]
     },
-    "closeout": {
-      "status": "loop-stopped",
-      "summary": "Known standing-loop automations were deleted during closeout. No recurring continuation is authorized from this state.",
-      "automationsDeleted": [
+    "automationPosture": {
+      "status": "restored-wave-integrated",
+      "summary": "The previous closeout recorded deleted standing-loop automations. That stop posture is superseded by the 2026-07-02 user request restoring automations. The first restored wave has been integrated from accepted worker commits.",
+      "integratedRestoredWaveCommits": [
+        "dbafaa078b2470ca5cc5404a4da90d4adc50e217",
+        "a6e80814377fac043aa1d605c0d1dc1a58347654",
+        "37d34b1d"
+      ],
+      "previouslyDeletedAutomations": [
         "chief thread heartbeat",
         "standing wave launcher",
         "storage/Ghidra sentinel",
@@ -65,8 +70,8 @@
       "limits": [
         "The source-only vocabulary map is not readiness-gate execution, command arming, importer execution, private asset reading, generated payload output, runtime proof, rebuild parity, visual/gameplay parity, or no-noticeable-difference proof.",
         "No command arming, importer execution, private asset read, generated payload output, runtime proof, rebuild parity, visual/gameplay parity, or no-noticeable-difference proof.",
-        "Static Wave1200 accounting support-file blocker remains unless fixed and rerun.",
-        "Docsync/mirror drift remains unless fixed and rerun."
+        "Static Wave1200 public-source accounting support is fixed/bounded; absent old/private materialized TSV support packets remain explicitly unclaimed.",
+        "Docsync/mirror drift is reconciled by refreshing protected lore-book mirrors."
       ]
     },
     "winuiUxAndReleaseDocs": {
@@ -88,10 +93,9 @@
     }
   },
   "validation": {
-    "latestIntegration": "Merged-tree validation passed for diff whitespace, state JSON, sanitized state/front-door scan, rebuild continuity probe, Lore ZIP probe tests, Lore builder self-test, full LoreBrowserServiceTests, WinUI build, focused W1/W8/W9 UiTests, patch-engine safety, WinUI primary-lane, ZIP package probe without optional Media smoke, docs commands, Markdown links, repo hygiene retry, public allowlist, and hard-payload safety. The accepted source wave was pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60 before the state-only baton update. The source-only internal tooling vocabulary map reconciliation passed git diff whitespace, docs commands, Markdown links, repo hygiene, hard-payload safety, and public allowlist after a timeout retry. The PatchBench/WinUI UX continuation passed diff whitespace, WinUI build, focused PatchBench receipt/boundary tests, focused About/accessibility tests, patch-engine safety, and WinUI primary-lane validation. The closeout Lore integration passed builder self-test, ZIP probe tests, and full AppCore in the root tree.",
+    "latestIntegration": "Merged-tree validation passed for diff whitespace, state JSON, sanitized state/front-door scan, rebuild continuity probe, Lore ZIP probe tests, Lore builder self-test, full LoreBrowserServiceTests, WinUI build, focused W1/W8/W9 UiTests, patch-engine safety, WinUI primary-lane, ZIP package probe without optional Media smoke, docs commands, Markdown links, repo hygiene retry, public allowlist, and hard-payload safety. The accepted source wave was pushed at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60 before the state-only baton update. The source-only internal tooling vocabulary map reconciliation passed git diff whitespace, docs commands, Markdown links, repo hygiene, hard-payload safety, and public allowlist after a timeout retry. The PatchBench/WinUI UX continuation passed diff whitespace, WinUI build, focused PatchBench receipt/boundary tests, focused About/accessibility tests, patch-engine safety, and WinUI primary-lane validation. The closeout Lore integration passed builder self-test, ZIP probe tests, and full AppCore in the root tree. The restored-loop worker lanes passed baton JSON/safety/docs checks, Wave1200/static-accounting/progress gates, docsync, docs/links, repo hygiene, hard-payload safety, and public allowlist before root integration.",
     "knownUnclaimedGates": [
-      "Static Wave1200 accounting support-file gate health is not claimed.",
-      "Docsync/mirror health is not claimed.",
+      "Absent old/private materialized Wave911/Wave1108 TSV support packets are not claimed validated.",
       "Optional representative Media smoke in npm run test:winui-zip-release-candidate-probe is not claimed; extracted-app audio row selection stayed at No track selected. The same ZIP probe without optional Media smoke passed."
     ]
   },
@@ -101,15 +105,12 @@
   },
   "openQuestions": [],
   "blockers": [
-    "Static Wave1200 accounting support-file blocker remains unresolved unless explicitly fixed and rerun.",
-    "Docsync mirror drift remains unresolved unless explicitly fixed and rerun.",
     "Optional representative Media smoke audio-row selection remains unclaimed unless separately authorized and proven."
   ],
   "nextSteps": [
-    "Repair or explicitly bound the Static Wave1200 accounting support-file blocker with the relevant static-accounting gate before claiming health.",
-    "Reconcile or intentionally document tools/docsync_check.py mirror drift before claiming docsync or mirror health.",
+    "Finish root validation and push verification for the restored-wave integration before launching another slice.",
     "Decide whether to run the optional representative Media smoke audio-row selection in a separately authorized runtime-proof lane; leave it unclaimed otherwise.",
-    "Do not continue the standing automation loop without a new explicit request.",
+    "Continue the restored standing loop under the 2026-07-02 user request only after the current root integration is pushed and clean.",
     "Continue PatchBench only with tests first while preserving page/AppCore ownership, Host/Join disablement, and runtime-proof boundaries.",
     "Use the wired PatchBench receipt helper only for primitive-state formatting and fail-closed display validation; keep AppCore receipt construction in the page/AppCore boundary.",
     "Use the source-only internal tooling vocabulary map only to select one bounded future clean-room question with an explicit higher-authority proof class."

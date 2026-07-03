@@ -32,6 +32,15 @@ Refresh metrics:
 
 ## Documentation Structure
 
+### Source-Only Continuity Maps
+
+Public-safe maps that use Stuart source names as candidate vocabulary only:
+
+- **[original-system-internal-tooling-vocabulary-map.md](original-system-internal-tooling-vocabulary-map.md)** -
+  source-only internal editor, developer-tool, resource, and pipeline vocabulary
+  for clean-room planning. It is context only, not readiness-gate execution,
+  command arming, importer execution, runtime proof, or rebuild parity.
+
 ### Core Systems
 
 Low-level engine architecture and object hierarchies:

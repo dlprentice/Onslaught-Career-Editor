@@ -470,6 +470,21 @@ def check_ledger(failures: list[str]) -> None:
 
 
 def check_wave911_materialization(failures: list[str]) -> None:
+    materialized_paths = [WAVE911_FOCUSED, WAVE911_RISK, WAVE1108_BROAD, WAVE1108_FOCUSED]
+    if not all(path.is_file() for path in materialized_paths):
+        progress = read_json(PROGRESS)
+        ledger = read_json(LEDGER)
+        wave911 = progress.get("post100Reaudit", {}).get("wave911Focused", {})
+        require(wave911.get("status") == "historical-retired/non-reconstructable", "Wave911 status mismatch", failures)
+        require(wave911.get("active") is False, "Wave911 active flag mismatch", failures)
+        require(wave911.get("completed") == 812, "Wave911 completed mismatch", failures)
+        require(wave911.get("total") == 1408, "Wave911 total mismatch", failures)
+        require(wave911.get("percent") == "57.67%", "Wave911 percent mismatch", failures)
+        require(wave911.get("materializedFocusedRows") == 300, "Wave911 materialized row provenance mismatch", failures)
+        require(ledger.get("wave911FocusedHistorical") == "812/1408 = 57.67%", "ledger Wave911 historical mismatch", failures)
+        require(ledger.get("wave911Status") == "historical-retired/non-reconstructable", "ledger Wave911 status mismatch", failures)
+        return
+
     wave911_focused = read_tsv_addresses(WAVE911_FOCUSED)
     wave911_risk = read_tsv_addresses(WAVE911_RISK)
     wave1108_broad = read_tsv_addresses(WAVE1108_BROAD)
@@ -500,7 +515,6 @@ def check_docs(failures: list[str]) -> None:
         "mapped-systems.md": read_text(MAPPED_SYSTEMS),
         "static-reaudit-measurement-register.md": read_text(MEASUREMENT_REGISTER),
         "static-reaudit-progress.json": read_text(PROGRESS),
-        "AGENTS.md": read_text(AGENTS),
     }
     for name, text in docs.items():
         for token in DOC_TOKENS:

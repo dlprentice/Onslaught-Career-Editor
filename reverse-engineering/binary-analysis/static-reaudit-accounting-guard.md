@@ -31,6 +31,12 @@ Wave1219 accounting anchor: `wave1219-final-score16-current-risk-review` uses th
 
 This guard defines the measurable paths for static re-audit progress and prevents anti-churn failures where old wave prose, duplicate-address rows, context rows, or arithmetic mistakes become the active percentage.
 
+Public-source support-packet boundary: if the old materialized Wave911/Wave1108
+TSV packet under `subagents/ghidra-static-reaudit/` is absent from this checkout,
+the probe validates only the tracked `static-reaudit-progress.json` and
+`static-reaudit-current-risk-ledger.json` historical Wave911 boundary. It does
+not claim fresh TSV materialization or overlap proof in that mode.
+
 ## Current Boundary
 
 - Static closure remains `6411/6411 = 100.00%` with debt `0 / 0 / 0`.
@@ -50,7 +56,7 @@ This guard defines the measurable paths for static re-audit progress and prevent
 | Static function-quality closure | `subagents/ghidra-static-reaudit/queue/current/static-reaudit-queue.json` |
 | Active current-risk progress | `reverse-engineering/binary-analysis/static-reaudit-current-risk-ledger.json` |
 | Published progress baton | `reverse-engineering/binary-analysis/static-reaudit-progress.json` |
-| Live risk-ranked candidates | `subagents/ghidra-static-reaudit/wave1108-current-risk-rank/wave1108-current-focused-candidates.tsv` |
+| Live risk-ranked candidates | `subagents/ghidra-static-reaudit/wave1108-current-risk-rank/wave1108-current-focused-candidates.tsv` when the materialized support packet is present; otherwise tracked progress/ledger fields bound the public-source check |
 | System map dashboard | `reverse-engineering/binary-analysis/mapped-systems.md` |
 | Campaign history | `reverse-engineering/binary-analysis/static-reaudit-campaign.md` |
 | Probe gate | `tools/static_reaudit_accounting_guard.py --check` |

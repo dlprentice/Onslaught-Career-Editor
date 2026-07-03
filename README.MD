@@ -14,7 +14,9 @@ generated runtime captures. See [LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md).
 Detailed static RE status is intentionally not duplicated in this README. Use
 [reverse-engineering/RE-INDEX.md](reverse-engineering/RE-INDEX.md),
 [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md), and the static measurement
-registers under `reverse-engineering/binary-analysis/` for current accounting.
+registers under `reverse-engineering/binary-analysis/`, especially
+[static-reaudit-measurement-register.md](reverse-engineering/binary-analysis/static-reaudit-measurement-register.md),
+for current accounting.
 
 For the current feature surface, navigation order, Save Lab workflows, static-RE posture, and lane gates, see **[CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md)**.
 

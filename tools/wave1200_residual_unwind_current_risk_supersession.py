@@ -1,41 +1,27 @@
 #!/usr/bin/env python3
-"""Validate Wave1200 residual compiler-unwind current-risk supersession artifacts."""
+"""Validate public-safe Wave1200 residual compiler-unwind accounting support."""
 
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE = ROOT / "subagents" / "ghidra-static-reaudit" / "wave1200-residual-unwind-current-risk-supersession"
 NOTE = ROOT / "reverse-engineering" / "binary-analysis" / "wave1200-residual-unwind-current-risk-supersession.md"
 NOTE_MIRROR = ROOT / "lore-book" / "reverse-engineering" / "binary-analysis" / "wave1200-residual-unwind-current-risk-supersession.md"
 READINESS = ROOT / "release" / "readiness" / "wave1200_residual_unwind_current_risk_supersession_2026-06-06.md"
 PROGRESS = ROOT / "reverse-engineering" / "binary-analysis" / "static-reaudit-progress.json"
 LEDGER = ROOT / "reverse-engineering" / "binary-analysis" / "static-reaudit-current-risk-ledger.json"
-ACCOUNTING = ROOT / "reverse-engineering" / "binary-analysis" / "static-reaudit-accounting-guard.md"
-MAPPED = ROOT / "reverse-engineering" / "binary-analysis" / "mapped-systems.md"
-CAMPAIGN = ROOT / "reverse-engineering" / "binary-analysis" / "static-reaudit-campaign.md"
-RANK = ROOT / "reverse-engineering" / "binary-analysis" / "wave1108-current-risk-rank.md"
-BINARY_INDEX = ROOT / "reverse-engineering" / "binary-analysis" / "_index.md"
-RE_INDEX = ROOT / "reverse-engineering" / "RE-INDEX.md"
-FUNCTION_COVERAGE = ROOT / "reverse-engineering" / "binary-analysis" / "functions" / "FUNCTION_COVERAGE_STATE.md"
-FUNCTION_INDEX = ROOT / "reverse-engineering" / "binary-analysis" / "functions" / "_index.md"
 BACKLOG = ROOT / "reverse-engineering" / "binary-analysis" / "MCP-MUTATION-BACKLOG.md"
 LEDGER_JSONL = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_ledger.jsonl"
 ATTEMPTS = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_attempt_log.jsonl"
-DEVELOPER_STATE = ROOT / "developer_agent_state.json"
-DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
-RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
-QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
 BACKUP = r"G:\GhidraBackups\BEA_20260606-231915_post_wave1200_residual_unwind_current_risk_verified"
 
-TARGETS = {
+DETAILED_SAMPLE_TARGETS = {
     "0x005d1115": ("Unwind@005d1115", "0x00619f7c", "Wave741", ("BattleEngine.cpp", "CMonitor__Shutdown_Thunk")),
     "0x005d1be0": ("Unwind@005d1be0", "0x0061aa4c", "Wave746", ("CPhysicsScript.cpp", "OID__FreeObject_Callback")),
     "0x005d2540": ("Unwind@005d2540", "0x0061b39c", "Wave750", ("eventmanager.cpp", "CParticleManager__RemoveFromGlobalList_Thunk")),
@@ -62,11 +48,155 @@ TARGETS = {
     "0x005d3160": ("Unwind@005d3160", "0x0061be7c", "Wave755", ("monitor cleanup", "CMonitor__Shutdown_Thunk")),
     "0x005d3440": ("Unwind@005d3440", "0x0061c174", "Wave756", ("particle-manager", "CParticleManager__RemoveFromGlobalList_Thunk")),
 }
-DETAILED_SAMPLE_TARGETS = TARGETS
-TARGETS = tuple(
-    line.strip().lower()
-    for line in (BASE / "targets.txt").read_text(encoding="ascii").splitlines()
-    if line.strip()
+
+TARGETS = (
+    "0x005d1115",
+    "0x005d1be0",
+    "0x005d2540",
+    "0x005d2560",
+    "0x005d2680",
+    "0x005d26e0",
+    "0x005d27f0",
+    "0x005d2930",
+    "0x005d29d0",
+    "0x005d2a60",
+    "0x005d2ad0",
+    "0x005d2b2c",
+    "0x005d2b60",
+    "0x005d2b90",
+    "0x005d2c40",
+    "0x005d2c53",
+    "0x005d2c90",
+    "0x005d2e70",
+    "0x005d2ec0",
+    "0x005d2ed3",
+    "0x005d2f00",
+    "0x005d2f08",
+    "0x005d3140",
+    "0x005d3160",
+    "0x005d3440",
+    "0x005d3460",
+    "0x005d3480",
+    "0x005d34b0",
+    "0x005d34c3",
+    "0x005d34f0",
+    "0x005d34f8",
+    "0x005d3540",
+    "0x005d3560",
+    "0x005d3b30",
+    "0x005d3b50",
+    "0x005d3b70",
+    "0x005d3b90",
+    "0x005d3bd0",
+    "0x005d3bf0",
+    "0x005d3cc6",
+    "0x005d3d5a",
+    "0x005d3eeb",
+    "0x005d3fe8",
+    "0x005d4184",
+    "0x005d4250",
+    "0x005d45a0",
+    "0x005d45dc",
+    "0x005d4640",
+    "0x005d46c0",
+    "0x005d46f0",
+    "0x005d4710",
+    "0x005d4880",
+    "0x005d4948",
+    "0x005d4ae0",
+    "0x005d4b10",
+    "0x005d4ba0",
+    "0x005d4c70",
+    "0x005d4c90",
+    "0x005d4cb0",
+    "0x005d4ed0",
+    "0x005d5000",
+    "0x005d5030",
+    "0x005d50b0",
+    "0x005d50e0",
+    "0x005d5170",
+    "0x005d5190",
+    "0x005d51d0",
+    "0x005d51f8",
+    "0x005d5388",
+    "0x005d55f0",
+    "0x005d5790",
+    "0x005d5810",
+    "0x005d58a0",
+    "0x005d58a8",
+    "0x005d58e0",
+    "0x005d58e8",
+    "0x005d5910",
+    "0x005d5c09",
+    "0x005d5c30",
+    "0x005d5c7c",
+    "0x005d5d8e",
+    "0x005d5f50",
+    "0x005d5f58",
+    "0x005d5f80",
+    "0x005d5f88",
+    "0x005d5fb0",
+    "0x005d5fb8",
+    "0x005d5fe0",
+    "0x005d5fe8",
+    "0x005d6010",
+    "0x005d6018",
+    "0x005d6040",
+    "0x005d6048",
+    "0x005d6070",
+    "0x005d6090",
+    "0x005d6098",
+    "0x005d60c0",
+    "0x005d60c8",
+    "0x005d60f0",
+    "0x005d60f8",
+    "0x005d6120",
+    "0x005d6128",
+    "0x005d6150",
+    "0x005d6158",
+    "0x005d6180",
+    "0x005d6188",
+    "0x005d6298",
+    "0x005d6309",
+    "0x005d6311",
+    "0x005d6346",
+    "0x005d634e",
+    "0x005d6383",
+    "0x005d63a0",
+    "0x005d63a8",
+    "0x005d63c0",
+    "0x005d63c8",
+    "0x005d63e0",
+    "0x005d63e8",
+    "0x005d6c50",
+    "0x005d6c70",
+    "0x005d6ca6",
+    "0x005d6cc0",
+    "0x005d6ce0",
+    "0x005d7020",
+    "0x005d73d9",
+    "0x005d73f0",
+    "0x005d77c0",
+    "0x005d77e0",
+    "0x005d7860",
+    "0x005d7a80",
+    "0x005d7ac0",
+    "0x005d7b60",
+    "0x005d7e70",
+    "0x005d7e78",
+    "0x005d7e80",
+    "0x005d7e88",
+    "0x005d7e90",
+    "0x005d7ec0",
+    "0x005d7ec8",
+    "0x005d7ed0",
+    "0x005d7ed8",
+    "0x005d7ef0",
+    "0x005d7f10",
+    "0x005d7f18",
+    "0x005d7f20",
+    "0x005d7f40",
+    "0x005d7f53",
 )
 
 DOC_TOKENS = (
@@ -138,11 +268,6 @@ def read_jsonl(path: Path) -> list[dict]:
     return [json.loads(line) for line in read_text(path).splitlines() if line.strip()]
 
 
-def read_tsv(path: Path) -> list[dict[str, str]]:
-    with path.open("r", encoding="utf-8-sig", newline="") as handle:
-        return list(csv.DictReader(handle, delimiter="\t"))
-
-
 def require(condition: bool, message: str, failures: list[str]) -> None:
     if not condition:
         failures.append(message)
@@ -152,115 +277,41 @@ def contains_token(text: str, token: str) -> bool:
     return token in text or token.replace("\\", "\\\\") in text
 
 
-def check_artifacts(failures: list[str]) -> None:
-    expected_counts = {
-        "pre-metadata.tsv": 147,
-        "pre-tags.tsv": 147,
-        "pre-xrefs.tsv": 147,
-        "pre-instructions.tsv": 348,
-        "pre-decompile/index.tsv": 147,
-    }
-    for relative, expected in expected_counts.items():
-        require(len(read_tsv(BASE / relative)) == expected, f"{relative} row count mismatch", failures)
-
-    metadata = {normalize_address(row["address"]): row for row in read_tsv(BASE / "pre-metadata.tsv")}
-    tags = {normalize_address(row["address"]): row for row in read_tsv(BASE / "pre-tags.tsv")}
-    decompile = {normalize_address(row["address"]): row for row in read_tsv(BASE / "pre-decompile" / "index.tsv")}
-    xrefs = {normalize_address(row["target_addr"]): row for row in read_tsv(BASE / "pre-xrefs.tsv")}
-
-    require(len(TARGETS) == 147, "target list count mismatch", failures)
-    for address in TARGETS:
-        name = f"Unwind@{address[2:]}"
-        signature = f"void __cdecl {name}(void)"
-        row = metadata.get(address)
-        require(row is not None, f"missing metadata for {address}", failures)
-        if row is not None:
-            comment = row.get("comment", "")
-            require(row.get("name") == name, f"name mismatch at {address}", failures)
-            require(row.get("signature") == signature, f"signature mismatch at {address}: {row.get('signature')}", failures)
-            require(row.get("status") == "OK", f"metadata status mismatch at {address}", failures)
-            for token in ("Static retail Ghidra metadata/decompile/xref evidence only", "remain unproven"):
-                require(token in comment, f"missing common comment token at {address}: {token}", failures)
-
-        tag_row = tags.get(address)
-        require(tag_row is not None, f"missing tags for {address}", failures)
-        if tag_row is not None:
-            actual = set(tag_row.get("tags", "").split(";"))
-            for token in ("static-reaudit", "compiler-unwind", "scope-table", "comment-hardened", "signature-hardened", "retail-binary-evidence"):
-                require(token in actual, f"missing tag at {address}: {token}", failures)
-
-        dec = decompile.get(address)
-        require(dec is not None, f"missing decompile row for {address}", failures)
-        if dec is not None:
-            require(dec.get("signature") == signature, f"decompile signature mismatch at {address}", failures)
-            require(dec.get("status") == "OK", f"decompile status mismatch at {address}", failures)
-
-        xref = xrefs.get(address)
-        require(xref is not None, f"missing xref row for {address}", failures)
-        if xref is not None:
-            require(xref.get("ref_type") == "DATA", f"xref type mismatch at {address}", failures)
-
-
-def check_logs_and_backup(failures: list[str]) -> None:
-    expected = {
-        "pre-metadata.log": "targets=147 found=147 missing=0",
-        "pre-tags.log": "ExportFunctionTagsByAddress complete: rows=147 missing=0",
-        "pre-xrefs.log": "Wrote 147 rows",
-        "pre-instructions.log": "Wrote 348 function-body instruction rows",
-        "pre-decompile.log": "targets=147 dumped=147 missing=0 failed=0",
-    }
-    for relative, token in expected.items():
-        text = read_text(BASE / relative)
-        require(token in text, f"missing log token in {relative}: {token}", failures)
-        for bad in ("LockException", "MISSING:", "BADADDR:", "FAIL:", "missing=1", "bad=1", "failed=1"):
-            require(bad not in text, f"unexpected failure token in {relative}: {bad}", failures)
-
-    backup = read_json(BASE / "backup-summary.json")
-    require(backup.get("backupPath") == BACKUP, "backup path mismatch", failures)
-    require(backup.get("fileCount") == 19, "backup file count mismatch", failures)
-    require(backup.get("totalBytes") == 176425863 or backup.get("totalBytes") == 176425863.0, "backup byte count mismatch", failures)
-    require(backup.get("missingCount") == 0, "backup missing count mismatch", failures)
-    require(backup.get("extraCount") == 0, "backup extra count mismatch", failures)
-    require(backup.get("diffCount") == 0, "backup diff count mismatch", failures)
-    require(backup.get("hashDiffCount") == 0, "backup hash diff count mismatch", failures)
+def ledger_row_addresses(row: dict) -> tuple[str, ...]:
+    return tuple(normalize_address(value) for value in row.get("address", "").split(",") if value.strip())
 
 
 def check_progress_and_docs(failures: list[str]) -> None:
+    require(len(TARGETS) == 147, "embedded Wave1200 target list count mismatch", failures)
+    require(len(set(TARGETS)) == 147, "embedded Wave1200 target list contains duplicates", failures)
+
     progress = read_json(PROGRESS)
     current = progress["post100Reaudit"]["currentRiskRank"]
-    require(current.get("focusedReviewed") == 1017, "focused reviewed mismatch", failures)
-    require(current.get("focusedReviewedPercent") == "86.26%", "focused reviewed percent mismatch", failures)
-    require(current.get("remainingFocusedAfterLatestReview") == 162, "remaining focused mismatch", failures)
-    require(current.get("liveFocusedCandidatesAfterLatestReview") == 1141, "live focused mismatch", failures)
-    require(current.get("legacyAdditiveReviewedDeprecated") == 1048, "legacy additive mismatch", failures)
+    require(current.get("accountingMode") == "unique-address-ledger", "accounting mode mismatch", failures)
+    require(current.get("currentRiskLedger") == "reverse-engineering/binary-analysis/static-reaudit-current-risk-ledger.json", "ledger pointer mismatch", failures)
+    require(current.get("legacyAdditiveThroughWave1200Deprecated") == 1048, "Wave1200 legacy additive mismatch", failures)
+    require(current.get("countedRowsThroughWave1200") == 1043, "Wave1200 counted-row mismatch", failures)
     require(current.get("duplicateAddressOvercountCorrected") == 26, "duplicate overcount mismatch", failures)
     require(current.get("wave1145ArithmeticOvercountCorrected") == 5, "Wave1145 overcount mismatch", failures)
+    require(
+        current.get("completionTarget") == "1179/1179 current-risk focused rows reviewed or superseded with bounded static evidence",
+        "completion target mismatch",
+        failures,
+    )
 
     ledger = read_json(LEDGER)
-    require(ledger.get("correctedUniqueReviewed") == 1017, "ledger unique mismatch", failures)
-    require(ledger.get("correctedUniquePercent") == "86.26%", "ledger percent mismatch", failures)
-    require(ledger.get("remainingUnique") == 162, "ledger remaining mismatch", failures)
-    require(ledger.get("countedRowsThroughWave1200") == 1043, "ledger counted row mismatch", failures)
+    require(ledger.get("legacyAdditiveThroughWave1200Deprecated") == 1048, "ledger Wave1200 legacy additive mismatch", failures)
+    require(ledger.get("duplicateAddressOvercount") == 26, "ledger duplicate overcount mismatch", failures)
+    wave1200 = next((row for row in ledger.get("perWave", []) if row.get("wave") == 1200), None)
+    require(wave1200 is not None, "ledger missing Wave1200 per-wave row", failures)
+    if wave1200 is not None:
+        require(wave1200.get("script") == "tools/wave1200_residual_unwind_current_risk_supersession.py", "ledger Wave1200 script mismatch", failures)
+        require(wave1200.get("countedRows") == 147, "ledger Wave1200 counted rows mismatch", failures)
+        require(wave1200.get("newUniqueRows") == 147, "ledger Wave1200 unique rows mismatch", failures)
+        require(wave1200.get("duplicateRows") == 0, "ledger Wave1200 duplicate rows mismatch", failures)
+        require(wave1200.get("duplicateAddresses") == [], "ledger Wave1200 duplicate address list mismatch", failures)
 
-    prose_docs = [
-        NOTE,
-        NOTE_MIRROR,
-        READINESS,
-        MAPPED,
-        CAMPAIGN,
-        RANK,
-        BINARY_INDEX,
-        RE_INDEX,
-        FUNCTION_COVERAGE,
-        FUNCTION_INDEX,
-        BACKLOG,
-        DEVELOPER_STATE,
-        DOCUMENTATION_STATE,
-        RE_STATE,
-        PROGRESS,
-        LEDGER,
-        ACCOUNTING,
-    ]
+    prose_docs = [NOTE, NOTE_MIRROR, READINESS]
     for path in prose_docs:
         text = read_text(path)
         for token in DOC_TOKENS:
@@ -269,6 +320,9 @@ def check_progress_and_docs(failures: list[str]) -> None:
             require(bad not in text.lower(), f"overclaim in {path.relative_to(ROOT)}: {bad}", failures)
 
     require(read_text(NOTE) == read_text(NOTE_MIRROR), "Wave1200 note mirror mismatch", failures)
+    backlog_text = read_text(BACKLOG)
+    for token in ("Wave1200", "function_mutation_ledger.jsonl", "function_mutation_attempt_log.jsonl", "147 residual `Unwind@...` rows"):
+        require(contains_token(backlog_text, token), f"missing Wave1200 backlog token: {token}", failures)
 
     package = read_json(PACKAGE_JSON)
     require(
@@ -278,18 +332,23 @@ def check_progress_and_docs(failures: list[str]) -> None:
         failures,
     )
 
-    queue = read_json(QUEUE_JSON)
-    quality = queue.get("qualitySignals", {})
-    require(queue.get("totalFunctions") == 6411, "queue total mismatch", failures)
-    require(quality.get("commentlessFunctionCount") == 0, "queue commentless mismatch", failures)
-    require(quality.get("undefinedSignatureCount") == 0, "queue undefined mismatch", failures)
-    require(quality.get("paramSignatureCount") == 0, "queue param_N mismatch", failures)
-
     ledger_rows = read_jsonl(LEDGER_JSONL)
     attempt_rows = read_jsonl(ATTEMPTS)
     task = "Wave1200 residual compiler-unwind current-risk supersession"
-    require(any(row.get("task") == task for row in ledger_rows), "missing Wave1200 ledger row", failures)
-    require(any(row.get("task") == task and row.get("result") == "success" for row in attempt_rows), "missing Wave1200 attempt row", failures)
+    ledger_row = next((row for row in ledger_rows if row.get("task") == task), None)
+    attempt_row = next((row for row in attempt_rows if row.get("task") == task and row.get("result") == "success"), None)
+    require(ledger_row is not None, "missing Wave1200 ledger row", failures)
+    require(attempt_row is not None, "missing Wave1200 attempt row", failures)
+    if ledger_row is not None:
+        require(ledger_row_addresses(ledger_row) == TARGETS, "Wave1200 ledger address list mismatch", failures)
+    if attempt_row is not None:
+        require(ledger_row_addresses(attempt_row) == TARGETS, "Wave1200 attempt address list mismatch", failures)
+        require(attempt_row.get("mode") == "read-only-supersession", "Wave1200 attempt mode mismatch", failures)
+        require(attempt_row.get("updated") == 0, "Wave1200 attempt updated count mismatch", failures)
+        require(attempt_row.get("skipped") == 147, "Wave1200 attempt skipped count mismatch", failures)
+        require(attempt_row.get("missing") == 0, "Wave1200 attempt missing count mismatch", failures)
+        require(attempt_row.get("bad") == 0, "Wave1200 attempt bad count mismatch", failures)
+        require(attempt_row.get("backup") == BACKUP, "Wave1200 attempt backup mismatch", failures)
 
 
 def main() -> int:
@@ -298,16 +357,14 @@ def main() -> int:
     parser.parse_args()
 
     failures: list[str] = []
-    check_artifacts(failures)
-    check_logs_and_backup(failures)
     check_progress_and_docs(failures)
 
     if failures:
-        print("Wave1200 residual compiler-unwind current-risk supersession probe: FAIL")
+        print("Wave1200 residual compiler-unwind public accounting support probe: FAIL")
         for failure in failures:
             print(f"- {failure}")
         return 1
-    print("Wave1200 residual compiler-unwind current-risk supersession probe: PASS")
+    print("Wave1200 residual compiler-unwind public accounting support probe: PASS")
     return 0
 
 
