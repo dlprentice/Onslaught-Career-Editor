@@ -1,6 +1,6 @@
 # Active Goal Slice
 
-Status: active; automations restored; Wave1200/docsync integrated; acceptance blocker sanitized
+Status: active; source-safe vocabulary checker reconciled
 Last updated: 2026-07-03
 Policy: `goal.policy.md`
 
@@ -62,6 +62,13 @@ Accepted restored-wave source commits integrated by cherry-pick:
 - Dsync mirror drift reconciliation:
   `37d34b1d`
 
+Accepted source-safe vocabulary-map checker commit, replayed onto current
+`origin/main`:
+
+- Original-system internal tooling vocabulary map probe:
+  accepted worker commit `f1c98fa423a787cb2f3160b7c046e912aa9030f9`,
+  reconciled source commit `30fc408f`
+
 ## Current Truth
 
 - PatchBench receipt rendering now runs through a primitive helper via a
@@ -86,7 +93,10 @@ Accepted restored-wave source commits integrated by cherry-pick:
   owners; retail binary/save/runtime evidence remains the higher authority for
   behavior.
 - The source-only internal tooling vocabulary map is public-safe planning
-  context for future clean-room questions. It is not readiness-gate execution,
+  context for future clean-room questions. The source checker validates
+  byte-identical canonical/Lore copies, tracked Markdown link targets, required
+  authority-tier and scope-firewall wording, and bounded
+  `tmm-arm4-readiness-gate` continuity. It is not readiness-gate execution,
   command arming, importer execution, generated payload output, runtime proof,
   rebuild parity, or no-noticeable-difference proof.
 - WinUI Home/About copy and static accessibility/product-lane tests improved
@@ -207,6 +217,24 @@ wording additionally passed:
 - `npm run test:hard-payload-safety`
 - `npm run test:public-allowlist`
 
+The source-safe vocabulary-map checker reconciliation additionally passed:
+
+- root/source consult, adversarial safety consult, and active-wave consult in
+  the prior accepted wave
+- W1 implementation with spec re-review and code-quality re-review after the
+  tracked-Markdown link guard fix
+- replay onto current `origin/main` after storage sentinel state advanced
+- `py -3 tools\original_system_internal_tooling_vocabulary_map_probe.py --self-test`
+- `py -3 tools\original_system_internal_tooling_vocabulary_map_probe.py --check`
+- `npm run test:original-system-internal-tooling-vocabulary-map`
+- `git diff --check`
+- state JSON parse
+- `npm run test:doc-commands`
+- `npm run test:md-links`
+- `npm run test:repo-hygiene`
+- `npm run test:hard-payload-safety`
+- `npm run test:public-allowlist`
+
 Phase 0 stale-baton correction is state-only. The `a9fe757e238a237eac8aa8f7f4e12d1bad57ec60`
 proof confirms the previous source wave was already pushed and accepted; it is
 not fresh runtime, release, Ghidra, static-accounting, or storage proof.
@@ -237,6 +265,8 @@ Known pre-existing or intentionally unclaimed gates:
   `roadmap/rebuild-front-door-chain-map.md`
 - Source-only internal tooling vocabulary map:
   `reverse-engineering/source-code/original-system-internal-tooling-vocabulary-map.md`
+- Vocabulary map checker:
+  `tools/original_system_internal_tooling_vocabulary_map_probe.py`
 - WinUI UX/accessibility surfaces:
   `OnslaughtCareerEditor.WinUI/Pages/HomePage.xaml`,
   `OnslaughtCareerEditor.WinUI/Pages/AboutPage.xaml`, and
@@ -247,9 +277,8 @@ Known pre-existing or intentionally unclaimed gates:
 
 ## Next Executable Work
 
-1. Continue the restored standing loop under the 2026-07-02 user request. Pick
-   the next bounded source-safe slice only after git refs verify this
-   acceptance remediation has landed.
+1. Continue the restored standing loop under the 2026-07-02 user request after
+   this source-safe checker reconciliation is pushed and refs are clean.
 2. Decide whether to run the optional representative Media smoke audio-row
    selection in a separately authorized runtime-proof lane; leave it unclaimed
    otherwise.
@@ -258,11 +287,13 @@ Known pre-existing or intentionally unclaimed gates:
    runtime-proof boundaries unchanged.
 4. Continue Lore with bounded ZIP/package parity hardening only; do not promote
    it to broad release or traversal-proof claims.
-5. Continue RE/rebuild with public-safe proof-plan/checker work until separate
-   authority grants live Ghidra mutation, runtime proof, private asset reads, or
-   importer execution.
-6. Use the internal tooling vocabulary map only to pick one bounded future
-   question with an explicit higher-authority proof class.
+5. Continue RE/rebuild with public-safe proof-plan/checker work only. The
+   vocabulary map checker is a guard for planning context, not authority for
+   live Ghidra mutation, runtime proof, private asset reads, or importer
+   execution.
+6. Use the internal tooling vocabulary map to pick one bounded future question
+   only when the next slice names its higher-authority proof class and explicit
+   non-claims.
 
 ## Stop Conditions
 
