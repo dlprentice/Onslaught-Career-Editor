@@ -12,17 +12,17 @@ or live Ghidra mutation by itself.
 
 ## Active Storage Posture
 
-- The current maintainer-local scratch/backup posture uses the assigned
-  removable `F:` root for new backup-producing Ghidra work and bulky temporary
-  proof output when it is mounted, writable, and explicitly selected by the
-  responsible lane. Expected top-level families are backup, scratch, proof, and
-  cleanup-manifest roots under that drive, with exact subpaths recorded only in
-  ignored maintainer-local manifests.
-- Exact `F:` paths, volume identifiers, local cleanup manifests, free-space
-  dumps, raw proof roots, and per-run artifact paths stay in ignored local
-  policy/manifests or campaign reports, not tracked docs.
-- Historical `G:` backup/archive strings in old wave evidence are provenance
-  only. Do not treat a legacy `G:` root as the live backup target, a required
+- The current maintainer-local scratch/backup posture uses a configured
+  removable scratch/backup root for new backup-producing Ghidra work and bulky
+  temporary proof output when it is mounted, writable, and explicitly selected
+  by the responsible lane. Expected top-level families are backup, scratch,
+  proof, and cleanup-manifest roots under that configured root, with exact
+  subpaths recorded only in ignored maintainer-local manifests.
+- Exact drive letters, roots, volume identifiers, local cleanup manifests,
+  free-space dumps, raw proof roots, and per-run artifact paths stay in ignored
+  local policy/manifests or campaign reports, not tracked docs.
+- Historical backup/archive drive strings in old wave evidence are provenance
+  only. Do not treat a legacy drive root as the live backup target, a required
   runtime dependency, or a fallback to hard-code in tools.
 - If the configured scratch/backup root is missing or unhealthy, stop and
   record the blocker or choose another explicit local/app-owned ignored root
@@ -55,13 +55,14 @@ The sentinel should:
 Every storage sentinel pass must produce exactly one primary deliverable:
 
 - `ADVANCEMENT`: a concrete storage-support result such as verified backup
-  freshness/read-back evidence, mounted/writable `F:` posture confirmation,
-  retained replacement or summary decision for a proof family, cleanup blocker
-  classification, or non-destructive scratch setup that unblocks a named active
-  RE/proof lane; or
-- `NO_CONCRETE_WORK_AVAILABLE`: a quiet blocker-style record naming checked
-  roots, relevant open slices or blockers, why no safe work was available, the
-  next eligible concrete action, and `retry_after` no later than 24 hours.
+  freshness/read-back evidence, mounted/writable configured-root posture
+  confirmation, retained replacement or summary decision for a proof family,
+  cleanup blocker classification, or non-destructive scratch setup that unblocks
+  a named active RE/proof lane; or
+- `BLOCKED_NO_CONCRETE_WORK_AVAILABLE_<yyyymmdd-hhmm>`: a quiet blocker record
+  naming checked roots, relevant open slices or blockers, why no safe work was
+  available, the next eligible concrete action, and `retry_after` no later than
+  24 hours.
 
 The sentinel must not:
 
@@ -218,7 +219,7 @@ Prepared consult lanes for this posture class:
 
 | Lane | Normal brief focus | Adversarial brief focus |
 | --- | --- | --- |
-| Codex | Check whether the patch makes the storage/Ghidra/proof posture durable, concise, and consistent with repo contracts. | Attack for hidden authority expansion, state/write conflicts, hard-payload leakage, stale `G:` reliance, weak proof-class separation, and missing validation. |
+| Codex | Check whether the patch makes the storage/Ghidra/proof posture durable, concise, and consistent with repo contracts. | Attack for hidden authority expansion, state/write conflicts, hard-payload leakage, stale legacy-drive reliance, weak proof-class separation, and missing validation. |
 | Cursor Agent `composer-2.5-fast` | Review docs for practical contributor clarity and collision risk in coordinated campaigns. | Attack for ambiguous ownership, unsafe automation shortcuts, overbroad cleanup language, or claims that exceed evidence. |
 | Grok Build | Review the policy as an outside lane for operational blind spots and missing stop conditions. | Attack for unsafe deletion, mutation, proof-retention, external-tool, or campaign-control assumptions. |
 

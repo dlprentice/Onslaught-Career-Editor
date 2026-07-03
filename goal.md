@@ -1,6 +1,6 @@
 # Active Goal Slice
 
-Status: active; career progression static bridge contract validated
+Status: active; texture/resource/decode static ledger validation after career bridge reconciliation
 Last updated: 2026-07-03
 Policy: `goal.policy.md`
 
@@ -95,9 +95,6 @@ Recent bounded source-safe slices:
   not readiness-gate execution, command arming, importer execution, runtime
   proof, Ghidra mutation/read-back, BEA/CDB launch, generated asset output,
   product exposure, release action, or rebuild parity.
-
-Current bounded source-safe slice:
-
 - Career progression static bridge contract:
   `reverse-engineering/binary-analysis/career-progression-static-bridge-contract.md`
   and `tools/career_progression_static_bridge_contract_probe.py`.
@@ -109,6 +106,23 @@ Current bounded source-safe slice:
   behavior, exact source-to-retail layout identity, gameplay outcomes,
   generated save/asset output, and rebuild parity remain separate
   higher-authority proof classes.
+
+Current bounded source-safe slice:
+
+- Texture/resource/decode static routing ledger:
+  `reverse-engineering/binary-analysis/texture-resource-decode-static-contract-ledger.v1.json`
+  and its protected Lore mirror provide a machine-checkable public-safe routing
+  ledger for the existing texture/resource/decode static contract.
+  `tools/texture_resource_decode_static_contract_probe.py` validates
+  canonical/Lore parity, ledger schema, historical-anchor redaction, current
+  static-accounting authority, package-script registration, public-path hygiene,
+  guard counters, and non-claims. The duplicate source-checkout/worktree
+  attempts were blocked, and their useful mapped-systems/static-measurement
+  legacy backup-root redaction handoff was reconciled into canonical and Lore
+  mirrors. This is static routing/accounting support only; it is not runtime
+  texture decode, decompression behavior, texture pixels, GPU upload, visual
+  output, live Ghidra read-back/mutation, private asset access, generated asset
+  output, product exposure, or rebuild parity.
 
 ## Current Truth
 
@@ -173,6 +187,14 @@ Current bounded source-safe slice:
   output, renderer behavior, generated save or asset output, AppCore, WinUI,
   CLI, Godot, release, command-arm, product-exposure, or rebuild parity
   support.
+- The texture/resource/decode static routing ledger is a machine-checkable
+  companion to the existing texture decode contract, not a decoder schema. It
+  records sanitized lane ids, anchor function names, Wave1163/Wave1216
+  provenance-only status, latest backup class redaction, static-accounting
+  closure, and false/zero guard summaries. It adds no runtime texture decode,
+  decompression behavior, texture pixels, GPU upload, visual output, live
+  Ghidra read-back/mutation, private asset access, generated asset output,
+  product exposure, or rebuild parity.
 - WinUI Home/About copy and static accessibility/product-lane tests improved
   user-facing boundaries. This is not runtime screen-reader, visual, BEA, CDB,
   audio, or gameplay proof.
@@ -392,6 +414,40 @@ The career progression static bridge-contract slice additionally passed:
 - `npm run test:hard-payload-safety`
 - `npm run test:public-allowlist`
 
+The texture/resource/decode static-routing ledger slice additionally passed:
+
+- Codex normal and adversarial consults
+- Cursor Agent `composer-2.5-fast` normal and adversarial consults
+- Grok Build normal and adversarial consult retries; concrete risk findings
+  were accepted, while the blanket no-JSON objection was overridden because
+  this repo explicitly permits public-safe structured RE ledgers/checkers
+- `py -3 tools\texture_resource_decode_static_contract_probe.py --self-test --check`
+- `npm run test:texture-resource-decode-static-contract`
+- scoped public-root leak scan over texture/resource/decode docs, mapped-systems
+  mirrors, measurement-register mirrors, coordination docs, and checker source
+- pre-reconciliation `npm run test:hard-payload-safety` with self-test and
+  `19378` public candidates checked
+
+Texture/public-boundary validation after remote reconciliation additionally passed:
+
+- direct `py -3 tools\public_allowlist_safety_check.py --include-submodules`
+  with `19566` candidates checked after an earlier no-diagnostic termination
+- full `npm run test:public-allowlist`, including hard-payload self-test plus
+  `19382` public candidates, public-submodule payload safety with `19566`
+  candidates, and public-primary migration inventory
+
+Current texture/resource/decode closeout markers:
+
+```text
+ADVANCEMENT: 1
+BLOCKED_ITEMS_ADDRESSED: duplicate source-checkout/worktree ownership, legacy backup-root leakage, remote divergence, public-allowlist instability, staged-ledger inclusion
+PRIMARY_DELIVERABLE: texture-resource-decode-static-contract-ledger.v1
+ACCEPTED_BY: Codex normal ACCEPT_WITH_NOTES and Codex adversarial ACCEPT after post-reconciliation re-review
+CONSULTS_USED: codex=normal/adversarial; cursor=normal/adversarial; grok=normal/adversarial
+SAFETY: clean; final ref/stage checks passed before commit, no runtime proof, no live Ghidra mutation/read-back, no hard payload, no private root leakage
+GOAL_DELTA: adds a public-safe texture/resource/decode static-routing ledger/checker and reconciles duplicate-lane redactions after career bridge fast-forward
+```
+
 Phase 0 stale-baton correction is state-only. The `a9fe757e238a237eac8aa8f7f4e12d1bad57ec60`
 proof confirms the previous source wave was already pushed and accepted; it is
 not fresh runtime, release, Ghidra, static-accounting, or storage proof.
@@ -443,6 +499,12 @@ Known pre-existing or intentionally unclaimed gates:
   `tools/career_progression_static_bridge_contract_probe.py`
 - Career progression consult record:
   `subagents/career-progression-static-bridge-consult-record-20260703.md`
+- Texture/resource/decode static contract and ledger:
+  `reverse-engineering/binary-analysis/texture-resource-decode-static-contract.md`
+  and
+  `reverse-engineering/binary-analysis/texture-resource-decode-static-contract-ledger.v1.json`
+- Texture/resource/decode static contract checker:
+  `tools/texture_resource_decode_static_contract_probe.py`
 - WinUI UX/accessibility surfaces:
   `OnslaughtCareerEditor.WinUI/Pages/HomePage.xaml`,
   `OnslaughtCareerEditor.WinUI/Pages/AboutPage.xaml`, and
@@ -454,8 +516,8 @@ Known pre-existing or intentionally unclaimed gates:
 ## Next Executable Work
 
 1. Continue the restored standing loop under the 2026-07-02 user request after
-   this career progression static bridge-contract slice is pushed and refs are
-   clean.
+   this texture/resource/decode static-routing ledger slice is validated and
+   pushed, or blocked with a precise validation record, and refs are clean.
 2. Decide whether to run the optional representative Media smoke audio-row
    selection in a separately authorized runtime-proof lane; leave it unclaimed
    otherwise.
@@ -485,10 +547,15 @@ Known pre-existing or intentionally unclaimed gates:
    collision, material appearance, shader, visual output, renderer behavior,
    generated-output, product exposure, or rebuild claim needs its own
    higher-authority proof and explicit non-claims.
-9. Treat `test:tmm-arm4-readiness-gate-proof-plan` as a local wrapper around the
+9. Use the texture/resource/decode static-routing ledger only as a routing table
+   for future texture/resource/decode questions. Any later decoder layout,
+   file-format schema, runtime decompression behavior, texture pixels, GPU
+   upload, visual output, generated-output, product exposure, or rebuild claim
+   needs its own higher-authority proof and explicit non-claims.
+10. Treat `test:tmm-arm4-readiness-gate-proof-plan` as a local wrapper around the
    existing public-safe continuity checker only. It is not a command-arm,
    runtime, importer, Ghidra, release, product-exposure, or rebuild-proof gate.
-10. Use the career progression static bridge contract only as a routing table
+11. Use the career progression static bridge contract only as a routing table
    for future campaign/save/career questions. Any later runtime save/load,
    defaultoptions boot, menu behavior, mission-outcome persistence, objective
    UI, Goodies behavior, live MissionScript command effect, generated save

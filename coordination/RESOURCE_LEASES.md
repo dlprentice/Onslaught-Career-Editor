@@ -57,9 +57,9 @@ into repo docs or readiness notes.
   authority.
 - The storage/Ghidra sentinel cadence during active campaigns is every two
   hours. Each pass must verify or unblock one concrete storage posture item, or
-  record `NO_CONCRETE_WORK_AVAILABLE` with checked roots, blockers, and next
-  eligible action. A pass that only says "no change" is incomplete unless it
-  records that blocker-style evidence.
+  record `BLOCKED_NO_CONCRETE_WORK_AVAILABLE_<yyyymmdd-hhmm>` with checked
+  roots, blockers, and next eligible action. A pass that only says "no change"
+  is incomplete unless it records that blocker-style evidence.
 - Release package builds are serialized when they share output folders or
   package names.
 - Broad .NET build/test gates should run serially when contention can produce

@@ -37,8 +37,7 @@ A write worker report must include:
 - state/docs updates recommended to the integrator
 - terminal status
 - lease-release confirmation
-- terminal classification: exactly one of `ADVANCEMENT`, `BLOCKED_*`, or
-  sentinel-only `NO_CONCRETE_WORK_AVAILABLE`
+- terminal classification: exactly one of `ADVANCEMENT` or `BLOCKED_*`
 - advancement classification: real project advancement or hygiene-only, with
   named evidence class when advancement is claimed
 - primary deliverable: accepted artifact/change id or well-formed `BLOCKED_*`
@@ -93,16 +92,16 @@ Required closeout markers for coordinated automation reports:
 ```text
 ADVANCEMENT: 0|1
 BLOCKED_ITEMS_ADDRESSED: <n>
-PRIMARY_DELIVERABLE: <artifact-id|BLOCKED_*-id|NO_CONCRETE_WORK_AVAILABLE>
+PRIMARY_DELIVERABLE: <artifact-id|BLOCKED_*-id>
 ACCEPTED_BY: <lane|integration-owner|acceptance-owner|human|n/a>
 CONSULTS_USED: codex=<normal/adversarial/unavailable>; cursor=<normal/adversarial/unavailable>; grok=<normal/adversarial/unavailable>
 SAFETY: clean | baton <id> | SAFETY_GATE_FAILED
 GOAL_DELTA: <one measurable line>|blocked
 ```
 
-For non-sentinel worker cycles, `PRIMARY_DELIVERABLE` is either an accepted
-artifact/change id or a `BLOCKED_*` id. `NO_CONCRETE_WORK_AVAILABLE` is reserved
-for storage sentinel passes only.
+`PRIMARY_DELIVERABLE` is either an accepted artifact/change id or a `BLOCKED_*`
+id. Storage sentinel passes with no safe concrete work use a
+`BLOCKED_NO_CONCRETE_WORK_AVAILABLE_<yyyymmdd-hhmm>` id.
 
 ### Blocked Records
 
