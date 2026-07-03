@@ -1,6 +1,6 @@
 # Active Goal Slice
 
-Status: active; TMM ARM4 readiness-gate package/checker guard validated
+Status: active; career progression static bridge contract validated
 Last updated: 2026-07-03
 Policy: `goal.policy.md`
 
@@ -96,6 +96,20 @@ Recent bounded source-safe slices:
   proof, Ghidra mutation/read-back, BEA/CDB launch, generated asset output,
   product exposure, release action, or rebuild parity.
 
+Current bounded source-safe slice:
+
+- Career progression static bridge contract:
+  `reverse-engineering/binary-analysis/career-progression-static-bridge-contract.md`
+  and `tools/career_progression_static_bridge_contract_probe.py`.
+  This uses the campaign/career progression front-door row and existing
+  save/CGame/Career/EndLevelData static docs to answer one bounded question:
+  `CCareer`, `level_structure`, `CGame`, and `CEndLevelData` may be routed only
+  as source/static save and career vocabulary into planning docs. Runtime
+  save/load behavior, mission-outcome persistence, objective UI, Goodies
+  behavior, exact source-to-retail layout identity, gameplay outcomes,
+  generated save/asset output, and rebuild parity remain separate
+  higher-authority proof classes.
+
 ## Current Truth
 
 - PatchBench receipt rendering now runs through a primitive helper via a
@@ -148,6 +162,17 @@ Recent bounded source-safe slices:
   output, renderer behavior, generated asset, AppCore, WinUI, CLI, Godot,
   release, extractor, importer, command-arm, product-exposure, or rebuild
   parity support.
+- The career progression static bridge contract is a source/static side guard
+  over the campaign/career progression front-door row. It records Tier C source
+  gameplay architecture plus Tier B retail/static save and career docs and
+  keeps `CCareer`, `level_structure`, `CGame`, and `CEndLevelData` as bridge
+  vocabulary only. It adds no runtime save/load behavior, defaultoptions boot
+  behavior, menu behavior, runtime mission-outcome persistence, runtime
+  objective UI, runtime Goodies wall behavior, runtime Goodies recomputation,
+  live MissionScript command effects, patch behavior, gameplay behavior, visual
+  output, renderer behavior, generated save or asset output, AppCore, WinUI,
+  CLI, Godot, release, command-arm, product-exposure, or rebuild parity
+  support.
 - WinUI Home/About copy and static accessibility/product-lane tests improved
   user-facing boundaries. This is not runtime screen-reader, visual, BEA, CDB,
   audio, or gameplay proof.
@@ -174,6 +199,8 @@ Recent bounded source-safe slices:
 - No installed game folder or original `BEA.exe` mutation.
 - No BEA/CDB/audio launch, live runtime proof, audible-output proof, or visual
   gameplay proof.
+- No runtime save/load behavior, mission-outcome persistence, objective UI,
+  Goodies behavior, generated save output, or gameplay progression proof.
 - No Host/Join enablement, player-ready online, public matchmaking, or online
   capability promotion.
 - No release publication, signing, installer/MSIX/Store work, GitHub Release
@@ -339,6 +366,32 @@ The TMM ARM4 readiness-gate package/checker guard slice additionally passed:
 - `npm run test:repo-hygiene` after a timeout retry
 - `npm run test:public-allowlist`
 
+The career progression static bridge-contract slice additionally passed:
+
+- read-only source/queue/lease review
+- high-throughput normal/adversarial consults recorded in
+  `subagents/career-progression-static-bridge-consult-record-20260703.md`
+- Codex normal consult returned `ACCEPT_WITH_NOTES`; Codex adversarial initially
+  returned `BLOCKED` because the checker accepted untracked Markdown link
+  targets, then returned `ACCEPT_WITH_NOTES` after `--others` was removed
+- Cursor Agent `composer-2.5-fast` normal/adversarial consults initially failed
+  with DNS resolution for the Cursor agent endpoint, then retries returned
+  `ACCEPT_WITH_NOTES`
+- Grok Build normal/adversarial consults initially failed on sanitized-bundle
+  read/max-turn setup, then git-initialized prompt-file retries returned
+  `ACCEPT` and `ACCEPT_WITH_NOTES`
+- consult-driven fixes removed untracked Markdown link acceptance, tightened
+  AppCore/MissionScript/mission-outcome wording, and clarified hard-payload
+  safety wording
+- `py -3 tools\career_progression_static_bridge_contract_probe.py --self-test --check`
+- `npm run test:career-progression-static-bridge-contract`
+- `git diff --check`
+- `npm run test:doc-commands`
+- `npm run test:md-links`
+- `npm run test:repo-hygiene`
+- `npm run test:hard-payload-safety`
+- `npm run test:public-allowlist`
+
 Phase 0 stale-baton correction is state-only. The `a9fe757e238a237eac8aa8f7f4e12d1bad57ec60`
 proof confirms the previous source wave was already pushed and accepted; it is
 not fresh runtime, release, Ghidra, static-accounting, or storage proof.
@@ -384,6 +437,12 @@ Known pre-existing or intentionally unclaimed gates:
   `reverse-engineering/binary-analysis/render-resource-bridge-static-contract.md`
 - Render-resource bridge static-contract checker:
   `tools/render_resource_bridge_static_contract_probe.py`
+- Career progression static bridge contract:
+  `reverse-engineering/binary-analysis/career-progression-static-bridge-contract.md`
+- Career progression static bridge-contract checker:
+  `tools/career_progression_static_bridge_contract_probe.py`
+- Career progression consult record:
+  `subagents/career-progression-static-bridge-consult-record-20260703.md`
 - WinUI UX/accessibility surfaces:
   `OnslaughtCareerEditor.WinUI/Pages/HomePage.xaml`,
   `OnslaughtCareerEditor.WinUI/Pages/AboutPage.xaml`, and
@@ -395,7 +454,7 @@ Known pre-existing or intentionally unclaimed gates:
 ## Next Executable Work
 
 1. Continue the restored standing loop under the 2026-07-02 user request after
-   this TMM ARM4 readiness-gate package/checker slice is pushed and refs are
+   this career progression static bridge-contract slice is pushed and refs are
    clean.
 2. Decide whether to run the optional representative Media smoke audio-row
    selection in a separately authorized runtime-proof lane; leave it unclaimed
@@ -429,6 +488,12 @@ Known pre-existing or intentionally unclaimed gates:
 9. Treat `test:tmm-arm4-readiness-gate-proof-plan` as a local wrapper around the
    existing public-safe continuity checker only. It is not a command-arm,
    runtime, importer, Ghidra, release, product-exposure, or rebuild-proof gate.
+10. Use the career progression static bridge contract only as a routing table
+   for future campaign/save/career questions. Any later runtime save/load,
+   defaultoptions boot, menu behavior, mission-outcome persistence, objective
+   UI, Goodies behavior, live MissionScript command effect, generated save
+   output, gameplay progression, product exposure, or rebuild claim needs its
+   own higher-authority proof and explicit non-claims.
 
 ## Stop Conditions
 
