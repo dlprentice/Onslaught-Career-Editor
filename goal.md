@@ -1,6 +1,6 @@
 # Active Goal Slice
 
-Status: active; AYA tag-family static contract validated
+Status: active; render-resource bridge static contract validated
 Last updated: 2026-07-03
 Policy: `goal.policy.md`
 
@@ -81,15 +81,16 @@ Previous bounded source-safe slice:
 
 Current bounded source-safe slice:
 
-- AYA resource tag-family static contract:
-  `reverse-engineering/game-assets/aya-resource-tag-family-static-contract.md`
-  and `tools/aya_resource_tag_family_static_contract_probe.py`.
-  This uses the rebuild front-door map to answer one bounded question:
-  `LVLR`, `WRES`, `ERES`, `LNDS`, `PAGE`, `GDIE`, `MESH`, and `TEXT` are
-  source/static loader-contract vocabulary only. Corpus counts, exact payload
-  schemas, runtime parser behavior, extractor runs, importer execution,
-  generated asset output, renderer behavior, and rebuild parity remain separate
-  higher-authority proof classes.
+- Render-resource bridge static contract:
+  `reverse-engineering/binary-analysis/render-resource-bridge-static-contract.md`
+  and `tools/render_resource_bridge_static_contract_probe.py`.
+  This uses the AYA tag-family contract and the existing renderer/texture static
+  docs to answer one bounded question: `MESH` and `TEXT` may be routed only as
+  source/static bridge vocabulary into renderer, material, mesh, and texture
+  planning docs. Runtime parser behavior, texture decode pixels, GPU upload,
+  mesh loading, animation/skinning, collision, material appearance, shader
+  behavior, visual output, renderer behavior, generated asset output, and
+  rebuild parity remain separate higher-authority proof classes.
 
 ## Current Truth
 
@@ -132,6 +133,15 @@ Current bounded source-safe slice:
   `PAGE`, `GDIE`, `MESH`, and `TEXT` as loader-contract vocabulary only. It
   adds no AppCore, WinUI, CLI, release, runtime, Ghidra, extractor, importer,
   generated asset, or command support.
+- The render-resource bridge static contract is a source/static side guard over
+  the renderer/material/mesh front-door row. It records Tier C source engine
+  architecture plus Tier B retail/static renderer and texture decode docs and
+  keeps `MESH`/`TEXT` as bridge vocabulary only. It adds no runtime parser,
+  runtime texture decode, GPU upload, texture pixels, runtime mesh loading,
+  animation/skinning, collision, material appearance, shader behavior, visual
+  output, renderer behavior, generated asset, AppCore, WinUI, CLI, Godot,
+  release, extractor, importer, command-arm, product-exposure, or rebuild
+  parity support.
 - WinUI Home/About copy and static accessibility/product-lane tests improved
   user-facing boundaries. This is not runtime screen-reader, visual, BEA, CDB,
   audio, or gameplay proof.
@@ -286,9 +296,24 @@ passed:
 The AYA resource tag-family static-contract slice additionally passed:
 
 - read-only source/queue/lease review
-- read-only acceptance returned `ACCEPT_WITH_NOTES` with no blockers
+- read-only acceptance returned `ACCEPT_WITH_NOTES` with no blockers, then
+  follow-up acceptance returned `ACCEPT` after checker link-path hardening
 - `py -3 tools\aya_resource_tag_family_static_contract_probe.py --self-test --check`
 - `npm run test:aya-resource-tag-family-static-contract`
+- `git diff --check`
+- state JSON parse
+- `npm run test:doc-commands`
+- `npm run test:md-links`
+- `npm run test:repo-hygiene`
+- `npm run test:hard-payload-safety`
+- `npm run test:public-allowlist`
+
+The render-resource bridge static-contract slice additionally passed:
+
+- read-only source/queue/lease review
+- read-only acceptance returned `ACCEPT_WITH_NOTES` with no blockers
+- `py -3 tools\render_resource_bridge_static_contract_probe.py --self-test --check`
+- `npm run test:render-resource-bridge-static-contract`
 - `git diff --check`
 - state JSON parse
 - `npm run test:doc-commands`
@@ -337,6 +362,10 @@ Known pre-existing or intentionally unclaimed gates:
   `reverse-engineering/game-assets/aya-resource-tag-family-static-contract.md`
 - AYA resource tag-family static-contract checker:
   `tools/aya_resource_tag_family_static_contract_probe.py`
+- Render-resource bridge static contract:
+  `reverse-engineering/binary-analysis/render-resource-bridge-static-contract.md`
+- Render-resource bridge static-contract checker:
+  `tools/render_resource_bridge_static_contract_probe.py`
 - WinUI UX/accessibility surfaces:
   `OnslaughtCareerEditor.WinUI/Pages/HomePage.xaml`,
   `OnslaughtCareerEditor.WinUI/Pages/AboutPage.xaml`, and
@@ -348,7 +377,8 @@ Known pre-existing or intentionally unclaimed gates:
 ## Next Executable Work
 
 1. Continue the restored standing loop under the 2026-07-02 user request after
-   this AYA tag-family static-contract slice is pushed and refs are clean.
+   this render-resource bridge static-contract slice is pushed and refs are
+   clean.
 2. Decide whether to run the optional representative Media smoke audio-row
    selection in a separately authorized runtime-proof lane; leave it unclaimed
    otherwise.
@@ -372,6 +402,12 @@ Known pre-existing or intentionally unclaimed gates:
    `PAGE`, `GDIE`, `MESH`, or `TEXT` schema, corpus, runtime, extraction,
    importer, generated-output, or rebuild claim needs its own higher-authority
    proof and explicit non-claims.
+8. Use the render-resource bridge static contract only as a routing table for
+   future renderer/material/mesh questions. Any later `MESH`/`TEXT` runtime
+   parser, texture decode, GPU upload, mesh loading, animation/skinning,
+   collision, material appearance, shader, visual output, renderer behavior,
+   generated-output, product exposure, or rebuild claim needs its own
+   higher-authority proof and explicit non-claims.
 
 ## Stop Conditions
 

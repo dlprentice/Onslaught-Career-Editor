@@ -497,6 +497,7 @@
     "test:world-thing-spawn-static-to-rebuild-contract-crosswalk": "py -3 tools\\world_thing_spawn_static_to_rebuild_contract_crosswalk_probe.py --check",
     "test:mesh-resource-render-static-contract": "py -3 tools\\mesh_resource_render_static_contract_probe.py --check",
     "test:physics-script-static-contract": "py -3 tools\\physics_script_static_contract_probe.py --check",
+    "test:render-resource-bridge-static-contract": "py -3 tools\\render_resource_bridge_static_contract_probe.py --check",
     "test:texture-resource-decode-static-contract": "py -3 tools\\texture_resource_decode_static_contract_probe.py --check",
     "test:unit-battleengine-gameplay-static-contract": "py -3 tools\\unit_battleengine_gameplay_static_contract_probe.py --check",
     "test:local-multiplayer-static-runtime-contract": "py -3 tools\\local_multiplayer_static_runtime_contract_probe.py --check",
