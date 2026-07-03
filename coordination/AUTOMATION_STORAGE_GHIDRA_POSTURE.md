@@ -10,6 +10,20 @@ in this directory and does not authorize product-source edits, hard-payload
 commits, release actions, installed-game mutation, original `BEA.exe` mutation,
 or live Ghidra mutation by itself.
 
+## Current Shutdown Override
+
+As of the 2026-07-03 shutdown closeout, the high-throughput Onslaught
+automations are stopped by explicit user request. The standing-wave launcher,
+Ghidra/RE sentinel, storage/Ghidra sentinel, validation/drift sentinel, and
+chief heartbeat should not run again unless the user explicitly authorizes a
+new bounded automation plan.
+
+The operational model after shutdown is one coordinator-led slice at a time:
+name the owner, write scope, acceptance owner, consult plan, validation gates,
+and stop conditions before editing. The sections below remain the policy for
+any future reauthorized automation or manual lane with the same action family;
+they are not current scheduling authority.
+
 ## Active Storage Posture
 
 - The current maintainer-local scratch/backup posture uses a configured
@@ -32,9 +46,10 @@ or live Ghidra mutation by itself.
 
 ## Storage Sentinel
 
-The restored storage/Ghidra sentinel is a recurring posture check, expected
-every two hours during active campaigns. It is a safety and routing loop, not a
-deletion authority.
+When explicitly reauthorized, the storage/Ghidra sentinel is a recurring
+posture check with a two-hour active-campaign cadence. It is a safety and
+routing loop, not a deletion authority. It is stopped under the current
+shutdown override.
 
 The sentinel should:
 
@@ -93,8 +108,10 @@ tracked evidence or assumed release inputs.
 ## High-Throughput Automation
 
 Restored standing-wave and Ghidra/RE automation may advance bounded work several
-times per day when authority, leases, and clean state are clear. High throughput
-means smaller, sharper slices with faster integration, not weaker gates.
+times per day only when explicitly reauthorized and when authority, leases, and
+clean state are clear. High throughput means smaller, sharper slices with faster
+integration, not weaker gates. Under the current shutdown override, this is
+policy context only and not an active loop.
 
 Each automation or worker cycle must close with exactly one primary deliverable:
 

@@ -1,26 +1,37 @@
 # Active Goal Slice
 
-Status: active; texture/resource/decode static ledger validation after career bridge reconciliation
+Status: paused; automation shutdown closeout
 Last updated: 2026-07-03
 Policy: `goal.policy.md`
 
 ## Current Slice
 
-As of the restored 2026-07-02 standing-loop request, the first active wave has
-been integrated from accepted worker commits. This supersedes the prior closeout
-stop posture as current operational truth; the closeout details below remain
-historical evidence and non-claim context only. The Wave1200 static-accounting
-support-file blocker is fixed for the tracked public-source gate and explicitly
-bounded for absent old/private materialized support packets. The docsync mirror
-drift blocker is fixed by refreshing protected mirrors and rerunning docsync.
+The high-throughput Onslaught automations were stopped by explicit user request
+on 2026-07-03 after the texture/resource/decode static-routing ledger was
+validated, committed, and pushed at `50c9b7b8`. There is no active standing
+automation slice now. Future work should be launched one bounded slice at a
+time from a human/coordinator prompt, with explicit ownership, leases, consult
+expectations, and validation gates before source edits.
+
+The shutdown normalization integrates only a narrow provenance guard for active
+Ghidra backup-root wording and concise state cleanup. It does not restart any
+automation and does not authorize runtime proof, live Ghidra mutation, copied
+`BEA.exe` patching, destructive storage cleanup, release publication,
+account/provider action, or paid spend.
+
+The Wave1200 static-accounting support-file blocker remains fixed for the
+tracked public-source gate and explicitly bounded for absent old/private
+materialized support packets. The docsync mirror drift blocker remains fixed by
+protected mirror refreshes.
 
 The previous chief epic rebuild/Ghidra/Lore/WinUI wave was integrated,
 accepted, and pushed from the accepted worker source commits. A final closeout
 continuation then integrated the accepted PatchBench receipt-helper wiring,
 static WinUI About game-install boundary copy, and Lore ZIP/package parity
-hardening. During that prior closeout, standing-loop automations were deleted;
-that stop posture is no longer the current operational state after the
-2026-07-02 user restoration request. Pre-state-update source-ref proof showed
+hardening. During that prior closeout, standing-loop automations were deleted.
+They were temporarily restored on 2026-07-02, intensified on 2026-07-03, and
+then stopped again by user direction during this shutdown normalization.
+Pre-state-update source-ref proof showed
 the earlier wave tip
 `a9fe757e238a237eac8aa8f7f4e12d1bad57ec60` matched `HEAD`, `origin/main`, and
 live remote `refs/heads/main` with divergence `0 0`.
@@ -515,47 +526,49 @@ Known pre-existing or intentionally unclaimed gates:
 
 ## Next Executable Work
 
-1. Continue the restored standing loop under the 2026-07-02 user request after
-   this texture/resource/decode static-routing ledger slice is validated and
-   pushed, or blocked with a precise validation record, and refs are clean.
-2. Decide whether to run the optional representative Media smoke audio-row
+1. Keep all Onslaught standing-loop automations stopped unless the user
+   explicitly reauthorizes a new bounded automation plan.
+2. Use the main coordinator thread for one slice at a time: name the owner,
+   write scope, acceptance owner, consult plan, validation gates, and stop
+   conditions before editing.
+3. Decide whether to run the optional representative Media smoke audio-row
    selection in a separately authorized runtime-proof lane; leave it unclaimed
    otherwise.
-3. Review the accepted PatchBench wiring during future PatchBench work by
+4. Review the accepted PatchBench wiring during future PatchBench work by
    preserving page/AppCore ownership of behavior and keeping Host/Join and
    runtime-proof boundaries unchanged.
-4. Continue Lore with bounded ZIP/package parity hardening only; do not promote
+5. Continue Lore with bounded ZIP/package parity hardening only; do not promote
    it to broad release or traversal-proof claims.
-5. Continue RE/rebuild with public-safe proof-plan/checker work only. The
+6. Continue RE/rebuild with public-safe proof-plan/checker work only. The
    vocabulary map checker is a guard for planning context, not authority for
    live Ghidra mutation, runtime proof, private asset reads, or importer
    execution.
-6. Use the internal tooling vocabulary map to pick one bounded future question
+7. Use the internal tooling vocabulary map to pick one bounded future question
    only when the next slice names its higher-authority proof class and explicit
    non-claims. The internal viewer/editor plan keeps `-modelviewer` and
    `-cutsceneeditor` blocked from product launch surfaces unless a later
    authorized retail/static proof and product command-boundary review change
    that boundary.
-7. Use the AYA tag-family static contract only as a routing table for future
+8. Use the AYA tag-family static contract only as a routing table for future
    bounded tag-family questions. Any later `LVLR`, `WRES`, `ERES`, `LNDS`,
    `PAGE`, `GDIE`, `MESH`, or `TEXT` schema, corpus, runtime, extraction,
    importer, generated-output, or rebuild claim needs its own higher-authority
    proof and explicit non-claims.
-8. Use the render-resource bridge static contract only as a routing table for
+9. Use the render-resource bridge static contract only as a routing table for
    future renderer/material/mesh questions. Any later `MESH`/`TEXT` runtime
    parser, texture decode, GPU upload, mesh loading, animation/skinning,
    collision, material appearance, shader, visual output, renderer behavior,
    generated-output, product exposure, or rebuild claim needs its own
    higher-authority proof and explicit non-claims.
-9. Use the texture/resource/decode static-routing ledger only as a routing table
+10. Use the texture/resource/decode static-routing ledger only as a routing table
    for future texture/resource/decode questions. Any later decoder layout,
    file-format schema, runtime decompression behavior, texture pixels, GPU
    upload, visual output, generated-output, product exposure, or rebuild claim
    needs its own higher-authority proof and explicit non-claims.
-10. Treat `test:tmm-arm4-readiness-gate-proof-plan` as a local wrapper around the
+11. Treat `test:tmm-arm4-readiness-gate-proof-plan` as a local wrapper around the
    existing public-safe continuity checker only. It is not a command-arm,
    runtime, importer, Ghidra, release, product-exposure, or rebuild-proof gate.
-11. Use the career progression static bridge contract only as a routing table
+12. Use the career progression static bridge contract only as a routing table
    for future campaign/save/career questions. Any later runtime save/load,
    defaultoptions boot, menu behavior, mission-outcome persistence, objective
    UI, Goodies behavior, live MissionScript command effect, generated save

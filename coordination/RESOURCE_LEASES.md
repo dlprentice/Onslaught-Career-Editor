@@ -52,14 +52,16 @@ into repo docs or readiness notes.
   desktop.
 - Live Ghidra mutation or read-back is serialized.
 - Storage retention, cleanup, and backup-producing work is serialized when it
-  can move or delete Ghidra/proof material. The recurring storage sentinel is
+  can move or delete Ghidra/proof material. Any recurring storage sentinel is
   read-only unless a separate owner holds the cleanup lease and explicit
   authority.
-- The storage/Ghidra sentinel cadence during active campaigns is every two
-  hours. Each pass must verify or unblock one concrete storage posture item, or
-  record `BLOCKED_NO_CONCRETE_WORK_AVAILABLE_<yyyymmdd-hhmm>` with checked
-  roots, blockers, and next eligible action. A pass that only says "no change"
-  is incomplete unless it records that blocker-style evidence.
+- During a future explicitly reauthorized active campaign, the storage/Ghidra
+  sentinel cadence is every two hours. Each pass must verify or unblock one
+  concrete storage posture item, or record
+  `BLOCKED_NO_CONCRETE_WORK_AVAILABLE_<yyyymmdd-hhmm>` with checked roots,
+  blockers, and next eligible action. A pass that only says "no change" is
+  incomplete unless it records that blocker-style evidence. Under the current
+  shutdown override, no recurring sentinel is active.
 - Release package builds are serialized when they share output folders or
   package names.
 - Broad .NET build/test gates should run serially when contention can produce

@@ -75,7 +75,8 @@ durable truth only in local campaign reports.
 - [REPORT_CONTRACT.md](REPORT_CONTRACT.md) defines worker, reviewer,
   integration, and acceptance report fields.
 - [AUTOMATION_STORAGE_GHIDRA_POSTURE.md](AUTOMATION_STORAGE_GHIDRA_POSTURE.md)
-  defines restored high-throughput automation, storage sentinel, Ghidra/headless
+  defines the current automation shutdown override plus future reauthorization
+  policy for high-throughput automation, storage sentinels, Ghidra/headless
   gates, proof-retention, consult, and advancement-vs-hygiene posture.
 
 For contributor setup, payload safety, and normal lane validation, continue to

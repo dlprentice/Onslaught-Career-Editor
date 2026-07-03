@@ -501,6 +501,7 @@
     "test:render-resource-bridge-static-contract": "py -3 tools\\render_resource_bridge_static_contract_probe.py --check",
     "test:career-progression-static-bridge-contract": "py -3 tools\\career_progression_static_bridge_contract_probe.py --check",
     "test:texture-resource-decode-static-contract": "py -3 tools\\texture_resource_decode_static_contract_probe.py --check",
+    "test:ghidra-legacy-backup-root-provenance-guard": "py -3 tools\\ghidra_legacy_backup_root_provenance_guard.py --self-test && py -3 tools\\ghidra_legacy_backup_root_provenance_guard.py --check",
     "test:unit-battleengine-gameplay-static-contract": "py -3 tools\\unit_battleengine_gameplay_static_contract_probe.py --check",
     "test:local-multiplayer-static-runtime-contract": "py -3 tools\\local_multiplayer_static_runtime_contract_probe.py --check",
     "test:ghidra-memory-heap-deltas-wave812": "py -3 tools\\ghidra_memory_heap_deltas_wave812_probe.py --check",
