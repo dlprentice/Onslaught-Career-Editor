@@ -141,6 +141,7 @@
     "archive:electron:test:bundle-smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File archive/electron-workbench/release/Test-ElectronBundleSmoke.ps1",
     "test:md-links": "py -3 tools\\md_link_check.py --out-dir subagents\\md-link-check",
     "test:doc-commands": "py -3 tools\\npm_script_doc_check.py && py -3 tools\\public_package_doc_command_check.py --self-test && py -3 tools\\public_package_doc_command_check.py",
+    "test:original-system-internal-tooling-vocabulary-map": "py -3 tools\\original_system_internal_tooling_vocabulary_map_probe.py --check",
     "test:hard-payload-safety": "py -3 tools\\hard_payload_safety_check.py --self-test && py -3 tools\\hard_payload_safety_check.py",
     "test:public-allowlist": "npm run test:hard-payload-safety && npm run test:public-submodule-payload-safety && npm run test:public-primary-migration-inventory",
     "test:public-candidate-inventory": "py -3 tools\\public_candidate_inventory_check.py --self-test --candidate-root .",
