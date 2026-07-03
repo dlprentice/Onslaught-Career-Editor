@@ -40,6 +40,11 @@ Public-safe maps that use Stuart source names as candidate vocabulary only:
   source-only internal editor, developer-tool, resource, and pipeline vocabulary
   for clean-room planning. It is context only, not readiness-gate execution,
   command arming, importer execution, runtime proof, or rebuild parity.
+- **[internal-viewer-editor-command-boundary-proof-plan.md](internal-viewer-editor-command-boundary-proof-plan.md)** -
+  bounded source-only proof plan for the internal viewer/editor command
+  boundary. It keeps `-modelviewer` and `-cutsceneeditor` as source/internal
+  vocabulary and blocked product flags unless a later retail/static proof and
+  explicit product command-boundary review change that status.
 
 ### Core Systems
 

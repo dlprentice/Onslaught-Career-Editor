@@ -1,6 +1,6 @@
 # Active Goal Slice
 
-Status: active; source-safe vocabulary checker reconciled
+Status: active; internal viewer/editor command-boundary proof plan validated
 Last updated: 2026-07-03
 Policy: `goal.policy.md`
 
@@ -69,6 +69,16 @@ Accepted source-safe vocabulary-map checker commit, replayed onto current
   accepted worker commit `f1c98fa423a787cb2f3160b7c046e912aa9030f9`,
   reconciled source commit `30fc408f`
 
+Current bounded source-safe slice:
+
+- Internal viewer/editor command-boundary proof plan:
+  `reverse-engineering/source-code/internal-viewer-editor-command-boundary-proof-plan.md`
+  and `tools/internal_viewer_editor_command_boundary_proof_plan_probe.py`.
+  This uses the original-system vocabulary map to answer one question:
+  `-modelviewer` and `-cutsceneeditor` remain source/internal vocabulary and
+  blocked product flags unless a later retail/static proof and explicit product
+  command-boundary review change that status.
+
 ## Current Truth
 
 - PatchBench receipt rendering now runs through a primitive helper via a
@@ -99,6 +109,11 @@ Accepted source-safe vocabulary-map checker commit, replayed onto current
   `tmm-arm4-readiness-gate` continuity. It is not readiness-gate execution,
   command arming, importer execution, generated payload output, runtime proof,
   rebuild parity, or no-noticeable-difference proof.
+- The internal viewer/editor command-boundary proof plan is a source-only side
+  guard over that vocabulary map. It records Tier C source vocabulary plus
+  tracked Tier B static command-boundary docs and keeps `-modelviewer` and
+  `-cutsceneeditor` blocked from executable/product surfaces. It adds no
+  AppCore, WinUI, CLI, release, runtime, Ghidra, patch, or command support.
 - WinUI Home/About copy and static accessibility/product-lane tests improved
   user-facing boundaries. This is not runtime screen-reader, visual, BEA, CDB,
   audio, or gameplay proof.
@@ -235,6 +250,21 @@ The source-safe vocabulary-map checker reconciliation additionally passed:
 - `npm run test:hard-payload-safety`
 - `npm run test:public-allowlist`
 
+The internal viewer/editor command-boundary proof-plan slice additionally
+passed:
+
+- read-only source/queue/lease review and bounded candidate consult
+- `py -3 tools\internal_viewer_editor_command_boundary_proof_plan_probe.py --self-test`
+- `py -3 tools\internal_viewer_editor_command_boundary_proof_plan_probe.py --check`
+- `npm run test:internal-viewer-editor-command-boundary-proof-plan`
+- `npm run test:original-system-internal-tooling-vocabulary-map`
+- `git diff --check`
+- `npm run test:doc-commands`
+- `npm run test:md-links`
+- `npm run test:repo-hygiene`
+- `npm run test:hard-payload-safety`
+- `npm run test:public-allowlist`
+
 Phase 0 stale-baton correction is state-only. The `a9fe757e238a237eac8aa8f7f4e12d1bad57ec60`
 proof confirms the previous source wave was already pushed and accepted; it is
 not fresh runtime, release, Ghidra, static-accounting, or storage proof.
@@ -267,6 +297,10 @@ Known pre-existing or intentionally unclaimed gates:
   `reverse-engineering/source-code/original-system-internal-tooling-vocabulary-map.md`
 - Vocabulary map checker:
   `tools/original_system_internal_tooling_vocabulary_map_probe.py`
+- Internal viewer/editor command-boundary proof plan:
+  `reverse-engineering/source-code/internal-viewer-editor-command-boundary-proof-plan.md`
+- Internal viewer/editor command-boundary checker:
+  `tools/internal_viewer_editor_command_boundary_proof_plan_probe.py`
 - WinUI UX/accessibility surfaces:
   `OnslaughtCareerEditor.WinUI/Pages/HomePage.xaml`,
   `OnslaughtCareerEditor.WinUI/Pages/AboutPage.xaml`, and
@@ -278,7 +312,7 @@ Known pre-existing or intentionally unclaimed gates:
 ## Next Executable Work
 
 1. Continue the restored standing loop under the 2026-07-02 user request after
-   this source-safe checker reconciliation is pushed and refs are clean.
+   this internal viewer/editor boundary slice is pushed and refs are clean.
 2. Decide whether to run the optional representative Media smoke audio-row
    selection in a separately authorized runtime-proof lane; leave it unclaimed
    otherwise.
@@ -293,7 +327,10 @@ Known pre-existing or intentionally unclaimed gates:
    execution.
 6. Use the internal tooling vocabulary map to pick one bounded future question
    only when the next slice names its higher-authority proof class and explicit
-   non-claims.
+   non-claims. The internal viewer/editor plan keeps `-modelviewer` and
+   `-cutsceneeditor` blocked from product launch surfaces unless a later
+   authorized retail/static proof and product command-boundary review change
+   that boundary.
 
 ## Stop Conditions
 
