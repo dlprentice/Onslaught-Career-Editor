@@ -1,6 +1,6 @@
 # Active Goal Slice
 
-Status: active; render-resource bridge static contract validated
+Status: active; TMM ARM4 readiness-gate package/checker guard validated
 Last updated: 2026-07-03
 Policy: `goal.policy.md`
 
@@ -69,7 +69,7 @@ Accepted source-safe vocabulary-map checker commit, replayed onto current
   accepted worker commit `f1c98fa423a787cb2f3160b7c046e912aa9030f9`,
   reconciled source commit `30fc408f`
 
-Previous bounded source-safe slice:
+Recent bounded source-safe slices:
 
 - Internal viewer/editor command-boundary proof plan:
   `reverse-engineering/source-code/internal-viewer-editor-command-boundary-proof-plan.md`
@@ -78,9 +78,6 @@ Previous bounded source-safe slice:
   `-modelviewer` and `-cutsceneeditor` remain source/internal vocabulary and
   blocked product flags unless a later retail/static proof and explicit product
   command-boundary review change that status.
-
-Current bounded source-safe slice:
-
 - Render-resource bridge static contract:
   `reverse-engineering/binary-analysis/render-resource-bridge-static-contract.md`
   and `tools/render_resource_bridge_static_contract_probe.py`.
@@ -91,6 +88,13 @@ Current bounded source-safe slice:
   mesh loading, animation/skinning, collision, material appearance, shader
   behavior, visual output, renderer behavior, generated asset output, and
   rebuild parity remain separate higher-authority proof classes.
+- TMM ARM4 readiness-gate package/checker guard:
+  `package.json` now exposes `test:tmm-arm4-readiness-gate-proof-plan`, and
+  `tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py` now validates that
+  package-script registration. This is public-safe tooling support only; it is
+  not readiness-gate execution, command arming, importer execution, runtime
+  proof, Ghidra mutation/read-back, BEA/CDB launch, generated asset output,
+  product exposure, release action, or rebuild parity.
 
 ## Current Truth
 
@@ -111,7 +115,9 @@ Current bounded source-safe slice:
 - The rebuild/readiness-gate update is public-safe continuity hardening only.
   It is not command arming, importer execution, private asset reading,
   generated payload output, runtime proof, rebuild parity, visual/gameplay
-  parity, or no-noticeable-difference proof.
+  parity, or no-noticeable-difference proof. The TMM ARM4 proof-plan checker now
+  also guards the short npm wrapper
+  `test:tmm-arm4-readiness-gate-proof-plan`.
 - Original-system mapping is a public-safe crosswalk. Source names are candidate
   owners; retail binary/save/runtime evidence remains the higher authority for
   behavior.
@@ -322,6 +328,17 @@ The render-resource bridge static-contract slice additionally passed:
 - `npm run test:hard-payload-safety`
 - `npm run test:public-allowlist`
 
+The TMM ARM4 readiness-gate package/checker guard slice additionally passed:
+
+- `py -3 tools\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py --self-test --check`
+- `npm run test:tmm-arm4-readiness-gate-proof-plan`
+- package/state JSON parse
+- `git diff --check`
+- `npm run test:doc-commands`
+- `npm run test:md-links`
+- `npm run test:repo-hygiene` after a timeout retry
+- `npm run test:public-allowlist`
+
 Phase 0 stale-baton correction is state-only. The `a9fe757e238a237eac8aa8f7f4e12d1bad57ec60`
 proof confirms the previous source wave was already pushed and accepted; it is
 not fresh runtime, release, Ghidra, static-accounting, or storage proof.
@@ -346,8 +363,9 @@ Known pre-existing or intentionally unclaimed gates:
   `tools/winui_zip_package_probe.py`, and
   `tools/winui_zip_package_probe_test.py`
 - Rebuild readiness-gate continuity:
-  `tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py` and the linked
-  proof-plan under `reverse-engineering/game-assets/`
+  `tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py`, the linked
+  proof-plan under `reverse-engineering/game-assets/`, and
+  `npm run test:tmm-arm4-readiness-gate-proof-plan`
 - Original-system crosswalk:
   `roadmap/rebuild-front-door-chain-map.md`
 - Source-only internal tooling vocabulary map:
@@ -377,7 +395,7 @@ Known pre-existing or intentionally unclaimed gates:
 ## Next Executable Work
 
 1. Continue the restored standing loop under the 2026-07-02 user request after
-   this render-resource bridge static-contract slice is pushed and refs are
+   this TMM ARM4 readiness-gate package/checker slice is pushed and refs are
    clean.
 2. Decide whether to run the optional representative Media smoke audio-row
    selection in a separately authorized runtime-proof lane; leave it unclaimed
@@ -408,6 +426,9 @@ Known pre-existing or intentionally unclaimed gates:
    collision, material appearance, shader, visual output, renderer behavior,
    generated-output, product exposure, or rebuild claim needs its own
    higher-authority proof and explicit non-claims.
+9. Treat `test:tmm-arm4-readiness-gate-proof-plan` as a local wrapper around the
+   existing public-safe continuity checker only. It is not a command-arm,
+   runtime, importer, Ghidra, release, product-exposure, or rebuild-proof gate.
 
 ## Stop Conditions
 

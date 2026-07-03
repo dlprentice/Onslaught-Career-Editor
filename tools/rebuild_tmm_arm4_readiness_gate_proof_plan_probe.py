@@ -37,6 +37,7 @@ STATIC_BACKLOG = ROOT / "roadmap" / "static-to-proof-rebuild-transition-backlog.
 ROADMAP_INDEX = ROOT / "roadmap" / "ROADMAP-INDEX.md"
 RE_INDEX = ROOT / "reverse-engineering" / "RE-INDEX.md"
 GAME_ASSETS_INDEX = ROOT / "reverse-engineering" / "game-assets" / "_index.md"
+PACKAGE_JSON = ROOT / "package.json"
 
 ALIAS = "tmm-arm4-readiness-gate"
 THIS_SLICE = (
@@ -60,6 +61,8 @@ SOURCE_CONTRACT_KEY = (
 )
 SOURCE_FILE_NAME = "texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.v1.json"
 PLAN_FILE_NAME = "texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md"
+PACKAGE_SCRIPT = "test:tmm-arm4-readiness-gate-proof-plan"
+PACKAGE_COMMAND = r"py -3 tools\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py --check"
 PREMATURE_RESULT_JSON_FILE_NAMES = (
     "texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.v1.json",
     "texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof.v1.json",
@@ -474,6 +477,13 @@ def check_plan_text(plan_text: str, source: Mapping[str, Any]) -> None:
     )
 
 
+def check_package_script() -> None:
+    package = read_json(PACKAGE_JSON)
+    scripts = package.get("scripts")
+    require(isinstance(scripts, Mapping), "package.json scripts must be an object")
+    require(scripts.get(PACKAGE_SCRIPT) == PACKAGE_COMMAND, f"package.json missing {PACKAGE_SCRIPT}")
+
+
 def check_front_door_docs() -> None:
     chain = read_text(CHAIN_MAP)
     backlog = read_text(STATIC_BACKLOG)
@@ -526,6 +536,7 @@ def run_check() -> None:
     source = read_json(SOURCE_PROOF)
     check_source_proof(source)
     check_plan_text(read_text(PLAN), source)
+    check_package_script()
     check_front_door_docs()
 
 
