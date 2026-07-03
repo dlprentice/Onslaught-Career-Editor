@@ -1,6 +1,6 @@
 # Active Goal Slice
 
-Status: active; internal viewer/editor command-boundary proof plan validated
+Status: active; AYA tag-family static contract validated
 Last updated: 2026-07-03
 Policy: `goal.policy.md`
 
@@ -69,7 +69,7 @@ Accepted source-safe vocabulary-map checker commit, replayed onto current
   accepted worker commit `f1c98fa423a787cb2f3160b7c046e912aa9030f9`,
   reconciled source commit `30fc408f`
 
-Current bounded source-safe slice:
+Previous bounded source-safe slice:
 
 - Internal viewer/editor command-boundary proof plan:
   `reverse-engineering/source-code/internal-viewer-editor-command-boundary-proof-plan.md`
@@ -78,6 +78,18 @@ Current bounded source-safe slice:
   `-modelviewer` and `-cutsceneeditor` remain source/internal vocabulary and
   blocked product flags unless a later retail/static proof and explicit product
   command-boundary review change that status.
+
+Current bounded source-safe slice:
+
+- AYA resource tag-family static contract:
+  `reverse-engineering/game-assets/aya-resource-tag-family-static-contract.md`
+  and `tools/aya_resource_tag_family_static_contract_probe.py`.
+  This uses the rebuild front-door map to answer one bounded question:
+  `LVLR`, `WRES`, `ERES`, `LNDS`, `PAGE`, `GDIE`, `MESH`, and `TEXT` are
+  source/static loader-contract vocabulary only. Corpus counts, exact payload
+  schemas, runtime parser behavior, extractor runs, importer execution,
+  generated asset output, renderer behavior, and rebuild parity remain separate
+  higher-authority proof classes.
 
 ## Current Truth
 
@@ -114,6 +126,12 @@ Current bounded source-safe slice:
   tracked Tier B static command-boundary docs and keeps `-modelviewer` and
   `-cutsceneeditor` blocked from executable/product surfaces. It adds no
   AppCore, WinUI, CLI, release, runtime, Ghidra, patch, or command support.
+- The AYA resource tag-family static contract is a source/static side guard over
+  the rebuild front-door AYA row. It records Tier C source/file-format docs plus
+  Tier B retail/static loader docs and keeps `LVLR`, `WRES`, `ERES`, `LNDS`,
+  `PAGE`, `GDIE`, `MESH`, and `TEXT` as loader-contract vocabulary only. It
+  adds no AppCore, WinUI, CLI, release, runtime, Ghidra, extractor, importer,
+  generated asset, or command support.
 - WinUI Home/About copy and static accessibility/product-lane tests improved
   user-facing boundaries. This is not runtime screen-reader, visual, BEA, CDB,
   audio, or gameplay proof.
@@ -265,6 +283,20 @@ passed:
 - `npm run test:hard-payload-safety`
 - `npm run test:public-allowlist`
 
+The AYA resource tag-family static-contract slice additionally passed:
+
+- read-only source/queue/lease review
+- read-only acceptance returned `ACCEPT_WITH_NOTES` with no blockers
+- `py -3 tools\aya_resource_tag_family_static_contract_probe.py --self-test --check`
+- `npm run test:aya-resource-tag-family-static-contract`
+- `git diff --check`
+- state JSON parse
+- `npm run test:doc-commands`
+- `npm run test:md-links`
+- `npm run test:repo-hygiene`
+- `npm run test:hard-payload-safety`
+- `npm run test:public-allowlist`
+
 Phase 0 stale-baton correction is state-only. The `a9fe757e238a237eac8aa8f7f4e12d1bad57ec60`
 proof confirms the previous source wave was already pushed and accepted; it is
 not fresh runtime, release, Ghidra, static-accounting, or storage proof.
@@ -301,6 +333,10 @@ Known pre-existing or intentionally unclaimed gates:
   `reverse-engineering/source-code/internal-viewer-editor-command-boundary-proof-plan.md`
 - Internal viewer/editor command-boundary checker:
   `tools/internal_viewer_editor_command_boundary_proof_plan_probe.py`
+- AYA resource tag-family static contract:
+  `reverse-engineering/game-assets/aya-resource-tag-family-static-contract.md`
+- AYA resource tag-family static-contract checker:
+  `tools/aya_resource_tag_family_static_contract_probe.py`
 - WinUI UX/accessibility surfaces:
   `OnslaughtCareerEditor.WinUI/Pages/HomePage.xaml`,
   `OnslaughtCareerEditor.WinUI/Pages/AboutPage.xaml`, and
@@ -312,7 +348,7 @@ Known pre-existing or intentionally unclaimed gates:
 ## Next Executable Work
 
 1. Continue the restored standing loop under the 2026-07-02 user request after
-   this internal viewer/editor boundary slice is pushed and refs are clean.
+   this AYA tag-family static-contract slice is pushed and refs are clean.
 2. Decide whether to run the optional representative Media smoke audio-row
    selection in a separately authorized runtime-proof lane; leave it unclaimed
    otherwise.
@@ -331,6 +367,11 @@ Known pre-existing or intentionally unclaimed gates:
    `-cutsceneeditor` blocked from product launch surfaces unless a later
    authorized retail/static proof and product command-boundary review change
    that boundary.
+7. Use the AYA tag-family static contract only as a routing table for future
+   bounded tag-family questions. Any later `LVLR`, `WRES`, `ERES`, `LNDS`,
+   `PAGE`, `GDIE`, `MESH`, or `TEXT` schema, corpus, runtime, extraction,
+   importer, generated-output, or rebuild claim needs its own higher-authority
+   proof and explicit non-claims.
 
 ## Stop Conditions
 

@@ -18,6 +18,14 @@ The public repo tracks tools, docs, contracts, and public-safe summaries. It doe
 not track extracted game assets, copied executables, private proof captures, or
 full Ghidra project stores.
 
+## Public-Safe Static Contracts
+
+- [AYA resource tag-family static contract](aya-resource-tag-family-static-contract.md)
+  - alias `aya-tag-family-static-contract`; source/static planning contract for
+    `LVLR`, `WRES`, `ERES`, `LNDS`, `PAGE`, `GDIE`, `MESH`, and `TEXT`, not
+    corpus proof, runtime parser proof, generated asset output, importer
+    execution, or rebuild parity.
+
 ## Historical Evidence Notes
 
 Materialized Texture / Mesh Material Sidecar Importer Private Corpus Real Importer Dry-Run Harness Command Arm Checklist Command Arm Checklist Command Arm Checklist Command Arm Checklist Readiness Gate Proof Plan slot: [Texture / Mesh Material Sidecar Importer Private Corpus Real Importer Dry-Run Harness Command Arm Checklist Command Arm Checklist Command Arm Checklist Command Arm Checklist Readiness Gate Proof Plan](texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md). Alias: `tmm-arm4-readiness-gate`. Status: public-safe proof-plan slot and continuity guard only, not readiness-gate execution, command arming, importer execution, generated asset output, runtime proof, rebuild parity, or no-noticeable-difference proof; it claims no runtime proof, no rebuild parity, and no no-noticeable-difference proof. Source evidence is the completed public-safe `tmm-arm4-validation` proof with commandArmChecklistRowsConsumed=99, commandArmChecklistValidationRows=99, passedCommandArmChecklistValidationRowCount=99, failedCommandArmChecklistValidationRowCount=0, validatedNotRunCommandArmChecklistRowCount=99, armedCommandRowCount=0, executedCommandRowCount=0, shellDispatchedCommandRowCount=0, consumerArchiveTotalCount=301, unknownAyaArchiveClassCount=0, publicLeakCheck=PASS, realImporterExecuted=false, actualAssetImportRows=0, generatedAssetRows=0, rawPathRows=0, rawFilenameRows=0, rawHashRows=0, byteLengthRows=0, rawCommandArgumentRows=0, publishedCommandArgumentRows=0, rawCommandDryRunTraceRows=0. Checker: `py -3 tools\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py --self-test --check`.

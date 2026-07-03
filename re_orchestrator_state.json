@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-03",
-  "currentFocus": "Static RE/Ghidra closure remains unchanged. Current source-safe standing-wave work added an internal viewer/editor command-boundary proof plan and checker that keep -modelviewer and -cutsceneeditor source/internal and blocked from product launch surfaces. Runtime, rebuild, payload, Ghidra, storage, release, command-arming, and product-enable non-claims remain preserved.",
+  "currentFocus": "Static RE/Ghidra closure remains unchanged. Current source-safe standing-wave work added an AYA resource tag-family static contract and checker that keep LVLR, WRES, ERES, LNDS, PAGE, GDIE, MESH, and TEXT as source/static loader-contract vocabulary. Runtime, rebuild, payload, Ghidra, storage, release, extractor/importer, generated-output, command-arming, and product-enable non-claims remain preserved.",
   "campaignPosture": {
     "status": "restored-wave-accepted-remediated",
     "summary": "The prior closeout recorded deleted standing-loop automations. That stop posture is superseded by the 2026-07-02 user request restoring automations. The first restored wave was integrated and pushed at 898e583efdff86847c0a55dca15f2ac088e43fc1; read-only acceptance then required sanitizing exact maintainer-local Ghidra project/backup paths from current tracked runbook wording.",
@@ -72,6 +72,26 @@
       "rebuild, visual, gameplay, or no-noticeable-difference proof"
     ]
   },
+  "ayaResourceTagFamilyContract": {
+    "status": "source/static contract and checker integrated",
+    "scope": "aya-resource-tag-family-static-contract",
+    "proofPlan": "reverse-engineering/game-assets/aya-resource-tag-family-static-contract.md",
+    "checker": "tools/aya_resource_tag_family_static_contract_probe.py",
+    "boundary": "LVLR, WRES, ERES, LNDS, PAGE, GDIE, MESH, and TEXT remain loader-contract vocabulary sourced from tracked source/file-format docs plus retail/static loader docs.",
+    "nonClaims": [
+      "fresh corpus counts",
+      "exact payload schemas",
+      "runtime parser behavior",
+      "extractor execution",
+      "importer execution",
+      "generated asset output",
+      "renderer behavior",
+      "AppCore/WinUI/CLI/release support",
+      "Ghidra mutation",
+      "private asset or payload reads",
+      "rebuild, visual, gameplay, or no-noticeable-difference proof"
+    ]
+  },
   "loreAndWinuiBoundaries": {
     "lore": "Lore pack fail-closed hardening is integrated but does not prove release readiness, broad ZIP package probe parity, complete traversal protection, runtime UI proof, or package publication.",
     "assetLibrary": "Asset Library source tests guard passive path summary and polite live-region scope, not runtime UIA/screen-reader behavior."
@@ -112,11 +132,14 @@
     "rebuildChecker": "tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py",
     "internalViewerEditorBoundaryPlan": "reverse-engineering/source-code/internal-viewer-editor-command-boundary-proof-plan.md",
     "internalViewerEditorBoundaryChecker": "tools/internal_viewer_editor_command_boundary_proof_plan_probe.py",
+    "ayaResourceTagFamilyContract": "reverse-engineering/game-assets/aya-resource-tag-family-static-contract.md",
+    "ayaResourceTagFamilyChecker": "tools/aya_resource_tag_family_static_contract_probe.py",
     "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
     "reIndex": "reverse-engineering/RE-INDEX.md"
   },
   "validation": {
-    "stateRefresh": "Internal viewer/editor command-boundary proof-plan slice plus 2026-07-03 storage/automation state continuity; storage cleanup occurred earlier under explicit user direction; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, original-BEA mutation, or command authorization occurred.",
+    "stateRefresh": "AYA resource tag-family static-contract slice plus 2026-07-03 storage/automation state continuity; storage cleanup occurred earlier under explicit user direction; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, original-BEA mutation, command authorization, extractor execution, importer execution, or generated asset output occurred.",
+    "latestAyaTagFamilyStaticContract": "The AYA resource tag-family static-contract slice passed read-only source/queue/lease review, read-only acceptance with ACCEPT_WITH_NOTES and no blockers, py -3 tools\\aya_resource_tag_family_static_contract_probe.py --self-test --check, npm run test:aya-resource-tag-family-static-contract, git diff --check, state JSON parse, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene, npm run test:hard-payload-safety, and npm run test:public-allowlist. Acceptance noted the checker uses existing extraction-pipeline count strings as anchor drift guards only, not fresh count authority.",
     "latestInternalViewerEditorBoundary": "The internal viewer/editor command-boundary proof-plan slice passed read-only source/queue/lease review, bounded candidate consult, py -3 tools\\internal_viewer_editor_command_boundary_proof_plan_probe.py --self-test, py -3 tools\\internal_viewer_editor_command_boundary_proof_plan_probe.py --check, npm run test:internal-viewer-editor-command-boundary-proof-plan, npm run test:original-system-internal-tooling-vocabulary-map, git diff --check, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene, npm run test:hard-payload-safety, and npm run test:public-allowlist.",
     "latestIntegration": "Current source-safe vocabulary-map checker reconciliation replayed accepted worker commit f1c98fa423a787cb2f3160b7c046e912aa9030f9 onto the storage-sentinel-refreshed origin/main tip as 30fc408f. The prior accepted wave passed root/source consult, adversarial safety consult, active-wave consult, W1 implementation, spec re-review, and code-quality re-review after the tracked-Markdown link guard fix. Reconciliation validation passed py -3 tools\\original_system_internal_tooling_vocabulary_map_probe.py --self-test, py -3 tools\\original_system_internal_tooling_vocabulary_map_probe.py --check, npm run test:original-system-internal-tooling-vocabulary-map, git diff --check, state JSON parse, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene, npm run test:hard-payload-safety, and npm run test:public-allowlist. Earlier restored-wave integration brought in accepted worker commits for restored-loop batons, Wave1200 public-source accounting support, and docsync mirror reconciliation. Acceptance remediation sanitized exact maintainer-local Ghidra project/backup path wording from current tracked runbook surfaces and passed diff whitespace, state JSON parse, scoped current-runbook/state local-path scan, docsync, docs commands, Markdown links, Wave1200/static-accounting/progress gates, repo hygiene, hard-payload safety, and public allowlist. Earlier source-ref evidence at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60 and rescue closeout evidence at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remain historical and do not imply fresh Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, or original-BEA mutation. The 2026-07-03 storage/automation closeout passed state JSON parse, focused live-runtime helper unit tests, docs commands, Markdown links, repo hygiene, hard-payload safety, and public allowlist after final scoped diff review."
   },
@@ -129,12 +152,12 @@
     "Optional representative Media smoke audio-row selection remains unclaimed unless separately authorized and proven."
   ],
   "nextSteps": [
-    "Verify git refs after this internal viewer/editor command-boundary slice is pushed before launching another slice.",
+    "Verify git refs after this AYA tag-family static-contract slice is pushed before launching another slice.",
     "Keep static RE mutation paused unless a product/runtime contradiction points back to a specific RE issue.",
     "Treat tmm-arm4-readiness-gate as proof-plan/checker support only; do not claim readiness-gate execution, runtime proof, or rebuild parity.",
     "Use PatchBench and Asset Library source tests as bounded source guards only; do not claim live runtime UI/accessibility proof from them.",
     "Do not run live BEA/CDB/audio proof without explicit runtime-proof authority, leases, private proof-root readiness, arm phrase handling, and cleanup validation.",
     "Do not delete future Ghidra/proof material without a candidate-specific local manifest, retained alternative or structured summary, consults where warranted, explicit authority, and acceptance.",
-    "Use the source-only internal tooling vocabulary map only to choose one bounded future question with a named higher-authority proof class; keep the internal viewer/editor checker as a public-source boundary guard, not proof authority or command authorization."
+    "Use the source-only internal tooling vocabulary map and AYA tag-family static contract only to choose bounded future questions with named higher-authority proof classes; keep both checkers as public-source boundary guards, not proof authority or command authorization."
   ]
 }
