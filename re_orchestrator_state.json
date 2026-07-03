@@ -1,9 +1,9 @@
 {
   "lastUpdated": "2026-07-03",
-  "currentFocus": "Static RE/Ghidra closure remains unchanged; standing-loop automations were restored by user request on 2026-07-02 and the first restored wave integrated the Static Wave1200 public-source accounting fix/boundary plus docsync mirror reconciliation. Runtime, rebuild, storage, payload, and release non-claims remain preserved.",
+  "currentFocus": "Static RE/Ghidra closure remains unchanged; standing-loop automations were restored by user request on 2026-07-02 and the first restored wave integrated the Static Wave1200 public-source accounting fix/boundary plus docsync mirror reconciliation. Acceptance remediation sanitized current tracked Ghidra project/backup path wording while runtime, rebuild, storage, payload, and release non-claims remain preserved.",
   "campaignPosture": {
-    "status": "restored-wave-integrated",
-    "summary": "The prior closeout recorded deleted standing-loop automations. That stop posture is superseded by the 2026-07-02 user request restoring automations. The first restored wave is integrated in source and pending root validation/push.",
+    "status": "restored-wave-accepted-remediated",
+    "summary": "The prior closeout recorded deleted standing-loop automations. That stop posture is superseded by the 2026-07-02 user request restoring automations. The first restored wave was integrated and pushed at 898e583efdff86847c0a55dca15f2ac088e43fc1; read-only acceptance then required sanitizing exact maintainer-local Ghidra project/backup paths from current tracked runbook wording.",
     "integratedRestoredWave": [
       "Static Wave1200 public-source accounting fix/boundary",
       "docsync mirror drift reconciliation"
@@ -89,8 +89,8 @@
     "reIndex": "reverse-engineering/RE-INDEX.md"
   },
   "validation": {
-    "stateRefresh": "Integration state refresh only; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, or original-BEA mutation.",
-    "latestIntegration": "Current restored-wave integration brings in accepted worker commits for restored-loop batons, Wave1200 public-source accounting support, and docsync mirror reconciliation. Earlier source-ref evidence at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60 and rescue closeout evidence at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remain historical and do not imply fresh Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, original-BEA mutation, or storage deletion."
+    "stateRefresh": "Acceptance-remediation state refresh only; no Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, or original-BEA mutation.",
+    "latestIntegration": "Current restored-wave integration brings in accepted worker commits for restored-loop batons, Wave1200 public-source accounting support, and docsync mirror reconciliation. Acceptance remediation sanitizes exact maintainer-local Ghidra project/backup path wording from current tracked runbook surfaces and passed diff whitespace, state JSON parse, scoped current-runbook/state local-path scan, docsync, docs commands, Markdown links, Wave1200/static-accounting/progress gates, repo hygiene, hard-payload safety, and public allowlist. Earlier source-ref evidence at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60 and rescue closeout evidence at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remain historical and do not imply fresh Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, original-BEA mutation, or storage deletion."
   },
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
@@ -101,7 +101,7 @@
     "Optional representative Media smoke audio-row selection remains unclaimed unless separately authorized and proven."
   ],
   "nextSteps": [
-    "Finish root validation and push verification for the restored-wave integration before launching another slice.",
+    "Verify git refs after the acceptance-remediation push before launching another slice.",
     "Keep static RE mutation paused unless a product/runtime contradiction points back to a specific RE issue.",
     "Treat tmm-arm4-readiness-gate as proof-plan/checker support only; do not claim readiness-gate execution, runtime proof, or rebuild parity.",
     "Use PatchBench and Asset Library source tests as bounded source guards only; do not claim live runtime UI/accessibility proof from them.",

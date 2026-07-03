@@ -1,6 +1,6 @@
 # Active Goal Slice
 
-Status: active; automations restored; Wave1200 and docsync closeout integrated
+Status: active; automations restored; Wave1200/docsync integrated; acceptance blocker sanitized
 Last updated: 2026-07-03
 Policy: `goal.policy.md`
 
@@ -24,6 +24,13 @@ that stop posture is no longer the current operational state after the
 the earlier wave tip
 `a9fe757e238a237eac8aa8f7f4e12d1bad57ec60` matched `HEAD`, `origin/main`, and
 live remote `refs/heads/main` with divergence `0 0`.
+
+The restored-wave source integration was pushed at
+`898e583efdff86847c0a55dca15f2ac088e43fc1`. Read-only acceptance returned
+`ACCEPTED_WITH_EXPLICIT_BLOCKERS` for exact maintainer-local Ghidra
+project/backup paths in active tracked runbooks. This closeout sanitizes those
+current runbook/project-root references while keeping runtime, storage, Ghidra,
+release, rebuild, and gameplay non-claims intact.
 
 Accepted source commits integrated by cherry-pick:
 
@@ -183,6 +190,23 @@ before root integration:
 - `npm run test:hard-payload-safety`
 - `npm run test:public-allowlist` after timeout retry where needed
 
+Acceptance remediation for exact maintainer-local Ghidra project/backup path
+wording additionally passed:
+
+- `git diff --check`
+- state JSON parse
+- scoped current-runbook/state scan for exact maintainer-local Ghidra
+  project/backup strings
+- `py -3 tools\docsync_check.py`
+- `npm run test:doc-commands`
+- `npm run test:md-links`
+- `npm run test:wave1200-residual-unwind-current-risk-supersession`
+- `npm run test:static-reaudit-accounting-guard`
+- `npm run test:ghidra-static-reaudit-progress`
+- `npm run test:repo-hygiene`
+- `npm run test:hard-payload-safety`
+- `npm run test:public-allowlist`
+
 Phase 0 stale-baton correction is state-only. The `a9fe757e238a237eac8aa8f7f4e12d1bad57ec60`
 proof confirms the previous source wave was already pushed and accepted; it is
 not fresh runtime, release, Ghidra, static-accounting, or storage proof.
@@ -224,8 +248,8 @@ Known pre-existing or intentionally unclaimed gates:
 ## Next Executable Work
 
 1. Continue the restored standing loop under the 2026-07-02 user request. Pick
-   the next bounded source-safe slice only after this integration is pushed and
-   verified.
+   the next bounded source-safe slice only after git refs verify this
+   acceptance remediation has landed.
 2. Decide whether to run the optional representative Media smoke audio-row
    selection in a separately authorized runtime-proof lane; leave it unclaimed
    otherwise.

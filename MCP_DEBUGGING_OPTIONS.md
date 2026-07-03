@@ -9,7 +9,7 @@ This file compares local MCP/debugger options for private maintainer RE work. It
 ## Active Pathing (This Machine)
 
 - Ghidra client: `D:\ghidra_12.0.3_PUBLIC_20260210\ghidra_12.0.3_PUBLIC`
-- Ghidra project root: `C:\Users\david\Ghidra`
+- Ghidra project root: maintainer-local path recorded outside git.
 - Active GhydraMCP runtime bundle: `D:\GhydraMCP-Complete-v2.2.0-rc.2-20260211-083952`
 - Repo-local `tools/GhydraMCP/` has been removed from this repo to avoid version drift confusion.
 
