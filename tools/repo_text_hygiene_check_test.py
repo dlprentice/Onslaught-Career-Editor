@@ -134,6 +134,29 @@ class RepoTextHygieneRuleTests(unittest.TestCase):
 
         self.assertIn("tracked-private-repo-root-path", labels)
 
+    def test_flags_private_repo_root_paths_in_directive_and_subagents(self) -> None:
+        labels = self.matching_labels(
+            "onslaught_codex_directive.md",
+            "Work was originally directed at dlprentice/Onslaught-Career-Editor-private.",
+        )
+        labels.update(
+            self.matching_labels(
+                "subagents/example/report.md",
+                "Historical command used /mnt/c/Users/operator/source/Onslaught-Career-Editor-"
+                + "private/Views/MainWindow.xaml",
+            )
+        )
+
+        self.assertIn("tracked-private-repo-root-path", labels)
+
+    def test_flags_private_save_attempt_fixture_paths_in_subagent_docs(self) -> None:
+        labels = self.matching_labels(
+            "subagents/depth3/lane05_cli_fixcards.md",
+            "python3 patcher.py save-attempts/haha-cannon-goes-brrrrr.bes /tmp/out.bes",
+        )
+
+        self.assertIn("tracked-private-save-attempt-fixture-reference", labels)
+
     def test_allows_private_repo_root_paths_in_private_runtime_evidence(self) -> None:
         labels = self.matching_labels(
             "release/readiness/private_runtime_evidence/2026-04-29-media-proof.md",

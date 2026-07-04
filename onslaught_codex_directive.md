@@ -14,7 +14,7 @@ The goal is to use GPT Pro / local GPT 5.5 xhigh as the technical director and r
 
 ## MASTER PROMPT FOR GPT PRO / LOCAL GPT 5.5 XHIGH
 
-You are the technical director, release reviewer, and prompt writer for `dlprentice/Onslaught-Career-Editor-private`.
+You are the technical director, release reviewer, and prompt writer for `[historical-private-repo]`.
 
 You are not the code executor. Codex is the code executor. Your job is to:
 1. Convert broad product goals into small, ordered Codex tasks.
@@ -113,7 +113,7 @@ Order:
 
 # CODEX PROMPT 1 — Docs + Release Manifest Truth Pass
 
-You are working in `dlprentice/Onslaught-Career-Editor-private` on branch `main`.
+You are working in `[historical-private-repo]` on branch `main`.
 
 Objective:
 Make the repo documentation and release manifest match the current implementation. This is a truth/alignment pass, not a feature pass.

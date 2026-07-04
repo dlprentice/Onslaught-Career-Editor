@@ -7,6 +7,7 @@ import hashlib
 import json
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 import winui_zip_package_probe as probe
@@ -87,6 +88,33 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
                 self.assertFalse((destination_root / "lore-book" / unlinked.relative_to(source)).exists())
         finally:
             probe.LORE_BOOK_SOURCE = original_lore_book_source
+
+    def test_extract_zip_rejects_traversal_members(self) -> None:
+        unsafe_members = (
+            "../escape.txt",
+            "/absolute.txt",
+            "C:/absolute.txt",
+            "C:\\absolute.txt",
+            "\\\\server\\share\\escape.txt",
+            "app/../escape.txt",
+            "app/./escape.txt",
+            "app//escape.txt",
+        )
+        for unsafe_member in unsafe_members:
+            with self.subTest(unsafe_member=unsafe_member):
+                with tempfile.TemporaryDirectory() as temp_root:
+                    root = Path(temp_root)
+                    zip_path = root / "unsafe.zip"
+                    extract_dir = root / "extract"
+                    with zipfile.ZipFile(zip_path, "w") as package:
+                        package.writestr(unsafe_member, "not ok")
+                        package.writestr("app/OnslaughtCareerEditor.WinUI.exe", "ok")
+
+                    exit_code, output = probe.extract_zip(zip_path, extract_dir)
+
+                    self.assertNotEqual(0, exit_code)
+                    self.assertIn("unsafe ZIP member", output)
+                    self.assertFalse((root / "escape.txt").exists())
 
     def test_copy_lore_book_rejects_missing_local_book_link(self) -> None:
         original_lore_book_source = probe.LORE_BOOK_SOURCE

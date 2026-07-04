@@ -58,14 +58,14 @@ TITLE_REGEX = re.compile(r"^\s*#\s+(?P<title>.+?)\s*$", re.MULTILINE)
 DOCUMENT_ID_REGEX = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 LOCAL_PATH_REDACTIONS = (
     (re.compile(r"https?://(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|127\.\d{1,3}\.\d{1,3}\.\d{1,3}|localhost)(?::\d+)?(?:/[^\s<>()\]]*)?", re.IGNORECASE), "maintainer-local endpoint"),
-    (re.compile(r"\bC:\\Users\\[^\\]+\\source\\Onslaught-Career-Editor-private\\?", re.IGNORECASE), "maintainer-local former private checkout"),
-    (re.compile(r"\bC:\\Users\\[^\\]+\\source\\Onslaught-Career-Editor\\?", re.IGNORECASE), "maintainer-local public checkout"),
+    (re.compile(r"\bC:\\Users\\[^\\]+\\source\\Onslaught-Career-Editor-private(?:\\{1,2}[^\r\n`<>()\]]*)?", re.IGNORECASE), "maintainer-local former private checkout"),
+    (re.compile(r"\bC:\\Users\\[^\\]+\\source\\Onslaught-Career-Editor(?:\\{1,2}[^\r\n`<>()\]]*)?", re.IGNORECASE), "maintainer-local public checkout"),
     (re.compile(r"\bC:\\Users\\[^\\]+\\Ghidra\\Projects\\BEA(?:\.gpr|\.rep)?\\?", re.IGNORECASE), "maintainer-local Ghidra BEA project"),
     (re.compile(r"\bC:\\Users\\[^\\]+\\Ghidra\\?", re.IGNORECASE), "maintainer-local Ghidra root"),
-    (re.compile(r"\b[A-Z]:\\{1,2}GhidraBackups\\?", re.IGNORECASE), "maintainer-local Ghidra backup root"),
-    (re.compile(r"\b[A-Z]:\\{1,2}OnslaughtRuntimeProofArchive\\?", re.IGNORECASE), "maintainer-local runtime proof archive"),
-    (re.compile(r"\b[A-Z]:\\", re.IGNORECASE), "maintainer-local external drive"),
+    (re.compile(r"\b[A-Z]:\\{1,2}GhidraBackups(?:\\{1,2}[^\r\n`<>()\]]*)?", re.IGNORECASE), "maintainer-local Ghidra backup root"),
+    (re.compile(r"\b[A-Z]:\\{1,2}OnslaughtRuntimeProofArchive(?:\\{1,2}[^\r\n`<>()\]]*)?", re.IGNORECASE), "maintainer-local runtime proof archive"),
     (re.compile(r"\b[A-Z]:\\[^\r\n`<>()\]]+", re.IGNORECASE), "maintainer-local Windows path"),
+    (re.compile(r"\b[A-Z]:\\", re.IGNORECASE), "maintainer-local external drive"),
 )
 
 
@@ -485,7 +485,11 @@ class LorePackBuilderTests(unittest.TestCase):
             lore = root / LORE_BOOK_DIR
             lore.mkdir()
             (lore / "BOOK.md").write_text(
-                "# Book\n\nC:\\Users\\operator\\Ghidra\\Projects\\BEA.gpr\n\nhttp://172.26.112.1:8193\n",
+                "# Book\n\n"
+                "C:\\Users\\operator\\Ghidra\\Projects\\BEA.gpr\n\n"
+                "C:\\Users\\operator\\source\\Onslaught-Career-Editor-private\\hidden\\proof-note.md\n\n"
+                "C:\\Users\\operator\\source\\Onslaught-Career-Editor\\local\\state-note.md\n\n"
+                "http://172.26.112.1:8193\n",
                 encoding="utf-8",
             )
 
@@ -493,9 +497,34 @@ class LorePackBuilderTests(unittest.TestCase):
             content = (root / LORE_PACK_DIR / CONTENT_FILE_NAME).read_text(encoding="utf-8")
 
             self.assertNotIn("C:\\Users\\operator", content)
+            self.assertNotIn("proof-note", content)
+            self.assertNotIn("state-note", content)
             self.assertNotIn("172.26.112.1", content)
             self.assertIn("maintainer-local Ghidra BEA project", content)
+            self.assertIn("maintainer-local former private checkout", content)
+            self.assertIn("maintainer-local public checkout", content)
             self.assertIn("maintainer-local endpoint", content)
+
+    def test_redacts_non_user_profile_drive_root_path_families_without_tail_tokens(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            root = Path(temp_root)
+            lore = root / LORE_BOOK_DIR
+            lore.mkdir()
+            (lore / "BOOK.md").write_text(
+                "# Book\n\n"
+                "G:\\GhidraBackups\\synthetic-redaction-fixture\\synthetic-manifest.txt\n\n"
+                "F:\\OnslaughtRuntimeProofArchive\\synthetic-redaction-fixture\\synthetic-capture.txt\n",
+                encoding="utf-8",
+            )
+
+            build_lore_pack(root, root / LORE_PACK_DIR, use_git=False)
+            content = (root / LORE_PACK_DIR / CONTENT_FILE_NAME).read_text(encoding="utf-8")
+
+            self.assertIn("maintainer-local Ghidra backup root", content)
+            self.assertIn("maintainer-local runtime proof archive", content)
+            self.assertNotIn("synthetic-redaction-fixture", content)
+            self.assertNotIn("synthetic-manifest", content)
+            self.assertNotIn("synthetic-capture", content)
 
     def test_rejects_hard_payload_like_lore_source(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:

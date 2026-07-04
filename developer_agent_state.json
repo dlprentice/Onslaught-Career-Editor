@@ -1,168 +1,65 @@
 {
   "lastUpdated": "2026-07-04",
-  "currentFocus": "Full-spectrum repo assurance wave closeout. Bounded public-boundary, release-accounting, consult-policy, ZIP-overlay denylist, documentation, state-hygiene, maintainer-local scratch/backup posture, and legacy local-storage cleanup repairs are closed as source/docs/tooling hygiene work. Current consult posture is Codex normal/adversarial, Cursor composer-2.5-fast normal/adversarial, and Grok Build normal/adversarial; Cursor gemini-3.1-pro is suspended because operator Cursor API/model usage is exhausted. Current-policy consult coverage and local gates passed for the touched docs/tools/release/public-boundary surfaces. The coordinator final response records the pushed commit and remote-ref parity evidence.",
+  "currentFocus": "Pre-Sol-Ultra repo quality wave integration is in implementation, review, and validation. Scope is bounded source/docs/tooling hygiene: AppCore save-version rejection, Lore root-containment hardening, ZIP extraction traversal defense, validation-tool repairs, private-path redaction checks, release profile freshness, and concise state baton refresh.",
+  "sourceOfTruth": {
+    "agentGuide": "AGENTS.md",
+    "contributorGuide": "CONTRIBUTING.md",
+    "securityGuide": "SECURITY.md",
+    "collaborationGuide": "COLLABORATION.md",
+    "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
+    "activeGoal": "goal.md",
+    "goalPolicy": "goal.policy.md"
+  },
   "currentTruth": {
-    "fullRepoAssuranceWave": {
-    "status": "complete-pushed-with-notes",
-    "summary": "The current CQO assurance wave accepted bounded hygiene work that is independently reviewable by class: local-path/public-boundary redaction checks, release-accounting regeneration, consult-policy docs updated to the active Composer-plus-Grok posture, ZIP overlay denylist coverage, release/readiness wording cleanup, concise baton truth, maintainer-local scratch/backup posture, and legacy local-storage cleanup follow-through. Current-policy consult evidence and local gates passed. Final pushed commit and remote-ref parity evidence are recorded in the coordinator final response.",
-      "consultRecord": "subagents/full-repo-assurance-consult-record-20260704.md",
-      "consultPosture": [
-        "Required current lanes: Codex normal/adversarial, Cursor composer-2.5-fast normal/adversarial, and Grok Build normal/adversarial.",
-        "Cursor gemini-3.1-pro is suspended while operator Cursor API/model usage is exhausted.",
-        "Prior Grok consult evidence is allowed under the revised user posture but remains advisory until Codex root independently validates the source diff and gates."
-      ],
-      "nonClaims": [
-        "No installed game folder or original BEA.exe mutation.",
-        "No BEA/CDB/audio launch, runtime proof, visual gameplay proof, or representative Media smoke claim.",
-        "No Host/Join enablement or player-ready online claim.",
-        "No Ghidra project mutation or fresh decompiler/read-back verification.",
-        "No release publication, signing, tag, upload, installer, MSIX, Store work, or announcement.",
-        "No destructive repo/game cleanup; legacy local-storage cleanup was explicit user-authorized retired local-volume cleanup and maintainer-local tool relocation only."
+    "wave1220StaticCloseout": "Wave1220 static closeout acceptance: active current-risk focused accounting is `1179/1179 = 100.00%`; remaining active focused work: 0",
+    "preSolUltraQualityWave": {
+      "status": "implementation-review-validation",
+      "summary": "The current wave is fixing small, reviewable correctness and hygiene gaps found by local workers and bounded root review. It is not a runtime-proof, release-publication, live-Ghidra, or game-mutation lane.",
+      "implementedRepairs": [
+        "Save analyzer now rejects same-size .bes buffers when the version word is wrong and covers the regression in AppCore tests.",
+        "Lore index and internal-target fallback now reject links that resolve outside the lore root and cover above-root file-backed cases.",
+        "ZIP package extraction rejects absolute, drive-qualified, empty, dot, dot-dot, and outside-root members before extraction.",
+        "Lore pack redaction consumes full maintainer-local path families before broad drive-root replacement.",
+        "Static-to-proof and Wave1220 probes are more tolerant of current canonical forms while retaining fail-closed checks.",
+        "Ghidra static queue probe no longer writes queue artifacts during read-only --check runs; writing now requires --write-report.",
+        "WinUI agentic UI hardening metrics script was added as advisory local tooling.",
+        "Repo text hygiene now flags private repo-root path families in directive and subagent text surfaces.",
+        "package.json includes the local docsync check wrapper."
       ]
     },
-    "integrationWave": {
-      "status": "accepted-and-pushed",
-      "base": "5b1d7eb75ac592f754766b490c20edbc71c069c4",
-      "pushedCommit": "a9fe757e238a237eac8aa8f7f4e12d1bad57ec60",
-      "preStateUpdateRefProof": "HEAD, origin/main, and live remote refs/heads/main matched a9fe757e238a237eac8aa8f7f4e12d1bad57ec60 with divergence 0 0 before this state-only baton update.",
-      "acceptedSourceCommits": [
-        "cd7d7bf928c32234e3e59d5021b695c7aeabb63d",
-        "301b81a5baba1d5fb870890903961c16eaead5bf",
-        "930c2cf3cdd8d4376bfabf579565de96cb98323d",
-        "98b39b84e2251b775b407d0d2984fc8f9c197409",
-        "1ad0f0cc3f1ba7a796d0c94dc00a5dc69bbd182f",
-        "e24c9e6ca7b6a2795ac27144dc575a5ced1ef6b7",
-        "5d13adeb70e1aa2d1bfdcbdf39d639b2811e9c27",
-        "af8136583eb2de60672e77ea1c21c7bc827fbaac",
-        "821fe61f5d192b6a08c0107dd87266139aeb8ffb"
-      ],
-      "reportOnlyLanes": [
-        "W2 superseded PatchBench helper parity",
-        "W4 static sentinel",
-        "W5 storage/Ghidra backup safety",
-        "W12 runtime-proof baton",
-        "W13 consult compliance"
-      ]
-    },
-    "automationPosture": {
-      "status": "stopped-by-user-shutdown",
-      "summary": "The previous closeout recorded deleted standing-loop automations; they were temporarily restored by the 2026-07-02 user request, then intensified on 2026-07-03. The user then stopped the automation experiment on 2026-07-03 because hygiene and ownership overhead outweighed the scheduling value. The standing-wave launcher, Ghidra/RE sentinel, storage/Ghidra sentinel, validation/drift sentinel, and chief heartbeat are not current operating loops. Re-enable only from an explicit new bounded automation plan.",
-      "integratedRestoredWaveCommits": [
-        "dbafaa078b2470ca5cc5404a4da90d4adc50e217",
-        "a6e80814377fac043aa1d605c0d1dc1a58347654",
-        "37d34b1d"
-      ],
-      "previouslyDeletedAutomations": [
-        "chief thread heartbeat",
-        "standing wave launcher",
-        "storage/Ghidra sentinel",
-        "Ghidra/RE sentinel",
-        "validation/drift sentinel"
-      ],
-      "acceptedCloseoutCommits": [
-        "c7d4f2c3425fc22cac5cedf3493d5f9793e7db8e",
-        "651c9b0a564f4d6803fac085b2a40d0c8b93bb69",
-        "84a9fd123269a48773a9da60f1f621fd0f52d2d5"
-      ]
-    },
-    "patchBench": {
-      "status": "primitive-helper-wiring-integrated",
-      "summary": "PatchBench receipt rendering is wired through PatchBenchSafeCopyReceiptText using a BinaryPatchesPage-owned mapper from the AppCore safe-copy receipt DTO. Group scan summaries remain sourced from visible rows/tracks.",
-      "limits": [
-        "BinaryPatchesPage and AppCore still own live receipt construction, I/O, launch planning, process control, catalog semantics, Host/Join boundary injection/fallback, online boundaries, and runtime-proof boundaries.",
-        "PatchBenchSafeCopyReceiptText remains primitive-state formatting plus fail-closed display validation only."
-      ]
-    },
-    "lore": {
-      "status": "closeout-parity-integrated",
-      "summary": "Lore ZIP/package probe, builder checker, and AppCore tests cover above-root and encoded above-root packed links, AppCore-compatible document-id grammar, case-variant content-id lookup, exact relativePath equality, byteLength/hash checks, non-object JSONL rows, and generic public-safe failures.",
-      "limits": [
-        "Not broad release readiness.",
-        "Not a complete filesystem traversal proof.",
-        "Not runtime UI proof."
-      ]
-    },
-    "rebuildAndOriginalMapping": {
-      "status": "public-safe-continuity-crosswalk-vocabulary-viewer-editor-aya-tag-render-bridge-tmm-gate-tooling-career-bridge-and-texture-ledger-integrated-pending-validation",
-      "summary": "TMM ARM4 readiness-gate continuity now has a short npm wrapper, test:tmm-arm4-readiness-gate-proof-plan, and the readiness-gate checker validates that wrapper. The original-system crosswalk and source-only internal tooling vocabulary map were added, the internal viewer/editor command-boundary proof plan/checker keeps -modelviewer and -cutsceneeditor source-only and blocked from product launch surfaces, the AYA resource tag-family static contract/checker keeps LVLR, WRES, ERES, LNDS, PAGE, GDIE, MESH, and TEXT as loader-contract vocabulary pending later higher-authority proof, the render-resource bridge static contract/checker routes MESH/TEXT only into existing renderer/material/mesh/texture static docs, and the career progression static bridge contract/checker routes CCareer/level_structure/CGame/CEndLevelData only into save/career static docs, and the texture/resource/decode static routing ledger/checker records sanitized lane ids, anchor function names, historical Wave1163/Wave1216 provenance-only status, latest backup-class redaction, static-accounting authority, false/zero guard summaries, and duplicate-lane redaction reconciliation.",
-      "limits": [
-        "The original-system vocabulary checker is a public-source guard only; it is not authority to use the vocabulary map as readiness evidence or to run tools.",
-        "The internal viewer/editor command-boundary checker is a source-only planning guard; it is not command authorization, runtime proof, AppCore/WinUI/CLI/release support, or retail-tool availability evidence.",
-        "The AYA tag-family static-contract checker is a source/static planning guard; it is not corpus proof, runtime parser proof, extractor execution, importer execution, generated asset output, renderer proof, AppCore/WinUI/CLI/release support, or rebuild parity evidence.",
-        "The render-resource bridge static-contract checker is a source/static planning guard; it is not runtime parser proof, runtime texture decode proof, GPU upload proof, texture pixel proof, runtime mesh-loading proof, animation/skinning proof, collision proof, material appearance proof, shader behavior proof, visual output proof, renderer behavior proof, extractor/importer execution, generated asset output, AppCore/WinUI/CLI/Godot/release support, product exposure, or rebuild parity evidence.",
-        "The TMM ARM4 npm wrapper/checker registration is tooling support only; it is not readiness-gate execution, command arming, importer execution, private asset reading, generated payload output, runtime proof, rebuild parity, visual/gameplay parity, or no-noticeable-difference proof.",
-        "The career progression static bridge-contract checker is a source/static planning guard; it is not runtime save/load proof, mission-outcome persistence proof, objective UI proof, Goodies behavior proof, live MissionScript command-effect proof, patch proof, gameplay proof, generated save/asset output, AppCore/WinUI/CLI/Godot/release support, product exposure, or rebuild parity evidence.",
-        "The source-only vocabulary map is not readiness-gate execution, command arming, importer execution, private asset reading, generated payload output, runtime proof, rebuild parity, visual/gameplay parity, or no-noticeable-difference proof.",
-        "No command arming, importer execution, private asset read, generated payload output, runtime proof, rebuild parity, visual/gameplay parity, or no-noticeable-difference proof.",
-        "Static Wave1200 public-source accounting support is fixed/bounded; absent old/private materialized TSV support packets remain explicitly unclaimed.",
-        "Docsync/mirror drift is reconciled by refreshing protected lore-book mirrors.",
-        "The texture/resource/decode static-routing ledger checker is a static routing/accounting guard; it is not a decoder schema, runtime texture decode proof, decompression behavior proof, texture pixel proof, GPU upload proof, visual output proof, live Ghidra read-back/mutation, private asset access, generated asset output, product exposure, or rebuild parity evidence."
-      ]
-    },
-    "winuiUxAndReleaseDocs": {
-      "status": "bounded-copy-and-docs-improvements-integrated",
-      "summary": "Home/About user-facing boundaries, release ZIP README copy, collaboration wording, readiness checklist posture, and static About game-install boundary copy were updated.",
-      "limits": [
-        "No runtime screen-reader or visual proof.",
-        "No release publication, signing, installer/MSIX/Store work, upload, tag, or announcement."
-      ]
-    },
-    "hardPayloadBoundary": "No hard payloads, secrets, raw local campaign paths, raw storage manifests, private proof paths, exact maintainer-local Ghidra project/backup paths in current runbooks, screenshots/frame dumps, copied executables, full Ghidra databases, .env files, build output, package output, or local runtime caches belong in tracked docs/state.",
-    "nonMutations": {
-      "installedGameOriginalBea": false,
-      "beaCdbAudioRuntimeProof": false,
-      "ghidraMutation": false,
-      "hostJoinEnablement": false,
-      "releasePublication": false,
-      "storageDeletion": true
-    },
-    "latestStorageSentinel": {
-      "date": "2026-07-03",
-      "localStorageCleanup20260704": "User-authorized legacy local-storage cleanup deleted stale project proof/backups and the inactive GhydraMCP runtime bundle, then moved the Ghidra 12.x distribution to the maintainer-local tooling posture and verified the headless launcher path. A local storage filename scan found no remaining Onslaught/BEA/Battle Engine/Aquila/backup-root/runtime-proof hits. The Steam game library and installed/original game files were not mutated.",
-      "driveHealth20260704": "Get-PhysicalDisk, Get-Disk, and Get-Volume reported all visible disks/volumes Healthy/OK. Raw SMART attributes were not available because smartctl is not installed and Windows storage reliability/failure-predict counters were not exposed to the current non-elevated client.",
-      "lastRunLocal": "2026-07-03 11:55 -04:00",
-      "mode": "user-authorized-cleanup-complete",
-      "summary": "User-authorized cleanup codified the future backup/proof posture to a maintainer-local ignored removable-root policy, created a fresh live-project Ghidra backup with backup-manifest plus file-count/byte/hash verification, removed legacy external Ghidra backup/source archive/runtime proof archive roots, and cleared superseded removable-root pre-cleanup scratch. Raw runtime proof bundles are no longer treated as permanent evidence; tracked proof summaries, validators, ledgers, recreation instructions, and future temporary proof outputs are the durable posture.",
-      "retainedEvidence": "Latest verified live-project Ghidra backup id BEA_20260703-152228Z_live_project_backup_verified is retained in ignored local storage with local cleanup/backup manifests. Tracked docs retain public-safe proof conclusions and boundaries; raw historical runtime proof bundles and old source-scratch worktree copies were deleted per user direction.",
-      "currentAuthorizedReclaimGiB": 419.61,
-      "inventorySummary": "Legacy external Ghidra backup root, source-scratch archive root, and runtime proof archive root were removed. Removable scratch now retains only the verified live-project Ghidra backup plus local cleanup manifests/policy. External archive drive free space measured about 928.14 GiB after cleanup; removable scratch free space measured about 119.07 GiB.",
-      "blockers": [
-        "Raw historical runtime proof bundles are intentionally deleted; future audits must rely on tracked public-safe summaries/validators or regenerate bounded temporary proof output.",
-        "Fresh future destructive cleanup still requires candidate-specific local manifests and retained replacement/summary decisions.",
-        "Do not treat removable scratch storage as the only durable copy of current source, release assets, or active claim-bearing evidence."
-      ]
-    }
+    "hardPayloadBoundary": "No hard payloads, secrets, raw local campaign paths, storage manifests, private proof paths, copied executables, screenshots/frame dumps, full Ghidra databases, .env files, build output, package output, or local runtime caches belong in tracked docs/state.",
+    "nonClaims": [
+      "No installed Battle Engine Aquila folder or original BEA.exe mutation.",
+      "No BEA/CDB/audio launch, visual proof, gameplay proof, representative Media smoke proof, or runtime causality proof.",
+      "No live Ghidra mutation, decompiler read-back, private asset access, extractor/importer execution, or generated asset output.",
+      "No Host/Join enablement, online/player-ready promotion, release publication, tag, upload, installer, MSIX, Store work, or announcement."
+    ]
   },
   "validation": {
-    "latestTmmArm4ReadinessGatePackageScript": "The TMM ARM4 readiness-gate proof-plan tooling slice passed py -3 tools\\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py --self-test --check, npm run test:tmm-arm4-readiness-gate-proof-plan, package/state JSON parse, git diff --check, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene after a timeout retry, and npm run test:public-allowlist. The checker now validates package.json registration for test:tmm-arm4-readiness-gate-proof-plan. This is package/checker support only and not runtime proof, Ghidra mutation/read-back, BEA/CDB launch, command arming, importer execution, generated asset output, release action, product exposure, or rebuild parity.",
-    "latestCareerProgressionStaticBridgeContract": "The career progression static bridge-contract slice passed read-only source/queue/lease review plus the high-throughput consult policy recorded in subagents/career-progression-static-bridge-consult-record-20260703.md. Codex normal returned ACCEPT_WITH_NOTES; Codex adversarial initially BLOCKED on untracked Markdown link acceptance, then follow-up returned ACCEPT_WITH_NOTES after the checker changed to git ls-files --cached only. Cursor Agent composer-2.5-fast normal/adversarial initially failed with DNS resolution for the Cursor agent endpoint, then retries returned ACCEPT_WITH_NOTES. Grok Build normal/adversarial initially failed on sanitized-bundle read/max-turn setup, then git-initialized prompt-file retries returned ACCEPT and ACCEPT_WITH_NOTES. Consult-driven fixes removed untracked Markdown link acceptance and tightened AppCore/MissionScript/mission-outcome wording. Validation passed py -3 tools\\career_progression_static_bridge_contract_probe.py --self-test --check, npm run test:career-progression-static-bridge-contract, git diff --check, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene, npm run test:hard-payload-safety, and npm run test:public-allowlist. It uses existing source gameplay, save-file, campaign graph/link, CGame, Career, EndLevelData, and rebuild front-door docs as source/static anchor tokens only; it is not runtime save/load, mission-outcome, objective UI, Goodies behavior, gameplay, generated-output, product-exposure, or rebuild proof.",
-    "latestRenderResourceBridgeStaticContract": "The render-resource bridge static-contract slice passed read-only source/queue/lease review, read-only acceptance with ACCEPT_WITH_NOTES and no blockers, follow-up acceptance with ACCEPT and no blockers, py -3 tools\\render_resource_bridge_static_contract_probe.py --self-test --check, npm run test:render-resource-bridge-static-contract, git diff --check, state JSON parse, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene, npm run test:hard-payload-safety, and npm run test:public-allowlist. Acceptance noted the checker should distinguish the DXMeshVB and DXTexture _index.md links by resolved path; the checker now validates exact resolved link targets. It uses existing AYA tag-family, engine, mesh, texture, DXMeshVB, DXTexture, and rebuild front-door docs as source/static anchor tokens only; it is not runtime/GPU/visual/importer/generated-output/product-exposure/rebuild proof.",
-    "latestAyaTagFamilyStaticContract": "The AYA resource tag-family static-contract slice passed read-only source/queue/lease review, read-only acceptance with ACCEPT_WITH_NOTES and no blockers, py -3 tools\\aya_resource_tag_family_static_contract_probe.py --self-test --check, npm run test:aya-resource-tag-family-static-contract, git diff --check, state JSON parse, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene, npm run test:hard-payload-safety, and npm run test:public-allowlist. Acceptance noted the checker uses existing extraction-pipeline count strings as anchor drift guards only, not fresh count authority.",
-    "latestInternalViewerEditorBoundary": "The internal viewer/editor command-boundary proof-plan slice passed read-only source/queue/lease review, bounded candidate consult, py -3 tools\\internal_viewer_editor_command_boundary_proof_plan_probe.py --self-test, py -3 tools\\internal_viewer_editor_command_boundary_proof_plan_probe.py --check, npm run test:internal-viewer-editor-command-boundary-proof-plan, npm run test:original-system-internal-tooling-vocabulary-map, git diff --check, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene, npm run test:hard-payload-safety, and npm run test:public-allowlist.",
-    "latestIntegration": "Current source-safe vocabulary-map checker reconciliation replayed accepted worker commit f1c98fa423a787cb2f3160b7c046e912aa9030f9 onto the storage-sentinel-refreshed origin/main tip as 30fc408f. The prior accepted wave passed root/source consult, adversarial safety consult, active-wave consult, W1 implementation, spec re-review, and code-quality re-review after the tracked-Markdown link guard fix. Reconciliation validation passed py -3 tools\\original_system_internal_tooling_vocabulary_map_probe.py --self-test, py -3 tools\\original_system_internal_tooling_vocabulary_map_probe.py --check, npm run test:original-system-internal-tooling-vocabulary-map, git diff --check, state JSON parse, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene, npm run test:hard-payload-safety, and npm run test:public-allowlist. Earlier merged-tree validation passed for diff whitespace, state JSON, sanitized state/front-door scan, rebuild continuity probe, Lore ZIP probe tests, Lore builder self-test, full LoreBrowserServiceTests, WinUI build, focused W1/W8/W9 UiTests, patch-engine safety, WinUI primary-lane, ZIP package probe without optional Media smoke, docs commands, Markdown links, repo hygiene retry, public allowlist, and hard-payload safety. The restored-loop worker lanes passed baton JSON/safety/docs checks, Wave1200/static-accounting/progress gates, docsync, docs/links, repo hygiene, hard-payload safety, and public allowlist before root integration. Read-only acceptance on pushed commit 898e583efdff86847c0a55dca15f2ac088e43fc1 required sanitizing exact maintainer-local Ghidra project/backup path wording from current tracked runbook surfaces; remediation passed diff whitespace, state JSON parse, scoped current-runbook/state local-path scan, docsync, docs commands, Markdown links, Wave1200/static-accounting/progress gates, repo hygiene, hard-payload safety, and public allowlist. The 2026-07-03 storage/automation closeout passed state JSON parse, focused live-runtime helper unit tests, docs commands, Markdown links, repo hygiene, hard-payload safety, and public allowlist after final scoped diff review.",
-    "knownUnclaimedGates": [
-      "Absent old/private materialized Wave911/Wave1108 TSV support packets are not claimed validated.",
-      "Optional representative Media smoke in npm run test:winui-zip-release-candidate-probe is not claimed; extracted-app audio row selection stayed at No track selected. The same ZIP probe without optional Media smoke passed."
+    "passedFocusedChecksBeforeFinalSuite": [
+      "Focused SaveAnalyzerService wrong-version test",
+      "Focused LoreBrowserService outside-root tests",
+      "tools/winui_zip_package_probe_test.py",
+      "tools/winui_lore_pack_builder.py --self-test",
+      "npm run test:winui-agentic-ui-hardening-metrics",
+      "tools/static_to_proof_transition_backlog_probe.py --check",
+      "tools/repo_text_hygiene_check_test.py"
     ],
-    "latestTextureResourceDecodeStaticLedger": "The texture/resource/decode static-routing ledger slice passed Codex normal/adversarial consult, Cursor Agent composer-2.5-fast normal/adversarial consult, compact Grok Build normal/adversarial consult retries with concrete risk findings accepted and the blanket no-JSON objection overridden under repo policy, py -3 tools\\texture_resource_decode_static_contract_probe.py --self-test --check, npm run test:texture-resource-decode-static-contract, hard-payload safety, public allowlist, and repo hygiene before the pushed ledger closeout. Duplicate source-checkout/worktree attempts were blocked by chief coordination, and their useful mapped-systems/static-measurement legacy backup-root redaction handoff was reconciled into canonical and Lore mirrors. This is static routing/accounting support only and not runtime texture decode, decompression behavior, texture pixels, GPU upload, visual output, live Ghidra read-back/mutation, private asset access, generated asset output, product exposure, or rebuild parity.",
-    "latestTextureResourceDecodePublicAllowlistGate": "After reconciliation onto origin/main, npm run test:public-allowlist passed: hard-payload self-test plus 19382 public candidates, public-submodule payload safety with 19566 candidates, and public-primary migration inventory with the current checkout root, 24839 private tracked paths, 19382 public tracked paths, and 5557 allowed private-only hard-payload/scratch paths. A prior run terminated with exit -1 during the submodule phase before diagnostics, but a direct rerun of py -3 tools\\public_allowlist_safety_check.py --include-submodules passed before the top-level gate passed."
+    "knownLocalOnlyGateBehavior": "tools/ghidra_static_reaudit_queue_probe.py --check is expected to fail closed when no local quality snapshot exists; it no longer writes queue output unless --write-report is passed.",
+    "remainingGatePlan": [
+      "Refresh release profile artifacts after final tracked edits.",
+      "Run source, docs, public-boundary, AppCore, WinUI build, and hard-payload gates serially.",
+      "Commit and push only after fresh gate evidence is read."
+    ]
   },
-  "currentCounters": {
-    "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
-    "catalogRows": "29/29 target specimen identity and policy metadata rows"
-  },
-  "openQuestions": [],
   "blockers": [
-    "Optional representative Media smoke audio-row selection remains unclaimed unless separately authorized and proven."
+    "Optional representative Media smoke audio-row selection remains unclaimed unless separately authorized and proven.",
+    "Live Ghidra queue snapshot is absent in this source-only lane; keep that gate fail-closed and local-only."
   ],
+  "openQuestions": [],
   "nextSteps": [
-    "Keep all stopped Onslaught automations stopped unless the user explicitly authorizes a new bounded automation plan.",
-    "Run future work one slice at a time from the main coordinator thread with explicit ownership, consults, validation gates, and stop conditions.",
-    "Decide whether to run the optional representative Media smoke audio-row selection in a separately authorized runtime-proof lane; leave it unclaimed otherwise.",
-    "Continue PatchBench only with tests first while preserving page/AppCore ownership, Host/Join disablement, and runtime-proof boundaries.",
-    "Use the wired PatchBench receipt helper only for primitive-state formatting and fail-closed display validation; keep AppCore receipt construction in the page/AppCore boundary.",
-    "Do not delete future Ghidra/proof material without a candidate-specific local manifest, retained alternative or structured summary, consults where warranted, explicit authority, and acceptance.",
-    "Use the source-only internal tooling vocabulary map, AYA tag-family static contract, render-resource bridge static contract, TMM ARM4 readiness-gate wrapper, and career progression static bridge contract only to select bounded future questions with explicit higher-authority proof classes; keep all five checks as public-source boundary guards, not proof authority or command authorization.",
-    "Use the source-only internal tooling vocabulary map, AYA tag-family static contract, render-resource bridge static contract, texture/resource/decode static-routing ledger, TMM ARM4 readiness-gate wrapper, and career progression static bridge contract only to select bounded future questions with explicit higher-authority proof classes; keep these checks as public-source boundary guards, not proof authority or command authorization."
+    "Complete consult review of the integrated diff and resolve any blocking findings.",
+    "Run the final validation suite from a clean, serial source tree.",
+    "After push, verify HEAD, origin/main, and live remote refs match before closing the campaign."
   ]
 }

@@ -21,15 +21,15 @@ Scope: `lore-book/roadmap/**` vs `roadmap/**`, and `lore-book/reverse-engineerin
 ### 1) MEDIUM - Parity status statement is outdated vs current key-doc reality
 
 Evidence:
-- [reverse-engineering/binary-analysis/documentation-audit.md](/mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/documentation-audit.md:18) states mirror parity was `0` missing / `0` extra / `0` content diffs.
-- [reverse-engineering/binary-analysis/documentation-audit.md](/mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/documentation-audit.md:27) states link normalization was done so canonical+lore-book copies match.
+- [reverse-engineering/binary-analysis/documentation-audit.md](redacted-private-source/reverse-engineering/binary-analysis/documentation-audit.md:18) states mirror parity was `0` missing / `0` extra / `0` content diffs.
+- [reverse-engineering/binary-analysis/documentation-audit.md](redacted-private-source/reverse-engineering/binary-analysis/documentation-audit.md:27) states link normalization was done so canonical+lore-book copies match.
 - Current key-doc content diffs now exist in at least:
-  - [roadmap/ROADMAP-INDEX.md](/mnt/c/users/david/source/onslaught-career-editor-private/roadmap/ROADMAP-INDEX.md:29) vs [lore-book/roadmap/ROADMAP-INDEX.md](/mnt/c/users/david/source/onslaught-career-editor-private/lore-book/roadmap/ROADMAP-INDEX.md:29)
-  - [reverse-engineering/binary-analysis/README.md](/mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/README.md:94) vs [lore-book/reverse-engineering/binary-analysis/README.md](/mnt/c/users/david/source/onslaught-career-editor-private/lore-book/reverse-engineering/binary-analysis/README.md:94)
-  - [reverse-engineering/game-assets/_index.md](/mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/game-assets/_index.md:56) vs [lore-book/reverse-engineering/game-assets/_index.md](/mnt/c/users/david/source/onslaught-career-editor-private/lore-book/reverse-engineering/game-assets/_index.md:56)
-  - [reverse-engineering/game-mechanics/_index.md](/mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/game-mechanics/_index.md:58) vs [lore-book/reverse-engineering/game-mechanics/_index.md](/mnt/c/users/david/source/onslaught-career-editor-private/lore-book/reverse-engineering/game-mechanics/_index.md:58)
-  - [reverse-engineering/project-meta/_index.md](/mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/project-meta/_index.md:36) vs [lore-book/reverse-engineering/project-meta/_index.md](/mnt/c/users/david/source/onslaught-career-editor-private/lore-book/reverse-engineering/project-meta/_index.md:36)
-  - [reverse-engineering/save-file/_index.md](/mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/save-file/_index.md:60) vs [lore-book/reverse-engineering/save-file/_index.md](/mnt/c/users/david/source/onslaught-career-editor-private/lore-book/reverse-engineering/save-file/_index.md:60)
+  - [roadmap/ROADMAP-INDEX.md](redacted-private-source/roadmap/ROADMAP-INDEX.md:29) vs [lore-book/roadmap/ROADMAP-INDEX.md](redacted-private-source/lore-book/roadmap/ROADMAP-INDEX.md:29)
+  - [reverse-engineering/binary-analysis/README.md](redacted-private-source/reverse-engineering/binary-analysis/README.md:94) vs [lore-book/reverse-engineering/binary-analysis/README.md](redacted-private-source/lore-book/reverse-engineering/binary-analysis/README.md:94)
+  - [reverse-engineering/game-assets/_index.md](redacted-private-source/reverse-engineering/game-assets/_index.md:56) vs [lore-book/reverse-engineering/game-assets/_index.md](redacted-private-source/lore-book/reverse-engineering/game-assets/_index.md:56)
+  - [reverse-engineering/game-mechanics/_index.md](redacted-private-source/reverse-engineering/game-mechanics/_index.md:58) vs [lore-book/reverse-engineering/game-mechanics/_index.md](redacted-private-source/lore-book/reverse-engineering/game-mechanics/_index.md:58)
+  - [reverse-engineering/project-meta/_index.md](redacted-private-source/reverse-engineering/project-meta/_index.md:36) vs [lore-book/reverse-engineering/project-meta/_index.md](redacted-private-source/lore-book/reverse-engineering/project-meta/_index.md:36)
+  - [reverse-engineering/save-file/_index.md](redacted-private-source/reverse-engineering/save-file/_index.md:60) vs [lore-book/reverse-engineering/save-file/_index.md](redacted-private-source/lore-book/reverse-engineering/save-file/_index.md:60)
 
 Why this matters:
 - Readers can misread the audit section as currently true parity instead of historical.
@@ -41,8 +41,8 @@ Recommended fix:
 ### 2) MEDIUM - Mirror-check status doc wording is stale
 
 Evidence:
-- [reverse-engineering/binary-analysis/mirror-check-2026-02-12.md](/mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/mirror-check-2026-02-12.md:9) says “No mirror issues detected.”
-- [lore-book/reverse-engineering/binary-analysis/mirror-check-2026-02-12.md](/mnt/c/users/david/source/onslaught-career-editor-private/lore-book/reverse-engineering/binary-analysis/mirror-check-2026-02-12.md:9) says the same.
+- [reverse-engineering/binary-analysis/mirror-check-2026-02-12.md](redacted-private-source/reverse-engineering/binary-analysis/mirror-check-2026-02-12.md:9) says “No mirror issues detected.”
+- [lore-book/reverse-engineering/binary-analysis/mirror-check-2026-02-12.md](redacted-private-source/lore-book/reverse-engineering/binary-analysis/mirror-check-2026-02-12.md:9) says the same.
 - Current key-doc parity now has content diffs (see Finding 1).
 
 Why this matters:
@@ -56,7 +56,7 @@ Recommended fix:
 Evidence:
 - Canonical file exists: `roadmap/release-allowlist-classification.tsv`.
 - Mirror counterpart is absent: `lore-book/roadmap/release-allowlist-classification.tsv`.
-- Both roadmap profile docs still reference that canonical artifact at [roadmap/release-allowlist-profile.md](/mnt/c/users/david/source/onslaught-career-editor-private/roadmap/release-allowlist-profile.md:140) and [lore-book/roadmap/release-allowlist-profile.md](/mnt/c/users/david/source/onslaught-career-editor-private/lore-book/roadmap/release-allowlist-profile.md:140).
+- Both roadmap profile docs still reference that canonical artifact at [roadmap/release-allowlist-profile.md](redacted-private-source/roadmap/release-allowlist-profile.md:140) and [lore-book/roadmap/release-allowlist-profile.md](redacted-private-source/lore-book/roadmap/release-allowlist-profile.md:140).
 
 Why this matters:
 - Lore-book roadmap section is not self-contained for release-profile supporting data.

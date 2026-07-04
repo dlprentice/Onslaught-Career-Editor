@@ -1,6 +1,6 @@
 # WinUI ZIP Release v1.0.6 - 2026-06-25
 
-Status: ready for GitHub Release publication after commit/tag
+Status: superseded by v1.0.7 generated Lore pack release
 
 ## Package
 
@@ -13,6 +13,11 @@ Status: ready for GitHub Release publication after commit/tag
 - Product lane: WinUI 3 / AppCore
 
 ## Delta From v1.0.5
+
+Historical note: this v1.0.6 candidate was superseded by the published v1.0.7
+ZIP. Do not treat this file as current publication approval; use
+`release/readiness/winui_zip_release_v1_0_7_2026-06-25.md` for the current
+published package record.
 
 - Keeps the v1.0.5 friendly wrapper layout and Explorer-safe package shape.
 - Keeps the packaged offline Lore reader limited to `BOOK.md`-linked files.

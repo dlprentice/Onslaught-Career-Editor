@@ -224,7 +224,21 @@ namespace Onslaught___Career_Editor
                 resolved = candidate;
             }
 
-            return ResolveMarkdownOrHtmlPath(resolved);
+            string? loreBookRoot = TryFindLoreBookRootForDocument(currentNormalized);
+            if (loreBookRoot != null && !IsSameOrUnderRoot(resolved, loreBookRoot))
+            {
+                return null;
+            }
+
+            string? resolvedPath = ResolveMarkdownOrHtmlPath(resolved);
+            if (resolvedPath != null &&
+                loreBookRoot != null &&
+                !IsSameOrUnderRoot(resolvedPath, loreBookRoot))
+            {
+                return null;
+            }
+
+            return resolvedPath;
         }
 
         public static string? ExtractAnchor(string? uriOrPath)
@@ -324,6 +338,15 @@ namespace Onslaught___Career_Editor
                 string title = linkMatch.Groups["title"].Value.Trim();
                 string relativePath = Uri.UnescapeDataString(linkMatch.Groups["path"].Value.Trim());
                 string filePath = Path.GetFullPath(Path.Combine(loreBookDirectory, relativePath.Replace('/', Path.DirectorySeparatorChar)));
+                if (!IsSameOrUnderRoot(filePath, loreBookDirectory))
+                {
+                    return new LoreTreeItem
+                    {
+                        Title = title,
+                        Order = order
+                    };
+                }
+
                 bool isIndex = IsIndexFile(filePath);
 
                 if (!documentMap.TryGetValue(filePath, out LoreDocument? document))
@@ -975,6 +998,55 @@ namespace Onslaught___Career_Editor
             };
 
             return candidates.FirstOrDefault(File.Exists);
+        }
+
+        private static string? TryFindLoreBookRootForDocument(string documentPath)
+        {
+            if (string.IsNullOrWhiteSpace(documentPath))
+            {
+                return null;
+            }
+
+            string fullPath;
+            try
+            {
+                fullPath = Path.GetFullPath(documentPath);
+            }
+            catch
+            {
+                return null;
+            }
+
+            DirectoryInfo? directory = File.Exists(fullPath)
+                ? new FileInfo(fullPath).Directory
+                : new DirectoryInfo(Path.GetDirectoryName(fullPath) ?? fullPath);
+            while (directory != null)
+            {
+                if (directory.Name.Equals("lore-book", StringComparison.OrdinalIgnoreCase))
+                {
+                    return directory.FullName;
+                }
+
+                directory = directory.Parent;
+            }
+
+            return null;
+        }
+
+        private static bool IsSameOrUnderRoot(string candidatePath, string rootPath)
+        {
+            if (string.IsNullOrWhiteSpace(candidatePath) || string.IsNullOrWhiteSpace(rootPath))
+            {
+                return false;
+            }
+
+            string candidate = Path.GetFullPath(candidatePath)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string root = Path.GetFullPath(rootPath)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return candidate.Equals(root, StringComparison.OrdinalIgnoreCase) ||
+                   candidate.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) ||
+                   candidate.StartsWith(root + Path.AltDirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
         }
 
         private static string ResolveMarkdownTitle(string markdown, string filePath)

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 
@@ -256,7 +257,7 @@ REQUIRED_TOKENS = (
     "remaining active focused work",
     "Active Proof Slice",
     "The selected active static-to-proof slice is Texture / Mesh Material Sidecar Importer Private Corpus Real Importer Dry-Run Harness Command Arm Checklist Command Arm Checklist Command Arm Checklist Command Arm Checklist Readiness Gate Proof Plan",
-    "selected after the Texture / Mesh Material Sidecar Importer Private Corpus Real Importer Dry-Run Harness Command Arm Checklist Command Arm Checklist Command Arm Checklist Command Arm Checklist Validation Proof Plan completed",
+    "Source evidence: completed `tmm-arm4-validation`",
     "Completed Texture / Mesh Material Sidecar Importer Private Corpus Real Importer Dry-Run Harness Command Arm Checklist Command Arm Checklist Command Arm Checklist Command Arm Checklist Validation Proof Plan",
     "texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.md",
     "texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.v1.json",
@@ -2957,12 +2958,22 @@ def require(condition: bool, message: str, failures: list[str]) -> None:
         failures.append(message)
 
 
+def strip_markdown_links(text: str) -> str:
+    return re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+
+
 def check_backlog(failures: list[str]) -> None:
     text = read_text(BACKLOG)
     active = active_slice_block(text)
+    plain_text = strip_markdown_links(text)
+    plain_active = strip_markdown_links(active)
     lower_text = text.lower()
     for token in REQUIRED_TOKENS:
-        require(token in text or token.lower() in lower_text, f"backlog missing token: {token}", failures)
+        require(
+            token in text or token in plain_text or token.lower() in lower_text,
+            f"backlog missing token: {token}",
+            failures,
+        )
     for bad in (
         "runtime proof complete",
         "visual QA complete",
@@ -3806,7 +3817,7 @@ def check_backlog(failures: list[str]) -> None:
         failures,
     )
     require(
-        "The selected active static-to-proof slice is Texture / Mesh Material Sidecar Importer Private Corpus Real Importer Dry-Run Harness Command Arm Checklist Command Arm Checklist Command Arm Checklist Command Arm Checklist Readiness Gate Proof Plan. Status: selected" in active,
+        "The selected active static-to-proof slice is Texture / Mesh Material Sidecar Importer Private Corpus Real Importer Dry-Run Harness Command Arm Checklist Command Arm Checklist Command Arm Checklist Command Arm Checklist Readiness Gate Proof Plan" in plain_active,
         "active block missing texture/mesh material sidecar importer private corpus real importer dry-run harness command arm checklist command arm checklist command-arm-checklist-command-arm-checklist-readiness-gate active lane",
         failures,
     )

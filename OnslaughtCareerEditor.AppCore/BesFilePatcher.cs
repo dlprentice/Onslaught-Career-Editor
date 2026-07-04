@@ -1198,6 +1198,12 @@ namespace Onslaught___Career_Editor
                 analysis.VersionWord = BinaryPrimitives.ReadUInt16LittleEndian(buf.AsSpan(0, 2));
                 analysis.VersionStamp = ReadUInt32(buf, 0x0000); // "dword view" of header for debugging
                 analysis.VersionValid = analysis.VersionWord == VERSION_WORD;
+                if (!analysis.VersionValid)
+                {
+                    analysis.IsValid = false;
+                    analysis.ErrorMessage = $"Invalid .bes version word. Expected 0x{VERSION_WORD:X4}, got 0x{analysis.VersionWord:X4} (header dword view 0x{analysis.VersionStamp:X8}).";
+                    return analysis;
+                }
 
                 // CCareer header dword0 (increments when unlocking goodies via cutscenes; often 0)
                 analysis.NewGoodieCountRaw = ReadUInt32(buf, NEW_GOODIE_COUNT);

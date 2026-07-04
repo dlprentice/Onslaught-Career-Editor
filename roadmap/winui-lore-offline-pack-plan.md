@@ -1,13 +1,12 @@
 # WinUI Offline Lore Pack Plan
 
-Status: active implementation
-Last updated: 2026-06-25
+Status: implemented for current ZIP package shape
+Last updated: 2026-07-04
 
-The published `v1.0.6` portable app ZIP ships the `lore-book/BOOK.md` reading
-set as normal files. The current source tree now stages a generated
-`lore-pack/` content pack for the next package candidate. This avoids the raw
-full `lore-book/` tree because the full mirror has long reverse-engineering and
-proof filenames that can exceed Windows Explorer `Extract All` path limits under
+The published `v1.0.7` portable app ZIP ships a short `lore-book/` entry point
+plus a generated `lore-pack/` content pack. This avoids the raw full
+`lore-book/` tree because the full mirror has long reverse-engineering and proof
+filenames that can exceed Windows Explorer `Extract All` path limits under
 normal Downloads folders.
 
 The desired shape is broad offline Lore reading inside the app through a
@@ -50,6 +49,10 @@ generated content pack, not raw long filenames.
   mirror leakage.
 - `LoreBrowserService` prefers the content pack when present and falls back to
   the existing `lore-book/BOOK.md` file reader when the pack is absent.
+- AppCore and package-probe coverage includes above-root link rejection, encoded
+  traversal cases, root-contained file fallback, schema/hash checks, and public
+  safe error wording. This is source/package validation, not runtime UI proof or
+  broad release publication authority.
 
 ## Non-Goals
 

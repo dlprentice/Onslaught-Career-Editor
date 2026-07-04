@@ -1,268 +1,49 @@
 {
   "lastUpdated": "2026-07-04",
-  "currentFocus": "Static RE/Ghidra closure remains unchanged during the 2026-07-03/2026-07-04 full-spectrum repo assurance wave. The current wave integrates bounded public-boundary, release-accounting, consult-policy, ZIP-overlay denylist, documentation, state-hygiene, maintainer-local scratch/backup posture, and legacy local-storage cleanup repairs under the active Codex plus Composer plus Grok consult posture. Runtime parser, runtime texture decode, decompression behavior, GPU upload, texture pixels, mesh loading, animation/skinning, collision, material appearance, shader behavior, visual output, renderer behavior, rebuild, payload, Ghidra mutation/read-back, private asset access, release, extractor/importer, generated-output, command-arming, and product-enable non-claims remain preserved.",
-  "campaignPosture": {
-    "currentAssuranceWave": {
-      "status": "complete-pushed-with-notes",
-      "summary": "Current RE-facing changes are hygiene-only: sanitizing tracked maintainer-local path wording, keeping release/accounting mirrors current, and preserving public/private boundaries. Required current consult coverage passed for Codex normal/adversarial, Cursor composer-2.5-fast normal/adversarial, and Grok Build normal/adversarial; Cursor gemini-3.1-pro is suspended while operator Cursor API/model usage is exhausted. Final pushed commit and remote-ref parity evidence are recorded in the coordinator final response.",
-      "consultRecord": "subagents/full-repo-assurance-consult-record-20260704.md",
-      "nonClaims": [
-        "No live Ghidra mutation or fresh read-back.",
-        "No BEA launch, CDB attach, audio capture, visual/runtime proof, generated asset output, runtime texture decode proof, or rebuild parity proof.",
-        "No release publication or online capability promotion."
-      ]
-    },
-    "status": "stopped-by-user-shutdown",
-    "summary": "The prior closeout recorded deleted standing-loop automations. They were temporarily restored by the 2026-07-02 user request, intensified on 2026-07-03, and then stopped again by explicit user request during the 2026-07-03 shutdown closeout. The first restored wave was integrated and pushed at 898e583efdff86847c0a55dca15f2ac088e43fc1; read-only acceptance then required sanitizing exact maintainer-local Ghidra project/backup paths from current tracked runbook wording.",
-    "integratedRestoredWave": [
-      "Static Wave1200 public-source accounting fix/boundary",
-      "docsync mirror drift reconciliation"
-    ],
-    "nonClaims": [
-      "No Ghidra mutation",
-      "2026-07-03 storage cleanup performed under explicit user direction",
-      "No runtime proof",
-      "No release publication"
-    ]
-  },
+  "currentFocus": "RE/Ghidra posture remains source-only during the pre-Sol-Ultra quality wave. The current edits preserve static-accounting truth and fail-closed local Ghidra snapshot behavior without running live Ghidra, reading private assets, mutating projects, launching BEA, or generating payloads.",
   "staticClosure": {
+    "wave1220StaticCloseout": "Wave1220 static closeout acceptance: active current-risk focused accounting is `1179/1179 = 100.00%`; remaining active focused work: 0",
     "functionQuality": "6411/6411 = 100.00%",
     "staticDebt": "0 / 0 / 0",
     "activeCurrentRisk": "1179/1179 = 100.00%",
     "measurementFrontDoor": "reverse-engineering/binary-analysis/static-reaudit-measurement-register.md"
   },
-  "publicPrimaryBoundary": "The public repo may track RE docs, wave notes, scratch text exports, function indexes, static maps, proof summaries, checkers, and state batons. Hard payloads, full Ghidra databases/backups, raw captures, copied executables, secrets, build output, package output, local proof paths, raw manifests, and local campaign/worktree paths remain out of tracked state.",
-  "rebuildReadiness": {
-    "status": "tmm-arm4-readiness-gate proof-plan/checker continuity hardening integrated",
-    "alias": "tmm-arm4-readiness-gate",
-    "proofPlan": "reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md",
-    "checker": "tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py",
-    "sourceBoundary": "The checker consumes only tracked public-safe files and validates source continuity, expected counters, front-door links, package-script registration, fail-closed public-boundary wording, and non-claims.",
-    "nonClaims": [
-      "readiness-gate execution",
-      "command arming",
-      "shell dispatch",
-      "importer execution",
-      "private asset read",
-      "private manifest read",
-      "generated payload",
-      "BEA launch",
-      "CDB attach",
-      "Ghidra mutation or read-back",
-      "runtime proof",
-      "visual proof",
-      "gameplay proof",
-      "runtime parity",
-      "rebuild parity",
-      "no-noticeable-difference parity"
-    ],
-    "futureGate": "A later readiness-gate proof needs a separate bounded assignment and must not reuse this checker as a generic gate without updating the bound source proof and expected counters."
+  "currentTruth": {
+    "ghidraQueueProbe": "tools/ghidra_static_reaudit_queue_probe.py --check is read-only and no longer writes queue artifacts. It fails closed when a local quality snapshot is absent; report writing requires --write-report.",
+    "wave1220Probe": "tools/static_reaudit_final_closeout_wave1220.py accepts the tracked static closeout when canonical docs and state batons contain the closeout token and the local optional queue snapshot is either valid or absent with progress provenance present.",
+    "scope": "Current RE-facing source changes are validator and state hygiene only."
   },
-  "sourceOnlyVocabularyMap": {
-    "status": "context-only planning input with public-source checker",
-    "path": "reverse-engineering/source-code/original-system-internal-tooling-vocabulary-map.md",
-    "boundary": "Source/internal tool names, flags, developer-menu labels, resource tags, and pipeline vocabulary are candidate terms only. Retail binary/save/runtime evidence remains higher authority before any behavior, command, importer, generated-output, runtime, rebuild, or parity claim.",
-    "checker": "tools/original_system_internal_tooling_vocabulary_map_probe.py",
-    "validation": "Current checker reconciliation passed self-test, check, npm script, diff whitespace, state JSON parse, docs commands, Markdown links, repo hygiene, hard-payload safety, and public allowlist. The checker validates exact canonical/Lore parity, tracked public Markdown links, required authority-tier and scope-firewall wording, overclaim guards, and bounded tmm-arm4-readiness-gate continuity."
-  },
-  "internalViewerEditorBoundary": {
-    "status": "source-only proof plan/checker integrated",
-    "scope": "internal-viewer-editor-command-boundary",
-    "proofPlan": "reverse-engineering/source-code/internal-viewer-editor-command-boundary-proof-plan.md",
-    "checker": "tools/internal_viewer_editor_command_boundary_proof_plan_probe.py",
-    "boundary": "-modelviewer and -cutsceneeditor remain source/internal vocabulary and blocked product flags. The plan uses Tier C source vocabulary plus tracked Tier B static command-boundary docs only.",
-    "nonClaims": [
-      "command authorization",
-      "command dispatch",
-      "runtime proof",
-      "retail-tool availability",
-      "AppCore/WinUI/CLI/release support",
-      "Ghidra mutation",
-      "private asset or payload reads",
-      "rebuild, visual, gameplay, or no-noticeable-difference proof"
-    ]
-  },
-  "ayaResourceTagFamilyContract": {
-    "status": "source/static contract and checker integrated",
-    "scope": "aya-resource-tag-family-static-contract",
-    "proofPlan": "reverse-engineering/game-assets/aya-resource-tag-family-static-contract.md",
-    "checker": "tools/aya_resource_tag_family_static_contract_probe.py",
-    "boundary": "LVLR, WRES, ERES, LNDS, PAGE, GDIE, MESH, and TEXT remain loader-contract vocabulary sourced from tracked source/file-format docs plus retail/static loader docs.",
-    "nonClaims": [
-      "fresh corpus counts",
-      "exact payload schemas",
-      "runtime parser behavior",
-      "extractor execution",
-      "importer execution",
-      "generated asset output",
-      "renderer behavior",
-      "AppCore/WinUI/CLI/release support",
-      "Ghidra mutation",
-      "private asset or payload reads",
-      "rebuild, visual, gameplay, or no-noticeable-difference proof"
-    ]
-  },
-  "renderResourceBridgeStaticContract": {
-    "status": "source/static bridge contract and checker integrated",
-    "scope": "render-resource-bridge-static-contract",
-    "proofPlan": "reverse-engineering/binary-analysis/render-resource-bridge-static-contract.md",
-    "checker": "tools/render_resource_bridge_static_contract_probe.py",
-    "boundary": "MESH and TEXT remain source/static bridge vocabulary routed from the AYA loader contract into existing renderer/material/mesh/texture static docs using Tier C source engine architecture plus Tier B retail/static renderer and texture decode documentation.",
-    "nonClaims": [
-      "runtime parser behavior",
-      "runtime texture decode behavior",
-      "GPU upload",
-      "texture pixels",
-      "runtime mesh loading",
-      "animation/skinning",
-      "collision",
-      "material appearance",
-      "shader behavior",
-      "visual output",
-      "renderer behavior",
-      "extractor execution",
-      "importer execution",
-      "generated asset output",
-      "AppCore/WinUI/CLI/Godot/release support",
-      "product exposure",
-      "rebuild, runtime, visual, gameplay, or no-noticeable-difference proof"
-    ]
-  },
-  "careerProgressionStaticBridgeContract": {
-    "status": "source/static bridge contract and checker integrated",
-    "scope": "career-progression-static-bridge-contract",
-    "proofPlan": "reverse-engineering/binary-analysis/career-progression-static-bridge-contract.md",
-    "checker": "tools/career_progression_static_bridge_contract_probe.py",
-    "boundary": "CCareer, level_structure, CGame, and CEndLevelData remain source/static bridge vocabulary routed from source gameplay docs into existing save/career static docs using Tier C source gameplay architecture plus Tier B retail/static save and career documentation.",
-    "nonClaims": [
-      "runtime save/load behavior",
-      "defaultoptions boot behavior",
-      "menu behavior",
-      "runtime mission-outcome persistence",
-      "runtime objective UI",
-      "runtime Goodies wall behavior",
-      "runtime Goodies recomputation",
-      "live MissionScript command effects",
-      "patch behavior",
-      "gameplay behavior",
-      "visual output",
-      "renderer behavior",
-      "extractor execution",
-      "importer execution",
-      "generated save or asset output",
-      "AppCore/WinUI/CLI/Godot/release support",
-      "product exposure",
-      "rebuild, runtime, visual, gameplay, or no-noticeable-difference proof"
-    ]
-  },
-  "loreAndWinuiBoundaries": {
-    "lore": "Lore pack fail-closed hardening is integrated but does not prove release readiness, broad ZIP package probe parity, complete traversal protection, runtime UI proof, or package publication.",
-    "assetLibrary": "Asset Library source tests guard passive path summary and polite live-region scope, not runtime UIA/screen-reader behavior."
-  },
-  "storageRetention": {
-    "mode": "user-authorized-cleanup-complete",
-    "localStorageCleanup20260704": "Stale local project proof/backups and the inactive GhydraMCP runtime bundle were deleted by explicit user direction. The Ghidra 12.x distribution was moved to the maintainer-local tooling posture and its headless launcher path was verified. A local storage filename scan found no remaining Onslaught/BEA/Battle Engine/Aquila/backup-root/runtime-proof hits. Steam/game install material was left untouched.",
-    "driveHealth20260704": "Windows Get-PhysicalDisk/Get-Disk/Get-Volume reported all visible disks/volumes Healthy/OK. Raw SMART attributes were unavailable in this session because smartctl is absent and Windows reliability/failure-predict counters were not exposed to the current non-elevated client.",
-    "highConfidenceDeletionCandidates": 3,
-    "deletionPerformed": true,
-    "authorizedReclaimedGiB": 419.61,
-    "actualReclaimedGiB": 419.61,
-    "futureReviewBands": "Medium and low values are non-authorized logical review ceilings only, not reclaimable storage, candidate pools, unique physical-size estimates, urgency signals, or deletion budgets.",
-    "latestCampaignReports": "Earlier storage/Ghidra report-only lanes retained all classified material. On 2026-07-03, user explicitly authorized moving future backups/proofs to the ignored removable-root posture, taking a fresh live-project Ghidra backup with backup-manifest plus file-count/byte/hash verification, deleting legacy external Ghidra/source/proof archive roots, and clearing superseded removable-root scratch.",
-    "latestSentinelRun": {
-      "date": "2026-07-03",
-      "inventorySummary": "Legacy external Ghidra backups, source-scratch archive, and runtime proof archive were deleted after local manifests. Removable scratch retains the fresh live-project Ghidra backup id BEA_20260703-152228Z_live_project_backup_verified plus ignored local cleanup manifests/policy and backup-manifest plus file-count/byte/hash verification.",
-      "deletionCandidates": "Completed: legacy external Ghidra backup root, old source-scratch/public-candidate archive root, legacy raw WinUI safe-copy runtime proof archive root, and superseded removable-root pre-cleanup/scratch folders.",
-      "freeSpaceBeforeAfter": "After cleanup: external archive drive free about 928.14 GiB and removable scratch free about 119.07 GiB. Reclaimed storage recorded at about 419.61 GiB across deleted legacy roots and superseded scratch.",
-      "blockers": "Raw historical runtime proof bundles are intentionally no longer retained. Future proof audits must rely on tracked summaries/validators/recreation steps or regenerate bounded temporary proof output. Future destructive cleanup still requires candidate-specific local manifests and retained replacement/summary decisions."
-    }
-  },
+  "nonClaims": [
+    "No live Ghidra mutation, decompiler read-back, project backup mutation, or private binary/asset read.",
+    "No BEA launch, CDB attach, audio capture, visual/runtime proof, generated asset output, runtime texture decode proof, runtime parser proof, or rebuild parity proof.",
+    "No command arming, extractor/importer execution, AppCore/WinUI/CLI/Godot product exposure, release action, Host/Join enablement, or online/player-ready claim."
+  ],
+  "hardPayloadBoundary": "Full Ghidra databases/backups, copied executable bytes, extracted assets, raw captures, raw proof bundles, screenshots/frame dumps, secrets, local proof roots, and local campaign paths remain outside tracked state.",
   "runtimeProofBoundary": {
     "musicAudibleOutputProof": false,
     "readyToRunLiveAttempt": false,
     "liveArmAllowed": false,
-    "preArmReadinessStatus": "prearm-readiness-not-proven",
-    "producerCoverageCompleteIsAuthority": false,
-    "musicStatus": "Music live-bundle readiness remains fail-closed and private pre-arm-only. Producer coverage or tooling availability is not live authority and not audible-output proof.",
-    "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint command-source proof and source-bound copied-runtime causality proof are both accepted",
-    "staticReClosureBoundary": "Static closure is not runtime, gameplay, visual, online, rebuild, or no-noticeable-difference proof.",
+    "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint command-source proof and source-bound copied-runtime causality proof are accepted",
     "installedGameOriginalBea": "read-only"
   },
-  "currentPointers": {
-    "activeGoal": "goal.md",
-    "developerState": "developer_agent_state.json",
-    "documentationState": "documentation_agent_state.json",
-    "roadmapIndex": "roadmap/ROADMAP-INDEX.md",
-    "rebuildProofPlan": "reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md",
-    "rebuildChecker": "tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py",
-    "internalViewerEditorBoundaryPlan": "reverse-engineering/source-code/internal-viewer-editor-command-boundary-proof-plan.md",
-    "internalViewerEditorBoundaryChecker": "tools/internal_viewer_editor_command_boundary_proof_plan_probe.py",
-    "ayaResourceTagFamilyContract": "reverse-engineering/game-assets/aya-resource-tag-family-static-contract.md",
-    "ayaResourceTagFamilyChecker": "tools/aya_resource_tag_family_static_contract_probe.py",
-    "renderResourceBridgeStaticContract": "reverse-engineering/binary-analysis/render-resource-bridge-static-contract.md",
-    "renderResourceBridgeStaticContractChecker": "tools/render_resource_bridge_static_contract_probe.py",
-    "careerProgressionStaticBridgeContract": "reverse-engineering/binary-analysis/career-progression-static-bridge-contract.md",
-    "careerProgressionStaticBridgeContractChecker": "tools/career_progression_static_bridge_contract_probe.py",
-    "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
-    "reIndex": "reverse-engineering/RE-INDEX.md",
-    "textureResourceDecodeStaticContract": "reverse-engineering/binary-analysis/texture-resource-decode-static-contract.md",
-    "textureResourceDecodeStaticLedger": "reverse-engineering/binary-analysis/texture-resource-decode-static-contract-ledger.v1.json",
-    "textureResourceDecodeStaticContractChecker": "tools/texture_resource_decode_static_contract_probe.py"
-  },
   "validation": {
-    "stateRefresh": "Texture/resource/decode static-routing ledger slice after pushed career progression bridge reconciliation plus 2026-07-03 storage/automation state continuity; storage cleanup occurred earlier under explicit user direction; no Ghidra mutation/read-back, runtime proof, runtime parser proof, runtime texture decode proof, decompression behavior proof, GPU upload proof, texture pixel proof, runtime mesh-loading proof, generated rebuild code, hard payload, release publication, installed-game mutation, original-BEA mutation, command authorization, extractor execution, importer execution, generated asset output, renderer implementation, product exposure, or rebuild parity occurred.",
-    "latestTmmArm4ReadinessGatePackageScript": "The TMM ARM4 readiness-gate proof-plan tooling slice passed py -3 tools\\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py --self-test --check, npm run test:tmm-arm4-readiness-gate-proof-plan, package/state JSON parse, git diff --check, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene after a timeout retry, and npm run test:public-allowlist. The checker now validates package.json registration for test:tmm-arm4-readiness-gate-proof-plan. This is package/checker support only and not readiness-gate execution, command arming, importer execution, runtime proof, Ghidra mutation/read-back, BEA/CDB launch, generated asset output, product exposure, release action, or rebuild parity.",
-    "latestCareerProgressionStaticBridgeContract": "The career progression static bridge-contract slice passed read-only source/queue/lease review plus the high-throughput consult policy recorded in subagents/career-progression-static-bridge-consult-record-20260703.md. Codex normal returned ACCEPT_WITH_NOTES; Codex adversarial initially BLOCKED on untracked Markdown link acceptance, then follow-up returned ACCEPT_WITH_NOTES after the checker changed to git ls-files --cached only. Cursor Agent composer-2.5-fast normal/adversarial initially failed with DNS resolution for the Cursor agent endpoint, then retries returned ACCEPT_WITH_NOTES. Grok Build normal/adversarial initially failed on sanitized-bundle read/max-turn setup, then git-initialized prompt-file retries returned ACCEPT and ACCEPT_WITH_NOTES. Consult-driven fixes removed untracked Markdown link acceptance and tightened AppCore/MissionScript/mission-outcome wording. Validation passed py -3 tools\\career_progression_static_bridge_contract_probe.py --self-test --check, npm run test:career-progression-static-bridge-contract, git diff --check, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene, npm run test:hard-payload-safety, and npm run test:public-allowlist. It uses existing source gameplay, save-file, campaign graph/link, CGame, Career, EndLevelData, and rebuild front-door docs as source/static anchor tokens only; it is not runtime save/load, mission-outcome, objective UI, Goodies behavior, gameplay, generated-output, product-exposure, or rebuild proof.",
-    "latestRenderResourceBridgeStaticContract": "The render-resource bridge static-contract slice passed read-only source/queue/lease review, read-only acceptance with ACCEPT_WITH_NOTES and no blockers, follow-up acceptance with ACCEPT and no blockers, py -3 tools\\render_resource_bridge_static_contract_probe.py --self-test --check, npm run test:render-resource-bridge-static-contract, git diff --check, state JSON parse, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene, npm run test:hard-payload-safety, and npm run test:public-allowlist. Acceptance noted the checker should distinguish the DXMeshVB and DXTexture _index.md links by resolved path; the checker now validates exact resolved link targets. It uses existing AYA tag-family, engine, mesh, texture, DXMeshVB, DXTexture, and rebuild front-door docs as source/static anchor tokens only; it is not runtime/GPU/visual/importer/generated-output/product-exposure/rebuild proof.",
-    "latestAyaTagFamilyStaticContract": "The AYA resource tag-family static-contract slice passed read-only source/queue/lease review, read-only acceptance with ACCEPT_WITH_NOTES and no blockers, py -3 tools\\aya_resource_tag_family_static_contract_probe.py --self-test --check, npm run test:aya-resource-tag-family-static-contract, git diff --check, state JSON parse, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene, npm run test:hard-payload-safety, and npm run test:public-allowlist. Acceptance noted the checker uses existing extraction-pipeline count strings as anchor drift guards only, not fresh count authority.",
-    "latestInternalViewerEditorBoundary": "The internal viewer/editor command-boundary proof-plan slice passed read-only source/queue/lease review, bounded candidate consult, py -3 tools\\internal_viewer_editor_command_boundary_proof_plan_probe.py --self-test, py -3 tools\\internal_viewer_editor_command_boundary_proof_plan_probe.py --check, npm run test:internal-viewer-editor-command-boundary-proof-plan, npm run test:original-system-internal-tooling-vocabulary-map, git diff --check, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene, npm run test:hard-payload-safety, and npm run test:public-allowlist.",
-    "latestIntegration": "Current source-safe vocabulary-map checker reconciliation replayed accepted worker commit f1c98fa423a787cb2f3160b7c046e912aa9030f9 onto the storage-sentinel-refreshed origin/main tip as 30fc408f. The prior accepted wave passed root/source consult, adversarial safety consult, active-wave consult, W1 implementation, spec re-review, and code-quality re-review after the tracked-Markdown link guard fix. Reconciliation validation passed py -3 tools\\original_system_internal_tooling_vocabulary_map_probe.py --self-test, py -3 tools\\original_system_internal_tooling_vocabulary_map_probe.py --check, npm run test:original-system-internal-tooling-vocabulary-map, git diff --check, state JSON parse, npm run test:doc-commands, npm run test:md-links, npm run test:repo-hygiene, npm run test:hard-payload-safety, and npm run test:public-allowlist. Earlier restored-wave integration brought in accepted worker commits for restored-loop batons, Wave1200 public-source accounting support, and docsync mirror reconciliation. Acceptance remediation sanitized exact maintainer-local Ghidra project/backup path wording from current tracked runbook surfaces and passed diff whitespace, state JSON parse, scoped current-runbook/state local-path scan, docsync, docs commands, Markdown links, Wave1200/static-accounting/progress gates, repo hygiene, hard-payload safety, and public allowlist. Earlier source-ref evidence at a9fe757e238a237eac8aa8f7f4e12d1bad57ec60 and rescue closeout evidence at 78dc0b92c543def1a98dbb5a3e347f0fe3bf2dcb remain historical and do not imply fresh Ghidra mutation, runtime proof, generated rebuild code, hard payload, release publication, installed-game mutation, or original-BEA mutation. The 2026-07-03 storage/automation closeout passed state JSON parse, focused live-runtime helper unit tests, docs commands, Markdown links, repo hygiene, hard-payload safety, and public allowlist after final scoped diff review.",
-    "latestTextureResourceDecodeStaticLedger": "The texture/resource/decode static-routing ledger slice passed Codex normal/adversarial consult, Cursor Agent composer-2.5-fast normal/adversarial consult, compact Grok Build normal/adversarial consult retries with concrete risk findings accepted and the blanket no-JSON objection overridden under repo policy, py -3 tools\\texture_resource_decode_static_contract_probe.py --self-test --check, npm run test:texture-resource-decode-static-contract, hard-payload safety, public allowlist, and repo hygiene before the pushed ledger closeout. Duplicate source-checkout/worktree attempts were blocked by chief coordination, and their useful mapped-systems/static-measurement legacy backup-root redaction handoff was reconciled into canonical and Lore mirrors. This is static routing/accounting support only and not runtime texture decode, decompression behavior, texture pixels, GPU upload, visual output, live Ghidra read-back/mutation, private asset access, generated asset output, product exposure, or rebuild parity.",
-    "latestTextureResourceDecodePublicAllowlistGate": "After reconciliation onto origin/main, npm run test:public-allowlist passed: hard-payload self-test plus 19382 public candidates, public-submodule payload safety with 19566 candidates, and public-primary migration inventory with the current checkout root, 24839 private tracked paths, 19382 public tracked paths, and 5557 allowed private-only hard-payload/scratch paths. A prior run terminated with exit -1 during the submodule phase before diagnostics, but a direct rerun of py -3 tools\\public_allowlist_safety_check.py --include-submodules passed before the top-level gate passed."
-  },
-  "currentCounters": {
-    "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
-    "catalogRows": "29/29 target specimen identity and policy metadata rows"
-  },
-  "openQuestions": [],
-  "blockers": [
-    "Optional representative Media smoke audio-row selection remains unclaimed unless separately authorized and proven."
-  ],
-  "nextSteps": [
-    "Keep all stopped Onslaught automations stopped unless the user explicitly authorizes a new bounded automation plan.",
-    "Use the main coordinator thread for future work, one bounded slice at a time, with explicit ownership, consults, validation gates, and stop conditions.",
-    "Keep static RE mutation paused unless a product/runtime contradiction points back to a specific RE issue.",
-    "Treat tmm-arm4-readiness-gate as proof-plan/checker support only; do not claim readiness-gate execution, runtime proof, or rebuild parity.",
-    "Use PatchBench and Asset Library source tests as bounded source guards only; do not claim live runtime UI/accessibility proof from them.",
-    "Do not run live BEA/CDB/audio proof without explicit runtime-proof authority, leases, private proof-root readiness, arm phrase handling, and cleanup validation.",
-    "Do not delete future Ghidra/proof material without a candidate-specific local manifest, retained alternative or structured summary, consults where warranted, explicit authority, and acceptance.",
-    "Use the source-only internal tooling vocabulary map, AYA tag-family static contract, render-resource bridge static contract, and career progression static bridge contract only to choose bounded future questions with named higher-authority proof classes; keep all four checkers as public-source boundary guards, not proof authority or command authorization.",
-    "Use the source-only internal tooling vocabulary map, AYA tag-family static contract, render-resource bridge static contract, texture/resource/decode static-routing ledger, and career progression static bridge contract only to choose bounded future questions with named higher-authority proof classes; keep these checkers as public-source boundary guards, not proof authority or command authorization."
-  ],
-  "textureResourceDecodeStaticLedger": {
-    "status": "static routing ledger and checker integrated",
-    "scope": "texture-resource-decode-static-contract-ledger",
-    "contract": "reverse-engineering/binary-analysis/texture-resource-decode-static-contract.md",
-    "ledger": "reverse-engineering/binary-analysis/texture-resource-decode-static-contract-ledger.v1.json",
-    "checker": "tools/texture_resource_decode_static_contract_probe.py",
-    "boundary": "The ledger is a public-safe machine-checkable routing/accounting companion to the existing texture static contract. It records sanitized lane ids, anchor function names, Wave1163/Wave1216 provenance-only status, latest backup-class redaction, static-accounting authority, and false/zero guard summaries.",
-    "nonClaims": [
-      "decoder schema",
-      "file-format layout",
-      "runtime parser behavior",
-      "runtime texture decode behavior",
-      "runtime decompression behavior",
-      "GPU upload",
-      "texture pixels",
-      "visual output",
-      "live Ghidra read-back or mutation",
-      "private asset or payload reads",
-      "extractor execution",
-      "importer execution",
-      "generated asset output",
-      "AppCore/WinUI/CLI/Godot/release support",
-      "product exposure",
-      "rebuild, runtime, visual, gameplay, or no-noticeable-difference proof"
+    "passedFocusedChecksBeforeFinalSuite": [
+      "tools/static_to_proof_transition_backlog_probe.py --check",
+      "tools/repo_text_hygiene_check_test.py",
+      "tools/ghidra_static_reaudit_queue_probe.py --check confirmed fail-closed no-snapshot behavior without writing output"
+    ],
+    "remainingGatePlan": [
+      "Run Wave1220 closeout probe after state refresh.",
+      "Run public-boundary and hard-payload gates before commit/push."
     ]
-  }
+  },
+  "blockers": [
+    "No local Ghidra quality snapshot is available for a positive queue probe result in this lane.",
+    "Optional runtime or representative Media proof requires separate authority and proof-root handling."
+  ],
+  "openQuestions": [],
+  "nextSteps": [
+    "Keep RE tooling changes source-only unless a later bounded proof lane explicitly authorizes local runtime or Ghidra work.",
+    "When future live proof is authorized, record exact authority, leases, private proof-root cleanup, and non-claims before running it."
+  ]
 }

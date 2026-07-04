@@ -12797,6 +12797,7 @@ subagents/final-synthesis/docs_fix_plan.md	R4_DENY	subagents/	exclude_from_porta
 subagents/final-synthesis/executive_findings.md	R4_DENY	subagents/	exclude_from_portable_or_legacy_export
 subagents/final-synthesis/synthesis_manifest.json	R4_DENY	subagents/	exclude_from_portable_or_legacy_export
 subagents/final/main_agent_execution_summary.md	R4_DENY	subagents/	exclude_from_portable_or_legacy_export
+subagents/full-repo-assurance-consult-record-20260704.md	R4_DENY	subagents/	exclude_from_portable_or_legacy_export
 subagents/full_repo_recheck_2026-03-05/wave1/lane01_csharp_wpf_gui_audit.md	R4_DENY	subagents/	exclude_from_portable_or_legacy_export
 subagents/full_repo_recheck_2026-03-05/wave1/lane02_csharp_core_cli_audit.md	R4_DENY	subagents/	exclude_from_portable_or_legacy_export
 subagents/full_repo_recheck_2026-03-05/wave1/lane03_python_parity_audit.md	R4_DENY	subagents/	exclude_from_portable_or_legacy_export

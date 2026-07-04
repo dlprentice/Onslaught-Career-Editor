@@ -324,6 +324,35 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void AnalyzeSave_RejectsWrongVersionWord()
+        {
+            string tempPath = Path.Combine(Path.GetTempPath(), $"career-wrong-version-{Guid.NewGuid():N}.bes");
+            byte[] buffer = new byte[BesFilePatcher.EXPECTED_FILE_SIZE];
+            BinaryPrimitives.WriteUInt16LittleEndian(buffer.AsSpan(0, 2), 0x1234);
+
+            try
+            {
+                File.WriteAllBytes(tempPath, buffer);
+
+                SaveAnalysis analysis = BesFilePatcher.AnalyzeSave(tempPath);
+                SaveAnalyzerDocument document = SaveAnalyzerService.BuildAnalysisDocument(analysis, verbose: false, dumpMystery: false);
+
+                Assert.False(analysis.IsValid);
+                Assert.False(analysis.VersionValid);
+                Assert.Contains("Invalid .bes version word", analysis.ErrorMessage);
+                Assert.Contains("Invalid file", document.StatusText);
+                Assert.Contains("Invalid .bes version word", document.ReportText);
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                {
+                    File.Delete(tempPath);
+                }
+            }
+        }
+
+        [Fact]
         public void PatchGoodieStates_WritesOnlyRequestedHiddenGoodiesThroughTrueDwordView()
         {
             string inputPath = Path.Combine(Path.GetTempPath(), $"career-input-{Guid.NewGuid():N}.bes");

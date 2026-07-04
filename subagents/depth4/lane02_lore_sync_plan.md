@@ -15,7 +15,7 @@ Bring `lore-book/lore/*.md` into deterministic parity with canonical `lore/*.md`
 Guardrail from findings: after closure, allowed non-identical lore pair count must be exactly `1`, and it must be `_index.md` with only the `AGENTS.md` relative-path depth delta.
 
 ## Exact File Sync Order
-Run from repo root (`/mnt/c/users/david/source/onslaught-career-editor-private`) in this exact sequence.
+Run from repo root (`redacted-private-source`) in this exact sequence.
 
 ```bash
 set -euo pipefail

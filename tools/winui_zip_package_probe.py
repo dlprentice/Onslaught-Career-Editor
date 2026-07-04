@@ -1060,7 +1060,23 @@ def extract_zip(zip_path: Path, extract_dir: Path) -> tuple[int, str]:
             shutil.rmtree(extract_dir)
         extract_dir.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(zip_path) as package:
-            package.extractall(extract_dir)
+            extract_root = extract_dir.resolve()
+            for member in package.infolist():
+                member_name = member.filename.replace("\\", "/")
+                member_name_without_trailing_slash = member_name.rstrip("/")
+                raw_parts = member_name_without_trailing_slash.split("/") if member_name_without_trailing_slash else []
+                member_path = PurePosixPath(member_name)
+                if (
+                    not member_name_without_trailing_slash
+                    or member_path.is_absolute()
+                    or any(part in ("", ".", "..") for part in raw_parts)
+                    or re.match(r"^[A-Za-z]:", member_name)
+                ):
+                    raise ValueError("unsafe ZIP member path")
+                destination = (extract_root / Path(*raw_parts)).resolve()
+                if destination != extract_root and extract_root not in destination.parents:
+                    raise ValueError("unsafe ZIP member path")
+            package.extractall(extract_root)
     except Exception as exc:  # pragma: no cover - defensive filesystem report
         return 1, str(exc)
     return 0, f"Extracted {relative(zip_path)} to {relative(extract_dir)}."

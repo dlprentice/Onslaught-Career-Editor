@@ -898,6 +898,36 @@ See the [reference](https://example.com/reference).
                     new Uri(Path.Combine(loreBook, "lore", "world-lore.md")).AbsoluteUri));
         }
 
+        [Fact]
+        public void LoadIndex_DoesNotIndexBookLinksOutsideLoreRoot()
+        {
+            string loreBook = CreateLoreBookSkeleton();
+            string outside = Path.Combine(_repoRoot, "outside.md");
+            File.WriteAllText(outside, "# Outside");
+            File.WriteAllText(Path.Combine(loreBook, "BOOK.md"), "- [Outside](../outside.md)");
+
+            LoreBrowserService service = new();
+            LoreIndex index = service.LoadIndex(_repoRoot);
+
+            Assert.DoesNotContain(index.Documents, document => document.FilePath == outside);
+            Assert.Empty(index.Documents);
+        }
+
+        [Fact]
+        public void ResolveInternalTarget_DoesNotResolveOutsideLoreRootForFileBackedDocuments()
+        {
+            string loreBook = CreateLoreBookSkeleton();
+            string startHere = Path.Combine(loreBook, "Start-Here.md");
+            string outside = Path.Combine(_repoRoot, "outside.md");
+            File.WriteAllText(startHere, "# Start Here");
+            File.WriteAllText(outside, "# Outside");
+
+            LoreBrowserService service = new();
+
+            Assert.Null(service.ResolveInternalTarget(startHere, "../outside.md"));
+            Assert.Null(service.ResolveInternalTarget(startHere, new Uri(outside).AbsoluteUri));
+        }
+
         private string CreateLoreBookSkeleton()
         {
             string loreBook = Path.Combine(_repoRoot, "lore-book");

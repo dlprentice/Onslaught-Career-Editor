@@ -1,7 +1,7 @@
 # Lane 07/10 Test Runbook Accuracy Audit (Read-Only)
 
 Date: 2026-03-04
-Context: WSL shell at `/mnt/c/users/david/source/onslaught-career-editor-private`
+Context: WSL shell at `redacted-private-source`
 
 ## Environment Verification (Executed)
 

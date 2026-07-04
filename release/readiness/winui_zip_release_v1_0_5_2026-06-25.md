@@ -1,6 +1,6 @@
 # WinUI ZIP Release v1.0.5
 
-Status: published and verified
+Status: published historical release, superseded by v1.0.7
 Date: 2026-06-25
 Scope: `winui-zip-release-v1.0.5`
 
@@ -10,6 +10,10 @@ its packaged Lore pages could still contain local relative links to deeper
 source docs that were intentionally not bundled. v1.0.5 keeps the Explorer-safe
 package shape and rewrites deeper unbundled source links to GitHub so the
 downloaded app ZIP does not contain dead local Lore links.
+
+Current package note: v1.0.5 remains a published historical release record. It
+is superseded by the published v1.0.7 ZIP and should not be cited as the current
+downloadable app release.
 
 | Field | Value |
 | --- | --- |

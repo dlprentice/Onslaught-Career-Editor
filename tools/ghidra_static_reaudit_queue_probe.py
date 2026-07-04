@@ -188,20 +188,21 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--snapshot", type=Path, default=DEFAULT_SNAPSHOT)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--write-report", action="store_true")
     args = parser.parse_args(argv)
     if not args.check:
         parser.error("expected --check")
 
     out = resolve(args.out)
-    try:
-        out.resolve().relative_to((ROOT / "subagents").resolve())
-    except ValueError:
-        print(f"Refusing to write report outside subagents/: {out}", file=sys.stderr)
-        return 1
-
     report = build_report(snapshot_path=args.snapshot)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    if args.write_report:
+        try:
+            out.resolve().relative_to((ROOT / "subagents").resolve())
+        except ValueError:
+            print(f"Refusing to write report outside subagents/: {out}", file=sys.stderr)
+            return 1
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 
     if args.json:
         print(json.dumps(report, indent=2))
@@ -209,7 +210,10 @@ def main(argv: list[str]) -> int:
         quality = report["qualitySignals"]
         print("Ghidra static re-audit queue probe")
         print(f"Status: {report['status']}")
-        print(f"Output: {relative(out)}")
+        if args.write_report:
+            print(f"Output: {relative(out)}")
+        else:
+            print("Output: not written; pass --write-report to materialize ignored local evidence")
         print(f"Total functions: {report['totalFunctions']}")
         print(f"Commentless functions: {quality['commentlessFunctionCount']}")
         print(f"Undefined signatures: {quality['undefinedSignatureCount']}")

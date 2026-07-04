@@ -68,6 +68,10 @@ PRIVATE_REPO_ROOT_PATTERN = re.compile(
     rf"(?:{WINDOWS_USER_ROOT_PATTERN_TEXT}\\{{1,2}}source\\{{1,2}}Onslaught-Career-Editor-private|C:/Users/[A-Za-z0-9._-]+/source/Onslaught-Career-Editor-private|{WSL_USER_ROOT_PATTERN_TEXT}/source/Onslaught-Career-Editor-private|{LINUX_USER_ROOT_PATTERN_TEXT}/source/Onslaught-Career-Editor-private)",
     re.IGNORECASE,
 )
+PRIVATE_SAVE_ATTEMPT_PATTERN = re.compile(
+    r"\bsave-attempts[/\\][^\s`\"'<>|,)\\\]]+\.bes\b",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -182,13 +186,20 @@ RULES = (
             "goal.policy.md",
             "lore-book/",
             "MCP_DEBUGGING_OPTIONS.md",
+            "onslaught_codex_directive.md",
             "re_orchestrator_state.json",
             "RELEASE_SCOPE_AND_TEST_COMMANDS.md",
             "release/readiness/",
             "reverse-engineering/",
             "roadmap/",
+            "subagents/",
         ),
         exclude_path_prefixes=("release/readiness/private_runtime_evidence/",),
+    ),
+    TextRule(
+        "tracked-private-save-attempt-fixture-reference",
+        PRIVATE_SAVE_ATTEMPT_PATTERN,
+        include_path_prefixes=("subagents/depth3/",),
     ),
     TextRule(
         "tracked-maintainer-user-root-path",

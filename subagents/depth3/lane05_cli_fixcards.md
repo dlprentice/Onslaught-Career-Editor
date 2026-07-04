@@ -53,8 +53,8 @@ Acceptance criteria:
 3. Error/help flow is stage-aligned with C# for this class of invalid numeric input.
 
 Verification commands:
-- `set -o pipefail; python3 patcher.py save-attempts/haha-cannon-goes-brrrrr.bes /tmp/out_py_cfg_fail.bes --controller-config-p1 -1 2>&1 | sed -n '1,40p'; echo "[rc=$?]"`
-- `set -o pipefail; "/mnt/c/Program Files/dotnet/dotnet.exe" run --project "Onslaught - Career Editor.csproj" -- "C:\\Users\\david\\source\\Onslaught-Career-Editor-private\\save-attempts\\haha-cannon-goes-brrrrr.bes" "C:\\Temp\\out_cs_cfg_fail.bes" --controller-config-p1 -1 2>&1 | sed -n '1,40p'; echo "[rc=$?]"`
+- `set -o pipefail; python3 patcher.py [private-save-fixture] /tmp/out_py_cfg_fail.bes --controller-config-p1 -1 2>&1 | sed -n '1,40p'; echo "[rc=$?]"`
+- `set -o pipefail; "/mnt/c/Program Files/dotnet/dotnet.exe" run --project "Onslaught - Career Editor.csproj" -- "[private-save-fixture]" "C:\\Temp\\out_cs_cfg_fail.bes" --controller-config-p1 -1 2>&1 | sed -n '1,40p'; echo "[rc=$?]"`
 Expected: both fail before patch execution; Python no longer prints patch preamble on this input.
 
 ## Card CLI-03 - Remove Failure-Path Stdout Preamble Drift
@@ -79,7 +79,7 @@ Acceptance criteria:
 3. Existing successful patch output remains unchanged.
 
 Verification commands:
-- `tmp=$(mktemp /tmp/onslaught-in-XXXXXX.bes); cp save-attempts/haha-cannon-goes-brrrrr.bes "$tmp"; set -o pipefail; python3 patcher.py "$tmp" /tmp/out_py_copy_fail.bes --copy-options-from "$tmp" --no-copy-options-entries --no-copy-options-tail > /tmp/py_stdout.txt 2> /tmp/py_stderr.txt; rc=$?; echo "rc=$rc"; wc -l /tmp/py_stdout.txt; sed -n '1,20p' /tmp/py_stderr.txt; rm -f "$tmp"`
+- `tmp=$(mktemp /tmp/onslaught-in-XXXXXX.bes); cp [private-save-fixture] "$tmp"; set -o pipefail; python3 patcher.py "$tmp" /tmp/out_py_copy_fail.bes --copy-options-from "$tmp" --no-copy-options-entries --no-copy-options-tail > /tmp/py_stdout.txt 2> /tmp/py_stderr.txt; rc=$?; echo "rc=$rc"; wc -l /tmp/py_stdout.txt; sed -n '1,20p' /tmp/py_stderr.txt; rm -f "$tmp"`
 - `"/mnt/c/Program Files/dotnet/dotnet.exe" test OnslaughtCareerEditor.UiTests/OnslaughtCareerEditor.UiTests.csproj --filter "Name~Cli_CopyOptionsFromWithBothNoCopyFlags_FailsAndDoesNotWriteOutput"`
 - `python3 -m unittest -v tests_pyqt.test_cli_validation_unittest`
 Expected: Python failure contract mirrors C# behavior (no preamble on fatal validation).
@@ -111,7 +111,7 @@ Acceptance criteria:
 Verification commands:
 - `python3 -m unittest -v tests_pyqt.test_cli_readonly_modes_unittest`
 - `"/mnt/c/Program Files/dotnet/dotnet.exe" test OnslaughtCareerEditor.UiTests/OnslaughtCareerEditor.UiTests.csproj --filter "Name~Cli_Analyze_Or_Name~Cli_Compare"`
-- `tmp1=$(mktemp /tmp/onslaught-a-XXXXXX.bes); tmp2=$(mktemp /tmp/onslaught-b-XXXXXX.bes); cp save-attempts/haha-cannon-goes-brrrrr.bes "$tmp1"; cp save-attempts/haha-cannon-goes-brrrrr.bes "$tmp2"; python3 patcher.py --compare "$tmp1" "$tmp2" | rg -n "FILE COMPARISON|Total differing bytes: 0|Files are identical!"; rm -f "$tmp1" "$tmp2"`
+- `tmp1=$(mktemp /tmp/onslaught-a-XXXXXX.bes); tmp2=$(mktemp /tmp/onslaught-b-XXXXXX.bes); cp [private-save-fixture] "$tmp1"; cp [private-save-fixture] "$tmp2"; python3 patcher.py --compare "$tmp1" "$tmp2" | rg -n "FILE COMPARISON|Total differing bytes: 0|Files are identical!"; rm -f "$tmp1" "$tmp2"`
 
 ## Card CLI-05 - Normalize Compare Missing-File Error Wording
 Priority: P2
@@ -134,7 +134,7 @@ Acceptance criteria:
 2. Both emit the same canonical error phrase in stderr.
 
 Verification commands:
-- `set -o pipefail; python3 patcher.py save-attempts/haha-cannon-goes-brrrrr.bes --compare /tmp/does-not-exist-compare.bes 2>&1 | sed -n '1,20p'; echo "[rc=$?]"`
-- `set -o pipefail; "/mnt/c/Program Files/dotnet/dotnet.exe" run --project "Onslaught - Career Editor.csproj" -- "C:\\Users\\david\\source\\Onslaught-Career-Editor-private\\save-attempts\\haha-cannon-goes-brrrrr.bes" --compare "C:\\Temp\\does-not-exist-compare.bes" 2>&1 | sed -n '1,20p'; echo "[rc=$?]"`
+- `set -o pipefail; python3 patcher.py [private-save-fixture] --compare /tmp/does-not-exist-compare.bes 2>&1 | sed -n '1,20p'; echo "[rc=$?]"`
+- `set -o pipefail; "/mnt/c/Program Files/dotnet/dotnet.exe" run --project "Onslaught - Career Editor.csproj" -- "[private-save-fixture]" --compare "C:\\Temp\\does-not-exist-compare.bes" 2>&1 | sed -n '1,20p'; echo "[rc=$?]"`
 - `python3 -m unittest -v tests_pyqt.test_cli_validation_unittest`
 - `"/mnt/c/Program Files/dotnet/dotnet.exe" test OnslaughtCareerEditor.UiTests/OnslaughtCareerEditor.UiTests.csproj --filter "Name~Cli_Compare"`
