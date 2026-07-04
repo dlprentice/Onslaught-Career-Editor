@@ -32,7 +32,7 @@ TARGET = "0x004f2cc0"
 TARGET_RAW = "004f2cc0"
 TARGET_NAME = "CTGALoader__HasNonzeroStatusOut_004f2cc0"
 SIGNATURE = "bool __thiscall CTGALoader__HasNonzeroStatusOut_004f2cc0(void * this)"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260602-085858_post_wave1079_texture_tga_table_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260602-085858_post_wave1079_texture_tga_table_review_verified"
 
 COMMON_TAGS = {
     "static-reaudit",

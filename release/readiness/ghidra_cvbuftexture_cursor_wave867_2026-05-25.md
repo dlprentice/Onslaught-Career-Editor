@@ -24,7 +24,7 @@ Read-back evidence:
 - Callsite export verified `270` instruction rows around six xrefs, including CPDSimpleSprite callsites `0x004c767b` and `0x004c8a09` that push `vertex_count` 4 plus stack-local output pointers.
 - Queue after Wave867: `6105` total functions, `5823` commented, `282` commentless, `0` exact-undefined signatures, `0` `param_N`, comment-backed proxy `5823/6105 = 95.38%`, strict clean-signature proxy `5823/6105 = 95.38%`.
 - Next raw commentless row: `0x005508a0 CDXEngine__ClearMatrixBlock`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-165414_post_wave867_cvbuftexture_cursor_verified`, `19` files, `172362631` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-165414_post_wave867_cvbuftexture_cursor_verified`, `19` files, `172362631` bytes, `DiffCount=0`.
 
 What this proves:
 

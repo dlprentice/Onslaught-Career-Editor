@@ -1,12 +1,12 @@
 # DXPalletizer.cpp - Function Mappings
 
 > Color palette quantization system for 8-bit indexed textures
-> Source file: `C:\dev\ONSLAUGHT2\DXPalletizer.cpp`
+> Source file: `[maintainer-local-source-export-root]\DXPalletizer.cpp`
 > Debug path address: `0x00651d60`
 
 ## Wave611 Saved Status
 
-Wave611 (2026-05-20) saved Ghidra signatures, comments, and tags for the nine-function DXPalletizer island. The pass made no renames; it hardened existing names with post-save metadata/tag/xref/instruction/decompile read-back and a verified Ghidra project backup at `G:\GhidraBackups\BEA_20260519-231515_post_wave611_dxpalletizer_verified`.
+Wave611 (2026-05-20) saved Ghidra signatures, comments, and tags for the nine-function DXPalletizer island. The pass made no renames; it hardened existing names with post-save metadata/tag/xref/instruction/decompile read-back and a verified Ghidra project backup at `[maintainer-local-ghidra-backup-root]\BEA_20260519-231515_post_wave611_dxpalletizer_verified`.
 
 Saved read-back:
 
@@ -264,7 +264,7 @@ int DXPalletizer__SwizzleBlock(
 
 | Address | Type | Purpose |
 |---------|------|---------|
-| 0x00651d60 | string | Debug path "C:\dev\ONSLAUGHT2\DXPalletizer.cpp" |
+| 0x00651d60 | string | Debug path "[maintainer-local-source-export-root]\DXPalletizer.cpp" |
 | 0x00651760 | int[128] | Small texture swizzle table |
 | 0x00651960 | int[128] | Large texture swizzle table |
 | 0x00651c60 | int[] | Block index lookup table |

@@ -4,7 +4,7 @@ Wave1142 (`wave1142-mixed-score22-current-risk-review`) re-read ten Wave1108 cur
 
 This moves Wave1108 current focused accounting to `261/1179 = 22.14%`. Static closure remains `6411/6411 = 100.00%`; static debt remains `0 / 0 / 0`; expanded post-100 static surface remains `1560/1560 = 100.00%`; Wave911 focused remains `812/1408 = 57.67%`; Wave911 top-500 remains `500/500 = 100.00%`. Current risk candidates: `6166`; current focused candidates: `1178`; live regenerated current focused candidates: `1178`; remaining active focused work: `918`.
 
-Probe token anchor: Wave1142; wave1142-mixed-score22-current-risk-review; `261/1179 = 22.14%`; 10 current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 918; current risk candidates: 6166; mixed score22 current-risk residual review; fresh Ghidra export; xref-site windows; static-shadow no-function boundary candidates; read-only review; no mutation; `0 / 0 / 0`; `6411/6411 = 100.00%`; `G:\GhidraBackups\BEA_20260605-153716_post_wave1142_mixed_score22_current_risk_review_verified`; `G:\GhidraBackups\BEA_20260605-145724_post_wave1141_cdxcompass_hud_current_risk_review_verified`.
+Probe token anchor: Wave1142; wave1142-mixed-score22-current-risk-review; `261/1179 = 22.14%`; 10 current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 918; current risk candidates: 6166; mixed score22 current-risk residual review; fresh Ghidra export; xref-site windows; static-shadow no-function boundary candidates; read-only review; no mutation; `0 / 0 / 0`; `6411/6411 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260605-153716_post_wave1142_mixed_score22_current_risk_review_verified`; `[maintainer-local-ghidra-backup-root]\BEA_20260605-145724_post_wave1141_cdxcompass_hud_current_risk_review_verified`.
 
 ## Primary Evidence
 
@@ -34,8 +34,8 @@ The callsite-window export also re-read projectile and reconnect-interface xref 
 - Static-shadow no-function exports: `805` instruction rows around `5` no-function boundary candidates.
 - Queue closure: `6411/6411 = 100.00%`; static debt `0 / 0 / 0`.
 - Current-risk refresh: current risk candidates `6166`; current focused candidates `1178`; focused threshold `15`; not Wave911 reconstruction.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-153716_post_wave1142_mixed_score22_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
-- Previous completed backup: `G:\GhidraBackups\BEA_20260605-145724_post_wave1141_cdxcompass_hud_current_risk_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-153716_post_wave1142_mixed_score22_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Previous completed backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-145724_post_wave1141_cdxcompass_hud_current_risk_review_verified`.
 
 ## Boundary
 

@@ -37,8 +37,8 @@ Evidence:
 - Context metadata/tag/xref/instruction/decompile exports: `2` / `2` / `4` / `180` / `2`.
 - Primary logs report `targets=6 found=6 missing=0`, `rows=6 missing=0`, `Wrote 22 rows`, `Wrote 681 function-body instruction rows`, and `targets=6 dumped=6 missing=0 failed=0`.
 - Context logs report `targets=2 found=2 missing=0`, `rows=2 missing=0`, `Wrote 4 rows`, `Wrote 180 function-body instruction rows`, and `targets=2 dumped=2 missing=0 failed=0`.
-- Final backup after the read-only evidence wave: `G:\GhidraBackups\BEA_20260605-100620_post_wave1133_feature_pickup_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
-- Previous completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-093432_post_wave1132_component_ai_current_risk_review_verified`.
+- Final backup after the read-only evidence wave: `[maintainer-local-ghidra-backup-root]\BEA_20260605-100620_post_wave1133_feature_pickup_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Previous completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-093432_post_wave1132_component_ai_current_risk_review_verified`.
 - Codex read-only consult recommended an eight-row feature/pickup cluster; root kept `0x0040dfb0 CGeneralVolume__SpawnPickupAndDispatch` and `0x004ef100 CUnit__VFunc64_SpawnConfiguredPickupThreeTimes` as context because they were already accounted by earlier waves, then counted the six still-unaccounted primary rows.
 
 What this proves:

@@ -30,7 +30,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 APPLY_SCRIPT = ROOT / "tools" / "ApplyCMonitorMovementAudioAnimationRenderCurrentRiskWave1187.java"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-151617_post_wave1187_cmonitor_movement_audio_animation_render_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-151617_post_wave1187_cmonitor_movement_audio_animation_render_current_risk_review_verified"
 
 TARGETS = {
     "0x00409950": {

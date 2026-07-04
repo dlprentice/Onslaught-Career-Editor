@@ -27,7 +27,7 @@ Read-back evidence:
 - Wave911 focused re-audit progress advances to `528/1408 = 37.50%`.
 - Expanded static surface progress advances to `757/1493 = 50.70%`.
 - Wave911 top-500 risk-ranked coverage advances to `456/500 = 91.20%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-214433_post_wave1020_projectile_burst_spawn_spine_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-214433_post_wave1020_projectile_burst_spawn_spine_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -44,4 +44,4 @@ What remains separate proof:
 - BEA patching behavior.
 - Rebuild parity.
 
-Probe token anchor: Wave1020; projectile-burst-spawn-spine-review-wave1020; 0x005069f0 ProjectileBurst__SpawnFromCurrentPreset; 0x00506010 ProjectileBurst__SpawnFromPercentBucketFallback; 0x00506930 CWeapon__HandleFireBurstEvent; 0x004d9f30 CRound__UpdateEffectTransformByMode_004d9f30; 0x004df530 CShell__CopyResourceNameToInlineBuffer; 528/1408 = 37.50%; 757/1493 = 50.70%; 456/500 = 91.20%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260531-214433_post_wave1020_projectile_burst_spawn_spine_review_verified; no mutation.
+Probe token anchor: Wave1020; projectile-burst-spawn-spine-review-wave1020; 0x005069f0 ProjectileBurst__SpawnFromCurrentPreset; 0x00506010 ProjectileBurst__SpawnFromPercentBucketFallback; 0x00506930 CWeapon__HandleFireBurstEvent; 0x004d9f30 CRound__UpdateEffectTransformByMode_004d9f30; 0x004df530 CShell__CopyResourceNameToInlineBuffer; 528/1408 = 37.50%; 757/1493 = 50.70%; 456/500 = 91.20%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260531-214433_post_wave1020_projectile_burst_spawn_spine_review_verified; no mutation.

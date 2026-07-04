@@ -21,7 +21,7 @@ Wave465 saved Ghidra name/signature/comment/tag corrections for `10` compact men
 - Corrected compact menu-item vtable reset/destructor wrappers, controller-back binding-capacity rendering, CPauseMenu scalar/base destructors, pause texture loading, resume/defaultoptions persistence, button dispatch, binding-prompt action-node init, and compact CGameMenu base init.
 - Queue after refresh: `6057` functions, `2108` commented, `3949` commentless, `1707` undefined signatures, `1586` `param_N` signatures.
 - Current telemetry proxies: comment-backed `2108/6057 = 34.80%`; strict comment-plus-clean-signature `2041/6057 = 33.70%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-194317_post_wave465_pausemenu_tail_verified` (`19` files, `157092743` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-194317_post_wave465_pausemenu_tail_verified` (`19` files, `157092743` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

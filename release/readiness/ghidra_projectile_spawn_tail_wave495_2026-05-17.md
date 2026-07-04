@@ -36,7 +36,7 @@ Wave495 saved static Ghidra name/signature/comment/tag hardening for ten project
 - Focused probe: `py -3 tools\ghidra_projectile_spawn_tail_wave495_probe.py --check` PASS.
 - NPM probe: `cmd.exe /c npm run test:ghidra-projectile-spawn-tail-wave495` PASS.
 - Queue refresh: `6068` total functions, `2239` commented, `3829` commentless, `1673` undefined signatures, `1516` `param_N`; strict comment-plus-clean-signature proxy `2180/6068 = 35.93%`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260517-101321_post_wave495_projectile_spawn_tail_verified` with `19` files, `157649799` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260517-101321_post_wave495_projectile_spawn_tail_verified` with `19` files, `157649799` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Public Boundary
 

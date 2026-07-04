@@ -15,7 +15,7 @@ Read-back evidence:
 - Wave911 focused re-audit progress advances to `518/1408 = 36.79%`.
 - Expanded static surface progress advances to `747/1493 = 50.03%`.
 - Wave911 top-500 risk-ranked coverage advances to `447/500 = 89.40%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-204742_post_wave1018_hlcollisiondetector_event_sweep_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-204742_post_wave1018_hlcollisiondetector_event_sweep_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -32,4 +32,4 @@ What remains separate proof:
 - BEA patching behavior.
 - Rebuild parity.
 
-Probe token anchor: Wave1018; hlcollisiondetector-event-sweep-review-wave1018; 0x00480a30 CHLCollisionDetector__ScanNeighborSectorsAndDispatchCollisions; 0x00480e10 CHLCollisionDetector__TraverseQuadNodeAndDispatchCollisions; 0x00480ed0 CHLCollisionDetector__DispatchCollisionEventForPair; 0x00481060 CHLCollisionDetector__ProcessMapWhoCollisionSweep; 0x004812d0 CHLCollisionDetector__HandleScheduledCollisionEvent; 518/1408 = 36.79%; 747/1493 = 50.03%; 447/500 = 89.40%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260531-204742_post_wave1018_hlcollisiondetector_event_sweep_review_verified; no mutation.
+Probe token anchor: Wave1018; hlcollisiondetector-event-sweep-review-wave1018; 0x00480a30 CHLCollisionDetector__ScanNeighborSectorsAndDispatchCollisions; 0x00480e10 CHLCollisionDetector__TraverseQuadNodeAndDispatchCollisions; 0x00480ed0 CHLCollisionDetector__DispatchCollisionEventForPair; 0x00481060 CHLCollisionDetector__ProcessMapWhoCollisionSweep; 0x004812d0 CHLCollisionDetector__HandleScheduledCollisionEvent; 518/1408 = 36.79%; 747/1493 = 50.03%; 447/500 = 89.40%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260531-204742_post_wave1018_hlcollisiondetector_event_sweep_review_verified; no mutation.

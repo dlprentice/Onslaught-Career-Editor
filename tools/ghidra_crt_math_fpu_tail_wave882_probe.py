@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave882 CRT math/FPU tail"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-002800_post_wave882_crt_math_fpu_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-002800_post_wave882_crt_math_fpu_tail_verified"
 NEXT_HEAD = "0x00563ad3 CRT__FpuTransDispatch2_ClearStatusAndHandle"
 STRICT_PROXY = "5943/6113 = 97.22%"
 

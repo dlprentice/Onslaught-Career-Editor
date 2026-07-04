@@ -50,7 +50,7 @@ This page is static retail-binary evidence only. `ThunderHead.cpp` is not presen
 
 ## Wave768 ThunderHead.cpp Unwind Continuation
 
-Wave768 static read-back (`unwind-continuation-wave768`, `wave768-readback-verified`) hardened the adjacent ThunderHead.cpp unwind cleanup callbacks as `void __cdecl Unwind@...(void)`. Exact anchors include `0x005d5280 Unwind@005d5280`, `0x005d52e0 Unwind@005d52e0`, and `0x005d5300 Unwind@005d5300`. Evidence includes DATA scope-table xrefs `0x0061db4c` through `0x0061dbec`, ThunderHead.cpp debug path `0x00633240`, three `OID__FreeObject_Callback` rows, `CDXLandscape__DestroyResourceDescriptorArray_Thunk`, and `CThing__dtor_base`. Verified backup: `G:\GhidraBackups\BEA_20260523-171555_post_wave768_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
+Wave768 static read-back (`unwind-continuation-wave768`, `wave768-readback-verified`) hardened the adjacent ThunderHead.cpp unwind cleanup callbacks as `void __cdecl Unwind@...(void)`. Exact anchors include `0x005d5280 Unwind@005d5280`, `0x005d52e0 Unwind@005d52e0`, and `0x005d5300 Unwind@005d5300`. Evidence includes DATA scope-table xrefs `0x0061db4c` through `0x0061dbec`, ThunderHead.cpp debug path `0x00633240`, three `OID__FreeObject_Callback` rows, `CDXLandscape__DestroyResourceDescriptorArray_Thunk`, and `CThing__dtor_base`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260523-171555_post_wave768_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
 
 ## Wave519 Evidence
 

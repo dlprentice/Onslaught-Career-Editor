@@ -8,7 +8,7 @@ Scope: saved retail `BEA.exe` Ghidra name/signature/comment/tag correction
 
 Wave428 serialized headless dry/apply/read-back hardened twelve saved `CMapWho` / `CMapWhoEntry` spatial-query functions at `0x00491900` through `0x00492020`. The pass corrected the over-specific `CCollisionSeekingRound` owner labels for two generic MapWho iterator helpers, narrowed one bounds helper name from entry wording to sector-coordinate wording, renamed the radius-level setup helper for clarity, and replaced `undefined` / `param_N` signature debt with proof-boundary comments and tags.
 
-This is public-safe static evidence only. It does not launch or patch `BEA.exe`, does not mutate the installed Steam game, and does not include raw decompile text or private runtime proof. The retail debug string names `C:\dev\ONSLAUGHT2\mapwho.cpp`, but `mapwho.cpp` is absent from the current Stuart source snapshot, so this wave is binary-led rather than source-body parity.
+This is public-safe static evidence only. It does not launch or patch `BEA.exe`, does not mutate the installed Steam game, and does not include raw decompile text or private runtime proof. The retail debug string names `[maintainer-local-source-export-root]\mapwho.cpp`, but `mapwho.cpp` is absent from the current Stuart source snapshot, so this wave is binary-led rather than source-body parity.
 
 ## Saved Ghidra Changes
 

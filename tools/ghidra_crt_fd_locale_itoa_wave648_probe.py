@@ -228,7 +228,7 @@ def check_docs(failures: list[str]) -> None:
     if "test:ghidra-crt-fd-locale-itoa-wave648" not in package.get("scripts", {}):
         failures.append("package.json missing Wave648 npm script")
     required_docs = {
-        PUBLIC_NOTE: ("Wave648", "CRT__StrNICmpWithLocaleLock", "2601", "814", "G:\\GhidraBackups\\BEA_20260520-205347_post_wave648_crt_fd_locale_itoa_verified"),
+        PUBLIC_NOTE: ("Wave648", "CRT__StrNICmpWithLocaleLock", "2601", "814", "[maintainer-local-ghidra-backup-root]\\BEA_20260520-205347_post_wave648_crt_fd_locale_itoa_verified"),
         FUNCTION_INDEX: ("Wave648", "CRT__GetLocaleInfoCopyOrInt", "0x0056e271"),
         CRT_DOC: ("Wave648", "CRT__UIntToAsciiBase_ReturnBuffer", "CRT__GetEnvVarValuePointerCaseInsensitive_0056e271"),
         GHIDRA_REFERENCE: ("Wave648", "CRT__ChangeFileSizeByFd_NoLock", "crt-fd-locale-itoa-wave648"),

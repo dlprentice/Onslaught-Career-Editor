@@ -27,7 +27,7 @@ Read-back evidence:
 - Post exports verified `7` metadata rows, `7` tag rows, `95` xref rows, `77` function-body instruction rows, `7` decompile rows, and `288` vtable-slot rows. Post vtable status is `259` `OK` and `29` `NO_FUNCTION_AT_POINTER`, resolving `15` additional slot occurrences across CThing, CWaypoint, and CInfantryAI.
 - Queue after Wave1081: `6283/6283 = 100.00%`, with `0` commentless functions, `0` exact-undefined signatures, `0` `param_N` signatures, `0` weak-name rows, `0` uncertain-owner rows, `0` address-suffixed helper rows, and `0` address-suffixed wrapper rows.
 - Wave911 focused progress remains `812/1408 = 57.67%`; expanded static surface advances to `1394/1560 = 89.36%`; top-500 remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-103048_post_wave1081_cthing_waypoint_residual_vtable_boundary_verified`, `19` files, `174787463` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-103048_post_wave1081_cthing_waypoint_residual_vtable_boundary_verified`, `19` files, `174787463` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -35,7 +35,7 @@ What this proves:
 - The saved names, signatures, comments, tags, decompile rows, instruction bodies, DATA xrefs, and vtable slots read back after save.
 - The recovered bodies are bounded static retail evidence tied to true-vtable pointers and adjacent listing boundaries.
 
-Probe token anchor: Wave1081; cthing-waypoint-residual-vtable-boundary-wave1081; 0x004bfa00 SharedVFunc__CopyGlobal829dd0Block30ToOut_004bfa00; 0x004f3760 CThing__AddShutdownEvent_004f3760; 0x004f37a0 CThing__StartDieProcess_004f37a0; 0x004f3d20 SharedVFunc__ForwardField28Slot10OrNull_004f3d20; 0x0043e9c0 SharedVFunc__CopyGlobal0066ea10Block10ToOut_0043e9c0; 0x005df550; 0x005dd278; 0x005dbf14; 812/1408 = 57.67%; 1394/1560 = 89.36%; 500/500 = 100.00%; 6283/6283 = 100.00%; G:\GhidraBackups\BEA_20260602-103048_post_wave1081_cthing_waypoint_residual_vtable_boundary_verified; boundary recovery.
+Probe token anchor: Wave1081; cthing-waypoint-residual-vtable-boundary-wave1081; 0x004bfa00 SharedVFunc__CopyGlobal829dd0Block30ToOut_004bfa00; 0x004f3760 CThing__AddShutdownEvent_004f3760; 0x004f37a0 CThing__StartDieProcess_004f37a0; 0x004f3d20 SharedVFunc__ForwardField28Slot10OrNull_004f3d20; 0x0043e9c0 SharedVFunc__CopyGlobal0066ea10Block10ToOut_0043e9c0; 0x005df550; 0x005dd278; 0x005dbf14; 812/1408 = 57.67%; 1394/1560 = 89.36%; 500/500 = 100.00%; 6283/6283 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-103048_post_wave1081_cthing_waypoint_residual_vtable_boundary_verified; boundary recovery.
 
 What remains unproven:
 

@@ -22,7 +22,7 @@ The pass saved comments and tags for all 32 thunks. It saved conservative API-sh
 - Post-state exports verified `32` metadata rows, `32` tag rows, `61` xref rows, `96` instruction rows, and `32` decompile rows.
 - Every target instruction is a six-byte import thunk (`JMP dword ptr [IAT]`). The island tail is `0x0055d69a GetFileVersionInfoSizeA`; the next instruction at `0x0055d6a0` begins `CRT__SehPopExceptionFrameAndJump`.
 - Prototype evidence came from local Windows SDK headers for DirectSound/VFW/Version APIs, repo/reference zlib headers, and local Ogg/Vorbis headers; opaque pointer types were kept where exact third-party struct layouts are outside the current Ghidra typing scope.
-- Backup verified: `G:\GhidraBackups\BEA_20260520-032435_post_wave619_import_thunks_verified` with `19` files, `161745799` bytes, and `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260520-032435_post_wave619_import_thunks_verified` with `19` files, `161745799` bytes, and `DiffCount=0`.
 
 ## Queue Telemetry
 

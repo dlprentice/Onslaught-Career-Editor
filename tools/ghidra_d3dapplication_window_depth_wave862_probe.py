@@ -30,7 +30,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave862 D3DApplication window/depth"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-144206_post_wave862_d3dapplication_window_depth_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-144206_post_wave862_d3dapplication_window_depth_verified"
 NEXT_HEAD = "0x0052e180 CInstructionOP_PLUS__VFunc_00_0052e180"
 STRICT_PROXY = "5804/6105 = 95.07%"
 

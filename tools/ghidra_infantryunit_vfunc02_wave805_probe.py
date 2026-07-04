@@ -28,7 +28,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-094441_post_wave805_infantryunit_vfunc02_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-094441_post_wave805_infantryunit_vfunc02_verified"
 OLD_NAME = "CInfantryUnit__VFunc_02_00488f60"
 NEW_NAME = "CInfantryUnit__VFunc02_ClearParticleLinkAndForward"
 SIGNATURE = f"void __fastcall {NEW_NAME}(void * this)"

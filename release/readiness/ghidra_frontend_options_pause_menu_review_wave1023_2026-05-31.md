@@ -33,7 +33,7 @@ Read-back evidence:
 - Headless logs reported metadata `targets=16 found=16 missing=0`, tags `rows=16 missing=0`, xrefs `Wrote 50 rows`, instructions `targets=16 missing=0`, and decompile `targets=16 dumped=16 missing=0 failed=0`.
 - Queue closure remains `6238/6238 = 100.00%` with 0 commentless, 0 exact-undefined signatures, and 0 `param_N`.
 - Wave911 focused re-audit progress advances to `555/1408 = 39.42%`; expanded static surface progress advances to `784/1493 = 52.51%`; Wave911 top-500 risk-ranked coverage advances to `483/500 = 96.60%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-233831_post_wave1023_frontend_options_pause_menu_review_verified`, `19` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-233831_post_wave1023_frontend_options_pause_menu_review_verified`, `19` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -51,4 +51,4 @@ What remains unproven:
 - BEA patching behavior.
 - Rebuild parity.
 
-Probe token anchor: Wave1023; frontend-options-pause-menu-review-wave1023; 0x004cdd70 GameControllers__RelinquishControlForTarget; 0x004cddf0 Audio__ReinitializeSoundAndRestoreMusic; 0x004ceef0 LandscapeDetail_SetLevel; 0x004cffd0 CVideoDetailLevel__GetCurrentPresetFromItems; 0x004d04b0 CPauseMenu__scalar_deleting_dtor; 0x004d11d0 CPauseMenu__Render; 0x004d1750 CSimpleGameMenu__dtor_base; 555/1408 = 39.42%; 784/1493 = 52.51%; 483/500 = 96.60%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260531-233831_post_wave1023_frontend_options_pause_menu_review_verified; no mutation.
+Probe token anchor: Wave1023; frontend-options-pause-menu-review-wave1023; 0x004cdd70 GameControllers__RelinquishControlForTarget; 0x004cddf0 Audio__ReinitializeSoundAndRestoreMusic; 0x004ceef0 LandscapeDetail_SetLevel; 0x004cffd0 CVideoDetailLevel__GetCurrentPresetFromItems; 0x004d04b0 CPauseMenu__scalar_deleting_dtor; 0x004d11d0 CPauseMenu__Render; 0x004d1750 CSimpleGameMenu__dtor_base; 555/1408 = 39.42%; 784/1493 = 52.51%; 483/500 = 96.60%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260531-233831_post_wave1023_frontend_options_pause_menu_review_verified; no mutation.

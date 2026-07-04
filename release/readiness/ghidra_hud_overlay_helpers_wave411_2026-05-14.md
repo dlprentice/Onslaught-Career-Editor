@@ -28,7 +28,7 @@ The Wave410 caller chain now directly supports CHud ownership for these neighbor
 - Focused unit tests passed `2/2`, Python compile passed, and the direct/package-script probes passed.
 - Refreshed queue telemetry reports `6028` functions, `1574` commented functions, `4454` commentless functions, `1909` undefined signatures, and `1843` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1574/6028 = 26.11%`; strict clean-signature `1511/6028 = 25.07%`.
-- The live Ghidra project backup was verified on `G:` at `G:\GhidraBackups\BEA_20260514_094034_post_wave411_hud_overlay_helpers_verified` with `19` files, `154831751` bytes, and `HashDiffCount=0`.
+- The live Ghidra project backup was verified on `[maintainer-local-backup-volume]` at `[maintainer-local-ghidra-backup-root]\BEA_20260514_094034_post_wave411_hud_overlay_helpers_verified` with `19` files, `154831751` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

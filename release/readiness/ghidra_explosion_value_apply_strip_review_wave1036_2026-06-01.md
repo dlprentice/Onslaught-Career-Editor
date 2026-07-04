@@ -32,7 +32,7 @@ Evidence counts:
 - Wave911 focused re-audit progress after Wave1036: `685/1408 = 48.65%`.
 - Expanded static surface progress after Wave1036: `914/1493 = 61.22%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-064537_post_wave1036_explosion_value_apply_strip_review_verified`, `19` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-064537_post_wave1036_explosion_value_apply_strip_review_verified`, `19` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -48,4 +48,4 @@ What remains unproven:
 - Exact source-body identity and local variable names/types.
 - BEA patch behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1036; explosion-value-apply-strip-review-wave1036; 0x0043afc0 CExplosionAirEffect__ApplyToExplosionByName; 0x0043b3a0 CExplosionScalar34__ApplyToExplosionByName; 0x0043b880 CExplosionWaterSound__ApplyToExplosionByName; DAT_008553f8; 685/1408 = 48.65%; 914/1493 = 61.22%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-064537_post_wave1036_explosion_value_apply_strip_review_verified; no mutation.
+Probe token anchor: Wave1036; explosion-value-apply-strip-review-wave1036; 0x0043afc0 CExplosionAirEffect__ApplyToExplosionByName; 0x0043b3a0 CExplosionScalar34__ApplyToExplosionByName; 0x0043b880 CExplosionWaterSound__ApplyToExplosionByName; DAT_008553f8; 685/1408 = 48.65%; 914/1493 = 61.22%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-064537_post_wave1036_explosion_value_apply_strip_review_verified; no mutation.

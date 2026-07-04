@@ -29,7 +29,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260601-162015_post_wave1053_cfastvb_stacklocked_transform_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260601-162015_post_wave1053_cfastvb_stacklocked_transform_review_verified"
 
 TARGETS = {
     "0x0059f857": "CFastVB__DispatchOp_TransformVec4Batch_0059f857",

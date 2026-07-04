@@ -32,7 +32,7 @@ Read-back evidence:
 - Vtable export: 9 vtable anchors, 360 slot rows, with primary targets present at slots including `0x005d9cdc`, `0x005d9c14`, `0x005d9f20`, `0x005da010`, `0x005d9d28`, `0x005d9b98`, and `0x005d9d50`.
 - Wave911 focused re-audit progress after Wave949 is `257/1408 = 18.25%`.
 - Static export-contract function-quality closure remains `6150/6150 = 100.00%`.
-- Verified read-only backup: `G:\GhidraBackups\BEA_20260528-075331_post_wave949_physics_unit_weapon_apply_lifetime_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
+- Verified read-only backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-075331_post_wave949_physics_unit_weapon_apply_lifetime_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
 
 What remains unproven:
 

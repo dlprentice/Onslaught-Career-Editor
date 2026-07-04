@@ -20,7 +20,7 @@ Read-back anchors:
 - Final dry summary: `updated=0 skipped=8 renamed=0 would_rename=0 signature_updated=0 varargs=0 missing=0 bad=0`.
 - Post exports verified `8` metadata rows, `8` tag rows, `17` xref rows, `264` instruction rows, and `8` clean decompile rows.
 - Pre-state evidence includes the same focused exports and candidate exports covering `15` adjacent CTexture/CDXTexture parser and constant-stream rows before the final eight-row tranche was selected.
-- Verified backup: `G:\GhidraBackups\BEA_20260521-102431_post_wave685_ctexture_parser_symbol_tail_verified`, `19` files, `164662151` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-102431_post_wave685_ctexture_parser_symbol_tail_verified`, `19` files, `164662151` bytes, `DiffCount=0`.
 
 ## Queue Delta
 

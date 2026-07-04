@@ -16,8 +16,8 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 2 xref rows, 241 instruction-window rows, 98 caller-site instruction rows, 7 context metadata rows, 7 context tag rows, and 1 decompile row.
 - Queue after Wave845: 6098 total, 5669 commented, 429 commentless, 0 exact-undefined signatures, 0 `param_N` signatures, comment-backed proxy `5669/6098 = 92.96%`, strict clean-signature proxy `5669/6098 = 92.96%`.
 - Next raw commentless row: `0x00510520 CWorldPhysicsManager__ResolveLoadedDefinitionReferences`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-053251_post_wave845_spawner_type_allowed_verified`, 19 files, 171871111 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-053251_post_wave845_spawner_type_allowed_verified`, 19 files, 171871111 bytes, `DiffCount=0`.
 
-Probe token anchor: Wave845 CSpawner Type Allowed; spawner-type-allowed-wave845; `0x0050f680 CSpawnerThng__IsSpawnTypeAllowed`; `bool __cdecl CSpawnerThng__IsSpawnTypeAllowed(int spawn_type)`; `0x004e32cc`; `0x004e39b2`; `0x0050f6a4/0x0050f6ac`; `4 through 0x14 and 0x16 through 0x18`; `5669/6098 = 92.96%`; `0x00510520 CWorldPhysicsManager__ResolveLoadedDefinitionReferences`; `G:\GhidraBackups\BEA_20260525-053251_post_wave845_spawner_type_allowed_verified`.
+Probe token anchor: Wave845 CSpawner Type Allowed; spawner-type-allowed-wave845; `0x0050f680 CSpawnerThng__IsSpawnTypeAllowed`; `bool __cdecl CSpawnerThng__IsSpawnTypeAllowed(int spawn_type)`; `0x004e32cc`; `0x004e39b2`; `0x0050f6a4/0x0050f6ac`; `4 through 0x14 and 0x16 through 0x18`; `5669/6098 = 92.96%`; `0x00510520 CWorldPhysicsManager__ResolveLoadedDefinitionReferences`; `[maintainer-local-ghidra-backup-root]\BEA_20260525-053251_post_wave845_spawner_type_allowed_verified`.
 
 Boundary note: this wave proves saved static Ghidra metadata/decompile/xref evidence for the CSpawnerThng spawn-type predicate only. Exact enum names, source method identity, concrete spawner/definition field meanings, runtime spawn admission behavior, BEA patching, and rebuild parity remain deferred.

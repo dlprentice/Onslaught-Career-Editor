@@ -41,4 +41,4 @@ Boundary:
 - This is not real/private importer execution.
 - This is not asset generation, BEA launch, Ghidra mutation, product UI work, Godot work, renderer/rebuild implementation, rebuild parity, or no-noticeable-difference parity.
 
-Backup note: latest verified Ghidra backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified` because this slice performs no Ghidra/game/exe mutation. External backup drives are detached as of 2026-06-15; use `D:\GhidraBackups` for future backup-producing waves while `G:` is unavailable.
+Backup note: latest verified Ghidra backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified` because this slice performs no Ghidra/game/exe mutation. External backup drives are detached as of 2026-06-15; use `[maintainer-local-ghidra-backup-root]` for future backup-producing waves while `[maintainer-local-backup-volume]` is unavailable.

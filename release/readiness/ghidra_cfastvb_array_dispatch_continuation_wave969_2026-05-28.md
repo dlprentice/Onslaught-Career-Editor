@@ -23,7 +23,7 @@ Read-back evidence:
 - Final post exports verified `5` metadata rows, `5` tag rows, `5` xref rows, `691` body-instruction rows, and `5` decompile rows.
 - Queue after Wave969: `6166` total functions, `6166` commented, `0` commentless, `0` exact-undefined signatures, `0` `param_N` signatures, comment-backed and strict clean-signature proxy `6166/6166 = 100.00%`.
 - Wave911 focused re-audit progress remains `344/1408 = 24.43%`; expanded static surface progress including newly recovered dispatch targets is `358/1422 = 25.18%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-170703_post_wave969_cfastvb_array_dispatch_continuation_verified`, `19` files, `173607815` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-170703_post_wave969_cfastvb_array_dispatch_continuation_verified`, `19` files, `173607815` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -38,4 +38,4 @@ What remains unproven:
 - Exact source identity for the recovered functions.
 - Runtime CPU dispatch behavior, runtime math/render behavior, BEA patching behavior, and rebuild parity.
 
-Probe token anchor: Wave969; cfastvb-array-dispatch-continuation-wave969; 0x005a3a40 CFastVB__DispatchOp_TransformVec2ArrayByMatrix4_WithTranslation_005a3a40; 0x005a3ca0 CFastVB__DispatchOp_TransformProjectVec2ArrayByMatrix4_005a3ca0; 0x005a3f00 CFastVB__DispatchOp_TransformVec2ArrayByMatrix4_NoTranslation_005a3f00; 0x005a4160 CFastVB__DispatchOp_TransformProjectVec3ArrayByMatrix4_Alt_005a4160; 0x005a4480 CFastVB__DispatchOp_TransformVec3ArrayByMatrix4_NoTranslation_005a4480; 0x00598474 CFastVB__InitDispatchOpsFromFeatureFlags; 344/1408 = 24.43%; 358/1422 = 25.18%; 6166/6166 = 100.00%; G:\GhidraBackups\BEA_20260528-170703_post_wave969_cfastvb_array_dispatch_continuation_verified; function-boundary recovery.
+Probe token anchor: Wave969; cfastvb-array-dispatch-continuation-wave969; 0x005a3a40 CFastVB__DispatchOp_TransformVec2ArrayByMatrix4_WithTranslation_005a3a40; 0x005a3ca0 CFastVB__DispatchOp_TransformProjectVec2ArrayByMatrix4_005a3ca0; 0x005a3f00 CFastVB__DispatchOp_TransformVec2ArrayByMatrix4_NoTranslation_005a3f00; 0x005a4160 CFastVB__DispatchOp_TransformProjectVec3ArrayByMatrix4_Alt_005a4160; 0x005a4480 CFastVB__DispatchOp_TransformVec3ArrayByMatrix4_NoTranslation_005a4480; 0x00598474 CFastVB__InitDispatchOpsFromFeatureFlags; 344/1408 = 24.43%; 358/1422 = 25.18%; 6166/6166 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260528-170703_post_wave969_cfastvb_array_dispatch_continuation_verified; function-boundary recovery.

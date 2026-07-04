@@ -24,7 +24,7 @@ DEVELOPER_STATE = ROOT / "developer_agent_state.json"
 DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260528-181005_post_wave971_cfastvb_dispatch_slot_boundary_sweep_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-181005_post_wave971_cfastvb_dispatch_slot_boundary_sweep_verified"
 
 TARGETS = {
     "0x005a4fee": ("B0", "0x005985e0"),

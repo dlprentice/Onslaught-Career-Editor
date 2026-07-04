@@ -1,6 +1,6 @@
 # flexarray.cpp - Flexible Array Container
 
-**Source File:** `C:\dev\ONSLAUGHT2\flexarray.cpp`
+**Source File:** `[maintainer-local-source-export-root]\flexarray.cpp`
 **Debug String Address:** `0x00629a9c`
 **Functions Found:** 9 (including 1 thunk)
 

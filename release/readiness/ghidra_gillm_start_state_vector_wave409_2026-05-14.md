@@ -20,7 +20,7 @@ The vtable evidence supersedes the older CExplosionInitThing label. Stuart's sou
 - Focused unit tests passed `3/3`, Python compile passed, and the direct/package-script probes passed.
 - Refreshed queue telemetry reports `6028` functions, `1562` commented functions, `4466` commentless functions, `1909` undefined signatures, and `1854` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1562/6028 = 25.91%`; strict clean-signature `1500/6028 = 24.88%`.
-- The live Ghidra project backup was verified on `G:` at `G:\GhidraBackups\BEA_20260514_083210_post_wave409_gillm_state_vector_verified` with `19` files, `154798983` bytes, and `HashDiffCount=0`.
+- The live Ghidra project backup was verified on `[maintainer-local-backup-volume]` at `[maintainer-local-ghidra-backup-root]\BEA_20260514_083210_post_wave409_gillm_state_vector_verified` with `19` files, `154798983` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

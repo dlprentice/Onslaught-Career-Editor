@@ -283,7 +283,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
         failures.append(f"unexpected queue head: {first}")
 
     backup = json.loads(read_text(BACKUP_SUMMARY))
-    if backup.get("BackupPath") != "G:\\GhidraBackups\\BEA_20260519-134212_post_wave592_dxengine_resource_tail_verified":
+    if backup.get("BackupPath") != "[maintainer-local-ghidra-backup-root]\\BEA_20260519-134212_post_wave592_dxengine_resource_tail_verified":
         failures.append("backup path mismatch")
     for key, expected_value in {
         "FileCount": 19,
@@ -318,7 +318,7 @@ def check_docs_and_logs(failures: list[str]) -> None:
         "CDXEngine__Init",
         "CDXEngine__InitResources",
         "0x0053d760 CThing__RenderDebugVolumeOverlay",
-        "G:\\GhidraBackups\\BEA_20260519-134212_post_wave592_dxengine_resource_tail_verified",
+        "[maintainer-local-ghidra-backup-root]\\BEA_20260519-134212_post_wave592_dxengine_resource_tail_verified",
         "runtime",
         "unproven",
     )

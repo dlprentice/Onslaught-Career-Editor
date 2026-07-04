@@ -33,7 +33,7 @@ Probe anchors: `0x0057d216 CFastVB__DispatchMmxKernel_00657974`, `0x0057df84 CDX
 - Final dry mode: `updated=0 skipped=12 renamed=0 would_rename=0 signature_updated=0 missing=0 bad=0`
 - All three passes reported `REPORT: Save succeeded`.
 - Post exports verified `12` metadata rows, `12` tag rows, `12` xref rows, `444` instruction rows, and `12` clean decompile rows.
-- Backup verified: `G:\GhidraBackups\BEA_20260521-005813_post_wave664_texture_downsample_verified`, `19` files, `163548039` bytes, `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260521-005813_post_wave664_texture_downsample_verified`, `19` files, `163548039` bytes, `DiffCount=0`.
 
 ## Queue
 

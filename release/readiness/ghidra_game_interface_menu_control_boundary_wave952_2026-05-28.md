@@ -20,7 +20,7 @@ Wave952 re-reviewed the CGameInterface menu execution/render cluster and recover
 - Post exports: 6 metadata rows, 6 tag rows, 8 xref rows, 1714 instruction rows, 6 decompile rows, and 16 post-vtable rows.
 - Queue after Wave952: 6151 total functions, 6151 commented, 0 commentless, 0 exact-undefined signatures, 0 `param_N`, strict export-contract closure `6151/6151 = 100.00%`.
 - Wave911 focused re-audit progress after Wave952: `276/1408 = 19.60%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-091135_post_wave952_game_interface_menu_control_boundary_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-091135_post_wave952_game_interface_menu_control_boundary_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
 
 ## What This Proves
 

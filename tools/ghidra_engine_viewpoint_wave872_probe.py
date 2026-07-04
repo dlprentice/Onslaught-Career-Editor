@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave872 engine/viewpoint"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-191020_post_wave872_engine_viewpoint_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-191020_post_wave872_engine_viewpoint_verified"
 NEXT_HEAD = "0x00553960 CDXEngine__RenderMultipassLayerA"
 STRICT_PROXY = "5857/6106 = 95.92%"
 

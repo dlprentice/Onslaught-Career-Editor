@@ -12,6 +12,6 @@ Evidence:
 
 - Baseline JSON: `425` selected rows, `23` families, `425` commented rows, `425` clean-signature rows, no missing required anchors.
 - Cluster summary: `engine-core 115`, `math-vector 84`, `console-monitor 78`, `memory-buffer 66`, `platform-app 53`, `render-state-shared 29`.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-120420_post_wave909_engine_platform_support_static_review_verified`, `19` files, `173247367` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-120420_post_wave909_engine_platform_support_static_review_verified`, `19` files, `173247367` bytes, `DiffCount=0`.
 
 This wave is read-only against Ghidra and makes no metadata mutation, no executable-byte change, no save mutation, and no BEA launch. Runtime device handling, platform I/O, allocator behavior, console command execution, monitor/safe-pointer behavior, exact layouts, patch behavior, and rebuild parity remain separate proof.

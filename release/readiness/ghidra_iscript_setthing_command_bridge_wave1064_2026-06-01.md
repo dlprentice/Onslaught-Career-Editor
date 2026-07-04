@@ -43,7 +43,7 @@ Read-back evidence:
 - Wave911 focused progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1199/1560 = 76.86%`.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-225655_post_wave1064_iscript_setthing_command_bridge_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-225655_post_wave1064_iscript_setthing_command_bridge_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -64,4 +64,4 @@ What remains unproven:
 
 Next candidate note: continue with the next expanded static re-audit cluster; prefer read-only review first and mutate only when fresh evidence proves a correction or normalization need.
 
-Probe token anchor: Wave1064; iscript-setthing-command-bridge-wave1064; 0x00534fb0 IScript__SetThingValueViaVFunc198_FromArg; 0x00534fe0 IScript__SetThingValueViaVFunc19C_FromArg; 0x00535010 IScript__SetThingValueViaEngineHelper4FE390_FromArg; 0x00535040 IScript__SetThingValueViaEngineHelper4FE3F0_FromArg; 0x00535530 IScript__SetThingFloatViaVFunc1C8_FromArg; 0x00535560 IScript__SetThingRefViaCUnitHelper4FD830_FromArg; 0x004fd830 CUnit__SetFactionForHierarchy; 0x004fe390 CEngine__EnableThingByNameFlag; 0x004fe3f0 CEngine__DisableThingByNameFlag; 812/1408 = 57.67%; 1199/1560 = 76.86%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-225655_post_wave1064_iscript_setthing_command_bridge_verified; no mutation.
+Probe token anchor: Wave1064; iscript-setthing-command-bridge-wave1064; 0x00534fb0 IScript__SetThingValueViaVFunc198_FromArg; 0x00534fe0 IScript__SetThingValueViaVFunc19C_FromArg; 0x00535010 IScript__SetThingValueViaEngineHelper4FE390_FromArg; 0x00535040 IScript__SetThingValueViaEngineHelper4FE3F0_FromArg; 0x00535530 IScript__SetThingFloatViaVFunc1C8_FromArg; 0x00535560 IScript__SetThingRefViaCUnitHelper4FD830_FromArg; 0x004fd830 CUnit__SetFactionForHierarchy; 0x004fe390 CEngine__EnableThingByNameFlag; 0x004fe3f0 CEngine__DisableThingByNameFlag; 812/1408 = 57.67%; 1199/1560 = 76.86%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-225655_post_wave1064_iscript_setthing_command_bridge_verified; no mutation.

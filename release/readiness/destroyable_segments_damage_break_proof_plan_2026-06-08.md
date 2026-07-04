@@ -22,7 +22,7 @@ Wave911 focused remains historical-retired/non-reconstructable at `812/1408 = 57
 Static anchors retained for the proof plan:
 
 - `destroyable-segments-static-contract.md` and Wave1205 `wave1205-destroyable-segment-current-risk-review`.
-- Wave1205 evidence: `5` destroyable-segment rows, `9` xref rows, `96` instruction rows, `5` decompile rows, and verified backup `G:\GhidraBackups\BEA_20260607-021737_post_wave1205_destroyable_segment_current_risk_review_verified`.
+- Wave1205 evidence: `5` destroyable-segment rows, `9` xref rows, `96` instruction rows, `5` decompile rows, and verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260607-021737_post_wave1205_destroyable_segment_current_risk_review_verified`.
 - `0x00442700 CDestructableSegment__RegisterChild`.
 - `0x004433f0 CDestroyableCoreSegment__AreCoreChildrenDestroyed`.
 - `CDestructableSegmentsController__DamageSegmentByIndexAndUpdateThreshold`.

@@ -23,7 +23,7 @@ Read-back evidence:
 - Final post exports verified `5` metadata rows, `5` tag rows, `5` xref rows, `190` body-instruction rows, and `5` decompile rows.
 - Queue after Wave968: `6161` total functions, `6161` commented, `0` commentless, `0` exact-undefined signatures, `0` `param_N` signatures, comment-backed and strict clean-signature proxy `6161/6161 = 100.00%`.
 - Wave911 focused re-audit progress remains `344/1408 = 24.43%`; expanded static surface progress including newly recovered dispatch targets is `353/1417 = 24.91%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-163203_post_wave968_cfastvb_dispatch_continuation_verified`, `19` files, `173607815` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-163203_post_wave968_cfastvb_dispatch_continuation_verified`, `19` files, `173607815` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -38,4 +38,4 @@ What remains unproven:
 - Exact source identity for the recovered functions.
 - Runtime CPU dispatch behavior, runtime math/render behavior, BEA patching behavior, and rebuild parity.
 
-Probe token anchor: Wave968; cfastvb-dispatch-continuation-wave968; 0x005a6209 CFastVB__DispatchOp_BuildScaleMatrixFromThreeScalars_005a6209; 0x005ab06f CFastVB__DispatchOp_TransformPackedVec4ByMatrix4_005ab06f; 0x005a6250 CFastVB__DispatchOp_TransposeMatrix4x4_005a6250; 0x005a62f8 CFastVB__DispatchOp_BuildRotationMatrixFromQuaternionPacked_Scalar_005a62f8; 0x005a63ca CFastVB__DispatchOp_BuildRotationMatrixFromQuaternionPacked_SIMD_005a63ca; 0x00598474 CFastVB__InitDispatchOpsFromFeatureFlags; 344/1408 = 24.43%; 353/1417 = 24.91%; 6161/6161 = 100.00%; G:\GhidraBackups\BEA_20260528-163203_post_wave968_cfastvb_dispatch_continuation_verified; function-boundary recovery.
+Probe token anchor: Wave968; cfastvb-dispatch-continuation-wave968; 0x005a6209 CFastVB__DispatchOp_BuildScaleMatrixFromThreeScalars_005a6209; 0x005ab06f CFastVB__DispatchOp_TransformPackedVec4ByMatrix4_005ab06f; 0x005a6250 CFastVB__DispatchOp_TransposeMatrix4x4_005a6250; 0x005a62f8 CFastVB__DispatchOp_BuildRotationMatrixFromQuaternionPacked_Scalar_005a62f8; 0x005a63ca CFastVB__DispatchOp_BuildRotationMatrixFromQuaternionPacked_SIMD_005a63ca; 0x00598474 CFastVB__InitDispatchOpsFromFeatureFlags; 344/1408 = 24.43%; 353/1417 = 24.91%; 6161/6161 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260528-163203_post_wave968_cfastvb_dispatch_continuation_verified; function-boundary recovery.

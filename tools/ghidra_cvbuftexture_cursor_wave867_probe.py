@@ -30,7 +30,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave867 CVBufTexture cursor"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-165414_post_wave867_cvbuftexture_cursor_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-165414_post_wave867_cvbuftexture_cursor_verified"
 NEXT_HEAD = "0x005508a0 CDXEngine__ClearMatrixBlock"
 STRICT_PROXY = "5823/6105 = 95.38%"
 

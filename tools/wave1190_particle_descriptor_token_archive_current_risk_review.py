@@ -31,7 +31,7 @@ PACKAGE_JSON = ROOT / "package.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 APPLY_SCRIPT = ROOT / "tools" / "ApplyParticleDescriptorTokenArchiveCurrentRiskWave1190.java"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-173000_post_wave1190_particle_descriptor_token_archive_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-173000_post_wave1190_particle_descriptor_token_archive_current_risk_review_verified"
 
 TOKEN_WRITERS = {
     "0x004c07f0": ("CPDSimpleSprite__WriteTokenFields", "void __fastcall CPDSimpleSprite__WriteTokenFields(void * this)", "0x005ddf7c", "tokens 6 through 0x1b", "simple-sprite"),

@@ -9,7 +9,7 @@
 
 SPtrSet (Smart Pointer Set) is a container class implementing a singly-linked list for managing collections of smart pointers. It uses a **free list pool** pattern for efficient memory management - nodes are pre-allocated at initialization and recycled rather than individually allocated/freed.
 
-Wave909 engine/platform support static review (`engine-platform-support-static-review-wave909`) records `CSPtrSet__Clear` as part of a static-coherent engine/platform/math/memory support core (`CSPtrSet 16` family rows in the slice). Verified backup: `G:\GhidraBackups\BEA_20260526-120420_post_wave909_engine_platform_support_static_review_verified`. Runtime safe-pointer container behavior remains separate proof.
+Wave909 engine/platform support static review (`engine-platform-support-static-review-wave909`) records `CSPtrSet__Clear` as part of a static-coherent engine/platform/math/memory support core (`CSPtrSet 16` family rows in the slice). Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-120420_post_wave909_engine_platform_support_static_review_verified`. Runtime safe-pointer container behavior remains separate proof.
 
 **Key Data Structures:**
 - Node size: 8 bytes (pointer + next link)
@@ -52,13 +52,13 @@ Wave744 unwind continuation saved `void __cdecl Unwind@...(void)` signatures, co
 
 The saved rows call `CSPtrSet__Clear` on stack locals `EBP-0x1c` and `EBP-0x2c`, plus conditional clears of the pointer at `EBP+4` gated by flag words `EBP-0x20` or `EBP-0x30`. Scope-table DATA xrefs run from `0x0061a61c` through `0x0061a684`. The `0x005d1828 Unwind@005d1828` row closes the local set-clear pair immediately before the next Carrier.cpp allocation-cleanup cluster. Tags include `unwind-continuation-wave744` and `wave744-readback-verified`.
 
-Verified backup: `G:\GhidraBackups\BEA_20260522-163423_post_wave744_unwind_continuation_verified`. After Wave744 the next high-signal queue head is `0x005d1840 Unwind@005d1840`; earliest raw commentless row remains `0x0042f220 CSPtrSet__Clear`. This is saved static retail Ghidra evidence only. Exact parent source body, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain unproven.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-163423_post_wave744_unwind_continuation_verified`. After Wave744 the next high-signal queue head is `0x005d1840 Unwind@005d1840`; earliest raw commentless row remains `0x0042f220 CSPtrSet__Clear`. This is saved static retail Ghidra evidence only. Exact parent source body, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain unproven.
 
 ## Function Details
 
 ### Wave797 SPtrSet clear thunk (0x0042f220)
 
-Wave797 static read-back (`sptrset-clear-wave797`, `wave797-readback-verified`) saved the comment/tags for `0x0042f220 CSPtrSet__Clear`. Instruction evidence is a five-byte unconditional jump (`E9 3B 6A 0B 00`) to canonical `0x004e5c60 CSPtrSet__Clear`; the Ghidra decompile/read-back follows that canonical target. Post exports verified 1 metadata row, 1 tag row, 164 xref rows to the thunk, 65 instruction rows, 1 decompile row, 12 SPtrSet helper metadata rows, 686 helper xref rows, and 12 helper decompile rows. Verified backup: `G:\GhidraBackups\BEA_20260524-054154_post_wave797_sptrset_clear_verified`.
+Wave797 static read-back (`sptrset-clear-wave797`, `wave797-readback-verified`) saved the comment/tags for `0x0042f220 CSPtrSet__Clear`. Instruction evidence is a five-byte unconditional jump (`E9 3B 6A 0B 00`) to canonical `0x004e5c60 CSPtrSet__Clear`; the Ghidra decompile/read-back follows that canonical target. Post exports verified 1 metadata row, 1 tag row, 164 xref rows to the thunk, 65 instruction rows, 1 decompile row, 12 SPtrSet helper metadata rows, 686 helper xref rows, and 12 helper decompile rows. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-054154_post_wave797_sptrset_clear_verified`.
 
 Post-Wave797 queue telemetry is `6098` total, `5545` commented, `553` commentless, `0` exact-undefined signatures, `0` `param_N` signatures, and strict clean-signature proxy `5545/6098 = 90.93%`. The next raw commentless row is `0x004404f0 CThing__NegateVec3ToOut`; commentless high-signal, signature, and name-confidence queues remain empty. Exact embedded-list owners, runtime pool behavior, exact source identity, BEA patching, and rebuild parity remain deferred.
 

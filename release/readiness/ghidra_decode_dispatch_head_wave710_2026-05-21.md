@@ -25,7 +25,7 @@ Evidence:
 - Post exports covered 8 metadata rows, 8 tag rows, 12 xref rows, 1928 instruction rows, and 8 clean decompile rows.
 - Queue after Wave710: 6098 total, 4125 commented, 1973 commentless, 1216 exact-undefined signatures, 210 `param_N`, comment-backed proxy `4125/6098 = 67.64%`, and strict clean-signature proxy `4071/6098 = 66.76%`.
 - Queue heads after Wave710: raw commentless head `0x0042f220 CSPtrSet__Clear`; high-signal head `0x0059bae0 CDXTexture__AllocFromBank_SplitBlock`.
-- Verified backup: `G:\GhidraBackups\BEA_20260521-221723_post_wave710_decode_dispatch_head_verified`, 19 files, 165514119 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-221723_post_wave710_decode_dispatch_head_verified`, 19 files, 165514119 bytes, `DiffCount=0`.
 
 Boundary:
 

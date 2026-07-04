@@ -20,7 +20,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 23 xref rows, 261 instruction-window rows, 901 deep instruction rows, 164 xref-site instruction rows, 19 DATA slot rows, and 1 decompile row.
 - Queue after Wave835: 6098 total functions, 5657 commented, 441 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5657/6098 = 92.77%`, strict clean-signature proxy `5657/6098 = 92.77%`.
 - Next raw commentless row: `0x004fa4b0 CUnit__SmoothEulerTowardTargetAndBuildMatrix`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-003658_post_wave835_cunit_apply_damage_verified`, 19 files, 171838343 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-003658_post_wave835_cunit_apply_damage_verified`, 19 files, 171838343 bytes, `DiffCount=0`.
 
 What this proves:
 

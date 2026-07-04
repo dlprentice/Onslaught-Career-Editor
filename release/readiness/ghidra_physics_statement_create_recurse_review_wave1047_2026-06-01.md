@@ -29,7 +29,7 @@ Read-back evidence:
 - Context exports verified `18` metadata rows, `18` tag rows, `26` xref rows, `1708` function-body instruction rows, and `18` decompile rows for paired load/create/factory context.
 - Queue closure remains `6246/6246 = 100.00%`, with `0` commentless rows, `0` exact-undefined signatures, and `0` `param_N` signatures.
 - Wave1047 adds five newly direct-reviewed Wave911 focused rows beyond prior Wave1040 coverage, so Wave911 focused progress advances to `740/1408 = 52.56%`; expanded static surface progress advances to `998/1509 = 66.14%`; top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-124915_post_wave1047_physics_statement_create_recurse_review_verified`, 19 files, 174590855 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-124915_post_wave1047_physics_statement_create_recurse_review_verified`, 19 files, 174590855 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -45,4 +45,4 @@ What remains separate proof:
 - Exact source-body identity.
 - BEA patching behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1047; physics-statement-create-recurse-review-wave1047; 0x0042ede0 CUnitStatement__CreateUnitAndRecurse; 0x0042f5b0 CWeaponStatement__CreateWeaponAndRecurse; 0x0042fa40 CWeaponModeStatement__CreateWeaponModeAndRecurse; 0x0042ff60 CRoundStatement__CreateRoundAndRecurse; 0x004304d0 CSpawnerStatement__CreateSpawnerAndRecurse; 0x004309a0 CExplosionStatement__CreateExplosionAndRecurse; 0x00430e20 CComponentStatement__CreateComponentAndRecurse; 0x00431310 CFeatureStatement__CreateFeatureAndRecurse; 0x00431760 CHazardStatement__CreateHazardAndRecurse; DAT_008553fc; CStatementChain__InvokeVFunc04OnNodes; 740/1408 = 52.56%; 998/1509 = 66.14%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-124915_post_wave1047_physics_statement_create_recurse_review_verified; comment/tag correction.
+Probe token anchor: Wave1047; physics-statement-create-recurse-review-wave1047; 0x0042ede0 CUnitStatement__CreateUnitAndRecurse; 0x0042f5b0 CWeaponStatement__CreateWeaponAndRecurse; 0x0042fa40 CWeaponModeStatement__CreateWeaponModeAndRecurse; 0x0042ff60 CRoundStatement__CreateRoundAndRecurse; 0x004304d0 CSpawnerStatement__CreateSpawnerAndRecurse; 0x004309a0 CExplosionStatement__CreateExplosionAndRecurse; 0x00430e20 CComponentStatement__CreateComponentAndRecurse; 0x00431310 CFeatureStatement__CreateFeatureAndRecurse; 0x00431760 CHazardStatement__CreateHazardAndRecurse; DAT_008553fc; CStatementChain__InvokeVFunc04OnNodes; 740/1408 = 52.56%; 998/1509 = 66.14%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-124915_post_wave1047_physics_statement_create_recurse_review_verified; comment/tag correction.

@@ -27,7 +27,7 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-053822_post_wave992_cannon_turret_activation_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-053822_post_wave992_cannon_turret_activation_review_verified"
 
 TARGETS = {
     "0x0041b1a0": ("CCannon__Init", "void __thiscall CCannon__Init(void * this, void * init)"),

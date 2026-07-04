@@ -28,7 +28,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-172337_post_wave1011_round_vtable_boundary_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-172337_post_wave1011_round_vtable_boundary_verified"
 
 TARGETS = {
     "0x004d8ac0": ("VFuncSlot_16_004d8ac0", "double __fastcall VFuncSlot_16_004d8ac0(void * this)"),

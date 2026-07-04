@@ -39,15 +39,15 @@ PRIOR_READINESS = {
 }
 
 PRIOR_BACKUPS = {
-    "Wave717": r"G:\GhidraBackups\BEA_20260522-021449_post_wave717_cfastvb_transform_dispatch_head_verified",
-    "Wave718": r"G:\GhidraBackups\BEA_20260522-025058_post_wave718_cfastvb_scalar_transform_core_verified",
-    "Wave719": r"G:\GhidraBackups\BEA_20260522-032725_post_wave719_cfastvb_matrix_quaternion_core_verified",
-    "Wave720": r"G:\GhidraBackups\BEA_20260522-035533_post_wave720_cfastvb_quaternion_tail_verified",
-    "Wave721": r"G:\GhidraBackups\BEA_20260522-043029_post_wave721_cfastvb_matrix_rotation_continuation_verified",
-    "Wave722": r"G:\GhidraBackups\BEA_20260522-050258_post_wave722_cfastvb_packed_vec2_quaternion_tail_verified",
+    "Wave717": r"[maintainer-local-ghidra-backup-root]\BEA_20260522-021449_post_wave717_cfastvb_transform_dispatch_head_verified",
+    "Wave718": r"[maintainer-local-ghidra-backup-root]\BEA_20260522-025058_post_wave718_cfastvb_scalar_transform_core_verified",
+    "Wave719": r"[maintainer-local-ghidra-backup-root]\BEA_20260522-032725_post_wave719_cfastvb_matrix_quaternion_core_verified",
+    "Wave720": r"[maintainer-local-ghidra-backup-root]\BEA_20260522-035533_post_wave720_cfastvb_quaternion_tail_verified",
+    "Wave721": r"[maintainer-local-ghidra-backup-root]\BEA_20260522-043029_post_wave721_cfastvb_matrix_rotation_continuation_verified",
+    "Wave722": r"[maintainer-local-ghidra-backup-root]\BEA_20260522-050258_post_wave722_cfastvb_packed_vec2_quaternion_tail_verified",
 }
 
-LATEST_GHIDRA_BACKUP = r"G:\GhidraBackups\BEA_20260605-215410_post_wave1154_unitai_deploy_target_current_risk_review_verified"
+LATEST_GHIDRA_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-215410_post_wave1154_unitai_deploy_target_current_risk_review_verified"
 
 TARGETS = [
     ("Wave717", "0x0059f360", "CFastVB__DispatchOp_TransformVec4_0059f360"),

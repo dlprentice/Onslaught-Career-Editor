@@ -253,7 +253,7 @@ def check_docs(failures: list[str]) -> None:
     if "test:ghidra-crt-dst-fp-signal-wave646" not in package.get("scripts", {}):
         failures.append("package.json missing Wave646 npm script")
     required_docs = {
-        PUBLIC_NOTE: ("Wave646", "CRT__IsInDst_WrapperLocked", "2614", "826", "G:\\GhidraBackups\\BEA_20260520-160110_post_wave646_crt_dst_fp_signal_verified"),
+        PUBLIC_NOTE: ("Wave646", "CRT__IsInDst_WrapperLocked", "2614", "826", "[maintainer-local-ghidra-backup-root]\\BEA_20260520-160110_post_wave646_crt_dst_fp_signal_verified"),
         FUNCTION_INDEX: ("Wave646", "CRT__IsCharTypeMaskOrLeadByte", "0x0056d525"),
         CRT_DOC: ("Wave646", "CRT__RaiseSignal", "CRT__UIntAddWithOverflowCheck"),
         GHIDRA_REFERENCE: ("Wave646", "CRT__ComputeDstTransitionDayMillis", "crt-dst-fp-signal-wave646"),

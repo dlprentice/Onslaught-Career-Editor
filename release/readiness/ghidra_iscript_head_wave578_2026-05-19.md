@@ -51,7 +51,7 @@ Next queue head: `0x005339a0 IScript__GetSlotBitValue`.
 
 Verified Ghidra project backup:
 
-- Path: `G:\GhidraBackups\BEA_20260519-034612_post_wave578_iscript_head_verified`
+- Path: `[maintainer-local-ghidra-backup-root]\BEA_20260519-034612_post_wave578_iscript_head_verified`
 - Files: `19`
 - Bytes: `160467847`
 - Diff count: `0`

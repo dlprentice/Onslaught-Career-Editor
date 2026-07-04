@@ -40,7 +40,7 @@ DEVELOPER_STATE = ROOT / "developer_agent_state.json"
 DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-103409_post_wave905_mesh_motion_world_particle_static_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-103409_post_wave905_mesh_motion_world_particle_static_review_verified"
 
 EXPECTED_FAMILIES = {
     "CThing": 28,

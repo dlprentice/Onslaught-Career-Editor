@@ -62,7 +62,7 @@ Delta from Wave661: `+21` commented functions, `-21` commentless functions, exac
 Verified post-wave backup:
 
 ```text
-G:\GhidraBackups\BEA_20260521-001158_post_wave662_cdxtexture_image_codec_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260521-001158_post_wave662_cdxtexture_image_codec_verified
 ```
 
 Backup manifest comparison: `19` files, `163449735` bytes, `DiffCount=0`.

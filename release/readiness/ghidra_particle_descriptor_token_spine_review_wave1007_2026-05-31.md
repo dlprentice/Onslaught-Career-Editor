@@ -29,7 +29,7 @@ Read-back evidence:
 - Target exports: 14 metadata rows, 14 tag rows, 14 xref rows, 1133 body-instruction rows, and 14 decompile rows.
 - Context exports: 7 metadata rows, 7 decompile rows, and 2370 body-instruction rows.
 - Vtable/RTTI exports: 480 slot rows and 10 type rows covering CPDMesh, CPDFunction, CPDTrail, CPDShape, CPDColourRange, CPDSelector, CPDEmitter, CPDSimpleSprite, CPDFoR, and CPDPMesh.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-143106_post_wave1007_particle_descriptor_token_spine_review_verified`, 19 files, 173869959 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-143106_post_wave1007_particle_descriptor_token_spine_review_verified`, 19 files, 173869959 bytes, `DiffCount=0`, `HashDiffCount=0`.
 - Queue closure remains `6223/6223 = 100.00%` with 0 commentless functions, 0 exact-undefined signatures, and 0 `param_N` signatures.
 - Wave911 focused re-audit progress advances to `499/1408 = 35.44%`.
 - Expanded static surface progress advances to `676/1478 = 45.74%`.

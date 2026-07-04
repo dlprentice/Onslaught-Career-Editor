@@ -4354,9 +4354,9 @@ def check_backlog(failures: list[str]) -> None:
         "CBoolDataType__Equals",
         "CBoolDataType__NotEquals",
         "CBoolDataType__Assign",
-        r"G:\GhidraBackups\BEA_20260526-095411_post_wave903_missionscript_static_review_verified",
-        r"G:\GhidraBackups\BEA_20260606-164704_post_wave1189_missionscript_bytecode_iscript_current_risk_review_verified",
-        r"G:\GhidraBackups\BEA_20260607-040938_post_wave1208_cbooldatatype_current_risk_review_verified",
+        r"[maintainer-local-ghidra-backup-root]\BEA_20260526-095411_post_wave903_missionscript_static_review_verified",
+        r"[maintainer-local-ghidra-backup-root]\BEA_20260606-164704_post_wave1189_missionscript_bytecode_iscript_current_risk_review_verified",
+        r"[maintainer-local-ghidra-backup-root]\BEA_20260607-040938_post_wave1208_cbooldatatype_current_risk_review_verified",
     ):
         require(token in missionscript_plan, f"MissionScript/IScript proof plan missing token: {token}", failures)
     for token in (
@@ -4381,7 +4381,7 @@ def check_backlog(failures: list[str]) -> None:
         "`436` total thing/spawn refs",
         "World/thing/spawn bridge",
         "world-thing-spawn-object-reference-proof-plan.md",
-        r"G:\GhidraBackups\BEA_20260526-095411_post_wave903_missionscript_static_review_verified",
+        r"[maintainer-local-ghidra-backup-root]\BEA_20260526-095411_post_wave903_missionscript_static_review_verified",
     ):
         require(token in missionscript_contract, f"MissionScript/IScript static contract missing token: {token}", failures)
     for token in (

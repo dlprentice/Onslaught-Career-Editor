@@ -1,7 +1,7 @@
 # BattleEngineConfigurations.cpp Functions
 
 > Source File: BattleEngineConfigurations.cpp | Binary: BEA.exe
-> Debug Path: 0x006235a8 (`C:\dev\ONSLAUGHT2\BattleEngineConfigurations.cpp`)
+> Debug Path: 0x006235a8 (`[maintainer-local-source-export-root]\BattleEngineConfigurations.cpp`)
 
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6113/6113** (Wave900: every function commented; clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
 

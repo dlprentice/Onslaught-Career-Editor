@@ -14,7 +14,7 @@ Evidence summary:
 - Large family anchors: `CMeshPart` `54`, `CMesh` `40`, `CWorld` `38`, `CWorldPhysicsManager` `32`, `CThing` `28`, `CParticleManager` `23`, `CMeshCollisionVolume` `21`.
 - Representative functions: `CThing__InitRenderThingFromInitMeshName`, `CMesh__LoadByNameWithStatus`, `CMeshPart__PopulatePoseCacheRecursive`, `CWorld__InitOccupancyBitplanes`, `CWorldPhysicsManager__CreateThingByType`, `CParticleManager__Update`, `CParticleSet__LoadFromArchive`, and `CParticleDescriptor__Load`.
 - Mesh/resource bridge: `213/213` loose meshes, `139/139` embedded packed mesh bodies, `352/352` model rows with readable material/texture-binding metadata, and `213/213` model texture sidecar refs covered.
-- Verified read-only Ghidra backup: `G:\GhidraBackups\BEA_20260526-103409_post_wave905_mesh_motion_world_particle_static_review_verified`, `19` files, `173247367` bytes, `DiffCount=0`.
+- Verified read-only Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-103409_post_wave905_mesh_motion_world_particle_static_review_verified`, `19` files, `173247367` bytes, `DiffCount=0`.
 
 What this proves:
 

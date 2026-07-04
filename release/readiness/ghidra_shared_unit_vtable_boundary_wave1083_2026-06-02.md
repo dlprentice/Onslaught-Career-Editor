@@ -31,7 +31,7 @@ Read-back evidence:
 - Post exports verified `13` metadata rows, `13` tag rows, `425` xref rows, `335` function-body instruction rows, `13` decompile rows, and `1600` selected vtable-slot rows.
 - The selected vtable-slot export improved from `1109` OK / `491` `NO_FUNCTION_AT_POINTER` to `1244` OK / `356` `NO_FUNCTION_AT_POINTER`; the thirteen recovered targets account for `135` sampled vtable-slot occurrences now resolving to saved functions.
 - Queue closure after Wave1083 is `6307/6307 = 100.00%`, with `0` commentless, `0` exact-undefined signatures, and `0` `param_N` signatures. Wave911 focused progress remains `812/1408 = 57.67%`; expanded static re-audit surface advances to `1418/1560 = 90.90%`; top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-114534_post_wave1083_shared_unit_vtable_boundary_verified`, 19 files, 174820231 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-114534_post_wave1083_shared_unit_vtable_boundary_verified`, 19 files, 174820231 bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -49,4 +49,4 @@ What remains separate proof:
 - BEA patching behavior.
 - Rebuild parity.
 
-Probe token anchor: Wave1083; shared-unit-vtable-boundary-review-wave1083; `0x00405d90 SharedUnitVFunc__ReturnField130ColorMask_00405d90`; `0x004f9260 SharedUnitVFunc__BuildField164TargetVectorContext_004f9260`; `0x004fe5f0 SharedUnitVFunc__ScheduleEvent7d0WithMinusOne_004fe5f0`; `0x005e3700`; `0x005dd710`; `1418/1560 = 90.90%`; `812/1408 = 57.67%`; `6307/6307 = 100.00%`; `G:\GhidraBackups\BEA_20260602-114534_post_wave1083_shared_unit_vtable_boundary_verified`; boundary recovery.
+Probe token anchor: Wave1083; shared-unit-vtable-boundary-review-wave1083; `0x00405d90 SharedUnitVFunc__ReturnField130ColorMask_00405d90`; `0x004f9260 SharedUnitVFunc__BuildField164TargetVectorContext_004f9260`; `0x004fe5f0 SharedUnitVFunc__ScheduleEvent7d0WithMinusOne_004fe5f0`; `0x005e3700`; `0x005dd710`; `1418/1560 = 90.90%`; `812/1408 = 57.67%`; `6307/6307 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260602-114534_post_wave1083_shared_unit_vtable_boundary_verified`; boundary recovery.

@@ -44,7 +44,7 @@ Read-back evidence:
 - Wave911 focused progress remains `812/1408 = 57.67%`; the Wave1062 primary rows were selected from the broader visible risk-ranked Mat34 surface rather than the materialized focused top slice.
 - Expanded static surface progress advances to `1170/1531 = 76.42%` after adding two newly re-audited primary Mat34 rows outside the prior expanded denominator.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-215617_post_wave1062_mat34_orientation_scale_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-215617_post_wave1062_mat34_orientation_scale_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -63,4 +63,4 @@ What remains unproven:
 
 Next candidate note: continue with the next focused static re-audit cluster; prefer read-only review first and mutate only when fresh evidence proves a correction or normalization need.
 
-Probe token anchor: Wave1062; mat34-orientation-scale-review-wave1062; 0x00495ed0 Mat34__ScaleByScalar; 0x004f8140 Mat34__SetFromEulerDegrees; 0x0040d1f0 Mat34__SetFromEulerAngles; 0x0040d2c0 Mat34__TransformVec3ByBasisToOut; 0x0040d320 Mat34__MultiplyBasisToOut; 0x004f7e90 CUnit__ctor_base; 0x005b86c0 CFastVB__FastAcosApprox_Scalar; 812/1408 = 57.67%; 1170/1531 = 76.42%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-215617_post_wave1062_mat34_orientation_scale_review_verified; comment/tag normalization.
+Probe token anchor: Wave1062; mat34-orientation-scale-review-wave1062; 0x00495ed0 Mat34__ScaleByScalar; 0x004f8140 Mat34__SetFromEulerDegrees; 0x0040d1f0 Mat34__SetFromEulerAngles; 0x0040d2c0 Mat34__TransformVec3ByBasisToOut; 0x0040d320 Mat34__MultiplyBasisToOut; 0x004f7e90 CUnit__ctor_base; 0x005b86c0 CFastVB__FastAcosApprox_Scalar; 812/1408 = 57.67%; 1170/1531 = 76.42%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-215617_post_wave1062_mat34_orientation_scale_review_verified; comment/tag normalization.

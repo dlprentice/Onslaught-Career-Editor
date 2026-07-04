@@ -31,7 +31,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260522-193422_post_wave750_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260522-193422_post_wave750_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d24e0": "0x0061b334",
@@ -185,11 +185,11 @@ def check_artifacts(failures: list[str]) -> None:
         require(name in helper_names, f"missing helper metadata row: {name}", failures)
 
     expected_strings = {
-        "string-00628d3c.tsv": r"C:\dev\ONSLAUGHT2\eventmanager.cpp",
-        "string-00628fac.tsv": r"C:\dev\ONSLAUGHT2\FEPBEConfig.cpp",
-        "string-0062913c.tsv": r"C:\dev\ONSLAUGHT2\FEPDebriefing.cpp",
-        "string-00629df0.tsv": r"C:\dev\ONSLAUGHT2\FrontEnd.cpp",
-        "string-0062bba4.tsv": r"C:\dev\ONSLAUGHT2\game.cpp",
+        "string-00628d3c.tsv": r"[maintainer-local-source-export-root]\eventmanager.cpp",
+        "string-00628fac.tsv": r"[maintainer-local-source-export-root]\FEPBEConfig.cpp",
+        "string-0062913c.tsv": r"[maintainer-local-source-export-root]\FEPDebriefing.cpp",
+        "string-00629df0.tsv": r"[maintainer-local-source-export-root]\FrontEnd.cpp",
+        "string-0062bba4.tsv": r"[maintainer-local-source-export-root]\game.cpp",
     }
     for relative, expected in expected_strings.items():
         rows = read_tsv(BASE / relative)

@@ -26,7 +26,7 @@ Read-back evidence:
 - Queue after Wave856: `6098` total functions, `5762` commented, `336` commentless, `0` exact-undefined signatures, `0` `param_N` signatures, comment-backed proxy `5762/6098 = 94.49%`, strict clean-signature proxy `5762/6098 = 94.49%`.
 - Next raw commentless row: `0x0051b600 CFEPMultiplayerStart__SubObj4034__ctor`.
 - Commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-114000_post_wave856_fepdirectory_page_verified`, `19` files, `172166023` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-114000_post_wave856_fepdirectory_page_verified`, `19` files, `172166023` bytes, `DiffCount=0`.
 
 What this proves:
 

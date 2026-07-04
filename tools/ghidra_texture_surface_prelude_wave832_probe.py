@@ -31,7 +31,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-230834_post_wave832_texture_surface_prelude_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-230834_post_wave832_texture_surface_prelude_verified"
 NEXT_HEAD = "0x004f5b70 CParticleDescriptor__SetIndexedParam"
 
 TARGETS = {
@@ -211,7 +211,7 @@ def check_artifacts(failures: list[str]) -> None:
 
     string_expectations = {
         "string-00632eb4.tsv": "JCLTEX #%d",
-        "string-00632ef0.tsv": r"C:\dev\ONSLAUGHT2\texture.cpp",
+        "string-00632ef0.tsv": r"[maintainer-local-source-export-root]\texture.cpp",
         "string-00652660.tsv": r"Texture %s refcount=%d\x0a",
     }
     for relative, token in string_expectations.items():

@@ -28,7 +28,7 @@ Read-back evidence:
 - Post exports: 8 metadata rows, 8 tag rows, 23 xref rows, 2088 target instruction rows, 729 helper instruction rows, 371 callsite instruction rows, 9 helper metadata rows, and 8 decompile rows.
 - Queue after Wave820: 6098 total, 5620 commented, 478 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5620/6098 = 92.16%`, strict clean-signature proxy `5620/6098 = 92.16%`.
 - Next raw commentless row: `0x004c0c70 CPDSimpleSprite__EvalExpressionNode`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-171120_post_wave820_explosion_path_cost_grid_verified`, 19 files, 171477895 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-171120_post_wave820_explosion_path_cost_grid_verified`, 19 files, 171477895 bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -36,7 +36,7 @@ Evidence counts:
 - Vtable export: 512 rows.
 - Queue closure remains `6238/6238 = 100.00%` with 0 commentless, 0 exact-undefined signatures, and 0 `param_N`.
 - Wave911 focused re-audit progress after Wave1024: `563/1408 = 39.99%`; expanded static surface progress: `792/1493 = 53.05%`; Wave911 top-500 risk-ranked coverage: `491/500 = 98.20%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-001008_post_wave1024_cunitai_doorwing_context_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-001008_post_wave1024_cunitai_doorwing_context_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

@@ -3,7 +3,7 @@
 > Music/audio playback system functions from BEA.exe
 
 **Source file**: `Music.cpp`
-**Debug path**: `C:\dev\ONSLAUGHT2\Music.cpp` (at 0x00630a4c)
+**Debug path**: `[maintainer-local-source-export-root]\Music.cpp` (at 0x00630a4c)
 **Class**: `CMusic` (RTTI: `.?AVCMusic@@` at 0x0063dfc8)
 **Related classes**: `CPCMusic` (RTTI: `.?AVCPCMusic@@` at 0x0063dfe0)
 
@@ -21,7 +21,7 @@ The retail cluster maintains a playlist of tracks loaded from the `data\music` d
 
 ## 2026-05-25 Wave851 PC Platform/Controller Tail Read-Back
 
-Wave851 PC platform/controller tail (`pc-platform-controller-tail-wave851`, `wave851-readback-verified`) saved comments/tags for `0x00515320 PCPlatform__InitMusicPlaylist`, the PC platform/music bridge that initializes async music streaming and calls `CMusic__LoadPlaylistFromDir(this,"data\music")`. Probe token anchor: `Wave851 PC platform/controller tail`; `0x00515320 PCPlatform__InitMusicPlaylist`; `CMusic__LoadPlaylistFromDir`; `data\music`; `5729/6098 = 93.95%`; `0x00515ab0 D3DDevice__SetViewport`; `G:\GhidraBackups\BEA_20260525-085618_post_wave851_pc_platform_controller_tail_verified`.
+Wave851 PC platform/controller tail (`pc-platform-controller-tail-wave851`, `wave851-readback-verified`) saved comments/tags for `0x00515320 PCPlatform__InitMusicPlaylist`, the PC platform/music bridge that initializes async music streaming and calls `CMusic__LoadPlaylistFromDir(this,"data\music")`. Probe token anchor: `Wave851 PC platform/controller tail`; `0x00515320 PCPlatform__InitMusicPlaylist`; `CMusic__LoadPlaylistFromDir`; `data\music`; `5729/6098 = 93.95%`; `0x00515ab0 D3DDevice__SetViewport`; `[maintainer-local-ghidra-backup-root]\BEA_20260525-085618_post_wave851_pc_platform_controller_tail_verified`.
 
 The row is a platform connector, not a replacement for the older Wave454 CMusic body work. Runtime audio playback, exact music vtable owner/layout, BEA patching, and rebuild parity remain deferred.
 
@@ -192,7 +192,7 @@ The CMusic class uses virtual functions for platform-specific operations:
 
 | Address | String | Used By |
 |---------|--------|---------|
-| 0x00630a4c | "C:\dev\ONSLAUGHT2\Music.cpp" | AddToPlayList (memory alloc) |
+| 0x00630a4c | "[maintainer-local-source-export-root]\Music.cpp" | AddToPlayList (memory alloc) |
 | 0x00630a34 | "Added %s to playlist\n" | AddToPlayList |
 | 0x00630a08 | "input vol = %2.8f, master music volume = %d" | Init, SetVolume |
 | 0x00630a68 | "Playing Track: %d\n" | PlaySelection |

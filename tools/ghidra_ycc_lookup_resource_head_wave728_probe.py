@@ -86,7 +86,7 @@ DOC_TOKENS = (
     "0x005afe60 CDXTexture__InitYccLookupTables",
     "0x005b0ee0 CDXTexture__InitScanlineColorConverter",
     "0x0042f220 CSPtrSet__Clear",
-    r"G:\GhidraBackups\BEA_20260522-075134_post_wave728_ycc_lookup_resource_head_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260522-075134_post_wave728_ycc_lookup_resource_head_verified",
 )
 
 OVERCLAIM_TOKENS = (
@@ -250,7 +250,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
             require(re.search(r"\bparam_\d+\b", row.get("signature", "")) is None, f"queue row still has param_N for {address}", failures)
 
     backup = read_json(BACKUP_SUMMARY)
-    require(backup.get("backup") == r"G:\GhidraBackups\BEA_20260522-075134_post_wave728_ycc_lookup_resource_head_verified", "backup path mismatch", failures)
+    require(backup.get("backup") == r"[maintainer-local-ghidra-backup-root]\BEA_20260522-075134_post_wave728_ycc_lookup_resource_head_verified", "backup path mismatch", failures)
     require(backup.get("fileCount") == 19, "backup file count mismatch", failures)
     require(int(backup.get("totalBytes", 0)) == 166660999, "backup byte count mismatch", failures)
     require(backup.get("diffCount") == 0, "backup diff count mismatch", failures)
@@ -345,7 +345,7 @@ def main() -> int:
     print("Status: PASS")
     print("Targets: 5")
     print("Queue: 6098 total, 4285 commented, 1813 commentless, 1216 undefined, 90 param_N")
-    print(r"Backup: G:\GhidraBackups\BEA_20260522-075134_post_wave728_ycc_lookup_resource_head_verified")
+    print(r"Backup: [maintainer-local-ghidra-backup-root]\BEA_20260522-075134_post_wave728_ycc_lookup_resource_head_verified")
     return 0
 
 

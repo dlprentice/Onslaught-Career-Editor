@@ -35,7 +35,7 @@ Wave497 saved static Ghidra name/signature/comment/tag hardening and boundary re
 - Focused probe: `py -3 tools\ghidra_crttree_wave497_probe.py --check` PASS.
 - NPM probe: `cmd.exe /c npm run test:ghidra-crttree-wave497` PASS.
 - Queue refresh: `6077` total functions, `2260` commented, `3817` commentless, `1663` undefined signatures, `1514` `param_N`; strict comment-plus-clean-signature proxy `2201/6077 = 36.22%`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260517-112202_post_wave497_crttree_verified` with `19` files, `157748103` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260517-112202_post_wave497_crttree_verified` with `19` files, `157748103` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Public Boundary
 

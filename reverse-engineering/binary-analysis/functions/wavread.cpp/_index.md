@@ -1,6 +1,6 @@
 # wavread.cpp - WAV File Reader
 
-**Source File:** `C:\dev\ONSLAUGHT2\wavread.cpp`
+**Source File:** `[maintainer-local-source-export-root]\wavread.cpp`
 **Debug String Address:** `0x0063d1b0`
 **Function Address Range:** `0x00505210` - `0x005056b0`
 
@@ -12,7 +12,7 @@ WAV file reader implementation for loading PCM-style audio through the Windows M
 
 This page is static retail-binary evidence. It does not prove runtime WAV acceptance behavior, runtime DirectSound integration, exact DirectX SDK source-body identity, concrete CWaveSoundRead/base layouts, or rebuild parity.
 
-Wave908 audio/media/cutscene static review (`audio-media-cutscene-static-review-wave908`) keeps the WAV reader inside the static-coherent audio/media/cutscene/camera core. The read-only slice covers `CWaveSoundRead 11` plus `WavRead 2` rows inside the `171` selected-row, `26` family evidence set, with anchors `CWaveSoundRead__Open`, `CWaveSoundRead__Read`, `WavRead__ReadMMIO`, and `WavRead__WaveReadFile`. Verified backup: `G:\GhidraBackups\BEA_20260526-113941_post_wave908_audio_media_cutscene_static_review_verified`. Runtime WAV decode/acceptance, DirectSound integration, exact SDK source identity, patch behavior, and rebuild parity remain unproven.
+Wave908 audio/media/cutscene static review (`audio-media-cutscene-static-review-wave908`) keeps the WAV reader inside the static-coherent audio/media/cutscene/camera core. The read-only slice covers `CWaveSoundRead 11` plus `WavRead 2` rows inside the `171` selected-row, `26` family evidence set, with anchors `CWaveSoundRead__Open`, `CWaveSoundRead__Read`, `WavRead__ReadMMIO`, and `WavRead__WaveReadFile`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-113941_post_wave908_audio_media_cutscene_static_review_verified`. Runtime WAV decode/acceptance, DirectSound integration, exact SDK source identity, patch behavior, and rebuild parity remain unproven.
 
 ## Class: CWaveSoundRead
 
@@ -81,7 +81,7 @@ The table-adjacent values after those observed slots are not promoted as functio
 
 Wave537 recovered and hardened thirteen WavRead/CWaveSoundRead targets. `ApplyWavReadWave537.java` reported dry `updated=0 skipped=13 renamed=0 would_rename=1 created=0 would_create=6 missing=0 bad=0`, apply `updated=13 skipped=0 renamed=1 would_rename=0 created=6 would_create=0 missing=0 bad=0`, and final verify dry `updated=0 skipped=13 renamed=0 would_rename=0 created=0 would_create=0 missing=0 bad=0`, with `REPORT: Save succeeded`.
 
-Read-back verified `13` metadata rows, `13` tag rows, `13` target xref rows, `1885` instruction rows, `13` target decompile exports, `14` expected vtable-slot rows, focused probe PASS, npm probe PASS, queue refresh PASS, and backup `G:\GhidraBackups\BEA_20260518-072526_post_wave537_wavread_verified` with `19` files, `159288199` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+Read-back verified `13` metadata rows, `13` tag rows, `13` target xref rows, `1885` instruction rows, `13` target decompile exports, `14` expected vtable-slot rows, focused probe PASS, npm probe PASS, queue refresh PASS, and backup `[maintainer-local-ghidra-backup-root]\BEA_20260518-072526_post_wave537_wavread_verified` with `19` files, `159288199` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 The refreshed queue reports `6089` total functions, `2622` commented, `3467` commentless, `1538` exact-undefined signatures, and `1315` `param_N` signatures. Runtime WAV loading, DirectSound integration, exact source-body identity, complete layouts, BEA patching, and rebuild parity remain deferred.
 

@@ -32,7 +32,7 @@ PACKAGE_JSON = ROOT / "package.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 APPLY_SCRIPT = ROOT / "tools" / "ApplyMaptexMapwhoSupportTailWave1195.java"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-200142_post_wave1195_cmaptex_cmapwho_support_tail_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-200142_post_wave1195_cmaptex_cmapwho_support_tail_current_risk_review_verified"
 
 TARGETS = {
     "0x00491180": ("CMapTex__Reset", "void __fastcall CMapTex__Reset(void * this)", ("OID__FreeObject", "+0x00/+0x08", "+0x0c")),

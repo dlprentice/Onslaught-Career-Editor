@@ -17,7 +17,7 @@ The pass used the `texel-unpack-tail-wave674` and `wave674-readback-verified` ta
 - Post exports verified `25` metadata rows, `25` tag rows, `25` xref rows, `1125` instruction rows, and `25` clean decompile rows.
 - Queue after Wave674: `6098` total, `3796` commented, `2302` commentless, `1217` exact-undefined signatures, `521` `param_N` signatures, strict clean-signature proxy `3746/6098 = 61.43%`.
 - Next queue head: `0x005869b0 CTexture__UnpackTexels_Bits16_16_16_ToFloat4`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260521-052857_post_wave674_texel_unpack_tail_verified`, `19` files, `164236167` bytes, `DiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-052857_post_wave674_texel_unpack_tail_verified`, `19` files, `164236167` bytes, `DiffCount=0`.
 
 ## Boundaries
 

@@ -45,8 +45,8 @@ PARTICLE_MANAGER_DOC_MIRROR = ROOT / "lore-book" / "reverse-engineering" / "bina
 PARTICLE_SET_DOC = ROOT / "reverse-engineering" / "binary-analysis" / "functions" / "ParticleSet.cpp" / "_index.md"
 PARTICLE_SET_DOC_MIRROR = ROOT / "lore-book" / "reverse-engineering" / "binary-analysis" / "functions" / "ParticleSet.cpp" / "_index.md"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260605-021103_post_wave1118_particle_message_current_risk_review_verified"
-PRIOR_BACKUP = r"G:\GhidraBackups\BEA_20260605-014214_post_wave1117_cengine_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-021103_post_wave1118_particle_message_current_risk_review_verified"
+PRIOR_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-014214_post_wave1117_cengine_current_risk_review_verified"
 ARTIFACT_COMMIT = "b0e5dc3108ed5a2fe5908aac0411055879242765"
 
 PRIOR_PROBES = (

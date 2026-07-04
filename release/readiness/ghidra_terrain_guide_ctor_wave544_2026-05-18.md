@@ -26,7 +26,7 @@ The constructor forwards `guideOwner` to `CGuide__ctor_base`, installs vtable `0
 - Focused probe: `py -3 tools\ghidra_terrain_guide_ctor_wave544_probe.py --check` PASS.
 - Npm wrapper: `cmd.exe /c npm run test:ghidra-terrain-guide-ctor-wave544` PASS.
 - Queue refresh: `py -3 tools\ghidra_static_reaudit_queue_probe.py --check --json` PASS after refreshing the live quality snapshot.
-- Backup: `G:\GhidraBackups\BEA_20260518-102611_post_wave544_terrain_guide_ctor_verified`, `19` files, `159320967` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-102611_post_wave544_terrain_guide_ctor_verified`, `19` files, `159320967` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
 
 ## Queue Snapshot
 

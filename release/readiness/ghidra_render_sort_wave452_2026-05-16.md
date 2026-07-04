@@ -21,7 +21,7 @@ Wave452 saved Ghidra signature/comment/tag corrections for `8` render/sort targe
 - Hardened four clean signatures: `CDXEngine__NormalizeCycleScalar`, `Math__AbsDoubleFromSignedFloat`, `CDXEngine__PackVec3AndDepthToSortKey`, and `CMeshRenderer__RenderMesh`.
 - Left four recursive render/animation wrappers signature-deferred by design: `CMeshPart__EvaluateAnimatedTransformCore`, `CMeshPart__RenderAnimatedRecursive`, `CSphere__RenderPartsWithOrientation`, and `CSphere__RenderAnimatedRecursive`.
 - Queue after refresh: `6057` functions, `1973` commented, `4084` commentless, `1733` undefined signatures, `1677` `param_N` signatures.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-131157_post_wave452_render_sort_verified` (`19` files, `156633991` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-131157_post_wave452_render_sort_verified` (`19` files, `156633991` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

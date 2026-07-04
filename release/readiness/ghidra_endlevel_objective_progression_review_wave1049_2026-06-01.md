@@ -34,7 +34,7 @@ Evidence counts:
 - Context exports: `12` metadata rows, `12` tag rows, `23` xref rows, `6129` function-body instruction rows, and `12` decompile rows.
 - Queue closure remains `6246/6246 = 100.00%`, with `0` commentless rows, `0` exact-undefined signatures, and `0` `param_N` signatures.
 - Wave1049 targets are outside the Wave911 focused TSV, so Wave911 focused progress remains `744/1408 = 52.84%`; expanded static surface progress advances to `1012/1509 = 67.06%`; top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-134936_post_wave1049_endlevel_objective_progression_review_verified`, 19 files, 174590855 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-134936_post_wave1049_endlevel_objective_progression_review_verified`, 19 files, 174590855 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -50,4 +50,4 @@ What remains separate proof:
 - Exact source-body identity where retail code and source names remain only source-aligned.
 - BEA patching behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1049; endlevel-objective-progression-review-wave1049; 0x004496e0 CEndLevelData__IsAllSecondaryObjectivesComplete; 0x0046d470 CGame__FillOutEndLevelData; 0x0041bdf0 CCareer__ReCalcLinks; 0x0046d9f0 CGame__RunOutroFMV; 0x005343e0 IScript__PrimaryObjectiveComplete; 0x00534470 IScript__SecondaryObjectiveFailed; CGame__SetSlot; IScript__SetSlotSave; IScript__GetSlotBitValue; 744/1408 = 52.84%; 1012/1509 = 67.06%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-134936_post_wave1049_endlevel_objective_progression_review_verified; no mutation.
+Probe token anchor: Wave1049; endlevel-objective-progression-review-wave1049; 0x004496e0 CEndLevelData__IsAllSecondaryObjectivesComplete; 0x0046d470 CGame__FillOutEndLevelData; 0x0041bdf0 CCareer__ReCalcLinks; 0x0046d9f0 CGame__RunOutroFMV; 0x005343e0 IScript__PrimaryObjectiveComplete; 0x00534470 IScript__SecondaryObjectiveFailed; CGame__SetSlot; IScript__SetSlotSave; IScript__GetSlotBitValue; 744/1408 = 52.84%; 1012/1509 = 67.06%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-134936_post_wave1049_endlevel_objective_progression_review_verified; no mutation.

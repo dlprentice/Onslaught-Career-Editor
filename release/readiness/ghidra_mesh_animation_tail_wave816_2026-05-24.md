@@ -22,7 +22,7 @@ Read-back evidence:
 - Post exports: 3 metadata rows, 3 tag rows, 56 xref rows, 567 instruction rows, 3 decompile rows, and 525 representative callsite instruction rows.
 - Queue after Wave816: 6098 total, 5602 commented, 496 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5602/6098 = 91.87%`, strict clean-signature proxy `5602/6098 = 91.87%`.
 - Next raw commentless row: `0x004b4ba0 CMeshPart__PopulatePoseCacheRecursive`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-151844_post_wave816_mesh_animation_tail_verified`, 19 files, 171346823 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-151844_post_wave816_mesh_animation_tail_verified`, 19 files, 171346823 bytes, `DiffCount=0`.
 
 What this proves:
 

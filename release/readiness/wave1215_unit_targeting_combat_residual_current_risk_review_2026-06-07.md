@@ -18,7 +18,7 @@ Evidence:
 - Wave911 is historical-retired/non-reconstructable at `812/1408 = 57.67%`; this is not Wave911 reconstruction.
 - current-risk denominator, continuity denominator, focused threshold `15`, and `1179/1179 current-risk focused rows reviewed or superseded with bounded static evidence` remain the active measured lane.
 - Codex read-only consults used; no Cursor/Composer.
-- Verified backup: `G:\GhidraBackups\BEA_20260607-090802_post_wave1215_unit_targeting_combat_residual_current_risk_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-090802_post_wave1215_unit_targeting_combat_residual_current_risk_review_verified`.
 
 Mutation status: read-only review; no mutation, no rename, no signature change, no comment change, no tag change, no function-boundary change, and no executable-byte change.
 

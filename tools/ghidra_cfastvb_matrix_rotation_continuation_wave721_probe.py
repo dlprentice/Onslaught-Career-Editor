@@ -123,7 +123,7 @@ DOC_TOKENS = (
     "0x005a9d78 CFastVB__DispatchOp_MultiplyMatrix4x4_Packed_005a9d78",
     "0x005aa480 CFastVB__DispatchOp_ConvertPackedS16ToFloatPairBatch_005aa480",
     "0x0042f220 CSPtrSet__Clear",
-    r"G:\GhidraBackups\BEA_20260522-043029_post_wave721_cfastvb_matrix_rotation_continuation_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260522-043029_post_wave721_cfastvb_matrix_rotation_continuation_verified",
 )
 
 OVERCLAIM_TOKENS = (
@@ -270,7 +270,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
     require(raw_head["name"] == "CSPtrSet__Clear", "raw commentless head name mismatch", failures)
 
     backup = read_json(BACKUP_SUMMARY)
-    require(backup["backup"] == r"G:\GhidraBackups\BEA_20260522-043029_post_wave721_cfastvb_matrix_rotation_continuation_verified", "backup destination mismatch", failures)
+    require(backup["backup"] == r"[maintainer-local-ghidra-backup-root]\BEA_20260522-043029_post_wave721_cfastvb_matrix_rotation_continuation_verified", "backup destination mismatch", failures)
     require(backup["sourceFileCount"] == 19, "backup source file count mismatch", failures)
     require(backup["backupFileCount"] == 19, "backup file count mismatch", failures)
     require(int(backup["backupBytes"]) == 166464391, "backup byte count mismatch", failures)
@@ -332,7 +332,7 @@ def main(argv: list[str]) -> int:
     print("Wave721 CFastVB matrix/rotation continuation probe: PASS")
     print(f"Targets: {len(TARGETS)}")
     print("Queue: 6098 total, 4248 commented, 1850 commentless, 1216 undefined, 118 param_N")
-    print(r"Backup: G:\GhidraBackups\BEA_20260522-043029_post_wave721_cfastvb_matrix_rotation_continuation_verified")
+    print(r"Backup: [maintainer-local-ghidra-backup-root]\BEA_20260522-043029_post_wave721_cfastvb_matrix_rotation_continuation_verified")
     return 0
 
 

@@ -58,7 +58,7 @@ STATUS_DOCS = [
     ROOT / "release" / "readiness" / "ghidra_wave900_plus_through_wave1034_recheck_2026-06-01.md",
 ]
 
-WAVE1219_BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+WAVE1219_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 CLOSEOUT_TOKEN = (
     "Wave1220 static closeout acceptance: active current-risk focused accounting is "
     "`1179/1179 = 100.00%`; remaining active focused work: 0"

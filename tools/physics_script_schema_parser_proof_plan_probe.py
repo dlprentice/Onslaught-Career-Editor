@@ -62,7 +62,7 @@ REQUIRED_READINESS_TOKENS = (
     "not a new static re-audit wave",
     "0x0042e950 CPhysicsScript__Load",
     "0x0042eb90 CPhysicsScript__CreateStatement",
-    "G:\\GhidraBackups\\BEA_20260607-005927_post_wave1203_physics_script_registry_apply_residual_current_risk_review_verified",
+    "[maintainer-local-ghidra-backup-root]\\BEA_20260607-005927_post_wave1203_physics_script_registry_apply_residual_current_risk_review_verified",
     "copied/app-owned script/resource evidence only",
     "MissionScripts/*.msl",
     "No mission outcome or serialized completeness claim until corpus proof exists.",

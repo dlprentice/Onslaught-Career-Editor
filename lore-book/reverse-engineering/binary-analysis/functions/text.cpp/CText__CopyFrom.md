@@ -12,7 +12,7 @@
 
 Wave831 CText CopyFrom saved bounded comments/tags for `0x004f2660 CText__CopyFrom` after dry/apply/final-dry read-back. Static retail evidence ties the helper to `CFrontEnd__SetLanguage`, caller xref `0x00466ace`, and `g_Text`: the caller runs `CFEPOptions__Cleanup()` and then calls `CText__CopyFrom(&g_Text, (language_index * 3 + 0xbf4) * 0x10 + this)`. The target frees any existing destination backing buffer with `CDXMemoryManager__Free`, copies source CText fields, allocates a new buffer through `CDXMemoryManager__Alloc` with debug path `0x00632dd8`, allocation type `0x72`, and line token `0x155`, copies the backing bytes with `REP MOVSD/REP MOVSB`, then rebases `this+0x08` and `this+0x0c` from source-buffer-relative offsets into the new destination buffer.
 
-Post-Wave831 queue telemetry is `5652/6098 = 92.69%` strict clean proxy; next raw commentless row is `0x004f2710 CTextureBase__Init`. Verified backup: `G:\GhidraBackups\BEA_20260524-224036_post_wave831_ctext_copyfrom_verified`.
+Post-Wave831 queue telemetry is `5652/6098 = 92.69%` strict clean proxy; next raw commentless row is `0x004f2710 CTextureBase__Init`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-224036_post_wave831_ctext_copyfrom_verified`.
 
 Boundary: exact `text.cpp` source body identity, concrete CText layout beyond observed offsets, runtime language-switch behavior, runtime localization behavior, allocator ownership, BEA patching, and rebuild parity remain deferred.
 
@@ -45,7 +45,7 @@ The function copies these fields from source to destination:
 Allocates a new backing buffer using `CDXMemoryManager__Alloc`:
 - Size: `source->mFileSize`
 - Type code: `0x72` (same type code as `CText__Init`)
-- Debug string: `"C:\\dev\\ONSLAUGHT2\\text.cpp"`
+- Debug string: `"[maintainer-local-source-export-root]\\text.cpp"`
 - Line: `0x155`
 
 ### Buffer Copy

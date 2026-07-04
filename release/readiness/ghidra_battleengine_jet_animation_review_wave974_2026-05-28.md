@@ -30,7 +30,7 @@ Read-back evidence:
 - Queue after Wave974: `6211` total, `6211` commented, `0` commentless, `0` exact-undefined signatures, `0` `param_N`, comment-backed proxy `6211/6211 = 100.00%`, strict clean-signature proxy `6211/6211 = 100.00%`.
 - Wave911 focused re-audit progress: `356/1408 = 25.28%`.
 - Expanded static surface progress: `415/1467 = 28.29%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-210511_post_wave974_battleengine_jet_animation_review_verified`, 19 files, 173771655 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-210511_post_wave974_battleengine_jet_animation_review_verified`, 19 files, 173771655 bytes, `DiffCount=0`.
 
 What this proves:
 

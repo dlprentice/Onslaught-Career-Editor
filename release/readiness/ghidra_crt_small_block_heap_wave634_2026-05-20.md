@@ -32,7 +32,7 @@ The pass corrected `CRT__SbHeapAllocChunkFromRegion_00567338` to `CRT__SbHeapAll
 - Post exports: `16` metadata rows, `16` tag rows, `31` xref rows, `1168` instruction rows, `16` decompile rows
 - Queue refresh: `6093` total, `3370` commented, `2723` commentless, `1217` exact-undefined signatures, `926` `param_N` signatures
 - Strict clean-signature proxy: `3316/6093 = 54.43%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-104156_post_wave634_crt_small_block_heap_verified` (`19` files, `162401159` bytes, `DiffCount=0`)
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-104156_post_wave634_crt_small_block_heap_verified` (`19` files, `162401159` bytes, `DiffCount=0`)
 
 The next high-signal queue head is `0x00567505 CRT__WriteFdTextMode_Locking_00567505`.
 

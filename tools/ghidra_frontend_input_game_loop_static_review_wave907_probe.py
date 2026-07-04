@@ -84,7 +84,7 @@ FUNCTION_DOCS = {
     ),
 }
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-111432_post_wave907_frontend_input_game_loop_static_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-111432_post_wave907_frontend_input_game_loop_static_review_verified"
 
 EXPECTED_FAMILIES = {
     "CGame": 56,

@@ -27,7 +27,7 @@ The pass added bounded comments/tags with the `math-half-float-wave658` tag. It 
 - Queue refresh passed with `6093` total functions, `3586` commented, `2507` commentless, `1217` exact-undefined signatures, and `722` `param_N` signatures.
 - Comment-backed proxy: `3586/6093 = 58.85%`.
 - Strict clean-signature proxy: `3536/6093 = 58.03%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260520-214232_post_wave658_math_half_float_verified` (`19` files, `163253127` bytes, `DiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-214232_post_wave658_math_half_float_verified` (`19` files, `163253127` bytes, `DiffCount=0`).
 - Next high-signal queue head: `0x005771af CFastVB__DispatchIndirect_00656fb4`.
 
 ## Bounded Claim

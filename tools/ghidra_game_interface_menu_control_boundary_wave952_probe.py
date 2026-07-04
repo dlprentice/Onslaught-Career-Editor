@@ -30,7 +30,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260528-091135_post_wave952_game_interface_menu_control_boundary_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-091135_post_wave952_game_interface_menu_control_boundary_verified"
 TARGET = "0x00472d50"
 TARGET_NAME = "CGameInterface__VFunc_03_HandleMenuControlInput"
 TARGET_SIGNATURE = (

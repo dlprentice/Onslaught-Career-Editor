@@ -13,7 +13,8 @@ are updated.
 
 ## Cleanup Rule
 
-- Active product and automation surfaces stay in place.
+- Active product source, validation tooling, and maintainer-run scripts stay in
+  place. This does not authorize or imply active standing automations.
 - Shared correctness/reference surfaces stay in place until their lane role is
   explicitly retired.
 - Archived surfaces may remain tracked for provenance and tests, but they are

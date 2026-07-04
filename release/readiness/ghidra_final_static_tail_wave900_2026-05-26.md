@@ -26,7 +26,7 @@ Read-back evidence:
 - Post exports: 7 metadata rows, 7 tag rows, 8 xref rows, 304 instruction rows, and 7 decompile rows.
 - Queue after Wave900: 6113 total, 6113 commented, 0 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `6113/6113 = 100.00%`, strict clean-signature proxy `6113/6113 = 100.00%`.
 - Commentless high-signal, signature, and name-confidence queues are empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-090248_post_wave900_final_static_tail_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-090248_post_wave900_final_static_tail_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -42,7 +42,7 @@ Evidence counts:
 - Wave911 focused progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress reaches `1560/1560 = 100.00%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260604-152017_post_wave1092_d3d_application_shell_review_verified`, 19 files, 175541127 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-152017_post_wave1092_d3d_application_shell_review_verified`, 19 files, 175541127 bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -57,4 +57,4 @@ What remains separate proof:
 - Exact source-body identity for all retail helper bodies.
 - BEA patching behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1092; d3d-application-shell-review-wave1092; 0x00528f80 CD3DApplication__Init; 0x005290a0 CD3DApplication__Create; 0x00529350 CD3DApplication__BuildDeviceList; 0x0052af00 CD3DApplication__Initialize3DEnvironment; 0x0052b840 CD3DApplication__ToggleFullscreen; 0x0052ba50 CD3DApplication__ForceWindowed; 0x0052bc80 CD3DApplication__SelectDeviceProc; 0x0052cd20 CD3DApplication__PerfTimerCommand; 0x005e4ad0; 1560/1560 = 100.00%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; G:\GhidraBackups\BEA_20260604-152017_post_wave1092_d3d_application_shell_review_verified; no mutation.
+Probe token anchor: Wave1092; d3d-application-shell-review-wave1092; 0x00528f80 CD3DApplication__Init; 0x005290a0 CD3DApplication__Create; 0x00529350 CD3DApplication__BuildDeviceList; 0x0052af00 CD3DApplication__Initialize3DEnvironment; 0x0052b840 CD3DApplication__ToggleFullscreen; 0x0052ba50 CD3DApplication__ForceWindowed; 0x0052bc80 CD3DApplication__SelectDeviceProc; 0x0052cd20 CD3DApplication__PerfTimerCommand; 0x005e4ad0; 1560/1560 = 100.00%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260604-152017_post_wave1092_d3d_application_shell_review_verified; no mutation.

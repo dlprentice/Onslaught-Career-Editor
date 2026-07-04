@@ -24,7 +24,7 @@ Read-back evidence:
 - Queue after Wave800: `6098` total functions, `5556` commented, `542` commentless, `0` exact-undefined signatures, `0` `param_N` signatures, comment-backed proxy `5556/6098 = 91.11%`, strict clean-signature proxy `5556/6098 = 91.11%`.
 - Probe anchors: `0 exact-undefined signatures`; `0 param_N signatures`.
 - Next raw commentless row: `0x0044a0c0 CDXMeshVB__GetGlobalZeroDouble`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-070217_post_wave800_gameplay_object_helpers_verified`, `19` files, `171314055` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-070217_post_wave800_gameplay_object_helpers_verified`, `19` files, `171314055` bytes, `DiffCount=0`.
 
 What this proves:
 

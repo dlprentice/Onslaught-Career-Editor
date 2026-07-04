@@ -13,7 +13,7 @@ Evidence counts:
 - Dry/apply/final dry: `tags_added=41`; apply `updated=8 skipped=0`; final dry `updated=0 skipped=8`.
 - Queue refresh: `6411/6411 = 100.00%`, `0 / 0 / 0`, current risk candidates: 6166, current focused candidates: 1127, live regenerated current focused candidates: 1127.
 - Active current-risk accounting: `1110/1179 = 94.15%`; remaining active focused work: 69; legacy additive counter is deprecated (`1141/1179`) because it includes a 26 duplicate-address overcount and Wave1145 arithmetic overcount: 5.
-- Verified backup: `G:\GhidraBackups\BEA_20260607-061324_post_wave1211_score17_residual_current_risk_review_verified`, 19 files, 176425863 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-061324_post_wave1211_score17_residual_current_risk_review_verified`, 19 files, 176425863 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 Measurement anchors: unique-address accounting; fresh Ghidra export; final dry updated=0 skipped=8; `static-reaudit-current-risk-ledger.json`; `static-reaudit-measurement-register.md`; `wave1108-current-risk-rank`; Wave911 is historical-retired/non-reconstructable at `812/1408 = 57.67%`; `1179/1179 current-risk focused rows reviewed or superseded with bounded static evidence`.
 

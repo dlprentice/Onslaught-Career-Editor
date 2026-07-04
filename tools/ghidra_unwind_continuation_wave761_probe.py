@@ -34,7 +34,7 @@ DEVELOPER_STATE = ROOT / "developer_agent_state.json"
 DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260523-140318_post_wave761_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260523-140318_post_wave761_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d3f4b": "0x0061cab4",
@@ -89,10 +89,10 @@ COMMENT_TOKENS = {
 }
 
 STRING_EXPECTATIONS = {
-    "string-00630c20.tsv": r"C:\dev\ONSLAUGHT2\oids.cpp",
-    "string-00630cd8.tsv": r"C:\dev\ONSLAUGHT2\ParticleDescriptor.cpp",
-    "string-00630e60.tsv": r"C:\dev\ONSLAUGHT2\ParticleManager.cpp",
-    "string-00630fb0.tsv": r"C:\dev\ONSLAUGHT2\ParticleSet.cpp",
+    "string-00630c20.tsv": r"[maintainer-local-source-export-root]\oids.cpp",
+    "string-00630cd8.tsv": r"[maintainer-local-source-export-root]\ParticleDescriptor.cpp",
+    "string-00630e60.tsv": r"[maintainer-local-source-export-root]\ParticleManager.cpp",
+    "string-00630fb0.tsv": r"[maintainer-local-source-export-root]\ParticleSet.cpp",
 }
 
 CORE_ANCHORS = (

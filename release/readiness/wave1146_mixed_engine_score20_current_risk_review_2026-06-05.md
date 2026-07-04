@@ -6,7 +6,7 @@ Scope: `wave1146-mixed-engine-score20-current-risk-review`
 
 Wave1146 re-read eight mixed CDamage/CConsole/CDebugMarkers/CEngine score20 current-risk rows with fresh Ghidra exports and made no mutation: no rename, signature change, comment/tag change, function-boundary change, executable-byte change, BEA launch, installed-game mutation, save mutation, or runtime-file mutation.
 
-Probe token anchor: Wave1146; wave1146-mixed-engine-score20-current-risk-review; 306/1179 = 25.95%; 8 current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 873; current risk candidates: 6166; mixed CDamage/CConsole/CDebugMarkers/CEngine score20 current-risk review; fresh Ghidra export; damage sentinel; console status-history; debug-marker shutdown; engine resource/view/light helpers; read-only review; no mutation; no Codex subagent; 0 / 0 / 0; 6411/6411 = 100.00%; CDamage__ctor_clear_head_and_init_flag; CConsole__ResetStatusHistoryBuffer; CDebugMarkers__Shutdown; CEngine__InitResources; CEngine__LoadAllNamedMeshes; CEngine__GetViewMatrixFromCamera; CEngine__ResetPos; CEngine__SetupLights; G:\GhidraBackups\BEA_20260605-174520_post_wave1146_mixed_engine_score20_current_risk_review_verified; G:\GhidraBackups\BEA_20260605-171711_post_wave1145_component_flag_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1146; wave1146-mixed-engine-score20-current-risk-review; 306/1179 = 25.95%; 8 current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 873; current risk candidates: 6166; mixed CDamage/CConsole/CDebugMarkers/CEngine score20 current-risk review; fresh Ghidra export; damage sentinel; console status-history; debug-marker shutdown; engine resource/view/light helpers; read-only review; no mutation; no Codex subagent; 0 / 0 / 0; 6411/6411 = 100.00%; CDamage__ctor_clear_head_and_init_flag; CConsole__ResetStatusHistoryBuffer; CDebugMarkers__Shutdown; CEngine__InitResources; CEngine__LoadAllNamedMeshes; CEngine__GetViewMatrixFromCamera; CEngine__ResetPos; CEngine__SetupLights; [maintainer-local-ghidra-backup-root]\BEA_20260605-174520_post_wave1146_mixed_engine_score20_current_risk_review_verified; [maintainer-local-ghidra-backup-root]\BEA_20260605-171711_post_wave1145_component_flag_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
 
 Fresh evidence:
 
@@ -15,8 +15,8 @@ Fresh evidence:
 - `pre-xrefs.tsv`: `12` rows.
 - `pre-instructions.tsv`: `466` instruction rows, `targets=8 missing=0`.
 - `pre-decompile/index.tsv`: `8` rows, `targets=8 dumped=8 missing=0 failed=0`.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-174520_post_wave1146_mixed_engine_score20_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
-- Previous completed backup: `G:\GhidraBackups\BEA_20260605-171711_post_wave1145_component_flag_current_risk_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-174520_post_wave1146_mixed_engine_score20_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Previous completed backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-171711_post_wave1145_component_flag_current_risk_review_verified`.
 - Codex subagent usage: none for this slice; Codex root selected and audited the mixed tranche locally.
 
 Reviewed rows:

@@ -27,7 +27,7 @@ Evidence:
 - The refreshed all-functions baseline reports `6004` total functions, `0` legacy weak names, `1951` undefined signatures, and `2056` `param_N` signatures.
 - The refreshed quality queue reports `6004` functions, `1193` commented functions, `4811` commentless functions, `1951` undefined signatures, and `2056` `param_N` signatures.
 - Current confirmation proxies remain telemetry only: comment-backed `1193/6004 = 19.87%`, strict clean-signature `1127/6004 = 18.77%`. The `20%` value is not a milestone or acceptance gate.
-- The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260513_003011_post_wave356_meshpart_cmc_verified` with `19` files, `152963975` bytes, and `HashDiffCount=0`.
+- The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_003011_post_wave356_meshpart_cmc_verified` with `19` files, `152963975` bytes, and `HashDiffCount=0`.
 
 Raw proof remains ignored under `subagents/ghidra-static-reaudit/meshpart-cmc-wave356/current/`.
 

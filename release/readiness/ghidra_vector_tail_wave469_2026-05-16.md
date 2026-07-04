@@ -22,7 +22,7 @@ Wave469 saved Ghidra name/signature/comment/tag corrections for `2` owner-neutra
 - Hardened `Vec3__CopyXYZ` to `void * __thiscall Vec3__CopyXYZ(void * this, void * src_vec3)` from `RET 0x4` / `EAX = ECX` evidence.
 - Queue after refresh: `6057` functions, `2136` commented, `3921` commentless, `1705` undefined signatures, `1578` `param_N` signatures.
 - Current telemetry proxies: comment-backed `2136/6057 = 35.26%`; strict comment-plus-clean-signature `2069/6057 = 34.16%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-212835_post_wave469_vector_tail_verified` (`19` files, `157125511` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-212835_post_wave469_vector_tail_verified` (`19` files, `157125511` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

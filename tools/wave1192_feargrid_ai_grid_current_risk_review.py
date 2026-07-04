@@ -31,7 +31,7 @@ PACKAGE_JSON = ROOT / "package.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 APPLY_SCRIPT = ROOT / "tools" / "ApplyFearGridAiGridCurrentRiskWave1192.java"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-183042_post_wave1192_feargrid_ai_grid_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-183042_post_wave1192_feargrid_ai_grid_current_risk_review_verified"
 
 TARGETS = {
     "0x0040dda0": (

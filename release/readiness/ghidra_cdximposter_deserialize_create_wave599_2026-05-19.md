@@ -22,7 +22,7 @@ What is proven:
 - The queue refresh reports `6093` total functions, `3074` commented, `3019` commentless, `1331` exact-undefined signatures, and `1080` `param_N` signatures.
 - Comment-backed proxy is `3074/6093 = 50.45%`; strict clean-signature proxy is `3029/6093 = 49.71%`.
 - The next high-signal queue head is `0x00544040 CDXEngine__ClearHudTextureSlots`.
-- The live Ghidra project backup verified at `G:\GhidraBackups\BEA_20260519-171359_post_wave599_cdximposter_deserialize_create_verified` with 19 files, 161155975 bytes, `DiffCount=0`, and manifest hash `df8ccc75f58e1c97db971b748b64b6909d61a4c602e16ce1fbc7c27f95178fa5`.
+- The live Ghidra project backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260519-171359_post_wave599_cdximposter_deserialize_create_verified` with 19 files, 161155975 bytes, `DiffCount=0`, and manifest hash `df8ccc75f58e1c97db971b748b64b6909d61a4c602e16ce1fbc7c27f95178fa5`.
 
 What is not proven:
 

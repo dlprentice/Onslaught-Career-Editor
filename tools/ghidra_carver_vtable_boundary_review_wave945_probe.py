@@ -29,7 +29,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260528-054358_post_wave945_carver_vtable_boundary_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-054358_post_wave945_carver_vtable_boundary_review_verified"
 SCRIPT_NAME = "test:ghidra-carver-vtable-boundary-review-wave945"
 SCRIPT_VALUE = r"py -3 tools\ghidra_carver_vtable_boundary_review_wave945_probe.py --check"
 

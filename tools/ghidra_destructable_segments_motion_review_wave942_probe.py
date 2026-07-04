@@ -29,7 +29,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260528-040608_post_wave942_destructable_segments_motion_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-040608_post_wave942_destructable_segments_motion_review_verified"
 SCRIPT_NAME = "test:ghidra-destructable-segments-motion-review-wave942"
 SCRIPT_VALUE = r"py -3 tools\ghidra_destructable_segments_motion_review_wave942_probe.py --check"
 

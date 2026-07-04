@@ -29,7 +29,7 @@ Read-back evidence:
 - Post exports: 14 metadata rows, 14 tag rows, 34 xref rows, 434 instruction rows, 14 decompile rows, 12 context metadata rows, and 12 context decompile index rows with the expected `CRT__PowCoreWithFpuGuards` context decompile-limit failure.
 - Queue after Wave882: 6113 total functions, 5943 commented, 170 commentless, 0 exact-undefined signatures, 0 `param_N`, strict static quality proxy `5943/6113 = 97.22%`.
 - Next raw commentless row: `0x00563ad3 CRT__FpuTransDispatch2_ClearStatusAndHandle`.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-002800_post_wave882_crt_math_fpu_tail_verified`, 19 files, 172755847 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-002800_post_wave882_crt_math_fpu_tail_verified`, 19 files, 172755847 bytes, `DiffCount=0`.
 
 What this proves:
 

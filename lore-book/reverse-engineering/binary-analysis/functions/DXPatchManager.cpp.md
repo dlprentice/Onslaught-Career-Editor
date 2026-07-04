@@ -1,7 +1,7 @@
 # DXPatchManager.cpp
 
 > DirectX terrain patch manager for LOD (Level of Detail) rendering
-> Debug path: `C:\dev\ONSLAUGHT2\DXPatchManager.cpp` (0x0065211c)
+> Debug path: `[maintainer-local-source-export-root]\DXPatchManager.cpp` (0x0065211c)
 
 ## Overview
 
@@ -88,7 +88,7 @@ Wave807 landscape patch raw head (`landscape-patch-raw-head-wave807`, `wave807-r
 
 Static evidence: `RET 0x10` proves four stack arguments after `ECX=this`; `CDXLandscape__UpdateLOD` callsite `0x00546fe6` calls this immediately after `CDXPatchManager__AllocatePatchSlot` returns a patch pointer, then passes two tile coordinates scaled by `8`, `grid_step` derived as `4 >> lod_slot`, and a tile-record metadata value from `[ESI+0x0b]`. The body stores the args into CDXPatch fields `+0x2c`, `+0x30`, `+0x34`, and `+0x4c`, then calls `CDXPatch__RebuildHeightGridVertexBuffer(this)`.
 
-Post-Wave807 queue telemetry is `6098` total, `5582` commented, `516` commentless, `0` exact-undefined signatures, `0` `param_N`, strict proxy `5582/6098 = 91.54%`, and next raw head `0x0048f620 CDXEngine__RenderPostMissionOverlayAndMenu`. Verified backup: `G:\GhidraBackups\BEA_20260524-105819_post_wave807_landscape_patch_raw_head_verified`.
+Post-Wave807 queue telemetry is `6098` total, `5582` commented, `516` commentless, `0` exact-undefined signatures, `0` `param_N`, strict proxy `5582/6098 = 91.54%`, and next raw head `0x0048f620 CDXEngine__RenderPostMissionOverlayAndMenu`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-105819_post_wave807_landscape_patch_raw_head_verified`.
 
 This is static Ghidra read-back evidence only. Exact source-body identity, exact CDXPatch field names, tile-record layout, runtime terrain rendering/GPU behavior, BEA patching, and rebuild parity remain deferred.
 
@@ -239,7 +239,7 @@ Wave613 saved nine CDXPatch/CDXPatchManager signatures, comments, and tags from 
 | `0x00550730` | `void __thiscall CDXPatch__FreeData(void * this)` | Unbounded callsite `0x005120cb` reaches this ECX-only cleanup helper. It frees the data pointer at patch `+0x0c` through `CDXMemoryManager__Free` when non-null, then clears it. |
 | `0x00550750` | `void __thiscall CDXPatch__LoadFromFile(void * this, void * chunk_reader)` | `CResourceAccumulator__ReadResourceFile` callsite `0x004d7875` passes a CDXPatch in ECX and one chunk-reader argument. The body reads `3x16` dwords into `+0x10`, reads a data count into `+0xd0`, allocates `count*2` bytes from DXPatchManager.cpp line `0x94`, reads 16-bit data into `+0x0c`, and marks `+0x08` loaded. |
 
-Read-back verified `9` metadata rows, `9` tag rows, `16` xref rows, `2349` instruction rows, `9` decompile rows, `464` callsite instruction rows, and `10` vtable-slot rows. Queue telemetry after Wave613 is `6093` functions, `3156` commented, `2937` commentless, `1275` exact-undefined signatures, `1056` `param_N`, comment-backed proxy `3156/6093 = 51.80%`, strict clean-signature proxy `3111/6093 = 51.06%`, and next head `0x00552060 CDXShadows__Destructor`. Verified backup: `G:\GhidraBackups\BEA_20260520-001229_post_wave613_cdxpatch_manager_verified`.
+Read-back verified `9` metadata rows, `9` tag rows, `16` xref rows, `2349` instruction rows, `9` decompile rows, `464` callsite instruction rows, and `10` vtable-slot rows. Queue telemetry after Wave613 is `6093` functions, `3156` commented, `2937` commentless, `1275` exact-undefined signatures, `1056` `param_N`, comment-backed proxy `3156/6093 = 51.80%`, strict clean-signature proxy `3111/6093 = 51.06%`, and next head `0x00552060 CDXShadows__Destructor`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-001229_post_wave613_cdxpatch_manager_verified`.
 
 CDXPatch vtable `0x005e5114` remains partial. Slot 0 points to `0x00550320`, where no Ghidra function exists yet; the nearby unbounded region calls `CDXPatch__Destructor_thunk` at `0x0055035c`, but Wave613 deliberately deferred boundary recovery. Exact CDXPatch, CDXPatchManager, patch-pool, CLandscapeTexture, and serialized patch-data layouts, runtime terrain rendering/LOD behavior, BEA patching, and rebuild parity remain unproven.
 

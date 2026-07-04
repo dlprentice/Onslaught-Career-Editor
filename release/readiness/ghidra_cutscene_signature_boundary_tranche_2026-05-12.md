@@ -27,7 +27,7 @@ The pass recovered two missing function boundaries, corrected stale destructor/i
 - `py -3 tools\ghidra_cutscene_signature_boundary_tranche_probe_test.py` passed `2/2`; `py -3 -m py_compile tools\ghidra_cutscene_signature_boundary_tranche_probe.py tools\ghidra_cutscene_signature_boundary_tranche_probe_test.py` passed.
 - `cmd.exe /c npm run test:ghidra-cutscene-signature-boundary-tranche` passed against the saved read-back artifacts.
 - The refreshed whole-database baseline reports `5974` functions and `0` weak functions. The refreshed quality queue reports `1089` commented functions, `4885` commentless functions, `1961` undefined signatures, and `2115` `param_N` signatures.
-- The post-mutation live Ghidra backup was verified at `G:\GhidraBackups\BEA_20260512_175825_post_wave345_cutscene_verified` with `19` files, `152701831` bytes, and `HashDiffCount=0`.
+- The post-mutation live Ghidra backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260512_175825_post_wave345_cutscene_verified` with `19` files, `152701831` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

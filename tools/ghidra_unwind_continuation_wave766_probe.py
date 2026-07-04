@@ -32,7 +32,7 @@ DEVELOPER_STATE = ROOT / "developer_agent_state.json"
 DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260523-161835_post_wave766_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260523-161835_post_wave766_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d4bf0": "0x0061d45c",
@@ -88,10 +88,10 @@ COMMENT_TOKENS = {
 }
 
 STRING_EXPECTATIONS = {
-    "string-00632428.tsv": r"C:\dev\ONSLAUGHT2\SoundManager.cpp",
-    "string-0063270c.tsv": r"C:\dev\ONSLAUGHT2\SphereTrigger.cpp",
-    "string-0062551c.tsv": r"C:\dev\ONSLAUGHT2\monitor.h",
-    "string-0063283c.tsv": r"C:\dev\ONSLAUGHT2\SquadNormal.cpp",
+    "string-00632428.tsv": r"[maintainer-local-source-export-root]\SoundManager.cpp",
+    "string-0063270c.tsv": r"[maintainer-local-source-export-root]\SphereTrigger.cpp",
+    "string-0062551c.tsv": r"[maintainer-local-source-export-root]\monitor.h",
+    "string-0063283c.tsv": r"[maintainer-local-source-export-root]\SquadNormal.cpp",
 }
 
 CORE_ANCHORS = (

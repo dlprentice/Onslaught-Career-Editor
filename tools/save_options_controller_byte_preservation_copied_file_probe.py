@@ -54,7 +54,7 @@ PROOF_LINK = "save-options-controller-byte-preservation-copied-file-proof.md"
 SCHEMA_LINK = "save-options-controller-byte-preservation-copied-file.v1.json"
 PLAN_LINK = "save-options-controller-byte-preservation-proof-plan.md"
 PRIVATE_EVIDENCE_ROOT = "subagents/static-to-proof/save-options-controller-byte-preservation-copied-file-proof/"
-LATEST_GHIDRA_BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+LATEST_GHIDRA_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 
 FORBIDDEN_PUBLIC_TOKENS = (
     "C:\\Users",

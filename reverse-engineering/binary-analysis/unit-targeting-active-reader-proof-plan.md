@@ -25,8 +25,8 @@ Primary static contract source: `reverse-engineering/binary-analysis/unit-battle
 
 Relevant retained evidence:
 
-- Wave1215 unit-targeting combat residual review (`wave1215-unit-targeting-combat-residual-current-risk-review`): `5` primary targeting rows, `6` xref rows, `794` instruction rows, `5` decompile rows, `425` context xref rows, `1123` context instruction rows, `15` context decompile rows, and `1` data-slot xref row, with verified backup `G:\GhidraBackups\BEA_20260607-090802_post_wave1215_unit_targeting_combat_residual_current_risk_review_verified`.
-- Wave927 CUnit active-reader targeting review (`cunit-active-reader-targeting-review-wave927`): `5` active-reader targeting rows, `23` xref rows, `464` instruction rows, and `5` decompile rows, plus context helper `CUnit__ForwardAimTransformAndAttachTargetReader`, with verified backup `G:\GhidraBackups\BEA_20260527-223748_post_wave927_cunit_active_reader_targeting_review_verified`.
+- Wave1215 unit-targeting combat residual review (`wave1215-unit-targeting-combat-residual-current-risk-review`): `5` primary targeting rows, `6` xref rows, `794` instruction rows, `5` decompile rows, `425` context xref rows, `1123` context instruction rows, `15` context decompile rows, and `1` data-slot xref row, with verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260607-090802_post_wave1215_unit_targeting_combat_residual_current_risk_review_verified`.
+- Wave927 CUnit active-reader targeting review (`cunit-active-reader-targeting-review-wave927`): `5` active-reader targeting rows, `23` xref rows, `464` instruction rows, and `5` decompile rows, plus context helper `CUnit__ForwardAimTransformAndAttachTargetReader`, with verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260527-223748_post_wave927_cunit_active_reader_targeting_review_verified`.
 - Unit/BattleEngine gameplay static contract anchors for `CUnit`, `CUnitAI`, `CGenericActiveReader`, `CSquadNormal`, and component-targeting rows.
 
 ## Static Anchors

@@ -6,7 +6,7 @@ Status: GREEN public-safe saved-Ghidra evidence
 
 Serialized headless Ghidra dry/apply/read-back corrected `8` early high-signal saved functions after focused metadata, decompile, xref, instruction, tag, and source/caller-context review.
 
-This pass corrected stale owner labels across damage, console/status-history, debug-marker, and sound-manager-adjacent helpers, hardened signatures/comments/tags, refreshed the whole-database quality queue, and backed up the actual live Ghidra project to `G:`.
+This pass corrected stale owner labels across damage, console/status-history, debug-marker, and sound-manager-adjacent helpers, hardened signatures/comments/tags, refreshed the whole-database quality queue, and backed up the actual live Ghidra project to `[maintainer-local-backup-volume]`.
 
 ## Targets
 
@@ -29,7 +29,7 @@ This pass corrected stale owner labels across damage, console/status-history, de
 - Focused probe: `PASS`; `10` xref evidence hits, `8` instruction evidence hits, `0` stale name hits, `0` stale signature hits, and `0` overclaim hits.
 - Whole-database refresh: `6008` functions, `1258` commented functions, `4750` commentless functions, `1948` `undefined` signatures, and `2011` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1258/6008 = 20.94%`; strict clean-signature `1196/6008 = 19.91%`. The `20%` value is not a milestone.
-- Actual live Ghidra backup: `G:\GhidraBackups\BEA_20260513_061308_post_wave364_early_high_signal_verified`, verified at `19` files, `153160583` bytes, and `HashDiffCount=0`.
+- Actual live Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260513_061308_post_wave364_early_high_signal_verified`, verified at `19` files, `153160583` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

@@ -35,7 +35,7 @@ Wave997 anchor:
 - Wave911 focused re-audit progress: `465/1408 = 33.03%`
 - Expanded static surface progress: `581/1478 = 39.31%`
 - Static closure: `6222/6222 = 100.00%`
-- Verified backup: `G:\GhidraBackups\BEA_20260531-083022_post_wave997_vec3_residual_review_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-083022_post_wave997_vec3_residual_review_verified`
 
 Interpretation:
 

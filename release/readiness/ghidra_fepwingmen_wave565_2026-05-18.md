@@ -26,7 +26,7 @@ This class is retail-binary-first because `FEPWingmen.cpp` is not present in `re
 - Post exports: `6` metadata rows plus expected missing `0x005216c0`, `6` tag rows, `13` xref rows, `1015` focused instruction rows, `6` target decompiles, and `16` vtable rows
 - Queue refresh: `6089` total functions, `2806` commented, `3283` commentless, `1498` exact-undefined signatures, `1180` `param_N` signatures
 - Strict proxy: `2806 / 6089 = 46.09%`
-- Backup: `G:\GhidraBackups\BEA_20260518-211003_post_wave565_fepwingmen_verified`
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-211003_post_wave565_fepwingmen_verified`
 - Backup verification: `19` files, `159910791` bytes, source/destination manifest hash `F7B863819658321D9F8EDA2D6B8DD2FB963C23E3A92FE33789468440988667E4`
 
 ## Limits

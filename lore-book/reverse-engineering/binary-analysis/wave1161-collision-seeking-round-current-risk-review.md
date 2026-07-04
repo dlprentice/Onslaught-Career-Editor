@@ -6,7 +6,7 @@ Tag: `wave1161-collision-seeking-round-current-risk-review`
 
 Wave1161 accounts for `17 collision-seeking/mesh-collision current-risk rows` from the active `wave1108-current-risk-rank` current-risk denominator. Fresh Ghidra exports showed the saved names, signatures, comments, and tags are coherent, so this wave made no Ghidra mutation.
 
-Probe token anchor: Wave1161; wave1161-collision-seeking-round-current-risk-review; 533/1179 = 45.21%; 17 collision-seeking/mesh-collision current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 646; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consults used; 0 / 0 / 0; 6411/6411 = 100.00%; 74 xref rows; 1567 instruction rows; CCollisionSeekingRound__InitCollisionLineAndSound; CCollisionSeekingRound__ResolveRoundCollisionResponse; CCollisionSeekingRound__ProcessMapWhoCollisionSweep; CMeshCollisionVolume__TestSweptSphereAgainstMeshPart; CMeshCollisionVolume__ResolveContactNormalAndPlane; CCollisionSeekingRound__ShutdownMonitorAndDestruct; G:\GhidraBackups\BEA_20260606-014548_post_wave1161_collision_seeking_round_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1161; wave1161-collision-seeking-round-current-risk-review; 533/1179 = 45.21%; 17 collision-seeking/mesh-collision current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 646; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consults used; 0 / 0 / 0; 6411/6411 = 100.00%; 74 xref rows; 1567 instruction rows; CCollisionSeekingRound__InitCollisionLineAndSound; CCollisionSeekingRound__ResolveRoundCollisionResponse; CCollisionSeekingRound__ProcessMapWhoCollisionSweep; CMeshCollisionVolume__TestSweptSphereAgainstMeshPart; CMeshCollisionVolume__ResolveContactNormalAndPlane; CCollisionSeekingRound__ShutdownMonitorAndDestruct; [maintainer-local-ghidra-backup-root]\BEA_20260606-014548_post_wave1161_collision_seeking_round_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
 
 ## Evidence
 
@@ -42,7 +42,7 @@ Reviewed anchors:
 | `0x004d8a70` | `CCollisionSeekingRound__ShutdownMonitorAndDestruct` | Monitor shutdown at `this+0x24`, then `CCollisionSeekingRound__Destructor(this)`. |
 | `0x005d3980` | `CMeshCollisionVolume__SetPartBounds_Unwind` | MeshCollisionVolume.cpp compiler-generated unwind cleanup callback tied to DATA xref `0x0061c5ec`. |
 
-Verified backup: `G:\GhidraBackups\BEA_20260606-014548_post_wave1161_collision_seeking_round_current_risk_review_verified`; `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-014548_post_wave1161_collision_seeking_round_current_risk_review_verified`; `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 ## Accounting
 

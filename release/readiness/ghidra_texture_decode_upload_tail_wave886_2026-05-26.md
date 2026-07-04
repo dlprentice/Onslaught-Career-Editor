@@ -29,7 +29,7 @@ Read-back evidence:
 - Queue after Wave886: `6113` total functions, `5978` commented, `135` commentless, `0` exact-undefined signatures, `0` `param_N`, comment-backed and strict clean-signature proxy `5978/6113 = 97.79%`.
 - Commentless high-signal, signature, and name-confidence queues remain empty.
 - Next raw commentless row: `0x005759b6 CFastVB__DispatchIndirect_00657014`.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-023255_post_wave886_texture_decode_upload_tail_verified`, `19` files, `172854151` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-023255_post_wave886_texture_decode_upload_tail_verified`, `19` files, `172854151` bytes, `DiffCount=0`.
 
 What this proves:
 

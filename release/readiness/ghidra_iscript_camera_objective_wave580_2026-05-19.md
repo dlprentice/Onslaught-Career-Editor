@@ -29,7 +29,7 @@ Read-back artifacts:
 
 - Dry/apply/final dry: `updated=0 skipped=6 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=6 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=6 renamed=0 would_rename=0 missing=0 bad=0`.
 - Post exports verified `6` metadata rows, `6` tag rows, `6` xref rows, `5454` instruction rows, `6` decompile rows, and `36` vtable rows.
-- Backup verified: `G:\GhidraBackups\BEA_20260519-044247_post_wave580_iscript_camera_objective_verified`, `19` files, `160500615` bytes, `DiffCount=0`, manifest hash `83E6EF0DFB8B3CE5A29E8A55C7F02A8DD40A3C6E8A1BAD5826A0722E4496C0B1`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260519-044247_post_wave580_iscript_camera_objective_verified`, `19` files, `160500615` bytes, `DiffCount=0`, manifest hash `83E6EF0DFB8B3CE5A29E8A55C7F02A8DD40A3C6E8A1BAD5826A0722E4496C0B1`.
 
 ## Queue Telemetry
 

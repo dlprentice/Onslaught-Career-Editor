@@ -1,6 +1,6 @@
 # FEPDirectory.cpp - Function Analysis
 
-**Source File:** `C:\dev\ONSLAUGHT2\FEPDirectory.cpp`
+**Source File:** `[maintainer-local-source-export-root]\FEPDirectory.cpp`
 **Debug Path String:** `0x0063fb4c`
 **RTTI Class Name:** `.?AVCFEPDirectory@@` at `0x00629bf8`
 
@@ -10,9 +10,9 @@
 
 CFEPDirectory is a frontend page class for save-directory browsing. Wave856 FEPDirectory page saved static Ghidra comments/tags for the page lifecycle, selected-save control flow, save-file enumeration, delete-confirmation processing, and render handoff. This is important frontend save-directory infrastructure, not filler; source-body evidence remains sparse enough that the claims stay bounded to static retail Ghidra evidence.
 
-Wave856 (`fepdirectory-page-wave856`, `wave856-readback-verified`) covered `0x0051aa90 CFEPDirectory__Init`, `0x0051aac0 CFEPDirectory__Shutdown`, `0x0051aaf0 CFEPDirectory__ButtonPressed`, `0x0051ac40 CFEPDirectory__Process`, `0x0051ad30 CFEPDirectory__RefreshSaveFileList`, and `0x0051b460 CFEPDirectory__Render`. Queue after Wave856: `6098` total, `5762` commented, `336` commentless, no exact-undefined signatures, no `param_N`, strict proxy `5762/6098 = 94.49%`. Next raw commentless row: `0x0051b600 CFEPMultiplayerStart__SubObj4034__ctor`. Verified backup: `G:\GhidraBackups\BEA_20260525-114000_post_wave856_fepdirectory_page_verified`.
+Wave856 (`fepdirectory-page-wave856`, `wave856-readback-verified`) covered `0x0051aa90 CFEPDirectory__Init`, `0x0051aac0 CFEPDirectory__Shutdown`, `0x0051aaf0 CFEPDirectory__ButtonPressed`, `0x0051ac40 CFEPDirectory__Process`, `0x0051ad30 CFEPDirectory__RefreshSaveFileList`, and `0x0051b460 CFEPDirectory__Render`. Queue after Wave856: `6098` total, `5762` commented, `336` commentless, no exact-undefined signatures, no `param_N`, strict proxy `5762/6098 = 94.49%`. Next raw commentless row: `0x0051b600 CFEPMultiplayerStart__SubObj4034__ctor`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-114000_post_wave856_fepdirectory_page_verified`.
 
-Wave954 (`save-load-directory-review-wave954`) re-reviewed the save/load/directory handoff around `0x00461c40 CFEPLoadGame__Init`, `0x00464620 CFEPSaveGame__Init`, and `0x0051ad30 CFEPDirectory__RefreshSaveFileList` with fresh serialized Ghidra metadata/tag/xref/instruction/decompile/vtable exports. The review found no mutation was needed in Ghidra, but corrected this doc's stale delete-helper context address to live `0x00514ec0 PCPlatform__DeleteSaveFile`. Evidence includes FEPSaveGame.cpp debug string `C:\dev\ONSLAUGHT2\FEPSaveGame.cpp`, FEPDirectory.cpp debug string `C:\dev\ONSLAUGHT2\FEPDirectory.cpp`, Wave911 focused re-audit progress `283/1408 = 20.10%`, static closure `6151/6151 = 100.00%`, and verified backup `G:\GhidraBackups\BEA_20260528-100717_post_wave954_save_load_directory_review_verified`.
+Wave954 (`save-load-directory-review-wave954`) re-reviewed the save/load/directory handoff around `0x00461c40 CFEPLoadGame__Init`, `0x00464620 CFEPSaveGame__Init`, and `0x0051ad30 CFEPDirectory__RefreshSaveFileList` with fresh serialized Ghidra metadata/tag/xref/instruction/decompile/vtable exports. The review found no mutation was needed in Ghidra, but corrected this doc's stale delete-helper context address to live `0x00514ec0 PCPlatform__DeleteSaveFile`. Evidence includes FEPSaveGame.cpp debug string `[maintainer-local-source-export-root]\FEPSaveGame.cpp`, FEPDirectory.cpp debug string `[maintainer-local-source-export-root]\FEPDirectory.cpp`, Wave911 focused re-audit progress `283/1408 = 20.10%`, static closure `6151/6151 = 100.00%`, and verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260528-100717_post_wave954_save_load_directory_review_verified`.
 
 ## Observed Layout
 
@@ -53,7 +53,7 @@ Exact `CFEPDirectory` layout, runtime frontend save-directory behavior, runtime 
 - `DAT_008a9694`: storage device id / platform slot passed into save enumeration and delete helpers.
 - `DAT_008a1168`: selected-save index global set by `CFEPDirectory__ButtonPressed`.
 - `DAT_008a116c`: selected-save name buffer filled before page transition.
-- Save-name buffers are 0x200-byte allocations tied to the `C:\dev\ONSLAUGHT2\FEPDirectory.cpp` debug path at `0x0063fb4c`.
+- Save-name buffers are 0x200-byte allocations tied to the `[maintainer-local-source-export-root]\FEPDirectory.cpp` debug path at `0x0063fb4c`.
 
 ## Version Info
 

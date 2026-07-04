@@ -27,7 +27,7 @@ Fresh serialized Ghidra exports under `subagents/ghidra-static-reaudit/wave960-c
 - `729` around-address instruction rows.
 - `7254` function-body instruction rows.
 - `9` decompile-index rows, all `OK`.
-- `6` direct string dumps: `C:\dev\ONSLAUGHT2\MeshPart.cpp`, old mesh version tokens `2.01`, `2.02`, `2.03`, `2.06`, and tag token `HORI`.
+- `6` direct string dumps: `[maintainer-local-source-export-root]\MeshPart.cpp`, old mesh version tokens `2.01`, `2.02`, `2.03`, `2.06`, and tag token `HORI`.
 
 Representative anchors:
 
@@ -49,7 +49,7 @@ Continuity checks:
 Verified Ghidra backup:
 
 ```text
-G:\GhidraBackups\BEA_20260528-123300_post_wave960_cmeshpart_oldstyle_loader_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260528-123300_post_wave960_cmeshpart_oldstyle_loader_review_verified
 ```
 
 Backup summary: `19` files, `173542279` bytes, `DiffCount=0`.
@@ -57,7 +57,7 @@ Backup summary: `19` files, `173542279` bytes, `DiffCount=0`.
 Wave911 focused re-audit progress after Wave960: `305/1408 = 21.66%`.
 Static export-contract function-quality closure remains `6151/6151 = 100.00%`.
 
-Probe anchor: Wave960; cmeshpart-oldstyle-loader-review-wave960; 0x004aede0 CMeshPart__LoadOldStyle_VersionA; 0x004af110 CMeshPart__LoadOldStyle_VersionB_WithExtraBlock; 0x004a8f05; 0x004a8f49; 0x004af10d RET 0x14; 0x004af462 RET 0x14; C:\dev\ONSLAUGHT2\MeshPart.cpp; 2.01; 2.02; 2.03; 2.06; HORI; 305/1408 = 21.66%; 6151/6151 = 100.00%; G:\GhidraBackups\BEA_20260528-123300_post_wave960_cmeshpart_oldstyle_loader_review_verified; no mutation.
+Probe anchor: Wave960; cmeshpart-oldstyle-loader-review-wave960; 0x004aede0 CMeshPart__LoadOldStyle_VersionA; 0x004af110 CMeshPart__LoadOldStyle_VersionB_WithExtraBlock; 0x004a8f05; 0x004a8f49; 0x004af10d RET 0x14; 0x004af462 RET 0x14; [maintainer-local-source-export-root]\MeshPart.cpp; 2.01; 2.02; 2.03; 2.06; HORI; 305/1408 = 21.66%; 6151/6151 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260528-123300_post_wave960_cmeshpart_oldstyle_loader_review_verified; no mutation.
 
 ## Boundaries
 

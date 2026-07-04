@@ -24,7 +24,7 @@ Read-back evidence:
 - String evidence: `grabs\scr%.4d.tga`, `Found %d joypads`, `Found no joypads`, and `Failed for %s`.
 - Queue after Wave848: 6098 total, 5678 commented, 420 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5678/6098 = 93.11%`, strict clean-signature proxy `5678/6098 = 93.11%`.
 - Next raw commentless row: `0x00513640 CEngine__GetConstant32`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-070518_post_wave848_platform_input_core_verified`, 19 files, 171871111 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-070518_post_wave848_platform_input_core_verified`, 19 files, 171871111 bytes, `DiffCount=0`.
 
 What this proves:
 

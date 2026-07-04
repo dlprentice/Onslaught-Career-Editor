@@ -4,7 +4,7 @@ Status: complete static read-back evidence
 Date: 2026-05-25
 Scope: `fepmultiplayerstart-runtime-wave857`
 
-Wave857 FEPMultiplayerStart runtime created three previously missing `CFEPMultiplayerStart` SubObj4034 vtable-slot function objects and saved comments, tags, and corrected signatures for eight important multiplayer-start frontend runtime helpers. The pass used the `fepmultiplayerstart-runtime-wave857` and `wave857-readback-verified` tags, made three function-object creations, no executable-byte changes, and no source-identity claim. `C:\dev\ONSLAUGHT2\FEPMultiplayerStart.cpp` exists as a retail debug-string anchor at `0x0063fc24`, but the source file is absent from the current Stuart source snapshot.
+Wave857 FEPMultiplayerStart runtime created three previously missing `CFEPMultiplayerStart` SubObj4034 vtable-slot function objects and saved comments, tags, and corrected signatures for eight important multiplayer-start frontend runtime helpers. The pass used the `fepmultiplayerstart-runtime-wave857` and `wave857-readback-verified` tags, made three function-object creations, no executable-byte changes, and no source-identity claim. `[maintainer-local-source-export-root]\FEPMultiplayerStart.cpp` exists as a retail debug-string anchor at `0x0063fc24`, but the source file is absent from the current Stuart source snapshot.
 
 Representative anchors:
 
@@ -26,7 +26,7 @@ Read-back evidence:
 - Post exports: 8 metadata rows, 8 tag rows, 10 xref rows, 296 instruction rows, 8 decompile rows, 18 context metadata rows, 18 context decompile rows, 12 vtable rows, and FEPMultiplayerStart.cpp string read-back.
 - Queue after Wave857: 6101 total functions, 5770 commented, 331 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5770/6101 = 94.57%`, strict clean-signature proxy `5770/6101 = 94.57%`.
 - Next raw commentless row: `0x0051f370 CFEPOptions__GetState`. The commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-121518_post_wave857_fepmultiplayerstart_runtime_verified`, 19 files, 172198791 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-121518_post_wave857_fepmultiplayerstart_runtime_verified`, 19 files, 172198791 bytes, `DiffCount=0`.
 
 What this proves:
 

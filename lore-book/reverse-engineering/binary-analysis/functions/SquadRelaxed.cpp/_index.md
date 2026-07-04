@@ -1,7 +1,7 @@
 # SquadRelaxed.cpp Functions
 
 > Source File: SquadRelaxed.cpp | Binary: BEA.exe
-> Debug Path: 0x00632918 (`C:\dev\ONSLAUGHT2\SquadRelaxed.cpp`)
+> Debug Path: 0x00632918 (`[maintainer-local-source-export-root]\SquadRelaxed.cpp`)
 
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6113/6113** (Wave900: every function commented; clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
 
@@ -12,11 +12,11 @@ CRelaxedSquad is an AI squad behavior state representing the idle/patrol mode fo
 **Class Name:** `CRelaxedSquad` (from RTTI at 0x0063d928)
 **Display Name:** "Relaxed Squad" (string at 0x0063293c)
 
-Wave1215 static read-back (`wave1215-unit-targeting-combat-residual-current-risk-review`) re-read `CRelaxedSquad__CreateIterator` as relaxed-squad iterator evidence. DATA xref `0x005e3b10` ties the row to the relaxed-squad table; the body allocates a `0x10`-byte `CSPtrSet`, calls `CSPtrSet__Init`, walks member nodes at `this+0xa4`, adds non-null members with `CSPtrSet__AddToHead`, and returns the set snapshot. Verified backup: `G:\GhidraBackups\BEA_20260607-090802_post_wave1215_unit_targeting_combat_residual_current_risk_review_verified`. Runtime relaxed-squad AI behavior, iterator ownership/lifetime, concrete member-node layout, BEA patching behavior, rebuild parity, and no-noticeable-difference parity remain separate proof.
+Wave1215 static read-back (`wave1215-unit-targeting-combat-residual-current-risk-review`) re-read `CRelaxedSquad__CreateIterator` as relaxed-squad iterator evidence. DATA xref `0x005e3b10` ties the row to the relaxed-squad table; the body allocates a `0x10`-byte `CSPtrSet`, calls `CSPtrSet__Init`, walks member nodes at `this+0xa4`, adds non-null members with `CSPtrSet__AddToHead`, and returns the set snapshot. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-090802_post_wave1215_unit_targeting_combat_residual_current_risk_review_verified`. Runtime relaxed-squad AI behavior, iterator ownership/lifetime, concrete member-node layout, BEA patching behavior, rebuild parity, and no-noticeable-difference parity remain separate proof.
 
-Wave767 static read-back (`unwind-continuation-wave767`, `wave767-readback-verified`) saved comments/tags/signatures for SquadRelaxed.cpp-adjacent compiler-generated unwind cleanup callbacks from `0x005d4e60 Unwind@005d4e60` through `0x005d4ed0 Unwind@005d4ed0`. Exact anchors include `0x005d4e90 Unwind@005d4e90`. Evidence includes SquadRelaxed.cpp debug path `0x00632918`, DATA scope-table xrefs `0x0061d6f4` through `0x0061d77c`, `OID__FreeObject_Callback`, `CComplexThing__dtor_base`, `CGenericActiveReader__dtor`, and `CParticleManager__RemoveFromGlobalList_Thunk` cleanup rows. Verified backup: `G:\GhidraBackups\BEA_20260523-164622_post_wave767_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
+Wave767 static read-back (`unwind-continuation-wave767`, `wave767-readback-verified`) saved comments/tags/signatures for SquadRelaxed.cpp-adjacent compiler-generated unwind cleanup callbacks from `0x005d4e60 Unwind@005d4e60` through `0x005d4ed0 Unwind@005d4ed0`. Exact anchors include `0x005d4e90 Unwind@005d4e90`. Evidence includes SquadRelaxed.cpp debug path `0x00632918`, DATA scope-table xrefs `0x0061d6f4` through `0x0061d77c`, `OID__FreeObject_Callback`, `CComplexThing__dtor_base`, `CGenericActiveReader__dtor`, and `CParticleManager__RemoveFromGlobalList_Thunk` cleanup rows. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260523-164622_post_wave767_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
 
-Wave1009 (`geometry-guide-heightfield-spine-review-wave1009`) recovered `0x004eaae0 CRelaxedSquad__VFunc_07_004eaae0` as a DATA-backed relaxed-squad static-shadow caller boundary. Queue closure is `6233/6233 = 100.00%`; verified backup: `G:\GhidraBackups\BEA_20260531-155648_post_wave1009_geometry_guide_heightfield_spine_review_verified`. Runtime relaxed-squad/debug-overlay behavior, exact source virtual name, concrete layouts, BEA patching, and rebuild parity remain separate proof.
+Wave1009 (`geometry-guide-heightfield-spine-review-wave1009`) recovered `0x004eaae0 CRelaxedSquad__VFunc_07_004eaae0` as a DATA-backed relaxed-squad static-shadow caller boundary. Queue closure is `6233/6233 = 100.00%`; verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-155648_post_wave1009_geometry_guide_heightfield_spine_review_verified`. Runtime relaxed-squad/debug-overlay behavior, exact source virtual name, concrete layouts, BEA patching, and rebuild parity remain separate proof.
 
 ## Functions
 
@@ -67,7 +67,7 @@ A second vtable reference exists at 0x005e3b10, suggesting class hierarchy or mu
 
 | Address | Value | Usage |
 |---------|-------|-------|
-| 0x00632918 | `C:\dev\ONSLAUGHT2\SquadRelaxed.cpp` | Debug path for assertions |
+| 0x00632918 | `[maintainer-local-source-export-root]\SquadRelaxed.cpp` | Debug path for assertions |
 | 0x0063293c | `Relaxed Squad` | Display name |
 | 0x0063d900 | `.?AVCRelaxedSquad@@` | RTTI type descriptor |
 | 0x0063d928 | `CRelaxedSquad` | Class name |

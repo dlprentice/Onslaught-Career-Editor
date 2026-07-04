@@ -23,7 +23,7 @@ DEVELOPER_STATE = ROOT / "developer_agent_state.json"
 DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-005829_post_wave984_battleengine_walker_dash_gate_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-005829_post_wave984_battleengine_walker_dash_gate_review_verified"
 
 TARGETS = {
     "0x0040a580": ("CBattleEngine__Morph", "void __fastcall CBattleEngine__Morph(void * battleEngine)"),

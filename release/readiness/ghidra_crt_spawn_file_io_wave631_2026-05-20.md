@@ -29,7 +29,7 @@ The pass corrected stale `CDXTexture` owner labels on the spawn/path and stream-
 - Post exports: `13` metadata rows, `13` tag rows, `24` xref rows, `1313` instruction rows, `13` decompile rows
 - Queue refresh: `6093` total, `3339` commented, `2754` commentless, `1217` exact-undefined signatures, `953` `param_N` signatures
 - Strict clean-signature proxy: `3287/6093 = 53.95%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-092034_post_wave631_crt_spawn_file_io_verified` (`19` files, `162302855` bytes, `DiffCount=0`)
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-092034_post_wave631_crt_spawn_file_io_verified` (`19` files, `162302855` bytes, `DiffCount=0`)
 
 The next high-signal queue head is `0x00565083 ControlsUI__FormatWideStringCore`.
 

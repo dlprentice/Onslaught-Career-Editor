@@ -29,7 +29,7 @@ The pass made no rename. It used retail-binary evidence from the direct caller `
   - final dry: `updated=0 skipped=1 renamed=0 would_rename=0 missing=0 bad=0`
 - Read-back exports verified `1` metadata row, `1` tag row, `1` xref row, `512` instruction rows, `488` target-function instruction rows, and `1` decompile row.
 - Caller context export verified `CHudComponent__RenderPassEntry(*(int *)(*(int *)(iVar1 + 0x160) + iVar2 * 4),this);`.
-- Verified backup: `G:\GhidraBackups\BEA_20260519-214647_post_wave608_hud_component_render_entry_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-214647_post_wave608_hud_component_render_entry_verified`
   - `fileCount=19`
   - `totalBytes=161418119`
   - `DiffCount=0`

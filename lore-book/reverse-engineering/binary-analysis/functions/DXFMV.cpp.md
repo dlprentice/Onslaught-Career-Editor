@@ -1,18 +1,18 @@
 # DXFMV.CPP Functions
 
 > Source File: DXFMV.CPP | Binary: BEA.exe
-> Debug Path: 0x00650644 (`C:\dev\ONSLAUGHT2\DXFMV.CPP`)
+> Debug Path: 0x00650644 (`[maintainer-local-source-export-root]\DXFMV.CPP`)
 
 ## Overview
 
 DirectX full-motion-video wrapper around the front-end video implementation. Wave594 is the first static saved-Ghidra pass that documents this file's adjacent retail FMV lifecycle head.
 
-Wave802 static read-back (`frontend-save-multiplayer-wave802`, `wave802-readback-verified`) corrected `0x00465640 CLTShell__InvokeWithLoadingTransitionGate` to `0x00465640 CFMV__PlayFullscreenWithLoadingGate`. `RET 0x1c` proves seven explicit stack arguments after `ECX=this`; the body stores/toggles a loading gate at `this+0x0c`, calls `CController__SetNonInteractiveSection(true/false)`, conditionally forwards `g_LanguageIndex`, and dispatches vtable slot `+0x2c`. Verified backup: `G:\GhidraBackups\BEA_20260524-081932_post_wave802_frontend_save_multiplayer_verified`. Exact CFMV layout, vtable slot contract, runtime FMV playback/localization behavior, BEA patching, and rebuild parity remain deferred.
+Wave802 static read-back (`frontend-save-multiplayer-wave802`, `wave802-readback-verified`) corrected `0x00465640 CLTShell__InvokeWithLoadingTransitionGate` to `0x00465640 CFMV__PlayFullscreenWithLoadingGate`. `RET 0x1c` proves seven explicit stack arguments after `ECX=this`; the body stores/toggles a loading gate at `this+0x0c`, calls `CController__SetNonInteractiveSection(true/false)`, conditionally forwards `g_LanguageIndex`, and dispatches vtable slot `+0x2c`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-081932_post_wave802_frontend_save_multiplayer_verified`. Exact CFMV layout, vtable slot contract, runtime FMV playback/localization behavior, BEA patching, and rebuild parity remain deferred.
 
 ## Debug Path Location
 
 - **Address**: 0x00650644
-- **String**: `C:\dev\ONSLAUGHT2\DXFMV.CPP`
+- **String**: `[maintainer-local-source-export-root]\DXFMV.CPP`
 
 ## 2026-05-19 Wave594 VBufTexture / FMV Head Read-Back
 

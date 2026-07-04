@@ -35,7 +35,7 @@ Wave999 anchor:
 - Expanded static surface progress: `596/1478 = 40.32%`
 - Wave911 top-500 risk-ranked coverage: `343/500 = 68.60%`
 - Static closure: `6222/6222 = 100.00%`
-- Verified backup: `G:\GhidraBackups\BEA_20260531-094628_post_wave999_fepbeconfig_helper_review_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-094628_post_wave999_fepbeconfig_helper_review_verified`
 
 Interpretation:
 

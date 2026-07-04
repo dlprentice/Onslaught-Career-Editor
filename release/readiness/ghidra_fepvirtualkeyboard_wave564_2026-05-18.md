@@ -24,7 +24,7 @@ No rename or boundary recovery was performed. This class is retail-binary-first 
 - Post exports: `4` metadata rows, `4` tag rows, `7` xref rows, `964` focused instruction rows, `4` target decompiles, `3` caller decompiles, and `195` DrawPanel disassembly rows
 - Queue refresh: `6089` total functions, `2800` commented, `3289` commentless, `1498` exact-undefined signatures, `1181` `param_N` signatures
 - Strict proxy: `2800 / 6089 = 45.99%`
-- Backup: `G:\GhidraBackups\BEA_20260518-203938_post_wave564_fepvirtualkeyboard_verified`
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-203938_post_wave564_fepvirtualkeyboard_verified`
 - Backup verification: `19` files, `159878023` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`
 
 ## Limits

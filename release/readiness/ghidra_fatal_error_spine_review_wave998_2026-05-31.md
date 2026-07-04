@@ -27,9 +27,9 @@ Read-back evidence:
 - Queue closure remains `6222/6222 = 100.00%`.
 - Wave911 focused re-audit progress is now `467/1408 = 33.17%`.
 - Expanded static surface progress is now `585/1478 = 39.58%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-091151_post_wave998_fatal_error_spine_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-091151_post_wave998_fatal_error_spine_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
-Probe token anchor: Wave998; `fatal-error-spine-review-wave998`; `0x0042c750 FatalError__ExitWithLocalizedPrefix_A`; `noreturn void __stdcall FatalError__ExitWithLocalizedPrefix_A(char * message, int callerContext)`; `0x0042d0b0 FatalError__ExitWithLocalizedPrefix_B`; `noreturn void __stdcall FatalError__ExitWithLocalizedPrefix_B(char * message)`; `0x0042cfa0 FatalError__ExitProcess`; `0x0042d080 FatalError_LocalizedStringId`; `467/1408 = 33.17%`; `585/1478 = 39.58%`; `6222/6222 = 100.00%`; `G:\GhidraBackups\BEA_20260531-091151_post_wave998_fatal_error_spine_review_verified`.
+Probe token anchor: Wave998; `fatal-error-spine-review-wave998`; `0x0042c750 FatalError__ExitWithLocalizedPrefix_A`; `noreturn void __stdcall FatalError__ExitWithLocalizedPrefix_A(char * message, int callerContext)`; `0x0042d0b0 FatalError__ExitWithLocalizedPrefix_B`; `noreturn void __stdcall FatalError__ExitWithLocalizedPrefix_B(char * message)`; `0x0042cfa0 FatalError__ExitProcess`; `0x0042d080 FatalError_LocalizedStringId`; `467/1408 = 33.17%`; `585/1478 = 39.58%`; `6222/6222 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260531-091151_post_wave998_fatal_error_spine_review_verified`.
 
 What this proves:
 

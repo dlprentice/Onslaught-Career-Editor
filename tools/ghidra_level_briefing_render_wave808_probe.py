@@ -32,7 +32,7 @@ ADDRESS = "0x0048f620"
 OLD_NAME = "CDXEngine__RenderPostMissionOverlayAndMenu"
 NAME = "CLevelBriefingLog__Render"
 SIGNATURE = "void __thiscall CLevelBriefingLog__Render(void * this, void * viewport)"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-113054_post_wave808_level_briefing_render_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-113054_post_wave808_level_briefing_render_verified"
 NEXT_HEAD = "0x004901e0 MathMatrix3x4__AssignFromEightScalars"
 
 COMMON_TAGS = {

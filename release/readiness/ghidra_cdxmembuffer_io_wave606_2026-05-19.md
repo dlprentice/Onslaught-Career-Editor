@@ -36,7 +36,7 @@ The pass corrected the stale `DXMemBuffer__*` owner prefix to `CDXMemBuffer__*` 
   - final dry: `updated=0 skipped=6 renamed=0 would_rename=0 missing=0 bad=0`
 - Read-back exports verified `6` metadata rows, `6` tag rows, 70 xref rows, 222 instruction rows, and `6` decompile rows.
 - Process note: an initial post-export wrapper command used escaped PowerShell paths and produced `FileNotFoundException` logs; no Ghidra mutation happened in that step. The trusted post-state artifacts are the clean serialized `*-rerun.log` exports.
-- Verified backup: `G:\GhidraBackups\BEA_20260519-204906_post_wave606_dxmembuffer_io_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-204906_post_wave606_dxmembuffer_io_verified`
   - `FileCount=19`
   - `TotalBytes=161352583`
   - `DiffCount=0`

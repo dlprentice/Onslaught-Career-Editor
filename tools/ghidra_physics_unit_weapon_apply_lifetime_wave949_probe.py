@@ -25,7 +25,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260528-075331_post_wave949_physics_unit_weapon_apply_lifetime_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-075331_post_wave949_physics_unit_weapon_apply_lifetime_review_verified"
 SCRIPT_NAME = "test:ghidra-physics-unit-weapon-apply-lifetime-wave949"
 SCRIPT_VALUE = r"py -3 tools\ghidra_physics_unit_weapon_apply_lifetime_wave949_probe.py --check"
 

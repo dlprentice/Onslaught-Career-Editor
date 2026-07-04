@@ -21,7 +21,7 @@ Evidence:
 - Post exports verified `6` metadata rows, `6` tag rows, `6` xref rows, `630` instruction rows, and `6` clean decompile rows.
 - Candidate exports covered `18` adjacent PNG decode rows through `0x005937f6 CDXTexture__GetPngPassCountFromInterlace`.
 - Queue refresh PASS: `6098` total, `3979` commented, `2119` commentless, `1216` exact-undefined signatures, and `347` `param_N` signatures.
-- Verified backup: `G:\GhidraBackups\BEA_20260521-142452_post_wave694_cdxtexture_png_decode_context_verified`, `19` files, `164989831` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-142452_post_wave694_cdxtexture_png_decode_context_verified`, `19` files, `164989831` bytes, `DiffCount=0`.
 
 Scope boundary:
 

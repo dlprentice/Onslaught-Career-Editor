@@ -22,7 +22,10 @@ TEXT_SUFFIXES = {
     ".html",
     ".json",
     ".jsonc",
+    ".jsonl",
+    ".java",
     ".md",
+    ".patch",
     ".ps1",
     ".py",
     ".sh",
@@ -30,20 +33,40 @@ TEXT_SUFFIXES = {
     ".tsx",
     ".tsv",
     ".txt",
+    ".csv",
     ".xml",
     ".xaml",
     ".yml",
     ".yaml",
 }
 
-PRIVATE_REPO_ROOT_PATH = (
-    "C:"
-    + "\\Users"
-    + "\\david"
-    + "\\source"
-    + "\\Onslaught-Career-Editor-"
-    + "private"
-    + "\\"
+WINDOWS_USER_ROOT_PATTERN_TEXT = r"C:\\{1,2}Users\\{1,2}[A-Za-z0-9._-]+"
+WSL_USER_ROOT_PATTERN_TEXT = r"/mnt/c/[Uu]sers/[A-Za-z0-9._-]+"
+LINUX_USER_ROOT_PATTERN_TEXT = r"(?-i:/home/[a-z][a-z0-9._-]*(?=/|$))"
+MAINTAINER_USER_ROOT_PATTERN = re.compile(
+    rf"(?:{WINDOWS_USER_ROOT_PATTERN_TEXT}|C:/Users/[A-Za-z0-9._-]+|{WSL_USER_ROOT_PATTERN_TEXT}|{LINUX_USER_ROOT_PATTERN_TEXT})",
+    re.IGNORECASE,
+)
+MAINTAINER_LOCAL_ROOT_PATTERN = re.compile(
+    r"(?:[A-Z]:\\{1,4}GhidraBackups|[A-Z]:/GhidraBackups|"
+    r"[A-Z]:\\{1,4}GhydraMCP(?:-[^\\\s\"'<>|,)\\]]*)?|[A-Z]:/GhydraMCP(?:-[^/\s\"'<>|,)\\]]*)?|"
+    r"[A-Z]:\\{1,4}OnslaughtRuntimeProof(?:s|Archive)?|[A-Z]:/OnslaughtRuntimeProof(?:s|Archive)?|"
+    r"[A-Z]:\\{1,4}dev\\{1,4}ONSLAUGHT2|[A-Z]:/dev/ONSLAUGHT2)",
+    re.IGNORECASE,
+)
+STANDALONE_BACKUP_DRIVE_REF_TEXT = r"(?<![A-Za-z0-9_])[D-Z]:(?![A-Za-z0-9_\\/])"
+BACKUP_DRIVE_CONTEXT_WORD_TEXT = (
+    r"(?i:backup|backed up|verified|verification|availability|unavailable|drive|volume|storage)"
+)
+STANDALONE_BACKUP_DRIVE_PATTERN = re.compile(
+    rf"(?:`{STANDALONE_BACKUP_DRIVE_REF_TEXT}`|"
+    rf"{BACKUP_DRIVE_CONTEXT_WORD_TEXT}[^\n]{{0,120}}{STANDALONE_BACKUP_DRIVE_REF_TEXT}|"
+    rf"{STANDALONE_BACKUP_DRIVE_REF_TEXT}[^\n]{{0,120}}"
+    rf"{BACKUP_DRIVE_CONTEXT_WORD_TEXT})"
+)
+PRIVATE_REPO_ROOT_PATTERN = re.compile(
+    rf"(?:{WINDOWS_USER_ROOT_PATTERN_TEXT}\\{{1,2}}source\\{{1,2}}Onslaught-Career-Editor-private|C:/Users/[A-Za-z0-9._-]+/source/Onslaught-Career-Editor-private|{WSL_USER_ROOT_PATTERN_TEXT}/source/Onslaught-Career-Editor-private|{LINUX_USER_ROOT_PATTERN_TEXT}/source/Onslaught-Career-Editor-private)",
+    re.IGNORECASE,
 )
 
 
@@ -144,8 +167,100 @@ RULES = (
     ),
     TextRule(
         "archive-doc-private-repo-root-path",
-        re.compile(re.escape(PRIVATE_REPO_ROOT_PATH), re.IGNORECASE),
+        PRIVATE_REPO_ROOT_PATTERN,
         include_path_prefixes=("archive/",),
+    ),
+    TextRule(
+        "tracked-private-repo-root-path",
+        PRIVATE_REPO_ROOT_PATTERN,
+        include_path_prefixes=(
+            ".codex/state/",
+            "coordination/",
+            "developer_agent_state.json",
+            "documentation_agent_state.json",
+            "goal.md",
+            "goal.policy.md",
+            "lore-book/",
+            "MCP_DEBUGGING_OPTIONS.md",
+            "re_orchestrator_state.json",
+            "RELEASE_SCOPE_AND_TEST_COMMANDS.md",
+            "release/readiness/",
+            "reverse-engineering/",
+            "roadmap/",
+        ),
+        exclude_path_prefixes=("release/readiness/private_runtime_evidence/",),
+    ),
+    TextRule(
+        "tracked-maintainer-user-root-path",
+        MAINTAINER_USER_ROOT_PATTERN,
+        include_path_prefixes=(
+            ".codex/state/",
+            "coordination/",
+            "developer_agent_state.json",
+            "documentation_agent_state.json",
+            "goal.md",
+            "goal.policy.md",
+            "lore-book/",
+            "MCP_DEBUGGING_OPTIONS.md",
+            "re_orchestrator_state.json",
+            "RELEASE_SCOPE_AND_TEST_COMMANDS.md",
+            "release/readiness/",
+            "reverse-engineering/",
+            "roadmap/",
+        ),
+    ),
+    TextRule(
+        "tracked-maintainer-local-root-path",
+        MAINTAINER_LOCAL_ROOT_PATTERN,
+        include_path_prefixes=(
+            ".codex/state/",
+            "coordination/",
+            "developer_agent_state.json",
+            "documentation_agent_state.json",
+            "goal.md",
+            "goal.policy.md",
+            "lore-book/",
+            "MCP_DEBUGGING_OPTIONS.md",
+            "re_orchestrator_state.json",
+            "RELEASE_SCOPE_AND_TEST_COMMANDS.md",
+            "release/readiness/",
+            "reverse-engineering/",
+            "roadmap/",
+        ),
+    ),
+    TextRule(
+        "tracked-maintainer-backup-drive-reference",
+        STANDALONE_BACKUP_DRIVE_PATTERN,
+        include_path_prefixes=(
+            ".codex/state/",
+            "coordination/",
+            "developer_agent_state.json",
+            "documentation_agent_state.json",
+            "goal.md",
+            "goal.policy.md",
+            "lore-book/",
+            "MCP_DEBUGGING_OPTIONS.md",
+            "re_orchestrator_state.json",
+            "RELEASE_SCOPE_AND_TEST_COMMANDS.md",
+            "release/readiness/",
+            "reverse-engineering/",
+            "roadmap/",
+        ),
+    ),
+    TextRule(
+        "stale-current-consult-stack-requires-gemini-opus",
+        re.compile(r"Grok(?:,\s*Grok Composer| Composer)?,\s*Opus,\s*and\s*Gemini\s+consults", re.IGNORECASE),
+        include_path_prefixes=(
+            ".codex/goals/",
+            "coordination/",
+            "developer_agent_state.json",
+            "documentation_agent_state.json",
+            "goal.md",
+            "goal.policy.md",
+            "lore-book/roadmap/",
+            "re_orchestrator_state.json",
+            "roadmap/",
+        ),
     ),
     TextRule(
         "top-level-fixture-parity-shorthand",

@@ -6,7 +6,7 @@ Scope: `wave1132-component-ai-current-risk-review`
 
 Wave1132 saved current-risk/read-back tags for ten component/active-reader UnitAI residual rows: `0x00427b80 CComponent__VFunc_09_00427b80`, `0x00427f90 CComponentBomberAI__scalar_deleting_dtor`, `0x00427fb0 CComponentBomberAI__dtor_base`, `0x00428050 CFenrirMainGunAI__scalar_deleting_dtor`, `0x00428070 CFenrirMainGunAI__dtor_base`, `0x00428710 CUnitAI__GetRenderPosFromActorOrCache`, `0x00428770 CUnitAI__GetRenderOrientationFromActorOrCache`, `0x00428c70 CUnitAI__RunSharedStepAndMaybeTriggerFlag4Action`, `0x00428d50 CUnitAI__PlayActivateAnimationOrFinalizeActivated`, and `0x00428e80 CComponentAI__ClearReaderIfTargetDestroyedThenForward`.
 
-Probe anchor: Wave1132; `wave1132-component-ai-current-risk-review`; `10 rows`; `178/1179 = 15.10%`; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 1001; component/active-reader UnitAI residual cluster; fresh Ghidra export; tag-only normalization; `91 tags`; static debt `0 / 0 / 0`; verified backup `G:\GhidraBackups\BEA_20260605-093432_post_wave1132_component_ai_current_risk_review_verified`; previous completed backup `G:\GhidraBackups\BEA_20260605-090018_post_wave1131_heightfield_current_risk_review_verified`.
+Probe anchor: Wave1132; `wave1132-component-ai-current-risk-review`; `10 rows`; `178/1179 = 15.10%`; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 1001; component/active-reader UnitAI residual cluster; fresh Ghidra export; tag-only normalization; `91 tags`; static debt `0 / 0 / 0`; verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260605-093432_post_wave1132_component_ai_current_risk_review_verified`; previous completed backup `[maintainer-local-ghidra-backup-root]\BEA_20260605-090018_post_wave1131_heightfield_current_risk_review_verified`.
 
 Read-back evidence:
 
@@ -16,7 +16,7 @@ Read-back evidence:
 - Pre/post metadata, instruction, and xref exports match exactly.
 - Queue quality refresh: `total_functions=6410 commented_functions=6410`.
 - Current focused accounting: `178/1179 = 15.10%`; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 1001.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-093432_post_wave1132_component_ai_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-093432_post_wave1132_component_ai_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

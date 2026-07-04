@@ -139,7 +139,9 @@ nontrivial.
 Nontrivial work requires Codex normal/adversarial, Cursor Agent
 `composer-2.5-fast` normal/adversarial, and Grok Build normal/adversarial
 consult evidence unless a lane is unavailable with exact reason and Codex-root
-verification or coordinator/integration-owner override.
+verification or coordinator/integration-owner override. Cursor Agent
+`gemini-3.1-pro` is suspended while the operator's Cursor API/model usage is
+exhausted; do not call it until the operator explicitly lifts that posture.
 
 Runtime proof, live Ghidra mutation, destructive cleanup, release,
 external-account action, and spend require a structured baton authority naming

@@ -14,7 +14,7 @@ ATTEMPT_LOG = ROOT/'reverse-engineering'/'binary-analysis'/'function_mutation_at
 QUEUE_JSON = ROOT/'subagents'/'ghidra-static-reaudit'/'queue'/'current'/'static-reaudit-queue.json'
 QUEUE_TSV = ROOT/'subagents'/'ghidra-static-reaudit'/'queue'/'current'/'functions_quality.tsv'
 BACKUP_SUMMARY = BASE/'backup-summary.json'
-BACKUP_PATH = r'G:\GhidraBackups\BEA_20260601-211936_post_wave1061_cdxtexture_png_decode_review_verified'
+BACKUP_PATH = r'[maintainer-local-ghidra-backup-root]\BEA_20260601-211936_post_wave1061_cdxtexture_png_decode_review_verified'
 TARGETS = {
     '0x00592dc2': ('CDXTexture__CreatePngDecodeContext', 'void * __stdcall CDXTexture__CreatePngDecodeContext(void * png_version_string, void * callback_context, void * error_callback, void * warning_callback)'),
     '0x00592eb6': ('CDXTexture__ParsePngHeadersUntilIdat', 'void __stdcall CDXTexture__ParsePngHeadersUntilIdat(void * png_decode_state, void * png_image_context)'),

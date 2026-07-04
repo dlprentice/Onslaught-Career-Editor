@@ -33,7 +33,7 @@ TRACKING_STATE = ROOT / "reverse-engineering" / "binary-analysis" / "function_mu
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 QUALITY_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-214433_post_wave1020_projectile_burst_spawn_spine_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-214433_post_wave1020_projectile_burst_spawn_spine_review_verified"
 
 TARGETS = {
     "0x005069f0": ("ProjectileBurst__SpawnFromCurrentPreset", "int __fastcall ProjectileBurst__SpawnFromCurrentPreset(void * burstContext)"),

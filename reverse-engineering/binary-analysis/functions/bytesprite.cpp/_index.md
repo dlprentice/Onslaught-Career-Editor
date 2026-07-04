@@ -1,6 +1,6 @@
 # bytesprite.cpp - Byte Sprite System
 
-**Source File:** `C:\dev\ONSLAUGHT2\bytesprite.cpp`
+**Source File:** `[maintainer-local-source-export-root]\bytesprite.cpp`
 **Debug String Address:** `0x00623c18`
 
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6113/6113** (Wave900: every function commented; clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
@@ -9,7 +9,7 @@
 
 The CByteSprite class implements a lightweight sprite rendering system using 8-bit byte pixel data with RLE (Run-Length Encoding) compression. Current saved Ghidra evidence ties the true CByteSprite helper cluster to `0x00418470` through `0x004189f0` and a `CDXCompass__Init` caller.
 
-Wave743 unwind continuation added saved static metadata around the bytesprite.cpp debug path. `0x005d1540 Unwind@005d1540` cleans up a `CResourceDescriptor` stack local at `EBP-0x5b8`, `0x005d1560 Unwind@005d1560` removes a `CParticleManager` stack local at `EBP-0x404` from its global list, `0x005d1580 Unwind@005d1580` calls `CDXMemBuffer__dtor_base` on stack local `EBP-0x140`, and `0x005d158b Unwind@005d158b` frees the pointer at `EBP-0x164` through `OID__FreeObject_Callback` with bytesprite.cpp debug path `0x00623c18`, line `0x1d`, and memtype `0x61`. These rows use `unwind-continuation-wave743` and `wave743-readback-verified`, with verified backup `G:\GhidraBackups\BEA_20260522-160155_post_wave743_unwind_continuation_verified`; next high-signal queue head after the wave is `0x005d1610 Unwind@005d1610`, while the raw commentless head remains `0x0042f220 CSPtrSet__Clear`. Runtime byte-sprite/resource/buffer cleanup behavior, exact source identity, and rebuild parity remain unproven.
+Wave743 unwind continuation added saved static metadata around the bytesprite.cpp debug path. `0x005d1540 Unwind@005d1540` cleans up a `CResourceDescriptor` stack local at `EBP-0x5b8`, `0x005d1560 Unwind@005d1560` removes a `CParticleManager` stack local at `EBP-0x404` from its global list, `0x005d1580 Unwind@005d1580` calls `CDXMemBuffer__dtor_base` on stack local `EBP-0x140`, and `0x005d158b Unwind@005d158b` frees the pointer at `EBP-0x164` through `OID__FreeObject_Callback` with bytesprite.cpp debug path `0x00623c18`, line `0x1d`, and memtype `0x61`. These rows use `unwind-continuation-wave743` and `wave743-readback-verified`, with verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260522-160155_post_wave743_unwind_continuation_verified`; next high-signal queue head after the wave is `0x005d1610 Unwind@005d1610`, while the raw commentless head remains `0x0042f220 CSPtrSet__Clear`. Runtime byte-sprite/resource/buffer cleanup behavior, exact source identity, and rebuild parity remain unproven.
 
 Wave 314 corrected three adjacent older ByteSprite labels out of this owner group:
 

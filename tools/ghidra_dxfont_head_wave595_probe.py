@@ -263,7 +263,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
 
     backup = json.loads(read_text(BACKUP_SUMMARY))
     expected_backup = {
-        "backupPath": "G:\\GhidraBackups\\BEA_20260519-151349_post_wave595_dxfont_head_verified",
+        "backupPath": "[maintainer-local-ghidra-backup-root]\\BEA_20260519-151349_post_wave595_dxfont_head_verified",
         "fileCount": 19,
         "totalBytes": 161057671,
         "diffCount": 0,
@@ -284,7 +284,7 @@ def check_docs(failures: list[str]) -> None:
             "Post-save read-back verified 8 metadata rows",
             "`3046` commented",
             "0x00540840 PCPlatform__ReadHeaderPairAndResetByteCount",
-            "G:\\GhidraBackups\\BEA_20260519-151349_post_wave595_dxfont_head_verified",
+            "[maintainer-local-ghidra-backup-root]\\BEA_20260519-151349_post_wave595_dxfont_head_verified",
         ),
         FUNCTION_INDEX: (
             "Latest saved-correction note: Wave595 DX font-head hardening",

@@ -49,7 +49,7 @@ Representative anchors include `CUnit__ApplyDamage`, `CUnit__GetCurrentHealthOrS
 
 - The selected Unit/BattleEngine/gameplay owner families have no remaining function-quality queue debt.
 - The current static documentation connects unit lifecycle, CUnitAI deploy/activation/target helpers, BattleEngine mode/weapon/target/projectile helpers, weapon and round config loaders, projectile spawn and collision-seeking paths, squad targeting, spawner waves, concrete unit subclass guide rows, and destructible segment damage handling.
-- The verified read-only Ghidra backup for this review is `G:\GhidraBackups\BEA_20260526-105331_post_wave906_unit_battleengine_gameplay_static_review_verified`.
+- The verified read-only Ghidra backup for this review is `[maintainer-local-ghidra-backup-root]\BEA_20260526-105331_post_wave906_unit_battleengine_gameplay_static_review_verified`.
 
 ## What Remains Separate
 

@@ -19,7 +19,7 @@ Fresh evidence:
 - Wave911 focused progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1148/1509 = 76.08%`.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-205027_post_wave1060_dxcompass_lifecycle_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-205027_post_wave1060_dxcompass_lifecycle_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 Validation command:
 
@@ -29,4 +29,4 @@ npm run test:ghidra-wave900-plus-through-wave1060-recheck
 
 Boundary note: this aggregate gate is static documentation/evidence hygiene. Runtime compass/HUD rendering behavior, exact `CHud`/`CDXCompass`/battle-engine context layouts, exact source-body identity, BEA patching behavior, gameplay outcomes, and rebuild parity remain separate proof.
 
-Probe token anchor: Wave1060; dxcompass-lifecycle-review-wave1060; 0x00406040 CDXCompass__GetTrackedPositionX; 0x0040c630 CDXCompass__GetTrackedPositionY; 0x004270e0 CDXCompass__InitMarkerArrays; 0x00427110 CDXCompass__LoadTextures; 0x00427190 CDXCompass__DestroyTextures; 0x00427200 CDXCompass__Reset; 0x00427210 CDXCompass__Render; 0x0053be40 CDXCompass__Init; 0x0053c1d0 CDXCompass__BuildRingGeometry; 812/1408 = 57.67%; 1148/1509 = 76.08%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-205027_post_wave1060_dxcompass_lifecycle_review_verified; tag normalization.
+Probe token anchor: Wave1060; dxcompass-lifecycle-review-wave1060; 0x00406040 CDXCompass__GetTrackedPositionX; 0x0040c630 CDXCompass__GetTrackedPositionY; 0x004270e0 CDXCompass__InitMarkerArrays; 0x00427110 CDXCompass__LoadTextures; 0x00427190 CDXCompass__DestroyTextures; 0x00427200 CDXCompass__Reset; 0x00427210 CDXCompass__Render; 0x0053be40 CDXCompass__Init; 0x0053c1d0 CDXCompass__BuildRingGeometry; 812/1408 = 57.67%; 1148/1509 = 76.08%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-205027_post_wave1060_dxcompass_lifecycle_review_verified; tag normalization.

@@ -26,7 +26,7 @@ The pass recovered six missing function boundaries in the seek, behaviour, allig
 - `py -3 tools\ghidra_seek_behaviour_state_tranche_probe_test.py` passed `2/2`; `py -3 -m py_compile tools\ghidra_seek_behaviour_state_tranche_probe.py tools\ghidra_seek_behaviour_state_tranche_probe_test.py` passed.
 - `cmd.exe /c npm run test:ghidra-seek-behaviour-state-tranche` passed against the saved read-back artifacts.
 - The refreshed whole-database baseline reports `5972` functions and `0` weak functions. The refreshed quality queue reports `1075` commented functions, `4897` commentless functions, `1969` undefined signatures, and `2119` `param_N` signatures.
-- The post-mutation live Ghidra backup was verified at `G:\GhidraBackups\BEA_20260512_172227_post_wave344_verified` with `19` files, `152701831` bytes, and `DiffCount=0`.
+- The post-mutation live Ghidra backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260512_172227_post_wave344_verified` with `19` files, `152701831` bytes, and `DiffCount=0`.
 
 ## Claim Boundary
 

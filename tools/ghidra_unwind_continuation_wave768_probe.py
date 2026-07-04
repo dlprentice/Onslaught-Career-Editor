@@ -33,7 +33,7 @@ DEVELOPER_STATE = ROOT / "developer_agent_state.json"
 DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260523-171555_post_wave768_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260523-171555_post_wave768_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d5050": "0x0061d8cc",
@@ -88,11 +88,11 @@ HELPER_NAMES = (
 )
 
 STRING_EXPECTATIONS = {
-    "string-00632ccc.tsv": r"C:\dev\ONSLAUGHT2\Tentacle.cpp",
-    "string-00632ef0.tsv": r"C:\dev\ONSLAUGHT2\texture.cpp",
-    "string-006331c0.tsv": r"C:\dev\ONSLAUGHT2\thing.cpp",
-    "string-00633240.tsv": r"C:\dev\ONSLAUGHT2\ThunderHead.cpp",
-    "string-00633a84.tsv": r"C:\dev\ONSLAUGHT2\tree.cpp",
+    "string-00632ccc.tsv": r"[maintainer-local-source-export-root]\Tentacle.cpp",
+    "string-00632ef0.tsv": r"[maintainer-local-source-export-root]\texture.cpp",
+    "string-006331c0.tsv": r"[maintainer-local-source-export-root]\thing.cpp",
+    "string-00633240.tsv": r"[maintainer-local-source-export-root]\ThunderHead.cpp",
+    "string-00633a84.tsv": r"[maintainer-local-source-export-root]\tree.cpp",
 }
 
 COMMENT_TOKENS = {

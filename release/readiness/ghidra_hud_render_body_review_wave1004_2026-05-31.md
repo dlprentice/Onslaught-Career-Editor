@@ -26,9 +26,9 @@ Fresh read-back evidence:
 - Wave911 focused re-audit progress advanced to `485/1408 = 34.45%`.
 - Expanded static surface progress advanced to `654/1478 = 44.25%`.
 - Wave911 top-500 risk-ranked coverage advanced to `380/500 = 76.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-124610_post_wave1004_hud_render_body_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-124610_post_wave1004_hud_render_body_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
-Probe token anchor: Wave1004; `hud-render-body-review-wave1004`; `0x00482590 CHud__RenderTargetIndicatorOverlay`; `0x00484c50 CHud__RenderTacticalRadarContacts`; `0x004857e0 HudOverlay__DrawSpriteQuad`; `0x004879e0 CHud__RenderOverlayForViewpoint`; `0x00487bc0 CHud__RenderOverlay`; `0x00487d10 CHud__RenderBattleline`; `0x00488090 CHud__RenderActiveHudComponentPass`; `0x004881e0 CHud__ResolveOverlaySlotRenderMode`; `0x0053ecc0 CDXEngine__PostRender`; `485/1408 = 34.45%`; `654/1478 = 44.25%`; `380/500 = 76.00%`; `6223/6223 = 100.00%`; `G:\GhidraBackups\BEA_20260531-124610_post_wave1004_hud_render_body_review_verified`; no mutation.
+Probe token anchor: Wave1004; `hud-render-body-review-wave1004`; `0x00482590 CHud__RenderTargetIndicatorOverlay`; `0x00484c50 CHud__RenderTacticalRadarContacts`; `0x004857e0 HudOverlay__DrawSpriteQuad`; `0x004879e0 CHud__RenderOverlayForViewpoint`; `0x00487bc0 CHud__RenderOverlay`; `0x00487d10 CHud__RenderBattleline`; `0x00488090 CHud__RenderActiveHudComponentPass`; `0x004881e0 CHud__ResolveOverlaySlotRenderMode`; `0x0053ecc0 CDXEngine__PostRender`; `485/1408 = 34.45%`; `654/1478 = 44.25%`; `380/500 = 76.00%`; `6223/6223 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260531-124610_post_wave1004_hud_render_body_review_verified`; no mutation.
 
 What this proves:
 

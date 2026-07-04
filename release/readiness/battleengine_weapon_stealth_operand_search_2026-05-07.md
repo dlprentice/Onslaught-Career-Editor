@@ -27,7 +27,7 @@ These offsets came from prior cloak/stealth candidate work. They cover the curre
 ## Commands
 
 ```powershell
-wsl bash -lc "cd /mnt/c/Users/david/source/Onslaught-Career-Editor-private && tools/run_ghidra_headless_postscript.sh ExportInstructionsByOperandToken.java subagents/battleengine-weapon-fired-stealth-candidate/current/operand-search/stealth_tokens.txt subagents/battleengine-weapon-fired-stealth-candidate/current/operand-search/stealth-field-instructions.tsv"
+wsl bash -lc "cd [maintainer-private-checkout] && tools/run_ghidra_headless_postscript.sh ExportInstructionsByOperandToken.java subagents/battleengine-weapon-fired-stealth-candidate/current/operand-search/stealth_tokens.txt subagents/battleengine-weapon-fired-stealth-candidate/current/operand-search/stealth-field-instructions.tsv"
 py -3 -m py_compile tools\battleengine_weapon_stealth_operand_search_probe.py
 npm run test:battleengine-weapon-stealth-operand-search
 ```

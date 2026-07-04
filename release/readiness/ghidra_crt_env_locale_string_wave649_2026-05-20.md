@@ -27,7 +27,7 @@ Serialized headless dry/apply/final-dry evidence:
 
 Read-back exports verified `11` metadata rows, `11` tag rows, `19` xref rows, `3091` instruction rows, and `11` clean decompile rows. The refreshed static queue now reports `6093` total functions, `3503` commented, `2590` commentless, `1217` exact-undefined signatures, and `805` `param_N` signatures. Comment-backed proxy is `3503/6093 = 57.49%`; strict clean-signature proxy is `3453/6093 = 56.67%`.
 
-Verified backup: `G:\GhidraBackups\BEA_20260520-222000_post_wave649_crt_env_locale_string_verified` with `19` files, `162925447` bytes, and `DiffCount=0`.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-222000_post_wave649_crt_env_locale_string_verified` with `19` files, `162925447` bytes, and `DiffCount=0`.
 
 Next queue head: `0x0056eb50 CDXMeshVB__SetTriangleStripDebugFlag`.
 

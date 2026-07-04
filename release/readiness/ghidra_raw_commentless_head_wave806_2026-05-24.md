@@ -24,7 +24,7 @@ Read-back evidence:
 - Post exports: 5 metadata rows, 5 tag rows, 120 xref rows, 525 instruction rows, and 5 decompile rows.
 - Queue after Wave806: 6098 total, 5581 commented, 517 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5581/6098 = 91.52%`, strict clean-signature proxy `5581/6098 = 91.52%`.
 - Next raw commentless row: `0x0048f2f0 CDXLandscape__SetUpdateBoundsAndRebuildVB`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-102416_post_wave806_raw_commentless_head_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-102416_post_wave806_raw_commentless_head_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
 
 What this proves:
 

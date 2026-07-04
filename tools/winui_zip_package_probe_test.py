@@ -628,6 +628,28 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             self.assertIn("bundle_payload_safety", folder_failures)
             self.assertIn("zip_payload_safety", zip_failures)
 
+    def test_zip_inspection_rejects_local_overlay_segments_inside_app_folder(self) -> None:
+        for segment in ("local-rom-input", "mcps"):
+            with self.subTest(segment=segment):
+                with tempfile.TemporaryDirectory() as temp_root:
+                    root = Path(temp_root)
+                    publish_dir = root / "publish"
+                    bundle_dir = root / "bundle"
+                    zip_path = root / f"{segment}.zip"
+                    self._write_publish_payload(publish_dir)
+                    probe.stage_portable_bundle(publish_dir, bundle_dir)
+                    payload_path = bundle_dir / "app" / segment / "payload.txt"
+                    payload_path.parent.mkdir(parents=True, exist_ok=True)
+                    payload_path.write_text("not ok\n", encoding="utf-8")
+
+                    folder_failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
+                    exit_code, _ = probe.create_zip(bundle_dir, zip_path)
+                    self.assertEqual(exit_code, 0)
+                    zip_failures = {item.key for item in probe.inspect_zip(zip_path) if item.status == "FAIL"}
+
+                    self.assertIn("bundle_payload_safety", folder_failures)
+                    self.assertIn("zip_payload_safety", zip_failures)
+
     def test_folder_inspection_allows_framework_images_but_rejects_payload_images(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:
             root = Path(temp_root)

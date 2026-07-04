@@ -33,7 +33,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave851 PC platform/controller tail"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-085618_post_wave851_pc_platform_controller_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-085618_post_wave851_pc_platform_controller_tail_verified"
 NEXT_HEAD = "0x00515ab0 D3DDevice__SetViewport"
 
 TARGETS = {

@@ -28,7 +28,7 @@ DEVELOPER_STATE = ROOT / "developer_agent_state.json"
 DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-144421_post_wave815_meshpart_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-144421_post_wave815_meshpart_tail_verified"
 NEXT_HEAD = "0x004b0cd0 CMesh__SelectModeSpecificPtr"
 
 TARGETS = {

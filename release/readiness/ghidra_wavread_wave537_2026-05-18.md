@@ -50,7 +50,7 @@ These percentages are telemetry only, not completion or correctness certificatio
 Verified saved-project backup:
 
 ```text
-G:\GhidraBackups\BEA_20260518-072526_post_wave537_wavread_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260518-072526_post_wave537_wavread_verified
 ```
 
 Backup verification: `19` files, `159288199` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.

@@ -32,7 +32,7 @@ CAPABILITIES = ROOT / "CURRENT_CAPABILITIES.md"
 AGENTS = ROOT / "AGENTS.md"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260604-171413_post_wave1095_render_state_matrix_support_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260604-171413_post_wave1095_render_state_matrix_support_review_verified"
 WAVE_TAG = "render-state-matrix-support-review-wave1095"
 TARGET = "0x00513af0"
 TARGET_NAME = "D3DStateCache__SetSlotMode4or5"

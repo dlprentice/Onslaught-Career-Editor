@@ -108,9 +108,9 @@ PLAN_TOKENS = (
     "CUnit__SetSpawnCooldownState3",
     "copied/app-owned",
     "no runtime object identity",
-    r"G:\GhidraBackups\BEA_20260526-103409_post_wave905_mesh_motion_world_particle_static_review_verified",
-    r"G:\GhidraBackups\BEA_20260526-105331_post_wave906_unit_battleengine_gameplay_static_review_verified",
-    r"G:\GhidraBackups\BEA_20260602-044834_post_wave1073_cworld_load_tail_review_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260526-103409_post_wave905_mesh_motion_world_particle_static_review_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260526-105331_post_wave906_unit_battleengine_gameplay_static_review_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260602-044834_post_wave1073_cworld_load_tail_review_verified",
 )
 
 READINESS_TOKENS = (

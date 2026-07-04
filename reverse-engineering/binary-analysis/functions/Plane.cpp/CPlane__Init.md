@@ -41,7 +41,7 @@ Important instruction evidence:
 
 The only current xref into `0x004d19d0` is a `DATA` reference from `0x005e1954`, consistent with a table/vtable-style reference rather than a normal direct caller.
 
-The retail binary carries debug string `C:\dev\ONSLAUGHT2\Plane.cpp` at `0x00631630`, but the current Stuart source snapshot does not contain `Plane.cpp`, `CPlane`, or `CWarspite` source bodies. Treat the function name and behavior as retail static evidence, not source-body parity.
+The retail binary carries debug string `[maintainer-local-source-export-root]\Plane.cpp` at `0x00631630`, but the current Stuart source snapshot does not contain `Plane.cpp`, `CPlane`, or `CWarspite` source bodies. Treat the function name and behavior as retail static evidence, not source-body parity.
 
 ## Validation
 

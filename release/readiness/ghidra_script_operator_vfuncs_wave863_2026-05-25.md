@@ -25,7 +25,7 @@ Read-back evidence:
 - Queue after Wave863: 6105 total, 5809 commented, 296 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5809/6105 = 95.15%`, strict clean-signature proxy `5809/6105 = 95.15%`.
 - Next raw commentless row: `0x0052ff30 ScriptCommandRegistry__InitBuiltins`.
 - Commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-150621_post_wave863_script_operator_vfuncs_verified`, 19 files, 172264327 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-150621_post_wave863_script_operator_vfuncs_verified`, 19 files, 172264327 bytes, `DiffCount=0`.
 
 What this proves:
 

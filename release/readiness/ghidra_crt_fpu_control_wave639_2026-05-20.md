@@ -20,7 +20,7 @@ The pass corrected `CRT__ControlFpMasked_0056947e` to `CRT__ControlFpMasked`, co
 - Post exports: `4` metadata rows, `4` tag rows, `7` xref rows, `484` instruction rows, `4` decompile rows
 - Queue refresh: `6093` total, `3407` commented, `2686` commentless, `1217` exact-undefined signatures, `898` `param_N` signatures
 - Strict clean-signature proxy: `3356/6093 = 55.08%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-124847_post_wave639_crt_fpu_control_verified` (`19` files, `162532231` bytes, `DiffCount=0`)
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-124847_post_wave639_crt_fpu_control_verified` (`19` files, `162532231` bytes, `DiffCount=0`)
 
 The next high-signal queue head is `0x005695af CRT__ToLower_005695af`.
 

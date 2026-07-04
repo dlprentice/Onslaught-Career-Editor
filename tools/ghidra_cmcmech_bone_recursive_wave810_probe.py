@@ -30,7 +30,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 ADDRESS = "0x0049bd50"
 NAME = "CMCMech__UpdateBoneHierarchyRecursive"
 SIGNATURE = "void CMCMech__UpdateBoneHierarchyRecursive(void)"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-123030_post_wave810_cmcmech_bone_recursive_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-123030_post_wave810_cmcmech_bone_recursive_verified"
 NEXT_HEAD = "0x0049c2d0 CMeshPart__HasAnimationToken_623074"
 
 COMMON_TAGS = {

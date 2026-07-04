@@ -22,8 +22,8 @@ Evidence:
 - Metadata/tag/xref/instruction/decompile exports: `2` / `2` / `2` / `73` / `2`.
 - Xref chain: `0x004d6d10 CRepairPadAI__VFunc_11_UpdateDockCandidateReader` calls `0x004d6e00 CRepairPadAI__IsCompatibleDockCandidate`, which calls `0x0040c5e0 CRepairPadAI__HasAnySlotBelowThreshold`.
 - Probe anchor wording: fresh read-only Ghidra export; no mutation.
-- Backup: `G:\GhidraBackups\BEA_20260605-050726_post_wave1124_repairpad_current_risk_review_verified`, `19` files, `175737735` bytes, `DiffCount=0`.
-- Previous completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-052636_post_wave1123_airunit_plane_support_vfunc_review_verified`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-050726_post_wave1124_repairpad_current_risk_review_verified`, `19` files, `175737735` bytes, `DiffCount=0`.
+- Previous completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-052636_post_wave1123_airunit_plane_support_vfunc_review_verified`.
 - Prior context: Wave328 normalized the RepairPadAI helper comments/tags, Wave924 re-read the four-row dock-candidate chain, and Wave1119 re-read the vtable-slot 11 caller.
 
 What this proves:

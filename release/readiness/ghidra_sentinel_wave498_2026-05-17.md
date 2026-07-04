@@ -33,7 +33,7 @@ Wave498 supersedes the older `0x004dea50` constructor/manual-creation note. The 
 - Focused probe: `py -3 tools\ghidra_sentinel_wave498_probe.py --check` PASS.
 - NPM probe: `cmd.exe /c npm run test:ghidra-sentinel-wave498` PASS.
 - Queue refresh: `6078` total functions, `2267` commented, `3811` commentless, `1657` undefined signatures, `1514` `param_N`; strict comment-plus-clean-signature proxy `2211/6078 = 36.38%`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260517-115915_post_wave498_sentinel_verified` with `19` files, `157780871` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260517-115915_post_wave498_sentinel_verified` with `19` files, `157780871` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Public Boundary
 

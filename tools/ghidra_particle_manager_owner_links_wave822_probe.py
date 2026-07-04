@@ -31,7 +31,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-180249_post_wave822_particle_manager_owner_links_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-180249_post_wave822_particle_manager_owner_links_verified"
 NEXT_HEAD = "0x004cd7a0 CWorldPhysicsManager__FindNodeByNameGE"
 
 TARGET_NAMES = {

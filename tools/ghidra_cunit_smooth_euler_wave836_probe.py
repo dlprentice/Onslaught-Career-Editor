@@ -28,7 +28,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-010821_post_wave836_cunit_smooth_euler_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-010821_post_wave836_cunit_smooth_euler_verified"
 TARGET_ADDR = "0x004fa4b0"
 TARGET_NAME = "CUnit__SmoothEulerTowardTargetAndBuildMatrix"
 TARGET_SIGNATURE = (

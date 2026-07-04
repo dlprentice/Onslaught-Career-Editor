@@ -1,7 +1,7 @@
 # imposter.cpp Functions
 
 > Source File: imposter.cpp | Binary: BEA.exe
-> Debug Path: 0x0062d3f0 (`C:\dev\ONSLAUGHT2\imposter.cpp`)
+> Debug Path: 0x0062d3f0 (`[maintainer-local-source-export-root]\imposter.cpp`)
 
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6113/6113** (Wave900: every function commented; clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
 
@@ -15,7 +15,7 @@ Wave415 re-audited the CImposter queue head from fresh retail metadata, xrefs, i
 
 Wave598 later hardened the adjacent CDXEngine/DXImposter imposter-head cluster around the CImposter allocator path: `0x00542740 CDXEngine__InitLandscapeTextureTables`, `0x00542a30 CDXImposter__InitEntry`, `0x00542ee0 CDXEngine__BuildZRotationMatrix`, `0x00543300 CDXEngine__RenderImposterBillboardSet`, and `0x005438c0 CDXImposter__RenderAll` now have saved signatures/comments/tags. This links `CImposter__FindOrCreate` to the DXImposter entry initializer and records render-side companion rows without claiming runtime behavior or exact layouts. Wave599 then hardened `0x00543d90 CDXImposter__Deserialize` and `0x00543f50 CDXImposter__Create`, tying the serialized IMPS chunk load path to CImposter list insertion and frame-data allocation.
 
-Wave753 static read-back (`unwind-continuation-wave753`, `wave753-readback-verified`) also hardened `0x005d2df0 Unwind@005d2df0` as a compiler-generated SEH unwind allocation-cleanup callback. DATA scope-table xref `0x0061bbc4` points at the body; instruction evidence calls `OID__FreeObject_Callback` on `*(EBP+0x1c)` with imposter.cpp debug path `0x0062d3f0`, line token `0x39`, and allocation/type value `0x29`. Verified backup: `G:\GhidraBackups\BEA_20260522-221626_post_wave753_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
+Wave753 static read-back (`unwind-continuation-wave753`, `wave753-readback-verified`) also hardened `0x005d2df0 Unwind@005d2df0` as a compiler-generated SEH unwind allocation-cleanup callback. DATA scope-table xref `0x0061bbc4` points at the body; instruction evidence calls `OID__FreeObject_Callback` on `*(EBP+0x1c)` with imposter.cpp debug path `0x0062d3f0`, line token `0x39`, and allocation/type value `0x29`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-221626_post_wave753_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
 
 ## Functions
 
@@ -100,7 +100,7 @@ Wave415 created this missing function boundary from static-init table data xref 
 
 | Address | String | Usage |
 |---------|--------|-------|
-| 0x0062d3f0 | "C:\dev\ONSLAUGHT2\imposter.cpp" | Debug path for assertions |
+| 0x0062d3f0 | "[maintainer-local-source-export-root]\imposter.cpp" | Debug path for assertions |
 | 0x0062d410 | "strange lack of imposter" | Warning when name matches but params differ |
 
 ## Related Files
@@ -124,7 +124,7 @@ Wave598 records the current CImposter/DXImposter bridge at the saved-Ghidra evid
 | `0x00543300` | `CDXEngine__RenderImposterBillboardSet` | Engine-side billboard-set helper with `RET 0xc` proof for `view_context`, `alpha`, and `frame_index` stack arguments. |
 | `0x005438c0` | `CDXImposter__RenderAll` | Global render pass called by `CDXEngine__Render`; gates on imposter globals, binds the atlas, renders via CVBufTexture paths, and restores sampler/state-cache values. |
 
-Read-back evidence: corrected dry/apply/final dry reported `updated=0 skipped=8 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=2 skipped=6 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=8 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Post exports verified `8` metadata rows, `8` tag rows, `9` xref rows, `888` instruction rows, and `8` decompile rows. Queue telemetry after Wave598 is `6093` total, `3072` commented, `3021` commentless, `1333` exact-undefined signatures, `1080` `param_N`, comment-backed proxy `3072/6093 = 50.42%`, and strict clean-signature proxy `3027/6093 = 49.68%`. Verified backup: `G:\GhidraBackups\BEA_20260519-164920_post_wave598_cdxengine_imposter_head_verified`. The next queue head is `0x00543d90 CDXImposter__Deserialize`.
+Read-back evidence: corrected dry/apply/final dry reported `updated=0 skipped=8 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=2 skipped=6 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=8 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Post exports verified `8` metadata rows, `8` tag rows, `9` xref rows, `888` instruction rows, and `8` decompile rows. Queue telemetry after Wave598 is `6093` total, `3072` commented, `3021` commentless, `1333` exact-undefined signatures, `1080` `param_N`, comment-backed proxy `3072/6093 = 50.42%`, and strict clean-signature proxy `3027/6093 = 49.68%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-164920_post_wave598_cdxengine_imposter_head_verified`. The next queue head is `0x00543d90 CDXImposter__Deserialize`.
 
 This is static saved-Ghidra evidence only. Runtime imposter rendering, runtime tree billboard behavior, exact CImposter/CDXImposter/CDXEngine/matrix/vector/CVBufTexture/texture-atlas/global layouts, exact source identity, BEA patching, and rebuild parity remain unproven.
 
@@ -137,7 +137,7 @@ Wave599 records the serialized IMPS chunk creation bridge at the saved-Ghidra ev
 | `0x00543d90` | `CDXImposter__Deserialize(void * chunk_reader)` | Resource accumulator IMPS dispatch pushes the active chunk reader, then this helper reads atlas dimensions, texture atlas data, serialized imposter count, and CVBufTexture setup before marking the imposter system initialized. |
 | `0x00543f50` | `CDXImposter__Create(void * chunk_reader)` | Called by `CDXImposter__Deserialize`; allocates a `0x4c` imposter, reads the serialized object payload, resolves the mesh/resource id, allocates frame data sized `+0x44 * +0x40 * 0x18`, calls `CImposter__AddToList`, and returns the object. |
 
-Read-back evidence: dry/apply/final dry reported `updated=0 skipped=2 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=2 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=2 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Post exports verified `2` metadata rows, `2` tag rows, `2` xref rows, `514` instruction rows, and `2` decompile rows. Queue telemetry after Wave599 is `6093` total, `3074` commented, `3019` commentless, `1331` exact-undefined signatures, `1080` `param_N`, comment-backed proxy `3074/6093 = 50.45%`, and strict clean-signature proxy `3029/6093 = 49.71%`. Verified backup: `G:\GhidraBackups\BEA_20260519-171359_post_wave599_cdximposter_deserialize_create_verified`. The next queue head is `0x00544040 CDXEngine__ClearHudTextureSlots`.
+Read-back evidence: dry/apply/final dry reported `updated=0 skipped=2 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=2 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=2 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Post exports verified `2` metadata rows, `2` tag rows, `2` xref rows, `514` instruction rows, and `2` decompile rows. Queue telemetry after Wave599 is `6093` total, `3074` commented, `3019` commentless, `1331` exact-undefined signatures, `1080` `param_N`, comment-backed proxy `3074/6093 = 50.45%`, and strict clean-signature proxy `3029/6093 = 49.71%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-171359_post_wave599_cdximposter_deserialize_create_verified`. The next queue head is `0x00544040 CDXEngine__ClearHudTextureSlots`.
 
 This is static saved-Ghidra evidence only. Runtime imposter loading, runtime tree billboard behavior, exact CImposter/CDXImposter/CDXEngine/CVBufTexture/texture-atlas/frame-data/global layouts, exact source identity, BEA patching, and rebuild parity remain unproven.
 

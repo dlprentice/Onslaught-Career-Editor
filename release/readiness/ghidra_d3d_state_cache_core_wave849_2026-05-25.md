@@ -33,7 +33,7 @@ Read-back evidence:
 - Additional read-only evidence: `19` context metadata rows, `19` context decompile rows, `76` release-field xref-site instruction rows, `208` return-use xref-site instruction rows, and graphics-card/texture/D3D error string dumps.
 - Queue after Wave849: `6098` total functions, `5691` commented, `407` commentless, `0` exact-undefined signatures, `0` `param_N`, comment-backed proxy `5691/6098 = 93.33%`, strict clean-signature proxy `5691/6098 = 93.33%`.
 - Next raw commentless row: `0x00513a80 PlatformInput__GetKeyState3Core`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-073710_post_wave849_d3d_state_cache_core_verified`, `19` files, `171936647` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-073710_post_wave849_d3d_state_cache_core_verified`, `19` files, `171936647` bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -32,7 +32,7 @@ Read-back evidence:
 - Wave911 focused re-audit progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1371/1560 = 87.88%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-073929_post_wave1077_infantryguide_lifecycle_review_verified`, `19` files, `174754695` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-073929_post_wave1077_infantryguide_lifecycle_review_verified`, `19` files, `174754695` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -52,4 +52,4 @@ What remains separate proof:
 
 Next candidate note: continue read-only first from the remaining expanded static re-audit surface, with particular attention to other guide-family vtable gaps such as TerrainGuide slots if fresh evidence supports boundary recovery.
 
-Probe token anchor: Wave1077; infantryguide-lifecycle-review-wave1077; 0x0047d750 CGroundVehicleGuide__VFunc03_UpdateGuidanceState_0047d750; 0x0047e2d0 SharedGuide__VFunc04_SetVectorMode1_0047e2d0; 0x0047e310 SharedGuide__VFunc05_SetVectorMode2_0047e310; 0x0047e340 SharedGuide__VFunc06_SetVectorMode3_0047e340; 0x0047e370 SharedGuide__VFunc07_SetVectorModeFromOwnerState_0047e370; 0x0047e3d0 SharedGuide__VFunc08_ResetVectorsFromOwner_0047e3d0; 0x005dbfa8; 0x005dbd90; 812/1408 = 57.67%; 1371/1560 = 87.88%; 500/500 = 100.00%; 6260/6260 = 100.00%; G:\GhidraBackups\BEA_20260602-073929_post_wave1077_infantryguide_lifecycle_review_verified; boundary recovery.
+Probe token anchor: Wave1077; infantryguide-lifecycle-review-wave1077; 0x0047d750 CGroundVehicleGuide__VFunc03_UpdateGuidanceState_0047d750; 0x0047e2d0 SharedGuide__VFunc04_SetVectorMode1_0047e2d0; 0x0047e310 SharedGuide__VFunc05_SetVectorMode2_0047e310; 0x0047e340 SharedGuide__VFunc06_SetVectorMode3_0047e340; 0x0047e370 SharedGuide__VFunc07_SetVectorModeFromOwnerState_0047e370; 0x0047e3d0 SharedGuide__VFunc08_ResetVectorsFromOwner_0047e3d0; 0x005dbfa8; 0x005dbd90; 812/1408 = 57.67%; 1371/1560 = 87.88%; 500/500 = 100.00%; 6260/6260 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-073929_post_wave1077_infantryguide_lifecycle_review_verified; boundary recovery.

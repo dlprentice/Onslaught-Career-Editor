@@ -28,7 +28,7 @@ Read-back evidence:
 - Post exports: 8 metadata rows, 8 tag rows, 91 xref rows, 2088 instruction rows, and 8 decompile rows.
 - Queue after Wave802: 6098 total, 5572 commented, 526 commentless, 0 exact-undefined signatures, 0 `param_N` signatures (`0 param_N`), strict clean-signature proxy `5572/6098 = 91.37%`.
 - Next raw commentless row: `0x0046d3a0 CGame__SetSlot`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-081932_post_wave802_frontend_save_multiplayer_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-081932_post_wave802_frontend_save_multiplayer_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
 
 What remains unproven:
 

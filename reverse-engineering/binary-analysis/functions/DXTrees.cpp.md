@@ -1,7 +1,7 @@
 # DXTrees.cpp - Function Mappings
 
 > DirectX-specific tree rendering system for environmental vegetation
-> Source: `C:\dev\ONSLAUGHT2\DXTrees.cpp` (debug path at 0x006529b0)
+> Source: `[maintainer-local-source-export-root]\DXTrees.cpp` (debug path at 0x006529b0)
 > Last updated: 2026-05-20
 
 ## Overview
@@ -10,7 +10,7 @@ DXTrees.cpp implements the `CDXTrees` class which handles DirectX-specific rende
 
 ## Wave841 Shared Default/False VFunc09
 
-Wave841 Shared Default/False VFunc09 (`cvertexshader-shared-vfunc09-wave841`, `wave841-readback-verified`) records that `0x005019c0 VFuncSlot_09_005019c0` is now saved as `int __cdecl VFuncSlot_09_005019c0(void)`. For this DXTrees.cpp ownership area, CDXTrees vtable `0x005e59d8` slot 1 points at the shared default/false stub; the body is `XOR EAX,EAX; RET`. Broader Wave841 evidence records `26 DATA pointer slots`, `49 RTTI-backed owner/slot rows`, representative owners `CControllerDefinition`, `CVertexShader`, and `CDXTrees`, queue proxy `5665/6098 = 92.90%`, next raw commentless row `0x0050ab60 CVBufTexture__RenderAndRestoreStateFlag4`, and verified backup `G:\GhidraBackups\BEA_20260525-032940_post_wave841_cvertexshader_shared_vfunc09_verified`. Exact source virtual method names, caller-specific semantics, concrete class layouts, runtime behavior, BEA patching, and rebuild parity remain deferred.
+Wave841 Shared Default/False VFunc09 (`cvertexshader-shared-vfunc09-wave841`, `wave841-readback-verified`) records that `0x005019c0 VFuncSlot_09_005019c0` is now saved as `int __cdecl VFuncSlot_09_005019c0(void)`. For this DXTrees.cpp ownership area, CDXTrees vtable `0x005e59d8` slot 1 points at the shared default/false stub; the body is `XOR EAX,EAX; RET`. Broader Wave841 evidence records `26 DATA pointer slots`, `49 RTTI-backed owner/slot rows`, representative owners `CControllerDefinition`, `CVertexShader`, and `CDXTrees`, queue proxy `5665/6098 = 92.90%`, next raw commentless row `0x0050ab60 CVBufTexture__RenderAndRestoreStateFlag4`, and verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260525-032940_post_wave841_cvertexshader_shared_vfunc09_verified`. Exact source virtual method names, caller-specific semantics, concrete class layouts, runtime behavior, BEA patching, and rebuild parity remain deferred.
 
 ## Wave618 Static Read-Back Note
 
@@ -26,7 +26,7 @@ Wave618 saved Ghidra signatures/comments/tags for the CDXTrees head without rena
 - `void __thiscall CDXTrees__Render(void * this)` at `0x0055aa10`
 - `void __thiscall CDXTrees__HideTree(void * this, void * tree_object)` at `0x0055ae40`
 
-Read-back evidence verified `9` metadata rows, `9` tag rows, `12` xref rows, `333` context instruction rows, `378` callsite instruction rows, `61` HideTree tail instruction rows, `9` decompile rows, and `16` vtable-slot rows. Backup `G:\GhidraBackups\BEA_20260520-025200_post_wave618_cdxtrees_head_verified` verified `19` files, `161680263` bytes, and `DiffCount=0`.
+Read-back evidence verified `9` metadata rows, `9` tag rows, `12` xref rows, `333` context instruction rows, `378` callsite instruction rows, `61` HideTree tail instruction rows, `9` decompile rows, and `16` vtable-slot rows. Backup `[maintainer-local-ghidra-backup-root]\BEA_20260520-025200_post_wave618_cdxtrees_head_verified` verified `19` files, `161680263` bytes, and `DiffCount=0`.
 
 The pass moved the queue to `6093` total functions, `3185` commented, `2908` commentless, `1247` exact-undefined signatures, and `1056` `param_N` signatures; the next queue head is `0x0055d5e0 DirectSoundCreate8`. This is static retail Ghidra evidence only. Runtime vegetation rendering, runtime tree destruction visibility, exact `CDXTrees`/`CRTTree`/`CVBufTexture`/render-state layouts, exact source-body identity, BEA patching, and rebuild parity remain deferred.
 

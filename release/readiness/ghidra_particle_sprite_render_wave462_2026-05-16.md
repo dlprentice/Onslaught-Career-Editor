@@ -21,7 +21,7 @@ Wave462 saved Ghidra signature/comment/tag corrections for `14` particle sprite/
 - Hardened UV atlas selection, sprite state/update dispatch, particle resource burst setup, transform/vector helpers, expression-driven scale/tint helpers, packed ARGB interpolation, inverse-lerp clamping, and selector normalized-coordinate conversion.
 - Queue after refresh: `6057` functions, `2073` commented, `3984` commentless, `1725` undefined signatures, `1603` `param_N` signatures.
 - Current telemetry proxies: comment-backed `2073/6057 = 34.23%`; strict comment-plus-clean-signature `2009/6057 = 33.17%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-182636_post_wave462_particle_sprite_render_verified` (`19` files, `156928903` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-182636_post_wave462_particle_sprite_render_verified` (`19` files, `156928903` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

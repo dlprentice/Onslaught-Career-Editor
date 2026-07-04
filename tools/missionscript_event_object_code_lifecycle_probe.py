@@ -56,7 +56,7 @@ FREE_OBJECT_DECOMPILE = WAVE546 / "post_decomp" / "004f7440_CMissionScriptObject
 ISCRIPT_CTOR_DECOMPILE = WAVE926 / "decompile" / "005333b0_IScript__Constructor.c"
 ISCRIPT_DTOR_DECOMPILE = WAVE926 / "decompile" / "00533450_IScript__Destructor.c"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 PROOF_LINK = "missionscript-event-object-code-lifecycle-proof.md"
 SCHEMA_LINK = "missionscript-event-object-code-lifecycle.v1.json"
 

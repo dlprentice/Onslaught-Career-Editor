@@ -32,11 +32,11 @@ These 9 rows are the remaining Wave1053 rows still present in the Wave1108 curre
 | `0x005a04a0` | `CFastVB__DispatchOp_WeightedMatrixBlendBatch_005a04a0` | Wave1053 metadata/tag/xref/decompile read-back |
 | `0x005a7617` | `CFastVB__DispatchOp_BuildRotationMatrixFromEulerAngles` | Wave1053 metadata/tag/xref/decompile read-back |
 
-Wave1053 verified `24` metadata rows, `24` tag rows, `34` xref rows, `4682` instruction rows, `24` decompile rows, `12` context metadata rows, `12` context tag rows, `49` context xref rows, `949` context instruction rows, and `12` context decompile rows. Verified Wave1053 backup: `G:\GhidraBackups\BEA_20260601-162015_post_wave1053_cfastvb_stacklocked_transform_review_verified`.
+Wave1053 verified `24` metadata rows, `24` tag rows, `34` xref rows, `4682` instruction rows, `24` decompile rows, `12` context metadata rows, `12` context tag rows, `49` context xref rows, `949` context instruction rows, and `12` context decompile rows. Verified Wave1053 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-162015_post_wave1053_cfastvb_stacklocked_transform_review_verified`.
 
-Latest completed Ghidra review backup remains `G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`.
+Latest completed Ghidra review backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`.
 
-Probe token anchor: Wave1110; wave1110-cfastvb-wave1053-remainder-supersession; 24/1179 = 2.04%; 9 rows; current focused candidates: 1179; Wave1053; cfastvb-stacklocked-transform-review-wave1053; 0x0059f857 CFastVB__DispatchOp_TransformVec4Batch_0059f857; 0x005a7617 CFastVB__DispatchOp_BuildRotationMatrixFromEulerAngles; G:\GhidraBackups\BEA_20260601-162015_post_wave1053_cfastvb_stacklocked_transform_review_verified; G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified; no new Ghidra export; no mutation.
+Probe token anchor: Wave1110; wave1110-cfastvb-wave1053-remainder-supersession; 24/1179 = 2.04%; 9 rows; current focused candidates: 1179; Wave1053; cfastvb-stacklocked-transform-review-wave1053; 0x0059f857 CFastVB__DispatchOp_TransformVec4Batch_0059f857; 0x005a7617 CFastVB__DispatchOp_BuildRotationMatrixFromEulerAngles; [maintainer-local-ghidra-backup-root]\BEA_20260601-162015_post_wave1053_cfastvb_stacklocked_transform_review_verified; [maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified; no new Ghidra export; no mutation.
 
 ## Boundary
 

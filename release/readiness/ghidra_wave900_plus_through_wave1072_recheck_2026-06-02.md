@@ -11,7 +11,7 @@ Current anchors:
 - Latest operational wave: Wave1072, `oid-target-profile-ballistic-review-wave1072`.
 - Latest focused probe: `tools/ghidra_oid_target_profile_ballistic_review_wave1072_probe.py`.
 - Latest readiness note: `release/readiness/ghidra_oid_target_profile_ballistic_review_wave1072_2026-06-02.md`.
-- Latest verified backup: `G:\GhidraBackups\BEA_20260602-035902_post_wave1072_oid_target_profile_ballistic_review_verified`.
+- Latest verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-035902_post_wave1072_oid_target_profile_ballistic_review_verified`.
 
 Current percentages:
 
@@ -57,4 +57,4 @@ Latest aggregate run:
 
 Boundary note: this aggregate gate proves local static evidence coverage, backup references, probe/doc wiring, and zero export-contract function-quality debt after validation. It does not prove runtime targeting/projectile/weapon behavior, exact OID/Unit/BattleEngine/CWeapon/CSquadNormal/target-profile/projectile-burst layouts, exact source-body identity, BEA patching, gameplay outcomes, or rebuild parity.
 
-Probe token anchor: Wave1072; oid-target-profile-ballistic-review-wave1072; 0x00507ab0 OID__CanFireAtTarget_BallisticArcA; 0x00509c80 CBattleEngine__ComputeProjectileMetricFromTargetProfile; 0x00509e90 ProjectileBurst__ResolvePresetByPercentBucketFallback; 0x00509f70 TargetProfileContext__IsEligibleByDistanceBucketOrRange; 0x0050a0e0 OID__ComputeForwardProjectedPointTowardTarget; 812/1408 = 57.67%; 1334/1560 = 85.51%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260602-035902_post_wave1072_oid_target_profile_ballistic_review_verified; read-only review.
+Probe token anchor: Wave1072; oid-target-profile-ballistic-review-wave1072; 0x00507ab0 OID__CanFireAtTarget_BallisticArcA; 0x00509c80 CBattleEngine__ComputeProjectileMetricFromTargetProfile; 0x00509e90 ProjectileBurst__ResolvePresetByPercentBucketFallback; 0x00509f70 TargetProfileContext__IsEligibleByDistanceBucketOrRange; 0x0050a0e0 OID__ComputeForwardProjectedPointTowardTarget; 812/1408 = 57.67%; 1334/1560 = 85.51%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-035902_post_wave1072_oid_target_profile_ballistic_review_verified; read-only review.

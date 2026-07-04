@@ -1,7 +1,7 @@
 # DXShadows.cpp Functions
 
 > Source File: DXShadows.cpp | Binary: BEA.exe
-> Debug Path: 0x00652410 (`C:\dev\ONSLAUGHT2\DXShadows.cpp`)
+> Debug Path: 0x00652410 (`[maintainer-local-source-export-root]\DXShadows.cpp`)
 
 Last updated: 2026-05-20
 
@@ -52,7 +52,7 @@ Wave614 saved signatures, comments, and tags in Ghidra after dry/apply/read-back
 
 The dry run reported `updated=0 skipped=3 renamed=0 would_rename=0 missing=0 bad=0`; the apply reported `updated=3 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`; the final dry reported `updated=0 skipped=3 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`.
 
-Read-back verified `3` metadata rows, `3` tag rows, `3` xref rows, `783` instruction rows, `3` target decompile rows, and `141` callsite instruction rows. The queue refresh after Wave614 reports `6093` functions, `3159` commented functions, `2934` commentless functions, `1272` exact-undefined signatures, `1056` `param_N` signatures, and next head `0x0055515e CDXSnow__Init`. The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260520-004026_post_wave614_cdxshadows_head_verified` with `19` files, `161614727` bytes, and `DiffCount=0`.
+Read-back verified `3` metadata rows, `3` tag rows, `3` xref rows, `783` instruction rows, `3` target decompile rows, and `141` callsite instruction rows. The queue refresh after Wave614 reports `6093` functions, `3159` commented functions, `2934` commentless functions, `1272` exact-undefined signatures, `1056` `param_N` signatures, and next head `0x0055515e CDXSnow__Init`. The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260520-004026_post_wave614_cdxshadows_head_verified` with `19` files, `161614727` bytes, and `DiffCount=0`.
 
 ## Related Systems
 

@@ -32,7 +32,7 @@ CAPABILITIES = ROOT / "CURRENT_CAPABILITIES.md"
 AGENTS = ROOT / "AGENTS.md"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260604-152017_post_wave1092_d3d_application_shell_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260604-152017_post_wave1092_d3d_application_shell_review_verified"
 WAVE_TAG = "d3d-application-shell-review-wave1092"
 
 TARGETS = {

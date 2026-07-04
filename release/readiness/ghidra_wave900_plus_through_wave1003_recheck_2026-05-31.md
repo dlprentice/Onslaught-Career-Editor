@@ -23,7 +23,7 @@ Validated scope after Wave1003 staging:
 - Operational readiness notes through Wave1003.
 - Focused package probe scripts through Wave1003.
 - Ignored evidence bases under `subagents/ghidra-static-reaudit/`.
-- On-disk `G:\GhidraBackups` references for operational waves, excluding non-backup Wave910/Wave911 planning waves.
+- On-disk `[maintainer-local-ghidra-backup-root]` references for operational waves, excluding non-backup Wave910/Wave911 planning waves.
 - Wave900+ apply-script log coverage where a wave used a Ghidra mutation script.
 - Direct Wave982-Wave1003 focused-probe reruns, with stale current-state/live-queue/doc-token failures classified separately from evidence mismatches.
 - Current queue closure at `6223/6223 = 100.00%`, with `0` commentless functions, `0` exact-`undefined` signatures, and `0` `param_N` signatures.
@@ -43,6 +43,6 @@ Observed summary after Wave1003 validation:
 
 Validation result: PASS.
 
-Wave1003 extension anchor: `hud-head-render-state-review-wave1003`; `0x0046c990 CGame__Shutdown`; `0x00481b00 CHud__ShutDown`; `0x00481400 CHud__ctor_base`; `0x00482090 HudRenderState__ApplyOverlaySpriteState`; `0x004821b0 CDXCompass__ApplyRenderStateModulate`; `0x00482210 CHud__RenderSegmentedMeterBar`; `G:\GhidraBackups\BEA_20260531-120949_post_wave1003_hud_head_render_state_review_verified`.
+Wave1003 extension anchor: `hud-head-render-state-review-wave1003`; `0x0046c990 CGame__Shutdown`; `0x00481b00 CHud__ShutDown`; `0x00481400 CHud__ctor_base`; `0x00482090 HudRenderState__ApplyOverlaySpriteState`; `0x004821b0 CDXCompass__ApplyRenderStateModulate`; `0x00482210 CHud__RenderSegmentedMeterBar`; `[maintainer-local-ghidra-backup-root]\BEA_20260531-120949_post_wave1003_hud_head_render_state_review_verified`.
 
 This recheck validates static evidence structure, focused-probe classification, backups, and live queue closure. It does not prove runtime behavior, exact source-layout identity, BEA patching behavior, or rebuild parity.

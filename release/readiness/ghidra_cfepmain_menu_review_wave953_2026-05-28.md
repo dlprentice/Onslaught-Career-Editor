@@ -28,7 +28,7 @@ Context anchors:
 
 - Frontend owner/render context: `0x004662a0 CFrontEnd__Init`, `0x00466ae0 CFrontEnd__SetPage`, `0x004679e0 CFrontEnd__RenderPreCommonFade`, and `0x00468770 CFrontEnd__PlaySound`.
 - Adjacent shared/demo frontend context: `0x0044d390 FEMessBox__Create` and `0x00457ee0 CFEPDemoMain__DoAction`.
-- Debug path string: `0x00629414` -> `C:\dev\ONSLAUGHT2\FEPMain.cpp`.
+- Debug path string: `0x00629414` -> `[maintainer-local-source-export-root]\FEPMain.cpp`.
 
 Read-back evidence:
 
@@ -37,7 +37,7 @@ Read-back evidence:
 - Existing Wave401 probe continuity: `py -3 tools\ghidra_fepmain_wave401_probe.py --check` returned `status=PASS targets=11 failures=0`.
 - Wave911 focused re-audit progress after Wave953 is `280/1408 = 19.89%`.
 - Static export-contract function-quality closure remains `6151/6151 = 100.00%`.
-- Verified read-only backup: `G:\GhidraBackups\BEA_20260528-093826_post_wave953_cfepmain_menu_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
+- Verified read-only backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-093826_post_wave953_cfepmain_menu_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
 
 What remains unproven:
 

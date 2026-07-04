@@ -8,7 +8,7 @@ Scope: saved retail `BEA.exe` Ghidra signature/comment/tag correction
 
 Wave427 serialized headless dry/apply/read-back hardened the six saved `CMapTex` terrain mixer-texture functions at `0x00491180` through `0x004916c0`. The pass preserved the already useful names and replaced generic/undefined signature debt with argument names and proof-boundary comments for reset, TGA load, downsample, mixer-set load, LOD copy, and chunk deserialization behavior.
 
-This is public-safe static evidence only. It does not launch or patch `BEA.exe`, does not mutate the installed Steam game, and does not include raw decompile text or private runtime proof. The retail debug string names `C:\dev\ONSLAUGHT2\maptex.cpp`, but `maptex.cpp` is absent from the current Stuart source snapshot, so this wave is binary-led rather than source-body parity.
+This is public-safe static evidence only. It does not launch or patch `BEA.exe`, does not mutate the installed Steam game, and does not include raw decompile text or private runtime proof. The retail debug string names `[maintainer-local-source-export-root]\maptex.cpp`, but `maptex.cpp` is absent from the current Stuart source snapshot, so this wave is binary-led rather than source-body parity.
 
 ## Saved Ghidra Changes
 

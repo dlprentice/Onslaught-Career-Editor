@@ -39,8 +39,8 @@ Validation evidence:
 - Post exports verified `25` metadata rows, `25` tag rows, `25` xref rows, `575` instruction rows, and `25` decompile rows.
 - Queue refresh passed with `6098` total functions, `4411` commented, `1687` commentless, `1164` exact-undefined signatures, `27` `param_N` signatures, comment-backed proxy `4411/6098 = 72.34%`, and strict clean-signature proxy `4353/6098 = 71.39%`.
 - Earliest raw commentless row is `0x0042f220 CSPtrSet__Clear`; next commentless high-signal row is `0x005d13d0 Unwind@005d13d0`.
-- Verified backup: `G:\GhidraBackups\BEA_20260522-153147_post_wave742_unwind_continuation_verified`, `19` files, `167152519` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-153147_post_wave742_unwind_continuation_verified`, `19` files, `167152519` bytes, `DiffCount=0`.
 
 Scope boundary: this wave proves saved static retail Ghidra metadata only. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
 
-Probe anchors: `Wave742 unwind continuation`, `unwind-continuation-wave742`, `0x005d1170 Unwind@005d1170`, `0x005d11f0 Unwind@005d11f0`, `0x005d1220 Unwind@005d1220`, `0x005d1360 Unwind@005d1360`, `0x005d13b3 Unwind@005d13b3`, `0x005d13d0 Unwind@005d13d0`, `0x0042f220 CSPtrSet__Clear`, `G:\GhidraBackups\BEA_20260522-153147_post_wave742_unwind_continuation_verified`.
+Probe anchors: `Wave742 unwind continuation`, `unwind-continuation-wave742`, `0x005d1170 Unwind@005d1170`, `0x005d11f0 Unwind@005d11f0`, `0x005d1220 Unwind@005d1220`, `0x005d1360 Unwind@005d1360`, `0x005d13b3 Unwind@005d13b3`, `0x005d13d0 Unwind@005d13d0`, `0x0042f220 CSPtrSet__Clear`, `[maintainer-local-ghidra-backup-root]\BEA_20260522-153147_post_wave742_unwind_continuation_verified`.

@@ -49,7 +49,7 @@ Read-back evidence:
 - Wave911 focused progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1232/1560 = 78.97%`.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-000144_post_wave1066_event_manager_scheduler_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-000144_post_wave1066_event_manager_scheduler_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -69,4 +69,4 @@ What remains unproven:
 
 Next candidate note: continue with the next expanded static re-audit cluster; prefer read-only review first and mutate only when fresh evidence proves a correction or normalization need.
 
-Probe token anchor: Wave1066; event-manager-scheduler-review-wave1066; 0x0044afa0 CEventManager__ctor; 0x0044b060 CEventManager__Init; 0x0044b2d0 CEventManager__AddEvent_TimeFromNow; 0x0044b310 CEventManager__AddEvent_ScheduledEvent; 0x0044b600 CEventManager__AdvanceTime; 0x0044b640 CEventManager__Flush; 0x004de1f0 CScheduledEvent__Set; 0x004de230 CScheduledEvent__dtor; 812/1408 = 57.67%; 1232/1560 = 78.97%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260602-000144_post_wave1066_event_manager_scheduler_review_verified; tag normalization.
+Probe token anchor: Wave1066; event-manager-scheduler-review-wave1066; 0x0044afa0 CEventManager__ctor; 0x0044b060 CEventManager__Init; 0x0044b2d0 CEventManager__AddEvent_TimeFromNow; 0x0044b310 CEventManager__AddEvent_ScheduledEvent; 0x0044b600 CEventManager__AdvanceTime; 0x0044b640 CEventManager__Flush; 0x004de1f0 CScheduledEvent__Set; 0x004de230 CScheduledEvent__dtor; 812/1408 = 57.67%; 1232/1560 = 78.97%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-000144_post_wave1066_event_manager_scheduler_review_verified; tag normalization.

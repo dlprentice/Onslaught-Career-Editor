@@ -29,7 +29,7 @@ The pass corrected the CTree destructor-body label, recovered three missing CTre
 - Focused probe: `tools/ghidra_ctree_wave520_probe.py --check`.
 - Queue refresh after Wave520: `6082` functions, `2465` commented, `3617` commentless, `1595` exact-undefined signatures, and `1392` `param_N` signatures.
 - Current whole-project telemetry proxy: comment-backed `2465/6082 = 40.53%`; strict comment-plus-clean-signature proxy `2403/6082 = 39.51%`.
-- Backup verified at `G:\GhidraBackups\BEA_20260517-225110_post_wave520_ctree_verified` with `19` files, `158632839` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260517-225110_post_wave520_ctree_verified` with `19` files, `158632839` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

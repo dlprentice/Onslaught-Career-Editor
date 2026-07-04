@@ -12,11 +12,17 @@ self-contained publish root. That was functionally useful but poor release UX:
 extracting the ZIP exposed runtime DLLs, executables, and locale folders at the
 top level instead of a small portable-app entry point.
 
-This hotfix makes the friendly portable layout the active package contract.
+This hotfix made the friendly portable layout the active package contract for
+the v1.0.2 ZIP.
+
+Current posture: later ZIP/package probes also require top-level `lore-book/`
+and `lore-pack/` folders so the portable app can launch with its offline Lore
+entry points and generated Lore pack. This note remains historical v1.0.2
+evidence; it is not fresh v1.0.7 release-probe evidence.
 
 ## Required Layout
 
-The ZIP root must contain only:
+For the v1.0.2 hotfix, the ZIP root contained only:
 
 - `Launch Onslaught Toolkit.cmd`
 - `README.MD`
@@ -25,6 +31,15 @@ The ZIP root must contain only:
 
 The raw self-contained WinUI payload, including `OnslaughtCareerEditor.WinUI.exe`,
 support DLLs, locale folders, notices, and patch catalogs, lives under `app/`.
+
+For current probes, the allowed top-level entries are:
+
+- `Launch Onslaught Toolkit.cmd`
+- `README.MD`
+- `LICENSE`
+- `app/`
+- `lore-book/`
+- `lore-pack/`
 
 The updated package probe rejects root-level `.exe` and `.dll` files and rejects
 unexpected top-level folders such as raw publish locale directories.

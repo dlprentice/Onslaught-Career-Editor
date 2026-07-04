@@ -26,7 +26,7 @@ Read-back evidence:
 - Wave911 focused re-audit progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1372/1560 = 87.95%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-082337_post_wave1078_terrainguide_vtable_review_verified`, `19` files, `174754695` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-082337_post_wave1078_terrainguide_vtable_review_verified`, `19` files, `174754695` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -46,4 +46,4 @@ What remains separate proof:
 
 Next candidate note: continue read-only first from the remaining expanded static re-audit surface, with TerrainGuide slot `10` / adjacent table context still recorded as not proven to be a function boundary.
 
-Probe token anchor: Wave1078; terrainguide-vtable-review-wave1078; 0x004f1ee0 CTerrainGuide__VFunc03_UpdateGuidanceState_004f1ee0; 0x005df4ec; 0x005df4f8; 0x004f2120; 0x004f2140 CText__ResetCoreFields; 812/1408 = 57.67%; 1372/1560 = 87.95%; 500/500 = 100.00%; 6261/6261 = 100.00%; G:\GhidraBackups\BEA_20260602-082337_post_wave1078_terrainguide_vtable_review_verified; boundary recovery.
+Probe token anchor: Wave1078; terrainguide-vtable-review-wave1078; 0x004f1ee0 CTerrainGuide__VFunc03_UpdateGuidanceState_004f1ee0; 0x005df4ec; 0x005df4f8; 0x004f2120; 0x004f2140 CText__ResetCoreFields; 812/1408 = 57.67%; 1372/1560 = 87.95%; 500/500 = 100.00%; 6261/6261 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-082337_post_wave1078_terrainguide_vtable_review_verified; boundary recovery.

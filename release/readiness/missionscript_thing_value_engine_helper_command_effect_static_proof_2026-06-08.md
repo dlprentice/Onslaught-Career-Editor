@@ -13,7 +13,7 @@ Static closeout remains unchanged:
 - Expanded post-100 static surface: `1560/1560 = 100.00%`.
 - Active current-risk focused accounting: `1179/1179 = 100.00%`.
 - Remaining active focused work: `0`.
-- Latest verified Ghidra backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+- Latest verified Ghidra backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 Representative anchors:
 
@@ -31,8 +31,8 @@ Read-back evidence:
 - Wave582 post exports verified `6` metadata rows, `6` tag rows, `6` xref rows, `534` instruction rows, `6` decompile rows, and `32` vtable rows.
 - Wave582 apply logs reported dry `updated=0 skipped=6 renamed=0 would_rename=0 missing=0 bad=0`, apply `updated=6 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`, and final dry `updated=0 skipped=6 renamed=0 would_rename=0 missing=0 bad=0`.
 - A copied loose-MSL non-comment scan found `15` `DisableWeapon`, `1` `EnableFlightMode`, `2` `DisableSpawner`, `4` `SetName`, `5` `TeleportOrientation`, and `0` `SetWindVector` rows.
-- Wave582 backup: `G:\GhidraBackups\BEA_20260519-082352_post_wave582_iscript_thing_value_verified`, `19` files, `160598919` bytes, `DiffCount=0`, manifest hash `CF051683F3A5BA8E0E6B7266941DA5C46CE53224EE2AC65FA16F1D4DF8F74CDF`.
-- Latest static closeout backup: `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+- Wave582 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-082352_post_wave582_iscript_thing_value_verified`, `19` files, `160598919` bytes, `DiffCount=0`, manifest hash `CF051683F3A5BA8E0E6B7266941DA5C46CE53224EE2AC65FA16F1D4DF8F74CDF`.
+- Latest static closeout backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 What this proves:
 

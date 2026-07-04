@@ -53,6 +53,7 @@ OnslaughtCareerEditor.AppCore.Tests/OnlineMultiplayerReadinessServiceTests.cs	R0
 OnslaughtCareerEditor.AppCore.Tests/OnslaughtCareerEditor.AppCore.Tests.csproj	R0_ALLOW	default
 OnslaughtCareerEditor.AppCore.Tests/SaveAnalyzerServiceTests.cs	R0_ALLOW	default
 OnslaughtCareerEditor.AppCore/AppConfig.cs	R0_ALLOW	default
+OnslaughtCareerEditor.AppCore/AssetCatalogLoadStatusText.cs	R0_ALLOW	default
 OnslaughtCareerEditor.AppCore/AssetCatalogReadabilityService.cs	R0_ALLOW	default
 OnslaughtCareerEditor.AppCore/AssetCatalogService.cs	R0_ALLOW	default
 OnslaughtCareerEditor.AppCore/AssetMaterialImportDryRunPlanService.cs	R0_ALLOW	default
@@ -102,6 +103,13 @@ OnslaughtCareerEditor.Release.slnx	R0_ALLOW	default
 OnslaughtCareerEditor.UiTests/BinaryPatchRegressionTests.cs	R0_ALLOW	default
 OnslaughtCareerEditor.UiTests/CliReadOnlyAndOptionsSafetyTests.cs	R0_ALLOW	default
 OnslaughtCareerEditor.UiTests/OnslaughtCareerEditor.UiTests.csproj	R0_ALLOW	default
+OnslaughtCareerEditor.UiTests/PatchBenchLaunchPresetTextTests.cs	R0_ALLOW	default
+OnslaughtCareerEditor.UiTests/PatchBenchOnlineReadinessRoutingGuardTests.cs	R0_ALLOW	default
+OnslaughtCareerEditor.UiTests/PatchBenchOnlineReadinessTextTests.cs	R0_ALLOW	default
+OnslaughtCareerEditor.UiTests/PatchBenchPrimitiveProjectionBoundaryTests.cs	R0_ALLOW	default
+OnslaughtCareerEditor.UiTests/PatchBenchSafeCopyOutcomeTextTests.cs	R0_ALLOW	default
+OnslaughtCareerEditor.UiTests/PatchBenchSafeCopyReceiptTextTests.cs	R0_ALLOW	default
+OnslaughtCareerEditor.UiTests/ReflectedWinUiTestSupport.cs	R0_ALLOW	default
 OnslaughtCareerEditor.UiTests/SavePatchRegressionTests.cs	R0_ALLOW	default
 OnslaughtCareerEditor.UiTests/SmokeTests.cs	R0_ALLOW	default
 OnslaughtCareerEditor.UiTests/TestFixturePaths.cs	R0_ALLOW	default
@@ -125,6 +133,15 @@ OnslaughtCareerEditor.WinUI/App.xaml	R0_ALLOW	default
 OnslaughtCareerEditor.WinUI/App.xaml.cs	R0_ALLOW	default
 OnslaughtCareerEditor.WinUI/AppConfigChangedService.cs	R0_ALLOW	default
 OnslaughtCareerEditor.WinUI/AppStatusService.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Helpers/PatchBenchChoiceVisualState.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Helpers/PatchBenchLaunchPresetText.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Helpers/PatchBenchLaunchText.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Helpers/PatchBenchMenuColorSelectionText.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Helpers/PatchBenchOnlineReadinessText.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Helpers/PatchBenchPatchGroups.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyOutcomeText.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyReceiptText.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSelectedProfileText.cs	R0_ALLOW	default
 OnslaughtCareerEditor.WinUI/Helpers/PickerInterop.cs	R0_ALLOW	default
 OnslaughtCareerEditor.WinUI/Helpers/ThemeBrushes.cs	R0_ALLOW	default
 OnslaughtCareerEditor.WinUI/MainWindow.xaml	R0_ALLOW	default
@@ -133,6 +150,17 @@ OnslaughtCareerEditor.WinUI/Media/VideoPlaybackWindow.cs	R0_ALLOW	default
 OnslaughtCareerEditor.WinUI/MediaHandoffService.cs	R0_ALLOW	default
 OnslaughtCareerEditor.WinUI/Models/BinaryPatchGroupModel.cs	R0_ALLOW	default
 OnslaughtCareerEditor.WinUI/Models/BinaryPatchItemModel.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Models/PatchBenchLaunchReadinessTextResult.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Models/PatchBenchLaunchReadinessTextState.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Models/PatchBenchMenuColorSelectionKind.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Models/PatchBenchOnlineCompanionSessionTextState.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Models/PatchBenchOnlineReadinessTextState.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyControlOptionsTextState.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyMusicSwapTextState.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyOutcomeTextState.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyReceiptTextState.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Models/PatchBenchSelectedChoiceState.cs	R0_ALLOW	default
+OnslaughtCareerEditor.WinUI/Models/PatchBenchSelectedProfileTextState.cs	R0_ALLOW	default
 OnslaughtCareerEditor.WinUI/OnslaughtCareerEditor.WinUI.csproj	R0_ALLOW	default
 OnslaughtCareerEditor.WinUI/Pages/AboutPage.xaml	R0_ALLOW	default
 OnslaughtCareerEditor.WinUI/Pages/AboutPage.xaml.cs	R0_ALLOW	default
@@ -297,6 +325,11 @@ archive/legacy-wpf/Views/SettingsView.xaml	R4_DENY	archive/
 archive/legacy-wpf/Views/SettingsView.xaml.cs	R4_DENY	archive/
 archive/legacy-wpf/Views/VideoPlayerView.xaml	R4_DENY	archive/
 archive/legacy-wpf/Views/VideoPlayerView.xaml.cs	R4_DENY	archive/
+coordination/AUTOMATION_STORAGE_GHIDRA_POSTURE.md	R0_ALLOW	default
+coordination/README.md	R0_ALLOW	default
+coordination/REPORT_CONTRACT.md	R0_ALLOW	default
+coordination/RESOURCE_LEASES.md	R0_ALLOW	default
+coordination/WORKSTREAM_CONTRACT.md	R0_ALLOW	default
 developer_agent_state.json	R4_DENY	developer_agent_state.json
 documentation_agent_state.json	R4_DENY	documentation_agent_state.json
 global.json	R0_ALLOW	default
@@ -328,6 +361,7 @@ lore-book/reverse-engineering/binary-analysis/_index.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/audio-media-cutscene-camera-proof-plan.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/audio-media-cutscene-static-review-2026-05-26.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/capture-menu-behavior.md	R0_ALLOW	default
+lore-book/reverse-engineering/binary-analysis/career-progression-static-bridge-contract.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/deep-validation-status.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/destroyable-segments-damage-break-proof-plan.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/destroyable-segments-static-contract.md	R0_ALLOW	default
@@ -1015,6 +1049,7 @@ lore-book/reverse-engineering/binary-analysis/physics-script-weapon-mode-rebuild
 lore-book/reverse-engineering/binary-analysis/physics-script-weapon-mode-rebuild-fixture-proof-plan.v1.json	R4_DENY	lore-book/reverse-engineering/binary-analysis/*.json
 lore-book/reverse-engineering/binary-analysis/physics-script-weapon-rebuild-fixture-proof-plan.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/physics-script-weapon-rebuild-fixture-proof-plan.v1.json	R4_DENY	lore-book/reverse-engineering/binary-analysis/*.json
+lore-book/reverse-engineering/binary-analysis/render-resource-bridge-static-contract.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/retail-specimen-baseline.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/save-options-byte-preservation-appcore-fixture-matrix-proof.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/save-options-byte-preservation-appcore-fixture-matrix.v1.json	R4_DENY	lore-book/reverse-engineering/binary-analysis/*.json
@@ -1060,6 +1095,7 @@ lore-book/reverse-engineering/binary-analysis/static-to-proof-post-command-effec
 lore-book/reverse-engineering/binary-analysis/static-to-proof-post-physics-script-fixture-next-safe-slice-selection-refresh.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/static-to-proof-post-physics-script-fixture-next-safe-slice-selection-refresh.v1.json	R4_DENY	lore-book/reverse-engineering/binary-analysis/*.json
 lore-book/reverse-engineering/binary-analysis/texture-render-static-review-2026-05-26.md	R0_ALLOW	default
+lore-book/reverse-engineering/binary-analysis/texture-resource-decode-static-contract-ledger.v1.json	R4_DENY	lore-book/reverse-engineering/binary-analysis/*.json
 lore-book/reverse-engineering/binary-analysis/texture-resource-decode-static-contract.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/unit-battleengine-gameplay-static-contract.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/unit-battleengine-gameplay-static-review-2026-05-26.md	R0_ALLOW	default
@@ -1197,6 +1233,7 @@ lore-book/reverse-engineering/binary-analysis/world-thing-spawn-static-to-rebuil
 lore-book/reverse-engineering/game-assets/README.md	R0_ALLOW	default
 lore-book/reverse-engineering/game-assets/_index.md	R0_ALLOW	default
 lore-book/reverse-engineering/game-assets/aya-asset-format.md	R0_ALLOW	default
+lore-book/reverse-engineering/game-assets/aya-resource-tag-family-static-contract.md	R0_ALLOW	default
 lore-book/reverse-engineering/game-assets/extraction-pipeline.md	R0_ALLOW	default
 lore-book/reverse-engineering/game-assets/game-folder-analysis.md	R0_ALLOW	default
 lore-book/reverse-engineering/game-assets/mission-events-index.md	R0_ALLOW	default
@@ -1221,6 +1258,7 @@ lore-book/reverse-engineering/game-assets/texture-mesh-material-sidecar-command-
 lore-book/reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-boundary-proof.v1.json	R0_ALLOW	default
 lore-book/reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-population-proof.md	R0_ALLOW	default
 lore-book/reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-population-proof.v1.json	R0_ALLOW	default
+lore-book/reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md	R0_ALLOW	default
 lore-book/reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.md	R0_ALLOW	default
 lore-book/reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.v1.json	R0_ALLOW	default
 lore-book/reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-readiness-gate-proof.md	R0_ALLOW	default
@@ -1398,10 +1436,12 @@ lore-book/reverse-engineering/source-code/gameplay/_index.md	R0_ALLOW	default
 lore-book/reverse-engineering/source-code/gameplay/battle-system.md	R0_ALLOW	default
 lore-book/reverse-engineering/source-code/gameplay/career-system.md	R0_ALLOW	default
 lore-book/reverse-engineering/source-code/gameplay/game-system.md	R0_ALLOW	default
+lore-book/reverse-engineering/source-code/internal-viewer-editor-command-boundary-proof-plan.md	R0_ALLOW	default
 lore-book/reverse-engineering/source-code/io/_index.md	R0_ALLOW	default
 lore-book/reverse-engineering/source-code/io/chunker-system.md	R0_ALLOW	default
 lore-book/reverse-engineering/source-code/io/event-system.md	R0_ALLOW	default
 lore-book/reverse-engineering/source-code/io/storage-system.md	R0_ALLOW	default
+lore-book/reverse-engineering/source-code/original-system-internal-tooling-vocabulary-map.md	R0_ALLOW	default
 lore-book/reverse-engineering/source-code/source-file-inventory.md	R0_ALLOW	default
 lore-book/reverse-engineering/source-code/stuart-source-file-manifest-2026-02-11.tsv	R4_DENY	lore-book/reverse-engineering/source-code/*-file-manifest-2026-02-11.tsv
 lore-book/reverse-engineering/source-code/stuart-source-requirements.md	R0_ALLOW	default
@@ -2748,6 +2788,7 @@ release/readiness/redaction_notes.md	R0_ALLOW	default
 release/readiness/release_candidate_evidence_2026-04-30.md	R0_ALLOW	default
 release/readiness/release_lane_strategy_2026-05-01.md	R0_ALLOW	default
 release/readiness/release_readiness_checklist.md	R0_ALLOW	default
+release/readiness/repo_skills_ghidra_policy_inventory_2026-06-25.md	R0_ALLOW	default
 release/readiness/save_options_byte_preservation_appcore_fixture_matrix_2026-06-09.md	R0_ALLOW	default
 release/readiness/save_options_byte_preservation_appcore_implementation_contract_2026-06-09.md	R0_ALLOW	default
 release/readiness/save_options_byte_preservation_runtime_proof_readiness_gate_2026-06-09.md	R0_ALLOW	default
@@ -2963,6 +3004,7 @@ release/readiness/winui_asset_catalog_readability_2026-05-06.md	R0_ALLOW	default
 release/readiness/winui_asset_library_backing_truth_2026-05-07.md	R0_ALLOW	default
 release/readiness/winui_asset_library_catalog_coverage_summary_2026-05-07.md	R0_ALLOW	default
 release/readiness/winui_asset_library_export_actions_2026-05-06.md	R0_ALLOW	default
+release/readiness/winui_asset_library_export_folder_qol_2026-06-25.md	R0_ALLOW	default
 release/readiness/winui_asset_library_first_run_catalog_guidance_2026-06-25.md	R0_ALLOW	default
 release/readiness/winui_asset_library_integration_2026-05-06.md	R0_ALLOW	default
 release/readiness/winui_asset_library_model_copy_2026-05-06.md	R0_ALLOW	default
@@ -2988,6 +3030,7 @@ release/readiness/winui_dependency_license_review_2026-05-06.md	R0_ALLOW	default
 release/readiness/winui_directinput_deadzone_byte_export_2026-06-19.md	R0_ALLOW	default
 release/readiness/winui_directinput_deadzone_runtime_ab_readiness_2026-06-23.md	R0_ALLOW	default
 release/readiness/winui_dual_safe_copy_topology_intake_2026-06-23.md	R0_ALLOW	default
+release/readiness/winui_enhanced_preview_music_swap_guard_2026-06-25.md	R0_ALLOW	default
 release/readiness/winui_enhanced_preview_profile_2026-06-17.md	R0_ALLOW	default
 release/readiness/winui_enhanced_profile_catalog_2026-06-18.md	R0_ALLOW	default
 release/readiness/winui_enhanced_profile_module_manifest_2026-06-17.md	R0_ALLOW	default
@@ -3071,6 +3114,8 @@ release/readiness/winui_music_capture_source_correlation_adapter_2026-06-22.md	R
 release/readiness/winui_music_capture_source_correlation_builder_2026-06-24.md	R0_ALLOW	default
 release/readiness/winui_music_capture_source_correlation_rejected_replay_2026-06-24.md	R0_ALLOW	default
 release/readiness/winui_music_cgame_caller_diagnostic_2026-06-24.md	R0_ALLOW	default
+release/readiness/winui_music_live_bundle_prearm_readiness_2026-06-29.md	R0_ALLOW	default
+release/readiness/winui_music_loopback_wall_clock_padding_2026-06-25.md	R0_ALLOW	default
 release/readiness/winui_music_source_audio_correlation_2026-06-22.md	R0_ALLOW	default
 release/readiness/winui_music_source_music_safety_sidecar_2026-06-24.md	R0_ALLOW	default
 release/readiness/winui_music_timestamped_cdb_log_producer_2026-06-24.md	R0_ALLOW	default
@@ -3089,6 +3134,7 @@ release/readiness/winui_page_button_automation_ids_2026-05-06.md	R0_ALLOW	defaul
 release/readiness/winui_patch_bench_controls_pause_group_2026-06-18.md	R0_ALLOW	default
 release/readiness/winui_patch_bench_copied_executable_smoke_2026-05-06.md	R0_ALLOW	default
 release/readiness/winui_patch_target_safety_wave_2026-06-16.md	R0_ALLOW	default
+release/readiness/winui_patchbench_presentation_helper_boundary_guard_2026-06-25.md	R0_ALLOW	default
 release/readiness/winui_pause_key_default_initializer_2026-06-18.md	R0_ALLOW	default
 release/readiness/winui_pause_o_scan_initializer_normal_gameplay_resume_2026-06-19.md	R0_ALLOW	default
 release/readiness/winui_pause_o_scan_initializer_runtime_2026-06-18.md	R0_ALLOW	default
@@ -3132,7 +3178,16 @@ release/readiness/winui_visual_capture_harness_guard_2026-05-07.md	R0_ALLOW	defa
 release/readiness/winui_visual_qa_2026-05-05.md	R0_ALLOW	default
 release/readiness/winui_visual_qa_refresh_2026-05-06.md	R0_ALLOW	default
 release/readiness/winui_window_size_persistence_2026-05-07.md	R0_ALLOW	default
+release/readiness/winui_windowed_mods_advanced_summary_text_modularity_2026-06-25.md	R0_ALLOW	default
+release/readiness/winui_windowed_mods_choice_style_helper_modularity_2026-06-25.md	R0_ALLOW	default
+release/readiness/winui_windowed_mods_launch_preset_selected_state_2026-06-25.md	R0_ALLOW	default
+release/readiness/winui_windowed_mods_launch_text_modularity_2026-06-25.md	R0_ALLOW	default
+release/readiness/winui_windowed_mods_menu_color_text_modularity_2026-06-25.md	R0_ALLOW	default
+release/readiness/winui_windowed_mods_patch_group_helper_modularity_2026-06-25.md	R0_ALLOW	default
 release/readiness/winui_windowed_mods_preset_ux_2026-06-16.md	R0_ALLOW	default
+release/readiness/winui_windowed_mods_safe_copy_outcome_text_modularity_2026-06-25.md	R0_ALLOW	default
+release/readiness/winui_windowed_mods_selected_choice_modularity_2026-06-25.md	R0_ALLOW	default
+release/readiness/winui_windowed_mods_selected_profile_text_modularity_2026-06-25.md	R0_ALLOW	default
 release/readiness/winui_windows_appsdk2_migration_2026-05-06.md	R0_ALLOW	default
 release/readiness/winui_zip_current_runtime_smoke_2026-05-08.md	R0_ALLOW	default
 release/readiness/winui_zip_package_probe_2026-05-06.md	R0_ALLOW	default
@@ -3159,6 +3214,7 @@ reverse-engineering/binary-analysis/_index.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/audio-media-cutscene-camera-proof-plan.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/audio-media-cutscene-static-review-2026-05-26.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/capture-menu-behavior.md	R0_ALLOW	default
+reverse-engineering/binary-analysis/career-progression-static-bridge-contract.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/deep-validation-status.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/destroyable-segments-damage-break-proof-plan.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/destroyable-segments-static-contract.md	R0_ALLOW	default
@@ -3846,6 +3902,7 @@ reverse-engineering/binary-analysis/physics-script-weapon-mode-rebuild-fixture-p
 reverse-engineering/binary-analysis/physics-script-weapon-mode-rebuild-fixture-proof-plan.v1.json	R4_DENY	reverse-engineering/binary-analysis/*.json
 reverse-engineering/binary-analysis/physics-script-weapon-rebuild-fixture-proof-plan.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/physics-script-weapon-rebuild-fixture-proof-plan.v1.json	R4_DENY	reverse-engineering/binary-analysis/*.json
+reverse-engineering/binary-analysis/render-resource-bridge-static-contract.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/retail-specimen-baseline.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/retail-specimen-manifest-2026-03-14.json	R4_DENY	reverse-engineering/binary-analysis/*.json
 reverse-engineering/binary-analysis/save-options-byte-preservation-appcore-fixture-matrix-proof.md	R0_ALLOW	default
@@ -16183,6 +16240,7 @@ reverse-engineering/binary-analysis/static-to-proof-post-command-effect-fixture-
 reverse-engineering/binary-analysis/static-to-proof-post-physics-script-fixture-next-safe-slice-selection-refresh.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/static-to-proof-post-physics-script-fixture-next-safe-slice-selection-refresh.v1.json	R4_DENY	reverse-engineering/binary-analysis/*.json
 reverse-engineering/binary-analysis/texture-render-static-review-2026-05-26.md	R0_ALLOW	default
+reverse-engineering/binary-analysis/texture-resource-decode-static-contract-ledger.v1.json	R4_DENY	reverse-engineering/binary-analysis/*.json
 reverse-engineering/binary-analysis/texture-resource-decode-static-contract.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/unit-battleengine-gameplay-static-contract.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/unit-battleengine-gameplay-static-review-2026-05-26.md	R0_ALLOW	default
@@ -16320,6 +16378,7 @@ reverse-engineering/binary-analysis/world-thing-spawn-static-to-rebuild-contract
 reverse-engineering/game-assets/README.md	R0_ALLOW	default
 reverse-engineering/game-assets/_index.md	R0_ALLOW	default
 reverse-engineering/game-assets/aya-asset-format.md	R0_ALLOW	default
+reverse-engineering/game-assets/aya-resource-tag-family-static-contract.md	R0_ALLOW	default
 reverse-engineering/game-assets/extraction-pipeline.md	R0_ALLOW	default
 reverse-engineering/game-assets/game-folder-analysis.md	R0_ALLOW	default
 reverse-engineering/game-assets/mission-events-index.md	R0_ALLOW	default
@@ -16344,6 +16403,7 @@ reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checkl
 reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-boundary-proof.v1.json	R0_ALLOW	default
 reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-population-proof.md	R0_ALLOW	default
 reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-population-proof.v1.json	R0_ALLOW	default
+reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md	R0_ALLOW	default
 reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.md	R0_ALLOW	default
 reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.v1.json	R0_ALLOW	default
 reverse-engineering/game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-readiness-gate-proof.md	R0_ALLOW	default
@@ -16521,10 +16581,12 @@ reverse-engineering/source-code/gameplay/_index.md	R0_ALLOW	default
 reverse-engineering/source-code/gameplay/battle-system.md	R0_ALLOW	default
 reverse-engineering/source-code/gameplay/career-system.md	R0_ALLOW	default
 reverse-engineering/source-code/gameplay/game-system.md	R0_ALLOW	default
+reverse-engineering/source-code/internal-viewer-editor-command-boundary-proof-plan.md	R0_ALLOW	default
 reverse-engineering/source-code/io/_index.md	R0_ALLOW	default
 reverse-engineering/source-code/io/chunker-system.md	R0_ALLOW	default
 reverse-engineering/source-code/io/event-system.md	R0_ALLOW	default
 reverse-engineering/source-code/io/storage-system.md	R0_ALLOW	default
+reverse-engineering/source-code/original-system-internal-tooling-vocabulary-map.md	R0_ALLOW	default
 reverse-engineering/source-code/source-file-inventory.md	R0_ALLOW	default
 reverse-engineering/source-code/stuart-source-file-manifest-2026-02-11.tsv	R4_DENY	reverse-engineering/source-code/*-file-manifest-2026-02-11.tsv
 reverse-engineering/source-code/stuart-source-requirements.md	R0_ALLOW	default
@@ -16570,9 +16632,11 @@ roadmap/original-binary-online-second-host-runtime-delivery-bridge.v1.json	R0_AL
 roadmap/original-binary-online-second-host-runtime-executor.v1.json	R0_ALLOW	default
 roadmap/original-binary-online-session-scalability-contract.v1.json	R0_ALLOW	default
 roadmap/original-binary-online-slot-ceiling-guard.v1.json	R0_ALLOW	default
+roadmap/patchbench-primitive-projection-contract.md	R0_ALLOW	default
 roadmap/public-primary-working-repo.md	R0_ALLOW	default
 roadmap/public-roadmap.md	R0_ALLOW	default
 roadmap/re-investigation.md	R0_ALLOW	default
+roadmap/rebuild-front-door-chain-map.md	R0_ALLOW	default
 roadmap/release-allowlist-classification.tsv	R4_DENY	roadmap/release-allowlist-classification.tsv
 roadmap/release-allowlist-profile.md	R4_DENY	roadmap/release-allowlist-profile.md
 roadmap/repo-structure-and-archive-map.md	R0_ALLOW	default
@@ -16593,6 +16657,7 @@ subagents/2026-03-15-runtime-defaultoptions-wave1/session-notes.md	R4_DENY	subag
 subagents/2026-03-15-runtime-maladim-wave2/session-notes.md	R4_DENY	subagents/
 subagents/2026-03-29-godmode-mechanism-wave4.md	R4_DENY	subagents/
 subagents/2026-03-29-runtime-maladim-wave3/session-notes.md	R4_DENY	subagents/
+subagents/career-progression-static-bridge-consult-record-20260703.md	R4_DENY	subagents/
 subagents/depth1/depth_manifest.json	R4_DENY	subagents/
 subagents/depth1/lane01_csharp_app_inventory.md	R4_DENY	subagents/
 subagents/depth1/lane02_python_app_inventory.md	R4_DENY	subagents/
@@ -17492,6 +17557,7 @@ tools/apply_bea_catalog_patch.py	R0_ALLOW	default
 tools/asset_material_package_materialization_probe.py	R0_ALLOW	default
 tools/audio_media_cutscene_camera_proof_plan_probe.py	R0_ALLOW	default
 tools/aya_archive_inventory.py	R0_ALLOW	default
+tools/aya_resource_tag_family_static_contract_probe.py	R0_ALLOW	default
 tools/battleengine_addprojectile_xref_probe.py	R0_ALLOW	default
 tools/battleengine_addprojectile_xref_probe_test.py	R0_ALLOW	default
 tools/battleengine_augmented_weapon_candidate_readback_probe.py	R0_ALLOW	default
@@ -17575,6 +17641,7 @@ tools/capture_audio_loopback_test.py	R0_ALLOW	default
 tools/capture_game_window.ps1	R0_ALLOW	default
 tools/capture_game_window_test.py	R0_ALLOW	default
 tools/cardid_preset_manager.py	R0_ALLOW	default
+tools/career_progression_static_bridge_contract_probe.py	R0_ALLOW	default
 tools/cheat_table_decode.py	R0_ALLOW	default
 tools/cloak_runtime_observer_log_probe.py	R4_DENY	tools/*runtime*
 tools/connect_cdb_client.ps1	R0_ALLOW	default
@@ -18224,6 +18291,7 @@ tools/ghidra_landscape_patch_wave422_probe.py	R0_ALLOW	default
 tools/ghidra_landscape_patch_wave422_probe_test.py	R0_ALLOW	default
 tools/ghidra_landscape_texture_wave421_probe.py	R0_ALLOW	default
 tools/ghidra_landscape_texture_wave421_probe_test.py	R0_ALLOW	default
+tools/ghidra_legacy_backup_root_provenance_guard.py	R0_ALLOW	default
 tools/ghidra_level_briefing_messagebox_wave423_probe.py	R0_ALLOW	default
 tools/ghidra_level_briefing_messagebox_wave423_probe_test.py	R0_ALLOW	default
 tools/ghidra_level_briefing_render_wave808_probe.py	R0_ALLOW	default
@@ -18717,6 +18785,7 @@ tools/goodies_source_topology_probe.py	R0_ALLOW	default
 tools/hard_payload_safety_check.py	R0_ALLOW	default
 tools/hash_retail_specimens.py	R0_ALLOW	default
 tools/hud_frontend_overlay_visual_runtime_proof_plan_probe.py	R4_DENY	tools/*runtime*
+tools/internal_viewer_editor_command_boundary_proof_plan_probe.py	R0_ALLOW	default
 tools/language_dat_decode.py	R0_ALLOW	default
 tools/legacy_patch_script_safety_test.py	R4_DENY	tools/legacy_patch_script_safety_test.py
 tools/level100_message_private_frame_checklist_population_probe.py	R4_DENY	tools/*private*
@@ -18797,6 +18866,7 @@ tools/model_texture_linkage_probe.py	R0_ALLOW	default
 tools/model_texture_linkage_probe_test.py	R0_ALLOW	default
 tools/npm_script_doc_check.py	R0_ALLOW	default
 tools/options_entries_decode.py	R0_ALLOW	default
+tools/original_system_internal_tooling_vocabulary_map_probe.py	R0_ALLOW	default
 tools/physics_script_component_rebuild_fixture_proof_plan.py	R0_ALLOW	default
 tools/physics_script_component_rebuild_fixture_proof_plan_probe.py	R0_ALLOW	default
 tools/physics_script_copied_corpus_parser.py	R0_ALLOW	default
@@ -18836,10 +18906,12 @@ tools/public_allowlist_safety_check.py	R0_ALLOW	default
 tools/public_candidate_inventory_check.py	R0_ALLOW	default
 tools/public_package_doc_command_check.py	R0_ALLOW	default
 tools/public_primary_migration_inventory.py	R0_ALLOW	default
+tools/rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py	R0_ALLOW	default
 tools/release_curated_manifest.py	R4_DENY	tools/release_curated_manifest.py
 tools/release_curated_manifest_test.py	R4_DENY	tools/release_curated_manifest_test.py
 tools/release_package.sh	R4_DENY	tools/release_package.sh
 tools/release_profile_snapshot.py	R4_DENY	tools/release_profile_snapshot.py
+tools/render_resource_bridge_static_contract_probe.py	R0_ALLOW	default
 tools/repo_line_endings_check.py	R0_ALLOW	default
 tools/repo_line_endings_check_test.py	R0_ALLOW	default
 tools/repo_text_hygiene_check.py	R0_ALLOW	default

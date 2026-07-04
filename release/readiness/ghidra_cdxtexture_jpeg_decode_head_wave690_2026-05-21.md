@@ -40,7 +40,7 @@ All three passes reported `REPORT: Save succeeded`. Post exports verified `8` me
 
 Post-Wave690 queue telemetry is `6098` total functions, `3953` commented, `2145` commentless, `1216` exact-undefined signatures, and `368` `param_N` signatures. Comment-backed proxy is `3953/6098 = 64.82%`; strict clean-signature proxy is `3903/6098 = 64.00%`.
 
-Verified backup: `G:\GhidraBackups\BEA_20260521-123207_post_wave690_cdxtexture_jpeg_decode_head_verified`, `19` files, `164825991` bytes, `DiffCount=0`.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-123207_post_wave690_cdxtexture_jpeg_decode_head_verified`, `19` files, `164825991` bytes, `DiffCount=0`.
 
 ## Boundaries
 

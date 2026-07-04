@@ -1,6 +1,6 @@
 # vbuffer.cpp - Vertex Buffer Management
 
-**Source File:** `C:\dev\ONSLAUGHT2\vbuffer.cpp`
+**Source File:** `[maintainer-local-source-export-root]\vbuffer.cpp`
 **Debug String Address:** `0x00633d08`
 **RTTI Class Name:** `.?AVCVBuffer@@` at `0x00633cf8`
 
@@ -12,7 +12,7 @@ CVBuffer (Vertex Buffer) manages GPU vertex data for 3D rendering. This is a cor
 
 Wave529 is the current saved Ghidra state for the `0x004fff00..0x00500390` CVBuffer tail. It corrected stale ctor/dtor labels, hardened signatures/comments/tags for the lifecycle/create/lock/release/stream helpers, and recovered `CVBuffer__CreateDefaultPoolVertexBuffer` at `0x00500250` from CVBuffer vtable slot 2 (`0x005dfb94`) plus the derived DXPatch-style slot (`0x005e511c`). This remains static retail evidence only; runtime rendering/device-loss behavior and rebuild parity are not proven by the wave.
 
-Wave904 (`texture-render-static-review-wave904`) includes CVBuffer/CIBuffer in the `static-coherent texture/resource/decode/render core` after export-contract queue closure `6113/6113 = 100.00%` (static review slice only). The reviewed slice covers `1289` rows across `25` selected families, including `CDXTexture` `366`, `CFastVB` `347`, `CTexture` `233`, and `CVBufTexture` `40`; buffer/render anchors include `CVBuffer__Create`, `CIBuffer__CreateConfigured`, `CDXTexture__LoadTextureFromFile_Core`, `CDXTexture__DecodeMemoryToTextureObject`, `CDXTexture__ValidateJpegFrameAndComputeMcuLayout`, `CFastVB__RenderTriangleStripImmediate`, and `CVBufTexture__DrawSpriteEx`. Asset bridge counts include `847/847` loose textures and `352/352` model material/texture-binding rows. Verified backup: `G:\GhidraBackups\BEA_20260526-101300_post_wave904_texture_render_static_review_verified`.
+Wave904 (`texture-render-static-review-wave904`) includes CVBuffer/CIBuffer in the `static-coherent texture/resource/decode/render core` after export-contract queue closure `6113/6113 = 100.00%` (static review slice only). The reviewed slice covers `1289` rows across `25` selected families, including `CDXTexture` `366`, `CFastVB` `347`, `CTexture` `233`, and `CVBufTexture` `40`; buffer/render anchors include `CVBuffer__Create`, `CIBuffer__CreateConfigured`, `CDXTexture__LoadTextureFromFile_Core`, `CDXTexture__DecodeMemoryToTextureObject`, `CDXTexture__ValidateJpegFrameAndComputeMcuLayout`, `CFastVB__RenderTriangleStripImmediate`, and `CVBufTexture__DrawSpriteEx`. Asset bridge counts include `847/847` loose textures and `352/352` model material/texture-binding rows. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-101300_post_wave904_texture_render_static_review_verified`.
 
 ## Class Structure
 

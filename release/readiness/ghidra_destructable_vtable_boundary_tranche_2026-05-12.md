@@ -18,7 +18,7 @@ Evidence:
 - The refreshed all-functions baseline reports `5982` total functions, `0` legacy weak names, `1951` undefined signatures, and `2075` `param_N` signatures.
 - The refreshed quality queue reports `5982` functions, `1151` commented functions, `4831` commentless functions, `1951` undefined signatures, and `2075` `param_N` signatures.
 - Current confirmation proxies remain telemetry only: comment-backed `1151/5982 = 19.24%`, strict clean-signature `1088/5982 = 18.19%`. The `20%` value is not a milestone or acceptance gate.
-- The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260512_215540_post_wave352_destructable_vtable_verified` with `19` files, `152931207` bytes, and `HashDiffCount=0`.
+- The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260512_215540_post_wave352_destructable_vtable_verified` with `19` files, `152931207` bytes, and `HashDiffCount=0`.
 
 Raw proof remains ignored under `subagents/ghidra-static-reaudit/destructable-vtable-boundary-wave352/current/`.
 

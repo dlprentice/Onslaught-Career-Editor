@@ -29,7 +29,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-161634_post_wave818_message_voice_pump_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-161634_post_wave818_message_voice_pump_verified"
 TARGET_ADDRESS = "0x004b7d90"
 TARGET_NAME = "CGame__PumpBinkVoiceSampleQueue"
 TARGET_SIGNATURE = "void __thiscall CGame__PumpBinkVoiceSampleQueue(void * this)"

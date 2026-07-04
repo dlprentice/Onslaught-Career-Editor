@@ -295,7 +295,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
         failures.append(f"queue head mismatch: {head}")
 
     summary = json.loads(read_text(BACKUP_SUMMARY))
-    if summary.get("BackupPath") != r"G:\GhidraBackups\BEA_20260519-130808_post_wave591_dxcompass_hud_head_verified":
+    if summary.get("BackupPath") != r"[maintainer-local-ghidra-backup-root]\BEA_20260519-130808_post_wave591_dxcompass_hud_head_verified":
         failures.append(f"backup path mismatch: {summary.get('BackupPath')}")
     expected_backup = {
         "FileCount": 19,

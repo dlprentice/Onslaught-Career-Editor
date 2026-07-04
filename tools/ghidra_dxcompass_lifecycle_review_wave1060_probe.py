@@ -29,7 +29,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260601-205027_post_wave1060_dxcompass_lifecycle_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260601-205027_post_wave1060_dxcompass_lifecycle_review_verified"
 
 TARGETS = {
     "0x00406040": ("CDXCompass__GetTrackedPositionX", "double __fastcall CDXCompass__GetTrackedPositionX(void * context)"),

@@ -21,7 +21,7 @@ Read-back evidence:
 - Post exports: 3 metadata rows, 3 tag rows, 4 xref rows, 33 instruction rows, 3 decompile rows, and 128 post vtable rows.
 - Queue after Wave945: `6116` total functions, `6116` commented, `0` commentless, `0` exact-undefined signatures, `0` `param_N`; export-contract function-quality closure remains `6116/6116 = 100.00%`.
 - Wave911 focused re-audit progress after Wave945: `206/1408 = 14.63%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-054358_post_wave945_carver_vtable_boundary_review_verified`, 19 files, 173312903 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-054358_post_wave945_carver_vtable_boundary_review_verified`, 19 files, 173312903 bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -6,7 +6,7 @@ Tag: `wave1160-weapon-projectile-targeting-current-risk-review`
 
 Wave1160 re-read nineteen CWeapon, ProjectileBurst, and CRound current-risk rows from the active `wave1108-current-risk-rank` current-risk denominator with fresh Ghidra exports. The pass found two ProjectileBurst rows with saved names, signatures, and comments but missing current audit tags, then performed tag-only normalization for `0x00506010 ProjectileBurst__SpawnFromPercentBucketFallback` and `0x005069f0 ProjectileBurst__SpawnFromCurrentPreset`.
 
-Probe token anchor: Wave1160; wave1160-weapon-projectile-targeting-current-risk-review; 516/1179 = 43.77%; 19 CWeapon/ProjectileBurst/CRound current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 663; current risk candidates: 6166; fresh Ghidra export; tag-only normalization; updated=2 skipped=0 renamed=0; tags_added=16; no rename; no signature change; no comment change; Codex read-only consults used; 0 / 0 / 0; 6411/6411 = 100.00%; 51 xref rows; 3272 instruction rows; CWeapon__DoesTargetMaskMatchDistanceProfile; ProjectileBurst__SpawnFromPercentBucketFallback; ProjectileBurst__SpawnFromCurrentPreset; CRound__SpawnConfiguredProjectile; CRound__ArmProjectileAndSpawnTrailEffect; G:\GhidraBackups\BEA_20260606-011357_post_wave1160_weapon_projectile_targeting_current_risk_review_verified; weapon_fire_breaks_stealth; exact CBattleEngine::WeaponFired; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1160; wave1160-weapon-projectile-targeting-current-risk-review; 516/1179 = 43.77%; 19 CWeapon/ProjectileBurst/CRound current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 663; current risk candidates: 6166; fresh Ghidra export; tag-only normalization; updated=2 skipped=0 renamed=0; tags_added=16; no rename; no signature change; no comment change; Codex read-only consults used; 0 / 0 / 0; 6411/6411 = 100.00%; 51 xref rows; 3272 instruction rows; CWeapon__DoesTargetMaskMatchDistanceProfile; ProjectileBurst__SpawnFromPercentBucketFallback; ProjectileBurst__SpawnFromCurrentPreset; CRound__SpawnConfiguredProjectile; CRound__ArmProjectileAndSpawnTrailEffect; [maintainer-local-ghidra-backup-root]\BEA_20260606-011357_post_wave1160_weapon_projectile_targeting_current_risk_review_verified; weapon_fire_breaks_stealth; exact CBattleEngine::WeaponFired; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
 
 Read-back evidence:
 
@@ -15,7 +15,7 @@ Read-back evidence:
 - Apply: `updated=2 skipped=0 renamed=0 would_rename=0 signature_updated=0 comment_only_updated=0 tags_added=16 missing=0 bad=0`, with `REPORT: Save succeeded`.
 - Final dry: `updated=0 skipped=2 renamed=0 would_rename=0 signature_updated=0 comment_only_updated=0 tags_added=0 missing=0 bad=0`.
 - Post exports: `19` metadata rows, `19` tag rows, `51` xref rows, `3272` instruction rows, and `19` decompile rows.
-- Verified backup: `G:\GhidraBackups\BEA_20260606-011357_post_wave1160_weapon_projectile_targeting_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-011357_post_wave1160_weapon_projectile_targeting_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 Representative anchors:
 

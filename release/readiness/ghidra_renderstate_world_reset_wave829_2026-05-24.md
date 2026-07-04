@@ -28,7 +28,7 @@ Read-back evidence:
 - Post exports: 9 metadata rows, 9 tag rows, 237 xref rows, 333 instruction rows, 9 decompile rows, and 5 caller decompile rows.
 - Queue after Wave829: `6098` total functions, `5650` commented, `448` commentless, `0` exact-undefined signatures, `0` `param_N` signatures, comment-backed proxy `5650/6098 = 92.65%`, strict clean-signature proxy `5650/6098 = 92.65%`.
 - Next raw commentless row: `0x004ef100 CUnit__RunTransitionStepThreeTimes`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-213733_post_wave829_renderstate_world_reset_verified`, 19 files, 171641735 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-213733_post_wave829_renderstate_world_reset_verified`, 19 files, 171641735 bytes, `DiffCount=0`.
 
 What this proves:
 

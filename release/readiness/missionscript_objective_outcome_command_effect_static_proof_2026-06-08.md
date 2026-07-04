@@ -6,7 +6,7 @@ Scope: `missionscript-objective-outcome-command-effect-static`
 
 This readiness note records the public-safe static proof result for [MissionScript Objective/Outcome Command-Effect Static Proof](../../reverse-engineering/binary-analysis/missionscript-objective-outcome-command-effect-static-proof.md), backed by `missionscript-objective-outcome-command-effect.v1.json`.
 
-Static closeout remains unchanged: `6411/6411 = 100.00%`, `0 / 0 / 0`, `1560/1560 = 100.00%`, `1179/1179 = 100.00%`, and remaining active focused work `0`. Latest verified Ghidra backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+Static closeout remains unchanged: `6411/6411 = 100.00%`, `0 / 0 / 0`, `1560/1560 = 100.00%`, `1179/1179 = 100.00%`, and remaining active focused work `0`. Latest verified Ghidra backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 Evidence anchors:
 

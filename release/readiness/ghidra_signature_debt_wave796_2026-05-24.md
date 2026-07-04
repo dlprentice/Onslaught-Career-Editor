@@ -31,7 +31,7 @@ Read-back evidence:
 - Queue after Wave796: 6098 total, 5544 commented, 554 commentless, 0 exact-undefined signatures, 0 `param_N` signatures, comment-backed proxy `5544/6098 = 90.92%`, strict clean-signature proxy `5544/6098 = 90.92%`.
 - Earliest raw commentless row remains `0x0042f220 CSPtrSet__Clear`.
 - The commentless high-signal, signature, and name-confidence queues are empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-050846_post_wave796_final_param_signature_debt_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-050846_post_wave796_final_param_signature_debt_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -40,7 +40,7 @@ What this proves:
 - The `signature-debt-wave796` and `wave796-readback-verified` tags are present on all eleven targets.
 - Current exact-undefined and `param_N` signature debt are both zero in the refreshed queue snapshot.
 
-Probe anchors: Wave796 signature debt; signature-debt-wave796; 0x004bbcd0 CNamedMesh__VFunc_09_004bbcd0; 0x00564486 CRT__FmodReduceCore; 0x00574a99 `vector_constructor_iterator'; 0x00591460 CDXTexture__DecodeJpegSegment_StartOfFrame; 0x00591fc0 CDXTexture__ParseJfifApp0Header; 0x005921a0 CDXTexture__ParseAdobeApp14Header; 0x00592ca0 CDXTexture__FormatChunkTagForDiagnostics; 0x0059c070 CTexture__ProcessRowBatchesLinearStride; 0x0059c110 CTexture__ProcessRowBatchesMcuStride128; 0x0059e310 CDXTexture__WriteJpegHuffmanTable; 0x005a7617 CFastVB__DispatchOp_BuildRotationMatrixFromEulerAngles; 0 exact-undefined signatures; 0 param_N signatures; 0x0042f220 CSPtrSet__Clear; G:\GhidraBackups\BEA_20260524-050846_post_wave796_final_param_signature_debt_verified.
+Probe anchors: Wave796 signature debt; signature-debt-wave796; 0x004bbcd0 CNamedMesh__VFunc_09_004bbcd0; 0x00564486 CRT__FmodReduceCore; 0x00574a99 `vector_constructor_iterator'; 0x00591460 CDXTexture__DecodeJpegSegment_StartOfFrame; 0x00591fc0 CDXTexture__ParseJfifApp0Header; 0x005921a0 CDXTexture__ParseAdobeApp14Header; 0x00592ca0 CDXTexture__FormatChunkTagForDiagnostics; 0x0059c070 CTexture__ProcessRowBatchesLinearStride; 0x0059c110 CTexture__ProcessRowBatchesMcuStride128; 0x0059e310 CDXTexture__WriteJpegHuffmanTable; 0x005a7617 CFastVB__DispatchOp_BuildRotationMatrixFromEulerAngles; 0 exact-undefined signatures; 0 param_N signatures; 0x0042f220 CSPtrSet__Clear; [maintainer-local-ghidra-backup-root]\BEA_20260524-050846_post_wave796_final_param_signature_debt_verified.
 
 What remains unproven:
 

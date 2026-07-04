@@ -24,7 +24,7 @@ Read-back evidence:
 - Final post exports verified `4` metadata rows, `4` tag rows, `4` xref rows, `131` body-instruction rows, and `4` decompile rows. Body-boundary readback confirms the new functions did not absorb adjacent starts `0x005a4d2c`, `0x005a6152`, `0x005a61b0`, or `0x005a6209`.
 - Queue after Wave967: `6156` total functions, `6156` commented, `0` commentless, `0` exact-undefined signatures, `0` `param_N` signatures, comment-backed and strict clean-signature proxy `6156/6156 = 100.00%`.
 - Wave911 focused re-audit progress after Wave967: `344/1408 = 24.43%`; expanded static surface progress including the four newly recovered dispatch targets is `348/1412 = 24.65%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-160046_post_wave967_cfastvb_fast_trig_abi_review_verified`, `19` files, `173575047` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-160046_post_wave967_cfastvb_fast_trig_abi_review_verified`, `19` files, `173575047` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -40,4 +40,4 @@ What remains unproven:
 - Runtime CPU dispatch behavior, runtime math behavior, BEA patching behavior, and rebuild parity.
 - The broader `CFastVB__InitDispatchOpsFromFeatureFlags` dispatch-table target set still has additional no-function labels that should be reviewed in a later focused wave instead of folded into Wave967.
 
-Probe token anchor: Wave967; cfastvb-fast-trig-abi-review-wave967; 0x005a4c67 CFastVB__DispatchOp_ComposeQuaternionFromFastTrigPairs_005a4c67; 0x005a60ef CFastVB__DispatchOp_BuildRotationMatrixX_FastTrig_005a60ef; 0x005a6152 CFastVB__DispatchOp_BuildRotationMatrixY_FastTrig_005a6152; 0x005a61b0 CFastVB__DispatchOp_BuildRotationMatrixZ_FastTrig_005a61b0; 0x00598474 CFastVB__InitDispatchOpsFromFeatureFlags; 0x005b8ca0 CFastVB__FastTrigPairApprox_Scalar; 344/1408 = 24.43%; 348/1412 = 24.65%; 6156/6156 = 100.00%; G:\GhidraBackups\BEA_20260528-160046_post_wave967_cfastvb_fast_trig_abi_review_verified; function-boundary recovery.
+Probe token anchor: Wave967; cfastvb-fast-trig-abi-review-wave967; 0x005a4c67 CFastVB__DispatchOp_ComposeQuaternionFromFastTrigPairs_005a4c67; 0x005a60ef CFastVB__DispatchOp_BuildRotationMatrixX_FastTrig_005a60ef; 0x005a6152 CFastVB__DispatchOp_BuildRotationMatrixY_FastTrig_005a6152; 0x005a61b0 CFastVB__DispatchOp_BuildRotationMatrixZ_FastTrig_005a61b0; 0x00598474 CFastVB__InitDispatchOpsFromFeatureFlags; 0x005b8ca0 CFastVB__FastTrigPairApprox_Scalar; 344/1408 = 24.43%; 348/1412 = 24.65%; 6156/6156 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260528-160046_post_wave967_cfastvb_fast_trig_abi_review_verified; function-boundary recovery.

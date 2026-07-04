@@ -24,7 +24,7 @@ Wave457 saved Ghidra name/signature/comment/tag corrections for `13` world occup
 - Corrected `CEngine__BuildStaticShadowVolumesAroundUnit` as the static-shadow helper that samples unit targeting position/radius, terrain shadow height, line volumes, and packed occupancy clears.
 - Queue after refresh: `6057` functions, `2018` commented, `4039` commentless, `1730` undefined signatures, `1649` `param_N` signatures.
 - Current telemetry proxies: comment-backed `2018/6057 = 33.32%`; strict comment-plus-clean-signature `1955/6057 = 32.28%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-155807_post_wave457_world_occupancy_verified` (`19` files, `156830599` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-155807_post_wave457_world_occupancy_verified` (`19` files, `156830599` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

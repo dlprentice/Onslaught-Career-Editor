@@ -37,7 +37,7 @@ Read-back evidence:
 - Context exports: 8 metadata rows, 8 tag rows, 862 xref rows, 421 body-instruction rows, and 8 decompile rows.
 - Queue after Wave1043: 6238 total, 6238 commented, 0 commentless, 0 exact-undefined signatures, 0 `param_N`, strict clean-signature proxy `6238/6238 = 100.00%`.
 - Re-audit progress after Wave1043 remains Wave911 focused `735/1408 = 52.20%`, expanded static surface `968/1493 = 64.84%`, top-500 risk-ranked `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-100128_post_wave1043_physics_statement_load_review_verified`, 19 files, 174263175 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-100128_post_wave1043_physics_statement_load_review_verified`, 19 files, 174263175 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What remains separate proof:
 

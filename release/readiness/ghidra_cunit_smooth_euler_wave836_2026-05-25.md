@@ -20,7 +20,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 31 xref rows including 30 DATA slot refs, 141 instruction-window rows, 361 deep instruction rows, 55 xref-site instruction rows, 7 context metadata rows, 7 context decompile rows, and 1 decompile row.
 - Queue after Wave836: 6098 total functions, 5658 commented, 440 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5658/6098 = 92.78%`, strict clean-signature proxy `5658/6098 = 92.78%`.
 - Next raw commentless row: `0x004fc3a0 CSpawnerThng__SetCooldownState3`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-010821_post_wave836_cunit_smooth_euler_verified`, 19 files, 171838343 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-010821_post_wave836_cunit_smooth_euler_verified`, 19 files, 171838343 bytes, `DiffCount=0`.
 
 What this proves:
 

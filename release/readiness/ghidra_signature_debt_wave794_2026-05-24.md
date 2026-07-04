@@ -30,7 +30,7 @@ Read-back evidence:
 - Queue after Wave794: 6098 total, 5544 commented, 554 commentless, 4 exact-undefined signatures, 11 `param_N`, comment-backed proxy `5544/6098 = 90.92%`, strict clean-signature proxy `5529/6098 = 90.67%`.
 - Earliest raw commentless row remains `0x0042f220 CSPtrSet__Clear`.
 - The commentless high-signal queue remains empty; next signature-debt head is `0x004acde0 CMeshCollisionVolume__InitContactOutputRecord`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-041355_post_wave794_crt_fpu_signature_debt_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-041355_post_wave794_crt_fpu_signature_debt_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
 
 What this proves:
 

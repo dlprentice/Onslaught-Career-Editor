@@ -31,7 +31,7 @@ Read-back and focused checks:
 - Instruction read-back: `890` rows
 - Focused probe: `PASS`, classification `ghidra-cli-flexarray-signature-correction.v1`
 - Queue snapshot after correction: `5876` functions, `715` with comments, `5161` commentless, `2013` undefined signatures, and `2319` `param_N` signatures
-- Ghidra project backup: copied `BEA.gpr` and `BEA.rep` to an out-of-repo local `G:` drive backup folder, with matching `18` repository files, `151391111` bytes, and matching `.gpr` SHA-256
+- Ghidra project backup: copied `BEA.gpr` and `BEA.rep` to an out-of-repo local `[maintainer-local-backup-volume]` drive backup folder, with matching `18` repository files, `151391111` bytes, and matching `.gpr` SHA-256
 
 Raw machine-readable evidence remains under ignored repo-relative paths such as `subagents/ghidra-static-reaudit/cli-flexarray-wave320/current/`.
 

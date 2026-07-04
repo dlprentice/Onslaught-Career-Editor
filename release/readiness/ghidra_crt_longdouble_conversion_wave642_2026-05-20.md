@@ -35,7 +35,7 @@ No renames, function-boundary changes, or executable-byte changes were made.
 - Comment-backed proxy: `3425/6093 = 56.21%`.
 - Strict clean-signature proxy: `3374/6093 = 55.37%`.
 - Next high-signal queue head: `0x00569d91 CRT__InitFileBuffer`.
-- Verified backup: `G:\GhidraBackups\BEA_20260520-140845_post_wave642_crt_longdouble_conversion_verified`, `19` files, `162597767` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-140845_post_wave642_crt_longdouble_conversion_verified`, `19` files, `162597767` bytes, `DiffCount=0`.
 
 ## Boundaries
 

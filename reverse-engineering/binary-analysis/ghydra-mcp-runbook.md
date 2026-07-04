@@ -1,36 +1,36 @@
 # GhydraMCP Runbook (BEA.exe)
 
-> Practical operating guide for this repo's Ghidra + MCP workflow.
-> Last updated: 2026-06-22
+> Practical operating guide for this repo's Ghidra workflow, with historical MCP notes.
+> Last updated: 2026-07-03
 
 ## Active Environment (Authoritative)
 
-- Ghidra install (active): `D:\ghidra_12.0.3_PUBLIC_20260210\ghidra_12.0.3_PUBLIC`
+- Ghidra install (active): maintainer-local Ghidra 12.x install root.
+- Headless entrypoint (active): `support/analyzeHeadless.bat` under the active Ghidra install.
 - Ghidra projects root (active): maintainer-local path recorded outside git.
 - Live BEA project (maintainer-local): exact project/store paths are kept in ignored local overlay notes or maintainer-private manifests.
-- Active GhydraMCP bundle: `D:\GhydraMCP-Complete-v2.2.0-rc.2-20260211-083952`
+- Active GhydraMCP bundle: none. The prior local bundle was removed after the workstation moved project scratch/backup/tooling posture to maintainer-local removable/tooling storage.
 - Repo-local `tools/GhydraMCP/` has been removed from this repo to avoid runtime-bundle confusion.
 - Canonical workstation setup, mutation discipline, backup-root posture, and static closeout truth live in `AGENTS.md` sections `Ghidra / Headless Rules` and `Current Known Gaps`.
 - After any chat context reset/compaction or Ghidra restart/deadlock, reread `AGENTS.md`, this runbook, the three repo state batons, and the relevant wave evidence before attempting mutations.
 - Backup root note (2026-06-25): external backup storage is machine-local and can be attached or detached. The exact backup root and latest verified backup name are kept outside tracked docs. If the preferred external root is unavailable during a new backup-producing Ghidra wave, use another explicit local backup root and record that temporary root in private evidence/state.
 
-## Two Access Modes (Same Backend)
+## Current Access Mode
 
-There are two client paths to the same GhydraMCP backend:
+The active non-interactive lane is Ghidra headless CLI through the repo wrappers:
+
+1. Set `GHIDRA_HOME` when the default does not match the workstation.
+2. Run `tools/run_ghidra_headless_postscript.sh` or `tools/run_ghidra_batch_rename_headless.sh`.
+3. Keep the target Ghidra project closed in the GUI before headless runs.
+
+## Historical MCP Access Modes
+
+When a GhydraMCP bundle is explicitly reinstalled, there are two client paths to the same GhydraMCP backend:
 
 1. Codex MCP tool transport (`mcp__ghydra__*`)
 2. Direct HTTP calls to the GhydraMCP plugin (`http://<host>:8193/...`)
 
-Transport arbitration on this workstation:
-
-1. Use whichever path is currently healthiest (native Codex MCP tools or direct HTTP/curl).
-2. Do not keep a fixed preference if reliability changes mid-session.
-3. Continue strict serialized mutation/read-back rules regardless of chosen transport.
-4. If one path becomes unstable, continue on the healthy path and keep logging outcomes.
-
-If Codex MCP transport fails (for example `Transport closed`) but the plugin is running, direct HTTP still works and is valid for RE operations.
-
-This is not bypassing GhydraMCP; it is bypassing only one client transport path.
+Continue strict serialized mutation/read-back rules regardless of chosen transport. If Codex MCP transport fails (for example `Transport closed`) but the plugin is running, direct HTTP can still work; this is bypassing only one client transport path.
 
 ## Endpoint Discovery
 
@@ -61,12 +61,10 @@ If an operation is not present in either list, treat it as unsupported by the cu
 If `/mcp` shows an unexpected bridge path or `Tools: (none)`:
 
 1. Check active config files for stale paths:
-   - `/home/dlprentice/.codex/config.toml`
-   - `/mnt/c/Users/david/.codex/config.toml`
-   - `/home/dlprentice/.codex/config.wsl.toml`
-   - `/mnt/c/Users/david/.codex/config.wsl.toml`
-2. Ensure all `ghydra` args point to the pinned bundle bridge:
-   - `D:\GhydraMCP-Complete-v2.2.0-rc.2-20260211-083952\bridge_mcp_hydra.py`
+   - `[maintainer-local-codex-config]/config.toml`
+   - `[maintainer-local-codex-config]/config.wsl.toml`
+2. If the MCP lane is explicitly restored, ensure all `ghydra` args point to the installed maintainer-local bundle bridge:
+   - `[maintainer-local-ghydra-mcp-bundle-root]\bridge_mcp_hydra.py`
 3. Kill stale bridge processes using old paths, then reload MCP in the client (`/mcp` disable+enable `ghydra` or restart Codex).
 
 This exact mismatch occurred on 2026-02-11 (`/mcp` still showing `rc.1` while docs/config were on `rc.2`).

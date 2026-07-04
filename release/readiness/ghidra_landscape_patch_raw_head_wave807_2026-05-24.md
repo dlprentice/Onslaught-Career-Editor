@@ -20,7 +20,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 1 xref row, 211 instruction rows, 1 decompile row, 76 post-callsite instruction rows, and 1 post-caller decompile row.
 - Queue after Wave807: 6098 total, 5582 commented, 516 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5582/6098 = 91.54%`, strict clean-signature proxy `5582/6098 = 91.54%`.
 - Next raw commentless row: `0x0048f620 CDXEngine__RenderPostMissionOverlayAndMenu`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-105819_post_wave807_landscape_patch_raw_head_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-105819_post_wave807_landscape_patch_raw_head_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
 
 What this proves:
 

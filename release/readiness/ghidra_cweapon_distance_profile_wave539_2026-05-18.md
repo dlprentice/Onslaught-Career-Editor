@@ -30,7 +30,7 @@ The important owner correction is that BattleEngine firing callers obtain a curr
 - Focused probe: `py -3 tools\ghidra_cweapon_distance_profile_wave539_probe.py --check` PASS.
 - Npm wrapper: `cmd.exe /c npm run test:ghidra-cweapon-distance-profile-wave539` PASS.
 - Queue refresh: `cmd.exe /c npm run test:ghidra-static-reaudit-queue` PASS after the mutation.
-- Backup: `G:\GhidraBackups\BEA_20260518-082127_post_wave539_cweapon_distance_profile_verified`, `19` files, `159320967` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-082127_post_wave539_cweapon_distance_profile_verified`, `19` files, `159320967` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
 
 ## Queue Snapshot
 

@@ -18,7 +18,7 @@ The pass used the `ctexture-include-context-wave680` and `wave680-readback-verif
 - Pre-context exports before mutation covered the same eighteen rows with `18` metadata rows, `18` tag rows, `33` xref rows, `1458` instruction rows, and `18` clean decompile rows.
 - Queue after Wave680: `6098` total, `3859` commented, `2239` commentless, `1216` exact-undefined signatures, `462` `param_N` signatures, strict clean-signature proxy `3809/6098 = 62.46%`.
 - Next queue head: `0x00589bd6 CTexture__ReportDirectiveParseError`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260521-080705_post_wave680_ctexture_include_context_verified`, `19` files, `164465543` bytes, `DiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-080705_post_wave680_ctexture_include_context_verified`, `19` files, `164465543` bytes, `DiffCount=0`.
 
 ## Boundaries
 

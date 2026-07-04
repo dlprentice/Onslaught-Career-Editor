@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave871 CScreenFx zoom"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-183506_post_wave871_cscreenfx_zoom_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-183506_post_wave871_cscreenfx_zoom_verified"
 NEXT_HEAD = "0x00552470 CEngine__ReleaseField6C0"
 STRICT_PROXY = "5854/6105 = 95.89%"
 

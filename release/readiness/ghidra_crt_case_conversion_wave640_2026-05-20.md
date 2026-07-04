@@ -18,7 +18,7 @@ The pass corrected `CRT__ToLower_005695af` to `CRT__ToLowerWithLocaleLock`, corr
 - Post exports: `2` metadata rows, `2` tag rows, `14` xref rows, `178` instruction rows, `2` decompile rows
 - Queue refresh: `6093` total, `3409` commented, `2684` commentless, `1217` exact-undefined signatures, `896` `param_N` signatures
 - Strict clean-signature proxy: `3358/6093 = 55.11%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-131150_post_wave640_crt_case_conversion_verified` (`19` files, `162532231` bytes, `DiffCount=0`)
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-131150_post_wave640_crt_case_conversion_verified` (`19` files, `162532231` bytes, `DiffCount=0`)
 
 The next high-signal queue head is `0x005696e9 CRT__AreHigherMaskBitsClear`.
 

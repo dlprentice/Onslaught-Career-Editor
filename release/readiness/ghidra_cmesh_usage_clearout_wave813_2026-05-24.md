@@ -24,7 +24,7 @@ Read-back evidence:
 - Queue after Wave813: 6098 total, 5591 commented, 507 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5591/6098 = 91.69%`, strict clean-signature proxy `5591/6098 = 91.69%`.
 - Next raw commentless row: `0x004aa4e0 CRTMesh__SumSubtreeField1C`.
 - Commentless high-signal, signature, and name-confidence queues are empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-134919_post_wave813_cmesh_usage_clearout_verified`, 19 files, 171346823 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-134919_post_wave813_cmesh_usage_clearout_verified`, 19 files, 171346823 bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -27,7 +27,7 @@ This is public-safe static evidence only. It does not launch or patch `BEA.exe`,
 | Post-apply idempotent dry run | PASS | Dry `updated=0 skipped=2 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. |
 | Post-apply metadata/tag/xref/instruction/decompile read-back | PASS | Verified `2` metadata rows, `2` tag rows, `2` xref rows, `522` focused instruction rows, `1201` full cylinder-cache instruction rows, and `2` target decompile exports. |
 | `cmd.exe /c npm run test:ghidra-cmcbuggy-hiveboss-wave431` | PASS | Focused probe returned `status: PASS` with zero failures. |
-| Actual Ghidra project backup verification after Wave431 mutation | PASS | Copied `BEA.gpr` and `BEA.rep` to `G:\GhidraBackups\BEA_20260515_173016_post_wave431_cmcbuggy_hiveboss_verified`; compared `19` files, `155618183` bytes, `HashDiffCount=0`, and `MissingCount=0`. |
+| Actual Ghidra project backup verification after Wave431 mutation | PASS | Copied `BEA.gpr` and `BEA.rep` to `[maintainer-local-ghidra-backup-root]\BEA_20260515_173016_post_wave431_cmcbuggy_hiveboss_verified`; compared `19` files, `155618183` bytes, `HashDiffCount=0`, and `MissingCount=0`. |
 
 ## Current Queue Telemetry
 

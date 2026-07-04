@@ -6,7 +6,7 @@ Scope: `missionscript-vm-datatype-opcode-schema`
 
 The MissionScript VM/datatype/opcode schema proof adds `missionscript-vm-datatype-opcode-schema.v1.json`, `missionscript-vm-datatype-opcode-schema-proof.md`, lore mirrors, and `tools/missionscript_vm_datatype_opcode_schema_probe.py`. It uses saved Wave573, Wave574, Wave575, Wave587, and Wave1189 static Ghidra evidence only.
 
-Static closeout remains unchanged: `6411/6411 = 100.00%`, static debt `0 / 0 / 0`, expanded post-100 static surface `1560/1560 = 100.00%`, active current-risk focused accounting `1179/1179 = 100.00%`, remaining active focused work `0`, and latest verified Ghidra backup `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+Static closeout remains unchanged: `6411/6411 = 100.00%`, static debt `0 / 0 / 0`, expanded post-100 static surface `1560/1560 = 100.00%`, active current-risk focused accounting `1179/1179 = 100.00%`, remaining active focused work `0`, and latest verified Ghidra backup `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 Representative anchors:
 

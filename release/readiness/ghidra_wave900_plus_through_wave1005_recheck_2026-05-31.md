@@ -5,7 +5,7 @@ Date: 2026-05-31
 
 This note extends the current Wave900+ recheck scope through Wave1005 after `help-text-display-review-wave1005`.
 
-Anchor tokens: Wave1005; `help-text-display-review-wave1005`; `0x0047fab0 CHelpTextDisplay__ctor`; `0x0047fad0 CHelpTextDisplay__scalar_deleting_dtor`; `0x0047fb00 CHelpTextDisplay__QueueMessageWithTimestamp`; `0x0047fb50 CHelpTextDisplay__RenderQueuedMessages`; `0x004659a0 CDXFont__DrawTextScaledWithShadow`; `0x00465710 CDXFont__DrawTextDynamic`; `0x00465a20 TextLayout__WrapWideTextToFixedLines`; progress `485/1408 = 34.45%`, `659/1478 = 44.59%`, `384/500 = 76.80%`; queue closure `6223/6223 = 100.00%`; backup `G:\GhidraBackups\BEA_20260531-132023_post_wave1005_help_text_display_review_verified`.
+Anchor tokens: Wave1005; `help-text-display-review-wave1005`; `0x0047fab0 CHelpTextDisplay__ctor`; `0x0047fad0 CHelpTextDisplay__scalar_deleting_dtor`; `0x0047fb00 CHelpTextDisplay__QueueMessageWithTimestamp`; `0x0047fb50 CHelpTextDisplay__RenderQueuedMessages`; `0x004659a0 CDXFont__DrawTextScaledWithShadow`; `0x00465710 CDXFont__DrawTextDynamic`; `0x00465a20 TextLayout__WrapWideTextToFixedLines`; progress `485/1408 = 34.45%`, `659/1478 = 44.59%`, `384/500 = 76.80%`; queue closure `6223/6223 = 100.00%`; backup `[maintainer-local-ghidra-backup-root]\BEA_20260531-132023_post_wave1005_help_text_display_review_verified`.
 
 Validation command:
 

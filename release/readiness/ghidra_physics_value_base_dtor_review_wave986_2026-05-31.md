@@ -67,7 +67,7 @@ This review keeps Wave986 narrow. Weapon-mode value load/destructor rows and rou
 Verified post-wave backup:
 
 ```text
-G:\GhidraBackups\BEA_20260531-015646_post_wave986_physics_value_base_dtor_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260531-015646_post_wave986_physics_value_base_dtor_review_verified
 files=19
 bytes=173837191
 MissingCount=0

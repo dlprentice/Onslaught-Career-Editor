@@ -25,7 +25,7 @@ Read-back evidence:
 - Post exports: 5 metadata rows, 5 tag rows, 8 xref rows, 353 instruction rows, 5 decompile rows, 10 context metadata rows, and 10 context decompile rows.
 - Queue after Wave881: 6113 total functions, 5929 commented, 184 commentless, 0 exact-undefined signatures, 0 `param_N`, strict static quality proxy `5929/6113 = 96.99%`.
 - Next raw commentless row: `0x00561530 CRT__ReportMathErrorAndRestoreControlWord_00561530`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-235139_post_wave881_crt_seh_tail_verified`, 19 files, 172755847 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-235139_post_wave881_crt_seh_tail_verified`, 19 files, 172755847 bytes, `DiffCount=0`.
 
 What this proves:
 

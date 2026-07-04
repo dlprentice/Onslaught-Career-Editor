@@ -24,7 +24,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260528-100717_post_wave954_save_load_directory_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-100717_post_wave954_save_load_directory_review_verified"
 
 EXPECTED_METADATA = {
     "0x00461c40": ("CFEPLoadGame__Init", "bool __thiscall CFEPLoadGame__Init(void * this)"),
@@ -69,8 +69,8 @@ CORE_TOKENS = (
     "0x00464620 CFEPSaveGame__Init",
     "0x0051ad30 CFEPDirectory__RefreshSaveFileList",
     "0x00514ec0 PCPlatform__DeleteSaveFile",
-    "C:\\dev\\ONSLAUGHT2\\FEPSaveGame.cpp",
-    "C:\\dev\\ONSLAUGHT2\\FEPDirectory.cpp",
+    "[maintainer-local-source-export-root]\\FEPSaveGame.cpp",
+    "[maintainer-local-source-export-root]\\FEPDirectory.cpp",
     "283/1408 = 20.10%",
     "6151/6151 = 100.00%",
     BACKUP_PATH,
@@ -145,8 +145,8 @@ def check_artifacts(failures: list[str]) -> None:
     require("0x00514cc0" not in metadata, "stale 0x00514cc0 target still exported as metadata target", failures)
 
     strings = {
-        "string-00629a78.tsv": r"C:\dev\ONSLAUGHT2\FEPSaveGame.cpp",
-        "string-0063fb4c.tsv": r"C:\dev\ONSLAUGHT2\FEPDirectory.cpp",
+        "string-00629a78.tsv": r"[maintainer-local-source-export-root]\FEPSaveGame.cpp",
+        "string-0063fb4c.tsv": r"[maintainer-local-source-export-root]\FEPDirectory.cpp",
     }
     for relative, expected in strings.items():
         rows = read_tsv(BASE / relative)

@@ -29,7 +29,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260601-165852_post_wave1054_ctext_localization_core_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260601-165852_post_wave1054_ctext_localization_core_review_verified"
 
 TARGETS = {
     "0x004f2140": "CText__ResetCoreFields",

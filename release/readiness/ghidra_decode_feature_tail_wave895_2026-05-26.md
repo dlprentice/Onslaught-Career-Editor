@@ -28,7 +28,7 @@ Read-back evidence:
 - Post exports: 9 metadata rows, 9 tag rows, 10 xref rows, 1329 instruction rows, and 9 decompile rows.
 - Queue after Wave895: 6113 total, 6086 commented, 27 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed and strict clean-signature proxy `6086/6113 = 99.56%`.
 - Next raw commentless row: `0x0059c610 CFastVB__ReleaseOwnedObjectAndReset_Core`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-064920_post_wave895_decode_feature_tail_verified`, 19 files, 173214599 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-064920_post_wave895_decode_feature_tail_verified`, 19 files, 173214599 bytes, `DiffCount=0`.
 
 What this proves:
 

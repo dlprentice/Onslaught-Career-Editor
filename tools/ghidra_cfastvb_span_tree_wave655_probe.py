@@ -192,7 +192,7 @@ DOC_TOKENS = (
     "2521",
     "736",
     "0x00574270 CDXTexture__FindFormatDescriptorById",
-    "G:\\GhidraBackups\\BEA_20260520-202319_post_wave655_cfastvb_span_tree_verified",
+    "[maintainer-local-ghidra-backup-root]\\BEA_20260520-202319_post_wave655_cfastvb_span_tree_verified",
 )
 
 OVERCLAIM_TOKENS = (

@@ -26,7 +26,7 @@ Read-back evidence:
 - Post exports: 5 metadata rows, 5 tag rows, 15 xref rows, 307 instruction rows, and 5 decompile rows.
 - Queue after Wave890: 6113 total, 6059 commented, 54 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed and strict proxy `6059/6113 = 99.12%`.
 - Next raw commentless row: `0x00580a05 CDXTexture__UploadSurfaceRegionWithFallback`.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-043655_post_wave890_texture_filter_mmx_dispatch_verified`, 19 files, 173149063 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-043655_post_wave890_texture_filter_mmx_dispatch_verified`, 19 files, 173149063 bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -41,7 +41,7 @@ Evidence:
 - String dumps verified `0x00628a98=dooropening`, `0x00628a8c=doorclosing`, `0x00628a80=doorclosed`, `0x00628aa4=wingfolded`, `0x00628ab0=wingunfolded`, `0x00628a74=wingflat`, `0x00628ac0=dooropen`, plus comparison strings `open`, `close`, `shoot`, and `fly`.
 - Wave911 focused re-audit progress after Wave930: `116/1408 = 8.24%`; context helpers are not counted against that progress denominator.
 - Static export-contract closure remains `6113/6113 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260527-233937_post_wave930_cunitai_doorwing_state_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260527-233937_post_wave930_cunitai_doorwing_state_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 
 What this proves:
 

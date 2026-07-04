@@ -31,7 +31,7 @@ BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave894 JPEG header parser tail"
 TAG = "jpeg-header-parser-tail-wave894"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-062021_post_wave894_jpeg_header_parser_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-062021_post_wave894_jpeg_header_parser_tail_verified"
 STRICT_PROXY = "6077/6113 = 99.41%"
 NEXT_HEAD = "0x00598390 CFastVB__DetectCpuFeatureMask"
 

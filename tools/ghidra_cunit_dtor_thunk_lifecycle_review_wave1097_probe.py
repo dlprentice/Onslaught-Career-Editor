@@ -28,7 +28,7 @@ CAPABILITIES = ROOT / "CURRENT_CAPABILITIES.md"
 AGENTS = ROOT / "AGENTS.md"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260604-182217_post_wave1097_cunit_dtor_thunk_lifecycle_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260604-182217_post_wave1097_cunit_dtor_thunk_lifecycle_review_verified"
 WAVE_TAG = "cunit-dtor-thunk-lifecycle-review-wave1097"
 
 TARGETS = {

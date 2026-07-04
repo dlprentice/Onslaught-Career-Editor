@@ -30,8 +30,8 @@ Coverage anchors:
 - Wave911 focused re-audit progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1359/1560 = 87.12%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-060358_post_wave1075_cunit_vfunc08_boundary_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-060358_post_wave1075_cunit_vfunc08_boundary_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 Boundary: this is static Ghidra/documentation/probe coverage evidence only. Exact source virtual name, concrete CUnit/init/world-layout semantics, runtime init/add-to-world/static-shadow behavior, BEA patching behavior, gameplay outcomes, and rebuild parity remain separate proof.
 
-Probe token anchor: Wave1075; cunit-vfunc08-boundary-wave1075; 0x004dfa40 CUnit__VFunc08_InitAndAddToWorld; 0x005dfd40; 0x005dfd60; 0x004dfa47; 0x004dfa9a; 0x004dfaa0; CUnit__Init; CWorld__AddUnitToOccupancyGridAndRebuildShadows_Thunk; 812/1408 = 57.67%; 1359/1560 = 87.12%; 500/500 = 100.00%; 6248/6248 = 100.00%; G:\GhidraBackups\BEA_20260602-060358_post_wave1075_cunit_vfunc08_boundary_verified; boundary recovery.
+Probe token anchor: Wave1075; cunit-vfunc08-boundary-wave1075; 0x004dfa40 CUnit__VFunc08_InitAndAddToWorld; 0x005dfd40; 0x005dfd60; 0x004dfa47; 0x004dfa9a; 0x004dfaa0; CUnit__Init; CWorld__AddUnitToOccupancyGridAndRebuildShadows_Thunk; 812/1408 = 57.67%; 1359/1560 = 87.12%; 500/500 = 100.00%; 6248/6248 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-060358_post_wave1075_cunit_vfunc08_boundary_verified; boundary recovery.

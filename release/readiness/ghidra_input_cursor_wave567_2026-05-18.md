@@ -29,7 +29,7 @@ No `source-parity` tag was applied. Stuart's source has useful mouse-message and
 - Strict proxy: `2817 / 6089 = 46.27%`
 - Focused probe: `py -3 tools\ghidra_input_cursor_wave567_probe.py --check` PASS
 - NPM wrapper: `cmd.exe /c npm run test:ghidra-input-cursor-wave567` PASS
-- Backup: `G:\GhidraBackups\BEA_20260518-221852_post_wave567_input_cursor_verified`
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-221852_post_wave567_input_cursor_verified`
 - Backup verification: `19` files, `159943559` bytes, source/destination manifest hash `7DE67F4FB6FFBF25E3456303303D087CE10DEEC1A1BE8157ADE80769A0CCB72F`
 
 ## Limits

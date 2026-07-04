@@ -36,7 +36,7 @@ No `source-parity` tag was applied. This tranche is bounded to retail binary evi
 - Strict/comment proxy: `2828 / 6093 = 46.42%`
 - Focused probe: `py -3 tools\ghidra_ogg_vorbis_wave568_probe.py --check` PASS
 - NPM wrapper: `cmd.exe /c npm run test:ghidra-ogg-vorbis-wave568` PASS
-- Backup: `G:\GhidraBackups\BEA_20260518-224923_post_wave568_ogg_vorbis_verified`
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-224923_post_wave568_ogg_vorbis_verified`
 - Backup verification: `19` files, `160009095` bytes, source/destination manifest hash `B990538F54B90A0FB3DF2467786D1C0371616FD07A123F4FEF69AFA9F00672E5`
 
 ## Limits

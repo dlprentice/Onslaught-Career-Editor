@@ -27,7 +27,7 @@ Evidence:
 - Fresh instruction rows: `1417`
 - Fresh decompile rows: `21`
 - All xrefs are DATA refs from `0x00598474 CFastVB__InitDispatchOpsFromFeatureFlags`.
-- Verified backup: `G:\GhidraBackups\BEA_20260606-040830_post_wave1165_cfastvb_dispatch_slot_tail_current_risk_review_verified`, `19` files, `176032647` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-040830_post_wave1165_cfastvb_dispatch_slot_tail_current_risk_review_verified`, `19` files, `176032647` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 Accounting after Wave1165:
 
@@ -47,4 +47,4 @@ Boundary:
 
 This proves static Ghidra coherence for the saved dispatch-slot bodies and their dispatch-table DATA refs only. Exact dispatch-table slot schema, vector/quaternion/matrix layout, packed lane order, hidden MMX/SSE/register/stack ABI completeness, exact source identity, runtime CPU dispatch/math/render behavior, BEA patching behavior, visual QA, gameplay outcomes, and rebuild parity remain separate proof.
 
-Probe token anchor: Wave1165; wave1165-cfastvb-dispatch-slot-tail-current-risk-review; 604/1179 = 51.23%; 21 CFastVB dispatch-slot tail current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 575; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consult used; 0 / 0 / 0; 6411/6411 = 100.00%; 21 xref rows; 1417 instruction rows; CFastVB__DispatchOp_SlotA4_005a77bc; CFastVB__DispatchOp_Slot10_005a923f; CFastVB__DispatchOp_SlotCC_005a9abe; CFastVB__DispatchOp_SlotC0_005aa8c5; CFastVB__DispatchOp_SlotD8_005aac0f; CFastVB__DispatchOp_Slot58_005aaf4d; CFastVB__InitDispatchOpsFromFeatureFlags; G:\GhidraBackups\BEA_20260606-040830_post_wave1165_cfastvb_dispatch_slot_tail_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1165; wave1165-cfastvb-dispatch-slot-tail-current-risk-review; 604/1179 = 51.23%; 21 CFastVB dispatch-slot tail current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 575; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consult used; 0 / 0 / 0; 6411/6411 = 100.00%; 21 xref rows; 1417 instruction rows; CFastVB__DispatchOp_SlotA4_005a77bc; CFastVB__DispatchOp_Slot10_005a923f; CFastVB__DispatchOp_SlotCC_005a9abe; CFastVB__DispatchOp_SlotC0_005aa8c5; CFastVB__DispatchOp_SlotD8_005aac0f; CFastVB__DispatchOp_Slot58_005aaf4d; CFastVB__InitDispatchOpsFromFeatureFlags; [maintainer-local-ghidra-backup-root]\BEA_20260606-040830_post_wave1165_cfastvb_dispatch_slot_tail_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.

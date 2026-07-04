@@ -29,7 +29,7 @@ TRACKING_STATE = ROOT / "reverse-engineering" / "binary-analysis" / "function_mu
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 QUALITY_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-211749_post_wave1019_physics_script_manager_lifecycle_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-211749_post_wave1019_physics_script_manager_lifecycle_review_verified"
 
 TARGETS = {
     "0x0042e880": ("CPhysicsScript__Create", "void __cdecl CPhysicsScript__Create(void)"),

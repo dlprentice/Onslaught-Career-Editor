@@ -20,13 +20,13 @@ Context anchors:
 - Primary vtable `0x005db8d0` preserves the outer `CFEPMultiplayerStart` dispatch slice: `Init`, `Shutdown`, `Process`, `ButtonPressed`, `RenderPreCommon`, `Render`, `TransitionNotification`, `SharedVFunc__NoOpOneArg_004014c0`, and inherited `CFrontEndPage__DeActiveNotification`.
 - Constructor context `0x00465f10 CFEPMultiplayerStart__ctor` calls `0x00459920 CFEPMultiplayerStart__SubObj8848__ctor` for owner offset `this+0x8848`.
 - Process and button context route timeout/back/select behavior through `0x00466ae0 CFrontEnd__SetPage`; render-pre-common reaches `0x00452ce0 CFrontEnd__RenderVideoQuadScaledToWindow`; `0x00459ee0 CFEPMultiplayerStart__SubObj8848__Render` resolves selected level and episode text and draws the `E3 2002` build/progress string.
-- Debug string `0x0063fc24` is `C:\dev\ONSLAUGHT2\FEPMultiplayerStart.cpp`.
+- Debug string `0x0063fc24` is `[maintainer-local-source-export-root]\FEPMultiplayerStart.cpp`.
 
 Read-back evidence:
 
 - Exports: 15 metadata rows, 15 tag rows, 73 xref rows, 1581 instruction rows, 15 decompile rows, and 20 vtable rows.
 - Existing continuity probe: `test:ghidra-fepmultiplayerstart-subobj-wave399` still passes against current saved Ghidra state.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-103114_post_wave955_fepmultiplayerstart_subobj8848_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-103114_post_wave955_fepmultiplayerstart_subobj8848_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
 - Static function-quality closure remains `6151/6151 = 100.00%`.
 - Wave911 focused re-audit progress after Wave955 is `286/1408 = 20.31%`.
 

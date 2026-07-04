@@ -20,7 +20,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 1 xref row, 69 target instruction rows, 56 callsite instruction rows, 7 helper metadata rows, and 1 decompile row.
 - Queue after Wave818: 6098 total, 5606 commented, 492 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5606/6098 = 91.93%`, strict clean-signature proxy `5606/6098 = 91.93%`.
 - Next raw commentless row: `0x004bc2d0 CWorld__ClearDynamicOccupancySet`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-161634_post_wave818_message_voice_pump_verified`, 19 files, 171379591 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-161634_post_wave818_message_voice_pump_verified`, 19 files, 171379591 bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -19,9 +19,9 @@ Current static closeout remains unchanged:
 
 Static source evidence:
 
-- Wave903 (`missionscript-static-review-wave903`): `169` selected MissionScript family rows, all commented and signature-clean after queue closure `6113/6113 = 100.00%`. Verified backup: `G:\GhidraBackups\BEA_20260526-095411_post_wave903_missionscript_static_review_verified`.
-- Wave1189 (`wave1189-missionscript-bytecode-iscript-current-risk-review`): `7` MissionScript bytecode/IScript current-risk rows, with `CAsmInstruction__SpawnFromOpcode` context only because Wave1120 already accounted it. Verified backup: `G:\GhidraBackups\BEA_20260606-164704_post_wave1189_missionscript_bytecode_iscript_current_risk_review_verified`.
-- Wave1208 (`wave1208-cbooldatatype-current-risk-review`): `CBoolDataType__Equals`, `CBoolDataType__NotEquals`, and `CBoolDataType__Assign` reviewed with no mutation. Verified backup: `G:\GhidraBackups\BEA_20260607-040938_post_wave1208_cbooldatatype_current_risk_review_verified`.
+- Wave903 (`missionscript-static-review-wave903`): `169` selected MissionScript family rows, all commented and signature-clean after queue closure `6113/6113 = 100.00%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-095411_post_wave903_missionscript_static_review_verified`.
+- Wave1189 (`wave1189-missionscript-bytecode-iscript-current-risk-review`): `7` MissionScript bytecode/IScript current-risk rows, with `CAsmInstruction__SpawnFromOpcode` context only because Wave1120 already accounted it. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-164704_post_wave1189_missionscript_bytecode_iscript_current_risk_review_verified`.
+- Wave1208 (`wave1208-cbooldatatype-current-risk-review`): `CBoolDataType__Equals`, `CBoolDataType__NotEquals`, and `CBoolDataType__Assign` reviewed with no mutation. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-040938_post_wave1208_cbooldatatype_current_risk_review_verified`.
 
 Representative contract anchors:
 

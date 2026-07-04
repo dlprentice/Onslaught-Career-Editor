@@ -4,7 +4,7 @@
 
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6113/6113** (Wave900: every function commented; clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
 
-Wave1218 (wave1218-generic-shared-vfunc-thunk-tail-current-risk-review) re-read 0x00441370 CDebris__GetClassId as part of the generic/shared vfunc-thunk tail current-risk review. The row remains a bounded class/OID id helper returning 0x1f, with no mutation, no rename, no signature change, no comment change, no tag change, no function-boundary change, and no executable-byte change. Verified backup: G:\GhidraBackups\BEA_20260607-222830_post_wave1218_generic_shared_vfunc_thunk_tail_current_risk_review_verified. Exact source enum identity, runtime debris behavior, exact layout, and rebuild parity remain separate proof.
+Wave1218 (wave1218-generic-shared-vfunc-thunk-tail-current-risk-review) re-read 0x00441370 CDebris__GetClassId as part of the generic/shared vfunc-thunk tail current-risk review. The row remains a bounded class/OID id helper returning 0x1f, with no mutation, no rename, no signature change, no comment change, no tag change, no function-boundary change, and no executable-byte change. Verified backup: [maintainer-local-ghidra-backup-root]\BEA_20260607-222830_post_wave1218_generic_shared_vfunc_thunk_tail_current_risk_review_verified. Exact source enum identity, runtime debris behavior, exact layout, and rebuild parity remain separate proof.
 
 
 ## Source Context
@@ -41,7 +41,7 @@ The final read-back verified `7` metadata rows, `7` decompile exports, `7` xref 
 
 Wave1090 (`cdebris-lifecycle-render-review-wave1090`) re-read the seven saved `CDebris` lifecycle/render rows with no mutation. Fresh primary exports verified `7` metadata rows, `7` tag rows, `7` xref rows, `202` function-body instruction rows, and `7` decompile rows; context exports verified `11` metadata rows, `11` tag rows, `1263` xref rows, `460` instruction rows, and `11` decompile rows. Vtable `0x005daf14` exported `48` slots, all `OK`.
 
-The reviewed evidence preserves the prior names/signatures/comments/tags around `grs_tuft1.MSH`, the global debris list `DAT_0066eb78`, render alpha state `DAT_0063012c`, render-object dispatch, class string `0x006283e0`, and class/OID id `0x1f`. Verified backup: `G:\GhidraBackups\BEA_20260604-135715_post_wave1090_cdebris_lifecycle_render_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
+The reviewed evidence preserves the prior names/signatures/comments/tags around `grs_tuft1.MSH`, the global debris list `DAT_0066eb78`, render alpha state `DAT_0063012c`, render-object dispatch, class string `0x006283e0`, and class/OID id `0x1f`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-135715_post_wave1090_cdebris_lifecycle_render_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
 
 Post-100 re-audit progress after this read-only pass is `1534/1560 = 98.33%`; Wave911 focused progress remains `812/1408 = 57.67%`; top-500 remains `500/500 = 100.00%`; function-quality closure remains `6410/6410 = 100.00%`. Probe token anchor: Wave1090; cdebris-lifecycle-render-review-wave1090; 0x004411a0 CDebris__Init; 0x00441320 CDebris__dtor_base; 0x004413a0 CDebris__Render; 0x00441420 CDebris__RenderImposter; 0x005daf14; grs_tuft1.MSH; DAT_0066eb78; DAT_0063012c; no mutation.
 

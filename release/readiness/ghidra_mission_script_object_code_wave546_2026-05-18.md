@@ -23,7 +23,7 @@ The helper is register-only: `ECX` holds the object-code record. The body frees 
 - Post read-back verified `1` metadata row, `1` tag row, `1` xref row, `133` instruction rows, `1` target decompile export, and `1` caller decompile export.
 - Focused probe: `py -3 tools\ghidra_mission_script_object_code_wave546_probe.py --check` PASS.
 - Queue refresh: `py -3 tools\ghidra_static_reaudit_queue_probe.py --check --json` PASS after refreshing the live quality snapshot.
-- Backup: `G:\GhidraBackups\BEA_20260518-112036_post_wave546_mission_script_object_code_verified`, `19` files, `159320967` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-112036_post_wave546_mission_script_object_code_verified`, `19` files, `159320967` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
 
 ## Queue Snapshot
 

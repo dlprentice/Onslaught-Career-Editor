@@ -31,7 +31,7 @@ Read-back evidence:
 - Logs report `targets=4 found=4 missing=0`, `targets=4 dumped=4 missing=0 failed=0`, `targets=13 found=13 missing=0`, and `targets=13 dumped=13 missing=0 failed=0`.
 - Wave911 focused re-audit progress after Wave948: `247/1408 = 17.54%`.
 - Static export-contract function-quality closure remains `6150/6150 = 100.00%`.
-- Verified read-only backup: `G:\GhidraBackups\BEA_20260528-073152_post_wave948_battleengine_transition_effects_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
+- Verified read-only backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-073152_post_wave948_battleengine_transition_effects_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
 
 Consult note:
 
@@ -54,4 +54,4 @@ What remains unproven:
 - BEA patching behavior.
 - Rebuild parity.
 
-Probe token anchor: Wave948; `battleengine-transition-effects-review-wave948`; `0x0040eeb0 CBattleEngine__FinishedPlayingCurrentAnimation`; `0x0040ef20 CBattleEngine__GroundParticleEffect`; `0x00410c50 CMonitor__UpdateMovementTransitionAndEffects`; `0x004124d0 CBattleEngineJetPart__GetCurrentWeaponNameField04`; `0x00409f70 CBattleEngine__ChangeWeapon`; `0x0040a580 CBattleEngine__Morph`; `0x00411e70 CBattleEngineJetPart__ChangeWeapon`; `0x005078f0 CMonitor__UpdateTrackedRenderPair`; `247/1408 = 17.54%`; `6150/6150 = 100.00%`; `G:\GhidraBackups\BEA_20260528-073152_post_wave948_battleengine_transition_effects_review_verified`; no mutation.
+Probe token anchor: Wave948; `battleengine-transition-effects-review-wave948`; `0x0040eeb0 CBattleEngine__FinishedPlayingCurrentAnimation`; `0x0040ef20 CBattleEngine__GroundParticleEffect`; `0x00410c50 CMonitor__UpdateMovementTransitionAndEffects`; `0x004124d0 CBattleEngineJetPart__GetCurrentWeaponNameField04`; `0x00409f70 CBattleEngine__ChangeWeapon`; `0x0040a580 CBattleEngine__Morph`; `0x00411e70 CBattleEngineJetPart__ChangeWeapon`; `0x005078f0 CMonitor__UpdateTrackedRenderPair`; `247/1408 = 17.54%`; `6150/6150 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260528-073152_post_wave948_battleengine_transition_effects_review_verified`; no mutation.

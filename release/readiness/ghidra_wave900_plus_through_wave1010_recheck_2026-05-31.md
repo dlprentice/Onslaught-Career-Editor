@@ -21,7 +21,7 @@ Verified recheck result:
 - Wave911 focused re-audit progress: `505/1408 = 35.87%`
 - Expanded static surface progress: `701/1489 = 47.08%`
 - Wave911 top-500 risk-ranked coverage: `409/500 = 81.80%`
-- Verified Wave1010 backup: `G:\GhidraBackups\BEA_20260531-163000_post_wave1010_battleengine_zoom_autoaim_review_verified`
+- Verified Wave1010 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-163000_post_wave1010_battleengine_zoom_autoaim_review_verified`
 
 The direct-probe stale-current classifications are expected when older focused probes still assert historical baton/current-doc totals that have intentionally rolled forward. The aggregate gate treats those as stale-current only when the line-level classifier finds no metadata, signature, tag, decompile, log, backup, lock, or unclassified evidence mismatch.
 

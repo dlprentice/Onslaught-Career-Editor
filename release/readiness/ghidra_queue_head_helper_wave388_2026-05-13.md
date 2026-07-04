@@ -29,7 +29,7 @@ This is static Ghidra evidence only. It does not prove runtime behavior, exact S
 | `cmd.exe /c npm run test:ghidra-queue-head-helper-wave388` | PASS: `status=PASS`, `targets=5`, `commented=5`, `signature_hardened=5`, `xref_hits=12`, `instruction_hits=12`, and `callsite_hits=11`. |
 | `py -3 -m py_compile tools\ghidra_queue_head_helper_wave388_probe.py tools\ghidra_queue_head_helper_wave388_probe_test.py` | PASS. |
 | `cmd.exe /c npm run test:ghidra-static-reaudit-queue` | PASS after refreshing `ExportFunctionQualitySnapshot.java`: `6027` functions, `1444` commented functions, `4583` commentless functions, `1935` undefined signatures, and `1909` `param_N` signatures. |
-| Actual Ghidra project backup | PASS: copied `BEA.gpr` and `BEA.rep` to `G:\GhidraBackups\BEA_20260513_200959_post_wave388_queue_head_helper_verified`; verified `19` files, `153947015` bytes, `HashDiffCount=0`. |
+| Actual Ghidra project backup | PASS: copied `BEA.gpr` and `BEA.rep` to `[maintainer-local-ghidra-backup-root]\BEA_20260513_200959_post_wave388_queue_head_helper_verified`; verified `19` files, `153947015` bytes, `HashDiffCount=0`. |
 
 The current broad comment-backed proxy is `1444/6027 = 23.96%`. The stricter comment-plus-no-`undefined`-or-`param_N` proxy is `1382/6027 = 22.93%`. These values are telemetry only, not completion milestones.
 

@@ -56,7 +56,7 @@ This is real installed-corpus/tooling evidence, but it is not a runtime-render c
 - The loaded Ghidra database has no remaining function-quality queue debt for the selected texture/resource/decode/render owner families.
 - The current static documentation connects texture lookup/lifetime, DirectX texture load/decode/upload, image codec paths, texel pack/unpack, SIMD/math dispatch, vertex/index buffer ownership, CVBufTexture render paths, render-state cache paths, render-queue handoff, and mesh-renderer entry anchors.
 - The current asset pipeline has public-safe count evidence for installed PC resource archives, texture/mesh/reference extraction, model metadata, and model texture linkage.
-- The verified read-only Ghidra backup for this review is `G:\GhidraBackups\BEA_20260526-101300_post_wave904_texture_render_static_review_verified`.
+- The verified read-only Ghidra backup for this review is `[maintainer-local-ghidra-backup-root]\BEA_20260526-101300_post_wave904_texture_render_static_review_verified`.
 
 ## What Remains Separate
 

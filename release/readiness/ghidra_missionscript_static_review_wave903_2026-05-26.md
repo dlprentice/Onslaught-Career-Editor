@@ -22,7 +22,7 @@ Read-only evidence:
 - Function-family export: 169 MissionScript/IScript-related rows, all comment-backed and signature-clean.
 - Baseline evidence: `subagents/ghidra-static-reaudit/wave903-missionscript-static-review/missionscript-static-review-baseline.json`.
 - Function anchors: `subagents/ghidra-static-reaudit/wave903-missionscript-static-review/missionscript-function-anchors.tsv`.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-095411_post_wave903_missionscript_static_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-095411_post_wave903_missionscript_static_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -22,7 +22,7 @@ Wave460 saved Ghidra name/signature/comment/tag corrections for `10` adjacent ob
 - Preserved that `0x004bfe00` and `0x004bff30` are jump thunks, not standalone cleanup bodies, and left adjacent queued `0x004f84c0` untouched.
 - Queue after refresh: `6057` functions, `2045` commented, `4012` commentless, `1727` undefined signatures, `1629` `param_N` signatures.
 - Current telemetry proxies: comment-backed `2045/6057 = 33.76%`; strict comment-plus-clean-signature `1981/6057 = 32.71%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-172857_post_wave460_object_cleanup_verified` (`19` files, `156896135` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-172857_post_wave460_object_cleanup_verified` (`19` files, `156896135` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

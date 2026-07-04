@@ -20,7 +20,7 @@ Results:
 | Wave-specific package probe scripts checked | 90 |
 | Ignored evidence bases checked | 90 |
 | Backup references checked | 92 |
-| Unique backup directories checked on `G:\GhidraBackups` | 92 |
+| Unique backup directories checked on `[maintainer-local-ghidra-backup-root]` | 92 |
 | Missing/suspicious backup directories | 0 |
 | Wave900+ apply scripts checked | 25 |
 | Wave982-Wave991 direct probe rows | 10 |
@@ -52,7 +52,7 @@ What this proves:
 - Wave991's direct focused probe passes under current state.
 - Wave982 through Wave990 direct focused-probe failures are classified as stale current-state/current-doc assumptions, not Ghidra metadata/signature/tag/decompile/log/backup evidence mismatches.
 - Every Wave900-Wave991 operational wave has a readiness-note record; Wave910 and Wave911 remain queue/planning waves rather than saved Ghidra mutation/review records with per-wave backup notes.
-- Every Wave900-Wave991 saved Ghidra review/mutation wave that claimed a project backup has an on-disk backup directory under `G:\GhidraBackups` with normal project-scale file and byte counts.
+- Every Wave900-Wave991 saved Ghidra review/mutation wave that claimed a project backup has an on-disk backup directory under `[maintainer-local-ghidra-backup-root]` with normal project-scale file and byte counts.
 - The 25 Wave900+ apply scripts have matching log coverage with clean summaries and save-succeeded evidence.
 - The current live queue remains closed at `6222/6222`, with zero commentless functions, zero exact-`undefined` signatures, and zero `param_N` signatures.
 

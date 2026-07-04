@@ -75,7 +75,7 @@ Prior context:
 
 Backup:
 
-`G:\GhidraBackups\BEA_20260606-095003_post_wave1178_carver_current_risk_consolidation_review_verified`
+`[maintainer-local-ghidra-backup-root]\BEA_20260606-095003_post_wave1178_carver_current_risk_consolidation_review_verified`
 
 Backup verification: `19` files, `176065415` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
@@ -99,4 +99,4 @@ What remains separate proof:
 - BEA patching behavior.
 - Visual QA, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1178; wave1178-carver-current-risk-consolidation-review; 715/1179 = 60.64%; 20 Carver current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 464; current risk candidates: 6166; fresh Ghidra export; tag-only normalization; updated=20 skipped=0; tags_added=206; no rename; no signature change; no comment change; no function-boundary change; no executable-byte change; Codex read-only consult used; Codex root final judgment; consult narrowed to 11 rows; root widened to 20-row coherent Carver slice; 0 / 0 / 0; 6411/6411 = 100.00%; 23 xref rows; 873 instruction rows; CCarver__Init; CCarverAI__dtor_base; CCarver__UpdateMotionAndWingPose; CCarverAI__OpenWings; CCarverAI__CloseWings; CCarverAI__Fire; CCarverAI__CheckNearbyEnemies; CCarverGuide__AcquireNearestTargetReader; CCarver__Destructor_VFunc01; G:\GhidraBackups\BEA_20260606-095003_post_wave1178_carver_current_risk_consolidation_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1178; wave1178-carver-current-risk-consolidation-review; 715/1179 = 60.64%; 20 Carver current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 464; current risk candidates: 6166; fresh Ghidra export; tag-only normalization; updated=20 skipped=0; tags_added=206; no rename; no signature change; no comment change; no function-boundary change; no executable-byte change; Codex read-only consult used; Codex root final judgment; consult narrowed to 11 rows; root widened to 20-row coherent Carver slice; 0 / 0 / 0; 6411/6411 = 100.00%; 23 xref rows; 873 instruction rows; CCarver__Init; CCarverAI__dtor_base; CCarver__UpdateMotionAndWingPose; CCarverAI__OpenWings; CCarverAI__CloseWings; CCarverAI__Fire; CCarverAI__CheckNearbyEnemies; CCarverGuide__AcquireNearestTargetReader; CCarver__Destructor_VFunc01; [maintainer-local-ghidra-backup-root]\BEA_20260606-095003_post_wave1178_carver_current_risk_consolidation_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.

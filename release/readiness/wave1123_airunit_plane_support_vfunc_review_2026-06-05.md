@@ -21,8 +21,8 @@ Evidence:
 
 - Metadata/tag/xref/instruction/decompile exports: `2` / `2` / `10` / `36` / `2`.
 - Probe anchor wording: fresh read-only Ghidra export; no mutation.
-- Backup: `G:\GhidraBackups\BEA_20260605-052636_post_wave1123_airunit_plane_support_vfunc_review_verified`, `19` files, `175737735` bytes, `DiffCount=0`.
-- Previous latest completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-043957_post_wave1122_hlcollisiondetector_current_risk_review_verified`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-052636_post_wave1123_airunit_plane_support_vfunc_review_verified`, `19` files, `175737735` bytes, `DiffCount=0`.
+- Previous latest completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-043957_post_wave1122_hlcollisiondetector_current_risk_review_verified`.
 - Prior context: Wave1006 normalized the aircraft and plane-family crash/support vtable-slot evidence.
 
 What this proves:

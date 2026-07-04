@@ -23,7 +23,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 1 xref row, 121 instruction-window rows, 381 deep instruction rows, 69 xref-site instruction rows, 16 context metadata rows, 16 context decompile rows, and 1 target decompile row.
 - Queue after Wave837: 6098 total, 5659 commented, 439 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5659/6098 = 92.80%`, strict clean-signature proxy `5659/6098 = 92.80%`.
 - Next raw commentless row: `0x004fce40 CUnitAI__CallAttachedNodeVFunc14IfPresent`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-013914_post_wave837_cunit_spawn_cooldown_verified`, 19 files, 171838343 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-013914_post_wave837_cunit_spawn_cooldown_verified`, 19 files, 171838343 bytes, `DiffCount=0`.
 
 What this proves:
 

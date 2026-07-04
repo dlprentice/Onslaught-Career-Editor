@@ -27,7 +27,7 @@ The pass added bounded comments/tags with the `texture-repeat-mip-decode-wave657
 - Queue refresh passed with `6093` total functions, `3583` commented, `2510` commentless, `1217` exact-undefined signatures, and `725` `param_N` signatures.
 - Comment-backed proxy: `3583/6093 = 58.81%`.
 - Strict clean-signature proxy: `3533/6093 = 57.98%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260520-212214_post_wave657_texture_repeat_mip_decode_verified` (`19` files, `163253127` bytes, `DiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-212214_post_wave657_texture_repeat_mip_decode_verified` (`19` files, `163253127` bytes, `DiffCount=0`).
 - Next high-signal queue head: `0x00575986 Math__IsFloatDiffOutsideTolerance`.
 
 ## Bounded Claim

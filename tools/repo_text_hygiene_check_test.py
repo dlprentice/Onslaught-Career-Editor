@@ -9,6 +9,16 @@ import repo_text_hygiene_check as hygiene
 
 
 class RepoTextHygieneRuleTests(unittest.TestCase):
+    def test_scans_evidence_text_suffixes(self) -> None:
+        for path in [
+            "reverse-engineering/binary-analysis/function_mutation_ledger.jsonl",
+            "reverse-engineering/scratch/example.goodies_diff.patch",
+            "tools/ApplyExample.java",
+            "release/readiness/public_candidate_allowlist.tsv",
+            "release/readiness/example.csv",
+        ]:
+            self.assertTrue(hygiene.is_text_file(path))
+
     def matching_labels(self, path: str, text: str) -> set[str]:
         labels: set[str] = set()
         for rule in hygiene.RULES:
@@ -80,7 +90,7 @@ class RepoTextHygieneRuleTests(unittest.TestCase):
         private_repo_root = (
             "C:"
             + "\\Users"
-            + "\\david"
+            + "\\operator"
             + "\\source"
             + "\\Onslaught-Career-Editor-"
             + "private"
@@ -92,6 +102,134 @@ class RepoTextHygieneRuleTests(unittest.TestCase):
         )
 
         self.assertIn("archive-doc-private-repo-root-path", labels)
+
+    def test_flags_private_repo_root_paths_in_active_docs_and_state(self) -> None:
+        private_repo_root = (
+            "C:"
+            + "\\Users"
+            + "\\operator"
+            + "\\source"
+            + "\\Onslaught-Career-Editor-"
+            + "private"
+        )
+        labels = self.matching_labels(
+            ".codex/state/winui-lane-health-evidence.md",
+            f"`git status` ran in `{private_repo_root}`.",
+        )
+        labels.update(
+            self.matching_labels(
+                "release/readiness/public_primary_full_migration_inventory_2026-06-24.md",
+                "py -3 tools\\public_primary_migration_inventory.py --check "
+                + "--private-root /mnt/c/Users/operator/source/Onslaught-Career-Editor-"
+                + "private --require-private-root",
+            )
+        )
+        labels.update(
+            self.matching_labels(
+                "reverse-engineering/binary-analysis/retail-specimen-manifest-2026-03-14.json",
+                '"repo_root": "C:\\\\Users\\\\operator\\\\source\\\\Onslaught-Career-Editor-'
+                + 'private"',
+            )
+        )
+
+        self.assertIn("tracked-private-repo-root-path", labels)
+
+    def test_allows_private_repo_root_paths_in_private_runtime_evidence(self) -> None:
+        labels = self.matching_labels(
+            "release/readiness/private_runtime_evidence/2026-04-29-media-proof.md",
+            "Local proof root: C:\\Users\\operator\\source\\Onslaught-Career-Editor-"
+            + "private\\subagents\\runtime-proof.json",
+        )
+
+        self.assertNotIn("tracked-private-repo-root-path", labels)
+
+    def test_flags_maintainer_user_root_paths_in_active_docs(self) -> None:
+        labels = self.matching_labels(
+            "release/readiness/repo_skills_ghidra_policy_inventory_2026-06-25.md",
+            "Ghidra project root: C:\\Users\\operator\\Ghidra\\Projects\\BEA.gpr",
+        )
+        labels.update(
+            self.matching_labels(
+                "release/readiness/private_runtime_evidence/2026-04-29-media-proof.md",
+                "Artifact root: C:\\Users\\operator\\AppData\\Roaming\\Electron",
+            )
+        )
+        labels.update(
+            self.matching_labels(
+                "reverse-engineering/binary-analysis/ghydra-mcp-runbook.md",
+                "Config path: /home/operator/.codex/config.toml",
+            )
+        )
+        labels.update(
+            self.matching_labels(
+                "MCP_DEBUGGING_OPTIONS.md",
+                "WSL config: /home/operator/.codex/config.wsl.toml",
+            )
+        )
+
+        self.assertIn("tracked-maintainer-user-root-path", labels)
+
+    def test_flags_maintainer_backup_and_export_roots_in_active_docs(self) -> None:
+        labels = self.matching_labels(
+            "release/readiness/wave1178_carver_current_risk_consolidation_review_2026-06-06.md",
+            "Verified backup: Z:\\GhidraBackups\\BEA_20260606_verified",
+        )
+        labels.update(
+            self.matching_labels(
+                "lore-book/reverse-engineering/binary-analysis/functions/Carver.cpp.md",
+                "Source export root: Z:/dev/ONSLAUGHT2/source/Carver.cpp",
+            )
+        )
+        labels.update(
+            self.matching_labels(
+                "reverse-engineering/binary-analysis/documentation-audit-pass-2026-02-12.json",
+                '"pattern": "Z:\\\\\\\\GhydraMCP-Complete-v2.2.0-rc.2"',
+            )
+        )
+        labels.update(
+            self.matching_labels(
+                "developer_agent_state.json",
+                "Runtime proof archive: Z:\\OnslaughtRuntimeProofs",
+            )
+        )
+
+        self.assertIn("tracked-maintainer-local-root-path", labels)
+
+    def test_flags_standalone_backup_drive_references_in_active_docs(self) -> None:
+        labels = self.matching_labels(
+            "release/readiness/ghidra_example.md",
+            "The live project backup was verified on `Z:` before mutation.",
+        )
+        labels.update(
+            self.matching_labels(
+                ".codex/state/winui-product-re-campaign-evidence.md",
+                "External backup drives are detached; use backup root while `Z:` is unavailable.",
+            )
+        )
+
+        self.assertIn("tracked-maintainer-backup-drive-reference", labels)
+
+    def test_allows_decompiler_warning_labels_near_storage_words(self) -> None:
+        labels = self.matching_labels(
+            "reverse-engineering/binary-analysis/functions/example.cpp.md",
+            "WARNING: storage pointer is unchecked in decompiler output.",
+        )
+
+        self.assertNotIn("tracked-maintainer-backup-drive-reference", labels)
+
+    def test_flags_stale_current_consult_stack_requiring_gemini_opus(self) -> None:
+        labels = self.matching_labels(
+            ".codex/goals/active-thread-goal.md",
+            "Required normal/adversarial Codex, Grok, Grok Composer, Opus, and Gemini consults.",
+        )
+        labels.update(
+            self.matching_labels(
+                "roadmap/static-to-proof-rebuild-transition-backlog.md",
+                "Use bounded normal/adversarial Codex, Grok Composer, Opus, and Gemini consults.",
+            )
+        )
+
+        self.assertIn("stale-current-consult-stack-requires-gemini-opus", labels)
 
     def test_flags_top_level_fixture_parity_shorthand(self) -> None:
         labels = self.matching_labels(

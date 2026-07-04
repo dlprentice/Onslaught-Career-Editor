@@ -32,7 +32,7 @@ Stuart's checked source snapshot does not currently include a full `Destructable
 - `cmd.exe /c npm run test:ghidra-destructable-segment-signature-tranche` passed against the saved read-back artifacts.
 - The refreshed whole-database baseline reports `5978` functions and `0` weak functions. The refreshed quality queue reports `1117` commented functions, `4861` commentless functions, `1955` undefined signatures, and `2099` `param_N` signatures.
 - The current comment-backed static RE proxy is still below `20%`: `1117/5978 = 18.69%`; the stricter comment-plus-clean-signature proxy is `1054/5978 = 17.63%`.
-- The post-mutation live Ghidra backup was verified on `G:` with `19` files, `152832903` bytes, and `HashDiffCount=0`.
+- The post-mutation live Ghidra backup was verified on `[maintainer-local-backup-volume]` with `19` files, `152832903` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

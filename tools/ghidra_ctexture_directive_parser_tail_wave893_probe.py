@@ -30,7 +30,7 @@ BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave893 CTexture directive parser tail"
 TAG = "ctexture-directive-parser-tail-wave893"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-055039_post_wave893_ctexture_directive_parser_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-055039_post_wave893_ctexture_directive_parser_tail_verified"
 STRICT_PROXY = "6073/6113 = 99.35%"
 NEXT_HEAD = "0x005913b0 CFastVB__JpegParser_ResetFrameState"
 

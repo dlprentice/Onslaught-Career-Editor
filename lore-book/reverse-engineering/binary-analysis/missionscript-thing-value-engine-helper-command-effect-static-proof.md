@@ -14,7 +14,7 @@ Static closeout remains unchanged:
 - Expanded post-100 static surface: `1560/1560 = 100.00%`.
 - Active current-risk focused accounting: `1179/1179 = 100.00%`.
 - Remaining active focused work: `0`.
-- Latest verified Ghidra backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+- Latest verified Ghidra backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 ## Schema Result
 
@@ -35,8 +35,8 @@ Evidence rows consumed by the schema:
 
 Backups already verified by their original waves:
 
-- Wave582: `G:\GhidraBackups\BEA_20260519-082352_post_wave582_iscript_thing_value_verified`
-- Latest static closeout backup: `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`
+- Wave582: `[maintainer-local-ghidra-backup-root]\BEA_20260519-082352_post_wave582_iscript_thing_value_verified`
+- Latest static closeout backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`
 
 ## Why This Matters
 

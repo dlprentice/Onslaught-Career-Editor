@@ -273,7 +273,7 @@ def check_docs_and_ledgers(failures: list[str]) -> None:
         "CDXFMV__ctor_base",
         "CDXFMV__scalar_deleting_dtor",
         "0x0053f730 CDXBitmapFont__ctor_like_0053f730",
-        "G:\\GhidraBackups\\BEA_20260519-144006_post_wave594_vbuftexture_fmv_head_verified",
+        "[maintainer-local-ghidra-backup-root]\\BEA_20260519-144006_post_wave594_vbuftexture_fmv_head_verified",
     )
     expectations = {
         "public note": common_full,
@@ -309,7 +309,7 @@ def check_docs_and_ledgers(failures: list[str]) -> None:
 def check_backup(failures: list[str]) -> None:
     summary = json.loads(read_text(BACKUP_SUMMARY))
     expected = {
-        "backupPath": "G:\\GhidraBackups\\BEA_20260519-144006_post_wave594_vbuftexture_fmv_head_verified",
+        "backupPath": "[maintainer-local-ghidra-backup-root]\\BEA_20260519-144006_post_wave594_vbuftexture_fmv_head_verified",
         "fileCount": 19,
         "totalBytes": 160992135,
         "diffCount": 0,

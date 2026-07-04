@@ -23,7 +23,7 @@ Read-back evidence:
 - Post exports: 4 metadata rows, 4 tag rows, 4 xref rows, 422 instruction rows, and 4 decompile rows.
 - Queue after Wave894: 6113 total, 6077 commented, 36 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed and strict clean-signature proxy `6077/6113 = 99.41%`.
 - Next raw commentless row: `0x00598390 CFastVB__DetectCpuFeatureMask`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-062021_post_wave894_jpeg_header_parser_tail_verified`, 19 files, 173149063 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-062021_post_wave894_jpeg_header_parser_tail_verified`, 19 files, 173149063 bytes, `DiffCount=0`.
 
 What this proves:
 

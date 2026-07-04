@@ -8,7 +8,7 @@ Wave1082 recovered and saved eleven previously unresolved AI/vtable function bou
 
 Representative anchors:
 
-Probe token anchor: Wave1082; infantryai-vtable-boundary-review-wave1082; 0x004ff330 SharedUnitAI__HandleEventAndMaybeFire_004ff330; 0x0048a030 CInfantryAI__UpdateSupportSelection_0048a030; 0x004f45c0 SharedVFunc__ForwardField64FloatOrZero_004f45c0; 0x005dbf14; 1405/1560 = 90.06%; 812/1408 = 57.67%; 6294/6294 = 100.00%; G:\GhidraBackups\BEA_20260602-110925_post_wave1082_infantryai_vtable_boundary_verified.
+Probe token anchor: Wave1082; infantryai-vtable-boundary-review-wave1082; 0x004ff330 SharedUnitAI__HandleEventAndMaybeFire_004ff330; 0x0048a030 CInfantryAI__UpdateSupportSelection_0048a030; 0x004f45c0 SharedVFunc__ForwardField64FloatOrZero_004f45c0; 0x005dbf14; 1405/1560 = 90.06%; 812/1408 = 57.67%; 6294/6294 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-110925_post_wave1082_infantryai_vtable_boundary_verified.
 
 | Address | Saved name | Evidence |
 | --- | --- | --- |
@@ -34,7 +34,7 @@ Read-back evidence:
 - Post CInfantryAI vtable-slot export improved from `71` OK / `25` `NO_FUNCTION_AT_POINTER` to `82` OK / `14` `NO_FUNCTION_AT_POINTER`; remaining unresolved slots are `.rdata` cells or no-memory literal/float-like values.
 - Queue after Wave1082: `6294` total, `6294` commented, `0` commentless, `0` exact-undefined signatures, `0` `param_N`, strict clean-signature proxy `6294/6294 = 100.00%`.
 - Re-audit progress: expanded static surface `1405/1560 = 90.06%`; Wave911 focused remains `812/1408 = 57.67%`; top-500 remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-110925_post_wave1082_infantryai_vtable_boundary_verified`, `19` files, `174787463` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-110925_post_wave1082_infantryai_vtable_boundary_verified`, `19` files, `174787463` bytes, `DiffCount=0`.
 
 What this proves:
 

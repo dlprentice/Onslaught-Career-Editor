@@ -22,7 +22,7 @@ Read-back evidence:
 - Final post exports verified `4` metadata rows, `4` tag rows, `4` xref rows, `342` body-instruction rows, and `4` decompile rows.
 - Queue after Wave970: `6170` total functions, `6170` commented, `0` commentless, `0` exact-undefined signatures, `0` `param_N` signatures, comment-backed and strict clean-signature proxy `6170/6170 = 100.00%`.
 - Wave911 focused re-audit progress remains `344/1408 = 24.43%`; expanded static surface progress including newly recovered dispatch targets is `362/1426 = 25.39%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-174057_post_wave970_cfastvb_axis_dispatch_continuation_verified`, `19` files, `173607815` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-174057_post_wave970_cfastvb_axis_dispatch_continuation_verified`, `19` files, `173607815` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -38,4 +38,4 @@ What remains unproven:
 - Exact source identity for the recovered functions.
 - Runtime CPU dispatch behavior, runtime math/render behavior, BEA patching behavior, and rebuild parity.
 
-Probe token anchor: Wave970; cfastvb-axis-dispatch-continuation-wave970; 0x005a46fc CFastVB__DispatchOp_MultiplyQuaternionPair_Packed_005a46fc; 0x005a4795 CFastVB__DispatchOp_NormalizeQuaternion_Packed_005a4795; 0x005a4836 CFastVB__DispatchOp_BuildQuaternionFromMatrix3x3_Packed_005a4836; 0x005a4a52 CFastVB__DispatchOp_BuildQuaternionFromMatrix3x3_FeatureOverride_005a4a52; 0x005a4980 internal branch target; 0x00598474 CFastVB__InitDispatchOpsFromFeatureFlags; 344/1408 = 24.43%; 362/1426 = 25.39%; 6170/6170 = 100.00%; G:\GhidraBackups\BEA_20260528-174057_post_wave970_cfastvb_axis_dispatch_continuation_verified; function-boundary recovery.
+Probe token anchor: Wave970; cfastvb-axis-dispatch-continuation-wave970; 0x005a46fc CFastVB__DispatchOp_MultiplyQuaternionPair_Packed_005a46fc; 0x005a4795 CFastVB__DispatchOp_NormalizeQuaternion_Packed_005a4795; 0x005a4836 CFastVB__DispatchOp_BuildQuaternionFromMatrix3x3_Packed_005a4836; 0x005a4a52 CFastVB__DispatchOp_BuildQuaternionFromMatrix3x3_FeatureOverride_005a4a52; 0x005a4980 internal branch target; 0x00598474 CFastVB__InitDispatchOpsFromFeatureFlags; 344/1408 = 24.43%; 362/1426 = 25.39%; 6170/6170 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260528-174057_post_wave970_cfastvb_axis_dispatch_continuation_verified; function-boundary recovery.

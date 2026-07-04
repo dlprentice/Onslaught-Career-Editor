@@ -18,7 +18,7 @@ Wave450 saved Ghidra name/signature/comment/tag corrections for `17` Message/Mes
 - Verify-dry summary: `updated=0 skipped=17 created=0 would_create=0 renamed=0 would_rename=0 missing=0 bad=0`
 - Post exports verified `17` metadata rows, `17` tag rows, `32` xref rows, `17` decompile exports, and focused ret-cleanup instruction evidence.
 - Queue after refresh: `6057` functions, `1954` commented, `4103` commentless, `1734` undefined signatures, `1689` `param_N` signatures.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-121409_post_wave450_messagebox_verified` (`19` files, `156535687` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-121409_post_wave450_messagebox_verified` (`19` files, `156535687` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

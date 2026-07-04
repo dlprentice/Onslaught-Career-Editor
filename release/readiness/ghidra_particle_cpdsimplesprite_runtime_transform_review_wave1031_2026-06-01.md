@@ -28,7 +28,7 @@ Evidence counts:
 - Post-mutation exports: 5 metadata rows, 5 tag rows, 19 xref rows, 539 body-instruction rows, and 5 decompile rows.
 - Queue closure remains `6238/6238 = 100.00%` with 0 commentless, 0 exact-undefined signatures, and 0 `param_N`.
 - Wave911 focused re-audit progress after Wave1031: `626/1408 = 44.46%`; expanded static surface progress: `855/1493 = 57.27%`; Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-040508_post_wave1031_particle_cpdsimplesprite_runtime_transform_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-040508_post_wave1031_particle_cpdsimplesprite_runtime_transform_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -43,4 +43,4 @@ What remains unproven:
 - Runtime particle parsing, linking, rendering, or transform behavior.
 - BEA patch behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1031; particle-cpdsimplesprite-runtime-transform-review-wave1031; 0x004f5b70 CTokenArchive__BindIndexedFieldPointer; 0x004c0150 CParticle__ApplyParentTransformOrStoreLink; 0x004c0940 CPDSimpleSprite__SetUVFromTileIndex; 0x004c5280 CPDSimpleSprite__CopyTransformMatrix; 0x004c5410 CParticleDescriptor__Update; 0x004f5b80 CTokenArchive__RegisterReferenceFixup; 626/1408 = 44.46%; 855/1493 = 57.27%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-040508_post_wave1031_particle_cpdsimplesprite_runtime_transform_review_verified; one rename/signature/comment correction.
+Probe token anchor: Wave1031; particle-cpdsimplesprite-runtime-transform-review-wave1031; 0x004f5b70 CTokenArchive__BindIndexedFieldPointer; 0x004c0150 CParticle__ApplyParentTransformOrStoreLink; 0x004c0940 CPDSimpleSprite__SetUVFromTileIndex; 0x004c5280 CPDSimpleSprite__CopyTransformMatrix; 0x004c5410 CParticleDescriptor__Update; 0x004f5b80 CTokenArchive__RegisterReferenceFixup; 626/1408 = 44.46%; 855/1493 = 57.27%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-040508_post_wave1031_particle_cpdsimplesprite_runtime_transform_review_verified; one rename/signature/comment correction.

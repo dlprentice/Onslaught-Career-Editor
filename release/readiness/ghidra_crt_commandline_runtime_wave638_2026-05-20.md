@@ -27,7 +27,7 @@ The pass corrected `CRT__GetEnvironmentStringsDupA_00569124` to `CRT__GetEnviron
 - Post exports: `11` metadata rows, `11` tag rows, `26` xref rows, `1331` instruction rows, `11` decompile rows
 - Queue refresh: `6093` total, `3403` commented, `2690` commentless, `1217` exact-undefined signatures, `902` `param_N` signatures
 - Strict clean-signature proxy: `3352/6093 = 55.01%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-122438_post_wave638_crt_commandline_runtime_verified` (`19` files, `162532231` bytes, `DiffCount=0`)
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-122438_post_wave638_crt_commandline_runtime_verified` (`19` files, `162532231` bytes, `DiffCount=0`)
 
 The next high-signal queue head is `0x00569449 CRT__ControlFp`.
 

@@ -34,7 +34,7 @@ BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave887 texture dispatch/interpolation tail"
 TAG = "texture-dispatch-interpolation-tail-wave887"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-030217_post_wave887_texture_dispatch_interpolation_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-030217_post_wave887_texture_dispatch_interpolation_tail_verified"
 STRICT_PROXY = "6008/6113 = 98.28%"
 NEXT_HEAD = "0x0057617e CDXTexture__DispatchPtr00656f48_WithInit"
 

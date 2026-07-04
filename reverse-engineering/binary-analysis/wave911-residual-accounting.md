@@ -34,7 +34,7 @@ The focused JSON records the canonical Wave911 focused denominator (`1408`) and 
 1408 focused candidates - 812 completed = 596 residual Wave911-focused identities not proven by present artifacts
 ```
 
-Latest completed Ghidra review backup remains Wave1100: `G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`.
+Latest completed Ghidra review backup remains Wave1100: `[maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`.
 
 Wave1107 reconstruction preflight (`wave911-reconstruction-preflight-wave1107`) checked whether the original Wave911 full focused worklist is not reconstructable from present artifacts. The Wave911 readiness note records `focused candidates: 1408`, and git history anchors `afa2c0f0 RE: verify Wave910 queue and seed Wave911 risk rank.` plus `e56f8c89 Merge main: Wave910 queue verification and Wave911 risk rank.`. The available artifacts still show `totalFunctions=6113`, `candidateFunctions=1408`, top sample count `200`, `300` data rows, `candidateFunctions=5803`, top sample count `250`, and `500` data rows, while the current queue is `6411/6411 = 100.00%` with header `address`, `name`, `signature`, `comment`, and `status`; only four output files are present in the Wave911 scratch folder. This preserves the `596` residual counter while blocking any claim that the exact original `1408` row identities were recovered from the current `6411`-row queue.
 

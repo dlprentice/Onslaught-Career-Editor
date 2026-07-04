@@ -32,7 +32,7 @@ The pass added bounded comments/tags with the `texture-format-upload-wave656` ta
 - Queue refresh passed with `6093` total functions, `3580` commented, `2513` commentless, `1217` exact-undefined signatures, and `728` `param_N` signatures.
 - Comment-backed proxy: `3580/6093 = 58.76%`.
 - Strict clean-signature proxy: `3530/6093 = 57.94%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260520-205422_post_wave656_texture_format_upload_verified` (`19` files, `163220359` bytes, `DiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-205422_post_wave656_texture_format_upload_verified` (`19` files, `163220359` bytes, `DiffCount=0`).
 - Next high-signal queue head: `0x00574abb CDXTexture__RepeatCallbackN`.
 
 ## Bounded Claim

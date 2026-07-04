@@ -4,7 +4,7 @@ Date: 2026-05-14
 
 ## Summary
 
-Wave419 saved a focused static-Ghidra correction for the InitThing queue head. The pass corrected the stale `0x0048dcf0` label from `CInfluenceMap__Init` to `CInitThing__ctor`, promoted the adjacent base copy and squad-load helpers, hardened the InitThing factory signature/comment, refreshed the full static re-audit queue, and backed up the live Ghidra project to `G:\GhidraBackups\BEA_20260514_143404_post_wave419_initthing_verified`.
+Wave419 saved a focused static-Ghidra correction for the InitThing queue head. The pass corrected the stale `0x0048dcf0` label from `CInfluenceMap__Init` to `CInitThing__ctor`, promoted the adjacent base copy and squad-load helpers, hardened the InitThing factory signature/comment, refreshed the full static re-audit queue, and backed up the live Ghidra project to `[maintainer-local-ghidra-backup-root]\BEA_20260514_143404_post_wave419_initthing_verified`.
 
 This is public-safe saved static retail-binary evidence. It is not runtime level-load proof, not complete class-layout recovery, not local-variable/type recovery, and not rebuild parity.
 

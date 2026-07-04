@@ -25,7 +25,7 @@ The pass saved nine signatures/comments/tags, corrected `CRT__GetCharTypeMask_Co
 - Post exports: `9` metadata rows, `9` tag rows, `68` xref rows, `333` instruction rows, `9` decompile rows
 - Queue refresh: `6093` total, `3326` commented, `2767` commentless, `1217` exact-undefined signatures, `964` `param_N` signatures
 - Strict clean-signature proxy: `3274/6093 = 53.73%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-081613_post_wave629_crt_input_scan_verified` (`19` files, `162204551` bytes, `DiffCount=0`)
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-081613_post_wave629_crt_input_scan_verified` (`19` files, `162204551` bytes, `DiffCount=0`)
 
 The next high-signal queue head is `0x00564486 CRT__FmodReduceCore`.
 

@@ -14,7 +14,7 @@ Evidence summary:
 - Large family anchors: `CDXTexture` `366`, `CFastVB` `347`, `CTexture` `233`, `CVBufTexture` `40`.
 - Representative functions: `CDXTexture__LoadTextureFromFile_Core`, `CDXTexture__DecodeMemoryToTextureObject`, `CDXTexture__ValidateJpegFrameAndComputeMcuLayout`, `CFastVB__RenderTriangleStripImmediate`, `CVBufTexture__DrawSpriteEx`, `CVBufTexture__RenderDynamicUnitPass`, `CDXEngine__Render`, and `CMeshRenderer__RenderMesh`.
 - Asset extraction bridge: `847/847` loose textures, `213/213` loose meshes, `139/139` embedded meshes, `352/352` model rows with readable material/texture-binding metadata, and `213/213` model texture sidecar refs covered.
-- Verified read-only Ghidra backup: `G:\GhidraBackups\BEA_20260526-101300_post_wave904_texture_render_static_review_verified`, `19` files, `173247367` bytes, `DiffCount=0`.
+- Verified read-only Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-101300_post_wave904_texture_render_static_review_verified`, `19` files, `173247367` bytes, `DiffCount=0`.
 
 What this proves:
 

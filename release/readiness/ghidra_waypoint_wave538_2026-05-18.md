@@ -29,7 +29,7 @@ The important owner correction is `0x00505960`: `CWaypointManager__LoadWaypoints
 - Focused probe: `py -3 tools\ghidra_waypoint_wave538_probe.py --check` PASS.
 - Npm wrapper: `cmd.exe /c npm run test:ghidra-waypoint-wave538` PASS.
 - Queue refresh: `cmd.exe /c npm run test:ghidra-static-reaudit-queue` PASS after the mutation.
-- Backup: `G:\GhidraBackups\BEA_20260518-075151_post_wave538_waypoint_verified`, `19` files, `159288199` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-075151_post_wave538_waypoint_verified`, `19` files, `159288199` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
 
 ## Queue Snapshot
 

@@ -57,7 +57,7 @@ No Ghidra mutation was performed.
 Read-only post-wave backup:
 
 ```text
-G:\GhidraBackups\BEA_20260527-121244_post_wave918_physics_statement_factories_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260527-121244_post_wave918_physics_statement_factories_review_verified
 files=19
 bytes=173247367
 ```

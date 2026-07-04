@@ -50,10 +50,10 @@ Post-Wave716 queue telemetry:
 - Raw commentless head: `0x0042f220 CSPtrSet__Clear`.
 - Next commentless high-signal head: `0x0059f360 CFastVB__DispatchOp_TransformVec4_0059f360`.
 
-Verified backup: `G:\GhidraBackups\BEA_20260522-013644_post_wave716_jpeg_writer_head_verified`, `19` files, `166103943` bytes, `DiffCount=0`.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-013644_post_wave716_jpeg_writer_head_verified`, `19` files, `166103943` bytes, `DiffCount=0`.
 
 ## Boundaries
 
 Wave716 proves static retail Ghidra metadata only. Exact JPEG encoder-state layout, writer/output-manager ABI, callback table ownership, quant/Huffman descriptor schemas, progressive/baseline mode policy, color-transform enum, runtime JPEG output fidelity, BEA patching, and rebuild parity remain unproven.
 
-Probe anchors: `Wave716 JPEG writer head`, `jpeg-writer-head-wave716`, `0x0059dfb2 CDXTexture__Crc32_Update`, `0x0059e110 CDXTexture__WriteJpegQuantTable`, `0x0059e310 CDXTexture__WriteJpegHuffmanTable`, `0xffdb`, `0xffc4`, `0xffd9`, `hidden EAX`, `hidden EBX`, `0x0059f360 CFastVB__DispatchOp_TransformVec4_0059f360`, `0x0042f220 CSPtrSet__Clear`, `G:\GhidraBackups\BEA_20260522-013644_post_wave716_jpeg_writer_head_verified`.
+Probe anchors: `Wave716 JPEG writer head`, `jpeg-writer-head-wave716`, `0x0059dfb2 CDXTexture__Crc32_Update`, `0x0059e110 CDXTexture__WriteJpegQuantTable`, `0x0059e310 CDXTexture__WriteJpegHuffmanTable`, `0xffdb`, `0xffc4`, `0xffd9`, `hidden EAX`, `hidden EBX`, `0x0059f360 CFastVB__DispatchOp_TransformVec4_0059f360`, `0x0042f220 CSPtrSet__Clear`, `[maintainer-local-ghidra-backup-root]\BEA_20260522-013644_post_wave716_jpeg_writer_head_verified`.

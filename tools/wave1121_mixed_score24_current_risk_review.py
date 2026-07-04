@@ -43,8 +43,8 @@ MESH_COLLISION_DOC_MIRROR = ROOT / "lore-book" / "reverse-engineering" / "binary
 VERTEX_SHADER_DOC = ROOT / "reverse-engineering" / "binary-analysis" / "functions" / "VertexShader.cpp" / "_index.md"
 VERTEX_SHADER_DOC_MIRROR = ROOT / "lore-book" / "reverse-engineering" / "binary-analysis" / "functions" / "VertexShader.cpp" / "_index.md"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260605-033658_post_wave1121_mixed_score24_current_risk_review_verified"
-PRIOR_BACKUP = r"G:\GhidraBackups\BEA_20260605-025952_post_wave1120_mixed_score25_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-033658_post_wave1121_mixed_score24_current_risk_review_verified"
+PRIOR_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-025952_post_wave1120_mixed_score25_current_risk_review_verified"
 STALE_SLOT2_PHRASE = "remains an unrecovered no-function-at-pointer boundary"
 
 PRIOR_PROBES = (

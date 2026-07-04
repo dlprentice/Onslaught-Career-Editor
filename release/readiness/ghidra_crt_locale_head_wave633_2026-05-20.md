@@ -26,7 +26,7 @@ The pass corrected the stale `CRT__InvokeLocaleValidationCallback` label to the 
 - Post exports: `10` metadata rows, `10` tag rows, `23` xref rows, `1450` instruction rows, `10` decompile rows
 - Queue refresh: `6093` total, `3354` commented, `2739` commentless, `1217` exact-undefined signatures, `940` `param_N` signatures
 - Strict clean-signature proxy: `3302/6093 = 54.19%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-101020_post_wave633_crt_locale_head_verified` (`19` files, `162368391` bytes, `DiffCount=0`)
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-101020_post_wave633_crt_locale_head_verified` (`19` files, `162368391` bytes, `DiffCount=0`)
 
 The next high-signal queue head is `0x00566294 CRT__InitializeHeapSubsystem`.
 

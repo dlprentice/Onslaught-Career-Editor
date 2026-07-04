@@ -24,7 +24,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260528-024426_post_wave939_meshcollisionvolume_swept_sphere_query_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-024426_post_wave939_meshcollisionvolume_swept_sphere_query_review_verified"
 SCRIPT_NAME = "test:ghidra-meshcollisionvolume-swept-sphere-query-review-wave939"
 SCRIPT_VALUE = r"py -3 tools\ghidra_meshcollisionvolume_swept_sphere_query_review_wave939_probe.py --check"
 

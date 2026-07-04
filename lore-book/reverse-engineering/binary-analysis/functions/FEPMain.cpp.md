@@ -1,16 +1,16 @@
 # FEPMain.cpp Functions
 
 > Source File: FEPMain.cpp | Binary: BEA.exe
-> Debug Path String: 0x00629414 (`C:\dev\ONSLAUGHT2\FEPMain.cpp`)
+> Debug Path String: 0x00629414 (`[maintainer-local-source-export-root]\FEPMain.cpp`)
 > RTTI Type Name: 0x00629d80 (`.?AVCFEPMain@@`)
 
 ## Overview
 
 `CFEPMain` is the retail frontend main-menu page cluster. Static read-back ties it to New Game, Continue, Load Game, Options, Multiplayer, Goodies, Credits/About, and return-state action routing.
 
-Source boundary: the retail binary contains the `C:\dev\ONSLAUGHT2\FEPMain.cpp` debug-path string, but `FEPMain.cpp` is absent from the current Stuart source snapshot. The names below are supported by retail vtable/debug-path/action-routing evidence, not by a direct source-file match.
+Source boundary: the retail binary contains the `[maintainer-local-source-export-root]\FEPMain.cpp` debug-path string, but `FEPMain.cpp` is absent from the current Stuart source snapshot. The names below are supported by retail vtable/debug-path/action-routing evidence, not by a direct source-file match.
 
-Wave953 (`cfepmain-menu-review-wave953`) re-reviewed the CFEPMain main-menu cluster read-only after the Wave951/Wave952 GameInterface pause-menu work. Fresh exports verified 17 metadata rows, 17 tag rows, 257 xref rows, 2935 instruction rows, 17 decompile rows, 56 vtable rows, and the debug path string `C:\dev\ONSLAUGHT2\FEPMain.cpp`. Exact focused anchors: `0x004621d0 CFEPMain__GetMenuType`, `0x004621e0 CFEPMain__GetActionCount`, `0x00462b70 CFEPMain__RenderPreCommon`, and `0x00462c90 CFEPMain__Update`. The review preserved the Wave401 vtable correction: `0x005dbae4` is the full dispatch slice, `0x005dbaf0` starts with `CFEPMain__ButtonPressed`, and `0x005dbb00` starts with `CFEPMain__ActiveNotification`. No mutation was needed. Wave911 focused re-audit progress after Wave953 is `280/1408 = 19.89%`; static export-contract closure remains `6151/6151 = 100.00%`. Verified backup: `G:\GhidraBackups\BEA_20260528-093826_post_wave953_cfepmain_menu_review_verified`. Runtime main-menu behavior, exact source identity, concrete CFEPMain layout, BEA patching, and rebuild parity remain separate proof.
+Wave953 (`cfepmain-menu-review-wave953`) re-reviewed the CFEPMain main-menu cluster read-only after the Wave951/Wave952 GameInterface pause-menu work. Fresh exports verified 17 metadata rows, 17 tag rows, 257 xref rows, 2935 instruction rows, 17 decompile rows, 56 vtable rows, and the debug path string `[maintainer-local-source-export-root]\FEPMain.cpp`. Exact focused anchors: `0x004621d0 CFEPMain__GetMenuType`, `0x004621e0 CFEPMain__GetActionCount`, `0x00462b70 CFEPMain__RenderPreCommon`, and `0x00462c90 CFEPMain__Update`. The review preserved the Wave401 vtable correction: `0x005dbae4` is the full dispatch slice, `0x005dbaf0` starts with `CFEPMain__ButtonPressed`, and `0x005dbb00` starts with `CFEPMain__ActiveNotification`. No mutation was needed. Wave911 focused re-audit progress after Wave953 is `280/1408 = 19.89%`; static export-contract closure remains `6151/6151 = 100.00%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-093826_post_wave953_cfepmain_menu_review_verified`. Runtime main-menu behavior, exact source identity, concrete CFEPMain layout, BEA patching, and rebuild parity remain separate proof.
 
 ## CFEPMain Dispatch/Vtable Layout
 
@@ -69,7 +69,7 @@ Wave401 corrected the older vtable note. The full CFEPMain dispatch slice is bes
 
 ## Debug Path Reference
 
-The checked debug-path xref sits inside the recovered `CFEPMain__Process` body. The assertion/debug path pushes line `0x61` (`97`) and file path `0x00629414` (`C:\dev\ONSLAUGHT2\FEPMain.cpp`) before the save/defaultoptions call chain.
+The checked debug-path xref sits inside the recovered `CFEPMain__Process` body. The assertion/debug path pushes line `0x61` (`97`) and file path `0x00629414` (`[maintainer-local-source-export-root]\FEPMain.cpp`) before the save/defaultoptions call chain.
 
 ## Menu Page Constants
 
@@ -102,7 +102,7 @@ Wave953 read-only re-audit evidence:
 - `cfepmain-menu-review-wave953` re-exported the eleven CFEPMain rows plus six frontend context anchors with no missing rows and no mutation.
 - Fresh read-back verified 17 metadata rows, 17 tag rows, 257 xref rows, 2935 instruction rows, 17 decompile rows, and 56 vtable rows.
 - The existing Wave401 continuity probe still passed: `py -3 tools\ghidra_fepmain_wave401_probe.py --check`.
-- Read-only backup verified at `G:\GhidraBackups\BEA_20260528-093826_post_wave953_cfepmain_menu_review_verified` with 19 files, 173542279 bytes, and `DiffCount=0`.
+- Read-only backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260528-093826_post_wave953_cfepmain_menu_review_verified` with 19 files, 173542279 bytes, and `DiffCount=0`.
 
 Wave401 saved and read back Ghidra metadata for the eleven targets above:
 

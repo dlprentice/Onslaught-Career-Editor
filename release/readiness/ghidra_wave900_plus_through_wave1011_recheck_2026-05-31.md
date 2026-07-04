@@ -8,7 +8,7 @@ Wave1011 extends the current Wave900+ recheck gate after `round-vtable-boundary-
 
 Current Wave1011 anchors: `0x0040ac50 CBattleEngine__Rearm`, `0x004d8ac0 VFuncSlot_16_004d8ac0`, `0x004d8ae0 VFuncSlot_39_004d8ae0`, `0x004d8dc0 VFuncSlot_02_004d8dc0`, and deferred `0x004d8e40`. Queue closure after Wave1011 is `6236/6236 = 100.00%`. Re-audit progress after Wave1011 is Wave911 focused `505/1408 = 35.87%`, expanded static surface `705/1491 = 47.28%`, and Wave911 top-500 risk-ranked `409/500 = 81.80%`.
 
-The Wave1011 verified backup is `G:\GhidraBackups\BEA_20260531-172337_post_wave1011_round_vtable_boundary_verified`, 19 files, 173935495 bytes, `DiffCount=0`, `HashDiffCount=0`.
+The Wave1011 verified backup is `[maintainer-local-ghidra-backup-root]\BEA_20260531-172337_post_wave1011_round_vtable_boundary_verified`, 19 files, 173935495 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 Validation command:
 

@@ -37,7 +37,7 @@ The pass corrected the suffix-style `CRT__IsCharTypeMaskOrLeadByte_0056d22d` lab
 - Comment-backed proxy: `3479/6093 = 57.10%`.
 - Strict clean-signature proxy: `3428/6093 = 56.26%`.
 - Next high-signal queue head: `0x0056d525 CRT__LongDoubleShiftMantissaLeft1_0056d525`.
-- Verified backup: `G:\GhidraBackups\BEA_20260520-160110_post_wave646_crt_dst_fp_signal_verified`, `19` files, `162761607` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-160110_post_wave646_crt_dst_fp_signal_verified`, `19` files, `162761607` bytes, `DiffCount=0`.
 
 ## Boundaries
 

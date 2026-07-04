@@ -11,7 +11,7 @@ Current anchors:
 - Latest operational wave: Wave1068, `rtbuilding-rtmesh-lifecycle-review-wave1068`.
 - Latest focused probe: `tools/ghidra_rtbuilding_rtmesh_lifecycle_review_wave1068_probe.py`.
 - Latest readiness note: `release/readiness/ghidra_rtbuilding_rtmesh_lifecycle_review_wave1068_2026-06-02.md`.
-- Latest verified backup: `G:\GhidraBackups\BEA_20260602-010648_post_wave1068_rtbuilding_rtmesh_lifecycle_review_verified`.
+- Latest verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-010648_post_wave1068_rtbuilding_rtmesh_lifecycle_review_verified`.
 
 Current percentages:
 
@@ -51,4 +51,4 @@ Latest aggregate run:
 
 Boundary note: this aggregate gate proves local static evidence coverage, backup references, probe/doc wiring, and zero export-contract function-quality debt. It does not prove runtime render behavior, runtime LOD/effect cleanup, exact layouts, exact source identity, BEA patching, gameplay outcomes, or rebuild parity.
 
-Probe token anchor: Wave1068; rtbuilding-rtmesh-lifecycle-review-wave1068; 0x004db850 CRTBuilding__Destructor; 0x004db8d0 CRTBuilding__ScalarDeletingDestructor; 0x004dba40 CRTBuilding__VFuncSlot10_PickRandomLinkedEntry; 0x004dc370 CRTMesh__Init; 0x004dc950 CRTMesh__Destructor; 0x004dd0c0 CRTMesh__CleanupAllEffects; 0x004dd6b0 CRTMesh__SetQualityLevel; 0x004dd770 CRTMesh__GetQualityLevel; 812/1408 = 57.67%; 1258/1560 = 80.64%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260602-010648_post_wave1068_rtbuilding_rtmesh_lifecycle_review_verified; read-only review.
+Probe token anchor: Wave1068; rtbuilding-rtmesh-lifecycle-review-wave1068; 0x004db850 CRTBuilding__Destructor; 0x004db8d0 CRTBuilding__ScalarDeletingDestructor; 0x004dba40 CRTBuilding__VFuncSlot10_PickRandomLinkedEntry; 0x004dc370 CRTMesh__Init; 0x004dc950 CRTMesh__Destructor; 0x004dd0c0 CRTMesh__CleanupAllEffects; 0x004dd6b0 CRTMesh__SetQualityLevel; 0x004dd770 CRTMesh__GetQualityLevel; 812/1408 = 57.67%; 1258/1560 = 80.64%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-010648_post_wave1068_rtbuilding_rtmesh_lifecycle_review_verified; read-only review.

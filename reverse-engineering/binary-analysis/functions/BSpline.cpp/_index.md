@@ -1,7 +1,7 @@
 # BSpline.cpp Functions
 
 > Source File: BSpline.cpp | Binary: BEA.exe
-> Debug Path: 0x00623ab8 (`C:\dev\ONSLAUGHT2\BSpline.cpp`)
+> Debug Path: 0x00623ab8 (`[maintainer-local-source-export-root]\BSpline.cpp`)
 
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6113/6113** (Wave900: every function commented; clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
 

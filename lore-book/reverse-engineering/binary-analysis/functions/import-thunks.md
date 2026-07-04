@@ -15,7 +15,7 @@ Wave740 DInput/CRT tail hardened the later `DINPUT8.DLL` thunk at `0x005d04e0` a
 | --- | --- | --- | --- |
 | `0x005d04e0 DirectInput8Create` | `DirectInput8Create` | `int __stdcall DirectInput8Create(void * hinstance, uint directinput_version, void * riid_directinput8, void * * directinput_out, void * outer_unknown)` | Six-byte thunk to IAT `0x005d8020`; `PlatformInput__InitDirectInput` callsite `0x00513178` pushes hinstance, DirectInput version `0x800`, IID pointer `0x0060c14c`, interface output `ESI`, and null outer pointer. |
 
-Wave740 queue telemetry after this pass is `6098` total, `4361` commented, `1737` commentless, `1214` exact-undefined signatures, `27` `param_N`, comment-backed proxy `4361/6098 = 71.51%`, strict proxy `4303/6098 = 70.56%`, raw commentless head `0x0042f220 CSPtrSet__Clear`, and high-signal head `0x005d0f10 Unwind@005d0f10`. Verified backup: `G:\GhidraBackups\BEA_20260522-141639_post_wave740_dinput_crt_tail_verified`.
+Wave740 queue telemetry after this pass is `6098` total, `4361` commented, `1737` commentless, `1214` exact-undefined signatures, `27` `param_N`, comment-backed proxy `4361/6098 = 71.51%`, strict proxy `4303/6098 = 70.56%`, raw commentless head `0x0042f220 CSPtrSet__Clear`, and high-signal head `0x005d0f10 Unwind@005d0f10`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-141639_post_wave740_dinput_crt_tail_verified`.
 
 This is static retail import-thunk/API evidence only. Imported DirectInput runtime behavior, device enumeration behavior, BEA patching, and rebuild parity remain deferred.
 

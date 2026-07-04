@@ -26,7 +26,7 @@ Read-back evidence:
 - Post exports: 5 metadata rows, 5 tag rows, 6 xref rows, 1,385 instruction rows, 5 decompile rows, 426 call-site instruction rows, and 8 helper metadata rows.
 - Queue after Wave873: 6,106 total functions, 5,862 commented, 244 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5862/6106 = 96.00%`, strict clean-signature proxy `5862/6106 = 96.00%`.
 - Next raw commentless row: `0x00554f80 CAtmosphericsProfile__ctor`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-193607_post_wave873_render_multipass_verified`, 19 files, 172,526,471 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-193607_post_wave873_render_multipass_verified`, 19 files, 172,526,471 bytes, `DiffCount=0`.
 
 What this proves:
 

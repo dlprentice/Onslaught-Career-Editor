@@ -4,7 +4,7 @@ Wave1140 (`wave1140-motion-controller-current-risk-review`) re-read nine Wave110
 
 This moves Wave1108 current focused accounting to `238/1179 = 20.19%`. Static closure remains `6411/6411 = 100.00%`; static debt remains `0 / 0 / 0`; expanded post-100 static surface remains `1560/1560 = 100.00%`; Wave911 focused remains `812/1408 = 57.67%`; Wave911 top-500 remains `500/500 = 100.00%`. Current risk candidates: `6166`; current focused candidates: `1178`; live regenerated current focused candidates: `1178`; remaining active focused work: `941`.
 
-Probe token anchor: Wave1140; wave1140-motion-controller-current-risk-review; `238/1179 = 20.19%`; 9 current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 941; current risk candidates: 6166; motion-controller residual current-risk cluster; fresh Ghidra export; read-only review; no mutation; `0 / 0 / 0`; `6411/6411 = 100.00%`; `G:\GhidraBackups\BEA_20260605-142515_post_wave1140_motion_controller_current_risk_review_verified`; `G:\GhidraBackups\BEA_20260605-134608_post_wave1139_battleengine_jetpart_current_risk_review_verified`.
+Probe token anchor: Wave1140; wave1140-motion-controller-current-risk-review; `238/1179 = 20.19%`; 9 current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 941; current risk candidates: 6166; motion-controller residual current-risk cluster; fresh Ghidra export; read-only review; no mutation; `0 / 0 / 0`; `6411/6411 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260605-142515_post_wave1140_motion_controller_current_risk_review_verified`; `[maintainer-local-ghidra-backup-root]\BEA_20260605-134608_post_wave1139_battleengine_jetpart_current_risk_review_verified`.
 
 ## Primary Evidence
 
@@ -30,8 +30,8 @@ Wave1140 also exported 15 context rows around the reviewed motion-controller clu
 - Context exports: `15` metadata rows, `15` tag rows, `26` xref rows, `1388` instruction rows, and `15` decompile rows.
 - Queue refresh: `6411/6411 = 100.00%`; static debt `0 / 0 / 0`.
 - Current-risk refresh: current risk candidates `6166`; current focused candidates `1178`; focused threshold `15`; not Wave911 reconstruction.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-142515_post_wave1140_motion_controller_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
-- Previous completed backup: `G:\GhidraBackups\BEA_20260605-134608_post_wave1139_battleengine_jetpart_current_risk_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-142515_post_wave1140_motion_controller_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Previous completed backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-134608_post_wave1139_battleengine_jetpart_current_risk_review_verified`.
 
 ## Boundary
 

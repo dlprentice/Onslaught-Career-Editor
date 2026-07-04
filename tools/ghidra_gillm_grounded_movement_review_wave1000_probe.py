@@ -27,7 +27,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 WAVE409_PROBE = ROOT / "tools" / "ghidra_gillm_start_state_vector_wave409_probe.py"
 RECHECK_TOOL = ROOT / "tools" / "ghidra_wave900_plus_through_wave983_recheck.py"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-101059_post_wave1000_gillm_grounded_movement_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-101059_post_wave1000_gillm_grounded_movement_review_verified"
 
 TARGETS = {
     "0x004799c0": ("CGillM__VFunc09_InitGroundedSpawnState", "void __thiscall CGillM__VFunc09_InitGroundedSpawnState(void * this, void * spawn_state)"),

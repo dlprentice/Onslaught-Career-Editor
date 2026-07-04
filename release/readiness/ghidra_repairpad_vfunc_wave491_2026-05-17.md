@@ -25,7 +25,7 @@ Date: 2026-05-17
 
 ## Backup
 
-- `G:\GhidraBackups\BEA_20260517-081712_post_wave491_repairpad_vfunc_verified`
+- `[maintainer-local-ghidra-backup-root]\BEA_20260517-081712_post_wave491_repairpad_vfunc_verified`
 - Verified: `19` files, `157551495` bytes, missing `0`, extra `0`, hash differences `0`.
 
 ## Boundary

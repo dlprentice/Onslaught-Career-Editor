@@ -28,7 +28,7 @@ ATTEMPT_LOG = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutat
 TRACKING_STATE = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_tracking_state.json"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260604-121500_post_wave1088_cradar_goodies_boundary_recovery_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260604-121500_post_wave1088_cradar_goodies_boundary_recovery_verified"
 CRADAR_TAG = "cradar-residual-vtable-tail-wave1088"
 GOODIES_TAG = "goodies-autoanalysis-boundary-recovery-wave1088"
 

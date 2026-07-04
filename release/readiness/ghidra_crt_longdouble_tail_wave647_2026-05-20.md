@@ -32,7 +32,7 @@ The pass corrected four suffix-style helper labels: `CRT__LongDoubleShiftMantiss
 - Comment-backed proxy: `3485/6093 = 57.20%`.
 - Strict clean-signature proxy: `3435/6093 = 56.38%`.
 - Next high-signal queue head: `0x0056db76 CRT__ChangeFileSizeByFd_NoLock`.
-- Verified backup: `G:\GhidraBackups\BEA_20260520-162946_post_wave647_crt_longdouble_tail_verified`, `19` files, `162827143` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-162946_post_wave647_crt_longdouble_tail_verified`, `19` files, `162827143` bytes, `DiffCount=0`.
 
 ## Boundaries
 

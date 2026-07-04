@@ -1,7 +1,7 @@
 # FEPDevelopment.cpp Functions
 
 > Source File: FEPDevelopment.cpp | Binary: BEA.exe
-> Debug Path String: 0x0062921c (`C:\dev\ONSLAUGHT2\FEPDevelopment.cpp`)
+> Debug Path String: 0x0062921c (`[maintainer-local-source-export-root]\FEPDevelopment.cpp`)
 
 ## Overview
 
@@ -9,7 +9,7 @@
 
 The important correction is that the earlier `0x00458100` function object started in the middle of the world-file enumeration body. The saved function boundary is now `0x00458090`, and `0x00458100` is intentionally absent as a stale-boundary guard.
 
-Wave957 (`cfepdevelopment-world-list-review-wave957`) re-read the cluster with fresh serialized metadata/tags/xref/instruction/decompile exports and made no mutation. It verified `0x004584d0 CFEPDevelopment__Render`, `0x00458ce0 CFEPDevelopment__ResolveActiveStorageDevice`, `0x00458710 CFEPDevelopment__RefreshWorldListCore`, the stale-boundary guard `0x00458100`, and the surrounding world-list/storage context. Wave911 focused re-audit progress is `292/1408 = 20.74%`; static closure remains `6151/6151 = 100.00%`; verified backup: `G:\GhidraBackups\BEA_20260528-111610_post_wave957_cfepdevelopment_world_list_review_verified`. Layout notes stay mode-qualified because world-file listing, storage/save refresh, and timer scheduling share offsets.
+Wave957 (`cfepdevelopment-world-list-review-wave957`) re-read the cluster with fresh serialized metadata/tags/xref/instruction/decompile exports and made no mutation. It verified `0x004584d0 CFEPDevelopment__Render`, `0x00458ce0 CFEPDevelopment__ResolveActiveStorageDevice`, `0x00458710 CFEPDevelopment__RefreshWorldListCore`, the stale-boundary guard `0x00458100`, and the surrounding world-list/storage context. Wave911 focused re-audit progress is `292/1408 = 20.74%`; static closure remains `6151/6151 = 100.00%`; verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-111610_post_wave957_cfepdevelopment_world_list_review_verified`. Layout notes stay mode-qualified because world-file listing, storage/save refresh, and timer scheduling share offsets.
 
 ## Functions
 

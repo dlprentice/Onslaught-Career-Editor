@@ -22,7 +22,7 @@ Evidence counts:
 - Expanded post-100 static surface remains `1560/1560 = 100.00%`.
 - Wave911 focused remains historical-retired/non-reconstructable at `812/1408 = 57.67%`; Wave911 top-500 remains `500/500 = 100.00%`.
 - Wave1108 current focused accounting advances to `666/1179 = 56.49%`; current risk candidates: 6166; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 513.
-- Verified backup: `G:\GhidraBackups\BEA_20260606-062008_post_wave1170_actor_derived_lifecycle_cleanup_current_risk_review_verified`, `19` files, `176065415` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-062008_post_wave1170_actor_derived_lifecycle_cleanup_current_risk_review_verified`, `19` files, `176065415` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -38,4 +38,4 @@ What remains unproven:
 - BEA patching behavior.
 - Visual QA, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1170; wave1170-actor-derived-lifecycle-cleanup-current-risk-review; 666/1179 = 56.49%; 6 actor-derived lifecycle cleanup current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 513; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consult used; 0 / 0 / 0; 6411/6411 = 100.00%; 6 xref rows; 100 instruction rows; CRocket__scalar_deleting_dtor; CSphereTrigger__scalar_deleting_dtor; CEscapePod__scalar_deleting_dtor; CRocket__dtor_base; CSphereTrigger__dtor_base; CEscapePod__dtor_base; Wave459; Wave460; Wave1022; G:\GhidraBackups\BEA_20260606-062008_post_wave1170_actor_derived_lifecycle_cleanup_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1170; wave1170-actor-derived-lifecycle-cleanup-current-risk-review; 666/1179 = 56.49%; 6 actor-derived lifecycle cleanup current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 513; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consult used; 0 / 0 / 0; 6411/6411 = 100.00%; 6 xref rows; 100 instruction rows; CRocket__scalar_deleting_dtor; CSphereTrigger__scalar_deleting_dtor; CEscapePod__scalar_deleting_dtor; CRocket__dtor_base; CSphereTrigger__dtor_base; CEscapePod__dtor_base; Wave459; Wave460; Wave1022; [maintainer-local-ghidra-backup-root]\BEA_20260606-062008_post_wave1170_actor_derived_lifecycle_cleanup_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.

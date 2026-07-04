@@ -253,7 +253,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
         require(commentless[0].get("name") == "CSPtrSet__Clear", f"raw commentless head name mismatch: {commentless[0]}", failures)
 
     backup = read_json(BACKUP_SUMMARY)
-    require(backup.get("backupPath") == "G:\\GhidraBackups\\BEA_20260521-194929_post_wave705_texture_serialized_chunk_prelude_verified", "backup path mismatch", failures)
+    require(backup.get("backupPath") == "[maintainer-local-ghidra-backup-root]\\BEA_20260521-194929_post_wave705_texture_serialized_chunk_prelude_verified", "backup path mismatch", failures)
     require(backup.get("fileCount") == 19, f"backup file count mismatch: {backup.get('fileCount')}", failures)
     require(int(backup.get("totalBytes", -1)) == 165448583, f"backup byte count mismatch: {backup.get('totalBytes')}", failures)
     require(backup.get("diffCount") == 0, f"backup diff count mismatch: {backup.get('diffCount')}", failures)

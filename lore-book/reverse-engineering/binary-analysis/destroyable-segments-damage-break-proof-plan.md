@@ -23,7 +23,7 @@ Primary static contract source: `reverse-engineering/binary-analysis/destroyable
 
 Relevant retained evidence:
 
-- Wave1205 current-risk review (`wave1205-destroyable-segment-current-risk-review`): `5` destroyable-segment rows, `9` xref rows, `96` instruction rows, and `5` decompile rows, with verified backup `G:\GhidraBackups\BEA_20260607-021737_post_wave1205_destroyable_segment_current_risk_review_verified`.
+- Wave1205 current-risk review (`wave1205-destroyable-segment-current-risk-review`): `5` destroyable-segment rows, `9` xref rows, `96` instruction rows, and `5` decompile rows, with verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260607-021737_post_wave1205_destroyable_segment_current_risk_review_verified`.
 - Wave1157 vfunc current-risk review for variant/vtable dispatch context.
 - Wave1133 feature/pickup bridge review for `0x00442710 CDestroyableSegment__SpawnConfiguredPickup` and `CWorldPhysicsManager__CreatePickup` linkage.
 - Wave1067 controller lookup/damage review for controller threshold/callback state.

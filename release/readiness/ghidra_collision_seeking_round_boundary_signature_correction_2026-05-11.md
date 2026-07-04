@@ -37,7 +37,7 @@ Read-back and focused checks:
 - Focused probe: `PASS`, classification `ghidra-collision-seeking-round-boundary-signature-correction.v1`
 - Queue snapshot after correction: `5884` functions, `743` with comments, `5141` commentless, `2004` undefined signatures, and `2307` `param_N` signatures
 - Baseline probe after correction: `5884` functions, `0` weak names, `0` uncertain owners/helpers/wrappers, and no missing seed function objects.
-- Actual Ghidra project backup: copied `BEA.gpr` and `BEA.rep` to `G:` after the final saved write; verification matched `19` files, `151456647` bytes, and `0` manifest diffs.
+- Actual Ghidra project backup: copied `BEA.gpr` and `BEA.rep` to `[maintainer-local-backup-volume]` after the final saved write; verification matched `19` files, `151456647` bytes, and `0` manifest diffs.
 
 Raw machine-readable evidence remains under ignored repo-relative paths such as `subagents/ghidra-static-reaudit/collision-seeking-wave322/current/`.
 

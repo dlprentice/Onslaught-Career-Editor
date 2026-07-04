@@ -49,7 +49,7 @@ Prior context:
 
 Backup:
 
-`G:\GhidraBackups\BEA_20260606-091847_post_wave1177_hiveboss_init_vfunc_current_risk_review_verified`
+`[maintainer-local-ghidra-backup-root]\BEA_20260606-091847_post_wave1177_hiveboss_init_vfunc_current_risk_review_verified`
 
 Backup verification: `19` files, `176065415` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
@@ -71,4 +71,4 @@ What remains separate proof:
 - BEA patching behavior.
 - Visual QA, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1177; wave1177-hiveboss-init-vfunc-current-risk-review; 695/1179 = 58.95%; 3 CHiveBoss init/vfunc current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 484; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consult used; Codex root final judgment; prior Wave397/Wave921/Wave1087/Wave1127/Wave1140 read-back evidence; 0 / 0 / 0; 6411/6411 = 100.00%; 3 xref rows; 249 instruction rows; 0x0047fe30 CHiveBoss__Init; 0x00480050 CHiveBossVFunc__ForwardApplyDamageUnlessFlag01000000_00480050; 0x00480080 CHiveBossVFunc__ComputeScaledOffsetVectorToOut_00480080; G:\GhidraBackups\BEA_20260606-091847_post_wave1177_hiveboss_init_vfunc_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1177; wave1177-hiveboss-init-vfunc-current-risk-review; 695/1179 = 58.95%; 3 CHiveBoss init/vfunc current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 484; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consult used; Codex root final judgment; prior Wave397/Wave921/Wave1087/Wave1127/Wave1140 read-back evidence; 0 / 0 / 0; 6411/6411 = 100.00%; 3 xref rows; 249 instruction rows; 0x0047fe30 CHiveBoss__Init; 0x00480050 CHiveBossVFunc__ForwardApplyDamageUnlessFlag01000000_00480050; 0x00480080 CHiveBossVFunc__ComputeScaledOffsetVectorToOut_00480080; [maintainer-local-ghidra-backup-root]\BEA_20260606-091847_post_wave1177_hiveboss_init_vfunc_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.

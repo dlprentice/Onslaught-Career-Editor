@@ -34,7 +34,7 @@ The pass created two missing function boundaries at `0x00577a3e` and `0x00577eaa
 - Final Ghidra dry run: `updated=0 skipped=17 created=0 would_create=0 body_set=0 would_set_body=0 renamed=0 would_rename=0 signature_updated=0 missing=0 bad=0`.
 - Post exports verified `17` metadata rows, `17` tag rows, `31` xref rows, `833` instruction rows, `17` clean decompile rows, and two `71`-row dispatch-table snapshots.
 - Queue after Wave660: `6098` total functions, `3619` commented, `2479` commentless, `1217` exact-undefined signatures, `698` `param_N` signatures, comment-backed proxy `3619/6098 = 59.35%`, strict clean-signature proxy `3569/6098 = 58.53%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260520-230154_post_wave660_math_dispatch_verified`, `19` files, `163318663` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-230154_post_wave660_math_dispatch_verified`, `19` files, `163318663` bytes, `DiffCount=0`.
 - Next queue head: `0x00579184 CFastVB__NormalizeQuaternionCopy`.
 
 ## Boundaries

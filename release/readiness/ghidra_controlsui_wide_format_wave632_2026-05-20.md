@@ -21,7 +21,7 @@ The pass corrected `CRT__MapWideCharsWithCallbackStopOnError` to the ControlsUI-
 - Post exports: `5` metadata rows, `5` tag rows, `12` xref rows, `505` instruction rows, `5` decompile rows
 - Queue refresh: `6093` total, `3344` commented, `2749` commentless, `1217` exact-undefined signatures, `948` `param_N` signatures
 - Strict clean-signature proxy: `3292/6093 = 54.03%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-094434_post_wave632_controlsui_wide_format_verified` (`19` files, `162302855` bytes, `DiffCount=0`)
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-094434_post_wave632_controlsui_wide_format_verified` (`19` files, `162302855` bytes, `DiffCount=0`)
 
 The next high-signal queue head is `0x0056586a CRT__SetLocale`.
 

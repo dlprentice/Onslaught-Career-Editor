@@ -27,8 +27,8 @@ Evidence:
 - Post metadata/tag/xref/instruction/decompile exports: `2` / `2` / `2` / `190` / `2`.
 - Post tags include `static-reaudit`, `wave1125-carver-targeting-current-risk-review`, `wave1125-readback-verified`, `retail-binary-evidence`, `tag-normalized`, `comment-hardened`, and `carver-targeting`.
 - Xrefs: `0x00422ba7` in `CCarverAI__UpdateAttackAndReschedule` calls `0x00422db0`; `0x004234ad` in `CCarverGuide__HandleEvent` calls `0x00423510`.
-- Backup: `G:\GhidraBackups\BEA_20260605-053504_post_wave1125_carver_targeting_current_risk_review_verified`, `19` files, `175737735` bytes, `DiffCount=0`.
-- Previous completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-050726_post_wave1124_repairpad_current_risk_review_verified`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-053504_post_wave1125_carver_targeting_current_risk_review_verified`, `19` files, `175737735` bytes, `DiffCount=0`.
+- Previous completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-050726_post_wave1124_repairpad_current_risk_review_verified`.
 - Prior context: Wave915 re-read both rows, Wave965 retained both as Carver init/combat/wing context, and Wave989 re-read the CarverGuide lifecycle path including `0x00423510`.
 
 What this proves:

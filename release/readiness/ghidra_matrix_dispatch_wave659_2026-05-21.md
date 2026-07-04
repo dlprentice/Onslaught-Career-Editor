@@ -41,7 +41,7 @@ The pass created three missing function boundaries (`0x005771dd`, `0x0057726d`, 
 - Queue refresh passed with `6096` total functions, `3602` commented, `2494` commentless, `1217` exact-undefined signatures, and `711` `param_N` signatures.
 - Comment-backed proxy: `3602/6096 = 59.09%`.
 - Strict clean-signature proxy: `3552/6096 = 58.27%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260521-221700_post_wave659_matrix_dispatch_verified` (`19` files, `163285895` bytes, `DiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-221700_post_wave659_matrix_dispatch_verified` (`19` files, `163285895` bytes, `DiffCount=0`).
 - Next high-signal queue head: `0x005776a5 CTexture__DispatchPtr00656fd0_WithInit`.
 
 ## Bounded Claim

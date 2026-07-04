@@ -107,7 +107,7 @@ DOC_TOKENS = (
     "2557",
     "772",
     "0x005721f0 CFastVB__SeedVertexCacheFromTriangleRefs",
-    "G:\\GhidraBackups\\BEA_20260520-185249_post_wave652_cfastvb_strip_merge_emission_verified",
+    "[maintainer-local-ghidra-backup-root]\\BEA_20260520-185249_post_wave652_cfastvb_strip_merge_emission_verified",
 )
 
 OVERCLAIM_TOKENS = (

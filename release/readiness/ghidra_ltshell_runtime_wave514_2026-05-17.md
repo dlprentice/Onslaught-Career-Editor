@@ -26,7 +26,7 @@ No rename was applied in this wave; the pass hardens the existing names with rea
 - Focused probe: `tools/ghidra_ltshell_runtime_wave514_probe.py --check`.
 - Queue refresh after Wave514: `6078` functions, `2404` commented, `3674` commentless, `1614` exact-undefined signatures, and `1428` `param_N` signatures.
 - Current whole-project telemetry proxy: comment-backed `2404/6078 = 39.55%`; strict comment-plus-clean-signature proxy `2350/6078 = 38.66%`.
-- Backup verified at `G:\GhidraBackups\BEA_20260517-204514_post_wave514_ltshell_runtime_verified` with `19` files, `158436231` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260517-204514_post_wave514_ltshell_runtime_verified` with `19` files, `158436231` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

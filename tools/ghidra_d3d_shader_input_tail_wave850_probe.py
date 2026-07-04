@@ -33,7 +33,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-081702_post_wave850_d3d_shader_input_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-081702_post_wave850_d3d_shader_input_tail_verified"
 NEXT_HEAD = "0x005140e0 CDXEngine__CaptureAviFrame"
 TASK = "Wave850 D3D shader/input tail"
 

@@ -25,7 +25,7 @@ The pass recovered six missing function boundaries in the feature-value family, 
 - `py -3 tools\ghidra_feature_value_tranche_probe_test.py` passed `3/3`; `py -3 -m py_compile tools\ghidra_feature_value_tranche_probe.py tools\ghidra_feature_value_tranche_probe_test.py` passed.
 - `cmd.exe /c npm run test:ghidra-feature-value-tranche` passed against the saved read-back artifacts.
 - The refreshed whole-database queue reports `5938` functions, `1014` commented functions, `4924` commentless functions, `1976` undefined signatures, and `2139` `param_N` signatures.
-- The post-mutation live Ghidra backup was verified at `G:\GhidraBackups\BEA_20260512_154029_post_wave341_verified` with `19` files, `152505223` bytes, and `DiffCount=0`.
+- The post-mutation live Ghidra backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260512_154029_post_wave341_verified` with `19` files, `152505223` bytes, and `DiffCount=0`.
 
 ## Claim Boundary
 

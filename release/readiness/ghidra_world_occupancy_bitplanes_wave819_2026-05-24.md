@@ -25,7 +25,7 @@ Read-back evidence:
 - Post exports: 6 metadata rows, 6 tag rows, 8 xref rows, 1326 target instruction rows, 204 callsite instruction rows, 8 helper metadata rows, and 6 decompile rows.
 - Queue after Wave819: 6098 total, 5612 commented, 486 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5612/6098 = 92.03%`, strict clean-signature proxy `5612/6098 = 92.03%`.
 - Next raw commentless row is `0x004bc2e0 CExplosionInitThing__ClearCostGridBoundsAndBuildPath`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-164330_post_wave819_world_occupancy_bitplanes_verified`, 19 files, 171412359 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-164330_post_wave819_world_occupancy_bitplanes_verified`, 19 files, 171412359 bytes, `DiffCount=0`.
 
 What this proves:
 

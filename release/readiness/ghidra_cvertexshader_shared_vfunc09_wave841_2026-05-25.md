@@ -26,7 +26,7 @@ Read-back evidence:
 - Queue after Wave841: `6098` total functions, `5665` commented, `433` commentless, `0` exact-undefined signatures, `0` `param_N` signatures, comment-backed proxy `5665/6098 = 92.90%`, strict clean-signature proxy `5665/6098 = 92.90%`.
 - The commentless high-signal, signature, and name-confidence queues remain empty.
 - Next raw commentless row: `0x0050ab60 CVBufTexture__RenderAndRestoreStateFlag4`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-032940_post_wave841_cvertexshader_shared_vfunc09_verified`, `19` files, `171838343` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-032940_post_wave841_cvertexshader_shared_vfunc09_verified`, `19` files, `171838343` bytes, `DiffCount=0`.
 
 What this proves:
 

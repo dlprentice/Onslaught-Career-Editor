@@ -17,7 +17,7 @@ Wave561 saved static Ghidra signature/comment/tag evidence for a ten-target plat
 - Final dry verification: `updated=0 skipped=10 renamed=0 would_rename=0 missing=0 bad=0`.
 - Read-back exports: `10` metadata rows, `10` tag rows, `30` xref rows, `650` target instruction rows, `16` vtable-slot rows, and `10` decompile rows.
 - Focused probe: `tools/ghidra_platform_shell_wave561_probe.py`.
-- Backup: `G:\GhidraBackups\BEA_20260518-191114_post_wave561_platform_shell_verified` with `19` files, `159812487` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-191114_post_wave561_platform_shell_verified` with `19` files, `159812487` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Queue Telemetry
 

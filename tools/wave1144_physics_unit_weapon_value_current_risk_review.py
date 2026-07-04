@@ -37,8 +37,8 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260605-165322_post_wave1144_physics_unit_weapon_value_current_risk_review_verified"
-PRIOR_BACKUP = r"G:\GhidraBackups\BEA_20260605-161338_post_wave1143_physics_statement_dtor_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-165322_post_wave1144_physics_unit_weapon_value_current_risk_review_verified"
+PRIOR_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-161338_post_wave1143_physics_statement_dtor_current_risk_review_verified"
 
 TARGETS = {
     "0x00432a50": ("CUnitAlligence__scalar_deleting_dtor", "void * __thiscall CUnitAlligence__scalar_deleting_dtor(void * this, int flags)"),

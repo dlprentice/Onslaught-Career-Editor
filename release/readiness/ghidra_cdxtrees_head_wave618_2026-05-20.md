@@ -24,7 +24,7 @@ The pass saved signatures, comments, and tags only. It made no function renames,
 - Dry/apply/final-dry logs reported `updated=0 skipped=9 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=9 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=9 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`.
 - Post-state exports verified `9` metadata rows, `9` tag rows, `12` xref rows, `333` context instruction rows, `378` callsite instruction rows, `61` HideTree tail instruction rows, `9` decompile rows, and `16` vtable slot rows.
 - The vtable at `0x005e59d8` has slot 0 `CDXTrees__scalar_deleting_dtor`, slot 1 `VFuncSlot_09_005019c0`, slots 2 and 3 `SharedVFunc__ReturnZero_00405930`, and slot 4 `CDXTrees__ReleaseBuffers`; slots 5-15 read back as float/data tail values, not function pointers.
-- Backup verified: `G:\GhidraBackups\BEA_20260520-025200_post_wave618_cdxtrees_head_verified` with `19` files, `161680263` bytes, and `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260520-025200_post_wave618_cdxtrees_head_verified` with `19` files, `161680263` bytes, and `DiffCount=0`.
 
 ## Queue Telemetry
 

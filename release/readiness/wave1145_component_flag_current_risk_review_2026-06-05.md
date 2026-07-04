@@ -6,7 +6,7 @@ Scope: `wave1145-component-flag-current-risk-review`
 
 Wave1145 re-read eight PhysicsScript component flag current-risk rows with fresh Ghidra exports and made no mutation: no rename, signature change, comment/tag change, function-boundary change, executable-byte change, BEA launch, installed-game mutation, save mutation, or runtime-file mutation.
 
-Probe token anchor: Wave1145; wave1145-component-flag-current-risk-review; 298/1179 = 25.28%; 8 current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 881; current risk candidates: 6166; PhysicsScript component flag current-risk review; fresh Ghidra export; component flag apply helpers; zero-comparison path; DAT_00855400; 0x005d856c; read-only review; no mutation; no Codex subagent; 0 / 0 / 0; 6411/6411 = 100.00%; CComponentFlag124__ApplyToComponentByName; CComponentFlag128__ApplyToComponentByName; CComponentFlag12C__ApplyToComponentByName; CComponentFlag198__ApplyToComponentByName; CComponentFlag114__ApplyToComponentByName; CComponentFlag19C__ApplyToComponentByName; CComponentFlag134__ApplyToComponentByName; CComponentFlag108__ApplyToComponentByName; G:\GhidraBackups\BEA_20260605-171711_post_wave1145_component_flag_current_risk_review_verified; G:\GhidraBackups\BEA_20260605-165322_post_wave1144_physics_unit_weapon_value_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1145; wave1145-component-flag-current-risk-review; 298/1179 = 25.28%; 8 current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 881; current risk candidates: 6166; PhysicsScript component flag current-risk review; fresh Ghidra export; component flag apply helpers; zero-comparison path; DAT_00855400; 0x005d856c; read-only review; no mutation; no Codex subagent; 0 / 0 / 0; 6411/6411 = 100.00%; CComponentFlag124__ApplyToComponentByName; CComponentFlag128__ApplyToComponentByName; CComponentFlag12C__ApplyToComponentByName; CComponentFlag198__ApplyToComponentByName; CComponentFlag114__ApplyToComponentByName; CComponentFlag19C__ApplyToComponentByName; CComponentFlag134__ApplyToComponentByName; CComponentFlag108__ApplyToComponentByName; [maintainer-local-ghidra-backup-root]\BEA_20260605-171711_post_wave1145_component_flag_current_risk_review_verified; [maintainer-local-ghidra-backup-root]\BEA_20260605-165322_post_wave1144_physics_unit_weapon_value_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
 
 Fresh evidence:
 
@@ -15,8 +15,8 @@ Fresh evidence:
 - `pre-xrefs.tsv`: `8` rows.
 - `pre-instructions.tsv`: `608` instruction rows, `targets=8 missing=0`.
 - `pre-decompile/index.tsv`: `8` rows, `targets=8 dumped=8 missing=0 failed=0`.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-171711_post_wave1145_component_flag_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
-- Previous completed backup: `G:\GhidraBackups\BEA_20260605-165322_post_wave1144_physics_unit_weapon_value_current_risk_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-171711_post_wave1145_component_flag_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Previous completed backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-165322_post_wave1144_physics_unit_weapon_value_current_risk_review_verified`.
 - Codex subagent usage: none for this slice; Codex root selected and audited the component-flag tranche locally.
 
 Reviewed rows:

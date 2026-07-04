@@ -55,7 +55,7 @@ Read-back evidence:
 - Wave911 focused progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1248/1560 = 80.00%`.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-003225_post_wave1067_destructable_controller_lookup_damage_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-003225_post_wave1067_destructable_controller_lookup_damage_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -75,4 +75,4 @@ What remains unproven:
 
 Next candidate note: continue with the next expanded static re-audit cluster; prefer read-only review first and mutate only when fresh evidence proves a correction or normalization need.
 
-Probe token anchor: Wave1067; destructable-controller-lookup-damage-review-wave1067; 0x00443fc0 CDestructableSegmentsController__Ctor; 0x00444030 CDestructableSegmentsController__DamageSegmentByIndexAndUpdateThreshold; 0x00444160 CDestructableSegmentsController__ApplyRandomDamageBurstAndUpdateThreshold; 0x004442d0 CDestructableSegmentsController__GetSegmentLastDamageTimeByIndex; 0x00444300 CDestructableSegmentsController__GetSegmentLastDamageAmountByIndex; 0x004443f0 CDestructableSegmentsController__TriggerCoreCascadeIfEligible; 0x00444450 CDestructableSegmentsController__SetSegmentField0CByName; 0x00444520 CDestructableSegmentsController__FindSegmentByName; 0x004445b0 CDestructableSegmentsController__SetSegmentActiveFlagByName; 0x00444620 CDestructableSegmentsController__SetAllSegmentsActiveFlagAndRefreshMetric; 812/1408 = 57.67%; 1248/1560 = 80.00%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260602-003225_post_wave1067_destructable_controller_lookup_damage_review_verified; read-only review.
+Probe token anchor: Wave1067; destructable-controller-lookup-damage-review-wave1067; 0x00443fc0 CDestructableSegmentsController__Ctor; 0x00444030 CDestructableSegmentsController__DamageSegmentByIndexAndUpdateThreshold; 0x00444160 CDestructableSegmentsController__ApplyRandomDamageBurstAndUpdateThreshold; 0x004442d0 CDestructableSegmentsController__GetSegmentLastDamageTimeByIndex; 0x00444300 CDestructableSegmentsController__GetSegmentLastDamageAmountByIndex; 0x004443f0 CDestructableSegmentsController__TriggerCoreCascadeIfEligible; 0x00444450 CDestructableSegmentsController__SetSegmentField0CByName; 0x00444520 CDestructableSegmentsController__FindSegmentByName; 0x004445b0 CDestructableSegmentsController__SetSegmentActiveFlagByName; 0x00444620 CDestructableSegmentsController__SetAllSegmentsActiveFlagAndRefreshMetric; 812/1408 = 57.67%; 1248/1560 = 80.00%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-003225_post_wave1067_destructable_controller_lookup_damage_review_verified; read-only review.

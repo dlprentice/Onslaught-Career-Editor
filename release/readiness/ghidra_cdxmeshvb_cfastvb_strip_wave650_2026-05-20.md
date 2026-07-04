@@ -33,7 +33,7 @@ The pass made no renames, no function-boundary changes, and no executable-byte c
 - Queue after Wave650: `6093` total, `3518` commented, `2575` commentless, `1217` exact-undefined signatures, `790` `param_N` signatures
 - Comment-backed proxy: `3518/6093 = 57.74%`
 - Strict clean-signature proxy: `3468/6093 = 56.92%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-215037_post_wave650_cdxmeshvb_cfastvb_strip_verified`, `19` files, `162990983` bytes, `DiffCount=0`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-215037_post_wave650_cdxmeshvb_cfastvb_strip_verified`, `19` files, `162990983` bytes, `DiffCount=0`
 - Next queue head: `0x0056fce0 CFastVB__SelectTriangleWithMaxOpenEdges`
 
 ## Boundaries

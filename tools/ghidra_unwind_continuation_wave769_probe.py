@@ -30,7 +30,7 @@ DEVELOPER_STATE = ROOT / "developer_agent_state.json"
 DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260523-174151_post_wave769_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260523-174151_post_wave769_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d5350": "0x0061dc3c",
@@ -82,8 +82,8 @@ HELPER_NAMES = (
 )
 
 STRING_EXPECTATIONS = {
-    "string-00633a84.tsv": r"C:\dev\ONSLAUGHT2\tree.cpp",
-    "string-00633b6c.tsv": r"C:\dev\ONSLAUGHT2\Unit.cpp",
+    "string-00633a84.tsv": r"[maintainer-local-source-export-root]\tree.cpp",
+    "string-00633b6c.tsv": r"[maintainer-local-source-export-root]\Unit.cpp",
 }
 
 COMMENT_TOKENS = {

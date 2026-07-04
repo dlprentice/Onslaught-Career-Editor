@@ -27,11 +27,11 @@ git -C references/Onslaught ls-tree -r --name-only HEAD
 Read-only Ghidra exports:
 
 ```powershell
-wsl bash -lc "cd /mnt/c/Users/david/source/Onslaught-Career-Editor-private && tools/run_ghidra_headless_postscript.sh ExportFunctionsByAddressDecompile.java subagents/battleengine-weapon-fire-candidate/current/decompile/addresses.txt subagents/battleengine-weapon-fire-candidate/current/decompile 30"
-wsl bash -lc "cd /mnt/c/Users/david/source/Onslaught-Career-Editor-private && tools/run_ghidra_headless_postscript.sh ExportXrefsForAddresses.java subagents/battleengine-weapon-fire-candidate/current/xrefs/addresses.txt subagents/battleengine-weapon-fire-candidate/current/xrefs/cweapon_type_xrefs.tsv"
-wsl bash -lc "cd /mnt/c/Users/david/source/Onslaught-Career-Editor-private && tools/run_ghidra_headless_postscript.sh ExportXrefsForAddresses.java subagents/battleengine-weapon-fire-candidate/current/xrefs/col_addresses.txt subagents/battleengine-weapon-fire-candidate/current/xrefs/cweapon_col_xrefs.tsv"
-wsl bash -lc "cd /mnt/c/Users/david/source/Onslaught-Career-Editor-private && tools/run_ghidra_headless_postscript.sh DumpPointerTable.java 0x00617304 24 subagents/battleengine-weapon-fire-candidate/current/xrefs/cweapon_vtable_00617304.tsv"
-wsl bash -lc "cd /mnt/c/Users/david/source/Onslaught-Career-Editor-private && tools/run_ghidra_headless_postscript.sh ResolveVtableTypeNames.java subagents/battleengine-weapon-fire-candidate/current/xrefs/vtable_candidates.txt subagents/battleengine-weapon-fire-candidate/current/xrefs/vtable_type_names.tsv"
+wsl bash -lc "cd [maintainer-private-checkout] && tools/run_ghidra_headless_postscript.sh ExportFunctionsByAddressDecompile.java subagents/battleengine-weapon-fire-candidate/current/decompile/addresses.txt subagents/battleengine-weapon-fire-candidate/current/decompile 30"
+wsl bash -lc "cd [maintainer-private-checkout] && tools/run_ghidra_headless_postscript.sh ExportXrefsForAddresses.java subagents/battleengine-weapon-fire-candidate/current/xrefs/addresses.txt subagents/battleengine-weapon-fire-candidate/current/xrefs/cweapon_type_xrefs.tsv"
+wsl bash -lc "cd [maintainer-private-checkout] && tools/run_ghidra_headless_postscript.sh ExportXrefsForAddresses.java subagents/battleengine-weapon-fire-candidate/current/xrefs/col_addresses.txt subagents/battleengine-weapon-fire-candidate/current/xrefs/cweapon_col_xrefs.tsv"
+wsl bash -lc "cd [maintainer-private-checkout] && tools/run_ghidra_headless_postscript.sh DumpPointerTable.java 0x00617304 24 subagents/battleengine-weapon-fire-candidate/current/xrefs/cweapon_vtable_00617304.tsv"
+wsl bash -lc "cd [maintainer-private-checkout] && tools/run_ghidra_headless_postscript.sh ResolveVtableTypeNames.java subagents/battleengine-weapon-fire-candidate/current/xrefs/vtable_candidates.txt subagents/battleengine-weapon-fire-candidate/current/xrefs/vtable_type_names.tsv"
 ```
 
 The first `DumpPointerTable.java` run used the wrong argument order and failed before producing evidence. It was rerun with the script's documented `<table_addr> <entry_count> <out_tsv>` order and completed.

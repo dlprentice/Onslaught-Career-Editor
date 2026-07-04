@@ -23,7 +23,7 @@ The pass saved signatures/comments/tags for all seven rows, made no renames, and
 - Post exports: `7` metadata rows, `7` tag rows, `14` xref rows, `1547` instruction rows, `7` decompile rows, plus `1` context decompile row for `CRT__ConvertLongDoubleByFormatSpec`
 - Queue refresh: `6093` total, `3416` commented, `2677` commentless, `1217` exact-undefined signatures, `889` `param_N` signatures
 - Strict clean-signature proxy: `3365/6093 = 55.23%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-133643_post_wave641_crt_mantissa_helpers_verified` (`19` files, `162564999` bytes, `DiffCount=0`)
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-133643_post_wave641_crt_mantissa_helpers_verified` (`19` files, `162564999` bytes, `DiffCount=0`)
 
 The next high-signal queue head is `0x005698e3 CRT__ConvertLongDoubleByFormatSpec`.
 

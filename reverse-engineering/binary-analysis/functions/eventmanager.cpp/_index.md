@@ -12,7 +12,7 @@ The Steam retail build keeps the same core architecture as Stuart's source:
 - Overflow list for far-future events
 - Per-frame flush with 3 priority buckets
 
-**Debug path string**: `C:\dev\ONSLAUGHT2\eventmanager.cpp` at `0x00628d3c`
+**Debug path string**: `[maintainer-local-source-export-root]\eventmanager.cpp` at `0x00628d3c`
 
 ## Wave1066 Scheduler Re-Audit
 
@@ -20,7 +20,7 @@ Wave1066 (`event-manager-scheduler-review-wave1066`, `wave1066-readback-verified
 
 Exact Wave1066 anchors: `0x0044afa0 CEventManager__ctor`, `0x0044b060 CEventManager__Init`, `0x0044b2d0 CEventManager__AddEvent_TimeFromNow`, `0x0044b310 CEventManager__AddEvent_ScheduledEvent`, `0x0044b600 CEventManager__AdvanceTime`, `0x0044b640 CEventManager__Flush`, `0x004de1f0 CScheduledEvent__Set`, and `0x004de230 CScheduledEvent__dtor`.
 
-Fresh primary/context/post exports verified `13/13/47/549/13`, `11/11/573/993/11`, and `13/13/47/549/13` rows for metadata/tags/xrefs/instructions/decompile. Verified backup: `G:\GhidraBackups\BEA_20260602-000144_post_wave1066_event_manager_scheduler_review_verified`. Progress anchors: `812/1408 = 57.67%`, `1232/1560 = 78.97%`, `500/500 = 100.00%`, `6246/6246 = 100.00%`.
+Fresh primary/context/post exports verified `13/13/47/549/13`, `11/11/573/993/11`, and `13/13/47/549/13` rows for metadata/tags/xrefs/instructions/decompile. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-000144_post_wave1066_event_manager_scheduler_review_verified`. Progress anchors: `812/1408 = 57.67%`, `1232/1560 = 78.97%`, `500/500 = 100.00%`, `6246/6246 = 100.00%`.
 
 This proves saved static tag/read-back evidence only. Runtime event scheduling/flush/reuse/dispatch behavior, exact event payload schema, exact `CEventManager`/active-reader layouts, exact source-body identity, BEA patching, gameplay outcomes, and rebuild parity remain separate proof.
 
@@ -61,7 +61,7 @@ This proves saved static tag/read-back evidence only. Runtime event scheduling/f
 | 0x005d2560 | Unwind@005d2560 | Wave750 eventmanager-adjacent monitor cleanup; calls `CMonitor__Shutdown` for `*(EBP-0x10)`. |
 | 0x005d2580 | Unwind@005d2580 | Wave750 eventmanager-adjacent descriptor cleanup; calls `CDXLandscape__DestroyResourceDescriptorArray_Thunk` for the stack-local descriptor array at `EBP-0x434`. |
 
-Wave750 saved `0x005d24e0 Unwind@005d24e0` through `0x005d2580 Unwind@005d2580` as `void __cdecl Unwind@...(void)` with static Ghidra comments/tags and backup `G:\GhidraBackups\BEA_20260522-193422_post_wave750_unwind_continuation_verified`. Wave749 previously saved `0x005d24b0 Unwind@005d24b0` with backup `G:\GhidraBackups\BEA_20260522-190133_post_wave749_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
+Wave750 saved `0x005d24e0 Unwind@005d24e0` through `0x005d2580 Unwind@005d2580` as `void __cdecl Unwind@...(void)` with static Ghidra comments/tags and backup `[maintainer-local-ghidra-backup-root]\BEA_20260522-193422_post_wave750_unwind_continuation_verified`. Wave749 previously saved `0x005d24b0 Unwind@005d24b0` with backup `[maintainer-local-ghidra-backup-root]\BEA_20260522-190133_post_wave749_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
 
 ## Cross-References
 

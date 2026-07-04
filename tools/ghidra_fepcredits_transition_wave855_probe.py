@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave855 FEPCredits transition"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-110750_post_wave855_fepcredits_transition_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-110750_post_wave855_fepcredits_transition_verified"
 TARGET = "0x0051a970"
 TARGET_NAME = "CFEPCredits__TransitionNotification"
 TARGET_SIGNATURE = "void __fastcall CFEPCredits__TransitionNotification(void * this, int from_page)"

@@ -158,7 +158,7 @@ PUBLIC_NOTE_TOKENS = (
     "CSquadNormal__SelectBestSupportOrEscort",
     "RET 0x4",
     "203 target xref rows",
-    "G:\\GhidraBackups\\BEA_20260518-005140_post_wave524_unit_deploy_support_corrected_verified",
+    "[maintainer-local-ghidra-backup-root]\\BEA_20260518-005140_post_wave524_unit_deploy_support_corrected_verified",
     "runtime deploy behavior",
     "rebuild parity",
 )

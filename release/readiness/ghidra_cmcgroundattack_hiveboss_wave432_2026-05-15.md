@@ -36,7 +36,7 @@ This is public-safe static evidence only. It does not launch or patch `BEA.exe`,
 | Post-apply idempotent dry run | PASS | Dry `updated=0 skipped=11 created=0 would_create=0 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. |
 | Post-apply metadata/tag/xref/vtable/instruction/decompile read-back | PASS | Verified `11` metadata rows, `11` tag rows, `16` xref rows, `48` vtable-slot rows, `2959` instruction rows, `769` focused full HiveBoss slot-4 instruction rows, and `11` target decompile exports. |
 | `cmd.exe /c npm run test:ghidra-cmcgroundattack-hiveboss-wave432` | PASS | Focused probe returned `status: PASS` with zero failures. |
-| Actual Ghidra project backup verification after Wave432 mutation | PASS | Copied `BEA.gpr` and `BEA.rep` to `G:\GhidraBackups\BEA_20260515_191902_post_wave432_cmcgroundattack_hiveboss_verified`; compared `19` files and `155650951` bytes. |
+| Actual Ghidra project backup verification after Wave432 mutation | PASS | Copied `BEA.gpr` and `BEA.rep` to `[maintainer-local-ghidra-backup-root]\BEA_20260515_191902_post_wave432_cmcgroundattack_hiveboss_verified`; compared `19` files and `155650951` bytes. |
 
 ## Current Queue Telemetry
 

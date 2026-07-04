@@ -21,7 +21,7 @@ Dome component for the Warspite battleship boss. CWarspiteDome is a destructible
 
 Wave435 recovered the adjacent `CMCWarspiteDome` motion-controller table near the tentacle controller cluster. These are distinct from the `CWarspiteDome` unit/object lifecycle functions above.
 
-Wave1021 (`motion-controller-constructor-review-wave1021`) re-read `0x0049ef80 CMCWarspiteDome__Constructor` with no mutation. Fresh xrefs still show `CWarspiteDome__Init` callers at `0x00504918` and `0x00504924`; instruction evidence calls `CMotionController__ctor_base`, installs vtable `0x005dc484`, stores the owner dome pointer at `+0x08`, and returns with `RET 0x4`. Verified backup: `G:\GhidraBackups\BEA_20260531-222637_post_wave1021_motion_controller_constructor_review_verified`. Runtime dome motion behavior, exact source-body identity, concrete layouts, BEA patching, and rebuild parity remain separate proof.
+Wave1021 (`motion-controller-constructor-review-wave1021`) re-read `0x0049ef80 CMCWarspiteDome__Constructor` with no mutation. Fresh xrefs still show `CWarspiteDome__Init` callers at `0x00504918` and `0x00504924`; instruction evidence calls `CMotionController__ctor_base`, installs vtable `0x005dc484`, stores the owner dome pointer at `+0x08`, and returns with `RET 0x4`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-222637_post_wave1021_motion_controller_constructor_review_verified`. Runtime dome motion behavior, exact source-body identity, concrete layouts, BEA patching, and rebuild parity remain separate proof.
 
 | Address | Name | Purpose |
 | --- | --- | --- |
@@ -34,7 +34,7 @@ Read-back verified vtable `0x005dc484` slot 1 at `0x0049efa0` and slot 4 at `0x0
 
 ## Exception Handlers
 
-Wave770 static read-back (`unwind-continuation-wave770`, `wave770-readback-verified`) hardened the WarspiteDome.cpp allocation-cleanup rows as `void __cdecl Unwind@...(void)`. DATA scope-table xrefs `0x0061e034`, `0x0061e03c`, and `0x0061e044` point at `0x005d57c0 Unwind@005d57c0`, `0x005d57d6 Unwind@005d57d6`, and `0x005d57ec Unwind@005d57ec`; instruction/decompile evidence calls `OID__FreeObject_Callback` on `*(EBP+0x4)` with WarspiteDome.cpp debug path `0x0063d170`, line tokens `0x19`, `0x1a`, and `0x1d`, and allocation/type values `0x17`, `0x16`, and `0x1b`. Verified backup: `G:\GhidraBackups\BEA_20260523-180835_post_wave770_unwind_continuation_verified`. This is saved static retail Ghidra evidence only; exact parent source body, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain unproven.
+Wave770 static read-back (`unwind-continuation-wave770`, `wave770-readback-verified`) hardened the WarspiteDome.cpp allocation-cleanup rows as `void __cdecl Unwind@...(void)`. DATA scope-table xrefs `0x0061e034`, `0x0061e03c`, and `0x0061e044` point at `0x005d57c0 Unwind@005d57c0`, `0x005d57d6 Unwind@005d57d6`, and `0x005d57ec Unwind@005d57ec`; instruction/decompile evidence calls `OID__FreeObject_Callback` on `*(EBP+0x4)` with WarspiteDome.cpp debug path `0x0063d170`, line tokens `0x19`, `0x1a`, and `0x1d`, and allocation/type values `0x17`, `0x16`, and `0x1b`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260523-180835_post_wave770_unwind_continuation_verified`. This is saved static retail Ghidra evidence only; exact parent source body, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain unproven.
 
 | Address | Name | Line | Purpose |
 |---------|------|------|---------|

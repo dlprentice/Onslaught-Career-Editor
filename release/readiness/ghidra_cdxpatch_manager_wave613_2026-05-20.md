@@ -40,7 +40,7 @@ The pass made no renames and did not create or repair function boundaries. The e
 - Apply: `updated=9 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`
 - Final dry: `updated=0 skipped=9 renamed=0 would_rename=0 missing=0 bad=0`
 - Read-back exports verified `9` metadata rows, `9` tag rows, `16` xref rows, `2349` instruction rows, `9` decompile rows, `464` callsite instruction rows, and `10` vtable-slot rows.
-- Verified backup: `G:\GhidraBackups\BEA_20260520-001229_post_wave613_cdxpatch_manager_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-001229_post_wave613_cdxpatch_manager_verified`
   - `sourceFileCount=19`
   - `destFileCount=19`
   - `sourceBytes=161614727`

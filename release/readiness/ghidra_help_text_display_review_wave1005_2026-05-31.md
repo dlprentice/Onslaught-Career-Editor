@@ -22,7 +22,7 @@ Read-back evidence:
 
 - Target exports: 5 metadata rows, 5 tag rows, 47 xref rows, 232 body-instruction rows, and 5 decompile rows.
 - Context exports: 4 metadata rows, 4 decompile rows, and 1252 body-instruction rows.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-132023_post_wave1005_help_text_display_review_verified`, 19 files, 173869959 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-132023_post_wave1005_help_text_display_review_verified`, 19 files, 173869959 bytes, `DiffCount=0`, `HashDiffCount=0`.
 - Queue closure remains `6223/6223 = 100.00%` with 0 commentless functions, 0 exact-undefined signatures, and 0 `param_N` signatures.
 - Wave911 focused re-audit progress remains `485/1408 = 34.45%`.
 - Expanded static surface progress advances to `659/1478 = 44.59%`.

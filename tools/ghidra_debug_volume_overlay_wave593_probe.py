@@ -300,7 +300,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
 
     backup = json.loads(read_text(BACKUP_SUMMARY))
     expected_backup = {
-        "backupPath": "G:\\GhidraBackups\\BEA_20260519-140648_post_wave593_debug_volume_overlay_verified",
+        "backupPath": "[maintainer-local-ghidra-backup-root]\\BEA_20260519-140648_post_wave593_debug_volume_overlay_verified",
         "fileCount": 19,
         "totalBytes": 160992135.0,
         "missingCount": 0,
@@ -337,7 +337,7 @@ def check_docs(failures: list[str]) -> None:
         "1347",
         "1100",
         "2987/6093 = 49.02%",
-        "G:\\GhidraBackups\\BEA_20260519-140648_post_wave593_debug_volume_overlay_verified",
+        "[maintainer-local-ghidra-backup-root]\\BEA_20260519-140648_post_wave593_debug_volume_overlay_verified",
     )
     for label, text in docs.items():
         require_tokens(label, text, required_tokens[:3], failures)

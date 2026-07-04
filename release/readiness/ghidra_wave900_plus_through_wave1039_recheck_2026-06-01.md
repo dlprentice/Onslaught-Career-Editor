@@ -14,7 +14,7 @@ Current extension:
 - Focused probe: `tools/ghidra_component_scalar_flag_apply_review_wave1039_probe.py`
 - Apply script: `tools/ApplyComponentScalarFlagApplyReviewWave1039.java`
 - Evidence base: `subagents/ghidra-static-reaudit/wave1039-component-value-scalar-flag-apply-review`
-- Verified backup: `G:\GhidraBackups\BEA_20260601-075609_post_wave1039_component_value_scalar_flag_apply_review_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-075609_post_wave1039_component_value_scalar_flag_apply_review_verified`
 
 Wave1039 summary:
 
@@ -30,4 +30,4 @@ Boundary note:
 
 This is structural static evidence validation. It checks focused probe coverage, readiness/evidence/backup structure, apply-log coverage, and live static queue closure. It does not prove runtime PhysicsScript application behavior, runtime component behavior, mission-script outcomes, exact source-body identity, concrete layouts, BEA patching, gameplay outcomes, or rebuild parity.
 
-Probe token anchor: Wave1039; component-scalar-flag-apply-review-wave1039; 0x0043ca70 CComponentScalarD8__ApplyToComponentByName; 0x0043d460 CComponentScalar160__ApplyToComponentByName; 0x0043ce60 CComponentFlag124__ApplyToComponentByName; 0x0043d3a0 CComponentFlag108__ApplyToComponentByName; DAT_00855400; 0x005d856c; positive-only wording; 711/1408 = 50.50%; 940/1493 = 62.96%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-075609_post_wave1039_component_value_scalar_flag_apply_review_verified; comment/tag correction.
+Probe token anchor: Wave1039; component-scalar-flag-apply-review-wave1039; 0x0043ca70 CComponentScalarD8__ApplyToComponentByName; 0x0043d460 CComponentScalar160__ApplyToComponentByName; 0x0043ce60 CComponentFlag124__ApplyToComponentByName; 0x0043d3a0 CComponentFlag108__ApplyToComponentByName; DAT_00855400; 0x005d856c; positive-only wording; 711/1408 = 50.50%; 940/1493 = 62.96%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-075609_post_wave1039_component_value_scalar_flag_apply_review_verified; comment/tag correction.

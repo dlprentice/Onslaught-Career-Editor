@@ -24,7 +24,7 @@ The prior saved name was `CSafeSide__VFunc_02_004de1d0`. Fresh retail evidence s
 - Focused probe: `py -3 tools\ghidra_safeside_shutdown_wave542_probe.py --check` PASS.
 - Npm wrapper: `cmd.exe /c npm run test:ghidra-safeside-shutdown-wave542` PASS.
 - Queue refresh: `py -3 tools\ghidra_static_reaudit_queue_probe.py --check --json` PASS after refreshing the live quality snapshot.
-- Backup: `G:\GhidraBackups\BEA_20260518-093637_post_wave542_safeside_shutdown_verified`, `19` files, `159320967` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-093637_post_wave542_safeside_shutdown_verified`, `19` files, `159320967` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
 
 ## Queue Snapshot
 

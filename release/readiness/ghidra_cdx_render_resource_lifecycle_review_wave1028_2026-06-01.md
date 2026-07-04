@@ -25,7 +25,7 @@ Evidence counts:
 - Vtable export: 8 rows from `0x005e50fc`.
 - Queue closure remains `6238/6238 = 100.00%` with 0 commentless, 0 exact-undefined signatures, and 0 `param_N`.
 - Wave911 focused re-audit progress after Wave1028: `605/1408 = 42.97%`; expanded static surface progress: `834/1493 = 55.86%`; Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-021726_post_wave1028_cdx_render_resource_lifecycle_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-021726_post_wave1028_cdx_render_resource_lifecycle_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -40,4 +40,4 @@ What remains unproven:
 - Exact source-body identity beyond static source/decompile parity.
 - BEA patch behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1028; cdx-render-resource-lifecycle-review-wave1028; 0x0054bff0 CDXMeshVB__scalar_deleting_dtor; 0x0054c010 CDXMeshVB__dtor_base; 0x00547d70 CDXMemBuffer__ctor; 0x004f2790 CDXSurf__UnlinkNodeFromGlobalList; 0x00527de0 CWaterRenderSystem__ResetAndMarkSourceFlag; 605/1408 = 42.97%; 834/1493 = 55.86%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-021726_post_wave1028_cdx_render_resource_lifecycle_review_verified; no mutation.
+Probe token anchor: Wave1028; cdx-render-resource-lifecycle-review-wave1028; 0x0054bff0 CDXMeshVB__scalar_deleting_dtor; 0x0054c010 CDXMeshVB__dtor_base; 0x00547d70 CDXMemBuffer__ctor; 0x004f2790 CDXSurf__UnlinkNodeFromGlobalList; 0x00527de0 CWaterRenderSystem__ResetAndMarkSourceFlag; 605/1408 = 42.97%; 834/1493 = 55.86%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-021726_post_wave1028_cdx_render_resource_lifecycle_review_verified; no mutation.

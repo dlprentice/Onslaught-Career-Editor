@@ -31,7 +31,7 @@ ADDRESS = "0x004a25c0"
 OLD_NAME = "CLTShell__ValidateAndRollHeapDeltas"
 NAME = "CMemoryHeap__CalcAndShowDeltas"
 SIGNATURE = "void __thiscall CMemoryHeap__CalcAndShowDeltas(void * this)"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-132640_post_wave812_memory_heap_deltas_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-132640_post_wave812_memory_heap_deltas_verified"
 NEXT_HEAD = "0x004a52b0 CMesh__ClearAllUsageMarkers"
 
 COMMON_TAGS = {

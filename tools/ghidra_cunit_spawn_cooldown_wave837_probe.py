@@ -33,7 +33,7 @@ ADDRESS = "0x004fc3a0"
 NAME = "CUnit__SetSpawnCooldownState3"
 OLD_NAME = "CSpawnerThng__SetCooldownState3"
 SIGNATURE = "void __thiscall CUnit__SetSpawnCooldownState3(void * this, float cooldown_delay)"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-013914_post_wave837_cunit_spawn_cooldown_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-013914_post_wave837_cunit_spawn_cooldown_verified"
 
 COMMON_TAGS = {
     "static-reaudit",

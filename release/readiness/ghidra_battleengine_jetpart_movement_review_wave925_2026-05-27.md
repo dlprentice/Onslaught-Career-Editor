@@ -27,7 +27,7 @@ Read-back evidence:
 - Decompile export: `7` rows, `7` OK.
 - Focused Wave911 re-audit progress after Wave925: `96/1408 = 6.82%`.
 - Static export-contract closure remains `6113/6113 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260527-223000_post_wave925_battleengine_jetpart_movement_review_verified`, `19` files, `173247367` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260527-223000_post_wave925_battleengine_jetpart_movement_review_verified`, `19` files, `173247367` bytes, `DiffCount=0`.
 
 Consult note:
 

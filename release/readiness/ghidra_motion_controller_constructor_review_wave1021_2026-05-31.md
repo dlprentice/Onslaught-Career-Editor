@@ -26,7 +26,7 @@ Read-back evidence:
 - Wave911 focused re-audit progress advances to `532/1408 = 37.78%`.
 - Expanded static surface progress advances to `761/1493 = 50.97%`.
 - Wave911 top-500 risk-ranked coverage advances to `460/500 = 92.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-222637_post_wave1021_motion_controller_constructor_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-222637_post_wave1021_motion_controller_constructor_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -44,4 +44,4 @@ What remains separate proof:
 - BEA patching behavior.
 - Rebuild parity.
 
-Probe token anchor: Wave1021; motion-controller-constructor-review-wave1021; 0x0049c3e0 CMCMine__Constructor; 0x0049c5d0 CMCSentinel__Constructor; 0x0049cad0 CMCTentacle__Constructor; 0x0049ef80 CMCWarspiteDome__Constructor; 532/1408 = 37.78%; 761/1493 = 50.97%; 460/500 = 92.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260531-222637_post_wave1021_motion_controller_constructor_review_verified; no mutation.
+Probe token anchor: Wave1021; motion-controller-constructor-review-wave1021; 0x0049c3e0 CMCMine__Constructor; 0x0049c5d0 CMCSentinel__Constructor; 0x0049cad0 CMCTentacle__Constructor; 0x0049ef80 CMCWarspiteDome__Constructor; 532/1408 = 37.78%; 761/1493 = 50.97%; 460/500 = 92.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260531-222637_post_wave1021_motion_controller_constructor_review_verified; no mutation.

@@ -38,7 +38,7 @@ The pass also corrected the newly recovered `CRoundTreeCollision__ApplyToRoundBy
 - `py -3 tools\ghidra_round_value_tail_tranche_probe_test.py` passed `3/3`; `py -3 -m py_compile tools\ghidra_round_value_tail_tranche_probe.py tools\ghidra_round_value_tail_tranche_probe_test.py` passed.
 - `cmd.exe /c npm run test:ghidra-round-value-tail-tranche` passed against the saved read-back artifacts.
 - The refreshed whole-database queue reports `5907` functions, `961` commented functions, `4946` commentless functions, `1979` undefined signatures, and `2158` `param_N` signatures.
-- The post-mutation live Ghidra backup was verified at `G:\GhidraBackups\BEA_20260512_121126_post_wave338_verified` with `19` files, `152275847` bytes, and `DiffCount=0`.
+- The post-mutation live Ghidra backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260512_121126_post_wave338_verified` with `19` files, `152275847` bytes, and `DiffCount=0`.
 
 ## Claim Boundary
 

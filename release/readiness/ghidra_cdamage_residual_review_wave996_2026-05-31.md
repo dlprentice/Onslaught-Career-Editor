@@ -27,9 +27,9 @@ Fresh read-back evidence:
 - Queue closure remains `6222/6222 = 100.00%`.
 - Wave911 focused re-audit progress remains `464/1408 = 32.95%` because the Wave911 candidate anchor was already counted by Wave995 context.
 - Expanded static surface progress is now `576/1478 = 38.97%` after seven adjacent `CDamage` helpers received dedicated post-100 read-only review.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-081328_post_wave996_cdamage_residual_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-081328_post_wave996_cdamage_residual_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
-Probe token anchor: Wave996; `cdamage-residual-review-wave996`; `0x00440b70 CDamage__ctor_clear_head_and_init_flag`; `0x00440b90 CDamage__Init`; `0x00440c70 CDamage__LoadDamageTexture`; `0x00440eb0 CDamage__InsertCellEntry`; `0x00440f80 CDamage__RemoveCellEntryByCoords`; `0x00441000 CDamage__CreateTextureBuffer`; `0x0044a130 CEngine__InitDamageSystem`; `464/1408 = 32.95%`; `576/1478 = 38.97%`; `6222/6222 = 100.00%`; `G:\GhidraBackups\BEA_20260531-081328_post_wave996_cdamage_residual_review_verified`; no mutation.
+Probe token anchor: Wave996; `cdamage-residual-review-wave996`; `0x00440b70 CDamage__ctor_clear_head_and_init_flag`; `0x00440b90 CDamage__Init`; `0x00440c70 CDamage__LoadDamageTexture`; `0x00440eb0 CDamage__InsertCellEntry`; `0x00440f80 CDamage__RemoveCellEntryByCoords`; `0x00441000 CDamage__CreateTextureBuffer`; `0x0044a130 CEngine__InitDamageSystem`; `464/1408 = 32.95%`; `576/1478 = 38.97%`; `6222/6222 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260531-081328_post_wave996_cdamage_residual_review_verified`; no mutation.
 
 What this proves:
 

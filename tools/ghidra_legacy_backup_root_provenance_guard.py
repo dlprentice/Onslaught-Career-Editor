@@ -40,6 +40,8 @@ HISTORICAL_SURFACE_ROOTS = (
     "release/readiness/",
 )
 
+SANITIZED_BACKUP_ROOT_TOKEN = "[maintainer-local-ghidra-backup-root]"
+
 FORBIDDEN_ACTIVE_PATTERNS = (
     (re.compile(r"(?i)\b[a-z]:[\\/](?:[^ \t\r\n`\"'<>|]*[\\/])*GhidraBackups[\\/]"), "exact GhidraBackups drive root"),
     (re.compile(r"(?i)(?:^|[\\/\s`\"'(<])GhidraBackups[\\/]"), "drive-less GhidraBackups root"),
@@ -61,7 +63,7 @@ REQUIRED_ACTIVE_TOKENS = {
 }
 
 REQUIRED_HISTORICAL_TOKENS = (
-    "GhidraBackups",
+    SANITIZED_BACKUP_ROOT_TOKEN,
     "Verified backup",
 )
 
@@ -121,7 +123,7 @@ def historical_reference_count() -> int:
                     text = path.read_text(encoding="utf-8-sig")
                 except UnicodeDecodeError:
                     continue
-                if "GhidraBackups" in text:
+                if SANITIZED_BACKUP_ROOT_TOKEN in text:
                     count += 1
     return count
 

@@ -28,7 +28,7 @@ Read-back evidence:
 - Fresh exports verified `17` metadata rows, `17` tag rows, `22` xref rows, `3087` instruction rows, and `17` decompile rows.
 - Export logs reported `targets=17 found=17 missing=0`, `rows=17 missing=0`, `Wrote 22 rows`, `Wrote 3087 function-body instruction rows`, and `targets=17 dumped=17 missing=0 failed=0`.
 - Static function-quality closure remains `6410/6410 = 100.00%`, expanded static surface remains `1560/1560 = 100.00%`, Wave911 focused progress remains `812/1408 = 57.67%`, and Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260604-174618_post_wave1096_crenderqueue_core_multipass_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-174618_post_wave1096_crenderqueue_core_multipass_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -46,4 +46,4 @@ What remains unproven:
 - Gameplay outcomes.
 - Rebuild parity.
 
-Probe token anchor: Wave1096; crenderqueue-core-multipass-review-wave1096; 0x005515a0 CDXEngine__InitConsoleVar_UseRenderQueue; 0x005515e0 CRenderQueueBucket__RenderAndRecycle; 0x00551920 CRenderQueue__BeginFrame; 0x005528b0 CRenderQueue__RenderAll; 0x00553960 CRenderQueue__RenderMultipassLayerA; 0x00554170 CRenderQueue__RenderMultipassLayerB; 0x005545d0 CRenderQueue__BuildProjectedSprites; 0x00554750 CRenderQueue__EmitBillboardStrip; 0x00554df0 CRenderQueue__RenderVBufTextureWithStateToggle; 1560/1560 = 100.00%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; G:\GhidraBackups\BEA_20260604-174618_post_wave1096_crenderqueue_core_multipass_review_verified; read-only review.
+Probe token anchor: Wave1096; crenderqueue-core-multipass-review-wave1096; 0x005515a0 CDXEngine__InitConsoleVar_UseRenderQueue; 0x005515e0 CRenderQueueBucket__RenderAndRecycle; 0x00551920 CRenderQueue__BeginFrame; 0x005528b0 CRenderQueue__RenderAll; 0x00553960 CRenderQueue__RenderMultipassLayerA; 0x00554170 CRenderQueue__RenderMultipassLayerB; 0x005545d0 CRenderQueue__BuildProjectedSprites; 0x00554750 CRenderQueue__EmitBillboardStrip; 0x00554df0 CRenderQueue__RenderVBufTextureWithStateToggle; 1560/1560 = 100.00%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260604-174618_post_wave1096_crenderqueue_core_multipass_review_verified; read-only review.

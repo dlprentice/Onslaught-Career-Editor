@@ -46,7 +46,7 @@ The pass corrected stale `CFastVB` owner labels on the locale grouping/monetary 
 - Comment-backed proxy: `3469/6093 = 56.93%`.
 - Strict clean-signature proxy: `3418/6093 = 56.10%`.
 - Next high-signal queue head: `0x0056ce69 CRT__IsInDst_WrapperLocked`.
-- Verified backup: `G:\GhidraBackups\BEA_20260520-152241_post_wave645_crt_locale_string_tail_verified`, `19` files, `162761607` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-152241_post_wave645_crt_locale_string_tail_verified`, `19` files, `162761607` bytes, `DiffCount=0`.
 
 ## Boundaries
 

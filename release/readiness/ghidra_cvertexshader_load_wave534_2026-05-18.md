@@ -25,7 +25,7 @@ Wave534 hardened the static Ghidra signatures, comments, and tags for nine adjac
 - Focused probe: `py -3 tools\ghidra_cvertexshader_load_wave534_probe.py --check`.
 - Queue refresh: `6083` functions, `2598` commented, `3485` commentless, `1550` exact-undefined signatures, and `1316` `param_N` signatures.
 - Current telemetry proxies: comment-backed `2598/6083 = 42.71%`; strict comment-plus-clean-signature `2544/6083 = 41.82%`.
-- Backup: `G:\GhidraBackups\BEA_20260518-055139_post_wave534_cvertexshader_load_verified`, verified `19` files, `159189895` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-055139_post_wave534_cvertexshader_load_verified`, verified `19` files, `159189895` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
 
 ## Caveats
 

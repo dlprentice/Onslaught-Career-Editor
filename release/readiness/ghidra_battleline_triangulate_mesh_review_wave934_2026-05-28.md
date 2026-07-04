@@ -29,14 +29,14 @@ Fresh read-back evidence:
 - Context exports: 3 metadata rows, 3 tag rows, 3 xref rows, 605 instruction rows, and 3 decompile rows.
 - Primary xrefs confirm `0x0053a712`, `0x0053a7a4`, and `0x0053a7c0` from `CDXBattleLine__BuildMesh`; internal Triangulate calls at `0x004f7478`, `0x004f7622`, `0x004f762b`, `0x004f7634`, `0x004f7673`, `0x004f767e`, `0x004f798d`, `0x004f799a`, and `0x004f79a7`.
 - Context xrefs confirm `0x0053a295 CDXBattleLine__Setup -> CDXBattleLine__BuildMesh`, `0x0053b276 CDXBattleLine__Render -> CDXBattleLine__RenderTriOverlayPass`, and `0x0053ed79 CDXEngine__PostRender -> CHud__RenderBattleline`.
-- Verified read-only backup: `G:\GhidraBackups\BEA_20260528-005650_post_wave934_battleline_triangulate_mesh_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified read-only backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-005650_post_wave934_battleline_triangulate_mesh_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 
 Progress:
 
 - Wave911 focused re-audit progress after Wave934: `146/1408 = 10.37%`.
 - Static export-contract function-quality closure remains `6113/6113 = 100.00%`.
 
-Probe token anchor: Wave934; `battleline-triangulate-mesh-review-wave934`; `0x004f7170 Triangulate__CreateQuadMesh`; `0x004f7460 Triangulate__InsertPointOrAppendVertex`; `0x004f74b0 Triangulate__SplitTriangleAtPointAndLegalizeEdges`; `0x004f7660 Triangulate__TryFlipSharedEdgeForQuality`; `0x004f78c0 Triangulate__FindTriangleByDirectedEdge`; `0x004f7940 Triangulate__RelaxMeshByEdgeFlips`; `0x0053a5e0 CDXBattleLine__BuildMesh`; `0x0053b470 CDXBattleLine__RenderTriOverlayPass`; `0x00487d10 CHud__RenderBattleline`; `146/1408 = 10.37%`; `6113/6113 = 100.00%`; `G:\GhidraBackups\BEA_20260528-005650_post_wave934_battleline_triangulate_mesh_review_verified`; no mutation.
+Probe token anchor: Wave934; `battleline-triangulate-mesh-review-wave934`; `0x004f7170 Triangulate__CreateQuadMesh`; `0x004f7460 Triangulate__InsertPointOrAppendVertex`; `0x004f74b0 Triangulate__SplitTriangleAtPointAndLegalizeEdges`; `0x004f7660 Triangulate__TryFlipSharedEdgeForQuality`; `0x004f78c0 Triangulate__FindTriangleByDirectedEdge`; `0x004f7940 Triangulate__RelaxMeshByEdgeFlips`; `0x0053a5e0 CDXBattleLine__BuildMesh`; `0x0053b470 CDXBattleLine__RenderTriOverlayPass`; `0x00487d10 CHud__RenderBattleline`; `146/1408 = 10.37%`; `6113/6113 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260528-005650_post_wave934_battleline_triangulate_mesh_review_verified`; no mutation.
 
 What this proves:
 

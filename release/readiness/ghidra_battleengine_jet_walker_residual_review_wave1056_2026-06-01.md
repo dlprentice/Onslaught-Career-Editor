@@ -27,7 +27,7 @@ Read-back evidence:
 - Wave911 focused progress advances to `775/1408 = 55.04%`.
 - Expanded static surface progress advances to `1097/1509 = 72.70%`.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-180430_post_wave1056_battleengine_jet_walker_residual_review_verified`, `19` files, `174656391` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-180430_post_wave1056_battleengine_jet_walker_residual_review_verified`, `19` files, `174656391` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -43,4 +43,4 @@ What remains unproven:
 - Concrete `CBattleEngine`, JetPart, WalkerPart, CWeapon, CWeaponData, CText, terrain/map, or store/heat layout completeness beyond observed offsets.
 - Exact source-body identity, BEA patching behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1056; battleengine-jet-walker-residual-review-wave1056; 0x004114d0 CBattleEngineJetPart__Gravity; 0x00411500 CBattleEngineJetPart__HandleSkimming; 0x004145a0 CBattleEngineWalkerPart__GetWeaponName; 0x004145d0 CBattleEngineWalkerPart__GetWeaponPhysicsName; 0x00414610 CBattleEngineWalkerPart__GetWeaponIconName; 0x00414630 CBattleEngineWalkerPart__CanWeaponFire; CBattleEngine__GetWeaponName; CBattleEngine__UpdateAutoTargetSetAndFireProjectiles; CText__GetStringById; CBattleEngine__HostileEnvironment; weapon_fire_breaks_stealth; 775/1408 = 55.04%; 1097/1509 = 72.70%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-180430_post_wave1056_battleengine_jet_walker_residual_review_verified; no mutation.
+Probe token anchor: Wave1056; battleengine-jet-walker-residual-review-wave1056; 0x004114d0 CBattleEngineJetPart__Gravity; 0x00411500 CBattleEngineJetPart__HandleSkimming; 0x004145a0 CBattleEngineWalkerPart__GetWeaponName; 0x004145d0 CBattleEngineWalkerPart__GetWeaponPhysicsName; 0x00414610 CBattleEngineWalkerPart__GetWeaponIconName; 0x00414630 CBattleEngineWalkerPart__CanWeaponFire; CBattleEngine__GetWeaponName; CBattleEngine__UpdateAutoTargetSetAndFireProjectiles; CText__GetStringById; CBattleEngine__HostileEnvironment; weapon_fire_breaks_stealth; 775/1408 = 55.04%; 1097/1509 = 72.70%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-180430_post_wave1056_battleengine_jet_walker_residual_review_verified; no mutation.

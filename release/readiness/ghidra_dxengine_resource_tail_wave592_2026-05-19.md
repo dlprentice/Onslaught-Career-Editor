@@ -28,7 +28,7 @@ What is proven:
 - The queue refresh reports `6093` total functions, `3032` commented, `3061` commentless, `1347` exact-undefined signatures, and `1101` `param_N` signatures.
 - Comment-backed proxy is `3032/6093 = 49.76%`; strict clean-signature proxy is `2986/6093 = 49.01%`.
 - The next high-signal queue head is `0x0053d760 CThing__RenderDebugVolumeOverlay`.
-- The live Ghidra project backup verified at `G:\GhidraBackups\BEA_20260519-134212_post_wave592_dxengine_resource_tail_verified` with 19 files, 160992135 bytes, `DiffCount=0`, and manifest hash `de15221c47eb97780dca8330a7a1decf858f621f3b267da86e4d8650488d7415`.
+- The live Ghidra project backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260519-134212_post_wave592_dxengine_resource_tail_verified` with 19 files, 160992135 bytes, `DiffCount=0`, and manifest hash `de15221c47eb97780dca8330a7a1decf858f621f3b267da86e4d8650488d7415`.
 
 What is not proven:
 

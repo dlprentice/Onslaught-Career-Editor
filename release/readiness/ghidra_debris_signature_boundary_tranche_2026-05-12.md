@@ -28,7 +28,7 @@ This pass corrected two older labels and recovered four adjacent function bounda
 - `py -3 tools\ghidra_debris_signature_boundary_tranche_probe_test.py` passed `2/2`; `py -3 -m py_compile tools\ghidra_debris_signature_boundary_tranche_probe.py tools\ghidra_debris_signature_boundary_tranche_probe_test.py` passed.
 - `cmd.exe /c npm run test:ghidra-debris-signature-boundary-tranche` passed against the saved read-back artifacts.
 - The refreshed whole-database baseline reports `5978` functions and `0` weak functions. The refreshed quality queue reports `1105` commented functions, `4873` commentless functions, `1958` undefined signatures, and `2107` `param_N` signatures.
-- The post-mutation live Ghidra backup was verified on `G:` with `19` files, `152734599` bytes, and `HashDiffCount=0`.
+- The post-mutation live Ghidra backup was verified on `[maintainer-local-backup-volume]` with `19` files, `152734599` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

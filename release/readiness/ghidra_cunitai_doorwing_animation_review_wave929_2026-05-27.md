@@ -38,7 +38,7 @@ Evidence:
 - String dumps verified `0x00623bb4=open`, `0x006289e4=close`, `0x006289ec=shoot`, and `0x0062359c=fly`.
 - Wave911 focused re-audit progress after Wave929: `111/1408 = 7.88%`; context helpers are not counted against that progress denominator.
 - Static export-contract closure remains `6113/6113 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260527-231046_post_wave929_cunitai_doorwing_animation_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260527-231046_post_wave929_cunitai_doorwing_animation_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 
 What this proves:
 

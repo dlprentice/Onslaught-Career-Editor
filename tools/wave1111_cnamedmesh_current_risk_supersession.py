@@ -35,9 +35,9 @@ PACKAGE_JSON = ROOT / "package.json"
 ADDRESS = "0x004bc050"
 NAME = "CNamedMesh__VFunc02_RemoveFromOccupancyAndForward"
 SIGNATURE = "void __fastcall CNamedMesh__VFunc02_RemoveFromOccupancyAndForward(void * this)"
-WAVE458_BACKUP = r"G:\GhidraBackups\BEA_20260516-162849_post_wave458_mesh_optimization_verified"
-WAVE944_BACKUP = r"G:\GhidraBackups\BEA_20260528-050722_post_wave944_building_namedmesh_lifecycle_review_verified"
-LATEST_BACKUP = r"G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified"
+WAVE458_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260516-162849_post_wave458_mesh_optimization_verified"
+WAVE944_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-050722_post_wave944_building_namedmesh_lifecycle_review_verified"
+LATEST_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified"
 
 DOC_TOKENS = (
     "Wave1111",

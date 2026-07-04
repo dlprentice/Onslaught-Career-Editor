@@ -21,7 +21,7 @@ Wave463 saved Ghidra signature/comment/tag corrections for `17` ParticleManager/
 - Hardened particle resource ownership/free paths, manager pool init/shutdown/update, effect-handle cleanup/interpolation/create, allocation and recycle paths, terrain projection, camera-distance LOD helper, active-list update/prune/destruction, and the ParticleSet factory/base init.
 - Queue after refresh: `6057` functions, `2090` commented, `3967` commentless, `1712` undefined signatures, `1599` `param_N` signatures.
 - Current telemetry proxies: comment-backed `2090/6057 = 34.51%`; strict comment-plus-clean-signature `2026/6057 = 33.45%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-185524_post_wave463_particle_manager_verified` (`19` files, `157059975` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-185524_post_wave463_particle_manager_verified` (`19` files, `157059975` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

@@ -17,8 +17,8 @@ Validation evidence:
 - Read-only context exports verified `902` xref-site instruction rows, `17343` HResultToString full-instruction rows, and the `E_ABORT` sample string.
 - Queue refresh passed with `6098` total functions, `4351` commented, `1747` commentless, `1215` exact-undefined signatures, `36` `param_N` signatures, comment-backed proxy `4351/6098 = 71.35%`, and strict clean-signature proxy `4293/6098 = 70.40%`.
 - Earliest raw commentless row is `0x0042f220 CSPtrSet__Clear`; next commentless high-signal row is `0x005d04e0 DirectInput8Create`.
-- Verified backup: `G:\GhidraBackups\BEA_20260522-135016_post_wave739_d3d_runtime_tail_verified`, `19` files, `166988679` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-135016_post_wave739_d3d_runtime_tail_verified`, `19` files, `166988679` bytes, `DiffCount=0`.
 
 Scope boundary: this wave proves saved static retail Ghidra metadata only. Imported `d3d9.dll` behavior, runtime graphics behavior, runtime error-reporting behavior, exact HRESULT table completeness, BEA patching, and rebuild parity remain deferred.
 
-Probe anchors: `Wave739 D3D runtime tail`, `d3d-runtime-tail-wave739`, `0x005be622 Direct3DCreate9`, `0x005be628 HResultToString`, `0x005d04e0 DirectInput8Create`, `0x0042f220 CSPtrSet__Clear`, `G:\GhidraBackups\BEA_20260522-135016_post_wave739_d3d_runtime_tail_verified`.
+Probe anchors: `Wave739 D3D runtime tail`, `d3d-runtime-tail-wave739`, `0x005be622 Direct3DCreate9`, `0x005be628 HResultToString`, `0x005d04e0 DirectInput8Create`, `0x0042f220 CSPtrSet__Clear`, `[maintainer-local-ghidra-backup-root]\BEA_20260522-135016_post_wave739_d3d_runtime_tail_verified`.

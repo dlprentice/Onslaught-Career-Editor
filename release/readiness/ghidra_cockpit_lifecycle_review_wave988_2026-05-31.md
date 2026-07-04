@@ -31,7 +31,7 @@ Read-back evidence:
 - Existing `test:ghidra-cockpit-compass-signature-correction` passed. Existing Wave321 cockpit/volume/UnitAI probe still resolves its 9 target rows but fails only on historical queue-total drift (`5876`/old debt expectations vs current `6222/6222` closure).
 - Queue closure remains `6222/6222 = 100.00%`.
 - Wave911 focused re-audit progress is `436/1408 = 30.97%`; expanded static surface progress is `502/1478 = 33.96%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-031646_post_wave988_cockpit_lifecycle_review_verified`, 19 files, 173837191 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-031646_post_wave988_cockpit_lifecycle_review_verified`, 19 files, 173837191 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

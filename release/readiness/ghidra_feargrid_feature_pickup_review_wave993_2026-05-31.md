@@ -31,7 +31,7 @@ Read-back evidence:
 - Queue after Wave993: `6222` total functions, `6222` commented, `0` commentless, `0` exact-undefined signatures, `0` `param_N`, static closure `6222/6222 = 100.00%`.
 - Wave911 focused re-audit progress: `447/1408 = 31.75%`.
 - Expanded static surface progress: `549/1478 = 37.14%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-061908_post_wave993_feargrid_feature_pickup_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-061908_post_wave993_feargrid_feature_pickup_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

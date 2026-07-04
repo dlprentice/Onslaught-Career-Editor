@@ -8,9 +8,9 @@ Wave1017 extends the current Wave900+ recheck gate after `hud-objective-marker-r
 
 Current Wave1017 anchors: `0x00484340 CHud__RenderTargetMarkers3D`, `0x004858d0 CHud__RenderObjectiveProgressGaugeAndHeadingNeedle`, `0x00486940 CHud__RenderObjectiveSlotFillPanel`, and context dispatcher `0x004879e0 CHud__RenderOverlayForViewpoint`. Queue closure after Wave1017 is `6238/6238 = 100.00%`. Re-audit progress after Wave1017 is Wave911 focused `513/1408 = 36.43%`, expanded static surface `742/1493 = 49.70%`, and Wave911 top-500 risk-ranked `442/500 = 88.40%`.
 
-The Wave1017 verified backup is `G:\GhidraBackups\BEA_20260531-201957_post_wave1017_hud_objective_marker_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+The Wave1017 verified backup is `[maintainer-local-ghidra-backup-root]\BEA_20260531-201957_post_wave1017_hud_objective_marker_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
-Probe token anchor: Wave1017; hud-objective-marker-review-wave1017; 0x00484340 CHud__RenderTargetMarkers3D; 0x004858d0 CHud__RenderObjectiveProgressGaugeAndHeadingNeedle; 0x00486940 CHud__RenderObjectiveSlotFillPanel; 0x004879e0 CHud__RenderOverlayForViewpoint; 513/1408 = 36.43%; 742/1493 = 49.70%; 442/500 = 88.40%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260531-201957_post_wave1017_hud_objective_marker_review_verified; no mutation.
+Probe token anchor: Wave1017; hud-objective-marker-review-wave1017; 0x00484340 CHud__RenderTargetMarkers3D; 0x004858d0 CHud__RenderObjectiveProgressGaugeAndHeadingNeedle; 0x00486940 CHud__RenderObjectiveSlotFillPanel; 0x004879e0 CHud__RenderOverlayForViewpoint; 513/1408 = 36.43%; 742/1493 = 49.70%; 442/500 = 88.40%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260531-201957_post_wave1017_hud_objective_marker_review_verified; no mutation.
 
 Validation command:
 

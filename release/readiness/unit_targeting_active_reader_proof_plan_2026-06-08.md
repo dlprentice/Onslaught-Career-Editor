@@ -19,8 +19,8 @@ Current static closeout remains unchanged:
 
 Static source evidence:
 
-- Wave1215 (`wave1215-unit-targeting-combat-residual-current-risk-review`): `5` primary targeting rows, `6` xref rows, `794` instruction rows, `5` decompile rows, `425` context xref rows, `1123` context instruction rows, `15` context decompile rows, and `1` data-slot xref row. Verified backup: `G:\GhidraBackups\BEA_20260607-090802_post_wave1215_unit_targeting_combat_residual_current_risk_review_verified`.
-- Wave927 (`cunit-active-reader-targeting-review-wave927`): `5` active-reader targeting rows, `23` xref rows, `464` instruction rows, and `5` decompile rows, plus `CUnit__ForwardAimTransformAndAttachTargetReader` context. Verified backup: `G:\GhidraBackups\BEA_20260527-223748_post_wave927_cunit_active_reader_targeting_review_verified`.
+- Wave1215 (`wave1215-unit-targeting-combat-residual-current-risk-review`): `5` primary targeting rows, `6` xref rows, `794` instruction rows, `5` decompile rows, `425` context xref rows, `1123` context instruction rows, `15` context decompile rows, and `1` data-slot xref row. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-090802_post_wave1215_unit_targeting_combat_residual_current_risk_review_verified`.
+- Wave927 (`cunit-active-reader-targeting-review-wave927`): `5` active-reader targeting rows, `23` xref rows, `464` instruction rows, and `5` decompile rows, plus `CUnit__ForwardAimTransformAndAttachTargetReader` context. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260527-223748_post_wave927_cunit_active_reader_targeting_review_verified`.
 
 Representative anchors:
 

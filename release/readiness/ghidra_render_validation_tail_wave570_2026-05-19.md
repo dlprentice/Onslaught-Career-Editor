@@ -28,7 +28,7 @@ No `source-parity` tag was applied. No owner rename was made because the xrefs s
 - Queue refresh: `6093` total functions, `2837` commented, `3256` commentless, `1494` exact-undefined signatures, `1158` `param_N` signatures
 - Post-Wave570 comment-backed proxy: `2837 / 6093 = 46.56%`
 - Post-Wave570 strict clean-signature proxy: `2783 / 6093 = 45.68%`
-- Backup: `G:\GhidraBackups\BEA_20260518-234439_post_wave570_render_validation_tail_verified`
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-234439_post_wave570_render_validation_tail_verified`
 - Backup verification: `19` files, `160074631` bytes, source/destination manifest hash `615C53DAACECA6A54B94D5ABBB379A80211AD349F75ACE4E3CAD7AFB7AFB7006`
 
 ## Limits

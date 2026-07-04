@@ -40,8 +40,8 @@ Evidence:
 - `ApplyProjectileCollisionTargetingCurrentRiskWave1126.java final dry`: `updated=0 skipped=3 renamed=0 would_rename=0 signature_updated=0 comment_only_updated=0 tags_added=0 missing=0 bad=0`.
 - Post metadata/tag/xref/instruction/decompile exports: `3` / `3` / `7` / `291` / `3`.
 - Queue quality refresh after the Ghidra write reported `total_functions=6410 commented_functions=6410`.
-- Final backup after the queue refresh: `G:\GhidraBackups\BEA_20260605-061135_post_wave1126_projectile_collision_targeting_current_risk_review_verified`, `19` files, `175901575` bytes, `DiffCount=0`.
-- Previous completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-053504_post_wave1125_carver_targeting_current_risk_review_verified`.
+- Final backup after the queue refresh: `[maintainer-local-ghidra-backup-root]\BEA_20260605-061135_post_wave1126_projectile_collision_targeting_current_risk_review_verified`, `19` files, `175901575` bytes, `DiffCount=0`.
+- Previous completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-053504_post_wave1125_carver_targeting_current_risk_review_verified`.
 
 What this proves:
 

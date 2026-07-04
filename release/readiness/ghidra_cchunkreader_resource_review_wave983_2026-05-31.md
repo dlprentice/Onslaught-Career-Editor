@@ -73,7 +73,7 @@ Wave983 confirms the saved `CChunkReader` names from Wave319 as the active label
 Verified post-wave backup:
 
 ```text
-G:\GhidraBackups\BEA_20260531-001624_post_wave983_cchunkreader_resource_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260531-001624_post_wave983_cchunkreader_resource_review_verified
 files=19
 bytes=173837191
 MissingCount=0

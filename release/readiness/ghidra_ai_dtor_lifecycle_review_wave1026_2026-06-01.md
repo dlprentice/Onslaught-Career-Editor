@@ -31,7 +31,7 @@ Evidence counts:
 - Context exports: 4 metadata rows, 4 tag rows, 4 xref rows, 215 body-instruction rows, and 4 decompile rows.
 - Queue closure remains `6238/6238 = 100.00%` with 0 commentless, 0 exact-undefined signatures, and 0 `param_N`.
 - Wave911 focused re-audit progress after Wave1026: `588/1408 = 41.76%`; expanded static surface progress: `817/1493 = 54.72%`; Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-013000_post_wave1026_ai_dtor_lifecycle_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-013000_post_wave1026_ai_dtor_lifecycle_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

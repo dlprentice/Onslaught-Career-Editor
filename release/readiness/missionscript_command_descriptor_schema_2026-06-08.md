@@ -6,7 +6,7 @@ Scope: `missionscript-command-descriptor-schema`
 
 This static-to-proof slice adds the MissionScript Command Descriptor Schema Proof at `missionscript-command-descriptor-schema-proof.md` and `missionscript-command-descriptor-schema.v1.json` for the saved `0x0052ff30 ScriptCommandRegistry__InitBuiltins` descriptor table evidence.
 
-Static closeout remains unchanged: `6411/6411 = 100.00%`, `0 / 0 / 0`, `1560/1560 = 100.00%`, and `1179/1179 = 100.00%`. Latest verified Ghidra backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+Static closeout remains unchanged: `6411/6411 = 100.00%`, `0 / 0 / 0`, `1560/1560 = 100.00%`, and `1179/1179 = 100.00%`. Latest verified Ghidra backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 Readiness anchors:
 

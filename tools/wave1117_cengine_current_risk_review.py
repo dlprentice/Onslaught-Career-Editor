@@ -35,8 +35,8 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260605-014214_post_wave1117_cengine_current_risk_review_verified"
-PRIOR_BACKUP = r"G:\GhidraBackups\BEA_20260605-011935_post_wave1116_door_wing_ai_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-014214_post_wave1117_cengine_current_risk_review_verified"
+PRIOR_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-011935_post_wave1116_door_wing_ai_current_risk_review_verified"
 
 PRIOR_PROBES = (
     "wave1109_cfastvb_current_risk_head_supersession.py",

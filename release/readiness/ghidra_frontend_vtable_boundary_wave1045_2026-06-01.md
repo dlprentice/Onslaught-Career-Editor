@@ -29,7 +29,7 @@ Read-back evidence:
 - Post exports verified `8` metadata rows, `8` tag rows, `8` DATA xref rows, `3540` function-body instruction rows, `8` decompile rows, and `135` frontend vtable slot rows.
 - Queue after Wave1045 is `6246/6246 = 100.00%`, with `0` commentless rows, `0` exact-undefined signatures, and `0` `param_N` signatures.
 - Wave1045 targets are not Wave911 focused TSV rows, so Wave911 focused progress remains `735/1408 = 52.20%`; expanded static surface progress advances to `985/1501 = 65.62%`; top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-112809_post_wave1045_frontend_vtable_boundary_verified`, 19 files, 174590855 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-112809_post_wave1045_frontend_vtable_boundary_verified`, 19 files, 174590855 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -46,4 +46,4 @@ What remains separate proof:
 - Exact source-body identity for `FEPWingmen.cpp`, which is absent from `references/Onslaught`.
 - BEA patching behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1045; frontend-vtable-boundary-wave1045; 0x0045c7a0 CFEPGoodies__Init; 0x0045c9e0 CFEPGoodies__Shutdown; 0x0045e0d0 CFEPGoodies__Render; 0x0045ffa0 CFEPGoodies__TransitionNotification; 0x005216c0 CFEPWingmen__Init; 0x00521d20 CFEPWingmen__ButtonPressed; 0x00522160 CFEPWingmen__RenderPreCommon; 0x00522190 CFEPWingmen__Render; 0x005db998; 0x005dba10; 735/1408 = 52.20%; 985/1501 = 65.62%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-112809_post_wave1045_frontend_vtable_boundary_verified; function-boundary recovery.
+Probe token anchor: Wave1045; frontend-vtable-boundary-wave1045; 0x0045c7a0 CFEPGoodies__Init; 0x0045c9e0 CFEPGoodies__Shutdown; 0x0045e0d0 CFEPGoodies__Render; 0x0045ffa0 CFEPGoodies__TransitionNotification; 0x005216c0 CFEPWingmen__Init; 0x00521d20 CFEPWingmen__ButtonPressed; 0x00522160 CFEPWingmen__RenderPreCommon; 0x00522190 CFEPWingmen__Render; 0x005db998; 0x005dba10; 735/1408 = 52.20%; 985/1501 = 65.62%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-112809_post_wave1045_frontend_vtable_boundary_verified; function-boundary recovery.

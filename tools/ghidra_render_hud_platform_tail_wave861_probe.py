@@ -32,7 +32,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave861 render/HUD/platform tail"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-141443_post_wave861_render_hud_platform_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-141443_post_wave861_render_hud_platform_tail_verified"
 NEXT_HEAD = "0x0052a830 CD3DApplication__FindDepthStencilFormat"
 STRICT_PROXY = "5802/6105 = 95.04%"
 
@@ -102,7 +102,7 @@ EXPECTED_XREFS = {
 STRING_EXPECTATIONS = {
     "string-00640058.tsv": "mouse.tga",
     "string-00625498.tsv": r"meshtex\default.tga",
-    "string-0063e03c.tsv": r"C:\dev\ONSLAUGHT2\PCPlatform.cpp",
+    "string-0063e03c.tsv": r"[maintainer-local-source-export-root]\PCPlatform.cpp",
     "string-0063dff0.tsv": r"data\music",
 }
 

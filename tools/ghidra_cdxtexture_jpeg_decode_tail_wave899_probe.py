@@ -28,7 +28,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-083306_post_wave899_cdxtexture_jpeg_decode_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-083306_post_wave899_cdxtexture_jpeg_decode_tail_verified"
 COMMON_TAGS = {
     "static-reaudit",
     "cdxtexture-jpeg-decode-tail-wave899",

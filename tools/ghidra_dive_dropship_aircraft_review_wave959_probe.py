@@ -25,7 +25,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260528-120725_post_wave959_dive_dropship_aircraft_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-120725_post_wave959_dive_dropship_aircraft_review_verified"
 
 EXPECTED_METADATA = {
     "0x00445380": ("CDiveBomberAI__scalar_deleting_dtor", "void * __thiscall CDiveBomberAI__scalar_deleting_dtor(void * this, int flags)"),
@@ -99,8 +99,8 @@ VTABLE_EVIDENCE = (
 )
 
 STRING_EXPECTATIONS = {
-    "string-006289c0.tsv": r"C:\dev\ONSLAUGHT2\DiveBomber.cpp",
-    "string-00628a54.tsv": r"C:\dev\ONSLAUGHT2\Dropship.cpp",
+    "string-006289c0.tsv": r"[maintainer-local-source-export-root]\DiveBomber.cpp",
+    "string-00628a54.tsv": r"[maintainer-local-source-export-root]\Dropship.cpp",
     "string-00628a74.tsv": "wingflat",
     "string-00628a80.tsv": "doorclosed",
     "string-00628a98.tsv": "dooropening",

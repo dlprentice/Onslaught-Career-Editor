@@ -38,4 +38,4 @@ This is static retail Ghidra evidence only. It does not prove exact `CSpawnPoint
 - `npm run test:ghidra-static-reaudit-queue` passed after queue refresh.
 - Refreshed queue: `6078` functions, `2317` commented, `3761` commentless, `1636` undefined signatures, `1486` `param_N` signatures.
 - Telemetry proxy: comment-backed `2317/6078 = 38.12%`; strict comment-plus-clean-signature `2263/6078 = 37.23%`. These are telemetry only, not completion certification.
-- Backup `G:\GhidraBackups\BEA_20260517-154500_post_wave505_spawnpoint_spheretrigger_verified` verified `19` files, `158010247` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Backup `[maintainer-local-ghidra-backup-root]\BEA_20260517-154500_post_wave505_spawnpoint_spheretrigger_verified` verified `19` files, `158010247` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.

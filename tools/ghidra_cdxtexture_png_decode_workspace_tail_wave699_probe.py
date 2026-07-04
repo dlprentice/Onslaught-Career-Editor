@@ -240,7 +240,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
     backup = read_json(BACKUP_SUMMARY)
     require(
         backup.get("backup_path").replace("\\", "/")
-        == "G:/GhidraBackups/BEA_20260521-163011_post_wave699_cdxtexture_png_decode_workspace_tail_verified",
+        == "[maintainer-local-ghidra-backup-root]/BEA_20260521-163011_post_wave699_cdxtexture_png_decode_workspace_tail_verified",
         "backup path mismatch",
         failures,
     )

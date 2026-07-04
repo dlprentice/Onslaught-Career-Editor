@@ -31,7 +31,7 @@ Evidence counts:
 - Wave911 focused re-audit progress after Wave1035: `672/1408 = 47.73%`.
 - Expanded static surface progress after Wave1035: `901/1493 = 60.35%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-061824_post_wave1035_spawner_value_apply_strip_review_verified`, `19` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-061824_post_wave1035_spawner_value_apply_strip_review_verified`, `19` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -47,4 +47,4 @@ What remains unproven:
 - Exact source-body identity and local variable names/types.
 - BEA patch behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1035; spawner-value-apply-strip-review-wave1035; 0x0043a170 CSpawnerDelay__ApplyToSpawnerByName; 0x0043a4d0 CSpawnerRecall__ApplyToSpawnerByName; 0x0043a7b0 CSpawnerInfinite__ApplyToSpawnerByName; DAT_008553f4; 672/1408 = 47.73%; 901/1493 = 60.35%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-061824_post_wave1035_spawner_value_apply_strip_review_verified; no mutation.
+Probe token anchor: Wave1035; spawner-value-apply-strip-review-wave1035; 0x0043a170 CSpawnerDelay__ApplyToSpawnerByName; 0x0043a4d0 CSpawnerRecall__ApplyToSpawnerByName; 0x0043a7b0 CSpawnerInfinite__ApplyToSpawnerByName; DAT_008553f4; 672/1408 = 47.73%; 901/1493 = 60.35%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-061824_post_wave1035_spawner_value_apply_strip_review_verified; no mutation.

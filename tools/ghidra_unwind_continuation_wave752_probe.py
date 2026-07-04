@@ -33,7 +33,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260522-212829_post_wave752_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260522-212829_post_wave752_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d29f1": "0x0061b7cc",
@@ -75,12 +75,12 @@ COMMON_TAGS = {
 }
 
 STRING_EXPECTATIONS = {
-    "string-0062bba4.tsv": r"C:\dev\ONSLAUGHT2\game.cpp",
-    "string-0062c9e8.tsv": r"C:\dev\ONSLAUGHT2\GillM.cpp",
-    "string-0062ca6c.tsv": r"C:\dev\ONSLAUGHT2\GillMHead.cpp",
-    "string-0062cadc.tsv": r"C:\dev\ONSLAUGHT2\GroundAttackAircraft.cpp",
-    "string-0062cb0c.tsv": r"C:\dev\ONSLAUGHT2\GroundUnit.cpp",
-    "string-0062cb30.tsv": r"C:\dev\ONSLAUGHT2\GroundVehicle.cpp",
+    "string-0062bba4.tsv": r"[maintainer-local-source-export-root]\game.cpp",
+    "string-0062c9e8.tsv": r"[maintainer-local-source-export-root]\GillM.cpp",
+    "string-0062ca6c.tsv": r"[maintainer-local-source-export-root]\GillMHead.cpp",
+    "string-0062cadc.tsv": r"[maintainer-local-source-export-root]\GroundAttackAircraft.cpp",
+    "string-0062cb0c.tsv": r"[maintainer-local-source-export-root]\GroundUnit.cpp",
+    "string-0062cb30.tsv": r"[maintainer-local-source-export-root]\GroundVehicle.cpp",
 }
 
 CORE_ANCHORS = (

@@ -36,8 +36,8 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260605-153716_post_wave1142_mixed_score22_current_risk_review_verified"
-PRIOR_BACKUP = r"G:\GhidraBackups\BEA_20260605-145724_post_wave1141_cdxcompass_hud_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-153716_post_wave1142_mixed_score22_current_risk_review_verified"
+PRIOR_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-145724_post_wave1141_cdxcompass_hud_current_risk_review_verified"
 
 TARGETS = {
     "0x004443f0": (

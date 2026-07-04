@@ -28,7 +28,7 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-062008_post_wave1170_actor_derived_lifecycle_cleanup_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-062008_post_wave1170_actor_derived_lifecycle_cleanup_current_risk_review_verified"
 
 TARGETS = {
     "0x004bfd40": ("CRocket__scalar_deleting_dtor", "void * __thiscall CRocket__scalar_deleting_dtor(void * this, byte flags)", "0x005dd45c"),

@@ -19,7 +19,7 @@ Wave451 saved Ghidra name/signature/comment/tag corrections for `11` MessageLog/
 - Verify-dry summary: `updated=0 skipped=11 created=0 would_create=0 renamed=0 would_rename=0 missing=0 bad=0`
 - Post exports verified `11` metadata rows, `11` tag rows, `19` xref rows, `11` decompile exports, and focused return-cleanup instruction evidence.
 - Queue after refresh: `6057` functions, `1965` commented, `4092` commentless, `1734` undefined signatures, `1680` `param_N` signatures.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-124114_post_wave451_messagelog_verified` (`19` files, `156568455` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-124114_post_wave451_messagelog_verified` (`19` files, `156568455` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

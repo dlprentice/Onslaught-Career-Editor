@@ -23,7 +23,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260527-235851_post_wave931_cengine_lifecycle_resource_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260527-235851_post_wave931_cengine_lifecycle_resource_review_verified"
 SCRIPT_NAME = "test:ghidra-cengine-lifecycle-resource-review-wave931"
 SCRIPT_VALUE = r"py -3 tools\ghidra_cengine_lifecycle_resource_review_wave931_probe.py --check"
 

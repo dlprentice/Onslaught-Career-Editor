@@ -62,4 +62,4 @@ Validation:
 - `py -3 tools\winui_safe_copy_online_private_lan_transport_smoke_check.py subagents\winui-safe-copy-live-runtime\online-private-relay-delivery-20260618-focus1\private-lan-transport-smoke-proof.json --expected-controller-configuration 1`
 - `py -3 tools\winui_safe_copy_online_private_remote_client_smoke_check.py subagents\winui-safe-copy-live-runtime\online-private-relay-delivery-20260618-focus1\private-remote-client-smoke-proof.json --expected-controller-configuration 1`
 
-No Ghidra mutation occurred, so no Ghidra backup was created for this slice. The latest Ghidra review backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`; future Ghidra backups should use `D:\GhidraBackups` while external drives are detached.
+No Ghidra mutation occurred, so no Ghidra backup was created for this slice. The latest Ghidra review backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`; future Ghidra backups should use `[maintainer-local-ghidra-backup-root]` while external drives are detached.

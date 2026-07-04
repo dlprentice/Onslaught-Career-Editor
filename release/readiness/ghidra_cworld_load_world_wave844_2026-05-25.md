@@ -29,7 +29,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 1 xref row, 3201 instruction-window rows with 2023 rows inside `CWorld__LoadWorld`, 11 context metadata rows, 11 context tag rows, and 1 decompile row.
 - Queue after Wave844: 6098 total functions, 5668 commented, 430 commentless, 0 exact-undefined signatures, 0 `param_N` signatures, comment-backed proxy `5668/6098 = 92.95%`, strict clean-signature proxy `5668/6098 = 92.95%`.
 - Next raw commentless row: `0x0050f680 CSpawnerThng__IsSpawnTypeAllowed`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-050626_post_wave844_cworld_load_world_verified`, 19 files, 171871111 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-050626_post_wave844_cworld_load_world_verified`, 19 files, 171871111 bytes, `DiffCount=0`.
 
 What this proves:
 

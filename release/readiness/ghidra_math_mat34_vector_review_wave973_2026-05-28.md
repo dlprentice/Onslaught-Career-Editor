@@ -26,7 +26,7 @@ Read-back evidence:
 - Queue after Wave973: `6210` total functions, `6210` commented, `0` commentless, `0` exact-undefined signatures, `0` `param_N`; comment-backed and strict clean-signature proxy `6210/6210 = 100.00%`.
 - Wave911 focused re-audit progress: `350/1408 = 24.86%`.
 - Expanded static surface progress: `408/1466 = 27.83%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-192743_post_wave973_math_mat34_vector_review_verified`, `19` files, `173771655` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-192743_post_wave973_math_mat34_vector_review_verified`, `19` files, `173771655` bytes, `DiffCount=0`.
 
 What this proves:
 

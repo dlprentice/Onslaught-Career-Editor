@@ -38,7 +38,7 @@ What is proven:
 - The queue refresh reports `6093` total functions, `3064` commented, `3029` commentless, `1333` exact-undefined signatures, and `1085` `param_N` signatures.
 - Comment-backed proxy is `3064/6093 = 50.29%`; strict clean-signature proxy is `3019/6093 = 49.55%`.
 - The next high-signal queue head is `0x00542740 CDXEngine__InitLandscapeTextureTables`.
-- The live Ghidra project backup verified at `G:\GhidraBackups\BEA_20260519-162129_post_wave597_cdxfrontendvideo_head_verified` with 19 files, 161123207 bytes, `DiffCount=0`, and manifest hash `614df28fbf49231fd4d2bd359d833564e4f64678cb240bd8a5ed2c1ed82c1506`.
+- The live Ghidra project backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260519-162129_post_wave597_cdxfrontendvideo_head_verified` with 19 files, 161123207 bytes, `DiffCount=0`, and manifest hash `614df28fbf49231fd4d2bd359d833564e4f64678cb240bd8a5ed2c1ed82c1506`.
 
 What is not proven:
 

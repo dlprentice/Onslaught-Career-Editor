@@ -24,7 +24,7 @@ Both helpers strlen-scan the stack `source_string`, advance a global modulo-4 sl
 - Post read-back verified `2` metadata rows, `2` tag rows, `25` xref rows, `562` instruction rows, and `2` decompile exports.
 - Focused probe: `py -3 tools\ghidra_string_scratch_wave547_probe.py --check` PASS.
 - Queue refresh: `py -3 tools\ghidra_static_reaudit_queue_probe.py --check --json` PASS after refreshing the live quality snapshot.
-- Backup: `G:\GhidraBackups\BEA_20260518-114408_post_wave547_string_scratch_verified`, `19` files, `159320967` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-114408_post_wave547_string_scratch_verified`, `19` files, `159320967` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
 
 ## Queue Snapshot
 

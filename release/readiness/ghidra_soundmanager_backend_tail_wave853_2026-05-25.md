@@ -31,7 +31,7 @@ Read-back evidence:
 - Additional read-only evidence: `12` context metadata rows, `12` context decompile rows, `32` vtable rows, `10` string dumps, and source-context hits from `pcsoundmanager.cpp`, `pcsoundmanager.h`, `SoundManager.cpp`, and `SoundManager.h`.
 - Queue after Wave853: `6098` total functions, `5754` commented, `344` commentless, `0` exact-undefined signatures, `0` `param_N`, comment-backed proxy `5754/6098 = 94.36%`, strict clean-signature proxy `5754/6098 = 94.36%`.
 - Next raw commentless row: `0x0051a6a0 CFastVB__RenderIndexedImmediate`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-101054_post_wave853_soundmanager_backend_tail_verified`, `19` files, `172133255` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-101054_post_wave853_soundmanager_backend_tail_verified`, `19` files, `172133255` bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -18,7 +18,7 @@ Result:
 - Readiness notes checked: `95`
 - Covered waves: `93`
 - Package probe scripts / evidence bases: `91`
-- Backup references: `93` unique on-disk `G:\GhidraBackups` paths
+- Backup references: `93` unique on-disk `[maintainer-local-ghidra-backup-root]` paths
 - Wave900+ apply scripts with clean log coverage: `26`
 - Direct Wave982-Wave992 probe classifications: `11` results, `1` direct pass, `10` allowed current-state/doc drift failures, `0` evidence/unclassified failures
 - Current queue closure: `6222/6222 = 100.00%`, `0` commentless, `0` exact-undefined signatures, `0` `param_N`

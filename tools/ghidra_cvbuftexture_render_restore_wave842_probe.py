@@ -31,7 +31,7 @@ BACKUP_SUMMARY = BASE / "backup-summary.json"
 ADDRESS = "0x0050ab60"
 NAME = "CVBufTexture__RenderAndRestoreStateFlag4"
 SIGNATURE = "void __stdcall CVBufTexture__RenderAndRestoreStateFlag4(void * dynamic_context, int unused_zero_arg, int enable_dynamic_flag_source)"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-035851_post_wave842_cvbuftexture_render_restore_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-035851_post_wave842_cvbuftexture_render_restore_verified"
 NEXT_HEAD = "0x0050b030 OID__TraceLineAndSelectBestTargetHit"
 
 EXPECTED_TAGS = {

@@ -44,8 +44,8 @@ Evidence:
 - Post metadata/tag/xref/instruction/decompile exports: `10` / `10` / `21` / `326` / `10`.
 - Pre/post metadata, instruction, and xref exports match exactly.
 - Queue quality refresh after the Ghidra write reported `total_functions=6410 commented_functions=6410`.
-- Final backup after the queue refresh: `G:\GhidraBackups\BEA_20260605-093432_post_wave1132_component_ai_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
-- Previous completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-090018_post_wave1131_heightfield_current_risk_review_verified`.
+- Final backup after the queue refresh: `[maintainer-local-ghidra-backup-root]\BEA_20260605-093432_post_wave1132_component_ai_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Previous completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-090018_post_wave1131_heightfield_current_risk_review_verified`.
 - Codex read-only consult agreed the cluster is coherent when scoped as component/active-reader UnitAI residuals, not as one exact source class.
 
 What this proves:

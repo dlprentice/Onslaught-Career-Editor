@@ -229,7 +229,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
     require(head.get("name") == "CTexture__InitPreprocessorDefaultDefines", f"next head name mismatch: {head}", failures)
 
     backup = read_json(BACKUP_SUMMARY)
-    require(backup.get("BackupPath") == "G:\\GhidraBackups\\BEA_20260521-085906_post_wave682_ctexture_macro_symbol_verified", "backup path mismatch", failures)
+    require(backup.get("BackupPath") == "[maintainer-local-ghidra-backup-root]\\BEA_20260521-085906_post_wave682_ctexture_macro_symbol_verified", "backup path mismatch", failures)
     require(backup.get("FileCount") == 19, f"backup file count mismatch: {backup}", failures)
     require(backup.get("TotalBytes") == 164498311, f"backup bytes mismatch: {backup}", failures)
     require(backup.get("DiffCount") == 0, f"backup diff mismatch: {backup}", failures)

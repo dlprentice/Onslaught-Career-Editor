@@ -40,7 +40,7 @@ Evidence:
 - Composer 2.5 adversarial consult agreed this is a coherent one-wave read-only cluster and that mutation should be unlikely unless live Ghidra diverged from the prior Wave360-Wave362/Wave600/Wave872 evidence. The live exports did not diverge.
 - Wave911 focused re-audit progress after Wave932: `130/1408 = 9.23%`.
 - Static export-contract closure remains `6113/6113 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-001551_post_wave932_cengine_view_resource_light_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-001551_post_wave932_cengine_view_resource_light_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 
 What this proves:
 

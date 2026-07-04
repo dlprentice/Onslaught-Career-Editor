@@ -24,7 +24,7 @@ Read-back evidence:
 - Post exports: 3 metadata rows, 3 tag rows, 3 xref rows, 67 instruction rows, 3 decompile rows, 69 xref-site instruction rows, 4 helper metadata rows, and 4 string dumps.
 - Queue after Wave871: 6105 total, 5854 commented, 251 commentless, 0 exact-undefined signatures, 0 `param_N` signatures, comment-backed proxy `5854/6105 = 95.89%`, strict clean-signature proxy `5854/6105 = 95.89%`.
 - Next raw commentless row: `0x00552470 CEngine__ReleaseField6C0`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-183506_post_wave871_cscreenfx_zoom_verified`, 19 files, 172460935 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-183506_post_wave871_cscreenfx_zoom_verified`, 19 files, 172460935 bytes, `DiffCount=0`.
 
 What this proves:
 

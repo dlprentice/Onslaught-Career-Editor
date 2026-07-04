@@ -29,7 +29,7 @@ Evidence:
 - Focused probe passed: `py -3 tools\ghidra_csoundmanager_sample_playback_wave501_probe.py --check`
 - npm probe passed: `cmd.exe /c npm run test:ghidra-csoundmanager-sample-playback-wave501`
 - Static queue check passed: `cmd.exe /c npm run test:ghidra-static-reaudit-queue`
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260517-132737_post_wave501_csoundmanager_sample_playback_verified`
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260517-132737_post_wave501_csoundmanager_sample_playback_verified`
 
 Queue snapshot after Wave501:
 

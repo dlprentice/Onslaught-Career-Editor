@@ -1,7 +1,7 @@
 # DXClouds.cpp Functions
 
 > Source File: DXClouds.cpp | Binary: BEA.exe
-> Debug Path: 0x006503d4 (`C:\dev\ONSLAUGHT2\DXClouds.cpp`)
+> Debug Path: 0x006503d4 (`[maintainer-local-source-export-root]\DXClouds.cpp`)
 
 ## Overview
 
@@ -18,7 +18,7 @@ Wave590 hardened the queue-head CClouds constructor and shutdown slot after seri
 
 Read-back evidence: `ApplyCCloudsHeadWave590.java` dry/apply/final dry reported `updated=0 skipped=2 renamed=0 would_rename=2 missing=0 bad=0`, then `updated=2 skipped=0 renamed=2 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=2 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Post exports verified `2` metadata rows, `2` tag rows, `2` xref rows, `522` instruction rows, `2` target decompiles, `12` vtable rows, `30` callsite instruction rows, `99` proof instruction rows, and `81` shutdown-caller instruction rows.
 
-Queue telemetry after the pass: `6093` total functions, `3021` commented, `3072` commentless, `1347` exact-undefined signatures, `1112` `param_N` signatures, comment-backed proxy `3021/6093 = 49.58%`, strict clean-signature proxy `2975/6093 = 48.83%`. Verified backup: `G:\GhidraBackups\BEA_20260519-122425_post_wave590_cclouds_head_verified`, `19` files, `160926599` bytes, manifest hash `31163c5c5f3d19d64d073d764769b9625270631f11a06d2ac1d6a9462f0cc898`.
+Queue telemetry after the pass: `6093` total functions, `3021` commented, `3072` commentless, `1347` exact-undefined signatures, `1112` `param_N` signatures, comment-backed proxy `3021/6093 = 49.58%`, strict clean-signature proxy `2975/6093 = 48.83%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-122425_post_wave590_cclouds_head_verified`, `19` files, `160926599` bytes, manifest hash `31163c5c5f3d19d64d073d764769b9625270631f11a06d2ac1d6a9462f0cc898`.
 
 ## Boundary Notes
 

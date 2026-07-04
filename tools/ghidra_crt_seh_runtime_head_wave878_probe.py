@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave878 CRT/SEH runtime head"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-221858_post_wave878_crt_seh_runtime_head_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-221858_post_wave878_crt_seh_runtime_head_verified"
 NEXT_HEAD = "0x0055dcb0 OID__AcosWrapper"
 STRICT_PROXY = "5901/6113 = 96.53%"
 

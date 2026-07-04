@@ -27,7 +27,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 1 xref row, 285 instruction-window rows, 37 WinMain callsite instruction rows, and 2 context decompile rows.
 - Queue after Wave847: 6098 total, 5674 commented, 424 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5674/6098 = 93.05%`, strict clean-signature proxy `5674/6098 = 93.05%`.
 - Next raw commentless row: `0x00513120 PlatformInput__InitDirectInput`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-063403_post_wave847_ltshell_exception_filter_verified`, 19 files, 171871111 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-063403_post_wave847_ltshell_exception_filter_verified`, 19 files, 171871111 bytes, `DiffCount=0`.
 
 What this proves:
 

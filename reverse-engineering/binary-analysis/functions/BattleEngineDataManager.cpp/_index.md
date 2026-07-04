@@ -1,7 +1,7 @@
 # BattleEngineDataManager.cpp Function Mappings
 
 > Functions from BattleEngineDataManager.cpp mapped to BEA.exe binary
-> Debug Path String: `C:\dev\ONSLAUGHT2\BattleEngineDataManager.cpp` at 0x00623674
+> Debug Path String: `[maintainer-local-source-export-root]\BattleEngineDataManager.cpp` at 0x00623674
 > Discovered: 2025-12-16 via Ghidra xref analysis
 
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6113/6113** (Wave900: every function commented; clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.

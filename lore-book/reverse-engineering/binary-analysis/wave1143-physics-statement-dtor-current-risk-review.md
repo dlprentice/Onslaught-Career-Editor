@@ -23,8 +23,8 @@ Wave1143 re-read nine current-risk PhysicsScript top-level statement destructor 
 ## Evidence Counts
 
 - Primary exports: `9` metadata rows, `9` tag rows, `9` xref rows, `207` instruction rows, and `9` decompile rows.
-- Backup: `G:\GhidraBackups\BEA_20260605-161338_post_wave1143_physics_statement_dtor_current_risk_review_verified`; `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
-- Previous completed backup: `G:\GhidraBackups\BEA_20260605-153716_post_wave1142_mixed_score22_current_risk_review_verified`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-161338_post_wave1143_physics_statement_dtor_current_risk_review_verified`; `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Previous completed backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-153716_post_wave1142_mixed_score22_current_risk_review_verified`.
 
 ## Progress
 
@@ -43,4 +43,4 @@ Wave1143 re-read nine current-risk PhysicsScript top-level statement destructor 
 
 Wave1143 is static Ghidra evidence only. It does not prove runtime PhysicsScript behavior, runtime statement destruction behavior, serialized file-format completeness, mission-script outcomes, exact layouts, BEA patching behavior, gameplay outcomes, visual QA, or rebuild parity.
 
-Probe token anchor: Wave1143; wave1143-physics-statement-dtor-current-risk-review; 270/1179 = 22.90%; 9 current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 909; current risk candidates: 6166; PhysicsScript statement destructor current-risk review; fresh Ghidra export; statement destructor bodies; scalar-deleting wrapper xrefs; read-only review; no mutation; 0 / 0 / 0; 6411/6411 = 100.00%; CUnitStatement__dtor; CWeaponStatement__dtor; CWeaponModeStatement__dtor; CRoundStatement__dtor; CSpawnerStatement__dtor; CExplosionStatement__dtor; CComponentStatement__dtor; CFeatureStatement__dtor; CHazardStatement__dtor; G:\GhidraBackups\BEA_20260605-161338_post_wave1143_physics_statement_dtor_current_risk_review_verified; G:\GhidraBackups\BEA_20260605-153716_post_wave1142_mixed_score22_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1143; wave1143-physics-statement-dtor-current-risk-review; 270/1179 = 22.90%; 9 current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 909; current risk candidates: 6166; PhysicsScript statement destructor current-risk review; fresh Ghidra export; statement destructor bodies; scalar-deleting wrapper xrefs; read-only review; no mutation; 0 / 0 / 0; 6411/6411 = 100.00%; CUnitStatement__dtor; CWeaponStatement__dtor; CWeaponModeStatement__dtor; CRoundStatement__dtor; CSpawnerStatement__dtor; CExplosionStatement__dtor; CComponentStatement__dtor; CFeatureStatement__dtor; CHazardStatement__dtor; [maintainer-local-ghidra-backup-root]\BEA_20260605-161338_post_wave1143_physics_statement_dtor_current_risk_review_verified; [maintainer-local-ghidra-backup-root]\BEA_20260605-153716_post_wave1142_mixed_score22_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.

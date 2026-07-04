@@ -9,7 +9,7 @@ After Wave909 closeout was pushed, a read-only headless export re-validated the 
 ## Command shape
 
 ```text
-analyzeHeadless.bat C:\Users\david\Ghidra\Projects BEA -process BEA.exe
+analyzeHeadless.bat [maintainer-local-ghidra-project-root] BEA -process BEA.exe
   -scriptPath <repo>\tools
   -postScript ExportFunctionQualitySnapshot.java <output.tsv>
   -noanalysis
@@ -34,7 +34,7 @@ Ghidra reported: `REPORT: Save succeeded for processed file: /BEA.exe`
 
 ## Project backup (post-closeout push)
 
-`G:\GhidraBackups\BEA_20260526-234159_post_wave909_closeout_pushed_verified` (robocopy of `C:\Users\david\Ghidra\Projects`, 19 files, matches prior backup shape)
+`[maintainer-local-ghidra-backup-root]\BEA_20260526-234159_post_wave909_closeout_pushed_verified` (robocopy of `[maintainer-local-ghidra-project-root]`, 19 files, matches prior backup shape)
 
 ## Boundary
 

@@ -1,7 +1,7 @@
 # MCTentacle.cpp Functions
 
 > Source File: MCTentacle.cpp | Binary: BEA.exe
-> Debug Path: `C:\dev\ONSLAUGHT2\MCTentacle.cpp` at `0x0062e06c`
+> Debug Path: `[maintainer-local-source-export-root]\MCTentacle.cpp` at `0x0062e06c`
 > Current evidence: Wave435 saved Ghidra read-back on 2026-05-16; Wave515 follow-up saved the adjacent `0x004f0c50` matrix helper on 2026-05-17
 
 ## Overview
@@ -10,15 +10,15 @@
 
 Wave435 corrected a stale interpretation at `0x0049eca0`: it is not an all-required-bones validator. It is a `CMeshPart` optimization filter that returns false for protected tentacle names and true for parts that can avoid the tentacle-specific optimization path.
 
-Wave1021 (`motion-controller-constructor-review-wave1021`) re-read the adjacent `0x0049cad0 CMCTentacle__Constructor` and `0x0049ef80 CMCWarspiteDome__Constructor` rows with no mutation. Fresh evidence keeps `CMCTentacle__Constructor` tied to `CTentacle__CreateTentacleGuide`, vtable `0x005dc450`, owner storage at `+0x08`, setup/cache clears, and `+0x28 = 0xbf800000`; it keeps `CMCWarspiteDome__Constructor` tied to `CWarspiteDome__Init`, vtable `0x005dc484`, and owner storage at `+0x08`. Verified backup: `G:\GhidraBackups\BEA_20260531-222637_post_wave1021_motion_controller_constructor_review_verified`. Runtime tentacle/dome motion behavior, exact source-body identity, concrete layouts, BEA patching, and rebuild parity remain separate proof.
+Wave1021 (`motion-controller-constructor-review-wave1021`) re-read the adjacent `0x0049cad0 CMCTentacle__Constructor` and `0x0049ef80 CMCWarspiteDome__Constructor` rows with no mutation. Fresh evidence keeps `CMCTentacle__Constructor` tied to `CTentacle__CreateTentacleGuide`, vtable `0x005dc450`, owner storage at `+0x08`, setup/cache clears, and `+0x28 = 0xbf800000`; it keeps `CMCWarspiteDome__Constructor` tied to `CWarspiteDome__Init`, vtable `0x005dc484`, and owner storage at `+0x08`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-222637_post_wave1021_motion_controller_constructor_review_verified`. Runtime tentacle/dome motion behavior, exact source-body identity, concrete layouts, BEA patching, and rebuild parity remain separate proof.
 
 ## Wave755 MCTentacle Unwind Continuation (2026-05-23)
 
-Wave755 static read-back (`unwind-continuation-wave755`, `wave755-readback-verified`) hardened `0x005d3360 Unwind@005d3360` and `0x005d3379 Unwind@005d3379` as compiler-generated SEH unwind allocation-cleanup callbacks. DATA scope-table xrefs `0x0061c09c` and `0x0061c0a4` point at the bodies; instruction/decompile evidence calls `OID__FreeObject_Callback` on `*(EBP-0x174)` with MCTentacle.cpp debug path `0x0062e06c`, line token `0x1b`, and allocation/type values `0x45` and `0x49`. Verified backup: `G:\GhidraBackups\BEA_20260523-105815_post_wave755_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
+Wave755 static read-back (`unwind-continuation-wave755`, `wave755-readback-verified`) hardened `0x005d3360 Unwind@005d3360` and `0x005d3379 Unwind@005d3379` as compiler-generated SEH unwind allocation-cleanup callbacks. DATA scope-table xrefs `0x0061c09c` and `0x0061c0a4` point at the bodies; instruction/decompile evidence calls `OID__FreeObject_Callback` on `*(EBP-0x174)` with MCTentacle.cpp debug path `0x0062e06c`, line token `0x1b`, and allocation/type values `0x45` and `0x49`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260523-105815_post_wave755_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
 
 ## Wave756 MCTentacle Unwind Continuation (2026-05-23)
 
-Wave756 static read-back (`unwind-continuation-wave756`, `wave756-readback-verified`) hardened `0x005d3392 Unwind@005d3392` as the next MCTentacle.cpp compiler-generated SEH unwind allocation-cleanup callback. DATA scope-table xref `0x0061c0ac` points at the body; instruction/decompile evidence calls `OID__FreeObject_Callback` on `*(EBP-0x174)` with MCTentacle.cpp debug path `0x0062e06c`, line token `0x1b`, and allocation/type value `0x6d`. Verified backup: `G:\GhidraBackups\BEA_20260523-112625_post_wave756_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
+Wave756 static read-back (`unwind-continuation-wave756`, `wave756-readback-verified`) hardened `0x005d3392 Unwind@005d3392` as the next MCTentacle.cpp compiler-generated SEH unwind allocation-cleanup callback. DATA scope-table xref `0x0061c0ac` points at the body; instruction/decompile evidence calls `OID__FreeObject_Callback` on `*(EBP-0x174)` with MCTentacle.cpp debug path `0x0062e06c`, line token `0x1b`, and allocation/type value `0x6d`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260523-112625_post_wave756_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
 
 ## Functions
 

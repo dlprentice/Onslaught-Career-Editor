@@ -43,7 +43,7 @@ Evidence counts:
 - Apply gate: dry reported `updated=0 skipped=1 comment_only_updated=1 tags_added=11 missing=0 bad=0`; apply reported `updated=1 skipped=0 comment_only_updated=1 tags_added=11 missing=0 bad=0`; final dry reported `updated=0 skipped=1 comment_only_updated=0 tags_added=0 missing=0 bad=0`.
 - Queue closure remains `6246/6246 = 100.00%`, with `0` commentless rows, `0` exact-undefined signatures, and `0` `param_N` signatures.
 - Wave911 focused progress remains `744/1408 = 52.84%`; expanded static surface progress advances to `1021/1509 = 67.66%`; top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-143021_post_wave1050_goodies_resource_wall_review_verified`, 19 files, 174590855 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-143021_post_wave1050_goodies_resource_wall_review_verified`, 19 files, 174590855 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -60,4 +60,4 @@ What remains separate proof:
 - Exact source-body identity where retail code and Stuart source differ.
 - BEA patching behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1050; goodies-resource-wall-review-wave1050; 0x0045d7e0 CFEPGoodies__Process; IsCheatActive(0/5); CFEPGoodies__FreeUpGoodyResources; CFEPGoodies__LoadingGoodyPoll; get_goodie_number; CFEPCommon__StopVideo; CFMV__PlayFullscreenWithLoadingGate; CFEPCommon__StartVideo; 0x005db998 CFEPGoodies_vtable; 744/1408 = 52.84%; 1021/1509 = 67.66%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-143021_post_wave1050_goodies_resource_wall_review_verified; comment/tag correction.
+Probe token anchor: Wave1050; goodies-resource-wall-review-wave1050; 0x0045d7e0 CFEPGoodies__Process; IsCheatActive(0/5); CFEPGoodies__FreeUpGoodyResources; CFEPGoodies__LoadingGoodyPoll; get_goodie_number; CFEPCommon__StopVideo; CFMV__PlayFullscreenWithLoadingGate; CFEPCommon__StartVideo; 0x005db998 CFEPGoodies_vtable; 744/1408 = 52.84%; 1021/1509 = 67.66%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-143021_post_wave1050_goodies_resource_wall_review_verified; comment/tag correction.

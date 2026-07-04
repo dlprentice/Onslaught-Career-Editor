@@ -255,7 +255,7 @@ def check_xrefs_instructions_and_context(failures: list[str]) -> None:
 
 def check_backup_and_queue(failures: list[str]) -> None:
     backup = read_json(BACKUP_SUMMARY)
-    if backup.get("backupPath") != "G:\\GhidraBackups\\BEA_20260519-214647_post_wave608_hud_component_render_entry_verified":
+    if backup.get("backupPath") != "[maintainer-local-ghidra-backup-root]\\BEA_20260519-214647_post_wave608_hud_component_render_entry_verified":
         failures.append(f"backup path mismatch: {backup.get('backupPath')}")
     expected_backup = {"fileCount": 19, "totalBytes": 161418119, "diffCount": 0}
     for key, expected_value in expected_backup.items():
@@ -309,7 +309,7 @@ def check_public_docs(failures: list[str]) -> None:
             "direct caller `CHudComponent__RenderPass`",
             "`512` instruction rows",
             "`488` target-function instruction rows",
-            "G:\\GhidraBackups\\BEA_20260519-214647_post_wave608_hud_component_render_entry_verified",
+            "[maintainer-local-ghidra-backup-root]\\BEA_20260519-214647_post_wave608_hud_component_render_entry_verified",
             "Next queue head: `0x0054bf80 CDXMeshVB__ctor_like_0054bf80`",
             "runtime HUD behavior",
             "rebuild parity remain unproven",

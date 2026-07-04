@@ -66,7 +66,7 @@ This normalizes the current static evidence for `transform_reject_special_moves`
 Verified post-wave backup:
 
 ```text
-G:\GhidraBackups\BEA_20260531-005829_post_wave984_battleengine_walker_dash_gate_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260531-005829_post_wave984_battleengine_walker_dash_gate_review_verified
 files=19
 bytes=173837191
 MissingCount=0

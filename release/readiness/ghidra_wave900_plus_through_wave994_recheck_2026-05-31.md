@@ -34,7 +34,7 @@ Wave994 anchor:
 - Wave911 focused re-audit progress: `461/1408 = 32.74%`
 - Expanded static surface progress: `563/1478 = 38.09%`
 - Static closure: `6222/6222 = 100.00%`
-- Verified backup: `G:\GhidraBackups\BEA_20260531-070007_post_wave994_particle_manager_core_review_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-070007_post_wave994_particle_manager_core_review_verified`
 
 Interpretation:
 

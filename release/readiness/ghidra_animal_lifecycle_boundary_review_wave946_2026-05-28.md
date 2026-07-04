@@ -30,7 +30,7 @@ Read-back evidence:
 - Post exports: 26 metadata rows, 26 tag rows, 1005 xref rows, 389 instruction rows, 26 decompile rows, and 69 post CAnimal vtable rows.
 - Queue after Wave946: `6139` total functions, `6139` commented, `0` commentless, `0` exact-undefined signatures, `0` `param_N`; export-contract function-quality closure remains `6139/6139 = 100.00%`.
 - Wave911 focused re-audit progress after Wave946: `232/1408 = 16.48%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-062816_post_wave946_animal_lifecycle_boundary_review_verified`, 19 files, 173476743 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-062816_post_wave946_animal_lifecycle_boundary_review_verified`, 19 files, 173476743 bytes, `DiffCount=0`.
 
 What this proves:
 

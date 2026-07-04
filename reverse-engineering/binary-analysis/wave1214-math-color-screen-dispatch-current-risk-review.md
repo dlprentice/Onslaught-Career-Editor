@@ -27,6 +27,6 @@ Fresh Ghidra export counts: `8` metadata rows, `8` tag rows, `58 xref rows`, `17
 
 Codex read-only consults used; no Cursor/Composer. The central accounting paths are `static-reaudit-current-risk-ledger.json`, `static-reaudit-measurement-register.md`, `reverse-engineering/binary-analysis/static-reaudit-progress.json`, `reverse-engineering/binary-analysis/static-reaudit-accounting-guard.md`, `reverse-engineering/binary-analysis/mapped-systems.md`, `mesh-resource-render-static-contract.md`, and `wave1108-current-risk-rank`.
 
-Verified backup: `G:\GhidraBackups\BEA_20260607-081942_post_wave1214_math_color_screen_dispatch_current_risk_review_verified` (`19` files, `176425863` bytes, `DiffCount=0`, `HashDiffCount=0`).
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-081942_post_wave1214_math_color_screen_dispatch_current_risk_review_verified` (`19` files, `176425863` bytes, `DiffCount=0`, `HashDiffCount=0`).
 
 Boundary: this wave strengthens rebuild-grade static contracts and the rebuild-grade specification aiming at no noticeable difference for particle tint/color helpers, selector screen-coordinate conversion, x87 acos dispatch, and mesh/texture/CFastVB math dispatch thunks. Runtime particle rendering behavior, runtime screen-coordinate output, runtime x87/CRT edge cases, runtime CPU feature dispatch, exact layouts, exact source identity, BEA patching behavior, rebuild parity, and no-noticeable-difference parity remain separate proof.

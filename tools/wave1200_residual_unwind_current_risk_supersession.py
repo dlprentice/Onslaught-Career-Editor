@@ -19,7 +19,7 @@ LEDGER_JSONL = ROOT / "reverse-engineering" / "binary-analysis" / "function_muta
 ATTEMPTS = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_attempt_log.jsonl"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-231915_post_wave1200_residual_unwind_current_risk_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-231915_post_wave1200_residual_unwind_current_risk_verified"
 
 DETAILED_SAMPLE_TARGETS = {
     "0x005d1115": ("Unwind@005d1115", "0x00619f7c", "Wave741", ("BattleEngine.cpp", "CMonitor__Shutdown_Thunk")),

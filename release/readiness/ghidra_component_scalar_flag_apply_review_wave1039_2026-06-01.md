@@ -31,7 +31,7 @@ Read-back evidence:
 - Wave911 focused progress advances to `711/1408 = 50.50%`.
 - Expanded static surface progress advances to `940/1493 = 62.96%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-075609_post_wave1039_component_value_scalar_flag_apply_review_verified`, `19` files, `174001031` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-075609_post_wave1039_component_value_scalar_flag_apply_review_verified`, `19` files, `174001031` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -49,4 +49,4 @@ What remains separate proof:
 - Exact source-body identity.
 - BEA patching, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1039; component-scalar-flag-apply-review-wave1039; 0x0043ca70 CComponentScalarD8__ApplyToComponentByName; 0x0043d460 CComponentScalar160__ApplyToComponentByName; 0x0043ce60 CComponentFlag124__ApplyToComponentByName; 0x0043d3a0 CComponentFlag108__ApplyToComponentByName; DAT_00855400; 0x005d856c; positive-only wording; 711/1408 = 50.50%; 940/1493 = 62.96%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-075609_post_wave1039_component_value_scalar_flag_apply_review_verified; comment/tag correction.
+Probe token anchor: Wave1039; component-scalar-flag-apply-review-wave1039; 0x0043ca70 CComponentScalarD8__ApplyToComponentByName; 0x0043d460 CComponentScalar160__ApplyToComponentByName; 0x0043ce60 CComponentFlag124__ApplyToComponentByName; 0x0043d3a0 CComponentFlag108__ApplyToComponentByName; DAT_00855400; 0x005d856c; positive-only wording; 711/1408 = 50.50%; 940/1493 = 62.96%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-075609_post_wave1039_component_value_scalar_flag_apply_review_verified; comment/tag correction.

@@ -19,8 +19,8 @@ Evidence:
 
 - Fresh metadata/tag/xref/instruction/decompile exports: `2` / `2` / `10` / `36` / `2`.
 - Existing tags remain anchored to `air-unit-crash-support-vfunc-review-wave1006`, `support-gate`, `vtable-slot-69`, and `static-reaudit`.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-052636_post_wave1123_airunit_plane_support_vfunc_review_verified`, `19` files, `175737735` bytes, `DiffCount=0`.
-- Previous latest completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-043957_post_wave1122_hlcollisiondetector_current_risk_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-052636_post_wave1123_airunit_plane_support_vfunc_review_verified`, `19` files, `175737735` bytes, `DiffCount=0`.
+- Previous latest completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-043957_post_wave1122_hlcollisiondetector_current_risk_review_verified`.
 - Prior context: Wave1006 normalized the saved comments/tags for the air-unit crash/support virtual helpers and plane-family overrides.
 
 Boundary:

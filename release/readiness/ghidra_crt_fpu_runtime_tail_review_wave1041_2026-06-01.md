@@ -22,7 +22,7 @@ Evidence counts:
 - Wave911 focused re-audit progress after Wave1041 remains `727/1408 = 51.63%`.
 - Expanded static surface progress after Wave1041 advances to `960/1493 = 64.30%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-090132_post_wave1041_crt_fpu_runtime_tail_review_verified`, `19` files, `174263175` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-090132_post_wave1041_crt_fpu_runtime_tail_review_verified`, `19` files, `174263175` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -37,4 +37,4 @@ What remains unproven:
 - Runtime errno/error-report/exit behavior.
 - BEA patching behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1041; crt-fpu-runtime-tail-review-wave1041; 0x0055da76 CRT__InitRuntimeFromStoredFrameGlobals; 0x0055e3ea CRT__FpuIntrinsicDispatch2Thunk; 0x00562a89 CRT__SetErrnoForFpSourceKind; 0x00569cb8 CRT__FloatDispatchAmsgExitCode2Thunk; __cintrindisp2; __amsg_exit; DAT_009d08b8; 0x00653658; 727/1408 = 51.63%; 960/1493 = 64.30%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-090132_post_wave1041_crt_fpu_runtime_tail_review_verified; no mutation.
+Probe token anchor: Wave1041; crt-fpu-runtime-tail-review-wave1041; 0x0055da76 CRT__InitRuntimeFromStoredFrameGlobals; 0x0055e3ea CRT__FpuIntrinsicDispatch2Thunk; 0x00562a89 CRT__SetErrnoForFpSourceKind; 0x00569cb8 CRT__FloatDispatchAmsgExitCode2Thunk; __cintrindisp2; __amsg_exit; DAT_009d08b8; 0x00653658; 727/1408 = 51.63%; 960/1493 = 64.30%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-090132_post_wave1041_crt_fpu_runtime_tail_review_verified; no mutation.

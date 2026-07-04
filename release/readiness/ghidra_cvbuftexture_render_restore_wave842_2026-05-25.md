@@ -23,7 +23,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 1 xref row, 261 instruction-window rows, 521 target-deep instruction rows, 71 xref-site instruction rows, 1 target decompile row, and 10 context metadata/tag/decompile rows.
 - Queue after Wave842: 6098 total functions, 5666 commented, 432 commentless, 0 exact-undefined signatures, 0 `param_N` signatures, comment-backed proxy `5666/6098 = 92.92%`, strict clean-signature proxy `5666/6098 = 92.92%`.
 - Next raw commentless row: `0x0050b030 OID__TraceLineAndSelectBestTargetHit`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-035851_post_wave842_cvbuftexture_render_restore_verified`, 19 files, 171838343 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-035851_post_wave842_cvbuftexture_render_restore_verified`, 19 files, 171838343 bytes, `DiffCount=0`.
 
 What this proves:
 

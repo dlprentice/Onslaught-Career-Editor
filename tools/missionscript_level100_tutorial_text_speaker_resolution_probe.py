@@ -59,7 +59,7 @@ LORE_WALKTHROUGH_PROOF = ROOT / "lore-book" / "reverse-engineering" / "binary-an
 
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 PROOF_LINK = "missionscript-level100-tutorial-text-speaker-resolution-proof-plan.md"
 SCHEMA_LINK = "missionscript-level100-tutorial-text-speaker-resolution.v1.json"
 WALKTHROUGH_LINK = "missionscript-level100-tutorial-static-walkthrough-proof-plan.md"

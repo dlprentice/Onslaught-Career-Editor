@@ -37,7 +37,7 @@ No `source-parity` tag was applied. This tranche is bounded to saved retail bina
 - Queue refresh: `6093` total functions, `2849` commented, `3244` commentless, `1485` exact-undefined signatures, `1153` `param_N` signatures
 - Post-Wave571 comment-backed proxy: `2849 / 6093 = 46.76%`
 - Post-Wave571 strict clean-signature proxy: `2797 / 6093 = 45.91%`
-- Backup: `G:\GhidraBackups\BEA_20260519-001056_post_wave571_display_media_thread_verified`
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-001056_post_wave571_display_media_thread_verified`
 - Backup verification: `19` files, `160107399` bytes, source/destination manifest hash `710526A0A69117FABF0A1C4E5203B06AF9F1638B4AA7F904D1DC5168E8CA0E4E`
 
 ## Limits

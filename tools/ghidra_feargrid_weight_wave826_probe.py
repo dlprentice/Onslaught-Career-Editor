@@ -28,7 +28,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-200047_post_wave826_feargrid_weight_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-200047_post_wave826_feargrid_weight_verified"
 NEXT_HEAD = "0x004df520 CActor__dtor_base"
 TARGET_ADDRESS = "0x004daff0"
 TARGET_NAME = "FearGridTrackedObject__LookupFearWeightByArchetype"

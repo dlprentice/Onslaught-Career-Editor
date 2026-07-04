@@ -24,7 +24,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260528-011246_post_wave935_world_footprint_heightfield_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-011246_post_wave935_world_footprint_heightfield_review_verified"
 SCRIPT_NAME = "test:ghidra-world-footprint-heightfield-review-wave935"
 SCRIPT_VALUE = r"py -3 tools\ghidra_world_footprint_heightfield_review_wave935_probe.py --check"
 

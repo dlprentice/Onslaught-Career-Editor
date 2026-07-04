@@ -27,7 +27,7 @@ LEDGER = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_l
 ATTEMPT_LOG = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_attempt_log.jsonl"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260602-134022_post_wave1086_shared_unit_residual_vtable_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260602-134022_post_wave1086_shared_unit_residual_vtable_continuation_verified"
 TAG = "shared-unit-residual-vtable-continuation-wave1086"
 
 TARGETS = {

@@ -27,7 +27,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260601-072938_post_wave1037_feature_value_apply_strip_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260601-072938_post_wave1037_feature_value_apply_strip_review_verified"
 
 TARGETS = {
     "0x0043bb30": ("CFeatureScalar18__ApplyToFeatureByName", "0x005da880", "0x18", "scalar"),

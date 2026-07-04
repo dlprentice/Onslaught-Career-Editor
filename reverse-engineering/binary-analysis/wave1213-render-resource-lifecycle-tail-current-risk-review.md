@@ -25,6 +25,6 @@ Fresh Ghidra export counts: `6` metadata rows, `6` tag rows, `13 xref rows`, `15
 
 Codex read-only consults used; no Cursor/Composer. The central accounting paths are `static-reaudit-current-risk-ledger.json`, `static-reaudit-measurement-register.md`, `reverse-engineering/binary-analysis/static-reaudit-progress.json`, `reverse-engineering/binary-analysis/static-reaudit-accounting-guard.md`, `reverse-engineering/binary-analysis/mapped-systems.md`, `mesh-resource-render-static-contract.md`, and `wave1108-current-risk-rank`.
 
-Verified backup: `G:\GhidraBackups\BEA_20260607-074242_post_wave1213_render_resource_lifecycle_tail_current_risk_review_verified` (`19` files, `176425863` bytes, `DiffCount=0`, `HashDiffCount=0`).
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-074242_post_wave1213_render_resource_lifecycle_tail_current_risk_review_verified` (`19` files, `176425863` bytes, `DiffCount=0`, `HashDiffCount=0`).
 
 Boundary: this wave strengthens rebuild-grade static contracts and the rebuild-grade specification aiming at no noticeable difference for index-buffer creation/locking, global texture/surface-list unlink, battleline base-destruction thunking, and landscape resource teardown. Runtime Direct3D behavior, runtime terrain/HUD output, runtime lost-device behavior, exact layouts, exact source identity, BEA patching behavior, rebuild parity, and no-noticeable-difference parity remain separate proof.

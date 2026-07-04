@@ -4,7 +4,7 @@ Status: complete static read-back evidence
 Date: 2026-05-24
 Scope: `texture-surface-prelude-wave832`
 
-Probe anchors: `Wave832 Texture/Surface Prelude`, `texture-surface-prelude-wave832`, `0x004f2710 CTextureBase__Init`, `void * __fastcall CTextureBase__Init(void * texture_base)`, `0x004f2790 CDXSurf__UnlinkNodeFromGlobalList`, `void __fastcall CDXSurf__UnlinkNodeFromGlobalList(void * texture_base)`, `DAT_0083d9b0`, `JCLTEX #%d`, `0x00556ce1`, `0x00556e70`, `5654/6098 = 92.72%`, `0x004f5b70 CParticleDescriptor__SetIndexedParam`, `G:\GhidraBackups\BEA_20260524-230834_post_wave832_texture_surface_prelude_verified`.
+Probe anchors: `Wave832 Texture/Surface Prelude`, `texture-surface-prelude-wave832`, `0x004f2710 CTextureBase__Init`, `void * __fastcall CTextureBase__Init(void * texture_base)`, `0x004f2790 CDXSurf__UnlinkNodeFromGlobalList`, `void __fastcall CDXSurf__UnlinkNodeFromGlobalList(void * texture_base)`, `DAT_0083d9b0`, `JCLTEX #%d`, `0x00556ce1`, `0x00556e70`, `5654/6098 = 92.72%`, `0x004f5b70 CParticleDescriptor__SetIndexedParam`, `[maintainer-local-ghidra-backup-root]\BEA_20260524-230834_post_wave832_texture_surface_prelude_verified`.
 
 Wave832 hardened saved Ghidra comments, tags, and signatures for two adjacent texture/surface lifecycle helpers:
 
@@ -21,7 +21,7 @@ Read-back evidence:
 - Post exports: 2 metadata rows, 2 tag rows, 4 xref rows, 74 target instruction rows, 2 target decompile rows, 11 context metadata rows, 11 context decompile rows, and 148 xref-site instruction rows.
 - Queue after Wave832: 6098 total, 5654 commented, 444 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5654/6098 = 92.72%`, strict clean-signature proxy `5654/6098 = 92.72%`.
 - Next raw commentless row: `0x004f5b70 CParticleDescriptor__SetIndexedParam`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-230834_post_wave832_texture_surface_prelude_verified`, 19 files, 171772807 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-230834_post_wave832_texture_surface_prelude_verified`, 19 files, 171772807 bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -38,7 +38,7 @@ The pass made four owner/name corrections and left the renderer pass entry at `0
   - final dry: `updated=0 skipped=7 renamed=0 would_rename=0 missing=0 bad=0`
 - Read-back exports verified `7` metadata rows, `7` tag rows, `9` xref rows, `791` instruction rows, `7` decompile rows, and `16` vtable-slot rows.
 - Vtable read-back verified slot `0` as `CDXMeshVB__scalar_deleting_dtor` and slot `4` as `CDXMeshVB__ReleaseResources`.
-- Verified backup: `G:\GhidraBackups\BEA_20260519-221542_post_wave609_cdxmeshvb_head_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-221542_post_wave609_cdxmeshvb_head_verified`
   - `sourceFileCount=19`
   - `destFileCount=19`
   - `sourceBytes=161418119`

@@ -32,7 +32,7 @@ Wave467 hardened this saved Ghidra signature/comment from retail stack use plus 
 
 Found via xref to debug path string at 0x00629df0:
 ```
-0x00466578: PUSH 0x629df0  ; "C:\dev\ONSLAUGHT2\FrontEnd.cpp"
+0x00466578: PUSH 0x629df0  ; "[maintainer-local-source-export-root]\FrontEnd.cpp"
 ```
 
 The debug path is passed to a memory allocation function at line 179 (0xb3) for debug tracking.
@@ -89,7 +89,7 @@ if (result == 0) return 0;
 ### 6. Player Object Allocation
 ```c
 for (int i = 0; i < 2; i++) {  // Two players
-    ptr = OID__AllocObject(0x178, 0x27, "C:\\dev\\ONSLAUGHT2\\FrontEnd.cpp", 0xb3);
+    ptr = OID__AllocObject(0x178, 0x27, "[maintainer-local-source-export-root]\\FrontEnd.cpp", 0xb3);
     if (ptr != NULL) {
         this->field_0xbe0c[i] = FUN_005145f0(this, i, 1);
     } else {

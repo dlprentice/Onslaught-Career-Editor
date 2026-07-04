@@ -44,7 +44,7 @@ No new function boundary was created in this tranche.
 - Final read-back verified `17/17` metadata rows, `17/17` decompile exports, `99` xref rows, `7497` instruction rows, and `17/17` tag rows.
 - `cmd.exe /c npm run test:ghidra-physics-script-unit-weapon-value-tranche` passed against the saved read-back artifacts.
 - The refreshed whole-database queue reports `5904` functions, `927` commented functions, `4977` commentless functions, `1981` undefined signatures, and `2187` `param_N` signatures.
-- The actual live Ghidra project backup after the saved mutation is `G:\GhidraBackups\BEA_20260512_082037_post_wave334_verified` with `19` files, `152210311` bytes, and `DiffCount=0`.
+- The actual live Ghidra project backup after the saved mutation is `[maintainer-local-ghidra-backup-root]\BEA_20260512_082037_post_wave334_verified` with `19` files, `152210311` bytes, and `DiffCount=0`.
 
 ## Claim Boundary
 

@@ -43,7 +43,7 @@ The pass applied 15 renames, including correcting stale `CUnit__DebugTraceIfFlag
 - Focused probe: `tools/ghidra_cthing_core_wave516_probe.py --check`.
 - Queue refresh after Wave516: `6078` functions, `2433` commented, `3645` commentless, `1610` exact-undefined signatures, and `1403` `param_N` signatures.
 - Current whole-project telemetry proxy: comment-backed `2433/6078 = 40.03%`; strict comment-plus-clean-signature proxy `2379/6078 = 39.14%`.
-- Backup verified at `G:\GhidraBackups\BEA_20260517-204846_post_wave516_cthing_core_verified` with `19` files, `158501767` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260517-204846_post_wave516_cthing_core_verified` with `19` files, `158501767` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

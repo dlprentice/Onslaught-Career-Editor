@@ -31,7 +31,7 @@ Read-back evidence:
 - Vtable export: 13 vtable anchors and 520 slot rows, with scalar-deleting statement destructor slots present at `0x005d9878`, `0x005d9850`, `0x005d9864`, `0x005d983c`, `0x005d9828`, `0x005d9814`, `0x005d9800`, `0x005d97ec`, and `0x005d97d8`.
 - Wave911 focused re-audit progress after Wave950 is `266/1408 = 18.89%`.
 - Static export-contract function-quality closure remains `6150/6150 = 100.00%`.
-- Verified read-only backup: `G:\GhidraBackups\BEA_20260528-081335_post_wave950_physics_statement_destructor_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
+- Verified read-only backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-081335_post_wave950_physics_statement_destructor_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
 
 What remains unproven:
 

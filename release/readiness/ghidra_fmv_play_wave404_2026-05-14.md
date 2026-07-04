@@ -25,7 +25,7 @@ Stuart source remains useful architecture context for normal frontend FMV paths 
 - Read-back verified `1` metadata row, `1` decompile export, `1` DATA xref at `0x004656b5`, `1` tag row, selected instruction tokens, and focused probe status `PASS`.
 - Refreshed queue telemetry reports `6028` functions, `1557` commented functions, `4471` commentless functions, `1910` undefined signatures, and `1858` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1557/6028 = 25.83%`, strict clean-signature `1495/6028 = 24.80%`.
-- The actual live Ghidra project backup is verified at `G:\GhidraBackups\BEA_20260514_060316_post_wave404_fmv_play_verified` with `19` files, `154798983` bytes, and `HashDiffCount=0`.
+- The actual live Ghidra project backup is verified at `[maintainer-local-ghidra-backup-root]\BEA_20260514_060316_post_wave404_fmv_play_verified` with `19` files, `154798983` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

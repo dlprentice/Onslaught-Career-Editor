@@ -30,7 +30,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave873 render multipass"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-193607_post_wave873_render_multipass_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-193607_post_wave873_render_multipass_verified"
 NEXT_HEAD = "0x00554f80 CAtmosphericsProfile__ctor"
 STRICT_PROXY = "5862/6106 = 96.00%"
 

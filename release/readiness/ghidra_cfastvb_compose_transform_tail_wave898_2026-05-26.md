@@ -22,7 +22,7 @@ Read-back evidence:
 - Post exports: 3 metadata rows, 3 tag rows, 3 xref rows, 444 instruction rows, 3 decompile rows, and 8 context metadata rows.
 - Queue after Wave898: 6113 total, 6100 commented, 13 commentless, 0 exact-undefined signatures, 0 `param_N`, strict/comment-backed proxy `6100/6113 = 99.79%`.
 - Next raw commentless row: `0x005b7770 CDXTexture__ValidateJpegFrameAndComputeMcuLayout`.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-080711_post_wave898_cfastvb_compose_transform_tail_verified`, 19 files, 173214599 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-080711_post_wave898_cfastvb_compose_transform_tail_verified`, 19 files, 173214599 bytes, `DiffCount=0`.
 
 What this proves:
 

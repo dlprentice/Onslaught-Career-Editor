@@ -39,7 +39,7 @@ SIGNATURE = (
     "int child_trace_mode, int collision_mode, uint reject_flags, int heightfield_trace_flags, "
     "uint required_thing_flags)"
 )
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-043624_post_wave843_cworld_find_first_thing_to_hit_line_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-043624_post_wave843_cworld_find_first_thing_to_hit_line_verified"
 NEXT_HEAD = "0x0050b9c0 CWorld__LoadWorld"
 
 EXPECTED_TAGS = {

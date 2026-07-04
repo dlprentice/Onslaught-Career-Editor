@@ -26,7 +26,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 12 xref rows, 121 instruction-window rows, 385 target-deep instruction rows, 322 target-range disassembly rows, 1260 xref-site instruction rows, 1 target decompile row, 9 caller metadata/decompile rows, and 7 context metadata/tag/decompile rows.
 - Queue after Wave843: 6098 total functions, 5667 commented, 431 commentless, 0 exact-undefined signatures, 0 `param_N` signatures, comment-backed proxy `5667/6098 = 92.93%`, strict clean-signature proxy `5667/6098 = 92.93%`.
 - Next raw commentless row: `0x0050b9c0 CWorld__LoadWorld`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-043624_post_wave843_cworld_find_first_thing_to_hit_line_verified`, 19 files, 171871111 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-043624_post_wave843_cworld_find_first_thing_to_hit_line_verified`, 19 files, 171871111 bytes, `DiffCount=0`.
 
 What this proves:
 

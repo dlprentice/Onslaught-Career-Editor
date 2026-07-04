@@ -33,7 +33,7 @@ Evidence counts:
 - Wave911 focused progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress remains `1560/1560 = 100.00%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260604-155838_post_wave1093_cengine_core_bootstrap_review_verified`, 19 files, 175541127 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-155838_post_wave1093_cengine_core_bootstrap_review_verified`, 19 files, 175541127 bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -48,4 +48,4 @@ What remains separate proof:
 - Exact source-body identity for all retail helper bodies.
 - BEA patching behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1093; cengine-core-bootstrap-review-wave1093; 0x00449820 CEngine__ctor; 0x004499d0 CEngine__Init; 0x00449dc0 CEngine__LoadAllNamedMeshes; 0x00449ef0 CEngine__GetViewMatrixFromCamera; 0x0044a020 CEngine__SetViewpoint; 0x0044a0d0 CEngine__SelectViewpoint; 0x0044a1f0 CEngine__LoadMixers; 0x0044a6e0 CEngine__Deserialize; 0x005290a0 CD3DApplication__Create; 0x0052af00 CD3DApplication__Initialize3DEnvironment; 1560/1560 = 100.00%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; G:\GhidraBackups\BEA_20260604-155838_post_wave1093_cengine_core_bootstrap_review_verified; no mutation.
+Probe token anchor: Wave1093; cengine-core-bootstrap-review-wave1093; 0x00449820 CEngine__ctor; 0x004499d0 CEngine__Init; 0x00449dc0 CEngine__LoadAllNamedMeshes; 0x00449ef0 CEngine__GetViewMatrixFromCamera; 0x0044a020 CEngine__SetViewpoint; 0x0044a0d0 CEngine__SelectViewpoint; 0x0044a1f0 CEngine__LoadMixers; 0x0044a6e0 CEngine__Deserialize; 0x005290a0 CD3DApplication__Create; 0x0052af00 CD3DApplication__Initialize3DEnvironment; 1560/1560 = 100.00%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260604-155838_post_wave1093_cengine_core_bootstrap_review_verified; no mutation.

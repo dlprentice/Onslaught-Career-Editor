@@ -38,7 +38,7 @@ ANCHOR_TOKENS = (
     "Status: active public-safe proof plan, not runtime proof",
     "destroyable-segments-static-contract.md",
     "wave1205-destroyable-segment-current-risk-review",
-    "G:\\GhidraBackups\\BEA_20260607-021737_post_wave1205_destroyable_segment_current_risk_review_verified",
+    "[maintainer-local-ghidra-backup-root]\\BEA_20260607-021737_post_wave1205_destroyable_segment_current_risk_review_verified",
     "0x00442700 CDestructableSegment__RegisterChild",
     "0x004433f0 CDestroyableCoreSegment__AreCoreChildrenDestroyed",
     "CDestructableSegmentsController__DamageSegmentByIndexAndUpdateThreshold",

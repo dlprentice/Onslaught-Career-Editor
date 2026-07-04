@@ -33,7 +33,7 @@ Probe anchors: `0x0058210e CTexture__PostProcessDecodedTexels_GammaOrSquare`, `0
 - Final dry mode: `updated=0 skipped=12 renamed=0 would_rename=0 signature_updated=0 missing=0 bad=0`
 - All three passes reported `REPORT: Save succeeded`.
 - Post exports verified `12` metadata rows, `12` tag rows, `52` xref rows, `444` instruction rows, and `12` clean decompile rows.
-- Backup verified: `G:\GhidraBackups\BEA_20260521-024019_post_wave668_dither_packer_head_verified`, `19` files, `163744647` bytes, `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260521-024019_post_wave668_dither_packer_head_verified`, `19` files, `163744647` bytes, `DiffCount=0`.
 
 ## Queue
 

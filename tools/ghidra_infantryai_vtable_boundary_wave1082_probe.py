@@ -16,7 +16,7 @@ PACKAGE_JSON = ROOT / "package.json"
 LEDGER = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_ledger.jsonl"
 ATTEMPT_LOG = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_attempt_log.jsonl"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260602-110925_post_wave1082_infantryai_vtable_boundary_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260602-110925_post_wave1082_infantryai_vtable_boundary_verified"
 
 TARGETS = {
     "0x004ff330": ("SharedUnitAI__HandleEventAndMaybeFire_004ff330", "int __thiscall SharedUnitAI__HandleEventAndMaybeFire_004ff330(void * this, int event_code)", "0x005dbf14"),

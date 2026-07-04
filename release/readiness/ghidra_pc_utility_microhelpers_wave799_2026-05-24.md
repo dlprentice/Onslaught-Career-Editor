@@ -26,7 +26,7 @@ Read-back evidence:
 - Queue after Wave799: 6098 total, 5552 commented, 546 commentless, 0 exact-undefined signatures, 0 param_N signatures, comment-backed proxy `5552/6098 = 91.05%`, strict clean-signature proxy `5552/6098 = 91.05%`.
 - The commentless high-signal, signature, and name-confidence queues are empty.
 - Next raw commentless row: `0x00445010 CMCBuggy__GetTargetValueOrFallback`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-063302_post_wave799_pc_utility_microhelpers_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-063302_post_wave799_pc_utility_microhelpers_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
 
 What this proves:
 

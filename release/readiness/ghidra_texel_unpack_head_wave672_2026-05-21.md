@@ -17,7 +17,7 @@ The pass used the `texel-unpack-head-wave672` and `wave672-readback-verified` ta
 - Post exports verified `16` metadata rows, `16` tag rows, `16` xref rows, `1616` instruction rows, and `16` clean decompile rows.
 - Queue after Wave672: `6098` total, `3746` commented, `2352` commentless, `1217` exact-undefined signatures, `571` `param_N` signatures, strict clean-signature proxy `3696/6098 = 60.61%`.
 - Next queue head: `0x0058577f CFastVB__TexelUnpackProfile_005e9f3c__ctor`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260521-042809_post_wave672_texel_unpack_head_verified`, `19` files, `163941255` bytes, `DiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-042809_post_wave672_texel_unpack_head_verified`, `19` files, `163941255` bytes, `DiffCount=0`.
 
 ## Boundaries
 

@@ -43,7 +43,7 @@ What is proven:
 - Post-save read-back verified 22 metadata rows, 22 tag rows, 105 xref rows, 2662 instruction rows, 22 decompile rows, and 64 vtable-slot rows.
 - The queue refresh reports `6093` total functions, `3000` commented, `3093` commentless, `1365` exact-undefined signatures, and `1116` `param_N` signatures.
 - The next high-signal queue head is `0x00539c80 CMissionScriptObjectCode__CMissionScriptObjectCode`.
-- The live Ghidra project backup verified at `G:\GhidraBackups\BEA_20260519-104019_post_wave587_scriptobjectcode_verified` with 19 files, 160861063 bytes, `DiffCount=0`, and manifest hash `d49c8bc11303903eec25964607ee6435e2b3b1fd5ef723ca69cc480bbfe08149`.
+- The live Ghidra project backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260519-104019_post_wave587_scriptobjectcode_verified` with 19 files, 160861063 bytes, `DiffCount=0`, and manifest hash `d49c8bc11303903eec25964607ee6435e2b3b1fd5ef723ca69cc480bbfe08149`.
 
 What is not proven:
 

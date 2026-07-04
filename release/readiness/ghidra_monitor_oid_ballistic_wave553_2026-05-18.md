@@ -35,7 +35,7 @@ Wave553 hardened eight static Ghidra functions across the monitor tracked-render
 - Focused probe: `py -3 tools\ghidra_monitor_oid_ballistic_wave553_probe.py --check` PASS.
 - npm wrapper: `cmd.exe /c npm run test:ghidra-monitor-oid-ballistic-wave553` PASS.
 - Queue refresh: PASS with `6089` total functions, `2672` commented, `3417` commentless, `1535` exact-undefined signatures, and `1270` `param_N` signatures.
-- Backup: `G:\GhidraBackups\BEA_20260518-142523_post_wave553_monitor_oid_ballistic_verified`, `19` files, `159386503` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-142523_post_wave553_monitor_oid_ballistic_verified`, `19` files, `159386503` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
 
 ## Not Proven
 

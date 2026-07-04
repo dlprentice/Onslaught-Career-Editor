@@ -114,7 +114,7 @@ class Level854FireDamageOutcomeCheckerTests(unittest.TestCase):
         for payload in (
             {"fireDamageOutcome": {"damageSource": "04aa0000"}},
             {"runtimeEvidence": {"pid": 1234}},
-            {"sourceArtifacts": {"logPath": "C:/Users/david/private/cdb.log"}},
+            {"sourceArtifacts": {"logPath": "[maintainer-local-user-root]/private/cdb.log"}},
             {"identity": "04aa0000"},
         ):
             with self.assertRaises(checker.Level854FireDamageOutcomeError):

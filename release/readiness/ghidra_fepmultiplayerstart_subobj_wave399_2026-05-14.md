@@ -29,7 +29,7 @@ The `SubObjXXXX` labels remain intentional offset-stable names because `FEPMulti
 - Self-test: `tools/ghidra_fepmultiplayerstart_subobj_wave399_probe_test.py`.
 - Refreshed static queue: `6028` functions, `1529` commented functions, `4499` commentless functions, `1913` undefined signatures, and `1864` `param_N` signatures.
 - Current confirmation proxies remain telemetry only: comment-backed `1529/6028 = 25.36%`, strict clean-signature `1464/6028 = 24.29%`.
-- Live Ghidra backup verified at `G:\GhidraBackups\BEA_20260514_030115_post_wave399_fepmultiplayerstart_subobj_verified` with `19` files, `154766215` bytes, and `HashDiffCount=0`.
+- Live Ghidra backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260514_030115_post_wave399_fepmultiplayerstart_subobj_verified` with `19` files, `154766215` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

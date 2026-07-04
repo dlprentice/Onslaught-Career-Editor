@@ -29,7 +29,7 @@ Read-back evidence:
 - Fresh exports: `13` metadata rows, `13` tag rows, `68` xref rows, `2465` around-address instruction rows, `728` function-body instruction rows, `13` decompile rows, `128` CGeneralVolume vtable rows, and `400` global-time/scalar xref rows. Body-instruction anchors include `0x00402025 MOV [ECX + 0xd4]`, `0x0040b10d MOV [EAX]`, `0x0040c724 CALL 0x00406460`, `0x0040c734 CALL 0x00401000`, `0x0040c73c CALL 0x00402020`, `0x004128cd CALL 0x00411e70`, `0x004136ab CALL 0x00409e60`, and `0x00413728 CALL 0x00409e60`.
 - Queue remains `6152` total functions, `6152` commented, `0` commentless, `0` exact-undefined signatures, and `0` `param_N`; export-contract function-quality closure remains `6152/6152 = 100.00%`.
 - Wave911 focused re-audit progress after Wave966: `340/1408 = 24.15%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-151637_post_wave966_generalvolume_active_reader_input_review_verified`, `19` files, `173542279` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-151637_post_wave966_generalvolume_active_reader_input_review_verified`, `19` files, `173542279` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -44,4 +44,4 @@ What remains unproven:
 - Exact source-file or source-body identity for CGeneralVolume helpers.
 - BEA patching behavior and rebuild parity.
 
-Probe token anchor: Wave966; generalvolume-active-reader-input-review-wave966; 0x00402020 CGeneralVolume__ResetCooldownTimestamp; 0x0040b100 CGeneralVolume__ctor_base; 0x0040c720 CGeneralVolume__ResetAndSetActiveReader; 0x00412830 CGeneralVolume__DisableLinkedEntriesByNameAndReselect; 0x00413660 CGeneralVolume__ApplyYawInputByWeaponClass; 0x004136e0 CGeneralVolume__ApplyPitchInputByWeaponClass; 0x005d892c; tag gap documented; 340/1408 = 24.15%; 6152/6152 = 100.00%; G:\GhidraBackups\BEA_20260528-151637_post_wave966_generalvolume_active_reader_input_review_verified; no mutation.
+Probe token anchor: Wave966; generalvolume-active-reader-input-review-wave966; 0x00402020 CGeneralVolume__ResetCooldownTimestamp; 0x0040b100 CGeneralVolume__ctor_base; 0x0040c720 CGeneralVolume__ResetAndSetActiveReader; 0x00412830 CGeneralVolume__DisableLinkedEntriesByNameAndReselect; 0x00413660 CGeneralVolume__ApplyYawInputByWeaponClass; 0x004136e0 CGeneralVolume__ApplyPitchInputByWeaponClass; 0x005d892c; tag gap documented; 340/1408 = 24.15%; 6152/6152 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260528-151637_post_wave966_generalvolume_active_reader_input_review_verified; no mutation.

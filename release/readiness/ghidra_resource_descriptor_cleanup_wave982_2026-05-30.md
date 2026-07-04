@@ -91,7 +91,7 @@ The pass made no executable-byte change and did not launch BEA.
 Verified post-wave backup:
 
 ```text
-G:\GhidraBackups\BEA_20260530-232843_post_wave982_resource_descriptor_cleanup_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260530-232843_post_wave982_resource_descriptor_cleanup_verified
 files=19
 bytes=173837191
 MissingCount=0

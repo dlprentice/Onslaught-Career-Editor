@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave857 FEPMultiplayerStart runtime"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-121518_post_wave857_fepmultiplayerstart_runtime_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-121518_post_wave857_fepmultiplayerstart_runtime_verified"
 NEXT_HEAD = "0x0051f370 CFEPOptions__GetState"
 
 TARGET_SIGNATURES = {
@@ -89,7 +89,7 @@ CORE_ANCHORS = (
     "0x0051be70 CFEPMultiplayerStart__SubObj4034__InitRuntimeState",
     "0x0051da60 CFEPMultiplayerStart__InitSelection",
     "0x0051ddd0 CFEPMultiplayerStart__HandleInput",
-    "C:\\dev\\ONSLAUGHT2\\FEPMultiplayerStart.cpp",
+    "[maintainer-local-source-export-root]\\FEPMultiplayerStart.cpp",
     NEXT_HEAD,
     "5770/6101 = 94.57%",
     BACKUP_PATH,
@@ -223,7 +223,7 @@ def check_artifacts(failures: list[str]) -> None:
         require(subobj_slots.get(slot) == name, f"SubObj4034 vtable slot {slot} mismatch", failures)
 
     string_rows = read_tsv(BASE / "post-string-0063fc24.tsv")
-    require(string_rows and string_rows[0].get("cstring") == r"C:\dev\ONSLAUGHT2\FEPMultiplayerStart.cpp", "FEPMultiplayerStart.cpp string mismatch", failures)
+    require(string_rows and string_rows[0].get("cstring") == r"[maintainer-local-source-export-root]\FEPMultiplayerStart.cpp", "FEPMultiplayerStart.cpp string mismatch", failures)
 
 
 def check_logs(failures: list[str]) -> None:
@@ -243,7 +243,7 @@ def check_logs(failures: list[str]) -> None:
         "post-context-metadata.log": "targets=18 found=18 missing=0",
         "post-context-decompile.log": "targets=18 dumped=18 missing=0 failed=0",
         "post-vtable.log": "ExportVtableSlots complete: targets=3 rows=12",
-        "post-string-0063fc24.log": r"DumpCStringAtAddress complete: input=0063fc24 target=0063fc24 text=C:\dev\ONSLAUGHT2\FEPMultiplayerStart.cpp",
+        "post-string-0063fc24.log": r"DumpCStringAtAddress complete: input=0063fc24 target=0063fc24 text=[maintainer-local-source-export-root]\FEPMultiplayerStart.cpp",
         "quality-refresh.log": "total_functions=6101 commented_functions=5770",
         "queue-probe.log": "Commentless functions: 331",
     }

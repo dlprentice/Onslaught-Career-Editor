@@ -22,6 +22,6 @@ This note records a public-safe saved-signature tranche for four adjacent CEngin
 - The refreshed all-functions baseline reports `6008` total function objects, `0` weak functions, `1948` undefined signatures, and `2022` `param_N` signatures.
 - The refreshed quality queue reports `1235` commented functions and `4773` commentless functions.
 - Current confirmation proxies are telemetry only: comment-backed `1235/6008 = 20.56%`; strict clean-signature `1173/6008 = 19.52%`. The `20%` value is not a milestone.
-- The actual live Ghidra project backup is verified at `G:\GhidraBackups\BEA_20260513_035100_post_wave361_engine_render_resource_verified` with `19` files, `153095047` bytes, and `HashDiffCount=0`.
+- The actual live Ghidra project backup is verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_035100_post_wave361_engine_render_resource_verified` with `19` files, `153095047` bytes, and `HashDiffCount=0`.
 
 Raw Ghidra exports, logs, and probe JSON are intentionally kept under ignored `subagents/ghidra-static-reaudit/engine-render-resource-wave361/current/`.

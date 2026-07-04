@@ -24,7 +24,7 @@ Read-back evidence:
 - Queue after Wave840: 6098 total functions, 5664 commented, 434 commentless, 0 exact-undefined signatures, 0 `param_N` signatures, comment-backed proxy `5664/6098 = 92.89%`, strict clean-signature proxy `5664/6098 = 92.89%`.
 - Next raw commentless row: `0x005019c0 VFuncSlot_09_005019c0`.
 - The commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-030308_post_wave840_shader_capability_init_verified`, 19 files, 171838343 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-030308_post_wave840_shader_capability_init_verified`, 19 files, 171838343 bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -26,7 +26,7 @@ The pass corrected two stale `undefined` signatures and one stale `param_N` sign
 - Focused probe: `tools/ghidra_thunderhead_wave519_probe.py --check`.
 - Queue refresh after Wave519: `6079` functions, `2457` commented, `3622` commentless, `1598` exact-undefined signatures, and `1394` `param_N` signatures.
 - Current whole-project telemetry proxy: comment-backed `2457/6079 = 40.42%`; strict comment-plus-clean-signature proxy `2400/6079 = 39.48%`.
-- Backup verified at `G:\GhidraBackups\BEA_20260517-222357_post_wave519_thunderhead_verified` with `19` files, `158567303` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260517-222357_post_wave519_thunderhead_verified` with `19` files, `158567303` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

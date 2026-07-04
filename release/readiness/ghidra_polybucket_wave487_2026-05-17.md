@@ -19,7 +19,7 @@ Date: 2026-05-17
 
 ## Backup
 
-- `G:\GhidraBackups\BEA_20260517-063000_post_wave487_polybucket_verified`
+- `[maintainer-local-ghidra-backup-root]\BEA_20260517-063000_post_wave487_polybucket_verified`
 - Verified: `19` files, `157387655` bytes, missing `0`, extra `0`, hash differences `0`.
 
 ## Boundary

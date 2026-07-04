@@ -94,7 +94,7 @@ DOC_TOKENS = (
     "0x005ab9c0 CDXTexture__InitComponentPlaneRowCache",
     "0x005aba90 CDXTexture__SelectNextScanTableForProgress",
     "0x0042f220 CSPtrSet__Clear",
-    r"G:\GhidraBackups\BEA_20260522-055657_post_wave724_texture_row_edge_padding_head_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260522-055657_post_wave724_texture_row_edge_padding_head_verified",
 )
 
 OVERCLAIM_TOKENS = (
@@ -251,7 +251,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
             require(re.search(r"\bparam_\d+\b", row.get("signature", "")) is None, f"queue row still has param_N for {address}", failures)
 
     backup = read_json(BACKUP_SUMMARY)
-    require(backup["backup"] == r"G:\GhidraBackups\BEA_20260522-055657_post_wave724_texture_row_edge_padding_head_verified", "backup destination mismatch", failures)
+    require(backup["backup"] == r"[maintainer-local-ghidra-backup-root]\BEA_20260522-055657_post_wave724_texture_row_edge_padding_head_verified", "backup destination mismatch", failures)
     require(backup["sourceFileCount"] == 19, "backup source file count mismatch", failures)
     require(backup["backupFileCount"] == 19, "backup file count mismatch", failures)
     require(int(backup["backupBytes"]) == 166562695, "backup byte count mismatch", failures)
@@ -315,7 +315,7 @@ def main(argv: list[str]) -> int:
     print("Status: PASS")
     print("Targets: 5")
     print("Queue: 6098 total, 4260 commented, 1838 commentless, 1216 undefined, 109 param_N")
-    print(r"Backup: G:\GhidraBackups\BEA_20260522-055657_post_wave724_texture_row_edge_padding_head_verified")
+    print(r"Backup: [maintainer-local-ghidra-backup-root]\BEA_20260522-055657_post_wave724_texture_row_edge_padding_head_verified")
     return 0
 
 

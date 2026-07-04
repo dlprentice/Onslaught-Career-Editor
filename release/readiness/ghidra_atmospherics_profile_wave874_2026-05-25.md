@@ -33,7 +33,7 @@ Read-back evidence:
 - Post exports: 10 metadata rows, 10 tag rows, 10 xref rows, 601 instruction rows, 10 decompile rows, 8 vtable rows, 6 pointer-table rows, and 16 helper metadata rows.
 - Queue after Wave874: 6,113 total functions, 5,872 commented, 241 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5872/6113 = 96.06%`, strict clean-signature proxy `5872/6113 = 96.06%`.
 - Next raw commentless row: `0x00555be0 CVBufTexture__DrawSpriteEx`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-201600_post_wave874_atmospherics_profile_verified`, 19 files, 172,592,007 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-201600_post_wave874_atmospherics_profile_verified`, 19 files, 172,592,007 bytes, `DiffCount=0`.
 
 What this proves:
 

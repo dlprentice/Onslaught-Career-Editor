@@ -29,14 +29,14 @@ Fresh read-back evidence:
 - Context exports: 6 metadata rows, 6 tag rows, 35 xref rows, 964 instruction rows, and 6 decompile rows.
 - Primary xrefs confirm activation/update DATA refs at `0x005e4300/0x005e3e48`, cached-transform callers from render-position/orientation helpers and the activation updater, trigger/event DATA refs at `0x005e42c0/0x005e3e08`, activation-animation DATA refs at `0x005e4088/0x005e3e2c`, and the hit-animation helper caller `CGillM__TriggerRandomArmHitAnimationIfReady`.
 - Context xrefs confirm the join to `CUnit__Init`, `CUnitAI__UpdateActivationStateAndSpawnPickup`, `CUnitAI__HandleTriggerEventAndMoveToOffset`, `CUnit__TryDestroyedCleanupAndResetDeploymentGraph`, `CGroundUnit__MarkDestroyedAndResetState`, and selected Unit DATA vtable refs.
-- Verified read-only backup: `G:\GhidraBackups\BEA_20260528-021545_post_wave938_cunitai_activation_lifecycle_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified read-only backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-021545_post_wave938_cunitai_activation_lifecycle_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 
 Progress:
 
 - Wave911 focused re-audit progress after Wave938: `166/1408 = 11.79%`.
 - Static export-contract function-quality closure remains `6113/6113 = 100.00%`.
 
-Probe token anchor: Wave938; `cunitai-activation-lifecycle-review-wave938`; `0x00428110 CUnitAI__UpdateActivationStateAndSpawnPickup`; `0x00428500 CUnitAI__RefreshCachedComponentTransform`; `0x00428800 CUnitAI__HandleTriggerEventAndMoveToOffset`; `0x004289b0 CUnitAI__AdvanceActivationAnimationState`; `0x00428cb0 CUnitAI__PlayHitAnimationAndSetFlag`; `0x00428d50 CUnitAI__PlayActivateAnimationOrFinalizeActivated`; `0x00428b50 CUnit__SetReaderAndComputeRelativeYaw`; `0x004fa8d0 CUnit__UpdateMotionAttachmentsAndEffects`; `0x004fcfe0 CUnit__ReleaseChildUnits`; `0x004fd040 CUnit__ResetDeploymentGraphAndScheduleEvent`; `0x004fd140 CUnit__MarkDestroyedAndCleanupLinks`; `166/1408 = 11.79%`; `6113/6113 = 100.00%`; `G:\GhidraBackups\BEA_20260528-021545_post_wave938_cunitai_activation_lifecycle_review_verified`; no mutation.
+Probe token anchor: Wave938; `cunitai-activation-lifecycle-review-wave938`; `0x00428110 CUnitAI__UpdateActivationStateAndSpawnPickup`; `0x00428500 CUnitAI__RefreshCachedComponentTransform`; `0x00428800 CUnitAI__HandleTriggerEventAndMoveToOffset`; `0x004289b0 CUnitAI__AdvanceActivationAnimationState`; `0x00428cb0 CUnitAI__PlayHitAnimationAndSetFlag`; `0x00428d50 CUnitAI__PlayActivateAnimationOrFinalizeActivated`; `0x00428b50 CUnit__SetReaderAndComputeRelativeYaw`; `0x004fa8d0 CUnit__UpdateMotionAttachmentsAndEffects`; `0x004fcfe0 CUnit__ReleaseChildUnits`; `0x004fd040 CUnit__ResetDeploymentGraphAndScheduleEvent`; `0x004fd140 CUnit__MarkDestroyedAndCleanupLinks`; `166/1408 = 11.79%`; `6113/6113 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260528-021545_post_wave938_cunitai_activation_lifecycle_review_verified`; no mutation.
 
 What this proves:
 

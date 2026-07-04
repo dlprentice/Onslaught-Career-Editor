@@ -220,9 +220,11 @@ reporting, or consult preparation.
 Nontrivial automation, storage deletion/retention, Ghidra mutation, public
 claim promotion, release posture, and broad collaboration-policy work require
 bounded consult evidence or an explicit `CONSULT_UNAVAILABLE` record for each
-missing lane. Required lanes are Codex normal, Codex adversarial, Cursor
-Agent `composer-2.5-fast` normal, Cursor Agent `composer-2.5-fast`
-adversarial, Grok Build normal, and Grok Build adversarial. Consults are
+missing lane. Required lanes are Codex normal, Codex adversarial, Cursor Agent
+`composer-2.5-fast` normal, Cursor Agent `composer-2.5-fast` adversarial,
+Grok Build normal, and Grok Build adversarial. Cursor Agent `gemini-3.1-pro`
+is suspended while the operator's Cursor API/model usage is exhausted; do not
+call it until the operator explicitly lifts that posture. Consults are
 advisory; Codex root or the integration owner remains responsible for final
 scope, safety, state reconciliation, and acceptance. Unresolved adversarial
 blockers prevent terminal success unless the coordinator or integration owner
@@ -238,7 +240,7 @@ Prepared consult lanes for this posture class:
 | --- | --- | --- |
 | Codex | Check whether the patch makes the storage/Ghidra/proof posture durable, concise, and consistent with repo contracts. | Attack for hidden authority expansion, state/write conflicts, hard-payload leakage, stale legacy-drive reliance, weak proof-class separation, and missing validation. |
 | Cursor Agent `composer-2.5-fast` | Review docs for practical contributor clarity and collision risk in coordinated campaigns. | Attack for ambiguous ownership, unsafe automation shortcuts, overbroad cleanup language, or claims that exceed evidence. |
-| Grok Build | Review the policy as an outside lane for operational blind spots and missing stop conditions. | Attack for unsafe deletion, mutation, proof-retention, external-tool, or campaign-control assumptions. |
+| Grok Build | Review policy reasoning, authority boundaries, and evidence sufficiency for broad or high-risk coordinated work. | Attack for unsafe deletion, mutation, proof-retention, external-tool, or campaign-control assumptions. |
 
 Consult briefs must not include secrets, `.env` values, auth/session/cache/log
 material, raw local manifests, exact local proof roots, hard payloads, copied

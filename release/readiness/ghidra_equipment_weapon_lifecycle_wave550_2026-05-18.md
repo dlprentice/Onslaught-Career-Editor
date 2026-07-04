@@ -28,7 +28,7 @@ Wave550 hardened two static Ghidra functions:
 - Focused probe: `py -3 tools\ghidra_equipment_weapon_lifecycle_wave550_probe.py --check` PASS.
 - npm wrapper: `cmd.exe /c npm run test:ghidra-equipment-weapon-lifecycle-wave550` PASS.
 - Queue refresh: PASS with `6089` total functions, `2661` commented, `3428` commentless, `1535` exact-undefined signatures, and `1281` `param_N` signatures.
-- Backup: `G:\GhidraBackups\BEA_20260518-125548_post_wave550_equipment_weapon_lifecycle_verified`, `19` files, `159353735` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-125548_post_wave550_equipment_weapon_lifecycle_verified`, `19` files, `159353735` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
 
 ## Not Proven
 

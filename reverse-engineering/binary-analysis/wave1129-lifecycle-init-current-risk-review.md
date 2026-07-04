@@ -38,8 +38,8 @@ Evidence:
 - Post vtable slot/type exports: `416` / `4`.
 - Pre/post instruction, xref, and vtable-slot exports match exactly.
 - Queue quality refresh after the Ghidra write reported `total_functions=6410 commented_functions=6410`.
-- Final backup after the queue refresh: `G:\GhidraBackups\BEA_20260605-075206_post_wave1129_lifecycle_init_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`.
-- Previous completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-072044_post_wave1128_generalvolume_current_risk_review_verified`.
+- Final backup after the queue refresh: `[maintainer-local-ghidra-backup-root]\BEA_20260605-075206_post_wave1129_lifecycle_init_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`.
+- Previous completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-072044_post_wave1128_generalvolume_current_risk_review_verified`.
 
 What this proves:
 

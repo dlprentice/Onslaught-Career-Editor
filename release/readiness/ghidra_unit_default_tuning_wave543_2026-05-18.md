@@ -24,7 +24,7 @@ The helper is a register-only initializer that writes fixed dword defaults to th
 - Focused probe: `py -3 tools\ghidra_unit_default_tuning_wave543_probe.py --check` PASS.
 - Npm wrapper: `cmd.exe /c npm run test:ghidra-unit-default-tuning-wave543` PASS.
 - Queue refresh: `py -3 tools\ghidra_static_reaudit_queue_probe.py --check --json` PASS after refreshing the live quality snapshot.
-- Backup: `G:\GhidraBackups\BEA_20260518-100152_post_wave543_unit_default_tuning_verified`, `19` files, `159320967` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-100152_post_wave543_unit_default_tuning_verified`, `19` files, `159320967` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
 
 ## Queue Snapshot
 

@@ -32,7 +32,7 @@ Evidence counts:
 - String/data checks for `0x00618938`, `0x00618988`, `0x006189d8`, `0x00618a08`, and `0x00618a38` produced empty C-string payloads, reinforcing that the mixed table is not a simple string/name table.
 - Queue closure remains `6238/6238 = 100.00%` with 0 commentless, 0 exact-undefined signatures, and 0 `param_N`.
 - Wave911 focused re-audit progress after Wave1032: `631/1408 = 44.82%`; expanded static surface progress: `860/1493 = 57.60%`; Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-043550_post_wave1032_tweak_reconnect_interface_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-043550_post_wave1032_tweak_reconnect_interface_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -47,4 +47,4 @@ What remains unproven:
 - Runtime frontend reconnect, landscape-detail, viewpoint, tweak registration, or tweak cleanup behavior.
 - BEA patch behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1032; tweak-reconnect-interface-review-wave1032; 0x00527c90 CReconnectInterface__ctor; 0x00527d00 CReconnectInterface__VFunc_07_00527d00; 0x00528690 CTweak__ctor_base; 0x005286b0 CTweak__dtor_base; 0x00528b20 CTweakInt_SetNumViewpoints__ctor; 0x00527c50 CFrontEnd__AdvanceStateAndRelinquishControl; 0x004530a0 CTweak__dtor_base_thunk_004530a0; 0x0054d4ac; 631/1408 = 44.82%; 860/1493 = 57.60%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-043550_post_wave1032_tweak_reconnect_interface_review_verified; no mutation.
+Probe token anchor: Wave1032; tweak-reconnect-interface-review-wave1032; 0x00527c90 CReconnectInterface__ctor; 0x00527d00 CReconnectInterface__VFunc_07_00527d00; 0x00528690 CTweak__ctor_base; 0x005286b0 CTweak__dtor_base; 0x00528b20 CTweakInt_SetNumViewpoints__ctor; 0x00527c50 CFrontEnd__AdvanceStateAndRelinquishControl; 0x004530a0 CTweak__dtor_base_thunk_004530a0; 0x0054d4ac; 631/1408 = 44.82%; 860/1493 = 57.60%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-043550_post_wave1032_tweak_reconnect_interface_review_verified; no mutation.

@@ -31,7 +31,7 @@ SCHEMA_LINK = "world-thing-spawn-copied-corpus-schema.v1.json"
 RESULT_LINK = "world-thing-spawn-copied-corpus-schema-proof.md"
 PLAN_LINK = "world-thing-spawn-copied-corpus-schema-proof-plan.md"
 WORLD_PLAN_LINK = "world-thing-spawn-object-reference-proof-plan.md"
-BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 
 EXPECTED_SELECTED = Counter(
     {

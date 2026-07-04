@@ -24,6 +24,6 @@ Fresh Ghidra export counts: `5` metadata rows, `5` tag rows, `6 xref rows`, `794
 
 Codex read-only consults used; no Cursor/Composer. The central accounting paths are `static-reaudit-current-risk-ledger.json`, `static-reaudit-measurement-register.md`, `reverse-engineering/binary-analysis/static-reaudit-progress.json`, `reverse-engineering/binary-analysis/static-reaudit-accounting-guard.md`, `reverse-engineering/binary-analysis/mapped-systems.md`, `unit-battleengine-gameplay-static-contract.md`, and `wave1108-current-risk-rank`.
 
-Verified backup: `G:\GhidraBackups\BEA_20260607-090802_post_wave1215_unit_targeting_combat_residual_current_risk_review_verified` (`19` files, `176425863` bytes, `DiffCount=0`, `HashDiffCount=0`).
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-090802_post_wave1215_unit_targeting_combat_residual_current_risk_review_verified` (`19` files, `176425863` bytes, `DiffCount=0`, `HashDiffCount=0`).
 
 Boundary: this wave strengthens rebuild-grade static contracts and the rebuild-grade specification aiming at no noticeable difference for air-guide target-reader acquisition, dive-bomber target output, owner-deferred component targeting, normal-squad engagement scoring, and relaxed-squad iterator snapshots. Runtime targeting behavior, runtime squad AI behavior, runtime component behavior, exact layouts, exact source identity, BEA patching behavior, rebuild parity, and no-noticeable-difference parity remain separate proof.

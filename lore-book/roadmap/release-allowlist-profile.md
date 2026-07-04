@@ -1,15 +1,15 @@
 # Release Allowlist Profile
 
-> Generated: 2026-06-25 13:37:06 -0400
+> Generated: 2026-07-03 20:28:53 -0400
 
 ## Classification Summary
 
 | Class | Count | Meaning |
 |---|---:|---|
-| R0_ALLOW | 6131 | Default allow bucket for portable/export release accounting (still requires human review before publishing an artifact) |
+| R0_ALLOW | 6200 | Default allow bucket for portable/export release accounting (still requires human review before publishing an artifact) |
 | R2_REVIEW | 0 | Volatile/generated/binary artifacts; include only when intentional |
 | R3_CONDITIONAL | 3 | Reference submodule families requiring licensing/scope review |
-| R4_DENY | 13177 | Excluded from portable app ZIPs and legacy curated export payloads; may still be tracked public source when compact, non-secret project history |
+| R4_DENY | 13180 | Excluded from portable app ZIPs and legacy curated export payloads; may still be tracked public source when compact, non-secret project history |
 
 Public-primary note: this profile is not the boundary for what may exist in
 the public source repo. It is an app/export accounting artifact. The source
@@ -829,7 +829,7 @@ outputs, and secrets.
 - `archive/legacy-python/onslaught_explorer.py`
 - `archive/legacy-python/patcher.py`
 - `archive/legacy-python/requirements.txt`
-- ... (13057 more entries in `roadmap/release-allowlist-classification.tsv`)
+- ... (13060 more entries in `roadmap/release-allowlist-classification.tsv`)
 
 ## Re-run Commands
 

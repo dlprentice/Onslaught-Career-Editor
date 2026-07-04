@@ -65,4 +65,4 @@ Not claimed:
 - No installed-game or original executable mutation.
 - No new executable byte patch.
 - No Ghidra mutation.
-- No new Ghidra backup; latest verified Ghidra review backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+- No new Ghidra backup; latest verified Ghidra review backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.

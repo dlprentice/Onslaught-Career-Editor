@@ -23,7 +23,7 @@ Read-back evidence:
 - Post exports: 2 metadata rows, 2 tag rows, 3 xref rows, 170 instruction rows, and 2 decompile rows.
 - Queue after Wave803: 6098 total, 5574 commented, 524 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5574/6098 = 91.41%`, strict clean-signature proxy `5574/6098 = 91.41%`.
 - Next raw commentless row is `0x00472e50 CVBufTexture__DrawSpriteWithDefaultTextureFallback`; commentless high-signal, signature, and name-confidence queues are empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-084656_post_wave803_game_slot_helpers_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-084656_post_wave803_game_slot_helpers_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
 
 What this proves:
 

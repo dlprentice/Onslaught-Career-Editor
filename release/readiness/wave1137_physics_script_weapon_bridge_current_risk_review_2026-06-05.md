@@ -36,8 +36,8 @@ Evidence counts:
 - Current focused candidates: 1178.
 - live regenerated current focused candidates: 1178.
 - remaining active focused work: 965.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-122130_post_wave1137_physics_script_weapon_bridge_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
-- Previous completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-114652_post_wave1136_pausemenu_current_risk_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-122130_post_wave1137_physics_script_weapon_bridge_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Previous completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-114652_post_wave1136_pausemenu_current_risk_review_verified`.
 
 What this proves:
 

@@ -23,7 +23,7 @@ Wave455 saved Ghidra name/signature/comment/tag corrections for `8` older Influe
 - Corrected stale InfluenceMap ownership for `0x004d39d0` and `0x004d3a00` to `CPolyBucket__InitFields` and `CPolyBucket__FreeBuffers`.
 - Queue after refresh: `6057` functions, `1997` commented, `4060` commentless, `1732` undefined signatures, `1668` `param_N` signatures.
 - Current telemetry proxies: comment-backed `1997/6057 = 32.97%`; strict comment-plus-clean-signature `1934/6057 = 31.93%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-144540_post_wave455_influencemap_followup_verified` (`19` files, `156765063` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-144540_post_wave455_influencemap_followup_verified` (`19` files, `156765063` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

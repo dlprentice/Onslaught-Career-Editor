@@ -32,7 +32,7 @@ Fresh read-back evidence:
 - Primary exports: 6 metadata rows, 6 tag rows, 7 xref rows, 351 instruction rows, and 6 decompile rows.
 - Context exports: 6 metadata rows, 6 tag rows, 28 xref rows, 288 instruction rows, and 6 decompile rows.
 - Vtable export: 192 rows across `0x005d8eb4`, `0x005dfd3c`, `0x005d910c`, and `0x005dd5f0`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-050722_post_wave944_building_namedmesh_lifecycle_review_verified`, 19 files, 173280135 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-050722_post_wave944_building_namedmesh_lifecycle_review_verified`, 19 files, 173280135 bytes, `DiffCount=0`.
 - Mutation status: read-only review; no dry/apply/final-dry mutation scripts were run because the saved rows already matched the bounded static evidence.
 
 Progress:
@@ -40,7 +40,7 @@ Progress:
 - Wave911 focused re-audit progress after Wave944: `192/1408 = 13.64%`.
 - Static export-contract function-quality closure remains `6113/6113 = 100.00%`.
 
-Probe token anchor: Wave944; `building-namedmesh-lifecycle-review-wave944`; read-only review; `0x004176c0 CThing__InitRenderThingFromInitMeshName`; `0x00417870 CBuilding__VFuncSlot_02_RemoveFromWorldUpdateShadowAndForward`; `0x004178a0 CBuilding__ProcessClosingAndUnshuttingAnimations`; `0x00418120 CBuilding__AdvanceOpenCloseAnimationState`; `0x004183d0 CBuildingNamedMesh__dtor_base`; `0x00418430 CBuildingNamedMesh__scalar_deleting_dtor`; `0x00418450 CBuildingNamedMesh__VFuncSlot_02_RemoveFromWorldAndForwardNamedMesh`; `0x004bc050 CNamedMesh__VFunc02_RemoveFromOccupancyAndForward`; `0x005d8eb4`; `0x005dfd3c`; `0x005d910c`; `0x005dd5f0`; `192/1408 = 13.64%`; `6113/6113 = 100.00%`; `G:\GhidraBackups\BEA_20260528-050722_post_wave944_building_namedmesh_lifecycle_review_verified`.
+Probe token anchor: Wave944; `building-namedmesh-lifecycle-review-wave944`; read-only review; `0x004176c0 CThing__InitRenderThingFromInitMeshName`; `0x00417870 CBuilding__VFuncSlot_02_RemoveFromWorldUpdateShadowAndForward`; `0x004178a0 CBuilding__ProcessClosingAndUnshuttingAnimations`; `0x00418120 CBuilding__AdvanceOpenCloseAnimationState`; `0x004183d0 CBuildingNamedMesh__dtor_base`; `0x00418430 CBuildingNamedMesh__scalar_deleting_dtor`; `0x00418450 CBuildingNamedMesh__VFuncSlot_02_RemoveFromWorldAndForwardNamedMesh`; `0x004bc050 CNamedMesh__VFunc02_RemoveFromOccupancyAndForward`; `0x005d8eb4`; `0x005dfd3c`; `0x005d910c`; `0x005dd5f0`; `192/1408 = 13.64%`; `6113/6113 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260528-050722_post_wave944_building_namedmesh_lifecycle_review_verified`.
 
 What this proves:
 

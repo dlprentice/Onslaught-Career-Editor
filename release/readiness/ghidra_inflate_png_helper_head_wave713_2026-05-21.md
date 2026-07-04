@@ -45,10 +45,10 @@ Post-Wave713 queue telemetry:
 - Raw commentless head: `0x0042f220 CSPtrSet__Clear`.
 - Next commentless high-signal head: `0x0059ce20 CDXTexture__ExpandPackedPixelsToScanline`.
 
-Verified backup: `G:\GhidraBackups\BEA_20260521-234937_post_wave713_inflate_png_helper_head_verified`, `19` files, `165972871` bytes, `DiffCount=0`.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-234937_post_wave713_inflate_png_helper_head_verified`, `19` files, `165972871` bytes, `DiffCount=0`.
 
 ## Boundaries
 
 This note proves saved static retail Ghidra metadata only. Exact `z_stream`/inflate-state layout, callback ABI, zlib source identity, downstream block-header helper return ABI, PNG decode-state layout, chunk/CRC flags, allocator ownership, runtime inflate behavior, runtime PNG behavior, runtime decode/image fidelity, BEA patching, and rebuild parity remain unproven.
 
-Probe anchors: `Wave713 inflate / PNG helper head`, `inflate-png-helper-head-wave713`, `0x0059c7cc CDXTexture__InflateInitStateFromHeader`, `0x0059cdbe CDXTexture__ValidateChunkTagAsciiOrLog`, `0x0059c8c1 CDXTexture__InflateStream_ProcessZlibState`, `extraout_EAX`, `0x0059ce20 CDXTexture__ExpandPackedPixelsToScanline`, `0x0042f220 CSPtrSet__Clear`, `G:\GhidraBackups\BEA_20260521-234937_post_wave713_inflate_png_helper_head_verified`.
+Probe anchors: `Wave713 inflate / PNG helper head`, `inflate-png-helper-head-wave713`, `0x0059c7cc CDXTexture__InflateInitStateFromHeader`, `0x0059cdbe CDXTexture__ValidateChunkTagAsciiOrLog`, `0x0059c8c1 CDXTexture__InflateStream_ProcessZlibState`, `extraout_EAX`, `0x0059ce20 CDXTexture__ExpandPackedPixelsToScanline`, `0x0042f220 CSPtrSet__Clear`, `[maintainer-local-ghidra-backup-root]\BEA_20260521-234937_post_wave713_inflate_png_helper_head_verified`.

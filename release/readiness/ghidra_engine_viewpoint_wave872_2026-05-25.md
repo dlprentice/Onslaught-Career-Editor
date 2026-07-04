@@ -27,7 +27,7 @@ Read-back evidence:
 - Post exports: 3 metadata rows, 3 tag rows, 3 xref rows, 156 instruction rows, 3 decompile rows, 61 `CEngine__SetupLights` xref-site instruction rows, 1 helper metadata row, 16 vtable rows, and 242 boundary-check instruction rows.
 - Queue after Wave872: 6106 total, 5857 commented, 249 commentless, 0 exact-undefined signatures, 0 `param_N` signatures, comment-backed proxy `5857/6106 = 95.92%`, strict clean-signature proxy `5857/6106 = 95.92%`.
 - Next raw commentless row: `0x00553960 CDXEngine__RenderMultipassLayerA`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-191020_post_wave872_engine_viewpoint_verified`, 19 files, 172460935 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-191020_post_wave872_engine_viewpoint_verified`, 19 files, 172460935 bytes, `DiffCount=0`.
 
 What this proves:
 

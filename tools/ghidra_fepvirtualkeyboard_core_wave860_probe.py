@@ -30,7 +30,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave860 CFEPVirtualKeyboard core"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-134150_post_wave860_fepvirtualkeyboard_core_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-134150_post_wave860_fepvirtualkeyboard_core_verified"
 NEXT_HEAD = "0x00523a70 CDXEngine__RenderMouseCursorSprite"
 STRICT_PROXY = "5792/6105 = 94.87%"
 

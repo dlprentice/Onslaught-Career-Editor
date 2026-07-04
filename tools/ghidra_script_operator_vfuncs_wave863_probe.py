@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave863 script operator vfuncs"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-150621_post_wave863_script_operator_vfuncs_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-150621_post_wave863_script_operator_vfuncs_verified"
 NEXT_HEAD = "0x0052ff30 ScriptCommandRegistry__InitBuiltins"
 STRICT_PROXY = "5809/6105 = 95.15%"
 

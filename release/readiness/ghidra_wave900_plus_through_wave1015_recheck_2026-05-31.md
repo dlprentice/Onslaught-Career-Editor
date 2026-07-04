@@ -8,9 +8,9 @@ Wave1015 extends the current Wave900+ recheck gate after `ogg-message-lifecycle-
 
 Current Wave1015 anchors: `0x004b6cd0 COggLoader__readerSubobject_dtor_body`, `0x004b6d30 COggLoader__ctor_base`, `0x004b6d90 COggLoader__ThreadProc_ReadPathIntoBuffer`, `0x004b6df0 COggLoader__readerSubobject_scalar_deleting_dtor`, `0x004b6e50 CMessage__ctor_base`, `0x004b6f10 CMessage__scalar_deleting_dtor`, and `0x004b7160 CMessage__dtor_base`. Queue closure after Wave1015 is `6238/6238 = 100.00%`. Re-audit progress after Wave1015 is Wave911 focused `511/1408 = 36.29%`, expanded static surface `736/1493 = 49.30%`, and Wave911 top-500 risk-ranked `437/500 = 87.40%`.
 
-The Wave1015 verified backup is `G:\GhidraBackups\BEA_20260531-192131_post_wave1015_ogg_message_lifecycle_review_verified`, 18 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+The Wave1015 verified backup is `[maintainer-local-ghidra-backup-root]\BEA_20260531-192131_post_wave1015_ogg_message_lifecycle_review_verified`, 18 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
-Probe token anchor: Wave1015; ogg-message-lifecycle-review-wave1015; 0x004b6cd0 COggLoader__readerSubobject_dtor_body; 0x004b6d30 COggLoader__ctor_base; 0x004b6d90 COggLoader__ThreadProc_ReadPathIntoBuffer; 0x004b6df0 COggLoader__readerSubobject_scalar_deleting_dtor; 0x004b6e50 CMessage__ctor_base; 0x004b6f10 CMessage__scalar_deleting_dtor; 0x004b7160 CMessage__dtor_base; 511/1408 = 36.29%; 736/1493 = 49.30%; 437/500 = 87.40%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260531-192131_post_wave1015_ogg_message_lifecycle_review_verified; no mutation.
+Probe token anchor: Wave1015; ogg-message-lifecycle-review-wave1015; 0x004b6cd0 COggLoader__readerSubobject_dtor_body; 0x004b6d30 COggLoader__ctor_base; 0x004b6d90 COggLoader__ThreadProc_ReadPathIntoBuffer; 0x004b6df0 COggLoader__readerSubobject_scalar_deleting_dtor; 0x004b6e50 CMessage__ctor_base; 0x004b6f10 CMessage__scalar_deleting_dtor; 0x004b7160 CMessage__dtor_base; 511/1408 = 36.29%; 736/1493 = 49.30%; 437/500 = 87.40%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260531-192131_post_wave1015_ogg_message_lifecycle_review_verified; no mutation.
 
 Validation command:
 

@@ -24,7 +24,7 @@ Wave708 node-tree predicates saved four adjacent CFastVB node-tree predicate/equ
 - Queue after Wave708: `6098` total, `4111` commented, `1987` commentless, `1216` exact-undefined signatures, `224` `param_N`, comment-backed proxy `4111/6098 = 67.42%`, strict clean-signature proxy `4057/6098 = 66.53%`.
 - Raw commentless head remains `0x0042f220 CSPtrSet__Clear`.
 - High-signal head moved to `0x00599d80 CFastVB__FlattenNodeTreeLeafByLinearIndex`.
-- Verified backup: `G:\GhidraBackups\BEA_20260521-211737_post_wave708_node_tree_predicates_verified`, `19` files, `165481351` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-211737_post_wave708_node_tree_predicates_verified`, `19` files, `165481351` bytes, `DiffCount=0`.
 
 ## Boundaries
 

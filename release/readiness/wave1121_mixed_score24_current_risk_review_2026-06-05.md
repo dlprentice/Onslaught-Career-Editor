@@ -23,8 +23,8 @@ Evidence:
 - `ApplyMixedScore24CurrentRiskWave1121.java` apply: `updated=1 skipped=0 renamed=0 would_rename=0 signature_updated=0 comment_only_updated=1 tags_added=3 missing=0 bad=0`, with `REPORT: Save succeeded`.
 - `ApplyMixedScore24CurrentRiskWave1121.java` final dry run: `updated=0 skipped=1 renamed=0 would_rename=0 signature_updated=0 comment_only_updated=0 tags_added=0 missing=0 bad=0`.
 - Post-mutation metadata/tag/xref/instruction/decompile exports: `4` / `4` / `42` / `1207` / `4`.
-- Backup: `G:\GhidraBackups\BEA_20260605-033658_post_wave1121_mixed_score24_current_risk_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
-- Previous latest completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-025952_post_wave1120_mixed_score25_current_risk_review_verified`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-033658_post_wave1121_mixed_score24_current_risk_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
+- Previous latest completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-025952_post_wave1120_mixed_score25_current_risk_review_verified`.
 
 What this proves:
 

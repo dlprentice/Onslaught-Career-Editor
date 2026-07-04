@@ -18,12 +18,12 @@ Static read-back anchors:
 - The row's current comment ties slot 2 to `CWorld__RemoveUnitFromOccupancyGrid_Thunk`, `VFuncSlot_02_004f41b0`, `0x00418450 CBuildingNamedMesh__VFuncSlot_02_RemoveFromWorldAndForwardNamedMesh`, and vtable `0x005dd5f0` slot 2.
 - Wave944 xrefs re-read `0x00418460 -> 0x004bc050` as an `UNCONDITIONAL_CALL` and `0x005dd5f8 -> 0x004bc050` as a DATA vtable ref.
 - Wave944 decompile re-read the body as removing this object from world occupancy and then forwarding through the saved base cleanup path represented as `CComplexThing__Shutdown(this)`.
-- Wave458 backup: `G:\GhidraBackups\BEA_20260516-162849_post_wave458_mesh_optimization_verified`.
-- Wave944 backup: `G:\GhidraBackups\BEA_20260528-050722_post_wave944_building_namedmesh_lifecycle_review_verified`.
-- Latest completed Ghidra review backup remains `G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`.
+- Wave458 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-162849_post_wave458_mesh_optimization_verified`.
+- Wave944 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-050722_post_wave944_building_namedmesh_lifecycle_review_verified`.
+- Latest completed Ghidra review backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`.
 - Mutation status: no new Ghidra export, no mutation, no executable-byte change, no BEA launch, and no installed-game/runtime-file mutation.
 
-Probe token anchor: Wave1111; wave1111-cnamedmesh-current-risk-supersession; 25/1179 = 2.12%; 1 row; current focused candidates: 1179; Wave458; mesh-optimization-wave458; Wave944; building-namedmesh-lifecycle-review-wave944; 0x004bc050 CNamedMesh__VFunc02_RemoveFromOccupancyAndForward; 0x00418450 CBuildingNamedMesh__VFuncSlot_02_RemoveFromWorldAndForwardNamedMesh; 0x005dd5f0; G:\GhidraBackups\BEA_20260516-162849_post_wave458_mesh_optimization_verified; G:\GhidraBackups\BEA_20260528-050722_post_wave944_building_namedmesh_lifecycle_review_verified; G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified; no new Ghidra export; no mutation.
+Probe token anchor: Wave1111; wave1111-cnamedmesh-current-risk-supersession; 25/1179 = 2.12%; 1 row; current focused candidates: 1179; Wave458; mesh-optimization-wave458; Wave944; building-namedmesh-lifecycle-review-wave944; 0x004bc050 CNamedMesh__VFunc02_RemoveFromOccupancyAndForward; 0x00418450 CBuildingNamedMesh__VFuncSlot_02_RemoveFromWorldAndForwardNamedMesh; 0x005dd5f0; [maintainer-local-ghidra-backup-root]\BEA_20260516-162849_post_wave458_mesh_optimization_verified; [maintainer-local-ghidra-backup-root]\BEA_20260528-050722_post_wave944_building_namedmesh_lifecycle_review_verified; [maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified; no new Ghidra export; no mutation.
 
 ## Boundary
 

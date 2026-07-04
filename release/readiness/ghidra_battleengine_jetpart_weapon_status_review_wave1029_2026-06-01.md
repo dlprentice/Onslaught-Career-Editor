@@ -32,7 +32,7 @@ Evidence counts:
 - Context exports: 11 metadata rows, 11 tag rows, 20 xref rows, 1583 body-instruction rows, and 11 decompile rows.
 - Queue closure remains `6238/6238 = 100.00%` with 0 commentless, 0 exact-undefined signatures, and 0 `param_N`.
 - Wave911 focused re-audit progress after Wave1029: `618/1408 = 43.89%`; expanded static surface progress: `847/1493 = 56.73%`; Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-025247_post_wave1029_battleengine_jetpart_weapon_status_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-025247_post_wave1029_battleengine_jetpart_weapon_status_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -48,4 +48,4 @@ What remains unproven:
 - Exact source-body identity beyond static source/decompile parity.
 - BEA patch behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1029; battleengine-jetpart-weapon-status-review-wave1029; 0x00411e70 CBattleEngineJetPart__ChangeWeapon; 0x00412050 CBattleEngineJetPart__WeaponFired; 0x004122b0 CBattleEngineJetPart__IsEnergyWeapon; 0x00412310 CBattleEngineJetPart__IsWeaponOverheated; 0x00412650 CBattleEngineJetPart__ResetConfiguration; 618/1408 = 43.89%; 847/1493 = 56.73%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-025247_post_wave1029_battleengine_jetpart_weapon_status_review_verified; no mutation.
+Probe token anchor: Wave1029; battleengine-jetpart-weapon-status-review-wave1029; 0x00411e70 CBattleEngineJetPart__ChangeWeapon; 0x00412050 CBattleEngineJetPart__WeaponFired; 0x004122b0 CBattleEngineJetPart__IsEnergyWeapon; 0x00412310 CBattleEngineJetPart__IsWeaponOverheated; 0x00412650 CBattleEngineJetPart__ResetConfiguration; 618/1408 = 43.89%; 847/1493 = 56.73%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-025247_post_wave1029_battleengine_jetpart_weapon_status_review_verified; no mutation.

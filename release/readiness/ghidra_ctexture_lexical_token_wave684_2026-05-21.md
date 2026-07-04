@@ -20,7 +20,7 @@ Read-back anchors:
 - Final dry summary: `updated=0 skipped=20 renamed=0 would_rename=0 signature_updated=0 varargs=0 missing=0 bad=0`.
 - Post exports verified `20` metadata rows, `20` tag rows, `118` xref rows, `660` instruction rows, and `20` clean decompile rows.
 - Pre-state evidence includes the same focused exports, a `2020`-row wide instruction export, and candidate exports covering `25` adjacent rows before the final twenty-row tranche was selected.
-- Verified backup: `G:\GhidraBackups\BEA_20260521-095848_post_wave684_ctexture_lexical_token_verified`, `19` files, `164629383` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-095848_post_wave684_ctexture_lexical_token_verified`, `19` files, `164629383` bytes, `DiffCount=0`.
 
 ## Queue Delta
 

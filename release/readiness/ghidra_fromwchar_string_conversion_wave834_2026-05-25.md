@@ -27,7 +27,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 14 xref rows, 101 target instruction-window rows, 81 full target instruction rows, 1 target decompile row, 9 context metadata rows, 9 context decompile rows, and 406 xref-site instruction rows.
 - Queue after Wave834: 6098 total, 5656 commented, 442 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5656/6098 = 92.75%`, strict clean-signature proxy `5656/6098 = 92.75%`.
 - Next raw commentless row: `0x004f9a90 CUnit__ApplyDamage`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-000436_post_wave834_fromwchar_string_conversion_verified`, 19 files, 171805575 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-000436_post_wave834_fromwchar_string_conversion_verified`, 19 files, 171805575 bytes, `DiffCount=0`.
 
 What this proves:
 

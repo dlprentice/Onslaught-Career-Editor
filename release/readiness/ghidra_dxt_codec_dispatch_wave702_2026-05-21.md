@@ -35,7 +35,7 @@ Tag anchor: `dxt-codec-dispatch-wave702`; read-back tag: `wave702-readback-verif
 - Post-export verified all `11` saved signatures/tags/comments with `17` xref rows, `1067` instruction rows, and `11` clean decompile rows.
 - Queue refresh after Wave702: `6098` total functions, `4056` commented, `2042` commentless, `1216` exact-undefined signatures, `270` `param_N` signatures, comment-backed proxy `4056/6098 = 66.51%`, strict clean-signature proxy `4002/6098 = 65.63%`.
 - Next queue head: `0x00598702 CTexture__NodePayloadBaseCtor`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260521-175105_post_wave702_dxt_codec_dispatch_verified`, `19` files, `165251975` bytes, `DiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-175105_post_wave702_dxt_codec_dispatch_verified`, `19` files, `165251975` bytes, `DiffCount=0`.
 
 ## Boundaries
 

@@ -18,7 +18,7 @@ The pass used the `cdxtexture-catch-bridge-wave679` and `wave679-readback-verifi
 - Context exports verified `4` metadata rows, `4` tag rows, `64` xref rows, `244` instruction rows, and `4` clean decompile rows across `0x005890f1`, `0x00589200`, `0x0058920c`, and `0x0058926b`.
 - Queue after Wave679: `6098` total, `3841` commented, `2257` commentless, `1216` exact-undefined signatures, `478` `param_N` signatures, strict clean-signature proxy `3791/6098 = 62.17%`.
 - Next queue head: `0x00589367 CTexture__ReleaseIncludeNodeTreeRecursive`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260521-073516_post_wave679_cdxtexture_catch_bridge_verified`, `19` files, `164367239` bytes, `DiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-073516_post_wave679_cdxtexture_catch_bridge_verified`, `19` files, `164367239` bytes, `DiffCount=0`.
 
 ## Boundaries
 

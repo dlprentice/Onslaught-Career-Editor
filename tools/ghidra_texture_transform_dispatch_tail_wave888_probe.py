@@ -34,7 +34,7 @@ BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave888 texture transform dispatch tail"
 TAG = "texture-transform-dispatch-tail-wave888"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-033426_post_wave888_texture_transform_dispatch_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-033426_post_wave888_texture_transform_dispatch_tail_verified"
 STRICT_PROXY = "6052/6113 = 99.00%"
 NEXT_HEAD = "0x00579a9a CVertexShader__CompileScriptWithDirectiveParser"
 

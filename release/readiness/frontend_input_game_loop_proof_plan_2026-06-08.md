@@ -19,10 +19,10 @@ Current static closeout remains unchanged:
 
 Static source evidence:
 
-- Wave907 (`frontend-input-game-loop-static-review-wave907`): `436` selected rows across `33` families with clusters `Frontend pages 176`, `Game loop / player 69`, `Frontend core / video render 54`, `Menu widgets 51`, `Input / controller 48`, and `Pause / message 38`. Verified backup: `G:\GhidraBackups\BEA_20260526-111432_post_wave907_frontend_input_game_loop_static_review_verified`.
-- Wave922 (`frontend-text-layout-review-wave922`): frontend text wrapping and text-id/fallback resolution evidence. Verified backup: `G:\GhidraBackups\BEA_20260527-175851_post_wave922_frontend_text_layout_review_verified`.
-- Wave1179 (`wave1179-input-audio-support-current-risk-review`): `Input__UpdateCursorCenterWithWindowScale`, `Input__ResetMouseTransientState`, `GameControllers__RelinquishControlForTarget`, and `Audio__ReinitializeSoundAndRestoreMusic`. Verified backup: `G:\GhidraBackups\BEA_20260606-101513_post_wave1179_input_audio_support_current_risk_review_verified`.
-- Wave1197 (`wave1197-fepbeconfig-frontend-residual-current-risk-review`): `CFEPBEConfig__Init`, `CFEPMultiplayerStart__SetConfigDescriptionByIndex`, `CFEPBEConfig__PlayWeaponSound`, and `CFEPBEConfig__PlayWeaponSoundAlt`. Verified backup: `G:\GhidraBackups\BEA_20260606-211310_post_wave1197_fepbeconfig_frontend_residual_current_risk_review_verified`.
+- Wave907 (`frontend-input-game-loop-static-review-wave907`): `436` selected rows across `33` families with clusters `Frontend pages 176`, `Game loop / player 69`, `Frontend core / video render 54`, `Menu widgets 51`, `Input / controller 48`, and `Pause / message 38`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-111432_post_wave907_frontend_input_game_loop_static_review_verified`.
+- Wave922 (`frontend-text-layout-review-wave922`): frontend text wrapping and text-id/fallback resolution evidence. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260527-175851_post_wave922_frontend_text_layout_review_verified`.
+- Wave1179 (`wave1179-input-audio-support-current-risk-review`): `Input__UpdateCursorCenterWithWindowScale`, `Input__ResetMouseTransientState`, `GameControllers__RelinquishControlForTarget`, and `Audio__ReinitializeSoundAndRestoreMusic`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-101513_post_wave1179_input_audio_support_current_risk_review_verified`.
+- Wave1197 (`wave1197-fepbeconfig-frontend-residual-current-risk-review`): `CFEPBEConfig__Init`, `CFEPMultiplayerStart__SetConfigDescriptionByIndex`, `CFEPBEConfig__PlayWeaponSound`, and `CFEPBEConfig__PlayWeaponSoundAlt`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-211310_post_wave1197_fepbeconfig_frontend_residual_current_risk_review_verified`.
 
 Representative anchors:
 

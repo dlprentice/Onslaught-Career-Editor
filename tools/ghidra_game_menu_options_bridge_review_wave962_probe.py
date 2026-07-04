@@ -28,7 +28,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUALITY_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260528-132411_post_wave962_game_menu_options_bridge_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-132411_post_wave962_game_menu_options_bridge_review_verified"
 
 EXPECTED_METADATA = {
     "0x0046c360": ("CGame__Init", "int __fastcall CGame__Init(void * this)"),

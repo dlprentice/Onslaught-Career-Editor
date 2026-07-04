@@ -37,7 +37,7 @@ The pass made no renames. The evidence is static retail Ghidra decompile, instru
 - Preserved correction log 2: `apply-corrected-this-pointer-mismatch.log` reported `updated=6 skipped=2 renamed=0 would_rename=0 missing=0 bad=1` after `DXPalletizer__FindNearestColor` read back its receiver as `void * this`.
 - Final dry/apply after correction: `updated=0 skipped=9 renamed=0 would_rename=0 missing=0 bad=0`
 - Read-back exports verified `9` metadata rows, `9` tag rows, `15` xref rows, `2349` instruction rows, `9` decompile rows, and `435` callsite instruction rows.
-- Verified backup: `G:\GhidraBackups\BEA_20260519-231515_post_wave611_dxpalletizer_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-231515_post_wave611_dxpalletizer_verified`
   - `sourceFileCount=19`
   - `destFileCount=19`
   - `sourceBytes=161549191`

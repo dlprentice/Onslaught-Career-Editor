@@ -28,7 +28,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-054154_post_wave797_sptrset_clear_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-054154_post_wave797_sptrset_clear_verified"
 TARGET = "0x0042f220"
 TARGET_NAME = "CSPtrSet__Clear"
 TARGET_SIGNATURE = "void __fastcall CSPtrSet__Clear(void * this)"

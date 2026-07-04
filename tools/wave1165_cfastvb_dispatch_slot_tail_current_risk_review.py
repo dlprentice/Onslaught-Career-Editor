@@ -26,7 +26,7 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-040830_post_wave1165_cfastvb_dispatch_slot_tail_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-040830_post_wave1165_cfastvb_dispatch_slot_tail_current_risk_review_verified"
 
 TARGETS = {
     "0x005a77bc": ("CFastVB__DispatchOp_SlotA4_005a77bc", "0x005985c2"),

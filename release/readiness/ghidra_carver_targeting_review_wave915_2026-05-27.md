@@ -47,7 +47,7 @@ No tracked `Carver.cpp` source body exists in `references/Onslaught/`; the repo 
 Read-only post-wave backup:
 
 ```text
-G:\GhidraBackups\BEA_20260527-103639_post_wave915_carver_targeting_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260527-103639_post_wave915_carver_targeting_review_verified
 files=19
 bytes=173247367
 ```

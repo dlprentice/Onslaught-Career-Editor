@@ -14,7 +14,7 @@ Read-back evidence:
 | Dry/apply/final dry | `updated=0 skipped=6`, then `updated=6 skipped=0`, then `updated=0 skipped=6`, all with `missing=0 bad=0` and `REPORT: Save succeeded` |
 | Post exports | `6` metadata rows, `6` tag rows, `6` xref rows, `534` target instruction rows, `6` decompile rows, `32` vtable rows |
 | Queue refresh | `6093` functions, `2950` commented, `3143` commentless, `1413` exact-undefined signatures, `1121` `param_N`; next head `0x00535330 CVM__VFunc_01_00535330` |
-| Backup | `G:\GhidraBackups\BEA_20260519-082352_post_wave582_iscript_thing_value_verified`, `19` files, `160598919` bytes, `DiffCount=0` |
+| Backup | `[maintainer-local-ghidra-backup-root]\BEA_20260519-082352_post_wave582_iscript_thing_value_verified`, `19` files, `160598919` bytes, `DiffCount=0` |
 
 Bounded claims:
 

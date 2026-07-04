@@ -29,7 +29,7 @@ Read-back evidence:
 - Wave911 focused re-audit progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1266/1560 = 81.15%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-013945_post_wave1069_groundunit_vfunc_motion_effects_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-013945_post_wave1069_groundunit_vfunc_motion_effects_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -49,4 +49,4 @@ What remains separate proof:
 
 Next candidate note: continue with the next expanded static re-audit cluster; prefer read-only review first and mutate only when fresh evidence proves a correction or normalization need.
 
-Probe token anchor: Wave1069; groundunit-vfunc-motion-effects-review-wave1069; 0x0049c1d0 CMCMech__VFunc_05_WriteInterpolatedBoneFloat_0049c1d0; 0x0049c440 CMCMine__VFunc_04_UpdateInterpolatedHeightOffset_0049c440; 0x0049f820 SharedGroundUnit__VFunc_09_InitGroundedMotionComponents_0049f820; 0x0049fc10 SharedGroundUnit__VFunc_66_UpdateVerticalDriftPickupAndEffects_0049fc10; 0x0049fdb0 SharedGroundUnit__VFunc_71_SpawnGenericMeshBreakEffects_0049fdb0; 0x004ba490 CMine__VFunc02_CleanupLinkedParticleAndForward; 0x004ba9d0 CMine__TryDestroyedResetAndDispatchVFunc1D4; 0x004d3630 CPod__VFunc_66_UpdateMotionAndAccumulateScalar; 812/1408 = 57.67%; 1266/1560 = 81.15%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260602-013945_post_wave1069_groundunit_vfunc_motion_effects_review_verified; read-only review.
+Probe token anchor: Wave1069; groundunit-vfunc-motion-effects-review-wave1069; 0x0049c1d0 CMCMech__VFunc_05_WriteInterpolatedBoneFloat_0049c1d0; 0x0049c440 CMCMine__VFunc_04_UpdateInterpolatedHeightOffset_0049c440; 0x0049f820 SharedGroundUnit__VFunc_09_InitGroundedMotionComponents_0049f820; 0x0049fc10 SharedGroundUnit__VFunc_66_UpdateVerticalDriftPickupAndEffects_0049fc10; 0x0049fdb0 SharedGroundUnit__VFunc_71_SpawnGenericMeshBreakEffects_0049fdb0; 0x004ba490 CMine__VFunc02_CleanupLinkedParticleAndForward; 0x004ba9d0 CMine__TryDestroyedResetAndDispatchVFunc1D4; 0x004d3630 CPod__VFunc_66_UpdateMotionAndAccumulateScalar; 812/1408 = 57.67%; 1266/1560 = 81.15%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-013945_post_wave1069_groundunit_vfunc_motion_effects_review_verified; read-only review.

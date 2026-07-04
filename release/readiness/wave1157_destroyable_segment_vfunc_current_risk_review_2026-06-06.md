@@ -6,7 +6,7 @@ Scope: `wave1157-destroyable-segment-vfunc-current-risk-review`
 
 Wave1157 re-read `12 destroyable-segment vfunc current-risk rows` with fresh Ghidra exports and made no mutation: no rename, signature change, comment change, tag change, function-boundary change, executable-byte change, BEA launch, installed-game mutation, save mutation, or runtime-file mutation.
 
-Probe token anchor: Wave1157; wave1157-destroyable-segment-vfunc-current-risk-review; 465/1179 = 39.44%; 12 destroyable-segment vfunc current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 714; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consults used; 0 / 0 / 0; 6411/6411 = 100.00%; 23 xref rows; 694 instruction rows; CDestroyableSegment__VFunc_03_ApplyDamage; CDestroyableSegment__VFunc_08_HandleSegmentBreak; CDestroyableSegment__VFunc_10_SpawnRubbleEffects; CDestroyableCoreSegment__VFunc_03_ApplyDamage; CDestroyableSwapSegment__VFunc_04_GetDamageStageIndex; CDestroyableEndSegment__VFunc_11_RecomputeEndDamageScaleFields; G:\GhidraBackups\BEA_20260605-235134_post_wave1157_destroyable_segment_vfunc_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1157; wave1157-destroyable-segment-vfunc-current-risk-review; 465/1179 = 39.44%; 12 destroyable-segment vfunc current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 714; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consults used; 0 / 0 / 0; 6411/6411 = 100.00%; 23 xref rows; 694 instruction rows; CDestroyableSegment__VFunc_03_ApplyDamage; CDestroyableSegment__VFunc_08_HandleSegmentBreak; CDestroyableSegment__VFunc_10_SpawnRubbleEffects; CDestroyableCoreSegment__VFunc_03_ApplyDamage; CDestroyableSwapSegment__VFunc_04_GetDamageStageIndex; CDestroyableEndSegment__VFunc_11_RecomputeEndDamageScaleFields; [maintainer-local-ghidra-backup-root]\BEA_20260605-235134_post_wave1157_destroyable_segment_vfunc_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
 
 Fresh evidence:
 
@@ -15,7 +15,7 @@ Fresh evidence:
 - `pre-xrefs.tsv`: `23 xref rows`, including vtable DATA refs and direct break/rubble helper calls.
 - `pre-instructions.tsv`: `694 instruction rows`, `targets=12 missing=0`.
 - `pre-decompile/index.tsv`: `12` rows, `targets=12 dumped=12 missing=0 failed=0`.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-235134_post_wave1157_destroyable_segment_vfunc_current_risk_review_verified`, local Ghidra project root, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-235134_post_wave1157_destroyable_segment_vfunc_current_risk_review_verified`, local Ghidra project root, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
 - Codex subagent usage: read-only consults audited candidate/accounting status and system-map coverage; Codex root selected, exported, audited, backed up, and kept the tranche read-only.
 
 Reviewed row groups:

@@ -28,7 +28,7 @@ What is proven:
 - Post-save read-back verified 6 metadata rows, 6 tag rows, 7 xref rows, 534 instruction rows, 6 decompile rows, and 64 vtable-slot rows.
 - The queue refresh reports `6093` total functions, `3006` commented, `3087` commentless, `1359` exact-undefined signatures, and `1116` `param_N` signatures.
 - The next high-signal queue head is `0x0053a050 CDXBattleLine__Constructor`.
-- The live Ghidra project backup verified at `G:\GhidraBackups\BEA_20260519-111437_post_wave588_cmission_script_object_code_verified` with 19 files, 160893831 bytes, `DiffCount=0`, and manifest hash `ef5cc4c7c0c7f5ef102a1a748647b231a36c39b430e5379fb06a627992982841`.
+- The live Ghidra project backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260519-111437_post_wave588_cmission_script_object_code_verified` with 19 files, 160893831 bytes, `DiffCount=0`, and manifest hash `ef5cc4c7c0c7f5ef102a1a748647b231a36c39b430e5379fb06a627992982841`.
 
 What is not proven:
 

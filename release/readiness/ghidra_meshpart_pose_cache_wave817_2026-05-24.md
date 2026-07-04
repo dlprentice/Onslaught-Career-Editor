@@ -23,7 +23,7 @@ Read-back evidence:
 - Queue after Wave817: 6098 total, 5605 commented, 493 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5605/6098 = 91.92%`, strict clean-signature proxy `5605/6098 = 91.92%`.
 - Next raw commentless row: `0x004b7d90 CGame__PumpBinkVoiceSampleQueue`.
 - Commentless high-signal, signature, and name-confidence queues are empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-154905_post_wave817_meshpart_pose_cache_verified`, 19 files, 171379591 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-154905_post_wave817_meshpart_pose_cache_verified`, 19 files, 171379591 bytes, `DiffCount=0`.
 
 What this proves:
 

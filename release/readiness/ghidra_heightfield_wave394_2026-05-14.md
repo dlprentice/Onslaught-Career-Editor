@@ -68,7 +68,7 @@ Read-back results:
 
 The refreshed queue reports `6027` functions, `1494` commented functions, `4533` commentless functions, `1915` undefined signatures, and `1880` `param_N` signatures. Current confirmation proxies are telemetry only: comment-backed `1494/6027 = 24.79%`; strict clean-signature `1432/6027 = 23.76%`.
 
-Actual live Ghidra project backup verification passed after the saved mutation: copied `BEA.gpr` and `BEA.rep` to `G:\GhidraBackups\BEA_20260514_002613_post_wave394_heightfield_verified` and verified `19` files, `154667911` bytes, and `HashDiffCount=0`.
+Actual live Ghidra project backup verification passed after the saved mutation: copied `BEA.gpr` and `BEA.rep` to `[maintainer-local-ghidra-backup-root]\BEA_20260514_002613_post_wave394_heightfield_verified` and verified `19` files, `154667911` bytes, and `HashDiffCount=0`.
 
 Release/docs closeout passed: curated manifest selected `2144` files, release profile counts were `R0=2206 R2=0 R3=2 R4=18188`, public allowlist checked `2144` rows, markdown links passed, doc-commands checked `3140` documented package-script references, docsync passed, and repo hygiene passed.
 

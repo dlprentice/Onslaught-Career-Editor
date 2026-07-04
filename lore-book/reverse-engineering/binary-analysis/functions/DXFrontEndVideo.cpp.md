@@ -1,7 +1,7 @@
 # DXFrontEndVideo.cpp - Function Mappings
 
 > DirectX front-end video playback using Bink library
-> Source: `C:\dev\ONSLAUGHT2\DXFrontEndVideo.cpp`
+> Source: `[maintainer-local-source-export-root]\DXFrontEndVideo.cpp`
 > Debug path at: 0x00650744
 
 ## Overview
@@ -41,7 +41,7 @@ Wave 385 correction: the older base-class rows in this note overclaimed nearby c
 
 Base class behavior should be rechecked in a future media/Bink tranche before promoting new constructor/destructor claims.
 
-Wave1003 (`hud-head-render-state-review-wave1003`) recovered the vtable slot-8 target `0x0046c990 CGame__Shutdown` as a source-backed `CGame::Shutdown` boundary while re-reading the HUD head/render-state cluster. This updates the CDXFrontEndVideo/CDXGame inherited vtable table below: slot 8 is no longer just an anonymous inherited pointer. Related Wave1003 anchors for cross-doc probes: `0x00481b00 CHud__ShutDown`; `0x00481400 CHud__ctor_base`; `0x00482090 HudRenderState__ApplyOverlaySpriteState`; `0x004821b0 CDXCompass__ApplyRenderStateModulate`; `0x00482210 CHud__RenderSegmentedMeterBar`; `472/1408 = 33.52%`; `641/1478 = 43.37%`; `371/500 = 74.20%`; `6223/6223 = 100.00%`; `G:\GhidraBackups\BEA_20260531-120949_post_wave1003_hud_head_render_state_review_verified`. Runtime shutdown behavior, exact layout/source identity, BEA patching, and rebuild parity remain separate proof.
+Wave1003 (`hud-head-render-state-review-wave1003`) recovered the vtable slot-8 target `0x0046c990 CGame__Shutdown` as a source-backed `CGame::Shutdown` boundary while re-reading the HUD head/render-state cluster. This updates the CDXFrontEndVideo/CDXGame inherited vtable table below: slot 8 is no longer just an anonymous inherited pointer. Related Wave1003 anchors for cross-doc probes: `0x00481b00 CHud__ShutDown`; `0x00481400 CHud__ctor_base`; `0x00482090 HudRenderState__ApplyOverlaySpriteState`; `0x004821b0 CDXCompass__ApplyRenderStateModulate`; `0x00482210 CHud__RenderSegmentedMeterBar`; `472/1408 = 33.52%`; `641/1478 = 43.37%`; `371/500 = 74.20%`; `6223/6223 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260531-120949_post_wave1003_hud_head_render_state_review_verified`. Runtime shutdown behavior, exact layout/source identity, BEA patching, and rebuild parity remain separate proof.
 
 ---
 
@@ -65,7 +65,7 @@ This is saved static Ghidra evidence only. Runtime Bink playback, async scheduli
 
 ## 2026-05-24 Wave799 Render Byte-Flag Microhelpers
 
-Wave799 PC utility microhelpers (`pc-utility-microhelpers-wave799`, `wave799-readback-verified`) saved static comments/tags for two byte-flag helpers called by `CDXFrontEndVideo__Render`: `0x00441e20 CDXFrontEndVideo__ClearByteFlag` and `0x00441e30 CDXFrontEndVideo__SetByteFlagAndReturnOld`. The clear helper writes zero to the byte pointed to by `ECX`; the set helper reads the old low byte at `[ECX]`, writes `1`, and returns the old value in `AL` while the upper `EAX` bits remain semantically unproven. Verified backup: `G:\GhidraBackups\BEA_20260524-063302_post_wave799_pc_utility_microhelpers_verified`. Exact owning field offset, runtime Bink/video behavior, BEA patching, and rebuild parity remain deferred.
+Wave799 PC utility microhelpers (`pc-utility-microhelpers-wave799`, `wave799-readback-verified`) saved static comments/tags for two byte-flag helpers called by `CDXFrontEndVideo__Render`: `0x00441e20 CDXFrontEndVideo__ClearByteFlag` and `0x00441e30 CDXFrontEndVideo__SetByteFlagAndReturnOld`. The clear helper writes zero to the byte pointed to by `ECX`; the set helper reads the old low byte at `[ECX]`, writes `1`, and returns the old value in `AL` while the upper `EAX` bits remain semantically unproven. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-063302_post_wave799_pc_utility_microhelpers_verified`. Exact owning field offset, runtime Bink/video behavior, BEA patching, and rebuild parity remain deferred.
 
 ---
 
@@ -416,7 +416,7 @@ struct BINK {
 
 | Address | String | Usage |
 |---------|--------|-------|
-| 0x00650744 | "C:\\dev\\ONSLAUGHT2\\DXFrontEndVideo.cpp" | Debug path |
+| 0x00650744 | "[maintainer-local-source-export-root]\\DXFrontEndVideo.cpp" | Debug path |
 | 0x0065076c | " failed to find file" | Error message |
 | 0x00650728 | "couldn't create UMTex %d" | Texture allocation error |
 | 0x00650784 | "Bink video closing. %i frames played, %i frames skipped (%i%%)\n" | Stats |

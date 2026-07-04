@@ -22,7 +22,7 @@ Read-back evidence:
 - Post exports: 3 metadata rows, 3 tag rows, 49 xref rows, 972 instruction rows, and 3 decompile rows.
 - Queue after Wave891: 6113 total, 6062 commented, 51 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed and strict clean-signature proxy `6062/6113 = 99.17%`.
 - Next raw commentless row: `0x005888bc CFastVB__InterpolateDualProfileStreams`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-050306_post_wave891_texture_upload_texel_profile_head_verified`, 19 files, 173149063 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-050306_post_wave891_texture_upload_texel_profile_head_verified`, 19 files, 173149063 bytes, `DiffCount=0`.
 
 What this proves:
 

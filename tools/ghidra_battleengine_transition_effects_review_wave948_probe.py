@@ -25,7 +25,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260528-073152_post_wave948_battleengine_transition_effects_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-073152_post_wave948_battleengine_transition_effects_review_verified"
 SCRIPT_NAME = "test:ghidra-battleengine-transition-effects-review-wave948"
 SCRIPT_VALUE = r"py -3 tools\ghidra_battleengine_transition_effects_review_wave948_probe.py --check"
 

@@ -26,7 +26,7 @@ CORPUS_RESULT = ROOT / "reverse-engineering" / "binary-analysis" / "world-thing-
 PROGRESS = ROOT / "reverse-engineering" / "binary-analysis" / "static-reaudit-progress.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 
 FORBIDDEN_PUBLIC_TOKENS = (
     "C:\\Users",

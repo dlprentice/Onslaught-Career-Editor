@@ -66,7 +66,7 @@ DOC_TOKENS = (
     "2507",
     "722",
     "0x005771af CFastVB__DispatchIndirect_00656fb4",
-    "G:\\GhidraBackups\\BEA_20260520-214232_post_wave658_math_half_float_verified",
+    "[maintainer-local-ghidra-backup-root]\\BEA_20260520-214232_post_wave658_math_half_float_verified",
 )
 
 OVERCLAIM_TOKENS = (
@@ -200,7 +200,7 @@ def check_state(failures: list[str]) -> None:
     require(backup.get("diffCount") == 0, "backup diffCount mismatch", failures)
     require(backup.get("fileCount") == 19, "backup fileCount mismatch", failures)
     require(int(backup.get("byteCount", 0)) == 163253127, "backup byteCount mismatch", failures)
-    require(backup.get("backupPath") == "G:\\GhidraBackups\\BEA_20260520-214232_post_wave658_math_half_float_verified", "backup path mismatch", failures)
+    require(backup.get("backupPath") == "[maintainer-local-ghidra-backup-root]\\BEA_20260520-214232_post_wave658_math_half_float_verified", "backup path mismatch", failures)
 
     queue = read_json(QUEUE_JSON)
     quality = queue["qualitySignals"]

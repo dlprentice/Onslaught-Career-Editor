@@ -27,10 +27,10 @@ Evidence:
 - Post exports covered 11 metadata rows, 11 tag rows, 57 xref rows, 2651 instruction rows, and 11 decompile rows.
 - Queue after Wave712: 6098 total, 4143 commented, 1955 commentless, 1216 exact-undefined signatures, 194 `param_N`, comment-backed proxy `4143/6098 = 67.94%`, and strict clean-signature proxy `4087/6098 = 67.02%`.
 - Queue heads after Wave712: raw commentless head `0x0042f220 CSPtrSet__Clear`; high-signal head `0x0059c7cc CDXTexture__InflateInitStateFromHeader`.
-- Verified backup: `G:\GhidraBackups\BEA_20260521-232045_post_wave712_decode_row_utility_head_verified`, 19 files, 165874567 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-232045_post_wave712_decode_row_utility_head_verified`, 19 files, 165874567 bytes, `DiffCount=0`.
 
 Boundary:
 
 This is static Ghidra metadata/read-back evidence only. The two row-batch walkers intentionally retain `param_1`/`param_2` and visible `unaff_ESI` in post decompile because their hidden-register ABI is not solved. Exact row-batch descriptor layout, callback ABI, descriptor schemas, allocator contract, async job/state layout, runtime JPEG/PNG/decode behavior, runtime texture behavior, BEA patching, source identity, and rebuild parity remain unproven.
 
-Probe anchors: `Wave712 decode row utility head`, `decode-row-utility-head-wave712`, `0x0059c070 CTexture__ProcessRowBatchesLinearStride`, `0x0059c78f CDXTexture__FinishAsyncDecodeJob`, `0x0059c110 CTexture__ProcessRowBatchesMcuStride128`, `0x0059c7cc CDXTexture__InflateInitStateFromHeader`, `0x0042f220 CSPtrSet__Clear`, `G:\GhidraBackups\BEA_20260521-232045_post_wave712_decode_row_utility_head_verified`.
+Probe anchors: `Wave712 decode row utility head`, `decode-row-utility-head-wave712`, `0x0059c070 CTexture__ProcessRowBatchesLinearStride`, `0x0059c78f CDXTexture__FinishAsyncDecodeJob`, `0x0059c110 CTexture__ProcessRowBatchesMcuStride128`, `0x0059c7cc CDXTexture__InflateInitStateFromHeader`, `0x0042f220 CSPtrSet__Clear`, `[maintainer-local-ghidra-backup-root]\BEA_20260521-232045_post_wave712_decode_row_utility_head_verified`.

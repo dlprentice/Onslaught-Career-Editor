@@ -29,7 +29,7 @@ Read-back verified `8` metadata rows, `8` decompile exports, `55` xref rows, `20
 
 The refreshed whole-database queue reports `6026` functions, `1358` commented functions, `4668` commentless functions, `1939` undefined signatures, and `1965` `param_N` signatures. Current confirmation proxies are telemetry only: comment-backed `1358/6026 = 22.54%`, strict clean-signature `1296/6026 = 21.51%`.
 
-The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260513_132030_post_wave376_frontend_queue_verified` with `19` files, `153586567` bytes, and `HashDiffCount=0`.
+The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_132030_post_wave376_frontend_queue_verified` with `19` files, `153586567` bytes, and `HashDiffCount=0`.
 
 ## Not Proven
 

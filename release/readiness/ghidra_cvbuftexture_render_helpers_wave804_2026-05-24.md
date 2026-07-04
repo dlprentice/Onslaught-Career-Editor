@@ -21,7 +21,7 @@ Read-back evidence:
 - Post exports: 2 metadata rows, 2 tag rows, 2 xref rows, 338 instruction rows, 2 decompile rows, 7 context metadata rows, and 7 context decompile rows.
 - Queue after Wave804: 6098 total, 5576 commented, 522 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5576/6098 = 91.44%`, strict clean-signature proxy `5576/6098 = 91.44%`.
 - Next raw commentless row is `0x00488f60 CInfantryUnit__VFunc_02_00488f60`; commentless high-signal, signature, and name-confidence queues are empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-091718_post_wave804_cvbuftexture_render_helpers_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-091718_post_wave804_cvbuftexture_render_helpers_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
 
 What this proves:
 

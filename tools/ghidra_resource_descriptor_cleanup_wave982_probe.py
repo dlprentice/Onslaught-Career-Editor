@@ -31,7 +31,7 @@ TARGET = "0x00403ff0"
 OLD_NAME = "CDXLandscape__DestroyResourceDescriptorArray_Thunk"
 NEW_NAME = "CResourceDescriptorTable__DestroyEmbeddedDescriptor_Thunk"
 SIGNATURE = f"void __thiscall {NEW_NAME}(void * this)"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260530-232843_post_wave982_resource_descriptor_cleanup_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260530-232843_post_wave982_resource_descriptor_cleanup_verified"
 
 REQUIRED_TAGS = {
     "static-reaudit",

@@ -30,7 +30,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave874 atmospherics profile"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-201600_post_wave874_atmospherics_profile_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-201600_post_wave874_atmospherics_profile_verified"
 NEXT_HEAD = "0x00555be0 CVBufTexture__DrawSpriteEx"
 STRICT_PROXY = "5872/6113 = 96.06%"
 

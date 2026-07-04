@@ -18,7 +18,7 @@ The pass used the `ctexture-directive-control-wave681` and `wave681-readback-ver
 - Pre-state exports before mutation covered the same ten rows with `10` metadata rows, `10` tag rows, `14` xref rows, `370` instruction rows, and `10` clean decompile rows.
 - Queue after Wave681: `6098` total, `3869` commented, `2229` commentless, `1216` exact-undefined signatures, `452` `param_N` signatures, strict clean-signature proxy `3819/6098 = 62.63%`.
 - Next queue head: `0x0058a578 CTexture__GetSymbolNameLength`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260521-083644_post_wave681_ctexture_directive_control_verified`, `19` files, `164465543` bytes, `DiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-083644_post_wave681_ctexture_directive_control_verified`, `19` files, `164465543` bytes, `DiffCount=0`.
 
 ## Boundaries
 

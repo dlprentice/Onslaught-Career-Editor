@@ -29,7 +29,7 @@ PACKAGE_JSON = ROOT / "package.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 APPLY_SCRIPT = ROOT / "tools" / "ApplyTopResidualScoreCurrentRiskWave1193.java"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-185314_post_wave1193_top_residual_score20_18_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-185314_post_wave1193_top_residual_score20_18_current_risk_review_verified"
 
 TARGETS = {
     "0x00424730": ("CCockpit__dtor_base", "void __fastcall CCockpit__dtor_base(void * this)", "score20", ("CCockpit destructor-base", "CMonitor__Shutdown")),

@@ -18,7 +18,7 @@ The pass used the `ctexture-macro-symbol-wave682` and `wave682-readback-verified
 - Pre-state exports before mutation covered the same nine rows with `9` metadata rows, `9` tag rows, `21` xref rows, `333` instruction rows, and `9` clean decompile rows. A wider pre-instruction export captured `3249` rows to verify the `RET` arities before mutation.
 - Queue after Wave682: `6098` total, `3878` commented, `2220` commentless, `1216` exact-undefined signatures, `443` `param_N` signatures, strict clean-signature proxy `3828/6098 = 62.77%`.
 - Next queue head: `0x0058b1a0 CTexture__InitPreprocessorDefaultDefines`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260521-085906_post_wave682_ctexture_macro_symbol_verified`, `19` files, `164498311` bytes, `DiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-085906_post_wave682_ctexture_macro_symbol_verified`, `19` files, `164498311` bytes, `DiffCount=0`.
 
 ## Boundaries
 

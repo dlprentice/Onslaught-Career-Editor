@@ -28,7 +28,7 @@ Serialized headless dry/apply/read-back saved proof-boundary comments and tags f
 | Focused package probe | `cmd.exe /c npm run test:ghidra-menuitem-base-comment` passed with targets `5`, primary vtable evidence hits `7`, sibling vtable evidence hits `5`, xref evidence hits `10`, instruction evidence hits `9`, stale token hits `0`, and overclaim hits `0`. |
 | Whole-database queue | `cmd.exe /c npm run test:ghidra-static-reaudit-queue` passed with `6020` total functions, `1329` commented functions, `4691` commentless functions, `1939` undefined signatures, and `1980` `param_N` signatures. |
 | Current proxies | Comment-backed `1329/6020 = 22.08%`; strict clean-signature `1267/6020 = 21.05%`. These are telemetry only, not milestones. |
-| Ghidra backup | Live `BEA.gpr`/`BEA.rep` backup verified at `G:\GhidraBackups\BEA_20260513_103746_post_wave371_menuitem_base_verified` with `19` files, `153422727` bytes, and `HashDiffCount=0`. |
+| Ghidra backup | Live `BEA.gpr`/`BEA.rep` backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_103746_post_wave371_menuitem_base_verified` with `19` files, `153422727` bytes, and `HashDiffCount=0`. |
 
 ## Claim Boundary
 

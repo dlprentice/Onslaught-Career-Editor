@@ -16,7 +16,7 @@ Wave563 hardened the CFastVB tail, five adjacent targets from `0x0051a270` throu
 
 Read-back exports verified `5` metadata rows, `5` tag rows, `17` xref rows, `1005` target instruction rows, and `5` decompile rows. The refreshed queue reports `6089` total functions, `2796` commented, `3293` commentless, `1498` exact-undefined signatures, `1185` `param_N` signatures, and strict clean-signature proxy `2742/6089 = 45.03%`.
 
-The post-wave project backup verified at `G:\GhidraBackups\BEA_20260518-201201_post_wave563_cfastvb_tail_verified` with `19` files, `159845255` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+The post-wave project backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260518-201201_post_wave563_cfastvb_tail_verified` with `19` files, `159845255` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Limits
 

@@ -28,7 +28,7 @@ Read-back evidence:
 - Post exports: 13 metadata rows, 13 tag rows, 29 xref rows, 1594 instruction rows, 13 decompile rows, and 757 xref-site instruction rows.
 - Queue after Wave870: 6105 total, 5851 commented, 254 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5851/6105 = 95.84%`, strict clean-signature proxy `5851/6105 = 95.84%`.
 - Next raw commentless row: `0x00551c90 CScreenFx__InitZoomEffectCvar`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-180844_post_wave870_crenderqueue_core_verified`, 19 files, 172460935 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-180844_post_wave870_crenderqueue_core_verified`, 19 files, 172460935 bytes, `DiffCount=0`.
 
 What this proves:
 

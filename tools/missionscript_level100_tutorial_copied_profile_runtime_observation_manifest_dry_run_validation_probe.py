@@ -28,7 +28,7 @@ RE_INDEX = ROOT / "reverse-engineering" / "RE-INDEX.md"
 LORE_RE_INDEX = ROOT / "lore-book" / "reverse-engineering" / "RE-INDEX.md"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 PLAN_LINK = "missionscript-level100-tutorial-copied-profile-runtime-observation-manifest-dry-run-validation-proof-plan.md"
 RESULT_LINK = "missionscript-level100-tutorial-copied-profile-runtime-observation-manifest-dry-run-validation.v1.json"
 TEMPLATE_PLAN_LINK = "missionscript-level100-tutorial-copied-profile-runtime-observation-manifest-template-generation-proof-plan.md"

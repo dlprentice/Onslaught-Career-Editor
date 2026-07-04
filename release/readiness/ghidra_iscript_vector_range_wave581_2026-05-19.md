@@ -17,7 +17,7 @@ Read-back evidence:
 - `ApplyIScriptVectorRangeWave581.java` dry/apply/final dry reported `updated=0 skipped=5 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=5 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=5 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`.
 - Post exports verified `5` metadata rows, `5` tag rows, `5` xref rows, `3545` target instruction rows, `5` decompile rows, and `24` vtable rows.
 - Queue refresh after Wave581: `6093` total functions, `2944` commented, `3149` commentless, `1413` exact-undefined signatures, `1127` `param_N` signatures, comment-backed proxy `2944/6093 = 48.32%`, and strict clean-signature proxy `2895/6093 = 47.51%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260519-075959_post_wave581_iscript_vector_range_verified`, `19` files, `160500615` bytes, `DiffCount=0`, manifest hash `66EAC6D25839E7626D5F27E6A496E682085E0169D2D38E22BAD8E61E00E4F687`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-075959_post_wave581_iscript_vector_range_verified`, `19` files, `160500615` bytes, `DiffCount=0`, manifest hash `66EAC6D25839E7626D5F27E6A496E682085E0169D2D38E22BAD8E61E00E4F687`.
 
 Not proven:
 

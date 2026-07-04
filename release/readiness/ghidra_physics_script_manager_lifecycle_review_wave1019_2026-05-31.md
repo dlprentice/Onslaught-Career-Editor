@@ -15,7 +15,7 @@ Read-back evidence:
 - Wave911 focused re-audit progress advances to `523/1408 = 37.14%`.
 - Expanded static surface progress advances to `752/1493 = 50.37%`.
 - Wave911 top-500 risk-ranked coverage advances to `452/500 = 90.40%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-211749_post_wave1019_physics_script_manager_lifecycle_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-211749_post_wave1019_physics_script_manager_lifecycle_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -32,4 +32,4 @@ What remains separate proof:
 - BEA patching behavior.
 - Rebuild parity.
 
-Probe token anchor: Wave1019; physics-script-manager-lifecycle-review-wave1019; 0x0042e880 CPhysicsScript__Create; 0x0042e8f0 CPhysicsScript__Destroy; 0x0042e950 CPhysicsScript__Load; 0x0042ea60 CPhysicsScript__Update; 0x0042eb90 CPhysicsScript__CreateStatement; 523/1408 = 37.14%; 752/1493 = 50.37%; 452/500 = 90.40%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260531-211749_post_wave1019_physics_script_manager_lifecycle_review_verified; no mutation.
+Probe token anchor: Wave1019; physics-script-manager-lifecycle-review-wave1019; 0x0042e880 CPhysicsScript__Create; 0x0042e8f0 CPhysicsScript__Destroy; 0x0042e950 CPhysicsScript__Load; 0x0042ea60 CPhysicsScript__Update; 0x0042eb90 CPhysicsScript__CreateStatement; 523/1408 = 37.14%; 752/1493 = 50.37%; 452/500 = 90.40%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260531-211749_post_wave1019_physics_script_manager_lifecycle_review_verified; no mutation.

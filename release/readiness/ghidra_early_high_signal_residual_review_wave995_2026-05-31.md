@@ -28,7 +28,7 @@ Read-back evidence:
 - Queue after Wave995: `6222` total functions, `6222` commented, `0` commentless, `0` exact-undefined signatures, `0` `param_N`, static closure `6222/6222 = 100.00%`.
 - Wave911 focused re-audit progress: `464/1408 = 32.95%`.
 - Expanded static surface progress: `569/1478 = 38.50%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-073718_post_wave995_early_high_signal_residual_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-073718_post_wave995_early_high_signal_residual_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

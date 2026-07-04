@@ -37,7 +37,7 @@ Read-back evidence:
 - Wave911 focused progress advances to `804/1408 = 57.10%`.
 - Expanded static surface progress advances to `1132/1509 = 75.02%`.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-192010_post_wave1058_cunitai_deploy_tracking_residual_review_verified`, `19` files, `174656391` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-192010_post_wave1058_cunitai_deploy_tracking_residual_review_verified`, `19` files, `174656391` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -55,4 +55,4 @@ What remains unproven:
 
 Next candidate note: continue with the next Wave911 focused static re-audit cluster; prefer read-only review first and mutate only when fresh evidence proves a correction or normalization need.
 
-Probe token anchor: Wave1058; cunitai-deploy-tracking-residual-review-wave1058; 0x004247a0 CGeneralVolume__InitRandomizedVelocityOffsets; 0x00424a20 CUnitAI__UpdateDeployAimAndScheduleEvent; 0x00424be0 CUnitAI__AdvanceDeployAnimationPhase; 0x00424ca0 CUnitAI__UpdateDeployTrackingTransformTowardTarget; 0x004250f0 CUnitAI__DecayDeployTrackingTransformToNeutral; 0x004244b0 CCockpit__ctor; 0x00424920 CGeneralVolume__BeginFlyToWalkTransition; 0x00424990 CGeneralVolume__BeginWalkToFlyTransition; 0x0040a580 CBattleEngine__Morph; 0x0040eeb0 CBattleEngine__FinishedPlayingCurrentAnimation; 0x00425760 Mat34__OrthonormalizeAxes; 804/1408 = 57.10%; 1132/1509 = 75.02%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-192010_post_wave1058_cunitai_deploy_tracking_residual_review_verified; tag normalization.
+Probe token anchor: Wave1058; cunitai-deploy-tracking-residual-review-wave1058; 0x004247a0 CGeneralVolume__InitRandomizedVelocityOffsets; 0x00424a20 CUnitAI__UpdateDeployAimAndScheduleEvent; 0x00424be0 CUnitAI__AdvanceDeployAnimationPhase; 0x00424ca0 CUnitAI__UpdateDeployTrackingTransformTowardTarget; 0x004250f0 CUnitAI__DecayDeployTrackingTransformToNeutral; 0x004244b0 CCockpit__ctor; 0x00424920 CGeneralVolume__BeginFlyToWalkTransition; 0x00424990 CGeneralVolume__BeginWalkToFlyTransition; 0x0040a580 CBattleEngine__Morph; 0x0040eeb0 CBattleEngine__FinishedPlayingCurrentAnimation; 0x00425760 Mat34__OrthonormalizeAxes; 804/1408 = 57.10%; 1132/1509 = 75.02%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-192010_post_wave1058_cunitai_deploy_tracking_residual_review_verified; tag normalization.

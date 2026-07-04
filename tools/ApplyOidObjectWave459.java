@@ -246,7 +246,7 @@ public class ApplyOidObjectWave459 extends GhidraScript {
                 "OID__CreateObject",
                 "__cdecl",
                 voidPtr,
-                "Wave459 signature/comment hardening: main OID object factory from C:\\dev\\ONSLAUGHT2\\oids.cpp. Takes an object_id switch value, allocates matching retail object sizes through OID__AllocObject, runs constructor/init helpers including OID__InitTargetData and OID__InitBaseObject where applicable, assigns primary/secondary vtable pointers, and returns the created object or null. Runtime object construction behavior, exact concrete layouts, complete OID enum names, source-body identity, and rebuild parity remain unproven.",
+                "Wave459 signature/comment hardening: main OID object factory from [maintainer-local-source-export-root]\\oids.cpp. Takes an object_id switch value, allocates matching retail object sizes through OID__AllocObject, runs constructor/init helpers including OID__InitTargetData and OID__InitBaseObject where applicable, assigns primary/secondary vtable pointers, and returns the created object or null. Runtime object construction behavior, exact concrete layouts, complete OID enum names, source-body identity, and rebuild parity remain unproven.",
                 names("OID__CreateObject"),
                 tags("oid", "factory", "signature-corrected", "comment-hardened"),
                 new ParameterImpl[] { param("object_id", intType) }

@@ -27,7 +27,7 @@ This wave explicitly corrects Wave 336's `0x004359c0` wording: fresh adjacent de
 - `py -3 tools\ghidra_round_sound_value_tranche_probe_test.py` passed `3/3`; `py -3 -m py_compile tools\ghidra_round_sound_value_tranche_probe.py tools\ghidra_round_sound_value_tranche_probe_test.py` passed.
 - `cmd.exe /c npm run test:ghidra-round-sound-value-tranche` passed against the saved read-back artifacts.
 - The refreshed whole-database queue reports `5904` functions, `943` commented functions, `4961` commentless functions, `1979` undefined signatures, and `2173` `param_N` signatures.
-- The post-mutation live Ghidra backup was verified at `G:\GhidraBackups\BEA_20260512_105859_post_wave337_verified` with `19` files, `152210311` bytes, and `DiffCount=0`.
+- The post-mutation live Ghidra backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260512_105859_post_wave337_verified` with `19` files, `152210311` bytes, and `DiffCount=0`.
 
 ## Claim Boundary
 

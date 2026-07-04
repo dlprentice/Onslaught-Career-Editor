@@ -32,7 +32,7 @@ Read-back evidence:
 - Wave911 focused re-audit progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1319/1560 = 84.55%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-031627_post_wave1071_texel_unpack_head_mid_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-031627_post_wave1071_texel_unpack_head_mid_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -52,4 +52,4 @@ What remains separate proof:
 
 Next candidate note: continue with the next expanded static re-audit cluster; prefer read-only review first and mutate only when fresh evidence proves a correction or normalization need.
 
-Probe token anchor: Wave1071; texel-unpack-head-mid-review-wave1071; 0x00584b5f CTexture__UnpackTexels_Bgr8ToFloat4; 0x0058546f CMeshCollisionVolume__UnpackTexels_Bits16_16_16_16_ToFloat4; 0x005856b8 CDXTexture__UnpackTexels_Bits332A8ToFloat4; 0x0058577f CFastVB__TexelUnpackProfile_005e9f3c__ctor; 0x00585fa3 CFastVB__UnpackTexels_Signed8_8_8_8_ToFloat4; 812/1408 = 57.67%; 1319/1560 = 84.55%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260602-031627_post_wave1071_texel_unpack_head_mid_review_verified; read-only review.
+Probe token anchor: Wave1071; texel-unpack-head-mid-review-wave1071; 0x00584b5f CTexture__UnpackTexels_Bgr8ToFloat4; 0x0058546f CMeshCollisionVolume__UnpackTexels_Bits16_16_16_16_ToFloat4; 0x005856b8 CDXTexture__UnpackTexels_Bits332A8ToFloat4; 0x0058577f CFastVB__TexelUnpackProfile_005e9f3c__ctor; 0x00585fa3 CFastVB__UnpackTexels_Signed8_8_8_8_ToFloat4; 812/1408 = 57.67%; 1319/1560 = 84.55%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-031627_post_wave1071_texel_unpack_head_mid_review_verified; read-only review.

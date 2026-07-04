@@ -49,8 +49,8 @@ SCRIPT_DOC_MIRROR = ROOT / "lore-book" / "reverse-engineering" / "binary-analysi
 FASTVB_DOC = ROOT / "reverse-engineering" / "binary-analysis" / "functions" / "FastVB.cpp" / "_index.md"
 FASTVB_DOC_MIRROR = ROOT / "lore-book" / "reverse-engineering" / "binary-analysis" / "functions" / "FastVB.cpp" / "_index.md"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260605-025952_post_wave1120_mixed_score25_current_risk_review_verified"
-PRIOR_BACKUP = r"G:\GhidraBackups\BEA_20260605-022812_post_wave1119_mixed_score26_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-025952_post_wave1120_mixed_score25_current_risk_review_verified"
+PRIOR_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-022812_post_wave1119_mixed_score26_current_risk_review_verified"
 
 PRIOR_PROBES = (
     "wave1109_cfastvb_current_risk_head_supersession.py",

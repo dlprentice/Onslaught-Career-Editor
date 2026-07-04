@@ -6,7 +6,7 @@ Tag: `wave1159-cmeshpart-name-pose-current-risk-review`
 
 Wave1159 accounts for `12 CMeshPart name/load/pose current-risk rows` from the active `wave1108-current-risk-rank` current-risk denominator. It uses fresh Ghidra export evidence and is a read-only review with no mutation.
 
-Probe token anchor: Wave1159; wave1159-cmeshpart-name-pose-current-risk-review; 497/1179 = 42.15%; 12 CMeshPart name/load/pose current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 682; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consults used; 0 / 0 / 0; 6411/6411 = 100.00%; 33 xref rows; 1790 instruction rows; CMeshPart__LoadOldStyle_VersionA; CMeshPart__RebuildPerVertexNormalsAndTangents; CMeshPart__PopulatePoseCacheRecursive; CMeshPart__EvaluatePoseTransformForFrame; CMesh__FindPartByNameI; G:\GhidraBackups\BEA_20260606-004711_post_wave1159_cmeshpart_name_pose_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1159; wave1159-cmeshpart-name-pose-current-risk-review; 497/1179 = 42.15%; 12 CMeshPart name/load/pose current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 682; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consults used; 0 / 0 / 0; 6411/6411 = 100.00%; 33 xref rows; 1790 instruction rows; CMeshPart__LoadOldStyle_VersionA; CMeshPart__RebuildPerVertexNormalsAndTangents; CMeshPart__PopulatePoseCacheRecursive; CMeshPart__EvaluatePoseTransformForFrame; CMesh__FindPartByNameI; [maintainer-local-ghidra-backup-root]\BEA_20260606-004711_post_wave1159_cmeshpart_name_pose_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
 
 ## Evidence
 
@@ -39,7 +39,7 @@ Reviewed anchors:
 | `0x004b4cd0` | `CMeshPart__RefreshCachedPoseIfStale` | Pose-cache stale-timestamp refresh gate. |
 | `0x004b4de0` | `CMeshPart__EvaluatePoseTransformForFrame` | Seven-argument cdecl pose transform evaluator. |
 
-Verified backup: `G:\GhidraBackups\BEA_20260606-004711_post_wave1159_cmeshpart_name_pose_current_risk_review_verified`; `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-004711_post_wave1159_cmeshpart_name_pose_current_risk_review_verified`; `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 ## Accounting
 

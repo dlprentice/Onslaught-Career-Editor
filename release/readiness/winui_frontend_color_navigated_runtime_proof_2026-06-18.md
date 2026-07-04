@@ -21,4 +21,4 @@ Not claimed:
 - No full frontend theme system.
 - No claim that every frontend/menu state on every target setup uses the selected clear-screen color.
 - No texture replacement, menu art replacement, HUD color replacement, gameplay rendering color proof, visual parity, rebuild parity, or no-noticeable-difference proof.
-- No Ghidra mutation or Ghidra backup; latest verified Ghidra review backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+- No Ghidra mutation or Ghidra backup; latest verified Ghidra review backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.

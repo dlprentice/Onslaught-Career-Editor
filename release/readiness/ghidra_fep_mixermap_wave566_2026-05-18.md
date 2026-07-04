@@ -27,7 +27,7 @@ No `source-parity` tag was applied because `FEPWingmen.cpp` and `mixermap.cpp` a
 - Strict proxy: `2811 / 6089 = 46.17%`
 - Focused probe: `py -3 tools\ghidra_fep_mixermap_wave566_probe.py --check` PASS
 - NPM wrapper: `cmd.exe /c npm run test:ghidra-fep-mixermap-wave566` PASS
-- Backup: `G:\GhidraBackups\BEA_20260518-214519_post_wave566_fep_mixermap_verified`
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-214519_post_wave566_fep_mixermap_verified`
 - Backup verification: `19` files, `159910791` bytes, source/destination manifest hash `C860FBFF2EBE9939D13E861C7459C6D3A0E1C344631BD72C3F92F612B97830C6`
 
 ## Limits

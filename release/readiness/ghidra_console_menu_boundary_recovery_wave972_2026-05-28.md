@@ -35,7 +35,7 @@ Read-back evidence:
 - Queue after Wave972: 6209 total functions, 6209 commented, 0 commentless, 0 exact-undefined signatures, 0 `param_N`, 0 uncertain-owner names, 0 address-suffixed helper names, and 0 address-suffixed wrapper names.
 - Static closure: `6209/6209 = 100.00%`.
 - Re-audit progress: Wave911 focused queue `345/1408 = 24.50%`; expanded static surface progress `402/1465 = 27.44%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-185042_post_wave972_console_menu_boundary_recovery_verified`, 19 files, 173771655 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-185042_post_wave972_console_menu_boundary_recovery_verified`, 19 files, 173771655 bytes, `DiffCount=0`.
 
 What this proves:
 

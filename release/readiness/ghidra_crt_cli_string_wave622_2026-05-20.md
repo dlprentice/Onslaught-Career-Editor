@@ -29,7 +29,7 @@ The pass saved bounded signatures, comments, and tags. It corrected five stale o
 - Parser evidence covers whitespace-skipping float parsing, decimal integer sign/digit handling, and a broad decimal parser thunk used outside the old sound-manager owner label.
 - Wide-string evidence covers ControlsUI wide-format output, broad `WStrCat`, and broad `WStrCpy` use across frontend/game-interface/message/ControlsUI callers.
 - Locale evidence covers the uppercase fast path, lock index `0x13`, ctype checks, and the `CRT__LCMapStringA_Compat` path.
-- Backup verified: `G:\GhidraBackups\BEA_20260520-045112_post_wave622_cli_crt_string_verified` with `19` files, `161909639` bytes, and `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260520-045112_post_wave622_cli_crt_string_verified` with `19` files, `161909639` bytes, and `DiffCount=0`.
 
 ## Queue Telemetry
 

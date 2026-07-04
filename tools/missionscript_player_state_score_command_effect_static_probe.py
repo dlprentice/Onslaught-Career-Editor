@@ -46,7 +46,7 @@ LORE_MSL_COMMANDS = ROOT / "lore-book" / "reverse-engineering" / "quick-referenc
 PACKAGE_JSON = ROOT / "package.json"
 
 MSL_ROOT = ROOT / "game" / "data" / "MissionScripts"
-WAVE1219_BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+WAVE1219_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 
 PROOF_LINK = "missionscript-player-state-score-command-effect-static-proof.md"
 SCHEMA_LINK = "missionscript-player-state-score-command-effect.v1.json"

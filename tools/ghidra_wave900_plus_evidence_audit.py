@@ -35,7 +35,7 @@ NON_BACKUP_OPERATIONAL_WAVES = {910, 911}
 META_AUDIT_NOTE_PREFIXES = ("ghidra_wave900_plus_",)
 
 WAVE_RE = re.compile(r"(?:wave|post_wave)(9\d\d)", re.IGNORECASE)
-BACKUP_RE = re.compile(r"G:\\GhidraBackups\\[^\s`|)]+")
+BACKUP_RE = re.compile(r"[maintainer-local-ghidra-backup-root]\\[^\s`|)]+")
 PACKAGE_WAVE_RE = re.compile(r"wave9\d\d", re.IGNORECASE)
 TOOL_PATH_RE = re.compile(r"tools[\\/][^\"'\s]+\.py", re.IGNORECASE)
 BASE_RE = re.compile(

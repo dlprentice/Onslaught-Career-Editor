@@ -28,10 +28,10 @@ Read-back evidence:
 - First saved apply exposed only Ghidra prototype-string convention read-back mismatches for the four newly created rows; the metadata itself was saved and the log is preserved as evidence.
 - Corrected redry and final dry: `updated=0 skipped=9 renamed=0 would_rename=0 signature_updated=0 comment_only_updated=0 missing=0 bad=0`.
 - Post exports: 9 metadata rows, 9 tag rows, 11 xref rows, 333 instruction rows, 9 decompile rows, 15 context metadata rows, 15 context decompile rows, 18 vtable slot rows, and three string dumps.
-- String anchors: `0x0063fc54` is `Couldn't write defaultoptions`, `0x0063fc74` is `defaultoptions.bea`, and `0x0063fc88` is `C:\dev\ONSLAUGHT2\FEPOptions.cpp`.
+- String anchors: `0x0063fc54` is `Couldn't write defaultoptions`, `0x0063fc74` is `defaultoptions.bea`, and `0x0063fc88` is `[maintainer-local-source-export-root]\FEPOptions.cpp`.
 - Queue after Wave858: 6105 total functions, 5779 commented, 326 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5779/6105 = 94.66%`, strict comment-plus-clean-signature proxy `5779/6105 = 94.66%`.
 - Next raw commentless row: `0x0051f9f0 CFEPScreenPos__Init`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-124939_post_wave858_fepoptions_core_verified`, 19 files, 172198791 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-124939_post_wave858_fepoptions_core_verified`, 19 files, 172198791 bytes, `DiffCount=0`.
 
 What this proves:
 

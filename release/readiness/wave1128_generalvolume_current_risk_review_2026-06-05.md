@@ -15,8 +15,8 @@ fresh Ghidra export evidence summary:
 - Post metadata/tag/xref/instruction/decompile exports: `6` / `6` / `54` / `170` / `6`.
 - Pre/post instruction exports match exactly.
 - Queue quality refresh reported `total_functions=6410 commented_functions=6410`.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-072044_post_wave1128_generalvolume_current_risk_review_verified`, `19` files, `175934343` bytes, `DiffCount=0`.
-- Previous completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-071212_post_wave1127_mixed_score23_current_risk_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-072044_post_wave1128_generalvolume_current_risk_review_verified`, `19` files, `175934343` bytes, `DiffCount=0`.
+- Previous completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-071212_post_wave1127_mixed_score23_current_risk_review_verified`.
 
 Mutation boundary:
 

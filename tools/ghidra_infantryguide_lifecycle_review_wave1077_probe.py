@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = ROOT / "subagents" / "ghidra-static-reaudit" / "wave1077-infantryguide-lifecycle-review"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260602-073929_post_wave1077_infantryguide_lifecycle_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260602-073929_post_wave1077_infantryguide_lifecycle_review_verified"
 
 TARGETS = {
     "0x0047d750": {

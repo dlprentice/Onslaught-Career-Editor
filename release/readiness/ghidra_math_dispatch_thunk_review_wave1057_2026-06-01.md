@@ -22,7 +22,7 @@ Read-back evidence:
 - Wave911 focused progress advances to `799/1408 = 56.75%`.
 - Expanded static surface progress advances to `1121/1509 = 74.29%`.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-184232_post_wave1057_math_dispatch_thunk_review_verified`, `19` files, `174656391` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-184232_post_wave1057_math_dispatch_thunk_review_verified`, `19` files, `174656391` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -41,4 +41,4 @@ What remains unproven:
 
 Next candidate note: a sidecar read-only reviewer recommended the old Wave321 CUnitAI/GeneralVolume deploy-tracking residual cluster (`0x004247a0`, `0x00424a20`, `0x00424be0`, `0x00424ca0`, `0x004250f0`) as a useful next focused review candidate.
 
-Probe token anchor: Wave1057; math-dispatch-thunk-review-wave1057; 0x005771af Math__BuildScaleMatrix4x4_Dispatch; 0x005771dd Math__BuildScaleMatrix4x4; 0x00577239 Math__BuildTranslationMatrix4x4_Dispatch; 0x005775c3 Math__BuildQuaternionRotationMatrix; 0x0057798e CFastVB__BuildAxisAngleQuaternion_Dispatch; 0x00577a3e Math__BuildQuaternionFromEulerAngles; 0x00577eaa Math__InterpolateVec4ByRatio; CFastVB__InitDispatchTableByCpuFeature; CFastVB__InitMathDispatchTable; CFastVB__InitDispatchTableVariant_005980be; CFastVB__InitDispatchOpsFromFeatureFlags; 799/1408 = 56.75%; 1121/1509 = 74.29%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-184232_post_wave1057_math_dispatch_thunk_review_verified; no mutation.
+Probe token anchor: Wave1057; math-dispatch-thunk-review-wave1057; 0x005771af Math__BuildScaleMatrix4x4_Dispatch; 0x005771dd Math__BuildScaleMatrix4x4; 0x00577239 Math__BuildTranslationMatrix4x4_Dispatch; 0x005775c3 Math__BuildQuaternionRotationMatrix; 0x0057798e CFastVB__BuildAxisAngleQuaternion_Dispatch; 0x00577a3e Math__BuildQuaternionFromEulerAngles; 0x00577eaa Math__InterpolateVec4ByRatio; CFastVB__InitDispatchTableByCpuFeature; CFastVB__InitMathDispatchTable; CFastVB__InitDispatchTableVariant_005980be; CFastVB__InitDispatchOpsFromFeatureFlags; 799/1408 = 56.75%; 1121/1509 = 74.29%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-184232_post_wave1057_math_dispatch_thunk_review_verified; no mutation.

@@ -32,7 +32,7 @@ Read-back evidence:
 - Vtable sample after Wave1087: `158` OK and `2` `NO_FUNCTION_AT_POINTER`. The ten selected code pointers now resolve to saved functions; the two remaining unresolved rows are `.rdata`/non-function entries at slots `29` and `147`.
 - Queue after Wave1087: `6365/6365 = 100.00%` static function-quality closure, with `0` commentless functions, `0` exact-`undefined` signatures, `0` `param_N` signatures, `0` uncertain-owner rows, `0` helper-address rows, and `0` wrapper-address rows.
 - Expanded static re-audit surface: `1482/1560 = 95.00%`. Wave911 focused remains `812/1408 = 57.67%`; top-500 remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-141730_post_wave1087_hiveboss_unit_vtable_tail_verified`, `19` files, `175082375` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-141730_post_wave1087_hiveboss_unit_vtable_tail_verified`, `19` files, `175082375` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -49,4 +49,4 @@ What remains unproven:
 - BEA patching behavior.
 - Clean-room rebuild parity.
 
-Probe token anchor: Wave1087; hiveboss-unit-vtable-tail-review-wave1087; `0x00480000 CHiveBossVFunc__CheckField170AndMaybeReturn64_00480000`; `0x0050eb10 CHiveBossVFunc__GetClassNameString_0050eb10`; `0x00480050 CHiveBossVFunc__ForwardApplyDamageUnlessFlag01000000_00480050`; `0x00480220 CHiveBossVFunc__AccumulateMotionOffsetsThenTailJmp4fa8d0_00480220`; `0x00480340 CHiveBossVFunc__BuildField164ContextAndDispatch_00480340`; `0x00480080 CHiveBossVFunc__ComputeScaledOffsetVectorToOut_00480080`; `158` OK / `2` `NO_FUNCTION_AT_POINTER`; `1482/1560 = 95.00%`; `812/1408 = 57.67%`; `500/500 = 100.00%`; `6365/6365 = 100.00%`; `G:\GhidraBackups\BEA_20260602-141730_post_wave1087_hiveboss_unit_vtable_tail_verified`; boundary recovery.
+Probe token anchor: Wave1087; hiveboss-unit-vtable-tail-review-wave1087; `0x00480000 CHiveBossVFunc__CheckField170AndMaybeReturn64_00480000`; `0x0050eb10 CHiveBossVFunc__GetClassNameString_0050eb10`; `0x00480050 CHiveBossVFunc__ForwardApplyDamageUnlessFlag01000000_00480050`; `0x00480220 CHiveBossVFunc__AccumulateMotionOffsetsThenTailJmp4fa8d0_00480220`; `0x00480340 CHiveBossVFunc__BuildField164ContextAndDispatch_00480340`; `0x00480080 CHiveBossVFunc__ComputeScaledOffsetVectorToOut_00480080`; `158` OK / `2` `NO_FUNCTION_AT_POINTER`; `1482/1560 = 95.00%`; `812/1408 = 57.67%`; `500/500 = 100.00%`; `6365/6365 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260602-141730_post_wave1087_hiveboss_unit_vtable_tail_verified`; boundary recovery.

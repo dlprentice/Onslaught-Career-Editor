@@ -28,7 +28,7 @@ This is static Ghidra evidence only. It does not prove runtime collision behavio
 | `cmd.exe /c npm run test:ghidra-geometry-collision-wave387` | PASS: `status=PASS`, `targets=4`, `caller_hits=4`, `instruction_hits=11`. |
 | `py -3 -m py_compile tools\ghidra_geometry_collision_wave387_probe.py tools\ghidra_geometry_collision_wave387_probe_test.py` | PASS. |
 | `cmd.exe /c npm run test:ghidra-static-reaudit-queue` | PASS after refreshing `ExportFunctionQualitySnapshot.java`: `6027` functions, `1439` commented functions, `4588` commentless functions, `1935` undefined signatures, and `1909` `param_N` signatures. |
-| Actual Ghidra project backup | PASS: copied `BEA.gpr` and `BEA.rep` to `G:\GhidraBackups\BEA_20260513_193642_post_wave387_geometry_collision_verified`; verified `19` files, `153947015` bytes, `HashDiffCount=0`. |
+| Actual Ghidra project backup | PASS: copied `BEA.gpr` and `BEA.rep` to `[maintainer-local-ghidra-backup-root]\BEA_20260513_193642_post_wave387_geometry_collision_verified`; verified `19` files, `153947015` bytes, `HashDiffCount=0`. |
 
 The current broad comment-backed proxy is `1439/6027 = 23.87%`. The stricter comment-plus-no-`undefined`-or-`param_N` proxy is `1377/6027 = 22.85%`. These values are telemetry only, not completion milestones.
 

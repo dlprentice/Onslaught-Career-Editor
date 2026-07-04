@@ -45,7 +45,7 @@ PACKAGE_JSON = ROOT / "package.json"
 
 SCHEMA_LINK = "missionscript-command-descriptor-schema.v1.json"
 PROOF_LINK = "missionscript-command-descriptor-schema-proof.md"
-BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 TABLE_START = 0x0064CE50
 STRIDE = 0x40
 SLOT_COUNT = 144

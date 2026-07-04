@@ -25,7 +25,7 @@ PROGRESS = ROOT / "reverse-engineering" / "binary-analysis" / "static-reaudit-pr
 PROGRESS_MIRROR = ROOT / "lore-book" / "reverse-engineering" / "binary-analysis" / "static-reaudit-progress.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260605-235134_post_wave1157_destroyable_segment_vfunc_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-235134_post_wave1157_destroyable_segment_vfunc_current_risk_review_verified"
 EXPECTED_SOURCE_ROOT = str(Path.home() / "Ghidra" / "Projects")
 
 TARGETS = {

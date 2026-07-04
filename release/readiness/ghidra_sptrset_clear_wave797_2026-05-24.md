@@ -22,7 +22,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 164 xref rows, 65 instruction rows, 1 decompile row, 12 helper metadata rows, 686 helper xref rows, and 12 helper decompile rows.
 - Queue after Wave797: 6098 total, 5545 commented, 553 commentless, 0 exact-undefined signatures, 0 param_N signatures, comment-backed proxy `5545/6098 = 90.93%`, strict clean-signature proxy `5545/6098 = 90.93%`.
 - Next raw commentless row is `0x004404f0 CThing__NegateVec3ToOut`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-054154_post_wave797_sptrset_clear_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-054154_post_wave797_sptrset_clear_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
 
 What this proves:
 

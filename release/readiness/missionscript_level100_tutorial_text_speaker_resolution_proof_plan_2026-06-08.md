@@ -6,7 +6,7 @@ Scope: `missionscript-level100-tutorial-text-speaker-resolution`
 
 This readiness note records the public-safe MissionScript Level100 Tutorial Text/Speaker Resolution Static Proof Plan for `level100` tutorial text/speaker resolution. It complements `missionscript-level100-tutorial-static-walkthrough-proof-plan.md` and is backed by `missionscript-level100-tutorial-text-speaker-resolution-proof-plan.md` plus `missionscript-level100-tutorial-text-speaker-resolution.v1.json`.
 
-Static closeout remains unchanged: `6411/6411 = 100.00%` function-quality closure, `0 / 0 / 0` static debt, `1560/1560 = 100.00%` expanded static surface, `1179/1179 = 100.00%` active current-risk focused accounting, and remaining active focused work `0`. Latest verified Ghidra backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+Static closeout remains unchanged: `6411/6411 = 100.00%` function-quality closure, `0 / 0 / 0` static debt, `1560/1560 = 100.00%` expanded static surface, `1179/1179 = 100.00%` active current-risk focused accounting, and remaining active focused work `0`. Latest verified Ghidra backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 Static evidence:
 

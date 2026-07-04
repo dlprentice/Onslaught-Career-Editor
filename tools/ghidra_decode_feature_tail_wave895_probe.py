@@ -32,7 +32,7 @@ BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave895 decode feature tail"
 TAG = "decode-feature-tail-wave895"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-064920_post_wave895_decode_feature_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-064920_post_wave895_decode_feature_tail_verified"
 STRICT_PROXY = "6086/6113 = 99.56%"
 NEXT_HEAD = "0x0059c610 CFastVB__ReleaseOwnedObjectAndReset_Core"
 

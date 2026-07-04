@@ -33,7 +33,7 @@ Read-back evidence:
 - Fresh exports: `28` metadata rows, `28` tag rows, `46` xref rows, `4060` around-address instruction rows, `1522` function-body instruction rows, `28` decompile rows, `128` CCarver vtable rows, and `4` Carver aim-global xref rows.
 - Queue remains `6152` total functions, `6152` commented, `0` commentless, `0` exact-undefined signatures, and `0` `param_N`; export-contract function-quality closure remains `6152/6152 = 100.00%`.
 - Wave911 focused re-audit progress after Wave965: `334/1408 = 23.72%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-144929_post_wave965_carver_init_combat_wing_review_verified`, `19` files, `173542279` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-144929_post_wave965_carver_init_combat_wing_review_verified`, `19` files, `173542279` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -47,4 +47,4 @@ What remains unproven:
 - Exact source method or virtual names, because `Carver.cpp` source is absent from the current source snapshot.
 - BEA patching behavior and rebuild parity.
 
-Probe token anchor: Wave965; carver-init-combat-wing-review-wave965; 0x00422440 CCarver__Init; 0x00422580 CCarverAI__dtor_base; 0x00422620 CCarver__UpdateMotionAndWingPose; 0x00422760 CCarverAI__OpenWings; 0x004227a0 CCarverAI__CloseWings; 0x004227e0 CCarverAI__OnHit; 0x00422820 CCarverAI__Fire; 0x00422930 CCarverAI__SetLastAttackTime; 0x00422940 CCarverAI__IsRecentlyAttacked; 0x004229b0 CarverAimGlobals__ResetVector; 0x004229d0 CarverAimGlobals__InitMatrix; 0x005e0d90; 334/1408 = 23.72%; 6152/6152 = 100.00%; G:\GhidraBackups\BEA_20260528-144929_post_wave965_carver_init_combat_wing_review_verified; no mutation.
+Probe token anchor: Wave965; carver-init-combat-wing-review-wave965; 0x00422440 CCarver__Init; 0x00422580 CCarverAI__dtor_base; 0x00422620 CCarver__UpdateMotionAndWingPose; 0x00422760 CCarverAI__OpenWings; 0x004227a0 CCarverAI__CloseWings; 0x004227e0 CCarverAI__OnHit; 0x00422820 CCarverAI__Fire; 0x00422930 CCarverAI__SetLastAttackTime; 0x00422940 CCarverAI__IsRecentlyAttacked; 0x004229b0 CarverAimGlobals__ResetVector; 0x004229d0 CarverAimGlobals__InitMatrix; 0x005e0d90; 334/1408 = 23.72%; 6152/6152 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260528-144929_post_wave965_carver_init_combat_wing_review_verified; no mutation.

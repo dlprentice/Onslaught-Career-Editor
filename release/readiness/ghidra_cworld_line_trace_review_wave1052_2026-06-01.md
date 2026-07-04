@@ -42,7 +42,7 @@ Evidence counts:
 - Context exports: `13` metadata rows, `13` tag rows, `105` xref rows, `4547` function-body instruction rows, and `13` decompile rows.
 - Queue closure remains `6246/6246 = 100.00%`, with `0` commentless rows, `0` exact-undefined signatures, and `0` `param_N` signatures.
 - Wave911 focused progress advances to `745/1408 = 52.91%`; expanded static surface progress advances to `1033/1509 = 68.46%`; top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-154511_post_wave1052_cworld_line_trace_review_verified`, 19 files, 174623623 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-154511_post_wave1052_cworld_line_trace_review_verified`, 19 files, 174623623 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -56,4 +56,4 @@ What remains separate proof:
 - Runtime collision, terrain, MapWho, auto-aim, targeting, damage, and sun line-of-sight behavior.
 - Exact source-body identity, BEA patching behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1052; cworld-line-trace-review-wave1052; 0x0050b030 CWorld__FindFirstThingToHitLine; CHeightField__TraceLineAgainstHeightfield; CMapWho__GetFirstEntryWithinLine; CMapWho__GetNextEntryWithinLine; CThing__GetPersistentCollisionSeekingThing; CBattleEngine__CalcUnitOverCrossHair; CBattleEngine__HandleAutoAim; CUnit__ApplyDamage; CDXEngine__Render; references/Onslaught/BattleEngine.cpp; references/Onslaught/DXEngine.cpp; references/Onslaught/PCEngine.cpp; 745/1408 = 52.91%; 1033/1509 = 68.46%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-154511_post_wave1052_cworld_line_trace_review_verified; no mutation.
+Probe token anchor: Wave1052; cworld-line-trace-review-wave1052; 0x0050b030 CWorld__FindFirstThingToHitLine; CHeightField__TraceLineAgainstHeightfield; CMapWho__GetFirstEntryWithinLine; CMapWho__GetNextEntryWithinLine; CThing__GetPersistentCollisionSeekingThing; CBattleEngine__CalcUnitOverCrossHair; CBattleEngine__HandleAutoAim; CUnit__ApplyDamage; CDXEngine__Render; references/Onslaught/BattleEngine.cpp; references/Onslaught/DXEngine.cpp; references/Onslaught/PCEngine.cpp; 745/1408 = 52.91%; 1033/1509 = 68.46%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-154511_post_wave1052_cworld_line_trace_review_verified; no mutation.

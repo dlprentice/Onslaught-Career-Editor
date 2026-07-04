@@ -1,7 +1,7 @@
 # MCMech.cpp Functions
 
 > Source File: MCMech.cpp | Binary: BEA.exe
-> Debug Path: `C:\dev\ONSLAUGHT2\MCMech.cpp` at 0x0062df60
+> Debug Path: `[maintainer-local-source-export-root]\MCMech.cpp` at 0x0062df60
 
 ## Overview
 
@@ -11,7 +11,7 @@ Wave433 is saved static Ghidra evidence, not runtime proof. It corrected two sta
 
 ## Wave755 MCMech Unwind Continuation (2026-05-23)
 
-Wave755 static read-back (`unwind-continuation-wave755`, `wave755-readback-verified`) saved comments/tags/signatures for six MCMech.cpp-adjacent compiler-generated SEH unwind cleanup callbacks from `0x005d32a0 Unwind@005d32a0` through `0x005d3340 Unwind@005d3340`. Evidence includes MCMech.cpp debug path `0x0062df60`, DATA scope-table xrefs `0x0061bfec` through `0x0061c074`, three `OID__FreeObject_Callback` allocation-cleanup rows, one `CLine__SetBaseVtable_00426360` local line-helper cleanup, one `CMCBuggy__ProfileEnd` profiler epilogue, and one `CMotionController__dtor_base` row. Verified backup: `G:\GhidraBackups\BEA_20260523-105815_post_wave755_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
+Wave755 static read-back (`unwind-continuation-wave755`, `wave755-readback-verified`) saved comments/tags/signatures for six MCMech.cpp-adjacent compiler-generated SEH unwind cleanup callbacks from `0x005d32a0 Unwind@005d32a0` through `0x005d3340 Unwind@005d3340`. Evidence includes MCMech.cpp debug path `0x0062df60`, DATA scope-table xrefs `0x0061bfec` through `0x0061c074`, three `OID__FreeObject_Callback` allocation-cleanup rows, one `CLine__SetBaseVtable_00426360` local line-helper cleanup, one `CMCBuggy__ProfileEnd` profiler epilogue, and one `CMotionController__dtor_base` row. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260523-105815_post_wave755_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
 
 | Address | Scope-table xref | Static read-back evidence |
 | --- | --- | --- |

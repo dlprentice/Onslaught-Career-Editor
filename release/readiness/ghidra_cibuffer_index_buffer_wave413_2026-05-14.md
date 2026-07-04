@@ -34,7 +34,7 @@ This note records a serialized saved-Ghidra metadata correction for the CIBuffer
 - Focused probes passed through both direct Python and the package-script wrapper.
 - Refreshed queue telemetry reports `6030` total functions, `1589` commented functions, `4441` commentless functions, `1900` undefined signatures, and `1839` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1589/6030 = 26.35%`; strict clean-signature `1526/6030 = 25.31%`.
-- The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260514_105233_post_wave413_cibuffer_index_buffer_verified` with `19` files, `154831751` bytes, and `HashDiffCount=0`.
+- The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260514_105233_post_wave413_cibuffer_index_buffer_verified` with `19` files, `154831751` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

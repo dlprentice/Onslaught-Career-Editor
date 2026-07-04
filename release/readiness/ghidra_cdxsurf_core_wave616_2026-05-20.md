@@ -40,7 +40,7 @@ The tranche is a saved-Ghidra signature/comment/tag pass with no renames and no 
 - Corrected thiscall dry/apply/final dry: `updated=0 skipped=12 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=1 skipped=11 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=12 renamed=0 would_rename=0 missing=0 bad=0`.
 - RenderSurface parameter-label dry/apply/final dry: `updated=0 skipped=12 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=1 skipped=11 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=12 renamed=0 would_rename=0 missing=0 bad=0`.
 - Read-back exports verified `15` context metadata rows plus `2` expected missing unbounded vtable targets, `15` tag rows plus the same `2` misses, `169` xref rows, `1445` instruction rows, `15` decompile rows plus `2` misses, and `32` vtable-slot rows.
-- Verified backup: `G:\GhidraBackups\BEA_20260520-020900_post_wave616_cdxsurf_core_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-020900_post_wave616_cdxsurf_core_verified`
   - `sourceFileCount=19`
   - `destFileCount=19`
   - `sourceBytes=161614727`

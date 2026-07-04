@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave869 CDXEngine render-state tail"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-174243_post_wave869_cdxengine_render_state_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-174243_post_wave869_cdxengine_render_state_tail_verified"
 NEXT_HEAD = "0x005515a0 CDXEngine__InitConsoleVar_UseRenderQueue"
 STRICT_PROXY = "5838/6105 = 95.63%"
 

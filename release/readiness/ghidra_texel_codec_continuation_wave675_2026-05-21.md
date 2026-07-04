@@ -17,7 +17,7 @@ The pass used the `texel-codec-continuation-wave675` and `wave675-readback-verif
 - Post exports verified `25` metadata rows, `25` tag rows, `52` xref rows, `1125` instruction rows, and `25` clean decompile rows.
 - Queue after Wave675: `6098` total, `3821` commented, `2277` commentless, `1217` exact-undefined signatures, `496` `param_N` signatures, strict clean-signature proxy `3771/6098 = 61.84%`.
 - Next queue head: `0x00587dee CFastVB__InitTexelUnpackVTable_005ea264`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260521-055935_post_wave675_texel_codec_continuation_verified`, `19` files, `164301703` bytes, `DiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-055935_post_wave675_texel_codec_continuation_verified`, `19` files, `164301703` bytes, `DiffCount=0`.
 
 ## Boundaries
 

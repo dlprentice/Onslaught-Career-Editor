@@ -29,7 +29,7 @@ DOCS = [
     ROOT / "reverse-engineering" / "binary-analysis" / "functions" / "d3dapp.cpp" / "_index.md",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260527-210516_post_wave923_hud_radar_pause_render_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260527-210516_post_wave923_hud_radar_pause_render_review_verified"
 SCRIPT_NAME = "test:ghidra-hud-radar-pause-render-review-wave923"
 SCRIPT_VALUE = r"py -3 tools\ghidra_hud_radar_pause_render_review_wave923_probe.py --check"
 

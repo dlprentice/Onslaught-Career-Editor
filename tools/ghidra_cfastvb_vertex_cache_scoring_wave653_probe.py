@@ -99,7 +99,7 @@ DOC_TOKENS = (
     "2550",
     "765",
     "0x00572e40 CTexture__DestroyNodeTreeAndStorage",
-    "G:\\GhidraBackups\\BEA_20260520-192250_post_wave653_cfastvb_vertex_cache_scoring_verified",
+    "[maintainer-local-ghidra-backup-root]\\BEA_20260520-192250_post_wave653_cfastvb_vertex_cache_scoring_verified",
 )
 
 OVERCLAIM_TOKENS = (

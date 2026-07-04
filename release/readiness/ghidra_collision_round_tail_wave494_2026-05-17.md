@@ -29,7 +29,7 @@ Wave494 saved static Ghidra name/signature/comment/tag hardening for seven colli
 - Focused probe: `py -3 tools\ghidra_collision_round_tail_wave494_probe.py --check` PASS.
 - NPM probe: `cmd.exe /c npm run test:ghidra-collision-round-tail-wave494` PASS.
 - Queue refresh: `6068` total functions, `2230` commented, `3838` commentless, `1673` undefined signatures, `1525` `param_N`; strict comment-plus-clean-signature proxy `2171/6068 = 35.78%`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260517-093427_post_wave494_collision_round_tail_verified` with `19` files, `157617031` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260517-093427_post_wave494_collision_round_tail_verified` with `19` files, `157617031` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Public Boundary
 

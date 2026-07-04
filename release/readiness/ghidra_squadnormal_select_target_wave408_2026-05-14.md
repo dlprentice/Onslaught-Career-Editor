@@ -20,7 +20,7 @@ The current retail body supports the `CSquadNormal__SelectBestEngagementTarget` 
 - Direct xrefs are `CSquadNormal__ScheduleTargetReaderRefresh` at callsite `0x004e815a` and a no-function callsite at `0x004ea584`; the latter remains boundary follow-up context, not a named function claim.
 - Refreshed queue telemetry reports `6028` functions, `1561` commented functions, `4467` commentless functions, `1909` undefined signatures, and `1855` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1561/6028 = 25.90%`, strict clean-signature `1499/6028 = 24.87%`.
-- The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260514_075916_post_wave408_squadnormal_select_target_verified` with `19` files, `154798983` bytes, and `HashDiffCount=0`.
+- The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260514_075916_post_wave408_squadnormal_select_target_verified` with `19` files, `154798983` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

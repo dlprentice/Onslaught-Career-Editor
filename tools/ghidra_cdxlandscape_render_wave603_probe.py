@@ -250,7 +250,7 @@ def check_docs_and_logs(failures: list[str]) -> None:
         "1318",
         "exact-undefined",
         "1073",
-        "G:\\GhidraBackups\\BEA_20260519-191021_post_wave603_cdxlandscape_render_verified",
+        "[maintainer-local-ghidra-backup-root]\\BEA_20260519-191021_post_wave603_cdxlandscape_render_verified",
     )
     for label, text in {
         "public note": public_note,
@@ -291,7 +291,7 @@ def check_docs_and_logs(failures: list[str]) -> None:
 
 def check_backup_and_queue(failures: list[str]) -> None:
     backup = read_json(BACKUP_SUMMARY)
-    if backup.get("destination") != "G:\\GhidraBackups\\BEA_20260519-191021_post_wave603_cdxlandscape_render_verified":
+    if backup.get("destination") != "[maintainer-local-ghidra-backup-root]\\BEA_20260519-191021_post_wave603_cdxlandscape_render_verified":
         failures.append(f"backup path mismatch: {backup.get('destination')}")
     expected = {
         "fileCount": 19,

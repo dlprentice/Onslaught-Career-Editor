@@ -24,7 +24,7 @@ Read-back evidence:
 - Queue after Wave815: 6098 total functions, 5599 commented, 499 commentless, 0 exact-undefined signatures, 0 `param_N` signatures, comment-backed proxy `5599/6098 = 91.82%`, strict clean-signature proxy `5599/6098 = 91.82%`.
 - Next raw commentless row: `0x004b0cd0 CMesh__SelectModeSpecificPtr`.
 - Commentless high-signal, signature, and name-confidence queues are empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-144421_post_wave815_meshpart_tail_verified`, 19 files, 171346823 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-144421_post_wave815_meshpart_tail_verified`, 19 files, 171346823 bytes, `DiffCount=0`.
 
 What this proves:
 

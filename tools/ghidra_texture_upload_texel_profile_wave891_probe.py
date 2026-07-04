@@ -31,7 +31,7 @@ BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave891 texture upload texel profile"
 TAG = "texture-upload-texel-profile-wave891"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-050306_post_wave891_texture_upload_texel_profile_head_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-050306_post_wave891_texture_upload_texel_profile_head_verified"
 STRICT_PROXY = "6062/6113 = 99.17%"
 NEXT_HEAD = "0x005888bc CFastVB__InterpolateDualProfileStreams"
 

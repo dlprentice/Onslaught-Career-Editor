@@ -33,7 +33,7 @@ Tag anchor: `texture-serialized-chunk-prelude-wave705`; read-back tag: `wave705-
 - Queue refresh after Wave705: `6098` total functions, `4095` commented, `2003` commentless, `1216` exact-undefined signatures, `238` `param_N` signatures, comment-backed proxy `4095/6098 = 67.15%`, strict clean-signature proxy `4041/6098 = 66.27%`.
 - Earliest raw commentless row: `0x0042f220 CSPtrSet__Clear`.
 - Next commentless high-signal row: `0x005997a5 CFastVB__InitNodeType17`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260521-194929_post_wave705_texture_serialized_chunk_prelude_verified`, `19` files, `165448583` bytes, `DiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-194929_post_wave705_texture_serialized_chunk_prelude_verified`, `19` files, `165448583` bytes, `DiffCount=0`.
 
 ## Boundaries
 

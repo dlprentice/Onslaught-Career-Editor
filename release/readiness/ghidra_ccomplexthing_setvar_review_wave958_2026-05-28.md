@@ -15,7 +15,7 @@ Primary Wave911 target:
 Context anchors:
 
 - `references/Onslaught/thing.cpp:827-829` contains the source fallback `CComplexThing::SetVar(CStringDataType* name, CDataType* data)` that logs `Warning: Uknown var '%s' in call to SetVar`.
-- `0x006331c0` dumps to `C:\dev\ONSLAUGHT2\thing.cpp`.
+- `0x006331c0` dumps to `[maintainer-local-source-export-root]\thing.cpp`.
 - `0x006331ec` dumps to `Warning: Uknown var '%s' in call to SetVar`.
 - `0x004804c0 CHiveBoss__SetVar` remains the derived `hb_*` config handler and falls back to `CComplexThing__SetVar` at `0x00480685`.
 - `0x004f4230 CComplexThing__SetScript`, `0x004f44a0 CComplexThing__SetAnimMode`, and `0x004f45a0 CComplexThing__FinishedPlayingCurrentAnimation` remain the adjacent CComplexThing script/animation context.
@@ -26,7 +26,7 @@ Read-back evidence:
 - Exports: 7 metadata rows, 7 tag rows, 528 xref rows, 259 instruction rows, and 7 decompile-index rows.
 - String dumps: `0x006331c0` and `0x006331ec`.
 - Cursor Composer 2.5 fast consult was advisory and agreed the likely outcome was read-only/no mutation.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-114016_post_wave958_ccomplexthing_setvar_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-114016_post_wave958_ccomplexthing_setvar_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
 - Static function-quality closure remains `6151/6151 = 100.00%`.
 - Wave911 focused re-audit progress after Wave958 is `293/1408 = 20.81%`.
 

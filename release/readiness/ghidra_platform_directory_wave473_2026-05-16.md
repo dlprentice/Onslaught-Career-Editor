@@ -51,7 +51,7 @@ These percentages are telemetry only, not certification.
 Verified saved-project backup:
 
 ```text
-G:\GhidraBackups\BEA_20260516-230437_post_wave473_platform_directory_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260516-230437_post_wave473_platform_directory_verified
 SourceCount 19
 BackupCount 19
 BackupBytes 157158279

@@ -43,7 +43,7 @@ This is public-safe static evidence only. It does not launch or patch `BEA.exe`,
 | Post-apply metadata/tag/xref/vtable/instruction/decompile read-back | PASS | Verified `18` metadata rows, `18` tag rows, `28` xref rows, `32` vtable-slot rows, `4338` instruction rows, and `18` target decompile exports. |
 | `cmd.exe /c npm run test:ghidra-cmctentacle-warspitedome-wave435` | PASS | Focused probe returned `status: PASS` for all `18` saved targets. |
 | `cmd.exe /c npm run test:ghidra-static-reaudit-queue` | PASS | Queue reports `6055` total functions, `1791` commented functions, `4264` commentless functions, `1803` undefined signatures, and `1762` `param_N` signatures. |
-| Actual Ghidra project backup verification after Wave435 mutation | PASS | Copied the live project to `G:\GhidraBackups\BEA_20260516-000814_post_wave435_cmctentacle_warspitedome_verified`; compared `19` files and `155880327` bytes with `MissingCount=0`, `HashDiffCount=0`, and `ExtraCount=0`. |
+| Actual Ghidra project backup verification after Wave435 mutation | PASS | Copied the live project to `[maintainer-local-ghidra-backup-root]\BEA_20260516-000814_post_wave435_cmctentacle_warspitedome_verified`; compared `19` files and `155880327` bytes with `MissingCount=0`, `HashDiffCount=0`, and `ExtraCount=0`. |
 
 ## Current Queue Telemetry
 

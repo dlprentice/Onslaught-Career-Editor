@@ -34,7 +34,7 @@ Read-back evidence:
 - Wave911 focused re-audit progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1448/1560 = 92.82%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-125900_post_wave1085_shared_unit_residual_vtable_boundary_verified`, `19` files, `174918535` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-125900_post_wave1085_shared_unit_residual_vtable_boundary_verified`, `19` files, `174918535` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -51,4 +51,4 @@ What remains separate proof:
 - Gameplay outcomes.
 - Rebuild parity.
 
-Probe token anchor: Wave1085; shared-unit-residual-vtable-boundary-review-wave1085; 0x00401550 SharedUnitVFunc__WriteVector1cMinus8cToOut_00401550; 0x004fd440 SharedUnitVFunc__TestField17c19cReadiness_004fd440; 0x004fc3c0 SharedUnitVFunc__ResolveField17cVectorContext_004fc3c0; 0x004f9220 SharedUnitVFunc__CountNestedThingListAndDispatch_004f9220; 0x004fe4a0 SharedUnitVFunc__CopySourceVectors114120AndRefresh_004fe4a0; 0x00401900 SharedUnitVFunc__ForwardArgToThingBridge_00401900; 0x00401910 SharedUnitVFunc__CopyTransformAndNotify_00401910; 0x004fce00 SharedUnitVFunc__ForwardField208Slot10_004fce00; 1448/1560 = 92.82%; 812/1408 = 57.67%; 500/500 = 100.00%; 6331/6331 = 100.00%; G:\GhidraBackups\BEA_20260602-125900_post_wave1085_shared_unit_residual_vtable_boundary_verified; boundary recovery.
+Probe token anchor: Wave1085; shared-unit-residual-vtable-boundary-review-wave1085; 0x00401550 SharedUnitVFunc__WriteVector1cMinus8cToOut_00401550; 0x004fd440 SharedUnitVFunc__TestField17c19cReadiness_004fd440; 0x004fc3c0 SharedUnitVFunc__ResolveField17cVectorContext_004fc3c0; 0x004f9220 SharedUnitVFunc__CountNestedThingListAndDispatch_004f9220; 0x004fe4a0 SharedUnitVFunc__CopySourceVectors114120AndRefresh_004fe4a0; 0x00401900 SharedUnitVFunc__ForwardArgToThingBridge_00401900; 0x00401910 SharedUnitVFunc__CopyTransformAndNotify_00401910; 0x004fce00 SharedUnitVFunc__ForwardField208Slot10_004fce00; 1448/1560 = 92.82%; 812/1408 = 57.67%; 500/500 = 100.00%; 6331/6331 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-125900_post_wave1085_shared_unit_residual_vtable_boundary_verified; boundary recovery.

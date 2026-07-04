@@ -24,7 +24,7 @@ Wave454 saved Ghidra name/signature/comment/tag corrections for `11` contiguous 
 - Recorded that retail `CMusic__SetVolume` linearly converts input float into the `0..127` set-volume field, while the PC source tangent-volume path differs.
 - Queue after refresh: `6057` functions, `1989` commented, `4068` commentless, `1733` undefined signatures, `1674` `param_N` signatures.
 - Current telemetry proxies: comment-backed `1989/6057 = 32.84%`; strict clean-signature `1923/6057 = 31.75%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-141054_post_wave454_music_verified` (`19` files, `156699527` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-141054_post_wave454_music_verified` (`19` files, `156699527` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

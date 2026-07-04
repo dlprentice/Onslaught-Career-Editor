@@ -34,7 +34,7 @@ PACKAGE_JSON = ROOT / "package.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 README = ROOT / "README.MD"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-023000_post_wave1206_console_support_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-023000_post_wave1206_console_support_current_risk_review_verified"
 
 TARGETS = {
     "0x00429bc0": ("CConsole__Init", "void __fastcall CConsole__Init(void * this)"),

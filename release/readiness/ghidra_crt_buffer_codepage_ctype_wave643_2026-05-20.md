@@ -38,7 +38,7 @@ The pass corrected `CRT__IsAlpha_0056a05b` to `CRT__IsAlpha` and `CRT__IsDigit_0
 - Comment-backed proxy: `3437/6093 = 56.41%`.
 - Strict clean-signature proxy: `3386/6093 = 55.57%`.
 - Next high-signal queue head: `0x0056a7e7 CRT__ValidatePathAttributesForOpen`.
-- Verified backup: `G:\GhidraBackups\BEA_20260520-143149_post_wave643_crt_buffer_codepage_ctype_verified`, `19` files, `162663303` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-143149_post_wave643_crt_buffer_codepage_ctype_verified`, `19` files, `162663303` bytes, `DiffCount=0`.
 
 ## Boundaries
 

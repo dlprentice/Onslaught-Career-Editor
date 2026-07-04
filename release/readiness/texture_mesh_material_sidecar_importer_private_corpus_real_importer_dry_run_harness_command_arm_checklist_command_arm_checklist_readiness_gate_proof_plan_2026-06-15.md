@@ -66,4 +66,4 @@ What remains unproven:
 - Product UI or Godot behavior.
 - Rebuild implementation, rebuild parity, or no-noticeable-difference parity.
 
-Latest verified Ghidra backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`, because this slice performs no Ghidra, game, executable, runtime, or private asset mutation. While the external backup drive is detached, future backup-producing Ghidra waves should use `D:\GhidraBackups`.
+Latest verified Ghidra backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`, because this slice performs no Ghidra, game, executable, runtime, or private asset mutation. While the external backup drive is detached, future backup-producing Ghidra waves should use `[maintainer-local-ghidra-backup-root]`.

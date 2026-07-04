@@ -15,8 +15,8 @@ Current extension:
 - Wave911 focused progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1170/1531 = 76.42%`.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified Wave1062 backup: `G:\GhidraBackups\BEA_20260601-215617_post_wave1062_mat34_orientation_scale_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified Wave1062 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-215617_post_wave1062_mat34_orientation_scale_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 The aggregate recheck remains structural static evidence validation. It does not prove runtime behavior, exact source/layout identity, BEA patching behavior, gameplay outcomes, or rebuild parity.
 
-Probe token anchor: Wave1062; mat34-orientation-scale-review-wave1062; 0x00495ed0 Mat34__ScaleByScalar; 0x004f8140 Mat34__SetFromEulerDegrees; 0x0040d1f0 Mat34__SetFromEulerAngles; 0x0040d2c0 Mat34__TransformVec3ByBasisToOut; 0x0040d320 Mat34__MultiplyBasisToOut; 0x004f7e90 CUnit__ctor_base; 0x005b86c0 CFastVB__FastAcosApprox_Scalar; 812/1408 = 57.67%; 1170/1531 = 76.42%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-215617_post_wave1062_mat34_orientation_scale_review_verified; comment/tag normalization.
+Probe token anchor: Wave1062; mat34-orientation-scale-review-wave1062; 0x00495ed0 Mat34__ScaleByScalar; 0x004f8140 Mat34__SetFromEulerDegrees; 0x0040d1f0 Mat34__SetFromEulerAngles; 0x0040d2c0 Mat34__TransformVec3ByBasisToOut; 0x0040d320 Mat34__MultiplyBasisToOut; 0x004f7e90 CUnit__ctor_base; 0x005b86c0 CFastVB__FastAcosApprox_Scalar; 812/1408 = 57.67%; 1170/1531 = 76.42%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-215617_post_wave1062_mat34_orientation_scale_review_verified; comment/tag normalization.

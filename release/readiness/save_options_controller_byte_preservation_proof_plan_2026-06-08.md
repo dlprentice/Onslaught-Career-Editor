@@ -19,9 +19,9 @@ Current static closeout remains unchanged:
 
 Static source evidence:
 
-- Wave902 (`save-options-static-review-wave902`): fixed `10004`-byte save/options container, version `0x4BD1`, true-view base `0x0002`, kill counters at `0x23F6`, options entries at `0x24BE`, `0x56`-byte tail, `CCareer__Load`, `CCareer__Save`, `OptionsTail_Write`, `OptionsTail_Read`, `CFEPOptions__WriteDefaultOptionsFile`, and `CPauseMenu__ResumeGameAndPersistOptions`. Verified backup: `G:\GhidraBackups\BEA_20260526-093817_post_wave902_save_options_static_review_verified`.
+- Wave902 (`save-options-static-review-wave902`): fixed `10004`-byte save/options container, version `0x4BD1`, true-view base `0x0002`, kill counters at `0x23F6`, options entries at `0x24BE`, `0x56`-byte tail, `CCareer__Load`, `CCareer__Save`, `OptionsTail_Write`, `OptionsTail_Read`, `CFEPOptions__WriteDefaultOptionsFile`, and `CPauseMenu__ResumeGameAndPersistOptions`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-093817_post_wave902_save_options_static_review_verified`.
 - Wave1044 (`career-controller-residual-review-wave1044`; package script `test:ghidra-career-controller-residual-review-wave1044`): retained career/controller residual read-back evidence including `CCareer__SetSlot` and controller lifecycle/record/playback static anchors. Readiness note: `release/readiness/ghidra_career_controller_residual_review_wave1044_2026-06-01.md`.
-- Wave1212 (`wave1212-options-detail-tweak-current-risk-review`): `9` metadata rows, `9` tag rows, `64 xref rows`, `175 instruction rows`, and `9 decompile rows`. Verified backup: `G:\GhidraBackups\BEA_20260607-065722_post_wave1212_options_detail_tweak_current_risk_review_verified`.
+- Wave1212 (`wave1212-options-detail-tweak-current-risk-review`): `9` metadata rows, `9` tag rows, `64 xref rows`, `175 instruction rows`, and `9 decompile rows`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-065722_post_wave1212_options_detail_tweak_current_risk_review_verified`.
 
 Representative anchors:
 

@@ -26,7 +26,7 @@ Evidence:
 - The refreshed all-functions baseline reports `6008` total functions, `0` legacy weak names, `1948` undefined signatures, and `2025` `param_N` signatures.
 - The refreshed quality queue reports `6008` functions, `1232` commented functions, `4776` commentless functions, `1948` undefined signatures, and `2025` `param_N` signatures.
 - Current confirmation proxies remain telemetry only: comment-backed `1232/6008 = 20.51%`, strict clean-signature `1170/6008 = 19.47%`. The `20%` value is not a milestone or acceptance gate; the objective remains as close to `100%` evidence-grade static RE as possible.
-- The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260513_030711_post_wave360_engine_viewpoint_verified` with `19` files, `153095047` bytes, and `HashDiffCount=0`.
+- The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_030711_post_wave360_engine_viewpoint_verified` with `19` files, `153095047` bytes, and `HashDiffCount=0`.
 
 Raw proof remains ignored under `subagents/ghidra-static-reaudit/engine-viewpoint-wave360/current/`.
 

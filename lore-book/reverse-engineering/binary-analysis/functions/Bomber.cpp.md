@@ -3,7 +3,7 @@
 **Date:** 2025-12-15
 **Analyst:** RE Agent (Ghidra MCP)
 **String Address:** 0x00623a78
-**String Value:** `C:\dev\ONSLAUGHT2\Bomber.cpp`
+**String Value:** `[maintainer-local-source-export-root]\Bomber.cpp`
 
 ## Summary
 
@@ -83,7 +83,7 @@ void Unwind_005d1416(void)
 ```asm
 004160e0: FE FF          ???
 004160e2: 6A 11          PUSH 0x11        ; Line 17 decimal
-004160e4: 68 78 3A 62 00 PUSH 0x623a78    ; "C:\dev\ONSLAUGHT2\Bomber.cpp"
+004160e4: 68 78 3A 62 00 PUSH 0x623a78    ; "[maintainer-local-source-export-root]\Bomber.cpp"
 004160e9: 6A 17          PUSH 0x17        ; Unknown parameter
 004160eb: 6A 30          PUSH 0x30        ; Unknown parameter
 004160ed: B9 F0 3D 9C 00 MOV ECX, 0x9c3df0 ; Object pointer?
@@ -111,7 +111,7 @@ void Unwind_005d1416(void)
 00416117: EB 02          JMP ...
 00416119: 33 FF          XOR EDI,EDI
 0041611b: 6A 12          PUSH 0x12        ; Line 18 decimal
-0041611d: 68 78 3A 62 00 PUSH 0x623a78    ; "C:\dev\ONSLAUGHT2\Bomber.cpp"
+0041611d: 68 78 3A 62 00 PUSH 0x623a78    ; "[maintainer-local-source-export-root]\Bomber.cpp"
 00416122: 6A 16          PUSH 0x16        ; Unknown parameter
 00416124: 6A 64          PUSH 0x64        ; Unknown parameter (100 decimal)
 00416126: B9 F0 3D 9C 00 MOV ECX, 0x9c3df0 ; Same object pointer

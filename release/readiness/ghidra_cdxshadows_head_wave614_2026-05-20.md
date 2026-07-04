@@ -28,7 +28,7 @@ The pass made no renames and did not create or repair function boundaries. The e
 - Apply: `updated=3 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`
 - Final dry: `updated=0 skipped=3 renamed=0 would_rename=0 missing=0 bad=0`
 - Read-back exports verified `3` metadata rows, `3` tag rows, `3` xref rows, `783` instruction rows, `3` decompile rows, and `141` callsite instruction rows.
-- Verified backup: `G:\GhidraBackups\BEA_20260520-004026_post_wave614_cdxshadows_head_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-004026_post_wave614_cdxshadows_head_verified`
   - `sourceFileCount=19`
   - `destFileCount=19`
   - `sourceBytes=161614727`

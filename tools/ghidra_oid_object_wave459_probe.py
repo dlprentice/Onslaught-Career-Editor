@@ -71,7 +71,7 @@ TARGETS: dict[str, dict[str, object]] = {
             "main OID object factory",
             "object_id switch",
             "OID__AllocObject",
-            "C:\\dev\\ONSLAUGHT2\\oids.cpp",
+            "[maintainer-local-source-export-root]\\oids.cpp",
             "Runtime object construction",
         ],
         ["oid", "factory", "signature-corrected", "comment-hardened"],

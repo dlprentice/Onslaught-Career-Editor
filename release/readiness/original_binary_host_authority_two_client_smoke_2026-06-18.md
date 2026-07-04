@@ -59,5 +59,5 @@ It does not prove multi-host LAN play, public matchmaking, public relay/server b
 No Ghidra backup was created because no Ghidra mutation occurred. The latest verified Ghidra review backup remains:
 
 ```text
-G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified
 ```

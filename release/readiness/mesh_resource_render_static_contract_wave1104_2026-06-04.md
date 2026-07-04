@@ -21,15 +21,15 @@ Static contract anchors:
 
 Read-back sources:
 
-- Wave904 backup: `G:\GhidraBackups\BEA_20260526-101300_post_wave904_texture_render_static_review_verified`.
-- Wave905 backup: `G:\GhidraBackups\BEA_20260526-103409_post_wave905_mesh_motion_world_particle_static_review_verified`.
-- Wave1093 backup: `G:\GhidraBackups\BEA_20260604-155838_post_wave1093_cengine_core_bootstrap_review_verified`.
-- Wave1094 backup: `G:\GhidraBackups\BEA_20260604-163255_post_wave1094_cdxengine_frame_render_spine_review_verified`.
-- Wave1095 backup: `G:\GhidraBackups\BEA_20260604-171413_post_wave1095_render_state_matrix_support_review_verified`.
-- Wave1096 backup: `G:\GhidraBackups\BEA_20260604-174618_post_wave1096_crenderqueue_core_multipass_review_verified`.
-- Wave1098 backup: `G:\GhidraBackups\BEA_20260604-190557_post_wave1098_primitive_collision_bridge_review_verified`.
-- Wave1099 backup: `G:\GhidraBackups\BEA_20260604-193549_post_wave1099_cmesh_resource_registry_review_verified`.
-- Latest completed Ghidra review backup remains Wave1100: `G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`.
+- Wave904 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-101300_post_wave904_texture_render_static_review_verified`.
+- Wave905 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-103409_post_wave905_mesh_motion_world_particle_static_review_verified`.
+- Wave1093 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-155838_post_wave1093_cengine_core_bootstrap_review_verified`.
+- Wave1094 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-163255_post_wave1094_cdxengine_frame_render_spine_review_verified`.
+- Wave1095 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-171413_post_wave1095_render_state_matrix_support_review_verified`.
+- Wave1096 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-174618_post_wave1096_crenderqueue_core_multipass_review_verified`.
+- Wave1098 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-190557_post_wave1098_primitive_collision_bridge_review_verified`.
+- Wave1099 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-193549_post_wave1099_cmesh_resource_registry_review_verified`.
+- Latest completed Ghidra review backup remains Wave1100: `[maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`.
 
 Current dashboard context: static Ghidra function-quality closure `6410/6410 = 100.00%`; commentless / exact-undefined / `param_N` debt `0 / 0 / 0`; expanded post-100 static surface `1560/1560 = 100.00%`; Wave911 focused `812/1408 = 57.67%`; Wave911 top-500 `500/500 = 100.00%`.
 

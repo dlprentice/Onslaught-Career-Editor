@@ -13,7 +13,7 @@ Read-back evidence:
 - Xrefs: `147 xref rows`
 - Instructions: `348 instruction rows`
 - Decompile: `147 decompile rows`
-- Verified backup: `G:\GhidraBackups\BEA_20260606-231915_post_wave1200_residual_unwind_current_risk_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-231915_post_wave1200_residual_unwind_current_risk_verified`
 
 Measured status:
 

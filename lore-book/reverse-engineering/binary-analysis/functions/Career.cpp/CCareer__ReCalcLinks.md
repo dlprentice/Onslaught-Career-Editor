@@ -37,7 +37,7 @@ The game compares whether the iterated child link is the finished node’s “hi
 
 ## Wave1049 Re-Audit
 
-Wave1049 (`endlevel-objective-progression-review-wave1049`) re-read `0x0041bdf0 CCareer__ReCalcLinks` with no mutation. Fresh Ghidra evidence keeps the saved signature `void __fastcall CCareer__ReCalcLinks(void * this)`, keeps the call to `0x004496e0 CEndLevelData__IsAllSecondaryObjectivesComplete`, and keeps the world-500 branch at career `+0x240c` bits `29/30`. Verified backup: `G:\GhidraBackups\BEA_20260601-134936_post_wave1049_endlevel_objective_progression_review_verified`. Runtime progression/save outcome behavior, exact layout identity, BEA patching, gameplay outcomes, and rebuild parity remain separate proof.
+Wave1049 (`endlevel-objective-progression-review-wave1049`) re-read `0x0041bdf0 CCareer__ReCalcLinks` with no mutation. Fresh Ghidra evidence keeps the saved signature `void __fastcall CCareer__ReCalcLinks(void * this)`, keeps the call to `0x004496e0 CEndLevelData__IsAllSecondaryObjectivesComplete`, and keeps the world-500 branch at career `+0x240c` bits `29/30`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-134936_post_wave1049_endlevel_objective_progression_review_verified`. Runtime progression/save outcome behavior, exact layout identity, BEA patching, gameplay outcomes, and rebuild parity remain separate proof.
 
 ## Related Functions
 - [CCareer__Update](CCareer__Update.md) - Calls this after a win

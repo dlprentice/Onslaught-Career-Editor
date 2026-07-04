@@ -19,7 +19,7 @@ Fresh evidence:
 - Wave911 focused progress remains `769/1408 = 54.62%`.
 - Expanded static surface progress advances to `1065/1509 = 70.58%`.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-165852_post_wave1054_ctext_localization_core_review_verified`, `19` files, `174656391` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-165852_post_wave1054_ctext_localization_core_review_verified`, `19` files, `174656391` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 Validation command:
 
@@ -29,4 +29,4 @@ npm run test:ghidra-wave900-plus-through-wave1054-recheck
 
 Boundary note: this aggregate gate is static documentation/evidence hygiene. Runtime localization behavior, exact CText layout, exact source-body identity, source-layout identity, BEA patching, gameplay outcomes, and rebuild parity remain separate proof.
 
-Probe token anchor: Wave1054; ctext-localization-core-review-wave1054; 0x004f2140 CText__ResetCoreFields; 0x004f21f0 CText__Init; 0x004f24b0 CText__GetAudioNameById; 0x004f2500 CText__GetStringByIdAfter; 0x004f2580 CText__GetStringById; CText__CopyFrom; CFrontEnd__SetLanguage; CDXMemBuffer__GetFileSize; data\\LANGUAGE; 0xffffffbb; MultiByteToWideChar; 769/1408 = 54.62%; 1065/1509 = 70.58%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-165852_post_wave1054_ctext_localization_core_review_verified; comment/tag correction.
+Probe token anchor: Wave1054; ctext-localization-core-review-wave1054; 0x004f2140 CText__ResetCoreFields; 0x004f21f0 CText__Init; 0x004f24b0 CText__GetAudioNameById; 0x004f2500 CText__GetStringByIdAfter; 0x004f2580 CText__GetStringById; CText__CopyFrom; CFrontEnd__SetLanguage; CDXMemBuffer__GetFileSize; data\\LANGUAGE; 0xffffffbb; MultiByteToWideChar; 769/1408 = 54.62%; 1065/1509 = 70.58%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-165852_post_wave1054_ctext_localization_core_review_verified; comment/tag correction.

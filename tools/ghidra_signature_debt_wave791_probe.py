@@ -27,7 +27,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-025245_post_wave791_crt_seh_signature_debt_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-025245_post_wave791_crt_seh_signature_debt_verified"
 
 TARGETS = {
     "0x0055d6a0": ("CRT__SehPopExceptionFrameAndJump", "void __stdcall CRT__SehPopExceptionFrameAndJump(void * continuation_target)", ("continuation_target", "CRT__SehUnwindAndResumeSearch")),

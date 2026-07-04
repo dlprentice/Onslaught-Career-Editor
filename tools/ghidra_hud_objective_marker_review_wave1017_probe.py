@@ -30,7 +30,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUALITY_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 RISK_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "wave911-risk-rank" / "wave911-risk-ranked-functions.tsv"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-201957_post_wave1017_hud_objective_marker_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-201957_post_wave1017_hud_objective_marker_review_verified"
 
 TARGETS = {
     "0x00484340": ("CHud__RenderTargetMarkers3D", "void __thiscall CHud__RenderTargetMarkers3D(void * this)"),

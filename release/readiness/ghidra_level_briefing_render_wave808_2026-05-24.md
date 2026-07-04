@@ -18,7 +18,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 1 xref row, 1201 instruction rows, 1 decompile row, 86 post-callsite instruction rows, and 1 post-caller decompile row.
 - Queue after Wave808: 6098 total, 5583 commented, 515 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5583/6098 = 91.55%`, strict clean-signature proxy `5583/6098 = 91.55%`.
 - Next raw commentless row: `0x004901e0 MathMatrix3x4__AssignFromEightScalars`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-113054_post_wave808_level_briefing_render_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-113054_post_wave808_level_briefing_render_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
 
 What this proves:
 

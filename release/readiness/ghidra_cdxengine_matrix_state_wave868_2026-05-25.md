@@ -29,7 +29,7 @@ Read-back evidence:
 - Queue after Wave868: 6105 total functions, 5828 commented, 277 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5828/6105 = 95.46%`, strict clean-signature proxy `5828/6105 = 95.46%`.
 - Next raw commentless row: `0x00551200 CDXEngine__ApplyCachedLight`.
 - Commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-171842_post_wave868_cdxengine_matrix_state_verified`, 19 files, 172362631 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-171842_post_wave868_cdxengine_matrix_state_verified`, 19 files, 172362631 bytes, `DiffCount=0`.
 
 What this proves:
 

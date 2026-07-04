@@ -21,7 +21,7 @@ No function names were changed. The saved signatures now model the manager lifec
 - Final read-back verified `5/5` metadata rows, `5/5` decompile exports, `5` xref rows, `425` instruction rows, and `5/5` tag rows.
 - `cmd.exe /c npm run test:ghidra-physics-script-signature-tranche` passed against the saved read-back artifacts after the queue refresh.
 - The refreshed whole-database queue reports `5884` functions, `823` commented functions, `5061` commentless functions, `1983` undefined signatures, and `2269` `param_N` signatures.
-- The actual live Ghidra project was copied to `G:\GhidraBackups\BEA_20260512_041459_post_wave330_verified`; verification compared `19` files, `151751559` bytes, and reported `DiffCount=0`.
+- The actual live Ghidra project was copied to `[maintainer-local-ghidra-backup-root]\BEA_20260512_041459_post_wave330_verified`; verification compared `19` files, `151751559` bytes, and reported `DiffCount=0`.
 
 ## Claim Boundary
 

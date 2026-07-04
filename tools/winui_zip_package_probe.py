@@ -104,8 +104,10 @@ ZIP_PAYLOAD_DENY_SEGMENTS = {
     "local-lab",
     "local-media",
     "local-proofs",
+    "local-rom-input",
     "local-saves",
     "media",
+    "mcps",
     "save-attempts",
 }
 ZIP_PAYLOAD_DENY_SUFFIXES = (

@@ -27,7 +27,7 @@ Read-back evidence:
 - Post exports: 8 metadata rows, 8 tag rows, 12 xref rows, 2371 instruction rows, 8 decompile rows, 9 context metadata rows, and 9 context decompile rows.
 - Queue after Wave877: 6113 total, 5893 commented, 220 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed and strict clean-signature proxy `5893/6113 = 96.40%`.
 - Next raw commentless row: `0x0055d731 CRT__SehDispatchWithScopeTable_Thunk_0055d731`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-215011_post_wave877_water_render_tail_verified`, 19 files, 172690311 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-215011_post_wave877_water_render_tail_verified`, 19 files, 172690311 bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -46,7 +46,7 @@ Tag anchor: `node-type-constructors-wave704`; read-back tag: `wave704-readback-v
 - Queue refresh after Wave704: `6098` total functions, `4088` commented, `2010` commentless, `1216` exact-undefined signatures, `243` `param_N` signatures, comment-backed proxy `4088/6098 = 67.04%`, strict clean-signature proxy `4034/6098 = 66.15%`.
 - Earliest raw commentless row: `0x0042f220 CSPtrSet__Clear`.
 - Next commentless high-signal row: `0x00599161 CTexture__ComputeDebugChunkDwordCount`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260521-185425_post_wave704_node_type_constructors_verified`, `19` files, `165415815` bytes, `DiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-185425_post_wave704_node_type_constructors_verified`, `19` files, `165415815` bytes, `DiffCount=0`.
 
 ## Boundaries
 

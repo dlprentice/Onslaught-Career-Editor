@@ -22,7 +22,7 @@ Read-back evidence:
 - Post exports: 3 metadata rows, 3 tag rows, 5 xref rows, 443 instruction rows, and 3 decompile rows.
 - Queue after Wave892: 6113 total, 6065 commented, 48 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed and strict clean-signature proxy `6065/6113 = 99.21%`.
 - Next raw commentless row: `0x0058aacf CTexture__HandleDirective_If`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-052708_post_wave892_simd_gate_dual_profile_verified`, 19 files, 173149063 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-052708_post_wave892_simd_gate_dual_profile_verified`, 19 files, 173149063 bytes, `DiffCount=0`.
 
 What this proves:
 

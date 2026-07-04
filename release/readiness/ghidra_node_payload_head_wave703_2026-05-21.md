@@ -36,7 +36,7 @@ Tag anchor: `ctexture-node-payload-head-wave703`; read-back tag: `wave703-readba
 - Post-export verified all `12` saved signatures/tags/comments with `60` xref rows, `444` instruction rows, and `12` clean decompile rows.
 - Queue refresh after Wave703: `6098` total functions, `4068` commented, `2030` commentless, `1216` exact-undefined signatures, `260` `param_N` signatures, comment-backed proxy `4068/6098 = 66.71%`, strict clean-signature proxy `4014/6098 = 65.82%`.
 - Next queue head: `0x005989c3 CTexture__NodeType8_InitDefaults`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260521-182413_post_wave703_node_payload_head_verified`, `19` files, `165317511` bytes, `DiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-182413_post_wave703_node_payload_head_verified`, `19` files, `165317511` bytes, `DiffCount=0`.
 
 ## Boundaries
 

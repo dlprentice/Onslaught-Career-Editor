@@ -22,7 +22,7 @@ Wave467 saved Ghidra name/signature/comment/tag corrections for `15` CFrontEnd r
 - Hardened source-backed signatures/comments for `CFrontEnd__DrawLine`, `CFrontEnd__DrawBox`, `CFrontEnd__DrawPanel`, `CFrontEnd__DrawBarGraph`, `CFrontEnd__DrawBar`, alpha-state helpers, shadow-offset helpers, `CFrontEnd__Init`, `CFrontEnd__Run`, and the retail fixed-return `CFrontEnd__NumControllersPresent` helper.
 - Queue after refresh: `6057` functions, `2129` commented, `3928` commentless, `1705` undefined signatures, `1582` `param_N` signatures.
 - Current telemetry proxies: comment-backed `2129/6057 = 35.15%`; strict comment-plus-clean-signature `2065/6057 = 34.09%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-203319_post_wave467_cfrontend_render_verified` (`19` files, `157125511` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-203319_post_wave467_cfrontend_render_verified` (`19` files, `157125511` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

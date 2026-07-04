@@ -269,7 +269,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
     require_tokens(
         "backup summary",
         json.dumps(backup),
-        ("G:\\GhidraBackups\\BEA_20260520-122438_post_wave638_crt_commandline_runtime_verified",),
+        ("[maintainer-local-ghidra-backup-root]\\BEA_20260520-122438_post_wave638_crt_commandline_runtime_verified",),
         failures,
     )
     if backup.get("fileCount") != 19:
@@ -298,7 +298,7 @@ def check_docs(failures: list[str]) -> None:
         "2690",
         "3352/6093 = 55.01%",
         "0x00569449 CRT__ControlFp",
-        "G:\\GhidraBackups\\BEA_20260520-122438_post_wave638_crt_commandline_runtime_verified",
+        "[maintainer-local-ghidra-backup-root]\\BEA_20260520-122438_post_wave638_crt_commandline_runtime_verified",
     )
     for path in (PUBLIC_NOTE, FUNCTION_INDEX, CRT_DOC, GHIDRA_REFERENCE, CAMPAIGN, BACKLOG):
         text = read_text(path)

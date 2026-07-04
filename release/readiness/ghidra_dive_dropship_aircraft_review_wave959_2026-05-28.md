@@ -36,7 +36,7 @@ Fresh serialized Ghidra exports under `subagents/ghidra-static-reaudit/wave959-d
 - `1703` function-body instruction rows.
 - `24` decompile-index rows, all `OK`.
 - `256` vtable rows from `0x005e1dfc CDropship_vtable` and `0x005dc304 CMCDropship_vtable`.
-- `8` direct string dumps: `C:\dev\ONSLAUGHT2\DiveBomber.cpp`, `C:\dev\ONSLAUGHT2\Dropship.cpp`, `wingflat`, `doorclosed`, `dooropening`, `doorclosing`, `Thruster Dust Effect`, and `Thruster`.
+- `8` direct string dumps: `[maintainer-local-source-export-root]\DiveBomber.cpp`, `[maintainer-local-source-export-root]\Dropship.cpp`, `wingflat`, `doorclosed`, `dooropening`, `doorclosing`, `Thruster Dust Effect`, and `Thruster`.
 
 Representative anchors:
 
@@ -65,7 +65,7 @@ The historical `npm run test:ghidra-air-unit-lifecycle-wave557` probe failed on 
 Verified Ghidra backup:
 
 ```text
-G:\GhidraBackups\BEA_20260528-120725_post_wave959_dive_dropship_aircraft_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260528-120725_post_wave959_dive_dropship_aircraft_review_verified
 ```
 
 Backup summary: `19` files, `173542279` bytes, `DiffCount=0`.
@@ -73,7 +73,7 @@ Backup summary: `19` files, `173542279` bytes, `DiffCount=0`.
 Wave911 focused re-audit progress after Wave959: `303/1408 = 21.52%`.
 Static export-contract function-quality closure remains `6151/6151 = 100.00%`.
 
-Probe anchor: Wave959; dive-dropship-aircraft-review-wave959; 0x00447120 CDropship__ProcessDoorThrustersAndChildUnits; 0x00448170 CDropship__TraceGroundAndSpawnThrusterDust; 0x00402dd0 ShadowHeightfield__AnyBoundsCornerAboveSampledHeight; 0x00445070 CDiveBomber__SelectTarget; 303/1408 = 21.52%; 6151/6151 = 100.00%; G:\GhidraBackups\BEA_20260528-120725_post_wave959_dive_dropship_aircraft_review_verified; no mutation.
+Probe anchor: Wave959; dive-dropship-aircraft-review-wave959; 0x00447120 CDropship__ProcessDoorThrustersAndChildUnits; 0x00448170 CDropship__TraceGroundAndSpawnThrusterDust; 0x00402dd0 ShadowHeightfield__AnyBoundsCornerAboveSampledHeight; 0x00445070 CDiveBomber__SelectTarget; 303/1408 = 21.52%; 6151/6151 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260528-120725_post_wave959_dive_dropship_aircraft_review_verified; no mutation.
 
 ## Boundaries
 

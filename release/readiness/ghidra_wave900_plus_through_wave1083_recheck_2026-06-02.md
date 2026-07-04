@@ -30,8 +30,8 @@ Coverage anchors:
 - Wave911 focused re-audit progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1418/1560 = 90.90%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-114534_post_wave1083_shared_unit_vtable_boundary_verified`, `19` files, `174820231` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-114534_post_wave1083_shared_unit_vtable_boundary_verified`, `19` files, `174820231` bytes, `DiffCount=0`.
 
 Boundary: this is static Ghidra/documentation/probe coverage evidence only. Exact source virtual names, concrete unit-family layout semantics, runtime targeting/render/event/list behavior, runtime gameplay outcomes, BEA patching behavior, and rebuild parity remain separate proof.
 
-Probe token anchor: Wave1083; shared-unit-vtable-boundary-review-wave1083; 0x00405d90 SharedUnitVFunc__ReturnField130ColorMask_00405d90; 0x004f9260 SharedUnitVFunc__BuildField164TargetVectorContext_004f9260; 0x004fe5f0 SharedUnitVFunc__ScheduleEvent7d0WithMinusOne_004fe5f0; 0x005e3700; 0x005dd710; 1418/1560 = 90.90%; 812/1408 = 57.67%; 500/500 = 100.00%; 6307/6307 = 100.00%; G:\GhidraBackups\BEA_20260602-114534_post_wave1083_shared_unit_vtable_boundary_verified; boundary recovery.
+Probe token anchor: Wave1083; shared-unit-vtable-boundary-review-wave1083; 0x00405d90 SharedUnitVFunc__ReturnField130ColorMask_00405d90; 0x004f9260 SharedUnitVFunc__BuildField164TargetVectorContext_004f9260; 0x004fe5f0 SharedUnitVFunc__ScheduleEvent7d0WithMinusOne_004fe5f0; 0x005e3700; 0x005dd710; 1418/1560 = 90.90%; 812/1408 = 57.67%; 500/500 = 100.00%; 6307/6307 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-114534_post_wave1083_shared_unit_vtable_boundary_verified; boundary recovery.

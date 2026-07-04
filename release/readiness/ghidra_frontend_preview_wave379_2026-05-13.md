@@ -31,7 +31,7 @@ Wave 379 serialized a Ghidra headless dry/apply/read-back pass over ten frontend
 - `cmd.exe /c npm run test:ghidra-frontend-preview-wave379` passed with focused probe status `PASS`, `10` targets, `14` xref evidence hits, and `23` instruction evidence hits.
 - The refreshed whole-database queue reports `6026` functions, `1388` commented functions, `4638` commentless functions, `1939` undefined signatures, and `1939` `param_N` signatures.
 - Current static RE confirmation proxies are telemetry only: comment-backed `1388/6026 = 23.03%`; strict clean-signature `1323/6026 = 21.95%`.
-- The actual live Ghidra project was backed up to an out-of-repo `G:` backup drive under label `BEA_20260513_150035_post_wave379_frontend_preview_verified`, with `19` files, `153652103` bytes, and `HashDiffCount=0`.
+- The actual live Ghidra project was backed up to an out-of-repo `[maintainer-local-backup-volume]` backup drive under label `BEA_20260513_150035_post_wave379_frontend_preview_verified`, with `19` files, `153652103` bytes, and `HashDiffCount=0`.
 
 ## Not Proven
 

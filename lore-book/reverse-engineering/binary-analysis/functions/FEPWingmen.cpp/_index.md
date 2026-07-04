@@ -5,12 +5,12 @@
 
 Front End Page for wingmen/ally selection screen. Handles the UI for selecting wingmen before missions.
 
-**Debug Path String:** `C:\dev\ONSLAUGHT2\FEPWingmen.cpp`
+**Debug Path String:** `[maintainer-local-source-export-root]\FEPWingmen.cpp`
 **String Address:** `0x0063fd4c`
 
 Wave566 status: saved static Ghidra evidence, not runtime proof. `FEPWingmen.cpp` is not present in `references/Onslaught`, so the current comments/tags are retail-binary-first and deliberately avoid `source-parity`.
 
-Wave1045 (`frontend-vtable-boundary-wave1045`) recovered the four deferred `CFEPWingmen` vtable boundaries from vtable `0x005dba10`: `0x005216c0 CFEPWingmen__Init`, `0x00521d20 CFEPWingmen__ButtonPressed`, `0x00522160 CFEPWingmen__RenderPreCommon`, and `0x00522190 CFEPWingmen__Render`. Wave1051 (`fepwingmen-page-review-wave1051`) then re-read the full page, closed the stale `missing-boundary-deferred` wording/tag on `0x00521c80 CFEPWingmen__Update`, and normalized `0x005230e0 CFEPWingmen__FindCurrentLevelRecord` around the recovered ButtonPressed/Render callsites. Queue closure is `6246/6246 = 100.00%`; Wave911 focused progress remains `744/1408 = 52.84%`; expanded static surface progress is `1032/1509 = 68.39%`; top-500 coverage remains `500/500 = 100.00%`. Verified backup: `G:\GhidraBackups\BEA_20260601-150857_post_wave1051_fepwingmen_page_review_verified`. FEPWingmen.cpp source is absent from `references/Onslaught`, so the reviewed rows remain retail Ghidra/vtable evidence only.
+Wave1045 (`frontend-vtable-boundary-wave1045`) recovered the four deferred `CFEPWingmen` vtable boundaries from vtable `0x005dba10`: `0x005216c0 CFEPWingmen__Init`, `0x00521d20 CFEPWingmen__ButtonPressed`, `0x00522160 CFEPWingmen__RenderPreCommon`, and `0x00522190 CFEPWingmen__Render`. Wave1051 (`fepwingmen-page-review-wave1051`) then re-read the full page, closed the stale `missing-boundary-deferred` wording/tag on `0x00521c80 CFEPWingmen__Update`, and normalized `0x005230e0 CFEPWingmen__FindCurrentLevelRecord` around the recovered ButtonPressed/Render callsites. Queue closure is `6246/6246 = 100.00%`; Wave911 focused progress remains `744/1408 = 52.84%`; expanded static surface progress is `1032/1509 = 68.39%`; top-500 coverage remains `500/500 = 100.00%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-150857_post_wave1051_fepwingmen_page_review_verified`. FEPWingmen.cpp source is absent from `references/Onslaught`, so the reviewed rows remain retail Ghidra/vtable evidence only.
 
 ## Functions Found
 
@@ -61,7 +61,7 @@ Wave1045 also recovered `0x00521d20 CFEPWingmen__ButtonPressed`, `0x00522160 CFE
 
 ## Wave1045 Frontend Vtable Boundary Recovery
 
-Wave1045 saved four `CFEPWingmen` function objects from vtable `0x005dba10` with the `frontend-vtable-boundary-wave1045` and `wave1045-readback-verified` tags. Post exports verified `8` metadata rows, `8` tag rows, `8` DATA xref rows, `3540` function-body instruction rows, `8` decompile rows, and `135` frontend vtable slot rows across Goodies and Wingmen. Wave911 focused progress remains `735/1408 = 52.20%`; expanded static surface progress is `985/1501 = 65.62%`; top-500 coverage remains `500/500 = 100.00%`. Verified backup: `G:\GhidraBackups\BEA_20260601-112809_post_wave1045_frontend_vtable_boundary_verified`.
+Wave1045 saved four `CFEPWingmen` function objects from vtable `0x005dba10` with the `frontend-vtable-boundary-wave1045` and `wave1045-readback-verified` tags. Post exports verified `8` metadata rows, `8` tag rows, `8` DATA xref rows, `3540` function-body instruction rows, `8` decompile rows, and `135` frontend vtable slot rows across Goodies and Wingmen. Wave911 focused progress remains `735/1408 = 52.20%`; expanded static surface progress is `985/1501 = 65.62%`; top-500 coverage remains `500/500 = 100.00%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-112809_post_wave1045_frontend_vtable_boundary_verified`.
 
 This is static retail Ghidra/vtable evidence only. It does not prove runtime Wingmen menu/input/render behavior, exact button semantics, exact concrete `CFEPWingmen` or record layouts, exact source-body identity, BEA patching, gameplay outcomes, or rebuild parity.
 
@@ -75,7 +75,7 @@ The saved `0x00521c80 CFEPWingmen__Update` comment now states that the dev-mode/
 
 Runtime Wingmen menu/input/render behavior, exact button behavior, visible frontend output, exact concrete `CFEPWingmen`/record/frontend thing/text/layout/controller-input layouts, exact source-body identity for absent `FEPWingmen.cpp`, BEA patching, gameplay outcomes, and rebuild parity remain separate proof.
 
-Probe token anchor: Wave1051; fepwingmen-page-review-wave1051; 0x00521c80 CFEPWingmen__Update; 0x00521d20 CFEPWingmen__ButtonPressed; 0x00522190 CFEPWingmen__Render; 0x005230e0 CFEPWingmen__FindCurrentLevelRecord; CFEPWingmen__UpdateSpinnerTransformAndPulse; 0x005dba10 CFEPWingmen_vtable; 0x006139a8; NO_FUNCTION_AT_POINTER; C:\dev\ONSLAUGHT2\FEPWingmen.cpp; 744/1408 = 52.84%; 1032/1509 = 68.39%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-150857_post_wave1051_fepwingmen_page_review_verified; comment/tag normalization.
+Probe token anchor: Wave1051; fepwingmen-page-review-wave1051; 0x00521c80 CFEPWingmen__Update; 0x00521d20 CFEPWingmen__ButtonPressed; 0x00522190 CFEPWingmen__Render; 0x005230e0 CFEPWingmen__FindCurrentLevelRecord; CFEPWingmen__UpdateSpinnerTransformAndPulse; 0x005dba10 CFEPWingmen_vtable; 0x006139a8; NO_FUNCTION_AT_POINTER; [maintainer-local-source-export-root]\FEPWingmen.cpp; 744/1408 = 52.84%; 1032/1509 = 68.39%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-150857_post_wave1051_fepwingmen_page_review_verified; comment/tag normalization.
 
 ## Function Notes
 
@@ -120,7 +120,7 @@ Read-back summary: dry `updated=0 skipped=5 renamed=0 would_rename=1 missing=0 b
 - Apply script: `tools/ApplyFEPWingmenWave565.java`
 - Probe: `tools/ghidra_fepwingmen_wave565_probe.py`
 - Artifacts: `subagents/ghidra-static-reaudit/wave565-fepwingmen-005230c0/`
-- Ghidra backup: `G:\GhidraBackups\BEA_20260518-211003_post_wave565_fepwingmen_verified`
+- Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-211003_post_wave565_fepwingmen_verified`
 
 Read-back summary: dry `updated=0 skipped=6 renamed=0 would_rename=1 missing=0 bad=0`; apply `updated=6 skipped=0 renamed=1 missing=0 bad=0`; final dry `updated=0 skipped=6 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Post exports verified 6 metadata rows, 6 tag rows, 13 xref rows, 1015 target instruction rows, 6 decompile rows, 16 vtable rows, queue refresh PASS, and backup manifest match.
 

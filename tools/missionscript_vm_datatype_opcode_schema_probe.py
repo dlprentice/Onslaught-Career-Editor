@@ -45,7 +45,7 @@ DATATYPE_DECOMPILE = WAVE575 / "post_decompile" / "0052ec60_CDataType__CreateFro
 RUN_DECOMPILE = WAVE587 / "post" / "decompile" / "00539b00_CScriptObjectCode__Run.c"
 CALL_DECOMPILE = WAVE574 / "post_decompile" / "0052ea40_CAsmInstruction__ExecuteCall.c"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 PROOF_LINK = "missionscript-vm-datatype-opcode-schema-proof.md"
 SCHEMA_LINK = "missionscript-vm-datatype-opcode-schema.v1.json"
 

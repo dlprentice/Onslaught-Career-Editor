@@ -34,7 +34,7 @@ Evidence artifacts:
 - `subagents/ghidra-static-reaudit/wave909-engine-platform-support-static-review/engine-platform-support-function-anchors.tsv`
 - `subagents/ghidra-static-reaudit/wave909-engine-platform-support-static-review/backup-summary.json`
 
-Verified backup: `G:\GhidraBackups\BEA_20260526-120420_post_wave909_engine_platform_support_static_review_verified`, `19` files, `173247367` bytes, `DiffCount=0`.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-120420_post_wave909_engine_platform_support_static_review_verified`, `19` files, `173247367` bytes, `DiffCount=0`.
 
 Source boundary: Stuart source remains architecture/name/logic reference, while the loaded Steam retail Ghidra rows are the authority for this static binary slice.
 

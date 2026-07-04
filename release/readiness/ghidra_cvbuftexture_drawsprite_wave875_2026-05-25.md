@@ -26,7 +26,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 91 xref rows, 516 instruction rows, 1 decompile row, 7 context metadata rows, and 7 context decompile rows.
 - Queue after Wave875: 6,113 total functions, 5,873 commented, 240 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5873/6113 = 96.07%`, strict clean-signature proxy `5873/6113 = 96.07%`.
 - Next raw commentless row: `0x00556cc0 CTexture__ctor`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-205138_post_wave875_cvbuftexture_drawsprite_verified`, 19 files, 172,624,775 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-205138_post_wave875_cvbuftexture_drawsprite_verified`, 19 files, 172,624,775 bytes, `DiffCount=0`.
 
 What this proves:
 

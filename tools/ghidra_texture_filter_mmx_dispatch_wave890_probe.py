@@ -32,7 +32,7 @@ BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave890 texture filter MMX dispatch"
 TAG = "texture-filter-mmx-dispatch-wave890"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-043655_post_wave890_texture_filter_mmx_dispatch_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-043655_post_wave890_texture_filter_mmx_dispatch_verified"
 STRICT_PROXY = "6059/6113 = 99.12%"
 NEXT_HEAD = "0x00580a05 CDXTexture__UploadSurfaceRegionWithFallback"
 

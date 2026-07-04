@@ -33,7 +33,7 @@ DEVELOPER_STATE = ROOT / "developer_agent_state.json"
 DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260523-123821_post_wave758_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260523-123821_post_wave758_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d38bc": "0x0061c55c",
@@ -93,10 +93,10 @@ COMMENT_TOKENS = {
 }
 
 STRING_EXPECTATIONS = {
-    "string-0062f8e8.tsv": r"C:\dev\ONSLAUGHT2\mesh.cpp",
-    "string-0062fe40.tsv": r"C:\dev\ONSLAUGHT2\MeshCollisionVolume.cpp",
-    "string-0062fe70.tsv": r"C:\dev\ONSLAUGHT2\MeshPart.cpp",
-    "string-00630178.tsv": r"C:\dev\ONSLAUGHT2\MeshRenderer.cpp",
+    "string-0062f8e8.tsv": r"[maintainer-local-source-export-root]\mesh.cpp",
+    "string-0062fe40.tsv": r"[maintainer-local-source-export-root]\MeshCollisionVolume.cpp",
+    "string-0062fe70.tsv": r"[maintainer-local-source-export-root]\MeshPart.cpp",
+    "string-00630178.tsv": r"[maintainer-local-source-export-root]\MeshRenderer.cpp",
 }
 
 CORE_ANCHORS = (

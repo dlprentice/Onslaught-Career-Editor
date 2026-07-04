@@ -32,7 +32,7 @@ This is public-safe static evidence only. It does not launch or patch `BEA.exe`,
 | Post-apply `cmd.exe /c npm run test:ghidra-level-briefing-messagebox-wave423` | PASS | Focused probe accepted the saved names, signatures, comments, tags, read-back tokens, and proof-boundary wording. |
 | Headless whole-database quality snapshot | PASS | `total_functions=6043`; `commented_functions=1671`. |
 | `cmd.exe /c npm run test:ghidra-static-reaudit-queue` | PASS | Queue reports `6043` functions, `4372` commentless functions, `1861` undefined signatures, `1809` `param_N` signatures, and zero broad uncertain/helper/wrapper debt. |
-| Live Ghidra project backup | PASS | `G:\GhidraBackups\BEA_20260514_163227_post_wave423_level_briefing_messagebox_verified`, `19` files, `155159431` bytes, `HashDiffCount=0`, `MissingCount=0`. |
+| Live Ghidra project backup | PASS | `[maintainer-local-ghidra-backup-root]\BEA_20260514_163227_post_wave423_level_briefing_messagebox_verified`, `19` files, `155159431` bytes, `HashDiffCount=0`, `MissingCount=0`. |
 
 ## Current Queue Telemetry
 

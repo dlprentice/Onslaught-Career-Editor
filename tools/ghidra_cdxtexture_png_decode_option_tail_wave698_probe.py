@@ -238,7 +238,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
     require(len(clean) == 3962, f"strict clean proxy mismatch: {len(clean)}", failures)
 
     backup = read_json(BACKUP_SUMMARY)
-    require(backup.get("backup_path").replace("\\", "/") == "G:/GhidraBackups/BEA_20260521-160619_post_wave698_cdxtexture_png_decode_option_tail_verified", "backup path mismatch", failures)
+    require(backup.get("backup_path").replace("\\", "/") == "[maintainer-local-ghidra-backup-root]/BEA_20260521-160619_post_wave698_cdxtexture_png_decode_option_tail_verified", "backup path mismatch", failures)
     require(backup.get("file_count") == 19, f"backup file count mismatch: {backup}", failures)
     require(int(backup.get("total_bytes")) == 165186439, f"backup bytes mismatch: {backup}", failures)
     require(backup.get("diff_count") == 0, f"backup diff mismatch: {backup}", failures)

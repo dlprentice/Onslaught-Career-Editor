@@ -29,7 +29,7 @@ This is not a static RE regression. It is an accounting/provenance boundary:
 | Broad risk JSON | `wave911-risk-ranked-functions.v1`; `totalFunctions=6113`; `candidateFunctions=5803`; top sample count `250`. |
 | Broad risk TSV | `500` data rows. |
 | Current queue TSV | Header is `address`, `name`, `signature`, `comment`, `status`; current rows are `6411`. |
-| Latest completed Ghidra backup | `G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`. |
+| Latest completed Ghidra backup | `[maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`. |
 
 ## Consequence
 

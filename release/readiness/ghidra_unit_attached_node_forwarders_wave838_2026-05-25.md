@@ -20,7 +20,7 @@ Read-back evidence:
 - Post exports: `3` metadata rows, `3` tag rows, `19` xref rows, `171` target-window instruction rows, `483` deep target instruction rows, `855` xref-site instruction rows, `8` context metadata rows, `8` context decompile rows, and `3` target decompile rows.
 - Queue after Wave838: `6098` total functions, `5662` commented, `436` commentless, `0` exact-undefined signatures, `0` `param_N`, comment-backed proxy `5662/6098 = 92.85%`, strict clean-signature proxy `5662/6098 = 92.85%`.
 - Next raw commentless row: `0x004fde70 CWarspite__TransitionToUndeploying`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-021158_post_wave838_unit_attached_node_forwarders_verified`, `19` files, `171838343` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-021158_post_wave838_unit_attached_node_forwarders_verified`, `19` files, `171838343` bytes, `DiffCount=0`.
 
 What this proves:
 

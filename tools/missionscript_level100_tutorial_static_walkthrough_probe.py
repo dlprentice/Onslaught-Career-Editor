@@ -61,7 +61,7 @@ LORE_TEXT_SPEAKER_SCHEMA = ROOT / "lore-book" / "reverse-engineering" / "binary-
 
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 PROOF_LINK = "missionscript-level100-tutorial-static-walkthrough-proof-plan.md"
 SCHEMA_LINK = "missionscript-level100-tutorial-static-walkthrough.v1.json"
 TEXT_SPEAKER_PROOF_LINK = "missionscript-level100-tutorial-text-speaker-resolution-proof-plan.md"

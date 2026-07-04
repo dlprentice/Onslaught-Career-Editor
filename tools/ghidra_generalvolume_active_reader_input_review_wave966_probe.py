@@ -25,7 +25,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUALITY_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260528-151637_post_wave966_generalvolume_active_reader_input_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-151637_post_wave966_generalvolume_active_reader_input_review_verified"
 
 EXPECTED_METADATA = {
     "0x00402020": ("CGeneralVolume__ResetCooldownTimestamp", "void __thiscall CGeneralVolume__ResetCooldownTimestamp(void * this, void * activeReaderTarget)"),

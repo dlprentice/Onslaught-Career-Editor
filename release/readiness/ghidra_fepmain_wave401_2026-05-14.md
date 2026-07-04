@@ -32,7 +32,7 @@ Plain-text probe anchors: 0x005dbaf0 starts with CFEPMain__ButtonPressed; 0x005d
 
 ## Source Boundary
 
-The retail binary contains the debug-path string `C:\dev\ONSLAUGHT2\FEPMain.cpp`, but `FEPMain.cpp` is absent from the current Stuart source snapshot. Source-style names in this tranche are supported by retail vtable/debug-path/action-routing evidence, not by a direct source file match.
+The retail binary contains the debug-path string `[maintainer-local-source-export-root]\FEPMain.cpp`, but `FEPMain.cpp` is absent from the current Stuart source snapshot. Source-style names in this tranche are supported by retail vtable/debug-path/action-routing evidence, not by a direct source file match.
 
 Plain-text source-boundary anchor: FEPMain.cpp is absent from the current Stuart source snapshot.
 

@@ -21,7 +21,7 @@ Read-back evidence:
 - Post exports: 2 metadata rows, 2 tag rows, 46 xref rows, 490 target instruction rows, 14 helper metadata rows, 2030 helper instruction rows, 8 caller decompile rows, 840 caller instruction rows, and 2 target decompile rows.
 - Queue after Wave823: 6098 total functions, 5628 commented, 470 commentless, 0 exact-undefined signatures, 0 `param_N` signatures, comment-backed proxy `5628/6098 = 92.29%`, strict comment-plus-clean-signature proxy `5628/6098 = 92.29%`.
 - Next raw commentless row: `0x004cf050 CMenuItem__Destructor`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-183746_post_wave823_particle_archive_buffer_cleanup_verified`, 19 files, 171543431 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-183746_post_wave823_particle_archive_buffer_cleanup_verified`, 19 files, 171543431 bytes, `DiffCount=0`.
 
 What this proves:
 

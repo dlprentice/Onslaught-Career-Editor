@@ -19,7 +19,7 @@ Stuart source is useful here because `CDXEngine::PostRender` explicitly calls `G
 - Read-back verified `1` metadata row, `1` tag row, `1` caller xref from `CDXEngine__PostRender` at `0x0053ef9b`, `261` instruction rows, and post-rename caller decompile text showing `CGame__DrawDebugStuff(&DAT_008a9a98)` followed by `CGame__DrawGameStuff(&DAT_008a9a98)`.
 - Refreshed queue telemetry reports `6028` functions, `1558` commented functions, `4470` commentless functions, `1909` undefined signatures, and `1858` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1558/6028 = 25.85%`, strict clean-signature `1496/6028 = 24.82%`.
-- The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260514_063725_post_wave405_cgame_draw_game_stuff_verified` with `19` files, `154798983` bytes, and `HashDiffCount=0`.
+- The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260514_063725_post_wave405_cgame_draw_game_stuff_verified` with `19` files, `154798983` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

@@ -6,7 +6,7 @@ Tag: `wave1158-hud-render-component-current-risk-review`
 
 Wave1158 re-read twenty HUD render/component current-risk rows from the `wave1108-current-risk-rank` active focused denominator with fresh Ghidra exports. The pass made no mutation, no rename, no signature change, no comment/tag change, no function-boundary change, no executable-byte change, no BEA launch, no installed-game mutation, no save mutation, and no runtime-file mutation.
 
-Probe token anchor: Wave1158; wave1158-hud-render-component-current-risk-review; 485/1179 = 41.14%; 20 HUD render/component current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 694; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consults used; 0 / 0 / 0; 6411/6411 = 100.00%; 24 xref rows; 7335 instruction rows; CHud__RenderOverlayForViewpoint; CHud__RenderBattleline; CHud__RenderActiveHudComponentPass; CHud__RenderTacticalRadarContacts; CHud__RenderObjectiveStatusPanel; CHud__SetHudComponent; G:\GhidraBackups\BEA_20260606-002152_post_wave1158_hud_render_component_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1158; wave1158-hud-render-component-current-risk-review; 485/1179 = 41.14%; 20 HUD render/component current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 694; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consults used; 0 / 0 / 0; 6411/6411 = 100.00%; 24 xref rows; 7335 instruction rows; CHud__RenderOverlayForViewpoint; CHud__RenderBattleline; CHud__RenderActiveHudComponentPass; CHud__RenderTacticalRadarContacts; CHud__RenderObjectiveStatusPanel; CHud__SetHudComponent; [maintainer-local-ghidra-backup-root]\BEA_20260606-002152_post_wave1158_hud_render_component_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
 
 Reviewed anchors:
 
@@ -37,7 +37,7 @@ Read-back evidence:
 
 - Exports: `20` metadata rows, `20` tag rows, `24` xref rows, `7335` instruction rows, and `20` decompile rows.
 - Xref graph: lifecycle calls from `CGame__Init`, `CGame__InitRestartLoop`, `CGame__RunLevel`, `CGame__PostLoadProcess`, and `CGame__Shutdown`; cutscene component calls from `CCutscene__Start`, `CCutscene__Stop`, and `CCutscene__Update`; post-render calls from `CDXEngine__PostRender`; overlay helper calls from `CHud__RenderOverlayForViewpoint`.
-- Verified backup: `G:\GhidraBackups\BEA_20260606-002152_post_wave1158_hud_render_component_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-002152_post_wave1158_hud_render_component_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
 - Static closure remains `6411/6411 = 100.00%` with static debt `0 / 0 / 0`; expanded post-100 static surface remains `1560/1560 = 100.00%`.
 - Wave1108 current focused accounting after Wave1158 is `485/1179 = 41.14%`; current risk candidates: `6166`; current focused candidates: `1178`; live regenerated current focused candidates: `1178`; remaining active focused work: `694`; focused threshold `15`; not Wave911 reconstruction.
 

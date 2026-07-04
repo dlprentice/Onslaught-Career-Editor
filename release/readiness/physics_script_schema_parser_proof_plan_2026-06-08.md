@@ -25,7 +25,7 @@ Static anchors retained for the parser/spec checklist:
 - `CUnitStatement__LoadFromMemBuffer` through `CPhysicsHazardValueList__LoadFromMemBuffer`.
 - `CStatementChain__InvokeVFunc04OnNodes`.
 - Registry roots `DAT_008553f4`, `DAT_008553f8`, `DAT_00855400`, `DAT_00855404`, `DAT_00855408`, and `DAT_008553fc`.
-- Latest completed PhysicsScript Ghidra review backup: `G:\GhidraBackups\BEA_20260607-005927_post_wave1203_physics_script_registry_apply_residual_current_risk_review_verified`.
+- Latest completed PhysicsScript Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-005927_post_wave1203_physics_script_registry_apply_residual_current_risk_review_verified`.
 
 Corpus requirements for the next executable slice:
 

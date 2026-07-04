@@ -38,7 +38,7 @@ The pass corrected `CRT__SpawnVe_0056a936` to `CRT__SpawnVe` and `CRT__BuildSpaw
 - Comment-backed proxy: `3449/6093 = 56.61%`.
 - Strict clean-signature proxy: `3398/6093 = 55.77%`.
 - Next high-signal queue head: `0x0056b368 CRT__WriteWideCharToStreamWithConversion`.
-- Verified backup: `G:\GhidraBackups\BEA_20260520-145509_post_wave644_crt_path_mbs_spawn_fd_verified`, `19` files, `162696071` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-145509_post_wave644_crt_path_mbs_spawn_fd_verified`, `19` files, `162696071` bytes, `DiffCount=0`.
 
 ## Boundaries
 

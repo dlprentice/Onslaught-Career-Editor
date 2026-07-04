@@ -1,6 +1,6 @@
 {
   "summary": {
-    "repo_root": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private",
+    "repo_root": "[maintainer-private-checkout]",
     "steam_root": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Battle Engine Aquila",
     "target_count": 9,
     "existing_target_count": 9,
@@ -21,7 +21,7 @@
       "key": "clean_repo_bea_exe",
       "kind": "executable",
       "label": "Clean repo mirror of the retail Steam executable",
-      "path": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private\\game\\BEA.exe",
+      "path": "[maintainer-private-checkout]\\game\\BEA.exe",
       "exists": true,
       "size": 2506752,
       "sha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -30,7 +30,7 @@
       "key": "repo_defaultoptions_bea",
       "kind": "options_snapshot",
       "label": "Repo mirror boot/global options snapshot",
-      "path": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private\\game\\defaultoptions.bea",
+      "path": "[maintainer-private-checkout]\\game\\defaultoptions.bea",
       "exists": true,
       "size": 10004,
       "sha256": "37ae23d38bfc35f3ed91f64bc3925533e73f583d8d2aa43d2ed6dae9a4f8ce6c"
@@ -39,7 +39,7 @@
       "key": "gold_save_haha_cannon",
       "kind": "career_save",
       "label": "Gold save baseline used by app/manual regression work",
-      "path": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private\\save-attempts\\haha-cannon-goes-brrrrr.bes",
+      "path": "[maintainer-private-checkout]\\save-attempts\\haha-cannon-goes-brrrrr.bes",
       "exists": true,
       "size": 10004,
       "sha256": "0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb"
@@ -48,7 +48,7 @@
       "key": "base_res_pc_aya",
       "kind": "resource_archive",
       "label": "Core base packed resource archive",
-      "path": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private\\game\\data\\resources\\base_res_PC.aya",
+      "path": "[maintainer-private-checkout]\\game\\data\\resources\\base_res_PC.aya",
       "exists": true,
       "size": 17931,
       "sha256": "0ee8530874425cac759834872f5941bc4be086c40ce6b70553b5c6b539802883"
@@ -57,7 +57,7 @@
       "key": "level_852_res_pc_aya",
       "kind": "resource_archive",
       "label": "Representative hidden/multiplayer-family packed resource archive",
-      "path": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private\\game\\data\\resources\\852_res_PC.aya",
+      "path": "[maintainer-private-checkout]\\game\\data\\resources\\852_res_PC.aya",
       "exists": true,
       "size": 1111476,
       "sha256": "9994fb2b67a3277a2aeecd0605eba226548f5990634585c8f2642b3efd29f793"
@@ -66,7 +66,7 @@
       "key": "mesh_m_be_trans_aya",
       "kind": "loose_mesh_payload",
       "label": "Representative loose mesh payload",
-      "path": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private\\game\\data\\resources\\meshes\\m_be_trans.msh.aya",
+      "path": "[maintainer-private-checkout]\\game\\data\\resources\\meshes\\m_be_trans.msh.aya",
       "exists": true,
       "size": 450127,
       "sha256": "623023edeedb339a28473ec7e1d683f2b1ffafd4ec07e1bd41c64c9dc8b8c576"
@@ -75,7 +75,7 @@
       "key": "english_dat",
       "kind": "language_dat",
       "label": "Representative localization table",
-      "path": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private\\game\\data\\LANGUAGE\\english.dat",
+      "path": "[maintainer-private-checkout]\\game\\data\\LANGUAGE\\english.dat",
       "exists": true,
       "size": 279933,
       "sha256": "789ecff619d077092769df281c540d138a25fcc74d70023466a604888e59371a"
@@ -84,7 +84,7 @@
       "key": "video_01_vid",
       "kind": "video",
       "label": "Representative Bink cutscene payload",
-      "path": "C:\\Users\\david\\source\\Onslaught-Career-Editor-private\\game\\data\\video\\cutscenes\\01.vid",
+      "path": "[maintainer-private-checkout]\\game\\data\\video\\cutscenes\\01.vid",
       "exists": true,
       "size": 32067000,
       "sha256": "76f9f1e1940f354b7a5f2040f1c115e8f2a552d350dea187aa3a7059bc695ea1"

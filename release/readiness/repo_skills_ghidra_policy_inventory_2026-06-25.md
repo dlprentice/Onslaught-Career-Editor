@@ -17,13 +17,13 @@ caches, or release artifacts.
 - Former private repo has the same tracked `.codex/goals` and `.codex/state`
   shape for this purpose; no private-only repo skill tree was found.
 - Relevant repo-specific maintainer-local Codex skills reviewed under
-  `C:\Users\david\.codex\skills\` were: `aya-assets`, `bea-binary-re`,
+  `[maintainer-local-codex-skills]` were: `aya-assets`, `bea-binary-re`,
   `bes-career-save`, and `onslaught-engine-source`.
 - Those local skills are routing conveniences over tracked repo docs/tools; they
   are not public clone prerequisites.
 - Maintainer-local live Ghidra project remains:
-  `C:\Users\david\Ghidra\Projects\BEA.gpr` with store
-  `C:\Users\david\Ghidra\Projects\BEA.rep\`.
+  `[maintainer-local-ghidra-project-root]\BEA.gpr` with store
+  `[maintainer-local-ghidra-project-root]\BEA.rep\`.
 
 ## Decision
 

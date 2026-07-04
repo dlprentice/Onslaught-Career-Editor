@@ -28,7 +28,7 @@ The pass saved bounded signatures, comments, and tags. It corrected three stale 
 - Vector-destructor evidence at `0x0055db0a` computes `array + elemSize * count`, walks elements in reverse, calls the element destructor callback through ECX, and uses `CRT__EhVectorDestructorIterator_IfNoException` on the cleanup path. Broad xrefs show generic runtime-helper use, not CDXLandscape ownership.
 - Exit/onexit evidence covers `CRT__CExit`, `CRT__DoExit`, the function-pointer range walker, and the onexit registration table.
 - Math evidence covers the acos-style FPU helper and rounded-double helper with control-word/status handling.
-- Backup verified: `G:\GhidraBackups\BEA_20260520-042315_post_wave621_crt_typeinfo_verified` with `19` files, `161844103` bytes, and `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260520-042315_post_wave621_crt_typeinfo_verified` with `19` files, `161844103` bytes, and `DiffCount=0`.
 
 ## Queue Telemetry
 

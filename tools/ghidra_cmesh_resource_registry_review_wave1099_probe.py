@@ -29,7 +29,7 @@ CAPABILITIES = ROOT / "CURRENT_CAPABILITIES.md"
 AGENTS = ROOT / "AGENTS.md"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260604-193549_post_wave1099_cmesh_resource_registry_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260604-193549_post_wave1099_cmesh_resource_registry_review_verified"
 WAVE_TAG = "cmesh-resource-registry-review-wave1099"
 
 TARGETS = {

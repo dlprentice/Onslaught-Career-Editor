@@ -33,7 +33,7 @@ TASK = "Wave886 texture decode/upload tail"
 TAG = "texture-decode-upload-tail-wave886"
 STRICT_PROXY = "5978/6113 = 97.79%"
 NEXT_HEAD = "0x005759b6 CFastVB__DispatchIndirect_00657014"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-023255_post_wave886_texture_decode_upload_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-023255_post_wave886_texture_decode_upload_tail_verified"
 
 TARGETS = {
     "0x00573d80": {

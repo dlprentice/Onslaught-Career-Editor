@@ -38,7 +38,7 @@ The pass saved bounded signatures, comments, and tags. It corrected the address-
 - TLS evidence covers global critical-section initialization, TLS slot allocation, 0x74-byte per-thread record creation, default record seeding, lazy TLS access, callback cleanup, and fatal-finalize routing.
 - Float-format evidence covers decimal-separator insertion, `__fassign`, scientific/fixed/general formatting, locale decimal separator insertion, right-shift/memmove support, and FPU control-word startup.
 - Lock evidence covers lazy critical-section allocation through CRT lock index `0x11`, indexed lock enter, and indexed lock leave.
-- Backup verified: `G:\GhidraBackups\BEA_20260520-064302_post_wave626_tls_float_lock_verified` with `19` files, `162106247` bytes, and `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260520-064302_post_wave626_tls_float_lock_verified` with `19` files, `162106247` bytes, and `DiffCount=0`.
 
 ## Queue Telemetry
 

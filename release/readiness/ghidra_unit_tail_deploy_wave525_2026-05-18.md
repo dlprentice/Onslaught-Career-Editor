@@ -63,7 +63,7 @@ These are queue telemetry only, not certification and not a milestone.
 
 Verified backup:
 
-- Path: `G:\GhidraBackups\BEA_20260518-012612_post_wave525_unit_tail_deploy_verified`
+- Path: `[maintainer-local-ghidra-backup-root]\BEA_20260518-012612_post_wave525_unit_tail_deploy_verified`
 - Files: 19
 - Bytes: 158862215
 - MissingCount: 0

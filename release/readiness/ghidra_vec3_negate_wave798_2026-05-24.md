@@ -21,7 +21,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 11 xref rows, 65 instruction rows, and 1 decompile row.
 - Queue after Wave798: 6098 total, 5546 commented, 552 commentless, 0 exact-undefined signatures, 0 param_N signatures, comment-backed proxy `5546/6098 = 90.95%`, strict clean-signature proxy `5546/6098 = 90.95%`.
 - Next raw commentless row is `0x00441730 CLIParams__SetField04`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-060456_post_wave798_vec3_negate_verified`, 18 files, 171314055 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-060456_post_wave798_vec3_negate_verified`, 18 files, 171314055 bytes, `DiffCount=0`.
 
 What this proves:
 

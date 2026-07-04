@@ -27,7 +27,7 @@ The important correction is owner cleanup: these functions previously carried st
 - Focused probe: `py -3 tools\ghidra_warspite_dome_state_wave541_probe.py --check` PASS.
 - Npm wrapper: `cmd.exe /c npm run test:ghidra-warspite-dome-state-wave541` PASS.
 - Queue refresh: `py -3 tools\ghidra_static_reaudit_queue_probe.py --check --json` PASS after refreshing the live quality snapshot.
-- Backup: `G:\GhidraBackups\BEA_20260518-091727_post_wave541_warspite_dome_state_verified`, `19` files, `159320967` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-091727_post_wave541_warspite_dome_state_verified`, `19` files, `159320967` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
 
 ## Queue Snapshot
 

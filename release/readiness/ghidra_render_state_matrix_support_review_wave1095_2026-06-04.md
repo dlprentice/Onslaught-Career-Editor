@@ -27,7 +27,7 @@ Read-back evidence:
 - Fresh pre/post exports verified `21` metadata rows, `21` tag rows, `1025` xref rows, `1388` instruction rows, and `21` decompile rows.
 - The corrected target has `27` incoming xref rows, including `CConsole__RenderLoadingScreen`, `CFrontEnd__Render`, `CHud__RenderOverlay`, `CHud__RenderTacticalRadarContacts`, `CDXImposter__RenderAll`, `CDXLandscape__Render`, `CDXLandscape__RenderTerrain`, `CDXLandscape__RenderShadowMap`, `CMeshRenderer__RenderMeshCore`, `CRenderQueue__BeginFrame`, `CVBufTexture__DrawSpriteEx`, and `CDXTrees__Render`.
 - Static function-quality closure remains `6410/6410 = 100.00%`, expanded static surface remains `1560/1560 = 100.00%`, Wave911 focused progress remains `812/1408 = 57.67%`, and Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260604-171413_post_wave1095_render_state_matrix_support_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-171413_post_wave1095_render_state_matrix_support_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -45,4 +45,4 @@ What remains unproven:
 - Gameplay outcomes.
 - Rebuild parity.
 
-Probe token anchor: Wave1095; render-state-matrix-support-review-wave1095; 0x00513af0 D3DStateCache__SetSlotMode4or5; 0x00513820 D3DStateCache__SetStateCached; 0x00513b60 D3DStateCache__ForceSlotMode4or5; 0x00550b10 CDXEngine__SetProjectionMatrix; 0x00550ca0 CDXEngine__SetWorldMatrixElements; 0x00550d50 CDXEngine__ApplyPendingRenderState; 0x00551200 CDXEngine__ApplyCachedLight; 1560/1560 = 100.00%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; G:\GhidraBackups\BEA_20260604-171413_post_wave1095_render_state_matrix_support_review_verified; tag-only normalization.
+Probe token anchor: Wave1095; render-state-matrix-support-review-wave1095; 0x00513af0 D3DStateCache__SetSlotMode4or5; 0x00513820 D3DStateCache__SetStateCached; 0x00513b60 D3DStateCache__ForceSlotMode4or5; 0x00550b10 CDXEngine__SetProjectionMatrix; 0x00550ca0 CDXEngine__SetWorldMatrixElements; 0x00550d50 CDXEngine__ApplyPendingRenderState; 0x00551200 CDXEngine__ApplyCachedLight; 1560/1560 = 100.00%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260604-171413_post_wave1095_render_state_matrix_support_review_verified; tag-only normalization.

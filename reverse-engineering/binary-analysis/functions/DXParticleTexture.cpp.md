@@ -1,6 +1,6 @@
 # DXParticleTexture.cpp Function Mappings
 
-> Debug path: `C:\dev\ONSLAUGHT2\DXParticleTexture.cpp` (0x00651dcc)
+> Debug path: `[maintainer-local-source-export-root]\DXParticleTexture.cpp` (0x00651dcc)
 > Functions found: 8
 > Last updated: 2026-05-20
 
@@ -30,7 +30,7 @@ Wave612 saved Ghidra signatures/comments/tags for the four engine-side particle 
 
 Read-back evidence: `ApplyParticleTextureBundleWave612.java` dry/apply/final dry reported `updated=0 skipped=13 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=13 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=13 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Post exports verified `13` metadata rows, `13` tag rows, `23` xref rows, `3393` instruction rows, `13` decompile rows, and `667` callsite instruction rows.
 
-Queue telemetry after the pass: `6093` total, `3147` commented, `2946` commentless, `1283` exact-undefined signatures, `1056` `param_N`, comment-backed proxy `3147/6093 = 51.65%`, strict clean-signature proxy `3102/6093 = 50.91%`. Verified backup: `G:\GhidraBackups\BEA_20260519-234626_post_wave612_particle_texture_verified`, `19` files, `161581959` bytes, `DiffCount=0`. Next queue head: `0x00550380 CDXPatch__Constructor`.
+Queue telemetry after the pass: `6093` total, `3147` commented, `2946` commentless, `1283` exact-undefined signatures, `1056` `param_N`, comment-backed proxy `3147/6093 = 51.65%`, strict clean-signature proxy `3102/6093 = 50.91%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-234626_post_wave612_particle_texture_verified`, `19` files, `161581959` bytes, `DiffCount=0`. Next queue head: `0x00550380 CDXPatch__Constructor`.
 
 This is static saved-Ghidra evidence only. Exact particle bundle, DXParticleTexture, CParticleDescriptor, CTexture, CVBufTexture, shader/global, and render-state layouts, runtime particle output, BEA patching, and rebuild parity remain unproven.
 
@@ -255,7 +255,7 @@ Instance method that renders this particle texture's geometry.
 
 | Address | String | Usage |
 |---------|--------|-------|
-| 0x00651dcc | "C:\dev\ONSLAUGHT2\DXParticleTexture.cpp" | Debug path |
+| 0x00651dcc | "[maintainer-local-source-export-root]\DXParticleTexture.cpp" | Debug path |
 | 0x00651ed0 | "particleshader" | Vertex shader name |
 | 0x00651ee0 | "vs_1_1 dcl_position v0 dcl_texco..." | Vertex shader source |
 | 0x00651e04 | "ps_2_0 dcl_2d s0 dcl_2d s1 dcl_v..." | Pixel shader source |

@@ -29,7 +29,7 @@ This is static Ghidra evidence only. It does not prove runtime console output, f
 | `cmd.exe /c npm run test:ghidra-diagnostic-console-wave386` | PASS: `status=PASS`, `targets=5`, `instruction_hits=11`. |
 | `py -3 -m py_compile tools\ghidra_diagnostic_console_wave386_probe.py tools\ghidra_diagnostic_console_wave386_probe_test.py` | PASS. |
 | `cmd.exe /c npm run test:ghidra-static-reaudit-queue` | PASS after refreshing `ExportFunctionQualitySnapshot.java`: `6027` functions, `1435` commented functions, `4592` commentless functions, `1935` undefined signatures, and `1913` `param_N` signatures. |
-| Actual Ghidra project backup | PASS: copied `BEA.gpr` and `BEA.rep` to `G:\GhidraBackups\BEA_20260513_190726_post_wave386_diagnostic_console_verified`; verified `19` files, `153914247` bytes, `HashDiffCount=0`. |
+| Actual Ghidra project backup | PASS: copied `BEA.gpr` and `BEA.rep` to `[maintainer-local-ghidra-backup-root]\BEA_20260513_190726_post_wave386_diagnostic_console_verified`; verified `19` files, `153914247` bytes, `HashDiffCount=0`. |
 
 The current broad comment-backed proxy is `1435/6027 = 23.81%`. The stricter comment-plus-no-`undefined`-or-`param_N` proxy is `1373/6027 = 22.78%`. These values are telemetry only, not completion milestones.
 

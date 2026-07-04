@@ -37,8 +37,8 @@ Evidence:
 - Post metadata/tag/xref/instruction/decompile exports: `6` / `6` / `35` / `741` / `6`.
 - Pre/post instruction exports match exactly.
 - Queue quality refresh after the Ghidra write reported `total_functions=6410 commented_functions=6410`.
-- Final backup after the queue refresh: `G:\GhidraBackups\BEA_20260605-071212_post_wave1127_mixed_score23_current_risk_review_verified`, `19` files, `175934343` bytes, `DiffCount=0`.
-- Previous completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-061135_post_wave1126_projectile_collision_targeting_current_risk_review_verified`.
+- Final backup after the queue refresh: `[maintainer-local-ghidra-backup-root]\BEA_20260605-071212_post_wave1127_mixed_score23_current_risk_review_verified`, `19` files, `175934343` bytes, `DiffCount=0`.
+- Previous completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-061135_post_wave1126_projectile_collision_targeting_current_risk_review_verified`.
 
 What this proves:
 

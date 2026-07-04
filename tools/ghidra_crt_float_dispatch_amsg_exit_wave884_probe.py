@@ -36,7 +36,7 @@ TARGET_SIG = "void CRT__FloatDispatchAmsgExitCode2Thunk(void)"
 OLD_NAME = "ControlsUI__AbortInvalidParameter"
 NEXT_HEAD = "0x005715b0 CFastVB__BuildStripBatchesFromIndexBuffer"
 STRICT_PROXY = "5967/6113 = 97.61%"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-012542_post_wave884_crt_float_dispatch_amsg_exit_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-012542_post_wave884_crt_float_dispatch_amsg_exit_verified"
 
 COMMON_TAGS = {
     "static-reaudit",

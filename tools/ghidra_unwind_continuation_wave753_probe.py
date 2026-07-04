@@ -31,7 +31,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260522-221626_post_wave753_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260522-221626_post_wave753_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d2c48": "0x0061ba14",
@@ -73,10 +73,10 @@ COMMON_TAGS = {
 }
 
 STRING_EXPECTATIONS = {
-    "string-0062cc98.tsv": r"C:\dev\ONSLAUGHT2\HiveBoss.cpp",
-    "string-0062ce78.tsv": r"C:\dev\ONSLAUGHT2\Hud.cpp",
-    "string-0062d3f0.tsv": r"C:\dev\ONSLAUGHT2\imposter.cpp",
-    "string-0062d4a8.tsv": r"C:\dev\ONSLAUGHT2\Infantry.cpp",
+    "string-0062cc98.tsv": r"[maintainer-local-source-export-root]\HiveBoss.cpp",
+    "string-0062ce78.tsv": r"[maintainer-local-source-export-root]\Hud.cpp",
+    "string-0062d3f0.tsv": r"[maintainer-local-source-export-root]\imposter.cpp",
+    "string-0062d4a8.tsv": r"[maintainer-local-source-export-root]\Infantry.cpp",
 }
 
 COMMENT_TOKENS = {

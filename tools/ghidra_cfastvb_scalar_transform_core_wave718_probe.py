@@ -163,7 +163,7 @@ DOC_TOKENS = (
     "0x005a1a8e CFastVB__BuildMatrix4x4FromQuaternion",
     "0x005a298f CFastVB__ConvertHalfToFloatArray_SIMD",
     "0x0042f220 CSPtrSet__Clear",
-    r"G:\GhidraBackups\BEA_20260522-025058_post_wave718_cfastvb_scalar_transform_core_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260522-025058_post_wave718_cfastvb_scalar_transform_core_verified",
 )
 
 OVERCLAIM_TOKENS = (
@@ -312,7 +312,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
     require(raw_head["name"] == "CSPtrSet__Clear", "raw commentless head name mismatch", failures)
 
     backup = read_json(BACKUP_SUMMARY)
-    require(backup["destination"] == r"G:\GhidraBackups\BEA_20260522-025058_post_wave718_cfastvb_scalar_transform_core_verified", "backup destination mismatch", failures)
+    require(backup["destination"] == r"[maintainer-local-ghidra-backup-root]\BEA_20260522-025058_post_wave718_cfastvb_scalar_transform_core_verified", "backup destination mismatch", failures)
     require(backup["fileCount"] == 19, "backup file count mismatch", failures)
     require(int(backup["totalBytes"]) == 166267783, "backup byte count mismatch", failures)
     require(backup["diffCount"] == 0, "backup diff count mismatch", failures)
@@ -373,7 +373,7 @@ def main(argv: list[str]) -> int:
     print("Wave718 CFastVB scalar transform core probe: PASS")
     print(f"Targets: {len(TARGETS)}")
     print("Queue: 6098 total, 4214 commented, 1884 commentless, 1216 undefined, 143 param_N")
-    print(r"Backup: G:\GhidraBackups\BEA_20260522-025058_post_wave718_cfastvb_scalar_transform_core_verified")
+    print(r"Backup: [maintainer-local-ghidra-backup-root]\BEA_20260522-025058_post_wave718_cfastvb_scalar_transform_core_verified")
     return 0
 
 

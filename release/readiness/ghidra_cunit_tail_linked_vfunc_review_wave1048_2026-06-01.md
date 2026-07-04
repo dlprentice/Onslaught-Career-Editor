@@ -24,7 +24,7 @@ Evidence counts:
 - Vtable export: `4` vtable anchors, `528` slot rows. Sample confirmations: `0x005d8d1c` slot `98` -> `0x004fd5e0`, slot `124` -> `0x004fd6a0`, slot `125` -> `0x004fd700`; `0x005e0b30`, `0x005e297c`, and `0x005e32d4` slots `22` and `23` point at the activation/deactivation helpers.
 - Queue closure remains `6246/6246 = 100.00%`, with `0` commentless rows, `0` exact-undefined signatures, and `0` `param_N` signatures.
 - Wave1048 newly direct-reviews four Wave911 focused rows beyond earlier context coverage, so Wave911 focused progress advances to `744/1408 = 52.84%`; expanded static surface progress advances to `1002/1509 = 66.40%`; top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-131919_post_wave1048_cunit_tail_linked_vfunc_review_verified`, 19 files, 174590855 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-131919_post_wave1048_cunit_tail_linked_vfunc_review_verified`, 19 files, 174590855 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -39,4 +39,4 @@ What remains separate proof:
 - Exact source-body identity or final source method names for the vfunc-style helpers.
 - BEA patching behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1048; cunit-tail-linked-vfunc-review-wave1048; 0x004fce40 CUnit__ForwardAttachedNodeVFunc14IfPresent; 0x004fce80 CUnit__ForwardAttachedNodeVFunc18IfPresent; 0x004fcec0 CUnit__ForwardAttachedNodeVFunc1CIfPresent; 0x004fd5e0 CUnit__VFunc26_GetRecentSegmentDamageMeter; 0x004fd6a0 CUnit__VFunc22_ActivateLinkedTargetsAndChildren; 0x004fd700 CUnit__VFunc23_DeactivateLinkedTargetsAndChildren; CDestructableSegmentsController__GetSegmentLastDamageTimeByIndex; CDestructableSegmentsController__GetSegmentLastDamageAmountByIndex; 0x005d8d1c; 0x005e0b30; 0x005e297c; 0x005e32d4; 744/1408 = 52.84%; 1002/1509 = 66.40%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-131919_post_wave1048_cunit_tail_linked_vfunc_review_verified; no mutation.
+Probe token anchor: Wave1048; cunit-tail-linked-vfunc-review-wave1048; 0x004fce40 CUnit__ForwardAttachedNodeVFunc14IfPresent; 0x004fce80 CUnit__ForwardAttachedNodeVFunc18IfPresent; 0x004fcec0 CUnit__ForwardAttachedNodeVFunc1CIfPresent; 0x004fd5e0 CUnit__VFunc26_GetRecentSegmentDamageMeter; 0x004fd6a0 CUnit__VFunc22_ActivateLinkedTargetsAndChildren; 0x004fd700 CUnit__VFunc23_DeactivateLinkedTargetsAndChildren; CDestructableSegmentsController__GetSegmentLastDamageTimeByIndex; CDestructableSegmentsController__GetSegmentLastDamageAmountByIndex; 0x005d8d1c; 0x005e0b30; 0x005e297c; 0x005e32d4; 744/1408 = 52.84%; 1002/1509 = 66.40%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-131919_post_wave1048_cunit_tail_linked_vfunc_review_verified; no mutation.

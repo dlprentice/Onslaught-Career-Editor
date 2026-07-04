@@ -24,11 +24,11 @@ Evidence:
 - Post exports covered 7 metadata rows, 7 tag rows, 19 xref rows, 1687 instruction rows, and 7 decompile rows.
 - Queue after Wave711: 6098 total, 4132 commented, 1966 commentless, 1216 exact-undefined signatures, 203 `param_N`, comment-backed proxy `4132/6098 = 67.76%`, and strict clean-signature proxy `4078/6098 = 66.87%`.
 - Queue heads after Wave711: raw commentless head `0x0042f220 CSPtrSet__Clear`; high-signal head `0x0059c070 CTexture__ProcessRowBatchesLinearStride`.
-- Verified backup: `G:\GhidraBackups\BEA_20260521-225104_post_wave711_decode_allocator_head_verified`, 19 files, 165776263 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-225104_post_wave711_decode_allocator_head_verified`, 19 files, 165776263 bytes, `DiffCount=0`.
 - Process note: one selected pre-metadata export captured a normal Ghidra analyzer pass before export because that first command omitted `-noanalysis`; all later selected dry/apply/final/post/queue runs used `-noanalysis`, and the saved final state is covered by post exports, queue refresh, and verified backup.
 
 Boundary:
 
 This is static Ghidra metadata/read-back evidence only. Exact allocator-state layout, exact decode-state layout, helper return ABI, descriptor callback contract, row-batch hidden-register ABI, runtime texture behavior, runtime image decode behavior, BEA patching, source identity, and rebuild parity remain unproven. The selected allocator helpers still document the `CDXTexture__AllocAligned16` `extraout_EAX` decompiler artifact where present, and `0x0059c510` still has a stale no-op helper label on the null path.
 
-Probe anchors: `Wave711 decode allocator head`, `decode-allocator-head-wave711`, `0x0059bae0 CDXTexture__AllocFromBank_SplitBlock`, `0x0059c5d0 CDXTexture__PumpDecodeAllocatorAndSetStage`, `0x0059be00 CDXTexture__CreateDecodeJobDescriptor`, `0x0059be70 CDXTexture__AllocDecodeBlockAndLink`, `0x0059c070 CTexture__ProcessRowBatchesLinearStride`, `0x0059c110 CTexture__ProcessRowBatchesMcuStride128`, `0x0042f220 CSPtrSet__Clear`, `G:\GhidraBackups\BEA_20260521-225104_post_wave711_decode_allocator_head_verified`.
+Probe anchors: `Wave711 decode allocator head`, `decode-allocator-head-wave711`, `0x0059bae0 CDXTexture__AllocFromBank_SplitBlock`, `0x0059c5d0 CDXTexture__PumpDecodeAllocatorAndSetStage`, `0x0059be00 CDXTexture__CreateDecodeJobDescriptor`, `0x0059be70 CDXTexture__AllocDecodeBlockAndLink`, `0x0059c070 CTexture__ProcessRowBatchesLinearStride`, `0x0059c110 CTexture__ProcessRowBatchesMcuStride128`, `0x0042f220 CSPtrSet__Clear`, `[maintainer-local-ghidra-backup-root]\BEA_20260521-225104_post_wave711_decode_allocator_head_verified`.

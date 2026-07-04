@@ -28,7 +28,7 @@ Read-back evidence:
 - Fresh exports verified `12` metadata rows, `12` tag rows, `190` xref rows, `656` instruction rows, and `12` decompile rows.
 - Export logs reported `targets=12 found=12 missing=0`, `rows=12 missing=0`, `Wrote 190 rows`, `Wrote 656 function-body instruction rows`, and `targets=12 dumped=12 missing=0 failed=0`.
 - Static function-quality closure remains `6410/6410 = 100.00%`, expanded static surface remains `1560/1560 = 100.00%`, Wave911 focused progress remains `812/1408 = 57.67%`, and Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260604-182217_post_wave1097_cunit_dtor_thunk_lifecycle_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-182217_post_wave1097_cunit_dtor_thunk_lifecycle_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -45,4 +45,4 @@ What remains unproven:
 - Gameplay outcomes.
 - Rebuild parity.
 
-Probe token anchor: Wave1097; cunit-dtor-thunk-lifecycle-review-wave1097; 0x004bfe00 CUnit__dtor_base_Thunk_004bfe00; 0x004f84c0 CUnit__VFunc01_ScalarDeletingDtor; 0x004f84e0 CUnit__dtor_base; 0x0050ee90 CUnit__scalar_deleting_dtor; 0x004f95d0 CUnit__VFunc02_CleanupWorldLinksAndForward; 0x004fcfa0 CUnit__ClearSpawnerSet; 0x004fcfe0 CUnit__ReleaseChildUnits; 0x004fd040 CUnit__ResetDeploymentGraphAndScheduleEvent; 0x004fd140 CUnit__MarkDestroyedAndCleanupLinks; 0x004cb0b0 ParticleEffectLink__SetHandleStateAndClear; 0x004013d0 CActor__dtor_base; 0x004f3f00 CComplexThing__dtor_base; 1560/1560 = 100.00%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; G:\GhidraBackups\BEA_20260604-182217_post_wave1097_cunit_dtor_thunk_lifecycle_review_verified; read-only review.
+Probe token anchor: Wave1097; cunit-dtor-thunk-lifecycle-review-wave1097; 0x004bfe00 CUnit__dtor_base_Thunk_004bfe00; 0x004f84c0 CUnit__VFunc01_ScalarDeletingDtor; 0x004f84e0 CUnit__dtor_base; 0x0050ee90 CUnit__scalar_deleting_dtor; 0x004f95d0 CUnit__VFunc02_CleanupWorldLinksAndForward; 0x004fcfa0 CUnit__ClearSpawnerSet; 0x004fcfe0 CUnit__ReleaseChildUnits; 0x004fd040 CUnit__ResetDeploymentGraphAndScheduleEvent; 0x004fd140 CUnit__MarkDestroyedAndCleanupLinks; 0x004cb0b0 ParticleEffectLink__SetHandleStateAndClear; 0x004013d0 CActor__dtor_base; 0x004f3f00 CComplexThing__dtor_base; 1560/1560 = 100.00%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260604-182217_post_wave1097_cunit_dtor_thunk_lifecycle_review_verified; read-only review.

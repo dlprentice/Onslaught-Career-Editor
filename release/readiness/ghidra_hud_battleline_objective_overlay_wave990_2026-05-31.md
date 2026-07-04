@@ -30,7 +30,7 @@ Read-back evidence:
 - Post exports: `8` metadata rows, `8` tag rows, `13` xref rows, `1429` body-instruction rows, and `8` decompile rows.
 - Queue closure after refresh remains `6222/6222 = 100.00%`, with `0` commentless functions, `0` exact-undefined signatures, and `0` `param_N` signatures.
 - Wave911 focused re-audit progress is `441/1408 = 31.32%`; expanded static surface progress is `517/1478 = 34.98%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-041618_post_wave990_hud_battleline_objective_overlay_verified`, 19 files, 173837191 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-041618_post_wave990_hud_battleline_objective_overlay_verified`, 19 files, 173837191 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

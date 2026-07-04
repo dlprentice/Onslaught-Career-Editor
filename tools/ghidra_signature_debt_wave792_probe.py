@@ -27,7 +27,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-031629_post_wave792_crt_runtime_signature_debt_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-031629_post_wave792_crt_runtime_signature_debt_verified"
 
 TARGETS = {
     "0x0055e0c0": ("__aulldiv", "ulonglong __stdcall __aulldiv(uint dividend_low, uint dividend_high, uint divisor_low, uint divisor_high)", ("unsigned 64-bit division", "dividend_low")),

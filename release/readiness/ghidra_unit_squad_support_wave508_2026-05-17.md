@@ -56,7 +56,7 @@ Artifacts are under `subagents/ghidra-static-reaudit/wave508-unit-squad-support-
 - `npm run test:ghidra-unit-squad-support-wave508` passed.
 - Queue refresh passed and reports `6078` functions, `2348` commented, `3730` commentless, `1631` exact-undefined signatures, and `1463` `param_N` signatures.
 - Current telemetry proxies are comment-backed `2348/6078 = 38.63%` and strict comment-plus-clean-signature `2294/6078 = 37.74%`; these are progress telemetry only, not completion certification.
-- Ghidra project backup verified at `G:\GhidraBackups\BEA_20260517-165658_post_wave508_unit_squad_support_verified` with `19` files, `158141319` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Ghidra project backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260517-165658_post_wave508_unit_squad_support_verified` with `19` files, `158141319` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Not Proven
 

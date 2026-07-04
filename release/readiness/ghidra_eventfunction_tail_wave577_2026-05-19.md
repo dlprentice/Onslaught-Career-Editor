@@ -31,7 +31,7 @@ No renames were applied. No `source-parity` tag was applied because the current 
 Verified Ghidra project backup:
 
 ```text
-G:\GhidraBackups\BEA_20260519-030958_post_wave577_eventfunction_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260519-030958_post_wave577_eventfunction_verified
 ```
 
 Backup verification reported `PASS`, `19` files, `160435079` bytes, `diffCount=0`, and manifest hash `103451E61F6E5D10504B6B778BBC2CEC6530FF68CAF1C320FAA68FE997299305`.

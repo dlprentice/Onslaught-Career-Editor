@@ -34,7 +34,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 APPLY_SCRIPT = ROOT / "tools" / "ApplyBattleEngineWalkerPartSupportCurrentRiskWave1188.java"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-160404_post_wave1188_battleengine_walkerpart_support_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-160404_post_wave1188_battleengine_walkerpart_support_current_risk_review_verified"
 
 TARGETS = {
     "0x00405a40": {

@@ -42,7 +42,7 @@ Representative anchors:
 Verified Ghidra backup:
 
 ```text
-G:\GhidraBackups\BEA_20260528-125650_post_wave961_cvertexshader_lifecycle_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260528-125650_post_wave961_cvertexshader_lifecycle_review_verified
 ```
 
 Backup summary: `19` files, `173542279` bytes, `DiffCount=0`.
@@ -50,7 +50,7 @@ Backup summary: `19` files, `173542279` bytes, `DiffCount=0`.
 Wave911 focused re-audit progress after Wave961: `306/1408 = 21.73%`.
 Static export-contract function-quality closure remains `6152/6152 = 100.00%`.
 
-Probe anchor: Wave961; cvertexshader-lifecycle-review-wave961; 0x00501890 CVertexShader__scalar_deleting_dtor; 0x00501a10 CVertexShader__VFunc_02_00501a10; 0x005dfbc4 slot 2; NO_FUNCTION_AT_POINTER; CEngine__DeviceCall16C_CreateVertexShaderLike; CVertexShader__LoadCompiledShaderBlobFromVSOFile; 0x80004005; 0xfffe0101; DAT_00854e6c; DAT_00888c8c; 306/1408 = 21.73%; 6152/6152 = 100.00%; G:\GhidraBackups\BEA_20260528-125650_post_wave961_cvertexshader_lifecycle_review_verified; function-boundary recovery.
+Probe anchor: Wave961; cvertexshader-lifecycle-review-wave961; 0x00501890 CVertexShader__scalar_deleting_dtor; 0x00501a10 CVertexShader__VFunc_02_00501a10; 0x005dfbc4 slot 2; NO_FUNCTION_AT_POINTER; CEngine__DeviceCall16C_CreateVertexShaderLike; CVertexShader__LoadCompiledShaderBlobFromVSOFile; 0x80004005; 0xfffe0101; DAT_00854e6c; DAT_00888c8c; 306/1408 = 21.73%; 6152/6152 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260528-125650_post_wave961_cvertexshader_lifecycle_review_verified; function-boundary recovery.
 
 ## Boundary
 

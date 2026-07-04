@@ -1,7 +1,7 @@
 # DXLandscape.cpp Function Mappings
 
 > Functions from DXLandscape.cpp mapped to BEA.exe binary
-> Debug path: `C:\dev\ONSLAUGHT2\DXLandscape.cpp` at 0x00650bdc
+> Debug path: `[maintainer-local-source-export-root]\DXLandscape.cpp` at 0x00650bdc
 
 ## Overview
 
@@ -82,9 +82,9 @@ CDXLandscape is the DirectX implementation of the landscape/terrain rendering sy
 
 Wave1213 (`wave1213-render-resource-lifecycle-tail-current-risk-review`) re-read `0x00544a60 CDXLandscape__Destructor` and `0x00544eb0 CDXLandscape__ReleaseBuffers` as current-risk denominator rows inside the mesh/resource/render static contract. Fresh xrefs verify `CDXLandscape__ScalarDeletingDestructor -> CDXLandscape__Destructor` at `0x00544a43`, and vtable DATA xref `0x005e50e0` points at `CDXLandscape__ReleaseBuffers` for slot `+0x10`. Context rows also re-read `CDXLandscape__Constructor`, `CDXLandscape__ScalarDeletingDestructor`, `CDXLandscape__Init`, `CDXLandscape__Shutdown`, and `CDXLandscape__UpdateLOD`.
 
-The wave made no mutation. Active current-risk progress moved to `1125/1179 = 95.42%`; verified backup: `G:\GhidraBackups\BEA_20260607-074242_post_wave1213_render_resource_lifecycle_tail_current_risk_review_verified`. Runtime Direct3D behavior, runtime terrain/HUD output, runtime lost-device behavior, exact CDXLandscape/CLandscape/resource layouts, exact source identity, BEA patching behavior, rebuild parity, and no-noticeable-difference parity remain separate proof.
+The wave made no mutation. Active current-risk progress moved to `1125/1179 = 95.42%`; verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-074242_post_wave1213_render_resource_lifecycle_tail_current_risk_review_verified`. Runtime Direct3D behavior, runtime terrain/HUD output, runtime lost-device behavior, exact CDXLandscape/CLandscape/resource layouts, exact source identity, BEA patching behavior, rebuild parity, and no-noticeable-difference parity remain separate proof.
 
-Wave865 render tail static read-back (`render-tail-wave865`, `wave865-readback-verified`) hardened `0x00544fb0 CDXLandscape__ResetWrapper` as `void __thiscall CDXLandscape__ResetWrapper(void * this, int reset_x, int reset_y)`. `CEngine__ResetPos` forwards two stack values and the engine landscape pointer at `engine+0x10` into the wrapper; the wrapper ignores the stack values and calls `CDXLandscape__Reset(this)`. Verified backup: `G:\GhidraBackups\BEA_20260525-160100_post_wave865_render_tail_verified`. Exact reset coordinate semantics, `CDXLandscape` layout, runtime reset behavior, source identity, BEA patching, and rebuild parity remain deferred.
+Wave865 render tail static read-back (`render-tail-wave865`, `wave865-readback-verified`) hardened `0x00544fb0 CDXLandscape__ResetWrapper` as `void __thiscall CDXLandscape__ResetWrapper(void * this, int reset_x, int reset_y)`. `CEngine__ResetPos` forwards two stack values and the engine landscape pointer at `engine+0x10` into the wrapper; the wrapper ignores the stack values and calls `CDXLandscape__Reset(this)`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-160100_post_wave865_render_tail_verified`. Exact reset coordinate semantics, `CDXLandscape` layout, runtime reset behavior, source identity, BEA patching, and rebuild parity remain deferred.
 
 ## Wave982 Resource Descriptor Cleanup Owner Correction
 
@@ -92,7 +92,7 @@ Wave982 resource descriptor cleanup correction (`resource-descriptor-cleanup-wav
 
 The row is retained here only as superseded DXLandscape-owner history. Current static evidence is generic descriptor cleanup: the body advances `ECX` by `8`, pushes `CResourceDescriptor__dtor`, element size `0x41c`, and count `1`, then calls `CRT__EhVectorDestructorIterator_WithUnwind`. Representative unwind xrefs include `0x005d0fb0`, `0x005d196b`, `0x005d2070`, `0x005d4900`, and `0x005d52e0`, plus DATA refs `0x00515f30` and `0x00515f90`.
 
-Post-Wave982 queue telemetry remains `6222/6222 = 100.00%`. Wave911 focused re-audit progress is `376/1408 = 26.70%`; expanded static surface progress is `435/1478 = 29.43%`. Verified backup: `G:\GhidraBackups\BEA_20260530-232843_post_wave982_resource_descriptor_cleanup_verified`.
+Post-Wave982 queue telemetry remains `6222/6222 = 100.00%`. Wave911 focused re-audit progress is `376/1408 = 26.70%`; expanded static surface progress is `435/1478 = 29.43%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260530-232843_post_wave982_resource_descriptor_cleanup_verified`.
 
 This is static Ghidra evidence only. Exact source identity, concrete descriptor-table layout, runtime unwind/cleanup behavior, BEA patching, and rebuild parity remain separate proof.
 
@@ -102,7 +102,7 @@ Wave807 landscape patch raw head (`landscape-patch-raw-head-wave807`, `wave807-r
 
 The DXLandscape evidence remains the caller: `CDXLandscape__UpdateLOD` callsite `0x00546fe6` calls the helper immediately after `CDXPatchManager__AllocatePatchSlot`, with two tile coordinates scaled by `8`, `grid_step` derived as `4 >> lod_slot`, and tile-record metadata copied from `[ESI+0x0b]`. Post-caller decompile read-back shows `CDXPatch__SetGridOriginStepAndRebuild(pvVar12, iStack_c8 * 8, iStack_c4 * 8, 4 >> ..., *(pbVar16 + 0xb))`.
 
-Post-Wave807 queue telemetry is `6098` total, `5582` commented, `516` commentless, `0` exact-undefined signatures, `0` `param_N`, strict proxy `5582/6098 = 91.54%`, and next raw head `0x0048f620 CDXEngine__RenderPostMissionOverlayAndMenu`. Verified backup: `G:\GhidraBackups\BEA_20260524-105819_post_wave807_landscape_patch_raw_head_verified`.
+Post-Wave807 queue telemetry is `6098` total, `5582` commented, `516` commentless, `0` exact-undefined signatures, `0` `param_N`, strict proxy `5582/6098 = 91.54%`, and next raw head `0x0048f620 CDXEngine__RenderPostMissionOverlayAndMenu`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-105819_post_wave807_landscape_patch_raw_head_verified`.
 
 This is static Ghidra read-back evidence only. Exact CDXPatch field names, tile-record layout, runtime terrain rendering/GPU behavior, BEA patching, and rebuild parity remain deferred.
 
@@ -112,7 +112,7 @@ Wave806 raw commentless head (`raw-commentless-head-wave806`, `wave806-readback-
 
 The old `CDXLandscape__ClearPendingHudMarkerHandle` / `CDXLandscape__ReleasePendingHudMarker` labels are superseded for these rows. The correction is based on adjacent `0x0048dec0 CResourceAccumulator__LoadMixerDetailTexture`, which formats `mixers\detail%.2d.tga` and stores `CTexture__FindTexture(...)` into the same global, plus xrefs from `CDXLandscape__Constructor`, `CDXLandscape__Destructor`, and `Unwind@005d7980`.
 
-Post-Wave806 queue telemetry is `6098` total, `5581` commented, `517` commentless, `0` exact-undefined signatures, `0` `param_N`, strict proxy `5581/6098 = 91.52%`, and next raw head `0x0048f2f0 CDXLandscape__SetUpdateBoundsAndRebuildVB`, later corrected by Wave807. Verified backup: `G:\GhidraBackups\BEA_20260524-102416_post_wave806_raw_commentless_head_verified`.
+Post-Wave806 queue telemetry is `6098` total, `5581` commented, `517` commentless, `0` exact-undefined signatures, `0` `param_N`, strict proxy `5581/6098 = 91.52%`, and next raw head `0x0048f2f0 CDXLandscape__SetUpdateBoundsAndRebuildVB`, later corrected by Wave807. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-102416_post_wave806_raw_commentless_head_verified`.
 
 This is static Ghidra read-back evidence only. Exact CDXLandscape field ownership, runtime terrain rendering behavior, runtime texture lifetime, BEA patching, and rebuild parity remain deferred.
 
@@ -159,7 +159,7 @@ Wave806 supersedes the HUD-marker interpretation for this row. The saved name is
 
 Wave748 unwind continuation saved a `void __cdecl Unwind@005d2070(void)` signature, comment, and tags for `0x005d2070 Unwind@005d2070`. Scope-table DATA xref `0x0061af0c` points at the cleanup body, and decompile/instruction evidence calls `CDXLandscape__DestroyResourceDescriptorArray_Thunk` on the stack-local descriptor array at `EBP-0x434`.
 
-The same `unwind-continuation-wave748` tranche spans `0x005d1fc8 Unwind@005d1fc8` through `0x005d222b Unwind@005d222b`, with verified backup `G:\GhidraBackups\BEA_20260522-183258_post_wave748_unwind_continuation_verified`. Next high-signal queue head is `0x005d2250 Unwind@005d2250`; earliest raw commentless row remains `0x0042f220 CSPtrSet__Clear`.
+The same `unwind-continuation-wave748` tranche spans `0x005d1fc8 Unwind@005d1fc8` through `0x005d222b Unwind@005d222b`, with verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260522-183258_post_wave748_unwind_continuation_verified`. Next high-signal queue head is `0x005d2250 Unwind@005d2250`; earliest raw commentless row remains `0x0042f220 CSPtrSet__Clear`.
 
 This is saved static retail Ghidra evidence only. Exact parent source body, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain unproven.
 
@@ -187,7 +187,7 @@ Evidence:
 - Vtable slot `0` at `0x005e50d0` points to `CDXLandscape__ScalarDeletingDestructor`; vtable slot `4` at `0x005e50e0` points to `CDXLandscape__ReleaseBuffers`.
 - `CEngine__Shutdown` calls `CDXLandscape__Shutdown` for `engine+0x10`; shutdown destroys the `+0x24` array of `0x34`-byte resource records through `CDXLandscape__ReleaseOwnedResources`, releases `+0x28/+0x2c/+0x30`, destroys CDXSurf state, and clears the `+0x38` texture/HUD-linked pointer.
 
-Post-Wave601 queue telemetry is `6093` total, `3088` commented, `3005` commentless, `1324` exact-undefined signatures, and `1073` `param_N`; comment-backed proxy `3088/6093 = 50.68%`; strict clean-signature proxy `3043/6093 = 49.94%`. Verified backup: `G:\GhidraBackups\BEA_20260519-181626_post_wave601_cdxlandscape_head_verified`. The next queue head is `0x00544fc0 CDXLandscape__BuildVertexBuffer`.
+Post-Wave601 queue telemetry is `6093` total, `3088` commented, `3005` commentless, `1324` exact-undefined signatures, and `1073` `param_N`; comment-backed proxy `3088/6093 = 50.68%`; strict clean-signature proxy `3043/6093 = 49.94%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-181626_post_wave601_cdxlandscape_head_verified`. The next queue head is `0x00544fc0 CDXLandscape__BuildVertexBuffer`.
 
 Static retail evidence only: runtime terrain rendering, exact CDXLandscape/CLandscape/CLandscapeTexture/CVBuffer/CIBuffer/CDXSurf layouts, exact source-body identity, BEA patching, and rebuild parity remain unproven.
 
@@ -209,7 +209,7 @@ Evidence:
 - `CEngine__InitResources` calls `CDXLandscape__LoadCloudShadowTexture`, which invokes `CTexture__FindTexture("clouds_shadow.tga", 4, 0, -1, 1, 1)` and stores the returned pointer at `this+0x38`.
 - `CEngine__UpdatePos` checks `engine+0x4a8`, loads the landscape object from `engine+0x10`, pushes its stack camera/context argument and `engine+0x4ac`, then calls `CDXLandscape__SetTileData`; `RET 0x8` proves the two-stack-argument shape, and the helper stores `tile_context` at `resource_record+0x10` for `record_index * 0x34`.
 
-Post-Wave602 queue telemetry is `6093` total, `3092` commented, `3001` commentless, `1320` exact-undefined signatures, and `1073` `param_N`; comment-backed proxy `3092/6093 = 50.75%`; strict clean-signature proxy `3047/6093 = 50.01%`. Verified backup: `G:\GhidraBackups\BEA_20260519-184356_post_wave602_cdxlandscape_core_verified`. The next queue head is `0x00545410 CDXLandscape__Render`.
+Post-Wave602 queue telemetry is `6093` total, `3092` commented, `3001` commentless, `1320` exact-undefined signatures, and `1073` `param_N`; comment-backed proxy `3092/6093 = 50.75%`; strict clean-signature proxy `3047/6093 = 50.01%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-184356_post_wave602_cdxlandscape_core_verified`. The next queue head is `0x00545410 CDXLandscape__Render`.
 
 Static retail evidence only: runtime terrain rendering, runtime cloud-shadow/waves behavior, resource ownership under lost-device/reset conditions, exact CDXLandscape/CLandscape/CLandscapeTexture/CVBuffer/CIBuffer/CDXSurf layouts, exact source-body identity, BEA patching, and rebuild parity remain unproven.
 
@@ -228,7 +228,7 @@ Evidence:
 - `CDXLandscape__Render` resets terrain resources when `DAT_0089ce44` changes, forwards both stack arguments to `CDXLandscape__UpdateLOD`, builds the world matrix from `DAT_008c0280..DAT_008c028c` plus the 12 dwords at `DAT_008aa9c0`, changes render-state/cache flags, applies cached lights with flag `1`, calls `CDXLandscape__RenderTerrain(record_index)`, then restores cached-light state with flag `0`.
 - `CDXLandscape__RenderTerrain` computes `this+0x24 + record_index*0x34`, updates cloud-shadow scroll offsets only for record `0`, runs validation passes through `CWaterRenderSystem__ValidateVBufferAndMarkReady`, configures texture stages for `this+0x30`, `DAT_0067a7d0`, and `this+0x38`, binds `this+0x2c` as the index buffer and `this+0x28` as the vertex buffer, draws base/LOD tile ranges, and conditionally calls `CDXLandscape__RenderShadowMap(0)`.
 
-Post-Wave603 queue telemetry is `6093` total, `3094` commented, `2999` commentless, `1318` exact-undefined signatures, and `1073` `param_N`; comment-backed proxy `3094/6093 = 50.78%`; strict clean-signature proxy `3049/6093 = 50.04%`. Verified backup: `G:\GhidraBackups\BEA_20260519-191021_post_wave603_cdxlandscape_render_verified`. The next queue head is `0x00546220 CDXLandscape__SetRenderTarget`.
+Post-Wave603 queue telemetry is `6093` total, `3094` commented, `2999` commentless, `1318` exact-undefined signatures, and `1073` `param_N`; comment-backed proxy `3094/6093 = 50.78%`; strict clean-signature proxy `3049/6093 = 50.04%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-191021_post_wave603_cdxlandscape_render_verified`. The next queue head is `0x00546220 CDXLandscape__SetRenderTarget`.
 
 Static retail evidence only: exact `engine_context_470` class semantics, matrix/light-state semantics, texture-stage/resource-record layouts, runtime terrain/shadow rendering, exact source-body identity, BEA patching, and rebuild parity remain unproven.
 
@@ -253,7 +253,7 @@ Evidence:
 - `CDXLandscape__RenderShadowMap` is called from `CDXLandscape__RenderTerrain` with `record_index 0`, guards `DAT_009c648c`, non-multiplayer state, and required `this+0x08/0x0c/0x18/0x1c` resources, switches to the shadow target at `this+0x08`, draws base/LOD terrain, calls `CWaterRenderSystem__RenderShadowPass(DAT_0089c9b4)`, restores target/depth surfaces and render states, and returns `AL`.
 - `CDXLandscape__RenderTileRange` is called by `CDXEngine__RenderMultipassLayerA` with four coordinate bounds and `ECX=DAT_0089c9b0`; `RET 0x10` proves the four-stack-argument shape. The body averages `x_min/x_max` and `z_min/z_max`, samples `CStaticShadows__SampleShadowHeightBilinear`, clamps to `0..0x3f` tile indices, binds tile CVBuffers at `+0x0c`, selects `DAT_009c64dc` material records from tile bytes `+0x10/+0x11`, validates through `DAT_009c7c58`, and draws indexed primitives.
 
-Post-Wave604 queue telemetry is `6093` total, `3099` commented, `2994` commentless, `1313` exact-undefined signatures, and `1073` `param_N`; comment-backed proxy `3099/6093 = 50.86%`; strict clean-signature proxy `3054/6093 = 50.12%`. Verified backup: `G:\GhidraBackups\BEA_20260519-194745_post_wave604_cdxlandscape_target_shadow_verified`. The next queue head is `0x00546b10 CDXLandscape__ResetCameraPosition`.
+Post-Wave604 queue telemetry is `6093` total, `3099` commented, `2994` commentless, `1313` exact-undefined signatures, and `1073` `param_N`; comment-backed proxy `3099/6093 = 50.86%`; strict clean-signature proxy `3054/6093 = 50.12%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-194745_post_wave604_cdxlandscape_target_shadow_verified`. The next queue head is `0x00546b10 CDXLandscape__ResetCameraPosition`.
 
 Static retail evidence only: exact D3D interface semantics, COM/surface ownership lifetime, CDXLandscape/resource/tile-record layouts, runtime terrain/shadow rendering, exact source-body identity, BEA patching, and rebuild parity remain unproven.
 
@@ -277,7 +277,7 @@ Evidence:
 - Wave996 (`cdamage-residual-review-wave996`) re-read the adjacent CDamage helpers read-only: `0x00440eb0 CDamage__InsertCellEntry` and `0x00440f80 CDamage__RemoveCellEntryByCoords` remain the saved Wave346 cell-entry signatures called from `CDXEngine__ApplyLandscapeDamageStamp`. Runtime terrain damage/decal behavior remains separate proof.
 - `CDXEngine__ComputeLandscapeTileComplexityScore` has `RET 0x4`; `CDXLandscape__Reset` passes `tile_index`, the body uses global heightfield pointers/scales rather than `ECX`, samples a `0x9 by 0x9` height window through `DAT_006fbdf0`, evaluates three subdivision levels, multiplies by `DAT_006fbdf4`, returns double, and the caller casts the result to float.
 
-Post-Wave605 queue telemetry is `6093` total, `3103` commented, `2990` commentless, `1311` exact-undefined signatures, and `1071` `param_N`; comment-backed proxy `3103/6093 = 50.93%`; strict clean-signature proxy `3058/6093 = 50.19%`. Verified backup: `G:\GhidraBackups\BEA_20260519-201654_post_wave605_cdxlandscape_lod_damage_verified`. The next queue head is `0x00547d40 DXMemBuffer__SetBufferSize`.
+Post-Wave605 queue telemetry is `6093` total, `3103` commented, `2990` commentless, `1311` exact-undefined signatures, and `1071` `param_N`; comment-backed proxy `3103/6093 = 50.93%`; strict clean-signature proxy `3058/6093 = 50.19%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-201654_post_wave605_cdxlandscape_lod_damage_verified`. The next queue head is `0x00547d40 DXMemBuffer__SetBufferSize`.
 
 Static retail evidence only: exact `engine_context_470` class semantics, CDXLandscape resource/tile/patch layouts, damage-entry layout, terrain deformation behavior, runtime LOD rendering, exact source-body identity, BEA patching, and rebuild parity remain unproven.
 
@@ -292,4 +292,4 @@ Static retail evidence only: the current `CDXLandscape` owner prefix is retained
 
 ## Wave1151 Current-Risk Tag Normalization
 
-Wave1151 tag-only normalization also covers `0x00403ff0 CResourceDescriptorTable__DestroyEmbeddedDescriptor_Thunk` as a score21 current-risk row. It confirms the Wave982 resource-descriptor cleanup-thunk boundary and adds Wave1151/current-risk tags only; no rename, signature, comment, boundary, or byte change was made. Verified backup: `G:\GhidraBackups\BEA_20260605-201419_post_wave1151_mixed_score21_current_risk_review_verified`. Runtime behavior, exact layouts, exact source-body identity, BEA patching behavior, gameplay outcomes, visual QA, and rebuild parity remain separate proof.
+Wave1151 tag-only normalization also covers `0x00403ff0 CResourceDescriptorTable__DestroyEmbeddedDescriptor_Thunk` as a score21 current-risk row. It confirms the Wave982 resource-descriptor cleanup-thunk boundary and adds Wave1151/current-risk tags only; no rename, signature, comment, boundary, or byte change was made. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-201419_post_wave1151_mixed_score21_current_risk_review_verified`. Runtime behavior, exact layouts, exact source-body identity, BEA patching behavior, gameplay outcomes, visual QA, and rebuild parity remain separate proof.

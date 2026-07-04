@@ -30,7 +30,7 @@ Fresh read-back evidence:
 - Primary exports: 6 metadata rows, 6 tag rows, 37 xref rows, 394 instruction rows, and 6 decompile rows.
 - Context exports: 15 metadata rows, 15 tag rows, 133 xref rows, 1171 instruction rows, and 15 decompile rows.
 - Vtable export: 192 rows across `0x005dfc94` and `0x005e1510`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-043815_post_wave943_unit_weapon_gameplay_review_verified`, 19 files, 173280135 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-043815_post_wave943_unit_weapon_gameplay_review_verified`, 19 files, 173280135 bytes, `DiffCount=0`.
 - Mutation status: read-only review; no dry/apply/final-dry mutation scripts were run because the saved rows already matched the bounded static evidence.
 
 Progress:
@@ -38,7 +38,7 @@ Progress:
 - Wave911 focused re-audit progress after Wave943: `186/1408 = 13.21%`.
 - Static export-contract function-quality closure remains `6113/6113 = 100.00%`.
 
-Probe token anchor: Wave943; `unit-weapon-gameplay-review-wave943`; `0x004f6fd0 CUnit__RenderWithDistanceFade`; `0x004fd230 CUnit__SpawnProfileDropPickup`; `0x00505e00 CWeapon__ctor_base`; `0x005061f0 CWeapon__DoesTargetMaskMatchDistanceProfile`; `0x005068f0 CWeapon__AdvanceChargeProgressIfAnySlotAssigned`; `0x0050ee90 CUnit__scalar_deleting_dtor`; `0x004bfe00 CUnit__dtor_base_Thunk_004bfe00`; `0x004f84e0 CUnit__dtor_base`; `0x00505f90 CWeapon__DetachFromSetAndShutdownMonitor`; `0x005dfc94`; `0x005e1510`; read-only review; `186/1408 = 13.21%`; `6113/6113 = 100.00%`; `G:\GhidraBackups\BEA_20260528-043815_post_wave943_unit_weapon_gameplay_review_verified`.
+Probe token anchor: Wave943; `unit-weapon-gameplay-review-wave943`; `0x004f6fd0 CUnit__RenderWithDistanceFade`; `0x004fd230 CUnit__SpawnProfileDropPickup`; `0x00505e00 CWeapon__ctor_base`; `0x005061f0 CWeapon__DoesTargetMaskMatchDistanceProfile`; `0x005068f0 CWeapon__AdvanceChargeProgressIfAnySlotAssigned`; `0x0050ee90 CUnit__scalar_deleting_dtor`; `0x004bfe00 CUnit__dtor_base_Thunk_004bfe00`; `0x004f84e0 CUnit__dtor_base`; `0x00505f90 CWeapon__DetachFromSetAndShutdownMonitor`; `0x005dfc94`; `0x005e1510`; read-only review; `186/1408 = 13.21%`; `6113/6113 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260528-043815_post_wave943_unit_weapon_gameplay_review_verified`.
 
 What this proves:
 

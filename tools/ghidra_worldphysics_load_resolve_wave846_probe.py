@@ -28,7 +28,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-060333_post_wave846_worldphysics_load_resolve_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-060333_post_wave846_worldphysics_load_resolve_verified"
 NEXT_HEAD = "0x00512040 CLTShell__InitUnhandledExceptionLogFile"
 
 TARGETS = {

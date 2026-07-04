@@ -328,7 +328,7 @@ def build_ledger() -> dict[str, Any]:
         "1179/1179 current-risk focused rows reviewed or superseded with bounded static evidence; "
         "static-reaudit-current-risk-ledger.json; static-reaudit-measurement-register.md; "
         "continuity denominator; "
-        r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified; "
+        r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified; "
         "wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; "
         "not Wave911 reconstruction; rebuild-grade static contracts; no noticeable difference."
     )

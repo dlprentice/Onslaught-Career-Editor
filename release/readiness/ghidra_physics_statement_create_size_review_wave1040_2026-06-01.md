@@ -35,7 +35,7 @@ Read-back evidence:
 - Wave911 focused progress advances to `727/1408 = 51.63%`.
 - Expanded static surface progress advances to `956/1493 = 64.03%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-082926_post_wave1040_physics_statement_create_size_review_verified`, `19` files, `174001031` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-082926_post_wave1040_physics_statement_create_size_review_verified`, `19` files, `174001031` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -53,4 +53,4 @@ What remains separate proof:
 - Exact source-body identity.
 - BEA patching, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1040; physics-statement-create-size-review-wave1040; 0x0042ede0 CUnitStatement__CreateUnitAndRecurse; 0x0042f4b0 CPhysicsUnitValueList__scalar_deleting_dtor; 0x0042f980 CPhysicsWeaponValueList__scalar_deleting_dtor; 0x0042fea0 CPhysicsWeaponModeValueList__scalar_deleting_dtor; 0x00430410 CPhysicsRoundValueList__scalar_deleting_dtor; CDXMemoryManager__Free; 0x00549220; DAT_009c3df0; 727/1408 = 51.63%; 956/1493 = 64.03%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-082926_post_wave1040_physics_statement_create_size_review_verified; comment/tag correction.
+Probe token anchor: Wave1040; physics-statement-create-size-review-wave1040; 0x0042ede0 CUnitStatement__CreateUnitAndRecurse; 0x0042f4b0 CPhysicsUnitValueList__scalar_deleting_dtor; 0x0042f980 CPhysicsWeaponValueList__scalar_deleting_dtor; 0x0042fea0 CPhysicsWeaponModeValueList__scalar_deleting_dtor; 0x00430410 CPhysicsRoundValueList__scalar_deleting_dtor; CDXMemoryManager__Free; 0x00549220; DAT_009c3df0; 727/1408 = 51.63%; 956/1493 = 64.03%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-082926_post_wave1040_physics_statement_create_size_review_verified; comment/tag correction.

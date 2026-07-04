@@ -28,8 +28,8 @@ Fresh export evidence:
 - Xrefs: `67` rows.
 - Instructions: `1170` rows, `targets=10 missing=0`.
 - Decompile: `10` rows, `targets=10 dumped=10 missing=0 failed=0`.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-022812_post_wave1119_mixed_score26_current_risk_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
-- Previous latest completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-021103_post_wave1118_particle_message_current_risk_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-022812_post_wave1119_mixed_score26_current_risk_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
+- Previous latest completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-021103_post_wave1118_particle_message_current_risk_review_verified`.
 
 Boundary:
 

@@ -25,7 +25,7 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-055200_post_wave1169_physics_script_loader_tail_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-055200_post_wave1169_physics_script_loader_tail_current_risk_review_verified"
 
 TARGETS = {
     "0x00430210": ("CRoundStatement__LoadFromMemBuffer", "void __thiscall CRoundStatement__LoadFromMemBuffer"),

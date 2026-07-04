@@ -18,7 +18,7 @@ Release allowlist hygiene: `a2e41405` (R0=4000 snapshot), state closeout `ebb59a
 **Done 2026-05-27** — `origin/main` updated and `origin/wip/sandbox` retired/deleted after archival tagging. Historical steps below are retained for audit only.
 
 ```powershell
-cd C:\Users\david\source\Onslaught-Career-Editor-private
+cd [maintainer-private-checkout]
 git checkout main
 git pull origin main
 git log -1 --oneline

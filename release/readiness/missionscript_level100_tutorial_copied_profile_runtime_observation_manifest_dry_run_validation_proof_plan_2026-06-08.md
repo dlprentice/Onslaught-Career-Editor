@@ -83,7 +83,7 @@ Static anchors preserved:
 - `CDXMemBuffer__InitFromFile`
 - Clean specimen SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
-Current static authority remains unchanged: `6411/6411 = 100.00%`, `0 / 0 / 0` debt, `1560/1560 = 100.00%` expanded post-100 surface, and `1179/1179 = 100.00%` current-risk focused accounting. Latest verified Ghidra backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified` because this slice performs no Ghidra mutation.
+Current static authority remains unchanged: `6411/6411 = 100.00%`, `0 / 0 / 0` debt, `1560/1560 = 100.00%` expanded post-100 surface, and `1179/1179 = 100.00%` current-risk focused accounting. Latest verified Ghidra backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified` because this slice performs no Ghidra mutation.
 
 What this proves:
 

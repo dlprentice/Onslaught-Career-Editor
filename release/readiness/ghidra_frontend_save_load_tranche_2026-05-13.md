@@ -34,7 +34,7 @@ Serialized headless dry/apply/read-back corrected and hardened `11` frontend sav
 | Focused package probe | `cmd.exe /c npm run test:ghidra-frontend-save-load` passed with targets `11`, xref evidence hits `14`, instruction evidence hits `29`, callsite evidence hits `4`, and vtable evidence hits `10`. |
 | Whole-database queue | Refreshed headless `ExportFunctionQualitySnapshot.java` plus `cmd.exe /c npm run test:ghidra-static-reaudit-queue` passed with `6026` total functions, `1350` commented functions, `4676` commentless functions, `1939` undefined signatures, and `1973` `param_N` signatures. |
 | Current proxies | Comment-backed `1350/6026 = 22.40%`; strict clean-signature `1288/6026 = 21.37%`. These are telemetry only, not milestones. |
-| Ghidra backup | Live `BEA.gpr`/`BEA.rep` backup verified at `G:\GhidraBackups\BEA_20260513_124725_post_wave375_frontend_save_load_verified` with `19` files, `153586567` bytes, and `HashDiffCount=0`. |
+| Ghidra backup | Live `BEA.gpr`/`BEA.rep` backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_124725_post_wave375_frontend_save_load_verified` with `19` files, `153586567` bytes, and `HashDiffCount=0`. |
 
 ## Claim Boundary
 

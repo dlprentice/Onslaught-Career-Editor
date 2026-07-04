@@ -14,7 +14,7 @@ Current extension:
 - Focused probe: `tools/ghidra_physics_statement_create_size_review_wave1040_probe.py`
 - Apply script: `tools/ApplyPhysicsStatementCreateSizeReviewWave1040.java`
 - Evidence base: `subagents/ghidra-static-reaudit/wave1040-physics-statement-create-size-review`
-- Verified backup: `G:\GhidraBackups\BEA_20260601-082926_post_wave1040_physics_statement_create_size_review_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-082926_post_wave1040_physics_statement_create_size_review_verified`
 
 Wave1040 summary:
 
@@ -30,4 +30,4 @@ Boundary note:
 
 This is structural static evidence validation. It checks focused probe coverage, readiness/evidence/backup structure, apply-log coverage, and live static queue closure. It does not prove runtime PhysicsScript behavior, runtime lifetime behavior, mission-script outcomes, exact source-body identity, concrete layouts, BEA patching, gameplay outcomes, or rebuild parity.
 
-Probe token anchor: Wave1040; physics-statement-create-size-review-wave1040; 0x0042ede0 CUnitStatement__CreateUnitAndRecurse; 0x0042f4b0 CPhysicsUnitValueList__scalar_deleting_dtor; 0x0042f980 CPhysicsWeaponValueList__scalar_deleting_dtor; 0x0042fea0 CPhysicsWeaponModeValueList__scalar_deleting_dtor; 0x00430410 CPhysicsRoundValueList__scalar_deleting_dtor; CDXMemoryManager__Free; 0x00549220; DAT_009c3df0; 727/1408 = 51.63%; 956/1493 = 64.03%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-082926_post_wave1040_physics_statement_create_size_review_verified; comment/tag correction.
+Probe token anchor: Wave1040; physics-statement-create-size-review-wave1040; 0x0042ede0 CUnitStatement__CreateUnitAndRecurse; 0x0042f4b0 CPhysicsUnitValueList__scalar_deleting_dtor; 0x0042f980 CPhysicsWeaponValueList__scalar_deleting_dtor; 0x0042fea0 CPhysicsWeaponModeValueList__scalar_deleting_dtor; 0x00430410 CPhysicsRoundValueList__scalar_deleting_dtor; CDXMemoryManager__Free; 0x00549220; DAT_009c3df0; 727/1408 = 51.63%; 956/1493 = 64.03%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-082926_post_wave1040_physics_statement_create_size_review_verified; comment/tag correction.

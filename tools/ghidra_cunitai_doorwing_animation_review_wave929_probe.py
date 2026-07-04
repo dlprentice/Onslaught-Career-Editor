@@ -23,7 +23,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260527-231046_post_wave929_cunitai_doorwing_animation_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260527-231046_post_wave929_cunitai_doorwing_animation_review_verified"
 SCRIPT_NAME = "test:ghidra-cunitai-doorwing-animation-review-wave929"
 SCRIPT_VALUE = r"py -3 tools\ghidra_cunitai_doorwing_animation_review_wave929_probe.py --check"
 

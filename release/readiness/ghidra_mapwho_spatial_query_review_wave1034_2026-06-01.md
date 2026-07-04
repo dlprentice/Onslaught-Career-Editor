@@ -28,7 +28,7 @@ Evidence counts:
 - Wave911 focused re-audit progress after Wave1034: `660/1408 = 46.88%`.
 - Expanded static surface progress after Wave1034: `889/1493 = 59.54%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-054844_post_wave1034_mapwho_spatial_query_review_verified`, `19` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-054844_post_wave1034_mapwho_spatial_query_review_verified`, `19` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -41,7 +41,7 @@ What remains unproven:
 - Runtime spatial-query behavior.
 - Runtime collision/render/tree/AI targeting behavior.
 - Concrete `CMapWho` / `CMapWhoEntry` layouts beyond observed offsets.
-- Exact local variable names/types and source-body identity. The retail debug path names `C:\dev\ONSLAUGHT2\mapwho.cpp`, but `mapwho.cpp` is absent from the current Stuart source snapshot.
+- Exact local variable names/types and source-body identity. The retail debug path names `[maintainer-local-source-export-root]\mapwho.cpp`, but `mapwho.cpp` is absent from the current Stuart source snapshot.
 - BEA patch behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1034; mapwho-spatial-query-review-wave1034; 0x00491900 CMapWhoEntry__Init; 0x00491d80 CMapWho__SetIteratorFromSectorHead; 0x00491ea0 CMapWho__GetFirstEntryWithinRadius; 0x00492110 CMapWho__GetFirstEntryWithinLine; 0x00492670 CMapWho__WorldToSector; 0x00492860 CMapWho__DebugDrawSector; 0x00492ba0 CMapWhoEntry__SetPosition; 0x00492c90 CMapWhoEntry__GetOwner; 660/1408 = 46.88%; 889/1493 = 59.54%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-054844_post_wave1034_mapwho_spatial_query_review_verified; no mutation.
+Probe token anchor: Wave1034; mapwho-spatial-query-review-wave1034; 0x00491900 CMapWhoEntry__Init; 0x00491d80 CMapWho__SetIteratorFromSectorHead; 0x00491ea0 CMapWho__GetFirstEntryWithinRadius; 0x00492110 CMapWho__GetFirstEntryWithinLine; 0x00492670 CMapWho__WorldToSector; 0x00492860 CMapWho__DebugDrawSector; 0x00492ba0 CMapWhoEntry__SetPosition; 0x00492c90 CMapWhoEntry__GetOwner; 660/1408 = 46.88%; 889/1493 = 59.54%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-054844_post_wave1034_mapwho_spatial_query_review_verified; no mutation.

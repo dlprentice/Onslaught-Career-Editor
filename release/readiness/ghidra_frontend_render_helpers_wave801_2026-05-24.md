@@ -27,7 +27,7 @@ Read-back evidence:
 - Post exports: 8 metadata rows, 8 tag rows, 134 xref rows, 296 instruction rows, and 8 decompile rows.
 - Queue after Wave801: 6098 total, 5564 commented, 534 commentless, 0 exact-undefined signatures, 0 param_N signatures, strict clean-signature proxy `5564/6098 = 91.24%`.
 - Next raw commentless row: `0x0044d390 CFEPSaveGame__InitDialogAndLayoutState`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-073450_post_wave801_frontend_render_helpers_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-073450_post_wave801_frontend_render_helpers_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
 
 Deferred from this wave:
 

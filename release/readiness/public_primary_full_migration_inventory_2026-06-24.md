@@ -5,7 +5,7 @@ Date: 2026-06-24
 
 ## Summary
 
-The public repo at `C:\Users\david\source\Onslaught-Career-Editor` is the
+The public repo at `[public-primary-checkout]` is the
 primary working repo. This inventory compares the public repo against the former
 private repo tracked index and accepts public-primary migration when the only
 remaining private-only tracked files are hard payloads or volatile scratch
@@ -15,7 +15,7 @@ Validated command:
 
 ```powershell
 py -3 tools\public_primary_migration_inventory.py --self-test
-py -3 tools\public_primary_migration_inventory.py --check --private-root C:\Users\david\source\Onslaught-Career-Editor-private --require-private-root
+py -3 tools\public_primary_migration_inventory.py --check --private-root [maintainer-private-checkout] --require-private-root
 ```
 
 Accepted output:

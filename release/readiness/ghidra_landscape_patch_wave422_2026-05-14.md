@@ -31,7 +31,7 @@ Stuart's current source snapshot does not contain matching `DXPatchManager.cpp` 
 - Focused probe passed through npm: `cmd.exe /c npm run test:ghidra-landscape-patch-wave422`.
 - Full static queue refreshed to `6043` functions, `1667` commented functions, `4376` commentless functions, `1861` undefined signatures, and `1813` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1667/6043 = 27.59%`; strict clean-signature `1604/6043 = 26.54%`.
-- Actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260514_160133_post_wave422_landscape_patch_verified` with `19` files, `155159431` bytes, `HashDiffCount=0`, and `MissingCount=0`.
+- Actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260514_160133_post_wave422_landscape_patch_verified` with `19` files, `155159431` bytes, `HashDiffCount=0`, and `MissingCount=0`.
 
 ## Not Proven
 

@@ -6,7 +6,7 @@ Scope: `wave1156-sharedunitvfunc-current-risk-review`
 
 Wave1156 re-read `29 SharedUnitVFunc current-risk rows` with fresh Ghidra exports and made no mutation: no rename, signature change, comment change, tag change, function-boundary change, executable-byte change, BEA launch, installed-game mutation, save mutation, or runtime-file mutation.
 
-Probe token anchor: Wave1156; wave1156-sharedunitvfunc-current-risk-review; 453/1179 = 38.42%; 29 SharedUnitVFunc current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 726; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consults used; 0 / 0 / 0; 6411/6411 = 100.00%; 951 DATA xrefs; 442 instruction rows; wave1083-readback-verified=6; wave1085-readback-verified=23; SharedUnitVFunc__WriteVector1cMinus8cToOut_00401550; SharedUnitVFunc__TestField17c19cReadiness_004fd440; SharedUnitVFunc__CopySourceVectors114120AndRefresh_004fe4a0; SharedUnitVFunc__ForwardField208Slot10_004fce00; SharedUnitVFunc__TestField17cEntryNameMatch_004fe310; G:\GhidraBackups\BEA_20260605-231547_post_wave1156_sharedunitvfunc_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1156; wave1156-sharedunitvfunc-current-risk-review; 453/1179 = 38.42%; 29 SharedUnitVFunc current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 726; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consults used; 0 / 0 / 0; 6411/6411 = 100.00%; 951 DATA xrefs; 442 instruction rows; wave1083-readback-verified=6; wave1085-readback-verified=23; SharedUnitVFunc__WriteVector1cMinus8cToOut_00401550; SharedUnitVFunc__TestField17c19cReadiness_004fd440; SharedUnitVFunc__CopySourceVectors114120AndRefresh_004fe4a0; SharedUnitVFunc__ForwardField208Slot10_004fce00; SharedUnitVFunc__TestField17cEntryNameMatch_004fe310; [maintainer-local-ghidra-backup-root]\BEA_20260605-231547_post_wave1156_sharedunitvfunc_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
 
 Fresh evidence:
 
@@ -16,7 +16,7 @@ Fresh evidence:
 - `pre-instructions.tsv`: `442 instruction rows`, `targets=29 missing=0`.
 - `pre-decompile/index.tsv`: `29` rows, `targets=29 dumped=29 missing=0 failed=0`.
 - Provenance tags: `wave1083-readback-verified=6`, `wave1085-readback-verified=23`.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-231547_post_wave1156_sharedunitvfunc_current_risk_review_verified`, local Ghidra project root, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-231547_post_wave1156_sharedunitvfunc_current_risk_review_verified`, local Ghidra project root, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
 - Codex subagent usage: read-only consults audited the export evidence, backup pattern, and map-update targets; Codex root selected, exported, audited, and kept the tranche read-only.
 
 Reviewed row groups:

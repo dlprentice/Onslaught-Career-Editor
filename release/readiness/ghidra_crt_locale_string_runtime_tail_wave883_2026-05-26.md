@@ -28,7 +28,7 @@ Read-back evidence:
 - Post exports: `23` metadata rows, `23` tag rows, `319` xref rows, `1973` instruction rows, and `23` decompile rows.
 - Queue after Wave883: `6113` total functions, `5966` commented, `147` commentless, `0` exact-undefined signatures, `0` `param_N`, comment-backed and strict clean-signature proxy `5966/6113 = 97.60%`.
 - Next raw commentless row: `0x00569cb8 ControlsUI__AbortInvalidParameter`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-005047_post_wave883_crt_locale_string_runtime_tail_verified`, `19` files, `172788615` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-005047_post_wave883_crt_locale_string_runtime_tail_verified`, `19` files, `172788615` bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -30,7 +30,7 @@ Fresh serialized Ghidra exports under `subagents/ghidra-static-reaudit/wave962-g
 Verified Ghidra backup:
 
 ```text
-G:\GhidraBackups\BEA_20260528-132411_post_wave962_game_menu_options_bridge_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260528-132411_post_wave962_game_menu_options_bridge_review_verified
 ```
 
 Backup summary: `19` files, `173542279` bytes, `DiffCount=0`.
@@ -38,7 +38,7 @@ Backup summary: `19` files, `173542279` bytes, `DiffCount=0`.
 Wave911 focused re-audit progress after Wave962: `309/1408 = 21.95%`.
 Static export-contract function-quality closure remains `6152/6152 = 100.00%`.
 
-Probe anchor: Wave962; game-menu-options-bridge-review-wave962; 0x004d0290 CControllerBackMenuItem__RenderBindingCapacityWarning; 0x004d0e40 CGameMenu__InitBase; 0x004d3020 CEngine__SetOptionValueAndNotifyTarget; 0x00472d50 CGameInterface__VFunc_03_HandleMenuControlInput; 0x004d02a5 PUSH 0xe8; 0x004d02d7 PUSH 0xe9; 0x004d0e49 MOV [EAX], 0x5dc72c; 0x004d302e MOV [EAX*0x4 + 0x662ab0], EDI; 0x005dbc2c slot 3; 0x005dc72c; 309/1408 = 21.95%; 6152/6152 = 100.00%; G:\GhidraBackups\BEA_20260528-132411_post_wave962_game_menu_options_bridge_review_verified; no mutation.
+Probe anchor: Wave962; game-menu-options-bridge-review-wave962; 0x004d0290 CControllerBackMenuItem__RenderBindingCapacityWarning; 0x004d0e40 CGameMenu__InitBase; 0x004d3020 CEngine__SetOptionValueAndNotifyTarget; 0x00472d50 CGameInterface__VFunc_03_HandleMenuControlInput; 0x004d02a5 PUSH 0xe8; 0x004d02d7 PUSH 0xe9; 0x004d0e49 MOV [EAX], 0x5dc72c; 0x004d302e MOV [EAX*0x4 + 0x662ab0], EDI; 0x005dbc2c slot 3; 0x005dc72c; 309/1408 = 21.95%; 6152/6152 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260528-132411_post_wave962_game_menu_options_bridge_review_verified; no mutation.
 
 ## Boundary
 

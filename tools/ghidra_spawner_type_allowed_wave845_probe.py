@@ -32,7 +32,7 @@ BACKUP_SUMMARY = BASE / "backup-summary.json"
 ADDRESS = "0x0050f680"
 NAME = "CSpawnerThng__IsSpawnTypeAllowed"
 SIGNATURE = "bool __cdecl CSpawnerThng__IsSpawnTypeAllowed(int spawn_type)"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-053251_post_wave845_spawner_type_allowed_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-053251_post_wave845_spawner_type_allowed_verified"
 NEXT_HEAD = "0x00510520"
 
 COMMON_TAGS = {

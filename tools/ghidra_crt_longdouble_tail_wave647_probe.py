@@ -223,7 +223,7 @@ def check_docs(failures: list[str]) -> None:
     if "test:ghidra-crt-longdouble-tail-wave647" not in package.get("scripts", {}):
         failures.append("package.json missing Wave647 npm script")
     required_docs = {
-        PUBLIC_NOTE: ("Wave647", "CRT__LongDoubleShiftMantissaLeft1", "2608", "821", "G:\\GhidraBackups\\BEA_20260520-162946_post_wave647_crt_longdouble_tail_verified"),
+        PUBLIC_NOTE: ("Wave647", "CRT__LongDoubleShiftMantissaLeft1", "2608", "821", "[maintainer-local-ghidra-backup-root]\\BEA_20260520-162946_post_wave647_crt_longdouble_tail_verified"),
         FUNCTION_INDEX: ("Wave647", "CRT__ConvertLongDoubleToDecimalRecordCore", "0x0056db76"),
         CRT_DOC: ("Wave647", "CRT__LongDoubleScaleByPowerOf10", "CRT__ChangeFileSizeByFd_NoLock"),
         GHIDRA_REFERENCE: ("Wave647", "CRT__AccumulateDecimalDigitsToLongDouble", "crt-longdouble-tail-wave647"),

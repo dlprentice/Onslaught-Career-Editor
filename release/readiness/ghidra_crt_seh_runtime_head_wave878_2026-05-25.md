@@ -27,7 +27,7 @@ Read-back evidence:
 - Post exports: 8 metadata rows, 8 tag rows, 522 xref rows, 150 instruction rows, 8 decompile rows, 14 context metadata rows, and 14 context decompile rows.
 - Queue after Wave878: 6113 total, 5901 commented, 212 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed and strict clean-signature proxy `5901/6113 = 96.53%`.
 - Next raw commentless row: `0x0055dcb0 OID__AcosWrapper`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-221858_post_wave878_crt_seh_runtime_head_verified`, 19 files, 172690311 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-221858_post_wave878_crt_seh_runtime_head_verified`, 19 files, 172690311 bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave854 CFastVB render immediate"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-104123_post_wave854_cfastvb_render_immediate_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-104123_post_wave854_cfastvb_render_immediate_verified"
 TARGET = "0x0051a6a0"
 TARGET_NAME = "CFastVB__RenderTriangleStripImmediate"
 TARGET_SIGNATURE = "void __thiscall CFastVB__RenderTriangleStripImmediate(void * this)"
@@ -160,7 +160,7 @@ def check_artifacts(failures: list[str]) -> None:
         require(len(read_tsv(BASE / relative)) == expected, f"{relative} row count mismatch", failures)
 
     string_rows = read_tsv(BASE / "string-0063fb24.tsv")
-    require(string_rows and string_rows[0].get("cstring") == r"C:\dev\ONSLAUGHT2\FastVB.cpp", "FastVB.cpp string mismatch", failures)
+    require(string_rows and string_rows[0].get("cstring") == r"[maintainer-local-source-export-root]\FastVB.cpp", "FastVB.cpp string mismatch", failures)
 
     metadata = {normalize_address(row["address"]): row for row in read_tsv(BASE / "post-metadata.tsv")}
     row = metadata.get(TARGET)

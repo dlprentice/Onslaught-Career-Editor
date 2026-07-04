@@ -34,7 +34,7 @@ The diagnostic `ExportVtableSlots.java` helper was widened from a `32` slot cap 
 - `cmd.exe /c npm run test:ghidra-gillm-family-wave389`: PASS; focused probe status `PASS`, `11` targets, `11` metadata rows, `11` tag rows, `0` failures.
 - Refreshed whole-database queue: `6027` functions, `1455` commented functions, `4572` commentless functions, `1932` undefined signatures, and `1901` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1455/6027 = 24.14%`; strict clean-signature `1393/6027 = 23.11%`.
-- Actual live Ghidra project backup verified at `G:\GhidraBackups\BEA_20260513_204327_post_wave389_gillm_family_verified` with `19` files, `153947015` bytes, and `HashDiffCount=0`.
+- Actual live Ghidra project backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_204327_post_wave389_gillm_family_verified` with `19` files, `153947015` bytes, and `HashDiffCount=0`.
 
 ## Not Proven
 

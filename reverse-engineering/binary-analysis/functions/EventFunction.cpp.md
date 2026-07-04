@@ -1,6 +1,6 @@
 # EventFunction.cpp - Function Mappings
 
-> Source file/debug path: `C:\dev\ONSLAUGHT2\MissionScript\EventFunction.cpp` (0x0064cce0)
+> Source file/debug path: `[maintainer-local-source-export-root]\MissionScript\EventFunction.cpp` (0x0064cce0)
 > Last updated: 2026-05-19
 
 ## Overview
@@ -35,7 +35,7 @@ Read-back artifacts:
 - Dry/apply/final dry: `updated=0 skipped=5`, `updated=5 skipped=0`, `updated=0 skipped=5`; all with `missing=0`, `bad=0`, and `REPORT: Save succeeded`.
 - Post exports: `5` metadata rows, `5` tag rows, `6` xref rows, `1305` instruction rows, `5` decompile rows, and `144` vtable rows.
 - Queue refresh after Wave577: `6093` functions, `2922` commented, `3171` commentless, `1425` exact-undefined signatures, and `1139` `param_N` signatures.
-- Verified Ghidra project backup: `G:\GhidraBackups\BEA_20260519-030958_post_wave577_eventfunction_verified`, `19` files, `160435079` bytes, manifest hash `103451E61F6E5D10504B6B778BBC2CEC6530FF68CAF1C320FAA68FE997299305`.
+- Verified Ghidra project backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-030958_post_wave577_eventfunction_verified`, `19` files, `160435079` bytes, manifest hash `103451E61F6E5D10504B6B778BBC2CEC6530FF68CAF1C320FAA68FE997299305`.
 
 ## Functions
 

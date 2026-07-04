@@ -37,7 +37,7 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 
 TARGETS = {
     "0x004098e0": ("CLine__ctor_copy", "void __thiscall CLine__ctor_copy(void * this, void * sourceLine)", ("CGeneralVolume", "CLine")),

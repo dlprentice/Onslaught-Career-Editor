@@ -34,7 +34,7 @@ Evidence:
 - The refreshed all-functions baseline reports `6008` total functions, `0` legacy weak names, `1949` undefined signatures, and `2040` `param_N` signatures.
 - The refreshed quality queue reports `6008` functions, `1214` commented functions, `4794` commentless functions, `1949` undefined signatures, and `2040` `param_N` signatures.
 - Current confirmation proxies remain telemetry only: comment-backed `1214/6008 = 20.21%`, strict clean-signature `1148/6008 = 19.11%`. The `20%` value is not a milestone or acceptance gate; the objective remains as close to `100%` evidence-grade static RE as possible.
-- The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260513_014424_post_wave358_unitai_dive_dropship_verified` with `19` files, `153029511` bytes, and `HashDiffCount=0`.
+- The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_014424_post_wave358_unitai_dive_dropship_verified` with `19` files, `153029511` bytes, and `HashDiffCount=0`.
 
 Raw proof remains ignored under `subagents/ghidra-static-reaudit/unitai-dive-dropship-wave358/current/`.
 

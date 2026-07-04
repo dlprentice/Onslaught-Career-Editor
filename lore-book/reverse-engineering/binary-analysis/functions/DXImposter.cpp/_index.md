@@ -1,6 +1,6 @@
 # DXImposter.cpp - DirectX Imposter Rendering System
 
-**Source File:** `C:\dev\ONSLAUGHT2\DXImposter.cpp`
+**Source File:** `[maintainer-local-source-export-root]\DXImposter.cpp`
 **Debug String Address:** `0x006508cc`
 **Analysis Date:** December 2025
 
@@ -20,7 +20,7 @@ The imposter system works in conjunction with:
 
 ## 2026-05-25 Wave865 Render Tail Read-Back
 
-Wave865 render tail static read-back (`render-tail-wave865`, `wave865-readback-verified`) hardened `0x00542f90 CDXImposter__BuildQuadGeometry` as `void __thiscall CDXImposter__BuildQuadGeometry(void * this, float * center_vec, float * right_vec, float * up_vec, float vertex_alpha, int reserved_14, float u0, float v0, float u1, float v1, int use_secondary_buffer)`. Static evidence ties the row to `CDXEngine__RenderImposterBillboardSet`; it normalizes the right/up cross product, selects `CVBufTexture` globals `0x008aa8b4` or `0x008aa8cc`, then writes four billboard vertices and six indices. Verified backup: `G:\GhidraBackups\BEA_20260525-160100_post_wave865_render_tail_verified`. Exact vertex layout, imposter frame layout, runtime billboard output, source identity, BEA patching, and rebuild parity remain deferred.
+Wave865 render tail static read-back (`render-tail-wave865`, `wave865-readback-verified`) hardened `0x00542f90 CDXImposter__BuildQuadGeometry` as `void __thiscall CDXImposter__BuildQuadGeometry(void * this, float * center_vec, float * right_vec, float * up_vec, float vertex_alpha, int reserved_14, float u0, float v0, float u1, float v1, int use_secondary_buffer)`. Static evidence ties the row to `CDXEngine__RenderImposterBillboardSet`; it normalizes the right/up cross product, selects `CVBufTexture` globals `0x008aa8b4` or `0x008aa8cc`, then writes four billboard vertices and six indices. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-160100_post_wave865_render_tail_verified`. Exact vertex layout, imposter frame layout, runtime billboard output, source identity, BEA patching, and rebuild parity remain deferred.
 
 ## Functions Found (Wave598 static queue plus known deserialize/create rows)
 
@@ -176,7 +176,7 @@ Wave598 hardened four DXImposter rows and four engine-side companion rows in the
 
 The same tranche saved engine-side helpers `0x00542740 CDXEngine__InitLandscapeTextureTables`, `0x00542a50 CDXEngine__BuildDirectionalSampleRing`, `0x00542ee0 CDXEngine__BuildZRotationMatrix`, and `0x00543300 CDXEngine__RenderImposterBillboardSet`. The corrected dry/apply/final-dry pass saved all eight rows after an initial Ghidra thiscall read-back mismatch on `0x00542ee0` and `0x00543300` was corrected by using explicit `this` ECX parameters.
 
-Read-back evidence: post exports verified `8` metadata rows, `8` tag rows, `9` xref rows, `888` instruction rows, and `8` decompile rows. Queue telemetry after Wave598 is `6093` total, `3072` commented, `3021` commentless, `1333` exact-undefined signatures, `1080` `param_N`, comment-backed proxy `3072/6093 = 50.42%`, and strict clean-signature proxy `3027/6093 = 49.68%`. Verified backup: `G:\GhidraBackups\BEA_20260519-164920_post_wave598_cdxengine_imposter_head_verified`. The next queue head is `0x00543d90 CDXImposter__Deserialize`.
+Read-back evidence: post exports verified `8` metadata rows, `8` tag rows, `9` xref rows, `888` instruction rows, and `8` decompile rows. Queue telemetry after Wave598 is `6093` total, `3072` commented, `3021` commentless, `1333` exact-undefined signatures, `1080` `param_N`, comment-backed proxy `3072/6093 = 50.42%`, and strict clean-signature proxy `3027/6093 = 49.68%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-164920_post_wave598_cdxengine_imposter_head_verified`. The next queue head is `0x00543d90 CDXImposter__Deserialize`.
 
 This is static saved-Ghidra evidence only. Runtime imposter rendering, runtime tree billboard behavior, exact CDXEngine/CDXImposter/CImposter/matrix/vector/CVBufTexture/texture-atlas/global layouts, exact source identity, BEA patching, and rebuild parity remain unproven.
 
@@ -189,7 +189,7 @@ Wave599 hardened the two IMPS chunk deserialize/create rows:
 | `0x00543d90` | `void __cdecl CDXImposter__Deserialize(void * chunk_reader)` | `CResourceAccumulator__ReadResourceFile` pushes the active chunk reader at `0x004d7705`, calls this row at `0x004d7706`, and cleans one stack argument. The body reads atlas dimensions into `0x008aa8c0/0x008aa8c4`, replaces texture atlas global `0x008aa8b8`, loops through `CDXImposter__Create`, allocates/configures primary and secondary CVBufTexture globals `0x008aa8b4/0x008aa8cc`, and sets `0x0067a67c` initialized. |
 | `0x00543f50` | `void * __cdecl CDXImposter__Create(void * chunk_reader)` | Called from `CDXImposter__Deserialize` at `0x00543e3b`. The body allocates a `0x4c` OID type `0x39` imposter, clears `+0x30/+0x38/+0x3c`, increments `0x008aa8bc`, reads the serialized object payload, resolves a mesh/resource id through `CMesh__FindByRuntimeId`, allocates frame data sized `+0x44 * +0x40 * 0x18`, calls `CImposter__AddToList`, and returns the object. |
 
-Read-back evidence: `ApplyCDXImposterDeserializeCreateWave599.java` dry/apply/final dry reported `updated=0 skipped=2 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=2 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=2 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Post exports verified `2` metadata rows, `2` tag rows, `2` xref rows, `514` instruction rows, and `2` decompile rows. Queue telemetry after Wave599 is `6093` total, `3074` commented, `3019` commentless, `1331` exact-undefined signatures, `1080` `param_N`, comment-backed proxy `3074/6093 = 50.45%`, and strict clean-signature proxy `3029/6093 = 49.71%`. Verified backup: `G:\GhidraBackups\BEA_20260519-171359_post_wave599_cdximposter_deserialize_create_verified`. The next queue head is `0x00544040 CDXEngine__ClearHudTextureSlots`.
+Read-back evidence: `ApplyCDXImposterDeserializeCreateWave599.java` dry/apply/final dry reported `updated=0 skipped=2 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=2 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=2 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Post exports verified `2` metadata rows, `2` tag rows, `2` xref rows, `514` instruction rows, and `2` decompile rows. Queue telemetry after Wave599 is `6093` total, `3074` commented, `3019` commentless, `1331` exact-undefined signatures, `1080` `param_N`, comment-backed proxy `3074/6093 = 50.45%`, and strict clean-signature proxy `3029/6093 = 49.71%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-171359_post_wave599_cdximposter_deserialize_create_verified`. The next queue head is `0x00544040 CDXEngine__ClearHudTextureSlots`.
 
 This is static saved-Ghidra evidence only. Runtime imposter loading, visible LOD behavior, exact IMPS/CDXImposter/CImposter/CVBufTexture/texture-atlas/frame-data/global layouts, exact source identity, BEA patching, and rebuild parity remain unproven.
 
@@ -257,7 +257,7 @@ From the strings dump, these cvars relate to imposters:
 
 | Address | String | Context |
 |---------|--------|---------|
-| `0x006508cc` | `"C:\dev\ONSLAUGHT2\DXImposter.cpp"` | Debug path, 6 references |
+| `0x006508cc` | `"[maintainer-local-source-export-root]\DXImposter.cpp"` | Debug path, 6 references |
 
 ## Data Following Debug String
 

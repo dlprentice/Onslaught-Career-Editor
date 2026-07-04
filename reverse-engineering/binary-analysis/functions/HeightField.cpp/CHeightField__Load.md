@@ -37,7 +37,7 @@ if (this->pHeightData != NULL) {
 // Allocate new height buffer
 // 0xa2000 = 663,552 bytes = 331,776 height samples (16-bit)
 this->pHeightData = CMemoryManager::Alloc(0xa2000, 0x22,
-    "C:\\dev\\ONSLAUGHT2\\HeightField.cpp", 0x880);
+    "[maintainer-local-source-export-root]\\HeightField.cpp", 0x880);
 ```
 
 ### Size Validation

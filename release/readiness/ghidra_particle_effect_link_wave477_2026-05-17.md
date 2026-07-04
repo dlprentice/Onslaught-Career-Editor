@@ -70,7 +70,7 @@ These percentages are telemetry only, not certification.
 Verified saved-project backup:
 
 ```text
-G:\GhidraBackups\BEA_20260517-010555_post_wave477_particle_effect_link_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260517-010555_post_wave477_particle_effect_link_verified
 SourceCount 19
 BackupCount 19
 BackupBytes 157223815

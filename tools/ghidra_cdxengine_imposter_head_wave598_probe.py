@@ -303,7 +303,7 @@ def check_docs_and_ledgers(failures: list[str]) -> None:
 
 def check_backup_and_queue(failures: list[str]) -> None:
     summary = read_json(BACKUP_SUMMARY)
-    expected_backup = "G:\\GhidraBackups\\BEA_20260519-164920_post_wave598_cdxengine_imposter_head_verified"
+    expected_backup = "[maintainer-local-ghidra-backup-root]\\BEA_20260519-164920_post_wave598_cdxengine_imposter_head_verified"
     if summary.get("backupPath") != expected_backup:
         failures.append(f"backup path mismatch: {summary.get('backupPath')}")
     if summary.get("fileCount") != 19:

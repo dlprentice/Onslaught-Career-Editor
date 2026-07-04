@@ -38,7 +38,7 @@ CALLER_ADDR = "0x0056ecaa"
 CALLER_NAME = "CDXMeshVB__BuildStripBatchesAndEmitIndexBuffer"
 NEXT_HEAD = "0x00573d80 CTexture__InsertNodeIntoTree"
 STRICT_PROXY = "5968/6113 = 97.63%"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-015531_post_wave885_cfastvb_strip_batch_builder_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-015531_post_wave885_cfastvb_strip_batch_builder_verified"
 
 COMMON_TAGS = {
     "static-reaudit",

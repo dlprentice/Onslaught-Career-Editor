@@ -28,7 +28,7 @@ What is proven:
 - Post-save read-back verified 11 metadata rows, 11 tag rows, 11 xref rows, 4059 instruction rows, 11 decompile rows, and 64 vtable rows.
 - The queue refresh reports `6093` total functions, `2963` commented, `3130` commentless, `1404` exact-undefined signatures, and `1117` `param_N` signatures.
 - The next high-signal queue head is `0x00537fd0 CBoolDataType__ctor_like_00537fd0`.
-- The live Ghidra project backup verified at `G:\GhidraBackups\BEA_20260519-091559_post_wave584_iscript_object_audio_verified` with 19 files, 160664455 bytes, `DiffCount=0`, and manifest hash `e2d334693fa1ddec75eb52efad37d966384ac44f6fd560d86f900a423a710b08`.
+- The live Ghidra project backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260519-091559_post_wave584_iscript_object_audio_verified` with 19 files, 160664455 bytes, `DiffCount=0`, and manifest hash `e2d334693fa1ddec75eb52efad37d966384ac44f6fd560d86f900a423a710b08`.
 
 What is not proven:
 

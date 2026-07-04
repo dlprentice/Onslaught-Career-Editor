@@ -19,7 +19,7 @@ This is not a new static re-audit wave, not a Ghidra mutation, not runtime Missi
 | Expanded post-100 static surface | `1560/1560 = 100.00%` |
 | Active current-risk focused accounting | `1179/1179 = 100.00%` |
 | Remaining active focused work | `0` |
-| Latest verified Ghidra backup | `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified` |
+| Latest verified Ghidra backup | `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified` |
 
 Remaining active focused work remains `0`; this proof does not change `static-reaudit-progress.json`, `static-reaudit-current-risk-ledger.json`, or the static percentages.
 

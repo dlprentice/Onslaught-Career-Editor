@@ -33,7 +33,7 @@ TASK = "Wave864 script command registry"
 ADDRESS = "0x0052ff30"
 NAME = "ScriptCommandRegistry__InitBuiltins"
 SIGNATURE = "void __cdecl ScriptCommandRegistry__InitBuiltins(void)"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-153044_post_wave864_script_command_registry_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-153044_post_wave864_script_command_registry_verified"
 NEXT_HEAD = "0x0053df40 CDXEngine__RenderTexturedBeamQuad"
 STRICT_PROXY = "5810/6105 = 95.17%"
 

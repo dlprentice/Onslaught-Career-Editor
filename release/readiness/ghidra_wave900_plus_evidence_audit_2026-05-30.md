@@ -20,7 +20,7 @@ Results:
 | Wave-specific package probe scripts checked | 80 |
 | Ignored evidence bases checked | 80 |
 | Backup references checked | 82 |
-| Unique backup directories checked on `G:\GhidraBackups` | 82 |
+| Unique backup directories checked on `[maintainer-local-ghidra-backup-root]` | 82 |
 | Wave900+ apply scripts checked | 20 |
 | Current live queue closure | `6222/6222 = 100.00%` |
 | Current commentless / exact-undefined / `param_N` debt | `0 / 0 / 0` |
@@ -36,7 +36,7 @@ What this proves:
 
 - Every Wave900-Wave981 operational wave has at least one readiness note.
 - All Wave900-Wave981 operational waves are represented in the readiness-note inventory; Wave910 and Wave911 are explicitly queue/planning records, not saved Ghidra mutation/review records with per-wave backup notes.
-- Every Wave900-Wave981 wave that claimed a Ghidra project backup has an on-disk backup directory under `G:\GhidraBackups` with normal project-scale file counts and byte counts.
+- Every Wave900-Wave981 wave that claimed a Ghidra project backup has an on-disk backup directory under `[maintainer-local-ghidra-backup-root]` with normal project-scale file counts and byte counts.
 - The 80 tracked Wave900+ focused package probe scripts still have sweep results, and the stricter line-level classifier finds no metadata/signature/tag/decompile/log/backup/lock/unclassified evidence-mismatch failure lines in the stale probe failures.
 - The 20 Wave900+ apply scripts have matching log coverage with clean `bad=0` summaries and `REPORT: Save succeeded` evidence.
 - The current live queue remains closed at `6222/6222`, with zero commentless functions, zero exact-`undefined` signatures, and zero `param_N` signatures.

@@ -17,7 +17,7 @@ Fresh evidence:
 - Wave911 focused progress remains `769/1408 = 54.62%`.
 - Expanded static surface progress advances to `1091/1509 = 72.30%`.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-173102_post_wave1055_cfastvb_residual_dispatch_review_verified`, `19` files, `174656391` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-173102_post_wave1055_cfastvb_residual_dispatch_review_verified`, `19` files, `174656391` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 Validation command:
 
@@ -27,4 +27,4 @@ npm run test:ghidra-wave900-plus-through-wave1055-recheck
 
 Boundary note: this aggregate gate is static documentation/evidence hygiene. Exact dispatch-table slot schema, vector/matrix/quaternion/stride/lane-order layouts, hidden EBX/EDI/XMM/MMX/stack ABI completeness, runtime CPU feature selection, runtime math/render correctness, exact source-body identity, BEA patching, gameplay outcomes, and rebuild parity remain separate proof.
 
-Probe token anchor: Wave1055; cfastvb-residual-dispatch-review-wave1055; 0x0059f360 CFastVB__DispatchOp_TransformVec4_0059f360; 0x0059f3d9 CFastVB__DispatchOp_NormalizeVec4_0059f3d9; 0x005a16b1 CFastVB__DispatchOp_TransformVec3ByMatrix4_005a16b1; 0x005a225f CFastVB__DispatchOp_TransformVec4Batch_Perspective_Alt_005a225f; 0x005a2ee9 CFastVB__DispatchOp_Determinant4x4_005a2ee9; 0x005a3508 CFastVB__DispatchOp_BuildMatrix4FromQuaternionPair_005a3508; 0x005a3791 CFastVB__DispatchOp_BuildQuaternionFromMatrix3x3_005a3791; CFastVB__InitDispatchTableVariant_005980be; CFastVB__InitDispatchTableVariant_0059822c; CFastVB__BroadcastMatrix4x4ToSIMDLanes; 769/1408 = 54.62%; 1091/1509 = 72.30%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-173102_post_wave1055_cfastvb_residual_dispatch_review_verified; no mutation.
+Probe token anchor: Wave1055; cfastvb-residual-dispatch-review-wave1055; 0x0059f360 CFastVB__DispatchOp_TransformVec4_0059f360; 0x0059f3d9 CFastVB__DispatchOp_NormalizeVec4_0059f3d9; 0x005a16b1 CFastVB__DispatchOp_TransformVec3ByMatrix4_005a16b1; 0x005a225f CFastVB__DispatchOp_TransformVec4Batch_Perspective_Alt_005a225f; 0x005a2ee9 CFastVB__DispatchOp_Determinant4x4_005a2ee9; 0x005a3508 CFastVB__DispatchOp_BuildMatrix4FromQuaternionPair_005a3508; 0x005a3791 CFastVB__DispatchOp_BuildQuaternionFromMatrix3x3_005a3791; CFastVB__InitDispatchTableVariant_005980be; CFastVB__InitDispatchTableVariant_0059822c; CFastVB__BroadcastMatrix4x4ToSIMDLanes; 769/1408 = 54.62%; 1091/1509 = 72.30%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-173102_post_wave1055_cfastvb_residual_dispatch_review_verified; no mutation.

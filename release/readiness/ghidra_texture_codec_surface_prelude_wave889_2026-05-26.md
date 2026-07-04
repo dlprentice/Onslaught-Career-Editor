@@ -29,7 +29,7 @@ Read-back evidence:
 - Post exports: 27 metadata rows, 27 tag rows, 74 xref rows, 4329 instruction rows, and 27 decompile rows.
 - Queue after Wave889: 6113 total, 6054 commented, 59 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed and strict proxy `6054/6113 = 99.03%`.
 - Next raw commentless row: `0x0057d0ee CWaypointManager__BoxBlurPackedColorRows_Scalar`.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-040930_post_wave889_texture_codec_surface_prelude_verified`, 19 files, 173149063 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-040930_post_wave889_texture_codec_surface_prelude_verified`, 19 files, 173149063 bytes, `DiffCount=0`.
 
 What this proves:
 

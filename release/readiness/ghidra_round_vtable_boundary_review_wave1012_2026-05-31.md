@@ -23,7 +23,7 @@ Read-back evidence:
 - Final exports: 10 metadata rows, 10 tag rows, 609 xref rows, 1182 body-instruction rows, and 4 decompile rows.
 - Queue closure after refresh: `6238/6238 = 100.00%`, with 0 commentless functions, 0 exact-undefined signatures, and 0 `param_N` signatures.
 - Re-audit progress after Wave1012: Wave911 focused `505/1408 = 35.87%`; expanded static surface `707/1493 = 47.35%`; Wave911 top-500 risk-ranked `409/500 = 81.80%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-183252_post_wave1012_round_vtable_slot66_verified`, 18 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-183252_post_wave1012_round_vtable_slot66_verified`, 18 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

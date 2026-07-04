@@ -33,7 +33,7 @@ Fresh read-back evidence:
 - Primary exports: 8 metadata rows, 8 tag rows, 1462 xref rows, 85 instruction rows, and 8 decompile rows.
 - Context exports: 13 metadata rows, 13 tag rows, 528 xref rows, 1830 instruction rows, and 13 decompile rows.
 - Vtable export: 24 rows across `0x005d88cc`, `0x005d8bfc`, and `0x005d95e8`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-030741_post_wave940_line_cylinder_dispatch_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-030741_post_wave940_line_cylinder_dispatch_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 - Mutation status: read-only review; no dry/apply/final-dry mutation scripts were run because the saved rows already matched the bounded static evidence.
 
 Progress:
@@ -41,7 +41,7 @@ Progress:
 - Wave911 focused re-audit progress after Wave940: `178/1408 = 12.64%`.
 - Static export-contract function-quality closure remains `6113/6113 = 100.00%`.
 
-Probe token anchor: Wave940; `line-cylinder-dispatch-review-wave940`; `0x004059a0 CCylinder__VFunc_01_004059a0`; `0x004098c0 CLine__VFunc_01_004098c0`; `0x004098e0 CLine__ctor_copy`; `0x00426340 CLine__ScalarDeletingDestructor_00426340`; `0x00426360 CLine__SetBaseVtable_00426360`; `0x00426320 CSphere__VFunc_01_00426320`; `0x005d88cc`; `0x005d8bfc`; `0x005d95e8`; read-only review; `178/1408 = 12.64%`; `6113/6113 = 100.00%`; `G:\GhidraBackups\BEA_20260528-030741_post_wave940_line_cylinder_dispatch_review_verified`.
+Probe token anchor: Wave940; `line-cylinder-dispatch-review-wave940`; `0x004059a0 CCylinder__VFunc_01_004059a0`; `0x004098c0 CLine__VFunc_01_004098c0`; `0x004098e0 CLine__ctor_copy`; `0x00426340 CLine__ScalarDeletingDestructor_00426340`; `0x00426360 CLine__SetBaseVtable_00426360`; `0x00426320 CSphere__VFunc_01_00426320`; `0x005d88cc`; `0x005d8bfc`; `0x005d95e8`; read-only review; `178/1408 = 12.64%`; `6113/6113 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260528-030741_post_wave940_line_cylinder_dispatch_review_verified`.
 
 What this proves:
 

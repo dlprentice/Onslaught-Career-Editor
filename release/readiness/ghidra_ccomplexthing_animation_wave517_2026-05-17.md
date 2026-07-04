@@ -39,7 +39,7 @@ The pass applied 13 renames, including superseding older `CAtmospheric__Construc
 - Focused probe: `tools/ghidra_ccomplexthing_animation_wave517_probe.py --check`.
 - Queue refresh after Wave517: `6078` functions, `2443` commented, `3635` commentless, `1608` exact-undefined signatures, and `1396` `param_N` signatures.
 - Current whole-project telemetry proxy: comment-backed `2443/6078 = 40.19%`; strict comment-plus-clean-signature proxy `2389/6078 = 39.31%`.
-- Backup verified at `G:\GhidraBackups\BEA_20260517-212455_post_wave517_ccomplexthing_animation_verified` with `19` files, `158567303` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260517-212455_post_wave517_ccomplexthing_animation_verified` with `19` files, `158567303` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

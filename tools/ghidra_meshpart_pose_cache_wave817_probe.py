@@ -28,7 +28,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-154905_post_wave817_meshpart_pose_cache_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-154905_post_wave817_meshpart_pose_cache_verified"
 
 TARGET_SIGNATURES = {
     "0x004b4ba0": "int __thiscall CMeshPart__PopulatePoseCacheRecursive(void * this, float anchor_x, float anchor_y, float anchor_z, float anchor_w, int transform_dword00, int transform_dword01, int transform_dword02, int transform_dword03, int transform_dword04, int transform_dword05, int transform_dword06, int transform_dword07, int transform_dword08, int transform_dword09, int transform_dword10, int transform_dword11, void * mesh_part, int frame_arg0, int frame_arg1, int cache_value)",

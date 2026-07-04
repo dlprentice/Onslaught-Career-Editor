@@ -6,7 +6,7 @@ Scope: `save-options-static-review-wave902`
 
 Wave902 is the first concrete post-100 system review after Wave900 closed the loaded Ghidra function-quality queue and Wave901 established the system-review baseline. It reviews save/options/career persistence across the saved Ghidra function snapshot, canonical save docs, AppCore patching rules, CLI/UI test coverage, and public release posture.
 
-Probe token anchor: Wave902; `save-options-static-review-wave902`; static-closed save/options/career; `6113/6113 = 100.00%`; `10004` bytes; version `0x4BD1`; career base `0x0002`; kill counters `0x23F6`; options entries `0x24BE`; options tail `0x56`; `CCareer__Load`; `CCareer__Save`; `OptionsTail_Write`; `OptionsTail_Read`; `CFEPOptions__WriteDefaultOptionsFile`; `CPauseMenu__ResumeGameAndPersistOptions`; `G:\GhidraBackups\BEA_20260526-093817_post_wave902_save_options_static_review_verified`.
+Probe token anchor: Wave902; `save-options-static-review-wave902`; static-closed save/options/career; `6113/6113 = 100.00%`; `10004` bytes; version `0x4BD1`; career base `0x0002`; kill counters `0x23F6`; options entries `0x24BE`; options tail `0x56`; `CCareer__Load`; `CCareer__Save`; `OptionsTail_Write`; `OptionsTail_Read`; `CFEPOptions__WriteDefaultOptionsFile`; `CPauseMenu__ResumeGameAndPersistOptions`; `[maintainer-local-ghidra-backup-root]\BEA_20260526-093817_post_wave902_save_options_static_review_verified`.
 
 ## Static-Closed Claim
 
@@ -49,7 +49,7 @@ This is the first post-100 slice that can be called static-closed with a narrow 
   - `OnslaughtCareerEditor.AppCore.Tests/SaveAnalyzerServiceTests.cs`
   - `OnslaughtCareerEditor.UiTests/SavePatchRegressionTests.cs`
   - `OnslaughtCareerEditor.UiTests/CliReadOnlyAndOptionsSafetyTests.cs`
-- Verified read-only Ghidra project backup: `G:\GhidraBackups\BEA_20260526-093817_post_wave902_save_options_static_review_verified`
+- Verified read-only Ghidra project backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-093817_post_wave902_save_options_static_review_verified`
 
 ## Function Anchors
 

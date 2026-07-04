@@ -42,7 +42,7 @@ The pass made no renames. The evidence is static retail Ghidra decompile, instru
 - Apply: `updated=13 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`
 - Final dry: `updated=0 skipped=13 renamed=0 would_rename=0 missing=0 bad=0`
 - Read-back exports verified `13` metadata rows, `13` tag rows, `23` xref rows, `3393` instruction rows, `13` decompile rows, and `667` callsite instruction rows.
-- Verified backup: `G:\GhidraBackups\BEA_20260519-234626_post_wave612_particle_texture_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-234626_post_wave612_particle_texture_verified`
   - `sourceFileCount=19`
   - `destFileCount=19`
   - `sourceBytes=161581959`

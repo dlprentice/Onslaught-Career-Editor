@@ -25,7 +25,7 @@ Read-back evidence:
 - Mutation status: read-only review; no mutation warranted.
 - Wave911 focused re-audit progress: `89/1408 = 6.32%` after Wave924 (`3` focused candidates plus `1` context helper reviewed in this wave).
 - Static export-contract closure remains `6113/6113 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260527-213142_post_wave924_repairpad_docking_review_verified`, `19` files, `173247367` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260527-213142_post_wave924_repairpad_docking_review_verified`, `19` files, `173247367` bytes, `DiffCount=0`.
 
 What this proves:
 

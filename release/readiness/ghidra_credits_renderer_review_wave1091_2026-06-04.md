@@ -44,7 +44,7 @@ Evidence counts:
 - Post around/vtable exports: `14` around-address targets, `546` around-instruction rows, and `9` CFEPCredits vtable rows.
 - Queue closure remains `6410/6410 = 100.00%`, with `0` commentless rows, `0` exact-undefined signatures, and `0` `param_N` signatures.
 - Wave911 focused progress remains `812/1408 = 57.67%`; expanded static surface progress advances to `1545/1560 = 99.04%`; top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260604-143442_post_wave1091_credits_renderer_review_verified`, 19 files, 175541127 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-143442_post_wave1091_credits_renderer_review_verified`, 19 files, 175541127 bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -59,4 +59,4 @@ What remains separate proof:
 - Exact source-body identity for absent full credits/frontend source files.
 - BEA patching behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1091; credits-renderer-review-wave1091; 0x00518bf0 CCredits__BuildDefaultEntries; 0x0051a030 CCredits__RenderCredits; 0x004726b0 CGame__RollCredits; 0x0051a8b0 CFEPCredits__Render; 0x0051a970 CFEPCredits__TransitionNotification; 0x005db880; 0x00472801; 0x0051a92b; DAT_00896ca8; CDXFont__DrawTextDynamic; CMusic__PlaySelection; 1545/1560 = 99.04%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; G:\GhidraBackups\BEA_20260604-143442_post_wave1091_credits_renderer_review_verified; comment/tag normalization.
+Probe token anchor: Wave1091; credits-renderer-review-wave1091; 0x00518bf0 CCredits__BuildDefaultEntries; 0x0051a030 CCredits__RenderCredits; 0x004726b0 CGame__RollCredits; 0x0051a8b0 CFEPCredits__Render; 0x0051a970 CFEPCredits__TransitionNotification; 0x005db880; 0x00472801; 0x0051a92b; DAT_00896ca8; CDXFont__DrawTextDynamic; CMusic__PlaySelection; 1545/1560 = 99.04%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260604-143442_post_wave1091_credits_renderer_review_verified; comment/tag normalization.

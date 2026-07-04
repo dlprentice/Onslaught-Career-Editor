@@ -34,14 +34,14 @@ Fresh read-back evidence:
 - Context exports: 8 metadata rows, 8 tag rows, 482 xref rows, 1189 instruction rows, and 8 decompile rows.
 - Primary xrefs confirm `CConsole__Init` from `CLTShell__InitializeRuntimeAndLoadCoreResources`, `CConsole__RegisterBuiltinCommands` from `CGame__Init`, `CConsole__ResetLayoutForWindowHeight` from `CLTShell__InitializeRuntimeAndLoadCoreResources`, `CConsoleVar__GetTypeName` from two label-level console callsites, `CConsole__ResetStatusHistoryBuffer` from `CLTShell__InitializeRuntimeAndLoadCoreResources`, `CConsole__Printf` from diagnostic/fatal/memory/save/load callsites, and `CConsole__PrintfNoNewline` from `CScriptObjectCode__Run`.
 - Context xrefs confirm the console/status/debug/registry join: `DebugTrace` from `CConsole__Printf` and `CConsole__AddString`, status overlay from `CGame__DrawGameStuff`, command/cvar registration from console/game/engine/render/audio/BattleEngine setup, key-name table init from `CConsole__Init`, and HKCU registry persistence from `CConsole__Init` and `CConsole__AddString`.
-- Verified read-only backup: `G:\GhidraBackups\BEA_20260528-015348_post_wave937_console_core_status_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified read-only backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-015348_post_wave937_console_core_status_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 
 Progress:
 
 - Wave911 focused re-audit progress after Wave937: `161/1408 = 11.43%`.
 - Static export-contract function-quality closure remains `6113/6113 = 100.00%`.
 
-Probe token anchor: Wave937; `console-core-status-review-wave937`; `0x00429bc0 CConsole__Init`; `0x00429ef0 CConsole__RegisterBuiltinCommands`; `0x0042a410 CConsole__ResetLayoutForWindowHeight`; `0x0042a540 CConsoleVar__GetTypeName`; `0x004416e0 CConsole__ResetStatusHistoryBuffer`; `0x00441740 CConsole__Printf`; `0x004418a0 CConsole__PrintfNoNewline`; `0x0040c640 DebugTrace`; `0x004419e0 CConsole__RenderStatusHistoryOverlay`; `0x0042a5f0 CConsoleVar__FormatValueToString`; `0x0042af80 CConsole__RegisterCommand`; `0x0042b040 CConsole__RegisterVariable`; `0x0042b840 CConsole__AddString`; `0x0042bcf0 CConsole__InitKeyNameTable`; `0x00515db0 Registry__SetStringValue_HKCU`; `161/1408 = 11.43%`; `6113/6113 = 100.00%`; `G:\GhidraBackups\BEA_20260528-015348_post_wave937_console_core_status_review_verified`; no mutation.
+Probe token anchor: Wave937; `console-core-status-review-wave937`; `0x00429bc0 CConsole__Init`; `0x00429ef0 CConsole__RegisterBuiltinCommands`; `0x0042a410 CConsole__ResetLayoutForWindowHeight`; `0x0042a540 CConsoleVar__GetTypeName`; `0x004416e0 CConsole__ResetStatusHistoryBuffer`; `0x00441740 CConsole__Printf`; `0x004418a0 CConsole__PrintfNoNewline`; `0x0040c640 DebugTrace`; `0x004419e0 CConsole__RenderStatusHistoryOverlay`; `0x0042a5f0 CConsoleVar__FormatValueToString`; `0x0042af80 CConsole__RegisterCommand`; `0x0042b040 CConsole__RegisterVariable`; `0x0042b840 CConsole__AddString`; `0x0042bcf0 CConsole__InitKeyNameTable`; `0x00515db0 Registry__SetStringValue_HKCU`; `161/1408 = 11.43%`; `6113/6113 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260528-015348_post_wave937_console_core_status_review_verified`; no mutation.
 
 What this proves:
 

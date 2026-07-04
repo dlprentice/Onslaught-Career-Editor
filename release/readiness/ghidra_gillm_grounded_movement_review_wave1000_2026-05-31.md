@@ -30,9 +30,9 @@ Fresh read-back evidence:
 - Wave911 focused re-audit progress remains `467/1408 = 33.17%` because this is a risk-ranked residual island rather than a new focused-candidate anchor.
 - Expanded static surface progress is now `606/1478 = 41.00%`.
 - Wave911 top-500 risk-ranked coverage for this residual pass advances to `350/500 = 70.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-101059_post_wave1000_gillm_grounded_movement_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-101059_post_wave1000_gillm_grounded_movement_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
-Probe token anchor: Wave1000; `gillm-grounded-movement-review-wave1000`; `0x004799c0 CGillM__VFunc09_InitGroundedSpawnState`; `0x00479d10 CGillM__UpdateGroundedVerticalDrift`; `0x00479db0 CGillM__TriggerRandomArmHitAnimationIfReady`; `0x00479f30 CGillM__ComputeTerrainClearanceNoiseScale`; `0x0047a0b0 CGillM__ComputeLateralSlopeAlignment`; `0x0047a160 CGillM__StartState1WithStoredMotionVector`; `467/1408 = 33.17%`; `606/1478 = 41.00%`; `350/500 = 70.00%`; `6222/6222 = 100.00%`; `G:\GhidraBackups\BEA_20260531-101059_post_wave1000_gillm_grounded_movement_review_verified`; no mutation.
+Probe token anchor: Wave1000; `gillm-grounded-movement-review-wave1000`; `0x004799c0 CGillM__VFunc09_InitGroundedSpawnState`; `0x00479d10 CGillM__UpdateGroundedVerticalDrift`; `0x00479db0 CGillM__TriggerRandomArmHitAnimationIfReady`; `0x00479f30 CGillM__ComputeTerrainClearanceNoiseScale`; `0x0047a0b0 CGillM__ComputeLateralSlopeAlignment`; `0x0047a160 CGillM__StartState1WithStoredMotionVector`; `467/1408 = 33.17%`; `606/1478 = 41.00%`; `350/500 = 70.00%`; `6222/6222 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260531-101059_post_wave1000_gillm_grounded_movement_review_verified`; no mutation.
 
 What this proves:
 

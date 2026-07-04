@@ -30,7 +30,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 APPLY_SCRIPT = ROOT / "tools" / "ApplyCUnitAIInitEntryDispatchCurrentRiskWave1186.java"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-143218_post_wave1186_cunitai_init_entry_dispatch_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-143218_post_wave1186_cunitai_init_entry_dispatch_current_risk_review_verified"
 
 TARGETS = {
     "0x004239f0": {

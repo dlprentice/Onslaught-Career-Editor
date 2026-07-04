@@ -39,7 +39,7 @@ Read-back evidence:
 - Vtable sample after Wave1088: `1545` OK and `55` `NO_FUNCTION_AT_POINTER`; the seven selected CRadar code pointers now resolve to saved functions. CRadar slots `29` (`0x00615728`) and `147` (`0x006155d0`) remain deliberate `.rdata`/non-function entries.
 - Queue after Wave1088: `6375/6375 = 100.00%` static function-quality closure, with `0` commentless functions, `0` exact-`undefined` signatures, `0` `param_N` signatures, `0` uncertain-owner rows, `0` helper-address rows, and `0` wrapper-address rows.
 - Expanded static re-audit surface: `1492/1560 = 95.64%`. Wave911 focused remains `812/1408 = 57.67%`; top-500 remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260604-121500_post_wave1088_cradar_goodies_boundary_recovery_verified`, `19` files, `175344519` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-121500_post_wave1088_cradar_goodies_boundary_recovery_verified`, `19` files, `175344519` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -56,4 +56,4 @@ What remains unproven:
 - BEA patching behavior.
 - Clean-room rebuild parity.
 
-Probe token anchor: Wave1088; cradar-residual-vtable-tail-wave1088; goodies-autoanalysis-boundary-recovery-wave1088; `0x004bfb00 CRadarVFunc__GetClassNameString_004bfb00`; `0x004d6360 CRadarVFunc__FlagArg70AndSeedMotion280_004d6360`; `0x004f6560 CRadarVFunc__CopyFrameOrComputedTransformToOut_004f6560`; `0x0041c160 CCareer__GetKillCounterLow24ByType_0041c160`; `0x0045a940 CFEPGoodies__BuildGoodieRequirementText_0045a940`; `0x0045ff80 CFEPGoodies__ClassifyGoodieIndexForRender_0045ff80`; `1545` OK / `55` `NO_FUNCTION_AT_POINTER`; `1492/1560 = 95.64%`; `812/1408 = 57.67%`; `500/500 = 100.00%`; `6375/6375 = 100.00%`; `G:\GhidraBackups\BEA_20260604-121500_post_wave1088_cradar_goodies_boundary_recovery_verified`; boundary recovery.
+Probe token anchor: Wave1088; cradar-residual-vtable-tail-wave1088; goodies-autoanalysis-boundary-recovery-wave1088; `0x004bfb00 CRadarVFunc__GetClassNameString_004bfb00`; `0x004d6360 CRadarVFunc__FlagArg70AndSeedMotion280_004d6360`; `0x004f6560 CRadarVFunc__CopyFrameOrComputedTransformToOut_004f6560`; `0x0041c160 CCareer__GetKillCounterLow24ByType_0041c160`; `0x0045a940 CFEPGoodies__BuildGoodieRequirementText_0045a940`; `0x0045ff80 CFEPGoodies__ClassifyGoodieIndexForRender_0045ff80`; `1545` OK / `55` `NO_FUNCTION_AT_POINTER`; `1492/1560 = 95.64%`; `812/1408 = 57.67%`; `500/500 = 100.00%`; `6375/6375 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260604-121500_post_wave1088_cradar_goodies_boundary_recovery_verified`; boundary recovery.

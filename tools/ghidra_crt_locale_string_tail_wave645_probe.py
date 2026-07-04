@@ -311,7 +311,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
         failures.append(f"queue TSV commented rows expected 3469, saw {commented}")
 
     backup = read_json(BASE / "backup-summary.json")
-    if backup.get("backupRoot") != "G:\\GhidraBackups\\BEA_20260520-152241_post_wave645_crt_locale_string_tail_verified":
+    if backup.get("backupRoot") != "[maintainer-local-ghidra-backup-root]\\BEA_20260520-152241_post_wave645_crt_locale_string_tail_verified":
         failures.append(f"backupRoot mismatch: {backup.get('backupRoot')}")
     if backup.get("fileCount") != 19 or backup.get("totalBytes") != 162761607 or backup.get("diffCount") != 0:
         failures.append(f"backup summary mismatch: {backup}")

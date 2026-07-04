@@ -24,7 +24,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUALITY_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260528-125650_post_wave961_cvertexshader_lifecycle_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-125650_post_wave961_cvertexshader_lifecycle_review_verified"
 TARGET = "0x00501a10"
 TARGET_NAME = "CVertexShader__VFunc_02_00501a10"
 TARGET_SIGNATURE = "int __thiscall CVertexShader__VFunc_02_00501a10(void * this)"

@@ -37,7 +37,7 @@ Wave1000 anchor:
 - Expanded static surface progress: `606/1478 = 41.00%`
 - Wave911 top-500 risk-ranked coverage: `350/500 = 70.00%`
 - Static closure: `6222/6222 = 100.00%`
-- Verified backup: `G:\GhidraBackups\BEA_20260531-101059_post_wave1000_gillm_grounded_movement_review_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-101059_post_wave1000_gillm_grounded_movement_review_verified`
 
 Interpretation:
 

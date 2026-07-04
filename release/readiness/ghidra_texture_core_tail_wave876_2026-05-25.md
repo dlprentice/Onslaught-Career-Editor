@@ -31,7 +31,7 @@ Read-back evidence:
 - Post exports: 12 metadata rows, 12 tag rows, 86 xref rows, 1491 instruction rows, 12 decompile rows, 10 context metadata rows, and 10 context decompile rows.
 - Queue after Wave876: 6113 total, 5885 commented, 228 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed and strict clean-signature proxy `5885/6113 = 96.27%`.
 - Next raw commentless row: `0x0055b0e0 CWaterRenderSystem__ctor`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-212045_post_wave876_texture_core_tail_verified`, 19 files, 172690311 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-212045_post_wave876_texture_core_tail_verified`, 19 files, 172690311 bytes, `DiffCount=0`.
 
 What this proves:
 

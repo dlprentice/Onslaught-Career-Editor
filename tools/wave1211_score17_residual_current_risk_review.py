@@ -40,7 +40,7 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 APPLY_SCRIPT = ROOT / "tools" / "ApplyScore17ResidualCurrentRiskWave1211.java"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-061324_post_wave1211_score17_residual_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-061324_post_wave1211_score17_residual_current_risk_review_verified"
 
 TARGETS = {
     "0x00402030": ("CActor__StickToGround", "void __thiscall CActor__StickToGround(void * this)", ("CThing::StickToGround", "mOldPos=mPos")),

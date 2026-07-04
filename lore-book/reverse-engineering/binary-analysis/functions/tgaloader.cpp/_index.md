@@ -1,7 +1,7 @@
 # tgaloader.cpp Functions
 
 > Source File: tgaloader.cpp | Binary: BEA.exe
-> Debug Path: 0x0063314c (`C:\dev\ONSLAUGHT2\tgaloader.cpp`)
+> Debug Path: 0x0063314c (`[maintainer-local-source-export-root]\tgaloader.cpp`)
 
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6113/6113** (Wave900: every function commented; clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
 
@@ -65,7 +65,7 @@ Wave414 created the missing inherited getter function boundaries at `0x00488670`
 
 Wave513 then renamed the CTGALoader destructor entries to `CTGALoader__ScalarDeletingDestructor` and `CTGALoader__Destructor`, saved the constructor as `void * __thiscall CTGALoader__CTGALoader(void * this, char * filename, void * status_out)`, and saved the loader as `bool __thiscall CTGALoader__Load(void * this)`.
 
-Wave1079 (`texture-tga-table-review-wave1079`, `wave1079-readback-verified`) recovered `0x004f2cc0 CTGALoader__HasNonzeroStatusOut_004f2cc0` as a saved `bool __thiscall` function. Fresh static evidence ties CTGALoader vtable `0x005df518` slot `8` at slot address `0x005df538` to the body; pre-read recorded it as `NO_FUNCTION_AT_POINTER`, and post-read verified a 9-instruction function that reads `this+0x118`, returns false for null or zero pointed status, returns true for nonzero pointed status, and stops before `0x004f2ce0 CTGALoader__Load`. Adjacent TerrainGuide slot `0x005df514` points at `0x00616dd0`, which dumps as an empty string/table-boundary context rather than a CTGALoader function. Queue closure after Wave1079 is `6262/6262 = 100.00%`; Wave911 focused progress remains `812/1408 = 57.67%`; expanded static surface advances to `1373/1560 = 88.01%`; top-500 coverage remains `500/500 = 100.00%`. Verified backup: `G:\GhidraBackups\BEA_20260602-085858_post_wave1079_texture_tga_table_review_verified`. Exact source virtual name, exact status-output field semantics, runtime TGA/image-loading behavior, BEA patching, gameplay outcomes, and rebuild parity remain separate proof. Probe token anchor: Wave1079; texture-tga-table-review-wave1079; 0x004f2cc0 CTGALoader__HasNonzeroStatusOut_004f2cc0; 0x005df518; 0x005df538; 0x004f2ce0 CTGALoader__Load; 0x00616dd0; 812/1408 = 57.67%; 1373/1560 = 88.01%; 500/500 = 100.00%; 6262/6262 = 100.00%; G:\GhidraBackups\BEA_20260602-085858_post_wave1079_texture_tga_table_review_verified; boundary recovery.
+Wave1079 (`texture-tga-table-review-wave1079`, `wave1079-readback-verified`) recovered `0x004f2cc0 CTGALoader__HasNonzeroStatusOut_004f2cc0` as a saved `bool __thiscall` function. Fresh static evidence ties CTGALoader vtable `0x005df518` slot `8` at slot address `0x005df538` to the body; pre-read recorded it as `NO_FUNCTION_AT_POINTER`, and post-read verified a 9-instruction function that reads `this+0x118`, returns false for null or zero pointed status, returns true for nonzero pointed status, and stops before `0x004f2ce0 CTGALoader__Load`. Adjacent TerrainGuide slot `0x005df514` points at `0x00616dd0`, which dumps as an empty string/table-boundary context rather than a CTGALoader function. Queue closure after Wave1079 is `6262/6262 = 100.00%`; Wave911 focused progress remains `812/1408 = 57.67%`; expanded static surface advances to `1373/1560 = 88.01%`; top-500 coverage remains `500/500 = 100.00%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-085858_post_wave1079_texture_tga_table_review_verified`. Exact source virtual name, exact status-output field semantics, runtime TGA/image-loading behavior, BEA patching, gameplay outcomes, and rebuild parity remain separate proof. Probe token anchor: Wave1079; texture-tga-table-review-wave1079; 0x004f2cc0 CTGALoader__HasNonzeroStatusOut_004f2cc0; 0x005df518; 0x005df538; 0x004f2ce0 CTGALoader__Load; 0x00616dd0; 812/1408 = 57.67%; 1373/1560 = 88.01%; 500/500 = 100.00%; 6262/6262 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-085858_post_wave1079_texture_tga_table_review_verified; boundary recovery.
 
 ## TGA Format Support
 
@@ -161,7 +161,7 @@ The loader handles both orientations by adjusting write pointers.
 The Load function allocates temporary buffer for 32-bit images:
 ```cpp
 // Allocation at line 0x77 (119) in tgaloader.cpp
-buffer = Alloc(width * height * 4, 0x80, "C:\\dev\\ONSLAUGHT2\\tgaloader.cpp", 0x77);
+buffer = Alloc(width * height * 4, 0x80, "[maintainer-local-source-export-root]\\tgaloader.cpp", 0x77);
 ```
 
 This suggests the game uses a debug memory allocator that tracks source file and line number.

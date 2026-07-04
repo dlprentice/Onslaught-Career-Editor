@@ -33,7 +33,7 @@ This note records a serialized headless Ghidra dry/apply/read-back pass for the 
 - Read-back exports verified `5` metadata rows, `5` tag rows, `6` xref rows, `285` instruction rows, and `5` decompile exports.
 - Package wrapper: `cmd.exe /c npm run test:ghidra-imposter-wave415` passed with focused probe status `PASS`.
 - Queue refresh: headless `ExportFunctionQualitySnapshot.java` and `cmd.exe /c npm run test:ghidra-static-reaudit-queue` passed with the `6037`-function telemetry above.
-- Actual Ghidra project backup: copied `BEA.gpr` and `BEA.rep` to `G:\GhidraBackups\BEA_20260514_121033_post_wave415_imposter_verified` and verified `19` files, `154930055` bytes, and `HashDiffCount=0`.
+- Actual Ghidra project backup: copied `BEA.gpr` and `BEA.rep` to `[maintainer-local-ghidra-backup-root]\BEA_20260514_121033_post_wave415_imposter_verified` and verified `19` files, `154930055` bytes, and `HashDiffCount=0`.
 
 ## Not Proven
 

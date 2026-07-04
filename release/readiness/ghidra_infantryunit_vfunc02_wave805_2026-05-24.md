@@ -20,7 +20,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 1 xref row, 121 instruction rows, 1 decompile row, 16 vtable-slot rows, 2 helper metadata rows, and 2 helper decompile rows.
 - Queue after Wave805: 6098 total, 5577 commented, 521 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5577/6098 = 91.46%`, strict clean-signature proxy `5577/6098 = 91.46%`.
 - Next raw commentless row: `0x0048ddf0 thunk_DXMemBuffer__Close`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-094441_post_wave805_infantryunit_vfunc02_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-094441_post_wave805_infantryunit_vfunc02_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
 
 What this proves:
 

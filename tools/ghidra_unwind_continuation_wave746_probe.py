@@ -32,7 +32,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260522-173500_post_wave746_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260522-173500_post_wave746_unwind_continuation_verified"
 
 TARGETS = {
     "0x005d1aa3": {"scope": "0x0061a914", "tokens": ("CGenericActiveReader__dtor", "+0x24"), "tags": {"active-reader", "component-adjacent"}},

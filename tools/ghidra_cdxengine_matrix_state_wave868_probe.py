@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave868 CDXEngine matrix state"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-171842_post_wave868_cdxengine_matrix_state_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-171842_post_wave868_cdxengine_matrix_state_verified"
 NEXT_HEAD = "0x00551200 CDXEngine__ApplyCachedLight"
 STRICT_PROXY = "5828/6105 = 95.46%"
 

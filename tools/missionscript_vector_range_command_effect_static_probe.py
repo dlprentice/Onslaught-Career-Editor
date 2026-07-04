@@ -37,8 +37,8 @@ PACKAGE_JSON = ROOT / "package.json"
 
 WAVE581 = ROOT / "subagents" / "ghidra-static-reaudit" / "wave581-iscript-vector-range-005345d0"
 MSL_ROOT = ROOT / "game" / "data" / "MissionScripts"
-WAVE1219_BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
-WAVE581_BACKUP = r"G:\GhidraBackups\BEA_20260519-075959_post_wave581_iscript_vector_range_verified"
+WAVE1219_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+WAVE581_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260519-075959_post_wave581_iscript_vector_range_verified"
 
 PROOF_LINK = "missionscript-vector-range-command-effect-static-proof.md"
 SCHEMA_LINK = "missionscript-vector-range-command-effect.v1.json"

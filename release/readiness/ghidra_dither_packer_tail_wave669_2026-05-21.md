@@ -33,7 +33,7 @@ Probe anchors: `0x00582ef8 CDXTexture__PackTexels_Dither_Bits2_10_10_10`, `0x005
 - Final dry mode: `updated=0 skipped=12 renamed=0 would_rename=0 signature_updated=0 missing=0 bad=0`
 - All three passes reported `REPORT: Save succeeded`.
 - Post exports verified `12` metadata rows, `12` tag rows, `12` xref rows, `444` instruction rows, and `12` clean decompile rows.
-- Backup verified: `G:\GhidraBackups\BEA_20260521-030557_post_wave669_dither_packer_tail_verified`, `19` files, `163810183` bytes, `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260521-030557_post_wave669_dither_packer_tail_verified`, `19` files, `163810183` bytes, `DiffCount=0`.
 
 ## Queue
 

@@ -21,7 +21,7 @@ Current static closeout remains unchanged:
 - Expanded post-100 static surface: `1560/1560 = 100.00%`.
 - Active current-risk focused accounting: `1179/1179 = 100.00%`.
 - Remaining active focused work remains `0`.
-- Latest verified Ghidra review backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+- Latest verified Ghidra review backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 Copied-corpus carry-forward:
 

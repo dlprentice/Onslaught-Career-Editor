@@ -47,7 +47,7 @@ Next queue head: `0x00533b70 IScript__Create3PointPanCamera`.
 
 Verified Ghidra project backup:
 
-- Path: `G:\GhidraBackups\BEA_20260519-041839_post_wave579_iscript_slot_goodie_verified`
+- Path: `[maintainer-local-ghidra-backup-root]\BEA_20260519-041839_post_wave579_iscript_slot_goodie_verified`
 - Files: `19`
 - Bytes: `160467847`
 - Diff count: `0`

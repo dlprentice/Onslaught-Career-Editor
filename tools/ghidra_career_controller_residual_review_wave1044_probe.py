@@ -28,7 +28,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260601-103855_post_wave1044_career_controller_residual_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260601-103855_post_wave1044_career_controller_residual_review_verified"
 
 TARGETS = {
     "0x0041b740": ("CCareerNode__Blank", "void __fastcall CCareerNode__Blank(void * this)"),

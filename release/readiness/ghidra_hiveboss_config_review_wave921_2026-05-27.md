@@ -52,7 +52,7 @@ No Ghidra mutation was performed.
 Read-only post-wave backup:
 
 ```text
-G:\GhidraBackups\BEA_20260527-172645_post_wave921_hiveboss_config_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260527-172645_post_wave921_hiveboss_config_review_verified
 files=19
 bytes=173247367
 ```

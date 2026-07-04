@@ -1,7 +1,17 @@
 {
-  "lastUpdated": "2026-07-03",
-  "currentFocus": "Static RE/Ghidra closure remains unchanged, and the 2026-07-03 high-throughput automation experiment is stopped by user request. The latest pushed source-safe standing-wave work is the texture/resource/decode static-routing ledger; this closeout adds only a narrow active-surface Ghidra backup-root provenance guard plus state/posture cleanup. Runtime parser, runtime texture decode, decompression behavior, GPU upload, texture pixels, mesh loading, animation/skinning, collision, material appearance, shader behavior, visual output, renderer behavior, rebuild, payload, Ghidra mutation/read-back, private asset access, storage, release, extractor/importer, generated-output, command-arming, and product-enable non-claims remain preserved.",
+  "lastUpdated": "2026-07-04",
+  "currentFocus": "Static RE/Ghidra closure remains unchanged during the 2026-07-03/2026-07-04 full-spectrum repo assurance wave. The current wave integrates bounded public-boundary, release-accounting, consult-policy, ZIP-overlay denylist, documentation, state-hygiene, maintainer-local scratch/backup posture, and legacy local-storage cleanup repairs under the active Codex plus Composer plus Grok consult posture. Runtime parser, runtime texture decode, decompression behavior, GPU upload, texture pixels, mesh loading, animation/skinning, collision, material appearance, shader behavior, visual output, renderer behavior, rebuild, payload, Ghidra mutation/read-back, private asset access, release, extractor/importer, generated-output, command-arming, and product-enable non-claims remain preserved.",
   "campaignPosture": {
+    "currentAssuranceWave": {
+      "status": "complete-pushed-with-notes",
+      "summary": "Current RE-facing changes are hygiene-only: sanitizing tracked maintainer-local path wording, keeping release/accounting mirrors current, and preserving public/private boundaries. Required current consult coverage passed for Codex normal/adversarial, Cursor composer-2.5-fast normal/adversarial, and Grok Build normal/adversarial; Cursor gemini-3.1-pro is suspended while operator Cursor API/model usage is exhausted. Final pushed commit and remote-ref parity evidence are recorded in the coordinator final response.",
+      "consultRecord": "subagents/full-repo-assurance-consult-record-20260704.md",
+      "nonClaims": [
+        "No live Ghidra mutation or fresh read-back.",
+        "No BEA launch, CDB attach, audio capture, visual/runtime proof, generated asset output, runtime texture decode proof, or rebuild parity proof.",
+        "No release publication or online capability promotion."
+      ]
+    },
     "status": "stopped-by-user-shutdown",
     "summary": "The prior closeout recorded deleted standing-loop automations. They were temporarily restored by the 2026-07-02 user request, intensified on 2026-07-03, and then stopped again by explicit user request during the 2026-07-03 shutdown closeout. The first restored wave was integrated and pushed at 898e583efdff86847c0a55dca15f2ac088e43fc1; read-only acceptance then required sanitizing exact maintainer-local Ghidra project/backup paths from current tracked runbook wording.",
     "integratedRestoredWave": [
@@ -151,15 +161,17 @@
   },
   "storageRetention": {
     "mode": "user-authorized-cleanup-complete",
+    "localStorageCleanup20260704": "Stale local project proof/backups and the inactive GhydraMCP runtime bundle were deleted by explicit user direction. The Ghidra 12.x distribution was moved to the maintainer-local tooling posture and its headless launcher path was verified. A local storage filename scan found no remaining Onslaught/BEA/Battle Engine/Aquila/backup-root/runtime-proof hits. Steam/game install material was left untouched.",
+    "driveHealth20260704": "Windows Get-PhysicalDisk/Get-Disk/Get-Volume reported all visible disks/volumes Healthy/OK. Raw SMART attributes were unavailable in this session because smartctl is absent and Windows reliability/failure-predict counters were not exposed to the current non-elevated client.",
     "highConfidenceDeletionCandidates": 3,
     "deletionPerformed": true,
     "authorizedReclaimedGiB": 419.61,
     "actualReclaimedGiB": 419.61,
     "futureReviewBands": "Medium and low values are non-authorized logical review ceilings only, not reclaimable storage, candidate pools, unique physical-size estimates, urgency signals, or deletion budgets.",
-    "latestCampaignReports": "Earlier storage/Ghidra report-only lanes retained all classified material. On 2026-07-03, user explicitly authorized moving future backups/proofs to the ignored removable-root posture, taking a fresh verified/read-back live-project Ghidra backup, deleting legacy external Ghidra/source/proof archive roots, and clearing superseded removable-root scratch.",
+    "latestCampaignReports": "Earlier storage/Ghidra report-only lanes retained all classified material. On 2026-07-03, user explicitly authorized moving future backups/proofs to the ignored removable-root posture, taking a fresh live-project Ghidra backup with backup-manifest plus file-count/byte/hash verification, deleting legacy external Ghidra/source/proof archive roots, and clearing superseded removable-root scratch.",
     "latestSentinelRun": {
       "date": "2026-07-03",
-      "inventorySummary": "Legacy external Ghidra backups, source-scratch archive, and runtime proof archive were deleted after local manifests. Removable scratch retains the fresh verified/read-back live-project Ghidra backup id BEA_20260703-152228Z_live_project_backup_verified plus ignored local cleanup manifests/policy.",
+      "inventorySummary": "Legacy external Ghidra backups, source-scratch archive, and runtime proof archive were deleted after local manifests. Removable scratch retains the fresh live-project Ghidra backup id BEA_20260703-152228Z_live_project_backup_verified plus ignored local cleanup manifests/policy and backup-manifest plus file-count/byte/hash verification.",
       "deletionCandidates": "Completed: legacy external Ghidra backup root, old source-scratch/public-candidate archive root, legacy raw WinUI safe-copy runtime proof archive root, and superseded removable-root pre-cleanup/scratch folders.",
       "freeSpaceBeforeAfter": "After cleanup: external archive drive free about 928.14 GiB and removable scratch free about 119.07 GiB. Reclaimed storage recorded at about 419.61 GiB across deleted legacy roots and superseded scratch.",
       "blockers": "Raw historical runtime proof bundles are intentionally no longer retained. Future proof audits must rely on tracked summaries/validators/recreation steps or regenerate bounded temporary proof output. Future destructive cleanup still requires candidate-specific local manifests and retained replacement/summary decisions."

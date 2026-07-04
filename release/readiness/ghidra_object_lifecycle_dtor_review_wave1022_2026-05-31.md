@@ -35,7 +35,7 @@ Read-back evidence:
 - Vtable exports verified `160` rows across `0x005dd458`, `0x005dd2f0`, `0x005dd16c`, `0x005dce64`, `0x005dcb58`, `0x005dc830`, `0x005dcfe8`, `0x005dccdc`, `0x005dc9c8`, and `0x005def1c`.
 - Queue closure remains `6238/6238 = 100.00%` with 0 commentless, 0 exact-undefined signatures, and 0 `param_N`.
 - Wave911 focused re-audit progress advances to `539/1408 = 38.28%`; expanded static surface progress advances to `768/1493 = 51.44%`; Wave911 top-500 risk-ranked coverage advances to `467/500 = 93.40%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-230345_post_wave1022_object_lifecycle_dtor_review_verified`, `19` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-230345_post_wave1022_object_lifecycle_dtor_review_verified`, `19` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -51,4 +51,4 @@ What remains unproven:
 - BEA patching behavior.
 - Rebuild parity.
 
-Probe token anchor: Wave1022; object-lifecycle-dtor-review-wave1022; 0x004bfd80 CSpawnerThng__scalar_deleting_dtor; 0x004bfed0 CSpawnerThng__dtor_base; 0x004bfe10 CRocket__dtor_base; 0x004bfe70 CWaypoint__dtor_base; 0x004bff40 CSphereTrigger__dtor_base; 0x004c0000 CEscapePod__dtor_base; 539/1408 = 38.28%; 768/1493 = 51.44%; 467/500 = 93.40%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260531-230345_post_wave1022_object_lifecycle_dtor_review_verified; renamed=2.
+Probe token anchor: Wave1022; object-lifecycle-dtor-review-wave1022; 0x004bfd80 CSpawnerThng__scalar_deleting_dtor; 0x004bfed0 CSpawnerThng__dtor_base; 0x004bfe10 CRocket__dtor_base; 0x004bfe70 CWaypoint__dtor_base; 0x004bff40 CSphereTrigger__dtor_base; 0x004c0000 CEscapePod__dtor_base; 539/1408 = 38.28%; 768/1493 = 51.44%; 467/500 = 93.40%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260531-230345_post_wave1022_object_lifecycle_dtor_review_verified; renamed=2.

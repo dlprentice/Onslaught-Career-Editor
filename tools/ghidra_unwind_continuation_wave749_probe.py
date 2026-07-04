@@ -31,7 +31,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260522-190133_post_wave749_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260522-190133_post_wave749_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d2250": "0x0061b10c",
@@ -176,10 +176,10 @@ def check_artifacts(failures: list[str]) -> None:
         require(name in helper_names, f"missing helper metadata row: {name}", failures)
 
     expected_strings = {
-        "string-006289c0.tsv": r"C:\dev\ONSLAUGHT2\DiveBomber.cpp",
-        "string-00628a54.tsv": r"C:\dev\ONSLAUGHT2\Dropship.cpp",
-        "string-00628b40.tsv": r"C:\dev\ONSLAUGHT2\engine.cpp",
-        "string-00628d3c.tsv": r"C:\dev\ONSLAUGHT2\eventmanager.cpp",
+        "string-006289c0.tsv": r"[maintainer-local-source-export-root]\DiveBomber.cpp",
+        "string-00628a54.tsv": r"[maintainer-local-source-export-root]\Dropship.cpp",
+        "string-00628b40.tsv": r"[maintainer-local-source-export-root]\engine.cpp",
+        "string-00628d3c.tsv": r"[maintainer-local-source-export-root]\eventmanager.cpp",
     }
     for relative, expected in expected_strings.items():
         rows = read_tsv(BASE / relative)

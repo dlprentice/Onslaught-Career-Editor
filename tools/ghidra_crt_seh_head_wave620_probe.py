@@ -230,7 +230,7 @@ def check_metadata_tags_and_edges(failures: list[str]) -> None:
 def check_backup_and_queue(failures: list[str]) -> None:
     backup = read_json(BACKUP_SUMMARY)
     expected_backup = {
-        "BackupPath": "G:\\GhidraBackups\\BEA_20260520-035125_post_wave620_crt_seh_head_verified",
+        "BackupPath": "[maintainer-local-ghidra-backup-root]\\BEA_20260520-035125_post_wave620_crt_seh_head_verified",
         "SourceFileCount": 19,
         "BackupFileCount": 19,
         "SourceBytes": 161811335,

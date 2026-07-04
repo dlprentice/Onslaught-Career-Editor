@@ -27,9 +27,9 @@ Fresh read-back evidence:
 - Wave911 focused re-audit progress remains `467/1408 = 33.17%` because this is a risk-ranked residual island rather than a new focused-candidate anchor.
 - Expanded static surface progress is now `596/1478 = 40.32%`.
 - Wave911 top-500 risk-ranked coverage for this residual pass advances to `343/500 = 68.60%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-094628_post_wave999_fepbeconfig_helper_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-094628_post_wave999_fepbeconfig_helper_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
-Probe token anchor: Wave999; `fepbeconfig-helper-review-wave999`; `0x0044eb30 CFEPMultiplayerStart__SetConfigDescriptionByIndex`; `0x0044f530 CFEPBEConfig__PlayWeaponSound`; `0x0044f830 CFEPBEConfig__PlayWeaponSoundAlt`; `0x00451a40 FEPBEConfig__FindSelectedEntryByGlobalId`; `467/1408 = 33.17%`; `596/1478 = 40.32%`; `343/500 = 68.60%`; `6222/6222 = 100.00%`; `G:\GhidraBackups\BEA_20260531-094628_post_wave999_fepbeconfig_helper_review_verified`; no mutation.
+Probe token anchor: Wave999; `fepbeconfig-helper-review-wave999`; `0x0044eb30 CFEPMultiplayerStart__SetConfigDescriptionByIndex`; `0x0044f530 CFEPBEConfig__PlayWeaponSound`; `0x0044f830 CFEPBEConfig__PlayWeaponSoundAlt`; `0x00451a40 FEPBEConfig__FindSelectedEntryByGlobalId`; `467/1408 = 33.17%`; `596/1478 = 40.32%`; `343/500 = 68.60%`; `6222/6222 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260531-094628_post_wave999_fepbeconfig_helper_review_verified`; no mutation.
 
 What this proves:
 

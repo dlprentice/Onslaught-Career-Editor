@@ -53,7 +53,7 @@ Validation boundary:
 - This proves one private still-frame capture from the exact direct-route copied-profile process/window pair.
 - This does not prove runtime MissionScript execution, Level100 script source selection, runtime command effects, visual correctness, native input, debugger observation, Godot parity, rebuild parity, or no-noticeable-difference parity.
 
-Static status remains unchanged: `6411/6411 = 100.00%` function-quality closure, `0 / 0 / 0` debt, expanded post-100 static surface `1560/1560 = 100.00%`, and current-risk focused accounting `1179/1179 = 100.00%`. Latest verified Ghidra backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`; this slice performs no Ghidra mutation and does not require a new Ghidra backup.
+Static status remains unchanged: `6411/6411 = 100.00%` function-quality closure, `0 / 0 / 0` debt, expanded post-100 static surface `1560/1560 = 100.00%`, and current-risk focused accounting `1179/1179 = 100.00%`. Latest verified Ghidra backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`; this slice performs no Ghidra mutation and does not require a new Ghidra backup.
 
 Static anchors preserved: `0x00539dc0`, `0x00539ca0`, and `CDXMemBuffer__InitFromFile`.
 

@@ -24,7 +24,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260528-005650_post_wave934_battleline_triangulate_mesh_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-005650_post_wave934_battleline_triangulate_mesh_review_verified"
 SCRIPT_NAME = "test:ghidra-battleline-triangulate-mesh-review-wave934"
 SCRIPT_VALUE = r"py -3 tools\ghidra_battleline_triangulate_mesh_review_wave934_probe.py --check"
 

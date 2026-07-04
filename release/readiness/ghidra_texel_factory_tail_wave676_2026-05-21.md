@@ -17,7 +17,7 @@ The pass used the `texel-factory-tail-wave676` and `wave676-readback-verified` t
 - Post exports verified `7` metadata rows, `7` tag rows, `13` xref rows, `623` instruction rows, and `7` clean decompile rows.
 - Queue after Wave676: `6098` total, `3828` commented, `2270` commentless, `1217` exact-undefined signatures, `489` `param_N` signatures, strict clean-signature proxy `3778/6098 = 61.95%`.
 - Next queue head: `0x0058864a CDXTexture__InitMappedFileContext`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260521-062327_post_wave676_texel_factory_tail_verified`, `19` files, `164334471` bytes, `DiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-062327_post_wave676_texel_factory_tail_verified`, `19` files, `164334471` bytes, `DiffCount=0`.
 
 ## Boundaries
 

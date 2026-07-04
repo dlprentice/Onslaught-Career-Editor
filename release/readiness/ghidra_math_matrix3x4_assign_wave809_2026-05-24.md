@@ -18,7 +18,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 16 xref rows, 125 instruction rows, 1 decompile row, 432 post-callsite instruction rows, and 5 post-caller decompile rows.
 - Queue after Wave809: 6098 total, 5584 commented, 514 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5584/6098 = 91.57%`, strict clean-signature proxy `5584/6098 = 91.57%`.
 - Next raw commentless row: `0x0049bd50 CMCMech__UpdateBoneHierarchyRecursive`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-120255_post_wave809_math_matrix3x4_assign_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-120255_post_wave809_math_matrix3x4_assign_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
 
 What this proves:
 

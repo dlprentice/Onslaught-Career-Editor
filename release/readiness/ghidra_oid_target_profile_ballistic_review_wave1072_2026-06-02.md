@@ -34,7 +34,7 @@ Read-back evidence:
 - Wave911 focused re-audit progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1334/1560 = 85.51%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-035902_post_wave1072_oid_target_profile_ballistic_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-035902_post_wave1072_oid_target_profile_ballistic_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -53,4 +53,4 @@ What remains separate proof:
 
 Next candidate note: continue with the next expanded static re-audit cluster; prefer read-only review first and mutate only when fresh evidence proves a correction or normalization need.
 
-Probe token anchor: Wave1072; oid-target-profile-ballistic-review-wave1072; 0x00507ab0 OID__CanFireAtTarget_BallisticArcA; 0x00509c80 CBattleEngine__ComputeProjectileMetricFromTargetProfile; 0x00509e90 ProjectileBurst__ResolvePresetByPercentBucketFallback; 0x00509f70 TargetProfileContext__IsEligibleByDistanceBucketOrRange; 0x0050a0e0 OID__ComputeForwardProjectedPointTowardTarget; 812/1408 = 57.67%; 1334/1560 = 85.51%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260602-035902_post_wave1072_oid_target_profile_ballistic_review_verified; read-only review.
+Probe token anchor: Wave1072; oid-target-profile-ballistic-review-wave1072; 0x00507ab0 OID__CanFireAtTarget_BallisticArcA; 0x00509c80 CBattleEngine__ComputeProjectileMetricFromTargetProfile; 0x00509e90 ProjectileBurst__ResolvePresetByPercentBucketFallback; 0x00509f70 TargetProfileContext__IsEligibleByDistanceBucketOrRange; 0x0050a0e0 OID__ComputeForwardProjectedPointTowardTarget; 812/1408 = 57.67%; 1334/1560 = 85.51%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-035902_post_wave1072_oid_target_profile_ballistic_review_verified; read-only review.

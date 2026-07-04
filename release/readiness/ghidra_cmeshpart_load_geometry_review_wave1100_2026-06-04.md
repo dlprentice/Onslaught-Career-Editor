@@ -26,14 +26,14 @@ Representative anchors:
 Source-reference context:
 
 - `references/Onslaught/ResourceAccumulator.cpp` records `resfile_cmeshpartsize = sizeof(CMeshPart)` and checks serialized resource files against that value, which supports the importance of the observed `0x13c` serialized record size without proving exact Steam retail layout identity.
-- The local source-reference tree does not contain matching MeshPart method bodies for this retail slice, so Wave1100 claims remain anchored to Ghidra metadata, xrefs, instructions, decompile, debug path `C:\dev\ONSLAUGHT2\MeshPart.cpp`, and prior saved read-back comments.
+- The local source-reference tree does not contain matching MeshPart method bodies for this retail slice, so Wave1100 claims remain anchored to Ghidra metadata, xrefs, instructions, decompile, debug path `[maintainer-local-source-export-root]\MeshPart.cpp`, and prior saved read-back comments.
 
 Read-back evidence:
 
 - Fresh read-only exports verified `24` metadata rows, `24` tag rows, `46` xref rows, `6091` instruction rows, and `24` decompile rows.
 - Export logs reported `targets=24 found=24 missing=0`, `rows=24 missing=0`, `Wrote 46 rows`, `Wrote 6091 function-body instruction rows`, and `targets=24 dumped=24 missing=0 failed=0`.
 - Static function-quality closure remains `6410/6410 = 100.00%`, expanded static surface remains `1560/1560 = 100.00%`, Wave911 focused progress remains `812/1408 = 57.67%`, and Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -50,4 +50,4 @@ What remains unproven:
 - Gameplay outcomes.
 - Rebuild parity.
 
-Probe token anchor: Wave1100; cmeshpart-load-geometry-review-wave1100; 0x004a51f0 CMeshPart__FreeResources; 0x004ae2b0 CMeshPart__CreatePolyBucket; 0x004ae860 CMeshPart__AllocateGeometry; 0x004aede0 CMeshPart__LoadOldStyle_VersionA; 0x004af470 CMeshPart__LoadVerticesAndTriangles; 0x004afbb0 CMeshPart__LoadVerticesWithBones; 0x004b27a0 CMeshPart__LoadFromStream; 0x004b31f0 CMeshPart__OptimizePolygons; 0x004b3b70 CMeshPart__Clone; 0x004b4250 CMeshPart__Merge; 0x004bae70 CMeshPart__CanOptimizePart_Strict; 0x004bb040 CMeshPart__CanMergeInOptimizePass; C:\dev\ONSLAUGHT2\MeshPart.cpp; resfile_cmeshpartsize; 0x13c; 1560/1560 = 100.00%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified; read-only review.
+Probe token anchor: Wave1100; cmeshpart-load-geometry-review-wave1100; 0x004a51f0 CMeshPart__FreeResources; 0x004ae2b0 CMeshPart__CreatePolyBucket; 0x004ae860 CMeshPart__AllocateGeometry; 0x004aede0 CMeshPart__LoadOldStyle_VersionA; 0x004af470 CMeshPart__LoadVerticesAndTriangles; 0x004afbb0 CMeshPart__LoadVerticesWithBones; 0x004b27a0 CMeshPart__LoadFromStream; 0x004b31f0 CMeshPart__OptimizePolygons; 0x004b3b70 CMeshPart__Clone; 0x004b4250 CMeshPart__Merge; 0x004bae70 CMeshPart__CanOptimizePart_Strict; 0x004bb040 CMeshPart__CanMergeInOptimizePass; [maintainer-local-source-export-root]\MeshPart.cpp; resfile_cmeshpartsize; 0x13c; 1560/1560 = 100.00%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified; read-only review.

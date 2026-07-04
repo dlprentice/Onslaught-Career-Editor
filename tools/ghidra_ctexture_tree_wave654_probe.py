@@ -107,7 +107,7 @@ DOC_TOKENS = (
     "2542",
     "757",
     "0x00572f00 CFastVB__InitDwordSpanBuilderState_00572f00",
-    "G:\\GhidraBackups\\BEA_20260520-195520_post_wave654_ctexture_tree_verified",
+    "[maintainer-local-ghidra-backup-root]\\BEA_20260520-195520_post_wave654_ctexture_tree_verified",
 )
 
 OVERCLAIM_TOKENS = (

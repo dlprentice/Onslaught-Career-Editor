@@ -1,7 +1,7 @@
 # DXKempyCube.cpp Functions
 
 > Source File: DXKempyCube.cpp | Binary: BEA.exe
-> Debug Path: 0x00650a88 (`C:\dev\ONSLAUGHT2\DXKempyCube.cpp`)
+> Debug Path: 0x00650a88 (`[maintainer-local-source-export-root]\DXKempyCube.cpp`)
 
 ## Overview
 
@@ -12,7 +12,7 @@ DirectX environment cube map rendering. Implements skybox and environment reflec
 ## Debug Path Location
 
 - **Address**: 0x00650a88
-- **String**: `C:\dev\ONSLAUGHT2\DXKempyCube.cpp`
+- **String**: `[maintainer-local-source-export-root]\DXKempyCube.cpp`
 
 ## Functions
 
@@ -30,7 +30,7 @@ DirectX environment cube map rendering. Implements skybox and environment reflec
 - Referenced in the _index.md as having 5 functions (CDXKempyCube - environment cube mapping, skybox rendering)
 - Part of the DX rendering subsystem
 - Wave600 proves the nearby saved Ghidra metadata/xref/instruction evidence for the texture-slot lifecycle, setup, and render helpers, but runtime cube behavior and exact layouts remain unproven.
-- Wave1033 (`cdxengine-render-resource-review-wave1033`) re-read `0x00544040 CDXEngine__ClearKempyCubeTextureSlots` as a primary target and `0x00544060 CDXEngine__ReleaseKempyCubeTexturesAndVertexBuffer` as corrected context, saved the `CTexture__DecrementRefCountFromNameField` wording at `0x00544060`, and marked it with `wave1033-readback-verified`. Probe token anchor: Wave1033; cdxengine-render-resource-review-wave1033; 0x0044a640 CDXEngine__SetOverlaySlotVisibilityByPlayerView; 0x0053d3a0 CDXEngine__ReleaseDefaultTextureAndMeshRefs; 0x00542a50 CDXEngine__BuildDirectionalSampleRing; 0x00544040 CDXEngine__ClearKempyCubeTextureSlots; 0x00544060 CDXEngine__ReleaseKempyCubeTexturesAndVertexBuffer; CTexture__DecrementRefCountFromNameField; supersedes older CHud__DecrementCounter9C wording; 635/1408 = 45.10%; 864/1493 = 57.87%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-051834_post_wave1033_cdxengine_render_resource_review_verified; two comment/tag corrections.
+- Wave1033 (`cdxengine-render-resource-review-wave1033`) re-read `0x00544040 CDXEngine__ClearKempyCubeTextureSlots` as a primary target and `0x00544060 CDXEngine__ReleaseKempyCubeTexturesAndVertexBuffer` as corrected context, saved the `CTexture__DecrementRefCountFromNameField` wording at `0x00544060`, and marked it with `wave1033-readback-verified`. Probe token anchor: Wave1033; cdxengine-render-resource-review-wave1033; 0x0044a640 CDXEngine__SetOverlaySlotVisibilityByPlayerView; 0x0053d3a0 CDXEngine__ReleaseDefaultTextureAndMeshRefs; 0x00542a50 CDXEngine__BuildDirectionalSampleRing; 0x00544040 CDXEngine__ClearKempyCubeTextureSlots; 0x00544060 CDXEngine__ReleaseKempyCubeTexturesAndVertexBuffer; CTexture__DecrementRefCountFromNameField; supersedes older CHud__DecrementCounter9C wording; 635/1408 = 45.10%; 864/1493 = 57.87%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-051834_post_wave1033_cdxengine_render_resource_review_verified; two comment/tag corrections.
 - Related to: DXLandscape.cpp, DXTexture.cpp
 
 ## Wave600 CDXEngine Kempy Cube Resource/Render Cluster (2026-05-19)
@@ -51,7 +51,7 @@ The texture/VB initializer formats five cube texture filenames through `CDXEngin
 
 Read-back evidence: `ApplyCDXEngineKempyCubeWave600.java` dry/apply/final dry reported `updated=0 skipped=5 renamed=0 would_rename=2 missing=0 bad=0`, then `updated=5 skipped=0 renamed=2 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=5 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Post exports verified `5` metadata rows, `5` tag rows, `5` xref rows, `1505` instruction rows, and `5` decompile rows.
 
-Queue telemetry after the pass: `6093` total, `3079` commented, `3014` commentless, `1331` exact-undefined signatures, `1075` `param_N`, comment-backed proxy `3079/6093 = 50.53%`, strict clean-signature proxy `3034/6093 = 49.79%`. Verified backup: `G:\GhidraBackups\BEA_20260519-174509_post_wave600_cdxengine_kempy_cube_verified`, `19` files, `161188743` bytes, manifest hash `d86b1630787846993bbd52f40f4821e89ecc5f13e8fa0afddccbe4feb8725247`. Next queue head: `0x00544770 CDXLandscape__ReleaseOwnedResources`.
+Queue telemetry after the pass: `6093` total, `3079` commented, `3014` commentless, `1331` exact-undefined signatures, `1075` `param_N`, comment-backed proxy `3079/6093 = 50.53%`, strict clean-signature proxy `3034/6093 = 49.79%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-174509_post_wave600_cdxengine_kempy_cube_verified`, `19` files, `161188743` bytes, manifest hash `d86b1630787846993bbd52f40f4821e89ecc5f13e8fa0afddccbe4feb8725247`. Next queue head: `0x00544770 CDXLandscape__ReleaseOwnedResources`.
 
 This is static saved-Ghidra evidence only. Runtime cube rendering, visible sky/reflection behavior, exact Kempy resource-block/texture/CVBuffer/vertex/render-state/matrix layouts, exact source identity, BEA patching, and rebuild parity remain unproven.
 

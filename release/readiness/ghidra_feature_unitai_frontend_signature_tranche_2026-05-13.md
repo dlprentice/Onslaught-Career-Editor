@@ -32,7 +32,7 @@ This note records a serialized headless dry/apply/read-back tranche that correct
 | Focused npm probe | `cmd.exe /c npm run test:ghidra-feature-unitai-frontend-signature` passed with status `PASS`, `12` targets, and `12` metadata rows. |
 | Whole-database baseline | `cmd.exe /c npm run test:ghidra-static-reaudit-baseline` passed with `6013` total functions, `0` legacy weak names, `1948` undefined signatures, and `1992` `param_N` signatures. |
 | Whole-database queue | `cmd.exe /c npm run test:ghidra-static-reaudit-queue` passed with `1292` commented functions and `4721` commentless functions. |
-| Ghidra backup | Live project backup verified at `G:\GhidraBackups\BEA_20260513_085340_post_wave368_feature_unitai_frontend_verified` with `19` files, `153357191` bytes, and `HashDiffCount=0`. |
+| Ghidra backup | Live project backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_085340_post_wave368_feature_unitai_frontend_verified` with `19` files, `153357191` bytes, and `HashDiffCount=0`. |
 
 The live queue counters did not move in this tranche because the checked functions were already in the broad counted buckets. The pass still improves the saved project by correcting stale owner labels, tightening receiver and stack-argument names, and writing proof-boundary comments/tags.
 

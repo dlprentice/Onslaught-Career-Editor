@@ -29,7 +29,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 TRACKING_STATE = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_tracking_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-192131_post_wave1015_ogg_message_lifecycle_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-192131_post_wave1015_ogg_message_lifecycle_review_verified"
 
 TARGETS = {
     "0x004b6cd0": ("COggLoader__readerSubobject_dtor_body", "void __fastcall COggLoader__readerSubobject_dtor_body(void * reader_subobject)"),

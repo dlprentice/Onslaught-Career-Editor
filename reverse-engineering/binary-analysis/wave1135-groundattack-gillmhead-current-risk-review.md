@@ -43,8 +43,8 @@ Evidence:
 - Context metadata/tag/xref/instruction/decompile exports: `13` / `13` / `15` / `546` / `13`.
 - Primary logs report `targets=10 found=10 missing=0`, `rows=10 missing=0`, `Wrote 22 rows`, `Wrote 443 function-body instruction rows`, and `targets=10 dumped=10 missing=0 failed=0`.
 - Context logs report `targets=13 found=13 missing=0`, `rows=13 missing=0`, `Wrote 15 rows`, `Wrote 546 function-body instruction rows`, and `targets=13 dumped=13 missing=0 failed=0`.
-- Final backup after the read-only evidence wave: `G:\GhidraBackups\BEA_20260605-111213_post_wave1135_groundattack_gillmhead_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
-- Previous completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-104845_post_wave1134_console_current_risk_review_verified`.
+- Final backup after the read-only evidence wave: `[maintainer-local-ghidra-backup-root]\BEA_20260605-111213_post_wave1135_groundattack_gillmhead_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Previous completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-104845_post_wave1134_console_current_risk_review_verified`.
 
 What this proves:
 

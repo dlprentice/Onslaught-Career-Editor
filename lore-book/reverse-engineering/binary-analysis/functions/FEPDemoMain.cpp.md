@@ -9,7 +9,7 @@
 
 Source-style names below are supported by retail vtable/action/text-token evidence, not by a direct source-file match. This page documents saved static Ghidra metadata only.
 
-Wave956 (`cfepdemo-main-review-wave956`) re-reviewed the four-target `CFEPDemoMain` dispatch slice read-only after static export-contract closure. Fresh exports verified 11 metadata rows, 11 tag rows, 220 xref rows, 404 instruction rows, 11 decompile rows, and 20 vtable/data-table rows. No mutation was needed; anchor phrase: no mutation. The Wave402 signatures still hold, vtable `0x005db7c0` still maps slots 3 through 6 to `0x00457ed0 CFEPDemoMain__GetActionCount`, `0x00457ec0 CFEPDemoMain__GetMenuType`, `0x00457ee0 CFEPDemoMain__DoAction`, and `0x00457f20 CFEPDemoMain__Update`, and data-table pointer `0x005e4a78` remains mixed context rather than a second dispatch slice. Wave911 focused re-audit progress after Wave956 is `290/1408 = 20.60%`; static closure remains `6151/6151 = 100.00%`. Verified backup: `G:\GhidraBackups\BEA_20260528-105733_post_wave956_cfepdemo_main_review_verified`. Runtime demo-menu behavior, runtime frontend navigation/rendering behavior, concrete `CFEPDemoMain` layout names, exact source-body identity, BEA patching, and rebuild parity remain separate proof.
+Wave956 (`cfepdemo-main-review-wave956`) re-reviewed the four-target `CFEPDemoMain` dispatch slice read-only after static export-contract closure. Fresh exports verified 11 metadata rows, 11 tag rows, 220 xref rows, 404 instruction rows, 11 decompile rows, and 20 vtable/data-table rows. No mutation was needed; anchor phrase: no mutation. The Wave402 signatures still hold, vtable `0x005db7c0` still maps slots 3 through 6 to `0x00457ed0 CFEPDemoMain__GetActionCount`, `0x00457ec0 CFEPDemoMain__GetMenuType`, `0x00457ee0 CFEPDemoMain__DoAction`, and `0x00457f20 CFEPDemoMain__Update`, and data-table pointer `0x005e4a78` remains mixed context rather than a second dispatch slice. Wave911 focused re-audit progress after Wave956 is `290/1408 = 20.60%`; static closure remains `6151/6151 = 100.00%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-105733_post_wave956_cfepdemo_main_review_verified`. Runtime demo-menu behavior, runtime frontend navigation/rendering behavior, concrete `CFEPDemoMain` layout names, exact source-body identity, BEA patching, and rebuild parity remain separate proof.
 
 ## CFEPDemoMain Dispatch Context
 
@@ -45,7 +45,7 @@ Wave956 rechecked the four rows above without Ghidra mutation:
 - `0x00457ed0 CFEPDemoMain__GetActionCount` still decompiles to `return 1`.
 - `0x00457ee0 CFEPDemoMain__DoAction` still writes `DAT_008a956c`, calls `CFrontEnd__SetPage(&DAT_0089d758, 0x11, 0x46)`, and falls back to `CFEPMain__DoAction`.
 - `0x00457f20 CFEPDemoMain__Update` still reaches `FrontEndText__GetLocalizedOrFallbackTextByToken` for tokens `0`, `8`, and `6`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-105733_post_wave956_cfepdemo_main_review_verified`, `19` files, `173542279` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-105733_post_wave956_cfepdemo_main_review_verified`, `19` files, `173542279` bytes, `DiffCount=0`.
 
 ## Wave402 Validation
 

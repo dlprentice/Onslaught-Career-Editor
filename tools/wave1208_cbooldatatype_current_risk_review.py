@@ -33,7 +33,7 @@ PACKAGE_JSON = ROOT / "package.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 CURRENT_CAPABILITIES = ROOT / "CURRENT_CAPABILITIES.md"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-040938_post_wave1208_cbooldatatype_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-040938_post_wave1208_cbooldatatype_current_risk_review_verified"
 
 TARGETS = {
     "0x0052e420": ("CBoolDataType__Equals", "bool __thiscall CBoolDataType__Equals(void * this, void * rhs)"),

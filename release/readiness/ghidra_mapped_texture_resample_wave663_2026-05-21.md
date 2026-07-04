@@ -25,7 +25,7 @@ Probe anchors: `0x0057c7a4 CMeshCollisionVolume__LoadMappedTextureResourcesByMod
 - Final dry mode: `updated=0 skipped=4 renamed=0 would_rename=0 signature_updated=0 missing=0 bad=0`
 - All three passes reported `REPORT: Save succeeded`.
 - Post exports verified `4` metadata rows, `4` tag rows, `9` xref rows, `148` instruction rows, and `4` clean decompile rows.
-- Backup verified: `G:\GhidraBackups\BEA_20260521-003649_post_wave663_mapped_texture_resample_verified`, `19` files, `163515271` bytes, `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260521-003649_post_wave663_mapped_texture_resample_verified`, `19` files, `163515271` bytes, `DiffCount=0`.
 
 ## Queue
 

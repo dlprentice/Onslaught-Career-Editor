@@ -23,7 +23,7 @@ Read-back evidence:
 - Queue after Wave825: 6098 total, 5633 commented, 465 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5633/6098 = 92.37%`, strict clean-signature proxy `5633/6098 = 92.37%`.
 - Commentless high-signal, signature, and name-confidence queues remain empty.
 - Next raw commentless row: `0x004daff0 CFearGrid__LookupFearWeightByArchetype`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-193427_post_wave825_strcopyn_helper_verified`, 19 files, 171576199 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-193427_post_wave825_strcopyn_helper_verified`, 19 files, 171576199 bytes, `DiffCount=0`.
 
 What this proves:
 

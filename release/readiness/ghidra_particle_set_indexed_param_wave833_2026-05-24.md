@@ -27,7 +27,7 @@ Read-back evidence:
 - Queue after Wave833: 6098 total, 5655 commented, 443 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5655/6098 = 92.74%`, strict clean-signature proxy `5655/6098 = 92.74%`.
 - Commentless high-signal, signature, and name-confidence queues remain empty.
 - Next raw commentless row: `0x004f7d30 FromWCHAR`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-233838_post_wave833_particle_set_indexed_param_verified`, 19 files, 171772807 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-233838_post_wave833_particle_set_indexed_param_verified`, 19 files, 171772807 bytes, `DiffCount=0`.
 
 What this proves:
 

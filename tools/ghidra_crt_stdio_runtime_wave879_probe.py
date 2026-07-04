@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave879 CRT/stdio runtime"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-225409_post_wave879_crt_stdio_runtime_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-225409_post_wave879_crt_stdio_runtime_verified"
 NEXT_HEAD = "0x0055ecb1 CRT__UnlockHeapLock9_0055ecb1"
 STRICT_PROXY = "5914/6113 = 96.74%"
 

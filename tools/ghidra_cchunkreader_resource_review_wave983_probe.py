@@ -29,7 +29,7 @@ DEVELOPER_STATE = ROOT / "developer_agent_state.json"
 DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-001624_post_wave983_cchunkreader_resource_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-001624_post_wave983_cchunkreader_resource_review_verified"
 
 TARGETS = {
     "0x004237d0": ("CChunkReader__ctor", "void * __fastcall CChunkReader__ctor(void * this)", 4),

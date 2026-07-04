@@ -48,10 +48,10 @@ CALLSITE_DOCS = (
     ROOT / "reverse-engineering" / "game-assets" / "mission-message-usage-callsites-2.md",
 )
 
-WAVE1219_BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
-WAVE584_BACKUP = r"G:\GhidraBackups\BEA_20260519-091559_post_wave584_iscript_object_audio_verified"
-WAVE1015_BACKUP = r"G:\GhidraBackups\BEA_20260531-192131_post_wave1015_ogg_message_lifecycle_review_verified"
-WAVE1074_BACKUP = r"G:\GhidraBackups\BEA_20260602-052830_post_wave1074_script_text_console_boundary_verified"
+WAVE1219_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+WAVE584_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260519-091559_post_wave584_iscript_object_audio_verified"
+WAVE1015_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-192131_post_wave1015_ogg_message_lifecycle_review_verified"
+WAVE1074_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260602-052830_post_wave1074_script_text_console_boundary_verified"
 
 PROOF_LINK = "missionscript-message-audio-command-effect-static-proof.md"
 SCHEMA_LINK = "missionscript-message-audio-command-effect.v1.json"

@@ -30,7 +30,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave853 SoundManager backend tail"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-101054_post_wave853_soundmanager_backend_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-101054_post_wave853_soundmanager_backend_tail_verified"
 NEXT_HEAD = "0x0051a6a0 CFastVB__RenderIndexedImmediate"
 
 COMMON_TAGS = {
@@ -156,8 +156,8 @@ TARGETS = {
 }
 
 STRING_EXPECTATIONS = {
-    "string-00632428.tsv": r"C:\dev\ONSLAUGHT2\SoundManager.cpp",
-    "string-0063e46c.tsv": r"C:\dev\ONSLAUGHT2\pcsoundmanager.cpp",
+    "string-00632428.tsv": r"[maintainer-local-source-export-root]\SoundManager.cpp",
+    "string-0063e46c.tsv": r"[maintainer-local-source-export-root]\pcsoundmanager.cpp",
     "string-0063e750.tsv": "Shutting down sound device\\x0a",
     "string-0063e76c.tsv": "Failed to create sample\\x0a",
     "string-0063e788.tsv": "Caching sample %s\\x0a",

@@ -22,7 +22,7 @@ DEVELOPER_STATE = ROOT / "developer_agent_state.json"
 DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-034107_post_wave989_carver_guide_lifecycle_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-034107_post_wave989_carver_guide_lifecycle_review_verified"
 
 TARGETS = {
     "0x00422440": ("CCarver__Init", "void __thiscall CCarver__Init(void * this, void * init)"),

@@ -18,8 +18,8 @@ Validation:
 - Post exports verified `2` metadata rows, `2` tag rows, `6` xref rows, `666` instruction rows, and `2` decompile rows.
 - Queue refresh passed: `6098` total, `4255` commented, `1843` commentless, `1216` exact-undefined signatures, `111` `param_N` signatures, comment-backed proxy `4255/6098 = 69.78%`, strict clean-signature proxy `4197/6098 = 68.82%`.
 - Current raw commentless head remains `0x0042f220 CSPtrSet__Clear`; current high-signal head is `0x005ab4d0 CMeshCollisionVolume__ExpandEdgeRows_MirrorHigh`.
-- Verified backup: `G:\GhidraBackups\BEA_20260522-052723_post_wave723_texture_node_output_serialization_head_verified`, `19` files, `166529927` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-052723_post_wave723_texture_node_output_serialization_head_verified`, `19` files, `166529927` bytes, `DiffCount=0`.
 
 Scope boundary: this is static saved-Ghidra metadata/decompile/instruction/xref evidence only. Exact chunk-builder layout, node field schema, type/kind enum, output-unit semantics, registry flag contract, runtime texture behavior, BEA patching, and rebuild parity remain deferred.
 
-Probe anchors: `Wave723 texture node output serialization head`, `texture-node-output-serialization-head-wave723`, `0x005ab0ed CDXTexture__EvalNodeOutputSizeUnits`, `0x005ab14b CTexture__SerializeNodeTreeToBitstream`, `0x0042f220 CSPtrSet__Clear`, `0x005ab4d0 CMeshCollisionVolume__ExpandEdgeRows_MirrorHigh`, `G:\GhidraBackups\BEA_20260522-052723_post_wave723_texture_node_output_serialization_head_verified`.
+Probe anchors: `Wave723 texture node output serialization head`, `texture-node-output-serialization-head-wave723`, `0x005ab0ed CDXTexture__EvalNodeOutputSizeUnits`, `0x005ab14b CTexture__SerializeNodeTreeToBitstream`, `0x0042f220 CSPtrSet__Clear`, `0x005ab4d0 CMeshCollisionVolume__ExpandEdgeRows_MirrorHigh`, `[maintainer-local-ghidra-backup-root]\BEA_20260522-052723_post_wave723_texture_node_output_serialization_head_verified`.

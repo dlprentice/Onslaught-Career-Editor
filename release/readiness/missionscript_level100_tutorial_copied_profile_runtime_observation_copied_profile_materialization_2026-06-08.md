@@ -13,7 +13,7 @@ Evidence anchors:
 - `MissionScript Level100 Tutorial Copied-Profile Runtime Observation Copied-Profile Materialization Proof`
 - Public proof: `reverse-engineering/binary-analysis/missionscript-level100-tutorial-copied-profile-runtime-observation-copied-profile-materialization-proof.md`
 - Machine-readable result: `reverse-engineering/binary-analysis/missionscript-level100-tutorial-copied-profile-runtime-observation-copied-profile-materialization.v1.json`
-- Latest verified Ghidra backup: `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`
+- Latest verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`
 - Sanitized profile id: `level100-clean-materialized-20260608-214752`
 - `status=COMPLETE`
 - `materializationStatus=clean-copied-profile-created`

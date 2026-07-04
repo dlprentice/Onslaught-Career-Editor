@@ -12,7 +12,7 @@ Evidence summary:
 - Cluster counts: audio core `36`, audio readers `28`, cutscene `27`, camera `31`, audio backend `24`, FMV / Bink `14`, music streaming `11`.
 - Large family anchors: `CSoundManager` `34`, `CPCSoundManager` `20`, `CCutscene` `14`, `CRTCutscene` `12`, `CMusic` `11`, `CWaveSoundRead` `11`, `CMovieCamera` `10`, `COggFileRead` `9`, `CBinkOpenThread` `9`, `CPanCamera` `9`, `CDXFMV` `4`, and `CGenericCamera` `4`.
 - Representative functions: `CSoundManager__Init`, `CSoundManager__CreateSample`, `CSoundManager__PlaySample`, `CSoundManager__FadeTo`, `CSoundManager__LoadCompressedSampleBank`, `CPCSoundManager__CreateSampleFromData`, `CPCSoundManager__CreateSoundBuffer`, `CPCSoundManager__DecodeADPCM`, `CMusic__Init`, `CMusic__UpdateStatus`, `CWaveSoundRead__Open`, `COggLoader__ThreadProc_ReadPathIntoBuffer`, `OggVorbisStream__ReadPcmSamples`, `COggFileRead__ReadDecodedPcm`, `CBinkOpenThread__WorkerMain`, `CDXFMV__ctor_base`, `CDXFMV__VFunc_06_0053f180`, `CFMV__PlayFullscreenWithLoadingGate`, `CCutscene__Load`, `CCutscene__Start`, `CCutscene__Update`, `CCutscene__SetTrackSlotByFlag`, `CRTCutscene__BuildCurrentFrameOutputs`, `CMovieCamera__GetPos`, `CMovieCamera__GetOrientation`, `CPanCamera__Update`, `CGenericCamera__GetPos`, and `CCamera__GetAspectRatio`.
-- Verified read-only Ghidra backup: `G:\GhidraBackups\BEA_20260526-113941_post_wave908_audio_media_cutscene_static_review_verified`, `19` files, `173247367` bytes, `DiffCount=0`.
+- Verified read-only Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-113941_post_wave908_audio_media_cutscene_static_review_verified`, `19` files, `173247367` bytes, `DiffCount=0`.
 
 What this proves:
 

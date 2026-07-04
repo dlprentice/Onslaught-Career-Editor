@@ -167,7 +167,7 @@ DOC_TOKENS = (
     "2479",
     "698",
     "3569/6098 = 58.53%",
-    "G:\\GhidraBackups\\BEA_20260520-230154_post_wave660_math_dispatch_verified",
+    "[maintainer-local-ghidra-backup-root]\\BEA_20260520-230154_post_wave660_math_dispatch_verified",
     "0x00579184 CFastVB__NormalizeQuaternionCopy",
 )
 
@@ -349,7 +349,7 @@ def check_state(failures: list[str]) -> None:
     require(backup.get("fileCount") == 19, "backup fileCount mismatch", failures)
     require(backup.get("byteCount") == 163318663, "backup byteCount mismatch", failures)
     require(
-        backup.get("backupPath") == "G:\\GhidraBackups\\BEA_20260520-230154_post_wave660_math_dispatch_verified",
+        backup.get("backupPath") == "[maintainer-local-ghidra-backup-root]\\BEA_20260520-230154_post_wave660_math_dispatch_verified",
         "backup path mismatch",
         failures,
     )

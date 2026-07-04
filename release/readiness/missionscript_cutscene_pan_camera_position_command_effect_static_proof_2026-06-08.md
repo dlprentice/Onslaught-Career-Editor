@@ -25,12 +25,12 @@ Static closeout remains unchanged:
 - Expanded post-100 static surface: `1560/1560 = 100.00%`.
 - Active current-risk focused accounting: `1179/1179 = 100.00%`.
 - Remaining active focused work: `0`.
-- Latest verified Ghidra backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+- Latest verified Ghidra backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 Evidence consumed:
 
 - Wave580 exports: `6` metadata rows, `6` tag rows, `6` xref rows, `5454` instruction rows, `6` decompile rows, and `36` vtable rows.
-- Wave580 verified backup: `G:\GhidraBackups\BEA_20260519-044247_post_wave580_iscript_camera_objective_verified`, `19` files, `160500615` bytes, `DiffCount=0`.
+- Wave580 verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-044247_post_wave580_iscript_camera_objective_verified`, `19` files, `160500615` bytes, `DiffCount=0`.
 - MissionScript descriptor schema: `missionscript-command-descriptor-schema.v1.json`.
 - MissionScript datatype schema: `missionscript-vm-datatype-opcode-schema.v1.json`.
 - Public loose-MSL docs: `msl-scripting.md`, `mission-thing-usage.md`, and `mission-events-index.md`.

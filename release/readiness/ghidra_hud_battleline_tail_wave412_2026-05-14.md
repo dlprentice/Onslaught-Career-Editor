@@ -25,7 +25,7 @@ This note records a serialized saved-Ghidra metadata correction for three HUD ba
 - Focused probes passed through both direct Python and the package-script wrapper.
 - Refreshed queue telemetry reports `6028` total functions, `1577` commented functions, `4451` commentless functions, `1909` undefined signatures, and `1840` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1577/6028 = 26.16%`; strict clean-signature `1514/6028 = 25.12%`.
-- The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260514_101618_post_wave412_hud_battleline_tail_verified` with `19` files, `154831751` bytes, and `HashDiffCount=0`.
+- The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260514_101618_post_wave412_hud_battleline_tail_verified` with `19` files, `154831751` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

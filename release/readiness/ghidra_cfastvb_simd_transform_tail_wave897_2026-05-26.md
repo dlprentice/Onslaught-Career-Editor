@@ -25,7 +25,7 @@ Read-back evidence:
 - Post exports: 9 metadata rows, 9 tag rows, 11 xref rows, 1077 instruction rows, 9 decompile rows, and 10 context metadata rows.
 - Queue after Wave897: 6113 total, 6097 commented, 16 commentless, 0 exact-undefined signatures, 0 `param_N`, strict/comment-backed proxy `6097/6113 = 99.74%`.
 - Next raw commentless row: `0x005a9f44 CFastVB__DispatchOp_ComposeTransformAndProjectVec3_005a9f44`.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-074111_post_wave897_cfastvb_simd_transform_tail_verified`, 19 files, 173214599 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-074111_post_wave897_cfastvb_simd_transform_tail_verified`, 19 files, 173214599 bytes, `DiffCount=0`.
 
 What this proves:
 

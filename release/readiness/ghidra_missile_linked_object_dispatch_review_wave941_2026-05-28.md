@@ -30,7 +30,7 @@ Fresh read-back evidence:
 - Primary exports: 4 metadata rows, 4 tag rows, 4 xref rows, 168 instruction rows, and 4 decompile rows.
 - Context exports: 12 metadata rows, 12 tag rows, 103 xref rows, 931 instruction rows, and 12 decompile rows.
 - Vtable export: 48 rows across `0x005e3ba4`, `0x005e3ba8`, `0x005e3bc8`, `0x005e3cb8`, `0x005e3cc0`, and `0x005de82c`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-034712_post_wave941_missile_linked_object_dispatch_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-034712_post_wave941_missile_linked_object_dispatch_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 - Mutation status: read-only review; no dry/apply/final-dry mutation scripts were run because the saved rows already matched the bounded static evidence.
 
 Progress:
@@ -38,7 +38,7 @@ Progress:
 - Wave911 focused re-audit progress after Wave941: `179/1408 = 12.71%`.
 - Static export-contract function-quality closure remains `6113/6113 = 100.00%`.
 
-Probe token anchor: Wave941; `missile-linked-object-dispatch-review-wave941`; `0x004baae0 CMissile__Init`; `0x004bac10 CMissile__DispatchLinkedObjectVFunc68AndPostHook`; `0x0050f8b0 CMissile__scalar_deleting_dtor`; `0x0050f8d0 CMissile__Destructor`; `0x0050f7a0 CWorldPhysicsManager__CreateProjectile`; `0x004d8410 CRound__Init`; `0x00452da0 SharedVFunc__NoOp_Ret08`; `0x005e3ba4`; `0x005e3ba8`; `0x005e3bc8`; `0x005e3cb8`; `0x005e3cc0`; `0x005de82c`; `0x005de850`; read-only review; `179/1408 = 12.71%`; `6113/6113 = 100.00%`; `G:\GhidraBackups\BEA_20260528-034712_post_wave941_missile_linked_object_dispatch_review_verified`.
+Probe token anchor: Wave941; `missile-linked-object-dispatch-review-wave941`; `0x004baae0 CMissile__Init`; `0x004bac10 CMissile__DispatchLinkedObjectVFunc68AndPostHook`; `0x0050f8b0 CMissile__scalar_deleting_dtor`; `0x0050f8d0 CMissile__Destructor`; `0x0050f7a0 CWorldPhysicsManager__CreateProjectile`; `0x004d8410 CRound__Init`; `0x00452da0 SharedVFunc__NoOp_Ret08`; `0x005e3ba4`; `0x005e3ba8`; `0x005e3bc8`; `0x005e3cb8`; `0x005e3cc0`; `0x005de82c`; `0x005de850`; read-only review; `179/1408 = 12.71%`; `6113/6113 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260528-034712_post_wave941_missile_linked_object_dispatch_review_verified`.
 
 What this proves:
 

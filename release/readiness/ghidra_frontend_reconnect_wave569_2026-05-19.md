@@ -26,7 +26,7 @@ No `source-parity` tag was applied. This tranche is bounded to retail binary evi
 - Comment-backed proxy: `2832 / 6093 = 46.48%`
 - Focused probe: `py -3 tools\ghidra_frontend_reconnect_wave569_probe.py --check` PASS
 - NPM wrapper: `cmd.exe /c npm run test:ghidra-frontend-reconnect-wave569` PASS
-- Backup: `G:\GhidraBackups\BEA_20260518-231808_post_wave569_frontend_reconnect_verified`
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-231808_post_wave569_frontend_reconnect_verified`
 - Backup verification: `19` files, `160041863` bytes, source/destination manifest hash `3D8F0AC26DA7EEE7F71D7F9357A3EC2B4B818C463AC10482AD107FF98E9F5DD1`
 
 ## Limits

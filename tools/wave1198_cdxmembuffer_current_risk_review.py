@@ -35,7 +35,7 @@ PACKAGE_JSON = ROOT / "package.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 APPLY_SCRIPT = ROOT / "tools" / "ApplyCDXMemBufferCurrentRiskWave1198.java"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-214911_post_wave1198_cdxmembuffer_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-214911_post_wave1198_cdxmembuffer_current_risk_review_verified"
 
 TARGETS = {
     "0x00547d70": (

@@ -11,9 +11,9 @@ This report preserves the Prompt 4 and Prompt 5 media proof facts without embedd
 - Branch: `wip/sandbox`
 - Source commit: `663ed2993086f7ce52097e874c23dd7a4db26fd0`
 - Evidence-report commit: `e2e90e56ca688790dc4ce87f71580d1ee53ffff2`
-- Repo root: `C:\Users\david\source\Onslaught-Career-Editor-private`
+- Repo root: `[maintainer-private-checkout]`
 - Runtime surface: Electron desktop dev mode against Vite renderer
-- Game profile source: stored local game profile at `C:\Users\david\source\Onslaught-Career-Editor-private\game`
+- Game profile source: stored local game profile at `[maintainer-private-checkout]\game`
 - No Game Harness runtime proof was started in this evidence pass.
 
 ## Commands and proof runs
@@ -33,10 +33,10 @@ Prompt 4 proof artifacts were last written at 2026-04-29 12:50:52 America/New_Yo
 
 ## Prompt 4 texture preview proof
 
-- Local proof JSON: `C:\Users\david\source\Onslaught-Career-Editor-private\subagents\2026-04-29-prompt4-texture-preview-proof.json`
-- Local screenshot: `C:\Users\david\source\Onslaught-Career-Editor-private\subagents\2026-04-29-prompt4-texture-preview.png`
+- Local proof JSON: `[maintainer-private-checkout]\subagents\2026-04-29-prompt4-texture-preview-proof.json`
+- Local screenshot: `[maintainer-private-checkout]\subagents\2026-04-29-prompt4-texture-preview.png`
 - Screenshot dimensions and size: 1440x940, 178683 bytes
-- Catalog path: `C:\Users\david\source\Onslaught-Career-Editor-private\subagents\asset_catalog_wave1_2026-03-14\catalog.json`
+- Catalog path: `[maintainer-private-checkout]\subagents\asset_catalog_wave1_2026-03-14\catalog.json`
 - Catalog schema: `media-catalog.v1`
 - Query: `cloud.tga`
 - LTLogo texture matches: 0
@@ -44,7 +44,7 @@ Prompt 4 proof artifacts were last written at 2026-04-29 12:50:52 America/New_Yo
 - Texture label: `atmospherics\clouds\cloud.tga`
 - Group: `dxtntextures`
 - Source path: `game\data\resources\dxtntextures\Atmospherics%Clouds%Cloud.tga(0)A8R8G8B8.aya`
-- Export path: `C:\Users\david\source\Onslaught-Career-Editor-private\subagents\asset_export_wave1_2026-03-13\loose_textures\dxtntextures\Atmospherics%Clouds%Cloud.tga(0)A8R8G8B8.png`
+- Export path: `[maintainer-private-checkout]\subagents\asset_export_wave1_2026-03-13\loose_textures\dxtntextures\Atmospherics%Clouds%Cloud.tga(0)A8R8G8B8.png`
 - Preview payload schema: `media-preview.v1`
 - Preview MIME: `image/png`
 - Preview byte size: 904
@@ -55,10 +55,10 @@ The preview path was repo-contained and resolved through the generated catalog. 
 
 ## Prompt 5 in-app Bink playback proof
 
-- Local proof JSON: `C:\Users\david\source\Onslaught-Career-Editor-private\subagents\2026-04-29-prompt5-video-proof.json`
-- Local screenshot: `C:\Users\david\source\Onslaught-Career-Editor-private\subagents\2026-04-29-prompt5-video-panel.png`
+- Local proof JSON: `[maintainer-private-checkout]\subagents\2026-04-29-prompt5-video-proof.json`
+- Local screenshot: `[maintainer-private-checkout]\subagents\2026-04-29-prompt5-video-panel.png`
 - Screenshot dimensions and size: 1440x940, 179128 bytes
-- Catalog path: `C:\Users\david\source\Onslaught-Career-Editor-private\subagents\asset_catalog_wave1_2026-03-14\catalog.json`
+- Catalog path: `[maintainer-private-checkout]\subagents\asset_catalog_wave1_2026-03-14\catalog.json`
 - Catalog schema: `media-catalog.v1`
 - Query: `LTLogo`
 - Video row id: `video:ltlogo.vid`
@@ -66,7 +66,7 @@ The preview path was repo-contained and resolved through the generated catalog. 
 - Group: `Root/menu clips`
 - Playback id: `video:video:ltlogo.vid`
 - Codec/status metadata: `BIKi`, `needs-transcode`
-- Source path: `C:\Users\david\source\Onslaught-Career-Editor-private\game\data\video\LTLogo.vid`
+- Source path: `[maintainer-private-checkout]\game\data\video\LTLogo.vid`
 - Source byte size: 1838068
 - Source SHA-256: `2f2819b52b696b2feec5b9bbd60e2d0a1e3f95e48d455ecdc1f3152e06e32b34`
 - Playback payload schema: `video-playback.v1`
@@ -74,7 +74,7 @@ The preview path was repo-contained and resolved through the generated catalog. 
 - Cache status: `hit`
 - MIME: `video/mp4`
 - VLC backend: `C:\Program Files\VideoLAN\VLC\vlc.exe`
-- MP4 cache path: `C:\Users\david\AppData\Roaming\Electron\media-cache\video\aa3a4af92c9ce56f4a904159.mp4`
+- MP4 cache path: `[maintainer-local-appdata]\media-cache\video\aa3a4af92c9ce56f4a904159.mp4`
 - MP4 cache byte size: 1716516
 - Cache location proof: under `%APPDATA%\Electron\media-cache\video`, outside the repo root
 - Renderer proof: `<video>` present, `readyState=4`, `duration=9.16585`, `videoWidth=480`, `videoHeight=300`, playback attempt returned `played`, `currentTime=0.258679`, no media error code, visible `HIT` and `IN APP` badges present

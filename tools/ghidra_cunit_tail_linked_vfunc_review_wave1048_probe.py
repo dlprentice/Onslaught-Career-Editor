@@ -28,7 +28,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260601-131919_post_wave1048_cunit_tail_linked_vfunc_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260601-131919_post_wave1048_cunit_tail_linked_vfunc_review_verified"
 
 FORWARDER_SIG = "int __thiscall {name}(void * this, int node_arg0, int node_arg1, int node_arg2, int node_arg3)"
 

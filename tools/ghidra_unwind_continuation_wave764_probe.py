@@ -33,7 +33,7 @@ DEVELOPER_STATE = ROOT / "developer_agent_state.json"
 DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260523-152957_post_wave764_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260523-152957_post_wave764_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d46c8": "0x0061cf4c",
@@ -92,12 +92,12 @@ COMMENT_TOKENS = {
 }
 
 STRING_EXPECTATIONS = {
-    "string-0062551c.tsv": r"C:\dev\ONSLAUGHT2\monitor.h",
-    "string-0062d590.tsv": r"C:\dev\ONSLAUGHT2\array.h",
-    "string-00631690.tsv": r"C:\dev\ONSLAUGHT2\Player.cpp",
-    "string-006316bc.tsv": r"C:\dev\ONSLAUGHT2\PolyBucket.cpp",
-    "string-00631784.tsv": r"C:\dev\ONSLAUGHT2\RadarWarningReceiver.cpp",
-    "string-00631b7c.tsv": r"C:\dev\ONSLAUGHT2\ResourceAccumulator.cpp",
+    "string-0062551c.tsv": r"[maintainer-local-source-export-root]\monitor.h",
+    "string-0062d590.tsv": r"[maintainer-local-source-export-root]\array.h",
+    "string-00631690.tsv": r"[maintainer-local-source-export-root]\Player.cpp",
+    "string-006316bc.tsv": r"[maintainer-local-source-export-root]\PolyBucket.cpp",
+    "string-00631784.tsv": r"[maintainer-local-source-export-root]\RadarWarningReceiver.cpp",
+    "string-00631b7c.tsv": r"[maintainer-local-source-export-root]\ResourceAccumulator.cpp",
 }
 
 CORE_ANCHORS = (

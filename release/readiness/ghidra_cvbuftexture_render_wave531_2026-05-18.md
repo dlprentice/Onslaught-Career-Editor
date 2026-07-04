@@ -31,7 +31,7 @@ Wave531 hardened eight adjacent CVBufTexture render-tail helpers using static re
 - Focused probe: `py -3 tools\ghidra_cvbuftexture_render_wave531_probe.py --check` -> `PASS`
 - NPM probe: `npm run test:ghidra-cvbuftexture-render-wave531` -> `PASS`
 - Queue probe: `py -3 tools\ghidra_static_reaudit_queue_probe.py --check` -> `PASS`
-- Verified backup: `G:\GhidraBackups\BEA_20260518-043303_post_wave531_cvbuftexture_render_verified` with `19` files, `159091591` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-043303_post_wave531_cvbuftexture_render_verified` with `19` files, `159091591` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Queue Impact
 

@@ -29,7 +29,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260522-180520_post_wave747_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260522-180520_post_wave747_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d1cd9": "0x0061ab3c",
@@ -160,7 +160,7 @@ def check_artifacts(failures: list[str]) -> None:
     for name in ("CSPtrSet__Clear", "CPhysicsScriptStatement__dtor", "CPhysicsUnitValue__dtor_base", "CPhysicsRoundValue__dtor_base", "CComplexThing__dtor_base", "OID__FreeObject_Callback"):
         require(name in helper_names, f"missing helper metadata row: {name}", failures)
     string_rows = read_tsv(BASE / "string-00625850.tsv")
-    require(string_rows and string_rows[0].get("cstring") == r"C:\dev\ONSLAUGHT2\WorldPhysicsManager.h", "WorldPhysicsManager.h string mismatch", failures)
+    require(string_rows and string_rows[0].get("cstring") == r"[maintainer-local-source-export-root]\WorldPhysicsManager.h", "WorldPhysicsManager.h string mismatch", failures)
 
     metadata = {normalize_address(row["address"]): row for row in read_tsv(BASE / "post-metadata.tsv")}
     tags = {normalize_address(row["address"]): row for row in read_tsv(BASE / "post-tags.tsv")}

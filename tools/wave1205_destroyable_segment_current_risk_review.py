@@ -34,7 +34,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-021737_post_wave1205_destroyable_segment_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-021737_post_wave1205_destroyable_segment_current_risk_review_verified"
 
 TARGETS = {
     "0x00442700": ("CDestructableSegment__RegisterChild", "void __thiscall CDestructableSegment__RegisterChild(void * this, void * childSegment)"),

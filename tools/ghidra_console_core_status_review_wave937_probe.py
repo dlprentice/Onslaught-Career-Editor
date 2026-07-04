@@ -23,7 +23,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260528-015348_post_wave937_console_core_status_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-015348_post_wave937_console_core_status_review_verified"
 SCRIPT_NAME = "test:ghidra-console-core-status-review-wave937"
 SCRIPT_VALUE = r"py -3 tools\ghidra_console_core_status_review_wave937_probe.py --check"
 

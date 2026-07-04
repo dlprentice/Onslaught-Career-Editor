@@ -35,7 +35,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-044807_post_wave1209_physics_roundvalue_destructor_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-044807_post_wave1209_physics_roundvalue_destructor_current_risk_review_verified"
 
 TARGETS = {
     "0x004395b0": (

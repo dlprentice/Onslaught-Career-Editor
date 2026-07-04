@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave858 FEPOptions core"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-124939_post_wave858_fepoptions_core_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-124939_post_wave858_fepoptions_core_verified"
 NEXT_HEAD = "0x0051f9f0 CFEPScreenPos__Init"
 STRICT_PROXY = "5779/6105 = 94.66%"
 
@@ -96,7 +96,7 @@ CORE_ANCHORS = (
     "0x0051f6d0 CFEPOptions__RenderPreCommon",
     "0x0051f700 CFEPOptions__Update",
     "0x0051f8e0 CFEPOptions__Cleanup",
-    "C:\\dev\\ONSLAUGHT2\\FEPOptions.cpp",
+    "[maintainer-local-source-export-root]\\FEPOptions.cpp",
     "defaultoptions.bea",
     "important frontend/options connective",
     NEXT_HEAD,
@@ -246,7 +246,7 @@ def check_artifacts(failures: list[str]) -> None:
     strings = {
         "post-string-0063fc54.tsv": "Couldn't write defaultoptions",
         "post-string-0063fc74.tsv": "defaultoptions.bea",
-        "post-string-0063fc88.tsv": r"C:\dev\ONSLAUGHT2\FEPOptions.cpp",
+        "post-string-0063fc88.tsv": r"[maintainer-local-source-export-root]\FEPOptions.cpp",
     }
     for relative, expected in strings.items():
         rows = read_tsv(BASE / relative)
@@ -268,7 +268,7 @@ def check_logs(failures: list[str]) -> None:
         "post-context-metadata.log": "targets=15 found=15 missing=0",
         "post-context-decompile.log": "targets=15 dumped=15 missing=0 failed=0",
         "post-vtable.log": "ExportVtableSlots complete: targets=2 rows=18",
-        "post-string-0063fc88.log": r"DumpCStringAtAddress complete: input=0063fc88 target=0063fc88 text=C:\dev\ONSLAUGHT2\FEPOptions.cpp",
+        "post-string-0063fc88.log": r"DumpCStringAtAddress complete: input=0063fc88 target=0063fc88 text=[maintainer-local-source-export-root]\FEPOptions.cpp",
         "quality-refresh.log": "total_functions=6105 commented_functions=5779",
         "queue-probe.log": "Commentless functions: 326",
     }

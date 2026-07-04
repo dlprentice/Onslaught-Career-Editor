@@ -23,6 +23,6 @@ Evidence:
 - Probe: `py -3 tools\ghidra_sptrset_helpers_wave506_probe.py --check` PASS.
 - npm probe: `cmd.exe /c npm run test:ghidra-sptrset-helpers-wave506` PASS.
 - Queue refresh: `6078` total functions, `2323` commented functions, `3755` commentless functions, `1636` exact-undefined signatures, `1483` `param_N` signatures.
-- Backup: `G:\GhidraBackups\BEA_20260517-154737_post_wave506_sptrset_helpers_verified`, `19` files, `158043015` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260517-154737_post_wave506_sptrset_helpers_verified`, `19` files, `158043015` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
 
 This is static saved-Ghidra evidence only. It does not prove exact template-instantiation ownership, all caller preconditions, runtime pool behavior, BEA launch behavior, game patching, or rebuild parity.

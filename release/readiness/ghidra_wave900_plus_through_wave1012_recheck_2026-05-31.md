@@ -8,7 +8,7 @@ Wave1012 extends the current Wave900+ recheck gate after `round-vtable-boundary-
 
 Current Wave1012 anchors: `0x004d8dc0 VFuncSlot_02_004d8dc0`, `0x004d8e40 VFuncSlot_66_004d8e40` with DATA refs `0x005de934` / `0x005e3cac`, `0x004d9910 VFuncSlot_00_004d9910` with DATA refs `0x005de82c` / `0x005e3ba4`, no standalone `0x004d9d10`, and separate `0x004d9d60 CEngine__InitRoundLaunchStateDefaults`. Queue closure after Wave1012 is `6238/6238 = 100.00%`. Re-audit progress after Wave1012 is Wave911 focused `505/1408 = 35.87%`, expanded static surface `707/1493 = 47.35%`, and Wave911 top-500 risk-ranked `409/500 = 81.80%`.
 
-The Wave1012 verified backup is `G:\GhidraBackups\BEA_20260531-183252_post_wave1012_round_vtable_slot66_verified`, 18 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+The Wave1012 verified backup is `[maintainer-local-ghidra-backup-root]\BEA_20260531-183252_post_wave1012_round_vtable_slot66_verified`, 18 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 Validation command:
 

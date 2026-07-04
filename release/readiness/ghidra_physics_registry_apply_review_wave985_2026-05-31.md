@@ -68,7 +68,7 @@ This review keeps Wave985 narrow. Nearby value/destructor rows such as `CPhysics
 Verified post-wave backup:
 
 ```text
-G:\GhidraBackups\BEA_20260531-013725_post_wave985_physics_registry_apply_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260531-013725_post_wave985_physics_registry_apply_review_verified
 files=19
 bytes=173837191
 MissingCount=0

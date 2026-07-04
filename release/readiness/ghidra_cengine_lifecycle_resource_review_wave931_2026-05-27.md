@@ -35,7 +35,7 @@ Evidence:
 - Composer 2.5 adversarial consult agreed this is a read-only review wave with no mutation-grade correction.
 - Wave911 focused re-audit progress after Wave931: `122/1408 = 8.66%`.
 - Static export-contract closure remains `6113/6113 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260527-235851_post_wave931_cengine_lifecycle_resource_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260527-235851_post_wave931_cengine_lifecycle_resource_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 
 What this proves:
 

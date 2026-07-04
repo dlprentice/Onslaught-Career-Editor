@@ -27,7 +27,7 @@ Not claimed:
 - No volume, mixing, looping, crossfade, menu-state, gameplay-state, or every-track proof.
 - No claim that arbitrary external OGG encodings are accepted; this run used shipped replacement bytes.
 - No visual parity, rebuild parity, or no-noticeable-difference proof.
-- No Ghidra mutation or Ghidra backup; latest verified Ghidra review backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+- No Ghidra mutation or Ghidra backup; latest verified Ghidra review backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 Validation:
 

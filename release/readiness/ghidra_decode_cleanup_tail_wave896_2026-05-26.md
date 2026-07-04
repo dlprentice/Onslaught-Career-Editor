@@ -21,7 +21,7 @@ Read-back evidence:
 - Post exports: 2 metadata rows, 2 tag rows, 13 xref rows, 22 instruction rows, and 2 decompile rows.
 - Queue after Wave896: 6113 total, 6088 commented, 25 commentless, 0 exact-undefined signatures, 0 `param_N`, strict/comment-backed proxy `6088/6113 = 99.59%`.
 - Next raw commentless row: `0x005a09f8 CFastVB__ConvertHalfToFloat8_SIMDKernel`.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-071320_post_wave896_decode_cleanup_tail_verified`, 19 files, 173214599 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-071320_post_wave896_decode_cleanup_tail_verified`, 19 files, 173214599 bytes, `DiffCount=0`.
 
 What this proves:
 

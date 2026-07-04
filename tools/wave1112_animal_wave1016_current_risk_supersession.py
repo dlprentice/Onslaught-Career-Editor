@@ -31,8 +31,8 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-WAVE1016_BACKUP = r"G:\GhidraBackups\BEA_20260531-195306_post_wave1016_animal_init_dtor_review_verified"
-LATEST_BACKUP = r"G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified"
+WAVE1016_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-195306_post_wave1016_animal_init_dtor_review_verified"
+LATEST_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified"
 
 TARGETS = {
     "0x00403d30": {

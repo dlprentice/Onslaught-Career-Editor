@@ -28,7 +28,7 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-123452_post_wave1183_physics_value_list_lifetime_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-123452_post_wave1183_physics_value_list_lifetime_current_risk_review_verified"
 
 TARGETS = {
     "0x0042f4b0": ("CPhysicsUnitValueList__scalar_deleting_dtor", "void * __thiscall CPhysicsUnitValueList__scalar_deleting_dtor(void * this, int flags)"),

@@ -73,7 +73,7 @@ Read-back results:
 
 The refreshed queue reports `6027` functions, `1489` commented functions, `4538` commentless functions, `1916` undefined signatures, and `1883` `param_N` signatures. Current confirmation proxies are telemetry only: comment-backed `1489/6027 = 24.71%`; strict clean-signature `1427/6027 = 23.68%`.
 
-Actual live Ghidra project backup verification passed at `G:\GhidraBackups\BEA_20260513_235110_post_wave393_firing_animation_verified` with `19` files, `154635143` bytes, and `HashDiffCount=0`.
+Actual live Ghidra project backup verification passed at `[maintainer-local-ghidra-backup-root]\BEA_20260513_235110_post_wave393_firing_animation_verified` with `19` files, `154635143` bytes, and `HashDiffCount=0`.
 
 ## What Is Proven
 

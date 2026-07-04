@@ -29,7 +29,7 @@ Wave706 node-type lifecycle saved nine adjacent CFastVB/CTexture node-type `0x11
 - Queue after Wave706: `6098` total, `4104` commented, `1994` commentless, `1216` exact-undefined signatures, `231` `param_N`, comment-backed proxy `4104/6098 = 67.30%`, strict clean-signature proxy `4050/6098 = 66.42%`.
 - Raw commentless head remains `0x0042f220 CSPtrSet__Clear`.
 - High-signal head moved to `0x00599a74 CFastVB__SelectBestNodeTreeMatch_ReportWarningAndSetFlag`.
-- Verified backup: `G:\GhidraBackups\BEA_20260521-201902_post_wave706_node_type_lifecycle_verified`, `19` files, `165448583` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-201902_post_wave706_node_type_lifecycle_verified`, `19` files, `165448583` bytes, `DiffCount=0`.
 
 ## Boundaries
 

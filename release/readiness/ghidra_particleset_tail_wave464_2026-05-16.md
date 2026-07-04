@@ -21,7 +21,7 @@ Wave464 saved Ghidra name/signature/comment/tag corrections for `8` ParticleSet-
 - Corrected `CParticleSet__dtor_base`, `CParticleSet__shared_scalar_deleting_dtor`, and `CPDSelector__DispatchChildVFunc20`, and hardened ParticleSet type-11/12/13 init plus archive/file loading helpers.
 - Queue after refresh: `6057` functions, `2098` commented, `3959` commentless, `1707` undefined signatures, `1596` `param_N` signatures.
 - Current telemetry proxies: comment-backed `2098/6057 = 34.64%`; strict comment-plus-clean-signature `2031/6057 = 33.53%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-192025_post_wave464_particleset_tail_verified` (`19` files, `157092743` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-192025_post_wave464_particleset_tail_verified` (`19` files, `157092743` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

@@ -51,7 +51,7 @@ The wave recovered `4` missing function boundaries and saved names, signatures, 
 - Final read-back verified `21/21` metadata rows, `21/21` decompile exports, `30` xref rows, `5145` instruction rows, and `21/21` tag rows.
 - `cmd.exe /c npm run test:ghidra-physics-script-statement-tranche3` passed against the saved read-back artifacts.
 - The refreshed whole-database queue reports `5904` functions, `910` commented functions, `4994` commentless functions, `1982` undefined signatures, and `2203` `param_N` signatures.
-- The actual live Ghidra project backup after the saved mutation is `G:\GhidraBackups\BEA_20260512_071711_post_wave333_verified` with `19` files, `152046471` bytes, and `DiffCount=0`.
+- The actual live Ghidra project backup after the saved mutation is `[maintainer-local-ghidra-backup-root]\BEA_20260512_071711_post_wave333_verified` with `19` files, `152046471` bytes, and `DiffCount=0`.
 
 ## Claim Boundary
 

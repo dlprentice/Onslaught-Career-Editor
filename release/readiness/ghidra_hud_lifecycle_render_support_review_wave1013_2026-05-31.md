@@ -31,9 +31,9 @@ Fresh read-back evidence:
 - Wave911 focused re-audit progress remains `505/1408 = 35.87%`.
 - Expanded static surface progress advances to `718/1493 = 48.09%` after counting the eleven new non-Wave1004 top-500 rows in this tranche.
 - Wave911 top-500 risk-ranked coverage advances to `420/500 = 84.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-182125_post_wave1013_hud_lifecycle_render_support_review_verified`, `18` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-182125_post_wave1013_hud_lifecycle_render_support_review_verified`, `18` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
-Probe token anchor: Wave1013; `hud-lifecycle-render-support-review-wave1013`; `0x00481450 CHud__Init`; `0x004815c0 CHud__Reset`; `0x00481650 CHud__LoadTextures`; `0x00481af0 CHud__PostLoadProcess`; `0x00481f40 CHud__SetHudComponent`; `0x004821e0 CDXCompass__ApplyRenderStateAdditive`; `0x00488330 CIBuffer__CreateConfigured`; `0x004885e0 CIBuffer__LockDirect`; `0x0048f540 CLevelBriefingLog__ctor`; `0x0048f5a0 CLevelBriefingLog__scalar_deleting_dtor`; `0x0048f5c0 CLevelBriefingLog__dtor`; `505/1408 = 35.87%`; `718/1493 = 48.09%`; `420/500 = 84.00%`; `6238/6238 = 100.00%`; `G:\GhidraBackups\BEA_20260531-182125_post_wave1013_hud_lifecycle_render_support_review_verified`; no mutation.
+Probe token anchor: Wave1013; `hud-lifecycle-render-support-review-wave1013`; `0x00481450 CHud__Init`; `0x004815c0 CHud__Reset`; `0x00481650 CHud__LoadTextures`; `0x00481af0 CHud__PostLoadProcess`; `0x00481f40 CHud__SetHudComponent`; `0x004821e0 CDXCompass__ApplyRenderStateAdditive`; `0x00488330 CIBuffer__CreateConfigured`; `0x004885e0 CIBuffer__LockDirect`; `0x0048f540 CLevelBriefingLog__ctor`; `0x0048f5a0 CLevelBriefingLog__scalar_deleting_dtor`; `0x0048f5c0 CLevelBriefingLog__dtor`; `505/1408 = 35.87%`; `718/1493 = 48.09%`; `420/500 = 84.00%`; `6238/6238 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260531-182125_post_wave1013_hud_lifecycle_render_support_review_verified`; no mutation.
 
 What this proves:
 

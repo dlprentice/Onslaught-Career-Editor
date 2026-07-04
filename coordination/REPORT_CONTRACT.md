@@ -51,9 +51,12 @@ specific consult lanes, the report must list each required lane separately:
 Codex normal review, Codex adversarial review, Cursor Agent
 `composer-2.5-fast` normal review, Cursor Agent `composer-2.5-fast`
 adversarial review, Grok Build normal review, and Grok Build adversarial
-review. Other named external consults can be added, but they do not replace the
-required six lanes for nontrivial work. If a lane is unavailable, mark it
-unavailable with exact tool/command/model/auth/safety reason.
+review. Cursor Agent `gemini-3.1-pro` remains suspended while the operator's
+Cursor API/model usage is exhausted; do not call it or treat it as required
+until the operator explicitly lifts that posture. If a lane is unavailable,
+mark it unavailable with exact tool/command/model/auth/safety reason.
+Optional additional consults may be recorded as supplemental evidence, but they
+do not replace any required lane in the current consult stack.
 
 The consult entry must include a brief non-sensitive task-scope summary,
 accepted consult findings, rejected consult findings with reasons, unresolved
@@ -94,7 +97,7 @@ ADVANCEMENT: 0|1
 BLOCKED_ITEMS_ADDRESSED: <n>
 PRIMARY_DELIVERABLE: <artifact-id|BLOCKED_*-id>
 ACCEPTED_BY: <lane|integration-owner|acceptance-owner|human|n/a>
-CONSULTS_USED: codex=<normal/adversarial/unavailable>; cursor=<normal/adversarial/unavailable>; grok=<normal/adversarial/unavailable>
+CONSULTS_USED: codex=<normal/adversarial/unavailable>; composer=<normal/adversarial/unavailable>; grok=<normal/adversarial/unavailable>
 SAFETY: clean | baton <id> | SAFETY_GATE_FAILED
 GOAL_DELTA: <one measurable line>|blocked
 ```

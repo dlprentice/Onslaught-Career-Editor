@@ -29,7 +29,7 @@ LEDGER = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_l
 ATTEMPT_LOG = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_attempt_log.jsonl"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260602-141730_post_wave1087_hiveboss_unit_vtable_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260602-141730_post_wave1087_hiveboss_unit_vtable_tail_verified"
 TAG = "hiveboss-unit-vtable-tail-review-wave1087"
 
 TARGETS = {

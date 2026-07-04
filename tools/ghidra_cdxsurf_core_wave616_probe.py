@@ -324,7 +324,7 @@ def check_exports(failures: list[str]) -> None:
 
 def check_backup_and_queue(failures: list[str]) -> None:
     backup = read_json(BACKUP_SUMMARY)
-    if backup.get("backupRoot") != "G:\\GhidraBackups\\BEA_20260520-020900_post_wave616_cdxsurf_core_verified":
+    if backup.get("backupRoot") != "[maintainer-local-ghidra-backup-root]\\BEA_20260520-020900_post_wave616_cdxsurf_core_verified":
         failures.append(f"backup path mismatch: {backup.get('backupRoot')}")
     expected_backup = {
         "sourceFileCount": 19,

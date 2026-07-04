@@ -26,7 +26,7 @@ Read-back evidence:
 - Reviewed vtables include `0x005dea38` RTCutscene, `0x005deaac` CRenderThing, `0x005deb1c` CRTMesh, and `0x005deb9c` CRTTree.
 - Queue closure remains `6246/6246 = 100.00%`, with `0` commentless rows, `0` exact-undefined signatures, and `0` `param_N` signatures.
 - Wave1046 targets are outside the Wave911 focused TSV, so Wave911 focused progress remains `735/1408 = 52.20%`; expanded static surface progress advances to `993/1509 = 65.81%`; top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-120449_post_wave1046_renderthing_crttree_review_verified`, 19 files, 174590855 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-120449_post_wave1046_renderthing_crttree_review_verified`, 19 files, 174590855 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -42,4 +42,4 @@ What remains separate proof:
 - `CSphere__RenderAnimatedRecursive` signature/layout review.
 - BEA patching behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1046; renderthing-crttree-review-wave1046; 0x004db880 CRenderThing__ForwardSlot26ToChildSlot68; 0x004dbb80 CRenderThing__VFunc_07_ClearRenderOutputs; 0x004dbbe0 CRenderThing__VFunc_08_ClearVec3; 0x004dbd20 CRenderThing__dtor; 0x004dbd50 CRenderThing__scalar_deleting_dtor; 0x004dd960 CRTTree__VFuncSlot02_BuildRenderOutputs; 0x004de050 CRTTree__VFuncSlot06_GetResourceScalar164; 0x004de060 SharedVFunc__ReturnResourceField150_004de060; 0x005dea38; 0x005deaac; 0x005deb1c; 0x005deb9c; DAT_0083cd58; 0x0083ccd8; 0x004b6260 CSphere__RenderAnimatedRecursive; 735/1408 = 52.20%; 993/1509 = 65.81%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-120449_post_wave1046_renderthing_crttree_review_verified; no mutation.
+Probe token anchor: Wave1046; renderthing-crttree-review-wave1046; 0x004db880 CRenderThing__ForwardSlot26ToChildSlot68; 0x004dbb80 CRenderThing__VFunc_07_ClearRenderOutputs; 0x004dbbe0 CRenderThing__VFunc_08_ClearVec3; 0x004dbd20 CRenderThing__dtor; 0x004dbd50 CRenderThing__scalar_deleting_dtor; 0x004dd960 CRTTree__VFuncSlot02_BuildRenderOutputs; 0x004de050 CRTTree__VFuncSlot06_GetResourceScalar164; 0x004de060 SharedVFunc__ReturnResourceField150_004de060; 0x005dea38; 0x005deaac; 0x005deb1c; 0x005deb9c; DAT_0083cd58; 0x0083ccd8; 0x004b6260 CSphere__RenderAnimatedRecursive; 735/1408 = 52.20%; 993/1509 = 65.81%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-120449_post_wave1046_renderthing_crttree_review_verified; no mutation.

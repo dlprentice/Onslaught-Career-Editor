@@ -35,7 +35,7 @@ No function renames were made. The pass used retail-binary evidence from xrefs, 
   - corrected apply: `updated=3 skipped=2 renamed=0 would_rename=0 missing=0 bad=0`
   - final dry: `updated=0 skipped=5 renamed=0 would_rename=0 missing=0 bad=0`
 - Read-back exports verified `5` metadata rows, `5` tag rows, `8` xref rows, `9045` instruction rows, and `5` decompile rows.
-- Verified backup: `G:\GhidraBackups\BEA_20260519-194745_post_wave604_cdxlandscape_target_shadow_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-194745_post_wave604_cdxlandscape_target_shadow_verified`
   - `FileCount=19`
   - `TotalBytes=161287047`
   - `DiffCount=0`

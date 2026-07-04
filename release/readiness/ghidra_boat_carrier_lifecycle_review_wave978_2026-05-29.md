@@ -54,7 +54,7 @@ No Ghidra mutation was performed.
 Read-only post-wave backup:
 
 ```text
-G:\GhidraBackups\BEA_20260529-142528_post_wave978_boat_carrier_lifecycle_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260529-142528_post_wave978_boat_carrier_lifecycle_review_verified
 files=19
 bytes=173804423
 MissingCount=0

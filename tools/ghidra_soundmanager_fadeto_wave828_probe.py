@@ -28,7 +28,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-210153_post_wave828_soundmanager_fadeto_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-210153_post_wave828_soundmanager_fadeto_verified"
 TARGET = "0x004e1260"
 TARGET_NAME = "CSoundManager__FadeTo"
 TARGET_SIGNATURE = "void __thiscall CSoundManager__FadeTo(void * this, void * sample, float fade_value, float speed, void * owner)"

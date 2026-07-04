@@ -33,7 +33,7 @@ The adjacent `0x00541140` vtable-slot body remains deferred. Wave 385 intentiona
 | `cmd.exe /c npm run test:ghidra-game-dxgame-wave385` | PASS: `targets=7`, `instruction_hits=13`, `vtable_type_hits=4`, `vtable_slot_hits=2`. |
 | `py -3 -m py_compile tools\ghidra_game_dxgame_wave385_probe.py tools\ghidra_game_dxgame_wave385_probe_test.py` | PASS. |
 | `cmd.exe /c npm run test:ghidra-static-reaudit-queue` | PASS: `6027` functions, `1430` commented functions, `4597` commentless functions, `1935` undefined signatures, and `1913` `param_N` signatures. |
-| Actual Ghidra project backup | PASS: copied `BEA.gpr` and `BEA.rep` to `G:\GhidraBackups\BEA_20260513_183156_post_wave385_game_dxgame_verified`; verified `19` files, `153815943` bytes, `HashDiffCount=0`. |
+| Actual Ghidra project backup | PASS: copied `BEA.gpr` and `BEA.rep` to `[maintainer-local-ghidra-backup-root]\BEA_20260513_183156_post_wave385_game_dxgame_verified`; verified `19` files, `153815943` bytes, `HashDiffCount=0`. |
 
 The current broad comment-backed proxy is `1430/6027 = 23.73%`. The stricter comment-plus-no-`undefined`-or-`param_N` proxy is `1368/6027 = 22.70%`. These values are telemetry only, not completion milestones.
 

@@ -238,7 +238,7 @@ public class ApplyFinalStaticTailWave900 extends GhidraScript {
                 "0x005d5120",
                 "CTexture__FindTexture_Unwind",
                 "void CTexture__FindTexture_Unwind(void)",
-                "Wave900 final static-tail read-back: texture.cpp CTexture__FindTexture unwind cleanup callback reached from scope-table DATA xref 0x0061d9cc. Static retail Ghidra evidence only: preserves the current name/signature while the locked-stack body pushes debug line 0x98, debug path pointer 0x00632ef0 (C:\\dev\\ONSLAUGHT2\\texture.cpp), allocation/type value 0x2, loads the allocation pointer from EBP-0x210, and calls OID__FreeObject_Callback. Exact parent source body, allocation ownership, runtime exception cleanup behavior, BEA patching, and rebuild parity remain unproven.",
+                "Wave900 final static-tail read-back: texture.cpp CTexture__FindTexture unwind cleanup callback reached from scope-table DATA xref 0x0061d9cc. Static retail Ghidra evidence only: preserves the current name/signature while the locked-stack body pushes debug line 0x98, debug path pointer 0x00632ef0 ([maintainer-local-source-export-root]\\texture.cpp), allocation/type value 0x2, loads the allocation pointer from EBP-0x210, and calls OID__FreeObject_Callback. Exact parent source body, allocation ownership, runtime exception cleanup behavior, BEA patching, and rebuild parity remain unproven.",
                 tags("texture-find-unwind", "scope-table", "texture-cpp", "oid-free-callback")
             )
         };

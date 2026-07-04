@@ -28,7 +28,7 @@ FOCUSED_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "wave911-risk-rank"
 RISK_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "wave911-risk-rank" / "wave911-risk-ranked-functions.json"
 RISK_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "wave911-risk-rank" / "wave911-risk-ranked-functions.tsv"
 
-LATEST_BACKUP = r"G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified"
+LATEST_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified"
 
 EXPECTED = {
     "function_total": 6411,

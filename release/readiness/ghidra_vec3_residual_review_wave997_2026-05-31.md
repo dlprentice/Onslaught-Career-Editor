@@ -23,9 +23,9 @@ Fresh read-back evidence:
 - Queue closure remains `6222/6222 = 100.00%`.
 - Wave911 focused re-audit progress is now `465/1408 = 33.03%`.
 - Expanded static surface progress is now `581/1478 = 39.31%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-083022_post_wave997_vec3_residual_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-083022_post_wave997_vec3_residual_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
-Probe token anchor: Wave997; `vec3-residual-review-wave997`; `0x0041ad10 Vec3__AddInPlace`; `0x00490900 Vec3__SubtractInPlace`; `0x004404f0 Vec3__NegateToOut`; `0x004c7d90 Vec3__CopyXYZ`; `0x004c7900 Vec3__NormalizeInPlace`; `465/1408 = 33.03%`; `581/1478 = 39.31%`; `6222/6222 = 100.00%`; `G:\GhidraBackups\BEA_20260531-083022_post_wave997_vec3_residual_review_verified`; no mutation.
+Probe token anchor: Wave997; `vec3-residual-review-wave997`; `0x0041ad10 Vec3__AddInPlace`; `0x00490900 Vec3__SubtractInPlace`; `0x004404f0 Vec3__NegateToOut`; `0x004c7d90 Vec3__CopyXYZ`; `0x004c7900 Vec3__NormalizeInPlace`; `465/1408 = 33.03%`; `581/1478 = 39.31%`; `6222/6222 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260531-083022_post_wave997_vec3_residual_review_verified`; no mutation.
 
 What this proves:
 

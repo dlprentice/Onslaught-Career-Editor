@@ -27,7 +27,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260523-231334_post_wave783_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260523-231334_post_wave783_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d7280": "0x0061f6d4",
@@ -122,7 +122,7 @@ CORE_ANCHORS = (
     "0x005d7520 Unwind@005d7520",
     "0x005d7536 Unwind@005d7536",
     "0x0042f220 CSPtrSet__Clear",
-    "G:\\GhidraBackups\\BEA_20260523-231334_post_wave783_unwind_continuation_verified",
+    "[maintainer-local-ghidra-backup-root]\\BEA_20260523-231334_post_wave783_unwind_continuation_verified",
 )
 
 OVERCLAIM_TOKENS = (

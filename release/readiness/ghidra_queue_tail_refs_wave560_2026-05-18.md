@@ -16,7 +16,7 @@ Wave560 saved static Ghidra signature/comment/tag evidence for a seven-target qu
 - Final dry verification: `updated=0 skipped=7 renamed=0 would_rename=0 missing=0 bad=0`.
 - Read-back exports: `7` metadata rows, `7` tag rows, `15` xref rows, `637` target instruction rows, `285` focused callsite instruction rows, and `7` decompile rows.
 - Focused probe: `tools/ghidra_queue_tail_refs_wave560_probe.py`.
-- Backup: `G:\GhidraBackups\BEA_20260518-184900_post_wave560_queue_tail_refs_verified` with `19` files, `159812487` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-184900_post_wave560_queue_tail_refs_verified` with `19` files, `159812487` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Queue Telemetry
 

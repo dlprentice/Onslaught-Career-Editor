@@ -25,7 +25,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUALITY_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260528-144929_post_wave965_carver_init_combat_wing_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-144929_post_wave965_carver_init_combat_wing_review_verified"
 
 EXPECTED_METADATA = {
     "0x00422440": ("CCarver__Init", "void __thiscall CCarver__Init(void * this, void * init)"),

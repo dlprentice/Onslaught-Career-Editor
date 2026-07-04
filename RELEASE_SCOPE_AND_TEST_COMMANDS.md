@@ -174,12 +174,21 @@ npm run test:repo-hygiene
 ```
 <!-- public-package-commands:end -->
 
-Maintainers may still run release profile, curated manifest, and
-`release_package.sh --dry-run` gates before packaging release artifacts. Those
-are release-accounting checks, not a reason to make the public source sparse.
+Maintainers should also run the release-accounting gates before packaging or
+auditing release artifacts:
+
+```powershell
+npm run release:profile-check
+npm run release:curated-check
+```
+
+Those checks keep the generated package/export accounting artifacts current.
+They are release-accounting checks, not a reason to make the public source
+sparse. `release_package.sh --dry-run` remains a maintainer packaging-policy
+check for environments where that shell path is in scope.
 
 Materializing a curated tree may still be useful for package-shape safety
-audits:
+audits, but it is not the canonical public source shape:
 
 ```powershell
 py -3 tools\export_curated_release_tree.py --dest ..\Onslaught-Career-Editor-public-candidate --force-clean

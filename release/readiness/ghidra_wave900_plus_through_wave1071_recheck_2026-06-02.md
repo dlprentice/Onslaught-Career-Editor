@@ -11,7 +11,7 @@ Current anchors:
 - Latest operational wave: Wave1071, `texel-unpack-head-mid-review-wave1071`.
 - Latest focused probe: `tools/ghidra_texel_unpack_head_mid_review_wave1071_probe.py`.
 - Latest readiness note: `release/readiness/ghidra_texel_unpack_head_mid_review_wave1071_2026-06-02.md`.
-- Latest verified backup: `G:\GhidraBackups\BEA_20260602-031627_post_wave1071_texel_unpack_head_mid_review_verified`.
+- Latest verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-031627_post_wave1071_texel_unpack_head_mid_review_verified`.
 
 Current percentages:
 
@@ -53,4 +53,4 @@ Latest aggregate run:
 
 Boundary note: this aggregate gate proves local static evidence coverage, backup references, probe/doc wiring, and zero export-contract function-quality debt after validation. It does not prove runtime texture output behavior, runtime codec/FourCC behavior, exact profile/descriptor/layout identity, exact source identity, BEA patching, gameplay outcomes, or rebuild parity.
 
-Probe token anchor: Wave1071; texel-unpack-head-mid-review-wave1071; 0x00584b5f CTexture__UnpackTexels_Bgr8ToFloat4; 0x0058546f CMeshCollisionVolume__UnpackTexels_Bits16_16_16_16_ToFloat4; 0x005856b8 CDXTexture__UnpackTexels_Bits332A8ToFloat4; 0x0058577f CFastVB__TexelUnpackProfile_005e9f3c__ctor; 0x00585fa3 CFastVB__UnpackTexels_Signed8_8_8_8_ToFloat4; 812/1408 = 57.67%; 1319/1560 = 84.55%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260602-031627_post_wave1071_texel_unpack_head_mid_review_verified; read-only review.
+Probe token anchor: Wave1071; texel-unpack-head-mid-review-wave1071; 0x00584b5f CTexture__UnpackTexels_Bgr8ToFloat4; 0x0058546f CMeshCollisionVolume__UnpackTexels_Bits16_16_16_16_ToFloat4; 0x005856b8 CDXTexture__UnpackTexels_Bits332A8ToFloat4; 0x0058577f CFastVB__TexelUnpackProfile_005e9f3c__ctor; 0x00585fa3 CFastVB__UnpackTexels_Signed8_8_8_8_ToFloat4; 812/1408 = 57.67%; 1319/1560 = 84.55%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-031627_post_wave1071_texel_unpack_head_mid_review_verified; read-only review.

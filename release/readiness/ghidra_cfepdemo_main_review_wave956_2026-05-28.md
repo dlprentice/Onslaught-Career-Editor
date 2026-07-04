@@ -26,7 +26,7 @@ Read-back evidence:
 
 - Exports: 11 metadata rows, 11 tag rows, 220 xref rows, 404 instruction rows, 11 decompile rows, and 20 vtable/data-table rows.
 - Existing continuity probe: `test:ghidra-fepdemo-wave402` still passes against current saved Ghidra state.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-105733_post_wave956_cfepdemo_main_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-105733_post_wave956_cfepdemo_main_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
 - Static function-quality closure remains `6151/6151 = 100.00%`.
 - Wave911 focused re-audit progress after Wave956 is `290/1408 = 20.60%`.
 

@@ -81,7 +81,7 @@ DOC_TOKENS = (
     "0x005ab00b CFastVB__DispatchOp_NormalizeQuaternionPacked_005ab00b",
     "0x005ab0ed CDXTexture__EvalNodeOutputSizeUnits",
     "0x0042f220 CSPtrSet__Clear",
-    r"G:\GhidraBackups\BEA_20260522-050258_post_wave722_cfastvb_packed_vec2_quaternion_tail_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260522-050258_post_wave722_cfastvb_packed_vec2_quaternion_tail_verified",
 )
 
 OVERCLAIM_TOKENS = (
@@ -228,7 +228,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
     require(raw_head["name"] == "CSPtrSet__Clear", "raw commentless head name mismatch", failures)
 
     backup = read_json(BACKUP_SUMMARY)
-    require(backup["backup"] == r"G:\GhidraBackups\BEA_20260522-050258_post_wave722_cfastvb_packed_vec2_quaternion_tail_verified", "backup destination mismatch", failures)
+    require(backup["backup"] == r"[maintainer-local-ghidra-backup-root]\BEA_20260522-050258_post_wave722_cfastvb_packed_vec2_quaternion_tail_verified", "backup destination mismatch", failures)
     require(backup["sourceFileCount"] == 19, "backup source file count mismatch", failures)
     require(backup["backupFileCount"] == 19, "backup file count mismatch", failures)
     require(int(backup["backupBytes"]) == 166497159, "backup byte count mismatch", failures)
@@ -290,7 +290,7 @@ def main(argv: list[str]) -> int:
     print("Wave722 CFastVB packed Vec2/quaternion tail probe: PASS")
     print(f"Targets: {len(TARGETS)}")
     print("Queue: 6098 total, 4253 commented, 1845 commentless, 1216 undefined, 113 param_N")
-    print(r"Backup: G:\GhidraBackups\BEA_20260522-050258_post_wave722_cfastvb_packed_vec2_quaternion_tail_verified")
+    print(r"Backup: [maintainer-local-ghidra-backup-root]\BEA_20260522-050258_post_wave722_cfastvb_packed_vec2_quaternion_tail_verified")
     return 0
 
 

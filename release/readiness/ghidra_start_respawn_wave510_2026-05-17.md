@@ -41,7 +41,7 @@ Artifacts are under `subagents/ghidra-static-reaudit/wave510-start-respawn-004ea
 - `cmd.exe /c npm run test:ghidra-start-respawn-wave510` passed.
 - Queue refresh passed and reports `6078` functions, `2370` commented, `3708` commentless, `1628` exact-undefined signatures, and `1444` `param_N` signatures.
 - Current telemetry proxies are comment-backed `2370/6078 = 38.99%` and strict comment-plus-clean-signature `2316/6078 = 38.10%`; these are progress telemetry only, not completion certification.
-- Ghidra project backup verified at `G:\GhidraBackups\BEA_20260517-180231_post_wave510_start_respawn_verified` with `19` files, `158272391` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Ghidra project backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260517-180231_post_wave510_start_respawn_verified` with `19` files, `158272391` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Not Proven
 

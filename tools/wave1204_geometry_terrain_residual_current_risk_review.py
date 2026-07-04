@@ -33,7 +33,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-013948_post_wave1204_geometry_terrain_residual_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-013948_post_wave1204_geometry_terrain_residual_current_risk_review_verified"
 
 TARGETS = {
     "0x00402dd0": ("ShadowHeightfield__AnyBoundsCornerAboveSampledHeight", "int __thiscall ShadowHeightfield__AnyBoundsCornerAboveSampledHeight(void * this)"),

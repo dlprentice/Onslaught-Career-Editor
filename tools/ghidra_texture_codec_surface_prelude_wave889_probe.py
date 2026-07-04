@@ -35,7 +35,7 @@ BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave889 texture codec surface prelude"
 TAG = "texture-codec-surface-prelude-wave889"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-040930_post_wave889_texture_codec_surface_prelude_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-040930_post_wave889_texture_codec_surface_prelude_verified"
 STRICT_PROXY = "6054/6113 = 99.03%"
 NEXT_HEAD = "0x0057d0ee CWaypointManager__BoxBlurPackedColorRows_Scalar"
 

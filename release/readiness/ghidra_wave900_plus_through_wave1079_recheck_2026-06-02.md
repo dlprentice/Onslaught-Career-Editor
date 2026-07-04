@@ -30,8 +30,8 @@ Coverage anchors:
 - Wave911 focused re-audit progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1373/1560 = 88.01%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-085858_post_wave1079_texture_tga_table_review_verified`, `19` files, `174754695` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-085858_post_wave1079_texture_tga_table_review_verified`, `19` files, `174754695` bytes, `DiffCount=0`.
 
 Boundary: this is static Ghidra/documentation/probe coverage evidence only. Exact source virtual name, exact status-output field semantics, runtime TGA/image-loading behavior, BEA patching behavior, gameplay outcomes, and rebuild parity remain separate proof.
 
-Probe token anchor: Wave1079; texture-tga-table-review-wave1079; 0x004f2cc0 CTGALoader__HasNonzeroStatusOut_004f2cc0; 0x005df518; 0x005df538; 0x004f2ce0 CTGALoader__Load; 0x00616dd0; 812/1408 = 57.67%; 1373/1560 = 88.01%; 500/500 = 100.00%; 6262/6262 = 100.00%; G:\GhidraBackups\BEA_20260602-085858_post_wave1079_texture_tga_table_review_verified; boundary recovery.
+Probe token anchor: Wave1079; texture-tga-table-review-wave1079; 0x004f2cc0 CTGALoader__HasNonzeroStatusOut_004f2cc0; 0x005df518; 0x005df538; 0x004f2ce0 CTGALoader__Load; 0x00616dd0; 812/1408 = 57.67%; 1373/1560 = 88.01%; 500/500 = 100.00%; 6262/6262 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-085858_post_wave1079_texture_tga_table_review_verified; boundary recovery.

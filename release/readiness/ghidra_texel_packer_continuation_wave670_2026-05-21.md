@@ -30,7 +30,7 @@ Probe anchors: `0x00583c8e CTexture__PackTexels_Dither_Bits8_8`, `0x0058463a CTe
 - Final dry mode: `updated=0 skipped=9 renamed=0 would_rename=0 signature_updated=0 missing=0 bad=0`
 - All three passes reported `REPORT: Save succeeded`.
 - Post exports verified `9` metadata rows, `9` tag rows, `9` xref rows, `729` instruction rows, and `9` clean decompile rows.
-- Backup verified: `G:\GhidraBackups\BEA_20260521-033410_post_wave670_texel_packer_continuation_verified`, `19` files, `163842951` bytes, `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260521-033410_post_wave670_texel_packer_continuation_verified`, `19` files, `163842951` bytes, `DiffCount=0`.
 
 ## Observations
 

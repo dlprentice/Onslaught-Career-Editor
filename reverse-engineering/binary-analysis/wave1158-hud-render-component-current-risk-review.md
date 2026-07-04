@@ -6,7 +6,7 @@ Tag: `wave1158-hud-render-component-current-risk-review`
 
 Wave1158 accounts for `20 HUD render/component current-risk rows` from the active `wave1108-current-risk-rank` denominator. It uses fresh read-only Ghidra export evidence and makes no mutation.
 
-Probe token anchor: Wave1158; wave1158-hud-render-component-current-risk-review; 485/1179 = 41.14%; 20 HUD render/component current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 694; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consults used; 0 / 0 / 0; 6411/6411 = 100.00%; 24 xref rows; 7335 instruction rows; CHud__RenderOverlayForViewpoint; CHud__RenderBattleline; CHud__RenderActiveHudComponentPass; CHud__RenderTacticalRadarContacts; CHud__RenderObjectiveStatusPanel; CHud__SetHudComponent; G:\GhidraBackups\BEA_20260606-002152_post_wave1158_hud_render_component_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1158; wave1158-hud-render-component-current-risk-review; 485/1179 = 41.14%; 20 HUD render/component current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 694; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consults used; 0 / 0 / 0; 6411/6411 = 100.00%; 24 xref rows; 7335 instruction rows; CHud__RenderOverlayForViewpoint; CHud__RenderBattleline; CHud__RenderActiveHudComponentPass; CHud__RenderTacticalRadarContacts; CHud__RenderObjectiveStatusPanel; CHud__SetHudComponent; [maintainer-local-ghidra-backup-root]\BEA_20260606-002152_post_wave1158_hud_render_component_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
 
 ## Evidence
 
@@ -30,7 +30,7 @@ The xref evidence keeps the HUD graph bounded:
 - `CHud__RenderOverlay` calls `CHud__RenderOverlayForViewpoint`.
 - `CHud__RenderOverlayForViewpoint` calls the target-indicator, controller-status, target-marker, tactical-radar, objective, slot-fill, and world-target helper rows.
 
-Verified backup: `G:\GhidraBackups\BEA_20260606-002152_post_wave1158_hud_render_component_current_risk_review_verified`; `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-002152_post_wave1158_hud_render_component_current_risk_review_verified`; `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 ## Accounting
 

@@ -35,7 +35,7 @@ TARGET_SIGNATURE = "void __thiscall CText__CopyFrom(void * this, void * src)"
 CALLER = "0x00466ab0"
 CALLER_NAME = "CFrontEnd__SetLanguage"
 NEXT_HEAD = "0x004f2710 CTextureBase__Init"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-224036_post_wave831_ctext_copyfrom_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-224036_post_wave831_ctext_copyfrom_verified"
 
 COMMON_TAGS = {
     "static-reaudit",

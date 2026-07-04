@@ -6,7 +6,7 @@ Status: GREEN public-safe saved-Ghidra evidence
 
 Serialized headless Ghidra dry/apply/read-back hardened comments and tags for `7` options-entry and platform-input targets after focused metadata, decompile, xref, instruction, tag, and source-context review.
 
-The saved names and signatures were already aligned with the current evidence. This pass added proof-boundary comments/tags, refreshed the whole-database quality queue, and backed up the actual live Ghidra project to `G:`.
+The saved names and signatures were already aligned with the current evidence. This pass added proof-boundary comments/tags, refreshed the whole-database quality queue, and backed up the actual live Ghidra project to `[maintainer-local-backup-volume]`.
 
 ## Targets
 
@@ -28,7 +28,7 @@ The saved names and signatures were already aligned with the current evidence. T
 - Focused probe: `PASS`; `7` xref evidence hits, `7` instruction evidence hits, `0` stale signature hits, and `0` overclaim hits.
 - Whole-database refresh: `6008` functions, `1250` commented functions, `4758` commentless functions, `1948` `undefined` signatures, and `2019` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1250/6008 = 20.81%`; strict clean-signature `1188/6008 = 19.77%`. The `20%` value is not a milestone.
-- Actual live Ghidra backup: `G:\GhidraBackups\BEA_20260513_051500_post_wave363_options_platform_input_verified`, verified at `19` files, `153127815` bytes, and `HashDiffCount=0`.
+- Actual live Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260513_051500_post_wave363_options_platform_input_verified`, verified at `19` files, `153127815` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

@@ -24,7 +24,7 @@ Wave453 saved Ghidra name/signature/comment/tag corrections for `5` adjacent Ogg
 - Corrected `CMessage__ctor_base`; `ret 0x1c` confirms seven stack arguments after `this`, including `message_text`, optional `active_reader_target`, and `queue_sort_key`, while unknown payload fields remain generic by design.
 - Queue after refresh: `6057` functions, `1978` commented, `4079` commentless, `1733` undefined signatures, `1674` `param_N` signatures.
 - Current telemetry proxies: comment-backed `1978/6057 = 32.66%`; strict clean-signature `1915/6057 = 31.62%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-134037_post_wave453_ogg_message_verified` (`19` files, `156633991` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-134037_post_wave453_ogg_message_verified` (`19` files, `156633991` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

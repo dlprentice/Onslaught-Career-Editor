@@ -29,7 +29,7 @@ Read-back evidence:
 - Post exports: 13 metadata rows, 13 tag rows, 523 xref rows, 195 instruction rows, 13 decompile rows, 12 context metadata rows, and 12 context decompile rows.
 - Queue after Wave879: 6113 total, 5914 commented, 199 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed and strict clean-signature proxy `5914/6113 = 96.74%`.
 - Next raw commentless row: `0x0055ecb1 CRT__UnlockHeapLock9_0055ecb1`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-225409_post_wave879_crt_stdio_runtime_verified`, 19 files, 172723079 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-225409_post_wave879_crt_stdio_runtime_verified`, 19 files, 172723079 bytes, `DiffCount=0`.
 
 What this proves:
 

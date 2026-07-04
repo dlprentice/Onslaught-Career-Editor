@@ -26,7 +26,7 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-075804_post_wave1174_building_namedmesh_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-075804_post_wave1174_building_namedmesh_current_risk_review_verified"
 
 TARGETS = {
     "0x00418450": (

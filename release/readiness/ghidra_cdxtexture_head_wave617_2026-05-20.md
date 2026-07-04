@@ -31,7 +31,7 @@ The tranche is a saved-Ghidra signature/comment/tag pass with no renames and no 
 - Apply: `updated=4 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`
 - Final dry: `updated=0 skipped=4 renamed=0 would_rename=0 missing=0 bad=0`
 - Read-back exports verified `16` context metadata rows, `16` tag rows, `57` xref rows, `592` instruction rows, `16` decompile rows, `32` vtable-slot rows, and `13` callsite-instruction targets.
-- Verified backup: `G:\GhidraBackups\BEA_20260520-022015_post_wave617_cdxtexture_head_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-022015_post_wave617_cdxtexture_head_verified`
   - `sourceFileCount=19`
   - `destFileCount=19`
   - `sourceBytes=161614727`

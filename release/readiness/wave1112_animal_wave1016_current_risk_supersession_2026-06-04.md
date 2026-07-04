@@ -20,11 +20,11 @@ Static read-back anchors:
 - Wave1016 context exports verified `32` metadata rows, `637` xref rows, `1292` body-instruction rows, and `32` decompile rows.
 - CAnimal vtable export verified `69` slots from `0x005d8698`, including slot 1 to `0x004041f0 CAnimal__scalar_deleting_dtor` and slot 9 to `0x00403d30 CAnimal__Init`.
 - Direct string/data evidence includes `0x00622d48 bird.msh`, `0x00622d1c Warning! Unknown animal type %d generated!\x0a`, and `0x00622d70 CAnimal`.
-- Wave1016 backup: `G:\GhidraBackups\BEA_20260531-195306_post_wave1016_animal_init_dtor_review_verified`.
-- Latest completed Ghidra review backup remains `G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`.
+- Wave1016 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-195306_post_wave1016_animal_init_dtor_review_verified`.
+- Latest completed Ghidra review backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`.
 - Mutation status: no new Ghidra export, no mutation, no executable-byte change, no BEA launch, and no installed-game/runtime-file mutation.
 
-Probe token anchor: Wave1112; wave1112-animal-wave1016-current-risk-supersession; 28/1179 = 2.37%; 3 rows; current focused candidates: 1179; Wave1016; animal-init-dtor-review-wave1016; 0x00403d30 CAnimal__Init; 0x00404010 CAnimal__dtor_base; 0x004041f0 CAnimal__scalar_deleting_dtor; 0x005d8698; 0x00622d48 bird.msh; 0x00622d1c Warning! Unknown animal type; 0x00622d70 CAnimal; G:\GhidraBackups\BEA_20260531-195306_post_wave1016_animal_init_dtor_review_verified; G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified; no new Ghidra export; no mutation.
+Probe token anchor: Wave1112; wave1112-animal-wave1016-current-risk-supersession; 28/1179 = 2.37%; 3 rows; current focused candidates: 1179; Wave1016; animal-init-dtor-review-wave1016; 0x00403d30 CAnimal__Init; 0x00404010 CAnimal__dtor_base; 0x004041f0 CAnimal__scalar_deleting_dtor; 0x005d8698; 0x00622d48 bird.msh; 0x00622d1c Warning! Unknown animal type; 0x00622d70 CAnimal; [maintainer-local-ghidra-backup-root]\BEA_20260531-195306_post_wave1016_animal_init_dtor_review_verified; [maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified; no new Ghidra export; no mutation.
 
 ## Boundary
 

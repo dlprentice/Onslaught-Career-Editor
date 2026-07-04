@@ -24,7 +24,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260528-105733_post_wave956_cfepdemo_main_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-105733_post_wave956_cfepdemo_main_review_verified"
 
 EXPECTED_METADATA = {
     "0x00457ec0": ("CFEPDemoMain__GetMenuType", "int __cdecl CFEPDemoMain__GetMenuType(void)"),

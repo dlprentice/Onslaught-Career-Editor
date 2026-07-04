@@ -24,9 +24,9 @@ Fresh read-back evidence:
 - Wave911 focused re-audit progress remains `472/1408 = 33.52%`.
 - Expanded static surface candidate-set progress is `641/1478 = 43.37%`, plus one newly recovered out-of-seed boundary.
 - Wave911 top-500 risk-ranked coverage is `371/500 = 74.20%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-120949_post_wave1003_hud_head_render_state_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-120949_post_wave1003_hud_head_render_state_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
-Probe token anchor: Wave1003; `hud-head-render-state-review-wave1003`; `0x0046c990 CGame__Shutdown`; `0x00481b00 CHud__ShutDown`; `0x00481400 CHud__ctor_base`; `0x00482090 HudRenderState__ApplyOverlaySpriteState`; `0x004821b0 CDXCompass__ApplyRenderStateModulate`; `0x00482210 CHud__RenderSegmentedMeterBar`; `472/1408 = 33.52%`; `641/1478 = 43.37%`; `371/500 = 74.20%`; `6223/6223 = 100.00%`; `G:\GhidraBackups\BEA_20260531-120949_post_wave1003_hud_head_render_state_review_verified`; function-boundary recovery.
+Probe token anchor: Wave1003; `hud-head-render-state-review-wave1003`; `0x0046c990 CGame__Shutdown`; `0x00481b00 CHud__ShutDown`; `0x00481400 CHud__ctor_base`; `0x00482090 HudRenderState__ApplyOverlaySpriteState`; `0x004821b0 CDXCompass__ApplyRenderStateModulate`; `0x00482210 CHud__RenderSegmentedMeterBar`; `472/1408 = 33.52%`; `641/1478 = 43.37%`; `371/500 = 74.20%`; `6223/6223 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260531-120949_post_wave1003_hud_head_render_state_review_verified`; function-boundary recovery.
 
 What this proves:
 

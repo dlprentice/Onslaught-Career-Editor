@@ -1,6 +1,6 @@
 # mixermap.cpp - Audio Mixer Map System
 
-**Source file:** `C:\dev\ONSLAUGHT2\mixermap.cpp`
+**Source file:** `[maintainer-local-source-export-root]\mixermap.cpp`
 **Debug string address:** `0x00640030`
 **Functions identified:** 4
 

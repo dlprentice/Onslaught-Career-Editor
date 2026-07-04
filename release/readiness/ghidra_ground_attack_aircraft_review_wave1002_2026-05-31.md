@@ -36,9 +36,9 @@ Fresh read-back evidence:
 - Wave911 focused re-audit progress remains `472/1408 = 33.52%` because this is a risk-ranked residual island rather than a new focused-candidate anchor.
 - Expanded static surface progress advances to `629/1478 = 42.56%`.
 - Wave911 top-500 risk-ranked coverage advances to `359/500 = 71.80%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-112128_post_wave1002_ground_attack_aircraft_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-112128_post_wave1002_ground_attack_aircraft_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
-Probe token anchor: Wave1002; `ground-attack-aircraft-review-wave1002`; `0x0047bbf0 CGroundAttackAircraft__Init`; `0x0047c040 CGroundAttackAircraft__AdvanceCloseShootAnimationState`; `0x004964d0 CMCGroundAttack__Constructor`; `0x00496540 CMCGroundAttack__VFunc_04_UpdateTurretTransform_00496540`; `0x004968a0 CMCGroundAttack__VFunc_08_CheckCachedMotionState_004968a0`; `472/1408 = 33.52%`; `629/1478 = 42.56%`; `359/500 = 71.80%`; `6222/6222 = 100.00%`; `G:\GhidraBackups\BEA_20260531-112128_post_wave1002_ground_attack_aircraft_review_verified`; no mutation.
+Probe token anchor: Wave1002; `ground-attack-aircraft-review-wave1002`; `0x0047bbf0 CGroundAttackAircraft__Init`; `0x0047c040 CGroundAttackAircraft__AdvanceCloseShootAnimationState`; `0x004964d0 CMCGroundAttack__Constructor`; `0x00496540 CMCGroundAttack__VFunc_04_UpdateTurretTransform_00496540`; `0x004968a0 CMCGroundAttack__VFunc_08_CheckCachedMotionState_004968a0`; `472/1408 = 33.52%`; `629/1478 = 42.56%`; `359/500 = 71.80%`; `6222/6222 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260531-112128_post_wave1002_ground_attack_aircraft_review_verified`; no mutation.
 
 What this proves:
 

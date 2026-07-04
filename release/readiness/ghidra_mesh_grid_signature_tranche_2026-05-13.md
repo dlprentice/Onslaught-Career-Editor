@@ -24,7 +24,7 @@ Serialized headless dry/apply/read-back hardened `7` saved Ghidra targets around
 - `cmd.exe /c npm run test:ghidra-mesh-grid-signature` passed with focused probe status `PASS`, `9/9` xref evidence hits, `13/13` instruction evidence hits, and `8/8` callsite evidence hits.
 - Whole-database quality refresh reports `6008` functions, `1270` commented functions, `4738` commentless functions, `1948` undefined signatures, and `1999` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1270/6008 = 21.14%` and strict clean-signature `1208/6008 = 20.11%`. These values are not milestones or completion gates; the target remains as close to `100%` evidence-grade static RE as possible.
-- The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260513_072135_post_wave366_mesh_grid_verified` with `19` files, `153226119` bytes, and `HashDiffCount=0`.
+- The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_072135_post_wave366_mesh_grid_verified` with `19` files, `153226119` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

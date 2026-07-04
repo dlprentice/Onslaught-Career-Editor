@@ -41,7 +41,7 @@ These percentages are telemetry only, not completion or correctness certificatio
 Verified saved-project backup:
 
 ```text
-G:\GhidraBackups\BEA_20260518-062025_post_wave535_meshcollisionvolume_core_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260518-062025_post_wave535_meshcollisionvolume_core_verified
 ```
 
 Backup verification: `19` files, `159189895` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.

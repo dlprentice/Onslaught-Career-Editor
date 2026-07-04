@@ -25,7 +25,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260528-043815_post_wave943_unit_weapon_gameplay_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-043815_post_wave943_unit_weapon_gameplay_review_verified"
 SCRIPT_NAME = "test:ghidra-unit-weapon-gameplay-review-wave943"
 SCRIPT_VALUE = r"py -3 tools\ghidra_unit_weapon_gameplay_review_wave943_probe.py --check"
 

@@ -45,7 +45,7 @@ These are retail field-use hints, not a finalized CGillM structure definition.
 
 ## Wave1199 GillM/GroundUnit AI-Motion-Effects Current-Risk Review (2026-06-06)
 
-Wave1199 (`wave1199-gillm-groundunit-ai-motion-effects-current-risk-review`) saved comment/tag normalization for the CGillM rows `0x00479b60`, `0x00479bf0`, `0x00479cb0`, `0x00479d10`, `0x00479db0`, and `0x0047a160`, plus the adjacent GillMHeadAI and shared ground-unit context rows documented in the companion owner pages. Fresh exports verified `10` metadata rows, `10` tag rows, `13 xref rows`, `540 instruction rows`, and `10 decompile rows`. Corrected current-risk accounting is `870/1179 = 73.79%`; remaining active focused work: 309. Verified backup: `G:\GhidraBackups\BEA_20260606-225205_post_wave1199_gillm_groundunit_ai_motion_effects_current_risk_review_verified`. Runtime GillM AI, terrain-guide, motion, arm-hit animation, and mesh-effect behavior remain separate proof.
+Wave1199 (`wave1199-gillm-groundunit-ai-motion-effects-current-risk-review`) saved comment/tag normalization for the CGillM rows `0x00479b60`, `0x00479bf0`, `0x00479cb0`, `0x00479d10`, `0x00479db0`, and `0x0047a160`, plus the adjacent GillMHeadAI and shared ground-unit context rows documented in the companion owner pages. Fresh exports verified `10` metadata rows, `10` tag rows, `13 xref rows`, `540 instruction rows`, and `10 decompile rows`. Corrected current-risk accounting is `870/1179 = 73.79%`; remaining active focused work: 309. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-225205_post_wave1199_gillm_groundunit_ai_motion_effects_current_risk_review_verified`. Runtime GillM AI, terrain-guide, motion, arm-hit animation, and mesh-effect behavior remain separate proof.
 
 ## Wave1000 Grounded Movement / Terrain Re-Audit (2026-05-31)
 
@@ -62,7 +62,7 @@ Representative anchors:
 | `0x0047a0b0 CGillM__ComputeLateralSlopeAlignment` | Lateral slope scalar helper using heading field `+0x114` and heightfield-normal sampling. |
 | `0x0047a160 CGillM__StartState1WithStoredMotionVector` | CGillM vtable slot `100`; copies the stored four-dword motion vector at `+0x278` into vtable `+0xf4` dispatch, then writes state `+0x244 = 1`. |
 
-Fresh exports verified `10` metadata rows, `10` tag rows, `10` xref rows, `526` body-instruction rows, `10` decompile rows, and `128` CGillM vtable-slot rows. Wave911 focused re-audit progress remains `467/1408 = 33.17%`; expanded static surface progress is `606/1478 = 41.00%`; Wave911 top-500 risk-ranked coverage is `350/500 = 70.00%`; static closure remains `6222/6222 = 100.00%`. Verified backup: `G:\GhidraBackups\BEA_20260531-101059_post_wave1000_gillm_grounded_movement_review_verified`.
+Fresh exports verified `10` metadata rows, `10` tag rows, `10` xref rows, `526` body-instruction rows, `10` decompile rows, and `128` CGillM vtable-slot rows. Wave911 focused re-audit progress remains `467/1408 = 33.17%`; expanded static surface progress is `606/1478 = 41.00%`; Wave911 top-500 risk-ranked coverage is `350/500 = 70.00%`; static closure remains `6222/6222 = 100.00%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-101059_post_wave1000_gillm_grounded_movement_review_verified`.
 
 Wave1000 also normalized the historical Wave409 focused probe's live-queue assertions from old Wave409 telemetry to current queue closure (`6222` total, `0` commentless, `0` exact-undefined signatures, `0` `param_N`). The evidence claim did not change.
 
@@ -90,7 +90,7 @@ Wave752 saved GillM.cpp-adjacent compiler-generated SEH unwind cleanup callbacks
 | `0x005d2a68 Unwind@005d2a68` and `0x005d2a73 Unwind@005d2a73` | DATA scope-table refs `0x0061b84c` and `0x0061b854`; call `CGenericActiveReader__dtor` on `(*(EBP-0x10))+0xc` and `(*(EBP-0x10))+0x24`. |
 | `0x005d2a90 Unwind@005d2a90` | DATA scope-table xref `0x0061b87c`; calls `OID__FreeObject_Callback` with GillM.cpp debug path `0x0062c9e8`, line `0x17`, allocation/type value `0x3e`, pointer `*(EBP-0x10)`. |
 
-Verified backup: `G:\GhidraBackups\BEA_20260522-212829_post_wave752_unwind_continuation_verified`. Exact parent source-body identity, runtime GillM cleanup behavior, BEA patching, and rebuild parity remain deferred.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-212829_post_wave752_unwind_continuation_verified`. Exact parent source-body identity, runtime GillM cleanup behavior, BEA patching, and rebuild parity remain deferred.
 
 ## Validation
 
@@ -98,9 +98,9 @@ Verified backup: `G:\GhidraBackups\BEA_20260522-212829_post_wave752_unwind_conti
 - Post-apply read-back verified `11` metadata rows, `11` decompile exports, `13` xref rows, `2431` instruction rows, `11` tag rows, `112` related vtable-slot rows, and `128` CGillM vtable-slot rows.
 - Focused probe `tools/ghidra_gillm_family_wave389_probe.py --check` and package script `npm run test:ghidra-gillm-family-wave389` pass against ignored raw read-back exports under `subagents/`.
 - Wave409 headless dry/apply corrected `0x0047a160` with `REPORT: Save succeeded`.
-- Wave409 post-apply read-back verified `1` metadata row, `1` tag row, `1` DATA xref row, `121` instruction rows, post-apply decompile text, `128` CGillM vtable-slot rows, focused probe status `PASS`, queue telemetry `6028/1562/4466/1909/1854`, and backup `G:\GhidraBackups\BEA_20260514_083210_post_wave409_gillm_state_vector_verified`.
+- Wave409 post-apply read-back verified `1` metadata row, `1` tag row, `1` DATA xref row, `121` instruction rows, post-apply decompile text, `128` CGillM vtable-slot rows, focused probe status `PASS`, queue telemetry `6028/1562/4466/1909/1854`, and backup `[maintainer-local-ghidra-backup-root]\BEA_20260514_083210_post_wave409_gillm_state_vector_verified`.
 - Wave544 refreshed the saved `CGillM__InitTerrainGuideComponent` function comment from `CTerrainGuide__ctor_like_004f1ec0` to `CTerrainGuide__ctor`; dry/apply/verify read-back reported clean summaries and `REPORT: Save succeeded`.
-- Wave1000 read-only re-audit verified `10` metadata rows, `10` tag rows, `10` xref rows, `526` body-instruction rows, `10` decompile rows, `128` CGillM vtable-slot rows, focused probe status `PASS`, static closure `6222/6222 = 100.00%`, and backup `G:\GhidraBackups\BEA_20260531-101059_post_wave1000_gillm_grounded_movement_review_verified`.
+- Wave1000 read-only re-audit verified `10` metadata rows, `10` tag rows, `10` xref rows, `526` body-instruction rows, `10` decompile rows, `128` CGillM vtable-slot rows, focused probe status `PASS`, static closure `6222/6222 = 100.00%`, and backup `[maintainer-local-ghidra-backup-root]\BEA_20260531-101059_post_wave1000_gillm_grounded_movement_review_verified`.
 
 ## Related Files
 
@@ -114,4 +114,4 @@ This page records saved static Ghidra metadata, not runtime proof. Exact source 
 
 ## Wave1152 Current-Risk Review
 
-Wave1152 (`wave1152-gillm-groundunit-terrain-current-risk-review`) re-read `0x00479f30 CGillM__ComputeTerrainClearanceNoiseScale` and `0x0047a0b0 CGillM__ComputeLateralSlopeAlignment` with fresh metadata/tags/xrefs/instructions/decompile evidence and no mutation. It confirms the saved GillM terrain-helper boundaries as static Ghidra evidence only. Verified backup: `G:\GhidraBackups\BEA_20260605-203535_post_wave1152_gillm_groundunit_terrain_current_risk_review_verified`. Runtime behavior, exact layouts, exact source-body identity, BEA patching behavior, gameplay outcomes, visual QA, and rebuild parity remain separate proof.
+Wave1152 (`wave1152-gillm-groundunit-terrain-current-risk-review`) re-read `0x00479f30 CGillM__ComputeTerrainClearanceNoiseScale` and `0x0047a0b0 CGillM__ComputeLateralSlopeAlignment` with fresh metadata/tags/xrefs/instructions/decompile evidence and no mutation. It confirms the saved GillM terrain-helper boundaries as static Ghidra evidence only. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-203535_post_wave1152_gillm_groundunit_terrain_current_risk_review_verified`. Runtime behavior, exact layouts, exact source-body identity, BEA patching behavior, gameplay outcomes, visual QA, and rebuild parity remain separate proof.

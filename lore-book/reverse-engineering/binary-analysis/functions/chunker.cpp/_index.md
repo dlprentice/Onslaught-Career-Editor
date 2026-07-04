@@ -1,6 +1,6 @@
 # chunker.cpp - Chunk Reader System Analysis
 
-**Source File**: `C:\dev\ONSLAUGHT2\chunker.cpp`
+**Source File**: `[maintainer-local-source-export-root]\chunker.cpp`
 **Debug String Address**: `0x00624464`
 **Last updated**: 2026-05-10
 
@@ -17,7 +17,7 @@ The current saved Ghidra names are reader-focused:
 - `CChunkReader__OpenFile` initializes the owned `CDXMemBuffer` from a filename.
 - `CChunkReader__GetNext`, `Read`, and `Skip` implement the shared chunk-id/size and payload cursor behavior used by many loaders.
 
-Wave983 (`cchunkreader-resource-review-wave983`) re-reviewed these rows against fresh metadata/tags/xrefs/instructions/decompile and source context, saved Wave983 comments/tags, verified signatures, and normalized stale docs that still used `CChunkerStream__...`, `FUN_00423910`, `FUN_00423960`, or `memcpy_wrapper` wording. Verified backup: `G:\GhidraBackups\BEA_20260531-001624_post_wave983_cchunkreader_resource_review_verified`. Static closure remains `6222/6222 = 100.00%`; Wave911 focused progress is `384/1408 = 27.27%`; expanded static surface progress is `443/1478 = 29.97%`. Exact `CChunkReader` structure layout, runtime archive/resource I/O behavior, exact archive schema coverage, BEA patching, and rebuild parity remain unproven. The next slice is a Wave900+ recheck before a new candidate cluster.
+Wave983 (`cchunkreader-resource-review-wave983`) re-reviewed these rows against fresh metadata/tags/xrefs/instructions/decompile and source context, saved Wave983 comments/tags, verified signatures, and normalized stale docs that still used `CChunkerStream__...`, `FUN_00423910`, `FUN_00423960`, or `memcpy_wrapper` wording. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-001624_post_wave983_cchunkreader_resource_review_verified`. Static closure remains `6222/6222 = 100.00%`; Wave911 focused progress is `384/1408 = 27.27%`; expanded static surface progress is `443/1478 = 29.97%`. Exact `CChunkReader` structure layout, runtime archive/resource I/O behavior, exact archive schema coverage, BEA patching, and rebuild parity remain unproven. The next slice is a Wave900+ recheck before a new candidate cluster.
 
 ## Functions Found
 
@@ -73,4 +73,4 @@ Wave745 saved static Ghidra comments/tags/signatures for the chunker/resource po
 | `0x005d19a0` | `Unwind@005d19a0` | DATA scope-table xref `0x0061a824`; calls `CMonitor__Shutdown` on `EBP-0x10`. |
 | `0x005d19c0` | `Unwind@005d19c0` | DATA scope-table xref `0x0061a84c`; calls `CLine__SetBaseVtable_00426360` on stack local `EBP-0x40`. |
 
-The full Wave745 tranche spans `0x005d1840 Unwind@005d1840` through `0x005d1a98 Unwind@005d1a98`, leaves raw commentless head `0x0042f220 CSPtrSet__Clear`, moves the high-signal head to `0x005d1aa3 Unwind@005d1aa3`, and has verified backup `G:\GhidraBackups\BEA_20260522-170426_post_wave745_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain unproven.
+The full Wave745 tranche spans `0x005d1840 Unwind@005d1840` through `0x005d1a98 Unwind@005d1a98`, leaves raw commentless head `0x0042f220 CSPtrSet__Clear`, moves the high-signal head to `0x005d1aa3 Unwind@005d1aa3`, and has verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260522-170426_post_wave745_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain unproven.

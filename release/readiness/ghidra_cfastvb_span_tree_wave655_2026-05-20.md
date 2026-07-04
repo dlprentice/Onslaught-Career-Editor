@@ -39,7 +39,7 @@ The pass made no renames, no function-boundary changes, and no executable-byte c
 - Queue after Wave655: `6093` total, `3572` commented, `2521` commentless, `1217` exact-undefined signatures, `736` `param_N` signatures
 - Comment-backed proxy: `3572/6093 = 58.62%`
 - Strict clean-signature proxy: `3522/6093 = 57.80%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-202319_post_wave655_cfastvb_span_tree_verified`, `19` files, `163154823` bytes, `DiffCount=0`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-202319_post_wave655_cfastvb_span_tree_verified`, `19` files, `163154823` bytes, `DiffCount=0`
 - Next queue head: `0x00574270 CDXTexture__FindFormatDescriptorById`
 
 ## Boundaries

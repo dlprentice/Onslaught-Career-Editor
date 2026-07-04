@@ -35,7 +35,7 @@ DEVELOPER_STATE = ROOT / "developer_agent_state.json"
 DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-110625_post_wave1217_lifecycle_cleanup_tail_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-110625_post_wave1217_lifecycle_cleanup_tail_current_risk_review_verified"
 
 TARGETS = {
     "0x00421b80": "CCarrierAI__scalar_deleting_dtor",

@@ -26,7 +26,7 @@ Serialized headless dry/apply/read-back hardened signatures, comments, and tags 
 | Focused package probe | `cmd.exe /c npm run test:ghidra-controller-base-comment` passed with targets `3`, xref evidence hits `5`, instruction evidence hits `13`, stale signature hits `0`, and overclaim hits `0`. |
 | Whole-database queue | Refreshed headless `ExportFunctionQualitySnapshot.java` plus `cmd.exe /c npm run test:ghidra-static-reaudit-queue` passed with `6020` total functions, `1332` commented functions, `4688` commentless functions, `1939` undefined signatures, and `1980` `param_N` signatures. |
 | Current proxies | Comment-backed `1332/6020 = 22.13%`; strict clean-signature `1270/6020 = 21.10%`. These are telemetry only, not milestones. |
-| Ghidra backup | Live `BEA.gpr`/`BEA.rep` backup verified at `G:\GhidraBackups\BEA_20260513_113130_post_wave373_controller_base_verified` with `19` files, `153455495` bytes, and `HashDiffCount=0`. |
+| Ghidra backup | Live `BEA.gpr`/`BEA.rep` backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_113130_post_wave373_controller_base_verified` with `19` files, `153455495` bytes, and `HashDiffCount=0`. |
 
 ## Claim Boundary
 

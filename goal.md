@@ -1,10 +1,41 @@
 # Active Goal Slice
 
-Status: paused; automation shutdown closeout
-Last updated: 2026-07-03
+Status: COMPLETE_PUSHED_WITH_NOTES
+Last updated: 2026-07-04
 Policy: `goal.policy.md`
 
 ## Current Slice
+
+The current 2026-07-03/2026-07-04 full-spectrum repo assurance wave produced
+bounded public-boundary, release-accounting, consult-policy, ZIP-overlay
+denylist, documentation, state-hygiene, maintainer-local scratch/backup posture,
+and legacy local-storage cleanup repairs. The current consult posture is Codex
+normal/adversarial, Cursor `composer-2.5-fast` normal/adversarial, and Grok
+Build normal/adversarial; Cursor `gemini-3.1-pro` is suspended because the
+operator's Cursor API/model usage is exhausted. Fresh local validation and
+current-policy consult coverage passed for the touched
+docs/tools/release/public-boundary gates. This closeout is a source/docs/tooling
+health commit pushed to `main`; final remote-ref parity evidence is recorded in
+the coordinator final response rather than embedded as a self-referential commit
+hash.
+Consult evidence is summarized in
+`subagents/full-repo-assurance-consult-record-20260704.md`.
+These bounded hygiene
+changes do not create runtime, release, Ghidra mutation, online, gameplay, or
+rebuild-proof authority.
+
+User-authorized legacy local-storage cleanup removed stale project
+proof/backups and the inactive GhydraMCP runtime bundle, moved the Ghidra 12.x
+distribution to the maintainer-local tooling posture, and verified the headless
+launcher there. A local storage filename scan found no remaining
+Onslaught/BEA/Battle Engine/Aquila/
+backup-root/runtime-proof hits after cleanup. The Steam game library and
+installed/original game files were not mutated.
+
+Windows disk health checks reported all visible physical disks and volumes as
+Healthy/OK. Raw SMART attributes were not available in this session because
+`smartctl` is not installed and Windows storage reliability/failure-predict
+counters were not exposed to the current non-elevated client.
 
 The high-throughput Onslaught automations were stopped by explicit user request
 on 2026-07-03 after the texture/resource/decode static-routing ledger was
@@ -454,7 +485,7 @@ ADVANCEMENT: 1
 BLOCKED_ITEMS_ADDRESSED: duplicate source-checkout/worktree ownership, legacy backup-root leakage, remote divergence, public-allowlist instability, staged-ledger inclusion
 PRIMARY_DELIVERABLE: texture-resource-decode-static-contract-ledger.v1
 ACCEPTED_BY: Codex normal ACCEPT_WITH_NOTES and Codex adversarial ACCEPT after post-reconciliation re-review
-CONSULTS_USED: codex=normal/adversarial; cursor=normal/adversarial; grok=normal/adversarial
+CONSULTS_USED: codex=normal/adversarial; composer=normal/adversarial; grok=normal/adversarial
 SAFETY: clean; final ref/stage checks passed before commit, no runtime proof, no live Ghidra mutation/read-back, no hard payload, no private root leakage
 GOAL_DELTA: adds a public-safe texture/resource/decode static-routing ledger/checker and reconciles duplicate-lane redactions after career bridge fast-forward
 ```

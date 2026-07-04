@@ -45,7 +45,7 @@ Read-back evidence:
 - Wave911 focused progress remains `812/1408 = 57.67%` because the normalized rows are outside the materialized focused TSV.
 - Expanded static surface progress advances to `1187/1548 = 76.68%`.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-222739_post_wave1063_atmospherics_snow_resource_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-222739_post_wave1063_atmospherics_snow_resource_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -64,4 +64,4 @@ What remains unproven:
 
 Next candidate note: continue with the next focused static re-audit cluster; prefer read-only review first and mutate only when fresh evidence proves a correction or normalization need.
 
-Probe token anchor: Wave1063; atmospherics-snow-resource-review-wave1063; 0x00404a00 Atmospherics__Init; 0x00404b90 Atmospherics__ResetAndUpdate; 0x00404bd0 Atmospherics__UpdateAll; 0x00404bf0 Atmospherics__RenderAll; 0x00404c10 Atmospherics__Shutdown; 0x00404c90 Atmospherics__NotifyAll; 0x00555020 CAtmosphericsProfile__ResetAndInitSnowResources; 812/1408 = 57.67%; 1187/1548 = 76.68%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-222739_post_wave1063_atmospherics_snow_resource_review_verified; tag normalization.
+Probe token anchor: Wave1063; atmospherics-snow-resource-review-wave1063; 0x00404a00 Atmospherics__Init; 0x00404b90 Atmospherics__ResetAndUpdate; 0x00404bd0 Atmospherics__UpdateAll; 0x00404bf0 Atmospherics__RenderAll; 0x00404c10 Atmospherics__Shutdown; 0x00404c90 Atmospherics__NotifyAll; 0x00555020 CAtmosphericsProfile__ResetAndInitSnowResources; 812/1408 = 57.67%; 1187/1548 = 76.68%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-222739_post_wave1063_atmospherics_snow_resource_review_verified; tag normalization.

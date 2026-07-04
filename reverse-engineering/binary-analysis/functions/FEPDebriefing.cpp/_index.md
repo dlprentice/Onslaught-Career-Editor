@@ -10,7 +10,7 @@ Frontend mission debriefing screen implementation. Displays mission results afte
 
 ## Wave801 Frontend/Render Helper Read-Back
 
-Wave801 static read-back (`frontend-render-helpers-wave801`, `wave801-readback-verified`) saved a current comment/tag on `0x00456780 CFEPDebriefing__Initialize`. DATA xref `0x005db9c0` reaches the row; static evidence ties the body to FEPDebriefing.cpp debug path `0x0062913c`, allocation/type values `0x324` and `0x640`, and debriefing initialization state clears. Verified backup: `G:\GhidraBackups\BEA_20260524-073450_post_wave801_frontend_render_helpers_verified`.
+Wave801 static read-back (`frontend-render-helpers-wave801`, `wave801-readback-verified`) saved a current comment/tag on `0x00456780 CFEPDebriefing__Initialize`. DATA xref `0x005db9c0` reaches the row; static evidence ties the body to FEPDebriefing.cpp debug path `0x0062913c`, allocation/type values `0x324` and `0x640`, and debriefing initialization state clears. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-073450_post_wave801_frontend_render_helpers_verified`.
 
 This remains static retail Ghidra evidence only. Exact source-body identity, runtime debriefing/frontend behavior, BEA patching, and rebuild parity remain deferred.
 
@@ -32,7 +32,7 @@ Live signature (normalized, 2026-02-24):
 
 These are saved static Ghidra corrections only. Runtime debriefing behavior, exact layout, concrete locals/types, and rebuild parity remain unproven.
 
-Wave1147 (`wave1147-frontend-game-shell-score20-current-risk-review`) corrected the saved `0x00456830 GlobalListNode__ClearField4AndPushGlobalList` comment/tag evidence: fresh read-back shows this shared callback clears field `+0x4`, calls `0x004cb040 ParticleEffectLink__PushGlobalList`, and returns `this`; older CWorldPhysicsManager-only callee wording was too narrow. Verified backup: `G:\GhidraBackups\BEA_20260605-182213_post_wave1147_frontend_game_shell_score20_current_risk_review_verified`.
+Wave1147 (`wave1147-frontend-game-shell-score20-current-risk-review`) corrected the saved `0x00456830 GlobalListNode__ClearField4AndPushGlobalList` comment/tag evidence: fresh read-back shows this shared callback clears field `+0x4`, calls `0x004cb040 ParticleEffectLink__PushGlobalList`, and returns `this`; older CWorldPhysicsManager-only callee wording was too narrow. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-182213_post_wave1147_frontend_game_shell_score20_current_risk_review_verified`.
 
 ## Wave981 CFEPDebriefing Boundary Recovery (2026-05-29)
 
@@ -112,7 +112,7 @@ Wave750 saved two FEPDebriefing/FrontEnd-adjacent compiler-generated SEH unwind 
 | `0x005d2630 Unwind@005d2630` | DATA scope-table xref `0x0061b4b4`; calls `OID__FreeObject_Callback` for FEPDebriefing.cpp debug path `0x0062913c`, line `0x80`, allocation/type value `0x30`. |
 | `0x005d2660 Unwind@005d2660` | DATA scope-table xref `0x0061b4dc`; calls `CSPtrSet__Clear` on the stack-local set at `EBP-0x1c`. |
 
-Read-back backup: `G:\GhidraBackups\BEA_20260522-193422_post_wave750_unwind_continuation_verified`. Exact parent source-body identity, runtime debriefing/frontend cleanup behavior, BEA patching, and rebuild parity remain deferred.
+Read-back backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-193422_post_wave750_unwind_continuation_verified`. Exact parent source-body identity, runtime debriefing/frontend cleanup behavior, BEA patching, and rebuild parity remain deferred.
 
 ## Cross-References
 

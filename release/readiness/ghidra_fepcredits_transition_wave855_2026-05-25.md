@@ -23,7 +23,7 @@ Read-back evidence:
 - Queue after Wave855: `6098` total functions, `5756` commented, `342` commentless, `0` exact-undefined signatures, `0` `param_N` signatures, comment-backed proxy `5756/6098 = 94.39%`, strict clean-signature proxy `5756/6098 = 94.39%`.
 - Next raw commentless row: `0x0051aa90 CFEPDirectory__Init`.
 - Commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-110750_post_wave855_fepcredits_transition_verified`, `19` files, `172166023` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-110750_post_wave855_fepcredits_transition_verified`, `19` files, `172166023` bytes, `DiffCount=0`.
 
 What this proves:
 

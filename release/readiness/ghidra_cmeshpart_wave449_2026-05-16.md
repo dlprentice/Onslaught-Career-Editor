@@ -48,7 +48,7 @@ Telemetry-only proxies are comment-backed `1937/6057 = 31.98%` and strict clean-
 
 ## Backup
 
-The actual saved Ghidra project was backed up after read-back at `G:\GhidraBackups\BEA_20260516-113946_post_wave449_cmeshpart_load_optimize_verified`. The backup comparison reported `19` files, `156502919` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+The actual saved Ghidra project was backed up after read-back at `[maintainer-local-ghidra-backup-root]\BEA_20260516-113946_post_wave449_cmeshpart_load_optimize_verified`. The backup comparison reported `19` files, `156502919` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Not Proven
 

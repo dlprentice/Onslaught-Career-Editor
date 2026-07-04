@@ -32,7 +32,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260523-105815_post_wave755_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260523-105815_post_wave755_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d30a0": "0x0061bde4",
@@ -74,11 +74,11 @@ COMMON_TAGS = {
 }
 
 STRING_EXPECTATIONS = {
-    "string-0062d7b0.tsv": r"C:\dev\ONSLAUGHT2\InitThing.cpp",
-    "string-0062db88.tsv": r"C:\dev\ONSLAUGHT2\mapwho.cpp",
-    "string-0062dc80.tsv": r"C:\dev\ONSLAUGHT2\MCBuggy.cpp",
-    "string-0062df60.tsv": r"C:\dev\ONSLAUGHT2\MCMech.cpp",
-    "string-0062e06c.tsv": r"C:\dev\ONSLAUGHT2\MCTentacle.cpp",
+    "string-0062d7b0.tsv": r"[maintainer-local-source-export-root]\InitThing.cpp",
+    "string-0062db88.tsv": r"[maintainer-local-source-export-root]\mapwho.cpp",
+    "string-0062dc80.tsv": r"[maintainer-local-source-export-root]\MCBuggy.cpp",
+    "string-0062df60.tsv": r"[maintainer-local-source-export-root]\MCMech.cpp",
+    "string-0062e06c.tsv": r"[maintainer-local-source-export-root]\MCTentacle.cpp",
 }
 
 COMMENT_TOKENS = {

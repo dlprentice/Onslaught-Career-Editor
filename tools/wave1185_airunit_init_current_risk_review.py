@@ -31,7 +31,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 APPLY_SCRIPT = ROOT / "tools" / "ApplyAirUnitInitCurrentRiskWave1185.java"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-134914_post_wave1185_airunit_init_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-134914_post_wave1185_airunit_init_current_risk_review_verified"
 TARGET = "0x00402ad0"
 TARGET_NAME = "CAirUnit__Init"
 TARGET_SIGNATURE = "void __thiscall CAirUnit__Init(void * this, void * init)"

@@ -23,7 +23,7 @@ The pass corrected `CRT__WriteFdTextMode_Locking_00567505` to `CRT__WriteFdTextM
 - Post exports: `7` metadata rows, `7` tag rows, `35` xref rows, `1267` instruction rows, `7` decompile rows
 - Queue refresh: `6093` total, `3377` commented, `2716` commentless, `1217` exact-undefined signatures, `919` `param_N` signatures
 - Strict clean-signature proxy: `3323/6093 = 54.54%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-111006_post_wave635_crt_fd_text_io_verified` (`19` files, `162401159` bytes, `DiffCount=0`)
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-111006_post_wave635_crt_fd_text_io_verified` (`19` files, `162401159` bytes, `DiffCount=0`)
 
 The next high-signal queue head is `0x00567de0 CRT__StrCpyAligned`.
 

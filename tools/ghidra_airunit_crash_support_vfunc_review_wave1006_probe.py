@@ -27,7 +27,7 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-135619_post_wave1006_airunit_crash_support_vfunc_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-135619_post_wave1006_airunit_crash_support_vfunc_review_verified"
 
 TARGETS = {
     "0x00402fa0": ("CUnit__UpdateMotionAndTrailEffects", "void __thiscall CUnit__UpdateMotionAndTrailEffects(void * this)"),

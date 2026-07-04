@@ -22,7 +22,7 @@ Read-back evidence:
 - Queue after Wave824: 6098 total, 5632 commented, 466 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5632/6098 = 92.36%`, strict clean-signature proxy `5632/6098 = 92.36%`.
 - Next raw commentless row: `0x004d6240 StrCopyN`.
 - Commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-190751_post_wave824_menuitem_pausemenu_raw_head_verified`, 19 files, 171576199 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-190751_post_wave824_menuitem_pausemenu_raw_head_verified`, 19 files, 171576199 bytes, `DiffCount=0`.
 
 What this proves:
 

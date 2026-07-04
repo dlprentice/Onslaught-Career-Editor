@@ -31,7 +31,7 @@ The pass includes 2 renames: the CTGALoader scalar-deleting destructor and destr
 - Focused probe: `tools/ghidra_texture_tga_wave513_probe.py --check`.
 - Queue refresh after Wave513: `6078` functions, `2400` commented, `3678` commentless, `1614` exact-undefined signatures, and `1431` `param_N` signatures.
 - Current whole-project telemetry proxy: comment-backed `2400/6078 = 39.49%`; strict comment-plus-clean-signature proxy `2343/6078 = 38.55%`.
-- Backup verified at `G:\GhidraBackups\BEA_20260517-193930_post_wave513_texture_tga_verified` with `19` files, `158403463` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260517-193930_post_wave513_texture_tga_verified` with `19` files, `158403463` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

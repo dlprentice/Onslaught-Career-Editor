@@ -254,7 +254,7 @@ def check_exports(failures: list[str]) -> None:
 
 def check_backup_and_queue(failures: list[str]) -> None:
     backup = read_json(BACKUP_SUMMARY)
-    if backup.get("backupRoot") != "G:\\GhidraBackups\\BEA_20260520-001229_post_wave613_cdxpatch_manager_verified":
+    if backup.get("backupRoot") != "[maintainer-local-ghidra-backup-root]\\BEA_20260520-001229_post_wave613_cdxpatch_manager_verified":
         failures.append(f"backup path mismatch: {backup.get('backupRoot')}")
     expected_backup = {
         "sourceFileCount": 19,
@@ -307,7 +307,7 @@ def check_public_docs(failures: list[str]) -> None:
             "`2349` instruction rows",
             "`464` callsite instruction rows",
             "`10` vtable-slot rows",
-            "G:\\GhidraBackups\\BEA_20260520-001229_post_wave613_cdxpatch_manager_verified",
+            "[maintainer-local-ghidra-backup-root]\\BEA_20260520-001229_post_wave613_cdxpatch_manager_verified",
             "Next queue head: `0x00552060 CDXShadows__Destructor`",
             "vtable slot 0 still points to `0x00550320`",
             "rebuild parity remain unproven",
@@ -345,7 +345,7 @@ def check_public_docs(failures: list[str]) -> None:
                 "2937",
                 "1275",
                 "CDXShadows__Destructor",
-                "G:\\GhidraBackups\\BEA_20260520-001229_post_wave613_cdxpatch_manager_verified",
+                "[maintainer-local-ghidra-backup-root]\\BEA_20260520-001229_post_wave613_cdxpatch_manager_verified",
             ),
             failures,
         )

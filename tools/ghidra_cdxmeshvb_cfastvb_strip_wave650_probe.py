@@ -162,7 +162,7 @@ DOC_TOKENS = (
     "2575",
     "790",
     "0x0056fce0 CFastVB__SelectTriangleWithMaxOpenEdges",
-    "G:\\GhidraBackups\\BEA_20260520-215037_post_wave650_cdxmeshvb_cfastvb_strip_verified",
+    "[maintainer-local-ghidra-backup-root]\\BEA_20260520-215037_post_wave650_cdxmeshvb_cfastvb_strip_verified",
 )
 
 OVERCLAIM_TOKENS = (
@@ -315,7 +315,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
         failures.append(f"queue head mismatch: {head}")
 
     backup = read_json(BACKUP_SUMMARY)
-    if backup.get("Destination") != r"G:\GhidraBackups\BEA_20260520-215037_post_wave650_cdxmeshvb_cfastvb_strip_verified":
+    if backup.get("Destination") != r"[maintainer-local-ghidra-backup-root]\BEA_20260520-215037_post_wave650_cdxmeshvb_cfastvb_strip_verified":
         failures.append(f"backup destination mismatch: {backup.get('Destination')}")
     if backup.get("FileCount") != 19:
         failures.append(f"backup file count mismatch: {backup.get('FileCount')}")

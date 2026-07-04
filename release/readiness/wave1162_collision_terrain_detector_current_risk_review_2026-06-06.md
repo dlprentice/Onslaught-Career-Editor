@@ -27,7 +27,7 @@ Read-back evidence:
 - Queue closure remains `6411/6411 = 100.00%` with `0 / 0 / 0` commentless/exact-undefined/`param_N` debt.
 - Active current-risk accounting advances to `547/1179 = 46.40%`.
 - Current focused candidates: `1178`; live regenerated current focused candidates: `1178`; remaining active focused work: `632`; current risk candidates: `6166`.
-- Verified backup: `G:\GhidraBackups\BEA_20260606-021413_post_wave1162_collision_terrain_detector_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-021413_post_wave1162_collision_terrain_detector_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -47,4 +47,4 @@ What remains separate:
 - Gameplay outcomes.
 - Rebuild parity.
 
-Probe token anchor: Wave1162; wave1162-collision-terrain-detector-current-risk-review; 547/1179 = 46.40%; 14 collision/terrain detector current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 632; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; 0 / 0 / 0; 6411/6411 = 100.00%; 41 xref rows; 2104 instruction rows; CCollisionSeekingInfantryBloke__CheckMountStateOrCollisionFlags; CMeshCollisionVolume__IsDirectionInsideTrianglePrism; CHeightField__GetHeightSamplePacked16; CHLCollisionDetector__ScanNeighborSectorsAndDispatchCollisions; CHLCollisionDetector__ProcessMapWhoCollisionSweep; CHLCollisionDetector__HandleScheduledCollisionEvent; G:\GhidraBackups\BEA_20260606-021413_post_wave1162_collision_terrain_detector_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1162; wave1162-collision-terrain-detector-current-risk-review; 547/1179 = 46.40%; 14 collision/terrain detector current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 632; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; 0 / 0 / 0; 6411/6411 = 100.00%; 41 xref rows; 2104 instruction rows; CCollisionSeekingInfantryBloke__CheckMountStateOrCollisionFlags; CMeshCollisionVolume__IsDirectionInsideTrianglePrism; CHeightField__GetHeightSamplePacked16; CHLCollisionDetector__ScanNeighborSectorsAndDispatchCollisions; CHLCollisionDetector__ProcessMapWhoCollisionSweep; CHLCollisionDetector__HandleScheduledCollisionEvent; [maintainer-local-ghidra-backup-root]\BEA_20260606-021413_post_wave1162_collision_terrain_detector_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.

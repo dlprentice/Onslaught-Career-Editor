@@ -159,7 +159,7 @@ DOC_TOKENS = (
     "0xffd9",
     "0x0059f360 CFastVB__DispatchOp_TransformVec4_0059f360",
     "0x0042f220 CSPtrSet__Clear",
-    r"G:\GhidraBackups\BEA_20260522-013644_post_wave716_jpeg_writer_head_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260522-013644_post_wave716_jpeg_writer_head_verified",
 )
 
 OVERCLAIM_TOKENS = (
@@ -313,7 +313,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
     file_count = backup.get("file_count") or backup.get("fileCount")
     total_bytes = backup.get("total_bytes") or backup.get("totalBytes")
     diff_count = backup.get("diff_count") if "diff_count" in backup else backup.get("diffCount")
-    require(backup_path == r"G:\GhidraBackups\BEA_20260522-013644_post_wave716_jpeg_writer_head_verified", "backup path mismatch", failures)
+    require(backup_path == r"[maintainer-local-ghidra-backup-root]\BEA_20260522-013644_post_wave716_jpeg_writer_head_verified", "backup path mismatch", failures)
     require(file_count == 19, "backup file count mismatch", failures)
     require(int(total_bytes or 0) == 166103943, "backup byte count mismatch", failures)
     require(diff_count == 0, "backup diff count mismatch", failures)
@@ -382,7 +382,7 @@ def main() -> int:
     print("Wave716 JPEG writer head probe: PASS")
     print("Targets: 16")
     print("Queue: 6098 total, 4183 commented, 1915 commentless, 1216 undefined, 159 param_N")
-    print("Backup: G:\\GhidraBackups\\BEA_20260522-013644_post_wave716_jpeg_writer_head_verified")
+    print("Backup: [maintainer-local-ghidra-backup-root]\\BEA_20260522-013644_post_wave716_jpeg_writer_head_verified")
     return 0
 
 

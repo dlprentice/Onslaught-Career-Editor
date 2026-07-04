@@ -28,7 +28,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-163000_post_wave1010_battleengine_zoom_autoaim_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-163000_post_wave1010_battleengine_zoom_autoaim_review_verified"
 
 TARGETS = {
     "0x00409e80": ("CBattleEngine__AutoZoomOut", "void __thiscall CBattleEngine__AutoZoomOut(void * this)"),

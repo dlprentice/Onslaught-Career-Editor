@@ -25,7 +25,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 1 xref row, 37 instruction rows, 1 decompile row, 5 context metadata rows, 5 context decompile rows, and 80 CUnit-family vtable rows.
 - Queue after Wave830: `6098` total functions, `5651` commented, `447` commentless, `0` exact-undefined signatures, `0` `param_N` signatures, comment-backed proxy `5651/6098 = 92.67%`, strict clean-signature proxy `5651/6098 = 92.67%`.
 - Next raw commentless row: `0x004f2660 CText__CopyFrom`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-220229_post_wave830_cunit_vfunc64_pickup_verified`, 19 files, 171641735 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-220229_post_wave830_cunit_vfunc64_pickup_verified`, 19 files, 171641735 bytes, `DiffCount=0`.
 
 What this proves:
 

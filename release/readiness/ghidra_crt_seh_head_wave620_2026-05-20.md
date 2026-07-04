@@ -23,7 +23,7 @@ The pass saved bounded comments and tags only. It made no function renames, no s
 - Post-state exports verified `7` metadata rows, `7` tag rows, `10` xref rows, `259` instruction rows, and `7` decompile rows.
 - Instruction evidence covers FS exception-list frame popping/restoration, indirect jumps through EAX/frame callbacks, `RtlUnwind` at `0x005d04e6`, callback wrapper argument marshaling into `0x005602d2`, exception flag checks, and a 0x14-byte try-block range walker.
 - Xrefs tie the rows into adjacent CRT/EH helpers including `CRT__SehUnwindAndResumeSearch`, `CRT__BuildCatchObject`, `CRT__DestroyCatchObject`, `CRT__SehInvokeCallSettingFrame12`, `CRT__CallExceptionTranslator`, `CRT__SehLookupAndInvokeScopeHandler`, and `CRT__ValidateCatchHandlersForThrow`.
-- Backup verified: `G:\GhidraBackups\BEA_20260520-035125_post_wave620_crt_seh_head_verified` with `19` files, `161811335` bytes, and `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260520-035125_post_wave620_crt_seh_head_verified` with `19` files, `161811335` bytes, and `DiffCount=0`.
 
 ## Queue Telemetry
 

@@ -49,10 +49,10 @@ WAVE580 = ROOT / "subagents" / "ghidra-static-reaudit" / "wave580-iscript-camera
 WAVE585 = ROOT / "subagents" / "ghidra-static-reaudit" / "wave585-iscript-level-event-00537fd0"
 WAVE1049 = ROOT / "subagents" / "ghidra-static-reaudit" / "wave1049-endlevel-objective-progression-review"
 
-WAVE1219_BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
-WAVE580_BACKUP = r"G:\GhidraBackups\BEA_20260519-044247_post_wave580_iscript_camera_objective_verified"
-WAVE585_BACKUP = r"G:\GhidraBackups\BEA_20260519-094217_post_wave585_iscript_level_event_verified"
-WAVE1049_BACKUP = r"G:\GhidraBackups\BEA_20260601-134936_post_wave1049_endlevel_objective_progression_review_verified"
+WAVE1219_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+WAVE580_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260519-044247_post_wave580_iscript_camera_objective_verified"
+WAVE585_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260519-094217_post_wave585_iscript_level_event_verified"
+WAVE1049_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260601-134936_post_wave1049_endlevel_objective_progression_review_verified"
 
 SCHEMA_LINK = "missionscript-objective-outcome-command-effect.v1.json"
 PROOF_LINK = "missionscript-objective-outcome-command-effect-static-proof.md"

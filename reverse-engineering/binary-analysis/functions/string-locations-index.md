@@ -16,7 +16,7 @@ This file catalogs strings found in BEA.exe used to locate functions via xrefs.
 
 ## Debug Path Strings (196 total, historical snapshot)
 
-Format: `C:\dev\ONSLAUGHT2\[filename]`
+Format: `[maintainer-local-source-export-root]\[filename]`
 
 ### High Priority (Not Yet Processed)
 

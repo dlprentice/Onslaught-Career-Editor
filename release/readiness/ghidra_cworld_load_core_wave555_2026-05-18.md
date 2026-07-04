@@ -50,7 +50,7 @@ These are queue telemetry only, not completion claims.
 Post-wave verified Ghidra backup:
 
 ```text
-G:\GhidraBackups\BEA_20260518-152609_post_wave555_cworld_load_core_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260518-152609_post_wave555_cworld_load_core_verified
 Files: 19
 Bytes: 159484807
 MissingCount: 0

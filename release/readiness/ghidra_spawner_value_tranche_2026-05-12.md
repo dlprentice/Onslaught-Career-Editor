@@ -30,7 +30,7 @@ The pass recovered seventeen missing function boundaries in the spawner-value fa
 - `py -3 tools\ghidra_spawner_value_tranche_probe_test.py` passed `3/3`; `py -3 -m py_compile tools\ghidra_spawner_value_tranche_probe.py tools\ghidra_spawner_value_tranche_probe_test.py` passed.
 - `cmd.exe /c npm run test:ghidra-spawner-value-tranche` passed against the saved read-back artifacts.
 - The refreshed whole-database queue reports `5924` functions, `983` commented functions, `4941` commentless functions, `1978` undefined signatures, and `2154` `param_N` signatures.
-- The post-mutation live Ghidra backup was verified at `G:\GhidraBackups\BEA_20260512_132313_post_wave339_verified` with `19` files, `152341383` bytes, and `DiffCount=0`.
+- The post-mutation live Ghidra backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260512_132313_post_wave339_verified` with `19` files, `152341383` bytes, and `DiffCount=0`.
 
 ## Claim Boundary
 

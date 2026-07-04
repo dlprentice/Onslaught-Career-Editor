@@ -1,7 +1,7 @@
 # InitThing.cpp Functions
 
 > Source File: InitThing.cpp | Binary: BEA.exe
-> Debug Path: 0x0062d7b0 (`C:\dev\ONSLAUGHT2\InitThing.cpp`)
+> Debug Path: 0x0062d7b0 (`[maintainer-local-source-export-root]\InitThing.cpp`)
 
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6113/6113** (Wave900: every function commented; clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
 
@@ -28,7 +28,7 @@ InitThing.cpp implements the **CInitThing class hierarchy** - initialization dat
 
 ## Wave754 InitThing Factory Unwind Continuation (2026-05-23)
 
-Wave754 static read-back (`unwind-continuation-wave754`, `wave754-readback-verified`) hardened eight InitThing.cpp factory unwind callbacks from `0x005d2ff0 Unwind@005d2ff0` through `0x005d308a Unwind@005d308a` as `void __cdecl Unwind@...(void)`. Evidence includes InitThing.cpp debug path `0x0062d7b0`, DATA scope-table xrefs `0x0061bda4` through `0x0061bddc`, line token `0x09`, and allocation/type values `0x0f`, `0x13`, `0x17`, `0x1b`, `0x1f`, `0x23`, `0x27`, and `0x2b`. Verified backup: `G:\GhidraBackups\BEA_20260523-102949_post_wave754_unwind_continuation_verified`. The next commentless high-signal row is `0x005d30a0 Unwind@005d30a0`, which appears to continue the same factory unwind run. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
+Wave754 static read-back (`unwind-continuation-wave754`, `wave754-readback-verified`) hardened eight InitThing.cpp factory unwind callbacks from `0x005d2ff0 Unwind@005d2ff0` through `0x005d308a Unwind@005d308a` as `void __cdecl Unwind@...(void)`. Evidence includes InitThing.cpp debug path `0x0062d7b0`, DATA scope-table xrefs `0x0061bda4` through `0x0061bddc`, line token `0x09`, and allocation/type values `0x0f`, `0x13`, `0x17`, `0x1b`, `0x1f`, `0x23`, `0x27`, and `0x2b`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260523-102949_post_wave754_unwind_continuation_verified`. The next commentless high-signal row is `0x005d30a0 Unwind@005d30a0`, which appears to continue the same factory unwind run. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
 
 | Address | Scope-table xref | Static read-back evidence |
 | --- | --- | --- |
@@ -43,7 +43,7 @@ Wave754 static read-back (`unwind-continuation-wave754`, `wave754-readback-verif
 
 ## Wave755 InitThing Factory Continuation (2026-05-23)
 
-Wave755 static read-back (`unwind-continuation-wave755`, `wave755-readback-verified`) hardened the next five InitThing.cpp factory unwind callbacks from `0x005d30a0 Unwind@005d30a0` through `0x005d30f8 Unwind@005d30f8` as `void __cdecl Unwind@...(void)`. Evidence includes InitThing.cpp debug path `0x0062d7b0`, DATA scope-table xrefs `0x0061bde4` through `0x0061be04`, line token `0x09`, and allocation/type values `0x2f`, `0x33`, `0x37`, `0x3b`, and `0x3f`. Verified backup: `G:\GhidraBackups\BEA_20260523-105815_post_wave755_unwind_continuation_verified`. The next commentless high-signal row is `0x005d3392 Unwind@005d3392` after Wave755. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
+Wave755 static read-back (`unwind-continuation-wave755`, `wave755-readback-verified`) hardened the next five InitThing.cpp factory unwind callbacks from `0x005d30a0 Unwind@005d30a0` through `0x005d30f8 Unwind@005d30f8` as `void __cdecl Unwind@...(void)`. Evidence includes InitThing.cpp debug path `0x0062d7b0`, DATA scope-table xrefs `0x0061bde4` through `0x0061be04`, line token `0x09`, and allocation/type values `0x2f`, `0x33`, `0x37`, `0x3b`, and `0x3f`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260523-105815_post_wave755_unwind_continuation_verified`. The next commentless high-signal row is `0x005d3392 Unwind@005d3392` after Wave755. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
 
 | Address | Scope-table xref | Static read-back evidence |
 | --- | --- | --- |

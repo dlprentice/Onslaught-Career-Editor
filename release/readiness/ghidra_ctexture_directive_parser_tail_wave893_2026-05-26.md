@@ -27,7 +27,7 @@ Read-back evidence:
 - Post exports: 8 metadata rows, 8 tag rows, 13 xref rows, 1696 instruction rows, and 8 decompile rows.
 - Queue after Wave893: 6113 total, 6073 commented, 40 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed and strict clean-signature proxy `6073/6113 = 99.35%`.
 - Next raw commentless row: `0x005913b0 CFastVB__JpegParser_ResetFrameState`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-055039_post_wave893_ctexture_directive_parser_tail_verified`, 19 files, 173149063 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-055039_post_wave893_ctexture_directive_parser_tail_verified`, 19 files, 173149063 bytes, `DiffCount=0`.
 
 What this proves:
 

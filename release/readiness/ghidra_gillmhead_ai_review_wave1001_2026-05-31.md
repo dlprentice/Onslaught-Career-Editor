@@ -27,9 +27,9 @@ Fresh read-back evidence:
 - Wave911 focused re-audit progress advances to `472/1408 = 33.52%`.
 - Expanded static surface progress advances to `613/1478 = 41.47%`.
 - Wave911 top-500 risk-ranked coverage advances to `355/500 = 71.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-104623_post_wave1001_gillmhead_ai_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-104623_post_wave1001_gillmhead_ai_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
-Probe token anchor: Wave1001; `gillmhead-ai-review-wave1001`; `0x0047a760 CGillMHead__CreateGillMHeadAIComponent`; `0x0047a900 CGillMHeadAI__AdvanceOpenAttackCloseState`; `CUnit__HasAnyLinkedUnitBeforeTargetTimeout`; `0x0047afc0 CGillMHeadAI__UpdateAimTransformAndTargetReader`; `CUnit__ForwardAimTransformAndAttachTargetReader`; `472/1408 = 33.52%`; `613/1478 = 41.47%`; `355/500 = 71.00%`; `6222/6222 = 100.00%`; `G:\GhidraBackups\BEA_20260531-104623_post_wave1001_gillmhead_ai_review_verified`; comment/tag mutation only.
+Probe token anchor: Wave1001; `gillmhead-ai-review-wave1001`; `0x0047a760 CGillMHead__CreateGillMHeadAIComponent`; `0x0047a900 CGillMHeadAI__AdvanceOpenAttackCloseState`; `CUnit__HasAnyLinkedUnitBeforeTargetTimeout`; `0x0047afc0 CGillMHeadAI__UpdateAimTransformAndTargetReader`; `CUnit__ForwardAimTransformAndAttachTargetReader`; `472/1408 = 33.52%`; `613/1478 = 41.47%`; `355/500 = 71.00%`; `6222/6222 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260531-104623_post_wave1001_gillmhead_ai_review_verified`; comment/tag mutation only.
 
 What this proves:
 

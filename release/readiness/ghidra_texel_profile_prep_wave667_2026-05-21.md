@@ -31,7 +31,7 @@ Probe anchors: `0x00581263 CFastVB__TexelUnpackProfile__dtor`, `0x00581e8c CDXTe
 - Final dry mode: `updated=0 skipped=10 renamed=0 would_rename=0 signature_updated=0 missing=0 bad=0`
 - All three passes reported `REPORT: Save succeeded`.
 - Post exports verified `10` metadata rows, `10` tag rows, `180` xref rows, `870` instruction rows, and `10` clean decompile rows.
-- Backup verified: `G:\GhidraBackups\BEA_20260521-021208_post_wave667_texel_profile_verified`, `19` files, `163646343` bytes, `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260521-021208_post_wave667_texel_profile_verified`, `19` files, `163646343` bytes, `DiffCount=0`.
 
 ## Queue
 

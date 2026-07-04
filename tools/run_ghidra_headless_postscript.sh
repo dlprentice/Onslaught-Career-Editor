@@ -17,17 +17,22 @@ if [[ -z "$SCRIPT_NAME" ]]; then
   exit 2
 fi
 
-GHIDRA_HOME_DEFAULT="/mnt/d/ghidra_12.0.3_PUBLIC_20260210/ghidra_12.0.3_PUBLIC"
-PROJECT_DIR_DEFAULT="/mnt/c/Users/david/Ghidra/Projects"
+GHIDRA_HOME_DEFAULT=""
+PROJECT_DIR_DEFAULT=""
 PROJECT_NAME_DEFAULT="BEA"
 PROGRAM_DEFAULT="BEA.exe"
-SCRIPT_DIR_DEFAULT="/mnt/c/Users/david/source/Onslaught-Career-Editor/tools"
+SCRIPT_DIR_DEFAULT="$(cd "$(dirname "$0")" && pwd)"
 
 GHIDRA_HOME="${GHIDRA_HOME:-$GHIDRA_HOME_DEFAULT}"
 PROJECT_DIR="${GHIDRA_PROJECT_DIR:-$PROJECT_DIR_DEFAULT}"
 PROJECT_NAME="${GHIDRA_PROJECT_NAME:-$PROJECT_NAME_DEFAULT}"
 PROGRAM_NAME="${GHIDRA_PROGRAM_NAME:-$PROGRAM_DEFAULT}"
 SCRIPT_DIR="${GHIDRA_SCRIPT_DIR:-$SCRIPT_DIR_DEFAULT}"
+
+if [[ -z "$GHIDRA_HOME" || -z "$PROJECT_DIR" ]]; then
+  echo "Set GHIDRA_HOME and GHIDRA_PROJECT_DIR before running headless Ghidra wrappers." >&2
+  exit 2
+fi
 
 echo "[headless] script=$SCRIPT_NAME"
 echo "[headless] ghidra_home=$GHIDRA_HOME"

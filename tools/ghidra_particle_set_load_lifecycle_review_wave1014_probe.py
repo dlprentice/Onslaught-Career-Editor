@@ -29,7 +29,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 TRACKING_STATE = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_tracking_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-191245_post_wave1014_particle_set_load_lifecycle_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-191245_post_wave1014_particle_set_load_lifecycle_review_verified"
 
 TARGETS = {
     "0x004cc020": ("CParticleSet__CreateByType", "void * __thiscall CParticleSet__CreateByType(void * this, char * set_name, int type_id, void * context)"),

@@ -17,8 +17,8 @@ Validation evidence:
 - Post exports verified `3` metadata rows, `3` tag rows, `3` xref rows, `783` instruction rows, and `3` decompile rows; read-only caller/xref-site context exports verified `1` caller decompile row and `340` xref-site instruction rows.
 - Queue refresh passed with `6098` total functions, `4333` commented, `1765` commentless, `1216` exact-undefined signatures, `45` `param_N` signatures, comment-backed proxy `4333/6098 = 71.06%`, and strict clean-signature proxy `4275/6098 = 70.11%`.
 - Earliest raw commentless row is `0x0042f220 CSPtrSet__Clear`; next commentless high-signal row is `0x005b81d0 CFastVB__SinCosApproxVec4_Paired`.
-- Verified backup: `G:\GhidraBackups\BEA_20260522-120358_post_wave736_jpeg_scan_controller_head_verified`, `19` files, `166923143` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-120358_post_wave736_jpeg_scan_controller_head_verified`, `19` files, `166923143` bytes, `DiffCount=0`.
 
 Scope boundary: this wave proves saved static retail Ghidra metadata only. Exact scan-controller struct, scan script semantics, local callback boundary at `0x005b8090`, callback ABI, JPEG mode enums, runtime JPEG output behavior, BEA patching, and rebuild parity remain deferred.
 
-Probe anchors: `Wave736 JPEG scan controller head`, `jpeg-scan-controller-head-wave736`, `0x005b7ee0 CDXTexture__ProcessJpegScanStateMachine`, `0x005b8060 CDXTexture__AbortJpegScanStateMachine`, `0x005b8110 CDXTexture__InitJpegScanController`, `0x005b81d0 CFastVB__SinCosApproxVec4_Paired`, `0x0042f220 CSPtrSet__Clear`, `G:\GhidraBackups\BEA_20260522-120358_post_wave736_jpeg_scan_controller_head_verified`.
+Probe anchors: `Wave736 JPEG scan controller head`, `jpeg-scan-controller-head-wave736`, `0x005b7ee0 CDXTexture__ProcessJpegScanStateMachine`, `0x005b8060 CDXTexture__AbortJpegScanStateMachine`, `0x005b8110 CDXTexture__InitJpegScanController`, `0x005b81d0 CFastVB__SinCosApproxVec4_Paired`, `0x0042f220 CSPtrSet__Clear`, `[maintainer-local-ghidra-backup-root]\BEA_20260522-120358_post_wave736_jpeg_scan_controller_head_verified`.

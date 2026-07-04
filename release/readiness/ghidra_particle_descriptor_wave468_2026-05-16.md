@@ -26,7 +26,7 @@ Candidate `0x004c0150` was reviewed but intentionally left unchanged because the
 - Corrected `CEngine__RemoveNodeFromActiveList` to `CParticleManager__UnlinkNodeFromActiveList`.
 - Queue after refresh: `6057` functions, `2134` commented, `3923` commentless, `1705` undefined signatures, `1580` `param_N` signatures.
 - Current telemetry proxies: comment-backed `2134/6057 = 35.23%`; strict comment-plus-clean-signature `2067/6057 = 34.13%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-210736_post_wave468_particle_descriptor_verified` (`19` files, `157125511` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-210736_post_wave468_particle_descriptor_verified` (`19` files, `157125511` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

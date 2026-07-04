@@ -22,7 +22,7 @@ Read-back/accounting anchors:
 
 Canonical note: `reverse-engineering/binary-analysis/wave911-residual-accounting.md`.
 
-Latest completed Ghidra review backup remains Wave1100: `G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`.
+Latest completed Ghidra review backup remains Wave1100: `[maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`.
 
 What this proves:
 

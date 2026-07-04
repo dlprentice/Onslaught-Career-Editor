@@ -34,7 +34,7 @@ Read-back evidence:
 - Queue after Wave994: `6222` total functions, `6222` commented, `0` commentless, `0` exact-undefined signatures, `0` `param_N`, static closure `6222/6222 = 100.00%`.
 - Wave911 focused re-audit progress: `461/1408 = 32.74%`.
 - Expanded static surface progress: `563/1478 = 38.09%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-070007_post_wave994_particle_manager_core_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-070007_post_wave994_particle_manager_core_review_verified`, `19` files, `173869959` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

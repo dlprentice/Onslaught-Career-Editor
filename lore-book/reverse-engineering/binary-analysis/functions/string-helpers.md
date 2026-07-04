@@ -17,7 +17,7 @@ Static read-back evidence:
 | `0x00514c33 EnumerateSaveFiles_Main`, `0x00514fb7 PCPlatform__WriteSaveFile`, `0x005150b7 PCPlatform__ReadSaveFile`, `0x00514ef7 PCPlatform__DeleteSaveFile` | Save-file path caller evidence. |
 | `0x004f7bf0 Text__AsciiToWideScratch`, `0x004f7c70 StringScratch__CopyToRotating4KBufferA`, `0x004f7cd0 StringScratch__CopyToRotating4KBufferB` | Adjacent four-slot scratch-buffer helper context. |
 
-Post-Wave834 queue telemetry is `6098` total, `5656` commented, `442` commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5656/6098 = 92.75%`, strict proxy `5656/6098 = 92.75%`, and next raw commentless row `0x004f9a90 CUnit__ApplyDamage`. Verified backup: `G:\GhidraBackups\BEA_20260525-000436_post_wave834_fromwchar_string_conversion_verified`.
+Post-Wave834 queue telemetry is `6098` total, `5656` commented, `442` commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5656/6098 = 92.75%`, strict proxy `5656/6098 = 92.75%`, and next raw commentless row `0x004f9a90 CUnit__ApplyDamage`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-000436_post_wave834_fromwchar_string_conversion_verified`.
 
 Boundary: exact source-body identity, exact encoding/codepage policy, Unicode lossiness beyond observed low-byte copying, caller scratch-buffer lifetime contract, runtime path/UI behavior, BEA patching, and rebuild parity remain deferred.
 
@@ -33,6 +33,6 @@ Static read-back evidence:
 | `0x00441740 CConsole__Printf` | Caller xref at `0x0044185c`; formats into a 700-byte stack buffer, passes `0x50` to `StrCopyN`, then explicitly clears the final console ring-entry byte. |
 | `0x004418a0 CConsole__PrintfNoNewline` | Caller xref at `0x00441998`; formats into a 256-byte stack buffer, passes `0x50` to `StrCopyN`, then explicitly clears the final console ring-entry byte. |
 
-Post-Wave825 queue telemetry is `6098` total, `5633` commented, `465` commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5633/6098 = 92.37%`, strict proxy `5633/6098 = 92.37%`, and next raw commentless row `0x004daff0 CFearGrid__LookupFearWeightByArchetype`. Verified backup: `G:\GhidraBackups\BEA_20260524-193427_post_wave825_strcopyn_helper_verified`.
+Post-Wave825 queue telemetry is `6098` total, `5633` commented, `465` commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5633/6098 = 92.37%`, strict proxy `5633/6098 = 92.37%`, and next raw commentless row `0x004daff0 CFearGrid__LookupFearWeightByArchetype`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-193427_post_wave825_strcopyn_helper_verified`.
 
 Boundary: exact source-body identity, exact console buffer lifetime, runtime truncation policy, runtime console output behavior, BEA patching, and rebuild parity remain deferred.

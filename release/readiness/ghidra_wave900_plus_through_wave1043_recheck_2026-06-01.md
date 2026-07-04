@@ -24,10 +24,10 @@ Wave1043 extension:
 - Focused probe: `npm run test:ghidra-physics-statement-load-review-wave1043`
 - Readiness note: `release/readiness/ghidra_physics_statement_load_review_wave1043_2026-06-01.md`
 - Evidence base: `subagents/ghidra-static-reaudit/wave1043-physics-statement-load-review`
-- Verified backup: `G:\GhidraBackups\BEA_20260601-100128_post_wave1043_physics_statement_load_review_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-100128_post_wave1043_physics_statement_load_review_verified`
 - Mutation status: no mutation.
 - Progress accounting: Wave1043 consolidates rows already reviewed by Wave917 and Wave933, so unique re-audit counters remain `735/1408 = 52.20%` and `968/1493 = 64.84%`.
 
 Boundary note: this recheck validates static evidence structure, backups, probe wiring, and current queue closure. It does not prove runtime PhysicsScript behavior, serialized file-format completeness, exact source-layout identity, BEA patching, gameplay outcomes, or rebuild parity.
 
-Probe token anchor: Wave1043; physics-statement-load-review-wave1043; 0x0042f2b0 CUnitStatement__LoadFromMemBuffer; 0x0042f780 CWeaponStatement__LoadFromMemBuffer; 0x0042fca0 CWeaponModeStatement__LoadFromMemBuffer; 0x00430210 CRoundStatement__LoadFromMemBuffer; 0x004306e0 CSpawnerStatement__LoadFromMemBuffer; 0x00431050 CComponentStatement__LoadFromMemBuffer; 0x004318f0 CHazardStatement__LoadFromMemBuffer; CPhysicsScriptStatements__CreateStatementType2; CPhysicsScriptStatements__CreateStatementType10; CDXMemBuffer__Read; CDXMemoryManager__Alloc; 735/1408 = 52.20%; 968/1493 = 64.84%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-100128_post_wave1043_physics_statement_load_review_verified; no mutation.
+Probe token anchor: Wave1043; physics-statement-load-review-wave1043; 0x0042f2b0 CUnitStatement__LoadFromMemBuffer; 0x0042f780 CWeaponStatement__LoadFromMemBuffer; 0x0042fca0 CWeaponModeStatement__LoadFromMemBuffer; 0x00430210 CRoundStatement__LoadFromMemBuffer; 0x004306e0 CSpawnerStatement__LoadFromMemBuffer; 0x00431050 CComponentStatement__LoadFromMemBuffer; 0x004318f0 CHazardStatement__LoadFromMemBuffer; CPhysicsScriptStatements__CreateStatementType2; CPhysicsScriptStatements__CreateStatementType10; CDXMemBuffer__Read; CDXMemoryManager__Alloc; 735/1408 = 52.20%; 968/1493 = 64.84%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-100128_post_wave1043_physics_statement_load_review_verified; no mutation.

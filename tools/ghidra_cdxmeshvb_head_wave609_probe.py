@@ -362,7 +362,7 @@ def check_exports(failures: list[str]) -> None:
 
 def check_backup_and_queue(failures: list[str]) -> None:
     backup = read_json(BACKUP_SUMMARY)
-    if backup.get("backupRoot") != "G:\\GhidraBackups\\BEA_20260519-221542_post_wave609_cdxmeshvb_head_verified":
+    if backup.get("backupRoot") != "[maintainer-local-ghidra-backup-root]\\BEA_20260519-221542_post_wave609_cdxmeshvb_head_verified":
         failures.append(f"backup path mismatch: {backup.get('backupRoot')}")
     expected_backup = {
         "sourceFileCount": 19,
@@ -426,7 +426,7 @@ def check_public_docs(failures: list[str]) -> None:
             "CDXMeshVB__Load",
             "`791` instruction rows",
             "`16` vtable-slot rows",
-            "G:\\GhidraBackups\\BEA_20260519-221542_post_wave609_cdxmeshvb_head_verified",
+            "[maintainer-local-ghidra-backup-root]\\BEA_20260519-221542_post_wave609_cdxmeshvb_head_verified",
             "Next queue head: `0x0054d530 CMeshRenderer__RenderMeshWithLayerPasses`",
             "runtime render behavior",
             "rebuild parity remain unproven",

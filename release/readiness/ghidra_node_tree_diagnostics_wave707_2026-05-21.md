@@ -23,7 +23,7 @@ Wave707 node-tree diagnostics saved three adjacent CFastVB diagnostic wrapper ro
 - Queue after Wave707: `6098` total, `4107` commented, `1991` commentless, `1216` exact-undefined signatures, `228` `param_N`, comment-backed proxy `4107/6098 = 67.35%`, strict clean-signature proxy `4053/6098 = 66.46%`.
 - Raw commentless head remains `0x0042f220 CSPtrSet__Clear`.
 - High-signal head moved to `0x00599b69 CFastVB__NodeTreeHasBitFlag0x200`.
-- Verified backup: `G:\GhidraBackups\BEA_20260521-204613_post_wave707_node_tree_diagnostics_verified`, `19` files, `165448583` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-204613_post_wave707_node_tree_diagnostics_verified`, `19` files, `165448583` bytes, `DiffCount=0`.
 
 ## Boundaries
 

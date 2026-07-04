@@ -14,7 +14,7 @@ This page is bounded to saved static Ghidra evidence. It does not prove runtime 
 
 ## Wave754 InfluenceMap.cpp Unwind Continuation (0x005d2f30-0x005d2fa0)
 
-Wave754 static read-back (`unwind-continuation-wave754`, `wave754-readback-verified`) hardened adjacent InfluenceMap.cpp unwind callbacks as `void __cdecl Unwind@...(void)` without renames, function-boundary changes, or executable-byte changes. Evidence includes the InfluenceMap.cpp debug path at `0x0062d61c`, DATA scope-table xrefs, `OID__FreeObject_Callback` rows, `CComplexThing__dtor_base`, and `CSPtrSet__Clear`. Exact anchors include `0x005d2f30 Unwind@005d2f30`, `0x005d2f54 Unwind@005d2f54`, and `0x005d2fa0 Unwind@005d2fa0`. Verified backup: `G:\GhidraBackups\BEA_20260523-102949_post_wave754_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
+Wave754 static read-back (`unwind-continuation-wave754`, `wave754-readback-verified`) hardened adjacent InfluenceMap.cpp unwind callbacks as `void __cdecl Unwind@...(void)` without renames, function-boundary changes, or executable-byte changes. Evidence includes the InfluenceMap.cpp debug path at `0x0062d61c`, DATA scope-table xrefs, `OID__FreeObject_Callback` rows, `CComplexThing__dtor_base`, and `CSPtrSet__Clear`. Exact anchors include `0x005d2f30 Unwind@005d2f30`, `0x005d2f54 Unwind@005d2f54`, and `0x005d2fa0 Unwind@005d2fa0`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260523-102949_post_wave754_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
 
 | Address | Scope-table xref | Static read-back evidence |
 | --- | --- | --- |
@@ -113,7 +113,7 @@ Wave418 active cluster:
 - Read-back verified `17` metadata rows, `17` tag rows, `24` xref rows, `1683` instruction rows, `17` decompile exports, active vtable `0x005dc050` slot resolution, and the `CInfluenceNode` string token.
 - Focused probe status: `PASS`.
 - Refreshed queue: `6043` functions, `1641` commented functions, `4402` commentless functions, `1878` undefined signatures, `1822` `param_N` signatures.
-- Live Ghidra backup: `G:\GhidraBackups\BEA_20260514_135504_post_wave418_influencemap_verified`, `19` files, `155061127` bytes, `HashDiffCount=0`.
+- Live Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260514_135504_post_wave418_influencemap_verified`, `19` files, `155061127` bytes, `HashDiffCount=0`.
 
 Wave455 follow-up:
 
@@ -123,7 +123,7 @@ Wave455 follow-up:
 - Read-back verified `8` metadata rows, `8` tag rows, `13` xref rows, `1032` focused instruction rows, `8` decompile exports, and focused probe status `PASS`.
 - Refreshed queue: `6057` functions, `1997` commented functions, `4060` commentless functions, `1732` undefined signatures, `1668` `param_N` signatures.
 - Current telemetry proxies: comment-backed `1997/6057 = 32.97%`; strict comment-plus-clean-signature `1934/6057 = 31.93%`. These are not certification milestones.
-- Live Ghidra backup: `G:\GhidraBackups\BEA_20260516-144540_post_wave455_influencemap_followup_verified`, `19` files, `156765063` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Live Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-144540_post_wave455_influencemap_followup_verified`, `19` files, `156765063` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Remaining Work
 

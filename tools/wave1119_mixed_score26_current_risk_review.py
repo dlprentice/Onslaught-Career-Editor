@@ -49,8 +49,8 @@ FASTVB_DOC_MIRROR = ROOT / "lore-book" / "reverse-engineering" / "binary-analysi
 MATH_DOC = ROOT / "reverse-engineering" / "binary-analysis" / "functions" / "Math.cpp" / "_index.md"
 MATH_DOC_MIRROR = ROOT / "lore-book" / "reverse-engineering" / "binary-analysis" / "functions" / "Math.cpp" / "_index.md"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260605-022812_post_wave1119_mixed_score26_current_risk_review_verified"
-PRIOR_BACKUP = r"G:\GhidraBackups\BEA_20260605-021103_post_wave1118_particle_message_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-022812_post_wave1119_mixed_score26_current_risk_review_verified"
+PRIOR_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-021103_post_wave1118_particle_message_current_risk_review_verified"
 ARTIFACT_COMMIT = "0474d555bb2d5ef1c4d88599e3eaee4aede11c7e"
 
 PRIOR_PROBES = (

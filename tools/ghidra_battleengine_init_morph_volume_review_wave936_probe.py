@@ -23,7 +23,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260528-013432_post_wave936_battleengine_init_morph_volume_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-013432_post_wave936_battleengine_init_morph_volume_review_verified"
 SCRIPT_NAME = "test:ghidra-battleengine-init-morph-volume-review-wave936"
 SCRIPT_VALUE = r"py -3 tools\ghidra_battleengine_init_morph_volume_review_wave936_probe.py --check"
 

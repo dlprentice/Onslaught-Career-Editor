@@ -24,8 +24,8 @@ Static anchors retained for the proof plan:
 - `hud-frontend-overlay-static-contract.md`, Wave1158 `wave1158-hud-render-component-current-risk-review`, Wave1141 CDXCompass/HUD context, and Wave1216 `wave1216-render-resource-texture-hud-tail-current-risk-review`.
 - Wave1141 CDXCompass/HUD context for `HudRenderState__ApplyOverlaySpriteState`, `CDXCompass__ApplyRenderStateModulate`, and `CDXCompass__ApplyRenderStateAdditive`.
 - Wave907 `frontend-input-game-loop-static-review-wave907` context for broader frontend/menu render anchors.
-- Wave1158 evidence: `20` HUD rows, `24` xref rows, `7335` instruction rows, `20` decompile rows, and verified backup `G:\GhidraBackups\BEA_20260606-002152_post_wave1158_hud_render_component_current_risk_review_verified`.
-- Wave1216 HUD/texture context: `7` tail rows, `12` xref rows, `962` instruction rows, `7` decompile rows, and verified backup `G:\GhidraBackups\BEA_20260607-101007_post_wave1216_render_resource_texture_hud_tail_current_risk_review_verified`.
+- Wave1158 evidence: `20` HUD rows, `24` xref rows, `7335` instruction rows, `20` decompile rows, and verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260606-002152_post_wave1158_hud_render_component_current_risk_review_verified`.
+- Wave1216 HUD/texture context: `7` tail rows, `12` xref rows, `962` instruction rows, `7` decompile rows, and verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260607-101007_post_wave1216_render_resource_texture_hud_tail_current_risk_review_verified`.
 - `0x00481400 CHud__ctor_base`.
 - `0x00481450 CHud__Init`.
 - `0x00481650 CHud__LoadTextures`.

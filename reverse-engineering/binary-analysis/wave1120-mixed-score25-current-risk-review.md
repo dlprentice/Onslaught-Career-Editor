@@ -26,8 +26,8 @@ Fresh export evidence:
 - Xrefs: `59` rows.
 - Instructions: `936` rows, `targets=8 missing=0`.
 - Decompile: `8` rows, `targets=8 dumped=8 missing=0 failed=0`.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-025952_post_wave1120_mixed_score25_current_risk_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
-- Previous latest completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-022812_post_wave1119_mixed_score26_current_risk_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-025952_post_wave1120_mixed_score25_current_risk_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
+- Previous latest completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-022812_post_wave1119_mixed_score26_current_risk_review_verified`.
 
 Boundary:
 

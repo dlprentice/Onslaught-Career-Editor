@@ -1,6 +1,6 @@
 # DXFont.cpp - DirectX Font Rendering System
 
-**Source File:** `C:\dev\ONSLAUGHT2\DXFont.cpp`
+**Source File:** `[maintainer-local-source-export-root]\DXFont.cpp`
 **Debug String Address:** `0x00650670`
 **Analysis Date:** December 2025
 
@@ -15,13 +15,13 @@ The class renders text by building vertex buffers with textured quads for each c
 
 ## Wave801 Frontend/Render Helper Read-Back
 
-Wave1005 (`help-text-display-review-wave1005`) re-read `0x00465710 CDXFont__DrawTextDynamic` as the direct HelpTextDisplay render dependency and `0x004659a0 CDXFont__DrawTextScaledWithShadow` as the related Wave801 top-500 text-render dependency. Fresh evidence confirmed `CHelpTextDisplay__RenderQueuedMessages` calls `CDXFont__DrawTextDynamic`, while `CDXFont__DrawTextScaledWithShadow` remains a broad frontend/game/HUD/message/menu helper with 43 xrefs and the same alpha-only `x+1/y+1` shadow draw followed by the foreground draw through `CDXFont__DrawTextScaled`. Verified backup: `G:\GhidraBackups\BEA_20260531-132023_post_wave1005_help_text_display_review_verified`. Runtime text rendering, exact font/layout identity, visible UI output, BEA patching, and rebuild parity remain separate proof.
+Wave1005 (`help-text-display-review-wave1005`) re-read `0x00465710 CDXFont__DrawTextDynamic` as the direct HelpTextDisplay render dependency and `0x004659a0 CDXFont__DrawTextScaledWithShadow` as the related Wave801 top-500 text-render dependency. Fresh evidence confirmed `CHelpTextDisplay__RenderQueuedMessages` calls `CDXFont__DrawTextDynamic`, while `CDXFont__DrawTextScaledWithShadow` remains a broad frontend/game/HUD/message/menu helper with 43 xrefs and the same alpha-only `x+1/y+1` shadow draw followed by the foreground draw through `CDXFont__DrawTextScaled`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-132023_post_wave1005_help_text_display_review_verified`. Runtime text rendering, exact font/layout identity, visible UI output, BEA patching, and rebuild parity remain separate proof.
 
-Wave1147 (`wave1147-frontend-game-shell-score20-current-risk-review`) re-read `0x004659a0 CDXFont__DrawTextScaledWithShadow` in the frontend/game shell score20 current-risk review. Fresh exports kept the saved shadow/foreground `CDXFont__DrawTextScaled` contract static-consistent with no mutation to this row. Verified backup: `G:\GhidraBackups\BEA_20260605-182213_post_wave1147_frontend_game_shell_score20_current_risk_review_verified`.
+Wave1147 (`wave1147-frontend-game-shell-score20-current-risk-review`) re-read `0x004659a0 CDXFont__DrawTextScaledWithShadow` in the frontend/game shell score20 current-risk review. Fresh exports kept the saved shadow/foreground `CDXFont__DrawTextScaled` contract static-consistent with no mutation to this row. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-182213_post_wave1147_frontend_game_shell_score20_current_risk_review_verified`.
 
 Wave801 static read-back (`frontend-render-helpers-wave801`, `wave801-readback-verified`) saved current comments/tags for `0x00465710 CDXFont__DrawTextDynamic`, corrected stale `0x004659a0 CDXEngine__DrawTextScaledWithShadow` to `0x004659a0 CDXFont__DrawTextScaledWithShadow`, and hardened the shadow helper signature as `int __thiscall CDXFont__DrawTextScaledWithShadow(void * this, float x, float y, uint packed_argb, short * text, uint flags, float depth_z, float x_scale, float y_scale)`.
 
-Static read-back shows `CDXFont__DrawTextDynamic` builds capped wide-text/per-character ARGB fade arrays before calling `CDXFont__DrawTextScaled`, and the corrected shadow helper forwards ECX to two `CDXFont__DrawTextScaled` calls: first alpha-only at `x+1/y+1`, then foreground. The same wave also saved `0x00465c10 CDXBitmapFont__BuildGlyphRemapTables` as the bitmap-font remap initializer over `DAT_005db5fc`, `DAT_00679af4`, `DAT_006799f4`, `DAT_006799d4`, and `DAT_005db738`. Verified backup: `G:\GhidraBackups\BEA_20260524-073450_post_wave801_frontend_render_helpers_verified`.
+Static read-back shows `CDXFont__DrawTextDynamic` builds capped wide-text/per-character ARGB fade arrays before calling `CDXFont__DrawTextScaled`, and the corrected shadow helper forwards ECX to two `CDXFont__DrawTextScaled` calls: first alpha-only at `x+1/y+1`, then foreground. The same wave also saved `0x00465c10 CDXBitmapFont__BuildGlyphRemapTables` as the bitmap-font remap initializer over `DAT_005db5fc`, `DAT_00679af4`, `DAT_006799f4`, `DAT_006799d4`, and `DAT_005db738`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-073450_post_wave801_frontend_render_helpers_verified`.
 
 This remains static retail Ghidra metadata only. Exact font class layout, runtime text rendering behavior, BEA patching, and rebuild parity remain deferred.
 
@@ -342,7 +342,7 @@ int CDXFont::GetTextExtent(wchar_t* text, SIZE* outSize);
 | Address | String | Usage |
 |---------|--------|-------|
 | `0x00650664` | `"SystemFont"` | Default texture name for GDI fonts |
-| `0x00650670` | `"C:\dev\ONSLAUGHT2\DXFont.cpp"` | Debug path |
+| `0x00650670` | `"[maintainer-local-source-export-root]\DXFont.cpp"` | Debug path |
 | `0x006251e8` | Character set template | Glyph iteration |
 
 ## Exception Handler

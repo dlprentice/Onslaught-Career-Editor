@@ -31,7 +31,7 @@ The pass saved bounded signatures, comments, and tags. It corrected one stale or
 - Math evidence covers FPU-control-word-aware rounding and the split-double acos core path behind `CRT__AcosClassifyAndDispatch`.
 - Heap evidence covers small-block heap allocation/free paths under lock 9 and fallback `HeapAlloc`/`HeapFree` routing.
 - Stream evidence covers core `fwrite`/`fread` helpers that handle buffered bytes, fd text-mode read/write paths, and EOF/error flags.
-- Backup verified: `G:\GhidraBackups\BEA_20260520-052133_post_wave623_sort_memory_crt_verified` with `19` files, `161909639` bytes, and `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260520-052133_post_wave623_sort_memory_crt_verified` with `19` files, `161909639` bytes, and `DiffCount=0`.
 
 ## Queue Telemetry
 

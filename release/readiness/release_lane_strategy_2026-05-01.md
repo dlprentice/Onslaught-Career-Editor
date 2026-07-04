@@ -4,9 +4,9 @@ Status: historical strategy note, superseded by public-primary source posture
 Last updated: 2026-06-24
 
 This document is retained as public-safe historical release-lane context. It no
-longer defines the active source-repository strategy. Current truth is that
-`C:\Users\david\source\Onslaught-Career-Editor` is the public-primary working
-repo: source, docs, tools, tests, RE notes, state batons, agent reports,
+longer defines the active source-repository strategy. Current truth is that this
+checkout is the public-primary working repo: source, docs, tools, tests, RE
+notes, state batons, agent reports,
 readiness notes, and compact proof summaries belong here when useful. Actual
 game payloads, copied executables, arbitrary saves/options payloads, raw CDB
 logs, screenshots/frame dumps, bulky generated runtime captures, full Ghidra
@@ -25,7 +25,8 @@ an archived comparison/source snapshot, not the normal working repo.
 The current release model remains explicit:
 
 - Player/community deliverables are WinUI-first.
-- The curated source candidate includes reviewed WinUI/AppCore/C# CLI/docs/tooling support and excludes archived app surfaces by default.
+- Package/export accounting includes reviewed WinUI/AppCore/C# CLI/docs/tooling
+  support and excludes archived app surfaces by default.
 - Electron is archived/reference under `archive/electron-workbench/`, not an active product or release lane.
 - Active Python scripts remain RE/tooling/lab support; the old Python GUI/CLI parity app remains archived/reference, not a shipping GUI/product lane.
 - Maintainer-local hard payload workflows stay in ignored overlays and require
@@ -44,7 +45,7 @@ Do not claim signed installer readiness from this strategy. The current evidence
 | WinUI product lane | Players and community modders using the primary Windows desktop app | Reviewed WinUI/AppCore/CLI/docs/tooling source in the public-primary repo; future installer/MSIX deliverables after separate packaging/signing proof. | Bundled game payloads, private `media/**`, private saves, runtime proof captures, raw screenshots, copied executables, raw local proof JSON, agent/operator directives, and unreviewed dependencies/assets. Compact non-secret repo state batons may live in public source, but do not belong in app ZIP/install packages by default. | WinUI/AppCore build/tests, native Media interaction smoke when runtime media posture is in scope, disposable unpackaged publish smoke when packaging posture is in scope, plus public safety/export checks before any public release. | Signed/installer readiness is not proven; unpackaged publish, focused Media interaction, and published-output Media interaction smoke exist, but installer/MSIX/install-uninstall proof remains future work. |
 | Archived Electron workbench lane | Future maintainers inspecting historical Electron/React/TypeScript work | Nothing from this lane ships by default. Narrow ideas may be ported into WinUI/AppCore/tools only after review. | Entire `archive/electron-workbench/**` tree, private runtime proof, generated catalogs with private paths, and old package outputs. | Optional `archive:electron:*` checks only when archive health is deliberately in scope. | It is archived; no active runtime proof is required for product release. |
 | Python script/tooling lane | Maintainers doing RE/tooling/lab work | Script outputs or tools ship only if explicitly reviewed and included by policy. | Python GUI/product work, revived archived Python app outputs, private extraction outputs, private asset paths, scratch data, and unreviewed generated artifacts. | Script-specific validation plus docs/public-safety gates. | Active Python tool inventory and validation commands still need a focused pass. |
-| Public safety/export lane | Reviewers and future public source/bundle consumers | Curated public source candidate from `release/readiness/curated_release_manifest.json`, generated `release/readiness/public_candidate_allowlist.tsv`, release/readiness evidence summaries, bundle/export policy metadata, and public-safe docs/tests/tools allowed by policy. | All hard-deny families, conditional reference corpora until approved, archived/non-shipping surfaces unless explicitly allowed, and any evidence that exposes private local/runtime material. | `py -3 tools\docsync_check.py`, `py -3 tools\release_profile_snapshot.py --check`, `py -3 tools\release_curated_manifest.py --check`, path-aware allowlist scan for deny families, and lane-specific gates for changed surfaces. | The generated allowlist must be refreshed whenever new public release evidence files are added. A clean public clone/archive review is still required before moving to repo-as-release. |
+| Public safety/export lane | Reviewers and future public source/bundle consumers | Package/export accounting from `release/readiness/curated_release_manifest.json`, generated `release/readiness/public_candidate_allowlist.tsv`, release/readiness evidence summaries, bundle/export policy metadata, and public-safe docs/tests/tools allowed by policy. | All hard-deny families, conditional reference corpora until approved, archived/non-shipping surfaces unless explicitly allowed, and any evidence that exposes private local/runtime material. | `py -3 tools\docsync_check.py`, `py -3 tools\release_profile_snapshot.py --check`, `py -3 tools\release_curated_manifest.py --check`, path-aware allowlist scan for deny families, and lane-specific gates for changed surfaces. | The generated allowlist must be refreshed whenever new public release evidence files are added. Clean clone/archive review remains a package/export gate, not a claim that the public-primary repo is sparse. |
 
 ## Option Comparison
 
@@ -89,7 +90,13 @@ The deny policy is family-based because filenames change. Release checks should 
 
 ## How The Release Pieces Fit Together
 
-`release/readiness/curated_release_manifest.json` is the source candidate policy. It names include patterns for the public candidate and exclude patterns for private, volatile, archived, legacy, and ops-sensitive paths. It includes WinUI/AppCore/C# CLI/docs/tooling support and excludes archived app surfaces by default. It already includes the Ralph-loop strategy/evidence report paths as release-readiness summaries, so those files are intended to be public-safe.
+`release/readiness/curated_release_manifest.json` is package/export accounting
+policy. It names include patterns for the generated package/export candidate
+and exclude patterns for private, volatile, archived, legacy, and ops-sensitive
+paths. It includes WinUI/AppCore/C# CLI/docs/tooling support and excludes
+archived app surfaces by default. It already includes the Ralph-loop
+strategy/evidence report paths as release-readiness summaries, so those files
+are intended to be public-safe.
 
 `release/readiness/public_candidate_allowlist.tsv` is generated evidence from the manifest. It is the reviewable file list for package/export candidates, not the definition of what may exist in public-primary source. It must be regenerated by `py -3 tools\release_curated_manifest.py`, not hand-edited. After generation, run `npm run test:public-allowlist`; it scans path-aware for deny families such as `.codex/`, top-level `game/`, top-level `media/`, `save-attempts/`, private proof roots, operator directives, denied binary/save suffixes, private absolute user paths, sandbox attachment paths, and embedded base64 data URLs. Run `npm run test:doc-commands` and `npm run test:repo-hygiene` with it to catch stale documented npm commands, tracked stale evidence placeholders, sandbox attachment links, renderer preview-mode wording regressions, and generated build/test output tracked outside private hard-excluded families.
 
@@ -101,7 +108,8 @@ The deny policy is family-based because filenames change. Release checks should 
 
 The source lane and bundle lane are complementary:
 
-- curated manifest plus generated allowlist controls source candidate contents
+- curated manifest plus generated allowlist controls package/export candidate
+  contents
 - private inventory records what stayed out
 - release profile snapshots catch classification drift
 - archive checks can still prove the archived Electron workbench hydrates if a future archive-health task explicitly requires it
@@ -113,7 +121,7 @@ Use the smallest relevant gate for routine documentation edits, but do not call 
 | Decision | Required checks |
 | --- | --- |
 | Strategy/doc-only update | `git diff --check`; targeted read-through of linked release docs; `py -3 tools\release_curated_manifest.py --check` if manifest/allowlist coverage is affected. |
-| Public source candidate refresh | `py -3 tools\docsync_check.py`; `npm run test:doc-commands`; `npm run test:md-links`; `py -3 tools\release_profile_snapshot.py --check`; `py -3 tools\release_curated_manifest.py --check`; `npm run test:public-allowlist`; `npm run test:repo-hygiene`. |
+| Package/export accounting refresh | `py -3 tools\docsync_check.py`; `npm run test:doc-commands`; `npm run test:md-links`; `py -3 tools\release_profile_snapshot.py --check`; `py -3 tools\release_curated_manifest.py --check`; `npm run test:public-allowlist`; `npm run test:repo-hygiene`. |
 | WinUI product lane health | `dotnet build ".\OnslaughtCareerEditor.WinUI\OnslaughtCareerEditor.WinUI.csproj" --nologo`; `dotnet test ".\OnslaughtCareerEditor.AppCore.Tests\OnslaughtCareerEditor.AppCore.Tests.csproj" --nologo`; `dotnet test ".\OnslaughtCareerEditor.UiTests\OnslaughtCareerEditor.UiTests.csproj" --nologo --filter "FullyQualifiedName!~LegacyWpf"` where applicable. |
 | Archived Electron workbench | Optional `archive:electron:*` checks only when deliberately inspecting archived Electron health. |
 | Temporary parity oracle retention | `dotnet build ".\OnslaughtCareerEditor.Release.slnx" --nologo`; `dotnet test ".\OnslaughtCareerEditor.AppCore.Tests\OnslaughtCareerEditor.AppCore.Tests.csproj" --nologo`; `dotnet test ".\OnslaughtCareerEditor.UiTests\OnslaughtCareerEditor.UiTests.csproj" --nologo`. |

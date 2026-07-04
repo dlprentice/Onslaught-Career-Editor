@@ -31,7 +31,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 TRACKING_STATE = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_tracking_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-233831_post_wave1023_frontend_options_pause_menu_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-233831_post_wave1023_frontend_options_pause_menu_review_verified"
 
 TARGETS = {
     "0x004cdd70": ("GameControllers__RelinquishControlForTarget", "void __fastcall GameControllers__RelinquishControlForTarget(void * controlled_target)", ("Wave479", "CController__RelinquishControl")),

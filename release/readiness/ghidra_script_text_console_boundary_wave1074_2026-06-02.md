@@ -27,7 +27,7 @@ Read-back evidence:
 - Wave911 focused re-audit progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1358/1560 = 87.05%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-052830_post_wave1074_script_text_console_boundary_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-052830_post_wave1074_script_text_console_boundary_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -49,4 +49,4 @@ What remains separate proof:
 
 Next candidate note: continue with read-only review first. The next raw-boundary candidate from Wave1073 remains `0x004dfa47`, but it is mixed CUnit/init-context code and should not be mutated until fresh owner/call-context evidence is strong enough.
 
-Probe token anchor: Wave1074; script-text-console-boundary-wave1074; 0x00537c40 IScript__PrintText; s_PrintText_0064f984; 0x0064d220; 0x0064d250; 0x00537c69; 0x00537c70; CText__GetStringById; CConsole__Printf; %w; 812/1408 = 57.67%; 1358/1560 = 87.05%; 500/500 = 100.00%; 6247/6247 = 100.00%; G:\GhidraBackups\BEA_20260602-052830_post_wave1074_script_text_console_boundary_verified; boundary recovery.
+Probe token anchor: Wave1074; script-text-console-boundary-wave1074; 0x00537c40 IScript__PrintText; s_PrintText_0064f984; 0x0064d220; 0x0064d250; 0x00537c69; 0x00537c70; CText__GetStringById; CConsole__Printf; %w; 812/1408 = 57.67%; 1358/1560 = 87.05%; 500/500 = 100.00%; 6247/6247 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-052830_post_wave1074_script_text_console_boundary_verified; boundary recovery.

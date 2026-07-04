@@ -41,7 +41,7 @@ Stuart's current source snapshot does not contain a matching `LandscapeTexture` 
 - Focused probe passed through npm: `cmd.exe /c npm run test:ghidra-landscape-texture-wave421`.
 - Full static queue refreshed to `6043` functions, `1663` commented functions, `4380` commentless functions, `1861` undefined signatures, and `1817` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1663/6043 = 27.52%`; strict comment-plus-clean-signature `1600/6043 = 26.48%`.
-- Actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260514_153419_post_wave421_landscape_texture_verified` with `19` files, `155159431` bytes, `HashDiffCount=0`, and `MissingCount=0`.
+- Actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260514_153419_post_wave421_landscape_texture_verified` with `19` files, `155159431` bytes, `HashDiffCount=0`, and `MissingCount=0`.
 
 ## Not Proven
 

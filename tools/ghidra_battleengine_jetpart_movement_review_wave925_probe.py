@@ -24,7 +24,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260527-223000_post_wave925_battleengine_jetpart_movement_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260527-223000_post_wave925_battleengine_jetpart_movement_review_verified"
 SCRIPT_NAME = "test:ghidra-battleengine-jetpart-movement-review-wave925"
 SCRIPT_VALUE = r"py -3 tools\ghidra_battleengine_jetpart_movement_review_wave925_probe.py --check"
 

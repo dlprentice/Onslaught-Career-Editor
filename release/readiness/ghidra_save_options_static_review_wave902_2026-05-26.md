@@ -22,7 +22,7 @@ Read-only evidence:
 - Function-anchor export: 32 save/options/career/frontend persistence rows, all comment-backed and signature-clean.
 - Baseline evidence: `subagents/ghidra-static-reaudit/wave902-save-options-static-review/save-options-static-review-baseline.json`.
 - Function anchors: `subagents/ghidra-static-reaudit/wave902-save-options-static-review/save-options-function-anchors.tsv`.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-093817_post_wave902_save_options_static_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-093817_post_wave902_save_options_static_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 
 What this proves:
 

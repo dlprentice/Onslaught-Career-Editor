@@ -46,9 +46,9 @@ PACKAGE_JSON = ROOT / "package.json"
 WAVE579 = ROOT / "subagents" / "ghidra-static-reaudit" / "wave579-iscript-slot-goodie-005338a0"
 WAVE803 = ROOT / "subagents" / "ghidra-static-reaudit" / "wave803-game-slot-helpers"
 
-WAVE1219_BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
-WAVE579_BACKUP = r"G:\GhidraBackups\BEA_20260519-041839_post_wave579_iscript_slot_goodie_verified"
-WAVE803_BACKUP = r"G:\GhidraBackups\BEA_20260524-084656_post_wave803_game_slot_helpers_verified"
+WAVE1219_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+WAVE579_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260519-041839_post_wave579_iscript_slot_goodie_verified"
+WAVE803_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-084656_post_wave803_game_slot_helpers_verified"
 
 SCHEMA_LINK = "missionscript-slot-command-effect.v1.json"
 PROOF_LINK = "missionscript-slot-command-effect-static-proof.md"

@@ -35,7 +35,7 @@ This note records a serialized headless Ghidra dry/apply/read-back pass for the 
 - Read-back exports verified `7` metadata rows plus one missing stale `0x0048ac80` guard, `7` tag rows, `9` xref rows, `1183` instruction rows, `7` decompile exports, and `32` vtable-slot rows across the checked CInfantryGuide and CGroundVehicleGuide vtable contexts.
 - Package wrapper: `cmd.exe /c npm run test:ghidra-infantry-guide-wave417` passed with focused probe status `PASS`.
 - Queue refresh: headless `ExportFunctionQualitySnapshot.java` and `py -3 tools\ghidra_static_reaudit_queue_probe.py --check --json` passed with the `6039`-function telemetry above.
-- Actual Ghidra project backup: copied `BEA.gpr` and `BEA.rep` to `G:\GhidraBackups\BEA_20260514_131457_post_wave417_infantry_guide_verified` and verified `19` files, `154962823` bytes, and `HashDiffCount=0`.
+- Actual Ghidra project backup: copied `BEA.gpr` and `BEA.rep` to `[maintainer-local-ghidra-backup-root]\BEA_20260514_131457_post_wave417_infantry_guide_verified` and verified `19` files, `154962823` bytes, and `HashDiffCount=0`.
 
 ## Not Proven
 

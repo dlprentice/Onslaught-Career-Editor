@@ -31,7 +31,7 @@ Fresh serialized Ghidra exports under `subagents/ghidra-static-reaudit/wave964-c
 Verified Ghidra backup:
 
 ```text
-G:\GhidraBackups\BEA_20260528-141856_post_wave964_cdxtexture_inflate_codes_tree_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260528-141856_post_wave964_cdxtexture_inflate_codes_tree_review_verified
 ```
 
 Backup summary: `19` files, `173542279` bytes, `DiffCount=0`.
@@ -39,7 +39,7 @@ Backup summary: `19` files, `173542279` bytes, `DiffCount=0`.
 Wave911 focused re-audit progress after Wave964: `323/1408 = 22.94%`.
 Static export-contract function-quality closure remains `6152/6152 = 100.00%`.
 
-Probe anchor: Wave964; cdxtexture-inflate-codes-tree-review-wave964; 0x0059c8c1 CDXTexture__InflateStream_ProcessZlibState; 0x0059c9ce CALL 0x005b1e94; 0x005b1e94 CDXTexture__InflateProcessBlockHeader; 0x005bcfd3 CDXTexture__InflateCodesState_Process; 0x005bd53b CDXTexture__BuildInflateHuffmanTable; 0x005bd933 CDXTexture__InflateDynamicTree_BuildLitDistTrees; 0x005be360 CDXTexture__InflateFast_DecodeBlockStream; extraout-eax-gap-resolved; 323/1408 = 22.94%; 6152/6152 = 100.00%; G:\GhidraBackups\BEA_20260528-141856_post_wave964_cdxtexture_inflate_codes_tree_review_verified; comment/tag mutation only.
+Probe anchor: Wave964; cdxtexture-inflate-codes-tree-review-wave964; 0x0059c8c1 CDXTexture__InflateStream_ProcessZlibState; 0x0059c9ce CALL 0x005b1e94; 0x005b1e94 CDXTexture__InflateProcessBlockHeader; 0x005bcfd3 CDXTexture__InflateCodesState_Process; 0x005bd53b CDXTexture__BuildInflateHuffmanTable; 0x005bd933 CDXTexture__InflateDynamicTree_BuildLitDistTrees; 0x005be360 CDXTexture__InflateFast_DecodeBlockStream; extraout-eax-gap-resolved; 323/1408 = 22.94%; 6152/6152 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260528-141856_post_wave964_cdxtexture_inflate_codes_tree_review_verified; comment/tag mutation only.
 
 ## Boundary
 

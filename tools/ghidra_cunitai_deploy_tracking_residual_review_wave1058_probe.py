@@ -34,7 +34,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260601-192010_post_wave1058_cunitai_deploy_tracking_residual_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260601-192010_post_wave1058_cunitai_deploy_tracking_residual_review_verified"
 
 TARGETS = {
     "0x004247a0": ("CGeneralVolume__InitRandomizedVelocityOffsets", "void __thiscall CGeneralVolume__InitRandomizedVelocityOffsets(void * this, int randomRange)"),

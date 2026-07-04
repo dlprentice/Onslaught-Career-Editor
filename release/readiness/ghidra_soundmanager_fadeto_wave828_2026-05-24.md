@@ -27,7 +27,7 @@ Read-back evidence:
 - Post exports: 16 context metadata rows, 16 context tag rows, 134 xref rows, 592 context instruction rows, 16 context decompile rows, and 4 caller decompile rows.
 - Queue after Wave828: `6098` total functions, `5641` commented, `457` commentless, `0` exact-undefined signatures, `0` `param_N` signatures, comment-backed proxy `5641/6098 = 92.51%`, strict clean-signature proxy `5641/6098 = 92.51%`.
 - Next raw commentless row: `0x004eb1e0 CGame__ResetRenderStateForWorldRender`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-210153_post_wave828_soundmanager_fadeto_verified`, 19 files, 171576199 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-210153_post_wave828_soundmanager_fadeto_verified`, 19 files, 171576199 bytes, `DiffCount=0`.
 
 What this proves:
 

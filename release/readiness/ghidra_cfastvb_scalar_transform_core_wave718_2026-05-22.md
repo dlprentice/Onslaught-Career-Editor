@@ -27,6 +27,6 @@ Validation:
 - Post exports verified `17` metadata rows, `17` tag rows, `33` xref rows, `1581` instruction rows, `4505` wide instruction rows, and `17` decompile rows, including the stack-locked anchor `0x005a0f50 CFastVB__EvaluateCubicBasisVec3`.
 - Queue refresh passed: `6098` total, `4214` commented, `1884` commentless, `1216` exact-undefined signatures, `143` `param_N` signatures, strict clean-signature proxy `4157/6098 = 68.17%`.
 - Current raw commentless head remains `0x0042f220 CSPtrSet__Clear`; current high-signal head is `0x005a298f CFastVB__ConvertHalfToFloatArray_SIMD`.
-- Verified backup: `G:\GhidraBackups\BEA_20260522-025058_post_wave718_cfastvb_scalar_transform_core_verified`, `19` files, `166267783` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-025058_post_wave718_cfastvb_scalar_transform_core_verified`, `19` files, `166267783` bytes, `DiffCount=0`.
 
 Scope boundary: this is static saved-Ghidra metadata/decompile/instruction/xref evidence only. Exact dispatch-table slot schema, vector/matrix storage contract, stack-locked cubic helper ABI, source identity, runtime math correctness, BEA patching, and rebuild parity remain deferred.

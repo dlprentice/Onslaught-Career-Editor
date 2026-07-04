@@ -36,7 +36,7 @@ Result:
 - `rawArtifactLeakCount=0`
 - `publicLeakCheck=PASS`
 
-Static context remains unchanged: `6411/6411 = 100.00%`, `0 / 0 / 0`, expanded post-100 static surface `1560/1560 = 100.00%`, active current-risk focused accounting `1179/1179 = 100.00%`, remaining active focused work `0`, latest verified Ghidra backup `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+Static context remains unchanged: `6411/6411 = 100.00%`, `0 / 0 / 0`, expanded post-100 static surface `1560/1560 = 100.00%`, active current-risk focused accounting `1179/1179 = 100.00%`, remaining active focused work `0`, latest verified Ghidra backup `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 Level100 anchors preserved for later retry: `level100`, `LevelScript.msl`, `25` files, `24` extras, `1469` lines, `26` event names, `34` handlers, `41` `PostEvent` callsites, `Destroyed Friendly Building` versus `Friendly Building Destroyed`, `45` `PlayCharMessage*`, `43` message tokens, `6` `AddHelpMessage`, speakers `P_TATIANA`, `P_KRAMER`, and `P_TECHNICIAN`, `68/68` text tokens with `0` missing references, `HUD_BATTLE_LINE_MAP`, `HUD_RADAR`, `18` raw `GetThingRef`, `15` unique object names, `20` `SpawnThing`, `Target Drone`, `Air Trainer`, `Target Tank`, `Target Truck`, `4` `GetSlot`, `4` `SetSlotSave`, `0x00539dc0`, `0x00539ca0`, `this+0x20`, `this+0x124`, and `CDXMemBuffer__InitFromFile`.
 

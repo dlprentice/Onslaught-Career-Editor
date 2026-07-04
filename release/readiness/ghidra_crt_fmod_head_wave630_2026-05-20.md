@@ -21,7 +21,7 @@ The pass saved comments/tags only. It intentionally made no signature, rename, f
 - Post exports: `5` metadata rows, `5` tag rows, `9` xref rows, `505` instruction rows, `5` decompile rows
 - Queue refresh: `6093` total, `3329` commented, `2764` commentless, `1217` exact-undefined signatures, `964` `param_N` signatures
 - Strict clean-signature proxy: `3276/6093 = 53.77%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-084254_post_wave630_crt_fmod_verified` (`19` files, `162204551` bytes, `DiffCount=0`)
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-084254_post_wave630_crt_fmod_verified` (`19` files, `162204551` bytes, `DiffCount=0`)
 
 The next high-signal queue head is `0x00564a0b CDXTexture__LoadFromPathWithFallbackExtensions`.
 

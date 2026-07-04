@@ -34,11 +34,11 @@ Evidence counts:
 - Primary exports: pre/post `11` metadata rows, `11` tag rows, `27` xref rows, `1818` function-body instruction rows, and `11` decompile rows.
 - Context exports: `15` metadata/tag/decompile index rows with one expected missing context function at `0x0046a180`, `321` xref rows, `3472` function-body instruction rows, and `14` dumped context decompile bodies.
 - Vtable export: pre/post `1` vtable anchor and `11` slot rows.
-- Debug string: `0x0063fd4c` -> `C:\dev\ONSLAUGHT2\FEPWingmen.cpp`.
+- Debug string: `0x0063fd4c` -> `[maintainer-local-source-export-root]\FEPWingmen.cpp`.
 - Apply gate: dry reported `updated=0 skipped=11 comment_updated=2 tags_added=51 tags_removed=0 would_remove_tags=1 missing=0 bad=0`; apply reported `updated=11 skipped=0 comment_updated=2 tags_added=51 tags_removed=1 would_remove_tags=0 missing=0 bad=0`; final dry reported `updated=0 skipped=11 comment_updated=0 tags_added=0 tags_removed=0 would_remove_tags=0 missing=0 bad=0`.
 - Queue closure remains `6246/6246 = 100.00%`, with `0` commentless rows, `0` exact-undefined signatures, and `0` `param_N` signatures.
 - Wave911 focused progress remains `744/1408 = 52.84%`; expanded static surface progress advances to `1032/1509 = 68.39%`; top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-150857_post_wave1051_fepwingmen_page_review_verified`, 19 files, 174623623 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-150857_post_wave1051_fepwingmen_page_review_verified`, 19 files, 174623623 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -54,4 +54,4 @@ What remains separate proof:
 - Exact source-body identity because `FEPWingmen.cpp` is absent from `references/Onslaught`.
 - BEA patching behavior and rebuild parity.
 
-Probe token anchor: Wave1051; fepwingmen-page-review-wave1051; 0x00521c80 CFEPWingmen__Update; 0x00521d20 CFEPWingmen__ButtonPressed; 0x00522190 CFEPWingmen__Render; 0x005230e0 CFEPWingmen__FindCurrentLevelRecord; CFEPWingmen__UpdateSpinnerTransformAndPulse; 0x005dba10 CFEPWingmen_vtable; 0x006139a8; NO_FUNCTION_AT_POINTER; C:\dev\ONSLAUGHT2\FEPWingmen.cpp; 744/1408 = 52.84%; 1032/1509 = 68.39%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-150857_post_wave1051_fepwingmen_page_review_verified; comment/tag normalization.
+Probe token anchor: Wave1051; fepwingmen-page-review-wave1051; 0x00521c80 CFEPWingmen__Update; 0x00521d20 CFEPWingmen__ButtonPressed; 0x00522190 CFEPWingmen__Render; 0x005230e0 CFEPWingmen__FindCurrentLevelRecord; CFEPWingmen__UpdateSpinnerTransformAndPulse; 0x005dba10 CFEPWingmen_vtable; 0x006139a8; NO_FUNCTION_AT_POINTER; [maintainer-local-source-export-root]\FEPWingmen.cpp; 744/1408 = 52.84%; 1032/1509 = 68.39%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-150857_post_wave1051_fepwingmen_page_review_verified; comment/tag normalization.

@@ -16,14 +16,14 @@ No function was renamed and no new function boundary was created.
 
 ## Evidence
 
-- Pre-mutation live Ghidra backup was verified at `G:\GhidraBackups\BEA_20260512_090411_actual_ghidra_project_verified` with `19` files, `152210311` bytes, and `DiffCount=0`.
+- Pre-mutation live Ghidra backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260512_090411_actual_ghidra_project_verified` with `19` files, `152210311` bytes, and `DiffCount=0`.
 - `ApplyComponentBasedCopySignatureTranche.java` dry run reported the planned one-target signature change with `renamed=0`, `missing=0`, and `bad=0`.
 - `ApplyComponentBasedCopySignatureTranche.java` apply reported `updated=1`, `renamed=0`, `missing=0`, and `bad=0`, with `REPORT: Save succeeded`.
 - Final read-back verified `1/1` metadata row, `1/1` decompile export, `4` xref rows, `805` instruction rows, and `1/1` tag row.
 - Caller decompile read-back for `CComponentBasedOn__VFunc_01_0043db90` now shows the two call sites passing only `this_00` plus `sourceComponent` or null; the stale third argument is gone from the caller view.
 - `cmd.exe /c npm run test:ghidra-component-based-copy-signature` passed against the saved read-back artifacts.
 - The refreshed whole-database queue reports `5904` functions, `928` commented functions, `4976` commentless functions, `1981` undefined signatures, and `2186` `param_N` signatures.
-- The post-mutation live Ghidra backup was verified at `G:\GhidraBackups\BEA_20260512_091719_post_wave335_verified` with `19` files, `152210311` bytes, and `DiffCount=0`.
+- The post-mutation live Ghidra backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260512_091719_post_wave335_verified` with `19` files, `152210311` bytes, and `DiffCount=0`.
 
 ## Claim Boundary
 

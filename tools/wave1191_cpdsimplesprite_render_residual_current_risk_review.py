@@ -30,7 +30,7 @@ PACKAGE_JSON = ROOT / "package.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 APPLY_SCRIPT = ROOT / "tools" / "ApplyCPDSimpleSpriteRenderResidualCurrentRiskWave1191.java"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-175052_post_wave1191_cpdsimplesprite_render_residual_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-175052_post_wave1191_cpdsimplesprite_render_residual_current_risk_review_verified"
 
 TARGETS = {
     "0x004c0940": (

@@ -253,7 +253,7 @@ def check_xrefs_and_instructions(failures: list[str]) -> None:
 
 def check_backup_and_queue(failures: list[str]) -> None:
     backup = read_json(BACKUP_SUMMARY)
-    if backup.get("BackupPath") != "G:\\GhidraBackups\\BEA_20260519-204906_post_wave606_dxmembuffer_io_verified":
+    if backup.get("BackupPath") != "[maintainer-local-ghidra-backup-root]\\BEA_20260519-204906_post_wave606_dxmembuffer_io_verified":
         failures.append(f"backup path mismatch: {backup.get('BackupPath')}")
     expected_backup = {"FileCount": 19, "TotalBytes": 161352583, "MissingCount": 0, "ExtraCount": 0, "DiffCount": 0}
     for key, expected_value in expected_backup.items():
@@ -319,7 +319,7 @@ def check_docs_and_logs(failures: list[str]) -> None:
         "1305",
         "exact-undefined",
         "1071",
-        "G:\\GhidraBackups\\BEA_20260519-204906_post_wave606_dxmembuffer_io_verified",
+        "[maintainer-local-ghidra-backup-root]\\BEA_20260519-204906_post_wave606_dxmembuffer_io_verified",
     )
     for label, text in {
         "public note": public_note,

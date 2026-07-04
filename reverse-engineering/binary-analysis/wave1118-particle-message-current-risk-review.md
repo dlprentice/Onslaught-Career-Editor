@@ -31,8 +31,8 @@ Fresh export evidence:
 - Xrefs: `34` rows.
 - Instructions: `1521` rows, `targets=13 missing=0`.
 - Decompile: `13` rows, `targets=13 dumped=13 missing=0 failed=0`.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-021103_post_wave1118_particle_message_current_risk_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
-- Previous latest completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-014214_post_wave1117_cengine_current_risk_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-021103_post_wave1118_particle_message_current_risk_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
+- Previous latest completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-014214_post_wave1117_cengine_current_risk_review_verified`.
 
 Boundary:
 

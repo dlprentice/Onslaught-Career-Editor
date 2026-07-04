@@ -36,7 +36,7 @@ DEVELOPER_STATE = ROOT / "developer_agent_state.json"
 DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-053028_post_wave1210_waypoint_wingman_lifecycle_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-053028_post_wave1210_waypoint_wingman_lifecycle_current_risk_review_verified"
 
 TARGETS = {
     "0x004bfd60": (

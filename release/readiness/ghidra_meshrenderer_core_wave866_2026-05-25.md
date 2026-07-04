@@ -21,7 +21,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 1 xref row, 2093 instruction rows, and 1 decompile row.
 - Queue after Wave866: 6105 total, 5820 commented, 285 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5820/6105 = 95.33%`, strict clean-signature proxy `5820/6105 = 95.33%`.
 - Next raw commentless row: `0x005501d0 CVBufTexture__GetVertexWriteCursorPlusOne`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-162911_post_wave866_meshrenderer_core_verified`, 19 files, 172329863 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-162911_post_wave866_meshrenderer_core_verified`, 19 files, 172329863 bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -35,7 +35,7 @@ The old `0x00458100` function object is intentionally absent after the boundary 
 | `cmd.exe /c npm run test:ghidra-fepdevelopment-wave384` | PASS; focused probe status `PASS`, `9` targets, `1` boundary guard, `7` callsite evidence hits, and `13` instruction evidence hits. |
 | `py -3 -m py_compile tools\ghidra_fepdevelopment_wave384_probe.py tools\ghidra_fepdevelopment_wave384_probe_test.py` | PASS after serial rerun; the first compile overlapped an importer/cache write and hit a transient `__pycache__` access denial. |
 | `cmd.exe /c npm run test:ghidra-static-reaudit-queue` | PASS after refreshing `ExportFunctionQualitySnapshot.java`; `6027` total functions, `1423` commented functions, `4604` commentless functions, `1935` undefined signatures, and `1917` `param_N` signatures. |
-| Live Ghidra project backup | PASS; `G:\GhidraBackups\BEA_20260513_175250_post_wave384_fepdevelopment_verified`, `19` files, `153783175` bytes, `HashDiffCount=0`. |
+| Live Ghidra project backup | PASS; `[maintainer-local-ghidra-backup-root]\BEA_20260513_175250_post_wave384_fepdevelopment_verified`, `19` files, `153783175` bytes, `HashDiffCount=0`. |
 
 Current confirmation proxies are telemetry only: comment-backed `1423/6027 = 23.61%`, strict clean-signature `1361/6027 = 22.58%`. They are not milestones and do not mark the RE campaign complete.
 

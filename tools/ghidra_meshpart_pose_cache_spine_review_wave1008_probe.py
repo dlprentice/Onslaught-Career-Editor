@@ -26,7 +26,7 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-150639_post_wave1008_meshpart_pose_cache_spine_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-150639_post_wave1008_meshpart_pose_cache_spine_review_verified"
 
 TARGETS = {
     "0x004b4ba0": (

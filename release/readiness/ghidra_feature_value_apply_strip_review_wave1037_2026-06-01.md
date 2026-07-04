@@ -26,7 +26,7 @@ Evidence counts:
 - Wave911 focused re-audit progress after Wave1037: `692/1408 = 49.15%`.
 - Expanded static surface progress after Wave1037: `921/1493 = 61.69%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-072938_post_wave1037_feature_value_apply_strip_review_verified`, `19` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-072938_post_wave1037_feature_value_apply_strip_review_verified`, `19` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -42,4 +42,4 @@ What remains unproven:
 - Exact source-body identity and local variable names/types.
 - BEA patch behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1037; feature-value-apply-strip-review-wave1037; 0x0043bb30 CFeatureScalar18__ApplyToFeatureByName; 0x0043bc80 CFeatureFlag10__ApplyToFeatureByName; 0x0043c010 CFeatureTexture__ApplyToFeatureByName; DAT_00855404; 692/1408 = 49.15%; 921/1493 = 61.69%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-072938_post_wave1037_feature_value_apply_strip_review_verified; no mutation.
+Probe token anchor: Wave1037; feature-value-apply-strip-review-wave1037; 0x0043bb30 CFeatureScalar18__ApplyToFeatureByName; 0x0043bc80 CFeatureFlag10__ApplyToFeatureByName; 0x0043c010 CFeatureTexture__ApplyToFeatureByName; DAT_00855404; 692/1408 = 49.15%; 921/1493 = 61.69%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-072938_post_wave1037_feature_value_apply_strip_review_verified; no mutation.

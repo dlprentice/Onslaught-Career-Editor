@@ -32,7 +32,7 @@ Read-back evidence:
 - Queue after Wave888: 6113 total, 6052 commented, 61 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed and strict clean-signature proxy `6052/6113 = 99.00%`.
 - Next raw commentless row: `0x00579a9a CVertexShader__CompileScriptWithDirectiveParser`.
 - Commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-033426_post_wave888_texture_transform_dispatch_tail_verified`, 19 files, 173116295 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-033426_post_wave888_texture_transform_dispatch_tail_verified`, 19 files, 173116295 bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -27,7 +27,7 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-111618_post_wave1181_cfastvb_residual_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-111618_post_wave1181_cfastvb_residual_current_risk_review_verified"
 
 TARGETS = {
     "0x00575dc9": ("CFastVB__HermiteInterpolateVec3", "int CFastVB__HermiteInterpolateVec3(void)"),

@@ -27,7 +27,7 @@ Read-back evidence:
 - Queue after Wave810: `6098` total functions, `5585` commented, `513` commentless, `0` exact-undefined signatures, `0` `param_N` signatures, comment-backed proxy `5585/6098 = 91.59%`, strict comment-plus-clean-signature proxy `5585/6098 = 91.59%`.
 - Next raw commentless row: `0x0049c2d0 CMeshPart__HasAnimationToken_623074`.
 - Commentless high-signal, signature, and name-confidence queues are empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-123030_post_wave810_cmcmech_bone_recursive_verified`, `19` files, `171314055` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-123030_post_wave810_cmcmech_bone_recursive_verified`, `19` files, `171314055` bytes, `DiffCount=0`.
 
 What this proves:
 

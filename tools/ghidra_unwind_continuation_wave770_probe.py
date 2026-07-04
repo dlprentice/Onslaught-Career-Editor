@@ -32,7 +32,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260523-180835_post_wave770_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260523-180835_post_wave770_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d5532": "0x0061ddc4",
@@ -74,11 +74,11 @@ COMMON_TAGS = {
 }
 
 STRING_EXPECTATIONS = {
-    "string-00633b6c.tsv": r"C:\dev\ONSLAUGHT2\Unit.cpp",
-    "string-00633d5c.tsv": r"C:\dev\ONSLAUGHT2\vbuftexture.cpp",
-    "string-0063cf78.tsv": r"C:\dev\ONSLAUGHT2\VertexShader.cpp",
-    "string-0063d12c.tsv": r"C:\dev\ONSLAUGHT2\Warspite.cpp",
-    "string-0063d170.tsv": r"C:\dev\ONSLAUGHT2\WarspiteDome.cpp",
+    "string-00633b6c.tsv": r"[maintainer-local-source-export-root]\Unit.cpp",
+    "string-00633d5c.tsv": r"[maintainer-local-source-export-root]\vbuftexture.cpp",
+    "string-0063cf78.tsv": r"[maintainer-local-source-export-root]\VertexShader.cpp",
+    "string-0063d12c.tsv": r"[maintainer-local-source-export-root]\Warspite.cpp",
+    "string-0063d170.tsv": r"[maintainer-local-source-export-root]\WarspiteDome.cpp",
 }
 
 COMMENT_TOKENS = {

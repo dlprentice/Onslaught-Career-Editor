@@ -13,10 +13,11 @@ This file preserves the exact active thread goal in the private repository so fu
   its `no Cursor/Composer unless explicitly reauthorized` clause has been
   superseded by explicit operator reauthorization on 2026-06-23. Current consult
   rules live in private `AGENTS.md`, `goal.policy.md`, and mutable `goal.md`:
-  required normal/adversarial Codex, Grok, Grok Composer, Opus, and Gemini
+  required normal/adversarial Codex, Cursor `composer-2.5-fast`, and Grok Build
   consult coverage for meaningful planning, UI/UX, copy, release-readiness,
   repo-tidiness, collaboration, and broad/risky work when safe, available, and
-  sanitizable.
+  sanitizable. Gemini, Opus, and Grok Composer are not available for the current
+  wave and must not be required.
 
 ## Verbatim Objective
 

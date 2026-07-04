@@ -20,13 +20,13 @@ Context anchors:
 - Save flow: `0x00464c50 CFEPSaveGame__CreateSave` enumerates existing saves, serializes `CAREER`, writes through `PCPlatform__WriteSaveFile`, and can call `0x00514ec0 PCPlatform__DeleteSaveFile`.
 - Directory flow: `0x0051ac40 CFEPDirectory__Process` reaches `0x00514ec0 PCPlatform__DeleteSaveFile` after confirmation; `0x0051ae70 CFEPDirectory__RenderSaveFileList` is shared with `0x00521100 CFEPVirtualKeyboard__Render`.
 - Vtable snapshots: `0x005db920` covers FEPSaveGame init/process/button/render/transition slots, `0x005db948` covers FEPLoadGame init/process/button/render/transition slots, and `0x005db800` covers CFEPDirectory init/shutdown/process/button/render slots.
-- Debug strings: `0x00629a78` is `C:\dev\ONSLAUGHT2\FEPSaveGame.cpp`; `0x0063fb4c` is `C:\dev\ONSLAUGHT2\FEPDirectory.cpp`.
+- Debug strings: `0x00629a78` is `[maintainer-local-source-export-root]\FEPSaveGame.cpp`; `0x0063fb4c` is `[maintainer-local-source-export-root]\FEPDirectory.cpp`.
 
 Read-back evidence:
 
 - Exports: 30 metadata rows, 30 tag rows, 76 xref rows, 2994 instruction rows, 30 decompile rows, and 36 vtable rows.
 - String dumps: `0x00629a78` and `0x0063fb4c`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-100717_post_wave954_save_load_directory_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-100717_post_wave954_save_load_directory_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
 - Static function-quality closure remains `6151/6151 = 100.00%`.
 - Wave911 focused re-audit progress after Wave954 is `283/1408 = 20.10%`.
 

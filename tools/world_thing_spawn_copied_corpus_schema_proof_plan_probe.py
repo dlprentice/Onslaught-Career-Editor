@@ -29,7 +29,7 @@ PACKAGE_JSON = ROOT / "package.json"
 
 SCHEMA_LINK = "world-thing-spawn-copied-corpus-schema-proof-plan.md"
 WORLD_LINK = "world-thing-spawn-object-reference-proof-plan.md"
-BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 
 STATIC_TOKENS = (
     "6411/6411 = 100.00%",

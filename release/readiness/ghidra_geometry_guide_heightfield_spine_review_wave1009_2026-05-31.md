@@ -42,7 +42,7 @@ Read-back evidence:
 - Final exports: 15 metadata rows, 15 tag rows, 137 xref rows, 2569 body-instruction rows, and 15 decompile rows.
 - Queue closure after refresh: `6233/6233 = 100.00%`, with 0 commentless functions, 0 exact-undefined signatures, and 0 `param_N` signatures.
 - Re-audit progress after Wave1009: Wave911 focused `499/1408 = 35.44%`; expanded static surface `694/1488 = 46.64%`; Wave911 top-500 risk-ranked `403/500 = 80.60%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-155648_post_wave1009_geometry_guide_heightfield_spine_review_verified`, 19 files, 173935495 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-155648_post_wave1009_geometry_guide_heightfield_spine_review_verified`, 19 files, 173935495 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

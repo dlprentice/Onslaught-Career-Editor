@@ -36,7 +36,7 @@ void CCareer::Update(void);
 
 ## Wave1049 Re-Audit
 
-Wave1049 (`endlevel-objective-progression-review-wave1049`) re-read `CCareer__Update` as context for the end-level objective/progression bridge with no mutation. Fresh evidence keeps `CCareer__Update` calling `CCareer__ReCalcLinks` after won-level updates and keeps the world-500 slot branch connected to `CGame__SetSlot`, `IScript__SetSlotSave`, and `IScript__GetSlotBitValue` context. Verified backup: `G:\GhidraBackups\BEA_20260601-134936_post_wave1049_endlevel_objective_progression_review_verified`. Runtime progression/save outcome behavior, concrete Career/CGame layout identity, BEA patching, gameplay outcomes, and rebuild parity remain separate proof.
+Wave1049 (`endlevel-objective-progression-review-wave1049`) re-read `CCareer__Update` as context for the end-level objective/progression bridge with no mutation. Fresh evidence keeps `CCareer__Update` calling `CCareer__ReCalcLinks` after won-level updates and keeps the world-500 slot branch connected to `CGame__SetSlot`, `IScript__SetSlotSave`, and `IScript__GetSlotBitValue` context. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-134936_post_wave1049_endlevel_objective_progression_review_verified`. Runtime progression/save outcome behavior, concrete Career/CGame layout identity, BEA patching, gameplay outcomes, and rebuild parity remain separate proof.
 
 ## Related Functions
 - [CCareer__ReCalcLinks](CCareer__ReCalcLinks.md) - Update link completion/broken state

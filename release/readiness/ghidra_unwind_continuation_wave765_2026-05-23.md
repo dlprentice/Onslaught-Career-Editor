@@ -30,7 +30,7 @@ Read-back evidence:
 - Queue after Wave765: 6098 total, 4987 commented, 1111 commentless, 588 exact-undefined signatures, 27 `param_N`, comment-backed proxy `4987/6098 = 81.78%`, strict clean-signature proxy `4929/6098 = 80.83%`.
 - Earliest raw commentless row remains `0x0042f220 CSPtrSet__Clear`.
 - Next commentless high-signal row is `0x005d4bf0 Unwind@005d4bf0`.
-- Verified backup: `G:\GhidraBackups\BEA_20260523-155528_post_wave765_unwind_continuation_verified`, 19 files, 169315207 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260523-155528_post_wave765_unwind_continuation_verified`, 19 files, 169315207 bytes, `DiffCount=0`.
 
 What this proves:
 

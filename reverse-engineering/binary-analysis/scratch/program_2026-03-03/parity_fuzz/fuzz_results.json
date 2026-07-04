@@ -151,8 +151,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "gineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_000.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Invert Y (Flight) (P1): Off\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_000.py.out\n  Patched: Career settings, Keybind overrides (2 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "gineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_000.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Invert Y (Flight) (P1): Off\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_000.py.out\n  Patched: Career settings, Keybind overrides (2 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
     },
     {
       "case": "case_001",
@@ -181,7 +181,7 @@
         "--controller-config-p2",
         "2",
         "--copy-options-from",
-        "/mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes",
+        "[maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes",
         "--no-copy-options-entries",
         "--bind-zoom-in",
         "MouseRight",
@@ -190,7 +190,7 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: keybind override: Unrecognized key 'MouseRight'. Examples: A, Num7, Up, Tab, Space, CapsLock, RShift, RControl, '-', '='.\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
       "py_stdout_tail": ""
     },
     {
@@ -211,7 +211,7 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: keybind override: MouseRight is only supported for Select weapon (entry 0x14).\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
       "py_stdout_tail": ""
     },
     {
@@ -237,8 +237,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "ogram_2026-03-03/parity_fuzz/case_003.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Music volume:   0.606\n  Vibration (P1): Off\n  Ctrl cfg (P1):  2\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_003.py.out\n  Patched: Career settings, Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "ogram_2026-03-03/parity_fuzz/case_003.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Music volume:   0.606\n  Vibration (P1): Off\n  Ctrl cfg (P1):  2\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_003.py.out\n  Patched: Career settings, Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
     },
     {
       "case": "case_004",
@@ -264,8 +264,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "s:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Per-category kills:\n    Aircraft:     5270\n    Vehicles:     645\n    Emplacements: 495\n    Infantry:     8846\n    Mechs:        9829\n  Sound volume:   0.437\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_004.py.out\n  Patched: Nodes (C-rank), Links, Goodies (OLD), Kills (custom per-category), Career settings\n  Kill counts (default: 100):\n    Aircraft: 5270 *\n    Vehicles: 645 *\n    Emplacements: 495 *\n    Infantry: 8846 *\n    Mechs: 9829 *\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "s:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Per-category kills:\n    Aircraft:     5270\n    Vehicles:     645\n    Emplacements: 495\n    Infantry:     8846\n    Mechs:        9829\n  Sound volume:   0.437\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_004.py.out\n  Patched: Nodes (C-rank), Links, Goodies (OLD), Kills (custom per-category), Career settings\n  Kill counts (default: 100):\n    Aircraft: 5270 *\n    Vehicles: 645 *\n    Emplacements: 495 *\n    Infantry: 8846 *\n    Mechs: 9829 *\n"
     },
     {
       "case": "case_005",
@@ -291,7 +291,7 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: keybind override: Unrecognized key 'MouseWheelUp'. Examples: A, Num7, Up, Tab, Space, CapsLock, RShift, RControl, '-', '='.\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
       "py_stdout_tail": ""
     },
     {
@@ -321,8 +321,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "ation:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Sound volume:   0.560\n  Music volume:   0.149\n  Invert Y (Walker) (P2): Off\n  Vibration (P1): On\n  Vibration (P2): On\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_006.py.out\n  Patched: Career settings, Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "ation:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Sound volume:   0.560\n  Music volume:   0.149\n  Invert Y (Walker) (P2): Off\n  Vibration (P1): On\n  Vibration (P2): On\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_006.py.out\n  Patched: Career settings, Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
     },
     {
       "case": "case_007",
@@ -338,7 +338,7 @@
         "--invert-flight-p1",
         "on",
         "--copy-options-from",
-        "/mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes",
+        "[maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes",
         "--no-copy-options-tail",
         "--bind-select-weapon",
         "RControl",
@@ -350,7 +350,7 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: keybind override: Unrecognized key 'MouseWheelUp'. Examples: A, Num7, Up, Tab, Space, CapsLock, RShift, RControl, '-', '='.\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
       "py_stdout_tail": ""
     },
     {
@@ -388,7 +388,7 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: keybind override: Unrecognized key 'MouseRight'. Examples: A, Num7, Up, Tab, Space, CapsLock, RShift, RControl, '-', '='.\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
       "py_stdout_tail": ""
     },
     {
@@ -405,8 +405,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "te/game/defaultoptions.bea\nOutput: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_009.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_009.py.out\n  WARNING: No sections selected for patching!\n  Skipped: Nodes, Links, Goodies, Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "te/game/defaultoptions.bea\nOutput: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_009.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_009.py.out\n  WARNING: No sections selected for patching!\n  Skipped: Nodes, Links, Goodies, Kills\n"
     },
     {
       "case": "case_010",
@@ -440,7 +440,7 @@
         "--controller-config-p2",
         "1",
         "--copy-options-from",
-        "/mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes",
+        "[maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes",
         "--no-copy-options-entries",
         "--bind-move-forward",
         "LShift",
@@ -455,7 +455,7 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: keybind override: Unrecognized key 'MouseWheelDown'. Examples: A, Num7, Up, Tab, Space, CapsLock, RShift, RControl, '-', '='.\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
       "py_stdout_tail": ""
     },
     {
@@ -478,8 +478,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_011.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    No\n  Sound volume:   0.205\n  Invert Y (Walker) (P2): On\n  Invert Y (Flight) (P2): Off\n  Vibration (P1): On\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_011.py.out\n  Patched: Links, Goodies (OLD), Career settings\n  Skipped: Nodes, Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_011.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    No\n  Sound volume:   0.205\n  Invert Y (Walker) (P2): On\n  Invert Y (Flight) (P2): Off\n  Vibration (P1): On\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_011.py.out\n  Patched: Links, Goodies (OLD), Career settings\n  Skipped: Nodes, Kills\n"
     },
     {
       "case": "case_012",
@@ -507,8 +507,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "3/parity_fuzz/case_012.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Invert Y (Flight) (P1): On\n  Invert Y (Flight) (P2): Off\n  Vibration (P1): Off\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_012.py.out\n  Patched: Career settings, Keybind overrides (2 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "3/parity_fuzz/case_012.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Invert Y (Flight) (P1): On\n  Invert Y (Flight) (P2): Off\n  Vibration (P1): Off\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_012.py.out\n  Patched: Career settings, Keybind overrides (2 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
     },
     {
       "case": "case_013",
@@ -527,7 +527,7 @@
         "--controller-config-p1",
         "3",
         "--copy-options-from",
-        "/mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes",
+        "[maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes",
         "--no-copy-options-tail",
         "--no-copy-options-entries",
         "--bind-fire-weapon",
@@ -543,7 +543,7 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: keybind override: Unrecognized key 'MouseWheelDown'. Examples: A, Num7, Up, Tab, Space, CapsLock, RShift, RControl, '-', '='.\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
       "py_stdout_tail": ""
     },
     {
@@ -564,8 +564,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "ering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_014.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     5684\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    Yes\n  Ctrl cfg (P1):  1\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_014.py.out\n  Patched: Kills (5684 each), Career settings, Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "ering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_014.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     5684\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    Yes\n  Ctrl cfg (P1):  1\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_014.py.out\n  Patched: Kills (5684 each), Career settings, Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies\n"
     },
     {
       "case": "case_015",
@@ -590,7 +590,7 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: keybind override: Unrecognized key 'MouseWheelDown'. Examples: A, Num7, Up, Tab, Space, CapsLock, RShift, RControl, '-', '='.\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
       "py_stdout_tail": ""
     },
     {
@@ -620,8 +620,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "-category kills:\n    Aircraft:     8481\n    Vehicles:     3007\n    Emplacements: 6599\n    Infantry:     4368\n    Mechs:        9736\n  Music volume:   0.177\n  Invert Y (Walker) (P1): Off\n  Invert Y (Flight) (P1): Off\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_016.py.out\n  Patched: Kills (custom per-category), Career settings\n  Skipped: Nodes, Links, Goodies\n  Kill counts (default: 100):\n    Aircraft: 8481 *\n    Vehicles: 3007 *\n    Emplacements: 6599 *\n    Infantry: 4368 *\n    Mechs: 9736 *\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "-category kills:\n    Aircraft:     8481\n    Vehicles:     3007\n    Emplacements: 6599\n    Infantry:     4368\n    Mechs:        9736\n  Music volume:   0.177\n  Invert Y (Walker) (P1): Off\n  Invert Y (Flight) (P1): Off\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_016.py.out\n  Patched: Kills (custom per-category), Career settings\n  Skipped: Nodes, Links, Goodies\n  Kill counts (default: 100):\n    Aircraft: 8481 *\n    Vehicles: 3007 *\n    Emplacements: 6599 *\n    Infantry: 4368 *\n    Mechs: 9736 *\n"
     },
     {
       "case": "case_017",
@@ -651,8 +651,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "Yes\n  Per-category kills:\n    Aircraft:     7905\n    Vehicles:     8893\n    Emplacements: 3068\n    Infantry:     7854\n    Mechs:        4522\n  Sound volume:   0.164\n  Music volume:   0.860\n  Vibration (P2): Off\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_017.py.out\n  Patched: Nodes (S-rank), Links, Goodies (OLD), Kills (custom per-category), Career settings\n  Kill counts (default: 100):\n    Aircraft: 7905 *\n    Vehicles: 8893 *\n    Emplacements: 3068 *\n    Infantry: 7854 *\n    Mechs: 4522 *\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "Yes\n  Per-category kills:\n    Aircraft:     7905\n    Vehicles:     8893\n    Emplacements: 3068\n    Infantry:     7854\n    Mechs:        4522\n  Sound volume:   0.164\n  Music volume:   0.860\n  Vibration (P2): Off\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_017.py.out\n  Patched: Nodes (S-rank), Links, Goodies (OLD), Kills (custom per-category), Career settings\n  Kill counts (default: 100):\n    Aircraft: 7905 *\n    Vehicles: 8893 *\n    Emplacements: 3068 *\n    Infantry: 7854 *\n    Mechs: 4522 *\n"
     },
     {
       "case": "case_018",
@@ -679,8 +679,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "8.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Invert Y (Walker) (P2): Off\n  Invert Y (Flight) (P1): On\n  Vibration (P1): On\n  Vibration (P2): Off\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_018.py.out\n  Patched: Career settings, Keybind overrides (2 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "8.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Invert Y (Walker) (P2): Off\n  Invert Y (Flight) (P1): On\n  Vibration (P1): On\n  Vibration (P2): Off\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_018.py.out\n  Patched: Career settings, Keybind overrides (2 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
     },
     {
       "case": "case_019",
@@ -711,8 +711,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "     8003\n    Vehicles:     8551\n    Emplacements: 826\n    Infantry:     3279\n    Mechs:        1108\n  Music volume:   0.501\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_019.py.out\n  Patched: Kills (custom per-category), Career settings, Keybind overrides (2 entries)\n  Skipped: Nodes, Links, Goodies\n  Kill counts (default: 100):\n    Aircraft: 8003 *\n    Vehicles: 8551 *\n    Emplacements: 826 *\n    Infantry: 3279 *\n    Mechs: 1108 *\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "     8003\n    Vehicles:     8551\n    Emplacements: 826\n    Infantry:     3279\n    Mechs:        1108\n  Music volume:   0.501\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_019.py.out\n  Patched: Kills (custom per-category), Career settings, Keybind overrides (2 entries)\n  Skipped: Nodes, Links, Goodies\n  Kill counts (default: 100):\n    Aircraft: 8003 *\n    Vehicles: 8551 *\n    Emplacements: 826 *\n    Infantry: 3279 *\n    Mechs: 1108 *\n"
     },
     {
       "case": "case_020",
@@ -737,8 +737,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "inks:    No\n  Patch goodies:  No\n  Patch kills:    Yes\n  Per-category kills:\n    Aircraft:     2804\n    Vehicles:     1585\n    Emplacements: 8676\n    Infantry:     2302\n    Mechs:        5942\n  Music volume:   0.076\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_020.py.out\n  Patched: Kills (custom per-category), Career settings\n  Skipped: Nodes, Links, Goodies\n  Kill counts (default: 100):\n    Aircraft: 2804 *\n    Vehicles: 1585 *\n    Emplacements: 8676 *\n    Infantry: 2302 *\n    Mechs: 5942 *\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "inks:    No\n  Patch goodies:  No\n  Patch kills:    Yes\n  Per-category kills:\n    Aircraft:     2804\n    Vehicles:     1585\n    Emplacements: 8676\n    Infantry:     2302\n    Mechs:        5942\n  Music volume:   0.076\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_020.py.out\n  Patched: Kills (custom per-category), Career settings\n  Skipped: Nodes, Links, Goodies\n  Kill counts (default: 100):\n    Aircraft: 2804 *\n    Vehicles: 1585 *\n    Emplacements: 8676 *\n    Infantry: 2302 *\n    Mechs: 5942 *\n"
     },
     {
       "case": "case_021",
@@ -761,8 +761,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "sis/scratch/program_2026-03-03/parity_fuzz/case_021.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Invert Y (Walker) (P1): Off\n  Vibration (P2): Off\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_021.py.out\n  Patched: Career settings, Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "sis/scratch/program_2026-03-03/parity_fuzz/case_021.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Invert Y (Walker) (P1): Off\n  Vibration (P2): Off\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_021.py.out\n  Patched: Career settings, Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
     },
     {
       "case": "case_022",
@@ -781,8 +781,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_022.py.out\n\nConfiguration:\n  Rank:           NONE\n  Kill count:     9166\n  Goodies style:  OLD (blue)\n  Patch nodes:    Yes\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_022.py.out\n  Patched: Nodes (NONE-rank), Links, Goodies (OLD), Kills (9166 each), Keybind overrides (2 entries)\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_022.py.out\n\nConfiguration:\n  Rank:           NONE\n  Kill count:     9166\n  Goodies style:  OLD (blue)\n  Patch nodes:    Yes\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_022.py.out\n  Patched: Nodes (NONE-rank), Links, Goodies (OLD), Kills (9166 each), Keybind overrides (2 entries)\n"
     },
     {
       "case": "case_023",
@@ -804,8 +804,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "t-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_023.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     1974\n  Goodies style:  OLD (blue)\n  Patch nodes:    Yes\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Level overrides: 2 levels\n  Invert Y (Walker) (P2): On\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_023.py.out\n  Patched: Nodes (S + 2 overrides), Links, Goodies (OLD), Kills (1974 each), Career settings\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "t-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_023.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     1974\n  Goodies style:  OLD (blue)\n  Patch nodes:    Yes\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Level overrides: 2 levels\n  Invert Y (Walker) (P2): On\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_023.py.out\n  Patched: Nodes (S + 2 overrides), Links, Goodies (OLD), Kills (1974 each), Career settings\n"
     },
     {
       "case": "case_024",
@@ -822,7 +822,7 @@
         "--invert-flight-p2",
         "off",
         "--copy-options-from",
-        "/mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes",
+        "[maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes",
         "--no-copy-options-tail",
         "--no-copy-options-entries",
         "--bind-move-forward",
@@ -832,8 +832,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: --copy-options-from was provided, but both --no-copy-options-entries and --no-copy-options-tail were set (nothing to copy).\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "Onslaught Career Editor - CLI Mode\n===================================\nInput:  /mnt/c/users/david/source/onslaught-career-editor-private/game/defaultoptions.bea\nOutput: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_024.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Invert Y (Walker) (P2): Off\n  Invert Y (Flight) (P2): Off\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "Onslaught Career Editor - CLI Mode\n===================================\nInput:  [maintainer-private-checkout]/game/defaultoptions.bea\nOutput: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_024.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Invert Y (Walker) (P2): Off\n  Invert Y (Flight) (P2): Off\n"
     },
     {
       "case": "case_025",
@@ -850,8 +850,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "t: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_025.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     1782\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Invert Y (Walker) (P1): On\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_025.py.out\n  Patched: Links, Goodies (OLD), Kills (1782 each), Career settings\n  Skipped: Nodes\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "t: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_025.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     1782\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Invert Y (Walker) (P1): On\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_025.py.out\n  Patched: Links, Goodies (OLD), Kills (1782 each), Career settings\n  Skipped: Nodes\n"
     },
     {
       "case": "case_026",
@@ -873,8 +873,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "ratch/program_2026-03-03/parity_fuzz/case_026.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     5810\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    Yes\n  Sound volume:   0.637\n  Ctrl cfg (P1):  3\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_026.py.out\n  Patched: Kills (5810 each), Career settings, Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "ratch/program_2026-03-03/parity_fuzz/case_026.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     5810\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    Yes\n  Sound volume:   0.637\n  Ctrl cfg (P1):  3\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_026.py.out\n  Patched: Kills (5810 each), Career settings, Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies\n"
     },
     {
       "case": "case_027",
@@ -903,8 +903,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "uration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Sound volume:   0.321\n  Music volume:   0.879\n  Invert Y (Walker) (P1): On\n  Vibration (P2): On\n  Ctrl cfg (P2):  1\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_027.py.out\n  Patched: Career settings, Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "uration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Sound volume:   0.321\n  Music volume:   0.879\n  Invert Y (Walker) (P1): On\n  Vibration (P2): On\n  Ctrl cfg (P2):  1\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_027.py.out\n  Patched: Career settings, Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
     },
     {
       "case": "case_028",
@@ -927,8 +927,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "ate/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_028.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     5965\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    Yes\n  Sound volume:   0.792\n  Invert Y (Walker) (P2): On\n  Vibration (P2): On\n  Ctrl cfg (P2):  2\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_028.py.out\n  Patched: Kills (5965 each), Career settings\n  Skipped: Nodes, Links, Goodies\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "ate/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_028.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     5965\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    Yes\n  Sound volume:   0.792\n  Invert Y (Walker) (P2): On\n  Vibration (P2): On\n  Ctrl cfg (P2):  2\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_028.py.out\n  Patched: Kills (5965 each), Career settings\n  Skipped: Nodes, Links, Goodies\n"
     },
     {
       "case": "case_029",
@@ -957,8 +957,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "\n  Rank:           C\n  Kill count:     6700\n  Goodies style:  OLD (blue)\n  Patch nodes:    Yes\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Level overrides: 2 levels\n  Sound volume:   0.029\n  Vibration (P1): Off\n  Vibration (P2): On\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_029.py.out\n  Patched: Nodes (C + 2 overrides), Links, Goodies (OLD), Kills (6700 each), Career settings, Keybind overrides (1 entries)\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "\n  Rank:           C\n  Kill count:     6700\n  Goodies style:  OLD (blue)\n  Patch nodes:    Yes\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Level overrides: 2 levels\n  Sound volume:   0.029\n  Vibration (P1): Off\n  Vibration (P2): On\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_029.py.out\n  Patched: Nodes (C + 2 overrides), Links, Goodies (OLD), Kills (6700 each), Career settings, Keybind overrides (1 entries)\n"
     },
     {
       "case": "case_030",
@@ -983,7 +983,7 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: keybind override: Unrecognized key 'MouseLeft'. Examples: A, Num7, Up, Tab, Space, CapsLock, RShift, RControl, '-', '='.\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
       "py_stdout_tail": ""
     },
     {
@@ -1003,8 +1003,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "ers/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_031.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     2934\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Vibration (P2): On\n  Ctrl cfg (P1):  3\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_031.py.out\n  Patched: Links, Goodies (OLD), Kills (2934 each), Career settings\n  Skipped: Nodes\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "ers/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_031.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     2934\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Vibration (P2): On\n  Ctrl cfg (P1):  3\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_031.py.out\n  Patched: Links, Goodies (OLD), Kills (2934 each), Career settings\n  Skipped: Nodes\n"
     },
     {
       "case": "case_032",
@@ -1037,8 +1037,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "raft:     7015\n    Vehicles:     5288\n    Emplacements: 8479\n    Infantry:     4243\n    Mechs:        8779\n  Sound volume:   0.195\n  Music volume:   0.722\n  Vibration (P1): On\n  Ctrl cfg (P1):  0\n  Ctrl cfg (P2):  1\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_032.py.out\n  Patched: Kills (custom per-category), Career settings\n  Skipped: Nodes, Links, Goodies\n  Kill counts (default: 100):\n    Aircraft: 7015 *\n    Vehicles: 5288 *\n    Emplacements: 8479 *\n    Infantry: 4243 *\n    Mechs: 8779 *\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "raft:     7015\n    Vehicles:     5288\n    Emplacements: 8479\n    Infantry:     4243\n    Mechs:        8779\n  Sound volume:   0.195\n  Music volume:   0.722\n  Vibration (P1): On\n  Ctrl cfg (P1):  0\n  Ctrl cfg (P2):  1\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_032.py.out\n  Patched: Kills (custom per-category), Career settings\n  Skipped: Nodes, Links, Goodies\n  Kill counts (default: 100):\n    Aircraft: 7015 *\n    Vehicles: 5288 *\n    Emplacements: 8479 *\n    Infantry: 4243 *\n    Mechs: 8779 *\n"
     },
     {
       "case": "case_033",
@@ -1060,8 +1060,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "rce/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_033.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Music volume:   0.426\n  Invert Y (Flight) (P2): Off\n  Vibration (P2): Off\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_033.py.out\n  Patched: Career settings\n  Skipped: Nodes, Links, Goodies, Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "rce/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_033.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Music volume:   0.426\n  Invert Y (Flight) (P2): Off\n  Vibration (P2): Off\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_033.py.out\n  Patched: Career settings\n  Skipped: Nodes, Links, Goodies, Kills\n"
     },
     {
       "case": "case_034",
@@ -1085,8 +1085,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "rse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_034.py.out\n\nConfiguration:\n  Rank:           A\n  Kill count:     5889\n  Goodies style:  OLD (blue)\n  Patch nodes:    Yes\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Sound volume:   0.956\n  Invert Y (Walker) (P1): On\n  Vibration (P1): On\n  Ctrl cfg (P1):  3\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_034.py.out\n  Patched: Nodes (A-rank), Links, Goodies (OLD), Kills (5889 each), Career settings\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "rse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_034.py.out\n\nConfiguration:\n  Rank:           A\n  Kill count:     5889\n  Goodies style:  OLD (blue)\n  Patch nodes:    Yes\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Sound volume:   0.956\n  Invert Y (Walker) (P1): On\n  Vibration (P1): On\n  Ctrl cfg (P1):  3\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_034.py.out\n  Patched: Nodes (A-rank), Links, Goodies (OLD), Kills (5889 each), Career settings\n"
     },
     {
       "case": "case_035",
@@ -1115,8 +1115,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": " Per-category kills:\n    Aircraft:     9933\n    Vehicles:     4650\n    Emplacements: 8081\n    Infantry:     9940\n    Mechs:        6131\n  Sound volume:   0.264\n  Invert Y (Walker) (P1): Off\n  Ctrl cfg (P2):  0\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_035.py.out\n  Patched: Links, Goodies (OLD), Kills (custom per-category), Career settings\n  Skipped: Nodes\n  Kill counts (default: 100):\n    Aircraft: 9933 *\n    Vehicles: 4650 *\n    Emplacements: 8081 *\n    Infantry: 9940 *\n    Mechs: 6131 *\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": " Per-category kills:\n    Aircraft:     9933\n    Vehicles:     4650\n    Emplacements: 8081\n    Infantry:     9940\n    Mechs:        6131\n  Sound volume:   0.264\n  Invert Y (Walker) (P1): Off\n  Ctrl cfg (P2):  0\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_035.py.out\n  Patched: Links, Goodies (OLD), Kills (custom per-category), Career settings\n  Skipped: Nodes\n  Kill counts (default: 100):\n    Aircraft: 9933 *\n    Vehicles: 4650 *\n    Emplacements: 8081 *\n    Infantry: 9940 *\n    Mechs: 6131 *\n"
     },
     {
       "case": "case_036",
@@ -1140,8 +1140,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "eer-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_036.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Invert Y (Flight) (P2): Off\n  Vibration (P1): Off\n  Vibration (P2): On\n  Ctrl cfg (P1):  1\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_036.py.out\n  Patched: Career settings\n  Skipped: Nodes, Links, Goodies, Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "eer-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_036.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Invert Y (Flight) (P2): Off\n  Vibration (P1): Off\n  Vibration (P2): On\n  Ctrl cfg (P1):  1\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_036.py.out\n  Patched: Career settings\n  Skipped: Nodes, Links, Goodies, Kills\n"
     },
     {
       "case": "case_037",
@@ -1178,8 +1178,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "LD (blue)\n  Patch nodes:    Yes\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    No\n  Level overrides: 3 levels\n  Music volume:   0.159\n  Invert Y (Walker) (P1): Off\n  Invert Y (Walker) (P2): On\n  Invert Y (Flight) (P2): Off\n  Ctrl cfg (P2):  1\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_037.py.out\n  Patched: Nodes (D + 3 overrides), Links, Goodies (OLD), Career settings, Keybind overrides (2 entries)\n  Skipped: Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "LD (blue)\n  Patch nodes:    Yes\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    No\n  Level overrides: 3 levels\n  Music volume:   0.159\n  Invert Y (Walker) (P1): Off\n  Invert Y (Walker) (P2): On\n  Invert Y (Flight) (P2): Off\n  Ctrl cfg (P2):  1\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_037.py.out\n  Patched: Nodes (D + 3 overrides), Links, Goodies (OLD), Career settings, Keybind overrides (2 entries)\n  Skipped: Kills\n"
     },
     {
       "case": "case_038",
@@ -1222,7 +1222,7 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: keybind override: Unrecognized key 'MouseWheelDown'. Examples: A, Num7, Up, Tab, Space, CapsLock, RShift, RControl, '-', '='.\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
       "py_stdout_tail": ""
     },
     {
@@ -1243,8 +1243,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "ut: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_039.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Invert Y (Walker) (P1): On\n  Vibration (P1): On\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_039.py.out\n  Patched: Career settings\n  Skipped: Nodes, Links, Goodies, Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "ut: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_039.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Invert Y (Walker) (P1): On\n  Vibration (P1): On\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_039.py.out\n  Patched: Career settings\n  Skipped: Nodes, Links, Goodies, Kills\n"
     },
     {
       "case": "case_040",
@@ -1291,8 +1291,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": " (Flight) (P1): Off\n  Invert Y (Flight) (P2): On\n  Vibration (P2): On\n  Ctrl cfg (P1):  0\n  Ctrl cfg (P2):  0\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_040.py.out\n  Patched: Nodes (S + 2 overrides), Links, Goodies (OLD), Kills (custom per-category), Career settings, Keybind overrides (1 entries)\n  Kill counts (default: 100):\n    Aircraft: 7888 *\n    Vehicles: 6898 *\n    Emplacements: 4967 *\n    Infantry: 5252 *\n    Mechs: 2065 *\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": " (Flight) (P1): Off\n  Invert Y (Flight) (P2): On\n  Vibration (P2): On\n  Ctrl cfg (P1):  0\n  Ctrl cfg (P2):  0\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_040.py.out\n  Patched: Nodes (S + 2 overrides), Links, Goodies (OLD), Kills (custom per-category), Career settings, Keybind overrides (1 entries)\n  Kill counts (default: 100):\n    Aircraft: 7888 *\n    Vehicles: 6898 *\n    Emplacements: 4967 *\n    Infantry: 5252 *\n    Mechs: 2065 *\n"
     },
     {
       "case": "case_041",
@@ -1323,7 +1323,7 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: keybind override: Unrecognized key 'MouseWheelUp'. Examples: A, Num7, Up, Tab, Space, CapsLock, RShift, RControl, '-', '='.\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
       "py_stdout_tail": ""
     },
     {
@@ -1350,8 +1350,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "s/scratch/program_2026-03-03/parity_fuzz/case_042.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Sound volume:   0.098\n  Invert Y (Walker) (P1): Off\n  Keybind overrides: 3 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_042.py.out\n  Patched: Career settings, Keybind overrides (3 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "s/scratch/program_2026-03-03/parity_fuzz/case_042.py.out\n\nConfiguration:\n  Rank:           S\n  Kill count:     100\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Sound volume:   0.098\n  Invert Y (Walker) (P1): Off\n  Keybind overrides: 3 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_042.py.out\n  Patched: Career settings, Keybind overrides (3 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
     },
     {
       "case": "case_043",
@@ -1368,7 +1368,7 @@
         "--vibration-p1",
         "on",
         "--copy-options-from",
-        "/mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes",
+        "[maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes",
         "--bind-look-up",
         "I",
         "Key ="
@@ -1376,8 +1376,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "ies:  Yes\n  Patch kills:    Yes\n  Sound volume:   0.716\n  Vibration (P1): On\n  Copy options from: /mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes\n    - entries: Yes\n    - tail:    Yes\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_043.py.out\n  Patched: Nodes (C-rank), Links, Goodies (OLD), Kills (3960 each), Career settings, Options copy (entries+tail), Keybind overrides (1 entries)\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "ies:  Yes\n  Patch kills:    Yes\n  Sound volume:   0.716\n  Vibration (P1): On\n  Copy options from: [maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes\n    - entries: Yes\n    - tail:    Yes\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_043.py.out\n  Patched: Nodes (C-rank), Links, Goodies (OLD), Kills (3960 each), Career settings, Options copy (entries+tail), Keybind overrides (1 entries)\n"
     },
     {
       "case": "case_044",
@@ -1408,8 +1408,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": " Goodies style:  OLD (blue)\n  Patch nodes:    Yes\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Sound volume:   0.217\n  Music volume:   0.286\n  Invert Y (Flight) (P1): Off\n  Invert Y (Flight) (P2): On\n  Vibration (P1): Off\n  Ctrl cfg (P1):  1\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_044.py.out\n  Patched: Nodes (E-rank), Links, Goodies (OLD), Kills (1203 each), Career settings, Keybind overrides (2 entries)\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": " Goodies style:  OLD (blue)\n  Patch nodes:    Yes\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Sound volume:   0.217\n  Music volume:   0.286\n  Invert Y (Flight) (P1): Off\n  Invert Y (Flight) (P2): On\n  Vibration (P1): Off\n  Ctrl cfg (P1):  1\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_044.py.out\n  Patched: Nodes (E-rank), Links, Goodies (OLD), Kills (1203 each), Career settings, Keybind overrides (2 entries)\n"
     },
     {
       "case": "case_045",
@@ -1428,7 +1428,7 @@
         "--vibration-p2",
         "off",
         "--copy-options-from",
-        "/mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes",
+        "[maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes",
         "--no-copy-options-tail",
         "--no-copy-options-entries",
         "--bind-move-forward",
@@ -1438,7 +1438,7 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: keybind override: Unrecognized key 'MouseRight'. Examples: A, Num7, Up, Tab, Space, CapsLock, RShift, RControl, '-', '='.\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
       "py_stdout_tail": ""
     },
     {
@@ -1470,8 +1470,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "  Per-category kills:\n    Aircraft:     7750\n    Vehicles:     9114\n    Emplacements: 2966\n    Infantry:     2033\n    Mechs:        1714\n  Sound volume:   0.839\n  Music volume:   0.076\n  Vibration (P1): Off\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_046.py.out\n  Patched: Nodes (S-rank), Links, Kills (custom per-category), Career settings\n  Skipped: Goodies\n  Kill counts (default: 100):\n    Aircraft: 7750 *\n    Vehicles: 9114 *\n    Emplacements: 2966 *\n    Infantry: 2033 *\n    Mechs: 1714 *\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "  Per-category kills:\n    Aircraft:     7750\n    Vehicles:     9114\n    Emplacements: 2966\n    Infantry:     2033\n    Mechs:        1714\n  Sound volume:   0.839\n  Music volume:   0.076\n  Vibration (P1): Off\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_046.py.out\n  Patched: Nodes (S-rank), Links, Kills (custom per-category), Career settings\n  Skipped: Goodies\n  Kill counts (default: 100):\n    Aircraft: 7750 *\n    Vehicles: 9114 *\n    Emplacements: 2966 *\n    Infantry: 2033 *\n    Mechs: 1714 *\n"
     },
     {
       "case": "case_047",
@@ -1515,8 +1515,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "s:        3675\n  Music volume:   0.337\n  Invert Y (Walker) (P1): On\n  Invert Y (Walker) (P2): On\n  Vibration (P2): Off\n  Keybind overrides: 5 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_047.py.out\n  Patched: Nodes (E-rank), Links, Goodies (OLD), Kills (custom per-category), Career settings, Keybind overrides (5 entries)\n  Kill counts (default: 100):\n    Aircraft: 5327 *\n    Vehicles: 4510 *\n    Emplacements: 6593 *\n    Infantry: 6708 *\n    Mechs: 3675 *\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "s:        3675\n  Music volume:   0.337\n  Invert Y (Walker) (P1): On\n  Invert Y (Walker) (P2): On\n  Vibration (P2): Off\n  Keybind overrides: 5 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_047.py.out\n  Patched: Nodes (E-rank), Links, Goodies (OLD), Kills (custom per-category), Career settings, Keybind overrides (5 entries)\n  Kill counts (default: 100):\n    Aircraft: 5327 *\n    Vehicles: 4510 *\n    Emplacements: 6593 *\n    Infantry: 6708 *\n    Mechs: 3675 *\n"
     },
     {
       "case": "case_048",
@@ -1549,8 +1549,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Sound volume:   0.987\n  Music volume:   0.450\n  Invert Y (Walker) (P1): On\n  Invert Y (Walker) (P2): Off\n  Invert Y (Flight) (P1): On\n  Invert Y (Flight) (P2): On\n  Vibration (P2): Off\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_048.py.out\n  Patched: Career settings, Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    No\n  Sound volume:   0.987\n  Music volume:   0.450\n  Invert Y (Walker) (P1): On\n  Invert Y (Walker) (P2): Off\n  Invert Y (Flight) (P1): On\n  Invert Y (Flight) (P2): On\n  Vibration (P2): Off\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_048.py.out\n  Patched: Career settings, Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
     },
     {
       "case": "case_049",
@@ -1566,7 +1566,7 @@
         "--controller-config-p2",
         "0",
         "--copy-options-from",
-        "/mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes",
+        "[maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes",
         "--no-copy-options-tail",
         "--bind-select-weapon",
         "D",
@@ -1578,8 +1578,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "h goodies:  Yes\n  Patch kills:    Yes\n  Music volume:   0.463\n  Ctrl cfg (P2):  0\n  Copy options from: /mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes\n    - entries: Yes\n    - tail:    No\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_049.py.out\n  Patched: Links, Goodies (OLD), Kills (7533 each), Career settings, Options copy (entries), Keybind overrides (2 entries)\n  Skipped: Nodes\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "h goodies:  Yes\n  Patch kills:    Yes\n  Music volume:   0.463\n  Ctrl cfg (P2):  0\n  Copy options from: [maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes\n    - entries: Yes\n    - tail:    No\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_049.py.out\n  Patched: Links, Goodies (OLD), Kills (7533 each), Career settings, Options copy (entries), Keybind overrides (2 entries)\n  Skipped: Nodes\n"
     },
     {
       "case": "case_050",
@@ -1597,7 +1597,7 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: keybind override: Unrecognized key 'MouseLeft'. Examples: A, Num7, Up, Tab, Space, CapsLock, RShift, RControl, '-', '='.\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
       "py_stdout_tail": ""
     },
     {
@@ -1619,7 +1619,7 @@
         "--vibration-p2",
         "on",
         "--copy-options-from",
-        "/mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes",
+        "[maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes",
         "--bind-special",
         "Up",
         "W"
@@ -1627,8 +1627,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "lume:   0.504\n  Invert Y (Walker) (P1): On\n  Invert Y (Flight) (P2): Off\n  Vibration (P2): On\n  Copy options from: /mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes\n    - entries: Yes\n    - tail:    Yes\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_051.py.out\n  Patched: Career settings, Options copy (entries+tail), Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "lume:   0.504\n  Invert Y (Walker) (P1): On\n  Invert Y (Flight) (P2): Off\n  Vibration (P2): On\n  Copy options from: [maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes\n    - entries: Yes\n    - tail:    Yes\n  Keybind overrides: 1 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_051.py.out\n  Patched: Career settings, Options copy (entries+tail), Keybind overrides (1 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
     },
     {
       "case": "case_052",
@@ -1660,8 +1660,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": " Vehicles:     8893\n    Emplacements: 9335\n    Infantry:     4744\n    Mechs:        6028\n  Invert Y (Walker) (P2): Off\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_052.py.out\n  Patched: Nodes (B-rank), Links, Goodies (OLD), Kills (custom per-category), Career settings, Keybind overrides (2 entries)\n  Kill counts (default: 100):\n    Aircraft: 6325 *\n    Vehicles: 8893 *\n    Emplacements: 9335 *\n    Infantry: 4744 *\n    Mechs: 6028 *\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": " Vehicles:     8893\n    Emplacements: 9335\n    Infantry:     4744\n    Mechs:        6028\n  Invert Y (Walker) (P2): Off\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_052.py.out\n  Patched: Nodes (B-rank), Links, Goodies (OLD), Kills (custom per-category), Career settings, Keybind overrides (2 entries)\n  Kill counts (default: 100):\n    Aircraft: 6325 *\n    Vehicles: 8893 *\n    Emplacements: 9335 *\n    Infantry: 4744 *\n    Mechs: 6028 *\n"
     },
     {
       "case": "case_053",
@@ -1693,8 +1693,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "         S\n  Kill count:     1222\n  Goodies style:  OLD (blue)\n  Patch nodes:    Yes\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Level overrides: 2 levels\n  Sound volume:   0.686\n  Music volume:   0.563\n  Invert Y (Walker) (P2): On\n  Keybind overrides: 3 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_053.py.out\n  Patched: Nodes (S + 2 overrides), Links, Goodies (OLD), Kills (1222 each), Career settings, Keybind overrides (3 entries)\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "         S\n  Kill count:     1222\n  Goodies style:  OLD (blue)\n  Patch nodes:    Yes\n  Patch links:    Yes\n  Patch goodies:  Yes\n  Patch kills:    Yes\n  Level overrides: 2 levels\n  Sound volume:   0.686\n  Music volume:   0.563\n  Invert Y (Walker) (P2): On\n  Keybind overrides: 3 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_053.py.out\n  Patched: Nodes (S + 2 overrides), Links, Goodies (OLD), Kills (1222 each), Career settings, Keybind overrides (3 entries)\n"
     },
     {
       "case": "case_054",
@@ -1713,7 +1713,7 @@
         "--controller-config-p1",
         "0",
         "--copy-options-from",
-        "/mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes",
+        "[maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes",
         "--no-copy-options-entries",
         "--bind-zoom-in",
         "MouseWheelUp",
@@ -1728,7 +1728,7 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: keybind override: MouseLeft is only supported for Fire weapon (entry 0x12/0x13).\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
       "py_stdout_tail": ""
     },
     {
@@ -1759,7 +1759,7 @@
         "--vibration-p1",
         "on",
         "--copy-options-from",
-        "/mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes",
+        "[maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes",
         "--no-copy-options-entries",
         "--bind-look-up",
         "MouseRight",
@@ -1768,7 +1768,7 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: keybind override: Invalid look binding 'MouseRight'. Use Mouse, MouseX+/MouseX-, MouseY+/MouseY-, or a keyboard key.\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
       "py_stdout_tail": ""
     },
     {
@@ -1799,8 +1799,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    Yes\n  Sound volume:   0.219\n  Music volume:   0.282\n  Invert Y (Walker) (P1): On\n  Invert Y (Flight) (P1): On\n  Invert Y (Flight) (P2): On\n  Ctrl cfg (P2):  2\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_056.py.out\n  Patched: Kills (5558 each), Career settings, Keybind overrides (2 entries)\n  Skipped: Nodes, Links, Goodies\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "\n  Goodies style:  OLD (blue)\n  Patch nodes:    No\n  Patch links:    No\n  Patch goodies:  No\n  Patch kills:    Yes\n  Sound volume:   0.219\n  Music volume:   0.282\n  Invert Y (Walker) (P1): On\n  Invert Y (Flight) (P1): On\n  Invert Y (Flight) (P2): On\n  Ctrl cfg (P2):  2\n  Keybind overrides: 2 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_056.py.out\n  Patched: Kills (5558 each), Career settings, Keybind overrides (2 entries)\n  Skipped: Nodes, Links, Goodies\n"
     },
     {
       "case": "case_057",
@@ -1817,7 +1817,7 @@
         "--vibration-p1",
         "off",
         "--copy-options-from",
-        "/mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes",
+        "[maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes",
         "--bind-move-forward",
         "Key -",
         "K",
@@ -1828,8 +1828,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "  Patch goodies:  No\n  Patch kills:    No\n  Invert Y (Walker) (P1): Off\n  Vibration (P1): Off\n  Copy options from: /mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes\n    - entries: Yes\n    - tail:    Yes\n  Keybind overrides: 3 entries (forces ControlSchemeIndex=0)\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_057.py.out\n  Patched: Career settings, Options copy (entries+tail), Keybind overrides (3 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "  Patch goodies:  No\n  Patch kills:    No\n  Invert Y (Walker) (P1): Off\n  Vibration (P1): Off\n  Copy options from: [maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes\n    - entries: Yes\n    - tail:    Yes\n  Keybind overrides: 3 entries (forces ControlSchemeIndex=0)\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_057.py.out\n  Patched: Career settings, Options copy (entries+tail), Keybind overrides (3 entries)\n  Skipped: Nodes, Links, Goodies, Kills\n"
     },
     {
       "case": "case_058",
@@ -1846,7 +1846,7 @@
         "--controller-config-p2",
         "0",
         "--copy-options-from",
-        "/mnt/c/users/david/source/onslaught-career-editor-private/save-attempts/haha-cannon-goes-brrrrr.bes",
+        "[maintainer-private-checkout]/save-attempts/haha-cannon-goes-brrrrr.bes",
         "--no-copy-options-tail",
         "--no-copy-options-entries",
         "--bind-move-forward",
@@ -1859,7 +1859,7 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "Error: keybind override: Unrecognized key 'MouseRight'. Examples: A, Num7, Up, Tab, Space, CapsLock, RShift, RControl, '-', '='.\n",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
       "py_stdout_tail": ""
     },
     {
@@ -1898,8 +1898,8 @@
       "byte_equal": false,
       "cs_stderr_tail": "Could not execute because the specified command or file was not found.\n",
       "py_stderr_tail": "",
-      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-/mnt/c/users/david/source/onslaught-career-editor-private/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
-      "py_stdout_tail": "s: 727\n    Infantry:     1172\n    Mechs:        7898\n  Sound volume:   0.892\n  Invert Y (Walker) (P1): Off\n  Invert Y (Flight) (P1): Off\n  Invert Y (Flight) (P2): Off\n  Vibration (P1): On\n  Ctrl cfg (P1):  1\n\nPatched: /mnt/c/users/david/source/onslaught-career-editor-private/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_059.py.out\n  Patched: Nodes (B-rank), Kills (custom per-category), Career settings\n  Skipped: Links, Goodies\n  Kill counts (default: 100):\n    Aircraft: 9518 *\n    Vehicles: 4219 *\n    Emplacements: 727 *\n    Infantry: 1172 *\n    Mechs: 7898 *\n"
+      "cs_stdout_tail": "Possible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-[maintainer-private-checkout]/bin/Debug/net10.0-windows/Onslaught - Career Editor.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n",
+      "py_stdout_tail": "s: 727\n    Infantry:     1172\n    Mechs:        7898\n  Sound volume:   0.892\n  Invert Y (Walker) (P1): Off\n  Invert Y (Flight) (P1): Off\n  Invert Y (Flight) (P2): Off\n  Vibration (P1): On\n  Ctrl cfg (P1):  1\n\nPatched: [maintainer-private-checkout]/reverse-engineering/binary-analysis/scratch/program_2026-03-03/parity_fuzz/case_059.py.out\n  Patched: Nodes (B-rank), Kills (custom per-category), Career settings\n  Skipped: Links, Goodies\n  Kill counts (default: 100):\n    Aircraft: 9518 *\n    Vehicles: 4219 *\n    Emplacements: 727 *\n    Infantry: 1172 *\n    Mechs: 7898 *\n"
     }
   ]
 }

@@ -12,7 +12,7 @@ Evidence summary:
 - Cluster counts: Unit core / AI / squads `199`, BattleEngine player state `133`, weapons / rounds / targeting `106`, unit subclasses / guides `102`, damage / destruction / spawn `93`.
 - Large family anchors: `CUnit` `90`, `CUnitAI` `63`, `CBattleEngine` `47`, `CSquadNormal` `31`, `CBattleEngineWalkerPart` `27`, `CBattleEngineJetPart` `23`, `CGeneralVolume` `23`, `CDestructableSegmentsController` `19`, `CCollisionSeekingRound` `17`, `CSpawnerThng` `14`, `CRound` `13`, and `CWeapon` `12`.
 - Representative functions: `CUnit__ApplyDamage`, `CUnitAI__UpdateActivationStateAndSpawnPickup`, `CBattleEngine__UpdateAutoTargetSetAndFireProjectiles`, `CBattleEngine__AddProjectile`, `CBattleEngine__Morph`, `CBattleEngine__HandleCloak`, `CBattleEngine__AugmentWeapon`, `CBattleEngineJetPart__WeaponFired`, `CBattleEngineWalkerPart__WeaponFired`, `CWeapon__HandleFireBurstEvent`, `CRound__SpawnConfiguredProjectile`, `CSpawnerThng__DoSpawn`, and `CDestroyableSegment__VFunc_03_ApplyDamage`.
-- Verified read-only Ghidra backup: `G:\GhidraBackups\BEA_20260526-105331_post_wave906_unit_battleengine_gameplay_static_review_verified`, `19` files, `173247367` bytes, `DiffCount=0`.
+- Verified read-only Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-105331_post_wave906_unit_battleengine_gameplay_static_review_verified`, `19` files, `173247367` bytes, `DiffCount=0`.
 
 What this proves:
 

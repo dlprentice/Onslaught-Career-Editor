@@ -25,7 +25,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 13 xref rows, 4 instruction rows, 1 decompile row, 5 context metadata rows, and 5 context decompile rows.
 - Queue after Wave884: 6113 total, 5967 commented, 146 commentless, 0 exact-undefined signatures, 0 `param_N`, strict proxy `5967/6113 = 97.61%`.
 - Next raw commentless row: `0x005715b0 CFastVB__BuildStripBatchesFromIndexBuffer`.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-012542_post_wave884_crt_float_dispatch_amsg_exit_verified`, 19 files, 172788615 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-012542_post_wave884_crt_float_dispatch_amsg_exit_verified`, 19 files, 172788615 bytes, `DiffCount=0`.
 
 What this proves:
 

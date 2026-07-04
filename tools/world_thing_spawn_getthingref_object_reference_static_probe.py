@@ -32,7 +32,7 @@ ISCRIPT_OWNER = ROOT / "reverse-engineering" / "binary-analysis" / "functions" /
 PROGRESS = ROOT / "reverse-engineering" / "binary-analysis" / "static-reaudit-progress.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 
 SELECTED_LEVEL_DIRS = {("22", "level022"), ("100", "level100")}
 SELECTED_THINGS = ("Target Zone 1", "Target Zone 2", "Target Zone 3", "Target Zone 4")

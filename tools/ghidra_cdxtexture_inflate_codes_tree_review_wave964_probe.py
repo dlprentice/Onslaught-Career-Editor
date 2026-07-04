@@ -25,7 +25,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUALITY_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260528-141856_post_wave964_cdxtexture_inflate_codes_tree_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-141856_post_wave964_cdxtexture_inflate_codes_tree_review_verified"
 
 EXPECTED_METADATA = {
     "0x0059c8c1": ("CDXTexture__InflateStream_ProcessZlibState", "int __stdcall CDXTexture__InflateStream_ProcessZlibState(void * inflate_stream, int flush_mode)"),

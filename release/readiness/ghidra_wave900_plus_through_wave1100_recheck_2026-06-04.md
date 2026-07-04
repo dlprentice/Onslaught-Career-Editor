@@ -16,9 +16,9 @@ Current anchor:
 - Expanded static surface: `1560/1560 = 100.00%`.
 - Wave911 focused progress: `812/1408 = 57.67%`.
 - Wave911 top-500 risk-ranked progress: `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
 
-Wave1100 probe token anchor: Wave1100; cmeshpart-load-geometry-review-wave1100; 0x004a51f0 CMeshPart__FreeResources; 0x004ae2b0 CMeshPart__CreatePolyBucket; 0x004ae860 CMeshPart__AllocateGeometry; 0x004aede0 CMeshPart__LoadOldStyle_VersionA; 0x004af470 CMeshPart__LoadVerticesAndTriangles; 0x004afbb0 CMeshPart__LoadVerticesWithBones; 0x004b27a0 CMeshPart__LoadFromStream; 0x004b31f0 CMeshPart__OptimizePolygons; 0x004b3b70 CMeshPart__Clone; 0x004b4250 CMeshPart__Merge; 0x004bae70 CMeshPart__CanOptimizePart_Strict; 0x004bb040 CMeshPart__CanMergeInOptimizePass; C:\dev\ONSLAUGHT2\MeshPart.cpp; resfile_cmeshpartsize; 0x13c; 1560/1560 = 100.00%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified; read-only review.
+Wave1100 probe token anchor: Wave1100; cmeshpart-load-geometry-review-wave1100; 0x004a51f0 CMeshPart__FreeResources; 0x004ae2b0 CMeshPart__CreatePolyBucket; 0x004ae860 CMeshPart__AllocateGeometry; 0x004aede0 CMeshPart__LoadOldStyle_VersionA; 0x004af470 CMeshPart__LoadVerticesAndTriangles; 0x004afbb0 CMeshPart__LoadVerticesWithBones; 0x004b27a0 CMeshPart__LoadFromStream; 0x004b31f0 CMeshPart__OptimizePolygons; 0x004b3b70 CMeshPart__Clone; 0x004b4250 CMeshPart__Merge; 0x004bae70 CMeshPart__CanOptimizePart_Strict; 0x004bb040 CMeshPart__CanMergeInOptimizePass; [maintainer-local-source-export-root]\MeshPart.cpp; resfile_cmeshpartsize; 0x13c; 1560/1560 = 100.00%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified; read-only review.
 
 Boundary:
 

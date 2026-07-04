@@ -38,7 +38,7 @@ All three passes reported `REPORT: Save succeeded`. Post exports verified `6` me
 
 Post-Wave691 queue telemetry is `6098` total functions, `3959` commented, `2139` commentless, `1216` exact-undefined signatures, and `366` `param_N` signatures. Comment-backed proxy is `3959/6098 = 64.92%`; strict clean-signature proxy is `3909/6098 = 64.10%`.
 
-Verified backup: `G:\GhidraBackups\BEA_20260521-130107_post_wave691_cdxtexture_jpeg_segment_parsers_verified`, `19` files, `164891527` bytes, `DiffCount=0`.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-130107_post_wave691_cdxtexture_jpeg_segment_parsers_verified`, `19` files, `164891527` bytes, `DiffCount=0`.
 
 ## Boundaries
 

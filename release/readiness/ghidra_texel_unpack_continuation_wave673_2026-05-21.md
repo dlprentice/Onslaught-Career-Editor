@@ -17,7 +17,7 @@ The pass used the `texel-unpack-continuation-wave673` and `wave673-readback-veri
 - Post exports verified `25` metadata rows, `25` tag rows, `67` xref rows, `1125` instruction rows, and `25` clean decompile rows.
 - Queue after Wave673: `6098` total, `3771` commented, `2327` commentless, `1217` exact-undefined signatures, `546` `param_N` signatures, strict clean-signature proxy `3721/6098 = 61.02%`.
 - Next queue head: `0x0058609e CFastVB__TexelUnpackProfile_005ea020__ctor`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260521-045554_post_wave673_texel_unpack_continuation_verified`, `19` files, `164072327` bytes, `DiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-045554_post_wave673_texel_unpack_continuation_verified`, `19` files, `164072327` bytes, `DiffCount=0`.
 
 ## Boundaries
 

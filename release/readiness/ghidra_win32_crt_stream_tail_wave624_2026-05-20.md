@@ -33,7 +33,7 @@ The pass saved bounded signatures, comments, and tags. It corrected one stale ad
 - Math evidence covers the x87 pow core behind `CRT__PowDispatch_ST0_ST1`, including FPU-control checks and pow-domain edge handling.
 - Stream evidence covers locked stream line reading, route lock/unlock helpers, locked ftell, and adjusted ftell text-mode/newline accounting.
 - Texture evidence covers `CDXTexture__AsciiToLowerInPlace`, including ASCII fast-path folding and locale-aware `LCMapStringA` fallback.
-- Backup verified: `G:\GhidraBackups\BEA_20260520-054923_post_wave624_win32_crt_stream_verified` with `19` files, `161942407` bytes, and `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260520-054923_post_wave624_win32_crt_stream_verified` with `19` files, `161942407` bytes, and `DiffCount=0`.
 
 ## Queue Telemetry
 

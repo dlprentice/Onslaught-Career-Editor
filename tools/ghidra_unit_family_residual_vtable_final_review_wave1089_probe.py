@@ -29,7 +29,7 @@ ATTEMPT_LOG = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutat
 TRACKING_STATE = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_tracking_state.json"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260604-130410_post_wave1089_unit_family_residual_vtable_final_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260604-130410_post_wave1089_unit_family_residual_vtable_final_review_verified"
 WAVE_TAG = "unit-family-residual-vtable-final-review-wave1089"
 
 TARGETS = {

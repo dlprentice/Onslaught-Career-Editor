@@ -35,7 +35,7 @@ Read-back evidence:
 - Post exports: `13` metadata rows, `13` tag rows, `57` xref rows, `1044` body-instruction rows, and `13` decompile rows.
 - Queue closure after refresh remains `6222/6222 = 100.00%`, with `0` commentless functions, `0` exact-undefined signatures, and `0` `param_N` signatures.
 - Wave911 focused re-audit progress is `446/1408 = 31.68%`; expanded static surface progress is `538/1478 = 36.40%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-053822_post_wave992_cannon_turret_activation_review_verified`, 19 files, 173837191 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-053822_post_wave992_cannon_turret_activation_review_verified`, 19 files, 173837191 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

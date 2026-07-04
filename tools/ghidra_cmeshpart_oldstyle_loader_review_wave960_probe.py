@@ -23,7 +23,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260528-123300_post_wave960_cmeshpart_oldstyle_loader_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-123300_post_wave960_cmeshpart_oldstyle_loader_review_verified"
 
 EXPECTED_METADATA = {
     "0x004a5b70": ("CMesh__Load", "int __thiscall CMesh__Load(void * this, void * mem_buffer, void * load_context)"),
@@ -65,7 +65,7 @@ XREF_EVIDENCE = (
 )
 
 STRING_EXPECTATIONS = {
-    "string-0062fe70.tsv": r"C:\dev\ONSLAUGHT2\MeshPart.cpp",
+    "string-0062fe70.tsv": r"[maintainer-local-source-export-root]\MeshPart.cpp",
     "string-0062fc48.tsv": "2.01",
     "string-0062fc40.tsv": "2.02",
     "string-0062fc38.tsv": "2.03",
@@ -82,7 +82,7 @@ CORE_TOKENS = (
     "0x004a8f49",
     "0x004af10d RET 0x14",
     "0x004af462 RET 0x14",
-    r"C:\dev\ONSLAUGHT2\MeshPart.cpp",
+    r"[maintainer-local-source-export-root]\MeshPart.cpp",
     "2.01",
     "2.02",
     "2.03",

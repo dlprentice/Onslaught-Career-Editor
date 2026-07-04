@@ -51,7 +51,7 @@ Artifacts are under `subagents/ghidra-static-reaudit/wave509-squadnormal-tail-00
 - `cmd.exe /c npm run test:ghidra-squadnormal-tail-wave509` passed.
 - Queue refresh passed and reports `6078` functions, `2363` commented, `3715` commentless, `1629` exact-undefined signatures, and `1450` `param_N` signatures.
 - Current telemetry proxies are comment-backed `2363/6078 = 38.88%` and strict comment-plus-clean-signature `2309/6078 = 37.99%`; these are progress telemetry only, not completion certification.
-- Ghidra project backup verified at `G:\GhidraBackups\BEA_20260517-173706_post_wave509_squadnormal_tail_verified` with `19` files, `158206855` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Ghidra project backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260517-173706_post_wave509_squadnormal_tail_verified` with `19` files, `158206855` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Not Proven
 

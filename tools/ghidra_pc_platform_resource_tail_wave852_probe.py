@@ -33,7 +33,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave852 PC platform/resource tail"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-093157_post_wave852_pc_platform_resource_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-093157_post_wave852_pc_platform_resource_tail_verified"
 NEXT_HEAD = "0x005168d0 CPCSoundManager__dtor"
 
 COMMON_TAGS = {

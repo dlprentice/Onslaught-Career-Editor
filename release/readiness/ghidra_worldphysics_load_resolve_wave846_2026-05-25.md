@@ -24,7 +24,7 @@ Read-back evidence:
 - Post exports: 4 metadata rows, 4 tag rows, 5 xref rows, 3300 instruction rows, 325 caller-site instruction rows, 23 context metadata rows, 23 context tag rows, and 4 decompile rows.
 - Queue after Wave846: 6098 total functions, 5673 commented, 425 commentless, 0 exact-undefined signatures, 0 `param_N` signatures, comment-backed proxy `5673/6098 = 93.03%`, strict clean-signature proxy `5673/6098 = 93.03%`.
 - Next raw commentless row is `0x00512040 CLTShell__InitUnhandledExceptionLogFile`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-060333_post_wave846_worldphysics_load_resolve_verified`, 19 files, 171871111 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-060333_post_wave846_worldphysics_load_resolve_verified`, 19 files, 171871111 bytes, `DiffCount=0`.
 
 What this proves:
 

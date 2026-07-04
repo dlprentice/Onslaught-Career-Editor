@@ -24,7 +24,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260528-050722_post_wave944_building_namedmesh_lifecycle_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-050722_post_wave944_building_namedmesh_lifecycle_review_verified"
 SCRIPT_NAME = "test:ghidra-building-namedmesh-lifecycle-review-wave944"
 SCRIPT_VALUE = r"py -3 tools\ghidra_building_namedmesh_lifecycle_review_wave944_probe.py --check"
 

@@ -30,7 +30,7 @@ Probe anchors: `0x0057e0c3 CDXTexture__ConvertSurfaceDirectCopyOrDxtCopy`, `0x00
 - Final dry mode: `updated=0 skipped=9 renamed=0 would_rename=0 signature_updated=0 missing=0 bad=0`
 - All three passes reported `REPORT: Save succeeded`.
 - Post exports verified `9` metadata rows, `9` tag rows, `13` xref rows, `333` instruction rows, and `9` clean decompile rows.
-- Backup verified: `G:\GhidraBackups\BEA_20260521-012532_post_wave665_texture_resample_verified`, `19` files, `163580807` bytes, `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260521-012532_post_wave665_texture_resample_verified`, `19` files, `163580807` bytes, `DiffCount=0`.
 
 ## Queue
 

@@ -35,14 +35,14 @@ Fresh read-back evidence:
 - `ApplyMeshCollisionVolumeSweptSphereQueryWave939.java apply`: `updated=1 would_update=0 skipped=0 missing=0 bad=0`.
 - `ApplyMeshCollisionVolumeSweptSphereQueryWave939.java final dry`: `updated=0 would_update=0 skipped=1 missing=0 bad=0`.
 - Post exports: 7 metadata rows, 7 tag rows, 14 xref rows, 1747 instruction rows, and 7 decompile rows.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-024426_post_wave939_meshcollisionvolume_swept_sphere_query_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-024426_post_wave939_meshcollisionvolume_swept_sphere_query_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 
 Progress:
 
 - Wave911 focused re-audit progress after Wave939: `173/1408 = 12.29%`.
 - Static export-contract function-quality closure remains `6113/6113 = 100.00%`.
 
-Probe token anchor: Wave939; `meshcollisionvolume-swept-sphere-query-review-wave939`; `0x004abe50 CMeshCollisionVolume__VFunc_02_004abe50`; `0x004ac6e0 CMeshCollisionVolume__VFunc_03_004ac6e0`; `0x004ac140 CMeshCollisionVolume__TestSweptSphereAgainstBounds`; `0x004ac4a0 CMeshCollisionVolume__TestSweptSphereAgainstMeshPart`; `0x004acf30 CMeshCollisionVolume__ResolveContactNormalAndPlane`; `0x004ad600 CMeshCollisionVolume__SetPartBounds`; `0x00478510 CMeshCollisionVolume__TestSweptSphereAgainstTriangleCore`; `0x004acde0 CMeshCollisionVolume__InitContactOutputRecord`; `24-entry direction-pointer table as 8 triangle tests`; `173/1408 = 12.29%`; `6113/6113 = 100.00%`; `G:\GhidraBackups\BEA_20260528-024426_post_wave939_meshcollisionvolume_swept_sphere_query_review_verified`; comment-only mutation.
+Probe token anchor: Wave939; `meshcollisionvolume-swept-sphere-query-review-wave939`; `0x004abe50 CMeshCollisionVolume__VFunc_02_004abe50`; `0x004ac6e0 CMeshCollisionVolume__VFunc_03_004ac6e0`; `0x004ac140 CMeshCollisionVolume__TestSweptSphereAgainstBounds`; `0x004ac4a0 CMeshCollisionVolume__TestSweptSphereAgainstMeshPart`; `0x004acf30 CMeshCollisionVolume__ResolveContactNormalAndPlane`; `0x004ad600 CMeshCollisionVolume__SetPartBounds`; `0x00478510 CMeshCollisionVolume__TestSweptSphereAgainstTriangleCore`; `0x004acde0 CMeshCollisionVolume__InitContactOutputRecord`; `24-entry direction-pointer table as 8 triangle tests`; `173/1408 = 12.29%`; `6113/6113 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260528-024426_post_wave939_meshcollisionvolume_swept_sphere_query_review_verified`; comment-only mutation.
 
 What this proves:
 

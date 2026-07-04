@@ -1,6 +1,6 @@
 # Boat.cpp Functions
 
-Wave1219 final current-risk closure note: `CBoat__Init` and `CBoatGuide__ctor` remain mapped to the Boat init/guide-construction path; verified backup `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`. Runtime boat/guide behavior, exact layouts, and rebuild parity remain separate proof.
+Wave1219 final current-risk closure note: `CBoat__Init` and `CBoatGuide__ctor` remain mapped to the Boat init/guide-construction path; verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`. Runtime boat/guide behavior, exact layouts, and rebuild parity remain separate proof.
 
 > Source File: Boat.cpp | Binary: BEA.exe
 > Debug Path: 0x00623990
@@ -13,7 +13,7 @@ Water vehicle (boat) implementation. CBoat handles surface vessel mechanics. Wav
 
 ## Wave1026 AI Destructor Lifecycle Review
 
-Wave1026 (`ai-dtor-lifecycle-review-wave1026`) re-read the Boat.cpp-adjacent destructor lifecycle rows `0x00414fa0 CBoatAI__scalar_deleting_dtor`, `0x00414fc0 CBoatAI__dtor_body_00414fc0`, `0x00415060 CUnitAI__scalar_deleting_dtor`, and `0x00415080 CUnitAI__dtor_body_00415080`. Fresh metadata/tags/xrefs/instructions/decompile confirmed the scalar wrappers call their body rows, test the scalar-delete flag, optionally free through `CDXMemoryManager__Free`, and return `this`; the destructor bodies restore vtable `0x005d8d1c`, remove reader cells at `+0x28/+0x24/+0x0c` through `CSPtrSet__Remove`, and call `CMonitor__Shutdown`. Context re-read covered `0x00414e50 CBoat__Init`, `0x00415d70 CBoatGuide__ctor`, `0x00417390 CBuilding__CreateRepairPadAI`, and `0x004a03b0 CUnitAI__dtor_base`. Verified backup: `G:\GhidraBackups\BEA_20260601-013000_post_wave1026_ai_dtor_lifecycle_review_verified`. Runtime cleanup behavior, exact source-body identity, exact class hierarchy/layouts, allocator ownership beyond observed static calls, BEA patching, gameplay outcomes, and rebuild parity remain separate proof.
+Wave1026 (`ai-dtor-lifecycle-review-wave1026`) re-read the Boat.cpp-adjacent destructor lifecycle rows `0x00414fa0 CBoatAI__scalar_deleting_dtor`, `0x00414fc0 CBoatAI__dtor_body_00414fc0`, `0x00415060 CUnitAI__scalar_deleting_dtor`, and `0x00415080 CUnitAI__dtor_body_00415080`. Fresh metadata/tags/xrefs/instructions/decompile confirmed the scalar wrappers call their body rows, test the scalar-delete flag, optionally free through `CDXMemoryManager__Free`, and return `this`; the destructor bodies restore vtable `0x005d8d1c`, remove reader cells at `+0x28/+0x24/+0x0c` through `CSPtrSet__Remove`, and call `CMonitor__Shutdown`. Context re-read covered `0x00414e50 CBoat__Init`, `0x00415d70 CBoatGuide__ctor`, `0x00417390 CBuilding__CreateRepairPadAI`, and `0x004a03b0 CUnitAI__dtor_base`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-013000_post_wave1026_ai_dtor_lifecycle_review_verified`. Runtime cleanup behavior, exact source-body identity, exact class hierarchy/layouts, allocator ownership beyond observed static calls, BEA patching, gameplay outcomes, and rebuild parity remain separate proof.
 
 ## Functions
 
@@ -35,7 +35,7 @@ Wave1026 (`ai-dtor-lifecycle-review-wave1026`) re-read the Boat.cpp-adjacent des
 
 Wave742 unwind continuation saved both Boat.cpp rows as `void __cdecl Unwind@...(void)` with `unwind-continuation-wave742` and `wave742-readback-verified` tags. The saved comments record Boat.cpp debug path `0x00623990`, scope-table DATA xrefs `0x0061a1ec` and `0x0061a1f4`, `OID__FreeObject_Callback` on the pointer at `EBP+4`, line `0x1e` / memtype `0x17` for `0x005d1360 Unwind@005d1360`, and line `0x1f` / memtype `0x16` for `0x005d1376 Unwind@005d1376`. The same tranche spans `0x005d1170 Unwind@005d1170` through `0x005d13b3 Unwind@005d13b3`; next high-signal queue head is `0x005d13d0 Unwind@005d13d0`, and earliest raw commentless row remains `0x0042f220 CSPtrSet__Clear`.
 
-Verified backup: `G:\GhidraBackups\BEA_20260522-153147_post_wave742_unwind_continuation_verified`. This is saved static retail Ghidra evidence only. Exact parent source body, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain unproven.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-153147_post_wave742_unwind_continuation_verified`. This is saved static retail Ghidra evidence only. Exact parent source body, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain unproven.
 
 ## Key Observations
 

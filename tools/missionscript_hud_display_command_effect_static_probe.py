@@ -42,7 +42,7 @@ WORLD_DOC = ROOT / "reverse-engineering" / "binary-analysis" / "functions" / "Wo
 PACKAGE_JSON = ROOT / "package.json"
 
 MSL_ROOT = ROOT / "game" / "data" / "MissionScripts"
-WAVE1219_BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+WAVE1219_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 
 PROOF_LINK = "missionscript-hud-display-command-effect-static-proof.md"
 SCHEMA_LINK = "missionscript-hud-display-command-effect.v1.json"

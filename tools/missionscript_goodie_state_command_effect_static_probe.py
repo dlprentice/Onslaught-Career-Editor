@@ -40,8 +40,8 @@ SAVE_FORMAT = ROOT / "reverse-engineering" / "save-file" / "save-format.md"
 PACKAGE_JSON = ROOT / "package.json"
 
 WAVE579 = ROOT / "subagents" / "ghidra-static-reaudit" / "wave579-iscript-slot-goodie-005338a0"
-WAVE1219_BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
-WAVE579_BACKUP = r"G:\GhidraBackups\BEA_20260519-041839_post_wave579_iscript_slot_goodie_verified"
+WAVE1219_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+WAVE579_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260519-041839_post_wave579_iscript_slot_goodie_verified"
 
 PROOF_LINK = "missionscript-goodie-state-command-effect-static-proof.md"
 SCHEMA_LINK = "missionscript-goodie-state-command-effect.v1.json"

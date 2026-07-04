@@ -28,7 +28,7 @@ The pass recovered eight missing function boundaries in the explosion-value fami
 - `cmd.exe /c npm run test:ghidra-explosion-value-tranche` passed against the saved read-back artifacts.
 - An initial focused probe expectation had two adjacent scalar vtable entries swapped; the read-back TSV showed `0x005da6ec` maps to `CExplosionScalar48__ApplyToExplosionByName` and `0x005da700` maps to `CExplosionScalar4C__ApplyToExplosionByName`, so the probe was corrected to match the saved Ghidra read-back.
 - The refreshed whole-database queue reports `5932` functions, `1003` commented functions, `4929` commentless functions, `1977` undefined signatures, and `2143` `param_N` signatures.
-- The post-mutation live Ghidra backup was verified at `G:\GhidraBackups\BEA_20260512_143022_post_wave340_verified` with `19` files, `152505223` bytes, and `DiffCount=0`.
+- The post-mutation live Ghidra backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260512_143022_post_wave340_verified` with `19` files, `152505223` bytes, and `DiffCount=0`.
 
 ## Claim Boundary
 

@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave856 FEPDirectory page"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-114000_post_wave856_fepdirectory_page_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-114000_post_wave856_fepdirectory_page_verified"
 NEXT_HEAD = "0x0051b600 CFEPMultiplayerStart__SubObj4034__ctor"
 
 TARGET_SIGNATURES = {
@@ -202,7 +202,7 @@ def check_artifacts(failures: list[str]) -> None:
         require(slot_names.get(slot) == name, f"vtable slot {slot} mismatch", failures)
 
     string_rows = read_tsv(BASE / "post-string-0063fb4c.tsv")
-    require(string_rows and string_rows[0].get("cstring") == r"C:\dev\ONSLAUGHT2\FEPDirectory.cpp", "FEPDirectory.cpp string mismatch", failures)
+    require(string_rows and string_rows[0].get("cstring") == r"[maintainer-local-source-export-root]\FEPDirectory.cpp", "FEPDirectory.cpp string mismatch", failures)
 
 
 def check_logs(failures: list[str]) -> None:
@@ -218,7 +218,7 @@ def check_logs(failures: list[str]) -> None:
         "post-context-metadata.log": "targets=16 found=16 missing=0",
         "post-context-decompile.log": "targets=16 dumped=16 missing=0 failed=0",
         "post-vtable.log": "ExportVtableSlots complete: targets=1 rows=12",
-        "post-string-0063fb4c.log": r"DumpCStringAtAddress complete: input=0063fb4c target=0063fb4c text=C:\dev\ONSLAUGHT2\FEPDirectory.cpp",
+        "post-string-0063fb4c.log": r"DumpCStringAtAddress complete: input=0063fb4c target=0063fb4c text=[maintainer-local-source-export-root]\FEPDirectory.cpp",
         "quality-refresh.log": "total_functions=6098 commented_functions=5762",
         "queue-probe.log": "Commentless functions: 336",
     }

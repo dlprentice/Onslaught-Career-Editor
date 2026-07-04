@@ -33,7 +33,7 @@ PACKAGE_JSON = ROOT / "package.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 APPLY_SCRIPT = ROOT / "tools" / "ApplyUnitWorldAirunitLifecycleScore17Wave1194.java"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-193734_post_wave1194_unit_world_airunit_lifecycle_score17_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-193734_post_wave1194_unit_world_airunit_lifecycle_score17_current_risk_review_verified"
 
 TARGETS = {
     "0x004dfa40": ("CUnit__VFunc08_InitAndAddToWorld", "void __thiscall CUnit__VFunc08_InitAndAddToWorld(void * this, void * init)", ("CUnit__Init", "CWorld__AddUnitToOccupancyGridAndRebuildShadows_Thunk")),

@@ -37,7 +37,7 @@ The pass corrected stale landscape, OID, PolyBucket, and global wrapper labels i
   - apply: `updated=7 skipped=0 renamed=6 would_rename=0 missing=0 bad=0`
   - final dry: `updated=0 skipped=7 renamed=0 would_rename=0 missing=0 bad=0`
 - Read-back exports verified `7` metadata rows, `7` tag rows, 1402 xref rows, 2695 instruction rows, and `7` decompile rows.
-- Verified backup: `G:\GhidraBackups\BEA_20260519-211737_post_wave607_cdxmemorymanager_core_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-211737_post_wave607_cdxmemorymanager_core_verified`
   - `fileCount=19`
   - `totalBytes=161418119`
   - `DiffCount=0`

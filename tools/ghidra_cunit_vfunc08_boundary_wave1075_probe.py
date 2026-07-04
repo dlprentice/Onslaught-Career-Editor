@@ -14,7 +14,7 @@ BASE = ROOT / "subagents" / "ghidra-static-reaudit" / "wave1075-raw-boundary-can
 TARGET = "0x004dfa40"
 TARGET_NAME = "CUnit__VFunc08_InitAndAddToWorld"
 TARGET_SIGNATURE = "void __thiscall CUnit__VFunc08_InitAndAddToWorld(void * this, void * init)"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260602-060358_post_wave1075_cunit_vfunc08_boundary_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260602-060358_post_wave1075_cunit_vfunc08_boundary_verified"
 
 CORE_DOCS = [
     ROOT / "README.md",

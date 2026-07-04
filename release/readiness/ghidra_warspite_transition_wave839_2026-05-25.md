@@ -22,7 +22,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 6 xref rows, 121 instruction-window rows, 221 target-deep instruction rows, 438 xref-site instruction rows, 1 decompile row, 10 context metadata rows, and 10 context decompile rows.
 - Queue after Wave839: 6098 total functions, 5663 commented, 435 commentless, 0 exact-undefined signatures, 0 `param_N` signatures, comment-backed proxy `5663/6098 = 92.87%`, strict clean-signature proxy `5663/6098 = 92.87%`.
 - Next raw commentless row: `0x005016b0 InitShaderCapabilityFlagsAndCVar`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-023901_post_wave839_warspite_transition_verified`, 19 files, 171838343 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-023901_post_wave839_warspite_transition_verified`, 19 files, 171838343 bytes, `DiffCount=0`.
 
 What this proves:
 

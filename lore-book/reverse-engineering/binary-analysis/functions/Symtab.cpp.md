@@ -2,7 +2,7 @@
 
 > Symbol Table for Mission Scripting System
 > Source: `MissionScript/Symtab.cpp`
-> Debug path string: `C:\dev\ONSLAUGHT2\MissionScript\Symtab.cpp` at 0x00650134
+> Debug path string: `[maintainer-local-source-export-root]\MissionScript\Symtab.cpp` at 0x00650134
 
 ## Overview
 

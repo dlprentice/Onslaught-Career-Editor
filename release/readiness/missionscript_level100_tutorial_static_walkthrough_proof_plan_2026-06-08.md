@@ -6,7 +6,7 @@ Scope: `missionscript-level100-tutorial-static-walkthrough`
 
 This readiness note records the public-safe Level100 tutorial static event/command walkthrough. The canonical proof is `missionscript-level100-tutorial-static-walkthrough-proof-plan.md`; the machine-checkable schema is `missionscript-level100-tutorial-static-walkthrough.v1.json`.
 
-Static closeout remains unchanged: `6411/6411 = 100.00%`, static debt `0 / 0 / 0`, expanded static surface `1560/1560 = 100.00%`, current-risk focused accounting `1179/1179 = 100.00%`, remaining active focused work `0`, and latest verified Ghidra backup `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+Static closeout remains unchanged: `6411/6411 = 100.00%`, static debt `0 / 0 / 0`, expanded static surface `1560/1560 = 100.00%`, current-risk focused accounting `1179/1179 = 100.00%`, remaining active focused work `0`, and latest verified Ghidra backup `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 Representative static anchors:
 

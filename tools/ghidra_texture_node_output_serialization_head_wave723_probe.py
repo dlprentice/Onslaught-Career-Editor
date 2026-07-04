@@ -61,7 +61,7 @@ DOC_TOKENS = (
     "0x005ab14b CTexture__SerializeNodeTreeToBitstream",
     "0x005ab4d0 CMeshCollisionVolume__ExpandEdgeRows_MirrorHigh",
     "0x0042f220 CSPtrSet__Clear",
-    r"G:\GhidraBackups\BEA_20260522-052723_post_wave723_texture_node_output_serialization_head_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260522-052723_post_wave723_texture_node_output_serialization_head_verified",
 )
 
 OVERCLAIM_TOKENS = (
@@ -217,7 +217,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
         require(re.search(r"\bparam_\d+\b", row.get("signature", "")) is None, f"queue row still has param_N for {address}", failures)
 
     backup = read_json(BACKUP_SUMMARY)
-    require(backup["backup"] == r"G:\GhidraBackups\BEA_20260522-052723_post_wave723_texture_node_output_serialization_head_verified", "backup destination mismatch", failures)
+    require(backup["backup"] == r"[maintainer-local-ghidra-backup-root]\BEA_20260522-052723_post_wave723_texture_node_output_serialization_head_verified", "backup destination mismatch", failures)
     require(backup["sourceFileCount"] == 19, "backup source file count mismatch", failures)
     require(backup["backupFileCount"] == 19, "backup file count mismatch", failures)
     require(int(backup["backupBytes"]) == 166529927, "backup byte count mismatch", failures)
@@ -279,7 +279,7 @@ def main(argv: list[str]) -> int:
     print("Wave723 texture node output serialization head probe: PASS")
     print(f"Targets: {len(TARGETS)}")
     print("Queue: 6098 total, 4255 commented, 1843 commentless, 1216 undefined, 111 param_N")
-    print(r"Backup: G:\GhidraBackups\BEA_20260522-052723_post_wave723_texture_node_output_serialization_head_verified")
+    print(r"Backup: [maintainer-local-ghidra-backup-root]\BEA_20260522-052723_post_wave723_texture_node_output_serialization_head_verified")
     return 0
 
 

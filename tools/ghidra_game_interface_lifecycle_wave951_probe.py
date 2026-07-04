@@ -22,7 +22,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260528-083735_post_wave951_game_interface_lifecycle_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-083735_post_wave951_game_interface_lifecycle_review_verified"
 
 TARGETS = {
     "0x0046c210": ("CGame__ctor", "void * __fastcall CGame__ctor(void * this)"),

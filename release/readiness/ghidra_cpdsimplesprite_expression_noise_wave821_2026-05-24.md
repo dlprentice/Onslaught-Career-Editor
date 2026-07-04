@@ -22,7 +22,7 @@ Read-back evidence:
 - Post exports: 2 metadata rows, 2 tag rows, 18 xref rows, 1802 target instruction rows, 2873 helper instruction rows, 13 helper metadata rows, and 2 decompile rows.
 - Queue after Wave821: 6098 total, 5622 commented, 476 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5622/6098 = 92.19%`, strict clean-signature proxy `5622/6098 = 92.19%`.
 - Next raw commentless row: `0x004caf30 CParticleManager__ClearParticleOwnerBacklinks`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-173755_post_wave821_cpdsimplesprite_expression_noise_verified`, 19 files, 171510663 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-173755_post_wave821_cpdsimplesprite_expression_noise_verified`, 19 files, 171510663 bytes, `DiffCount=0`.
 
 What this proves:
 

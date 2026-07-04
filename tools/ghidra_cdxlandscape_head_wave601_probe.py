@@ -316,7 +316,7 @@ def check_docs_and_ledgers(failures: list[str]) -> None:
         "1073",
         "3043/6093 = 49.94%",
         "0x00544fc0 CDXLandscape__BuildVertexBuffer",
-        "G:\\GhidraBackups\\BEA_20260519-181626_post_wave601_cdxlandscape_head_verified",
+        "[maintainer-local-ghidra-backup-root]\\BEA_20260519-181626_post_wave601_cdxlandscape_head_verified",
     )
     for label, text in texts.items():
         require_tokens(label, text, common_tokens[:9], failures)
@@ -370,7 +370,7 @@ def check_queue_tracking_backup(failures: list[str]) -> None:
     backup = read_json(BACKUP_SUMMARY)
     expected_backup = {
         "sourcePath": str(Path.home() / "Ghidra" / "Projects"),
-        "backupPath": "G:\\GhidraBackups\\BEA_20260519-181626_post_wave601_cdxlandscape_head_verified",
+        "backupPath": "[maintainer-local-ghidra-backup-root]\\BEA_20260519-181626_post_wave601_cdxlandscape_head_verified",
         "fileCount": 19,
         "totalBytes": 161221511,
         "missingCount": 0,

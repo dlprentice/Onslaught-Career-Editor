@@ -1,7 +1,7 @@
 # Sentinel.cpp - Function Mappings
 
 > CSentinel class - AI-controlled defensive turret/sentinel unit
-> Debug path: `C:\dev\ONSLAUGHT2\Sentinel.cpp` (0x0063221c)
+> Debug path: `[maintainer-local-source-export-root]\Sentinel.cpp` (0x0063221c)
 
 ## Overview
 
@@ -9,9 +9,9 @@
 
 This page records static retail-binary evidence only. Concrete `CSentinel`/weapon/list/helper layouts, runtime firing behavior, runtime animation behavior, exact source body identity, BEA launch behavior, and rebuild parity remain unproven.
 
-Wave1020 (`projectile-burst-spawn-spine-review-wave1020`) re-read `0x00506010 ProjectileBurst__SpawnFromPercentBucketFallback` with Sentinel caller context. Fresh xrefs still show `0x004decc0 CSentinel__UpdateFlamethrowers` calling the fallback at `0x004ded11`, while `0x004dea50 CSentinel__Init` remains the initialization context row. No mutation was needed. Verified backup: `G:\GhidraBackups\BEA_20260531-214433_post_wave1020_projectile_burst_spawn_spine_review_verified`. Runtime flamethrower/projectile behavior, exact Sentinel/weapon layouts, BEA patching, and rebuild parity remain separate proof.
+Wave1020 (`projectile-burst-spawn-spine-review-wave1020`) re-read `0x00506010 ProjectileBurst__SpawnFromPercentBucketFallback` with Sentinel caller context. Fresh xrefs still show `0x004decc0 CSentinel__UpdateFlamethrowers` calling the fallback at `0x004ded11`, while `0x004dea50 CSentinel__Init` remains the initialization context row. No mutation was needed. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-214433_post_wave1020_projectile_burst_spawn_spine_review_verified`. Runtime flamethrower/projectile behavior, exact Sentinel/weapon layouts, BEA patching, and rebuild parity remain separate proof.
 
-Wave1021 (`motion-controller-constructor-review-wave1021`) re-read `0x0049c5d0 CMCSentinel__Constructor` with no mutation. Fresh xrefs still show `CSentinel__Init` callers at `0x004deafd` and `0x004deb09`; instruction evidence calls `CMotionController__ctor_base`, installs vtable `0x005dc420`, stores the owner sentinel pointer at `+0x08`, and seeds `+0x0c/+0x10` with `0xc479c000`. Verified backup: `G:\GhidraBackups\BEA_20260531-222637_post_wave1021_motion_controller_constructor_review_verified`. Runtime sentinel motion behavior, exact source-body identity, concrete layouts, BEA patching, and rebuild parity remain separate proof.
+Wave1021 (`motion-controller-constructor-review-wave1021`) re-read `0x0049c5d0 CMCSentinel__Constructor` with no mutation. Fresh xrefs still show `CSentinel__Init` callers at `0x004deafd` and `0x004deb09`; instruction evidence calls `CMotionController__ctor_base`, installs vtable `0x005dc420`, stores the owner sentinel pointer at `+0x08`, and seeds `+0x0c/+0x10` with `0xc479c000`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-222637_post_wave1021_motion_controller_constructor_review_verified`. Runtime sentinel motion behavior, exact source-body identity, concrete layouts, BEA patching, and rebuild parity remain separate proof.
 
 ## Class Hierarchy
 
@@ -46,7 +46,7 @@ Evidence artifacts live under `subagents/ghidra-static-reaudit/wave498-sentinel-
 | Final verify dry | `updated=0 skipped=7 created=0 would_create=0 renamed=0 would_rename=0 missing=0 bad=0` |
 | Probe | `py -3 tools\ghidra_sentinel_wave498_probe.py --check` PASS |
 | NPM probe | `cmd.exe /c npm run test:ghidra-sentinel-wave498` PASS |
-| Backup | `G:\GhidraBackups\BEA_20260517-115915_post_wave498_sentinel_verified`, 19 files, 157780871 bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0` |
+| Backup | `[maintainer-local-ghidra-backup-root]\BEA_20260517-115915_post_wave498_sentinel_verified`, 19 files, 157780871 bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0` |
 
 Wave542 later resolved the deferred non-Sentinel `0x004de1d0` target as `CSafeSide__ShutdownAndUnlinkFactionAnchor`.
 
@@ -65,7 +65,7 @@ Read-back artifacts live under `subagents/ghidra-static-reaudit/wave542-safeside
 | Final verify dry | `updated=0 skipped=1 renamed=0 would_rename=0 missing=0 bad=0` |
 | Probe | `py -3 tools\ghidra_safeside_shutdown_wave542_probe.py --check` PASS |
 | NPM probe | `cmd.exe /c npm run test:ghidra-safeside-shutdown-wave542` PASS |
-| Backup | `G:\GhidraBackups\BEA_20260518-093637_post_wave542_safeside_shutdown_verified`, 19 files, 159320967 bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0` |
+| Backup | `[maintainer-local-ghidra-backup-root]\BEA_20260518-093637_post_wave542_safeside_shutdown_verified`, 19 files, 159320967 bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0` |
 
 This is not runtime faction-anchor proof, exact `CSafeSide` source-body proof, concrete layout recovery, BEA launch behavior, game patching, or rebuild parity.
 
@@ -90,7 +90,7 @@ This is not runtime faction-anchor proof, exact `CSafeSide` source-body proof, c
 
 | Address | String | Usage |
 | --- | --- | --- |
-| `0x0063221c` | `C:\dev\ONSLAUGHT2\Sentinel.cpp` | Debug path |
+| `0x0063221c` | `[maintainer-local-source-export-root]\Sentinel.cpp` | Debug path |
 | `0x0063223c` | `inactive` | Deactivated animation state |
 | `0x00632248` | `Sentinel Flamethrower` | Flamethrower candidate name |
 | `0x00632260` | `activate` | Activated animation state |

@@ -30,7 +30,7 @@ The pass made no rename. The current source checkout does not include the matchi
   - apply: `updated=1 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`
   - final dry: `updated=0 skipped=1 renamed=0 would_rename=0 missing=0 bad=0`
 - Read-back exports verified `1` metadata row, `1` tag row, `2` xref rows, `2201` instruction rows, `763` target-function instruction rows, `1` decompile row, and `114` callsite instruction rows.
-- Verified backup: `G:\GhidraBackups\BEA_20260519-224655_post_wave610_meshrenderer_layer_passes_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-224655_post_wave610_meshrenderer_layer_passes_verified`
   - `sourceFileCount=19`
   - `destFileCount=19`
   - `sourceBytes=161418119`

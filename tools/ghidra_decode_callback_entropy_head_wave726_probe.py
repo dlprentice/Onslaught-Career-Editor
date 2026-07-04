@@ -100,7 +100,7 @@ DOC_TOKENS = (
     "0x005ae810 CDXTexture__RefillEntropyInputWindow",
     "0x005aeaf0 CDXTexture__UpsampleChromaLinearHorizontal",
     "0x0042f220 CSPtrSet__Clear",
-    r"G:\GhidraBackups\BEA_20260522-065624_post_wave726_decode_callback_entropy_head_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260522-065624_post_wave726_decode_callback_entropy_head_verified",
 )
 
 OVERCLAIM_TOKENS = (
@@ -259,7 +259,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
             require(re.search(r"\bparam_\d+\b", row.get("signature", "")) is None, f"queue row still has param_N for {address}", failures)
 
     backup = read_json(BACKUP_SUMMARY)
-    require(backup["backup"] == r"G:\GhidraBackups\BEA_20260522-065624_post_wave726_decode_callback_entropy_head_verified", "backup destination mismatch", failures)
+    require(backup["backup"] == r"[maintainer-local-ghidra-backup-root]\BEA_20260522-065624_post_wave726_decode_callback_entropy_head_verified", "backup destination mismatch", failures)
     require(backup["fileCount"] == 19, "backup file count mismatch", failures)
     require(int(backup["totalBytes"]) == 166595463, "backup byte count mismatch", failures)
     require(backup["diffCount"] == 0, "backup diff count mismatch", failures)
@@ -321,7 +321,7 @@ def main(argv: list[str]) -> int:
     print("Status: PASS")
     print("Targets: 6")
     print("Queue: 6098 total, 4274 commented, 1824 commentless, 1216 undefined, 99 param_N")
-    print(r"Backup: G:\GhidraBackups\BEA_20260522-065624_post_wave726_decode_callback_entropy_head_verified")
+    print(r"Backup: [maintainer-local-ghidra-backup-root]\BEA_20260522-065624_post_wave726_decode_callback_entropy_head_verified")
     return 0
 
 

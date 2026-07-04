@@ -28,9 +28,9 @@ Wave1003 recovered this function boundary after `CHud__ShutDown` caller review f
 - Pre-context instructions show `0x0046c98e RET` ending `CGame__InitRestartLoop`, orphan instructions from `0x0046c990` through `0x0046ca6b RET`, and the separate `0x0046ca70 CGame__ShutdownRestartLoop` entry.
 - Post-read-back decompile shows calls to `CMusic__Stop`, `CHud__ShutDown`, `CGameInterface__Shutdown`, particle/static-shadow/imposter/engine/map/mesh/texture cleanup, `MEM_MANAGER__Cleanup`, `CGame__RunOutroFMV`, and console status/clear helpers.
 - Apply script `ApplyCGameShutdownBoundaryWave1003.java` dry/apply/final dry passed, created one function object, and saved `hud-head-render-state-review-wave1003` / `wave1003-readback-verified` tags.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-120949_post_wave1003_hud_head_render_state_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-120949_post_wave1003_hud_head_render_state_review_verified`.
 
-Probe token anchor: Wave1003; `hud-head-render-state-review-wave1003`; `0x0046c990 CGame__Shutdown`; `0x00481b00 CHud__ShutDown`; `0x00481400 CHud__ctor_base`; `0x00482090 HudRenderState__ApplyOverlaySpriteState`; `0x004821b0 CDXCompass__ApplyRenderStateModulate`; `0x00482210 CHud__RenderSegmentedMeterBar`; `472/1408 = 33.52%`; `641/1478 = 43.37%`; `371/500 = 74.20%`; `6223/6223 = 100.00%`; `G:\GhidraBackups\BEA_20260531-120949_post_wave1003_hud_head_render_state_review_verified`.
+Probe token anchor: Wave1003; `hud-head-render-state-review-wave1003`; `0x0046c990 CGame__Shutdown`; `0x00481b00 CHud__ShutDown`; `0x00481400 CHud__ctor_base`; `0x00482090 HudRenderState__ApplyOverlaySpriteState`; `0x004821b0 CDXCompass__ApplyRenderStateModulate`; `0x00482210 CHud__RenderSegmentedMeterBar`; `472/1408 = 33.52%`; `641/1478 = 43.37%`; `371/500 = 74.20%`; `6223/6223 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260531-120949_post_wave1003_hud_head_render_state_review_verified`.
 
 ## Boundary
 

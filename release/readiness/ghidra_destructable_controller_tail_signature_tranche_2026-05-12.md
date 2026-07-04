@@ -30,7 +30,7 @@ Stuart's checked source snapshot does not currently include a full `Destructable
 - The refreshed whole-database baseline reports `5978` functions, `0` weak functions, `1951` undefined signatures, and `2078` `param_N` signatures.
 - The refreshed quality queue reports `1143` commented functions, `4835` commentless functions, `1951` undefined signatures, and `2078` `param_N` signatures.
 - The current comment-backed static RE proxy is still below `20%`: `1143/5978 = 19.12%`; the stricter comment-plus-clean-signature proxy is `1080/5978 = 18.07%`.
-- The post-mutation live Ghidra backup was verified at `G:\GhidraBackups\BEA_20260512_204318_post_wave350_destructable_controller_tail_verified` with `19` files, `152865671` bytes, and `HashDiffCount=0`.
+- The post-mutation live Ghidra backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260512_204318_post_wave350_destructable_controller_tail_verified` with `19` files, `152865671` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

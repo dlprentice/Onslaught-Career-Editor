@@ -24,8 +24,8 @@ Evidence:
 
 - Fresh metadata/tag/xref/instruction/decompile exports: `7` / `7` / `24` / `752` / `7`.
 - Existing tags remain anchored to `collision-hl-wave398`, `hlcollision`, and `static-reaudit`.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-043957_post_wave1122_hlcollisiondetector_current_risk_review_verified`, `19` files, `175672199` bytes, `DiffCount=0`.
-- Previous latest completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-033658_post_wave1121_mixed_score24_current_risk_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-043957_post_wave1122_hlcollisiondetector_current_risk_review_verified`, `19` files, `175672199` bytes, `DiffCount=0`.
+- Previous latest completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-033658_post_wave1121_mixed_score24_current_risk_review_verified`.
 - Prior context: Wave398 corrected older owner labels, Wave916 reviewed all seven rows read-only, and Wave1018 re-read the event/sweep spine with no mutation.
 
 Boundary:

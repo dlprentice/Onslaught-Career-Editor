@@ -21,7 +21,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 9 xref rows, 181 instruction rows, 1 decompile row, 4 caller metadata rows, and 4 caller decompile rows.
 - Queue after Wave811: 6098 total, 5586 commented, 512 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5586/6098 = 91.60%`, strict clean-signature proxy `5586/6098 = 91.60%`.
 - Next raw commentless row: `0x004a25c0 CLTShell__ValidateAndRollHeapDeltas`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-125806_post_wave811_cmesh_legmotion_animation_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-125806_post_wave811_cmesh_legmotion_animation_verified`, 19 files, 171314055 bytes, `DiffCount=0`.
 
 What this proves:
 

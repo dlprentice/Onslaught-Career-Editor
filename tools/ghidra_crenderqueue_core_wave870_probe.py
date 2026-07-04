@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave870 CRenderQueue core"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-180844_post_wave870_crenderqueue_core_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-180844_post_wave870_crenderqueue_core_verified"
 NEXT_HEAD = "0x00551c90 CScreenFx__InitZoomEffectCvar"
 STRICT_PROXY = "5851/6105 = 95.84%"
 

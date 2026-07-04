@@ -28,8 +28,8 @@ Validation:
 - Post exports verified `12` metadata rows, `12` tag rows, `25` xref rows, `1116` instruction rows, `3180` wide instruction rows, and `12` decompile rows.
 - Queue refresh passed: `6098` total, `4226` commented, `1872` commentless, `1216` exact-undefined signatures, `131` `param_N` signatures, strict clean-signature proxy `4169/6098 = 68.37%`.
 - Current raw commentless head remains `0x0042f220 CSPtrSet__Clear`; current high-signal head is `0x005a47f2 CFastVB__DispatchOp_ExtractAxisAndOptionalAngle`.
-- Verified backup: `G:\GhidraBackups\BEA_20260522-032725_post_wave719_cfastvb_matrix_quaternion_core_verified`, `19` files, `166366087` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-032725_post_wave719_cfastvb_matrix_quaternion_core_verified`, `19` files, `166366087` bytes, `DiffCount=0`.
 
 Scope boundary: this is static saved-Ghidra metadata/decompile/instruction/xref evidence only. Exact dispatch-table slot schema, vector/matrix storage contract, source identity, runtime math correctness, BEA patching, and rebuild parity remain deferred.
 
-Probe anchors: `Wave719 CFastVB matrix/quaternion core`, `cfastvb-matrix-quaternion-core-wave719`, `0x005a298f CFastVB__ConvertHalfToFloatArray_SIMD`, `0x005a2b2d CFastVB__InvertMatrix4x4_WithDeterminant`, `0x005a3791 CFastVB__DispatchOp_BuildQuaternionFromMatrix3x3_005a3791`, `0x0042f220 CSPtrSet__Clear`, `0x005a47f2 CFastVB__DispatchOp_ExtractAxisAndOptionalAngle`, `G:\GhidraBackups\BEA_20260522-032725_post_wave719_cfastvb_matrix_quaternion_core_verified`.
+Probe anchors: `Wave719 CFastVB matrix/quaternion core`, `cfastvb-matrix-quaternion-core-wave719`, `0x005a298f CFastVB__ConvertHalfToFloatArray_SIMD`, `0x005a2b2d CFastVB__InvertMatrix4x4_WithDeterminant`, `0x005a3791 CFastVB__DispatchOp_BuildQuaternionFromMatrix3x3_005a3791`, `0x0042f220 CSPtrSet__Clear`, `0x005a47f2 CFastVB__DispatchOp_ExtractAxisAndOptionalAngle`, `[maintainer-local-ghidra-backup-root]\BEA_20260522-032725_post_wave719_cfastvb_matrix_quaternion_core_verified`.

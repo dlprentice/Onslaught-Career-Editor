@@ -33,7 +33,7 @@ Evidence counts:
 - Vtable export: `48` slot rows, all `OK`.
 - Queue closure remains `6410/6410 = 100.00%`, with `0` commentless rows, `0` exact-undefined signatures, and `0` `param_N` signatures.
 - Wave911 focused progress remains `812/1408 = 57.67%`; expanded static surface progress advances to `1534/1560 = 98.33%`; top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260604-135715_post_wave1090_cdebris_lifecycle_render_review_verified`, 19 files, 175541127 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-135715_post_wave1090_cdebris_lifecycle_render_review_verified`, 19 files, 175541127 bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -48,4 +48,4 @@ What remains separate proof:
 - Exact source-body identity for an absent full `debris.cpp` implementation body.
 - BEA patching behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1090; cdebris-lifecycle-render-review-wave1090; 0x004411a0 CDebris__Init; 0x00441320 CDebris__dtor_base; 0x004413a0 CDebris__Render; 0x00441420 CDebris__RenderImposter; 0x005daf14; grs_tuft1.MSH; DAT_0066eb78; DAT_0063012c; 1534/1560 = 98.33%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; G:\GhidraBackups\BEA_20260604-135715_post_wave1090_cdebris_lifecycle_render_review_verified; no mutation.
+Probe token anchor: Wave1090; cdebris-lifecycle-render-review-wave1090; 0x004411a0 CDebris__Init; 0x00441320 CDebris__dtor_base; 0x004413a0 CDebris__Render; 0x00441420 CDebris__RenderImposter; 0x005daf14; grs_tuft1.MSH; DAT_0066eb78; DAT_0063012c; 1534/1560 = 98.33%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260604-135715_post_wave1090_cdebris_lifecycle_render_review_verified; no mutation.

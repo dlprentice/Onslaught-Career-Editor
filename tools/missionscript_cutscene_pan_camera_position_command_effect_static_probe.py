@@ -41,8 +41,8 @@ LORE_MSL_COMMANDS = ROOT / "lore-book" / "reverse-engineering" / "quick-referenc
 PACKAGE_JSON = ROOT / "package.json"
 
 WAVE580 = ROOT / "subagents" / "ghidra-static-reaudit" / "wave580-iscript-camera-objective-00533b70"
-WAVE1219_BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
-WAVE580_BACKUP = r"G:\GhidraBackups\BEA_20260519-044247_post_wave580_iscript_camera_objective_verified"
+WAVE1219_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+WAVE580_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260519-044247_post_wave580_iscript_camera_objective_verified"
 
 PROOF_LINK = "missionscript-cutscene-pan-camera-position-command-effect-static-proof.md"
 SCHEMA_LINK = "missionscript-cutscene-pan-camera-position-command-effect.v1.json"

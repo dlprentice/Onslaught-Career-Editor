@@ -25,7 +25,7 @@ Evidence:
 - Focused probe passed: `py -3 tools\ghidra_audio_tail_wave503_probe.py --check`
 - npm probe passed: `cmd.exe /c npm run test:ghidra-audio-tail-wave503`
 - Static queue check passed: `cmd.exe /c npm run test:ghidra-static-reaudit-queue`
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260517-142753_post_wave503_audio_tail_verified`
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260517-142753_post_wave503_audio_tail_verified`
 
 Queue snapshot after Wave503:
 

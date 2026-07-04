@@ -22,7 +22,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260528-103114_post_wave955_fepmultiplayerstart_subobj8848_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-103114_post_wave955_fepmultiplayerstart_subobj8848_review_verified"
 
 EXPECTED_METADATA = {
     "0x00459920": ("CFEPMultiplayerStart__SubObj8848__ctor", "void * __thiscall CFEPMultiplayerStart__SubObj8848__ctor(void * this)"),
@@ -76,7 +76,7 @@ CORE_TOKENS = (
     "0x00459e50 CFEPMultiplayerStart__SubObj8848__RenderPreCommon",
     "0x00459ee0 CFEPMultiplayerStart__SubObj8848__Render",
     "0x005db4fc",
-    r"C:\dev\ONSLAUGHT2\FEPMultiplayerStart.cpp",
+    r"[maintainer-local-source-export-root]\FEPMultiplayerStart.cpp",
     "286/1408 = 20.31%",
     "6151/6151 = 100.00%",
     BACKUP_PATH,
@@ -150,7 +150,7 @@ def check_artifacts(failures: list[str]) -> None:
         require(dec is not None and dec.get("status") == "OK", f"decompile missing/failed at {address}", failures)
 
     rows = read_tsv(BASE / "string-0063fc24.tsv")
-    require(rows and rows[0].get("cstring") == r"C:\dev\ONSLAUGHT2\FEPMultiplayerStart.cpp", "debug string mismatch", failures)
+    require(rows and rows[0].get("cstring") == r"[maintainer-local-source-export-root]\FEPMultiplayerStart.cpp", "debug string mismatch", failures)
 
     for filename, tokens in DECOMPILE_TOKENS.items():
         text = read_text(BASE / "pre-decompile" / filename)
@@ -174,7 +174,7 @@ def check_logs_and_backup(failures: list[str]) -> None:
         "pre-instructions.log": "Wrote 1581 function-body instruction rows",
         "pre-decompile.log": "targets=15 dumped=15 missing=0 failed=0",
         "pre-vtables.log": "ExportVtableSlots complete: targets=2 rows=20",
-        "string-0063fc24.log": r"DumpCStringAtAddress complete: input=0063fc24 target=0063fc24 text=C:\dev\ONSLAUGHT2\FEPMultiplayerStart.cpp",
+        "string-0063fc24.log": r"DumpCStringAtAddress complete: input=0063fc24 target=0063fc24 text=[maintainer-local-source-export-root]\FEPMultiplayerStart.cpp",
     }
     for relative, token in expected_logs.items():
         text = read_text(BASE / relative)

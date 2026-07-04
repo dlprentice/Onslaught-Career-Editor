@@ -1,7 +1,7 @@
 # MCBuggy.cpp Functions
 
 > Source File: MCBuggy.cpp | Binary: BEA.exe
-> Debug Path Address: 0x0062dc80 (`C:\dev\ONSLAUGHT2\MCBuggy.cpp`)
+> Debug Path Address: 0x0062dc80 (`[maintainer-local-source-export-root]\MCBuggy.cpp`)
 > RTTI: `.?AVCMCBuggy@@` at 0x0062dc70
 
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6113/6113** (Wave900: every function commented; clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
@@ -16,11 +16,11 @@ This page records static saved-Ghidra evidence only. It does not prove runtime w
 
 Wave800 gameplay object helpers static read-back (`gameplay-object-helpers-wave800`, `wave800-readback-verified`) hardened `0x00445010 CMCBuggy__GetTargetValueOrFallback` as `float __thiscall CMCBuggy__GetTargetValueOrFallback(void * this, int target_id)`. `RET 0x4` proves one explicit stack argument after `ECX`, and the direct xref is `CDestructableSegmentsMotionController__ApplyRumbleTransform` at `0x00494cfa`. The body reads a target table at `this+4` using `target_id`, checks a candidate vfunc at `+0x14`, returns candidate field `+0x44` as an x87 float, or falls back to global float `0x005d856c`. If `target_id` is nonzero and no direct entry exists, it follows the owner/controller path at `this+0x10/+0x30`, dispatches vfunc `+0x24`, and probes the returned `+0x160` target table.
 
-Verified backup: `G:\GhidraBackups\BEA_20260524-070217_post_wave800_gameplay_object_helpers_verified`. This is saved static retail Ghidra evidence only; exact field names, concrete target-record layout, runtime rumble/target behavior, BEA patching, and rebuild parity remain deferred.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-070217_post_wave800_gameplay_object_helpers_verified`. This is saved static retail Ghidra evidence only; exact field names, concrete target-record layout, runtime rumble/target behavior, BEA patching, and rebuild parity remain deferred.
 
 ## Wave755 MCBuggy Unwind Continuation (2026-05-23)
 
-Wave755 static read-back (`unwind-continuation-wave755`, `wave755-readback-verified`) saved comments/tags/signatures for six MCBuggy.cpp-adjacent compiler-generated SEH unwind cleanup callbacks from `0x005d3200 Unwind@005d3200` through `0x005d3280 Unwind@005d3280`. Evidence includes MCBuggy.cpp debug path `0x0062dc80`, DATA scope-table xrefs `0x0061bf44` through `0x0061bfc4`, two `OID__FreeObject_Callback` allocation-cleanup rows, one `CMCBuggy__ProfileEnd` profiler epilogue row, and two `CMotionController__dtor_base` rows. Verified backup: `G:\GhidraBackups\BEA_20260523-105815_post_wave755_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
+Wave755 static read-back (`unwind-continuation-wave755`, `wave755-readback-verified`) saved comments/tags/signatures for six MCBuggy.cpp-adjacent compiler-generated SEH unwind cleanup callbacks from `0x005d3200 Unwind@005d3200` through `0x005d3280 Unwind@005d3280`. Evidence includes MCBuggy.cpp debug path `0x0062dc80`, DATA scope-table xrefs `0x0061bf44` through `0x0061bfc4`, two `OID__FreeObject_Callback` allocation-cleanup rows, one `CMCBuggy__ProfileEnd` profiler epilogue row, and two `CMotionController__dtor_base` rows. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260523-105815_post_wave755_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
 
 | Address | Scope-table xref | Static read-back evidence |
 | --- | --- | --- |
@@ -89,7 +89,7 @@ The wave also hardened `CUnitAI__CallIndexedEntryVFunc10` and `CUnitAI__CanUseIn
 ## Key Static Findings
 
 - Wheel marker strings: `WheelBase` at `0x0062dca0`, `WheelMotion` at `0x0062cb54`, `Wheel` at `0x0062dcac`, `Axle` at `0x0062dcb4`, and `Body` at `0x0062dcbc`.
-- Debug path string: `C:\dev\ONSLAUGHT2\MCBuggy.cpp` at `0x0062dc80`.
+- Debug path string: `[maintainer-local-source-export-root]\MCBuggy.cpp` at `0x0062dc80`.
 - Wheel arrays and transform buffers are dynamically allocated from the observed wheel-base count.
 - Contact sentinels use `-1.0f` (`0xbf800000`).
 - Profiling uses `rdtsc`; the saved comment records bucket accumulation under globals near `DAT_0082ce84` and `DAT_0082d054`.

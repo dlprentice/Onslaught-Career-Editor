@@ -20,7 +20,7 @@ Current static closeout remains unchanged:
 - Expanded post-100 static surface: `1560/1560 = 100.00%`.
 - Active current-risk focused accounting: `1179/1179 = 100.00%`.
 - Remaining active focused work: `0`.
-- Latest verified Ghidra backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+- Latest verified Ghidra backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 Proof evidence was generated under ignored private evidence root `subagents/static-to-proof/save-options-controller-byte-preservation-copied-file-proof/`. Public notes and schema intentionally omit private source paths and source hashes.
 

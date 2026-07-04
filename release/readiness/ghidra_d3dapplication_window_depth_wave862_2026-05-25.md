@@ -22,7 +22,7 @@ Read-back evidence:
 - Queue after Wave862: 6105 total, 5804 commented, 301 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5804/6105 = 95.07%`, strict clean-signature proxy `5804/6105 = 95.07%`.
 - Next raw commentless row: `0x0052e180 CInstructionOP_PLUS__VFunc_00_0052e180`.
 - Commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-144206_post_wave862_d3dapplication_window_depth_verified`, 19 files, 172264327 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-144206_post_wave862_d3dapplication_window_depth_verified`, 19 files, 172264327 bytes, `DiffCount=0`.
 
 What this proves:
 

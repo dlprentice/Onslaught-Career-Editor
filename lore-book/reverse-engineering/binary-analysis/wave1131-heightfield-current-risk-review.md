@@ -41,8 +41,8 @@ Evidence:
 - Post metadata/tag/xref/instruction/decompile exports: `7` / `7` / `9` / `220` / `7`.
 - Pre/post metadata, instruction, and xref exports match exactly.
 - Queue quality refresh after the Ghidra write reported `total_functions=6410 commented_functions=6410`.
-- Final backup after the queue refresh: `G:\GhidraBackups\BEA_20260605-090018_post_wave1131_heightfield_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
-- Previous completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-082438_post_wave1130_dive_dropship_current_risk_review_verified`.
+- Final backup after the queue refresh: `[maintainer-local-ghidra-backup-root]\BEA_20260605-090018_post_wave1131_heightfield_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Previous completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-082438_post_wave1130_dive_dropship_current_risk_review_verified`.
 - Codex read-only consult recommended a later Feature/Pickup candidate; root selected the earlier uncovered HeightField cluster after live covered-set analysis.
 
 What this proves:

@@ -30,7 +30,7 @@ Read-back evidence:
 - Post exports: `8` metadata rows, `8` tag rows, `12` xref rows, `1430` body-instruction rows, and `8` decompile rows.
 - Queue closure after refresh remains `6222/6222 = 100.00%`, with `0` commentless functions, `0` exact-undefined signatures, and `0` `param_N` signatures.
 - Wave911 focused re-audit progress is `445/1408 = 31.61%`; expanded static surface progress is `525/1478 = 35.52%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-045300_post_wave991_round_config_bridge_review_verified`, 19 files, 173837191 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-045300_post_wave991_round_config_bridge_review_verified`, 19 files, 173837191 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

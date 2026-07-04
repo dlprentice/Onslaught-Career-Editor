@@ -28,7 +28,7 @@ CAPABILITIES = ROOT / "CURRENT_CAPABILITIES.md"
 AGENTS = ROOT / "AGENTS.md"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified"
 WAVE_TAG = "cmeshpart-load-geometry-review-wave1100"
 
 TARGETS = {
@@ -169,7 +169,7 @@ COMMON_DOC_TOKENS = (
     "0x004b4250 CMeshPart__Merge",
     "0x004bae70 CMeshPart__CanOptimizePart_Strict",
     "0x004bb040 CMeshPart__CanMergeInOptimizePass",
-    r"C:\dev\ONSLAUGHT2\MeshPart.cpp",
+    r"[maintainer-local-source-export-root]\MeshPart.cpp",
     "resfile_cmeshpartsize",
     "0x13c",
     "1560/1560 = 100.00%",

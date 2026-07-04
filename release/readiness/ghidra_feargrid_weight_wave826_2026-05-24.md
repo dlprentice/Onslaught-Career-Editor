@@ -23,7 +23,7 @@ Read-back evidence:
 - Post exports: 1 metadata row, 1 tag row, 1 xref row, 301 target instruction rows, 1 target decompile row, 5 context metadata rows, 1205 context instruction rows, and 5 context decompile rows.
 - Queue after Wave826: 6098 total, 5634 commented, 464 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5634/6098 = 92.39%`, strict clean-signature proxy `5634/6098 = 92.39%`.
 - Next raw commentless row: `0x004df520 CActor__dtor_base`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-200047_post_wave826_feargrid_weight_verified`, 19 files, 171576199 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-200047_post_wave826_feargrid_weight_verified`, 19 files, 171576199 bytes, `DiffCount=0`.
 
 What this proves:
 

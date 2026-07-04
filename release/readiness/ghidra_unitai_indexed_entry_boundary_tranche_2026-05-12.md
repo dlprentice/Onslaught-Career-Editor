@@ -20,7 +20,7 @@ Evidence:
 - The refreshed all-functions baseline reports `6002` total functions, `0` legacy weak names, `1951` undefined signatures, and `2073` `param_N` signatures.
 - The refreshed quality queue reports `6002` functions, `1173` commented functions, `4829` commentless functions, `1951` undefined signatures, and `2073` `param_N` signatures.
 - Current confirmation proxies remain telemetry only: comment-backed `1173/6002 = 19.54%`, strict clean-signature `1110/6002 = 18.49%`. The `20%` value is not a milestone or acceptance gate.
-- The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260512_230703_post_wave354_unitai_indexed_entry_verified` with `18` files, `152931207` bytes, and `HashDiffCount=0`.
+- The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260512_230703_post_wave354_unitai_indexed_entry_verified` with `18` files, `152931207` bytes, and `HashDiffCount=0`.
 
 Raw proof remains ignored under `subagents/ghidra-static-reaudit/unitai-indexed-entry-wave354/current/`.
 

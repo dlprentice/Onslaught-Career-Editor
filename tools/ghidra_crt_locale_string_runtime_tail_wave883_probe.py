@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave883 CRT locale/string/runtime tail"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-005047_post_wave883_crt_locale_string_runtime_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-005047_post_wave883_crt_locale_string_runtime_tail_verified"
 NEXT_HEAD = "0x00569cb8 ControlsUI__AbortInvalidParameter"
 STRICT_PROXY = "5966/6113 = 97.60%"
 

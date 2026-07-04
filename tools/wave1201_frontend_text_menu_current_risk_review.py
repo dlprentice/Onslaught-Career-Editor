@@ -33,7 +33,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-235230_post_wave1201_frontend_text_menu_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-235230_post_wave1201_frontend_text_menu_current_risk_review_verified"
 
 TARGETS = {
     "0x00465a20": ("TextLayout__WrapWideTextToFixedLines", "int __stdcall TextLayout__WrapWideTextToFixedLines(short * line_buffer, short * wide_text, float max_width)"),

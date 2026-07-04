@@ -12,7 +12,7 @@ Read-back evidence:
 
 - Fresh Ghidra exports: `3` metadata rows, `3` tag rows, `3 xref rows`, `339 instruction rows`, and `3` decompile rows.
 - Logs report `targets=3 found=3 missing=0`, `rows=3 missing=0`, `Wrote 3 rows`, `Wrote 339 function-body instruction rows`, and `targets=3 dumped=3 missing=0 failed=0`.
-- Verified backup: `G:\GhidraBackups\BEA_20260606-073137_post_wave1173_cfastvb_strip_candidate_current_risk_review_verified`, `19` files, `176065415` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-073137_post_wave1173_cfastvb_strip_candidate_current_risk_review_verified`, `19` files, `176065415` bytes, `DiffCount=0`, `HashDiffCount=0`.
 - Current-risk accounting after Wave1173: `675/1179 = 57.25%`; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 504; current risk candidates: 6166; focused threshold `15`; not Wave911 reconstruction.
 
 Mutation status: read-only review; no mutation, no rename, no signature change, no comment/tag change, no function-boundary change, and no executable-byte change.

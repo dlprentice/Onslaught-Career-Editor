@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave877 water render tail"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-215011_post_wave877_water_render_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-215011_post_wave877_water_render_tail_verified"
 NEXT_HEAD = "0x0055d731 CRT__SehDispatchWithScopeTable_Thunk_0055d731"
 STRICT_PROXY = "5893/6113 = 96.40%"
 

@@ -36,7 +36,7 @@ Wave998 anchor:
 - Wave911 focused re-audit progress: `467/1408 = 33.17%`
 - Expanded static surface progress: `585/1478 = 39.58%`
 - Static closure: `6222/6222 = 100.00%`
-- Verified backup: `G:\GhidraBackups\BEA_20260531-091151_post_wave998_fatal_error_spine_review_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-091151_post_wave998_fatal_error_spine_review_verified`
 
 Interpretation:
 

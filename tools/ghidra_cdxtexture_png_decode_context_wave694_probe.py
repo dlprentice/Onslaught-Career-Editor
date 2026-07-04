@@ -223,7 +223,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
     require(head.get("name") == "CDXTexture__ReleasePngDecodeContextHandles", f"next head name mismatch: {head}", failures)
 
     backup = read_json(BACKUP_SUMMARY)
-    require(backup.get("backup_path") == "G:/GhidraBackups/BEA_20260521-142452_post_wave694_cdxtexture_png_decode_context_verified", "backup path mismatch", failures)
+    require(backup.get("backup_path") == "[maintainer-local-ghidra-backup-root]/BEA_20260521-142452_post_wave694_cdxtexture_png_decode_context_verified", "backup path mismatch", failures)
     require(backup.get("file_count") == 19, f"backup file count mismatch: {backup}", failures)
     require(int(backup.get("total_bytes")) == 164989831, f"backup bytes mismatch: {backup}", failures)
     require(backup.get("diff_count") == 0, f"backup diff mismatch: {backup}", failures)

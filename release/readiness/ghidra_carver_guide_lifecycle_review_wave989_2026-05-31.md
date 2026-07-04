@@ -28,7 +28,7 @@ Read-back evidence:
 - Vtable slots confirm `0x005d947c[0] -> CCarverGuide__HandleEvent`, `0x005d947c[1] -> CCarverGuide__scalar_deleting_dtor`, and `0x005e0d90[8] -> CCarver__Init` for CCarver continuity.
 - Queue closure remains `6222/6222 = 100.00%`.
 - Wave911 focused re-audit progress is `438/1408 = 31.11%`; expanded static surface progress is `509/1478 = 34.44%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-034107_post_wave989_carver_guide_lifecycle_review_verified`, 19 files, 173837191 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-034107_post_wave989_carver_guide_lifecycle_review_verified`, 19 files, 173837191 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

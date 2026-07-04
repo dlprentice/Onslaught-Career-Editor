@@ -23,7 +23,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260528-003302_post_wave933_physics_statement_loaders_tranche2_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-003302_post_wave933_physics_statement_loaders_tranche2_review_verified"
 SCRIPT_NAME = "test:ghidra-physics-statement-loaders-tranche2-review-wave933"
 SCRIPT_VALUE = r"py -3 tools\ghidra_physics_statement_loaders_tranche2_review_wave933_probe.py --check"
 

@@ -1,7 +1,7 @@
 # ScriptEventNB.cpp - Function Mappings
 
 > Source file: `MissionScript/ScriptEventNB.cpp`
-> Debug path: `C:\dev\ONSLAUGHT2\MissionScript\ScriptEventNB.cpp` (0x0064fe98)
+> Debug path: `[maintainer-local-source-export-root]\MissionScript\ScriptEventNB.cpp` (0x0064fe98)
 > Last updated: 2026-05-19
 
 ## Overview
@@ -107,7 +107,7 @@ void CScriptEventNB::~CScriptEventNB() {
 void CScriptEventNB::CreateEventListener() {
     // Allocate object (size 0x10, type 0x76)
     int* obj = OID__AllocObject(0x10, 0x76,
-        "C:\\dev\\ONSLAUGHT2\\MissionScript\\ScriptEventNB.cpp", 0x42);
+        "[maintainer-local-source-export-root]\\MissionScript\\ScriptEventNB.cpp", 0x42);
 
     if (obj != NULL) {
         CRelaxedSquad::Init();
@@ -159,14 +159,14 @@ int* CScriptEventNB::RegisterEventListener(undefined4* param_1, int param_2) {
     if (local_14 != NULL) {
         // Found existing listener - add to its list
         int* wrapper = OID__AllocObject(4, 0x76,
-            "C:\\dev\\ONSLAUGHT2\\MissionScript\\ScriptEventNB.cpp", 0x19);
+            "[maintainer-local-source-export-root]\\MissionScript\\ScriptEventNB.cpp", 0x19);
         if (wrapper != NULL) {
             *wrapper = param_2;
             if (param_2 != 0) {
                 // Lazily allocate the monitor deletion list at param_2+0x04 (monitor.h)
                 if (*(int*)(param_2 + 4) == 0) {
                     int obj = OID__AllocObject(0x10, 0x5e,
-                        "C:\\dev\\ONSLAUGHT2\\MissionScript\\ScriptFunctionManager.cpp", 0x18);
+                        "[maintainer-local-source-export-root]\\MissionScript\\ScriptFunctionManager.cpp", 0x18);
                     if (obj != 0) {
                         CSPtrSet__Init(obj);
                     }
@@ -178,7 +178,7 @@ int* CScriptEventNB::RegisterEventListener(undefined4* param_1, int param_2) {
     } else {
         // No existing listener - create new one
         local_14 = OID__AllocObject(0x18, 0x76,
-            "C:\\dev\\ONSLAUGHT2\\MissionScript\\ScriptEventNB.cpp", 0x68);
+            "[maintainer-local-source-export-root]\\MissionScript\\ScriptEventNB.cpp", 0x68);
         if (local_14 != NULL) {
             CSPtrSet__Init(local_14 + 1);
             // Clone the event name
@@ -186,7 +186,7 @@ int* CScriptEventNB::RegisterEventListener(undefined4* param_1, int param_2) {
             *local_14 = nameClone;
             // Create wrapper and add
             int* wrapper = OID__AllocObject(4, 0x76,
-                "C:\\dev\\ONSLAUGHT2\\MissionScript\\ScriptEventNB.cpp", 0x11);
+                "[maintainer-local-source-export-root]\\MissionScript\\ScriptEventNB.cpp", 0x11);
             if (wrapper != NULL) {
                 *wrapper = param_2;
                 if (param_2 != 0) {
@@ -487,7 +487,7 @@ Offsets formerly listed from `0x58` through `0x6c` came from the now-moved `CScr
 | Address | String | Usage |
 |---------|--------|-------|
 | 0x0062c258 | "game playing" | Special event name - no warning |
-| 0x0064fe98 | "C:\\dev\\ONSLAUGHT2\\MissionScript\\ScriptEventNB.cpp" | Debug path |
+| 0x0064fe98 | "[maintainer-local-source-export-root]\\MissionScript\\ScriptEventNB.cpp" | Debug path |
 | 0x0064fe80 | ".?AVCScriptEventNB@@" | RTTI class name |
 
 ---

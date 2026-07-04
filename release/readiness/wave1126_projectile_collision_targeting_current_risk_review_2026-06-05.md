@@ -27,8 +27,8 @@ Evidence:
 - Post metadata/tag/xref/instruction/decompile exports: `3` / `3` / `7` / `291` / `3`.
 - Post tags include `static-reaudit`, `wave1126-projectile-collision-targeting-current-risk-review`, `wave1126-readback-verified`, `retail-binary-evidence`, `comment-hardened`, `tag-normalized`, `current-risk-review`, and `projectile-collision-targeting`.
 - Queue quality refresh after the Ghidra write reported `total_functions=6410 commented_functions=6410`.
-- Final backup after the queue refresh: `G:\GhidraBackups\BEA_20260605-061135_post_wave1126_projectile_collision_targeting_current_risk_review_verified`, `19` files, `175901575` bytes, `DiffCount=0`.
-- Previous completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-053504_post_wave1125_carver_targeting_current_risk_review_verified`.
+- Final backup after the queue refresh: `[maintainer-local-ghidra-backup-root]\BEA_20260605-061135_post_wave1126_projectile_collision_targeting_current_risk_review_verified`, `19` files, `175901575` bytes, `DiffCount=0`.
+- Previous completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-053504_post_wave1125_carver_targeting_current_risk_review_verified`.
 - Prior context: Wave919, Wave920, Wave1059, and Wave495.
 
 What this proves:

@@ -25,7 +25,7 @@ The pass corrected the stale `CDXTexture__InsertUniqueTripletAtFront` owner labe
 - Queue after Wave653: `6093` total, `3543` commented, `2550` commentless, `1217` exact-undefined signatures, `765` `param_N` signatures
 - Comment-backed proxy: `3543/6093 = 58.15%`
 - Strict clean-signature proxy: `3491/6093 = 57.30%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-192250_post_wave653_cfastvb_vertex_cache_scoring_verified`, `19` files, `163023751` bytes, `DiffCount=0`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-192250_post_wave653_cfastvb_vertex_cache_scoring_verified`, `19` files, `163023751` bytes, `DiffCount=0`
 - Next queue head: `0x00572e40 CTexture__DestroyNodeTreeAndStorage`
 
 ## Boundaries

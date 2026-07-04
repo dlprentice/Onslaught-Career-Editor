@@ -27,7 +27,7 @@ The pass saved bounded signatures, comments, and tags. It made no function-bound
 - Entry evidence covers SEH-frame setup, Win32 version capture, heap/TLS/file/argv/environment/static-init setup, startup show-command selection, `CLTShell__WinMain`, and `CRT__CExit`.
 - Fatal-exit evidence covers runtime error reporting and `ExitProcess(0xff)`.
 - CRT EH evidence covers catch-type matching, unwind-map walking, catch-block invocation, catch-object materialization/destruction, and pointer-to-member-displacement adjustment.
-- Backup verified: `G:\GhidraBackups\BEA_20260520-061702_post_wave625_entry_crt_eh_verified` with `19` files, `162040711` bytes, and `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260520-061702_post_wave625_entry_crt_eh_verified` with `19` files, `162040711` bytes, and `DiffCount=0`.
 
 ## Queue Telemetry
 

@@ -6,7 +6,7 @@ Scope: `wave1139-battleengine-jetpart-current-risk-review`
 
 Wave1139 re-read ten Wave1108 current-risk rows in the BattleEngine JetPart movement/gravity cluster and recovered one additional source-backed function boundary:
 
-Probe token anchor: Wave1139; wave1139-battleengine-jetpart-current-risk-review; `229/1179 = 19.42%`; 10 current-risk rows; 1 function-boundary recovery; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 950; current risk candidates: 6166; BattleEngine JetPart movement/gravity current-risk cluster; fresh Ghidra export; function-boundary recovery; `0 / 0 / 0`; `6411/6411 = 100.00%`; `G:\GhidraBackups\BEA_20260605-134608_post_wave1139_battleengine_jetpart_current_risk_review_verified`; `G:\GhidraBackups\BEA_20260605-130856_post_wave1138_battleengine_walkerpart_current_risk_review_verified`.
+Probe token anchor: Wave1139; wave1139-battleengine-jetpart-current-risk-review; `229/1179 = 19.42%`; 10 current-risk rows; 1 function-boundary recovery; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 950; current risk candidates: 6166; BattleEngine JetPart movement/gravity current-risk cluster; fresh Ghidra export; function-boundary recovery; `0 / 0 / 0`; `6411/6411 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260605-134608_post_wave1139_battleengine_jetpart_current_risk_review_verified`; `[maintainer-local-ghidra-backup-root]\BEA_20260605-130856_post_wave1138_battleengine_walkerpart_current_risk_review_verified`.
 
 | Address | Evidence |
 | --- | --- |
@@ -32,8 +32,8 @@ Read-back evidence:
 - Queue refresh after the boundary recovery: `6411/6411 = 100.00%`, static debt `0 / 0 / 0`.
 - Current-risk refresh: current risk candidates `6166`, current focused candidates `1178`, focused threshold `15`.
 - Wave1108 current focused accounting moved to `229/1179 = 19.42%`; remaining active focused work: `950`.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-134608_post_wave1139_battleengine_jetpart_current_risk_review_verified`, 19 files, 175967111 bytes, `DiffCount=0`, `HashDiffCount=0`.
-- Previous completed backup: `G:\GhidraBackups\BEA_20260605-130856_post_wave1138_battleengine_walkerpart_current_risk_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-134608_post_wave1139_battleengine_jetpart_current_risk_review_verified`, 19 files, 175967111 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Previous completed backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-130856_post_wave1138_battleengine_walkerpart_current_risk_review_verified`.
 
 What this proves:
 

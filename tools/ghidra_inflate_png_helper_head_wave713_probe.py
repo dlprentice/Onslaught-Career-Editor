@@ -115,7 +115,7 @@ DOC_TOKENS = (
     "extraout_EAX",
     "0x0059ce20 CDXTexture__ExpandPackedPixelsToScanline",
     "0x0042f220 CSPtrSet__Clear",
-    r"G:\GhidraBackups\BEA_20260521-234937_post_wave713_inflate_png_helper_head_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260521-234937_post_wave713_inflate_png_helper_head_verified",
 )
 
 OVERCLAIM_TOKENS = (
@@ -268,7 +268,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
     file_count = backup.get("file_count") or backup.get("fileCount")
     total_bytes = backup.get("total_bytes") or backup.get("totalBytes")
     diff_count = backup.get("diff_count") if "diff_count" in backup else backup.get("diffCount")
-    require(backup_path == r"G:\GhidraBackups\BEA_20260521-234937_post_wave713_inflate_png_helper_head_verified", "backup path mismatch", failures)
+    require(backup_path == r"[maintainer-local-ghidra-backup-root]\BEA_20260521-234937_post_wave713_inflate_png_helper_head_verified", "backup path mismatch", failures)
     require(file_count == 19, "backup file count mismatch", failures)
     require(int(total_bytes or 0) == 165972871, "backup byte count mismatch", failures)
     require(diff_count == 0, "backup diff count mismatch", failures)
@@ -330,7 +330,7 @@ def main() -> int:
     print("Wave713 inflate / PNG helper head probe: PASS")
     print("Targets: 11")
     print("Queue: 6098 total, 4154 commented, 1944 commentless, 1216 undefined, 183 param_N")
-    print("Backup: G:\\GhidraBackups\\BEA_20260521-234937_post_wave713_inflate_png_helper_head_verified")
+    print("Backup: [maintainer-local-ghidra-backup-root]\\BEA_20260521-234937_post_wave713_inflate_png_helper_head_verified")
     return 0
 
 

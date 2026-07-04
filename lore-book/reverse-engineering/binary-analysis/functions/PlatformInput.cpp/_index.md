@@ -8,7 +8,7 @@ This page tracks platform-input helpers where saved Ghidra rows are bounded by r
 
 ## Wave851 PC Platform/Controller Tail
 
-Wave851 PC platform/controller tail (`pc-platform-controller-tail-wave851`, `wave851-readback-verified`) saved comments/tags for late platform key-state/key-sink wrappers. Exact anchors: `0x00515970 PlatformInput__GetKeyOn`, `0x00515980 PlatformInput__ConsumeKeyOnce`, `0x005159b0 PlatformInput__ResetKeyStateTables`, and `0x005159c0 PLATFORM__SetKeySink`. Probe token anchor: `Wave851 PC platform/controller tail`; `0x00515970 PlatformInput__GetKeyOn`; `0x005159c0 PLATFORM__SetKeySink`; `PlatformInput__ConsumeKeyOnce`; `PlatformInput__ResetKeyStateTables`; `5729/6098 = 93.95%`; `0x00515ab0 D3DDevice__SetViewport`; `G:\GhidraBackups\BEA_20260525-085618_post_wave851_pc_platform_controller_tail_verified`.
+Wave851 PC platform/controller tail (`pc-platform-controller-tail-wave851`, `wave851-readback-verified`) saved comments/tags for late platform key-state/key-sink wrappers. Exact anchors: `0x00515970 PlatformInput__GetKeyOn`, `0x00515980 PlatformInput__ConsumeKeyOnce`, `0x005159b0 PlatformInput__ResetKeyStateTables`, and `0x005159c0 PLATFORM__SetKeySink`. Probe token anchor: `Wave851 PC platform/controller tail`; `0x00515970 PlatformInput__GetKeyOn`; `0x005159c0 PLATFORM__SetKeySink`; `PlatformInput__ConsumeKeyOnce`; `PlatformInput__ResetKeyStateTables`; `5729/6098 = 93.95%`; `0x00515ab0 D3DDevice__SetViewport`; `[maintainer-local-ghidra-backup-root]\BEA_20260525-085618_post_wave851_pc_platform_controller_tail_verified`.
 
 | Address | Function | Static evidence |
 | --- | --- | --- |
@@ -21,7 +21,7 @@ Queue after Wave851: `6098` total, `5729` commented, `369` commentless, `0` exac
 
 ## Wave848 Platform Input Core
 
-Wave848 platform input core (`platform-input-core-wave848`, `wave848-readback-verified`) saved comments/tags/signatures for three important PlatformInput rows and one adjacent screenshot row in `engine.cpp`/`ltshell.cpp` evidence. Exact anchors: `0x00513120 PlatformInput__InitDirectInput`, `0x00513370 PlatformInput__PollPadState`, and `0x005135f0 PlatformInput__SetKeySinkCore`. Verified backup: `G:\GhidraBackups\BEA_20260525-070518_post_wave848_platform_input_core_verified`. Exact DirectInput interface layout, exact pad-state/key-sink layouts, runtime controller behavior, runtime screenshot output/filesystem behavior, runtime virtual-keyboard behavior, BEA patching, and rebuild parity remain deferred.
+Wave848 platform input core (`platform-input-core-wave848`, `wave848-readback-verified`) saved comments/tags/signatures for three important PlatformInput rows and one adjacent screenshot row in `engine.cpp`/`ltshell.cpp` evidence. Exact anchors: `0x00513120 PlatformInput__InitDirectInput`, `0x00513370 PlatformInput__PollPadState`, and `0x005135f0 PlatformInput__SetKeySinkCore`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-070518_post_wave848_platform_input_core_verified`. Exact DirectInput interface layout, exact pad-state/key-sink layouts, runtime controller behavior, runtime screenshot output/filesystem behavior, runtime virtual-keyboard behavior, BEA patching, and rebuild parity remain deferred.
 
 | Address | Function | Signature | Static evidence |
 | --- | --- | --- | --- |

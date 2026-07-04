@@ -27,7 +27,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-012644_post_wave787_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-012644_post_wave787_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d7d30": "0x0062007c",
@@ -82,8 +82,8 @@ HELPER_NAMES = {
 }
 
 STRING_EXPECTATIONS = {
-    "string-0065269c.tsv": r"C:\dev\ONSLAUGHT2\DXTexture.cpp",
-    "string-006529b0.tsv": r"C:\dev\ONSLAUGHT2\DXTrees.cpp",
+    "string-0065269c.tsv": r"[maintainer-local-source-export-root]\DXTexture.cpp",
+    "string-006529b0.tsv": r"[maintainer-local-source-export-root]\DXTrees.cpp",
 }
 
 COMMENT_TOKENS = {
@@ -127,7 +127,7 @@ CORE_ANCHORS = (
     "0x005d7f18 Unwind@005d7f18",
     "0x005d7f20 Unwind@005d7f20",
     "0x0042f220 CSPtrSet__Clear",
-    "G:\\GhidraBackups\\BEA_20260524-012644_post_wave787_unwind_continuation_verified",
+    "[maintainer-local-ghidra-backup-root]\\BEA_20260524-012644_post_wave787_unwind_continuation_verified",
 )
 
 OVERCLAIM_TOKENS = (

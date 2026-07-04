@@ -1,8 +1,8 @@
 # ltshell.cpp - Lost Toys Shell (Application Entry Point)
 
-Wave1219 final current-risk closure note: `PCLTShell__ctor` remains mapped to platform shell construction and title/input-state initialization; verified backup `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`. Runtime launch behavior, exact shell layout, and rebuild parity remain separate proof.
+Wave1219 final current-risk closure note: `PCLTShell__ctor` remains mapped to platform shell construction and title/input-state initialization; verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`. Runtime launch behavior, exact shell layout, and rebuild parity remain separate proof.
 
-**Source File:** `C:\dev\ONSLAUGHT2\ltshell.cpp`
+**Source File:** `[maintainer-local-source-export-root]\ltshell.cpp`
 **Debug String Address:** `0x0063dd8c`
 
 ## Overview
@@ -16,25 +16,25 @@ The RTTI class name `PCLTShell` (found at `0x0063dc60`) indicates this was imple
 
 Wave862 D3DApplication window/depth (`d3dapplication-window-depth-wave862`, `wave862-readback-verified`) documents important connective infrastructure in the base `CD3DApplication` rows used by the PC shell path. `0x0052aaf0 CD3DApplication__MsgProc` has DATA vtable ref `0x005e4ae4`, a raw WndProc-style callsite `0x00512fb5`, and source-reference context from `PCLTShell::MsgProc` forwarding into the base `CD3DApplication::MsgProc`. The same pass corrected `0x0052a830 CD3DApplication__FindDepthStencilFormat` to a source-aligned depth/stencil selector called from `CD3DApplication__BuildDeviceList`.
 
-Probe token anchor: `Wave862 D3DApplication window/depth`; `0x0052a830 CD3DApplication__FindDepthStencilFormat`; `0x0052aaf0 CD3DApplication__MsgProc`; `d3dapplication-window-depth-wave862`; `5804/6105 = 95.07%`; `0x0052e180 CInstructionOP_PLUS__VFunc_00_0052e180`; `G:\GhidraBackups\BEA_20260525-144206_post_wave862_d3dapplication_window_depth_verified`.
+Probe token anchor: `Wave862 D3DApplication window/depth`; `0x0052a830 CD3DApplication__FindDepthStencilFormat`; `0x0052aaf0 CD3DApplication__MsgProc`; `d3dapplication-window-depth-wave862`; `5804/6105 = 95.07%`; `0x0052e180 CInstructionOP_PLUS__VFunc_00_0052e180`; `[maintainer-local-ghidra-backup-root]\BEA_20260525-144206_post_wave862_d3dapplication_window_depth_verified`.
 
 This is saved static retail/source-reference evidence only. Exact `CD3DApplication` layout, runtime window/device-loss/device-selection behavior, BEA patching, and rebuild parity remain deferred.
 
 ## 2026-05-25 Wave852 PC Platform/Resource Tail Read-Back
 
-Wave852 PC platform/resource tail (`pc-platform-resource-tail-wave852`, `wave852-readback-verified`) adds saved static evidence for the resource-descriptor table rows called by shell startup/shutdown: `0x00515fb0 CResourceDescriptorTable__InitDefaultMeshNames` from `CLTShell__InitializeRuntimeAndLoadCoreResources` and `0x00516450 CResourceDescriptorTable__FreeAllEntries` from `CLTShell__ShutdownRuntimeAndReleaseResources`. Probe token anchor: `Wave852 PC platform/resource tail`; `0x00515fb0 CResourceDescriptorTable__InitDefaultMeshNames`; `0x00516450 CResourceDescriptorTable__FreeAllEntries`; `default.msh`; `5736/6098 = 94.06%`; `0x005168d0 CPCSoundManager__dtor`; `G:\GhidraBackups\BEA_20260525-093157_post_wave852_pc_platform_resource_tail_verified`.
+Wave852 PC platform/resource tail (`pc-platform-resource-tail-wave852`, `wave852-readback-verified`) adds saved static evidence for the resource-descriptor table rows called by shell startup/shutdown: `0x00515fb0 CResourceDescriptorTable__InitDefaultMeshNames` from `CLTShell__InitializeRuntimeAndLoadCoreResources` and `0x00516450 CResourceDescriptorTable__FreeAllEntries` from `CLTShell__ShutdownRuntimeAndReleaseResources`. Probe token anchor: `Wave852 PC platform/resource tail`; `0x00515fb0 CResourceDescriptorTable__InitDefaultMeshNames`; `0x00516450 CResourceDescriptorTable__FreeAllEntries`; `default.msh`; `5736/6098 = 94.06%`; `0x005168d0 CPCSoundManager__dtor`; `[maintainer-local-ghidra-backup-root]\BEA_20260525-093157_post_wave852_pc_platform_resource_tail_verified`.
 
 The initializer fills a global 0x428-byte-stride descriptor table with default mesh/resource names including `default.msh`, `cannon1.msh`, `radar1.msh`, `plane1.msh`, `tree2.msh`, `tank1.msh`, `Enemymech.msh`, `bloke.msh`, `EnemyT~1.msh`, `shell.msh`, `cockpit2.msh`, and `carrier.msh`, and sets `DAT_00896488` to `0x17`. The shutdown helper walks descriptor records from `DAT_0088a510` toward `0x00896868` and frees per-descriptor arrays through `CDXMemoryManager__Free`. Runtime resource loading/shutdown behavior, exact descriptor schema, full asset taxonomy, BEA patching, and rebuild parity remain deferred.
 
 ## 2026-05-25 Wave850 D3D Shader/Input Tail Read-Back
 
-Wave850 D3D shader/input tail (`d3d-shader-input-tail-wave850`, `wave850-readback-verified`) added saved static evidence for the adjacent ltshell/source-wrapper band: `0x00513c70 CEngine__DrawIndexedPrimitives` aligns to source `D3D_DrawIndexedPrimitive`, `0x00513e90 CEngine__SetVertexShaderHandleCached` / `0x00513ec0 CEngine__SetVertexShaderHandleRaw` align to `D3D_SetVertexShader` style call paths, and `0x00513f20 CEngine__CreatePixelShaderFromText` aligns to `D3D_CreatePixelShader` context. Probe token anchor: `Wave850 D3D shader/input tail`; `D3D_DrawIndexedPrimitive`; `D3D_SetVertexShader`; `D3D_CreatePixelShader`; `5704/6098 = 93.54%`; `0x005140e0 CDXEngine__CaptureAviFrame`; `G:\GhidraBackups\BEA_20260525-081702_post_wave850_d3d_shader_input_tail_verified`.
+Wave850 D3D shader/input tail (`d3d-shader-input-tail-wave850`, `wave850-readback-verified`) added saved static evidence for the adjacent ltshell/source-wrapper band: `0x00513c70 CEngine__DrawIndexedPrimitives` aligns to source `D3D_DrawIndexedPrimitive`, `0x00513e90 CEngine__SetVertexShaderHandleCached` / `0x00513ec0 CEngine__SetVertexShaderHandleRaw` align to `D3D_SetVertexShader` style call paths, and `0x00513f20 CEngine__CreatePixelShaderFromText` aligns to `D3D_CreatePixelShader` context. Probe token anchor: `Wave850 D3D shader/input tail`; `D3D_DrawIndexedPrimitive`; `D3D_SetVertexShader`; `D3D_CreatePixelShader`; `5704/6098 = 93.54%`; `0x005140e0 CDXEngine__CaptureAviFrame`; `[maintainer-local-ghidra-backup-root]\BEA_20260525-081702_post_wave850_d3d_shader_input_tail_verified`.
 
 The same pass corrected `0x00513ff0` to `CEngine__DeviceCall16C_CreateVertexShaderLike` from shader loader callsites that test the device result. This is saved static retail/source-reference evidence only; exact Direct3D interface version, exact COM method names, runtime rendering/shader behavior, BEA patching, and rebuild parity remain deferred.
 
 ## 2026-05-25 Wave849 D3D State/Cache Core Read-Back
 
-Wave849 D3D state/cache core (`d3d-state-cache-core-wave849`, `wave849-readback-verified`) added saved static evidence for `0x00513650 CEngine__PrintGraphicsCardInfo`, the compact retail graphics-card report matching source `cg_whatami` / `con_whatami` context. The body prints `Graphics card info`, `Description`, `Driver`, `Driver version`, and pure/impure device status strings. Probe token anchor: `Wave849 D3D state/cache core`; `0x00513650 CEngine__PrintGraphicsCardInfo`; `cg_whatami`; `Graphics card info`; `5691/6098 = 93.33%`; `0x00513a80 PlatformInput__GetKeyState3Core`; `G:\GhidraBackups\BEA_20260525-073710_post_wave849_d3d_state_cache_core_verified`.
+Wave849 D3D state/cache core (`d3d-state-cache-core-wave849`, `wave849-readback-verified`) added saved static evidence for `0x00513650 CEngine__PrintGraphicsCardInfo`, the compact retail graphics-card report matching source `cg_whatami` / `con_whatami` context. The body prints `Graphics card info`, `Description`, `Driver`, `Driver version`, and pure/impure device status strings. Probe token anchor: `Wave849 D3D state/cache core`; `0x00513650 CEngine__PrintGraphicsCardInfo`; `cg_whatami`; `Graphics card info`; `5691/6098 = 93.33%`; `0x00513a80 PlatformInput__GetKeyState3Core`; `[maintainer-local-ghidra-backup-root]\BEA_20260525-073710_post_wave849_d3d_state_cache_core_verified`.
 
 This is saved static retail/source-reference evidence only; exact adapter structure fields, runtime console command behavior, runtime D3D device behavior, BEA patching, and rebuild parity remain deferred.
 
@@ -171,7 +171,7 @@ return exitCode;
 
 ## Wave848 Platform Input Core
 
-Wave848 platform input core (`platform-input-core-wave848`, `wave848-readback-verified`) saved bounded static metadata for the adjacent PCLTShell/platform input and screenshot path. The DirectInput rows are important platform/control connective code even though their final static claims remain bounded by Ghidra/source-reference evidence rather than runtime controller proof. Verified backup: `G:\GhidraBackups\BEA_20260525-070518_post_wave848_platform_input_core_verified`.
+Wave848 platform input core (`platform-input-core-wave848`, `wave848-readback-verified`) saved bounded static metadata for the adjacent PCLTShell/platform input and screenshot path. The DirectInput rows are important platform/control connective code even though their final static claims remain bounded by Ghidra/source-reference evidence rather than runtime controller proof. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-070518_post_wave848_platform_input_core_verified`.
 
 | Address | Evidence |
 | --- | --- |
@@ -199,7 +199,7 @@ Post-Wave848 strict proxy is `5678/6098 = 93.11%`; next raw commentless row is `
 
 | Address | String |
 |---------|--------|
-| `0x0063dd8c` | `"C:\dev\ONSLAUGHT2\ltshell.cpp"` |
+| `0x0063dd8c` | `"[maintainer-local-source-export-root]\ltshell.cpp"` |
 | `0x0063dd70` | `"Loading previous options"` |
 | `0x0063ddac` | `"Init game with %d bytes"` |
 | `0x0063dd24` | `"Memory heap at %dMb"` |
@@ -250,7 +250,7 @@ Post-Wave848 strict proxy is `5678/6098 = 93.11%`; next raw commentless row is `
 
 ## Wave847 LTShell Exception Filter (2026-05-25)
 
-Probe token anchor: Wave847 LTShell exception filter; ltshell-exception-filter-wave847; 0x00512040 CLTShell__UnhandledExceptionFilter; int __stdcall CLTShell__UnhandledExceptionFilter(void * exception_pointers); SetUnhandledExceptionFilter; 0x0051213c; OnslaughtException.txt; 0x0063dc88; RET 0x4; 5674/6098 = 93.05%; 0x00513120 PlatformInput__InitDirectInput; G:\GhidraBackups\BEA_20260525-063403_post_wave847_ltshell_exception_filter_verified
+Probe token anchor: Wave847 LTShell exception filter; ltshell-exception-filter-wave847; 0x00512040 CLTShell__UnhandledExceptionFilter; int __stdcall CLTShell__UnhandledExceptionFilter(void * exception_pointers); SetUnhandledExceptionFilter; 0x0051213c; OnslaughtException.txt; 0x0063dc88; RET 0x4; 5674/6098 = 93.05%; 0x00513120 PlatformInput__InitDirectInput; [maintainer-local-ghidra-backup-root]\BEA_20260525-063403_post_wave847_ltshell_exception_filter_verified
 
 Wave847 corrected the loaded row at `0x00512040` from stale `CLTShell__InitUnhandledExceptionLogFile` metadata to:
 
@@ -260,7 +260,7 @@ int __stdcall CLTShell__UnhandledExceptionFilter(void * exception_pointers);
 
 Static retail evidence: `CLTShell__WinMain` pushes `0x00512040` at `0x0051213c` before calling imported `SetUnhandledExceptionFilter`; the callback calls `SetUnhandledExceptionFilter(NULL)`, opens `OnslaughtException.txt` with mode string `0x0063dc88`, returns `1`/`EXCEPTION_EXECUTE_HANDLER`, and exits with `RET 0x4`. Source-reference evidence in `references/Onslaught/ltshell.cpp:172` has the fuller PC `ExceptionHandler(EXCEPTION_POINTERS *info)` shape, but the saved retail claim remains limited to observed Ghidra decompile/xref/instruction evidence.
 
-Queue after Wave847: `6098` total functions, `5674` commented, `424` commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed and strict clean-signature proxy `5674/6098 = 93.05%`. Next raw commentless row: `0x00513120 PlatformInput__InitDirectInput`. Verified backup: `G:\GhidraBackups\BEA_20260525-063403_post_wave847_ltshell_exception_filter_verified`.
+Queue after Wave847: `6098` total functions, `5674` commented, `424` commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed and strict clean-signature proxy `5674/6098 = 93.05%`. Next raw commentless row: `0x00513120 PlatformInput__InitDirectInput`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-063403_post_wave847_ltshell_exception_filter_verified`.
 
 Full debug-symbol dump behavior, runtime crash handling, exact source-body parity, BEA patching, and rebuild parity remain deferred.
 

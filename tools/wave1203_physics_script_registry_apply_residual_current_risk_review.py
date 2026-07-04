@@ -33,7 +33,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-005927_post_wave1203_physics_script_registry_apply_residual_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-005927_post_wave1203_physics_script_registry_apply_residual_current_risk_review_verified"
 
 TARGETS = {
     "0x00427dd0": ("CComponent__CreateWeaponComponent", "void __thiscall CComponent__CreateWeaponComponent(void * this, void * initOrContext)"),

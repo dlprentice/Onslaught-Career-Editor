@@ -26,7 +26,7 @@ The pass corrected `CRT__CallocWithRetry_005689b8` to `CRT__CallocWithRetry` and
 - Post exports: `10` metadata rows, `10` tag rows, `28` xref rows, `370` instruction rows, `10` decompile rows
 - Queue refresh: `6093` total, `3392` commented, `2701` commentless, `1217` exact-undefined signatures, `907` `param_N` signatures
 - Strict clean-signature proxy: `3338/6093 = 54.78%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-115724_post_wave637_crt_runtime_math_fd_verified` (`19` files, `162499463` bytes, `DiffCount=0`)
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-115724_post_wave637_crt_runtime_math_fd_verified` (`19` files, `162499463` bytes, `DiffCount=0`)
 
 The next high-signal queue head is `0x00568f70 CRT__ParseCommandLineToArgv`.
 

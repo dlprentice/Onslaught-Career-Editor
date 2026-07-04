@@ -45,7 +45,7 @@ Read-back evidence:
 - Wave911 focused progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1219/1560 = 78.14%`.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-232711_post_wave1065_destroyable_segment_vfunc_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-232711_post_wave1065_destroyable_segment_vfunc_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -65,4 +65,4 @@ What remains unproven:
 
 Next candidate note: continue with the next expanded static re-audit cluster; prefer read-only review first and mutate only when fresh evidence proves a correction or normalization need.
 
-Probe token anchor: Wave1065; destroyable-segment-vfunc-review-wave1065; 0x00442870 CDestroyableSegment__VFunc_11_RecomputeDamageScaleFields; 0x00442960 CDestroyableSegment__VFunc_03_ApplyDamage; 0x00442b20 CDestroyableSegment__VFunc_08_HandleSegmentBreak; 0x00442f60 CDestroyableSegment__VFunc_10_SpawnRubbleEffects; 0x00443460 CDestroyableSegment__VFunc_00_HandleEvent3000Dispatch; 0x004436d0 CDestroyableCoreSegment__VFunc_00_HandleEvent3000And3002Dispatch; 0x00443890 CDestroyableSegmentVariant__VFunc_03_ApplyDamage; 0x00443ea0 CDestroyableSegmentComponent__VFunc_08_HandleComponentBreak; 812/1408 = 57.67%; 1219/1560 = 78.14%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-232711_post_wave1065_destroyable_segment_vfunc_review_verified; no mutation.
+Probe token anchor: Wave1065; destroyable-segment-vfunc-review-wave1065; 0x00442870 CDestroyableSegment__VFunc_11_RecomputeDamageScaleFields; 0x00442960 CDestroyableSegment__VFunc_03_ApplyDamage; 0x00442b20 CDestroyableSegment__VFunc_08_HandleSegmentBreak; 0x00442f60 CDestroyableSegment__VFunc_10_SpawnRubbleEffects; 0x00443460 CDestroyableSegment__VFunc_00_HandleEvent3000Dispatch; 0x004436d0 CDestroyableCoreSegment__VFunc_00_HandleEvent3000And3002Dispatch; 0x00443890 CDestroyableSegmentVariant__VFunc_03_ApplyDamage; 0x00443ea0 CDestroyableSegmentComponent__VFunc_08_HandleComponentBreak; 812/1408 = 57.67%; 1219/1560 = 78.14%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-232711_post_wave1065_destroyable_segment_vfunc_review_verified; no mutation.

@@ -33,7 +33,7 @@ Evidence counts:
 - Post-correction context exports: 10 metadata rows, 10 tag rows, and 10 decompile rows.
 - Queue closure remains `6238/6238 = 100.00%` with 0 commentless, 0 exact-undefined signatures, and 0 `param_N`.
 - Wave911 focused re-audit progress after Wave1033: `635/1408 = 45.10%`; expanded static surface progress: `864/1493 = 57.87%`; Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-051834_post_wave1033_cdxengine_render_resource_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-051834_post_wave1033_cdxengine_render_resource_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -48,4 +48,4 @@ What remains unproven:
 - Exact source-body identity for the reviewed helpers.
 - BEA patch behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1033; cdxengine-render-resource-review-wave1033; 0x0044a640 CDXEngine__SetOverlaySlotVisibilityByPlayerView; 0x0053d3a0 CDXEngine__ReleaseDefaultTextureAndMeshRefs; 0x00542a50 CDXEngine__BuildDirectionalSampleRing; 0x00544040 CDXEngine__ClearKempyCubeTextureSlots; 0x00544060 CDXEngine__ReleaseKempyCubeTexturesAndVertexBuffer; CTexture__DecrementRefCountFromNameField; supersedes older CHud__DecrementCounter9C wording; 635/1408 = 45.10%; 864/1493 = 57.87%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-051834_post_wave1033_cdxengine_render_resource_review_verified; two comment/tag corrections.
+Probe token anchor: Wave1033; cdxengine-render-resource-review-wave1033; 0x0044a640 CDXEngine__SetOverlaySlotVisibilityByPlayerView; 0x0053d3a0 CDXEngine__ReleaseDefaultTextureAndMeshRefs; 0x00542a50 CDXEngine__BuildDirectionalSampleRing; 0x00544040 CDXEngine__ClearKempyCubeTextureSlots; 0x00544060 CDXEngine__ReleaseKempyCubeTexturesAndVertexBuffer; CTexture__DecrementRefCountFromNameField; supersedes older CHud__DecrementCounter9C wording; 635/1408 = 45.10%; 864/1493 = 57.87%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-051834_post_wave1033_cdxengine_render_resource_review_verified; two comment/tag corrections.

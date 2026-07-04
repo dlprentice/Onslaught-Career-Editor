@@ -8,35 +8,40 @@ This file compares local MCP/debugger options for private maintainer RE work. It
 
 ## Active Pathing (This Machine)
 
-- Ghidra client: `D:\ghidra_12.0.3_PUBLIC_20260210\ghidra_12.0.3_PUBLIC`
+- Ghidra client: maintainer-local Ghidra 12.x install root, with
+  headless entrypoint under `support/analyzeHeadless.bat`.
 - Ghidra project root: maintainer-local path recorded outside git.
-- Active GhydraMCP runtime bundle: `D:\GhydraMCP-Complete-v2.2.0-rc.2-20260211-083952`
+- Active GhydraMCP runtime bundle: none. The prior local bundle was removed
+  after the project scratch/backup/tooling posture moved to maintainer-local
+  removable/tooling storage.
 - Repo-local `tools/GhydraMCP/` has been removed from this repo to avoid version drift confusion.
 
 ## Concise Install List (Recommended)
 
 Order matters. This is the minimal stack that works best for BEA.exe RE with MCP access:
 
-1. **Ghidra 12.x + GhydraMCP**
-   Static analysis with MCP control (decompile, xrefs, data/struct edits). Install Ghidra, then install GhydraMCP plugin zip and run the MCP bridge. On this machine, the active bundle is `D:\GhydraMCP-Complete-v2.2.0-rc.2-20260211-083952`.
-2. **x64dbg (x32dbg) + x64dbgMCP**
+1. **Ghidra 12.x headless CLI**
+   Static analysis and scripted post-processing through `analyzeHeadless`. Install Ghidra on the maintainer-local tooling root and point `GHIDRA_HOME` at that install before running repo wrappers.
+2. **Ghidra 12.x + GhydraMCP** (optional / currently inactive)
+   MCP control can still be useful for decompile/xrefs/data/struct edits, but no active GhydraMCP runtime bundle is present on this workstation after the local cleanup.
+3. **x64dbg (x32dbg) + x64dbgMCP**
    Primary live debugger for the 32-bit BEA.exe. Install x64dbg, drop the plugin `.dp32` into the x32dbg plugins folder, then connect via MCP.
-3. **Frida + frida-mcp**
+4. **Frida + frida-mcp**
    Runtime instrumentation and hooks when static + debugger aren’t enough. Install Frida, then `frida-mcp`.
-4. **WinDbg + mcp-windbg** (optional but valuable)
+5. **WinDbg + mcp-windbg** (optional but valuable)
    Crash dumps / deep Windows analysis. Install WinDbg or Debugging Tools for Windows, then `mcp-windbg`.
 
 ## Version/Cost Check (Verified 2026-02-10)
 
 All recommended items are free. Latest-known versions at time of writing:
 - Ghidra: `12.0.3` (active on this workstation).
-- GhydraMCP: `v2.2.0-rc.2` (active working install, external bundle path above).
+- GhydraMCP: `v2.2.0-rc.2` (historical working install; currently inactive on this workstation).
 - x64dbg: GitHub snapshot release tag `2025.07.04` (use x32dbg for BEA.exe).
 - x64dbgMCP: install/build from `Wasdubya/x64dbgMCP` (no formal release tags; use the repo’s `build/release/` artifacts).
 - frida-mcp: PyPI `0.1.1` (2025-03-27).
 - mcp-windbg: PyPI `0.12.2` (2025-12-15).
 
-Note: GhydraMCP mutation reliability is affected by bridge request timeout. If renames/signature changes time out on `BEA.exe`, bump timeout aggressively (e.g., **300s+**) and restart the MCP server process. The stock `bridge_mcp_hydra.py` shipped in the bundle uses a hard-coded **10s** HTTP timeout; see `MCP_LIMITATIONS.md` for why this matters on `BEA.exe`.
+Note: GhydraMCP mutation reliability is affected by bridge request timeout. If this lane is restored later and renames/signature changes time out on `BEA.exe`, bump timeout aggressively (e.g., **300s+**) and restart the MCP server process. The stock `bridge_mcp_hydra.py` shipped in the bundle uses a hard-coded **10s** HTTP timeout; see `MCP_LIMITATIONS.md` for why this matters on `BEA.exe`.
 
 ## Two Access Modes (Important)
 

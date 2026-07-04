@@ -186,7 +186,7 @@ EXPECTED_STRINGS = {
     "0062dcac": "Wheel",
     "0062dcb4": "Axle",
     "0062dcbc": "Body",
-    "0062dc80": "C:\\dev\\ONSLAUGHT2\\MCBuggy.cpp",
+    "0062dc80": "[maintainer-local-source-export-root]\\MCBuggy.cpp",
 }
 
 OVERCLAIM_TOKENS = (

@@ -76,7 +76,7 @@ FUNCTION_DOCS = {
     ),
 }
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-113941_post_wave908_audio_media_cutscene_static_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-113941_post_wave908_audio_media_cutscene_static_review_verified"
 
 EXPECTED_FAMILIES = {
     "CSoundManager": 34,

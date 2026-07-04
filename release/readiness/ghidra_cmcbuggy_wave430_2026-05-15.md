@@ -8,7 +8,7 @@ Scope: saved retail `BEA.exe` Ghidra name/signature/comment/tag correction
 
 Wave430 serialized headless dry/apply/read-back hardened fifteen saved functions in the `CMCBuggy` / wheel-motion neighborhood. The pass covers the buggy constructor/destructor/init/update helpers, shared Mat34/Vec3 helpers used by the wheel update path, mesh-part wheel token filters, and a nested/shared destructable-segment motion-controller table after the primary `CMCBuggy` vtable.
 
-This is public-safe static evidence only. It does not launch or patch `BEA.exe`, does not mutate the installed Steam game, and does not include raw decompile text or private runtime proof. The retail debug string names `C:\dev\ONSLAUGHT2\MCBuggy.cpp`, but `MCBuggy.cpp` is absent from the current Stuart source snapshot, so this wave is binary-led rather than source-body parity.
+This is public-safe static evidence only. It does not launch or patch `BEA.exe`, does not mutate the installed Steam game, and does not include raw decompile text or private runtime proof. The retail debug string names `[maintainer-local-source-export-root]\MCBuggy.cpp`, but `MCBuggy.cpp` is absent from the current Stuart source snapshot, so this wave is binary-led rather than source-body parity.
 
 ## Saved Ghidra Changes
 
@@ -34,7 +34,7 @@ This is public-safe static evidence only. It does not launch or patch `BEA.exe`,
 | `cmd.exe /c npm run test:ghidra-cmcbuggy-wave430` | PASS | `PASS ghidra-cmcbuggy-wave430 targetCount=15 failures=0`. |
 | `py -3 -m py_compile tools\ghidra_cmcbuggy_wave430_probe.py tools\ghidra_cmcbuggy_wave430_probe_test.py` | PASS | Both focused Python files compile. |
 | `cmd.exe /c npm run test:ghidra-static-reaudit-queue` | PASS | Queue reports `6043` functions, `4326` commentless functions, `1833` undefined signatures, `1792` `param_N` signatures, and zero broad uncertain/helper/wrapper debt. |
-| Actual Ghidra project backup verification after Wave430 mutation | PASS | Copied `BEA.gpr` and `BEA.rep` to `G:\GhidraBackups\BEA_20260515_160834_post_wave430_cmcbuggy_verified`; compared `19` files, `155618183` bytes, `HashDiffCount=0`, and `MissingCount=0`. |
+| Actual Ghidra project backup verification after Wave430 mutation | PASS | Copied `BEA.gpr` and `BEA.rep` to `[maintainer-local-ghidra-backup-root]\BEA_20260515_160834_post_wave430_cmcbuggy_verified`; compared `19` files, `155618183` bytes, `HashDiffCount=0`, and `MissingCount=0`. |
 | `py -3 tools\release_curated_manifest.py` and `--check` | PASS | Curated manifest selected `2308` files and regenerated `release/readiness/public_candidate_allowlist.tsv`; check passed. |
 | `py -3 tools\release_profile_snapshot.py` and `--check` | PASS | Release profile counts remain `R0=2370 R2=0 R3=2 R4=18188`; check passed. |
 | `cmd.exe /c npm run test:public-allowlist` | PASS | Public allowlist safety check passed with `2308` rows checked. |

@@ -25,8 +25,8 @@ Read-back evidence:
 - Wave911 focused re-audit progress advances to `513/1408 = 36.43%`.
 - Expanded static surface progress advances to `739/1493 = 49.50%`.
 - Wave911 top-500 risk-ranked coverage advances to `439/500 = 87.80%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-195306_post_wave1016_animal_init_dtor_review_verified`, `19` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-195306_post_wave1016_animal_init_dtor_review_verified`, `19` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
-Probe token anchor: Wave1016; animal-init-dtor-review-wave1016; 0x00403d30 CAnimal__Init; 0x00404010 CAnimal__dtor_base; 0x004041f0 CAnimal__scalar_deleting_dtor; 0x005d8698; 0x00622d48 bird.msh; 0x00622d1c Warning! Unknown animal type; 0x00622d70 CAnimal; 513/1408 = 36.43%; 739/1493 = 49.50%; 439/500 = 87.80%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260531-195306_post_wave1016_animal_init_dtor_review_verified; no mutation.
+Probe token anchor: Wave1016; animal-init-dtor-review-wave1016; 0x00403d30 CAnimal__Init; 0x00404010 CAnimal__dtor_base; 0x004041f0 CAnimal__scalar_deleting_dtor; 0x005d8698; 0x00622d48 bird.msh; 0x00622d1c Warning! Unknown animal type; 0x00622d70 CAnimal; 513/1408 = 36.43%; 739/1493 = 49.50%; 439/500 = 87.80%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260531-195306_post_wave1016_animal_init_dtor_review_verified; no mutation.
 
 Boundary note: this proves static read-back coherence for the selected CAnimal init/destructor rows and immediate vtable/data/context evidence only. Exact source virtual names, concrete `CAnimal`/`CAnimalInitThing`/resource-descriptor/list layouts, runtime animal behavior, runtime event scheduling, BEA patching, and rebuild parity remain separate proof.

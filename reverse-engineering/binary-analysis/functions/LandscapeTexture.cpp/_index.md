@@ -4,7 +4,7 @@ Last updated: 2026-05-18
 
 ## Source And Evidence Status
 
-Retail debug-path evidence names `C:\dev\ONSLAUGHT2\LandscapeTexture.cpp`, and RTTI names `CLandscapeTexture` through type descriptor `0x0062d8c8`. The current `references/Onslaught/` source snapshot does not include a matching `LandscapeTexture` source file, so Wave421 relies on saved Steam retail Ghidra read-back: metadata, decompile, xrefs, instructions, tags, and vtable-adjacent context.
+Retail debug-path evidence names `[maintainer-local-source-export-root]\LandscapeTexture.cpp`, and RTTI names `CLandscapeTexture` through type descriptor `0x0062d8c8`. The current `references/Onslaught/` source snapshot does not include a matching `LandscapeTexture` source file, so Wave421 relies on saved Steam retail Ghidra read-back: metadata, decompile, xrefs, instructions, tags, and vtable-adjacent context.
 
 Treat this page as static retail-binary evidence, not source-body parity and not runtime terrain-render proof.
 
@@ -87,7 +87,7 @@ Wave421 saved signatures, comments, and tags for all fourteen existing `CLandsca
 
 The Wave421 dry run reported `updated=0 skipped=14 created=0 would_create=0 renamed=0 would_rename=0 missing=0 bad=0`; the apply reported `updated=14 skipped=0 created=0 would_create=0 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`.
 
-Read-back verified `14` metadata rows, `14` tag rows, `30` xref rows, `1862` instruction rows, `14` decompile exports, `64` vtable-adjacent rows, focused probe status `PASS`, and refreshed queue counts of `6043` functions, `1663` commented functions, `4380` commentless functions, `1861` undefined signatures, and `1817` `param_N` signatures. The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260514_153419_post_wave421_landscape_texture_verified` with `19` files, `155159431` bytes, `HashDiffCount=0`, and `MissingCount=0`.
+Read-back verified `14` metadata rows, `14` tag rows, `30` xref rows, `1862` instruction rows, `14` decompile exports, `64` vtable-adjacent rows, focused probe status `PASS`, and refreshed queue counts of `6043` functions, `1663` commented functions, `4380` commentless functions, `1861` undefined signatures, and `1817` `param_N` signatures. The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260514_153419_post_wave421_landscape_texture_verified` with `19` files, `155159431` bytes, `HashDiffCount=0`, and `MissingCount=0`.
 
 Wave422 read-back for `0x0048f180` is documented with the broader landscape patch tranche at `release/readiness/ghidra_landscape_patch_wave422_2026-05-14.md`.
 

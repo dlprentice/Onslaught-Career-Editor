@@ -23,7 +23,7 @@ Read-back evidence:
 - Post exports: 4 metadata rows, 4 tag rows, 46 xref rows, 1684 target instruction rows, 2353 helper instruction rows, 13 helper metadata rows, and 4 decompile rows.
 - Queue after Wave822: 6098 total, 5626 commented, 472 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5626/6098 = 92.26%`, strict clean-signature proxy `5626/6098 = 92.26%`.
 - Next raw commentless row: `0x004cd7a0 CWorldPhysicsManager__FindNodeByNameGE`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-180249_post_wave822_particle_manager_owner_links_verified`, 19 files, 171543431 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-180249_post_wave822_particle_manager_owner_links_verified`, 19 files, 171543431 bytes, `DiffCount=0`.
 
 What this proves:
 

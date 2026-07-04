@@ -31,7 +31,7 @@ Key static anchors:
 - Entity and resource load path: calls `CHeightField__TraceMapLoadRequestAndCheckLoadedFlags`, `CEngine__LoadAllNamedMeshes`, `CWorldPhysicsManager__CreateSquad`, `CWorldPhysicsManager__CreateThingByType`, `CWorldPhysicsManager__CreateEffect`, `CWorldPhysicsManager__CreateTrigger`, `OID__CreateObject`, `InitThing__CreateThingByType`, and `CWorldMeshList__Add`.
 - Tail: calls `CInfluenceMapManager__SkipLoad` or `CInfluenceMapManager__Load`, `CWaypointManager__LoadWaypoints`, version-gated occupancy chunk helpers, `CWorld__SpawnInitialThings`, `CInfluenceMapManager__Update`, `CInfluenceMapManager__PropagateDistances`, `CWorld__ClearOccupancyBitsUsingHeightBands`, and either `CWorld__ApplyStaticMaskToOccupancyBitplanes` or `CWorld__RebuildOccupancyGridFromDynamicSet`.
 
-Post-Wave844 queue telemetry: `5668/6098 = 92.95%` strict clean-signature proxy. Next raw commentless row: `0x0050f680 CSpawnerThng__IsSpawnTypeAllowed`. Verified backup: `G:\GhidraBackups\BEA_20260525-050626_post_wave844_cworld_load_world_verified`.
+Post-Wave844 queue telemetry: `5668/6098 = 92.95%` strict clean-signature proxy. Next raw commentless row: `0x0050f680 CSpawnerThng__IsSpawnTypeAllowed`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-050626_post_wave844_cworld_load_world_verified`.
 
 Boundary: this is static retail Ghidra evidence only. Exact world-buffer schema, concrete stack-local structure layouts, exact source-body identity, runtime load behavior, BEA patching, and rebuild parity remain deferred.
 

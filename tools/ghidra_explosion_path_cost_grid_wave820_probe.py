@@ -28,7 +28,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-171120_post_wave820_explosion_path_cost_grid_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-171120_post_wave820_explosion_path_cost_grid_verified"
 NEXT_HEAD = "0x004c0c70 CPDSimpleSprite__EvalExpressionNode"
 
 TARGET_SIGNATURES = {

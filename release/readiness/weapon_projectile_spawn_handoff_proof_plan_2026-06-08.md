@@ -19,10 +19,10 @@ Current static closeout remains unchanged:
 
 Static source evidence:
 
-- Wave1160 (`wave1160-weapon-projectile-targeting-current-risk-review`): `19` metadata rows, `19` tag rows, `51` xref rows, `3272` instruction rows, and `19` decompile rows. Verified backup: `G:\GhidraBackups\BEA_20260606-011357_post_wave1160_weapon_projectile_targeting_current_risk_review_verified`.
-- Wave1027 (`battleengine-walkerpart-weapon-spine-review-wave1027`): `12` primary metadata rows, `12` tag rows, `39` xref rows, `704` body-instruction rows, and `12` decompile rows. Verified backup: `G:\GhidraBackups\BEA_20260601-014543_post_wave1027_battleengine_walkerpart_weapon_spine_review_verified`.
-- Wave1029 (`battleengine-jetpart-weapon-status-review-wave1029`): `13` primary metadata rows, `13` tag rows, `19` xref rows, `790` body-instruction rows, and `13` decompile rows. Verified backup: `G:\GhidraBackups\BEA_20260601-025247_post_wave1029_battleengine_jetpart_weapon_status_review_verified`.
-- Wave1020 (`projectile-burst-spawn-spine-review-wave1020`): `5` primary metadata rows, `5` tag rows, `22` xref rows, `1651` body-instruction rows, `5` decompile rows, and a `48`-row pointer-table export from `0x005dfc94`. Verified backup: `G:\GhidraBackups\BEA_20260531-214433_post_wave1020_projectile_burst_spawn_spine_review_verified`.
+- Wave1160 (`wave1160-weapon-projectile-targeting-current-risk-review`): `19` metadata rows, `19` tag rows, `51` xref rows, `3272` instruction rows, and `19` decompile rows. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-011357_post_wave1160_weapon_projectile_targeting_current_risk_review_verified`.
+- Wave1027 (`battleengine-walkerpart-weapon-spine-review-wave1027`): `12` primary metadata rows, `12` tag rows, `39` xref rows, `704` body-instruction rows, and `12` decompile rows. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-014543_post_wave1027_battleengine_walkerpart_weapon_spine_review_verified`.
+- Wave1029 (`battleengine-jetpart-weapon-status-review-wave1029`): `13` primary metadata rows, `13` tag rows, `19` xref rows, `790` body-instruction rows, and `13` decompile rows. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-025247_post_wave1029_battleengine_jetpart_weapon_status_review_verified`.
+- Wave1020 (`projectile-burst-spawn-spine-review-wave1020`): `5` primary metadata rows, `5` tag rows, `22` xref rows, `1651` body-instruction rows, `5` decompile rows, and a `48`-row pointer-table export from `0x005dfc94`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-214433_post_wave1020_projectile_burst_spawn_spine_review_verified`.
 
 Representative anchors:
 

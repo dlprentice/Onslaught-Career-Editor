@@ -11,7 +11,7 @@ This front-end page drives the world/mission level-select wheel. It owns the cur
 
 ## Wave801 Frontend/Render Helper Read-Back
 
-Wave801 static read-back (`frontend-render-helpers-wave801`, `wave801-readback-verified`) saved a current comment/tag on `0x0045d730 CFEPLevelSelect__UpdateMouseEdgeSlide`. The body is called by level-select processing, gates on `CFrontEnd__IsMouseInputReady`, reads cursor globals `DAT_0089bda8/DAT_0089bda4`, applies a cubic delta scale, and clamps the target value. Verified backup: `G:\GhidraBackups\BEA_20260524-073450_post_wave801_frontend_render_helpers_verified`.
+Wave801 static read-back (`frontend-render-helpers-wave801`, `wave801-readback-verified`) saved a current comment/tag on `0x0045d730 CFEPLevelSelect__UpdateMouseEdgeSlide`. The body is called by level-select processing, gates on `CFrontEnd__IsMouseInputReady`, reads cursor globals `DAT_0089bda8/DAT_0089bda4`, applies a cubic delta scale, and clamps the target value. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-073450_post_wave801_frontend_render_helpers_verified`.
 
 This remains static retail Ghidra evidence only. Exact source-body identity, runtime mouse-edge slide behavior, BEA patching, and rebuild parity remain deferred.
 

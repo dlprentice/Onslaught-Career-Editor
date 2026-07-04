@@ -28,7 +28,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260601-082926_post_wave1040_physics_statement_create_size_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260601-082926_post_wave1040_physics_statement_create_size_review_verified"
 
 TARGETS = {
     "0x0042ede0": ("CUnitStatement__CreateUnitAndRecurse", "void __fastcall CUnitStatement__CreateUnitAndRecurse(void * this)"),

@@ -27,7 +27,7 @@ The pass corrected two names, saved nine signatures, and intentionally left `CRT
 - Post exports: `11` metadata rows, `11` tag rows, `63` xref rows, `979` instruction rows, `11` decompile rows
 - Queue refresh: `6093` total, `3306` commented, `2787` commentless, `1217` exact-undefined signatures, `984` `param_N` signatures
 - Strict clean-signature proxy: `3254/6093 = 53.41%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-070942_post_wave627_crt_fpu_format_verified` (`19` files, `162106247` bytes, `DiffCount=0`)
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-070942_post_wave627_crt_fpu_format_verified` (`19` files, `162106247` bytes, `DiffCount=0`)
 
 The next high-signal queue head is `0x0056202e CRT__ReallocBase`.
 

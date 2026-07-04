@@ -32,7 +32,7 @@ ADDRESS = "0x0049c2d0"
 OLD_NAME = "CMeshPart__HasAnimationToken_623074"
 NAME = "CMesh__HasLegMotionAnimation"
 SIGNATURE = "bool __cdecl CMesh__HasLegMotionAnimation(void * mesh)"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-125806_post_wave811_cmesh_legmotion_animation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-125806_post_wave811_cmesh_legmotion_animation_verified"
 NEXT_HEAD = "0x004a25c0 CLTShell__ValidateAndRollHeapDeltas"
 
 COMMON_TAGS = {

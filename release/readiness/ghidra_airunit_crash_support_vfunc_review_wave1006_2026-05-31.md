@@ -29,7 +29,7 @@ Read-back evidence:
 - Wave911 focused re-audit progress remains `485/1408 = 34.45%`.
 - Expanded static surface progress advances to `662/1478 = 44.79%`.
 - Wave911 top-500 risk-ranked coverage remains `384/500 = 76.80%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-135619_post_wave1006_airunit_crash_support_vfunc_review_verified`, 19 files, 173869959 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-135619_post_wave1006_airunit_crash_support_vfunc_review_verified`, 19 files, 173869959 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

@@ -36,7 +36,7 @@ PACKAGE_JSON = ROOT / "package.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 README = ROOT / "README.MD"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-033229_post_wave1207_d3d_render_resource_lifecycle_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-033229_post_wave1207_d3d_render_resource_lifecycle_current_risk_review_verified"
 
 TARGETS = {
     "0x00501890": ("CVertexShader__scalar_deleting_dtor", "void * __thiscall CVertexShader__scalar_deleting_dtor(void * this, byte delete_flags)"),

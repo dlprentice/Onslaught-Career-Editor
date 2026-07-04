@@ -17,7 +17,7 @@ LEDGER = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_l
 ATTEMPT_LOG = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_attempt_log.jsonl"
 README = ROOT / "release" / "readiness" / "ghidra_shared_unit_vtable_boundary_wave1083_2026-06-02.md"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260602-114534_post_wave1083_shared_unit_vtable_boundary_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260602-114534_post_wave1083_shared_unit_vtable_boundary_verified"
 
 TARGETS = {
     "0x00405d90": ("SharedUnitVFunc__ReturnField130ColorMask_00405d90", "int __thiscall SharedUnitVFunc__ReturnField130ColorMask_00405d90(void * this)", 17),

@@ -32,7 +32,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260522-183258_post_wave748_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260522-183258_post_wave748_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d1fc8": "0x0061ae64",
@@ -177,9 +177,9 @@ def check_artifacts(failures: list[str]) -> None:
         require(name in helper_names, f"missing helper metadata row: {name}", failures)
 
     expected_strings = {
-        "string-0062811c.tsv": r"C:\dev\ONSLAUGHT2\Cutscene.cpp",
-        "string-006287b4.tsv": r"C:\dev\ONSLAUGHT2\DestructableSegmentsController.cpp",
-        "string-0062551c.tsv": r"C:\dev\ONSLAUGHT2\monitor.h",
+        "string-0062811c.tsv": r"[maintainer-local-source-export-root]\Cutscene.cpp",
+        "string-006287b4.tsv": r"[maintainer-local-source-export-root]\DestructableSegmentsController.cpp",
+        "string-0062551c.tsv": r"[maintainer-local-source-export-root]\monitor.h",
     }
     for relative, expected in expected_strings.items():
         rows = read_tsv(BASE / relative)

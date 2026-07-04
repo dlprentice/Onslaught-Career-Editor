@@ -28,7 +28,7 @@ Evidence:
 - Context export: 1 metadata row, 1 tag row, 21 xref rows, 144 instruction rows, and 1 decompile row.
 - Wave911 focused re-audit progress after Wave928: `108/1408 = 7.67%`; the context helper is not counted against that progress denominator.
 - Static export-contract closure remains `6113/6113 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260527-225215_post_wave928_cunitai_deploy_state_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260527-225215_post_wave928_cunitai_deploy_state_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 
 What this proves:
 

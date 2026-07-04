@@ -40,7 +40,7 @@ Read-back evidence:
 - Pre/post context exports: `17` metadata rows, `17` tag rows, `36` xref rows, `5415` instruction rows, and `17` decompile rows.
 - Queue closure remains `6410/6410 = 100.00%`, with `0` commentless functions, `0` exact-undefined signatures, and `0` `param_N`.
 - Expanded static surface remains `1560/1560 = 100.00%`; Wave911 focused remains `812/1408 = 57.67%`; Wave911 top-500 risk-ranked remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260604-163255_post_wave1094_cdxengine_frame_render_spine_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260604-163255_post_wave1094_cdxengine_frame_render_spine_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -57,4 +57,4 @@ What remains unproven:
 - Gameplay outcomes.
 - Rebuild parity.
 
-Probe token anchor: Wave1094; cdxengine-frame-render-spine-review-wave1094; 0x0053e220 CDXEngine__PreRender; 0x0053e2e0 CDXEngine__Render; 0x0053ecc0 CDXEngine__PostRender; 0x0046e460 CGame__Render; 0x0053bb50 CDXEngine__RenderOptionalFullscreenEffectPass; 0x005441b0 CDXEngine__RenderKempyCubeFaces; 0x0054f7e0 CDXEngine__RenderParticleTexturePass; 0x00542a50 CDXEngine__BuildDirectionalSampleRing; 0x00551920 CRenderQueue__BeginFrame; 0x005528b0 CRenderQueue__RenderAll; 1560/1560 = 100.00%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; G:\GhidraBackups\BEA_20260604-163255_post_wave1094_cdxengine_frame_render_spine_review_verified; comment/tag normalization.
+Probe token anchor: Wave1094; cdxengine-frame-render-spine-review-wave1094; 0x0053e220 CDXEngine__PreRender; 0x0053e2e0 CDXEngine__Render; 0x0053ecc0 CDXEngine__PostRender; 0x0046e460 CGame__Render; 0x0053bb50 CDXEngine__RenderOptionalFullscreenEffectPass; 0x005441b0 CDXEngine__RenderKempyCubeFaces; 0x0054f7e0 CDXEngine__RenderParticleTexturePass; 0x00542a50 CDXEngine__BuildDirectionalSampleRing; 0x00551920 CRenderQueue__BeginFrame; 0x005528b0 CRenderQueue__RenderAll; 1560/1560 = 100.00%; 812/1408 = 57.67%; 500/500 = 100.00%; 6410/6410 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260604-163255_post_wave1094_cdxengine_frame_render_spine_review_verified; comment/tag normalization.

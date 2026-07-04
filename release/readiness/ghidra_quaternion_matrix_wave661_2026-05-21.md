@@ -24,7 +24,7 @@ The pass corrected the earlier Wave660 slot-25 Euler-matrix wording: `0x00577a3e
 - Final Ghidra dry run: `updated=0 skipped=7 renamed=0 would_rename=0 signature_updated=0 missing=0 bad=0`.
 - Post exports verified `7` metadata rows, `7` tag rows, `9` xref rows, `651` instruction rows, `7` clean decompile rows, and two `71`-row dispatch-table snapshots.
 - Queue after Wave661: `6098` total functions, `3623` commented, `2475` commentless, `1217` exact-undefined signatures, `694` `param_N` signatures, comment-backed proxy `3623/6098 = 59.41%`, strict clean-signature proxy `3573/6098 = 58.59%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260520-234153_post_wave661_quaternion_matrix_verified`, `19` files, `163416967` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-234153_post_wave661_quaternion_matrix_verified`, `19` files, `163416967` bytes, `DiffCount=0`.
 - Next queue head: `0x00579b39 CDXTexture__LookupNamedFormatDescriptor`.
 
 ## Boundaries

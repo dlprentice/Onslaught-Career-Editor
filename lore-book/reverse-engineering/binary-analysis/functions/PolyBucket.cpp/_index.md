@@ -1,6 +1,6 @@
 # PolyBucket.cpp Functions
 
-**Source file:** `C:\dev\ONSLAUGHT2\PolyBucket.cpp`
+**Source file:** `[maintainer-local-source-export-root]\PolyBucket.cpp`
 
 **Debug path string:** `0x006316bc`
 
@@ -107,7 +107,7 @@ Wave455 corrected two older InfluenceMap-labeled entries into CPolyBucket contex
 
 ## Wave764 PolyBucket.cpp Unwind Continuation
 
-Wave764 static read-back (`unwind-continuation-wave764`, `wave764-readback-verified`) saved comments/tags/signatures for PolyBucket.cpp-adjacent compiler-generated SEH unwind cleanup callbacks at `0x005d4800 Unwind@005d4800`, `0x005d4840 Unwind@005d4840`, and `0x005d4859 Unwind@005d4859` as `void __cdecl Unwind@...(void)` rows. Evidence includes PolyBucket.cpp debug path `0x006316bc`, DATA scope-table xrefs `0x0061d074`, `0x0061d0a4`, and `0x0061d0ac`, and `OID__FreeObject_Callback` calls with line/allocation tokens `0x14c/0x46`, `0x499/0x46`, and `0x4da/0x46`. The adjacent `0x005d481c Unwind@005d481c` row uses array.h debug path `0x0062d590`. Verified backup: `G:\GhidraBackups\BEA_20260523-152957_post_wave764_unwind_continuation_verified`. This is saved static retail Ghidra evidence only; exact parent source-body identity, runtime polybucket cleanup behavior, runtime exception behavior, BEA patching, and rebuild parity remain deferred.
+Wave764 static read-back (`unwind-continuation-wave764`, `wave764-readback-verified`) saved comments/tags/signatures for PolyBucket.cpp-adjacent compiler-generated SEH unwind cleanup callbacks at `0x005d4800 Unwind@005d4800`, `0x005d4840 Unwind@005d4840`, and `0x005d4859 Unwind@005d4859` as `void __cdecl Unwind@...(void)` rows. Evidence includes PolyBucket.cpp debug path `0x006316bc`, DATA scope-table xrefs `0x0061d074`, `0x0061d0a4`, and `0x0061d0ac`, and `OID__FreeObject_Callback` calls with line/allocation tokens `0x14c/0x46`, `0x499/0x46`, and `0x4da/0x46`. The adjacent `0x005d481c Unwind@005d481c` row uses array.h debug path `0x0062d590`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260523-152957_post_wave764_unwind_continuation_verified`. This is saved static retail Ghidra evidence only; exact parent source-body identity, runtime polybucket cleanup behavior, runtime exception behavior, BEA patching, and rebuild parity remain deferred.
 
 ## Function Details
 
@@ -198,7 +198,7 @@ Debug visualization that renders all bucket triangles:
 
 | Address | String |
 |---------|--------|
-| 0x006316bc | `C:\dev\ONSLAUGHT2\PolyBucket.cpp` |
+| 0x006316bc | `[maintainer-local-source-export-root]\PolyBucket.cpp` |
 | 0x006316e0 | `Warning: Triangle wasn't placed in polybucket (part_num %d)` |
 | 0x0063171c | `WARNING: search in invalid poly bucket` |
 | 0x0063174c | `WARNING: diff outside poly bucket` |

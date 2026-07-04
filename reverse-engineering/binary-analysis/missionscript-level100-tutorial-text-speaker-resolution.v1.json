@@ -13,7 +13,7 @@
     "expandedStaticSurface": "1560/1560 = 100.00%",
     "currentRiskFocused": "1179/1179 = 100.00%",
     "remainingActiveFocusedWork": 0,
-    "latestGhidraBackup": "G:\\GhidraBackups\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+    "latestGhidraBackup": "[maintainer-local-ghidra-backup-root]\\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
   },
   "textCorpus": {
     "levelEnglishTokenBlocks": 52,

@@ -4,7 +4,7 @@ Wave1139 (`wave1139-battleengine-jetpart-current-risk-review`) re-read ten Wave1
 
 This moves Wave1108 current focused accounting to `229/1179 = 19.42%`. Static closure is now `6411/6411 = 100.00%`; static debt remains `0 / 0 / 0`; expanded post-100 static surface remains `1560/1560 = 100.00%`; Wave911 focused remains `812/1408 = 57.67%`; Wave911 top-500 remains `500/500 = 100.00%`. Current risk candidates: `6166`; current focused candidates: `1178`; live regenerated current focused candidates: `1178`; remaining active focused work: `950`.
 
-Probe token anchor: Wave1139; wave1139-battleengine-jetpart-current-risk-review; `229/1179 = 19.42%`; 10 current-risk rows; 1 function-boundary recovery; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 950; current risk candidates: 6166; BattleEngine JetPart movement/gravity current-risk cluster; fresh Ghidra export; function-boundary recovery; `0 / 0 / 0`; `6411/6411 = 100.00%`; `G:\GhidraBackups\BEA_20260605-134608_post_wave1139_battleengine_jetpart_current_risk_review_verified`; `G:\GhidraBackups\BEA_20260605-130856_post_wave1138_battleengine_walkerpart_current_risk_review_verified`.
+Probe token anchor: Wave1139; wave1139-battleengine-jetpart-current-risk-review; `229/1179 = 19.42%`; 10 current-risk rows; 1 function-boundary recovery; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 950; current risk candidates: 6166; BattleEngine JetPart movement/gravity current-risk cluster; fresh Ghidra export; function-boundary recovery; `0 / 0 / 0`; `6411/6411 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260605-134608_post_wave1139_battleengine_jetpart_current_risk_review_verified`; `[maintainer-local-ghidra-backup-root]\BEA_20260605-130856_post_wave1138_battleengine_walkerpart_current_risk_review_verified`.
 
 ## Primary Evidence
 
@@ -34,8 +34,8 @@ Probe token anchor: Wave1139; wave1139-battleengine-jetpart-current-risk-review;
 - Post exports: `11` metadata rows, `11` tag rows, `13` xref rows, `833` instruction rows, and `11` decompile rows.
 - Queue refresh: `6411/6411 = 100.00%`; static debt `0 / 0 / 0`.
 - Current-risk refresh: current risk candidates `6166`; current focused candidates `1178`; focused threshold `15`; not Wave911 reconstruction.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-134608_post_wave1139_battleengine_jetpart_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
-- Previous completed backup: `G:\GhidraBackups\BEA_20260605-130856_post_wave1138_battleengine_walkerpart_current_risk_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-134608_post_wave1139_battleengine_jetpart_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Previous completed backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-130856_post_wave1138_battleengine_walkerpart_current_risk_review_verified`.
 
 ## Boundary
 

@@ -1,7 +1,7 @@
 # gcgamut.cpp
 
 > Graphics Context Gamut - view frustum visibility culling system
-> Debug path: `C:\dev\ONSLAUGHT2\gcgamut.cpp` (0x0062c968)
+> Debug path: `[maintainer-local-source-export-root]\gcgamut.cpp` (0x0062c968)
 
 ## Overview
 
@@ -24,7 +24,7 @@ The system works by:
 | `0x004742a0` | `void __thiscall CGamut__ComputePlanes(void * this, float * frustum_corners)` | Called from `CGamut__Calculate`; large frustum-plane and grid-rasterization helper over frustum-corner input. |
 | `0x00476a20` | `void __thiscall CGamut__Calculate(void * this, float * view_matrix, float depth, float width_scale, float height_scale, float * camera_pos)` | Called from `CDXEngine__Render`; honors `cg_gamutlocked`, stores camera position, builds frustum corners, calls `CGamut__ComputePlanes`, and fills visibility bytes from height ranges. |
 
-Validation: headless dry/apply reported dry `updated=0 skipped=4 renamed=0 would_rename=0 missing=0 bad=0` and apply `updated=4 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Read-back verified `4` metadata rows, `4` decompile exports, `4` xref rows, `484` instruction rows, `196` callsite-instruction rows, and `4` tag rows; the focused probe passed with `4` xref evidence hits, `8` instruction evidence hits, and `15` callsite evidence hits. The refreshed queue is `6026` functions, `1414` commented functions, `4612` commentless functions, `1935` undefined signatures, and `1917` `param_N` signatures. Current confirmation proxies are telemetry only: comment-backed `1414/6026 = 23.46%`, strict clean-signature `1352/6026 = 22.43%`. The live Ghidra project backup is verified at `G:\GhidraBackups\BEA_20260513_171430_post_wave383_gamut_verified` with `19` files, `153717639` bytes, and `HashDiffCount=0`.
+Validation: headless dry/apply reported dry `updated=0 skipped=4 renamed=0 would_rename=0 missing=0 bad=0` and apply `updated=4 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Read-back verified `4` metadata rows, `4` decompile exports, `4` xref rows, `484` instruction rows, `196` callsite-instruction rows, and `4` tag rows; the focused probe passed with `4` xref evidence hits, `8` instruction evidence hits, and `15` callsite evidence hits. The refreshed queue is `6026` functions, `1414` commented functions, `4612` commentless functions, `1935` undefined signatures, and `1917` `param_N` signatures. Current confirmation proxies are telemetry only: comment-backed `1414/6026 = 23.46%`, strict clean-signature `1352/6026 = 22.43%`. The live Ghidra project backup is verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_171430_post_wave383_gamut_verified` with `19` files, `153717639` bytes, and `HashDiffCount=0`.
 
 Not proven: runtime frustum-culling/rendering/imposter/terrain behavior, exact `gcgamut.cpp` source body, concrete `CGamut` layout, local variable types, final semantics for every stack float, BEA launch behavior, game patching, or rebuild parity.
 
@@ -230,7 +230,7 @@ CEngine__Shutdown (0x004498c1)
 | 0x0062c8f0 | "Determines if the gamut is displayed" | CVar description |
 | 0x0062c918 | "cg_gamutlocked" | Console variable name |
 | 0x0062c928 | "Determines if the gamut gets recalculated as the camera moves" | CVar description |
-| 0x0062c968 | "C:\\dev\\ONSLAUGHT2\\gcgamut.cpp" | Debug path |
+| 0x0062c968 | "[maintainer-local-source-export-root]\\gcgamut.cpp" | Debug path |
 
 ## Related Systems
 

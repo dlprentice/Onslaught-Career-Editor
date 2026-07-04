@@ -34,7 +34,7 @@ SIGNATURE = (
     "float scalar_00, float scalar_14, float scalar_18, float scalar_1c, "
     "float scalar_20, float scalar_24, float scalar_28, float scalar_2c)"
 )
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-120255_post_wave809_math_matrix3x4_assign_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-120255_post_wave809_math_matrix3x4_assign_verified"
 NEXT_HEAD = "0x0049bd50 CMCMech__UpdateBoneHierarchyRecursive"
 
 COMMON_TAGS = {

@@ -36,7 +36,7 @@ Serialized headless dry/apply/read-back hardened `13` frontend controls and cont
 | Whole-database baseline | `cmd.exe /c npm run test:ghidra-static-reaudit-baseline` passed with `6020` total functions, `0` legacy weak names, `1980` `param_N` signatures, and `1939` undefined signatures. |
 | Whole-database queue | `cmd.exe /c npm run test:ghidra-static-reaudit-queue` passed with `1324` commented functions and `4696` commentless functions. |
 | Current proxies | Comment-backed `1324/6020 = 21.99%`; strict clean-signature `1262/6020 = 20.96%`. These are telemetry only, not milestones. |
-| Ghidra backup | Live `BEA.gpr`/`BEA.rep` backup verified at `G:\GhidraBackups\BEA_20260513_100816_post_wave370_frontend_controls_verified` with `19` files, `153422727` bytes, and `HashDiffCount=0`. |
+| Ghidra backup | Live `BEA.gpr`/`BEA.rep` backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_100816_post_wave370_frontend_controls_verified` with `19` files, `153422727` bytes, and `HashDiffCount=0`. |
 
 ## Claim Boundary
 

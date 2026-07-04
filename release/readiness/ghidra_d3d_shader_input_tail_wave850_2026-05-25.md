@@ -33,7 +33,7 @@ Read-back evidence:
 - Additional read-only evidence: `18` context metadata rows, `18` context decompile rows, `1998` xref-site instruction rows, and `1937` target-long instruction rows.
 - Queue after Wave850: `6098` total functions, `5704` commented, `394` commentless, `0` exact-undefined signatures, `0` `param_N`, comment-backed proxy `5704/6098 = 93.54%`, strict clean-signature proxy `5704/6098 = 93.54%`.
 - Next raw commentless row: `0x005140e0 CDXEngine__CaptureAviFrame`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-081702_post_wave850_d3d_shader_input_tail_verified`, `19` files, `171969415` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-081702_post_wave850_d3d_shader_input_tail_verified`, `19` files, `171969415` bytes, `DiffCount=0`.
 
 What this proves:
 

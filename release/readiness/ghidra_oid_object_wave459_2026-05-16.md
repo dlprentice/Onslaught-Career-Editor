@@ -22,7 +22,7 @@ Wave459 saved Ghidra name/signature/comment/tag corrections for `12` OID object 
 - Corrected eight vtable slot-1 lifecycle labels to `CTree__scalar_deleting_dtor`, `CActorBase__shared_scalar_deleting_dtor_004bfd00`, `CRocket__scalar_deleting_dtor`, `CWaypoint__scalar_deleting_dtor`, `CSpawnerThing__scalar_deleting_dtor`, `CSphereTrigger__scalar_deleting_dtor`, `CWingmanStart__scalar_deleting_dtor`, and `CEscapePod__scalar_deleting_dtor`.
 - Queue after refresh: `6057` functions, `2035` commented, `4022` commentless, `1727` undefined signatures, `1636` `param_N` signatures.
 - Current telemetry proxies: comment-backed `2035/6057 = 33.60%`; strict comment-plus-clean-signature `1971/6057 = 32.54%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-170043_post_wave459_oid_object_verified` (`19` files, `156863367` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-170043_post_wave459_oid_object_verified` (`19` files, `156863367` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

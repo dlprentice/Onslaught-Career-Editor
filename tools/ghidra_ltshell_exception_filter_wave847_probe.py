@@ -29,7 +29,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-063403_post_wave847_ltshell_exception_filter_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-063403_post_wave847_ltshell_exception_filter_verified"
 NEXT_HEAD = "0x00513120 PlatformInput__InitDirectInput"
 TARGET_ADDRESS = "0x00512040"
 TARGET_NAME = "CLTShell__UnhandledExceptionFilter"

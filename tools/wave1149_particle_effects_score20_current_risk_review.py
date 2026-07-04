@@ -42,8 +42,8 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260605-192706_post_wave1149_particle_effects_score20_current_risk_review_verified"
-PRIOR_BACKUP = r"G:\GhidraBackups\BEA_20260605-185756_post_wave1148_battleengine_walker_control_score20_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-192706_post_wave1149_particle_effects_score20_current_risk_review_verified"
+PRIOR_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-185756_post_wave1148_battleengine_walker_control_score20_current_risk_review_verified"
 
 TARGETS = {
     "0x004c35d0": ("CEngine__ConfigureParticleBurstForDistance", "void __thiscall CEngine__ConfigureParticleBurstForDistance(void * this, void * particle, int unused_context)", ("CParticleManager__SetParticleResource", "+0x80", "+0x88")),

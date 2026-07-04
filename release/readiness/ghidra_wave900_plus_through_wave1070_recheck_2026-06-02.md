@@ -11,7 +11,7 @@ Current anchors:
 - Latest operational wave: Wave1070, `texel-unpack-tail-review-wave1070`.
 - Latest focused probe: `tools/ghidra_texel_unpack_tail_review_wave1070_probe.py`.
 - Latest readiness note: `release/readiness/ghidra_texel_unpack_tail_review_wave1070_2026-06-02.md`.
-- Latest verified backup: `G:\GhidraBackups\BEA_20260602-022701_post_wave1070_texel_unpack_tail_review_verified`.
+- Latest verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-022701_post_wave1070_texel_unpack_tail_review_verified`.
 
 Current percentages:
 
@@ -54,4 +54,4 @@ Latest aggregate run:
 
 Boundary note: this aggregate gate proves local static evidence coverage, backup references, probe/doc wiring, and zero export-contract function-quality debt. It does not prove runtime texture output behavior, runtime codec/FourCC behavior, exact profile/descriptor/row-window layouts, exact source identity, BEA patching, gameplay outcomes, or rebuild parity.
 
-Probe token anchor: Wave1070; texel-unpack-tail-review-wave1070; 0x0058609e CFastVB__TexelUnpackProfile_005ea020__ctor; 0x005860ba CTexture__UnpackTexels_Signed16_16_ToFloat4_RG; 0x005861b4 CDXTexture__UnpackTexels_Signed2_10_10_10_ToFloat4; 0x00586305 CDXTexture__UnpackTexels_Signed16_16_16_16_ToFloat4; 0x00586438 CTexture__UnpackTexels_NormalXY_Signed8_8_ReconstructZ; 0x00586609 CDXTexture__UnpackTexels_CallbackPerTexel_Stride2_SetRGBAOne; 0x005866d2 CFastVB__UnpackTexels_CallbackPerTexel_Stride4_SetZAOne; 0x0058677b CDXTexture__UnpackTexels_CallbackSingleTexel; 0x0058686f CTexture__UnpackTexels_CopyRaw128; 0x005868d1 CFastVB__UnpackTexels_L16A16_ToFloat4; 0x00586bb7 CFastVB__FlushPendingConvertedRows16; 0x00586f37 CFastVB__DecodeRowWindowToScratchPairs; 812/1408 = 57.67%; 1278/1560 = 81.92%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260602-022701_post_wave1070_texel_unpack_tail_review_verified; read-only review.
+Probe token anchor: Wave1070; texel-unpack-tail-review-wave1070; 0x0058609e CFastVB__TexelUnpackProfile_005ea020__ctor; 0x005860ba CTexture__UnpackTexels_Signed16_16_ToFloat4_RG; 0x005861b4 CDXTexture__UnpackTexels_Signed2_10_10_10_ToFloat4; 0x00586305 CDXTexture__UnpackTexels_Signed16_16_16_16_ToFloat4; 0x00586438 CTexture__UnpackTexels_NormalXY_Signed8_8_ReconstructZ; 0x00586609 CDXTexture__UnpackTexels_CallbackPerTexel_Stride2_SetRGBAOne; 0x005866d2 CFastVB__UnpackTexels_CallbackPerTexel_Stride4_SetZAOne; 0x0058677b CDXTexture__UnpackTexels_CallbackSingleTexel; 0x0058686f CTexture__UnpackTexels_CopyRaw128; 0x005868d1 CFastVB__UnpackTexels_L16A16_ToFloat4; 0x00586bb7 CFastVB__FlushPendingConvertedRows16; 0x00586f37 CFastVB__DecodeRowWindowToScratchPairs; 812/1408 = 57.67%; 1278/1560 = 81.92%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-022701_post_wave1070_texel_unpack_tail_review_verified; read-only review.

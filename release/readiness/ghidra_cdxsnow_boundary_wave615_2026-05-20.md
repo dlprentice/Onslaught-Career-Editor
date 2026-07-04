@@ -29,7 +29,7 @@ The saved Ghidra evidence shows vtable `0x005e5974` slot `+0x0c` / address `0x00
 - Apply: `updated=1 skipped=0 created=1 would_create=0 deleted=1 would_delete=0 body_set=1 would_set_body=0 renamed=0 would_rename=0 missing=0 bad=0`
 - Final dry: `updated=0 skipped=1 created=0 would_create=0 deleted=0 would_delete=0 body_set=0 would_set_body=0 renamed=0 would_rename=0 missing=0 bad=0`
 - Read-back exports verified `4` context metadata rows plus the expected stale-address miss, `4` context tag rows plus the expected stale-address miss, `5` xref rows, `339` instruction rows, `4` decompile rows plus the expected stale-address miss, and `8` vtable rows.
-- Verified backup: `G:\GhidraBackups\BEA_20260520-011651_post_wave615_cdxsnow_boundary_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-011651_post_wave615_cdxsnow_boundary_verified`
   - `sourceFileCount=19`
   - `destFileCount=19`
   - `sourceBytes=161614727`

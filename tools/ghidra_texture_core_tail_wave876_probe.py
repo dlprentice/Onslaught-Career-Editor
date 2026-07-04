@@ -32,7 +32,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave876 texture core tail"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-212045_post_wave876_texture_core_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-212045_post_wave876_texture_core_tail_verified"
 NEXT_HEAD = "0x0055b0e0 CWaterRenderSystem__ctor"
 STRICT_PROXY = "5885/6113 = 96.27%"
 

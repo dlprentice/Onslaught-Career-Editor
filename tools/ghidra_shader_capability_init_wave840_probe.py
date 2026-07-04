@@ -33,7 +33,7 @@ BACKUP_SUMMARY = BASE / "backup-summary.json"
 ADDRESS = "0x005016b0"
 NAME = "InitShaderCapabilityFlagsAndCVar"
 SIGNATURE = "void __cdecl InitShaderCapabilityFlagsAndCVar(void)"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-030308_post_wave840_shader_capability_init_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-030308_post_wave840_shader_capability_init_verified"
 NEXT_HEAD = "0x005019c0 VFuncSlot_09_005019c0"
 
 EXPECTED_TAGS = {

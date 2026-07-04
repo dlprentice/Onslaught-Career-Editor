@@ -47,7 +47,7 @@ Read-back evidence:
 - Wave911 focused progress remains `812/1408 = 57.67%` because the Wave1061 rows are outside the current materialized Wave911 focused queue.
 - Expanded static surface progress extends to `1168/1529 = 76.39%` after adding these twenty PNG rows outside the prior expanded denominator.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-211936_post_wave1061_cdxtexture_png_decode_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-211936_post_wave1061_cdxtexture_png_decode_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -63,4 +63,4 @@ What remains unproven:
 
 Next candidate note: continue with the next focused static re-audit cluster; prefer read-only review first and mutate only when fresh evidence proves a correction or normalization need.
 
-Probe token anchor: Wave1061; cdxtexture-png-decode-review-wave1061; 0x00592dc2 CDXTexture__CreatePngDecodeContext; 0x00592eb6 CDXTexture__ParsePngHeadersUntilIdat; 0x00593043 CDXTexture__DecodePngPassRowsAndPostprocess; 0x00593411 CDXTexture__ResetPngDecodeContext; 0x0059d699 CDXTexture__ParsePngChunk_IHDR; 0x0059d879 CDXTexture__ParsePngChunk_PLTE; 0x0059d992 CDXTexture__ParsePngChunk_IEND; 0x0059d9d8 CDXTexture__ParsePngChunk_gAMA; 0x0059dad9 CDXTexture__ParsePngChunk_sRGB; 0x0059dbbb CDXTexture__ParsePngChunk_tRNS; 0x0059dd5c CDXTexture__HandlePngChunkAfterIdat; 0x0059dda2 CDXTexture__ProcessIdatChunkDataAndQueueDecode; 812/1408 = 57.67%; 1168/1529 = 76.39%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-211936_post_wave1061_cdxtexture_png_decode_review_verified; no mutation.
+Probe token anchor: Wave1061; cdxtexture-png-decode-review-wave1061; 0x00592dc2 CDXTexture__CreatePngDecodeContext; 0x00592eb6 CDXTexture__ParsePngHeadersUntilIdat; 0x00593043 CDXTexture__DecodePngPassRowsAndPostprocess; 0x00593411 CDXTexture__ResetPngDecodeContext; 0x0059d699 CDXTexture__ParsePngChunk_IHDR; 0x0059d879 CDXTexture__ParsePngChunk_PLTE; 0x0059d992 CDXTexture__ParsePngChunk_IEND; 0x0059d9d8 CDXTexture__ParsePngChunk_gAMA; 0x0059dad9 CDXTexture__ParsePngChunk_sRGB; 0x0059dbbb CDXTexture__ParsePngChunk_tRNS; 0x0059dd5c CDXTexture__HandlePngChunkAfterIdat; 0x0059dda2 CDXTexture__ProcessIdatChunkDataAndQueueDecode; 812/1408 = 57.67%; 1168/1529 = 76.39%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-211936_post_wave1061_cdxtexture_png_decode_review_verified; no mutation.

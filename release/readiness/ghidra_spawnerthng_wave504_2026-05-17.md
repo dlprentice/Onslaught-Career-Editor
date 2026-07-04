@@ -28,7 +28,7 @@ This is static retail Ghidra evidence only. It does not prove exact `CSpawnerThn
 
 ## Evidence
 
-- Source debug path `C:\dev\ONSLAUGHT2\SpawnerThng.cpp` and `CSpawnerInitThing` source fields supplied naming/layout hints.
+- Source debug path `[maintainer-local-source-export-root]\SpawnerThng.cpp` and `CSpawnerInitThing` source fields supplied naming/layout hints.
 - Retail Ghidra decompile, xrefs, instructions, caller exports, and callsite exports supplied the saved evidence.
 - Artifacts are under `subagents/ghidra-static-reaudit/wave504-spawnerthng-004e3010/`.
 
@@ -44,4 +44,4 @@ This is static retail Ghidra evidence only. It does not prove exact `CSpawnerThn
 - `npm run test:ghidra-static-reaudit-queue` passed after queue refresh.
 - Refreshed queue: `6078` functions, `2311` commented, `3767` commentless, `1638` undefined signatures, `1490` `param_N` signatures.
 - Telemetry proxy: comment-backed `2311/6078 = 38.02%`; strict comment-plus-clean-signature `2257/6078 = 37.13%`. These are telemetry only, not completion certification.
-- Backup `G:\GhidraBackups\BEA_20260517-145950_post_wave504_spawnerthng_verified` verified `19` files, `158010247` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Backup `[maintainer-local-ghidra-backup-root]\BEA_20260517-145950_post_wave504_spawnerthng_verified` verified `19` files, `158010247` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.

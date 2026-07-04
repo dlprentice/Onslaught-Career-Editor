@@ -1,7 +1,7 @@
 # WorldMeshList.cpp Function Analysis
 
-**Source file:** `C:\dev\ONSLAUGHT2\WorldMeshList.cpp`
-**Header file:** `C:\dev\ONSLAUGHT2\WorldMeshList.h`
+**Source file:** `[maintainer-local-source-export-root]\WorldMeshList.cpp`
+**Header file:** `[maintainer-local-source-export-root]\WorldMeshList.h`
 **Analysis date:** December 2025
 
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6246/6246** (Wave1073: every exported function commented with clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
@@ -30,7 +30,7 @@ This system appears to be used during world loading to track which meshes need t
 | `0x0050d9a0` | `CWorldMeshList__Clear` | `void __cdecl CWorldMeshList__Clear(void)` | Clear all entries and free memory |
 | `0x0050dc20` | `CWorldMeshList__MarkUsed` | `void __cdecl CWorldMeshList__MarkUsed(char * mesh_name)` | Mark a mesh entry as used |
 
-Wave1073 static re-audit (cworld-load-tail-review-wave1073) re-read all three saved WorldMeshList rows with no mutation: `0x0050d9a0 CWorldMeshList__Clear`, `0x0050d9e0 CWorldMeshList__Add`, and `0x0050dc20 CWorldMeshList__MarkUsed`. Fresh xrefs keep `0x0050d9e0 CWorldMeshList__Add` tied to `CWorld__LoadWorld`, recursive child-mesh handling, `CSpawnerThng__Init`, and `CScriptObjectCode__CollectSpawnThings`; `0x0050dc20 CWorldMeshList__MarkUsed` remains tied to `CUnit__Init`. Verified backup: `G:\GhidraBackups\BEA_20260602-044834_post_wave1073_cworld_load_tail_review_verified`. This is static Ghidra evidence only; runtime mesh loading/usage behavior, exact list-node/layout identity, and rebuild parity remain separate proof. Probe token anchor: Wave1073; cworld-load-tail-review-wave1073; 0x0050a870 CWorld__ClearSetArrays; 0x0050ac70 CWorld__LoadScriptEvents; 0x0050b520 CWorld__LoadWorldFile; 0x0050d6a0 CWorld__PushWorldTextSlot; 0x0050d9e0 CWorldMeshList__Add; 0x0050dcb0 CWorld__SpawnInitialThings; 0x0050df80 CWorldPhysicsManager__CreateThingByType; 0x00537c40; 0x004dfa47; 812/1408 = 57.67%; 1357/1560 = 86.99%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260602-044834_post_wave1073_cworld_load_tail_review_verified; read-only review.
+Wave1073 static re-audit (cworld-load-tail-review-wave1073) re-read all three saved WorldMeshList rows with no mutation: `0x0050d9a0 CWorldMeshList__Clear`, `0x0050d9e0 CWorldMeshList__Add`, and `0x0050dc20 CWorldMeshList__MarkUsed`. Fresh xrefs keep `0x0050d9e0 CWorldMeshList__Add` tied to `CWorld__LoadWorld`, recursive child-mesh handling, `CSpawnerThng__Init`, and `CScriptObjectCode__CollectSpawnThings`; `0x0050dc20 CWorldMeshList__MarkUsed` remains tied to `CUnit__Init`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-044834_post_wave1073_cworld_load_tail_review_verified`. This is static Ghidra evidence only; runtime mesh loading/usage behavior, exact list-node/layout identity, and rebuild parity remain separate proof. Probe token anchor: Wave1073; cworld-load-tail-review-wave1073; 0x0050a870 CWorld__ClearSetArrays; 0x0050ac70 CWorld__LoadScriptEvents; 0x0050b520 CWorld__LoadWorldFile; 0x0050d6a0 CWorld__PushWorldTextSlot; 0x0050d9e0 CWorldMeshList__Add; 0x0050dcb0 CWorld__SpawnInitialThings; 0x0050df80 CWorldPhysicsManager__CreateThingByType; 0x00537c40; 0x004dfa47; 812/1408 = 57.67%; 1357/1560 = 86.99%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-044834_post_wave1073_cworld_load_tail_review_verified; read-only review.
 
 ## Wave556 Static Read-Back (2026-05-18)
 
@@ -119,8 +119,8 @@ struct WorldMeshNode {
 ## Cross-References
 
 **Debug strings found:**
-- `0x0063d488`: `"C:\dev\ONSLAUGHT2\WorldMeshList.cpp"` (line 0x2E = 46)
-- `0x0063d464`: `"C:\dev\ONSLAUGHT2\WorldMeshList.h"` (line 0x11 = 17)
+- `0x0063d488`: `"[maintainer-local-source-export-root]\WorldMeshList.cpp"` (line 0x2E = 46)
+- `0x0063d464`: `"[maintainer-local-source-export-root]\WorldMeshList.h"` (line 0x11 = 17)
 
 The line numbers in allocation calls suggest:
 - Line 46 in .cpp: Node allocation in `Add()`

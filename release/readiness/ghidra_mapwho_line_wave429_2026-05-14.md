@@ -8,7 +8,7 @@ Scope: saved retail `BEA.exe` Ghidra signature/comment/tag correction
 
 Wave429 serialized headless dry/apply/read-back hardened thirteen saved `CMapWho` / `CMapWhoEntry` functions at `0x00492110` through `0x00492ca0`. The pass covered the line-query iterator helpers, world-to-sector conversion, sector sorting, debug draw helpers, and entry position/owner helpers after Wave428 handled the neighboring init/radius-query cluster.
 
-This is public-safe static evidence only. It does not launch or patch `BEA.exe`, does not mutate the installed Steam game, and does not include raw decompile text or private runtime proof. The retail debug string names `C:\dev\ONSLAUGHT2\mapwho.cpp`, but `mapwho.cpp` is absent from the current Stuart source snapshot, so this wave is binary-led rather than source-body parity.
+This is public-safe static evidence only. It does not launch or patch `BEA.exe`, does not mutate the installed Steam game, and does not include raw decompile text or private runtime proof. The retail debug string names `[maintainer-local-source-export-root]\mapwho.cpp`, but `mapwho.cpp` is absent from the current Stuart source snapshot, so this wave is binary-led rather than source-body parity.
 
 ## Saved Ghidra Changes
 

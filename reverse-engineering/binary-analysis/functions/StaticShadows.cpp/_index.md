@@ -1,7 +1,7 @@
 # StaticShadows.cpp Functions
 
 > Source File: StaticShadows.cpp | Binary: BEA.exe
-> Debug Path: 0x006329f8 (`C:\dev\ONSLAUGHT2\StaticShadows.cpp`)
+> Debug Path: 0x006329f8 (`[maintainer-local-source-export-root]\StaticShadows.cpp`)
 
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6113/6113** (Wave900: every function commented; clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
 
@@ -9,9 +9,9 @@
 
 CStaticShadows handles pre-computed shadow rendering for static objects (buildings, terrain features) in the game world. The system uses a grid-based shadow map approach where each cell contains a bitmap representing shadow coverage. Shadows are computed by ray-tracing from light sources through scene geometry.
 
-Wave767 static read-back (`unwind-continuation-wave767`, `wave767-readback-verified`) saved comments/tags/signatures for StaticShadows.cpp-adjacent compiler-generated unwind cleanup callbacks from `0x005d4ef0 Unwind@005d4ef0` through `0x005d4f90 Unwind@005d4f90`. Evidence includes StaticShadows.cpp debug path `0x006329f8`, DATA scope-table xrefs `0x0061d7a4` through `0x0061d814`, allocation-free callbacks, and eight `CLine__SetBaseVtable_00426360` stack-local line cleanup rows beginning at `0x005d4f28 Unwind@005d4f28`. Verified backup: `G:\GhidraBackups\BEA_20260523-164622_post_wave767_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
+Wave767 static read-back (`unwind-continuation-wave767`, `wave767-readback-verified`) saved comments/tags/signatures for StaticShadows.cpp-adjacent compiler-generated unwind cleanup callbacks from `0x005d4ef0 Unwind@005d4ef0` through `0x005d4f90 Unwind@005d4f90`. Evidence includes StaticShadows.cpp debug path `0x006329f8`, DATA scope-table xrefs `0x0061d7a4` through `0x0061d814`, allocation-free callbacks, and eight `CLine__SetBaseVtable_00426360` stack-local line cleanup rows beginning at `0x005d4f28 Unwind@005d4f28`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260523-164622_post_wave767_unwind_continuation_verified`. Exact parent source-body identity, runtime exception behavior, runtime cleanup behavior, BEA patching, and rebuild parity remain deferred.
 
-Wave1009 (`geometry-guide-heightfield-spine-review-wave1009`) re-reviewed `0x0047eb80 CStaticShadows__SampleShadowHeightBilinear` as the central static-shadow height sampler and recovered DATA-backed caller boundaries including `0x00534ac0 ScriptCommand__SampleStaticShadowHeight_00534ac0`. Queue closure is `6233/6233 = 100.00%`; verified backup: `G:\GhidraBackups\BEA_20260531-155648_post_wave1009_geometry_guide_heightfield_spine_review_verified`. Runtime static-shadow, terrain, or MissionScript behavior, exact source method identity, concrete layouts, BEA patching, and rebuild parity remain separate proof.
+Wave1009 (`geometry-guide-heightfield-spine-review-wave1009`) re-reviewed `0x0047eb80 CStaticShadows__SampleShadowHeightBilinear` as the central static-shadow height sampler and recovered DATA-backed caller boundaries including `0x00534ac0 ScriptCommand__SampleStaticShadowHeight_00534ac0`. Queue closure is `6233/6233 = 100.00%`; verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-155648_post_wave1009_geometry_guide_heightfield_spine_review_verified`. Runtime static-shadow, terrain, or MissionScript behavior, exact source method identity, concrete layouts, BEA patching, and rebuild parity remain separate proof.
 
 ## Functions
 

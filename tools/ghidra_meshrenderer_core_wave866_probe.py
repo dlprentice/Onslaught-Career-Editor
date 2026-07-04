@@ -38,7 +38,7 @@ SIGNATURE = (
     "void * render_context, void * effect_owner, int render_slot_or_mode, int render_flags, "
     "int reserved_zero, void * world_position_vec4)"
 )
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-162911_post_wave866_meshrenderer_core_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-162911_post_wave866_meshrenderer_core_verified"
 NEXT_HEAD = "0x005501d0 CVBufTexture__GetVertexWriteCursorPlusOne"
 STRICT_PROXY = "5820/6105 = 95.33%"
 

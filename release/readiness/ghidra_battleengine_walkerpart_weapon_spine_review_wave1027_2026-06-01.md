@@ -31,7 +31,7 @@ Evidence counts:
 - Context exports: 5 metadata rows, 5 tag rows, 13 xref rows, 718 body-instruction rows, and 5 decompile rows.
 - Queue closure remains `6238/6238 = 100.00%` with 0 commentless, 0 exact-undefined signatures, and 0 `param_N`.
 - Wave911 focused re-audit progress after Wave1027: `600/1408 = 42.61%`; expanded static surface progress: `829/1493 = 55.53%`; Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-014543_post_wave1027_battleengine_walkerpart_weapon_spine_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-014543_post_wave1027_battleengine_walkerpart_weapon_spine_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -48,4 +48,4 @@ What remains unproven:
 - Concrete `CBattleEngineWalkerPart`, `CBattleEngine`, `CWeapon`, or configuration layouts.
 - BEA patch behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1027; battleengine-walkerpart-weapon-spine-review-wave1027; 0x00412bc0 CBattleEngineWalkerPart__ctor; 0x00413cc0 CBattleEngineWalkerPart__FireWeapon; 0x00413cf0 CBattleEngineWalkerPart__ChargeWeapon; 0x00414030 CBattleEngineWalkerPart__GetCurrentWeapon; 0x004140d0 CBattleEngineWalkerPart__WeaponFired; 0x004145f0 CBattleEngineWalkerPart__GetCurrentWeaponZoomMode; 600/1408 = 42.61%; 829/1493 = 55.53%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-014543_post_wave1027_battleengine_walkerpart_weapon_spine_review_verified; no mutation.
+Probe token anchor: Wave1027; battleengine-walkerpart-weapon-spine-review-wave1027; 0x00412bc0 CBattleEngineWalkerPart__ctor; 0x00413cc0 CBattleEngineWalkerPart__FireWeapon; 0x00413cf0 CBattleEngineWalkerPart__ChargeWeapon; 0x00414030 CBattleEngineWalkerPart__GetCurrentWeapon; 0x004140d0 CBattleEngineWalkerPart__WeaponFired; 0x004145f0 CBattleEngineWalkerPart__GetCurrentWeaponZoomMode; 600/1408 = 42.61%; 829/1493 = 55.53%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-014543_post_wave1027_battleengine_walkerpart_weapon_spine_review_verified; no mutation.

@@ -19,8 +19,8 @@ Evidence:
 
 - Fresh metadata/tag/xref/instruction/decompile exports: `2` / `2` / `2` / `73` / `2`.
 - Existing tags remain anchored to `comment-hardened`, `repairpad-ai`, `repairpad-wave328`, and `static-reaudit`.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-050726_post_wave1124_repairpad_current_risk_review_verified`, `19` files, `175737735` bytes, `DiffCount=0`.
-- Previous completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-052636_post_wave1123_airunit_plane_support_vfunc_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-050726_post_wave1124_repairpad_current_risk_review_verified`, `19` files, `175737735` bytes, `DiffCount=0`.
+- Previous completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-052636_post_wave1123_airunit_plane_support_vfunc_review_verified`.
 - Prior context: Wave328 normalized the RepairPadAI helper comments/tags, Wave924 re-read the four-row dock-candidate chain, and Wave1119 re-read the vtable-slot 11 caller.
 
 Boundary:

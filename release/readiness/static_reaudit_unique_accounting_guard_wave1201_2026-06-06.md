@@ -24,7 +24,7 @@ Probe token anchor: current focused candidates: 1141; live regenerated current f
 
 Accounting boundary: the legacy additive counter is deprecated. After Wave1201 it would read `1073/1179`, but that includes a 26 duplicate-address overcount and Wave1145 arithmetic overcount: 5. Wave911 is historical-retired/non-reconstructable at `812/1408 = 57.67%`; this is not Wave911 reconstruction.
 
-Verified backup: `G:\GhidraBackups\BEA_20260606-235230_post_wave1201_frontend_text_menu_current_risk_review_verified`.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-235230_post_wave1201_frontend_text_menu_current_risk_review_verified`.
 
 Active measurement files:
 

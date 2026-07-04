@@ -29,7 +29,7 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-045300_post_wave991_round_config_bridge_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-045300_post_wave991_round_config_bridge_review_verified"
 
 TARGETS = {
     "0x00426150": ("CCollisionSeekingRound__Init", "void __thiscall CCollisionSeekingRound__Init(void * this, void * roundConfig)"),

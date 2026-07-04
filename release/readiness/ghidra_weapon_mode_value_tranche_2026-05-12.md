@@ -29,7 +29,7 @@ No new function boundary was created in this wave.
 - Final read-back verified `9/9` metadata rows, `9/9` decompile exports, `12` xref rows, `3789` instruction rows, and `9/9` tag rows.
 - `cmd.exe /c npm run test:ghidra-weapon-mode-value-tranche` passed against the saved read-back artifacts.
 - The refreshed whole-database queue reports `5904` functions, `937` commented functions, `4967` commentless functions, `1980` undefined signatures, and `2178` `param_N` signatures.
-- The post-mutation live Ghidra backup was verified at `G:\GhidraBackups\BEA_20260512_100148_post_wave336_verified` with `19` files, `152210311` bytes, and `DiffCount=0`.
+- The post-mutation live Ghidra backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260512_100148_post_wave336_verified` with `19` files, `152210311` bytes, and `DiffCount=0`.
 - Follow-up Wave 337 superseded the `0x004359c0` constructor-base wording after the adjacent `0x00437080` scalar-deleting destructor wrapper was re-read and saved.
 
 ## Claim Boundary

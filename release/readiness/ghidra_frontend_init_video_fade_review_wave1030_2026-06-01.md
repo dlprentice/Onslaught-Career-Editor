@@ -22,7 +22,7 @@ Evidence counts:
 - Context exports: 10 metadata rows, 10 tag rows, 354 xref rows, 221 body-instruction rows, and 10 decompile rows.
 - Queue closure remains `6238/6238 = 100.00%` with 0 commentless, 0 exact-undefined signatures, and 0 `param_N`.
 - Wave911 focused re-audit progress after Wave1030: `621/1408 = 44.11%`; expanded static surface progress: `850/1493 = 56.93%`; Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-032415_post_wave1030_frontend_init_video_fade_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-032415_post_wave1030_frontend_init_video_fade_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -37,4 +37,4 @@ What remains unproven:
 - Exact source-body identity beyond static source/decompile parity.
 - BEA patch behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1030; frontend-init-video-fade-review-wave1030; 0x004662a0 CFrontEnd__Init; 0x004679e0 CFrontEnd__RenderPreCommonFade; 0x00452ce0 CFrontEnd__RenderVideoQuadScaledToWindow; 621/1408 = 44.11%; 850/1493 = 56.93%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-032415_post_wave1030_frontend_init_video_fade_review_verified; no mutation.
+Probe token anchor: Wave1030; frontend-init-video-fade-review-wave1030; 0x004662a0 CFrontEnd__Init; 0x004679e0 CFrontEnd__RenderPreCommonFade; 0x00452ce0 CFrontEnd__RenderVideoQuadScaledToWindow; 621/1408 = 44.11%; 850/1493 = 56.93%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-032415_post_wave1030_frontend_init_video_fade_review_verified; no mutation.

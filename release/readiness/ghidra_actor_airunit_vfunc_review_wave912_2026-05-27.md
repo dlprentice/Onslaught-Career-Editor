@@ -50,7 +50,7 @@ void __thiscall CActor__StickToGround(void * this)
 Pre-mutation backup:
 
 ```text
-G:\GhidraBackups\BEA_20260527-100120_pre_wave912_actor_sticktoground_mutation
+[maintainer-local-ghidra-backup-root]\BEA_20260527-100120_pre_wave912_actor_sticktoground_mutation
 files=19
 bytes=173247367
 ```
@@ -58,7 +58,7 @@ bytes=173247367
 Post-mutation backup:
 
 ```text
-G:\GhidraBackups\BEA_20260527-100357_post_wave912_actor_sticktoground_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260527-100357_post_wave912_actor_sticktoground_verified
 files=19
 bytes=173247367
 ```

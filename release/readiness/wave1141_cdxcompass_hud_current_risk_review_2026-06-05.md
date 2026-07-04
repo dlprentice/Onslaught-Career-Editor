@@ -6,7 +6,7 @@ Scope: `wave1141-cdxcompass-hud-current-risk-review`
 
 Wave1141 re-read thirteen Wave1108 current-risk rows in the CDXCompass/HUD render-state current-risk cluster with fresh Ghidra metadata, tag, xref, instruction, context, and decompile exports. It was a read-only review with no mutation: no rename, no signature edit, no comment/tag edit, no function-boundary change, no executable-byte change, no BEA launch, no installed-game mutation, and no runtime-file mutation.
 
-Probe token anchor: Wave1141; wave1141-cdxcompass-hud-current-risk-review; `251/1179 = 21.29%`; 13 current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 928; current risk candidates: 6166; CDXCompass/HUD render-state current-risk cluster; fresh Ghidra export; read-only review; no mutation; `0 / 0 / 0`; `6411/6411 = 100.00%`; `G:\GhidraBackups\BEA_20260605-145724_post_wave1141_cdxcompass_hud_current_risk_review_verified`; `G:\GhidraBackups\BEA_20260605-142515_post_wave1140_motion_controller_current_risk_review_verified`.
+Probe token anchor: Wave1141; wave1141-cdxcompass-hud-current-risk-review; `251/1179 = 21.29%`; 13 current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 928; current risk candidates: 6166; CDXCompass/HUD render-state current-risk cluster; fresh Ghidra export; read-only review; no mutation; `0 / 0 / 0`; `6411/6411 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260605-145724_post_wave1141_cdxcompass_hud_current_risk_review_verified`; `[maintainer-local-ghidra-backup-root]\BEA_20260605-142515_post_wave1140_motion_controller_current_risk_review_verified`.
 
 | Address | Evidence |
 | --- | --- |
@@ -31,8 +31,8 @@ Read-back evidence:
 - Queue refresh after the read-only review: `6411/6411 = 100.00%`, static debt `0 / 0 / 0`.
 - Current-risk refresh: current risk candidates `6166`, current focused candidates `1178`, focused threshold `15`.
 - Wave1108 current focused accounting moved to `251/1179 = 21.29%`; remaining active focused work: `928`.
-- Verified backup: `G:\GhidraBackups\BEA_20260605-145724_post_wave1141_cdxcompass_hud_current_risk_review_verified`, 19 files, 175967111 bytes, `DiffCount=0`, `HashDiffCount=0`.
-- Previous completed backup: `G:\GhidraBackups\BEA_20260605-142515_post_wave1140_motion_controller_current_risk_review_verified`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-145724_post_wave1141_cdxcompass_hud_current_risk_review_verified`, 19 files, 175967111 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Previous completed backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-142515_post_wave1140_motion_controller_current_risk_review_verified`.
 
 What this proves:
 

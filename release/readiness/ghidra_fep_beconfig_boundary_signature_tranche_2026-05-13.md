@@ -41,7 +41,7 @@ Serialized headless dry/apply/read-back recovered and hardened `22` FrontEnd Bat
 - `cmd.exe /c npm run test:ghidra-fep-beconfig-boundary-signature` passed with focused probe status `PASS` and `22` targets.
 - Whole-database quality refresh reports `6013` functions, `1292` commented functions, `4721` commentless functions, `1948` undefined signatures, and `1992` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1292/6013 = 21.49%` and strict clean-signature `1230/6013 = 20.46%`. These values are not milestones or completion gates; the target remains as close to `100%` evidence-grade static RE as possible.
-- The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260513_080854_post_wave367_fep_beconfig_verified` with `19` files, `153357191` bytes, and `HashDiffCount=0`.
+- The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_080854_post_wave367_fep_beconfig_verified` with `19` files, `153357191` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

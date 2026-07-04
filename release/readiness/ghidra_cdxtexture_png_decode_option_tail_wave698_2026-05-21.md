@@ -23,7 +23,7 @@ Evidence:
 - Post exports verified `8` metadata rows, `8` tag rows, `18` xref rows, `296` instruction rows, and `8` clean decompile rows.
 - Queue refresh PASS: `6098` total, `4016` commented, `2082` commentless, `1216` exact-undefined signatures, and `310` `param_N` signatures.
 - Strict comment-plus-clean-signature proxy from the refreshed TSV is `3962/6098 = 64.97%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260521-160619_post_wave698_cdxtexture_png_decode_option_tail_verified`, `19` files, `165186439` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-160619_post_wave698_cdxtexture_png_decode_option_tail_verified`, `19` files, `165186439` bytes, `DiffCount=0`.
 
 Scope boundary:
 

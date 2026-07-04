@@ -32,7 +32,7 @@ Read-back evidence:
 - Vtable sample improved from `1480` OK / `120` `NO_FUNCTION_AT_POINTER` to `1528` OK / `72` `NO_FUNCTION_AT_POINTER`; the selected Wave1086 targets account for `48` sampled slot occurrences now resolving to saved functions.
 - Queue after Wave1086: `6355/6355 = 100.00%` static function-quality closure, with `0` commentless functions, `0` exact-`undefined` signatures, `0` `param_N` signatures, `0` uncertain-owner rows, `0` helper-address rows, and `0` wrapper-address rows.
 - Expanded static re-audit surface: `1472/1560 = 94.36%`. Wave911 focused remains `812/1408 = 57.67%`; top-500 remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-134022_post_wave1086_shared_unit_residual_vtable_continuation_verified`, `19` files, `175082375` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-134022_post_wave1086_shared_unit_residual_vtable_continuation_verified`, `19` files, `175082375` bytes, `DiffCount=0`.
 
 What this proves:
 
@@ -49,4 +49,4 @@ What remains unproven:
 - BEA patching behavior.
 - Clean-room rebuild parity.
 
-Probe token anchor: Wave1086; shared-unit-residual-vtable-continuation-wave1086; `0x00405dc0 SharedUnitVFunc__ReturnFloat005d858c_00405dc0`; `0x004037a0 SharedUnitVFunc__ApplyDamageAndResolveSlot19Vector_004037a0`; `0x00403a90 SharedUnitVFunc__ForwardVectorToField208WithScaledAngle_00403a90`; `0x00428be0 CUnitAIVFunc__MaybeSmoothVectorTowardTarget_00428be0`; `0x0047a730 CGillMHeadAIVFunc__ForwardArgAndSetIdleAnimation_0047a730`; `1472/1560 = 94.36%`; `812/1408 = 57.67%`; `500/500 = 100.00%`; `6355/6355 = 100.00%`; `G:\GhidraBackups\BEA_20260602-134022_post_wave1086_shared_unit_residual_vtable_continuation_verified`; boundary recovery.
+Probe token anchor: Wave1086; shared-unit-residual-vtable-continuation-wave1086; `0x00405dc0 SharedUnitVFunc__ReturnFloat005d858c_00405dc0`; `0x004037a0 SharedUnitVFunc__ApplyDamageAndResolveSlot19Vector_004037a0`; `0x00403a90 SharedUnitVFunc__ForwardVectorToField208WithScaledAngle_00403a90`; `0x00428be0 CUnitAIVFunc__MaybeSmoothVectorTowardTarget_00428be0`; `0x0047a730 CGillMHeadAIVFunc__ForwardArgAndSetIdleAnimation_0047a730`; `1472/1560 = 94.36%`; `812/1408 = 57.67%`; `500/500 = 100.00%`; `6355/6355 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260602-134022_post_wave1086_shared_unit_residual_vtable_continuation_verified`; boundary recovery.

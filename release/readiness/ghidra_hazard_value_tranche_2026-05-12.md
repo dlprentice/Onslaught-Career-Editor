@@ -23,7 +23,7 @@ The pass recovered three missing function boundaries in the hazard-value family,
 - `py -3 tools\ghidra_hazard_value_tranche_probe_test.py` passed `3/3`; `py -3 -m py_compile tools\ghidra_hazard_value_tranche_probe.py tools\ghidra_hazard_value_tranche_probe_test.py` passed.
 - `cmd.exe /c npm run test:ghidra-hazard-value-tranche` passed against the saved read-back artifacts.
 - The refreshed whole-database queue reports `5941` functions, `1022` commented functions, `4919` commentless functions, `1975` undefined signatures, and `2135` `param_N` signatures.
-- The post-mutation live Ghidra backup was verified at `G:\GhidraBackups\BEA_20260512_161208_post_wave342_verified` with `19` files, `152537991` bytes, and `DiffCount=0`.
+- The post-mutation live Ghidra backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260512_161208_post_wave342_verified` with `19` files, `152537991` bytes, and `DiffCount=0`.
 
 ## Claim Boundary
 

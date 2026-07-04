@@ -23,7 +23,7 @@ Read-back evidence:
 - Queue after Wave831: 6098 total, 5652 commented, 446 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5652/6098 = 92.69%`, strict proxy `5652/6098 = 92.69%`.
 - Commentless high-signal, signature, and name-confidence queues remain empty.
 - Next raw commentless row: `0x004f2710 CTextureBase__Init`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-224036_post_wave831_ctext_copyfrom_verified`, 19 files, 171772807 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-224036_post_wave831_ctext_copyfrom_verified`, 19 files, 171772807 bytes, `DiffCount=0`.
 
 What this proves:
 

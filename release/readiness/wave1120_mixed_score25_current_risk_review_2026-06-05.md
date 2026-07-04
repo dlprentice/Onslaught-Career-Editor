@@ -16,8 +16,8 @@ Evidence:
 - Fresh instruction export: `936` rows, `targets=8 missing=0`.
 - Fresh decompile export: `8` rows, `targets=8 dumped=8 missing=0 failed=0`.
 - Mutation status: no mutation, no rename, no signature change, no comment/tag write, no executable-byte change.
-- Backup: `G:\GhidraBackups\BEA_20260605-025952_post_wave1120_mixed_score25_current_risk_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
-- Previous latest completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-022812_post_wave1119_mixed_score26_current_risk_review_verified`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-025952_post_wave1120_mixed_score25_current_risk_review_verified`, `19` files, `175541127` bytes, `DiffCount=0`.
+- Previous latest completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-022812_post_wave1119_mixed_score26_current_risk_review_verified`.
 
 What this proves:
 

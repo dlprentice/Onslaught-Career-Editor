@@ -31,7 +31,7 @@ Serialized headless dry/apply/read-back corrected and hardened `7` frontend/comm
 | Goodies dependent read-back | Refreshed the Goodies decompile proof and `py -3 tools\goodies_ghidra_readback_probe.py --check` passed with functions `6/6`, instruction contexts `8/8`, and unlock/field-map checks passing. |
 | Whole-database queue | Refreshed headless `ExportFunctionQualitySnapshot.java` plus `cmd.exe /c npm run test:ghidra-static-reaudit-queue` passed with `6021` total functions, `1339` commented functions, `4682` commentless functions, `1939` undefined signatures, and `1978` `param_N` signatures. |
 | Current proxies | Comment-backed `1339/6021 = 22.24%`; strict clean-signature `1274/6021 = 21.16%`. These are telemetry only, not milestones. |
-| Ghidra backup | Live `BEA.gpr`/`BEA.rep` backup verified at `G:\GhidraBackups\BEA_20260513_121200_post_wave374_frontend_common_video_verified` with `19` files, `153488263` bytes, and `HashDiffCount=0`. |
+| Ghidra backup | Live `BEA.gpr`/`BEA.rep` backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_121200_post_wave374_frontend_common_video_verified` with `19` files, `153488263` bytes, and `HashDiffCount=0`. |
 
 ## Claim Boundary
 

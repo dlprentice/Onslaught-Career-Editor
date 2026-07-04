@@ -29,7 +29,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 TRACKING_STATE = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_tracking_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-195306_post_wave1016_animal_init_dtor_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-195306_post_wave1016_animal_init_dtor_review_verified"
 
 TARGETS = {
     "0x00403d30": ("CAnimal__Init", "void __thiscall CAnimal__Init(void * this, void * init)"),

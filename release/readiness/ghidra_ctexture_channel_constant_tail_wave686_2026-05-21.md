@@ -20,7 +20,7 @@ Read-back anchors:
 - Final dry summary: `updated=0 skipped=7 renamed=0 would_rename=0 signature_updated=0 varargs=0 missing=0 bad=0`.
 - Post exports verified `7` metadata rows, `7` tag rows, `13` xref rows, `511` instruction rows, and `7` clean decompile rows.
 - Pre-state evidence includes the same focused exports and candidate exports covering `11` adjacent CTexture/CDXTexture channel, constant-stream, debug-chunk, destructor, release, and stream-write rows before the final seven-row tranche was selected.
-- Verified backup: `G:\GhidraBackups\BEA_20260521-105415_post_wave686_ctexture_channel_constant_tail_verified`, `19` files, `164727687` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-105415_post_wave686_ctexture_channel_constant_tail_verified`, `19` files, `164727687` bytes, `DiffCount=0`.
 
 ## Queue Delta
 

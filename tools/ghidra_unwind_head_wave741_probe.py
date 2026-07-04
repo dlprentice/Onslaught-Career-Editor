@@ -32,7 +32,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260522-150238_post_wave741_unwind_head_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260522-150238_post_wave741_unwind_head_verified"
 
 TARGETS = {
     "0x005d0f10": {"scope": "0x00619e04", "tokens": ("Monitor.h", "OID__FreeObject_Callback", "memtype 0x5e"), "tags": {"monitor", "monitor-h", "free-object"}},

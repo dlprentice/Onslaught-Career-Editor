@@ -5,7 +5,7 @@ Date: 2026-05-31
 
 This note extends the current Wave900+ recheck scope through Wave1006 after `air-unit-crash-support-vfunc-review-wave1006`.
 
-Anchor tokens: Wave1006; `air-unit-crash-support-vfunc-review-wave1006`; `0x00402fa0 CUnit__UpdateMotionAndTrailEffects`; `0x00403730 CAirUnit__VFunc_68_TimestampAndCrashIfNoAirSupport`; `0x00403760 CAirUnit__VFunc_69_ResetD0AndCrashIfNoSupportModes`; `0x00403a50 CAirUnit__VFunc_117_HasPositionDeltaWhileFlag4Clear`; `0x0047bf60 CPlane__VFunc_69_CrashIfNoSupportModes`; `0x004d20a0 CPlane__VFunc_68_CrashIfNoAirSupport`; progress `485/1408 = 34.45%`, `662/1478 = 44.79%`, `384/500 = 76.80%`; queue closure `6223/6223 = 100.00%`; backup `G:\GhidraBackups\BEA_20260531-135619_post_wave1006_airunit_crash_support_vfunc_review_verified`.
+Anchor tokens: Wave1006; `air-unit-crash-support-vfunc-review-wave1006`; `0x00402fa0 CUnit__UpdateMotionAndTrailEffects`; `0x00403730 CAirUnit__VFunc_68_TimestampAndCrashIfNoAirSupport`; `0x00403760 CAirUnit__VFunc_69_ResetD0AndCrashIfNoSupportModes`; `0x00403a50 CAirUnit__VFunc_117_HasPositionDeltaWhileFlag4Clear`; `0x0047bf60 CPlane__VFunc_69_CrashIfNoSupportModes`; `0x004d20a0 CPlane__VFunc_68_CrashIfNoAirSupport`; progress `485/1408 = 34.45%`, `662/1478 = 44.79%`, `384/500 = 76.80%`; queue closure `6223/6223 = 100.00%`; backup `[maintainer-local-ghidra-backup-root]\BEA_20260531-135619_post_wave1006_airunit_crash_support_vfunc_review_verified`.
 
 Validation command:
 

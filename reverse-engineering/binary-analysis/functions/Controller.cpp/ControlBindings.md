@@ -94,7 +94,7 @@ Key corrections:
 - `0x004565d0` is saved as `void __cdecl OptionsEntries__SetBindingSlot(int slotIndex, int entryId, int field0, int deviceCode, short scan, short vk)`.
 - Four compact `CControllerDefinition` helpers at `0x00456610`, `0x00456620`, `0x00456630`, and `0x00456640` now have proof-boundary signatures/comments.
 
-Validation: dry/apply both reported `targets=13 changed_or_would_change=13 failed=0` with `REPORT: Save succeeded`; read-back verified `13` metadata rows, `13` decompile exports, `26` xref rows, `2145` instruction rows, `13` tag rows, `64` vtable-slot rows, `252` callsite-instruction rows, and `1251` full `ControlsUI__RenderBindingsList` instruction rows. The focused package probe passes, and the live Ghidra backup is verified at `G:\GhidraBackups\BEA_20260513_100816_post_wave370_frontend_controls_verified`.
+Validation: dry/apply both reported `targets=13 changed_or_would_change=13 failed=0` with `REPORT: Save succeeded`; read-back verified `13` metadata rows, `13` decompile exports, `26` xref rows, `2145` instruction rows, `13` tag rows, `64` vtable-slot rows, `252` callsite-instruction rows, and `1251` full `ControlsUI__RenderBindingsList` instruction rows. The focused package probe passes, and the live Ghidra backup is verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_100816_post_wave370_frontend_controls_verified`.
 
 ## Controls__DispatchRemap Table
 

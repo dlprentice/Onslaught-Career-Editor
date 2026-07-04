@@ -25,7 +25,7 @@ Wave499 saved static Ghidra signature/comment/tag hardening for the fixed `0x56`
 - Focused probe: `py -3 tools\ghidra_options_tail_wave499_probe.py --check` PASS.
 - NPM probe: `cmd.exe /c npm run test:ghidra-options-tail-wave499` PASS.
 - Queue refresh: `6078` total functions, `2267` commented, `3811` commentless, `1655` undefined signatures, `1514` `param_N`; strict comment-plus-clean-signature proxy `2213/6078 = 36.41%`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260517-122449_post_wave499_options_tail_verified` with `19` files, `157780871` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260517-122449_post_wave499_options_tail_verified` with `19` files, `157780871` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Public Boundary
 

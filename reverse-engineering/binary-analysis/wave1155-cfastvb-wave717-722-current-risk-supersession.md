@@ -78,16 +78,16 @@ These rows were still present in the active Wave1108 current focused candidate l
 
 Prior verified backups:
 
-- Wave717: `G:\GhidraBackups\BEA_20260522-021449_post_wave717_cfastvb_transform_dispatch_head_verified`
-- Wave718: `G:\GhidraBackups\BEA_20260522-025058_post_wave718_cfastvb_scalar_transform_core_verified`
-- Wave719: `G:\GhidraBackups\BEA_20260522-032725_post_wave719_cfastvb_matrix_quaternion_core_verified`
-- Wave720: `G:\GhidraBackups\BEA_20260522-035533_post_wave720_cfastvb_quaternion_tail_verified`
-- Wave721: `G:\GhidraBackups\BEA_20260522-043029_post_wave721_cfastvb_matrix_rotation_continuation_verified`
-- Wave722: `G:\GhidraBackups\BEA_20260522-050258_post_wave722_cfastvb_packed_vec2_quaternion_tail_verified`
+- Wave717: `[maintainer-local-ghidra-backup-root]\BEA_20260522-021449_post_wave717_cfastvb_transform_dispatch_head_verified`
+- Wave718: `[maintainer-local-ghidra-backup-root]\BEA_20260522-025058_post_wave718_cfastvb_scalar_transform_core_verified`
+- Wave719: `[maintainer-local-ghidra-backup-root]\BEA_20260522-032725_post_wave719_cfastvb_matrix_quaternion_core_verified`
+- Wave720: `[maintainer-local-ghidra-backup-root]\BEA_20260522-035533_post_wave720_cfastvb_quaternion_tail_verified`
+- Wave721: `[maintainer-local-ghidra-backup-root]\BEA_20260522-043029_post_wave721_cfastvb_matrix_rotation_continuation_verified`
+- Wave722: `[maintainer-local-ghidra-backup-root]\BEA_20260522-050258_post_wave722_cfastvb_packed_vec2_quaternion_tail_verified`
 
-Latest completed Ghidra review backup remains `G:\GhidraBackups\BEA_20260605-215410_post_wave1154_unitai_deploy_target_current_risk_review_verified`. Wave1155 did not perform a new Ghidra operation, so it has no new live-project backup.
+Latest completed Ghidra review backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260605-215410_post_wave1154_unitai_deploy_target_current_risk_review_verified`. Wave1155 did not perform a new Ghidra operation, so it has no new live-project backup.
 
-Probe token anchor: Wave1155; wave1155-cfastvb-wave717-722-current-risk-supersession; 424/1179 = 35.96%; 46 current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 755; current risk candidates: 6166; CFastVB Wave717-Wave722 current-risk supersession; no new Ghidra export; no mutation; Codex read-only consult used; 0 / 0 / 0; 6411/6411 = 100.00%; CFastVB__DispatchOp_TransformVec4_0059f360; CFastVB__ConvertHalfToFloatArray_SSE; CFastVB__ConvertHalfToFloatArray_SIMD; CFastVB__DispatchOp_ExtractAxisAndOptionalAngle; CFastVB__DispatchOp_InitIdentityMatrix4x4_005a62bf; CFastVB__DispatchOp_NormalizeQuaternionPacked_005ab00b; G:\GhidraBackups\BEA_20260522-021449_post_wave717_cfastvb_transform_dispatch_head_verified; G:\GhidraBackups\BEA_20260522-050258_post_wave722_cfastvb_packed_vec2_quaternion_tail_verified; G:\GhidraBackups\BEA_20260605-215410_post_wave1154_unitai_deploy_target_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1155; wave1155-cfastvb-wave717-722-current-risk-supersession; 424/1179 = 35.96%; 46 current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 755; current risk candidates: 6166; CFastVB Wave717-Wave722 current-risk supersession; no new Ghidra export; no mutation; Codex read-only consult used; 0 / 0 / 0; 6411/6411 = 100.00%; CFastVB__DispatchOp_TransformVec4_0059f360; CFastVB__ConvertHalfToFloatArray_SSE; CFastVB__ConvertHalfToFloatArray_SIMD; CFastVB__DispatchOp_ExtractAxisAndOptionalAngle; CFastVB__DispatchOp_InitIdentityMatrix4x4_005a62bf; CFastVB__DispatchOp_NormalizeQuaternionPacked_005ab00b; [maintainer-local-ghidra-backup-root]\BEA_20260522-021449_post_wave717_cfastvb_transform_dispatch_head_verified; [maintainer-local-ghidra-backup-root]\BEA_20260522-050258_post_wave722_cfastvb_packed_vec2_quaternion_tail_verified; [maintainer-local-ghidra-backup-root]\BEA_20260605-215410_post_wave1154_unitai_deploy_target_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
 
 ## Boundary
 

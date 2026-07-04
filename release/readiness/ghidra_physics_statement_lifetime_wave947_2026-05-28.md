@@ -31,7 +31,7 @@ Read-back evidence:
 - Post exports: 11 metadata rows, 11 tag rows, 11 xref rows, 221 instruction rows, 11 decompile rows, focused vtable re-export with 104 rows, and typed vtable re-export with 360 rows.
 - Queue after Wave947: 6150 total functions, 6150 commented, 0 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed and strict clean-signature proxy `6150/6150 = 100.00%`.
 - Wave911 focused re-audit progress after Wave947: `243/1408 = 17.26%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-070755_post_wave947_physics_statement_lifetime_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-070755_post_wave947_physics_statement_lifetime_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
 
 What this proves:
 

@@ -14,7 +14,7 @@ Date: 2026-05-17
 - Refreshed static queue: `6057` functions, `3898` commentless, `1702` undefined signatures, `1552` `param_N` signatures.
 
 ## Backup
-- `G:\GhidraBackups\BEA_20260517-023240_post_wave480_audio_reset_verified`
+- `[maintainer-local-ghidra-backup-root]\BEA_20260517-023240_post_wave480_audio_reset_verified`
 - Verified: `19` files, `157289351` bytes, missing `0`, extra `0`, hash differences `0`.
 
 ## Boundary

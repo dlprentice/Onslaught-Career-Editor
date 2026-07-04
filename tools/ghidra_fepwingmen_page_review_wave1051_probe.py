@@ -27,7 +27,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260601-150857_post_wave1051_fepwingmen_page_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260601-150857_post_wave1051_fepwingmen_page_review_verified"
 
 PRIMARY_SIGNATURES = {
     "0x00521650": ("CFEPWingmen__GetWingmenCount", "char CFEPWingmen__GetWingmenCount(void)"),
@@ -95,7 +95,7 @@ DOC_TOKENS = (
     "0x005dba10 CFEPWingmen_vtable",
     "0x006139a8",
     "NO_FUNCTION_AT_POINTER",
-    r"C:\dev\ONSLAUGHT2\FEPWingmen.cpp",
+    r"[maintainer-local-source-export-root]\FEPWingmen.cpp",
     "744/1408 = 52.84%",
     "1032/1509 = 68.39%",
     "500/500 = 100.00%",
@@ -179,7 +179,7 @@ def check_artifacts(failures: list[str]) -> None:
 
     string_rows = read_tsv(BASE / "string-0063fd4c.tsv")
     require(
-        bool(string_rows) and string_rows[0].get("cstring") == r"C:\dev\ONSLAUGHT2\FEPWingmen.cpp",
+        bool(string_rows) and string_rows[0].get("cstring") == r"[maintainer-local-source-export-root]\FEPWingmen.cpp",
         "FEPWingmen debug-string dump mismatch",
         failures,
     )

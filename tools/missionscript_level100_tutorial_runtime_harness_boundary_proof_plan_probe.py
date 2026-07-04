@@ -55,7 +55,7 @@ LORE_MSL_SCRIPTING = ROOT / "lore-book" / "reverse-engineering" / "game-assets" 
 PROGRESS = ROOT / "reverse-engineering" / "binary-analysis" / "static-reaudit-progress.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 PLAN_LINK = "missionscript-level100-tutorial-runtime-harness-boundary-proof-plan.md"
 SCHEMA_LINK = "missionscript-level100-tutorial-runtime-harness-boundary.v1.json"
 WALKTHROUGH_LINK = "missionscript-level100-tutorial-static-walkthrough-proof-plan.md"

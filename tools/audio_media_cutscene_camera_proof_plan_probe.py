@@ -99,10 +99,10 @@ ANCHOR_TOKENS = (
     "FMV/cache",
     "cutscene sync",
     "camera behavior",
-    r"G:\GhidraBackups\BEA_20260526-113941_post_wave908_audio_media_cutscene_static_review_verified",
-    r"G:\GhidraBackups\BEA_20260531-192131_post_wave1015_ogg_message_lifecycle_review_verified",
-    r"G:\GhidraBackups\BEA_20260606-101513_post_wave1179_input_audio_support_current_risk_review_verified",
-    r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260526-113941_post_wave908_audio_media_cutscene_static_review_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260531-192131_post_wave1015_ogg_message_lifecycle_review_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260606-101513_post_wave1179_input_audio_support_current_risk_review_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified",
 )
 
 READINESS_TOKENS = (

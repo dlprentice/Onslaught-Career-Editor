@@ -6,7 +6,7 @@ Status: GREEN public-safe saved-Ghidra evidence
 
 Serialized headless Ghidra dry/apply/read-back hardened `8` CEngine / CDXEngine / render-tail functions after focused metadata, decompile, xref, instruction, tag, and source-context review.
 
-This pass corrected two stale owner labels, hardened several signatures, added behavior-bounded comments/tags, refreshed the whole-database quality queue, and backed up the actual live Ghidra project to `G:`.
+This pass corrected two stale owner labels, hardened several signatures, added behavior-bounded comments/tags, refreshed the whole-database quality queue, and backed up the actual live Ghidra project to `[maintainer-local-backup-volume]`.
 
 ## Targets
 
@@ -29,7 +29,7 @@ This pass corrected two stale owner labels, hardened several signatures, added b
 - Focused probe: `PASS`; `8` xref evidence hits, `8` instruction evidence hits, `0` stale target-name hits, `0` stale target-signature hits, and `0` overclaim hits.
 - Whole-database refresh: `6008` functions, `1243` commented functions, `4765` commentless functions, `1948` `undefined` signatures, and `2019` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1243/6008 = 20.69%`; strict clean-signature `1181/6008 = 19.66%`. The `20%` value is not a milestone.
-- Actual live Ghidra backup: `G:\GhidraBackups\BEA_20260513_044146_post_wave362_engine_render_tail_verified`, verified at `19` files, `153127815` bytes, and `HashDiffCount=0`.
+- Actual live Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260513_044146_post_wave362_engine_render_tail_verified`, verified at `19` files, `153127815` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

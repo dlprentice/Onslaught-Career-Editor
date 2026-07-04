@@ -23,7 +23,7 @@ Read-back evidence:
 - Corrected export logs are clean of `LockException`, `Input file not found`, and `Script not found`. The preserved `badpath-*` logs document the initial rejected export invocation that used stripped backslash paths and the wrong xref script name before the corrected rerun.
 - Queue after Wave885: 6113 total, 5968 commented, 145 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5968/6113 = 97.63%`, strict clean-signature proxy `5968/6113 = 97.63%`.
 - Next raw commentless row: `0x00573d80 CTexture__InsertNodeIntoTree`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-015531_post_wave885_cfastvb_strip_batch_builder_verified`, 19 files, 172821383 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-015531_post_wave885_cfastvb_strip_batch_builder_verified`, 19 files, 172821383 bytes, `DiffCount=0`.
 
 What this proves:
 

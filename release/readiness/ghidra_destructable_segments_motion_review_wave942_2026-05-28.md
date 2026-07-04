@@ -41,14 +41,14 @@ Fresh read-back evidence:
 - Post primary exports: 6 metadata rows, 6 tag rows, 8 xref rows, 826 instruction rows, and 6 decompile rows.
 - Post vtable export: 24 rows across `0x005dc27c` and `0x005dc388`.
 - Queue refresh remains `6113` total functions, `6113` commented, `0` commentless, `0` exact-undefined signatures, and `0` `param_N`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-040608_post_wave942_destructable_segments_motion_review_verified`, 19 files, 173280135 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-040608_post_wave942_destructable_segments_motion_review_verified`, 19 files, 173280135 bytes, `DiffCount=0`.
 
 Progress:
 
 - Wave911 focused re-audit progress after Wave942: `180/1408 = 12.78%`.
 - Static export-contract function-quality closure remains `6113/6113 = 100.00%`.
 
-Probe token anchor: Wave942; `destructable-segments-motion-review-wave942`; comment-only mutation; `0x00494c60 CDestructableSegmentsMotionController__Ctor`; `0x00494ca0 CDestructableSegmentsMotionController__ScalarDeletingDestructor`; `0x00494cc0 CDestructableSegmentsMotionController__Destructor`; `0x00494ce0 CDestructableSegmentsMotionController__ApplyRumbleTransform`; `0x00497130 CDestructableSegmentsMotionController__DestructorThunk_00497130`; `0x00497140 CDestructableSegmentsMotionController__CacheNamedCollisionCylinders`; `0x00497090 CMCHiveBoss__Constructor`; `0x00497110 CMCHiveBoss__ScalarDeletingDestructor`; `0x004976d0 CMCHiveBoss__VFunc_04_UpdateCylinderTransforms_004976d0`; `0x004976f1`; `0x005dc27c`; `0x005dc388`; `180/1408 = 12.78%`; `6113/6113 = 100.00%`; `G:\GhidraBackups\BEA_20260528-040608_post_wave942_destructable_segments_motion_review_verified`.
+Probe token anchor: Wave942; `destructable-segments-motion-review-wave942`; comment-only mutation; `0x00494c60 CDestructableSegmentsMotionController__Ctor`; `0x00494ca0 CDestructableSegmentsMotionController__ScalarDeletingDestructor`; `0x00494cc0 CDestructableSegmentsMotionController__Destructor`; `0x00494ce0 CDestructableSegmentsMotionController__ApplyRumbleTransform`; `0x00497130 CDestructableSegmentsMotionController__DestructorThunk_00497130`; `0x00497140 CDestructableSegmentsMotionController__CacheNamedCollisionCylinders`; `0x00497090 CMCHiveBoss__Constructor`; `0x00497110 CMCHiveBoss__ScalarDeletingDestructor`; `0x004976d0 CMCHiveBoss__VFunc_04_UpdateCylinderTransforms_004976d0`; `0x004976f1`; `0x005dc27c`; `0x005dc388`; `180/1408 = 12.78%`; `6113/6113 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260528-040608_post_wave942_destructable_segments_motion_review_verified`.
 
 What this proves:
 

@@ -30,7 +30,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260528-062816_post_wave946_animal_lifecycle_boundary_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-062816_post_wave946_animal_lifecycle_boundary_review_verified"
 SCRIPT_NAME = "test:ghidra-animal-lifecycle-boundary-review-wave946"
 SCRIPT_VALUE = r"py -3 tools\ghidra_animal_lifecycle_boundary_review_wave946_probe.py --check"
 

@@ -32,7 +32,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-003050_post_wave1202_cannon_motion_controller_residual_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-003050_post_wave1202_cannon_motion_controller_residual_current_risk_review_verified"
 
 TARGETS = {
     "0x0041b450": ("CCannon__VFuncSlot_02_RemoveFromWorldAndForward", "void __fastcall CCannon__VFuncSlot_02_RemoveFromWorldAndForward(void * this)"),

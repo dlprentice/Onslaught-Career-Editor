@@ -290,6 +290,7 @@ lore-book/reverse-engineering/binary-analysis/static-to-proof-next-safe-slice-se
 lore-book/reverse-engineering/binary-analysis/static-to-proof-next-safe-slice-selection.v1.json	R4_DENY	lore-book/reverse-engineering/binary-analysis/*.json	exclude_from_portable_or_legacy_export
 lore-book/reverse-engineering/binary-analysis/static-to-proof-post-command-effect-fixture-next-safe-slice-selection-refresh.v1.json	R4_DENY	lore-book/reverse-engineering/binary-analysis/*.json	exclude_from_portable_or_legacy_export
 lore-book/reverse-engineering/binary-analysis/static-to-proof-post-physics-script-fixture-next-safe-slice-selection-refresh.v1.json	R4_DENY	lore-book/reverse-engineering/binary-analysis/*.json	exclude_from_portable_or_legacy_export
+lore-book/reverse-engineering/binary-analysis/texture-resource-decode-static-contract-ledger.v1.json	R4_DENY	lore-book/reverse-engineering/binary-analysis/*.json	exclude_from_portable_or_legacy_export
 lore-book/reverse-engineering/binary-analysis/world-thing-spawn-getthingref-object-reference-static.v1.json	R4_DENY	lore-book/reverse-engineering/binary-analysis/*.json	exclude_from_portable_or_legacy_export
 lore-book/reverse-engineering/binary-analysis/world-thing-spawn-spawner-handoff-static.v1.json	R4_DENY	lore-book/reverse-engineering/binary-analysis/*.json	exclude_from_portable_or_legacy_export
 lore-book/reverse-engineering/binary-analysis/world-thing-spawn-static-to-rebuild-contract-crosswalk.v1.json	R4_DENY	lore-book/reverse-engineering/binary-analysis/*.json	exclude_from_portable_or_legacy_export
@@ -12724,6 +12725,7 @@ reverse-engineering/binary-analysis/static-to-proof-next-safe-slice-selection-re
 reverse-engineering/binary-analysis/static-to-proof-next-safe-slice-selection.v1.json	R4_DENY	reverse-engineering/binary-analysis/*.json	exclude_from_portable_or_legacy_export
 reverse-engineering/binary-analysis/static-to-proof-post-command-effect-fixture-next-safe-slice-selection-refresh.v1.json	R4_DENY	reverse-engineering/binary-analysis/*.json	exclude_from_portable_or_legacy_export
 reverse-engineering/binary-analysis/static-to-proof-post-physics-script-fixture-next-safe-slice-selection-refresh.v1.json	R4_DENY	reverse-engineering/binary-analysis/*.json	exclude_from_portable_or_legacy_export
+reverse-engineering/binary-analysis/texture-resource-decode-static-contract-ledger.v1.json	R4_DENY	reverse-engineering/binary-analysis/*.json	exclude_from_portable_or_legacy_export
 reverse-engineering/binary-analysis/world-thing-spawn-getthingref-object-reference-static.v1.json	R4_DENY	reverse-engineering/binary-analysis/*.json	exclude_from_portable_or_legacy_export
 reverse-engineering/binary-analysis/world-thing-spawn-spawner-handoff-static.v1.json	R4_DENY	reverse-engineering/binary-analysis/*.json	exclude_from_portable_or_legacy_export
 reverse-engineering/binary-analysis/world-thing-spawn-static-to-rebuild-contract-crosswalk.v1.json	R4_DENY	reverse-engineering/binary-analysis/*.json	exclude_from_portable_or_legacy_export
@@ -12737,6 +12739,7 @@ subagents/2026-03-15-runtime-defaultoptions-wave1/session-notes.md	R4_DENY	subag
 subagents/2026-03-15-runtime-maladim-wave2/session-notes.md	R4_DENY	subagents/	exclude_from_portable_or_legacy_export
 subagents/2026-03-29-godmode-mechanism-wave4.md	R4_DENY	subagents/	exclude_from_portable_or_legacy_export
 subagents/2026-03-29-runtime-maladim-wave3/session-notes.md	R4_DENY	subagents/	exclude_from_portable_or_legacy_export
+subagents/career-progression-static-bridge-consult-record-20260703.md	R4_DENY	subagents/	exclude_from_portable_or_legacy_export
 subagents/depth1/depth_manifest.json	R4_DENY	subagents/	exclude_from_portable_or_legacy_export
 subagents/depth1/lane01_csharp_app_inventory.md	R4_DENY	subagents/	exclude_from_portable_or_legacy_export
 subagents/depth1/lane02_python_app_inventory.md	R4_DENY	subagents/	exclude_from_portable_or_legacy_export

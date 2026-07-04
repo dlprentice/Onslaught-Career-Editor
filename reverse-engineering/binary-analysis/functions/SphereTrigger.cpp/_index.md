@@ -1,7 +1,7 @@
 # SphereTrigger.cpp Functions
 
 > Source File: SphereTrigger.cpp | Binary: BEA.exe
-> Debug Path: 0x0063270c (`C:\dev\ONSLAUGHT2\SphereTrigger.cpp`)
+> Debug Path: 0x0063270c (`[maintainer-local-source-export-root]\SphereTrigger.cpp`)
 
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6113/6113** (Wave900: every function commented; clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
 
@@ -17,17 +17,17 @@ The trigger system works by:
 
 ## Wave1170 Actor-Derived Lifecycle Cleanup Review
 
-Wave1170 (`wave1170-actor-derived-lifecycle-cleanup-current-risk-review`) re-read `CSphereTrigger__scalar_deleting_dtor` and `CSphereTrigger__dtor_base` inside `6 actor-derived lifecycle cleanup current-risk rows` from the `wave1108-current-risk-rank` current-risk denominator. Fresh Ghidra export evidence verified the scalar-deleting wrapper DATA vtable xref and the base destructor path that clears `CSPtrSet` at `+0x8c`, removes the `+0x7c` particle/global-list node, and delegates to `CComplexThing__dtor_base`. This was a read-only review with no mutation, no rename, no signature change, no comment/tag change, no function-boundary change, and no executable-byte change. Verified backup: `G:\GhidraBackups\BEA_20260606-062008_post_wave1170_actor_derived_lifecycle_cleanup_current_risk_review_verified`.
+Wave1170 (`wave1170-actor-derived-lifecycle-cleanup-current-risk-review`) re-read `CSphereTrigger__scalar_deleting_dtor` and `CSphereTrigger__dtor_base` inside `6 actor-derived lifecycle cleanup current-risk rows` from the `wave1108-current-risk-rank` current-risk denominator. Fresh Ghidra export evidence verified the scalar-deleting wrapper DATA vtable xref and the base destructor path that clears `CSPtrSet` at `+0x8c`, removes the `+0x7c` particle/global-list node, and delegates to `CComplexThing__dtor_base`. This was a read-only review with no mutation, no rename, no signature change, no comment/tag change, no function-boundary change, and no executable-byte change. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-062008_post_wave1170_actor_derived_lifecycle_cleanup_current_risk_review_verified`.
 
 Runtime sphere-trigger cleanup behavior, exact concrete layouts, exact source-body identity, BEA patching behavior, visual QA, gameplay outcomes, and rebuild parity remain separate proof.
 
-Probe token anchor: Wave1170; wave1170-actor-derived-lifecycle-cleanup-current-risk-review; 666/1179 = 56.49%; 6 actor-derived lifecycle cleanup current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 513; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consult used; 0 / 0 / 0; 6411/6411 = 100.00%; 6 xref rows; 100 instruction rows; CRocket__scalar_deleting_dtor; CSphereTrigger__scalar_deleting_dtor; CEscapePod__scalar_deleting_dtor; CRocket__dtor_base; CSphereTrigger__dtor_base; CEscapePod__dtor_base; Wave459; Wave460; Wave1022; G:\GhidraBackups\BEA_20260606-062008_post_wave1170_actor_derived_lifecycle_cleanup_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1170; wave1170-actor-derived-lifecycle-cleanup-current-risk-review; 666/1179 = 56.49%; 6 actor-derived lifecycle cleanup current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 513; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consult used; 0 / 0 / 0; 6411/6411 = 100.00%; 6 xref rows; 100 instruction rows; CRocket__scalar_deleting_dtor; CSphereTrigger__scalar_deleting_dtor; CEscapePod__scalar_deleting_dtor; CRocket__dtor_base; CSphereTrigger__dtor_base; CEscapePod__dtor_base; Wave459; Wave460; Wave1022; [maintainer-local-ghidra-backup-root]\BEA_20260606-062008_post_wave1170_actor_derived_lifecycle_cleanup_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
 
 ## Wave1022 Object-Lifecycle Destructor Review
 
-Wave1022 (`object-lifecycle-dtor-review-wave1022`) re-read `0x004bff40 CSphereTrigger__dtor_base` as part of the adjacent destructor strip. The row still reads back as `void __fastcall CSphereTrigger__dtor_base(void * this)`; static evidence keeps it as the body called by `CSphereTrigger__scalar_deleting_dtor`, clearing the `+0x8c` `CSPtrSet`, removing the `+0x7c` particle/global-list node through `CParticleManager__RemoveFromGlobalList`, and delegating to `CComplexThing__dtor_base`. Verified backup: `G:\GhidraBackups\BEA_20260531-230345_post_wave1022_object_lifecycle_dtor_review_verified`.
+Wave1022 (`object-lifecycle-dtor-review-wave1022`) re-read `0x004bff40 CSphereTrigger__dtor_base` as part of the adjacent destructor strip. The row still reads back as `void __fastcall CSphereTrigger__dtor_base(void * this)`; static evidence keeps it as the body called by `CSphereTrigger__scalar_deleting_dtor`, clearing the `+0x8c` `CSPtrSet`, removing the `+0x7c` particle/global-list node through `CParticleManager__RemoveFromGlobalList`, and delegating to `CComplexThing__dtor_base`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-230345_post_wave1022_object_lifecycle_dtor_review_verified`.
 
-Probe token anchor: Wave1022; object-lifecycle-dtor-review-wave1022; 0x004bff40 CSphereTrigger__dtor_base; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260531-230345_post_wave1022_object_lifecycle_dtor_review_verified.
+Probe token anchor: Wave1022; object-lifecycle-dtor-review-wave1022; 0x004bff40 CSphereTrigger__dtor_base; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260531-230345_post_wave1022_object_lifecycle_dtor_review_verified.
 
 Runtime sphere-trigger cleanup behavior, exact tracked-set layout, exact source-body identity, BEA patching, and rebuild parity remain separate proof.
 
@@ -42,13 +42,13 @@ Runtime sphere-trigger cleanup behavior, exact tracked-set layout, exact source-
 
 Wave505 saved signatures/comments/tags for both known `CSphereTrigger` helpers on 2026-05-17. The pass keeps `0x004e5540` as `CSphereTrigger__OnTriggered` and corrects `0x004e5700` from stale `CSphereTrigger__Update` to `CSphereTrigger__Hit`, because the body calls `CComplexThing__Hit(this, other_thing, collision_report)` before recording the active object reader.
 
-Verification artifacts live under `subagents/ghidra-static-reaudit/wave505-spawnpoint-trigger-004e43d0/`. The Wave505 apply script reported clean dry/apply/final-verify runs, post exports verified `6` metadata rows, `6` tag rows, `7` xref rows, `726` instruction rows, and `6` decompile exports across the whole spawn-point/sphere-trigger tranche, and both direct and npm probes passed. Backup `G:\GhidraBackups\BEA_20260517-154500_post_wave505_spawnpoint_spheretrigger_verified` verified `19` files, `158010247` bytes, and zero missing/extra/hash-diff files.
+Verification artifacts live under `subagents/ghidra-static-reaudit/wave505-spawnpoint-trigger-004e43d0/`. The Wave505 apply script reported clean dry/apply/final-verify runs, post exports verified `6` metadata rows, `6` tag rows, `7` xref rows, `726` instruction rows, and `6` decompile exports across the whole spawn-point/sphere-trigger tranche, and both direct and npm probes passed. Backup `[maintainer-local-ghidra-backup-root]\BEA_20260517-154500_post_wave505_spawnpoint_spheretrigger_verified` verified `19` files, `158010247` bytes, and zero missing/extra/hash-diff files.
 
 Not proven by Wave505: exact `CSphereTrigger`, monitor/list, particle-effect, or collision-report layouts; runtime trigger behavior; BEA launch behavior; game patching; or rebuild parity.
 
 ## Wave766 Unwind Continuation
 
-Wave766 static read-back (`unwind-continuation-wave766`, `wave766-readback-verified`) saved comments/tags/signatures for SphereTrigger.cpp-adjacent compiler-generated unwind cleanup callbacks from `0x005d4c50 Unwind@005d4c50` through `0x005d4d06 Unwind@005d4d06`. Evidence includes DATA scope-table xrefs `0x0061d4d4` through `0x0061d5b4`, SphereTrigger.cpp debug path `0x0063270c`, active-reader destructor callbacks, monitor shutdown callbacks, particle-list cleanup, CLine stack-local cleanup, and the `0x005d4cf0 Unwind@005d4cf0` allocation-free row. Verified backup: `G:\GhidraBackups\BEA_20260523-161835_post_wave766_unwind_continuation_verified`.
+Wave766 static read-back (`unwind-continuation-wave766`, `wave766-readback-verified`) saved comments/tags/signatures for SphereTrigger.cpp-adjacent compiler-generated unwind cleanup callbacks from `0x005d4c50 Unwind@005d4c50` through `0x005d4d06 Unwind@005d4d06`. Evidence includes DATA scope-table xrefs `0x0061d4d4` through `0x0061d5b4`, SphereTrigger.cpp debug path `0x0063270c`, active-reader destructor callbacks, monitor shutdown callbacks, particle-list cleanup, CLine stack-local cleanup, and the `0x005d4cf0 Unwind@005d4cf0` allocation-free row. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260523-161835_post_wave766_unwind_continuation_verified`.
 
 | Address | Evidence |
 | --- | --- |
@@ -107,8 +107,8 @@ void __thiscall CSphereTrigger__Hit(void * this, void * other_thing, void * coll
 ```
 
 **String References:**
-- Debug path `"C:\dev\ONSLAUGHT2\SphereTrigger.cpp"` at 0x0063270c (line 0x53 = 83)
-- `"C:\dev\ONSLAUGHT2\monitor.h"` at 0x0062551c (line 0x18 = 24)
+- Debug path `"[maintainer-local-source-export-root]\SphereTrigger.cpp"` at 0x0063270c (line 0x53 = 83)
+- `"[maintainer-local-source-export-root]\monitor.h"` at 0x0062551c (line 0x18 = 24)
 
 **Called Functions:**
 - `CComplexThing__Hit` - Base/source-parity hit handler

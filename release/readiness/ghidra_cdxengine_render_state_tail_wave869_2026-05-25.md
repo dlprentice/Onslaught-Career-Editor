@@ -29,7 +29,7 @@ Read-back evidence:
 - Post exports: 10 metadata rows, 10 tag rows, 47 xref rows, 237 instruction rows, 10 decompile rows, and 1269 xref-site instruction rows.
 - Queue after Wave869: 6105 total functions, 5838 commented, 267 commentless, 0 exact-undefined signatures, 0 `param_N` signatures, strict comment-plus-clean-signature proxy `5838/6105 = 95.63%`.
 - Next raw commentless row: `0x005515a0 CDXEngine__InitConsoleVar_UseRenderQueue`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-174243_post_wave869_cdxengine_render_state_tail_verified`, 19 files, 172395399 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-174243_post_wave869_cdxengine_render_state_tail_verified`, 19 files, 172395399 bytes, `DiffCount=0`.
 
 What this proves:
 

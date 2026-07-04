@@ -10,7 +10,7 @@ Treat this page as static binary evidence, not source-body parity, runtime GPU b
 
 ## Wave849 D3D State/Cache Core Read-Back
 
-Wave849 D3D state/cache core (`d3d-state-cache-core-wave849`, `wave849-readback-verified`) strengthened the external texture-format/create helpers used by `CUMTexture__RecreateTextureResource`: `0x00513760 CEngine__TextureFormatField32FD4ToIndex` and `0x00513a10 CEngine__CreateTextureUnchecked`. Probe token anchor: `Wave849 D3D state/cache core`; `0x00513760 CEngine__TextureFormatField32FD4ToIndex`; `0x00513a10 CEngine__CreateTextureUnchecked`; `CUMTexture__RecreateTextureResource`; `5691/6098 = 93.33%`; `0x00513a80 PlatformInput__GetKeyState3Core`; `G:\GhidraBackups\BEA_20260525-073710_post_wave849_d3d_state_cache_core_verified`.
+Wave849 D3D state/cache core (`d3d-state-cache-core-wave849`, `wave849-readback-verified`) strengthened the external texture-format/create helpers used by `CUMTexture__RecreateTextureResource`: `0x00513760 CEngine__TextureFormatField32FD4ToIndex` and `0x00513a10 CEngine__CreateTextureUnchecked`. Probe token anchor: `Wave849 D3D state/cache core`; `0x00513760 CEngine__TextureFormatField32FD4ToIndex`; `0x00513a10 CEngine__CreateTextureUnchecked`; `CUMTexture__RecreateTextureResource`; `5691/6098 = 93.33%`; `0x00513a80 PlatformInput__GetKeyState3Core`; `[maintainer-local-ghidra-backup-root]\BEA_20260525-073710_post_wave849_d3d_state_cache_core_verified`.
 
 The rename from stale `CEngine__ReleaseField32FD4` to `CEngine__TextureFormatField32FD4ToIndex` is based on the helper loading `this+0x32fd4`, calling `CEngine__TextureFormatD3DToIndex`, and callers using `EAX` as a texture-format index. Exact CEngine field name, complete format table semantics, runtime texture behavior, BEA patching, and rebuild parity remain deferred.
 
@@ -78,7 +78,7 @@ Wave522 saved signatures, comments, tags, and owner corrections for the six `CUM
 
 The dry run reported `updated=0 skipped=6 renamed=0 would_rename=5 missing=0 bad=0`; the apply reported `updated=6 skipped=0 renamed=5 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`.
 
-Read-back verified `6` metadata rows, `6` tag rows, `15` xref rows, `366` instruction rows, `6` target decompile exports, `6` context metadata rows, `6` context decompile exports, `16` vtable-slot rows, focused probe status `PASS`, and refreshed queue counts of `6082` functions, `2477` commented functions, `3605` commentless functions, `1594` exact-undefined signatures, and `1381` `param_N` signatures. The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260517-235521_post_wave522_cumtexture_verified` with `19` files, `158731143` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+Read-back verified `6` metadata rows, `6` tag rows, `15` xref rows, `366` instruction rows, `6` target decompile exports, `6` context metadata rows, `6` context decompile exports, `16` vtable-slot rows, focused probe status `PASS`, and refreshed queue counts of `6082` functions, `2477` commented functions, `3605` commentless functions, `1594` exact-undefined signatures, and `1381` `param_N` signatures. The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260517-235521_post_wave522_cumtexture_verified` with `19` files, `158731143` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Remaining Limits
 

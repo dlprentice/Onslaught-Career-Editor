@@ -30,7 +30,7 @@ Fresh serialized Ghidra exports under `subagents/ghidra-static-reaudit/wave963-c
 Verified Ghidra backup:
 
 ```text
-G:\GhidraBackups\BEA_20260528-135208_post_wave963_cpdsimplesprite_distance_burst_tint_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260528-135208_post_wave963_cpdsimplesprite_distance_burst_tint_review_verified
 ```
 
 Backup summary: `19` files, `173542279` bytes, `DiffCount=0`.
@@ -38,7 +38,7 @@ Backup summary: `19` files, `173542279` bytes, `DiffCount=0`.
 Wave911 focused re-audit progress after Wave963: `311/1408 = 22.09%`.
 Static export-contract function-quality closure remains `6152/6152 = 100.00%`.
 
-Probe anchor: Wave963; cpdsimplesprite-distance-burst-tint-review-wave963; 0x004c35d0 CEngine__ConfigureParticleBurstForDistance; 0x004c8060 CEngine__ComputeSpriteTintByDistance; 0x004c5d50 CPDSimpleSprite__ProcessAndRenderSpriteList; 0x004c8040 CPDSimpleSprite__VFunc_23_004c8040; 0x004c3645 MOV [ESI + 0x80], ECX; 0x004c3665 CALL 0x004caed0; 0x004c8088 FIDIV [EDI + 0x80]; 0x004c80e7 CALL 0x004c10c0; 0x004c767b CVBufTexture__GetVertexPtrAt; 311/1408 = 22.09%; 6152/6152 = 100.00%; G:\GhidraBackups\BEA_20260528-135208_post_wave963_cpdsimplesprite_distance_burst_tint_review_verified; no mutation.
+Probe anchor: Wave963; cpdsimplesprite-distance-burst-tint-review-wave963; 0x004c35d0 CEngine__ConfigureParticleBurstForDistance; 0x004c8060 CEngine__ComputeSpriteTintByDistance; 0x004c5d50 CPDSimpleSprite__ProcessAndRenderSpriteList; 0x004c8040 CPDSimpleSprite__VFunc_23_004c8040; 0x004c3645 MOV [ESI + 0x80], ECX; 0x004c3665 CALL 0x004caed0; 0x004c8088 FIDIV [EDI + 0x80]; 0x004c80e7 CALL 0x004c10c0; 0x004c767b CVBufTexture__GetVertexPtrAt; 311/1408 = 22.09%; 6152/6152 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260528-135208_post_wave963_cpdsimplesprite_distance_burst_tint_review_verified; no mutation.
 
 ## Boundary
 

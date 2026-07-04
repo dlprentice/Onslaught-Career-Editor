@@ -33,8 +33,8 @@ Evidence:
 - Context metadata/tag/xref/instruction/decompile exports: `8` / `8` / `470` / `679` / `8`.
 - Primary logs report `targets=2 found=2 missing=0`, `rows=2 missing=0`, `Wrote 2 rows`, `Wrote 418 function-body instruction rows`, and `targets=2 dumped=2 missing=0 failed=0`.
 - Context logs report `targets=8 found=8 missing=0`, `rows=8 missing=0`, `Wrote 470 rows`, `Wrote 679 function-body instruction rows`, and `targets=8 dumped=8 missing=0 failed=0`.
-- Final backup after the read-only evidence wave: `G:\GhidraBackups\BEA_20260605-104845_post_wave1134_console_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
-- Previous completed Ghidra review backup: `G:\GhidraBackups\BEA_20260605-100620_post_wave1133_feature_pickup_current_risk_review_verified`.
+- Final backup after the read-only evidence wave: `[maintainer-local-ghidra-backup-root]\BEA_20260605-104845_post_wave1134_console_current_risk_review_verified`, `19` files, `175967111` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Previous completed Ghidra review backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-100620_post_wave1133_feature_pickup_current_risk_review_verified`.
 - Codex read-only consult recommended a later GroundAttack/GillMHead cluster; root kept the already-exported next uncovered current-risk console pair and preserved the consult's cluster as a future-candidate note.
 
 What this proves:

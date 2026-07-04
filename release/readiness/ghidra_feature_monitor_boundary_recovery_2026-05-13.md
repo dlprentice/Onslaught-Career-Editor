@@ -29,7 +29,7 @@ This closes the Wave368 adjacent no-function follow-up for `0x0044e4e0`, `0x0044
 | Focused npm probe | `cmd.exe /c npm run test:ghidra-feature-monitor-boundary` passed with status `PASS`, `7` targets, and output under ignored `subagents\ghidra-static-reaudit\feature-monitor-boundary-wave369\current\`. |
 | Whole-database baseline | Refreshed `ExportWeakFunctionList.java` all-functions export plus `cmd.exe /c npm run test:ghidra-static-reaudit-baseline` passed with `6020` total functions, `0` legacy weak names, `1980` `param_N` signatures, and `1948` undefined signatures. |
 | Whole-database queue | Refreshed `ExportFunctionQualitySnapshot.java` plus `cmd.exe /c npm run test:ghidra-static-reaudit-queue` passed with `1311` commented functions and `4709` commentless functions. |
-| Ghidra backup | Live project backup verified at `G:\GhidraBackups\BEA_20260513_093318_post_wave369_feature_monitor_boundary_verified` with `19` files, `153389959` bytes, and `HashDiffCount=0`. |
+| Ghidra backup | Live project backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_093318_post_wave369_feature_monitor_boundary_verified` with `19` files, `153389959` bytes, and `HashDiffCount=0`. |
 
 Current whole-project confirmation proxies remain telemetry only: comment-backed `1311/6020 = 21.78%`; strict comment-plus-no-`undefined`-or-`param_N` proxy `1249/6020 = 20.75%`. These are not milestones or completion gates.
 

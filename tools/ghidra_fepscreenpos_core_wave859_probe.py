@@ -30,7 +30,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave859 CFEPScreenPos core"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-131538_post_wave859_fepscreenpos_core_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-131538_post_wave859_fepscreenpos_core_verified"
 NEXT_HEAD = "0x0051ff90 CFEPVirtualKeyboard__Init"
 STRICT_PROXY = "5784/6105 = 94.74%"
 

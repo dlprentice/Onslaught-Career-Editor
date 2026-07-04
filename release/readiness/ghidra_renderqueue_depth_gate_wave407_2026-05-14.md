@@ -19,7 +19,7 @@ The previous owner label was useful as caller context but overstated the target'
 - Read-back verified `1` metadata row, `1` tag row, `1` xref row, `25` target instruction rows, `17` callsite instruction rows, and the post-rename decompile text.
 - Refreshed queue telemetry reports `6028` functions, `1560` commented functions, `4468` commentless functions, `1909` undefined signatures, and `1856` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1560/6028 = 25.88%`, strict clean-signature `1498/6028 = 24.85%`.
-- The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260514_073711_post_wave407_renderqueue_depth_gate_verified` with `19` files, `154798983` bytes, and `HashDiffCount=0`.
+- The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260514_073711_post_wave407_renderqueue_depth_gate_verified` with `19` files, `154798983` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

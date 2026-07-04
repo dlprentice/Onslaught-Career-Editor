@@ -29,7 +29,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave881 CRT SEH tail"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-235139_post_wave881_crt_seh_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-235139_post_wave881_crt_seh_tail_verified"
 NEXT_HEAD = "0x00561530 CRT__ReportMathErrorAndRestoreControlWord_00561530"
 STRICT_PROXY = "5929/6113 = 96.99%"
 

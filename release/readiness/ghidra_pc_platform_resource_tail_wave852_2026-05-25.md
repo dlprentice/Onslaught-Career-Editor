@@ -27,7 +27,7 @@ Read-back evidence:
 - Additional read-only evidence: `9` context metadata rows, `9` context decompile rows, `15` string dumps, and source-context search hits.
 - Queue after Wave852: `6098` total functions, `5736` commented, `362` commentless, `0` exact-undefined signatures, `0` `param_N`, comment-backed proxy `5736/6098 = 94.06%`, strict clean-signature proxy `5736/6098 = 94.06%`.
 - Next raw commentless row: `0x005168d0 CPCSoundManager__dtor`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-093157_post_wave852_pc_platform_resource_tail_verified`, `19` files, `172034951` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-093157_post_wave852_pc_platform_resource_tail_verified`, `19` files, `172034951` bytes, `DiffCount=0`.
 
 What this proves:
 

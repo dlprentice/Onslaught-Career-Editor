@@ -29,7 +29,7 @@ No function renames were made. The pass used retail-binary evidence from xrefs, 
   - apply: `updated=2 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`
   - final dry: `updated=0 skipped=2 renamed=0 would_rename=0 missing=0 bad=0`
 - Read-back exports verified `2` metadata rows, `2` tag rows, `2` xref rows, `1818` instruction rows, and `2` decompile rows.
-- Verified backup: `G:\GhidraBackups\BEA_20260519-191021_post_wave603_cdxlandscape_render_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-191021_post_wave603_cdxlandscape_render_verified`
   - `fileCount=19`
   - `totalBytes=161254279`
   - `DiffCount=0`

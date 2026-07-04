@@ -6,7 +6,7 @@ Scope: `missionscript-static-review-wave903`
 
 Wave903 is the second concrete post-100 system review after Wave900 closed the loaded Ghidra function-quality queue. It reviews the MissionScript / IScript core across saved Ghidra function-quality evidence, prior read-back waves, loose MSL asset indexes, command-reference docs, and source-mapping constraints.
 
-Probe token anchor: Wave903; `missionscript-static-review-wave903`; static-coherent MissionScript/IScript core; `6113/6113 = 100.00%`; `ScriptCommandRegistry__InitBuiltins`; `144` command descriptor records; `0x0064ce50`; `0x0064f210`; `IScript__ScheduleEvent`; `IScript__SetSlotSave`; `IScript__LevelWon`; `CScriptObjectCode__Run`; `CScriptEventNB__PostEvent`; `CMissionScriptObjectCode__LoadAsync`; `795` loose MSL event names; `G:\GhidraBackups\BEA_20260526-095411_post_wave903_missionscript_static_review_verified`.
+Probe token anchor: Wave903; `missionscript-static-review-wave903`; static-coherent MissionScript/IScript core; `6113/6113 = 100.00%`; `ScriptCommandRegistry__InitBuiltins`; `144` command descriptor records; `0x0064ce50`; `0x0064f210`; `IScript__ScheduleEvent`; `IScript__SetSlotSave`; `IScript__LevelWon`; `CScriptObjectCode__Run`; `CScriptEventNB__PostEvent`; `CMissionScriptObjectCode__LoadAsync`; `795` loose MSL event names; `[maintainer-local-ghidra-backup-root]\BEA_20260526-095411_post_wave903_missionscript_static_review_verified`.
 
 ## Classification
 
@@ -51,7 +51,7 @@ MissionScript / IScript is now a static-coherent core system. The command regist
   - `reverse-engineering/game-assets/mission-slot-usage.md`
   - `reverse-engineering/game-assets/mission-thing-usage.md`
   - `reverse-engineering/binary-analysis/functions/Script.cpp/_index.md`
-- Verified read-only Ghidra project backup: `G:\GhidraBackups\BEA_20260526-095411_post_wave903_missionscript_static_review_verified`
+- Verified read-only Ghidra project backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-095411_post_wave903_missionscript_static_review_verified`
 
 ## Function-Family Inventory
 

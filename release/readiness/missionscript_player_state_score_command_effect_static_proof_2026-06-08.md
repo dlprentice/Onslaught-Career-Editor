@@ -20,7 +20,7 @@ Readiness facts:
 - Schema/proof artifacts: `missionscript-player-state-score-command-effect-static-proof.md` and `missionscript-player-state-score-command-effect.v1.json`.
 - Copied loose-MSL counts: `15 / 0 / 10` calls across `12 / 0 / 4` files for `AddScore`, `ToggleCockpit`, and `SetStealth`.
 - Static closeout remains `6411/6411 = 100.00%`, static debt `0 / 0 / 0`, expanded post-100 static surface `1560/1560 = 100.00%`, active current-risk focused accounting `1179/1179 = 100.00%`, and remaining active focused work `0`.
-- Latest verified Ghidra backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+- Latest verified Ghidra backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 What this proves:
 

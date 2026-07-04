@@ -47,8 +47,8 @@ ATTEMPT_LOG = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutat
 TRACKING_STATE = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_tracking_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260605-182213_post_wave1147_frontend_game_shell_score20_current_risk_review_verified"
-PRIOR_BACKUP = r"G:\GhidraBackups\BEA_20260605-174520_post_wave1146_mixed_engine_score20_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-182213_post_wave1147_frontend_game_shell_score20_current_risk_review_verified"
+PRIOR_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-174520_post_wave1146_mixed_engine_score20_current_risk_review_verified"
 
 TARGETS = {
     "0x00451a40": ("FEPBEConfig__FindSelectedEntryByGlobalId", "int * __fastcall FEPBEConfig__FindSelectedEntryByGlobalId(void * list_state)"),

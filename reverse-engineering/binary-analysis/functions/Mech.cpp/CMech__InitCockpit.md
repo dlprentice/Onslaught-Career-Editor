@@ -6,7 +6,7 @@
 
 - **Named in Ghidra:** Yes
 - **Signature Set:** Yes (Wave436 headless apply/read-back, 2026-05-16)
-- **Verified vs Source:** Partial static evidence only; the allocation path cites `C:\dev\ONSLAUGHT2\Mech.cpp` line `0x48`, but the matching source body is not present in the current reference snapshot.
+- **Verified vs Source:** Partial static evidence only; the allocation path cites `[maintainer-local-source-export-root]\Mech.cpp` line `0x48`, but the matching source body is not present in the current reference snapshot.
 
 ## Purpose
 

@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = ROOT / "subagents" / "ghidra-static-reaudit" / "wave1078-terrainguide-vtable-review"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260602-082337_post_wave1078_terrainguide_vtable_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260602-082337_post_wave1078_terrainguide_vtable_review_verified"
 TARGET = "0x004f1ee0"
 TARGET_NAME = "CTerrainGuide__VFunc03_UpdateGuidanceState_004f1ee0"
 TARGET_SIGNATURE = "void __fastcall CTerrainGuide__VFunc03_UpdateGuidanceState_004f1ee0(void * this)"

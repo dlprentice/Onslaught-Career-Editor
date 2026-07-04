@@ -4,7 +4,7 @@ Date: 2026-05-14
 
 ## Summary
 
-Wave418 saved a focused static-Ghidra correction for the InfluenceMap queue head. The pass corrected or hardened 17 CInfluenceMap / CInfluenceMapManager targets, created four previously missing vtable-slot function objects, corrected three stale saved labels, refreshed the full static re-audit queue, and backed up the live Ghidra project to `G:\GhidraBackups\BEA_20260514_135504_post_wave418_influencemap_verified`.
+Wave418 saved a focused static-Ghidra correction for the InfluenceMap queue head. The pass corrected or hardened 17 CInfluenceMap / CInfluenceMapManager targets, created four previously missing vtable-slot function objects, corrected three stale saved labels, refreshed the full static re-audit queue, and backed up the live Ghidra project to `[maintainer-local-ghidra-backup-root]\BEA_20260514_135504_post_wave418_influencemap_verified`.
 
 This is public-safe saved static retail-binary evidence. It is not runtime AI proof, not exact source-body recovery, not concrete class-layout recovery, and not rebuild parity.
 

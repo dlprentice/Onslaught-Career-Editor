@@ -31,7 +31,7 @@ BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave892 SIMD gate dual profile"
 TAG = "simd-gate-dual-profile-wave892"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260526-052708_post_wave892_simd_gate_dual_profile_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260526-052708_post_wave892_simd_gate_dual_profile_verified"
 STRICT_PROXY = "6065/6113 = 99.21%"
 NEXT_HEAD = "0x0058aacf CTexture__HandleDirective_If"
 

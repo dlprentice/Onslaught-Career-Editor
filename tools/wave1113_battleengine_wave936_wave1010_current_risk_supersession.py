@@ -32,9 +32,9 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-WAVE936_BACKUP = r"G:\GhidraBackups\BEA_20260528-013432_post_wave936_battleengine_init_morph_volume_review_verified"
-WAVE1010_BACKUP = r"G:\GhidraBackups\BEA_20260531-163000_post_wave1010_battleengine_zoom_autoaim_review_verified"
-LATEST_BACKUP = r"G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified"
+WAVE936_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-013432_post_wave936_battleengine_init_morph_volume_review_verified"
+WAVE1010_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-163000_post_wave1010_battleengine_zoom_autoaim_review_verified"
+LATEST_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified"
 
 TARGETS = {
     "0x00404dd0": {

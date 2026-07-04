@@ -33,7 +33,7 @@ DEVELOPER_STATE = ROOT / "developer_agent_state.json"
 DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260523-130827_post_wave759_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260523-130827_post_wave759_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d3bd0": "0x0061c844",
@@ -89,9 +89,9 @@ COMMENT_TOKENS = {
 }
 
 STRING_EXPECTATIONS = {
-    "string-006309a4.tsv": r"C:\dev\ONSLAUGHT2\Mine.cpp",
-    "string-006309c0.tsv": r"C:\dev\ONSLAUGHT2\Missile.cpp",
-    "string-00630c20.tsv": r"C:\dev\ONSLAUGHT2\oids.cpp",
+    "string-006309a4.tsv": r"[maintainer-local-source-export-root]\Mine.cpp",
+    "string-006309c0.tsv": r"[maintainer-local-source-export-root]\Missile.cpp",
+    "string-00630c20.tsv": r"[maintainer-local-source-export-root]\oids.cpp",
 }
 
 CORE_ANCHORS = (

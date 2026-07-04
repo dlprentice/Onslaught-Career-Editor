@@ -28,7 +28,7 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-061908_post_wave993_feargrid_feature_pickup_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-061908_post_wave993_feargrid_feature_pickup_review_verified"
 
 TARGETS = {
     "0x0040dda0": ("CUnitAI__RefreshGridCooldownFromOccupiedCells", "void __thiscall CUnitAI__RefreshGridCooldownFromOccupiedCells(void * this)"),

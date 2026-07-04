@@ -31,7 +31,7 @@ Wave533 hardened eight adjacent CVertexShader core helpers using static retail G
 - Focused probe: `py -3 tools\ghidra_cvertexshader_core_wave533_probe.py --check` -> `PASS`
 - NPM probe: `npm run test:ghidra-cvertexshader-core-wave533` -> `PASS`
 - Queue probe: `py -3 tools\ghidra_static_reaudit_queue_probe.py --check` -> `PASS`
-- Verified backup: `G:\GhidraBackups\BEA_20260518-052432_post_wave533_cvertexshader_core_verified` with `19` files, `159124359` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-052432_post_wave533_cvertexshader_core_verified` with `19` files, `159124359` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Queue Impact
 

@@ -33,7 +33,7 @@ TARGET_NAME = "CUnit__VFunc64_SpawnConfiguredPickupThreeTimes"
 TARGET_SIGNATURE = "void __fastcall CUnit__VFunc64_SpawnConfiguredPickupThreeTimes(void * this)"
 OLD_NAME = "CUnit__RunTransitionStepThreeTimes"
 NEXT_HEAD = "0x004f2660 CText__CopyFrom"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-220229_post_wave830_cunit_vfunc64_pickup_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-220229_post_wave830_cunit_vfunc64_pickup_verified"
 
 COMMON_TAGS = {
     "static-reaudit",

@@ -27,7 +27,7 @@ The pass corrected three stale labels (`CDXTexture__ValidateSourceAndSetLoadErro
 - Post exports: `11` metadata rows, `11` tag rows, `23` xref rows, `2871` instruction rows, `11` decompile rows
 - Queue refresh: `6093` total, `3317` commented, `2776` commentless, `1217` exact-undefined signatures, `973` `param_N` signatures
 - Strict clean-signature proxy: `3265/6093 = 53.59%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-074256_post_wave628_crt_heap_fp_verified` (`19` files, `162139015` bytes, `DiffCount=0`)
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-074256_post_wave628_crt_heap_fp_verified` (`19` files, `162139015` bytes, `DiffCount=0`)
 
 The next high-signal queue head is `0x00562cef CRT__InputFormatCore`.
 

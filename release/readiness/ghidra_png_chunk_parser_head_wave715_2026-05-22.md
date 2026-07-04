@@ -42,10 +42,10 @@ Post-Wave715 queue telemetry:
 - Raw commentless head: `0x0042f220 CSPtrSet__Clear`.
 - Next commentless high-signal head: `0x0059dfb2 CDXTexture__Crc32_Update`.
 
-Verified backup: `G:\GhidraBackups\BEA_20260522-005631_post_wave715_png_chunk_parser_head_verified`, `19` files, `166038407` bytes, `DiffCount=0`.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-005631_post_wave715_png_chunk_parser_head_verified`, `19` files, `166038407` bytes, `DiffCount=0`.
 
 ## Boundaries
 
 Wave715 proves static retail Ghidra metadata only. Exact PNG decode-state layout, image-context layout, chunk/flag enum, CRC/source-read bounds, gamma/sRGB/tRNS policy provenance, transparency field schema, zlib stream layout, async job contract, runtime PNG behavior, runtime decode/image fidelity, BEA patching, and rebuild parity remain unproven.
 
-Probe anchors: `Wave715 PNG chunk parser head`, `png-chunk-parser-head-wave715`, `0x0059d992 CDXTexture__ParsePngChunk_IEND`, `0x0059dbbb CDXTexture__ParsePngChunk_tRNS`, `49 45 4e 44`, `74 52 4e 53`, `CDXTexture__ProcessIdatChunkDataAndQueueDecode(png_decode_state_00)`, `0x0059dfb2 CDXTexture__Crc32_Update`, `0x0042f220 CSPtrSet__Clear`, `G:\GhidraBackups\BEA_20260522-005631_post_wave715_png_chunk_parser_head_verified`.
+Probe anchors: `Wave715 PNG chunk parser head`, `png-chunk-parser-head-wave715`, `0x0059d992 CDXTexture__ParsePngChunk_IEND`, `0x0059dbbb CDXTexture__ParsePngChunk_tRNS`, `49 45 4e 44`, `74 52 4e 53`, `CDXTexture__ProcessIdatChunkDataAndQueueDecode(png_decode_state_00)`, `0x0059dfb2 CDXTexture__Crc32_Update`, `0x0042f220 CSPtrSet__Clear`, `[maintainer-local-ghidra-backup-root]\BEA_20260522-005631_post_wave715_png_chunk_parser_head_verified`.

@@ -32,7 +32,7 @@ BACKUP_SUMMARY = BASE / "backup-summary.json"
 ADDRESS = "0x0050b9c0"
 NAME = "CWorld__LoadWorld"
 SIGNATURE = "bool __thiscall CWorld__LoadWorld(void * this, void * levelName)"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-050626_post_wave844_cworld_load_world_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-050626_post_wave844_cworld_load_world_verified"
 NEXT_HEAD = "0x0050f680"
 
 COMMON_TAGS = {

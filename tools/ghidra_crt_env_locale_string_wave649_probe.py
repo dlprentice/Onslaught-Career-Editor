@@ -252,7 +252,7 @@ def check_docs(failures: list[str]) -> None:
     if "test:ghidra-crt-env-locale-string-wave649" not in package.get("scripts", {}):
         failures.append("package.json missing Wave649 npm script")
     required_docs = {
-        PUBLIC_NOTE: ("Wave649", "CRT__ProcessWideEnvTableToMultibyte", "2590", "805", "G:\\GhidraBackups\\BEA_20260520-222000_post_wave649_crt_env_locale_string_verified"),
+        PUBLIC_NOTE: ("Wave649", "CRT__ProcessWideEnvTableToMultibyte", "2590", "805", "[maintainer-local-ghidra-backup-root]\\BEA_20260520-222000_post_wave649_crt_env_locale_string_verified"),
         FUNCTION_INDEX: ("Wave649", "CRT__CloneEnvironmentTable", "0x0056eb50"),
         CRT_DOC: ("Wave649", "CRT__GetEnvVarValuePointerCaseInsensitive", "CDXMeshVB__SetTriangleStripDebugFlag"),
         GHIDRA_REFERENCE: ("Wave649", "CRT__CompareLocaleStringsWithMBCSFallback", "crt-env-locale-string-wave649"),

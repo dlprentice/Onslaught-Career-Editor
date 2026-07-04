@@ -20,7 +20,7 @@ Read-back evidence:
 - Target exports: 3 metadata rows, 3 tag rows, 8 xref rows, 467 body-instruction rows, and 3 decompile rows.
 - Context exports: 6 metadata rows, 708 xref rows, 1622 body-instruction rows, and 6 decompile rows.
 - Callsite export: 105 instruction rows across `0x00445130`, `0x004ad70a`, `0x004b4dbc`, `0x004dd1cf`, and `0x004dede9`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-150639_post_wave1008_meshpart_pose_cache_spine_review_verified`, 19 files, 173869959 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-150639_post_wave1008_meshpart_pose_cache_spine_review_verified`, 19 files, 173869959 bytes, `DiffCount=0`, `HashDiffCount=0`.
 - Queue closure remains `6223/6223 = 100.00%` with 0 commentless functions, 0 exact-undefined signatures, and 0 `param_N` signatures.
 - Wave911 focused re-audit progress remains `499/1408 = 35.44%` because these rows are not Wave911 focused-candidate rows.
 - Expanded static surface progress advances to `679/1478 = 45.94%`.

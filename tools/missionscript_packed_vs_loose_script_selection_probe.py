@@ -51,7 +51,7 @@ WAVE588 = ROOT / "subagents" / "ghidra-static-reaudit" / "wave588-cmission-scrip
 LOAD_ASYNC_DECOMPILE = WAVE588 / "post" / "decompile" / "00539ca0_CMissionScriptObjectCode__LoadAsync.c"
 START_LOAD_ASYNC_DECOMPILE = WAVE588 / "post" / "decompile" / "00539dc0_CMissionScriptObjectCode__StartLoadAsync.c"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified"
 PROOF_LINK = "missionscript-packed-vs-loose-script-selection-proof-plan.md"
 SCHEMA_LINK = "missionscript-packed-vs-loose-script-selection.v1.json"
 NEXT_SLICE = "MissionScript Level100 Tutorial Runtime Harness Boundary Proof Plan"

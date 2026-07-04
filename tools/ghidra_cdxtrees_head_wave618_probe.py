@@ -264,7 +264,7 @@ def check_xrefs_and_callsites(failures: list[str]) -> None:
 def check_backup_and_queue(failures: list[str]) -> None:
     backup = read_json(BACKUP_SUMMARY)
     expected_backup = {
-        "BackupPath": "G:\\GhidraBackups\\BEA_20260520-025200_post_wave618_cdxtrees_head_verified",
+        "BackupPath": "[maintainer-local-ghidra-backup-root]\\BEA_20260520-025200_post_wave618_cdxtrees_head_verified",
         "SourceFileCount": 19,
         "BackupFileCount": 19,
         "SourceBytes": 161680263,

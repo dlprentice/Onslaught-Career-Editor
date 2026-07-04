@@ -24,7 +24,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260528-114016_post_wave958_ccomplexthing_setvar_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-114016_post_wave958_ccomplexthing_setvar_review_verified"
 
 EXPECTED_METADATA = {
     "0x004f45e0": ("CComplexThing__SetVar", "void __stdcall CComplexThing__SetVar(void * var_name, void * data)"),
@@ -198,7 +198,7 @@ def check_artifacts(failures: list[str]) -> None:
     warning = read_tsv(BASE / "string-006331ec.tsv")
     source = read_tsv(BASE / "string-006331c0.tsv")
     require(warning and warning[0].get("cstring") == "Warning: Uknown var '%s' in call to SetVar", "warning string mismatch", failures)
-    require(source and source[0].get("cstring") == r"C:\dev\ONSLAUGHT2\thing.cpp", "source path string mismatch", failures)
+    require(source and source[0].get("cstring") == r"[maintainer-local-source-export-root]\thing.cpp", "source path string mismatch", failures)
 
 
 def check_logs_and_backup(failures: list[str]) -> None:
@@ -209,7 +209,7 @@ def check_logs_and_backup(failures: list[str]) -> None:
         "instructions.log": "Wrote 259 instruction rows",
         "decompile.log": "targets=7 dumped=7 missing=0 failed=0",
         "string-006331ec.log": "Warning: Uknown var",
-        "string-006331c0.log": r"C:\dev\ONSLAUGHT2\thing.cpp",
+        "string-006331c0.log": r"[maintainer-local-source-export-root]\thing.cpp",
     }
     for relative, token in expected_logs.items():
         text = read_text(BASE / relative)

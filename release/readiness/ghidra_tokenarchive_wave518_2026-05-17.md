@@ -30,7 +30,7 @@ The pass corrected 8 `undefined` signatures and one stale `param_N` signature. I
 - Focused probe: `tools/ghidra_tokenarchive_wave518_probe.py --check`.
 - Queue refresh after Wave518: `6078` functions, `2452` commented, `3626` commentless, `1600` exact-undefined signatures, and `1395` `param_N` signatures.
 - Current whole-project telemetry proxy: comment-backed `2452/6078 = 40.34%`; strict comment-plus-clean-signature proxy `2397/6078 = 39.44%`.
-- Backup verified at `G:\GhidraBackups\BEA_20260517-215239_post_wave518_tokenarchive_verified` with `19` files, `158567303` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260517-215239_post_wave518_tokenarchive_verified` with `19` files, `158567303` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

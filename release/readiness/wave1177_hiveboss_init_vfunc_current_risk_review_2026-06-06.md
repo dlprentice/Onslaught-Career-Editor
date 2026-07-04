@@ -18,7 +18,7 @@ Read-back evidence:
 
 - Post exports: `3` metadata rows, `3` tag rows, `3` DATA xref rows, `249` function-body instruction rows, and `3` decompile rows.
 - Queue/accounting after Wave1177: `6411` total functions, `6411` commented, `0` commentless, `0` exact-undefined signatures, `0` `param_N`, `695/1179 = 58.95%` current focused accounting, `484` remaining active focused rows.
-- Verified backup: `G:\GhidraBackups\BEA_20260606-091847_post_wave1177_hiveboss_init_vfunc_current_risk_review_verified`, `19` files, `176065415` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-091847_post_wave1177_hiveboss_init_vfunc_current_risk_review_verified`, `19` files, `176065415` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -32,4 +32,4 @@ What remains unproven:
 
 Static clean-room target: preserve rebuild-grade static contracts for a future clean-room implementation aiming at no noticeable difference; actual no-noticeable-difference parity still requires later runtime, asset, visual, control, timing, save, patch, and rebuild proof.
 
-Probe token anchor: Wave1177; wave1177-hiveboss-init-vfunc-current-risk-review; 695/1179 = 58.95%; 3 CHiveBoss init/vfunc current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 484; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consult used; Codex root final judgment; prior Wave397/Wave921/Wave1087/Wave1127/Wave1140 read-back evidence; 0 / 0 / 0; 6411/6411 = 100.00%; 3 xref rows; 249 instruction rows; 0x0047fe30 CHiveBoss__Init; 0x00480050 CHiveBossVFunc__ForwardApplyDamageUnlessFlag01000000_00480050; 0x00480080 CHiveBossVFunc__ComputeScaledOffsetVectorToOut_00480080; G:\GhidraBackups\BEA_20260606-091847_post_wave1177_hiveboss_init_vfunc_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
+Probe token anchor: Wave1177; wave1177-hiveboss-init-vfunc-current-risk-review; 695/1179 = 58.95%; 3 CHiveBoss init/vfunc current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 484; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consult used; Codex root final judgment; prior Wave397/Wave921/Wave1087/Wave1127/Wave1140 read-back evidence; 0 / 0 / 0; 6411/6411 = 100.00%; 3 xref rows; 249 instruction rows; 0x0047fe30 CHiveBoss__Init; 0x00480050 CHiveBossVFunc__ForwardApplyDamageUnlessFlag01000000_00480050; 0x00480080 CHiveBossVFunc__ComputeScaledOffsetVectorToOut_00480080; [maintainer-local-ghidra-backup-root]\BEA_20260606-091847_post_wave1177_hiveboss_init_vfunc_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.

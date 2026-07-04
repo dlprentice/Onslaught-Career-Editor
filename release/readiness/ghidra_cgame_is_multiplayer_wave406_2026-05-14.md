@@ -19,7 +19,7 @@ Stuart source is useful here because `CGame::IsMultiplayer` contains the distinc
 - Read-back verified `1` metadata row, `1` tag row, `54` xref rows, `81` instruction rows, and the post-rename decompile text with the `CGame+0x2a0` / `850..899` predicate.
 - Refreshed queue telemetry reports `6028` functions, `1559` commented functions, `4469` commentless functions, `1909` undefined signatures, and `1857` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1559/6028 = 25.86%`, strict clean-signature `1497/6028 = 24.83%`.
-- The actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260514_070751_post_wave406_cgame_is_multiplayer_verified` with `19` files, `154798983` bytes, and `HashDiffCount=0`.
+- The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260514_070751_post_wave406_cgame_is_multiplayer_verified` with `19` files, `154798983` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

@@ -1,7 +1,7 @@
 # Camera.cpp Functions
 
 > Source File: Camera.cpp | Binary: BEA.exe
-> Debug Path: 0x00623c90 (`C:\\dev\\ONSLAUGHT2\\Camera.cpp`)
+> Debug Path: 0x00623c90 (`[maintainer-local-source-export-root]\\Camera.cpp`)
 
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6113/6113** (Wave900: every function commented; clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
 
@@ -9,7 +9,7 @@
 
 Camera implementations that use `CBSpline` control points and `CActiveReader` (monitor.h deletion-event system) to safely track a `CThing*`.
 
-Wave908 audio/media/cutscene static review (`audio-media-cutscene-static-review-wave908`) records the camera side of the static-coherent audio/media/cutscene/camera core. The read-only `171` selected-row, `26` family slice includes `CMovieCamera 10`, `CPanCamera 9`, `CGenericCamera 4`, `CControllableCamera 3`, `CThingCamera 2`, `CViewPointCamera 1`, `CInterpolatedCamera 1`, and `CCamera 1`, with anchors `CMovieCamera__GetPos`, `CMovieCamera__GetOrientation`, `CPanCamera__Update`, `CGenericCamera__GetPos`, and `CCamera__GetAspectRatio`. Verified backup: `G:\GhidraBackups\BEA_20260526-113941_post_wave908_audio_media_cutscene_static_review_verified`. Runtime camera switching/framing, exact layout identity, patch behavior, and rebuild parity remain separate proof.
+Wave908 audio/media/cutscene static review (`audio-media-cutscene-static-review-wave908`) records the camera side of the static-coherent audio/media/cutscene/camera core. The read-only `171` selected-row, `26` family slice includes `CMovieCamera 10`, `CPanCamera 9`, `CGenericCamera 4`, `CControllableCamera 3`, `CThingCamera 2`, `CViewPointCamera 1`, `CInterpolatedCamera 1`, and `CCamera 1`, with anchors `CMovieCamera__GetPos`, `CMovieCamera__GetOrientation`, `CPanCamera__Update`, `CGenericCamera__GetPos`, and `CCamera__GetAspectRatio`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-113941_post_wave908_audio_media_cutscene_static_review_verified`. Runtime camera switching/framing, exact layout identity, patch behavior, and rebuild parity remain separate proof.
 
 ## Functions
 
@@ -72,8 +72,8 @@ Renames/signatures for `0x00418ef0`, `0x00419140`, `0x00419120`, `0x004198d0`, `
 - `0x00418ef0` implements the internal source constructor `CThing3rdPersonCamera::CThing3rdPersonCamera(CThing* for_thing)` (see `references/Onslaught/Camera.cpp`).
 - The monitor.h deletion-event system is used via an embedded reader cell at `this+0x04` (CActiveReader/CGenericActiveReader semantics): when the monitored thing dies it nulls the cell to prevent dangling pointers.
 - `CBSpline` is constructed with **degree/order 3** (cubic) for smooth movement.
-- Wave743 unwind continuation saved static Ghidra comments/tags/signatures for the camera-adjacent unwind tail `0x005d15b0` through `0x005d15e4` with `unwind-continuation-wave743` and `wave743-readback-verified`. Verified backup: `G:\GhidraBackups\BEA_20260522-160155_post_wave743_unwind_continuation_verified`; next high-signal queue head after the wave is `0x005d1610 Unwind@005d1610`, while the raw commentless head remains `0x0042f220 CSPtrSet__Clear`. Runtime camera cleanup behavior, exact source body identity, and rebuild parity remain unproven.
-- Wave744 unwind continuation saved additional static Ghidra comments/tags/signatures for camera-adjacent cleanup rows in the `0x005d1610` through `0x005d1740` range with `unwind-continuation-wave744` and `wave744-readback-verified`. Verified backup: `G:\GhidraBackups\BEA_20260522-163423_post_wave744_unwind_continuation_verified`; next high-signal queue head after the wave is `0x005d1840 Unwind@005d1840`, while the raw commentless head remains `0x0042f220 CSPtrSet__Clear`. Runtime camera cleanup behavior, exact source body identity, and rebuild parity remain unproven.
+- Wave743 unwind continuation saved static Ghidra comments/tags/signatures for the camera-adjacent unwind tail `0x005d15b0` through `0x005d15e4` with `unwind-continuation-wave743` and `wave743-readback-verified`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-160155_post_wave743_unwind_continuation_verified`; next high-signal queue head after the wave is `0x005d1610 Unwind@005d1610`, while the raw commentless head remains `0x0042f220 CSPtrSet__Clear`. Runtime camera cleanup behavior, exact source body identity, and rebuild parity remain unproven.
+- Wave744 unwind continuation saved additional static Ghidra comments/tags/signatures for camera-adjacent cleanup rows in the `0x005d1610` through `0x005d1740` range with `unwind-continuation-wave744` and `wave744-readback-verified`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-163423_post_wave744_unwind_continuation_verified`; next high-signal queue head after the wave is `0x005d1840 Unwind@005d1840`, while the raw commentless head remains `0x0042f220 CSPtrSet__Clear`. Runtime camera cleanup behavior, exact source body identity, and rebuild parity remain unproven.
 
 ## Constructor Allocations
 

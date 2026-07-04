@@ -84,7 +84,7 @@ In shipped files, `audio_pool_size` is consistently `0x2685` (9861 bytes) and th
 Allocates the backing buffer via `OID__AllocObject` with:
 - Size from `FUN_005482c0` (file size)
 - Type code 0x72 ('r')
-- Debug string "C:\dev\ONSLAUGHT2\text.cpp"
+- Debug string "[maintainer-local-source-export-root]\text.cpp"
 - Line number 0x80 (128)
 
 ### Guard Conditions

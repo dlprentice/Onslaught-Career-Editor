@@ -45,7 +45,7 @@ Result:
 
 Known patch-catalog deltas observed in the current convenience executable: `resolution_gate` at `0x129696`, `force_windowed` at `0x12A644`, `version_overlay_use_patched_format_pointer` at `0x06416F`, and `version_overlay_patched_format_cave_string` at `0x1AA444`. `skip_auto_toggle` at `0x12BB97` remains original.
 
-Static context remains unchanged: `6411/6411 = 100.00%`, `0 / 0 / 0`, expanded post-100 static surface `1560/1560 = 100.00%`, active current-risk focused accounting `1179/1179 = 100.00%`, remaining active focused work `0`, latest verified Ghidra backup `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+Static context remains unchanged: `6411/6411 = 100.00%`, `0 / 0 / 0`, expanded post-100 static surface `1560/1560 = 100.00%`, active current-risk focused accounting `1179/1179 = 100.00%`, remaining active focused work `0`, latest verified Ghidra backup `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 This proves only clean source-specimen authority and current convenience-executable patch classification. It does not prove copied-profile creation, BEA launch, patching during this slice, runtime MissionScript behavior, visual QA, Godot parity, rebuild parity, or no-noticeable-difference parity.
 

@@ -30,7 +30,7 @@ Evidence:
 - Composer 2.5 consult independently recommended this tranche as the most coherent Wave933 cluster and expected read-only outcome unless live Ghidra contradicted Wave331-Wave344/Wave917/Wave918 evidence.
 - Wave911 focused re-audit progress after Wave933: `140/1408 = 9.94%`.
 - Static export-contract closure remains `6113/6113 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-003302_post_wave933_physics_statement_loaders_tranche2_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-003302_post_wave933_physics_statement_loaders_tranche2_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 
 What this proves:
 

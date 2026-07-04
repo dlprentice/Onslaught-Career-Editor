@@ -27,14 +27,14 @@ Fresh read-back evidence:
 - Primary xrefs confirm calls to `0x0047ea20 CHeightField__GetHeightSamplePacked16` from `CHeightField__BuildCellMinMaxHeightTable`, `CWorld__ClearOccupancyBitsUsingHeightBands`, `CWorld__RebuildOccupancyGridFromDynamicSet`, `CWorld__RasterizeFootprintIntoOccupancyBitplanes`, `CDXLandscape__BuildVertexBuffer`, `CDXPatch__RebuildHeightGridVertexBuffer`, `CGroundUnit__UpdateLinkedEffectsByHeightClearance`, `CAirGuide__UpdateGroundClearanceCache`, and `CSquadNormal__IsValidLinkedSupportForTarget`.
 - Primary xrefs confirm calls to `0x004bd5c0 CWorld__RasterizeFootprintIntoOccupancyBitplanes` from `CWorld__RemoveUnitFromOccupancyGrid` and `CWorld__AddUnitToOccupancyGridAndRebuildShadows`.
 - Context xrefs confirm `0x004bd88d CWorld__RasterizeFootprintIntoOccupancyBitplanes -> CMonitor__SampleHeightfieldNormalAtXY`, `0x004bd7b7 CWorld__RasterizeFootprintIntoOccupancyBitplanes -> CWorld__SetOrClearOccupancyBit`, `0x004bd93a CWorld__RasterizeFootprintIntoOccupancyBitplanes -> CWorld__ClearCrossNeighborsInBitplane`, `0x0046d244 CGame__PostLoadProcess -> CHeightField__BuildCellMinMaxHeightTable`, and `0x0050d47a CWorld__LoadWorld -> CWorld__RebuildOccupancyGridFromDynamicSet`.
-- Verified read-only backup: `G:\GhidraBackups\BEA_20260528-011246_post_wave935_world_footprint_heightfield_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified read-only backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-011246_post_wave935_world_footprint_heightfield_review_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 
 Progress:
 
 - Wave911 focused re-audit progress after Wave935: `148/1408 = 10.51%`.
 - Static export-contract function-quality closure remains `6113/6113 = 100.00%`.
 
-Probe token anchor: Wave935; `world-footprint-heightfield-review-wave935`; `0x0047ea20 CHeightField__GetHeightSamplePacked16`; `0x004bd5c0 CWorld__RasterizeFootprintIntoOccupancyBitplanes`; `0x0047ec60 CMonitor__SampleHeightfieldNormalAtXY`; `0x004bdf70 CWorld__SetOrClearOccupancyBit`; `0x004bd440 CWorld__ClearCrossNeighborsInBitplane`; `0x00490e30 CHeightField__BuildCellMinMaxHeightTable`; `0x004bcd60 CWorld__RebuildOccupancyGridFromDynamicSet`; `148/1408 = 10.51%`; `6113/6113 = 100.00%`; `G:\GhidraBackups\BEA_20260528-011246_post_wave935_world_footprint_heightfield_review_verified`; no mutation.
+Probe token anchor: Wave935; `world-footprint-heightfield-review-wave935`; `0x0047ea20 CHeightField__GetHeightSamplePacked16`; `0x004bd5c0 CWorld__RasterizeFootprintIntoOccupancyBitplanes`; `0x0047ec60 CMonitor__SampleHeightfieldNormalAtXY`; `0x004bdf70 CWorld__SetOrClearOccupancyBit`; `0x004bd440 CWorld__ClearCrossNeighborsInBitplane`; `0x00490e30 CHeightField__BuildCellMinMaxHeightTable`; `0x004bcd60 CWorld__RebuildOccupancyGridFromDynamicSet`; `148/1408 = 10.51%`; `6113/6113 = 100.00%`; `[maintainer-local-ghidra-backup-root]\BEA_20260528-011246_post_wave935_world_footprint_heightfield_review_verified`; no mutation.
 
 What this proves:
 

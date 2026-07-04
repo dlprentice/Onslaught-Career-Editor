@@ -58,13 +58,13 @@ TITLE_REGEX = re.compile(r"^\s*#\s+(?P<title>.+?)\s*$", re.MULTILINE)
 DOCUMENT_ID_REGEX = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 LOCAL_PATH_REDACTIONS = (
     (re.compile(r"https?://(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|127\.\d{1,3}\.\d{1,3}\.\d{1,3}|localhost)(?::\d+)?(?:/[^\s<>()\]]*)?", re.IGNORECASE), "maintainer-local endpoint"),
-    (re.compile(r"\bC:\\Users\\david\\source\\Onslaught-Career-Editor-private\\?", re.IGNORECASE), "maintainer-local former private checkout"),
-    (re.compile(r"\bC:\\Users\\david\\source\\Onslaught-Career-Editor\\?", re.IGNORECASE), "maintainer-local public checkout"),
-    (re.compile(r"\bC:\\Users\\david\\Ghidra\\Projects\\BEA(?:\.gpr|\.rep)?\\?", re.IGNORECASE), "maintainer-local Ghidra BEA project"),
-    (re.compile(r"\bC:\\Users\\david\\Ghidra\\?", re.IGNORECASE), "maintainer-local Ghidra root"),
-    (re.compile(r"\bG:\\GhidraBackups\\?", re.IGNORECASE), "maintainer-local Ghidra backup root"),
-    (re.compile(r"\bG:\\OnslaughtRuntimeProofArchive\\?", re.IGNORECASE), "maintainer-local runtime proof archive"),
-    (re.compile(r"\bG:\\", re.IGNORECASE), "maintainer-local external drive"),
+    (re.compile(r"\bC:\\Users\\[^\\]+\\source\\Onslaught-Career-Editor-private\\?", re.IGNORECASE), "maintainer-local former private checkout"),
+    (re.compile(r"\bC:\\Users\\[^\\]+\\source\\Onslaught-Career-Editor\\?", re.IGNORECASE), "maintainer-local public checkout"),
+    (re.compile(r"\bC:\\Users\\[^\\]+\\Ghidra\\Projects\\BEA(?:\.gpr|\.rep)?\\?", re.IGNORECASE), "maintainer-local Ghidra BEA project"),
+    (re.compile(r"\bC:\\Users\\[^\\]+\\Ghidra\\?", re.IGNORECASE), "maintainer-local Ghidra root"),
+    (re.compile(r"\b[A-Z]:\\{1,2}GhidraBackups\\?", re.IGNORECASE), "maintainer-local Ghidra backup root"),
+    (re.compile(r"\b[A-Z]:\\{1,2}OnslaughtRuntimeProofArchive\\?", re.IGNORECASE), "maintainer-local runtime proof archive"),
+    (re.compile(r"\b[A-Z]:\\", re.IGNORECASE), "maintainer-local external drive"),
     (re.compile(r"\b[A-Z]:\\[^\r\n`<>()\]]+", re.IGNORECASE), "maintainer-local Windows path"),
 )
 
@@ -485,16 +485,16 @@ class LorePackBuilderTests(unittest.TestCase):
             lore = root / LORE_BOOK_DIR
             lore.mkdir()
             (lore / "BOOK.md").write_text(
-                "# Book\n\nD:\\Ghidra\\Projects\\BEA.gpr\n\nhttp://172.26.112.1:8193\n",
+                "# Book\n\nC:\\Users\\operator\\Ghidra\\Projects\\BEA.gpr\n\nhttp://172.26.112.1:8193\n",
                 encoding="utf-8",
             )
 
             build_lore_pack(root, root / LORE_PACK_DIR, use_git=False)
             content = (root / LORE_PACK_DIR / CONTENT_FILE_NAME).read_text(encoding="utf-8")
 
-            self.assertNotIn("D:\\", content)
+            self.assertNotIn("C:\\Users\\operator", content)
             self.assertNotIn("172.26.112.1", content)
-            self.assertIn("maintainer-local Windows path", content)
+            self.assertIn("maintainer-local Ghidra BEA project", content)
             self.assertIn("maintainer-local endpoint", content)
 
     def test_rejects_hard_payload_like_lore_source(self) -> None:

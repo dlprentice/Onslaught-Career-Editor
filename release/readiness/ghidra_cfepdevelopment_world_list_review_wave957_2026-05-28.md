@@ -31,7 +31,7 @@ Read-back evidence:
 - Exports: 13 metadata rows, 13 tag rows, 221 xref rows, 877 instruction rows, and 13 decompile-index rows.
 - Expected stale-boundary guard: `0x00458100` is `MISSING`.
 - Existing continuity probe: `test:ghidra-fepdevelopment-wave384` still passes against current saved Ghidra state.
-- Verified backup: `G:\GhidraBackups\BEA_20260528-111610_post_wave957_cfepdevelopment_world_list_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-111610_post_wave957_cfepdevelopment_world_list_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
 - Static function-quality closure remains `6151/6151 = 100.00%`.
 - Wave911 focused re-audit progress after Wave957 is `292/1408 = 20.74%`.
 

@@ -29,7 +29,7 @@ Wave532 hardened six adjacent VBufTexture/resource-tail helpers using static ret
 - Focused probe: `py -3 tools\ghidra_vbuftexture_resource_tail_wave532_probe.py --check` -> `PASS`
 - NPM probe: `npm run test:ghidra-vbuftexture-resource-tail-wave532` -> `PASS`
 - Queue probe: `py -3 tools\ghidra_static_reaudit_queue_probe.py --check` -> `PASS`
-- Verified backup: `G:\GhidraBackups\BEA_20260518-045906_post_wave532_vbuftexture_resource_tail_verified` with `19` files, `159091591` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-045906_post_wave532_vbuftexture_resource_tail_verified` with `19` files, `159091591` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Queue Impact
 

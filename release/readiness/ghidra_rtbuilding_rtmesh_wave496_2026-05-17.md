@@ -32,7 +32,7 @@ Wave496 saved static Ghidra name/signature/comment/tag hardening for ten adjacen
 - Focused probe: `py -3 tools\ghidra_rtbuilding_rtmesh_wave496_probe.py --check` PASS.
 - NPM probe: `cmd.exe /c npm run test:ghidra-rtbuilding-rtmesh-wave496` PASS.
 - Queue refresh: `6068` total functions, `2249` commented, `3819` commentless, `1665` undefined signatures, `1514` `param_N`; strict comment-plus-clean-signature proxy `2193/6068 = 36.14%`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260517-104658_post_wave496_rtbuilding_rtmesh_verified` with `19` files, `157748103` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260517-104658_post_wave496_rtbuilding_rtmesh_verified` with `19` files, `157748103` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Public Boundary
 

@@ -34,7 +34,7 @@ Read-back evidence:
 - Final exports: 9 metadata rows, 9 tag rows, 12 xref rows, 2044 body-instruction rows, and 9 decompile rows.
 - Queue closure after refresh: `6234/6234 = 100.00%`, with 0 commentless functions, 0 exact-undefined signatures, and 0 `param_N` signatures.
 - Re-audit progress after Wave1010: Wave911 focused `505/1408 = 35.87%`; expanded static surface `701/1489 = 47.08%`; Wave911 top-500 risk-ranked `409/500 = 81.80%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-163000_post_wave1010_battleengine_zoom_autoaim_review_verified`, 19 files, 173935495 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-163000_post_wave1010_battleengine_zoom_autoaim_review_verified`, 19 files, 173935495 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

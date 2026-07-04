@@ -38,7 +38,7 @@ Evidence counts:
 - Instruction-window export: 159 instruction rows.
 - Queue closure remains `6238/6238 = 100.00%` with 0 commentless, 0 exact-undefined signatures, and 0 `param_N`.
 - Wave911 focused re-audit progress after Wave1025: `576/1408 = 40.91%`; expanded static surface progress: `805/1493 = 53.92%`; Wave911 top-500 risk-ranked coverage: `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-004522_post_wave1025_cfastvb_node_tree_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-004522_post_wave1025_cfastvb_node_tree_review_verified`, 19 files, 173968263 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

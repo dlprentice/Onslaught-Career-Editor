@@ -17,7 +17,7 @@ Fresh evidence:
 - Wave911 focused progress advances to `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1140/1509 = 75.55%`.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-195206_post_wave1059_collision_seeking_round_tail_review_verified`, `19` files, `174689159` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-195206_post_wave1059_collision_seeking_round_tail_review_verified`, `19` files, `174689159` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 Validation command:
 
@@ -27,4 +27,4 @@ npm run test:ghidra-wave900-plus-through-wave1059-recheck
 
 Boundary note: this aggregate gate is static documentation/evidence hygiene. Runtime projectile, collision, event, delayed-ready, and response behavior; exact helper layouts; exact source-body identity; BEA patching behavior; gameplay outcomes; and rebuild parity remain separate proof.
 
-Probe token anchor: Wave1059; collision-seeking-round-tail-review-wave1059; 0x00425b50 CCollisionSeekingRound__InitCollisionLineAndSound; 0x00425e30 CCollisionSeekingRound__UpdatePrimarySeekerLeadVector; 0x00426300 CMeshCollisionVolume__ScalarDeletingDestructor_00426300; 0x00426370 CCollisionSeekingRound__ReplacePrimarySeekerAndRefreshOffset; 0x004263f0 CCollisionSeekingRound__Destructor; 0x00426480 CCollisionSeekingRound__SetCollisionMask; 0x004264a0 CCollisionSeekingRound__ResolveRoundCollisionResponse; 0x00426a20 CCollisionSeekingRound__MarkDelayedCollisionReady; 812/1408 = 57.67%; 1140/1509 = 75.55%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-195206_post_wave1059_collision_seeking_round_tail_review_verified; tag normalization.
+Probe token anchor: Wave1059; collision-seeking-round-tail-review-wave1059; 0x00425b50 CCollisionSeekingRound__InitCollisionLineAndSound; 0x00425e30 CCollisionSeekingRound__UpdatePrimarySeekerLeadVector; 0x00426300 CMeshCollisionVolume__ScalarDeletingDestructor_00426300; 0x00426370 CCollisionSeekingRound__ReplacePrimarySeekerAndRefreshOffset; 0x004263f0 CCollisionSeekingRound__Destructor; 0x00426480 CCollisionSeekingRound__SetCollisionMask; 0x004264a0 CCollisionSeekingRound__ResolveRoundCollisionResponse; 0x00426a20 CCollisionSeekingRound__MarkDelayedCollisionReady; 812/1408 = 57.67%; 1140/1509 = 75.55%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-195206_post_wave1059_collision_seeking_round_tail_review_verified; tag normalization.

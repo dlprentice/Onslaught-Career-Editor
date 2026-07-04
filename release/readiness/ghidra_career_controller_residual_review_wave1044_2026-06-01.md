@@ -28,7 +28,7 @@ Read-back evidence:
 - Context exports: 11 metadata rows, 11 tag rows, 25 xref rows, 1259 body-instruction rows, and 11 decompile rows.
 - Queue after Wave1044 remains 6238 total, 6238 commented, 0 commentless, 0 exact-undefined signatures, 0 `param_N`, strict clean-signature proxy `6238/6238 = 100.00%`.
 - Wave1044 targets are not Wave911 focused TSV rows, so Wave911 focused progress remains `735/1408 = 52.20%`; expanded static surface progress advances to `977/1493 = 65.44%`; top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-103855_post_wave1044_career_controller_residual_review_verified`, 19 files, 174263175 bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-103855_post_wave1044_career_controller_residual_review_verified`, 19 files, 174263175 bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What remains separate proof:
 

@@ -28,7 +28,7 @@ Read-back evidence:
 - Post exports: 30 metadata rows, 30 tag rows, 72 xref rows, 470 instruction rows, and 30 decompile rows.
 - Queue after Wave887: 6113 total, 6008 commented, 105 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed/strict proxy `6008/6113 = 98.28%`.
 - Next raw commentless row: `0x0057617e CDXTexture__DispatchPtr00656f48_WithInit`.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-030217_post_wave887_texture_dispatch_interpolation_tail_verified`, 19 files, 172952455 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-030217_post_wave887_texture_dispatch_interpolation_tail_verified`, 19 files, 172952455 bytes, `DiffCount=0`.
 
 What this proves:
 

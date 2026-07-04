@@ -26,7 +26,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260528-034712_post_wave941_missile_linked_object_dispatch_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-034712_post_wave941_missile_linked_object_dispatch_review_verified"
 SCRIPT_NAME = "test:ghidra-missile-linked-object-dispatch-review-wave941"
 SCRIPT_VALUE = r"py -3 tools\ghidra_missile_linked_object_dispatch_review_wave941_probe.py --check"
 

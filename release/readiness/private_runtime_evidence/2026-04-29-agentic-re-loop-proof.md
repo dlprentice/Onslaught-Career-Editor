@@ -19,9 +19,9 @@ This was a runtime proof, not an open-ended autonomy feature. The final accepted
 
 ## Local artifact root
 
-- Artifact root: `C:\Users\david\AppData\Roaming\Electron`
-- Local ignored proof JSON: `C:\Users\david\source\Onslaught-Career-Editor-private\subagents\2026-04-29-prompt7-agentic-re-loop-proof.json`
-- Raw frame PNGs stay under `C:\Users\david\AppData\Roaming\Electron\artifacts\game-window-frame-capture\...` and are not committed.
+- Artifact root: `[maintainer-local-appdata]`
+- Local ignored proof JSON: `[maintainer-private-checkout]\subagents\2026-04-29-prompt7-agentic-re-loop-proof.json`
+- Raw frame PNGs stay under `[maintainer-local-appdata]\artifacts\game-window-frame-capture\...` and are not committed.
 - No raw screenshots, frame PNGs, data URLs, base64 payloads, or private proof JSON are committed.
 
 ## Commands run for runtime proof
@@ -36,8 +36,8 @@ The final pre-run and post-run `Get-Process` checks returned no process rows.
 
 ## Source profile and original executable
 
-- Source game root: `C:\Users\david\source\Onslaught-Career-Editor-private\game`
-- Source executable: `C:\Users\david\source\Onslaught-Career-Editor-private\game\BEA.exe`
+- Source game root: `[maintainer-private-checkout]\game`
+- Source executable: `[maintainer-private-checkout]\game\BEA.exe`
 - Source SHA-256 before: `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 - Source verified before: `2026-04-30T00:38:15.258Z`
 - Source SHA-256 after: `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -51,14 +51,14 @@ No repo-local `game\BEA.exe`, installed Steam executable, or real user profile w
 
 - Job: `game.prepareSafeProfile`
 - Run ID: `job-20260430003815267-game-prepareSafeProfile-394e12`
-- Target copied profile: `C:\Users\david\AppData\Roaming\Electron\game-profiles\bea-agentic-loop-prompt7-1777509493363`
-- Source game root: `C:\Users\david\source\Onslaught-Career-Editor-private\game`
+- Target copied profile: `[maintainer-local-appdata]\game-profiles\bea-agentic-loop-prompt7-1777509493363`
+- Source game root: `[maintainer-private-checkout]\game`
 - Entries copied: `9`
-- Artifact: `C:\Users\david\AppData\Roaming\Electron\artifacts\game-profile-prepare\job-20260430003815267-game-prepareSafeProfile-394e12\prepare.json`
+- Artifact: `[maintainer-local-appdata]\artifacts\game-profile-prepare\job-20260430003815267-game-prepareSafeProfile-394e12\prepare.json`
 
 ## Copied executable and patch
 
-- Copied executable: `C:\Users\david\AppData\Roaming\Electron\game-profiles\bea-agentic-loop-prompt7-1777509493363\BEA.exe`
+- Copied executable: `[maintainer-local-appdata]\game-profiles\bea-agentic-loop-prompt7-1777509493363\BEA.exe`
 - Copied executable SHA-256 before patch: `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 - Copied executable SHA-256 after patch: `e1436ef7e0ad9ccbddd43aaaca952f6e84d4b1a282835cead745efcfc32fadf4`
 - Patch job: `patch.applyCatalogPatch`
@@ -71,8 +71,8 @@ No repo-local `game\BEA.exe`, installed Steam executable, or real user profile w
 - Known Steam hash before: yes
 - Known Steam hash after: no
 - Post-patch catalog counts: original `6`, patched `1`, mismatch `0`, out-of-range `0`
-- Backup path: `C:\Users\david\AppData\Roaming\Electron\game-profiles\bea-agentic-loop-prompt7-1777509493363\BEA.exe.original.backup`
-- Artifact: `C:\Users\david\AppData\Roaming\Electron\artifacts\patch-apply\job-20260430003822524-patch-applyCatalogPatch-23878a\apply.json`
+- Backup path: `[maintainer-local-appdata]\game-profiles\bea-agentic-loop-prompt7-1777509493363\BEA.exe.original.backup`
+- Artifact: `[maintainer-local-appdata]\artifacts\patch-apply\job-20260430003822524-patch-applyCatalogPatch-23878a\apply.json`
 
 Only catalog patch id `force_windowed` was applied, and only to the copied executable.
 
@@ -81,10 +81,10 @@ Only catalog patch id `force_windowed` was applied, and only to the copied execu
 - Job: `game.launchProfile`
 - Run ID: `job-20260430003823033-game-launchProfile-7e8819`
 - Process ID: `22372`
-- Executable: `C:\Users\david\AppData\Roaming\Electron\game-profiles\bea-agentic-loop-prompt7-1777509493363\BEA.exe`
-- Working directory: `C:\Users\david\AppData\Roaming\Electron\game-profiles\bea-agentic-loop-prompt7-1777509493363`
+- Executable: `[maintainer-local-appdata]\game-profiles\bea-agentic-loop-prompt7-1777509493363\BEA.exe`
+- Working directory: `[maintainer-local-appdata]\game-profiles\bea-agentic-loop-prompt7-1777509493363`
 - Arguments: none
-- Artifact: `C:\Users\david\AppData\Roaming\Electron\artifacts\game-launch\job-20260430003823033-game-launchProfile-7e8819\launch.json`
+- Artifact: `[maintainer-local-appdata]\artifacts\game-launch\job-20260430003823033-game-launchProfile-7e8819\launch.json`
 
 ## Observe 1
 
@@ -100,13 +100,13 @@ Frame 1:
 - Job: `game.captureWindowFrame`
 - Run ID: `job-20260430003829274-game-captureWindowFrame-047546`
 - Status: captured
-- PNG path: `C:\Users\david\AppData\Roaming\Electron\artifacts\game-window-frame-capture\job-20260430003829274-game-captureWindowFrame-047546\frame.png`
+- PNG path: `[maintainer-local-appdata]\artifacts\game-window-frame-capture\job-20260430003829274-game-captureWindowFrame-047546\frame.png`
 - Dimensions: `655x540`
 - Size: `293152` bytes
 - MIME: `image/png`
 - SHA-256: `311119dd61e1458ff6cc4d32889d7643241150121ab74cdba11255856a7fc2d7`
 - Captured at: `2026-04-30T00:38:31.723Z`
-- Artifact: `C:\Users\david\AppData\Roaming\Electron\artifacts\game-window-frame-capture\job-20260430003829274-game-captureWindowFrame-047546\frame.json`
+- Artifact: `[maintainer-local-appdata]\artifacts\game-window-frame-capture\job-20260430003829274-game-captureWindowFrame-047546\frame.json`
 
 ## Decide
 
@@ -154,8 +154,8 @@ Rejected alternatives:
 - Action count: `1`
 - Key events/messages sent: `2`
 - Focused: yes
-- Plan artifact: `C:\Users\david\AppData\Roaming\Electron\artifacts\game-window-input-plan\job-20260430003832021-game-planWindowInput-8a777c\plan.json`
-- Send artifact: `C:\Users\david\AppData\Roaming\Electron\artifacts\game-window-input\job-20260430003833846-game-sendWindowInput-483f9f\input.json`
+- Plan artifact: `[maintainer-local-appdata]\artifacts\game-window-input-plan\job-20260430003832021-game-planWindowInput-8a777c\plan.json`
+- Send artifact: `[maintainer-local-appdata]\artifacts\game-window-input\job-20260430003833846-game-sendWindowInput-483f9f\input.json`
 - Send note: focused the selected `BEA.exe` top-level window, then sent bounded keyboard input.
 
 The action was sent only after a plan and only to the managed `game.launchProfile` target with exact `ProcessId` and `HwndHex`.
@@ -165,13 +165,13 @@ The action was sent only after a plan and only to the managed `game.launchProfil
 - Job: `game.captureWindowFrame`
 - Run ID: `job-20260430003836772-game-captureWindowFrame-e9f917`
 - Status: captured
-- PNG path: `C:\Users\david\AppData\Roaming\Electron\artifacts\game-window-frame-capture\job-20260430003836772-game-captureWindowFrame-e9f917\frame.png`
+- PNG path: `[maintainer-local-appdata]\artifacts\game-window-frame-capture\job-20260430003836772-game-captureWindowFrame-e9f917\frame.png`
 - Dimensions: `655x540`
 - Size: `236799` bytes
 - MIME: `image/png`
 - SHA-256: `b5908068133e819f2f53a56a8dd3ce8f485321bcea06db4af0705cc0d49283de`
 - Captured at: `2026-04-30T00:38:39.210Z`
-- Artifact: `C:\Users\david\AppData\Roaming\Electron\artifacts\game-window-frame-capture\job-20260430003836772-game-captureWindowFrame-e9f917\frame.json`
+- Artifact: `[maintainer-local-appdata]\artifacts\game-window-frame-capture\job-20260430003836772-game-captureWindowFrame-e9f917\frame.json`
 
 Frame 2 has a later timestamp, a distinct artifact path, a different byte size, and a different hash from frame 1. This still does not claim semantic gameplay reaction; no gameplay-state classifier or human-labeled state assertion was part of this proof.
 
@@ -184,14 +184,14 @@ Frame 2 has a later timestamp, a distinct artifact path, a different byte size, 
 - Previous status: running
 - Current status: exited
 - Stop requested: yes
-- Stop artifact: `C:\Users\david\AppData\Roaming\Electron\artifacts\managed-process-stop\job-20260430003839488-runtime-stopManagedProcess-abaa19\stop.json`
+- Stop artifact: `[maintainer-local-appdata]\artifacts\managed-process-stop\job-20260430003839488-runtime-stopManagedProcess-abaa19\stop.json`
 - Registry job: `runtime.listManagedProcesses`
 - Registry run ID: `job-20260430003841815-runtime-listManagedProcesses-205f70`
 - Managed process records: `6`
 - Running records after stop: `0`
 - Exited records after stop: `6`
 - Latest record: `game PID 22372 (exited)`
-- Registry artifact: `C:\Users\david\AppData\Roaming\Electron\artifacts\managed-process-registry\job-20260430003841815-runtime-listManagedProcesses-205f70\processes.json`
+- Registry artifact: `[maintainer-local-appdata]\artifacts\managed-process-registry\job-20260430003841815-runtime-listManagedProcesses-205f70\processes.json`
 
 Post-run `Get-Process -Name BEA` returned no process rows. The local proof JSON records `rows: []`.
 

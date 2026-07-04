@@ -23,7 +23,7 @@ Read-back evidence:
 - Queue after Wave812: 6098 total, 5587 commented, 511 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5587/6098 = 91.62%`, strict clean-signature proxy `5587/6098 = 91.62%`.
 - Next raw commentless row: `0x004a52b0 CMesh__ClearAllUsageMarkers`.
 - Commentless high-signal, signature, and name-confidence queues are empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-132640_post_wave812_memory_heap_deltas_verified`, 19 files, 171346823 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-132640_post_wave812_memory_heap_deltas_verified`, 19 files, 171346823 bytes, `DiffCount=0`.
 
 What this proves:
 

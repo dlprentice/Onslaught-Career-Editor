@@ -35,14 +35,14 @@ Representative static anchors:
 
 Retained backups include:
 
-- `G:\GhidraBackups\BEA_20260526-103409_post_wave905_mesh_motion_world_particle_static_review_verified`
-- `G:\GhidraBackups\BEA_20260526-105331_post_wave906_unit_battleengine_gameplay_static_review_verified`
-- `G:\GhidraBackups\BEA_20260602-044834_post_wave1073_cworld_load_tail_review_verified`
-- `G:\GhidraBackups\BEA_20260525-050626_post_wave844_cworld_load_world_verified`
-- `G:\GhidraBackups\BEA_20260518-155904_post_wave556_cworld_tail_verified`
-- `G:\GhidraBackups\BEA_20260525-060333_post_wave846_worldphysics_load_resolve_verified`
-- `G:\GhidraBackups\BEA_20260525-053251_post_wave845_spawner_type_allowed_verified`
-- `G:\GhidraBackups\BEA_20260525-013914_post_wave837_cunit_spawn_cooldown_verified`
-- `G:\GhidraBackups\BEA_20260601-225655_post_wave1064_iscript_setthing_command_bridge_verified`
+- `[maintainer-local-ghidra-backup-root]\BEA_20260526-103409_post_wave905_mesh_motion_world_particle_static_review_verified`
+- `[maintainer-local-ghidra-backup-root]\BEA_20260526-105331_post_wave906_unit_battleengine_gameplay_static_review_verified`
+- `[maintainer-local-ghidra-backup-root]\BEA_20260602-044834_post_wave1073_cworld_load_tail_review_verified`
+- `[maintainer-local-ghidra-backup-root]\BEA_20260525-050626_post_wave844_cworld_load_world_verified`
+- `[maintainer-local-ghidra-backup-root]\BEA_20260518-155904_post_wave556_cworld_tail_verified`
+- `[maintainer-local-ghidra-backup-root]\BEA_20260525-060333_post_wave846_worldphysics_load_resolve_verified`
+- `[maintainer-local-ghidra-backup-root]\BEA_20260525-053251_post_wave845_spawner_type_allowed_verified`
+- `[maintainer-local-ghidra-backup-root]\BEA_20260525-013914_post_wave837_cunit_spawn_cooldown_verified`
+- `[maintainer-local-ghidra-backup-root]\BEA_20260601-225655_post_wave1064_iscript_setthing_command_bridge_verified`
 
 No runtime MissionScript execution, runtime `GetThingRef` behavior, runtime `SpawnThing` behavior, runtime world loading behavior, runtime object identity, runtime spawner behavior, runtime Unit/BattleEngine spawn behavior, live loose-MSL loading, packed-resource script selection, exact `IScript__GetThingRef` or `IScript__SpawnThing` handler address proof, exact world/thing/spawner/Unit/MissionScript layouts, exact source-body identity, BEA patching behavior, visual QA, Godot parity, rebuild parity, or no-noticeable-difference parity claim is made.

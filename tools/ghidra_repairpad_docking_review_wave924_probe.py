@@ -23,7 +23,7 @@ STATE_FILES = [
     ROOT / "re_orchestrator_state.json",
 ]
 
-BACKUP = r"G:\GhidraBackups\BEA_20260527-213142_post_wave924_repairpad_docking_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260527-213142_post_wave924_repairpad_docking_review_verified"
 SCRIPT_NAME = "test:ghidra-repairpad-docking-review-wave924"
 SCRIPT_VALUE = r"py -3 tools\ghidra_repairpad_docking_review_wave924_probe.py --check"
 

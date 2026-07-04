@@ -28,13 +28,13 @@ Wave1113 accounts for `5 rows` from the Wave1108 current focused denominator as 
 
 Wave936 verified `6` primary metadata rows, `6` tag rows, `12` xref rows, `938` body-instruction rows, and `6` decompile rows, plus `7` context metadata rows, `7` context tag rows, `22` context xref rows, `828` context instruction rows, and `7` context decompile rows. Wave1010 final exports verified `9` metadata rows, `9` tag rows, `12` xref rows, `2044` body-instruction rows, and `9` decompile rows.
 
-Wave936 backup: `G:\GhidraBackups\BEA_20260528-013432_post_wave936_battleengine_init_morph_volume_review_verified`.
+Wave936 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-013432_post_wave936_battleengine_init_morph_volume_review_verified`.
 
-Wave1010 backup: `G:\GhidraBackups\BEA_20260531-163000_post_wave1010_battleengine_zoom_autoaim_review_verified`.
+Wave1010 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-163000_post_wave1010_battleengine_zoom_autoaim_review_verified`.
 
-Latest completed Ghidra review backup remains `G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`.
+Latest completed Ghidra review backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified`.
 
-Probe token anchor: Wave1113; wave1113-battleengine-wave936-wave1010-current-risk-supersession; 33/1179 = 2.80%; 5 rows; current focused candidates: 1179; Wave936; battleengine-init-morph-volume-review-wave936; Wave1010; battleengine-weapon-autoaim-review-wave1010; 0x00404dd0 CBattleEngine__Init; 0x00406da0 CBattleEngine__SelectNearestForwardTargetFromGlobalSet; 0x0040b6d0 CBattleEngine__HandleAutoAim; 0x0040dc30 CBattleEngine__EnableVolumeEntryGroupsByName; 0x0040dc60 CBattleEngine__DisableVolumeEntryGroupsByNameAndReselect; G:\GhidraBackups\BEA_20260528-013432_post_wave936_battleengine_init_morph_volume_review_verified; G:\GhidraBackups\BEA_20260531-163000_post_wave1010_battleengine_zoom_autoaim_review_verified; G:\GhidraBackups\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified; no new Ghidra export; no mutation.
+Probe token anchor: Wave1113; wave1113-battleengine-wave936-wave1010-current-risk-supersession; 33/1179 = 2.80%; 5 rows; current focused candidates: 1179; Wave936; battleengine-init-morph-volume-review-wave936; Wave1010; battleengine-weapon-autoaim-review-wave1010; 0x00404dd0 CBattleEngine__Init; 0x00406da0 CBattleEngine__SelectNearestForwardTargetFromGlobalSet; 0x0040b6d0 CBattleEngine__HandleAutoAim; 0x0040dc30 CBattleEngine__EnableVolumeEntryGroupsByName; 0x0040dc60 CBattleEngine__DisableVolumeEntryGroupsByNameAndReselect; [maintainer-local-ghidra-backup-root]\BEA_20260528-013432_post_wave936_battleengine_init_morph_volume_review_verified; [maintainer-local-ghidra-backup-root]\BEA_20260531-163000_post_wave1010_battleengine_zoom_autoaim_review_verified; [maintainer-local-ghidra-backup-root]\BEA_20260604-200748_post_wave1100_cmeshpart_load_geometry_review_verified; no new Ghidra export; no mutation.
 
 ## Boundary
 

@@ -39,10 +39,10 @@ Post-Wave714 queue telemetry:
 - Raw commentless head: `0x0042f220 CSPtrSet__Clear`.
 - Next commentless high-signal head: `0x0059d699 CDXTexture__ParsePngChunk_IHDR`.
 
-Verified backup: `G:\GhidraBackups\BEA_20260522-002212_post_wave714_png_scanline_pass_head_verified`, `19` files, `165972871` bytes, `DiffCount=0`.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-002212_post_wave714_png_scanline_pass_head_verified`, `19` files, `165972871` bytes, `DiffCount=0`.
 
 ## Boundaries
 
 This note proves saved static retail Ghidra metadata only. Exact PNG decode-state layout, row-layout descriptor schema, Adam7 table/mask semantics, chunk/CRC flag enum, row-workspace/buffer ownership, source-read bounds, warning/error policy, runtime PNG behavior, runtime decode/image fidelity, BEA patching, and rebuild parity remain unproven. The `0x0059d614 CDXTexture__FinalizePngChunkAndVerifyCrc` post decompile intentionally retains the documented `extraout_var` artifact from the upstream bool-return helper.
 
-Probe anchors: `Wave714 PNG scanline / pass head`, `png-scanline-pass-head-wave714`, `0x0059ce20 CDXTexture__ExpandPackedPixelsToScanline`, `0x0059d614 CDXTexture__FinalizePngChunkAndVerifyCrc`, `extraout_var`, `0x0059d699 CDXTexture__ParsePngChunk_IHDR`, `0x0042f220 CSPtrSet__Clear`, `G:\GhidraBackups\BEA_20260522-002212_post_wave714_png_scanline_pass_head_verified`.
+Probe anchors: `Wave714 PNG scanline / pass head`, `png-scanline-pass-head-wave714`, `0x0059ce20 CDXTexture__ExpandPackedPixelsToScanline`, `0x0059d614 CDXTexture__FinalizePngChunkAndVerifyCrc`, `extraout_var`, `0x0059d699 CDXTexture__ParsePngChunk_IHDR`, `0x0042f220 CSPtrSet__Clear`, `[maintainer-local-ghidra-backup-root]\BEA_20260522-002212_post_wave714_png_scanline_pass_head_verified`.

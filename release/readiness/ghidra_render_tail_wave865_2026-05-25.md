@@ -30,7 +30,7 @@ Read-back evidence:
 - Post exports: 9 metadata rows, 9 tag rows, 20 xref rows, 1542 function-body instruction rows, and 9 decompile rows.
 - Queue after Wave865: 6105 total, 5819 commented, 286 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5819/6105 = 95.32%`, strict clean-signature proxy `5819/6105 = 95.32%`.
 - Next raw commentless row: `0x00549570 CMeshRenderer__RenderMeshCore`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-160100_post_wave865_render_tail_verified`, 19 files, 172329863 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-160100_post_wave865_render_tail_verified`, 19 files, 172329863 bytes, `DiffCount=0`.
 
 What this proves:
 

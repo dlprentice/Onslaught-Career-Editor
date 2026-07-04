@@ -30,7 +30,7 @@ LEDGER = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_l
 ATTEMPT_LOG = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_attempt_log.jsonl"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260601-215617_post_wave1062_mat34_orientation_scale_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260601-215617_post_wave1062_mat34_orientation_scale_review_verified"
 
 EXPECTED_SIGNATURES = {
     "0x0040d1f0": ("Mat34__SetFromEulerAngles", "void __thiscall Mat34__SetFromEulerAngles(void * this, float angle0, float angle1, float angle2)"),

@@ -26,7 +26,7 @@ Read-back evidence:
 - Queue after Wave899: 6113 total, 6106 commented, 7 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `6106/6113 = 99.89%`, strict clean-signature proxy `6106/6113 = 99.89%`.
 - Next raw commentless row: `0x005d04e6 RtlUnwind`.
 - Commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260526-083306_post_wave899_cdxtexture_jpeg_decode_tail_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-083306_post_wave899_cdxtexture_jpeg_decode_tail_verified`, 19 files, 173247367 bytes, `DiffCount=0`.
 
 What this proves:
 

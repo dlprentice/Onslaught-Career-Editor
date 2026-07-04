@@ -1,7 +1,7 @@
 # FEPBEConfig.cpp Functions
 
 > Source File: FEPBEConfig.cpp | Binary: BEA.exe
-> Debug Path: 0x00628fac (`C:\dev\ONSLAUGHT2\FEPBEConfig.cpp`)
+> Debug Path: 0x00628fac (`[maintainer-local-source-export-root]\FEPBEConfig.cpp`)
 > RTTI: `.?AVCFEPBEConfig@@` at 0x00629c58
 > Current saved-Ghidra wave: Wave 999 (`2026-05-31` read-only review; Wave367/Wave403 saved corrections preserved)
 
@@ -13,9 +13,9 @@
 
 The older note that described `0x0044fa93` as an unrecognized init region is superseded. Fresh byte/prologue inspection plus saved Ghidra body repair show the function boundary starts at `0x0044fa90`, the SEH prologue before the `beconf::init() 0-5` trace strings. Ghidra now has a saved `CFEPBEConfig__Init` function body covering `0x0044fa90-0x0044fd9f`.
 
-Wave1147 (`wave1147-frontend-game-shell-score20-current-risk-review`) re-read `0x00451a40 FEPBEConfig__FindSelectedEntryByGlobalId` as part of the frontend/game shell score20 current-risk review. Fresh Ghidra exports found the saved name/signature/comment static-consistent with no mutation to this row. Verified backup: `G:\GhidraBackups\BEA_20260605-182213_post_wave1147_frontend_game_shell_score20_current_risk_review_verified`.
+Wave1147 (`wave1147-frontend-game-shell-score20-current-risk-review`) re-read `0x00451a40 FEPBEConfig__FindSelectedEntryByGlobalId` as part of the frontend/game shell score20 current-risk review. Fresh Ghidra exports found the saved name/signature/comment static-consistent with no mutation to this row. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-182213_post_wave1147_frontend_game_shell_score20_current_risk_review_verified`.
 
-Wave1197 (`wave1197-fepbeconfig-frontend-residual-current-risk-review`) saved comment/tag normalization for `4 FEPBEConfig/frontend residual score15-16 current-risk rows`: `CFEPBEConfig__Init`, `CFEPMultiplayerStart__SetConfigDescriptionByIndex`, `CFEPBEConfig__PlayWeaponSound`, and `CFEPBEConfig__PlayWeaponSoundAlt`. fresh Ghidra export evidence verified `4 xref rows`, `860 instruction rows`, and `4 decompile rows`; dry/apply/final-dry reported `updated=0 skipped=0 renamed=0 would_rename=0 signature_updated=0 comment_only_updated=4 tags_added=52 missing=0 bad=0`, `updated=4 skipped=0 renamed=0 would_rename=0 signature_updated=0 comment_only_updated=4 tags_added=52 missing=0 bad=0`, and final dry updated=0 skipped=4. No rename, no signature change, no function-boundary change, and no executable-byte change occurred. Codex read-only consults used; no Cursor/Composer. Wave1108 current focused accounting is `885/1179 = 75.06%`; current risk candidates: 6166; current focused candidates: 1142; live regenerated current focused candidates: 1142; remaining active focused work: 294; current-risk denominator; focused threshold `15`; not Wave911 reconstruction; static closure remains `6411/6411 = 100.00%` with `0 / 0 / 0`; wave1108-current-risk-rank. Verified backup: `G:\GhidraBackups\BEA_20260606-211310_post_wave1197_fepbeconfig_frontend_residual_current_risk_review_verified`. Static target: rebuild-grade static contracts and rebuild-grade specification for no noticeable difference; runtime frontend/config loading behavior, runtime frontend audio/text behavior, exact layouts, source identity, patching, rebuild parity, and no-noticeable-difference parity remain separate proof.
+Wave1197 (`wave1197-fepbeconfig-frontend-residual-current-risk-review`) saved comment/tag normalization for `4 FEPBEConfig/frontend residual score15-16 current-risk rows`: `CFEPBEConfig__Init`, `CFEPMultiplayerStart__SetConfigDescriptionByIndex`, `CFEPBEConfig__PlayWeaponSound`, and `CFEPBEConfig__PlayWeaponSoundAlt`. fresh Ghidra export evidence verified `4 xref rows`, `860 instruction rows`, and `4 decompile rows`; dry/apply/final-dry reported `updated=0 skipped=0 renamed=0 would_rename=0 signature_updated=0 comment_only_updated=4 tags_added=52 missing=0 bad=0`, `updated=4 skipped=0 renamed=0 would_rename=0 signature_updated=0 comment_only_updated=4 tags_added=52 missing=0 bad=0`, and final dry updated=0 skipped=4. No rename, no signature change, no function-boundary change, and no executable-byte change occurred. Codex read-only consults used; no Cursor/Composer. Wave1108 current focused accounting is `885/1179 = 75.06%`; current risk candidates: 6166; current focused candidates: 1142; live regenerated current focused candidates: 1142; remaining active focused work: 294; current-risk denominator; focused threshold `15`; not Wave911 reconstruction; static closure remains `6411/6411 = 100.00%` with `0 / 0 / 0`; wave1108-current-risk-rank. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-211310_post_wave1197_fepbeconfig_frontend_residual_current_risk_review_verified`. Static target: rebuild-grade static contracts and rebuild-grade specification for no noticeable difference; runtime frontend/config loading behavior, runtime frontend audio/text behavior, exact layouts, source identity, patching, rebuild parity, and no-noticeable-difference parity remain separate proof.
 
 ## Functions
 
@@ -53,7 +53,7 @@ Wave999 (`fepbeconfig-helper-review-wave999`) re-reviewed the Wave911 risk-ranke
 
 Primary checked anchors: `0x0044eb30 CFEPMultiplayerStart__SetConfigDescriptionByIndex`, `0x0044f530 CFEPBEConfig__PlayWeaponSound`, `0x0044f830 CFEPBEConfig__PlayWeaponSoundAlt`, and `0x00451a40 FEPBEConfig__FindSelectedEntryByGlobalId`. Context rows: `0x0044eab0 CFEPMultiplayerStart__GetConfigIdByIndex`, `0x0044ecf0 CFEPMultiplayerStart__GetConfigCount`, `0x0044f030 CFEPBEConfig__GetWeaponProperty`, `0x0044f300 CFEPBEConfig__GetWeaponPropertyAlt`, `0x00450090 CFEPBEConfig__ButtonPressed`, `0x004505b0 CFEPBEConfig__Render`, and `0x00451930 CFEPBEConfig__FindEntryByName`.
 
-Fresh evidence verified `11` metadata rows, `11` tag rows, `31` xref rows, `3001` body-instruction rows, and `11` decompile rows. Existing Wave367/Wave403 probes still pass. Queue closure remains `6222/6222 = 100.00%`; Wave911 focused re-audit progress remains `467/1408 = 33.17%`; expanded static surface progress is `596/1478 = 40.32%`; Wave911 top-500 risk-ranked coverage is `343/500 = 68.60%`. Verified backup: `G:\GhidraBackups\BEA_20260531-094628_post_wave999_fepbeconfig_helper_review_verified`.
+Fresh evidence verified `11` metadata rows, `11` tag rows, `31` xref rows, `3001` body-instruction rows, and `11` decompile rows. Existing Wave367/Wave403 probes still pass. Queue closure remains `6222/6222 = 100.00%`; Wave911 focused re-audit progress remains `467/1408 = 33.17%`; expanded static surface progress is `596/1478 = 40.32%`; Wave911 top-500 risk-ranked coverage is `343/500 = 68.60%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-094628_post_wave999_fepbeconfig_helper_review_verified`.
 
 Boundary: this proves static helper coherence for the selected frontend config rows only. Exact Stuart source-body identity, concrete FEPBEConfig/config-entry/weapon-record/list layouts, runtime frontend menu behavior, runtime audio/text presentation behavior, BEA patching, and rebuild parity remain separate proof.
 
@@ -94,7 +94,7 @@ The old `0x0044fa93` note was a mid-prologue address. During Wave 367, an interm
 | `0x00628f24` | `beconf::init() 2\n` | Init trace stage 2. |
 | `0x00628f50` | `beconf::init() 1\n` | Init trace stage 1. |
 | `0x00628f64` | `beconf::init() 3\n` | Init trace stage 3. |
-| `0x00628fac` | `C:\dev\ONSLAUGHT2\FEPBEConfig.cpp` | Debug source path. |
+| `0x00628fac` | `[maintainer-local-source-export-root]\FEPBEConfig.cpp` | Debug source path. |
 | `0x00628fd0` | `beconf::init() 0\n` | Init trace stage 0. |
 
 ## Wave750 Unwind Cleanup Evidence (2026-05-22)
@@ -108,7 +108,7 @@ Wave750 saved four FEPBEConfig-adjacent compiler-generated SEH unwind cleanup ca
 | `0x005d25e0 Unwind@005d25e0` | DATA scope-table xref `0x0061b464`; calls `OID__FreeObject_Callback` for FEPBEConfig.cpp debug path `0x00628fac`, line `0x80`, allocation/type value `0x18f`. |
 | `0x005d2610 Unwind@005d2610` | DATA scope-table xref `0x0061b48c`; jumps to `CMenuItem__RestoreCompactVTable` with the menu item pointer at `*(EBP-0x10)`. |
 
-Read-back backup: `G:\GhidraBackups\BEA_20260522-193422_post_wave750_unwind_continuation_verified`. Exact parent source-body identity, runtime FEPBEConfig cleanup behavior, BEA patching, and rebuild parity remain deferred.
+Read-back backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-193422_post_wave750_unwind_continuation_verified`. Exact parent source-body identity, runtime FEPBEConfig cleanup behavior, BEA patching, and rebuild parity remain deferred.
 
 ## Claim Boundary
 

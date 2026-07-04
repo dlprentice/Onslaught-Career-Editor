@@ -31,7 +31,7 @@ Read-back evidence:
 - Queue after Wave861: 6105 total, 5802 commented, 303 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5802/6105 = 95.04%`, strict clean-signature proxy `5802/6105 = 95.04%`.
 - Next raw commentless row: `0x0052a830 CD3DApplication__FindDepthStencilFormat`.
 - Commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-141443_post_wave861_render_hud_platform_tail_verified`, 19 files, 172264327 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-141443_post_wave861_render_hud_platform_tail_verified`, 19 files, 172264327 bytes, `DiffCount=0`.
 
 What this proves:
 

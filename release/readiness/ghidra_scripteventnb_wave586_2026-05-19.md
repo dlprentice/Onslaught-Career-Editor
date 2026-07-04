@@ -32,7 +32,7 @@ What is proven:
 - Post-save read-back verified 13 metadata rows, 13 tag rows, 18 xref rows, 5577 instruction rows, 13 decompile rows, and 72 vtable-slot rows.
 - The queue refresh reports `6093` total functions, `2978` commented, `3115` commentless, `1387` exact-undefined signatures, and `1116` `param_N` signatures.
 - The next high-signal queue head is `0x00538ea0 CScriptObjectCode__scalar_deleting_dtor`.
-- The live Ghidra project backup verified at `G:\GhidraBackups\BEA_20260519-100558_post_wave586_scripteventnb_verified` with 19 files, 160729991 bytes, `DiffCount=0`, and manifest hash `7123094a4ecc3b49020cfd84ce6d4b55784547783fd0ba2d7e0e3a981e93bd3b`.
+- The live Ghidra project backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260519-100558_post_wave586_scripteventnb_verified` with 19 files, 160729991 bytes, `DiffCount=0`, and manifest hash `7123094a4ecc3b49020cfd84ce6d4b55784547783fd0ba2d7e0e3a981e93bd3b`.
 
 What is not proven:
 

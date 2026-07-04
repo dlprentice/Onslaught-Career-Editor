@@ -35,7 +35,7 @@ BACKUP_SUMMARY = BASE / "backup-summary.json"
 ADDRESS = "0x005019c0"
 NAME = "VFuncSlot_09_005019c0"
 SIGNATURE = "int __cdecl VFuncSlot_09_005019c0(void)"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-032940_post_wave841_cvertexshader_shared_vfunc09_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-032940_post_wave841_cvertexshader_shared_vfunc09_verified"
 NEXT_HEAD = "0x0050ab60 CVBufTexture__RenderAndRestoreStateFlag4"
 
 EXPECTED_TAGS = {

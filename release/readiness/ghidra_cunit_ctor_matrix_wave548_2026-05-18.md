@@ -28,7 +28,7 @@ Wave548 hardened two adjacent static Ghidra functions:
 - Focused probe: `py -3 tools\ghidra_cunit_ctor_matrix_wave548_probe.py --check` PASS.
 - npm wrapper: `cmd.exe /c npm run test:ghidra-cunit-ctor-matrix-wave548` PASS.
 - Queue refresh: PASS with `6089` total functions, `2656` commented, `3433` commentless, `1535` exact-undefined signatures, and `1286` `param_N` signatures.
-- Backup: `G:\GhidraBackups\BEA_20260518-120643_post_wave548_cunit_ctor_matrix_verified`, `19` files, `159320967` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-120643_post_wave548_cunit_ctor_matrix_verified`, `19` files, `159320967` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
 
 ## Not Proven
 

@@ -13,7 +13,7 @@ Read-back evidence:
 - Xrefs: `20 xref rows`
 - Instructions: `140 instruction rows`
 - Decompile: `13 decompile rows`
-- Verified backup: `G:\GhidraBackups\BEA_20260607-003050_post_wave1202_cannon_motion_controller_residual_current_risk_review_verified`
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-003050_post_wave1202_cannon_motion_controller_residual_current_risk_review_verified`
 
 Measured status:
 

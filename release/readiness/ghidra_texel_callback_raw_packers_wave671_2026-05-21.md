@@ -29,7 +29,7 @@ Probe anchors: `0x00584724 CDXTexture__PackTexels_CallbackPerTexel_RepeatA`, `0x
 - Final dry mode: `updated=0 skipped=8 renamed=0 would_rename=0 signature_updated=0 missing=0 bad=0`
 - All three passes reported `REPORT: Save succeeded`.
 - Post exports verified `8` metadata rows, `8` tag rows, `9` xref rows, `840` instruction rows, and `8` clean decompile rows.
-- Backup verified: `G:\GhidraBackups\BEA_20260521-035844_post_wave671_texel_callback_raw_packers_verified`, `19` files, `163875719` bytes, `DiffCount=0`.
+- Backup verified: `[maintainer-local-ghidra-backup-root]\BEA_20260521-035844_post_wave671_texel_callback_raw_packers_verified`, `19` files, `163875719` bytes, `DiffCount=0`.
 
 ## Observations
 

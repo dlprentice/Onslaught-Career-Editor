@@ -30,8 +30,8 @@ Coverage anchors:
 - Wave911 focused re-audit progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1405/1560 = 90.06%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-110925_post_wave1082_infantryai_vtable_boundary_verified`, `19` files, `174787463` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-110925_post_wave1082_infantryai_vtable_boundary_verified`, `19` files, `174787463` bytes, `DiffCount=0`.
 
 Boundary: this is static Ghidra/documentation/probe coverage evidence only. Exact source virtual names, concrete `CUnitAI`/`CInfantryAI`/reader/vector field layout semantics, runtime AI targeting/firing/support-selection/event-scheduling/animation behavior, BEA patching behavior, gameplay outcomes, and rebuild parity remain separate proof.
 
-Probe token anchor: Wave1082; infantryai-vtable-boundary-review-wave1082; 0x004ff330 SharedUnitAI__HandleEventAndMaybeFire_004ff330; 0x0048a030 CInfantryAI__UpdateSupportSelection_0048a030; 0x004f45c0 SharedVFunc__ForwardField64FloatOrZero_004f45c0; 0x005dbf14; 1405/1560 = 90.06%; 812/1408 = 57.67%; 500/500 = 100.00%; 6294/6294 = 100.00%; G:\GhidraBackups\BEA_20260602-110925_post_wave1082_infantryai_vtable_boundary_verified; boundary recovery.
+Probe token anchor: Wave1082; infantryai-vtable-boundary-review-wave1082; 0x004ff330 SharedUnitAI__HandleEventAndMaybeFire_004ff330; 0x0048a030 CInfantryAI__UpdateSupportSelection_0048a030; 0x004f45c0 SharedVFunc__ForwardField64FloatOrZero_004f45c0; 0x005dbf14; 1405/1560 = 90.06%; 812/1408 = 57.67%; 500/500 = 100.00%; 6294/6294 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-110925_post_wave1082_infantryai_vtable_boundary_verified; boundary recovery.

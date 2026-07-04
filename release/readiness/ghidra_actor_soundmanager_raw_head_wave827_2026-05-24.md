@@ -25,7 +25,7 @@ Read-back evidence:
 - Post exports: 6 metadata rows, 6 tag rows, 9 xref rows, 1806 target instruction rows, 6 target decompile rows, 11 context metadata rows, 3311 context instruction rows, and 11 context decompile rows.
 - Queue after Wave827: 6098 total, 5640 commented, 458 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5640/6098 = 92.49%`, strict clean-signature proxy `5640/6098 = 92.49%`.
 - Next raw commentless row: `0x004e1260 CMonitor__UpdateTrackedValueAndDirection`.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-203238_post_wave827_actor_soundmanager_raw_head_verified`, 19 files, 171576199 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-203238_post_wave827_actor_soundmanager_raw_head_verified`, 19 files, 171576199 bytes, `DiffCount=0`.
 
 What this proves:
 

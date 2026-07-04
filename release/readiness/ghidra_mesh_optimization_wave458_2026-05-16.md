@@ -23,7 +23,7 @@ Wave458 saved Ghidra signature/comment/tag corrections for `5` mesh optimization
 - Corrected `0x004bc050` to `CNamedMesh__VFunc02_RemoveFromOccupancyAndForward`, vtable `0x005dd5f0` slot 2.
 - Queue after refresh: `6057` functions, `2023` commented, `4034` commentless, `1730` undefined signatures, `1645` `param_N` signatures.
 - Current telemetry proxies: comment-backed `2023/6057 = 33.40%`; strict comment-plus-clean-signature `1959/6057 = 32.34%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-162849_post_wave458_mesh_optimization_verified` (`19` files, `Mismatches=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-162849_post_wave458_mesh_optimization_verified` (`19` files, `Mismatches=0`).
 
 ## Boundary
 

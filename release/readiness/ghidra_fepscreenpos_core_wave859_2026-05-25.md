@@ -24,7 +24,7 @@ Read-back evidence:
 - Post exports: 5 metadata rows, 5 tag rows, 5 xref rows, 225 instruction rows, 5 decompile rows, 13 context metadata rows, 13 context decompile rows, 18 vtable rows, and four screen-position/RTTI string dumps.
 - Queue after Wave859: `6105` total functions, `5784` commented, `321` commentless, `0` exact-undefined signatures, `0` `param_N` signatures, comment-backed proxy `5784/6105 = 94.74%`, strict proxy `5784/6105 = 94.74%`.
 - Next raw commentless row: `0x0051ff90 CFEPVirtualKeyboard__Init`; commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-131538_post_wave859_fepscreenpos_core_verified`, 19 files, 172198791 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-131538_post_wave859_fepscreenpos_core_verified`, 19 files, 172198791 bytes, `DiffCount=0`.
 
 What this proves:
 

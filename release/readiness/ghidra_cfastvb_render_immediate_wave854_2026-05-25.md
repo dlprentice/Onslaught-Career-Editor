@@ -20,10 +20,10 @@ Read-back evidence:
 - `ApplyCFastVBRenderImmediateWave854.java apply`: `updated=1 skipped=0 renamed=1 would_rename=1 signature_updated=1 comment_only_updated=1 missing=0 bad=0`
 - `ApplyCFastVBRenderImmediateWave854.java final dry`: `updated=0 skipped=1 renamed=0 would_rename=0 signature_updated=0 comment_only_updated=0 missing=0 bad=0`
 - Post exports: `1` metadata row, `1` tag row, `4` xref rows, `221` instruction rows, and `1` decompile row.
-- Additional read-only evidence: `7` context metadata rows, `7` context decompile rows, `3` caller metadata rows, `3` caller decompile rows, and FastVB.cpp debug-string dump `C:\dev\ONSLAUGHT2\FastVB.cpp` at `0x0063fb24`.
+- Additional read-only evidence: `7` context metadata rows, `7` context decompile rows, `3` caller metadata rows, `3` caller decompile rows, and FastVB.cpp debug-string dump `[maintainer-local-source-export-root]\FastVB.cpp` at `0x0063fb24`.
 - Queue after Wave854: `6098` total functions, `5755` commented, `343` commentless, `0` exact-undefined signatures, `0` `param_N`, comment-backed proxy `5755/6098 = 94.38%`, strict clean-signature proxy `5755/6098 = 94.38%`.
 - Next raw commentless row: `0x0051a970 CFEPCredits__TransitionNotification`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-104123_post_wave854_cfastvb_render_immediate_verified`, `19` files, `172166023` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-104123_post_wave854_cfastvb_render_immediate_verified`, `19` files, `172166023` bytes, `DiffCount=0`.
 
 What this proves:
 

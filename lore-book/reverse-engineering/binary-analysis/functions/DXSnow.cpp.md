@@ -1,14 +1,14 @@
 # DXSnow.cpp Functions
 
 > Source file evidence: `DXSnow.cpp` strings in `BEA.exe`
-> Debug path string: `0x00652534` (`C:\dev\ONSLAUGHT2\DXSnow.cpp`)
+> Debug path string: `0x00652534` (`[maintainer-local-source-export-root]\DXSnow.cpp`)
 > Last updated: 2026-05-25
 
 ## Wave874 CAtmosphericsProfile / DXSnow Static Setup
 
 Wave874 atmospherics profile (`atmospherics-profile-wave874`, `wave874-readback-verified`) created seven missing function boundaries and saved signatures/comments/tags for ten DXSnow/CAtmosphericsProfile snow-weather renderer rows. These rows are high-importance weather-renderer infrastructure with low local-evidence density, not low-importance filler. The pass made no executable-byte changes and did not launch BEA.
 
-Probe anchors for this wave: `Wave874 atmospherics profile`, `0x00554e80 DXSnow__StaticInitPrimaryTransformGlobals`, `0x00554f50 DXSnow__StaticInitDisableSnowConfig`, `0x00554f70 DXSnow__StaticDestroyDisableSnowConfig`, `0x00554f80 CAtmosphericsProfile__ctor`, `0x00555010 CAtmosphericsProfile__VFunc00_GetNameString`, `0x00555410 CAtmosphericsProfile__ReleaseResources`, `0x00555460 CAtmosphericsProfile__RenderOverlay`, `0x00555600 CAtmosphericsProfile__VFunc08_UpdateSnowAndRenderOverlay`, `0x00555af0 DXSnow__StaticZeroOverlayVectorGlobals`, `0x00555b10 DXSnow__StaticInitOverlayTransformGlobals`, `DISABLE_SNOW`, next raw commentless row `0x00555be0 CVBufTexture__DrawSpriteEx`, strict proxy `5872/6113 = 96.06%`, and verified backup `G:\GhidraBackups\BEA_20260525-201600_post_wave874_atmospherics_profile_verified`.
+Probe anchors for this wave: `Wave874 atmospherics profile`, `0x00554e80 DXSnow__StaticInitPrimaryTransformGlobals`, `0x00554f50 DXSnow__StaticInitDisableSnowConfig`, `0x00554f70 DXSnow__StaticDestroyDisableSnowConfig`, `0x00554f80 CAtmosphericsProfile__ctor`, `0x00555010 CAtmosphericsProfile__VFunc00_GetNameString`, `0x00555410 CAtmosphericsProfile__ReleaseResources`, `0x00555460 CAtmosphericsProfile__RenderOverlay`, `0x00555600 CAtmosphericsProfile__VFunc08_UpdateSnowAndRenderOverlay`, `0x00555af0 DXSnow__StaticZeroOverlayVectorGlobals`, `0x00555b10 DXSnow__StaticInitOverlayTransformGlobals`, `DISABLE_SNOW`, next raw commentless row `0x00555be0 CVBufTexture__DrawSpriteEx`, strict proxy `5872/6113 = 96.06%`, and verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260525-201600_post_wave874_atmospherics_profile_verified`.
 
 | Address | Current saved signature | Static evidence |
 | --- | --- | --- |

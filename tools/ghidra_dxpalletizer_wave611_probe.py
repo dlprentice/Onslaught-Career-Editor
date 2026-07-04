@@ -278,7 +278,7 @@ def check_exports(failures: list[str]) -> None:
 
 def check_backup_and_queue(failures: list[str]) -> None:
     backup = read_json(BACKUP_SUMMARY)
-    if backup.get("backupRoot") != "G:\\GhidraBackups\\BEA_20260519-231515_post_wave611_dxpalletizer_verified":
+    if backup.get("backupRoot") != "[maintainer-local-ghidra-backup-root]\\BEA_20260519-231515_post_wave611_dxpalletizer_verified":
         failures.append(f"backup path mismatch: {backup.get('backupRoot')}")
     expected_backup = {
         "sourceFileCount": 19,
@@ -330,7 +330,7 @@ def check_public_docs(failures: list[str]) -> None:
             "`15` xref rows",
             "`2349` instruction rows",
             "`435` callsite instruction rows",
-            "G:\\GhidraBackups\\BEA_20260519-231515_post_wave611_dxpalletizer_verified",
+            "[maintainer-local-ghidra-backup-root]\\BEA_20260519-231515_post_wave611_dxpalletizer_verified",
             "Next queue head: `0x0054f6e0 CDXEngine__ShutdownParticleSystemBundle`",
             "runtime texture output",
             "rebuild parity remain unproven",
@@ -368,7 +368,7 @@ def check_public_docs(failures: list[str]) -> None:
                 "2959",
                 "1292",
                 "CDXEngine__ShutdownParticleSystemBundle",
-                "G:\\GhidraBackups\\BEA_20260519-231515_post_wave611_dxpalletizer_verified",
+                "[maintainer-local-ghidra-backup-root]\\BEA_20260519-231515_post_wave611_dxpalletizer_verified",
             ),
             failures,
         )

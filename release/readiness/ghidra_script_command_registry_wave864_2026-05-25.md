@@ -23,7 +23,7 @@ Read-back evidence:
 - Queue after Wave864: 6105 total, 5810 commented, 295 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5810/6105 = 95.17%`, strict clean-signature proxy `5810/6105 = 95.17%`.
 - Next raw commentless row: `0x0053df40 CDXEngine__RenderTexturedBeamQuad`.
 - Commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-153044_post_wave864_script_command_registry_verified`, 19 files, 172264327 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-153044_post_wave864_script_command_registry_verified`, 19 files, 172264327 bytes, `DiffCount=0`.
 
 What this proves:
 

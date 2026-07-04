@@ -36,7 +36,7 @@ This is public-safe static evidence only. It does not launch or patch `BEA.exe`,
 | Post-apply metadata/tag/xref/vtable/instruction/decompile read-back | PASS | Verified `9` metadata rows, `9` tag rows, `11` xref rows, `32` vtable-slot rows, `945` instruction rows, and `9` target decompile exports. |
 | `cmd.exe /c npm run test:ghidra-cmcmine-sentinel-wave434` | PASS | Focused probe returned `status: PASS` for all `9` saved targets. |
 | `cmd.exe /c npm run test:ghidra-static-reaudit-queue` | PASS | Queue reports `6051` total functions, `1773` commented functions, `4278` commentless functions, `1811` undefined signatures, and `1768` `param_N` signatures. |
-| Actual Ghidra project backup verification after Wave434 mutation | PASS | Copied the live project to `G:\GhidraBackups\BEA_20260515-223534_post_wave434_cmcmine_sentinel_verified`; compared `19` files and `155814791` bytes with `MissingCount=0`, `HashDiffCount=0`, and `ExtraCount=0`. |
+| Actual Ghidra project backup verification after Wave434 mutation | PASS | Copied the live project to `[maintainer-local-ghidra-backup-root]\BEA_20260515-223534_post_wave434_cmcmine_sentinel_verified`; compared `19` files and `155814791` bytes with `MissingCount=0`, `HashDiffCount=0`, and `ExtraCount=0`. |
 
 An initial overlapped read-only instruction export hit a Ghidra project `LockException`; it was rerun serially before final read-back, and no mutation was running during that failed export.
 

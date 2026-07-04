@@ -88,10 +88,10 @@ ANCHOR_TOKENS = (
     "pause/message lifecycle design",
     "frontend-video wrapper design",
     "Goodies/level/multiplayer page behavior design",
-    r"G:\GhidraBackups\BEA_20260526-111432_post_wave907_frontend_input_game_loop_static_review_verified",
-    r"G:\GhidraBackups\BEA_20260527-175851_post_wave922_frontend_text_layout_review_verified",
-    r"G:\GhidraBackups\BEA_20260606-101513_post_wave1179_input_audio_support_current_risk_review_verified",
-    r"G:\GhidraBackups\BEA_20260606-211310_post_wave1197_fepbeconfig_frontend_residual_current_risk_review_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260526-111432_post_wave907_frontend_input_game_loop_static_review_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260527-175851_post_wave922_frontend_text_layout_review_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260606-101513_post_wave1179_input_audio_support_current_risk_review_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260606-211310_post_wave1197_fepbeconfig_frontend_residual_current_risk_review_verified",
 )
 
 READINESS_TOKENS = (

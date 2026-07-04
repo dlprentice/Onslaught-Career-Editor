@@ -22,7 +22,7 @@ Wave461 saved Ghidra name/signature/comment/tag corrections for `14` particle de
 - Corrected `CPDMesh__dtor_base` / `CPDMesh__scalar_deleting_dtor`, and hardened `CParticleDescriptor__Update` / `CParticleDescriptor__Load` to explicit `int __thiscall` signatures.
 - Queue after refresh: `6057` functions, `2059` commented, `3998` commentless, `1725` undefined signatures, `1617` `param_N` signatures.
 - Current telemetry proxies: comment-backed `2059/6057 = 33.99%`; strict comment-plus-clean-signature `1992/6057 = 32.89%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-175743_post_wave461_particle_descriptor_verified` (`19` files, `156928903` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-175743_post_wave461_particle_descriptor_verified` (`19` files, `156928903` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

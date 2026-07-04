@@ -122,7 +122,7 @@ DOC_TOKENS = (
     "0x005a3791 CFastVB__DispatchOp_BuildQuaternionFromMatrix3x3_005a3791",
     "0x005a47f2 CFastVB__DispatchOp_ExtractAxisAndOptionalAngle",
     "0x0042f220 CSPtrSet__Clear",
-    r"G:\GhidraBackups\BEA_20260522-032725_post_wave719_cfastvb_matrix_quaternion_core_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260522-032725_post_wave719_cfastvb_matrix_quaternion_core_verified",
 )
 
 OVERCLAIM_TOKENS = (
@@ -271,7 +271,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
     require(raw_head["name"] == "CSPtrSet__Clear", "raw commentless head name mismatch", failures)
 
     backup = read_json(BACKUP_SUMMARY)
-    require(backup["destination"] == r"G:\GhidraBackups\BEA_20260522-032725_post_wave719_cfastvb_matrix_quaternion_core_verified", "backup destination mismatch", failures)
+    require(backup["destination"] == r"[maintainer-local-ghidra-backup-root]\BEA_20260522-032725_post_wave719_cfastvb_matrix_quaternion_core_verified", "backup destination mismatch", failures)
     require(backup["fileCount"] == 19, "backup file count mismatch", failures)
     require(int(backup["totalBytes"]) == 166366087, "backup byte count mismatch", failures)
     require(backup["diffCount"] == 0, "backup diff count mismatch", failures)
@@ -332,7 +332,7 @@ def main(argv: list[str]) -> int:
     print("Wave719 CFastVB matrix/quaternion core probe: PASS")
     print(f"Targets: {len(TARGETS)}")
     print("Queue: 6098 total, 4226 commented, 1872 commentless, 1216 undefined, 131 param_N")
-    print(r"Backup: G:\GhidraBackups\BEA_20260522-032725_post_wave719_cfastvb_matrix_quaternion_core_verified")
+    print(r"Backup: [maintainer-local-ghidra-backup-root]\BEA_20260522-032725_post_wave719_cfastvb_matrix_quaternion_core_verified")
     return 0
 
 

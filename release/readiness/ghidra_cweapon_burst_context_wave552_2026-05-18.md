@@ -29,7 +29,7 @@ Wave552 hardened two static Ghidra functions from the old Wave133 CEngine-labele
 - Focused probe: `py -3 tools\ghidra_cweapon_burst_context_wave552_probe.py --check` PASS.
 - npm wrapper: `cmd.exe /c npm run test:ghidra-cweapon-burst-context-wave552` PASS.
 - Queue refresh: PASS with `6089` total functions, `2664` commented, `3425` commentless, `1535` exact-undefined signatures, and `1278` `param_N` signatures.
-- Backup: `G:\GhidraBackups\BEA_20260518-134428_post_wave552_cweapon_burst_context_verified`, `19` files, `159353735` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
+- Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260518-134428_post_wave552_cweapon_burst_context_verified`, `19` files, `159353735` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
 
 ## Not Proven
 

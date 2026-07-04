@@ -32,7 +32,7 @@ Evidence:
 - Focused probe passed: `py -3 tools\ghidra_csoundmanager_events_wave500_probe.py --check`
 - npm probe passed: `cmd.exe /c npm run test:ghidra-csoundmanager-events-wave500`
 - Static queue check passed: `cmd.exe /c npm run test:ghidra-static-reaudit-queue`
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260517-125819_post_wave500_csoundmanager_events_verified`
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260517-125819_post_wave500_csoundmanager_events_verified`
 
 Queue snapshot after Wave500:
 

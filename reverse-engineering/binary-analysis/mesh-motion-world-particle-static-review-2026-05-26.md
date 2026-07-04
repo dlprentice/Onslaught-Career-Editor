@@ -55,7 +55,7 @@ Mesh/resource bridge counts remain public-safe count evidence:
 
 - The selected mesh/motion/world/particle owner families have no remaining function-quality queue debt.
 - The current static documentation connects thing/render initialization, mesh load/lifetime, mesh-part material/geometry/pose-cache paths, skeletal/static VB build paths, world occupancy bitplanes, physics-manager factory/list resolution, collision scans, particle resource/update/render-node paths, and mesh asset bridge counts.
-- The verified read-only Ghidra backup for this review is `G:\GhidraBackups\BEA_20260526-103409_post_wave905_mesh_motion_world_particle_static_review_verified`.
+- The verified read-only Ghidra backup for this review is `[maintainer-local-ghidra-backup-root]\BEA_20260526-103409_post_wave905_mesh_motion_world_particle_static_review_verified`.
 
 ## What Remains Separate
 

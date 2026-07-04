@@ -50,7 +50,7 @@ No Ghidra mutation was performed.
 Read-only post-wave backup:
 
 ```text
-G:\GhidraBackups\BEA_20260527-113943_post_wave916_hlcollisiondetector_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260527-113943_post_wave916_hlcollisiondetector_review_verified
 files=19
 bytes=173247367
 ```

@@ -24,7 +24,7 @@ Probe and evidence:
 
 - `npm run test:static-reaudit-final-closeout-wave1220` passed.
 - `npm run test:ghidra-wave900-plus-through-wave1034-recheck` passed after classifying stale current-state/doc drift separately from evidence mismatches.
-- Latest Ghidra review backup remains Wave1219: `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified` (`19` files, `176458631` bytes, `DiffCount=0`, `HashDiffCount=0`).
+- Latest Ghidra review backup remains Wave1219: `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified` (`19` files, `176458631` bytes, `DiffCount=0`, `HashDiffCount=0`).
 - Canonical maps/contracts and lore mirrors were refreshed for `mapped-systems.md`, `wave1108-current-risk-rank.md`, the subsystem static contracts, and affected Wave1205-Wave1218 status notes.
 
 What this proves:

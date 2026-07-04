@@ -28,7 +28,7 @@ The pass applied 2 renames: the CTentacleAI scalar deleting destructor and adjac
 - Focused probe: `tools/ghidra_tentacle_ai_wave515_probe.py --check`.
 - Queue refresh after Wave515: `6078` functions, `2411` commented, `3667` commentless, `1611` exact-undefined signatures, and `1424` `param_N` signatures.
 - Current whole-project telemetry proxy: comment-backed `2411/6078 = 39.67%`; strict comment-plus-clean-signature proxy `2357/6078 = 38.78%`.
-- Backup verified at `G:\GhidraBackups\BEA_20260517-202309_post_wave515_tentacle_ai_verified` with `19` files, `158436231` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260517-202309_post_wave515_tentacle_ai_verified` with `19` files, `158436231` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

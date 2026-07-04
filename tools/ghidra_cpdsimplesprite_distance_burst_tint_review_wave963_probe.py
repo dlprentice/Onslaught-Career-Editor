@@ -26,7 +26,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUALITY_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260528-135208_post_wave963_cpdsimplesprite_distance_burst_tint_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-135208_post_wave963_cpdsimplesprite_distance_burst_tint_review_verified"
 
 EXPECTED_METADATA = {
     "0x004c0c70": ("CPDSimpleSprite__EvalExpressionNode", "double __cdecl CPDSimpleSprite__EvalExpressionNode(float base_value, void * post_scale_node, void * pre_scale_node, void * pre_offset_node, void * post_offset_node, int operator_id, int output_mode, float time_scale)"),

@@ -31,7 +31,7 @@ Read-back evidence:
 - Wave911 focused re-audit progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1365/1560 = 87.50%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-065500_post_wave1076_infantryunit_lifecycle_boundary_verified`, `19` files, `174754695` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-065500_post_wave1076_infantryunit_lifecycle_boundary_verified`, `19` files, `174754695` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -51,4 +51,4 @@ What remains separate proof:
 
 Next candidate note: continue with read-only review first from the remaining expanded static re-audit surface.
 
-Probe token anchor: Wave1076; infantryunit-lifecycle-boundary-wave1076; 0x00488f10 CInfantryUnit__VFunc38_HandleHitOrDispatchHit; 0x00488f80 CInfantryUnit__VFunc34_CreateCollisionSphereWithAttachmentRadius; 0x00489090 CInfantryUnit__VFunc59_SelectAnimationMode; 0x004892c0 CInfantryUnit__VFunc65_UpdateMotionAnimationState; 0x00489650 CInfantryUnit__VFunc39_HandleCollisionDamageReaction; 0x00489b40 CInfantryUnit__VFunc49_HandleDeathPickupAndEffects; 0x005e2730; 0x005e27b8; 0x005e27c8; 0x005e27cc; 0x005e27f4; 0x005e281c; 0x005e2834; 812/1408 = 57.67%; 1365/1560 = 87.50%; 500/500 = 100.00%; 6254/6254 = 100.00%; G:\GhidraBackups\BEA_20260602-065500_post_wave1076_infantryunit_lifecycle_boundary_verified; boundary recovery.
+Probe token anchor: Wave1076; infantryunit-lifecycle-boundary-wave1076; 0x00488f10 CInfantryUnit__VFunc38_HandleHitOrDispatchHit; 0x00488f80 CInfantryUnit__VFunc34_CreateCollisionSphereWithAttachmentRadius; 0x00489090 CInfantryUnit__VFunc59_SelectAnimationMode; 0x004892c0 CInfantryUnit__VFunc65_UpdateMotionAnimationState; 0x00489650 CInfantryUnit__VFunc39_HandleCollisionDamageReaction; 0x00489b40 CInfantryUnit__VFunc49_HandleDeathPickupAndEffects; 0x005e2730; 0x005e27b8; 0x005e27c8; 0x005e27cc; 0x005e27f4; 0x005e281c; 0x005e2834; 812/1408 = 57.67%; 1365/1560 = 87.50%; 500/500 = 100.00%; 6254/6254 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-065500_post_wave1076_infantryunit_lifecycle_boundary_verified; boundary recovery.

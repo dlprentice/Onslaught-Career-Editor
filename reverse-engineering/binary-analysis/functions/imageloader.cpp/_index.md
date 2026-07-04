@@ -1,7 +1,7 @@
 # imageloader.cpp Functions
 
 > Source File: imageloader.cpp | Binary: BEA.exe
-> Debug Path: 0x0062d3cc (`C:\dev\ONSLAUGHT2\imageloader.cpp`)
+> Debug Path: 0x0062d3cc (`[maintainer-local-source-export-root]\imageloader.cpp`)
 > RTTI: 0x0062d3b8 (`.?AVCImageLoader@@`)
 
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6113/6113** (Wave900: every function commented; clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.

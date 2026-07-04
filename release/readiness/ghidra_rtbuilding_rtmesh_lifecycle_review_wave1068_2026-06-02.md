@@ -37,7 +37,7 @@ Read-back evidence:
 - Wave911 focused progress remains `812/1408 = 57.67%`.
 - Expanded static surface progress advances to `1258/1560 = 80.64%`.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260602-010648_post_wave1068_rtbuilding_rtmesh_lifecycle_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260602-010648_post_wave1068_rtbuilding_rtmesh_lifecycle_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -57,4 +57,4 @@ What remains unproven:
 
 Next candidate note: continue with the next expanded static re-audit cluster; prefer read-only review first and mutate only when fresh evidence proves a correction or normalization need.
 
-Probe token anchor: Wave1068; rtbuilding-rtmesh-lifecycle-review-wave1068; 0x004db850 CRTBuilding__Destructor; 0x004db8d0 CRTBuilding__ScalarDeletingDestructor; 0x004dba40 CRTBuilding__VFuncSlot10_PickRandomLinkedEntry; 0x004dc370 CRTMesh__Init; 0x004dc950 CRTMesh__Destructor; 0x004dd0c0 CRTMesh__CleanupAllEffects; 0x004dd6b0 CRTMesh__SetQualityLevel; 0x004dd770 CRTMesh__GetQualityLevel; 812/1408 = 57.67%; 1258/1560 = 80.64%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260602-010648_post_wave1068_rtbuilding_rtmesh_lifecycle_review_verified; read-only review.
+Probe token anchor: Wave1068; rtbuilding-rtmesh-lifecycle-review-wave1068; 0x004db850 CRTBuilding__Destructor; 0x004db8d0 CRTBuilding__ScalarDeletingDestructor; 0x004dba40 CRTBuilding__VFuncSlot10_PickRandomLinkedEntry; 0x004dc370 CRTMesh__Init; 0x004dc950 CRTMesh__Destructor; 0x004dd0c0 CRTMesh__CleanupAllEffects; 0x004dd6b0 CRTMesh__SetQualityLevel; 0x004dd770 CRTMesh__GetQualityLevel; 812/1408 = 57.67%; 1258/1560 = 80.64%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260602-010648_post_wave1068_rtbuilding_rtmesh_lifecycle_review_verified; read-only review.

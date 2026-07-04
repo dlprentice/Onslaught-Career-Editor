@@ -23,7 +23,7 @@ Wave456 saved Ghidra name/signature/comment/tag corrections for `8` `CMine`, `CM
 - Corrected the base motion-controller constructor evidence: `CMotionController__ctor_base` writes vtable `0x005dc778` and clears `+0x04/+0x08` with zeroed `ECX`.
 - Queue after refresh: `6057` functions, `2005` commented, `4052` commentless, `1730` undefined signatures, `1662` `param_N` signatures.
 - Current telemetry proxies: comment-backed `2005/6057 = 33.10%`; strict comment-plus-clean-signature `1942/6057 = 32.06%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-152041_post_wave456_mine_missile_verified` (`19` files, `156765063` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-152041_post_wave456_mine_missile_verified` (`19` files, `156765063` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

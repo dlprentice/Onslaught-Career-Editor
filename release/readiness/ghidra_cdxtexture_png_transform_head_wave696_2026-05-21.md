@@ -24,7 +24,7 @@ Evidence:
 - Candidate exports covered `17` adjacent PNG transform rows through `0x00594d5c CDXTexture__ApplyPngRowTransforms`.
 - Queue refresh PASS: `6098` total, `3999` commented, `2099` commentless, `1216` exact-undefined signatures, and `327` `param_N` signatures.
 - Strict comment-plus-clean-signature proxy from the refreshed TSV is `3943/6098 = 64.66%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260521-151249_post_wave696_cdxtexture_png_transform_head_verified`, `19` files, `165088135` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-151249_post_wave696_cdxtexture_png_transform_head_verified`, `19` files, `165088135` bytes, `DiffCount=0`.
 
 Scope boundary:
 

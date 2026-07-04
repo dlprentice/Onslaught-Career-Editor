@@ -27,7 +27,7 @@ Wave493 saved static Ghidra name/signature/comment/tag hardening for five CRound
 - Focused probe: `py -3 tools\ghidra_round_wave493_probe.py --check` PASS.
 - NPM probe: `cmd.exe /c npm run test:ghidra-round-wave493` PASS.
 - Queue refresh: `6068` total functions, `2223` commented, `3845` commentless, `1673` undefined signatures, `1531` `param_N`; strict comment-plus-clean-signature proxy `2167/6068 = 35.71%`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260517-090622_post_wave493_round_verified` with `19` files, `157584263` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260517-090622_post_wave493_round_verified` with `19` files, `157584263` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Public Boundary
 

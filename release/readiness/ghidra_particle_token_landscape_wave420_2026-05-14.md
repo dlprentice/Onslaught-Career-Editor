@@ -32,7 +32,7 @@ Stuart's source snapshot did not include direct source files for these checked h
 - Python compile check passed for the Wave420 probe and tests.
 - Full static queue refreshed to `6043` functions, `1649` commented functions, `4394` commentless functions, `1875` undefined signatures, and `1817` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1649/6043 = 27.29%`; strict comment-plus-clean-signature `1586/6043 = 26.25%`.
-- Actual live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260514_150540_post_wave420_particle_token_landscape_verified` with `19` files, `155126663` bytes, `HashDiffCount=0`, and `MissingCount=0`.
+- Actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260514_150540_post_wave420_particle_token_landscape_verified` with `19` files, `155126663` bytes, `HashDiffCount=0`, and `MissingCount=0`.
 
 ## Not Proven
 

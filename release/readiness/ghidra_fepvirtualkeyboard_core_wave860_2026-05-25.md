@@ -28,7 +28,7 @@ Read-back evidence:
 - Queue after Wave860: 6105 total, 5792 commented, 313 commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5792/6105 = 94.87%`, strict clean-signature proxy `5792/6105 = 94.87%`.
 - Next raw commentless row: `0x00523a70 CDXEngine__RenderMouseCursorSprite`.
 - Commentless high-signal, signature, and name-confidence queues remain empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-134150_post_wave860_fepvirtualkeyboard_core_verified`, 19 files, 172231559 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-134150_post_wave860_fepvirtualkeyboard_core_verified`, 19 files, 172231559 bytes, `DiffCount=0`.
 
 What this proves:
 

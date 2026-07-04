@@ -36,8 +36,8 @@ PACKAGE_JSON = ROOT / "package.json"
 BUILDING_DOC = ROOT / "reverse-engineering" / "binary-analysis" / "functions" / "Building.cpp" / "_index.md"
 BUILDING_DOC_MIRROR = ROOT / "lore-book" / "reverse-engineering" / "binary-analysis" / "functions" / "Building.cpp" / "_index.md"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260605-050726_post_wave1124_repairpad_current_risk_review_verified"
-PRIOR_BACKUP = r"G:\GhidraBackups\BEA_20260605-052636_post_wave1123_airunit_plane_support_vfunc_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-050726_post_wave1124_repairpad_current_risk_review_verified"
+PRIOR_BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260605-052636_post_wave1123_airunit_plane_support_vfunc_review_verified"
 
 TARGETS = {
     "0x0040c5e0": (

@@ -31,7 +31,7 @@ Wave381 serialized a focused headless dry/apply/read-back pass over `9` saved Gh
 - Read-back verified `9` metadata rows, `9` decompile exports, `22` xref rows, `405` instruction rows, and `9` tag rows.
 - The refreshed live queue reports `6026` functions, `1393` commented functions, `4633` commentless functions, `1939` undefined signatures, and `1934` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1393/6026 = 23.12%`, strict clean-signature `1328/6026 = 22.04%`.
-- The live Ghidra project backup was verified at `G:\GhidraBackups\BEA_20260513_160255_post_wave381_game_helper_verified` with `19` files, `153652103` bytes, and `HashDiffCount=0`.
+- The live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260513_160255_post_wave381_game_helper_verified` with `19` files, `153652103` bytes, and `HashDiffCount=0`.
 
 ## Not Proven
 

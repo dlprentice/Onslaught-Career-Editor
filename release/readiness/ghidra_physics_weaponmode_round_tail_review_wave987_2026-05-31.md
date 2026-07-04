@@ -27,7 +27,7 @@ Read-back evidence:
 - Queue after Wave987 remains `6222/6222 = 100.00%`, with `0` commentless functions, `0` exact-undefined signatures, and `0` `param_N` signatures.
 - Wave911 focused re-audit progress: `432/1408 = 30.68%`.
 - Expanded static surface progress: `492/1478 = 33.29%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260531-023543_post_wave987_physics_weaponmode_round_tail_review_verified`, `19` files, `173837191` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-023543_post_wave987_physics_weaponmode_round_tail_review_verified`, `19` files, `173837191` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 

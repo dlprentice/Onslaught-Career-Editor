@@ -25,7 +25,7 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 
-BACKUP = r"G:\GhidraBackups\BEA_20260606-050232_post_wave1167_component_scalar_physics_type_current_risk_review_verified"
+BACKUP = r"[maintainer-local-ghidra-backup-root]\BEA_20260606-050232_post_wave1167_component_scalar_physics_type_current_risk_review_verified"
 
 TARGETS = {
     "0x0043ca70": "CComponentScalarD8__ApplyToComponentByName",

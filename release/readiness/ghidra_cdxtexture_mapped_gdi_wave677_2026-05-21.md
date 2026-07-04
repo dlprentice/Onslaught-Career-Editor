@@ -17,7 +17,7 @@ The pass used the `cdxtexture-mapped-gdi-wave677` and `wave677-readback-verified
 - Post exports verified `7` metadata rows, `7` tag rows, `15` xref rows, `623` instruction rows, and `7` clean decompile rows.
 - Queue after Wave677: `6098` total, `3835` commented, `2263` commentless, `1217` exact-undefined signatures, `482` `param_N` signatures, strict clean-signature proxy `3785/6098 = 62.07%`.
 - Next queue head: `0x00588cc6 CDXTexture__ProjectPointToPlaneAndScale`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260521-064643_post_wave677_cdxtexture_mapped_gdi_verified`, `19` files, `164334471` bytes, `DiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-064643_post_wave677_cdxtexture_mapped_gdi_verified`, `19` files, `164334471` bytes, `DiffCount=0`.
 
 ## Boundaries
 

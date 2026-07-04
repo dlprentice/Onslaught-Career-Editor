@@ -57,7 +57,7 @@ OUT = BASE / "wave900-plus-through-wave983-recheck-summary.json"
 DIRECT_RESULTS = BASE / "wave982-wave983-direct-probe-results.tsv"
 
 WAVE_RE = re.compile(r"(?:wave|post_wave)(9\d\d|1\d{3})", re.IGNORECASE)
-BACKUP_RE = re.compile(r"G:\\GhidraBackups\\[^\s`|)]+")
+BACKUP_RE = re.compile(r"[maintainer-local-ghidra-backup-root]\\[^\s`|)]+")
 TOOL_PATH_RE = re.compile(r"tools[\\/][^\"'\s]+\.py", re.IGNORECASE)
 BASE_RE = re.compile(
     r"BASE\s*=\s*ROOT\s*/\s*['\"]subagents['\"]\s*/\s*['\"]ghidra-static-reaudit['\"]\s*/\s*['\"]([^'\"]+)['\"]"

@@ -36,7 +36,7 @@ Read-back evidence:
 - Wave911 focused progress remains `812/1408 = 57.67%` because the Wave1060 rows were outside the original Wave911 focused seed.
 - Expanded static surface progress advances to `1148/1509 = 76.08%`; `0x00427210 CDXCompass__Render` was already present in post-900 context evidence, so it is not double-counted.
 - Wave911 top-500 coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-205027_post_wave1060_dxcompass_lifecycle_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-205027_post_wave1060_dxcompass_lifecycle_review_verified`, `19` files, `174721927` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -55,4 +55,4 @@ What remains unproven:
 
 Next candidate note: continue with the next focused static re-audit cluster; prefer read-only review first and mutate only when fresh evidence proves a correction or normalization need.
 
-Probe token anchor: Wave1060; dxcompass-lifecycle-review-wave1060; 0x00406040 CDXCompass__GetTrackedPositionX; 0x0040c630 CDXCompass__GetTrackedPositionY; 0x004270e0 CDXCompass__InitMarkerArrays; 0x00427110 CDXCompass__LoadTextures; 0x00427190 CDXCompass__DestroyTextures; 0x00427200 CDXCompass__Reset; 0x00427210 CDXCompass__Render; 0x0053be40 CDXCompass__Init; 0x0053c1d0 CDXCompass__BuildRingGeometry; 812/1408 = 57.67%; 1148/1509 = 76.08%; 500/500 = 100.00%; 6246/6246 = 100.00%; G:\GhidraBackups\BEA_20260601-205027_post_wave1060_dxcompass_lifecycle_review_verified; tag normalization.
+Probe token anchor: Wave1060; dxcompass-lifecycle-review-wave1060; 0x00406040 CDXCompass__GetTrackedPositionX; 0x0040c630 CDXCompass__GetTrackedPositionY; 0x004270e0 CDXCompass__InitMarkerArrays; 0x00427110 CDXCompass__LoadTextures; 0x00427190 CDXCompass__DestroyTextures; 0x00427200 CDXCompass__Reset; 0x00427210 CDXCompass__Render; 0x0053be40 CDXCompass__Init; 0x0053c1d0 CDXCompass__BuildRingGeometry; 812/1408 = 57.67%; 1148/1509 = 76.08%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-205027_post_wave1060_dxcompass_lifecycle_review_verified; tag normalization.

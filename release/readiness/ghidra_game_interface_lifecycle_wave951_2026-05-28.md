@@ -31,7 +31,7 @@ Read-back evidence:
 - Vtable export: 2 anchors and 64 slot rows. The useful rows are the `0x005dbc2c` GameInterface prefix and the `0x005e509c` CDXGame/CGame prefix; later rows in those 32-slot windows intentionally overrun into adjacent constants/tables and are not treated as vtable proof.
 - Wave911 focused re-audit progress after Wave951 is `271/1408 = 19.25%`.
 - Static export-contract function-quality closure remains `6150/6150 = 100.00%`.
-- Verified read-only backup: `G:\GhidraBackups\BEA_20260528-083735_post_wave951_game_interface_lifecycle_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
+- Verified read-only backup: `[maintainer-local-ghidra-backup-root]\BEA_20260528-083735_post_wave951_game_interface_lifecycle_review_verified`, 19 files, 173542279 bytes, `DiffCount=0`.
 
 What remains unproven:
 

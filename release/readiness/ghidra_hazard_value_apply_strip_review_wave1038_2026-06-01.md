@@ -23,7 +23,7 @@ Evidence counts:
 - Wave911 focused re-audit progress after Wave1038: `696/1408 = 49.43%`.
 - Expanded static surface progress after Wave1038: `925/1493 = 61.96%`.
 - Wave911 top-500 risk-ranked coverage remains `500/500 = 100.00%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260601-072720_post_wave1038_hazard_value_apply_strip_review_verified`, `19` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-072720_post_wave1038_hazard_value_apply_strip_review_verified`, `19` files, `173968263` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
 What this proves:
 
@@ -39,4 +39,4 @@ What remains unproven:
 - Scalar/string field semantics, exact source-body identity, and local variable names/types.
 - BEA patch behavior, gameplay outcomes, and rebuild parity.
 
-Probe token anchor: Wave1038; hazard-value-apply-strip-review-wave1038; 0x0043c1a0 CHazardScalar14__ApplyToHazardByName; 0x0043c280 CHazardScalar18__ApplyToHazardByName; 0x0043c320 CHazardNoise__ApplyToHazardByName; 0x0043c410 CHazardEffect__ApplyToHazardByName; DAT_00855408; 696/1408 = 49.43%; 925/1493 = 61.96%; 500/500 = 100.00%; 6238/6238 = 100.00%; G:\GhidraBackups\BEA_20260601-072720_post_wave1038_hazard_value_apply_strip_review_verified; no mutation.
+Probe token anchor: Wave1038; hazard-value-apply-strip-review-wave1038; 0x0043c1a0 CHazardScalar14__ApplyToHazardByName; 0x0043c280 CHazardScalar18__ApplyToHazardByName; 0x0043c320 CHazardNoise__ApplyToHazardByName; 0x0043c410 CHazardEffect__ApplyToHazardByName; DAT_00855408; 696/1408 = 49.43%; 925/1493 = 61.96%; 500/500 = 100.00%; 6238/6238 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-072720_post_wave1038_hazard_value_apply_strip_review_verified; no mutation.

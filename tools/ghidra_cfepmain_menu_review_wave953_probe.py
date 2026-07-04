@@ -23,7 +23,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260528-093826_post_wave953_cfepmain_menu_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260528-093826_post_wave953_cfepmain_menu_review_verified"
 
 PRIMARY_TARGETS = {
     "0x004621b0": ("CFEPMain__Init", "int __fastcall CFEPMain__Init(void * this)"),
@@ -102,7 +102,7 @@ CORE_TOKENS = (
     "0x005dbae4",
     "0x005dbaf0",
     "0x005dbb00",
-    "C:\\dev\\ONSLAUGHT2\\FEPMain.cpp",
+    "[maintainer-local-source-export-root]\\FEPMain.cpp",
     "280/1408 = 19.89%",
     "6151/6151 = 100.00%",
     BACKUP_PATH,
@@ -172,7 +172,7 @@ def check_artifacts(failures: list[str]) -> None:
         require(actual == expected, f"{relative} row count mismatch: {actual} != {expected}", failures)
 
     string_rows = read_tsv(BASE / "string-00629414.tsv")
-    require(string_rows and string_rows[0].get("cstring") == r"C:\dev\ONSLAUGHT2\FEPMain.cpp", "FEPMain debug string mismatch", failures)
+    require(string_rows and string_rows[0].get("cstring") == r"[maintainer-local-source-export-root]\FEPMain.cpp", "FEPMain debug string mismatch", failures)
 
     metadata = {normalize_address(row["address"]): row for row in read_tsv(BASE / "pre-metadata.tsv")}
     tags = {normalize_address(row["address"]): row for row in read_tsv(BASE / "pre-tags.tsv")}

@@ -249,7 +249,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
     require_tokens(
         "backup summary",
         json.dumps(backup),
-        ("G:\\GhidraBackups\\BEA_20260520-133643_post_wave641_crt_mantissa_helpers_verified",),
+        ("[maintainer-local-ghidra-backup-root]\\BEA_20260520-133643_post_wave641_crt_mantissa_helpers_verified",),
         failures,
     )
     if backup.get("fileCount") != 19:
@@ -274,7 +274,7 @@ def check_docs(failures: list[str]) -> None:
         "2677",
         "3365/6093 = 55.23%",
         "0x005698e3 CRT__ConvertLongDoubleByFormatSpec",
-        "G:\\GhidraBackups\\BEA_20260520-133643_post_wave641_crt_mantissa_helpers_verified",
+        "[maintainer-local-ghidra-backup-root]\\BEA_20260520-133643_post_wave641_crt_mantissa_helpers_verified",
     )
     for path in (PUBLIC_NOTE, FUNCTION_INDEX, CRT_DOC, GHIDRA_REFERENCE, CAMPAIGN, BACKLOG):
         text = read_text(path)

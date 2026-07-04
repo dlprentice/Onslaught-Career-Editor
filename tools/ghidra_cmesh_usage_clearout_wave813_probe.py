@@ -33,7 +33,7 @@ TARGETS = {
     "0x004a53f0": "CMesh__StatusLoadingMeshResources",
     "0x004a5430": "CMesh__FreeUnusedAndReportLeaks",
 }
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-134919_post_wave813_cmesh_usage_clearout_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-134919_post_wave813_cmesh_usage_clearout_verified"
 NEXT_HEAD = "0x004aa4e0 CRTMesh__SumSubtreeField1C"
 
 COMMON_TAGS = {

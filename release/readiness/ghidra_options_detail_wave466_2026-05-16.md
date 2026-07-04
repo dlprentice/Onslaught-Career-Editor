@@ -21,7 +21,7 @@ Wave466 saved Ghidra name/signature/comment/tag corrections for `6` options/deta
 - Corrected or hardened landscape-detail setter/getter signatures, the tree-detail quality setter, mouse-sensitivity scalar-deleting destructor, multisample sample-count label resolver, and video-detail preset recognizer.
 - Queue after refresh: `6057` functions, `2114` commented, `3943` commentless, `1705` undefined signatures, `1582` `param_N` signatures.
 - Current telemetry proxies: comment-backed `2114/6057 = 34.90%`; strict comment-plus-clean-signature `2047/6057 = 33.80%`.
-- Verified backup: `G:\GhidraBackups\BEA_20260516-202900_post_wave466_options_detail_verified` (`19` files, `157092743` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260516-202900_post_wave466_options_detail_verified` (`19` files, `157092743` bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`).
 
 ## Boundary
 

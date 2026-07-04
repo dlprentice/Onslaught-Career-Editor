@@ -6,7 +6,7 @@ Status: public-safe static reverse-engineering evidence.
 
 Wave 323 revisited the DXCompass HUD/render/resource helper cluster and one broad allocator wrapper after fresh metadata, decompile, xref, instruction, and callsite review. This wave saved eight Ghidra signatures/comments with no renames and no new function boundaries.
 
-The live Ghidra project was backed up before continuing this work to `G:\GhidraBackups\BEA_20260511_234324_user_safety_verified`. The backup verification reported `19` files, `151456647` bytes, and `DiffCount=0`.
+The live Ghidra project was backed up before continuing this work to `[maintainer-local-ghidra-backup-root]\BEA_20260511_234324_user_safety_verified`. The backup verification reported `19` files, `151456647` bytes, and `DiffCount=0`.
 
 ## Saved Corrections
 

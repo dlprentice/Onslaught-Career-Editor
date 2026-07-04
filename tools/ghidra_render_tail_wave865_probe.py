@@ -33,7 +33,7 @@ QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" /
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
 TASK = "Wave865 render tail"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-160100_post_wave865_render_tail_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-160100_post_wave865_render_tail_verified"
 NEXT_HEAD = "0x00549570 CMeshRenderer__RenderMeshCore"
 STRICT_PROXY = "5819/6105 = 95.32%"
 

@@ -17,7 +17,7 @@ The pass used the `cdxtexture-dispatch-prelude-wave678` and `wave678-readback-ve
 - Post exports verified `4` metadata rows, `4` tag rows, `71` xref rows, `148` instruction rows, and `4` clean decompile rows.
 - Queue after Wave678: `6098` total, `3839` commented, `2259` commentless, `1217` exact-undefined signatures, `478` `param_N` signatures, strict clean-signature proxy `3789/6098 = 62.14%`.
 - Next queue head: `0x00589200 Catch@00589200`.
-- Verified Ghidra backup: `G:\GhidraBackups\BEA_20260521-071055_post_wave678_cdxtexture_dispatch_prelude_verified`, `19` files, `164367239` bytes, `DiffCount=0`.
+- Verified Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260521-071055_post_wave678_cdxtexture_dispatch_prelude_verified`, `19` files, `164367239` bytes, `DiffCount=0`.
 
 ## Boundaries
 

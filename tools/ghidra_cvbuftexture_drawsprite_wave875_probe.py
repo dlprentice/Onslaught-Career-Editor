@@ -37,7 +37,7 @@ SIGNATURE = (
     "float rotation_radians, float argb_tint_bits, float width_scale, float height_scale, "
     "float u0, float u1, float v0, float v1)"
 )
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-205138_post_wave875_cvbuftexture_drawsprite_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-205138_post_wave875_cvbuftexture_drawsprite_verified"
 NEXT_HEAD = "0x00556cc0 CTexture__ctor"
 STRICT_PROXY = "5873/6113 = 96.07%"
 

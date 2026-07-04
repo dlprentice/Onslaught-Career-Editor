@@ -31,7 +31,7 @@ Observed static behavior:
 
 Post-Wave835 queue telemetry: `6098` total functions, `5657` commented, `441` commentless, `0` exact-undefined signatures, `0` `param_N`, strict clean-signature proxy `5657/6098 = 92.77%`. The next raw commentless row is `0x004fa4b0 CUnit__SmoothEulerTowardTargetAndBuildMatrix`; commentless high-signal, signature, and name-confidence queues remain empty.
 
-Verified backup: `G:\GhidraBackups\BEA_20260525-003658_post_wave835_cunit_apply_damage_verified`.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-003658_post_wave835_cunit_apply_damage_verified`.
 
 ## Boundaries
 

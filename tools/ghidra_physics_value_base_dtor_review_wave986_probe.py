@@ -22,7 +22,7 @@ DEVELOPER_STATE = ROOT / "developer_agent_state.json"
 DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-015646_post_wave986_physics_value_base_dtor_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-015646_post_wave986_physics_value_base_dtor_review_verified"
 
 TARGETS = {
     "0x00432cc0": ("CPhysicsUnitValue__dtor_base", "void __fastcall CPhysicsUnitValue__dtor_base(void * this)", "0x005d9e54"),

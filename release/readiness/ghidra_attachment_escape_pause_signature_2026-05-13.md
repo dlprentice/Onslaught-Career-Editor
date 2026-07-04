@@ -27,7 +27,7 @@ This pass keeps the unresolved shared vtable-slot owner deferred, hardens two OI
 - Focused probe: `PASS`; `7` xref evidence hits, `8` instruction evidence hits, `0` stale name hits, `0` stale signature hits, and `0` overclaim hits.
 - Whole-database refresh: `6008` functions, `1264` commented functions, `4744` commentless functions, `1948` `undefined` signatures, and `2005` `param_N` signatures.
 - Current confirmation proxies are telemetry only: comment-backed `1264/6008 = 21.04%`; strict clean-signature `1202/6008 = 20.01%`. These values are not milestones.
-- Actual live Ghidra backup: `G:\GhidraBackups\BEA_20260513_064724_post_wave365_attachment_escape_pause_verified`, verified at `19` files, `153160583` bytes, and `HashDiffCount=0`.
+- Actual live Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260513_064724_post_wave365_attachment_escape_pause_verified`, verified at `19` files, `153160583` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 

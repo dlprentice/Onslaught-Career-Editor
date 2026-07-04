@@ -1,6 +1,6 @@
 # ResourceAccumulator.cpp - Function Mapping
 
-Source file: `C:\dev\ONSLAUGHT2\ResourceAccumulator.cpp`
+Source file: `[maintainer-local-source-export-root]\ResourceAccumulator.cpp`
 
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6113/6113** (Wave900: every function commented; clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
 
@@ -8,7 +8,7 @@ Source file: `C:\dev\ONSLAUGHT2\ResourceAccumulator.cpp`
 
 `ResourceAccumulator` builds retail resource archive paths and loads chunked `.aya` resource files through `CChunkReader`. Wave490 hardened the two known ResourceAccumulator-owned functions from callsite, decompile, xref, instruction, tag, and read-back evidence. Wave551 corrected the `VSDS` chunk helper at `0x005042f0` to `CVertexShader__DeserializeAll`, so that shader-table deserialize logic now lives on the VertexShader page while this page records the dispatch relationship. This page is static retail-binary documentation only; runtime loading behavior, concrete resource/global layouts, exact source-body identity, and rebuild parity remain open.
 
-Wave852 PC platform/resource tail (`pc-platform-resource-tail-wave852`, `wave852-readback-verified`) adds the adjacent resource-file dispatch edge to `0x00515b10 PCPlatform__DeserializeFontsAndAssets`. `CResourceAccumulator__ReadResourceFile` is the sole exported xref to the row; saved static evidence shows the callee freeing/rebuilding PC font slots, warning `Warning : deserializing font twice!`, allocating CDXBitmapFont-like objects, and calling `CDXBitmapFont__Deserialize` on the chunk reader. Probe token anchor: `Wave852 PC platform/resource tail`; `0x00515b10 PCPlatform__DeserializeFontsAndAssets`; `CResourceAccumulator__ReadResourceFile`; `CDXBitmapFont__Deserialize`; `5736/6098 = 94.06%`; `0x005168d0 CPCSoundManager__dtor`; `G:\GhidraBackups\BEA_20260525-093157_post_wave852_pc_platform_resource_tail_verified`. Exact serialized font/resource chunk schema, runtime loading behavior, BEA patching, and rebuild parity remain deferred.
+Wave852 PC platform/resource tail (`pc-platform-resource-tail-wave852`, `wave852-readback-verified`) adds the adjacent resource-file dispatch edge to `0x00515b10 PCPlatform__DeserializeFontsAndAssets`. `CResourceAccumulator__ReadResourceFile` is the sole exported xref to the row; saved static evidence shows the callee freeing/rebuilding PC font slots, warning `Warning : deserializing font twice!`, allocating CDXBitmapFont-like objects, and calling `CDXBitmapFont__Deserialize` on the chunk reader. Probe token anchor: `Wave852 PC platform/resource tail`; `0x00515b10 PCPlatform__DeserializeFontsAndAssets`; `CResourceAccumulator__ReadResourceFile`; `CDXBitmapFont__Deserialize`; `5736/6098 = 94.06%`; `0x005168d0 CPCSoundManager__dtor`; `[maintainer-local-ghidra-backup-root]\BEA_20260525-093157_post_wave852_pc_platform_resource_tail_verified`. Exact serialized font/resource chunk schema, runtime loading behavior, BEA patching, and rebuild parity remain deferred.
 
 ## Functions Found
 
@@ -33,7 +33,7 @@ Wave806 raw commentless head (`raw-commentless-head-wave806`, `wave806-readback-
 
 Exact anchor: `0x0048dec0 CResourceAccumulator__LoadMixerDetailTexture`.
 
-This row connects the Wave806 `CDXLandscape__ClearMixerDetailTextureHandle` and `CDXLandscape__ReleaseMixerDetailTextureRef` corrections to the mixer-detail texture path. Verified backup: `G:\GhidraBackups\BEA_20260524-102416_post_wave806_raw_commentless_head_verified`. Exact heightfield field name, texture type semantics, runtime terrain rendering/resource-loading behavior, BEA patching, and rebuild parity remain deferred.
+This row connects the Wave806 `CDXLandscape__ClearMixerDetailTextureHandle` and `CDXLandscape__ReleaseMixerDetailTextureRef` corrections to the mixer-detail texture path. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-102416_post_wave806_raw_commentless_head_verified`. Exact heightfield field name, texture type semantics, runtime terrain rendering/resource-loading behavior, BEA patching, and rebuild parity remain deferred.
 
 ### `CResourceAccumulator__GetResourceFilename` (`0x004d6f70`)
 
@@ -87,11 +87,11 @@ Wave551 dispatch note: the `VSDS` branch calls `CVertexShader__DeserializeAll(pc
 
 ## Wave764 ResourceAccumulator.cpp Unwind Continuation
 
-Wave764 static read-back (`unwind-continuation-wave764`, `wave764-readback-verified`) saved comments/tags/signatures for ResourceAccumulator.cpp-adjacent compiler-generated SEH unwind cleanup callbacks at `0x005d48d0 Unwind@005d48d0` and `0x005d4900 Unwind@005d4900` as `void __cdecl Unwind@...(void)` rows. Evidence includes DATA scope-table xrefs `0x0061d134` and `0x0061d15c`, `OID__FreeObject_Callback(EBP-0x5cc)` with ResourceAccumulator.cpp debug path `0x00631b7c`, line token `0x330`, allocation/type value `0x80`, and `CDXLandscape__DestroyResourceDescriptorArray_Thunk` on the stack-local descriptor array at `EBP-0x434`. Verified backup: `G:\GhidraBackups\BEA_20260523-152957_post_wave764_unwind_continuation_verified`. This is saved static retail Ghidra evidence only; exact parent source-body identity, runtime resource loading cleanup behavior, runtime exception behavior, BEA patching, and rebuild parity remain deferred.
+Wave764 static read-back (`unwind-continuation-wave764`, `wave764-readback-verified`) saved comments/tags/signatures for ResourceAccumulator.cpp-adjacent compiler-generated SEH unwind cleanup callbacks at `0x005d48d0 Unwind@005d48d0` and `0x005d4900 Unwind@005d4900` as `void __cdecl Unwind@...(void)` rows. Evidence includes DATA scope-table xrefs `0x0061d134` and `0x0061d15c`, `OID__FreeObject_Callback(EBP-0x5cc)` with ResourceAccumulator.cpp debug path `0x00631b7c`, line token `0x330`, allocation/type value `0x80`, and `CDXLandscape__DestroyResourceDescriptorArray_Thunk` on the stack-local descriptor array at `EBP-0x434`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260523-152957_post_wave764_unwind_continuation_verified`. This is saved static retail Ghidra evidence only; exact parent source-body identity, runtime resource loading cleanup behavior, runtime exception behavior, BEA patching, and rebuild parity remain deferred.
 
 ## Wave765 Boundary-Adjacent Unwind Continuation
 
-Wave765 static read-back (`unwind-continuation-wave765`, `wave765-readback-verified`) saved comments/tags/signatures for two ResourceAccumulator/Round-boundary-adjacent cleanup callbacks: `0x005d4948 Unwind@005d4948` jumps to `CParticleManager__RemoveFromGlobalList_Thunk` on `(*(EBP-0x10))+0xe0`, and `0x005d4956 Unwind@005d4956` jumps to `CGenericActiveReader__dtor` on `(*(EBP-0x10))+0xe8`. Scope-table DATA xrefs are `0x0061d1b4` and `0x0061d1bc`. Verified backup: `G:\GhidraBackups\BEA_20260523-155528_post_wave765_unwind_continuation_verified`. This is saved static retail Ghidra evidence only; exact parent source-body identity, runtime resource cleanup behavior, runtime exception behavior, BEA patching, and rebuild parity remain deferred.
+Wave765 static read-back (`unwind-continuation-wave765`, `wave765-readback-verified`) saved comments/tags/signatures for two ResourceAccumulator/Round-boundary-adjacent cleanup callbacks: `0x005d4948 Unwind@005d4948` jumps to `CParticleManager__RemoveFromGlobalList_Thunk` on `(*(EBP-0x10))+0xe0`, and `0x005d4956 Unwind@005d4956` jumps to `CGenericActiveReader__dtor` on `(*(EBP-0x10))+0xe8`. Scope-table DATA xrefs are `0x0061d1b4` and `0x0061d1bc`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260523-155528_post_wave765_unwind_continuation_verified`. This is saved static retail Ghidra evidence only; exact parent source-body identity, runtime resource cleanup behavior, runtime exception behavior, BEA patching, and rebuild parity remain deferred.
 
 ## Wave490 Evidence
 
@@ -101,7 +101,7 @@ Wave765 static read-back (`unwind-continuation-wave765`, `wave765-readback-verif
 - Dry/apply/verify summaries: dry `updated=0 skipped=2`, apply `updated=2 skipped=0`, verify dry `updated=0 skipped=2`, all with `REPORT: Save succeeded`.
 - Read-back verified metadata/comments/signatures, tags, decompile exports, xrefs, instruction rows, and callsite push/cleanup evidence for both functions.
 - Refreshed queue after Wave490: `6068` functions, `2215` commented, `3853` commentless, `1674` undefined signatures, and `1538` `param_N` signatures.
-- Verified backup: `G:\GhidraBackups\BEA_20260517-075159_post_wave490_resource_accumulator_verified` (`19` files, `157551495` bytes, missing `0`, extra `0`, hash differences `0`).
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260517-075159_post_wave490_resource_accumulator_verified` (`19` files, `157551495` bytes, missing `0`, extra `0`, hash differences `0`).
 
 ## Notes
 

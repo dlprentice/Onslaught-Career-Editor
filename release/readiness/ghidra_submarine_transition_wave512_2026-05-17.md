@@ -25,7 +25,7 @@ Wave512 saved static Ghidra name/signature/comment/tag refinements for 8 submari
 - Post read-back exports: 8 metadata rows, 8 tag rows, 8 xref rows, 2888 instruction rows, and 8 decompile exports.
 - Focused probe: `py -3 tools\ghidra_submarine_transition_wave512_probe.py --check` returns `PASS`.
 - Queue telemetry: 6078 total functions, 2391 commented functions, 3687 commentless functions, 1618 exact-undefined signatures, and 1433 `param_N` signatures.
-- Ghidra backup: `G:\GhidraBackups\BEA_20260517-190236_post_wave512_submarine_transition_verified`, 19 files, 158370695 bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
+- Ghidra backup: `[maintainer-local-ghidra-backup-root]\BEA_20260517-190236_post_wave512_submarine_transition_verified`, 19 files, 158370695 bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0`.
 
 ## Boundaries
 

@@ -49,7 +49,7 @@ Artifacts are under `subagents/ghidra-static-reaudit/wave511-static-shadows-004e
 - `cmd.exe /c npm run test:ghidra-static-shadows-wave511` passed.
 - Queue refresh passed and reports `6078` functions, `2383` commented, `3695` commentless, `1620` exact-undefined signatures, and `1439` `param_N` signatures.
 - Current telemetry proxies are comment-backed `2383/6078 = 39.21%` and strict comment-plus-clean-signature `2329/6078 = 38.32%`; these are progress telemetry only, not completion certification.
-- Ghidra project backup verified at `G:\GhidraBackups\BEA_20260517-183811_post_wave511_static_shadows_verified` with `19` files, `158370695` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
+- Ghidra project backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260517-183811_post_wave511_static_shadows_verified` with `19` files, `158370695` bytes, `MissingCount=0`, `ExtraCount=0`, and `HashDiffCount=0`.
 
 ## Not Proven
 

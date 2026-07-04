@@ -31,7 +31,7 @@ BACKUP_SUMMARY = BASE / "backup-summary.json"
 ADDRESS = "0x004fde70"
 NAME = "CWarspite__TransitionToUndeploying"
 SIGNATURE = "void __thiscall CWarspite__TransitionToUndeploying(void * this)"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260525-023901_post_wave839_warspite_transition_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260525-023901_post_wave839_warspite_transition_verified"
 NEXT_HEAD = "0x005016b0 InitShaderCapabilityFlagsAndCVar"
 
 EXPECTED_TAGS = {

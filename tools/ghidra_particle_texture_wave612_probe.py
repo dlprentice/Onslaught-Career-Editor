@@ -251,7 +251,7 @@ def check_exports(failures: list[str]) -> None:
 
 def check_backup_and_queue(failures: list[str]) -> None:
     backup = read_json(BACKUP_SUMMARY)
-    if backup.get("backupRoot") != "G:\\GhidraBackups\\BEA_20260519-234626_post_wave612_particle_texture_verified":
+    if backup.get("backupRoot") != "[maintainer-local-ghidra-backup-root]\\BEA_20260519-234626_post_wave612_particle_texture_verified":
         failures.append(f"backup path mismatch: {backup.get('backupRoot')}")
     expected_backup = {
         "sourceFileCount": 19,
@@ -303,7 +303,7 @@ def check_public_docs(failures: list[str]) -> None:
             "`23` xref rows",
             "`3393` instruction rows",
             "`667` callsite instruction rows",
-            "G:\\GhidraBackups\\BEA_20260519-234626_post_wave612_particle_texture_verified",
+            "[maintainer-local-ghidra-backup-root]\\BEA_20260519-234626_post_wave612_particle_texture_verified",
             "Next queue head: `0x00550380 CDXPatch__Constructor`",
             "runtime particle output",
             "rebuild parity remain unproven",
@@ -342,7 +342,7 @@ def check_public_docs(failures: list[str]) -> None:
                 "2946",
                 "1283",
                 "CDXPatch__Constructor",
-                "G:\\GhidraBackups\\BEA_20260519-234626_post_wave612_particle_texture_verified",
+                "[maintainer-local-ghidra-backup-root]\\BEA_20260519-234626_post_wave612_particle_texture_verified",
             ),
             failures,
         )

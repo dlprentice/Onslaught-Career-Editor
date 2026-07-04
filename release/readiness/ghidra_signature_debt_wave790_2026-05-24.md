@@ -23,7 +23,7 @@ Read-back evidence:
 - Queue after Wave790: 6098 total, 5544 commented, 554 commentless, 31 exact-undefined signatures, 19 `param_N`, comment-backed proxy `5544/6098 = 90.92%`, strict clean-signature proxy `5494/6098 = 90.10%`.
 - Earliest raw commentless row remains `0x0042f220 CSPtrSet__Clear`.
 - The commentless high-signal queue remains empty.
-- Verified backup: `G:\GhidraBackups\BEA_20260524-023043_post_wave790_signature_debt_verified`, 19 files, 171215751 bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-023043_post_wave790_signature_debt_verified`, 19 files, 171215751 bytes, `DiffCount=0`.
 
 What this proves:
 

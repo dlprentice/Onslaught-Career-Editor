@@ -32,7 +32,7 @@ Read-back evidence:
 - Additional read-only evidence: `15` context metadata rows, `15` context decompile rows, `20` CPCController vtable rows, `16` music/platform vtable rows, five string dumps, and source-context search hits.
 - Queue after Wave851: `6098` total functions, `5729` commented, `369` commentless, `0` exact-undefined signatures, `0` `param_N`, comment-backed proxy `5729/6098 = 93.95%`, strict clean-signature proxy `5729/6098 = 93.95%`.
 - Next raw commentless row: `0x00515ab0 D3DDevice__SetViewport`.
-- Verified backup: `G:\GhidraBackups\BEA_20260525-085618_post_wave851_pc_platform_controller_tail_verified`, `19` files, `172034951` bytes, `DiffCount=0`.
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-085618_post_wave851_pc_platform_controller_tail_verified`, `19` files, `172034951` bytes, `DiffCount=0`.
 
 What this proves:
 

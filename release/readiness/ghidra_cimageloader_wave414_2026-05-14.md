@@ -41,7 +41,7 @@ This note records a serialized headless Ghidra dry/apply/read-back pass for the 
 - Read-back exports verified `13` metadata rows, `13` tag rows, ImageLoader vtable rows, xrefs, `13` decompile exports, and target instruction evidence.
 - Package wrapper: `cmd.exe /c npm run test:ghidra-cimageloader-wave414` passed with focused probe status `PASS`.
 - Queue refresh: headless `ExportFunctionQualitySnapshot.java` and `cmd.exe /c npm run test:ghidra-static-reaudit-queue` passed with the `6035`-function telemetry above.
-- Actual Ghidra project backup: copied `BEA.gpr` and `BEA.rep` to `G:\GhidraBackups\BEA_20260514_113511_post_wave414_cimageloader_verified` and verified `19` files, `154897287` bytes, and `HashDiffCount=0`.
+- Actual Ghidra project backup: copied `BEA.gpr` and `BEA.rep` to `[maintainer-local-ghidra-backup-root]\BEA_20260514_113511_post_wave414_cimageloader_verified` and verified `19` files, `154897287` bytes, and `HashDiffCount=0`.
 
 ## Not Proven
 

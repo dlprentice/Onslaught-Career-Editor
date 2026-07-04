@@ -29,7 +29,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 TRACKING_STATE = ROOT / "reverse-engineering" / "binary-analysis" / "function_mutation_tracking_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260601-004522_post_wave1025_cfastvb_node_tree_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260601-004522_post_wave1025_cfastvb_node_tree_review_verified"
 
 TARGETS = {
     "0x0056ff40": ("CFastVB__TriangleListContainsVertexTriplet_0056ff40", "uint __stdcall CFastVB__TriangleListContainsVertexTriplet_0056ff40(void * triangle_list_span, void * triangle)", ("Wave651", "triangle-record")),

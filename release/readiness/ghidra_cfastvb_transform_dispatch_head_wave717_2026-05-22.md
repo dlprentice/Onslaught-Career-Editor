@@ -50,10 +50,10 @@ Post-Wave717 queue telemetry:
 - Raw commentless head: `0x0042f220 CSPtrSet__Clear`.
 - Next commentless high-signal head: `0x005a0b22 CFastVB__ConvertHalfToFloatArray_SSE`.
 
-Verified backup: `G:\GhidraBackups\BEA_20260522-021449_post_wave717_cfastvb_transform_dispatch_head_verified`, `19` files, `166235015` bytes, `DiffCount=0`.
+Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-021449_post_wave717_cfastvb_transform_dispatch_head_verified`, `19` files, `166235015` bytes, `DiffCount=0`.
 
 ## Boundaries
 
 Wave717 proves static retail Ghidra metadata only. Exact dispatch-table slot schema, vector/matrix storage contract, batch helper hidden-register ABI, source identity, runtime math correctness, BEA patching, and rebuild parity remain unproven.
 
-Probe anchors: `Wave717 CFastVB transform dispatch head`, `cfastvb-transform-dispatch-head-wave717`, `0x0059f360 CFastVB__DispatchOp_TransformVec4_0059f360`, `0x0059f6dd CFastVB__BroadcastMatrix4x4ToSIMDLanes`, `0x005a04a0 CFastVB__DispatchOp_WeightedMatrixBlendBatch_005a04a0`, `Ghidra thiscall normalization mismatch`, `0x005a0b22 CFastVB__ConvertHalfToFloatArray_SSE`, `0x0042f220 CSPtrSet__Clear`, `G:\GhidraBackups\BEA_20260522-021449_post_wave717_cfastvb_transform_dispatch_head_verified`.
+Probe anchors: `Wave717 CFastVB transform dispatch head`, `cfastvb-transform-dispatch-head-wave717`, `0x0059f360 CFastVB__DispatchOp_TransformVec4_0059f360`, `0x0059f6dd CFastVB__BroadcastMatrix4x4ToSIMDLanes`, `0x005a04a0 CFastVB__DispatchOp_WeightedMatrixBlendBatch_005a04a0`, `Ghidra thiscall normalization mismatch`, `0x005a0b22 CFastVB__ConvertHalfToFloatArray_SSE`, `0x0042f220 CSPtrSet__Clear`, `[maintainer-local-ghidra-backup-root]\BEA_20260522-021449_post_wave717_cfastvb_transform_dispatch_head_verified`.

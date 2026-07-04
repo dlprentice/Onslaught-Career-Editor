@@ -95,11 +95,11 @@ ANCHOR_TOKENS = (
     "Platform/file I/O proof design",
     "Console command proof design",
     "CRT/FPU side-effect proof design",
-    r"G:\GhidraBackups\BEA_20260526-120420_post_wave909_engine_platform_support_static_review_verified",
-    r"G:\GhidraBackups\BEA_20260601-090132_post_wave1041_crt_fpu_runtime_tail_review_verified",
-    r"G:\GhidraBackups\BEA_20260601-094520_post_wave1042_memory_heap_allocator_review_verified",
-    r"G:\GhidraBackups\BEA_20260604-171413_post_wave1095_render_state_matrix_support_review_verified",
-    r"G:\GhidraBackups\BEA_20260607-081942_post_wave1214_math_color_screen_dispatch_current_risk_review_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260526-120420_post_wave909_engine_platform_support_static_review_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260601-090132_post_wave1041_crt_fpu_runtime_tail_review_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260601-094520_post_wave1042_memory_heap_allocator_review_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260604-171413_post_wave1095_render_state_matrix_support_review_verified",
+    r"[maintainer-local-ghidra-backup-root]\BEA_20260607-081942_post_wave1214_math_color_screen_dispatch_current_risk_review_verified",
 )
 
 READINESS_TOKENS = (

@@ -23,7 +23,7 @@ Validated scope after Wave1002 staging:
 - Operational readiness notes through Wave1002.
 - Focused package probe scripts through Wave1002.
 - Ignored evidence bases under `subagents/ghidra-static-reaudit/`.
-- On-disk `G:\GhidraBackups` references for operational waves, excluding non-backup Wave910/Wave911 planning waves.
+- On-disk `[maintainer-local-ghidra-backup-root]` references for operational waves, excluding non-backup Wave910/Wave911 planning waves.
 - Wave900+ apply-script log coverage where a wave used a Ghidra mutation script.
 - Direct Wave982-Wave1002 focused-probe reruns, with stale current-state/live-queue/doc-token failures classified separately from evidence mismatches.
 - Current queue closure at `6222/6222 = 100.00%`, with `0` commentless functions, `0` exact-`undefined` signatures, and `0` `param_N` signatures.
@@ -43,6 +43,6 @@ Observed summary after Wave1002 validation:
 
 Validation result: `PASS`. Direct probe reruns only passed for the current Wave1002 focused probe; earlier Wave982-Wave1001 focused probes intentionally fail against rolled-current state/docs and are classified as `current-state-baton` and/or `rolled-current-doc`, with no evidence-mismatch, missing-tool, or unclassified failure remaining.
 
-Wave1002 extension anchor: `ground-attack-aircraft-review-wave1002`; `0x0047bbf0 CGroundAttackAircraft__Init`; `0x0047c040 CGroundAttackAircraft__AdvanceCloseShootAnimationState`; `0x004964d0 CMCGroundAttack__Constructor`; `0x00496540 CMCGroundAttack__VFunc_04_UpdateTurretTransform_00496540`; `0x004968a0 CMCGroundAttack__VFunc_08_CheckCachedMotionState_004968a0`; `G:\GhidraBackups\BEA_20260531-112128_post_wave1002_ground_attack_aircraft_review_verified`.
+Wave1002 extension anchor: `ground-attack-aircraft-review-wave1002`; `0x0047bbf0 CGroundAttackAircraft__Init`; `0x0047c040 CGroundAttackAircraft__AdvanceCloseShootAnimationState`; `0x004964d0 CMCGroundAttack__Constructor`; `0x00496540 CMCGroundAttack__VFunc_04_UpdateTurretTransform_00496540`; `0x004968a0 CMCGroundAttack__VFunc_08_CheckCachedMotionState_004968a0`; `[maintainer-local-ghidra-backup-root]\BEA_20260531-112128_post_wave1002_ground_attack_aircraft_review_verified`.
 
 This recheck validates static evidence structure, focused-probe classification, backups, and live queue closure. It does not prove runtime behavior, exact source-layout identity, BEA patching behavior, or rebuild parity.

@@ -48,7 +48,7 @@ This is public-safe static evidence only. It does not launch or patch `BEA.exe`,
 | Post-apply metadata/tag/xref/vtable/instruction/decompile read-back | PASS | Verified `21` metadata rows, `21` tag rows, `95` xref rows, `64` vtable-slot rows, `7749` instruction rows, and `21` target decompile exports. |
 | `cmd.exe /c npm run test:ghidra-cmcmech-wave433` | PASS | Focused probe returned `status: PASS` for `19` saved targets, with the two deferred large bodies excluded from semantic promotion. |
 | `cmd.exe /c npm run test:ghidra-static-reaudit-queue` | PASS | Queue reports `6049` total functions, `1764` commented functions, `4285` commentless functions, `1811` undefined signatures, and `1775` `param_N` signatures. |
-| Actual Ghidra project backup verification after Wave433 mutation | PASS | Copied the live project to `G:\GhidraBackups\BEA_20260515-210712_post_wave433_cmcmech_verified`; compared `19` files and `155814791` bytes with `MissingCount=0`, `HashDiffCount=0`, and `ExtraCount=0`. |
+| Actual Ghidra project backup verification after Wave433 mutation | PASS | Copied the live project to `[maintainer-local-ghidra-backup-root]\BEA_20260515-210712_post_wave433_cmcmech_verified`; compared `19` files and `155814791` bytes with `MissingCount=0`, `HashDiffCount=0`, and `ExtraCount=0`. |
 
 ## Current Queue Telemetry
 

@@ -32,7 +32,7 @@ QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" 
 QUEUE_TSV = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "functions_quality.tsv"
 BACKUP_SUMMARY = BASE / "backup-summary.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260523-112625_post_wave756_unwind_continuation_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260523-112625_post_wave756_unwind_continuation_verified"
 
 TARGET_XREFS = {
     "0x005d3392": "0x0061c0ac",
@@ -90,11 +90,11 @@ HELPER_NAMES = (
 )
 
 STRING_EXPECTATIONS = {
-    "string-00622b80.tsv": r"C:\dev\ONSLAUGHT2\Monitor.h",
-    "string-0062e06c.tsv": r"C:\dev\ONSLAUGHT2\MCTentacle.cpp",
-    "string-0062e0e0.tsv": r"C:\dev\ONSLAUGHT2\Mech.cpp",
-    "string-0062f590.tsv": r"C:\dev\ONSLAUGHT2\MemoryManager.cpp",
-    "string-0062f7d8.tsv": r"C:\dev\ONSLAUGHT2\MenuItem.cpp",
+    "string-00622b80.tsv": r"[maintainer-local-source-export-root]\Monitor.h",
+    "string-0062e06c.tsv": r"[maintainer-local-source-export-root]\MCTentacle.cpp",
+    "string-0062e0e0.tsv": r"[maintainer-local-source-export-root]\Mech.cpp",
+    "string-0062f590.tsv": r"[maintainer-local-source-export-root]\MemoryManager.cpp",
+    "string-0062f7d8.tsv": r"[maintainer-local-source-export-root]\MenuItem.cpp",
 }
 
 COMMENT_TOKENS = {

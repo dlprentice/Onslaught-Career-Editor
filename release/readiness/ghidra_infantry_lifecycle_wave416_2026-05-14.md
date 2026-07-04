@@ -39,7 +39,7 @@ This note records a serialized headless Ghidra dry/apply/read-back pass for an i
 - Read-back exports verified `10` metadata rows, `10` tag rows, `12` xref rows, `890` instruction rows, and `10` decompile exports.
 - Package wrapper: `cmd.exe /c npm run test:ghidra-infantry-lifecycle-wave416` passed with focused probe status `PASS`.
 - Queue refresh: headless `ExportFunctionQualitySnapshot.java` and `cmd.exe /c npm run test:ghidra-static-reaudit-queue` passed with the `6037`-function telemetry above.
-- Actual Ghidra project backup: copied `BEA.gpr` and `BEA.rep` to `G:\GhidraBackups\BEA_20260514_124157_post_wave416_infantry_lifecycle_verified` and verified `19` files, `154962823` bytes, and `HashDiffCount=0`.
+- Actual Ghidra project backup: copied `BEA.gpr` and `BEA.rep` to `[maintainer-local-ghidra-backup-root]\BEA_20260514_124157_post_wave416_infantry_lifecycle_verified` and verified `19` files, `154962823` bytes, and `HashDiffCount=0`.
 
 ## Not Proven
 

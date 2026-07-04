@@ -27,7 +27,7 @@ RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 RECHECK_TOOL = ROOT / "tools" / "ghidra_wave900_plus_through_wave983_recheck.py"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-112128_post_wave1002_ground_attack_aircraft_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-112128_post_wave1002_ground_attack_aircraft_review_verified"
 
 TARGETS = {
     "0x0047bab0": ("CGroundAttackAI__InitState", "void __fastcall CGroundAttackAI__InitState(void * this)"),

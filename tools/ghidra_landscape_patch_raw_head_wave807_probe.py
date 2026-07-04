@@ -33,7 +33,7 @@ ADDRESS = "0x0048f2f0"
 PRE_NAME = "CDXLandscape__SetUpdateBoundsAndRebuildVB"
 NAME = "CDXPatch__SetGridOriginStepAndRebuild"
 SIGNATURE = "void __thiscall CDXPatch__SetGridOriginStepAndRebuild(void * this, int grid_origin_x, int grid_origin_z, int grid_step, int tile_metadata)"
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260524-105819_post_wave807_landscape_patch_raw_head_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260524-105819_post_wave807_landscape_patch_raw_head_verified"
 
 COMMON_TAGS = {
     "static-reaudit",

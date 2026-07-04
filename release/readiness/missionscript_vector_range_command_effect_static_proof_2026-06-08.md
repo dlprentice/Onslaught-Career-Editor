@@ -13,7 +13,7 @@ Static closeout remains unchanged:
 - Expanded post-100 static surface: `1560/1560 = 100.00%`.
 - Active current-risk focused accounting: `1179/1179 = 100.00%`.
 - Remaining active focused work: `0`.
-- Latest verified Ghidra backup remains `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+- Latest verified Ghidra backup remains `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 Representative anchors:
 
@@ -30,8 +30,8 @@ Read-back evidence:
 - Wave581 post exports verified `5` metadata rows, `5` tag rows, `5` xref rows, `3545` instruction rows, `5` decompile rows, and `24` vtable rows.
 - Descriptor context preserves raw records `0x0064dc50`, `0x0064dc90`, `0x0064dcd0`, `0x0064dd10`, `0x0064dd50`, `0x0064dd90`, `0x0064e850`, `0x0064e890`, and `0x0064e950` as raw static table evidence only.
 - A copied loose-MSL non-comment scan found no direct non-comment loose-MSL rows for `GetVectorLength`, `CheckValueInRange`, `GetVectorX`, `GetVectorY`, `GetVectorZ`, or `Magnitude`.
-- Wave581 backup: `G:\GhidraBackups\BEA_20260519-075959_post_wave581_iscript_vector_range_verified`, `19` files, `160500615` bytes, `DiffCount=0`, manifest hash `66EAC6D25839E7626D5F27E6A496E682085E0169D2D38E22BAD8E61E00E4F687`.
-- Latest static closeout backup: `G:\GhidraBackups\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
+- Wave581 backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-075959_post_wave581_iscript_vector_range_verified`, `19` files, `160500615` bytes, `DiffCount=0`, manifest hash `66EAC6D25839E7626D5F27E6A496E682085E0169D2D38E22BAD8E61E00E4F687`.
+- Latest static closeout backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-230027_post_wave1219_final_score16_current_risk_review_verified`.
 
 What this proves:
 

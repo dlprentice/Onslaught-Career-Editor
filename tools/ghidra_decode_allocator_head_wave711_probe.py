@@ -97,7 +97,7 @@ DOC_TOKENS = (
     "0x0059c5d0 CDXTexture__PumpDecodeAllocatorAndSetStage",
     "0x0059c070 CTexture__ProcessRowBatchesLinearStride",
     "0x0042f220 CSPtrSet__Clear",
-    "G:\\GhidraBackups\\BEA_20260521-225104_post_wave711_decode_allocator_head_verified",
+    "[maintainer-local-ghidra-backup-root]\\BEA_20260521-225104_post_wave711_decode_allocator_head_verified",
 )
 
 OVERCLAIM_TOKENS = (
@@ -253,7 +253,7 @@ def check_queue_and_backup(failures: list[str]) -> None:
     require(head["name"] == "CTexture__ProcessRowBatchesLinearStride", "high-signal head name mismatch", failures)
 
     backup = read_json(BACKUP_SUMMARY)
-    require(backup.get("backupPath") == r"G:\GhidraBackups\BEA_20260521-225104_post_wave711_decode_allocator_head_verified", "backup path mismatch", failures)
+    require(backup.get("backupPath") == r"[maintainer-local-ghidra-backup-root]\BEA_20260521-225104_post_wave711_decode_allocator_head_verified", "backup path mismatch", failures)
     require(backup.get("fileCount") == 19, "backup file count mismatch", failures)
     require(int(backup.get("totalBytes", 0)) == 165776263, "backup byte count mismatch", failures)
     require(backup.get("diffCount") == 0, "backup diff count mismatch", failures)
@@ -303,7 +303,7 @@ def main() -> int:
     print("Wave711 decode allocator head probe: PASS")
     print("Targets: 7")
     print("Queue: 6098 total, 4132 commented, 1966 commentless, 1216 undefined, 203 param_N")
-    print("Backup: G:\\GhidraBackups\\BEA_20260521-225104_post_wave711_decode_allocator_head_verified")
+    print("Backup: [maintainer-local-ghidra-backup-root]\\BEA_20260521-225104_post_wave711_decode_allocator_head_verified")
     return 0
 
 

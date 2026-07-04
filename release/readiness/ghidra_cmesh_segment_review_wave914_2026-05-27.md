@@ -49,7 +49,7 @@ The saved CMesh helper names remain appropriate for the current evidence. Stuart
 Read-only post-wave backup:
 
 ```text
-G:\GhidraBackups\BEA_20260527-103159_post_wave914_cmesh_segment_review_verified
+[maintainer-local-ghidra-backup-root]\BEA_20260527-103159_post_wave914_cmesh_segment_review_verified
 files=19
 bytes=173247367
 ```

@@ -8,7 +8,7 @@
 
 Wave507 records the first focused CShell family evidence in the saved Ghidra project. The checked functions are tied to projectile-burst shell creation through `ProjectileBurst__SpawnFromCurrentPreset` and OID type `0x15`; the exact source filename and full class layout are still unproven.
 
-Wave1020 (`projectile-burst-spawn-spine-review-wave1020`) re-read `0x004df530 CShell__CopyResourceNameToInlineBuffer` in the projectile-burst spawn spine. The callsite at `0x005076dc` from `0x005069f0 ProjectileBurst__SpawnFromCurrentPreset` still matches the saved Wave507 claim, and the helper still ends with `RET 0x4` after copying the resource name into `this+0x110`. No mutation was needed. Verified backup: `G:\GhidraBackups\BEA_20260531-214433_post_wave1020_projectile_burst_spawn_spine_review_verified`. Runtime shell/projectile behavior, exact buffer-size contract, exact source identity, BEA patching, and rebuild parity remain separate proof.
+Wave1020 (`projectile-burst-spawn-spine-review-wave1020`) re-read `0x004df530 CShell__CopyResourceNameToInlineBuffer` in the projectile-burst spawn spine. The callsite at `0x005076dc` from `0x005069f0 ProjectileBurst__SpawnFromCurrentPreset` still matches the saved Wave507 claim, and the helper still ends with `RET 0x4` after copying the resource name into `this+0x110`. No mutation was needed. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260531-214433_post_wave1020_projectile_burst_spawn_spine_review_verified`. Runtime shell/projectile behavior, exact buffer-size contract, exact source identity, BEA patching, and rebuild parity remain separate proof.
 
 ## Wave507 CShell Projectile-Burst Shell Helpers (2026-05-17)
 

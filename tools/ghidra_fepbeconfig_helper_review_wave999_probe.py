@@ -23,7 +23,7 @@ DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
 RE_STATE = ROOT / "re_orchestrator_state.json"
 QUEUE_JSON = ROOT / "subagents" / "ghidra-static-reaudit" / "queue" / "current" / "static-reaudit-queue.json"
 
-BACKUP_PATH = r"G:\GhidraBackups\BEA_20260531-094628_post_wave999_fepbeconfig_helper_review_verified"
+BACKUP_PATH = r"[maintainer-local-ghidra-backup-root]\BEA_20260531-094628_post_wave999_fepbeconfig_helper_review_verified"
 
 TARGETS = {
     "0x0044eab0": ("CFEPMultiplayerStart__GetConfigIdByIndex", "int __cdecl CFEPMultiplayerStart__GetConfigIdByIndex(int config_index)"),

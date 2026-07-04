@@ -21,7 +21,7 @@ The pass corrected `CRT__SetMultibyteCodePage_00567f92` to `CRT__SetMultibyteCod
 - Post exports: `5` metadata rows, `5` tag rows, `38` xref rows, `905` instruction rows, `5` decompile rows
 - Queue refresh: `6093` total, `3382` commented, `2711` commentless, `1217` exact-undefined signatures, `914` `param_N` signatures
 - Strict clean-signature proxy: `3328/6093 = 54.62%`
-- Verified backup: `G:\GhidraBackups\BEA_20260520-113139_post_wave636_crt_string_codepage_verified` (`19` files, `162401159` bytes, `DiffCount=0`)
+- Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260520-113139_post_wave636_crt_string_codepage_verified` (`19` files, `162401159` bytes, `DiffCount=0`)
 
 The next high-signal queue head is `0x00568667 CRT__PowSpecialCaseCore`.
 

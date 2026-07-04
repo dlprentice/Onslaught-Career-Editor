@@ -29,7 +29,7 @@ The pass corrected one important calling-convention nuance: for Ghidra `__thisca
 - `py -3 tools\ghidra_cylinder_damage_signature_tranche_probe_test.py` passed `2/2`; `py -3 -m py_compile tools\ghidra_cylinder_damage_signature_tranche_probe.py tools\ghidra_cylinder_damage_signature_tranche_probe_test.py` passed.
 - `cmd.exe /c npm run test:ghidra-cylinder-damage-signature-tranche` passed against the saved read-back artifacts.
 - The refreshed whole-database baseline reports `5974` functions and `0` weak functions. The refreshed quality queue reports `1098` commented functions, `4876` commentless functions, `1958` undefined signatures, and `2110` `param_N` signatures.
-- The post-mutation live Ghidra backup was verified at `G:\GhidraBackups\BEA_20260512_183034_post_wave346_cylinder_damage_verified` with `19` files, `152734599` bytes, and `HashDiffCount=0`.
+- The post-mutation live Ghidra backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260512_183034_post_wave346_cylinder_damage_verified` with `19` files, `152734599` bytes, and `HashDiffCount=0`.
 
 ## Claim Boundary
 
