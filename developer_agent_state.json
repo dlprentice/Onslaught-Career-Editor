@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-04",
-  "currentFocus": "v1.0.8 release-prep is locally validated and ready for prep-only commit/push. Scope is bounded metadata, release-candidate ZIP naming, release-readiness reporting, package validation, and the Media smoke harness repair; it does not authorize release publication, tag creation, upload, signing, installer/MSIX/Store work, gameplay proof, or capability promotion.",
+  "currentFocus": "v1.0.8 is published. Current closeout aligns tracked source/docs/state with the GitHub Release while preserving boundaries: no signing, installer/MSIX/Store work, gameplay proof, Host/Join/player-ready online claim, rebuild parity, visual parity, installed-game mutation, or original BEA.exe mutation.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "contributorGuide": "CONTRIBUTING.md",
@@ -27,18 +27,20 @@
         "package.json includes the local docsync check wrapper."
       ]
     },
-    "v108ReleasePrep": {
-      "status": "validated-local-candidate",
-      "summary": "Current prep bumps package metadata and the release-candidate ZIP filename to v1.0.8, adds candidate-only readiness accounting, repairs the representative Media UIA smoke locator/selection path, and keeps v1.0.7 as the last public GitHub Release until explicit publication authority is granted. The final v1.0.8 ZIP candidate passes under the final name.",
-      "candidateArtifact": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.8-win-x64.zip",
-      "candidateSha256": "f01474cb21624cfb938450911be277937e0e12cd04ff1755d2ff1b87aa6b283a",
-      "candidateSizeBytes": 246803017,
+    "v108Release": {
+      "status": "published",
+      "summary": "v1.0.8 is the latest public GitHub Release. It publishes the final unsigned portable WinUI ZIP with the friendly root layout, 949-document Lore pack, checksum sidecar, fixed representative Media smoke, and passing release-candidate probe. v1.0.7 remains historical.",
+      "releaseUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.8",
+      "releaseTarget": "6e7bcb42b3849b51a9d14dbb15863c520aa21a4b",
+      "zipAsset": "OnslaughtToolkit-winui-v1.0.8-win-x64.zip",
+      "zipSha256": "f01474cb21624cfb938450911be277937e0e12cd04ff1755d2ff1b87aa6b283a",
+      "zipSizeBytes": 246803017,
       "loreDocumentCount": 949,
       "finalGate": "npm run test:winui-zip-release-candidate-probe",
       "finalGateStatus": "pass; extracted launch, Home navigation, Lore reader, representative Media smoke, root layout, payload safety, Lore pack checks, and process cleanup passed",
       "mediaSmokeRepair": "WinUiMediaInteractionSmokeTests now scopes media row lookup to MediaAudioTreeView/MediaVideoTreeView TreeItems, uses UIA scroll/selection/invoke/click activation, and waits for exact selected text before asserting.",
       "nonClaims": [
-        "No GitHub Release, tag, release asset upload, signing, installer, MSIX, Store package, or announcement.",
+        "No signing, installer, MSIX, Store package, SmartScreen/reputation claim, or announcement.",
         "No hard payload, copied executable, raw proof bundle, full Ghidra database, secret, installed-game mutation, original BEA.exe mutation, Host/Join enablement, online-ready claim, gameplay claim, rebuild claim, or visual parity claim."
       ]
     },
@@ -62,16 +64,16 @@
     ],
     "knownLocalOnlyGateBehavior": "tools/ghidra_static_reaudit_queue_probe.py --check is expected to fail closed when no local quality snapshot exists; it no longer writes queue output unless --write-report is passed.",
     "remainingGatePlan": [
-      "Complete fresh read-only acceptance review of the v1.0.8 prep patch.",
-      "Commit and push prep only after acceptance review is read.",
-      "Keep publication, tag creation, release asset upload, signing, installer/MSIX/Store work, and announcement blocked until separate explicit authorization."
+      "Validate post-publication source-truth docs/state closeout.",
+      "Commit and push source-truth closeout to main.",
+      "Keep signing, installer/MSIX/Store work, announcement, gameplay proof, Host/Join/player-ready online, rebuild parity, visual parity, installed-game mutation, and original BEA.exe mutation out of scope."
     ]
   },
   "blockers": [],
   "openQuestions": [],
   "nextSteps": [
-    "Run fresh read-only acceptance over the v1.0.8 prep patch.",
-    "If acceptance passes, commit and push prep only, then verify HEAD, origin/main, and live remote refs match.",
-    "Publish v1.0.8 only in a later explicitly authorized release slice."
+    "Run post-publication docs/state validation gates.",
+    "Commit and push source-truth closeout, then verify HEAD, origin/main, and live remote refs match.",
+    "Leave any future signing, installer, announcement, or stronger proof work to a separate authorized slice."
   ]
 }

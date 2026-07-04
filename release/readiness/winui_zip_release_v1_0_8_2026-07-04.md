@@ -1,10 +1,12 @@
-# WinUI ZIP Release v1.0.8 Prep - 2026-07-04
+# WinUI ZIP Release v1.0.8 - 2026-07-04
 
-Status: release-prep candidate passed locally, not published
+Status: published GitHub Release
 
-This note tracks the v1.0.8 prep slice. It is not a GitHub Release, tag,
-uploaded asset, signing result, MSIX, Store package, installer, announcement, or
-public capability promotion.
+This note tracks the v1.0.8 public ZIP release. It is a GitHub Release with the
+final ZIP and checksum sidecar uploaded, targeting commit
+`6e7bcb42b3849b51a9d14dbb15863c520aa21a4b`. It is not a signing result, MSIX,
+Store package, installer, SmartScreen/reputation claim, runtime gameplay proof,
+online capability promotion, or rebuild/visual parity claim.
 
 ## Reference Audit
 
@@ -18,31 +20,32 @@ Updated current release-prep metadata:
 - `.gitignore` release scratch coverage for generated
   `subagents/winui-zip-release-readiness-current/` output
 - `README.RELEASE.md`, `CURRENT_CAPABILITIES.md`, and
-  `lore-book/CURRENT_CAPABILITIES.md` distinguish v1.0.8 candidate prep from
-  the last public v1.0.7 GitHub Release
+  `lore-book/CURRENT_CAPABILITIES.md` distinguish published v1.0.8 truth from
+  historical v1.0.7 release records
 
 Historical references intentionally retained:
 
 - `release/readiness/winui_zip_release_v1_0_7_2026-06-25.md` remains the
-  published v1.0.7 release record with its real tag, download, checksum, and
+  historical v1.0.7 release record with its real tag, download, checksum, and
   SHA-256 facts.
 - Earlier dated v1.0.3 through v1.0.6 readiness notes remain historical.
-- `README.MD` continues to describe v1.0.7 as the last public download until a
-  separate authorized publication slice creates v1.0.8 on GitHub.
+- `README.MD` now describes v1.0.8 as the current public download and keeps
+  prior releases as historical context.
 - Third-party dependency versions such as `@hapi/hoek@11.0.7` and
   `path-parse@1.0.7` remain unchanged.
 
-## Candidate Artifact
+## Published Artifact
 
 The final v1.0.8 release-candidate probe built the final-named ZIP and passed
 the package/layout/Lore/launch/Home/Media/process-cleanup checks. The artifact
-below is a local release-prep candidate, not a published GitHub Release asset.
+below was uploaded to the v1.0.8 GitHub Release.
 
-- ZIP: `subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.8-win-x64.zip`
+- Release URL:
+  `https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.8`
+- ZIP: `OnslaughtToolkit-winui-v1.0.8-win-x64.zip`
 - ZIP size: `246803017`
 - SHA-256: `f01474cb21624cfb938450911be277937e0e12cd04ff1755d2ff1b87aa6b283a`
-- Checksum sidecar:
-  `subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.8-win-x64.zip.sha256`
+- Checksum sidecar: `OnslaughtToolkit-winui-v1.0.8-win-x64.zip.sha256`
 - Probe report:
   `subagents/winui-zip-release-candidate-probe/current/zip-package-report.json`
 - Lore document count: `949`
@@ -95,15 +98,16 @@ Final validation refreshed in this prep slice:
 - `npm run test:doc-commands` - pass
 - `npm run test:md-links` - pass
 
-This prep is locally validated for a prep-only commit/push after acceptance
-review. Do not tag, publish, or upload this prep without a separate explicit
-publication authorization.
+Post-publication verification confirmed the release exists, the `v1.0.8` tag
+resolves to `6e7bcb42b3849b51a9d14dbb15863c520aa21a4b`, the ZIP and SHA-256
+sidecar assets are uploaded, the uploaded ZIP size is `246803017`, and the
+uploaded ZIP asset digest is
+`sha256:f01474cb21624cfb938450911be277937e0e12cd04ff1755d2ff1b87aa6b283a`.
 
 ## Boundaries
 
-- No GitHub Release publication.
-- No tag creation.
-- No release asset upload.
+- GitHub Release publication, tag creation, and release asset upload occurred
+  for `v1.0.8` only.
 - No signing, installer, MSIX, Store package, or SmartScreen claim.
 - No Battle Engine Aquila game files, copied executables, saves, media payloads,
   raw proof bundles, CDB logs, screenshots, full Ghidra databases, secrets, or

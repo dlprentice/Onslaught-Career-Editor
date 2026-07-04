@@ -21,11 +21,14 @@ attached to GitHub Releases with a SHA-256 checksum sidecar. Extract the full
 ZIP and run `Launch Onslaught Toolkit.cmd` from the clean top-level folder. The
 self-contained WinUI payload lives under `app\`; run
 `app\OnslaughtCareerEditor.WinUI.exe` only as a fallback. The `v1.0.7` package
-bundles a generated short-path `lore-pack/` with 943
-public-safe Markdown/TXT Lore documents, rewrites unbundled source links to
-GitHub source/search pages, and verifies the exact ZIP with Explorer-safe entry
-paths, packaged-Lore copy truth, extracted launch, Home, Lore, and
-representative Media UI smokes. `v1.0.7` supersedes
+was superseded by `v1.0.8`, which bundles a generated short-path `lore-pack/`
+with 949 public-safe Markdown/TXT Lore documents, rewrites unbundled source
+links to GitHub source/search pages, and verifies the exact ZIP with
+Explorer-safe entry paths, packaged-Lore copy truth, extracted launch, Home,
+Lore, representative Media UI smokes, and process cleanup. The `v1.0.8` ZIP
+SHA-256 is
+`f01474cb21624cfb938450911be277937e0e12cd04ff1755d2ff1b87aa6b283a`, published
+beside its checksum sidecar. `v1.0.7` superseded
 `v1.0.3`/`v1.0.4`/`v1.0.5`/`v1.0.6`: v1.0.3 could hit Windows Explorer
 `0x80010135` path-too-long extraction failures under normal Downloads paths,
 v1.0.4 did not rewrite deeper unbundled Lore links, v1.0.5 did not yet surface
@@ -33,11 +36,10 @@ the source-link boundary clearly inside the app, and v1.0.6 did not yet include
 the generated broad offline Lore content pack.
 
 `release/readiness/WINUI-ZIP-README.txt` describes ZIPs built from the current
-source candidate. The published `v1.0.7` asset is documented by
+source candidate. The published `v1.0.7` asset is documented historically by
 `release/readiness/winui_zip_release_v1_0_7_2026-06-25.md`.
-The `v1.0.8` release-prep candidate is source-tree and local-artifact readiness
-only until a maintainer explicitly authorizes tag creation, GitHub Release
-publication, and asset upload.
+The published `v1.0.8` asset is documented by
+`release/readiness/winui_zip_release_v1_0_8_2026-07-04.md`.
 
 The ZIP release does not include Battle Engine Aquila game files, copied
 executables, saves, media payloads, full Ghidra databases, or bulky generated

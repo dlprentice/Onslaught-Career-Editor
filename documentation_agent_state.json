@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-04",
-  "currentFocus": "Documentation and state batons are refreshed for locally validated v1.0.8 release-prep. The docs distinguish candidate/source readiness from the last public v1.0.7 GitHub Release and must not imply publication, signing, installer/MSIX/Store readiness, gameplay proof, online capability, or rebuild parity.",
+  "currentFocus": "Documentation and state batons are aligned with the published v1.0.8 GitHub Release. Docs describe v1.0.8 as the latest public download while preserving boundaries around signing, installer/MSIX/Store readiness, gameplay proof, online capability, rebuild parity, visual parity, and installed-game/original BEA.exe mutation.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "contributorGuide": "CONTRIBUTING.md",
@@ -14,7 +14,7 @@
   "currentDocsTruth": {
     "wave1220StaticCloseout": "Wave1220 static closeout acceptance: active current-risk focused accounting is `1179/1179 = 100.00%`; remaining active focused work: 0",
     "preSolUltraQualityWave": "Current tracked changes are bounded source/docs/tooling hygiene for AppCore save analysis, Lore path containment, ZIP extraction safety, validation-tool behavior, release-profile freshness, private-path redaction checks, and concise baton state. They are not release, runtime, live-Ghidra, gameplay, or online-readiness evidence.",
-    "releaseDocs": "v1.0.8 release-prep docs may describe candidate ZIP and public-boundary validation status only. The final v1.0.8 release-candidate probe now passes locally under OnslaughtToolkit-winui-v1.0.8-win-x64.zip, including representative Media smoke after the UIA tree-item selection repair. v1.0.7 remains the last public GitHub Release until explicit publication authority creates the v1.0.8 tag, release, and assets. Do not promote signing, installer/MSIX/Store, upload, tag, announcement, gameplay proof, or online capability.",
+    "releaseDocs": "v1.0.8 is the latest public GitHub Release. It publishes OnslaughtToolkit-winui-v1.0.8-win-x64.zip and its SHA-256 sidecar for commit 6e7bcb42b3849b51a9d14dbb15863c520aa21a4b, with 949 Lore documents, friendly root layout, passing launch/Home/Lore/representative Media smokes, and process cleanup. v1.0.7 remains historical. Do not promote signing, installer/MSIX/Store, announcement, gameplay proof, online capability, rebuild parity, visual parity, or installed-game/original BEA.exe mutation.",
     "lore": "Lore docs and mirrored roadmap material should remain public-safe and source/tooling scoped. Lore pack and browser hardening is traversal/path-boundary support, not a full filesystem proof or runtime UI proof.",
     "patchBenchAndWinUI": "WinUI copy and metrics surfaces are source/static or local-build aids unless native UIA or visual proof is freshly run and recorded. PatchBench remains disabled/safety-scoped where runtime proof is absent.",
     "reAndRebuild": "Static RE closeout and rebuild planning docs remain planning and static-accounting surfaces. They are not runtime parser proof, visual/gameplay proof, live Ghidra read-back, generated asset output, or rebuild parity."
@@ -28,16 +28,16 @@
       "ZIP package probe tests"
     ],
     "remainingGatePlan": [
-      "Complete fresh read-only acceptance review of the v1.0.8 prep patch.",
-      "Commit and push prep only after acceptance review is read.",
-      "Keep v1.0.8 publication, tag creation, release asset upload, signing, installer/MSIX/Store work, and announcement blocked until separate explicit authorization."
+      "Validate post-publication source-truth docs/state closeout.",
+      "Commit and push source-truth closeout to main.",
+      "Keep signing, installer/MSIX/Store work, announcement, gameplay proof, online capability, rebuild parity, visual parity, and installed-game/original BEA.exe mutation out of scope."
     ]
   },
   "blockers": [],
   "openQuestions": [],
   "nextSteps": [
-    "Keep historical v1.0.7 release notes unchanged unless a separate publication slice explicitly supersedes them.",
-    "Publish v1.0.8 only in a later explicitly authorized release slice.",
+    "Keep historical v1.0.7 release notes intact as historical records.",
+    "Leave any future signing, installer, announcement, or stronger proof work to a separate authorized slice.",
     "Keep future state updates concise and current-state oriented rather than historical."
   ]
 }
