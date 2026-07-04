@@ -1,7 +1,7 @@
 # Onslaught Toolkit Release Notes
 
 Status: active release note
-Last updated: 2026-06-25
+Last updated: 2026-07-04
 
 This file describes the current source-release and public-safety posture. The repo is WinUI-first for the user-facing Windows product. Electron, WPF, and the old Python GUI/CLI parity app are archived/reference surfaces.
 
@@ -35,6 +35,9 @@ the generated broad offline Lore content pack.
 `release/readiness/WINUI-ZIP-README.txt` describes ZIPs built from the current
 source candidate. The published `v1.0.7` asset is documented by
 `release/readiness/winui_zip_release_v1_0_7_2026-06-25.md`.
+The `v1.0.8` release-prep candidate is source-tree and local-artifact readiness
+only until a maintainer explicitly authorizes tag creation, GitHub Release
+publication, and asset upload.
 
 The ZIP release does not include Battle Engine Aquila game files, copied
 executables, saves, media payloads, full Ghidra databases, or bulky generated

@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-04",
-  "currentFocus": "Documentation and state batons are being refreshed for the pre-Sol-Ultra quality wave. The tracked docs should distinguish proven source/tooling repairs from runtime proof, release publication, live Ghidra work, online capability, and rebuild aspirations.",
+  "currentFocus": "Documentation and state batons are refreshed for locally validated v1.0.8 release-prep. The docs distinguish candidate/source readiness from the last public v1.0.7 GitHub Release and must not imply publication, signing, installer/MSIX/Store readiness, gameplay proof, online capability, or rebuild parity.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "contributorGuide": "CONTRIBUTING.md",
@@ -14,7 +14,7 @@
   "currentDocsTruth": {
     "wave1220StaticCloseout": "Wave1220 static closeout acceptance: active current-risk focused accounting is `1179/1179 = 100.00%`; remaining active focused work: 0",
     "preSolUltraQualityWave": "Current tracked changes are bounded source/docs/tooling hygiene for AppCore save analysis, Lore path containment, ZIP extraction safety, validation-tool behavior, release-profile freshness, private-path redaction checks, and concise baton state. They are not release, runtime, live-Ghidra, gameplay, or online-readiness evidence.",
-    "releaseDocs": "Release/readiness docs may describe local ZIP and public-boundary validation status only. Do not promote any release publication, signing, installer/MSIX/Store, upload, tag, announcement, or representative Media smoke result without a fresh proof lane.",
+    "releaseDocs": "v1.0.8 release-prep docs may describe candidate ZIP and public-boundary validation status only. The final v1.0.8 release-candidate probe now passes locally under OnslaughtToolkit-winui-v1.0.8-win-x64.zip, including representative Media smoke after the UIA tree-item selection repair. v1.0.7 remains the last public GitHub Release until explicit publication authority creates the v1.0.8 tag, release, and assets. Do not promote signing, installer/MSIX/Store, upload, tag, announcement, gameplay proof, or online capability.",
     "lore": "Lore docs and mirrored roadmap material should remain public-safe and source/tooling scoped. Lore pack and browser hardening is traversal/path-boundary support, not a full filesystem proof or runtime UI proof.",
     "patchBenchAndWinUI": "WinUI copy and metrics surfaces are source/static or local-build aids unless native UIA or visual proof is freshly run and recorded. PatchBench remains disabled/safety-scoped where runtime proof is absent.",
     "reAndRebuild": "Static RE closeout and rebuild planning docs remain planning and static-accounting surfaces. They are not runtime parser proof, visual/gameplay proof, live Ghidra read-back, generated asset output, or rebuild parity."
@@ -28,18 +28,16 @@
       "ZIP package probe tests"
     ],
     "remainingGatePlan": [
-      "Run docsync, doc commands, Markdown links, repo hygiene, release profile, curated release, public allowlist, and hard-payload safety gates after final edits.",
-      "Keep final campaign reports under the ignored local campaign root and summarize only sanitized conclusions in tracked state."
+      "Complete fresh read-only acceptance review of the v1.0.8 prep patch.",
+      "Commit and push prep only after acceptance review is read.",
+      "Keep v1.0.8 publication, tag creation, release asset upload, signing, installer/MSIX/Store work, and announcement blocked until separate explicit authorization."
     ]
   },
-  "blockers": [
-    "Optional representative Media smoke remains unclaimed.",
-    "No fresh runtime UIA, visual, gameplay, audio, live Ghidra, release-publication, or online capability proof is part of this wave."
-  ],
+  "blockers": [],
   "openQuestions": [],
   "nextSteps": [
-    "Regenerate release profile artifacts after source/doc repairs settle.",
-    "Record final validation and consult outcomes in ignored campaign reports.",
+    "Keep historical v1.0.7 release notes unchanged unless a separate publication slice explicitly supersedes them.",
+    "Publish v1.0.8 only in a later explicitly authorized release slice.",
     "Keep future state updates concise and current-state oriented rather than historical."
   ]
 }

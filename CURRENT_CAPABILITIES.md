@@ -2,7 +2,7 @@
 
 Deployment shape: offline safe-copy patches should feel like "choose a preset, prepare a copied game folder, launch the copied executable." Any future first-generation online experiment is expected to require WinUI or a bundled companion helper during the session for identity/auth, invitations, relay/host authority, input delivery, cleanup, and rollback. A later native-feeling mega patch or in-game menu remains a promotion target for proven features, not the first netplay deployment shape.
 
-Downloadable app release shape: the public `v1.0.7` release is an
+Last public downloadable app release shape: the public `v1.0.7` release is an
 unsigned portable Windows x64 ZIP with a SHA-256 checksum sidecar. The package
 uses a friendly top-level launcher/readme/license layout, keeps the
 self-contained WinUI payload under `app/`, includes a generated short-path
@@ -12,6 +12,8 @@ source/search pages, rejects raw root DLL/EXE layouts, rejects Explorer-unsafe
 long ZIP entry paths, and passes extracted launch, Home, Lore, and
 representative Media UI smokes with no skipped test rows. Evidence:
 `release/readiness/winui_zip_release_v1_0_7_2026-06-25.md`.
+`v1.0.8` release prep is candidate/source readiness only until an explicit
+publication slice creates the tag, GitHub Release, and uploaded assets.
 WinUI labels Lore source/external links as browser-opening actions instead of
 implying every Lore link stays inside the app. External references may still
 open in the browser.

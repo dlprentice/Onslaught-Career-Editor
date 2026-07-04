@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-04",
-  "currentFocus": "Pre-Sol-Ultra repo quality wave integration is in implementation, review, and validation. Scope is bounded source/docs/tooling hygiene: AppCore save-version rejection, Lore root-containment hardening, ZIP extraction traversal defense, validation-tool repairs, private-path redaction checks, release profile freshness, and concise state baton refresh.",
+  "currentFocus": "v1.0.8 release-prep is locally validated and ready for prep-only commit/push. Scope is bounded metadata, release-candidate ZIP naming, release-readiness reporting, package validation, and the Media smoke harness repair; it does not authorize release publication, tag creation, upload, signing, installer/MSIX/Store work, gameplay proof, or capability promotion.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "contributorGuide": "CONTRIBUTING.md",
@@ -27,10 +27,25 @@
         "package.json includes the local docsync check wrapper."
       ]
     },
+    "v108ReleasePrep": {
+      "status": "validated-local-candidate",
+      "summary": "Current prep bumps package metadata and the release-candidate ZIP filename to v1.0.8, adds candidate-only readiness accounting, repairs the representative Media UIA smoke locator/selection path, and keeps v1.0.7 as the last public GitHub Release until explicit publication authority is granted. The final v1.0.8 ZIP candidate passes under the final name.",
+      "candidateArtifact": "subagents/winui-zip-release-candidate-probe/current/OnslaughtToolkit-winui-v1.0.8-win-x64.zip",
+      "candidateSha256": "f01474cb21624cfb938450911be277937e0e12cd04ff1755d2ff1b87aa6b283a",
+      "candidateSizeBytes": 246803017,
+      "loreDocumentCount": 949,
+      "finalGate": "npm run test:winui-zip-release-candidate-probe",
+      "finalGateStatus": "pass; extracted launch, Home navigation, Lore reader, representative Media smoke, root layout, payload safety, Lore pack checks, and process cleanup passed",
+      "mediaSmokeRepair": "WinUiMediaInteractionSmokeTests now scopes media row lookup to MediaAudioTreeView/MediaVideoTreeView TreeItems, uses UIA scroll/selection/invoke/click activation, and waits for exact selected text before asserting.",
+      "nonClaims": [
+        "No GitHub Release, tag, release asset upload, signing, installer, MSIX, Store package, or announcement.",
+        "No hard payload, copied executable, raw proof bundle, full Ghidra database, secret, installed-game mutation, original BEA.exe mutation, Host/Join enablement, online-ready claim, gameplay claim, rebuild claim, or visual parity claim."
+      ]
+    },
     "hardPayloadBoundary": "No hard payloads, secrets, raw local campaign paths, storage manifests, private proof paths, copied executables, screenshots/frame dumps, full Ghidra databases, .env files, build output, package output, or local runtime caches belong in tracked docs/state.",
     "nonClaims": [
       "No installed Battle Engine Aquila folder or original BEA.exe mutation.",
-      "No BEA/CDB/audio launch, visual proof, gameplay proof, representative Media smoke proof, or runtime causality proof.",
+      "No BEA executable/CDB/gameplay launch, visual proof, gameplay proof, or runtime causality proof. The v1.0.8 package evidence is limited to WinUI UIA launch/Home/Lore/representative Media smokes.",
       "No live Ghidra mutation, decompiler read-back, private asset access, extractor/importer execution, or generated asset output.",
       "No Host/Join enablement, online/player-ready promotion, release publication, tag, upload, installer, MSIX, Store work, or announcement."
     ]
@@ -47,19 +62,16 @@
     ],
     "knownLocalOnlyGateBehavior": "tools/ghidra_static_reaudit_queue_probe.py --check is expected to fail closed when no local quality snapshot exists; it no longer writes queue output unless --write-report is passed.",
     "remainingGatePlan": [
-      "Refresh release profile artifacts after final tracked edits.",
-      "Run source, docs, public-boundary, AppCore, WinUI build, and hard-payload gates serially.",
-      "Commit and push only after fresh gate evidence is read."
+      "Complete fresh read-only acceptance review of the v1.0.8 prep patch.",
+      "Commit and push prep only after acceptance review is read.",
+      "Keep publication, tag creation, release asset upload, signing, installer/MSIX/Store work, and announcement blocked until separate explicit authorization."
     ]
   },
-  "blockers": [
-    "Optional representative Media smoke audio-row selection remains unclaimed unless separately authorized and proven.",
-    "Live Ghidra queue snapshot is absent in this source-only lane; keep that gate fail-closed and local-only."
-  ],
+  "blockers": [],
   "openQuestions": [],
   "nextSteps": [
-    "Complete consult review of the integrated diff and resolve any blocking findings.",
-    "Run the final validation suite from a clean, serial source tree.",
-    "After push, verify HEAD, origin/main, and live remote refs match before closing the campaign."
+    "Run fresh read-only acceptance over the v1.0.8 prep patch.",
+    "If acceptance passes, commit and push prep only, then verify HEAD, origin/main, and live remote refs match.",
+    "Publish v1.0.8 only in a later explicitly authorized release slice."
   ]
 }

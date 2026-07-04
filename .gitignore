@@ -46,6 +46,7 @@ subagents/winui-runtime-accessibility-smoke/
 subagents/winui-visual-qa/
 subagents/winui-zip-package-probe/
 subagents/winui-zip-release-candidate-probe/
+subagents/winui-zip-release-readiness-current/
 release/out/
 release/artifacts/
 .tmp*/

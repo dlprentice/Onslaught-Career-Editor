@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using FlaUI.Core;
 using FlaUI.Core.AutomationElements;
+using FlaUI.Core.Definitions;
 using FlaUI.Core.Tools;
 using FlaUI.UIA3;
 using NUnit.Framework;
@@ -360,16 +361,25 @@ public class WinUiMediaInteractionSmokeTests
     private static void SetTextBox(Window window, string automationId, string text)
     {
         TextBox textBox = FindByAutomationId(window, automationId).AsTextBox();
-        textBox.Text = string.Empty;
-        textBox.Enter(text);
+        textBox.Focus();
+        textBox.Text = text;
+        bool valueApplied = Retry.WhileFalse(
+            () => string.Equals(textBox.Text, text, StringComparison.Ordinal),
+            TimeSpan.FromSeconds(5)).Success;
+        Assert.That(valueApplied, Is.True, $"Expected {automationId} to accept the requested text value.");
     }
 
     private static void PlayAudioRow(Window window, MediaAudioItem audioItem, string gameDirectory)
     {
         SetTextBox(window, "MediaAudioSearchBox", audioItem.Name);
-        AutomationElement audioLeaf = WaitForNamePrefix(window, audioItem.Name, TimeSpan.FromSeconds(15));
-        audioLeaf.Click();
+        AutomationElement audioLeaf = WaitForTreeItemByNamePrefix(
+            window,
+            "MediaAudioTreeView",
+            audioItem.Name,
+            TimeSpan.FromSeconds(15));
+        InvokeElement(audioLeaf);
 
+        WaitForAutomationText(window, "MediaAudioNowPlaying", audioItem.Name, TimeSpan.FromSeconds(10));
         AssertTextByAutomationId(window, "MediaAudioNowPlaying", audioItem.Name);
         AssertSummaryIsPublicSafe(window, "MediaAudioSourceSummary", gameDirectory, Path.GetFileName(audioItem.FilePath));
 
@@ -383,9 +393,14 @@ public class WinUiMediaInteractionSmokeTests
     private static void PlayVideoRow(Window window, MediaVideoItem videoItem, string gameDirectory)
     {
         SetTextBox(window, "MediaVideoSearchBox", videoItem.Name);
-        AutomationElement videoLeaf = WaitForNamePrefix(window, videoItem.Name, TimeSpan.FromSeconds(15));
-        videoLeaf.Click();
+        AutomationElement videoLeaf = WaitForTreeItemByNamePrefix(
+            window,
+            "MediaVideoTreeView",
+            videoItem.Name,
+            TimeSpan.FromSeconds(15));
+        InvokeElement(videoLeaf);
 
+        WaitForAutomationText(window, "MediaVideoSelected", videoItem.Name, TimeSpan.FromSeconds(10));
         AssertTextByAutomationId(window, "MediaVideoSelected", videoItem.Name);
         AssertSummaryIsPublicSafe(window, "MediaVideoSourceSummary", gameDirectory, Path.GetFileName(videoItem.FilePath));
         Assert.That(FindByAutomationId(window, "MediaVideoPlayButton").IsEnabled, Is.True, "Expected selected video to expose a Play action.");
@@ -400,14 +415,53 @@ public class WinUiMediaInteractionSmokeTests
         Assert.That(videoTimeAdvanced, Is.True, "Expected inline video playback time to advance.");
     }
 
-    private static AutomationElement WaitForNamePrefix(Window window, string prefix, TimeSpan timeout)
+    private static AutomationElement WaitForTreeItemByNamePrefix(Window window, string treeAutomationId, string prefix, TimeSpan timeout)
     {
+        AutomationElement treeRoot = FindByAutomationId(window, treeAutomationId);
         AutomationElement? element = Retry.WhileNull(
-            () => window.FindAllDescendants()
-                .FirstOrDefault(candidate => TryGetName(candidate)?.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) == true),
+            () => treeRoot.FindAllDescendants()
+                .FirstOrDefault(candidate =>
+                    candidate.ControlType == ControlType.TreeItem &&
+                    TryGetName(candidate)?.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) == true),
             timeout).Result;
-        Assert.That(element, Is.Not.Null, $"Expected a visible media row starting with: {prefix}");
+        Assert.That(element, Is.Not.Null, $"Expected a visible media tree item starting with: {prefix}");
         return element!;
+    }
+
+    private static void InvokeElement(AutomationElement element)
+    {
+        if (element.Patterns.ScrollItem.IsSupported)
+        {
+            element.Patterns.ScrollItem.Pattern.ScrollIntoView();
+        }
+
+        if (element.Patterns.SelectionItem.IsSupported)
+        {
+            element.Patterns.SelectionItem.Pattern.Select();
+        }
+
+        element.Focus();
+        Thread.Sleep(250);
+
+        if (element.Patterns.Invoke.IsSupported)
+        {
+            element.Patterns.Invoke.Pattern.Invoke();
+        }
+
+        element.Click();
+    }
+
+    private static void WaitForAutomationText(Window window, string automationId, string expectedText, TimeSpan timeout)
+    {
+        string actualText = string.Empty;
+        bool matched = Retry.WhileFalse(
+            () =>
+            {
+                actualText = TryGetName(FindByAutomationId(window, automationId)) ?? string.Empty;
+                return string.Equals(actualText, expectedText, StringComparison.Ordinal);
+            },
+            timeout).Success;
+        Assert.That(matched, Is.True, $"Expected {automationId} to read: {expectedText}. Actual: {actualText}");
     }
 
     private static void WaitForText(Window window, string text, TimeSpan timeout)
