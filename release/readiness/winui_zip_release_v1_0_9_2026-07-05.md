@@ -1,6 +1,6 @@
 # WinUI ZIP Release v1.0.9 - 2026-07-05
 
-Status: release-candidate validated; GitHub publication pending in this release slice
+Status: published GitHub Release
 
 This note tracks the v1.0.9 public ZIP release. It is a portable unsigned
 Windows x64 ZIP with a checksum sidecar. It is not a signing result, MSIX,
@@ -27,8 +27,13 @@ online capability promotion, or rebuild/visual parity claim.
 ## Candidate Artifact
 
 The final v1.0.9 release-candidate probe built the final-named ZIP and passed
-the package/layout/Lore/launch/Home/Media/process-cleanup checks.
+the package/layout/Lore/launch/Home/Media/process-cleanup checks. The ZIP below
+was uploaded to the v1.0.9 GitHub Release.
 
+- Release URL:
+  `https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.9`
+- Release target:
+  `75c7c973bb32e8a308c6607e39035ba7286d8194`
 - ZIP: `OnslaughtToolkit-winui-v1.0.9-win-x64.zip`
 - ZIP size: `246804448`
 - SHA-256: `e09439c40a4ff7197c4151e18651388b2515a71950ea2479b01266c00d918519`
@@ -73,8 +78,19 @@ the package/layout/Lore/launch/Home/Media/process-cleanup checks.
 
 Additional final repo gates are recorded in the release commit/final handoff.
 
+## Post-Publication Verification
+
+Post-publication verification confirmed the release exists, the `v1.0.9` tag
+resolves to `75c7c973bb32e8a308c6607e39035ba7286d8194`, the ZIP and SHA-256
+sidecar assets are uploaded, the uploaded ZIP size is `246804448`, and the
+uploaded ZIP asset digest is
+`sha256:e09439c40a4ff7197c4151e18651388b2515a71950ea2479b01266c00d918519`.
+GitHub lists v1.0.9 as the latest release.
+
 ## Boundaries
 
+- GitHub Release publication, tag creation, and release asset upload occurred
+  for `v1.0.9`.
 - No signing, installer, MSIX, Store package, or SmartScreen claim.
 - No Battle Engine Aquila game files, copied executables, saves, media payloads,
   raw proof bundles, CDB logs, screenshots, full Ghidra databases, secrets, or

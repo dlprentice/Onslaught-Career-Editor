@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-05",
-  "currentFocus": "Documentation/state are aligned for the authorized v1.0.9 portable ZIP release slice. Current docs promote the first-time-user UX/code-flow safety repairs into the next unsigned WinUI ZIP release while preserving no-signing/no-installer/no-gameplay/no-online/no-rebuild/no-original-BEA-mutation boundaries.",
+  "currentFocus": "Documentation/state are aligned with the published v1.0.9 portable ZIP release. Current docs promote the first-time-user UX/code-flow safety repairs as the latest unsigned WinUI ZIP release while preserving no-signing/no-installer/no-gameplay/no-online/no-rebuild/no-original-BEA-mutation boundaries.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "contributorGuide": "CONTRIBUTING.md",
@@ -14,7 +14,7 @@
   "currentDocsTruth": {
     "wave1220StaticCloseout": "Wave1220 static closeout acceptance: active current-risk focused accounting is `1179/1179 = 100.00%`; remaining active focused work: 0",
     "preSolUltraQualityWave": "Current tracked changes are bounded source/docs/tooling hygiene for AppCore save analysis, Lore path containment, ZIP extraction safety, validation-tool behavior, release-profile freshness, private-path redaction checks, and concise baton state. They are not release, runtime, live-Ghidra, gameplay, or online-readiness evidence.",
-    "releaseDocs": "v1.0.9 is the authorized next public GitHub Release slice. It publishes OnslaughtToolkit-winui-v1.0.9-win-x64.zip and its SHA-256 sidecar, with 949 Lore documents, friendly root layout, passing launch/Home/Lore/representative Media smokes, and process cleanup. v1.0.8 remains historical. `release/readiness/winui_zip_release_v1_0_9_2026-07-05.md` records the release candidate facts; `release/readiness/winui_action_reaction_map_v1_0_9_2026-07-05.md` records harder release questions plus a source-derived WinUI handler-family action/reaction map; `release/readiness/winui_control_action_matrix_v1_0_9_2026-07-05.tsv` records the per-control source matrix. Do not promote signing, installer/MSIX/Store, announcement, gameplay proof, online capability, rebuild parity, visual parity, or installed-game/original BEA.exe mutation.",
+    "releaseDocs": "v1.0.9 is the latest public GitHub Release. It publishes OnslaughtToolkit-winui-v1.0.9-win-x64.zip and its SHA-256 sidecar for commit 75c7c973bb32e8a308c6607e39035ba7286d8194, with 949 Lore documents, friendly root layout, passing launch/Home/Lore/representative Media smokes, and process cleanup. v1.0.8 remains historical. `release/readiness/winui_zip_release_v1_0_9_2026-07-05.md` records the published release facts; `release/readiness/winui_action_reaction_map_v1_0_9_2026-07-05.md` records harder release questions plus a source-derived WinUI handler-family action/reaction map; `release/readiness/winui_control_action_matrix_v1_0_9_2026-07-05.tsv` records the per-control source matrix. Do not promote signing, installer/MSIX/Store, announcement, gameplay proof, online capability, rebuild parity, visual parity, or installed-game/original BEA.exe mutation.",
     "lore": "Lore docs and mirrored roadmap material should remain public-safe and source/tooling scoped. Lore pack and browser hardening is traversal/path-boundary support, not a full filesystem proof or runtime UI proof.",
     "patchBenchAndWinUI": "WinUI copy and metrics surfaces are source/static or local-build aids unless native UIA or visual proof is freshly run and recorded. PatchBench remains disabled/safety-scoped where runtime proof is absent.",
     "reAndRebuild": "Static RE closeout and rebuild planning docs remain planning and static-accounting surfaces. They are not runtime parser proof, visual/gameplay proof, live Ghidra read-back, generated asset output, or rebuild parity."
@@ -28,8 +28,7 @@
       "ZIP package probe tests"
     ],
     "remainingGatePlan": [
-      "Commit and push the v1.0.9 release source update.",
-      "Publish the v1.0.9 GitHub Release with the validated ZIP and SHA-256 sidecar.",
+      "Push the v1.0.9 post-publication source-truth closeout.",
       "Keep signing, installer/MSIX/Store work, announcement, gameplay proof, online capability, rebuild parity, visual parity, and installed-game/original BEA.exe mutation out of scope."
     ]
   },
