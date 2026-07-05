@@ -87,6 +87,11 @@ uploaded ZIP asset digest is
 `sha256:e09439c40a4ff7197c4151e18651388b2515a71950ea2479b01266c00d918519`.
 GitHub lists v1.0.9 as the latest release.
 
+The immutable release tag remains on the package-producing commit above.
+Post-publication source-truth cleanup is tracked on `main` after that tag,
+beginning with `ecd4d467ec1e258769e6ffa333a210a5c2ef2743`; those source/docs
+commits do not change the already-uploaded v1.0.9 ZIP or checksum sidecar.
+
 ## Boundaries
 
 - GitHub Release publication, tag creation, and release asset upload occurred
