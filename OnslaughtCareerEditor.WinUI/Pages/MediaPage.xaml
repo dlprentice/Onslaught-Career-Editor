@@ -468,12 +468,12 @@
                                     <TextBlock x:Name="VideoPathTextBlock"
                                                AutomationProperties.AutomationId="MediaVideoSourceSummary"
                                                Style="{StaticResource SectionBodyTextStyle}"
-                                               Text="Select a video from the library on the left to start playback or reveal the file in Explorer."
+                                               Text="Select a video from the library on the left to start playback or show the file in Explorer."
                                                TextTrimming="CharacterEllipsis"
                                                TextWrapping="NoWrap" />
                                     <Button x:Name="RevealVideoButton"
                                             AutomationProperties.AutomationId="MediaRevealVideoButton"
-                                            Content="Reveal File"
+                                            Content="Show in Explorer"
                                             Click="RevealVideoButton_Click"
                                             IsEnabled="False"
                                             HorizontalAlignment="Left" />

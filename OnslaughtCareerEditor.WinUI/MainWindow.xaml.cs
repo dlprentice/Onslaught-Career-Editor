@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -18,6 +19,7 @@ namespace OnslaughtCareerEditor.WinUI
         private readonly Dictionary<string, Type> _pageByTag;
         private readonly Dictionary<Type, object> _pageCache = new();
         private readonly AppWindow? _appWindow;
+        private bool _closeConfirmedAfterSafeCopyWarning;
 
         public MainWindow()
         {
@@ -50,6 +52,11 @@ namespace OnslaughtCareerEditor.WinUI
             };
 
             AppStatusService.StatusChanged += HandleStatusChanged;
+            if (_appWindow is not null)
+            {
+                _appWindow.Closing += AppWindow_Closing;
+            }
+
             Closed += MainWindow_Closed;
             RefreshFooter();
             NavigateToTag(GetInitialTag());
@@ -183,6 +190,56 @@ namespace OnslaughtCareerEditor.WinUI
             int width = Math.Clamp(config.WindowWidth, AppConfig.MinWindowWidth, AppConfig.MaxWindowWidth);
             int height = Math.Clamp(config.WindowHeight, AppConfig.MinWindowHeight, AppConfig.MaxWindowHeight);
             _appWindow.Resize(new SizeInt32(width, height));
+        }
+
+        private async void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
+        {
+            if (_closeConfirmedAfterSafeCopyWarning)
+            {
+                return;
+            }
+
+            IReadOnlyList<GameProfileRegisteredProcess> activeSafeCopies = App.SafeGameCopyProcesses.Snapshot();
+            if (activeSafeCopies.Count == 0)
+            {
+                return;
+            }
+
+            args.Cancel = true;
+            if (!await ConfirmCloseWithManagedSafeCopyAsync(activeSafeCopies.Count))
+            {
+                AppStatusService.SetStatus("Close canceled: copied game still running");
+                return;
+            }
+
+            _closeConfirmedAfterSafeCopyWarning = true;
+            Close();
+        }
+
+        private async Task<bool> ConfirmCloseWithManagedSafeCopyAsync(int processCount)
+        {
+            XamlRoot? root = (Content as FrameworkElement)?.XamlRoot ?? ContentFrame.XamlRoot;
+            if (root is null)
+            {
+                return true;
+            }
+
+            string copiedGameText = processCount == 1 ? "the copied game process" : $"{processCount} copied game processes";
+            ContentDialog dialog = new()
+            {
+                Title = "Close copied game too?",
+                Content = new TextBlock
+                {
+                    Text = $"Closing Onslaught Toolkit will close or force-stop {copiedGameText} it launched from an app-owned safe copy. Save progress first; the installed game folder stays unchanged.",
+                    TextWrapping = TextWrapping.WrapWholeWords,
+                },
+                PrimaryButtonText = "Close toolkit and copied game",
+                CloseButtonText = "Keep running",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = root,
+            };
+
+            return await dialog.ShowAsync() == ContentDialogResult.Primary;
         }
 
         private void MainWindow_Closed(object sender, WindowEventArgs args)

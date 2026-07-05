@@ -155,7 +155,7 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
             Assert.That(
                 patchReady,
                 Is.True,
-                $"Expected Patch Save to become enabled for copied input and distinct output paths. Input='{inputText}' Output='{outputText}' Pending='{pendingText}' Safety='{safetyText}'");
+                $"Expected Write patched save copy to become enabled for copied input and distinct output paths. Input='{inputText}' Output='{outputText}' Pending='{pendingText}' Safety='{safetyText}'");
             Assert.That(pendingText, Does.Contain("Pending:"));
             Assert.That(safetyText, Does.Contain("Save patching is ready"));
 
@@ -259,7 +259,7 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
             Assert.That(
                 patchReady,
                 Is.True,
-                $"Expected Patch Game Options to become enabled for copied input and distinct output paths. Safety='{safetyText}'");
+                $"Expected Write options copy to become enabled for copied input and distinct output paths. Safety='{safetyText}'");
             Assert.That(safetyText, Does.Contain("Game options patching is ready"));
 
             ScrollIntoView(patchButton);

@@ -90,8 +90,8 @@
                                 Click="PrepareCopiedProfileButton_Click" />
                         <Button x:Name="PatchBenchTopPlaySafeCopyButton"
                                 AutomationProperties.AutomationId="PatchBenchTopPlaySafeCopyButton"
-                                AutomationProperties.Name="Play safe game copy from main workflow"
-                                Content="Play safe copy"
+                                AutomationProperties.Name="Launch safe game copy from main workflow"
+                                Content="Launch safe game copy"
                                 Grid.Column="2"
                                 HorizontalAlignment="Stretch"
                                 Click="LaunchCopiedProfileButton_Click" />
@@ -628,17 +628,17 @@
                             <StackPanel Spacing="10">
                                 <Button x:Name="PatchBenchLaunchCopiedProfileButton"
                                         AutomationProperties.AutomationId="PatchBenchLaunchCopiedProfileButton"
-                                        AutomationProperties.Name="Play safe game copy"
-                                        Content="Play safe copy"
+                                        AutomationProperties.Name="Launch safe game copy"
+                                        Content="Launch safe game copy"
                                         Style="{StaticResource AccentButtonStyle}"
                                         Click="LaunchCopiedProfileButton_Click" />
                                 <Button x:Name="PatchBenchStopCopiedProfileButton"
                                         AutomationProperties.AutomationId="PatchBenchStopCopiedProfileButton"
-                                        AutomationProperties.Name="Stop safe game copy"
-                                        Content="Stop safe copy"
+                                        AutomationProperties.Name="Stop copied game"
+                                        Content="Stop copied game"
                                         Click="StopCopiedProfileButton_Click" />
                             </StackPanel>
-                            <TextBlock Text="Play starts the safe copy. Stop closes only the safe-copy process started here and never deletes the safe copy. Save progress first; Stop may force-close the copied game if it does not respond."
+                            <TextBlock Text="Launch starts the safe copy. Stop closes only the copied-game process started here and never deletes the safe copy. Save progress first; Stop may force-close the copied game if it does not respond."
                                        Style="{StaticResource SectionBodyTextStyle}" />
                             <Border Background="{ThemeResource ShellMutedSurfaceBrush}"
                                     BorderBrush="{ThemeResource ShellBorderBrush}"

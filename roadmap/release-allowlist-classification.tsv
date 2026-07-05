@@ -2996,6 +2996,7 @@ release/readiness/weapon_projectile_spawn_handoff_proof_plan_2026-06-08.md	R0_AL
 release/readiness/winui_about_product_lane_smoke_2026-05-06.md	R0_ALLOW	default
 release/readiness/winui_accessibility_automation_ids_review_2026-05-06.md	R0_ALLOW	default
 release/readiness/winui_accessible_name_source_guard_2026-05-07.md	R0_ALLOW	default
+release/readiness/winui_action_reaction_map_v1_0_9_2026-07-05.md	R0_ALLOW	default
 release/readiness/winui_agentic_ui_snapshot_2026-06-24.md	R0_ALLOW	default
 release/readiness/winui_appconfig_normalization_guard_2026-05-07.md	R0_ALLOW	default
 release/readiness/winui_appconfig_save_detection_guard_2026-05-07.md	R0_ALLOW	default
@@ -3017,6 +3018,7 @@ release/readiness/winui_asset_texture_preview_visual_2026-05-06.md	R0_ALLOW	defa
 release/readiness/winui_automation_id_uniqueness_guard_2026-05-06.md	R0_ALLOW	default
 release/readiness/winui_card_primary_button_visibility_2026-05-06.md	R0_ALLOW	default
 release/readiness/winui_configuration_editor_copied_options_smoke_2026-05-06.md	R0_ALLOW	default
+release/readiness/winui_control_action_matrix_v1_0_9_2026-07-05.tsv	R0_ALLOW	default
 release/readiness/winui_control_causality_contract_2026-06-19.md	R0_ALLOW	default
 release/readiness/winui_control_feel_candidate_map_2026-06-19.md	R0_ALLOW	default
 release/readiness/winui_control_feel_telemetry_bundle_2026-06-19.md	R0_ALLOW	default
@@ -3200,6 +3202,8 @@ release/readiness/winui_zip_release_v1_0_4_2026-06-25.md	R0_ALLOW	default
 release/readiness/winui_zip_release_v1_0_5_2026-06-25.md	R0_ALLOW	default
 release/readiness/winui_zip_release_v1_0_6_2026-06-25.md	R0_ALLOW	default
 release/readiness/winui_zip_release_v1_0_7_2026-06-25.md	R0_ALLOW	default
+release/readiness/winui_zip_release_v1_0_8_2026-07-04.md	R0_ALLOW	default
+release/readiness/winui_zip_release_v1_0_9_2026-07-05.md	R0_ALLOW	default
 release/readiness/world_thing_spawn_copied_corpus_schema_proof_2026-06-08.md	R0_ALLOW	default
 release/readiness/world_thing_spawn_copied_corpus_schema_proof_plan_2026-06-08.md	R0_ALLOW	default
 release/readiness/world_thing_spawn_getthingref_object_reference_static_proof_2026-06-08.md	R0_ALLOW	default

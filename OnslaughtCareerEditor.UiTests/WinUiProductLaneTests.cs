@@ -876,10 +876,10 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("Leave this off for clean patch tests"));
         Assert.That(pageXaml, Does.Contain("The source savegames folder is still read-only"));
         Assert.That(pageXaml, Does.Contain("Create safe copy"));
-        Assert.That(pageXaml, Does.Contain("Play safe copy"));
-        Assert.That(pageXaml, Does.Contain("Stop safe copy"));
-        Assert.That(pageXaml, Does.Contain("Play starts the safe copy."));
-        Assert.That(pageXaml, Does.Contain("Stop closes only the safe-copy process started here"));
+        Assert.That(pageXaml, Does.Contain("Launch safe game copy"));
+        Assert.That(pageXaml, Does.Contain("Stop copied game"));
+        Assert.That(pageXaml, Does.Contain("Launch starts the safe copy."));
+        Assert.That(pageXaml, Does.Contain("Stop closes only the copied-game process started here"));
         Assert.That(pageXaml, Does.Contain("Save progress first"));
         Assert.That(pageXaml, Does.Not.Contain("Copied profile preflight"));
         Assert.That(pageXaml, Does.Not.Contain("Prepare copied profile"));
@@ -1838,6 +1838,50 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Not.Contain("Play will run BEA.exe from safe copy: {result.TargetGameRoot}"));
         Assert.That(code, Does.Not.Contain("PatchBenchHostOnlineSessionButton"));
         Assert.That(code, Does.Not.Contain("PatchBenchJoinOnlineSessionButton"));
+    }
+
+    [Test]
+    public void PatchBench_SafeCopyStopAndWindowCloseWarnBeforeClosingCopiedGame()
+    {
+        string shellCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "MainWindow.xaml.cs");
+        string patchBenchCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs");
+
+        Assert.That(shellCode, Does.Contain("AppWindow_Closing"));
+        Assert.That(shellCode, Does.Contain("App.SafeGameCopyProcesses.Snapshot()"));
+        Assert.That(shellCode, Does.Contain("Closing Onslaught Toolkit will close or force-stop"));
+        Assert.That(shellCode, Does.Contain("Close toolkit and copied game"));
+        Assert.That(shellCode, Does.Contain("Keep running"));
+        Assert.That(shellCode, Does.Contain("_closeConfirmedAfterSafeCopyWarning"));
+
+        Assert.That(patchBenchCode, Does.Contain("Stop copied game?"));
+        Assert.That(patchBenchCode, Does.Contain("Stop copied game"));
+        Assert.That(patchBenchCode, Does.Contain("Keep running"));
+        Assert.That(patchBenchCode, Does.Contain("safe copy stop canceled"));
+        Assert.That(patchBenchCode, Does.Contain("Save progress first"));
+    }
+
+    [Test]
+    public void PrimaryWriteAndShellLabelsUsePlainFirstTimeUserCopyLanguage()
+    {
+        string savesXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.xaml");
+        string mediaXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "MediaPage.xaml");
+        string assetXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "AssetLibraryPage.xaml");
+        string patchBenchXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml");
+
+        Assert.That(savesXaml, Does.Contain("Write patched save copy"));
+        Assert.That(savesXaml, Does.Contain("Write options copy"));
+        Assert.That(savesXaml, Does.Not.Contain("Content=\"Patch Save\""));
+        Assert.That(savesXaml, Does.Not.Contain("Content=\"Patch Game Options\""));
+
+        Assert.That(mediaXaml, Does.Contain("Show in Explorer"));
+        Assert.That(mediaXaml, Does.Not.Contain("Reveal File"));
+
+        Assert.That(assetXaml, Does.Contain("Write local package"));
+        Assert.That(assetXaml, Does.Not.Contain("Content=\"Prepare package\""));
+
+        Assert.That(patchBenchXaml, Does.Contain("Launch safe game copy"));
+        Assert.That(patchBenchXaml, Does.Contain("Stop copied game"));
+        Assert.That(patchBenchXaml, Does.Not.Contain("Content=\"Play safe game copy\""));
     }
 
     [Test]

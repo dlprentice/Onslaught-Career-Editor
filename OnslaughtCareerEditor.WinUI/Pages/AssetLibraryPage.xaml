@@ -615,7 +615,7 @@
                                             Spacing="8">
                                     <Button x:Name="PrepareMaterialPackageButton"
                                             AutomationProperties.AutomationId="AssetPrepareMaterialPackageButton"
-                                            Content="Prepare package"
+                                            Content="Write local package"
                                             IsEnabled="False"
                                             Click="PrepareMaterialPackageButton_Click" />
                                     <Button x:Name="OpenMaterialPackageButton"

@@ -756,7 +756,7 @@
                                                Text="Choose at least one section and a valid .bes input/output pair to enable patching." />
                                     <Button x:Name="EditorPatchButton"
                                             AutomationProperties.AutomationId="SaveEditorPatchButton"
-                                            Content="Patch Save"
+                                            Content="Write patched save copy"
                                             Style="{StaticResource AccentButtonStyle}"
                                             Click="EditorPatchButton_Click"
                                             HorizontalAlignment="Left"
@@ -1163,7 +1163,7 @@
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <Button x:Name="ConfigurationPatchButton"
                                             AutomationProperties.AutomationId="ConfigurationPatchButton"
-                                            Content="Patch Game Options"
+                                            Content="Write options copy"
                                             Style="{StaticResource AccentButtonStyle}"
                                             Click="ConfigurationPatchButton_Click"
                                             HorizontalAlignment="Left"

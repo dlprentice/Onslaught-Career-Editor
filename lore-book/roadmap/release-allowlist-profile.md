@@ -1,12 +1,12 @@
 # Release Allowlist Profile
 
-> Generated: 2026-07-04 11:22:58 -0400
+> Generated: 2026-07-04 21:07:06 -0400
 
 ## Classification Summary
 
 | Class | Count | Meaning |
 |---|---:|---|
-| R0_ALLOW | 6201 | Default allow bucket for portable/export release accounting (still requires human review before publishing an artifact) |
+| R0_ALLOW | 6205 | Default allow bucket for portable/export release accounting (still requires human review before publishing an artifact) |
 | R2_REVIEW | 0 | Volatile/generated/binary artifacts; include only when intentional |
 | R3_CONDITIONAL | 3 | Reference submodule families requiring licensing/scope review |
 | R4_DENY | 13181 | Excluded from portable app ZIPs and legacy curated export payloads; may still be tracked public source when compact, non-secret project history |

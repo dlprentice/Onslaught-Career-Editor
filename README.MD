@@ -27,20 +27,22 @@ Downloadable app builds are published on the
 page as unsigned portable Windows x64 ZIP assets with SHA-256 checksum sidecars.
 Extract the full ZIP and run `Launch Onslaught Toolkit.cmd` from the clean
 top-level folder. The app payload lives under `app\`; run
-`app\OnslaughtCareerEditor.WinUI.exe` only as a fallback. Use `v1.0.8` or newer;
+`app\OnslaughtCareerEditor.WinUI.exe` only as a fallback. Use `v1.0.9` or newer;
 it keeps the Explorer-safe ZIP layout introduced after `v1.0.3`/`v1.0.4`, labels
 browser-opening Lore links clearly, and includes a generated offline Lore
 content pack.
 
 The ZIP release does not include Battle Engine Aquila game files, copied
 executables, saves, media payloads, full Ghidra databases, or bulky generated
-proof captures. Published `v1.0.8` keeps `lore-book\BOOK.md` as a short entry
+proof captures. Published `v1.0.9` keeps `lore-book\BOOK.md` as a short entry
 point and adds `lore-pack\onslaught-lore.v1.jsonl` plus
 `lore-pack\onslaught-lore.v1.index.json` with 949 public-safe Markdown/TXT Lore
 documents, so the app can search and read broad offline Lore without raw deep
 `lore-book/` filenames breaking normal Explorer extraction. Its ZIP SHA-256 is
-`f01474cb21624cfb938450911be277937e0e12cd04ff1755d2ff1b87aa6b283a`, with a
-published checksum sidecar. External references may still open in the browser.
+`e09439c40a4ff7197c4151e18651388b2515a71950ea2479b01266c00d918519`, with a
+published checksum sidecar. v1.0.9 also improves first-time-user wording around
+write/copy/shell actions and confirms before the app closes or force-stops a
+managed copied-game process. External references may still open in the browser.
 Media and safe copied-game workflows use your own retail/Steam install.
 Asset Library loads generated local asset catalogs; the ZIP does not bundle
 game assets or generate catalogs in-place. Catalog generation is a source/lab

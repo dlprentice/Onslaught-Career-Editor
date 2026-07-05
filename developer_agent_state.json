@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-07-04",
-  "currentFocus": "v1.0.8 is published. Current closeout aligns tracked source/docs/state with the GitHub Release while preserving boundaries: no signing, installer/MSIX/Store work, gameplay proof, Host/Join/player-ready online claim, rebuild parity, visual parity, installed-game mutation, or original BEA.exe mutation.",
+  "lastUpdated": "2026-07-05",
+  "currentFocus": "v1.0.9 portable ZIP release slice is authorized. Current work promotes the first-time-user UX/code-flow safety repairs into a new unsigned WinUI ZIP release while preserving boundaries: no signing, installer/MSIX/Store work, gameplay proof, Host/Join/player-ready online claim, rebuild parity, visual parity, installed-game mutation, or original BEA.exe mutation.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "contributorGuide": "CONTRIBUTING.md",
@@ -27,27 +27,28 @@
         "package.json includes the local docsync check wrapper."
       ]
     },
-    "v108Release": {
-      "status": "published",
-      "summary": "v1.0.8 is the latest public GitHub Release. It publishes the final unsigned portable WinUI ZIP with the friendly root layout, 949-document Lore pack, checksum sidecar, fixed representative Media smoke, and passing release-candidate probe. v1.0.7 remains historical.",
-      "releaseUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.8",
-      "releaseTarget": "6e7bcb42b3849b51a9d14dbb15863c520aa21a4b",
-      "zipAsset": "OnslaughtToolkit-winui-v1.0.8-win-x64.zip",
-      "zipSha256": "f01474cb21624cfb938450911be277937e0e12cd04ff1755d2ff1b87aa6b283a",
-      "zipSizeBytes": 246803017,
+    "v109Release": {
+      "status": "release-candidate-validated-publication-authorized",
+      "summary": "v1.0.9 is the next public GitHub Release slice. It publishes the first-time-user UX/code-flow safety repairs as an unsigned portable WinUI ZIP with the friendly root layout, 949-document Lore pack, checksum sidecar, passing release-candidate probe, and process cleanup. v1.0.8 remains historical.",
+      "releaseUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.9",
+      "releaseTarget": "pending tag publication",
+      "zipAsset": "OnslaughtToolkit-winui-v1.0.9-win-x64.zip",
+      "zipSha256": "e09439c40a4ff7197c4151e18651388b2515a71950ea2479b01266c00d918519",
+      "zipSizeBytes": 246804448,
       "loreDocumentCount": 949,
       "finalGate": "npm run test:winui-zip-release-candidate-probe",
       "finalGateStatus": "pass; extracted launch, Home navigation, Lore reader, representative Media smoke, root layout, payload safety, Lore pack checks, and process cleanup passed",
-      "mediaSmokeRepair": "WinUiMediaInteractionSmokeTests now scopes media row lookup to MediaAudioTreeView/MediaVideoTreeView TreeItems, uses UIA scroll/selection/invoke/click activation, and waits for exact selected text before asserting.",
+      "userFacingDelta": "Write/copy/shell/process actions now use clearer first-time-user labels; Stop copied game and app close with a managed copied game now require explicit user confirmation.",
       "nonClaims": [
         "No signing, installer, MSIX, Store package, SmartScreen/reputation claim, or announcement.",
         "No hard payload, copied executable, raw proof bundle, full Ghidra database, secret, installed-game mutation, original BEA.exe mutation, Host/Join enablement, online-ready claim, gameplay claim, rebuild claim, or visual parity claim."
-      ]
+      ],
+      "winuiActionReactionMap": "release/readiness/winui_action_reaction_map_v1_0_9_2026-07-05.md records harder release questions plus a source-derived handler-family map for visible WinUI buttons, toggles, selections, text edits, sliders, and launch/copy actions. release/readiness/winui_control_action_matrix_v1_0_9_2026-07-05.tsv records the per-control source matrix."
     },
     "hardPayloadBoundary": "No hard payloads, secrets, raw local campaign paths, storage manifests, private proof paths, copied executables, screenshots/frame dumps, full Ghidra databases, .env files, build output, package output, or local runtime caches belong in tracked docs/state.",
     "nonClaims": [
       "No installed Battle Engine Aquila folder or original BEA.exe mutation.",
-      "No BEA executable/CDB/gameplay launch, visual proof, gameplay proof, or runtime causality proof. The v1.0.8 package evidence is limited to WinUI UIA launch/Home/Lore/representative Media smokes.",
+      "No BEA executable/CDB/gameplay launch, visual proof, gameplay proof, or runtime causality proof. The v1.0.9 package evidence is limited to WinUI UIA launch/Home/Lore/representative Media smokes.",
       "No live Ghidra mutation, decompiler read-back, private asset access, extractor/importer execution, or generated asset output.",
       "No Host/Join enablement, online/player-ready promotion, release publication, tag, upload, installer, MSIX, Store work, or announcement."
     ]
@@ -64,16 +65,15 @@
     ],
     "knownLocalOnlyGateBehavior": "tools/ghidra_static_reaudit_queue_probe.py --check is expected to fail closed when no local quality snapshot exists; it no longer writes queue output unless --write-report is passed.",
     "remainingGatePlan": [
-      "Validate post-publication source-truth docs/state closeout.",
-      "Commit and push source-truth closeout to main.",
+      "Commit and push the v1.0.9 release source update.",
+      "Publish the v1.0.9 GitHub Release with the validated ZIP and SHA-256 sidecar.",
       "Keep signing, installer/MSIX/Store work, announcement, gameplay proof, Host/Join/player-ready online, rebuild parity, visual parity, installed-game mutation, and original BEA.exe mutation out of scope."
     ]
   },
   "blockers": [],
   "openQuestions": [],
   "nextSteps": [
-    "Run post-publication docs/state validation gates.",
-    "Commit and push source-truth closeout, then verify HEAD, origin/main, and live remote refs match.",
+    "Next UX hardening, if authorized, should focus on Asset Library first-run guidance, Windowed & Mods density, and replacing any remaining dense maintainer phrasing with plain user flow text.",
     "Leave any future signing, installer, announcement, or stronger proof work to a separate authorized slice."
   ]
 }

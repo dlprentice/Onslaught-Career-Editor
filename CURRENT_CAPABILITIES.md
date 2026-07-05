@@ -2,7 +2,7 @@
 
 Deployment shape: offline safe-copy patches should feel like "choose a preset, prepare a copied game folder, launch the copied executable." Any future first-generation online experiment is expected to require WinUI or a bundled companion helper during the session for identity/auth, invitations, relay/host authority, input delivery, cleanup, and rollback. A later native-feeling mega patch or in-game menu remains a promotion target for proven features, not the first netplay deployment shape.
 
-Last public downloadable app release shape: the public `v1.0.8` release is an
+Last public downloadable app release shape: the public `v1.0.9` release is an
 unsigned portable Windows x64 ZIP with a SHA-256 checksum sidecar. The package
 uses a friendly top-level launcher/readme/license layout, keeps the
 self-contained WinUI payload under `app/`, includes a generated short-path
@@ -12,11 +12,14 @@ source/search pages, rejects raw root DLL/EXE layouts, rejects Explorer-unsafe
 long ZIP entry paths, and passes extracted launch, Home, Lore, and
 representative Media UI smokes with no skipped test rows and process cleanup.
 ZIP SHA-256:
-`f01474cb21624cfb938450911be277937e0e12cd04ff1755d2ff1b87aa6b283a`.
-Evidence: `release/readiness/winui_zip_release_v1_0_8_2026-07-04.md`.
+`e09439c40a4ff7197c4151e18651388b2515a71950ea2479b01266c00d918519`.
+Evidence: `release/readiness/winui_zip_release_v1_0_9_2026-07-05.md`.
 WinUI labels Lore source/external links as browser-opening actions instead of
 implying every Lore link stays inside the app. External references may still
 open in the browser.
+v1.0.9 also clarifies first-time-user wording for write/copy/shell actions and
+adds explicit confirmation before the toolkit closes or force-stops a managed
+copied-game process.
 It does not include Battle Engine Aquila game files, saves, private media,
 private proof material, MSIX/installer packaging, signing, Store distribution,
 SmartScreen/reputation proof, player-ready online multiplayer, or gameplay

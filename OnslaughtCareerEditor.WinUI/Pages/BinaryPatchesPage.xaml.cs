@@ -798,7 +798,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 TextureRamLimitMb: string.Empty,
                 StatusMessage: PatchBenchLaunchPresetText.BuildLocalMultiplayerProbeStatusMessage()));
             PatchBenchOnlinePrepActionStatus.Text = "Local split-screen launch preset selected. Next: create a safe copy, then play that safe copy. This is not Host/Join or online play.";
-            OperationLogTextBox.Text = "Local split-screen preset selected: -skipfmv -level 850. Create safe copy next, then Play safe copy. No listener, invitation, remote input, or Host/Join control is enabled.";
+            OperationLogTextBox.Text = "Local split-screen preset selected: -skipfmv -level 850. Create safe copy next, then launch that safe copy. No listener, invitation, remote input, or Host/Join control is enabled.";
         }
 
         private void MaintainerArtifactToolsToggle_Toggled(object sender, RoutedEventArgs e)
@@ -1640,7 +1640,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             try
             {
                 if (!await ConfirmAsync(
-                        "Play safe copy?",
+                        "Launch safe game copy?",
                         $"The app will launch BEA.exe from the safe game copy only.\n\nSafe copy: {plan.WorkingDirectory}\n{PatchBenchLaunchText.BuildModifierSummary(plan.Arguments)}\n\nThe Steam/game install stays unchanged. The game may take focus, switch display modes, fail to start, or exit. Any manual input after launch is not counted as automated proof."))
                 {
                     AppStatusService.SetStatus("Windowed & Mods: safe copy launch canceled");
@@ -1693,6 +1693,19 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             GameProfileManagedProcess process = _managedCopiedProfileProcess;
+            if (!await ConfirmAsync(
+                    "Stop copied game?",
+                    "This closes only the copied BEA.exe process started from this page. Save progress first; Stop can close or force-close the copied game after a timeout. The installed game folder and safe-copy files stay unchanged.",
+                    primaryButtonText: "Stop copied game",
+                    closeButtonText: "Keep running"))
+            {
+                PatchBenchCopiedProfileLaunchStatus.Text = PatchBenchLaunchText.BuildBoundary("Safe copy is still running.");
+                OperationLogTextBox.Text = "Safe copy stop canceled. The copied game process was left running.";
+                AppStatusService.SetStatus("Windowed & Mods: safe copy stop canceled");
+                UpdateControlState();
+                return;
+            }
+
             _isStoppingCopiedProfile = true;
             PatchBenchStopCopiedProfileButton.IsEnabled = false;
             PatchBenchCopiedProfileLaunchStatus.Text = "Stopping safe copy...";
@@ -2588,7 +2601,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             return fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase);
         }
 
-        private async System.Threading.Tasks.Task<bool> ConfirmAsync(string title, string body)
+        private async System.Threading.Tasks.Task<bool> ConfirmAsync(
+            string title,
+            string body,
+            string primaryButtonText = "Continue",
+            string closeButtonText = "Cancel")
         {
             var dialog = new ContentDialog
             {
@@ -2598,8 +2615,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     Text = body,
                     TextWrapping = TextWrapping.WrapWholeWords
                 },
-                PrimaryButtonText = "Continue",
-                CloseButtonText = "Cancel",
+                PrimaryButtonText = primaryButtonText,
+                CloseButtonText = closeButtonText,
                 DefaultButton = ContentDialogButton.Close,
                 XamlRoot = XamlRoot
             };
