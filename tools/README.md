@@ -1,7 +1,7 @@
 # Tools Surface Map
 
 Status: public-primary orientation note
-Last updated: 2026-06-27
+Last updated: 2026-07-11
 
 `tools/` in this public-primary repo is tracked project tooling for release
 checks, AppCore/WinUI smoke helpers, RE support, runtime proof wrappers, and
@@ -61,6 +61,50 @@ may compile a local runner, launch a copied executable, attach CDB, capture
 frames, and send scoped input by design. Prefer tracked scripts, narrow
 arguments, and one reviewed external proof root instead of inline shell byte
 dumps or broad ad hoc scans.
+
+## Generated Asset Export Safety
+
+`export_game_assets.py` writes only to a local output root that is physically
+separate from the selected game tree. It validates every required source before
+creating that root, holds source and output directory chains without following
+reparse points, accepts only the current Python interpreter and the `dotnet`
+resolved from `PATH`, and rescans the output around each child step.
+
+`BeaAssetExportHarness` reads the tracked public AYA/FBX reference behavior but
+does not give a third-party path writer a publishable output file. It builds FBX
+and PNG bytes in memory, creates each final staged file through an exclusive
+identity-held handle, requires the exact expected file/directory tree, and
+copies from those handles into native same-directory atomic replacements. Its
+self-test covers hardlink placement, concurrent writer rejection, output-root
+identity, exact-handle publication, and game-tree rejection. Acceptance also
+included a synthetic model smoke for FBX parsing, PNG output, final texture
+paths, and staging cleanup without using game payloads.
+
+`safe_generated_output.py` supplies the equivalent guarded writer for Python
+inventory, language, video, and catalog producers. Those producers hold their
+source inputs, write through native temporary handles, flush, rename the exact
+handle, and verify the committed identity rather than trusting a temporary path.
+Writable output directories use a transient delete-on-close guard installed
+while a strict directory handle is held; this prevents an empty leased directory
+from being converted in place to a reparse point without blocking normal child
+publication. Guards disappear once another held output entry keeps the directory
+nonempty and leave no catalog/package payload.
+
+New file content is written only after the temporary identity is marked
+POSIX-delete-pending and reports zero links. If a watcher creates an alias before
+quarantine, the operation stops before writing. Disposition is cleared only
+after bytes are final, so a hostile same-user hardlink created in the remaining
+commit window can retain only the final bytes and forces commit rejection. It is
+equivalent to copying a completed output; containment from that same-user action
+is not a claimed security boundary.
+
+`export_asset_catalog.py` emits one canonical
+`<bundle>/asset_catalog/catalog.json` with schema `2` and the
+`bundle-root-relative` path contract. Catalog JSON files use the same guarded
+writer. `npm test` runs the generated-output guards and producer self-tests
+before the product build/test gates. Keep the generated bundle ignored/local;
+these safeguards do not make extracted game assets suitable for Git or release
+packaging and do not make a multi-file export batch transactional.
 
 ## Agent Skill Routing
 

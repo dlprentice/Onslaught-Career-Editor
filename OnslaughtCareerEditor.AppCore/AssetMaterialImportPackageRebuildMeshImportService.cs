@@ -29,19 +29,63 @@ namespace Onslaught___Career_Editor
         private static AssetMaterialImportPackageRebuildMeshImportResult Build(string packageRoot, bool executeWrite)
         {
             string fullPackageRoot = Path.GetFullPath(packageRoot);
+            using GuardedPackageOutputRoot? operationRoot = Directory.Exists(fullPackageRoot)
+                ? new GuardedPackageOutputRoot(
+                    fullPackageRoot,
+                    trustedSourceRoot: null,
+                    execute: false,
+                    requireExistingRoot: true)
+                : null;
             string packageRootName = BuildRootName(fullPackageRoot);
             string sourceManifestRelativePath = AssetMaterialImportPackageRebuildMeshService.ManifestFileName;
-            string sourceManifestPath = Path.Combine(fullPackageRoot, sourceManifestRelativePath);
             List<AssetMaterialImportPackageRebuildMeshImportIssue> issues = [];
 
-            if (!File.Exists(sourceManifestPath))
+            AssetMaterialImportPackageRebuildMeshManifest? sourceManifest;
+            try
             {
-                issues.Add(new AssetMaterialImportPackageRebuildMeshImportIssue("manifest", sourceManifestRelativePath, "missing-rebuild-mesh-manifest"));
+                using GuardedPackageArtifactRead sourceManifestRead = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    sourceManifestRelativePath,
+                    "Rebuild-mesh source manifest");
+                if (!sourceManifestRead.Exists)
+                {
+                    issues.Add(new AssetMaterialImportPackageRebuildMeshImportIssue("manifest", sourceManifestRelativePath, "missing-rebuild-mesh-manifest"));
+                    return BuildResult(
+                        executeWrite,
+                        packageRootName,
+                        sourceManifestRelativePath,
+                        "missing-rebuild-mesh-manifest",
+                        sourceCompleted: false,
+                        manifestWritten: false,
+                        manifestStatus: executeWrite ? "not-written" : "preflight-not-written",
+                        manifestBytes: 0,
+                        rows: [],
+                        issues);
+                }
+                if (!TryReadSourceManifest(sourceManifestRead, out sourceManifest) || sourceManifest == null)
+                {
+                    issues.Add(new AssetMaterialImportPackageRebuildMeshImportIssue("manifest", sourceManifestRelativePath, "invalid-rebuild-mesh-manifest"));
+                    return BuildResult(
+                        executeWrite,
+                        packageRootName,
+                        sourceManifestRelativePath,
+                        "invalid-rebuild-mesh-manifest",
+                        sourceCompleted: false,
+                        manifestWritten: false,
+                        manifestStatus: executeWrite ? "not-written" : "preflight-not-written",
+                        manifestBytes: 0,
+                        rows: [],
+                        issues);
+                }
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                issues.Add(new AssetMaterialImportPackageRebuildMeshImportIssue("manifest", sourceManifestRelativePath, "unsafe-rebuild-mesh-manifest"));
                 return BuildResult(
                     executeWrite,
                     packageRootName,
                     sourceManifestRelativePath,
-                    "missing-rebuild-mesh-manifest",
+                    "unsafe-rebuild-mesh-manifest",
                     sourceCompleted: false,
                     manifestWritten: false,
                     manifestStatus: executeWrite ? "not-written" : "preflight-not-written",
@@ -50,15 +94,16 @@ namespace Onslaught___Career_Editor
                     issues);
             }
 
-            if (!TryReadSourceManifest(sourceManifestPath, out AssetMaterialImportPackageRebuildMeshManifest? sourceManifest) ||
-                sourceManifest == null)
+            if (sourceManifest.Meshes is null ||
+                sourceManifest.Meshes.Count > 100_000 ||
+                sourceManifest.Meshes.Any(static mesh => mesh is null))
             {
-                issues.Add(new AssetMaterialImportPackageRebuildMeshImportIssue("manifest", sourceManifestRelativePath, "invalid-rebuild-mesh-manifest"));
+                issues.Add(new AssetMaterialImportPackageRebuildMeshImportIssue("manifest", sourceManifestRelativePath, "invalid-rebuild-mesh-structure"));
                 return BuildResult(
                     executeWrite,
                     packageRootName,
                     sourceManifestRelativePath,
-                    "invalid-rebuild-mesh-manifest",
+                    "invalid-rebuild-mesh-structure",
                     sourceCompleted: false,
                     manifestWritten: false,
                     manifestStatus: executeWrite ? "not-written" : "preflight-not-written",
@@ -148,32 +193,51 @@ namespace Onslaught___Career_Editor
                 return BlockedRow(mesh, "source-mesh-not-ready");
             }
 
-            if (!TryResolveInsidePackage(fullPackageRoot, mesh.ObjRelativePath, out string fullObjPath))
+            if (!TryResolveInsidePackage(fullPackageRoot, mesh.ObjRelativePath, out _))
             {
                 issues.Add(new AssetMaterialImportPackageRebuildMeshImportIssue("mesh", mesh.ObjRelativePath, "unsafe-obj-path"));
                 return BlockedRow(mesh, "unsafe-obj-path", unsafePathRows: 1);
             }
 
-            if (!TryResolveInsidePackage(fullPackageRoot, mesh.MtlRelativePath, out string fullMtlPath))
+            if (!TryResolveInsidePackage(fullPackageRoot, mesh.MtlRelativePath, out _))
             {
                 issues.Add(new AssetMaterialImportPackageRebuildMeshImportIssue("mesh", mesh.MtlRelativePath, "unsafe-mtl-path"));
                 return BlockedRow(mesh, "unsafe-mtl-path", unsafePathRows: 1);
             }
 
-            if (!File.Exists(fullObjPath))
+            ObjParseResult obj;
+            MtlParseResult mtl;
+            try
             {
-                issues.Add(new AssetMaterialImportPackageRebuildMeshImportIssue("mesh", mesh.ObjRelativePath, "missing-obj-file"));
-                return BlockedRow(mesh, "missing-obj-file");
-            }
+                using GuardedPackageArtifactRead objRead = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    mesh.ObjRelativePath,
+                    "Rebuild-mesh import OBJ");
+                using GuardedPackageArtifactRead mtlRead = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    mesh.MtlRelativePath,
+                    "Rebuild-mesh import MTL");
+                if (!objRead.Exists)
+                {
+                    issues.Add(new AssetMaterialImportPackageRebuildMeshImportIssue("mesh", mesh.ObjRelativePath, "missing-obj-file"));
+                    return BlockedRow(mesh, "missing-obj-file");
+                }
+                if (!mtlRead.Exists)
+                {
+                    issues.Add(new AssetMaterialImportPackageRebuildMeshImportIssue("mesh", mesh.MtlRelativePath, "missing-mtl-file"));
+                    return BlockedRow(mesh, "missing-mtl-file");
+                }
 
-            if (!File.Exists(fullMtlPath))
+                obj = ParseObj(
+                    objRead.ReadAllText(Utf8NoBom),
+                    Path.GetFileName(mesh.MtlRelativePath));
+                mtl = ParseMtl(fullPackageRoot, mtlRead.ReadAllText(Utf8NoBom));
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
             {
-                issues.Add(new AssetMaterialImportPackageRebuildMeshImportIssue("mesh", mesh.MtlRelativePath, "missing-mtl-file"));
-                return BlockedRow(mesh, "missing-mtl-file");
+                issues.Add(new AssetMaterialImportPackageRebuildMeshImportIssue("mesh", mesh.ObjRelativePath, "unsafe-mesh-input-path"));
+                return BlockedRow(mesh, "unsafe-mesh-input-path", unsafePathRows: 1);
             }
-
-            ObjParseResult obj = ParseObj(fullObjPath, Path.GetFileName(mesh.MtlRelativePath));
-            MtlParseResult mtl = ParseMtl(fullPackageRoot, fullMtlPath);
             List<string> rowIssues = [];
             rowIssues.AddRange(obj.Issues);
             rowIssues.AddRange(mtl.Issues);
@@ -255,7 +319,7 @@ namespace Onslaught___Career_Editor
                 ReadyForRebuildConsumer: false);
         }
 
-        private static ObjParseResult ParseObj(string fullObjPath, string expectedMtlFileName)
+        private static ObjParseResult ParseObj(string objText, string expectedMtlFileName)
         {
             int vertexCount = 0;
             int textureCoordinateCount = 0;
@@ -268,7 +332,7 @@ namespace Onslaught___Career_Editor
             HashSet<string> materialNamesUsed = new(StringComparer.Ordinal);
             List<string> issues = [];
 
-            foreach (string rawLine in File.ReadLines(fullObjPath))
+            foreach (string rawLine in objText.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
             {
                 string line = rawLine.Trim();
                 if (line.Length == 0 || line.StartsWith('#'))
@@ -386,7 +450,7 @@ namespace Onslaught___Career_Editor
                 Issues: issues);
         }
 
-        private static MtlParseResult ParseMtl(string fullPackageRoot, string fullMtlPath)
+        private static MtlParseResult ParseMtl(string fullPackageRoot, string mtlText)
         {
             HashSet<string> materialNames = new(StringComparer.Ordinal);
             int texturedMaterialRows = 0;
@@ -396,7 +460,7 @@ namespace Onslaught___Career_Editor
             bool insideMaterial = false;
             List<string> issues = [];
 
-            foreach (string rawLine in File.ReadLines(fullMtlPath))
+            foreach (string rawLine in mtlText.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
             {
                 string line = rawLine.Trim();
                 if (line.Length == 0 || line.StartsWith('#'))
@@ -441,17 +505,29 @@ namespace Onslaught___Career_Editor
                     }
 
                     if (!texturePath.StartsWith("importer-input/textures/", StringComparison.OrdinalIgnoreCase) ||
-                        !TryResolveInsidePackage(fullPackageRoot, texturePath, out string fullTexturePath))
+                        !TryResolveInsidePackage(fullPackageRoot, texturePath, out _))
                     {
                         unsafePathRows++;
                         issues.Add("unsafe-texture-path");
                         continue;
                     }
 
-                    if (!File.Exists(fullTexturePath))
+                    try
                     {
-                        missingTextureRows++;
-                        issues.Add("missing-texture-file");
+                        using GuardedPackageArtifactRead textureRead = GuardedPackageArtifactReader.Open(
+                            fullPackageRoot,
+                            texturePath,
+                            "Rebuild-mesh import texture");
+                        if (!textureRead.Exists)
+                        {
+                            missingTextureRows++;
+                            issues.Add("missing-texture-file");
+                        }
+                    }
+                    catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+                    {
+                        unsafePathRows++;
+                        issues.Add("unsafe-texture-path");
                     }
 
                     texturedMaterialRows++;
@@ -542,7 +618,9 @@ namespace Onslaught___Career_Editor
                 return (false, "preflight-not-written", 0);
             }
 
-            string manifestPath = Path.Combine(fullPackageRoot, ManifestFileName);
+            if (!completed)
+                return (false, "source-not-ready-not-written", 0);
+
             AssetMaterialImportPackageRebuildMeshImportManifest manifest = new(
                 Schema: ManifestSchema,
                 GeneratedAtUtc: DateTimeOffset.UtcNow,
@@ -567,19 +645,30 @@ namespace Onslaught___Career_Editor
                 UnsafePathRows: rows.Sum(static row => row.UnsafePathRows),
                 Completed: completed,
                 Rows: rows.OrderBy(static row => row.Ordinal).ToList());
-            File.WriteAllText(manifestPath, JsonSerializer.Serialize(manifest, JsonOptions), Utf8NoBom);
-            return (true, "written", new FileInfo(manifestPath).Length);
+            try
+            {
+                GuardedArtifactWriteResult write = GuardedPackageArtifactWriter.ReplaceText(
+                    fullPackageRoot,
+                    ManifestFileName,
+                    JsonSerializer.Serialize(manifest, JsonOptions),
+                    Utf8NoBom);
+                return (true, "written", write.Bytes);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                return (false, "unsafe-manifest-path", 0);
+            }
         }
 
         private static bool TryReadSourceManifest(
-            string sourceManifestPath,
+            GuardedPackageArtifactRead sourceManifestRead,
             out AssetMaterialImportPackageRebuildMeshManifest? sourceManifest)
         {
             sourceManifest = null;
             try
             {
                 sourceManifest = JsonSerializer.Deserialize<AssetMaterialImportPackageRebuildMeshManifest>(
-                    File.ReadAllText(sourceManifestPath),
+                    sourceManifestRead.ReadAllText(Utf8NoBom),
                     JsonOptions);
             }
             catch (JsonException)

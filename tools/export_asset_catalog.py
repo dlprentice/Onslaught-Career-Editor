@@ -11,8 +11,8 @@ This ties together:
 - loose video manifest
 
 Examples:
-    py -3 tools/export_asset_catalog.py
-    py -3 tools/export_asset_catalog.py --out-dir subagents/asset_catalog_wave1_2026-03-14
+    py -3 tools/export_asset_catalog.py --self-test
+    py -3 tools/export_asset_catalog.py --bundle-root <generated-root> --out-dir <generated-root>/asset_catalog ...
 """
 
 from __future__ import annotations
@@ -25,6 +25,11 @@ from collections import Counter
 from pathlib import Path
 
 import aya_archive_inventory as aai
+from safe_generated_output import SecuredOutputRoot
+
+
+CATALOG_SCHEMA_VERSION = 2
+CATALOG_PATH_CONTRACT = "bundle-root-relative"
 
 
 def repo_rel(path: Path, repo_root: Path) -> str:
@@ -32,6 +37,16 @@ def repo_rel(path: Path, repo_root: Path) -> str:
         return str(path.resolve().relative_to(repo_root.resolve())).replace("/", "\\")
     except Exception:
         return str(path).replace("/", "\\")
+
+
+def bundle_rel(path: Path, bundle_root: Path, label: str) -> str:
+    try:
+        relative = path.resolve().relative_to(bundle_root.resolve())
+    except ValueError as exc:
+        raise SystemExit(f"{label} is outside --bundle-root: {path}") from exc
+    if not relative.parts:
+        raise SystemExit(f"{label} must be a file below --bundle-root: {path}")
+    return str(relative).replace("/", "\\")
 
 
 def read_json(path: Path) -> object:
@@ -95,6 +110,7 @@ def build_texture_catalog(
     texture_manifest: list[dict[str, object]],
     packed_manifest: dict[str, object],
     repo_root: Path,
+    bundle_root: Path,
 ) -> list[dict[str, object]]:
     text_map = packed_ref_maps(packed_manifest, "text_texture_refs")
     gdie_map = packed_ref_maps(packed_manifest, "gdie_texture_refs")
@@ -121,7 +137,7 @@ def build_texture_catalog(
         )
         entry["source_aya_paths"].append(repo_rel(input_path, repo_root))
         entry["source_roots"].add(input_path.parent.name.lower())
-        entry["loose_export_pngs"].append(repo_rel(output_path, repo_root))
+        entry["loose_export_pngs"].append(bundle_rel(output_path, bundle_root, "texture export"))
 
     out: list[dict[str, object]] = []
     for key in sorted(catalog):
@@ -154,6 +170,7 @@ def build_loose_mesh_catalog(
     mesh_manifest: list[dict[str, object]],
     packed_manifest: dict[str, object],
     repo_root: Path,
+    bundle_root: Path,
 ) -> list[dict[str, object]]:
     reference_map = packed_ref_maps(packed_manifest, "reference_mesh_refs")
     gdie_map = packed_ref_maps(packed_manifest, "gdie_mesh_refs")
@@ -178,7 +195,7 @@ def build_loose_mesh_catalog(
             },
         )
         entry["source_aya_paths"].append(repo_rel(input_path, repo_root))
-        entry["export_fbx_paths"].append(repo_rel(output_path, repo_root))
+        entry["export_fbx_paths"].append(bundle_rel(output_path, bundle_root, "loose-mesh export"))
 
     out: list[dict[str, object]] = []
     for key in sorted(catalog):
@@ -209,6 +226,7 @@ def build_loose_mesh_catalog(
 def build_embedded_mesh_catalog(
     embedded_manifest: list[dict[str, object]],
     repo_root: Path,
+    bundle_root: Path,
 ) -> list[dict[str, object]]:
     out: list[dict[str, object]] = []
     for row in embedded_manifest:
@@ -223,7 +241,7 @@ def build_embedded_mesh_catalog(
                 "source_archive": source_archive,
                 "body_name": body_name,
                 "source_body_path": repo_rel(input_path, repo_root),
-                "export_fbx_path": repo_rel(output_path, repo_root),
+                "export_fbx_path": bundle_rel(output_path, bundle_root, "embedded-mesh export"),
             }
         )
     return sorted(out, key=lambda item: item["catalog_id"])
@@ -485,6 +503,11 @@ def build_summary(
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo-root", type=Path, default=Path("."))
+    ap.add_argument(
+        "--bundle-root",
+        type=Path,
+        help="Single generated export root that contains every catalog export path",
+    )
     ap.add_argument("--packed-manifest", type=Path, default=Path("subagents/aya_asset_manifest_wave5_2026-03-13.json"))
     ap.add_argument("--texture-manifest", type=Path, default=Path("subagents/asset_export_wave1_2026-03-13/loose_textures/manifest.json"))
     ap.add_argument("--loose-mesh-manifest", type=Path, default=Path("subagents/asset_export_wave1_2026-03-13/loose_meshes/manifest.json"))
@@ -493,7 +516,18 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--language-matrix", type=Path, default=Path("subagents/language_export_wave1_2026-03-13/merged_matrix.json"))
     ap.add_argument("--out-dir", type=Path, default=Path("subagents/asset_catalog_wave1_2026-03-14"))
     ap.add_argument("--self-test", action="store_true", help="Run built-in catalog assembly checks without private game assets")
+    ap.add_argument(
+        "--emit-consumer-contract-fixture",
+        type=Path,
+        help=argparse.SUPPRESS,
+    )
     return ap.parse_args()
+
+
+def validate_catalog_output_layout(bundle_root: Path, out_dir: Path) -> None:
+    expected_catalog_dir = bundle_root / "asset_catalog"
+    if out_dir != expected_catalog_dir:
+        raise SystemExit("--out-dir must be the asset_catalog child directory of --bundle-root")
 
 
 def run_self_test() -> int:
@@ -582,9 +616,9 @@ def run_self_test() -> int:
             ]
         }
 
-        textures = build_texture_catalog(texture_manifest, packed_manifest, repo_root)
-        loose_meshes = build_loose_mesh_catalog(loose_mesh_manifest, packed_manifest, repo_root)
-        embedded_meshes = build_embedded_mesh_catalog(embedded_mesh_manifest, repo_root)
+        textures = build_texture_catalog(texture_manifest, packed_manifest, repo_root, repo_root)
+        loose_meshes = build_loose_mesh_catalog(loose_mesh_manifest, packed_manifest, repo_root, repo_root)
+        embedded_meshes = build_embedded_mesh_catalog(embedded_mesh_manifest, repo_root, repo_root)
         videos = build_video_catalog(video_manifest)
         language_rows = build_language_catalog(language_matrix)
         goodies = build_goodie_catalog(packed_manifest, videos, language_rows)
@@ -602,8 +636,11 @@ def run_self_test() -> int:
         assert summary["video_family_counts"] == {"briefing": 1, "cutscene_numeric": 1}
         assert summary["goodie_family_counts"] == {"Model": 1, "Video": 1}
         assert textures[0]["canonical_ref"] == "meshtex\\cloud.tga"
+        assert textures[0]["export_png_paths"] == ["exports\\cloud.png"]
         assert loose_meshes[0]["canonical_ref"] == "fighter"
+        assert loose_meshes[0]["export_fbx_paths"] == ["exports\\fighter.fbx"]
         assert embedded_meshes[0]["source_archive"] == "001_res_PC.aya"
+        assert embedded_meshes[0]["export_fbx_path"] == "exports\\body00.fbx"
         assert language_rows[0]["text_present_count"] == 1
         assert language_rows[0]["audio_present_count"] == 1
         assert goodies[0]["index"] == 8
@@ -613,50 +650,127 @@ def run_self_test() -> int:
         assert goodies[1]["index"] == 232
         assert goodies[1]["video_sequence_id"] == "33"
 
+        validate_catalog_output_layout(repo_root, repo_root / "asset_catalog")
+        try:
+            validate_catalog_output_layout(repo_root, repo_root)
+            raise AssertionError("direct catalog output layout should be rejected")
+        except SystemExit as exc:
+            assert "asset_catalog child" in str(exc)
+
     print("export_asset_catalog self-test: PASS")
+    return 0
+
+
+def emit_consumer_contract_fixture(bundle_root: Path) -> int:
+    """Emit a tiny producer-owned bundle for the AppCore contract regression."""
+
+    bundle_root = bundle_root.resolve()
+    export_path = bundle_root / "exports" / "producer_texture.png"
+    catalog_path = bundle_root / "asset_catalog" / "catalog.json"
+    png = bytes(
+        [
+            137, 80, 78, 71, 13, 10, 26, 10,
+            0, 0, 0, 13, 73, 72, 68, 82,
+            0, 0, 0, 1, 0, 0, 0, 1,
+            8, 6, 0, 0, 0, 31, 21, 196,
+            137, 0, 0, 0, 13, 73, 68, 65,
+            84, 120, 156, 99, 248, 207, 192,
+            240, 31, 0, 5, 0, 1, 255, 137,
+            153, 61, 29, 0, 0, 0, 0, 73,
+            69, 78, 68, 174, 66, 96, 130,
+        ]
+    )
+    catalog = {
+        "schema_version": CATALOG_SCHEMA_VERSION,
+        "path_contract": CATALOG_PATH_CONTRACT,
+        "summary": {
+            "texture_catalog_entries": 1,
+            "total_catalog_entries": 1,
+        },
+        "textures": [
+            {
+                "catalog_id": "texture:producer-contract",
+                "canonical_ref": "textures\\producer_contract.tga",
+                "export_png_paths": ["exports\\producer_texture.png"],
+            }
+        ],
+        "loose_meshes": [],
+        "embedded_meshes": [],
+        "videos": [],
+        "language_rows": [],
+        "goodies": [],
+    }
+    with SecuredOutputRoot(bundle_root) as output:
+        output.atomic_write_bytes(export_path, png)
+        output.atomic_write_json(catalog_path, catalog)
+    print(json.dumps({"catalog": str(catalog_path)}, indent=2))
     return 0
 
 
 def main() -> int:
     args = parse_args()
+    if args.emit_consumer_contract_fixture is not None:
+        return emit_consumer_contract_fixture(args.emit_consumer_contract_fixture)
     if args.self_test:
         return run_self_test()
 
-    args.out_dir.mkdir(parents=True, exist_ok=True)
+    args.repo_root = args.repo_root.resolve()
+    args.out_dir = args.out_dir.resolve()
+    bundle_root = (
+        args.bundle_root.resolve()
+        if args.bundle_root is not None
+        else (args.out_dir.parent if args.out_dir.name.lower() == "asset_catalog" else args.out_dir)
+    )
+    validate_catalog_output_layout(bundle_root, args.out_dir)
 
-    packed_manifest = read_json(args.packed_manifest)
-    texture_manifest = read_json(args.texture_manifest)
-    loose_mesh_manifest = read_json(args.loose_mesh_manifest)
-    embedded_mesh_manifest = read_json(args.embedded_mesh_manifest)
-    video_manifest = read_json(args.video_manifest)
-    language_matrix = read_json(args.language_matrix)
+    input_paths = (
+        args.packed_manifest.resolve(),
+        args.texture_manifest.resolve(),
+        args.loose_mesh_manifest.resolve(),
+        args.embedded_mesh_manifest.resolve(),
+        args.video_manifest.resolve(),
+        args.language_matrix.resolve(),
+    )
+    missing_inputs = [path for path in input_paths if not path.is_file()]
+    if missing_inputs:
+        raise SystemExit(f"catalog input does not exist: {missing_inputs[0]}")
 
-    textures = build_texture_catalog(texture_manifest, packed_manifest, args.repo_root)
-    loose_meshes = build_loose_mesh_catalog(loose_mesh_manifest, packed_manifest, args.repo_root)
-    embedded_meshes = build_embedded_mesh_catalog(embedded_mesh_manifest, args.repo_root)
-    videos = build_video_catalog(video_manifest)
-    language_rows = build_language_catalog(language_matrix)
-    goodies = build_goodie_catalog(packed_manifest, videos, language_rows)
-    summary = build_summary(textures, loose_meshes, embedded_meshes, videos, language_rows, goodies)
+    with SecuredOutputRoot(args.out_dir, protected_sources=input_paths) as output:
+        packed_manifest = read_json(input_paths[0])
+        texture_manifest = read_json(input_paths[1])
+        loose_mesh_manifest = read_json(input_paths[2])
+        embedded_mesh_manifest = read_json(input_paths[3])
+        video_manifest = read_json(input_paths[4])
+        language_matrix = read_json(input_paths[5])
 
-    catalog = {
-        "summary": summary,
-        "textures": textures,
-        "loose_meshes": loose_meshes,
-        "embedded_meshes": embedded_meshes,
-        "videos": videos,
-        "language_rows": language_rows,
-        "goodies": goodies,
-    }
+        textures = build_texture_catalog(texture_manifest, packed_manifest, args.repo_root, bundle_root)
+        loose_meshes = build_loose_mesh_catalog(loose_mesh_manifest, packed_manifest, args.repo_root, bundle_root)
+        embedded_meshes = build_embedded_mesh_catalog(embedded_mesh_manifest, args.repo_root, bundle_root)
+        videos = build_video_catalog(video_manifest)
+        language_rows = build_language_catalog(language_matrix)
+        goodies = build_goodie_catalog(packed_manifest, videos, language_rows)
+        summary = build_summary(textures, loose_meshes, embedded_meshes, videos, language_rows, goodies)
 
-    (args.out_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
-    (args.out_dir / "catalog.json").write_text(json.dumps(catalog, indent=2), encoding="utf-8")
-    (args.out_dir / "textures.json").write_text(json.dumps(textures, indent=2), encoding="utf-8")
-    (args.out_dir / "loose_meshes.json").write_text(json.dumps(loose_meshes, indent=2), encoding="utf-8")
-    (args.out_dir / "embedded_meshes.json").write_text(json.dumps(embedded_meshes, indent=2), encoding="utf-8")
-    (args.out_dir / "videos.json").write_text(json.dumps(videos, indent=2), encoding="utf-8")
-    (args.out_dir / "language_rows.json").write_text(json.dumps(language_rows, indent=2), encoding="utf-8")
-    (args.out_dir / "goodies.json").write_text(json.dumps(goodies, indent=2), encoding="utf-8")
+        catalog = {
+            "schema_version": CATALOG_SCHEMA_VERSION,
+            "path_contract": CATALOG_PATH_CONTRACT,
+            "summary": summary,
+            "textures": textures,
+            "loose_meshes": loose_meshes,
+            "embedded_meshes": embedded_meshes,
+            "videos": videos,
+            "language_rows": language_rows,
+            "goodies": goodies,
+        }
+
+        output.atomic_write_json(args.out_dir / "summary.json", summary)
+        output.atomic_write_json(args.out_dir / "catalog.json", catalog)
+        output.atomic_write_json(args.out_dir / "textures.json", textures)
+        output.atomic_write_json(args.out_dir / "loose_meshes.json", loose_meshes)
+        output.atomic_write_json(args.out_dir / "embedded_meshes.json", embedded_meshes)
+        output.atomic_write_json(args.out_dir / "videos.json", videos)
+        output.atomic_write_json(args.out_dir / "language_rows.json", language_rows)
+        output.atomic_write_json(args.out_dir / "goodies.json", goodies)
 
     print(json.dumps({"out_dir": str(args.out_dir), "summary": summary}, indent=2))
     return 0

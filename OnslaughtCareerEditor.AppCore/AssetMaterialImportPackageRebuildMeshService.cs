@@ -30,6 +30,13 @@ namespace Onslaught___Career_Editor
         private static AssetMaterialImportPackageRebuildMeshResult Build(string packageRoot, bool executeWrite)
         {
             string fullPackageRoot = Path.GetFullPath(packageRoot);
+            using GuardedPackageOutputRoot? operationRoot = Directory.Exists(fullPackageRoot)
+                ? new GuardedPackageOutputRoot(
+                    fullPackageRoot,
+                    trustedSourceRoot: null,
+                    execute: false,
+                    requireExistingRoot: true)
+                : null;
             string packageRootName = BuildRootName(fullPackageRoot);
             AssetMaterialImportPackageRebuildSceneResult rebuildScene =
                 new AssetMaterialImportPackageRebuildSceneService().Preflight(fullPackageRoot);
@@ -130,28 +137,61 @@ namespace Onslaught___Career_Editor
                 return BuildBlockedMeshRow(scene, "missing-scene-contract-file");
             }
 
-            if (!TryResolveInsidePackage(fullPackageRoot, scene.SceneRelativePath, out string fullScenePath) ||
-                !File.Exists(fullScenePath))
+            if (!TryResolveInsidePackage(fullPackageRoot, scene.SceneRelativePath, out _))
             {
                 issues.Add(new AssetMaterialImportPackageRebuildMeshIssue("scene", scene.SceneRelativePath, "missing-scene-contract-file"));
                 return BuildBlockedMeshRow(scene, "missing-scene-contract-file");
             }
 
-            if (!TryReadSceneFile(fullScenePath, out AssetMaterialImportPackageRebuildSceneFile? sceneFile) ||
-                sceneFile == null)
+            AssetMaterialImportPackageRebuildSceneFile? sceneFile;
+            try
+            {
+                using GuardedPackageArtifactRead sceneInput = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    scene.SceneRelativePath,
+                    "Rebuild-mesh scene contract");
+                if (!sceneInput.Exists)
+                {
+                    issues.Add(new AssetMaterialImportPackageRebuildMeshIssue("scene", scene.SceneRelativePath, "missing-scene-contract-file"));
+                    return BuildBlockedMeshRow(scene, "missing-scene-contract-file");
+                }
+                if (!TryReadSceneFile(sceneInput, out sceneFile) || sceneFile == null)
+                {
+                    issues.Add(new AssetMaterialImportPackageRebuildMeshIssue("scene", scene.SceneRelativePath, "invalid-scene-contract-file"));
+                    return BuildBlockedMeshRow(scene, "invalid-scene-contract-file");
+                }
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
             {
                 issues.Add(new AssetMaterialImportPackageRebuildMeshIssue("scene", scene.SceneRelativePath, "invalid-scene-contract-file"));
                 return BuildBlockedMeshRow(scene, "invalid-scene-contract-file");
             }
 
-            if (!TryResolveInsidePackage(fullPackageRoot, sceneFile.ModelInputRelativePath, out string fullModelInputPath) ||
-                !File.Exists(fullModelInputPath))
+            if (!TryResolveInsidePackage(fullPackageRoot, sceneFile.ModelInputRelativePath, out _))
             {
                 issues.Add(new AssetMaterialImportPackageRebuildMeshIssue("model", sceneFile.ModelInputRelativePath, "missing-model-input-file"));
                 return BuildBlockedMeshRow(scene, "missing-model-input-file");
             }
 
-            AssetModelSummary modelSummary = FbxModelSummaryReader.Read(fullModelInputPath);
+            AssetModelSummary modelSummary;
+            try
+            {
+                using GuardedPackageArtifactRead modelInput = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    sceneFile.ModelInputRelativePath,
+                    "Rebuild-mesh model input");
+                if (!modelInput.Exists)
+                {
+                    issues.Add(new AssetMaterialImportPackageRebuildMeshIssue("model", sceneFile.ModelInputRelativePath, "missing-model-input-file"));
+                    return BuildBlockedMeshRow(scene, "missing-model-input-file");
+                }
+                modelSummary = FbxModelSummaryReader.Read(modelInput.Stream);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                issues.Add(new AssetMaterialImportPackageRebuildMeshIssue("model", sceneFile.ModelInputRelativePath, "missing-mesh-payload"));
+                return BuildBlockedMeshRow(scene, "missing-mesh-payload");
+            }
             AssetModelMeshPayload payload = modelSummary.MeshPayload;
             if (!modelSummary.MetadataAvailable || !payload.Available || !payload.BaseGeometryComplete)
             {
@@ -162,8 +202,8 @@ namespace Onslaught___Career_Editor
             string outputToken = BuildOutputToken(scene.Ordinal, scene.CatalogId);
             string objRelativePath = $"{WorkspaceRootRelativePath}/models/{outputToken}.mesh.obj";
             string mtlRelativePath = $"{WorkspaceRootRelativePath}/models/{outputToken}.mesh.mtl";
-            if (!TryResolveInsidePackage(fullPackageRoot, objRelativePath, out string fullObjPath) ||
-                !TryResolveInsidePackage(fullPackageRoot, mtlRelativePath, out string fullMtlPath))
+            if (!TryResolveInsidePackage(fullPackageRoot, objRelativePath, out _) ||
+                !TryResolveInsidePackage(fullPackageRoot, mtlRelativePath, out _))
             {
                 issues.Add(new AssetMaterialImportPackageRebuildMeshIssue("mesh", objRelativePath, "unsafe-output-path"));
                 return BuildBlockedMeshRow(scene, "unsafe-output-path", objRelativePath, mtlRelativePath);
@@ -172,10 +212,30 @@ namespace Onslaught___Career_Editor
             IReadOnlyList<string> materialNames = BuildMaterialNames(modelSummary);
             string objContent = BuildObjContent(scene, mtlRelativePath, payload, materialNames);
             string mtlContent = BuildMtlContent(scene, materialNames, sceneFile.Textures);
-            bool objExists = File.Exists(fullObjPath);
-            bool mtlExists = File.Exists(fullMtlPath);
-            bool objMatches = objExists && string.Equals(File.ReadAllText(fullObjPath), objContent, StringComparison.Ordinal);
-            bool mtlMatches = mtlExists && string.Equals(File.ReadAllText(fullMtlPath), mtlContent, StringComparison.Ordinal);
+            bool objExists;
+            bool mtlExists;
+            bool objMatches;
+            bool mtlMatches;
+            try
+            {
+                using GuardedPackageArtifactRead objRead = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    objRelativePath,
+                    "Rebuild-mesh OBJ output");
+                using GuardedPackageArtifactRead mtlRead = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    mtlRelativePath,
+                    "Rebuild-mesh MTL output");
+                objExists = objRead.Exists;
+                mtlExists = mtlRead.Exists;
+                objMatches = objExists && string.Equals(objRead.ReadAllText(Utf8NoBom), objContent, StringComparison.Ordinal);
+                mtlMatches = mtlExists && string.Equals(mtlRead.ReadAllText(Utf8NoBom), mtlContent, StringComparison.Ordinal);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                issues.Add(new AssetMaterialImportPackageRebuildMeshIssue("mesh", objRelativePath, "unsafe-output-path"));
+                return BuildBlockedMeshRow(scene, "unsafe-output-path", objRelativePath, mtlRelativePath);
+            }
             if ((objExists && !objMatches) || (mtlExists && !mtlMatches))
             {
                 issues.Add(new AssetMaterialImportPackageRebuildMeshIssue("mesh", objRelativePath, "blocked-existing-mismatch"));
@@ -189,18 +249,25 @@ namespace Onslaught___Career_Editor
             }
             else
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(fullObjPath)!);
-                if (!objExists)
+                try
                 {
-                    File.WriteAllText(fullObjPath, objContent, Utf8NoBom);
+                    GuardedArtifactWriteResult objWrite = GuardedPackageArtifactWriter.WriteText(
+                        fullPackageRoot,
+                        objRelativePath,
+                        objContent,
+                        Utf8NoBom);
+                    GuardedArtifactWriteResult mtlWrite = GuardedPackageArtifactWriter.WriteText(
+                        fullPackageRoot,
+                        mtlRelativePath,
+                        mtlContent,
+                        Utf8NoBom);
+                    status = objWrite.Existing && mtlWrite.Existing ? "skipped-existing" : "written";
                 }
-
-                if (!mtlExists)
+                catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
                 {
-                    File.WriteAllText(fullMtlPath, mtlContent, Utf8NoBom);
+                    issues.Add(new AssetMaterialImportPackageRebuildMeshIssue("mesh", objRelativePath, "unsafe-output-path"));
+                    return BuildBlockedMeshRow(scene, "unsafe-output-path", objRelativePath, mtlRelativePath);
                 }
-
-                status = objExists && mtlExists ? "skipped-existing" : "written";
             }
 
             return BuildMeshRowResult(scene, objRelativePath, mtlRelativePath, status, payload, materialNames.Count, sceneFile.Textures.Count);
@@ -453,7 +520,9 @@ namespace Onslaught___Career_Editor
                 return (false, "preflight-not-written", 0);
             }
 
-            string manifestPath = Path.Combine(fullPackageRoot, ManifestFileName);
+            if (!completed)
+                return (false, "source-not-ready-not-written", 0);
+
             AssetMaterialImportPackageRebuildMeshManifest manifest = new(
                 Schema: ManifestSchema,
                 GeneratedAtUtc: DateTimeOffset.UtcNow,
@@ -475,19 +544,30 @@ namespace Onslaught___Career_Editor
                 TextureBindingRows: meshRows.Sum(static row => row.TextureBindingRows),
                 Completed: completed,
                 Meshes: meshRows.OrderBy(static row => row.Ordinal).ToList());
-            File.WriteAllText(manifestPath, JsonSerializer.Serialize(manifest, JsonOptions), Utf8NoBom);
-            return (true, "written", new FileInfo(manifestPath).Length);
+            try
+            {
+                GuardedArtifactWriteResult write = GuardedPackageArtifactWriter.ReplaceText(
+                    fullPackageRoot,
+                    ManifestFileName,
+                    JsonSerializer.Serialize(manifest, JsonOptions),
+                    Utf8NoBom);
+                return (true, "written", write.Bytes);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                return (false, "unsafe-manifest-path", 0);
+            }
         }
 
         private static bool TryReadSceneFile(
-            string fullScenePath,
+            GuardedPackageArtifactRead sceneInput,
             out AssetMaterialImportPackageRebuildSceneFile? sceneFile)
         {
             sceneFile = null;
             try
             {
                 sceneFile = JsonSerializer.Deserialize<AssetMaterialImportPackageRebuildSceneFile>(
-                    File.ReadAllText(fullScenePath),
+                    sceneInput.ReadAllText(Utf8NoBom),
                     JsonOptions);
             }
             catch (JsonException)
@@ -538,31 +618,12 @@ namespace Onslaught___Career_Editor
             return string.IsNullOrWhiteSpace(token) ? "asset" : token;
         }
 
-        private static bool TryResolveInsidePackage(string fullPackageRoot, string relativePath, out string fullPath)
+        private static bool TryResolveInsidePackage(string fullPackageRoot, string? relativePath, out string fullPath) =>
+            GuardedPackageArtifactReader.TryResolveRelativePath(fullPackageRoot, relativePath, out fullPath);
+
+        private static string NormalizeRelativePath(string? value)
         {
-            fullPath = string.Empty;
-            if (string.IsNullOrWhiteSpace(relativePath) || Path.IsPathRooted(relativePath))
-            {
-                return false;
-            }
-
-            string candidate = Path.GetFullPath(Path.Combine(
-                fullPackageRoot,
-                relativePath.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar)));
-            string root = fullPackageRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) +
-                Path.DirectorySeparatorChar;
-            if (!candidate.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            fullPath = candidate;
-            return true;
-        }
-
-        private static string NormalizeRelativePath(string value)
-        {
-            return value.Replace('\\', '/');
+            return (value ?? string.Empty).Replace('\\', '/');
         }
 
         private static bool IsReadyStatus(string status)

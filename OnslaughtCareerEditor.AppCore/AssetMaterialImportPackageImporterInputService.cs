@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text.Json;
 
 namespace Onslaught___Career_Editor
@@ -33,6 +32,13 @@ namespace Onslaught___Career_Editor
             bool executeCopy)
         {
             string fullPackageRoot = Path.GetFullPath(packageRoot);
+            using GuardedPackageOutputRoot? operationRoot = Directory.Exists(fullPackageRoot)
+                ? new GuardedPackageOutputRoot(
+                    fullPackageRoot,
+                    trustedSourceRoot: null,
+                    execute: false,
+                    requireExistingRoot: true)
+                : null;
             string packageRootName = BuildRootName(fullPackageRoot);
             AssetMaterialImportPackageImporterDryRunService dryRunService = new();
             AssetMaterialImportPackageImporterDryRunSidecarValidationResult validation =
@@ -167,8 +173,8 @@ namespace Onslaught___Career_Editor
         {
             string sourceRelativePath = NormalizeRelativePath(dryRunRow.PackageRelativePath);
             string adapterRelativePath = NormalizeRelativePath(dryRunRow.AdapterRelativePath);
-            bool sourceSafe = TryResolveInsidePackage(fullPackageRoot, sourceRelativePath, out string fullSourcePath);
-            bool adapterSafe = TryResolveInsidePackage(fullPackageRoot, adapterRelativePath, out string fullAdapterPath) &&
+            bool sourceSafe = TryResolveInsidePackage(fullPackageRoot, sourceRelativePath, out _);
+            bool adapterSafe = TryResolveInsidePackage(fullPackageRoot, adapterRelativePath, out _) &&
                 adapterRelativePath.StartsWith(ImporterInputRootRelativePath + "/", StringComparison.OrdinalIgnoreCase);
 
             if (!sourceSafe)
@@ -183,33 +189,66 @@ namespace Onslaught___Career_Editor
                 return BuildRowResult(dryRunRow, sourceRelativePath, adapterRelativePath, "unsafe-destination-path", 0);
             }
 
-            if (!File.Exists(fullSourcePath))
+            GuardedPackageArtifactRead sourceRead;
+            try
+            {
+                sourceRead = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    sourceRelativePath,
+                    "Importer-input package source");
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                issues.Add(new AssetMaterialImportPackageImporterInputIssue(dryRunRow.Role, sourceRelativePath, "unsafe-source-path"));
+                return BuildRowResult(dryRunRow, sourceRelativePath, adapterRelativePath, "unsafe-source-path", 0);
+            }
+
+            using (sourceRead)
+            {
+            if (!sourceRead.Exists)
             {
                 issues.Add(new AssetMaterialImportPackageImporterInputIssue(dryRunRow.Role, sourceRelativePath, "missing-source"));
                 return BuildRowResult(dryRunRow, sourceRelativePath, adapterRelativePath, "missing-source", 0);
             }
 
-            string sourceHash = HashFileSha256(fullSourcePath);
-            long sourceBytes = new FileInfo(fullSourcePath).Length;
+            string sourceHash = sourceRead.ComputeSha256Hex();
+            long sourceBytes = sourceRead.Length;
             bool adapterAlreadyPlanned = !plannedAdapterPaths.Add(adapterRelativePath);
 
-            if (File.Exists(fullAdapterPath))
+            if (!executeCopy)
             {
-                string outputHash = HashFileSha256(fullAdapterPath);
-                string status = string.Equals(sourceHash, outputHash, StringComparison.OrdinalIgnoreCase)
-                    ? executeCopy ? "skipped-existing" : "would-skip-existing"
-                    : "blocked-existing-mismatch";
-                if (status == "blocked-existing-mismatch")
+                try
                 {
-                    issues.Add(new AssetMaterialImportPackageImporterInputIssue(dryRunRow.Role, adapterRelativePath, status));
-                }
+                    using GuardedPackageArtifactRead adapterRead = GuardedPackageArtifactReader.Open(
+                        fullPackageRoot,
+                        adapterRelativePath,
+                        "Importer-input adapter destination");
+                    if (adapterRead.Exists)
+                    {
+                        string status = string.Equals(
+                                sourceHash,
+                                adapterRead.ComputeSha256Hex(),
+                                StringComparison.OrdinalIgnoreCase)
+                            ? "would-skip-existing"
+                            : "blocked-existing-mismatch";
+                        if (status == "blocked-existing-mismatch")
+                        {
+                            issues.Add(new AssetMaterialImportPackageImporterInputIssue(dryRunRow.Role, adapterRelativePath, status));
+                        }
 
-                return BuildRowResult(
-                    dryRunRow,
-                    sourceRelativePath,
-                    adapterRelativePath,
-                    status,
-                    new FileInfo(fullAdapterPath).Length);
+                        return BuildRowResult(
+                            dryRunRow,
+                            sourceRelativePath,
+                            adapterRelativePath,
+                            status,
+                            adapterRead.Length);
+                    }
+                }
+                catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+                {
+                    issues.Add(new AssetMaterialImportPackageImporterInputIssue(dryRunRow.Role, adapterRelativePath, "unsafe-destination-path"));
+                    return BuildRowResult(dryRunRow, sourceRelativePath, adapterRelativePath, "unsafe-destination-path", 0);
+                }
             }
 
             if (adapterAlreadyPlanned && !executeCopy)
@@ -232,14 +271,33 @@ namespace Onslaught___Career_Editor
                     sourceBytes);
             }
 
-            Directory.CreateDirectory(Path.GetDirectoryName(fullAdapterPath)!);
-            File.Copy(fullSourcePath, fullAdapterPath, overwrite: false);
-            return BuildRowResult(
-                dryRunRow,
-                sourceRelativePath,
-                adapterRelativePath,
-                "copied",
-                new FileInfo(fullAdapterPath).Length);
+            try
+            {
+                GuardedArtifactWriteResult copy = GuardedPackageArtifactWriter.CopyFile(
+                    fullPackageRoot,
+                    sourceRelativePath,
+                    adapterRelativePath);
+                return BuildRowResult(
+                    dryRunRow,
+                    sourceRelativePath,
+                    adapterRelativePath,
+                    copy.Existing ? "skipped-existing" : "copied",
+                    copy.Bytes);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                issues.Add(new AssetMaterialImportPackageImporterInputIssue(
+                    dryRunRow.Role,
+                    adapterRelativePath,
+                    "unsafe-destination-path"));
+                return BuildRowResult(
+                    dryRunRow,
+                    sourceRelativePath,
+                    adapterRelativePath,
+                    "unsafe-destination-path",
+                    0);
+            }
+            }
         }
 
         private static (bool Written, string Status, long Bytes) WriteManifestIfRequested(
@@ -255,8 +313,9 @@ namespace Onslaught___Career_Editor
                 return (false, "preflight-not-written", 0);
             }
 
-            Directory.CreateDirectory(fullPackageRoot);
-            string manifestPath = Path.Combine(fullPackageRoot, ImporterInputManifestFileName);
+            if (!completed)
+                return (false, "source-not-ready-not-written", 0);
+
             AssetMaterialImportPackageImporterInputManifest manifest = new(
                 Schema: ImporterInputManifestSchema,
                 GeneratedAtUtc: DateTimeOffset.UtcNow,
@@ -275,8 +334,19 @@ namespace Onslaught___Career_Editor
                 Rows: rows
                     .OrderBy(static row => row.Ordinal)
                     .ToList());
-            File.WriteAllText(manifestPath, JsonSerializer.Serialize(manifest, WriteJsonOptions));
-            return (true, "written", new FileInfo(manifestPath).Length);
+            try
+            {
+                GuardedArtifactWriteResult write = GuardedPackageArtifactWriter.ReplaceText(
+                    fullPackageRoot,
+                    ImporterInputManifestFileName,
+                    JsonSerializer.Serialize(manifest, WriteJsonOptions),
+                    System.Text.Encoding.UTF8);
+                return (true, "written", write.Bytes);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                return (false, "unsafe-manifest-path", 0);
+            }
         }
 
         private static AssetMaterialImportPackageImporterInputRow BuildRowResult(
@@ -303,22 +373,36 @@ namespace Onslaught___Career_Editor
         {
             fullPath = string.Empty;
             if (string.IsNullOrWhiteSpace(relativePath) || Path.IsPathRooted(relativePath))
+                return false;
+
+            try
+            {
+                string normalized = relativePath
+                    .Replace('/', Path.DirectorySeparatorChar)
+                    .Replace('\\', Path.DirectorySeparatorChar);
+                string[] components = normalized.Split(Path.DirectorySeparatorChar, StringSplitOptions.None);
+                if (components.Length == 0 ||
+                    components.Any(static component => string.IsNullOrWhiteSpace(component) || component is "." or ".."))
+                {
+                    return false;
+                }
+
+                string candidate = FileMutationSafety.NormalizeLocalPath(
+                    Path.Combine(fullPackageRoot, Path.Combine(components)),
+                    "Importer-input package path");
+                if (!FileMutationSafety.IsSameOrUnderRoot(candidate, fullPackageRoot) ||
+                    string.Equals(candidate, fullPackageRoot, FileMutationSafety.PathComparison))
+                {
+                    return false;
+                }
+
+                fullPath = candidate;
+                return true;
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException)
             {
                 return false;
             }
-
-            string candidate = Path.GetFullPath(Path.Combine(
-                fullPackageRoot,
-                relativePath.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar)));
-            string root = fullPackageRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) +
-                Path.DirectorySeparatorChar;
-            if (!candidate.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            fullPath = candidate;
-            return true;
         }
 
         private static bool IsReadyStatus(string status)
@@ -326,20 +410,14 @@ namespace Onslaught___Career_Editor
             return status is "would-copy" or "would-use-planned-copy" or "would-skip-existing" or "copied" or "skipped-existing";
         }
 
-        private static string HashFileSha256(string path)
-        {
-            using FileStream stream = File.OpenRead(path);
-            return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
-        }
-
         private static string BuildRootName(string packageRoot)
         {
             return Path.GetFileName(packageRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
         }
 
-        private static string NormalizeRelativePath(string value)
+        private static string NormalizeRelativePath(string? value)
         {
-            return value.Replace('\\', '/');
+            return (value ?? string.Empty).Replace('\\', '/');
         }
     }
 

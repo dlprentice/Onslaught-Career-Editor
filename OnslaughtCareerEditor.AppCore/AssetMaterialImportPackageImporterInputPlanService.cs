@@ -19,7 +19,6 @@ namespace Onslaught___Career_Editor
         {
             string fullPackageRoot = Path.GetFullPath(packageRoot);
             string packageRootName = BuildRootName(fullPackageRoot);
-            string manifestPath = Path.Combine(fullPackageRoot, AssetMaterialImportPackageImporterInputService.ImporterInputManifestFileName);
             AssetMaterialImportPackageImporterDryRunSidecarValidationResult dryRunValidation =
                 new AssetMaterialImportPackageImporterDryRunService().ValidateSidecar(fullPackageRoot);
             List<AssetMaterialImportPackageImporterInputPlanIssue> issues = dryRunValidation.Issues
@@ -39,17 +38,37 @@ namespace Onslaught___Career_Editor
                     [new AssetMaterialImportPackageImporterInputPlanIssue("manifest", AssetMaterialImportPackageImporterInputService.ImporterInputManifestFileName, "missing-package-root")]);
             }
 
-            if (!File.Exists(manifestPath))
+            string manifestJson;
+            long manifestBytes;
+            try
+            {
+                using GuardedPackageArtifactRead manifestRead = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    AssetMaterialImportPackageImporterInputService.ImporterInputManifestFileName,
+                    "Material package importer-input manifest");
+                if (!manifestRead.Exists)
+                {
+                    return Failure(
+                        packageRootName,
+                        "missing-manifest",
+                        manifestExists: false,
+                        dryRunValidation,
+                        [new AssetMaterialImportPackageImporterInputPlanIssue("manifest", AssetMaterialImportPackageImporterInputService.ImporterInputManifestFileName, "missing-manifest")]);
+                }
+
+                manifestJson = manifestRead.ReadAllText(System.Text.Encoding.UTF8);
+                manifestBytes = manifestRead.Length;
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
             {
                 return Failure(
                     packageRootName,
-                    "missing-manifest",
+                    "unsafe-manifest-path",
                     manifestExists: false,
                     dryRunValidation,
-                    [new AssetMaterialImportPackageImporterInputPlanIssue("manifest", AssetMaterialImportPackageImporterInputService.ImporterInputManifestFileName, "missing-manifest")]);
+                    [new AssetMaterialImportPackageImporterInputPlanIssue("manifest", AssetMaterialImportPackageImporterInputService.ImporterInputManifestFileName, "unsafe-manifest-path")]);
             }
 
-            string manifestJson = File.ReadAllText(manifestPath);
             bool manifestContainsPackageRoot = ContainsPathToken(manifestJson, fullPackageRoot);
             bool manifestContainsHashToken = manifestJson.Contains("sha256", StringComparison.OrdinalIgnoreCase);
             AssetMaterialImportPackageImporterInputManifest? manifest;
@@ -67,7 +86,7 @@ namespace Onslaught___Career_Editor
                     manifestExists: true,
                     dryRunValidation,
                     [new AssetMaterialImportPackageImporterInputPlanIssue("manifest", AssetMaterialImportPackageImporterInputService.ImporterInputManifestFileName, "invalid-json")],
-                    manifestBytes: new FileInfo(manifestPath).Length,
+                    manifestBytes: manifestBytes,
                     manifestContainsPackageRoot: manifestContainsPackageRoot,
                     manifestContainsHashToken: manifestContainsHashToken);
             }
@@ -80,7 +99,22 @@ namespace Onslaught___Career_Editor
                     manifestExists: true,
                     dryRunValidation,
                     [new AssetMaterialImportPackageImporterInputPlanIssue("manifest", AssetMaterialImportPackageImporterInputService.ImporterInputManifestFileName, "empty-manifest")],
-                    manifestBytes: new FileInfo(manifestPath).Length,
+                    manifestBytes: manifestBytes,
+                    manifestContainsPackageRoot: manifestContainsPackageRoot,
+                    manifestContainsHashToken: manifestContainsHashToken);
+            }
+
+            if (manifest.Rows is null ||
+                manifest.Rows.Count > 100_000 ||
+                manifest.Rows.Any(static row => row is null))
+            {
+                return Failure(
+                    packageRootName,
+                    "invalid-structure",
+                    manifestExists: true,
+                    dryRunValidation,
+                    [new AssetMaterialImportPackageImporterInputPlanIssue("manifest", AssetMaterialImportPackageImporterInputService.ImporterInputManifestFileName, "invalid-structure")],
+                    manifestBytes: manifestBytes,
                     manifestContainsPackageRoot: manifestContainsPackageRoot,
                     manifestContainsHashToken: manifestContainsHashToken);
             }
@@ -118,18 +152,15 @@ namespace Onslaught___Career_Editor
                 .Where(static row => string.Equals(row.Role, "texture", StringComparison.OrdinalIgnoreCase))
                 .GroupBy(static row => row.CatalogId, StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(static group => group.Key, static group => (IReadOnlyList<AssetMaterialImportPackageImporterInputRow>)group.ToList(), StringComparer.OrdinalIgnoreCase);
-            Dictionary<string, AssetModelSummary> modelSummaryCache = new(StringComparer.OrdinalIgnoreCase);
-            Dictionary<string, PngHeaderInfo> textureHeaderCache = new(StringComparer.OrdinalIgnoreCase);
-
             IReadOnlyList<AssetMaterialImportPackageImporterInputPlanModelJob> modelJobs = manifest.Rows
                 .Where(static row => string.Equals(row.Role, "model", StringComparison.OrdinalIgnoreCase))
                 .OrderBy(static row => row.Ordinal)
-                .Select(row => BuildModelJob(fullPackageRoot, row, textureRowsByCatalogId, modelSummaryCache, issues))
+                .Select(row => BuildModelJob(fullPackageRoot, row, textureRowsByCatalogId, issues))
                 .ToList();
             IReadOnlyList<AssetMaterialImportPackageImporterInputPlanTextureBindingJob> textureJobs = manifest.Rows
                 .Where(static row => string.Equals(row.Role, "texture", StringComparison.OrdinalIgnoreCase))
                 .OrderBy(static row => row.Ordinal)
-                .Select(row => BuildTextureJob(fullPackageRoot, row, textureHeaderCache, issues))
+                .Select(row => BuildTextureJob(fullPackageRoot, row, issues))
                 .ToList();
 
             int totalJobRows = modelJobs.Count + textureJobs.Count;
@@ -152,7 +183,7 @@ namespace Onslaught___Career_Editor
             int existingUniqueInputFiles = manifest.Rows
                 .Select(static row => row.AdapterRelativePath)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .Count(path => TryResolveInsidePackage(fullPackageRoot, path, out string fullPath) && File.Exists(fullPath));
+                .Count(path => SafePackageFileExists(fullPackageRoot, path));
             int uniqueInputFiles = manifest.Rows
                 .Select(static row => row.AdapterRelativePath)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -180,7 +211,7 @@ namespace Onslaught___Career_Editor
                 ManifestRelativePath: AssetMaterialImportPackageImporterInputService.ImporterInputManifestFileName,
                 ManifestExists: true,
                 ManifestStatus: status,
-                ManifestBytes: new FileInfo(manifestPath).Length,
+                ManifestBytes: manifestBytes,
                 InputManifestSchema: manifest.Schema,
                 InputManifestSchemaValid: schemaValid,
                 InputManifestCompletedFlag: manifest.Completed,
@@ -216,17 +247,31 @@ namespace Onslaught___Career_Editor
             string fullPackageRoot,
             AssetMaterialImportPackageImporterInputRow row,
             IReadOnlyDictionary<string, IReadOnlyList<AssetMaterialImportPackageImporterInputRow>> textureRowsByCatalogId,
-            Dictionary<string, AssetModelSummary> modelSummaryCache,
             List<AssetMaterialImportPackageImporterInputPlanIssue> issues)
         {
             string adapterRelativePath = NormalizeRelativePath(row.AdapterRelativePath);
             string sourceRelativePath = NormalizeRelativePath(row.SourcePackageRelativePath);
-            string pathStatus = ResolveInputPathStatus(fullPackageRoot, adapterRelativePath, out string fullInputPath);
-            bool inputFileExists = pathStatus == "inside-package-root" && File.Exists(fullInputPath);
+            string pathStatus = ResolveInputPathStatus(fullPackageRoot, adapterRelativePath, out _);
+            bool inputFileExists = false;
+            AssetModelSummary summary = AssetModelSummary.Unavailable(0, "Importer input model file is missing.");
+            if (pathStatus == "inside-package-root")
+            {
+                try
+                {
+                    using GuardedPackageArtifactRead input = GuardedPackageArtifactReader.Open(
+                        fullPackageRoot,
+                        adapterRelativePath,
+                        "Importer input model");
+                    inputFileExists = input.Exists;
+                    if (inputFileExists)
+                        summary = FbxModelSummaryReader.Read(input.Stream);
+                }
+                catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+                {
+                    pathStatus = "unsafe-input-path";
+                }
+            }
             bool rowReady = IsReadyManifestRow(row.Status);
-            AssetModelSummary summary = inputFileExists
-                ? GetOrReadModel(modelSummaryCache, adapterRelativePath, fullInputPath)
-                : AssetModelSummary.Unavailable(0, "Importer input model file is missing.");
             int textureBindingRows = textureRowsByCatalogId.TryGetValue(row.CatalogId, out IReadOnlyList<AssetMaterialImportPackageImporterInputRow>? textureRows)
                 ? textureRows.Count
                 : 0;
@@ -273,17 +318,31 @@ namespace Onslaught___Career_Editor
         private static AssetMaterialImportPackageImporterInputPlanTextureBindingJob BuildTextureJob(
             string fullPackageRoot,
             AssetMaterialImportPackageImporterInputRow row,
-            Dictionary<string, PngHeaderInfo> textureHeaderCache,
             List<AssetMaterialImportPackageImporterInputPlanIssue> issues)
         {
             string adapterRelativePath = NormalizeRelativePath(row.AdapterRelativePath);
             string sourceRelativePath = NormalizeRelativePath(row.SourcePackageRelativePath);
-            string pathStatus = ResolveInputPathStatus(fullPackageRoot, adapterRelativePath, out string fullInputPath);
-            bool inputFileExists = pathStatus == "inside-package-root" && File.Exists(fullInputPath);
+            string pathStatus = ResolveInputPathStatus(fullPackageRoot, adapterRelativePath, out _);
+            bool inputFileExists = false;
+            PngHeaderInfo header = new(false, null, null, 0, "Importer input texture file is missing.");
+            if (pathStatus == "inside-package-root")
+            {
+                try
+                {
+                    using GuardedPackageArtifactRead input = GuardedPackageArtifactReader.Open(
+                        fullPackageRoot,
+                        adapterRelativePath,
+                        "Importer input texture");
+                    inputFileExists = input.Exists;
+                    if (inputFileExists)
+                        header = PngHeaderReader.Read(input.Stream);
+                }
+                catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+                {
+                    pathStatus = "unsafe-input-path";
+                }
+            }
             bool rowReady = IsReadyManifestRow(row.Status);
-            PngHeaderInfo header = inputFileExists
-                ? GetOrReadTexture(textureHeaderCache, adapterRelativePath, fullInputPath)
-                : new PngHeaderInfo(false, null, null, 0, "Importer input texture file is missing.");
             string planStatus = BuildTexturePlanStatus(rowReady, pathStatus, inputFileExists, header);
             bool readyForImportPlan = planStatus == "ready-for-import-plan";
             if (!readyForImportPlan)
@@ -423,32 +482,20 @@ namespace Onslaught___Career_Editor
             return header.Readable ? "ready-for-import-plan" : "unreadable-texture-file";
         }
 
-        private static AssetModelSummary GetOrReadModel(
-            Dictionary<string, AssetModelSummary> cache,
-            string adapterRelativePath,
-            string fullInputPath)
+        private static bool SafePackageFileExists(string fullPackageRoot, string relativePath)
         {
-            if (!cache.TryGetValue(adapterRelativePath, out AssetModelSummary? summary))
+            try
             {
-                summary = FbxModelSummaryReader.Read(fullInputPath);
-                cache[adapterRelativePath] = summary;
+                using GuardedPackageArtifactRead read = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    relativePath,
+                    "Importer input file");
+                return read.Exists;
             }
-
-            return summary;
-        }
-
-        private static PngHeaderInfo GetOrReadTexture(
-            Dictionary<string, PngHeaderInfo> cache,
-            string adapterRelativePath,
-            string fullInputPath)
-        {
-            if (!cache.TryGetValue(adapterRelativePath, out PngHeaderInfo? header))
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
             {
-                header = PngHeaderReader.Read(fullInputPath);
-                cache[adapterRelativePath] = header;
+                return false;
             }
-
-            return header;
         }
 
         private static string ResolveInputPathStatus(
@@ -471,22 +518,36 @@ namespace Onslaught___Career_Editor
         {
             fullPath = string.Empty;
             if (string.IsNullOrWhiteSpace(relativePath) || Path.IsPathRooted(relativePath))
+                return false;
+
+            try
+            {
+                string normalized = relativePath
+                    .Replace('/', Path.DirectorySeparatorChar)
+                    .Replace('\\', Path.DirectorySeparatorChar);
+                string[] components = normalized.Split(Path.DirectorySeparatorChar, StringSplitOptions.None);
+                if (components.Length == 0 ||
+                    components.Any(static component => string.IsNullOrWhiteSpace(component) || component is "." or ".."))
+                {
+                    return false;
+                }
+
+                string candidate = FileMutationSafety.NormalizeLocalPath(
+                    Path.Combine(fullPackageRoot, Path.Combine(components)),
+                    "Importer input path");
+                if (!FileMutationSafety.IsSameOrUnderRoot(candidate, fullPackageRoot) ||
+                    string.Equals(candidate, fullPackageRoot, FileMutationSafety.PathComparison))
+                {
+                    return false;
+                }
+
+                fullPath = candidate;
+                return true;
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException)
             {
                 return false;
             }
-
-            string candidate = Path.GetFullPath(Path.Combine(
-                fullPackageRoot,
-                relativePath.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar)));
-            string root = fullPackageRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) +
-                Path.DirectorySeparatorChar;
-            if (!candidate.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            fullPath = candidate;
-            return true;
         }
 
         private static bool IsReadyManifestRow(string status)
@@ -499,9 +560,9 @@ namespace Onslaught___Career_Editor
             return Path.GetFileName(packageRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
         }
 
-        private static string NormalizeRelativePath(string value)
+        private static string NormalizeRelativePath(string? value)
         {
-            return value.Replace('\\', '/');
+            return (value ?? string.Empty).Replace('\\', '/');
         }
 
         private static bool ContainsPathToken(string text, string fullPackageRoot)

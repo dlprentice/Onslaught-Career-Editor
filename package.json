@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "test": "npm run check:quick",
-    "check:quick": "npm run test:docsync && npm run test:doc-commands && npm run build:winui && npm run test:appcore && npm run test:winui",
+    "check:quick": "npm run test:docsync && npm run test:doc-commands && npm run test:generated-output-safety && npm run build:winui && npm run test:appcore && npm run test:winui",
     "dev": "dotnet run --project .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj",
     "build": "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo",
     "build:winui": "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo",
@@ -143,6 +143,7 @@
     "archive:electron:test:bundle-smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File archive/electron-workbench/release/Test-ElectronBundleSmoke.ps1",
     "test:md-links": "py -3 tools\\md_link_check.py --out-dir subagents\\md-link-check",
     "test:doc-commands": "py -3 tools\\npm_script_doc_check.py && py -3 tools\\public_package_doc_command_check.py --self-test && py -3 tools\\public_package_doc_command_check.py",
+    "test:generated-output-safety": "py -3 tools\\safe_generated_output.py --self-test && py -3 tools\\export_video_manifest.py --self-test && py -3 tools\\export_asset_catalog.py --self-test && dotnet run --project .\\tools\\BeaAssetExportHarness\\BeaAssetExportHarness.csproj -- --self-test-output-safety",
     "test:docsync": "py -3 tools\\docsync_check.py",
     "test:original-system-internal-tooling-vocabulary-map": "py -3 tools\\original_system_internal_tooling_vocabulary_map_probe.py --check",
     "test:internal-viewer-editor-command-boundary-proof-plan": "py -3 tools\\internal_viewer_editor_command_boundary_proof_plan_probe.py --check",

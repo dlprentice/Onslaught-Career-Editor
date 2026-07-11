@@ -9,7 +9,7 @@ namespace Onslaught___Career_Editor
             sampleLimit = Math.Clamp(sampleLimit, 0, 100);
 
             IReadOnlyList<AssetTextureReadabilityRow> textureRows = snapshot.Textures
-                .Select(BuildTextureRow)
+                .Select(item => BuildTextureRow(snapshot, item))
                 .ToList();
 
             IReadOnlyList<AssetModelReadabilityRow> modelRows = snapshot.LooseMeshes
@@ -33,15 +33,40 @@ namespace Onslaught___Career_Editor
                 ModelSamples: modelRows.Take(sampleLimit).ToList());
         }
 
-        private static AssetTextureReadabilityRow BuildTextureRow(AssetTextureItem item)
+        private static AssetTextureReadabilityRow BuildTextureRow(
+            AssetCatalogSnapshot snapshot,
+            AssetTextureItem item)
         {
-            PngHeaderInfo header = PngHeaderReader.Read(item.ExportPath);
+            PngHeaderInfo header;
+            bool exportExists;
+            try
+            {
+                using AssetCatalogSourceLease source = AssetCatalogSourceAccessService.Open(
+                    snapshot,
+                    item.ExportPath,
+                    "Catalog texture readability source");
+                exportExists = source.Exists;
+                header = source.Exists
+                    ? PngHeaderReader.Read(source.Stream)
+                    : new PngHeaderInfo(false, null, null, 0, "PNG export is not available at the recorded local path.");
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                exportExists = false;
+                header = new PngHeaderInfo(
+                    false,
+                    null,
+                    null,
+                    0,
+                    "PNG export failed trusted-root and file-identity validation.");
+            }
+
             return new AssetTextureReadabilityRow(
                 Kind: "texture",
                 Label: string.IsNullOrWhiteSpace(item.DisplayName) ? "Texture" : item.DisplayName,
                 SourceLabel: string.IsNullOrWhiteSpace(item.SourceGroup) ? "Textures" : item.SourceGroup,
                 ExportFileName: item.ExportFileName,
-                ExportExists: item.ExportExists,
+                ExportExists: exportExists,
                 ReadablePng: header.Readable,
                 Width: header.Width,
                 Height: header.Height,

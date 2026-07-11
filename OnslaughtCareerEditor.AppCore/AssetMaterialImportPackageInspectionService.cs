@@ -17,19 +17,50 @@ namespace Onslaught___Career_Editor
         {
             string fullPackageRoot = Path.GetFullPath(packageRoot);
             string rootName = BuildRootName(fullPackageRoot);
-            string manifestPath = Path.Combine(fullPackageRoot, AssetMaterialImportPackageMaterializationService.ManifestFileName);
 
             if (!Directory.Exists(fullPackageRoot))
             {
                 return Failure(rootName, "missing-package-root", manifestExists: false);
             }
 
-            if (!File.Exists(manifestPath))
+            GuardedPackageOutputRoot? packageSafety = null;
+            try
             {
-                return Failure(rootName, "missing-manifest", manifestExists: false);
-            }
+                packageSafety = new GuardedPackageOutputRoot(
+                    fullPackageRoot,
+                    trustedSourceRoot: null,
+                    execute: false);
+                string manifestPath = packageSafety.ResolveDestination(
+                    AssetMaterialImportPackageMaterializationService.ManifestFileName,
+                    createDirectories: false);
+                FileStream? manifestStream = packageSafety.HoldExistingFile(manifestPath);
+                if (manifestStream is null)
+                {
+                    return Failure(rootName, "missing-manifest", manifestExists: false);
+                }
 
-            string manifestJson = File.ReadAllText(manifestPath);
+                const long maxManifestBytes = 64L * 1024 * 1024;
+                if (manifestStream.Length > maxManifestBytes)
+                {
+                    return Failure(
+                        rootName,
+                        "manifest-too-large",
+                        manifestExists: true,
+                        manifestBytes: manifestStream.Length,
+                        issues: [new AssetMaterialImportPackageInspectionIssue(
+                            "manifest",
+                            AssetMaterialImportPackageMaterializationService.ManifestFileName,
+                            "manifest-too-large")]);
+                }
+
+            manifestStream.Position = 0;
+            using var manifestReader = new StreamReader(
+                manifestStream,
+                System.Text.Encoding.UTF8,
+                detectEncodingFromByteOrderMarks: true,
+                leaveOpen: true);
+            string manifestJson = manifestReader.ReadToEnd();
+            long manifestBytes = manifestStream.Length;
             bool manifestContainsPackageRoot = ContainsPathToken(manifestJson, fullPackageRoot);
             AssetMaterialImportPackageOutputManifest? manifest;
             try
@@ -42,7 +73,7 @@ namespace Onslaught___Career_Editor
                     rootName,
                     "invalid-json",
                     manifestExists: true,
-                    manifestBytes: new FileInfo(manifestPath).Length,
+                    manifestBytes: manifestBytes,
                     manifestContainsPackageRoot: manifestContainsPackageRoot,
                     issues: [new AssetMaterialImportPackageInspectionIssue("manifest", AssetMaterialImportPackageMaterializationService.ManifestFileName, "invalid-json")]);
             }
@@ -53,21 +84,40 @@ namespace Onslaught___Career_Editor
                     rootName,
                     "empty-manifest",
                     manifestExists: true,
-                    manifestBytes: new FileInfo(manifestPath).Length,
+                    manifestBytes: manifestBytes,
                     manifestContainsPackageRoot: manifestContainsPackageRoot,
                     issues: [new AssetMaterialImportPackageInspectionIssue("manifest", AssetMaterialImportPackageMaterializationService.ManifestFileName, "empty-manifest")]);
             }
 
-            IReadOnlyList<AssetMaterialImportPackageModelOperation> modelRows =
-                manifest.Models ?? Array.Empty<AssetMaterialImportPackageModelOperation>();
+            if (manifest.Files is null || manifest.Models is null ||
+                manifest.Files.Count > 100_000 || manifest.Models.Count > 100_000 ||
+                manifest.Files.Any(static file => file is null) ||
+                manifest.Models.Any(static model => model is null) ||
+                manifest.Models.Any(static model =>
+                    model.TextureReferences is null ||
+                    model.TextureReferences.Any(static texture => texture is null)))
+            {
+                return Failure(
+                    rootName,
+                    "invalid-structure",
+                    manifestExists: true,
+                    manifestBytes: manifestBytes,
+                    manifestContainsPackageRoot: manifestContainsPackageRoot,
+                    issues: [new AssetMaterialImportPackageInspectionIssue("manifest", AssetMaterialImportPackageMaterializationService.ManifestFileName, "invalid-structure")]);
+            }
+
+            IReadOnlyList<AssetMaterialImportPackageMaterializedFile> fileRows = manifest.Files;
+            IReadOnlyList<AssetMaterialImportPackageModelOperation> modelRows = manifest.Models;
             HashSet<string> manifestPaths = new(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> manifestFullPaths = new(FileMutationSafety.PathComparer);
             List<AssetMaterialImportPackageInspectionIssue> issues = new();
             int existingManifestFiles = 0;
             int missingManifestFiles = 0;
             int unsafeManifestPaths = 0;
             int unsafeModelGraphPaths = 0;
+            int duplicateManifestPaths = 0;
 
-            foreach (AssetMaterialImportPackageMaterializedFile file in manifest.Files)
+            foreach (AssetMaterialImportPackageMaterializedFile file in fileRows)
             {
                 string relativePath = NormalizeRelativePath(file.DestinationRelativePath);
                 if (!TryResolveInsideRoot(fullPackageRoot, relativePath, out string fullPath))
@@ -77,8 +127,16 @@ namespace Onslaught___Career_Editor
                     continue;
                 }
 
-                manifestPaths.Add(relativePath);
-                if (File.Exists(fullPath))
+                string canonicalRelativePath = NormalizeRelativePath(
+                    Path.GetRelativePath(fullPackageRoot, fullPath));
+                if (!manifestFullPaths.Add(fullPath))
+                {
+                    duplicateManifestPaths++;
+                    issues.Add(new AssetMaterialImportPackageInspectionIssue(file.Role, relativePath, "duplicate-manifest-path"));
+                    continue;
+                }
+                manifestPaths.Add(canonicalRelativePath);
+                if (packageSafety.HoldExistingFile(fullPath) is not null)
                 {
                     existingManifestFiles++;
                 }
@@ -112,7 +170,16 @@ namespace Onslaught___Career_Editor
             }
 
             IReadOnlyList<string> payloadFiles = Directory
-                .EnumerateFiles(fullPackageRoot, "*", SearchOption.AllDirectories)
+                .EnumerateFiles(
+                    fullPackageRoot,
+                    "*",
+                    new EnumerationOptions
+                    {
+                        RecurseSubdirectories = true,
+                        AttributesToSkip = FileAttributes.ReparsePoint,
+                        IgnoreInaccessible = false,
+                        ReturnSpecialDirectories = false,
+                    })
                 .Select(path => NormalizeRelativePath(Path.GetRelativePath(fullPackageRoot, path)))
                 .Where(static path => !string.Equals(path, AssetMaterialImportPackageMaterializationService.ManifestFileName, StringComparison.OrdinalIgnoreCase))
                 .Where(static path => !string.Equals(path, AssetMaterialImportPackageWorkOrderService.WorkOrderFileName, StringComparison.OrdinalIgnoreCase))
@@ -138,8 +205,8 @@ namespace Onslaught___Career_Editor
 
             bool schemaValid = string.Equals(manifest.Schema, AssetMaterialImportPackageMaterializationService.ManifestSchema, StringComparison.Ordinal);
             bool rowCountsValid =
-                manifest.TotalPackageFiles == manifest.Files.Count &&
-                manifest.PlannedFiles == manifest.Files.Count;
+                manifest.TotalPackageFiles == fileRows.Count &&
+                manifest.PlannedFiles == fileRows.Count;
             bool completed =
                 schemaValid &&
                 rowCountsValid &&
@@ -147,6 +214,7 @@ namespace Onslaught___Career_Editor
                 !manifestContainsPackageRoot &&
                 unsafeManifestPaths == 0 &&
                 unsafeModelGraphPaths == 0 &&
+                duplicateManifestPaths == 0 &&
                 missingManifestFiles == 0 &&
                 extraPayloadFiles.Count == 0;
             string status = completed
@@ -160,7 +228,7 @@ namespace Onslaught___Career_Editor
                 ManifestRelativePath: AssetMaterialImportPackageMaterializationService.ManifestFileName,
                 ManifestExists: true,
                 ManifestStatus: status,
-                ManifestBytes: new FileInfo(manifestPath).Length,
+                ManifestBytes: manifestBytes,
                 Schema: manifest.Schema,
                 SchemaValid: schemaValid,
                 ManifestCompletedFlag: manifest.Completed,
@@ -182,6 +250,22 @@ namespace Onslaught___Career_Editor
                 UnsafeModelGraphPaths: unsafeModelGraphPaths,
                 Completed: completed,
                 Issues: issues);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                return Failure(
+                    rootName,
+                    "unsafe-package-tree",
+                    manifestExists: false,
+                    issues: [new AssetMaterialImportPackageInspectionIssue(
+                        "package",
+                        AssetMaterialImportPackageMaterializationService.ManifestFileName,
+                        "unsafe-package-tree")]);
+            }
+            finally
+            {
+                packageSafety?.Dispose();
+            }
         }
 
         private static AssetMaterialImportPackageInspectionResult Failure(
@@ -225,9 +309,9 @@ namespace Onslaught___Career_Editor
             return Path.GetFileName(packageRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
         }
 
-        private static string NormalizeRelativePath(string path)
+        private static string NormalizeRelativePath(string? path)
         {
-            return path.Replace('\\', '/');
+            return (path ?? string.Empty).Replace('\\', '/');
         }
 
         private static bool TryResolveInsideRoot(string fullPackageRoot, string relativePath, out string fullPath)
@@ -238,15 +322,36 @@ namespace Onslaught___Career_Editor
                 return false;
             }
 
-            string candidate = Path.GetFullPath(Path.Combine(fullPackageRoot, relativePath.Replace('/', Path.DirectorySeparatorChar)));
-            string root = fullPackageRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            if (!candidate.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            try
+            {
+                string normalizedRelative = relativePath
+                    .Replace('/', Path.DirectorySeparatorChar)
+                    .Replace('\\', Path.DirectorySeparatorChar);
+                string[] components = normalizedRelative.Split(
+                    Path.DirectorySeparatorChar,
+                    StringSplitOptions.None);
+                if (components.Length == 0 ||
+                    components.Any(static component => string.IsNullOrWhiteSpace(component) || component is "." or ".."))
+                {
+                    return false;
+                }
+
+                string candidate = FileMutationSafety.NormalizeLocalPath(
+                    Path.Combine(fullPackageRoot, Path.Combine(components)),
+                    "Material package manifest path");
+                if (!FileMutationSafety.IsSameOrUnderRoot(candidate, fullPackageRoot) ||
+                    string.Equals(candidate, fullPackageRoot, FileMutationSafety.PathComparison))
+                {
+                    return false;
+                }
+
+                fullPath = candidate;
+                return true;
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException)
             {
                 return false;
             }
-
-            fullPath = candidate;
-            return true;
         }
 
         private static bool ContainsPathToken(string text, string fullPackageRoot)

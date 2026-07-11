@@ -7,6 +7,40 @@ namespace Onslaught___Career_Editor
 {
     public sealed class AssetModelTextureLinkService
     {
+        internal static IReadOnlyDictionary<string, IReadOnlyList<AssetModelSidecarTexture>>
+            CaptureSnapshotSidecars(
+                AssetCatalogLoadSession session,
+                IEnumerable<string> modelExportPaths)
+        {
+            var result = new Dictionary<string, IReadOnlyList<AssetModelSidecarTexture>>(
+                FileMutationSafety.PathComparer);
+            string trustedRoot = FileMutationSafety.NormalizeLocalPath(
+                session.TrustedExportRoot,
+                "Trusted asset export root");
+
+            foreach (string modelExportPath in modelExportPaths
+                .Where(static path => !string.IsNullOrWhiteSpace(path))
+                .Select(path => FileMutationSafety.NormalizeLocalPath(path, "Catalog model export"))
+                .Distinct(FileMutationSafety.PathComparer))
+            {
+                using AssetCatalogSourceRead modelSource = session.OpenSource(
+                    modelExportPath,
+                    "Catalog model export used for sidecar discovery");
+                if (!modelSource.Exists)
+                {
+                    result[modelExportPath] = [];
+                    continue;
+                }
+
+                result[modelExportPath] = CaptureModelSidecars(
+                    session,
+                    trustedRoot,
+                    modelSource.PhysicalPath);
+            }
+
+            return result;
+        }
+
         public AssetModelTextureLinks Build(IReadOnlyList<AssetTextureItem> textures, AssetModelSummary summary)
         {
             IReadOnlyDictionary<string, AssetTextureItem> catalogTextures = BuildCatalogTextureMap(textures);
@@ -45,12 +79,12 @@ namespace Onslaught___Career_Editor
         }
 
         public IReadOnlyList<AssetModelTextureBindingResolution> BuildBindingResolutions(
-            IReadOnlyList<AssetTextureItem> textures,
+            AssetCatalogSnapshot snapshot,
             string modelExportPath,
             AssetModelSummary summary)
         {
-            IReadOnlyDictionary<string, AssetTextureItem> catalogTextures = BuildCatalogTextureMap(textures);
-            SidecarTextureIndex sidecarIndex = BuildSidecarTextureIndex(modelExportPath);
+            IReadOnlyDictionary<string, AssetTextureItem> catalogTextures = BuildCatalogTextureMap(snapshot.Textures);
+            SidecarTextureIndex sidecarIndex = BuildSidecarTextureIndex(snapshot, modelExportPath);
             IReadOnlyList<string> textureBindingFileNames = summary.TextureBindingFileNames
                 .Where(static value => !string.IsNullOrWhiteSpace(value))
                 .Select(static value => ExtractFileName(value.Trim()))
@@ -109,6 +143,7 @@ namespace Onslaught___Career_Editor
         }
 
         public IReadOnlyList<AssetModelSidecarTexture> ResolveSidecarTextures(
+            AssetCatalogSnapshot snapshot,
             string modelExportPath,
             IReadOnlyList<string> textureBindingFileNames)
         {
@@ -117,17 +152,7 @@ namespace Onslaught___Career_Editor
                 return Array.Empty<AssetModelSidecarTexture>();
             }
 
-            DirectoryInfo? meshTextureRoot = FindMeshTextureRoot(modelExportPath);
-            if (meshTextureRoot == null)
-            {
-                return Array.Empty<AssetModelSidecarTexture>();
-            }
-
-            IReadOnlyList<FileInfo> sidecarFiles = meshTextureRoot
-                .EnumerateFiles()
-                .Where(static file => IsTextureSidecar(file.Name))
-                .OrderBy(static file => file.Name, StringComparer.OrdinalIgnoreCase)
-                .ToList();
+            IReadOnlyList<AssetModelSidecarTexture> sidecarFiles = ReadSidecarFiles(snapshot, modelExportPath);
             if (sidecarFiles.Count == 0)
             {
                 return Array.Empty<AssetModelSidecarTexture>();
@@ -202,34 +227,27 @@ namespace Onslaught___Career_Editor
             return false;
         }
 
-        private static SidecarTextureIndex BuildSidecarTextureIndex(string modelExportPath)
+        private static SidecarTextureIndex BuildSidecarTextureIndex(
+            AssetCatalogSnapshot snapshot,
+            string modelExportPath)
         {
             if (string.IsNullOrWhiteSpace(modelExportPath))
             {
                 return SidecarTextureIndex.Empty;
             }
 
-            DirectoryInfo? meshTextureRoot = FindMeshTextureRoot(modelExportPath);
-            if (meshTextureRoot == null)
-            {
-                return SidecarTextureIndex.Empty;
-            }
-
-            IReadOnlyList<FileInfo> sidecarFiles = meshTextureRoot
-                .EnumerateFiles()
-                .Where(static file => IsTextureSidecar(file.Name))
-                .OrderBy(static file => file.Name, StringComparer.OrdinalIgnoreCase)
-                .ToList();
+            IReadOnlyList<AssetModelSidecarTexture> sidecarFiles = ReadSidecarFiles(snapshot, modelExportPath);
             return sidecarFiles.Count == 0 ? SidecarTextureIndex.Empty : BuildSidecarTextureIndexFromFiles(sidecarFiles);
         }
 
-        private static SidecarTextureIndex BuildSidecarTextureIndexFromFiles(IReadOnlyList<FileInfo> sidecarFiles)
+        private static SidecarTextureIndex BuildSidecarTextureIndexFromFiles(
+            IReadOnlyList<AssetModelSidecarTexture> sidecarFiles)
         {
-            Dictionary<string, FileInfo> byFileName = sidecarFiles
-                .GroupBy(static file => file.Name, StringComparer.OrdinalIgnoreCase)
+            Dictionary<string, AssetModelSidecarTexture> byFileName = sidecarFiles
+                .GroupBy(static file => file.FileName, StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(static group => group.Key, static group => group.First(), StringComparer.OrdinalIgnoreCase);
-            Dictionary<string, FileInfo> byStem = sidecarFiles
-                .GroupBy(static file => NormalizeTextureKey(file.Name), StringComparer.OrdinalIgnoreCase)
+            Dictionary<string, AssetModelSidecarTexture> byStem = sidecarFiles
+                .GroupBy(static file => NormalizeTextureKey(file.FileName), StringComparer.OrdinalIgnoreCase)
                 .Where(static group => !string.IsNullOrWhiteSpace(group.Key))
                 .ToDictionary(static group => group.Key, static group => group.First(), StringComparer.OrdinalIgnoreCase);
             return new SidecarTextureIndex(byFileName, byStem);
@@ -247,16 +265,16 @@ namespace Onslaught___Career_Editor
                 return false;
             }
 
-            if (index.ByFileName.TryGetValue(fileName, out FileInfo? exactFile))
+            if (index.ByFileName.TryGetValue(fileName, out AssetModelSidecarTexture? exactFile))
             {
-                texture = new AssetModelSidecarTexture(exactFile.Name, exactFile.FullName, ExactFileNameMatch: true);
+                texture = exactFile with { ExactFileNameMatch = true };
                 return true;
             }
 
             string key = NormalizeTextureKey(fileName);
-            if (!string.IsNullOrWhiteSpace(key) && index.ByStem.TryGetValue(key, out FileInfo? stemFile))
+            if (!string.IsNullOrWhiteSpace(key) && index.ByStem.TryGetValue(key, out AssetModelSidecarTexture? stemFile))
             {
-                texture = new AssetModelSidecarTexture(stemFile.Name, stemFile.FullName, ExactFileNameMatch: false);
+                texture = stemFile with { ExactFileNameMatch = false };
                 return true;
             }
 
@@ -345,28 +363,84 @@ namespace Onslaught___Career_Editor
             return withoutExtension.Trim().ToLowerInvariant();
         }
 
-        private static DirectoryInfo? FindMeshTextureRoot(string modelExportPath)
+        private static IReadOnlyList<AssetModelSidecarTexture> ReadSidecarFiles(
+            AssetCatalogSnapshot snapshot,
+            string modelExportPath)
         {
-            FileInfo modelExport = new(Path.GetFullPath(modelExportPath));
-            DirectoryInfo? directory = modelExport.Directory;
-            while (directory != null)
+            try
             {
-                DirectoryInfo direct = new(Path.Combine(directory.FullName, "MeshTextures"));
-                if (direct.Exists)
+                string normalizedModelPath = FileMutationSafety.NormalizeLocalPath(
+                    modelExportPath,
+                    "Catalog model export");
+                return snapshot.SealedSidecarTexturesByModelPath.TryGetValue(
+                    normalizedModelPath,
+                    out IReadOnlyList<AssetModelSidecarTexture>? sidecars)
+                        ? sidecars
+                        : Array.Empty<AssetModelSidecarTexture>();
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                return Array.Empty<AssetModelSidecarTexture>();
+            }
+        }
+
+        private static IReadOnlyList<AssetModelSidecarTexture> CaptureModelSidecars(
+            AssetCatalogLoadSession session,
+            string trustedRoot,
+            string modelPhysicalPath)
+        {
+            string? directory = Path.GetDirectoryName(modelPhysicalPath);
+            while (!string.IsNullOrWhiteSpace(directory) &&
+                FileMutationSafety.IsSameOrUnderRoot(directory, trustedRoot))
+            {
+                foreach (string candidate in new[]
                 {
-                    return direct;
+                    Path.Combine(directory, "MeshTextures"),
+                    Path.Combine(directory, "loose_meshes", "MeshTextures"),
+                })
+                {
+                    if (!Directory.Exists(candidate))
+                        continue;
+
+                    using FileMutationSafety.DirectoryLockSet directoryLocks =
+                        FileMutationSafety.LockDirectoryTree(candidate, "Model sidecar texture directory");
+                    if (!FileMutationSafety.IsSameOrUnderRoot(directoryLocks.PhysicalPath, trustedRoot))
+                    {
+                        throw new InvalidOperationException(
+                            "Model sidecar texture directory resolves outside the trusted generated export root.");
+                    }
+
+                    var sidecars = new List<AssetModelSidecarTexture>();
+                    foreach (string filePath in Directory
+                        .EnumerateFiles(directoryLocks.PhysicalPath)
+                        .Where(static path => IsTextureSidecar(Path.GetFileName(path)))
+                        .OrderBy(static path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase))
+                    {
+                        using AssetCatalogSourceRead sidecar = session.OpenSource(
+                            filePath,
+                            "Model sidecar texture");
+                        if (sidecar.Exists)
+                        {
+                            sidecars.Add(new AssetModelSidecarTexture(
+                                Path.GetFileName(sidecar.Path),
+                                sidecar.Path,
+                                ExactFileNameMatch: false));
+                        }
+                    }
+
+                    return sidecars;
                 }
 
-                DirectoryInfo looseMeshRoot = new(Path.Combine(directory.FullName, "loose_meshes", "MeshTextures"));
-                if (looseMeshRoot.Exists)
-                {
-                    return looseMeshRoot;
-                }
+                if (string.Equals(directory, trustedRoot, FileMutationSafety.PathComparison))
+                    break;
 
-                directory = directory.Parent;
+                string? parent = Path.GetDirectoryName(directory);
+                if (string.Equals(parent, directory, FileMutationSafety.PathComparison))
+                    break;
+                directory = parent;
             }
 
-            return null;
+            return Array.Empty<AssetModelSidecarTexture>();
         }
 
         private static bool IsTextureSidecar(string fileName)
@@ -382,12 +456,12 @@ namespace Onslaught___Career_Editor
         }
 
         private sealed record SidecarTextureIndex(
-            IReadOnlyDictionary<string, FileInfo> ByFileName,
-            IReadOnlyDictionary<string, FileInfo> ByStem)
+            IReadOnlyDictionary<string, AssetModelSidecarTexture> ByFileName,
+            IReadOnlyDictionary<string, AssetModelSidecarTexture> ByStem)
         {
             public static SidecarTextureIndex Empty { get; } = new(
-                new Dictionary<string, FileInfo>(StringComparer.OrdinalIgnoreCase),
-                new Dictionary<string, FileInfo>(StringComparer.OrdinalIgnoreCase));
+                new Dictionary<string, AssetModelSidecarTexture>(StringComparer.OrdinalIgnoreCase),
+                new Dictionary<string, AssetModelSidecarTexture>(StringComparer.OrdinalIgnoreCase));
         }
     }
 

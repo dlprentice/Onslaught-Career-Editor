@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-11",
-  "currentFocus": "Close release-blocking filesystem authority gaps: save/options guarded output is implemented and green; trusted asset-root discovery and package materialization remain active before WinUI UX and rebuild work.",
+  "currentFocus": "The filesystem-authority slice is accepted and green. Advance through WinUI first-use clarity, accessibility, compact layout, navigation focus/status, and truthful launch-preset state before rebuild work.",
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
     "catalogRows": "29/29 target specimen identity and policy metadata rows"
@@ -40,19 +40,21 @@
       "toolFiles": 2614,
       "releaseFiles": 1710,
       "npmScriptsBeforeQuickAliases": 1494,
-      "contributorQuickCheck": "npm test -> check:quick passed in 91.4 seconds (docsync, doc commands, zero-warning WinUI build, 1217 AppCore tests, 134 WinUI tests with 2 expected real-asset skips)"
+      "contributorQuickCheck": "npm test passed after generated-output hardening (docsync, doc commands, generated-output safety, zero-warning WinUI build, 1307 AppCore tests, 134 WinUI tests with 2 expected real-asset skips)"
     },
     "safetyAudit": {
       "safeCopyModel": "Retain it. Initial copied-profile creation, copied-executable target checks, catalog pinning, backup provenance, and process stop targeting are strong.",
       "patchCatalog": "29 total rows; 20 visible (9 stable, 11 experimental); 9 hidden companions.",
       "closedThisWave": [
         "Save/options outputs now require matching .bes/.bea types, calculate the app-owned patched-output default without creating it, resolve DOS drive aliases to physical local paths, hold physical ancestor identities, protect source file identities, reject in-place/hardlink/symlink/junction/device/network/alternate-stream/reserved-device and installed-game-tree targets, stage and flush a sibling file, atomically replace the destination, and verify staged plus committed identities and bytes.",
-        "Generated safe-copy control editing remains available only after profile/manifest validation mints a capability for the canonical app-owned GameProfiles root; a naked trusted-root string can no longer authorize writes."
+        "Generated safe-copy control editing remains available only after profile/manifest validation mints a capability for the canonical app-owned GameProfiles root; a naked trusted-root string can no longer authorize writes.",
+        "Asset catalog discovery is bound to one schema-2 bundle root and relative catalog paths. Catalog sources and sidecars are pinned and revalidated through held identities before use.",
+        "First material-package publication uses a sibling stage, exact member and hash sealing, guarded vacant-name publication, final reopen/reverification, and rollback. Existing packages must already be complete and byte-identical.",
+        "Downstream package writers, Python export tools, and the C# AYA export harness use guarded output identities. New output files remain delete-pending with link count zero while bytes are written, then are committed only after final identity, path, length, and hash checks."
       ],
-      "acceptance": "Final bounded normal and adversarial reviewers both returned ACCEPT after earlier REJECT findings drove trusted-root capability, physical path, staging-handle, no-follow final-handle, and deterministic race-test corrections.",
-      "highPriorityGaps": [
-        "Asset catalogs can resolve rooted, ancestor, or current-directory sources instead of one declared trusted export root."
-      ],
+      "acceptance": "Codex and Cursor/Grok normal and adversarial reviewers returned ACCEPT after focused follow-ups. Full npm test passed with 1307 AppCore tests, 134 WinUI tests, 2 expected real-asset skips, and a zero-warning build. A synthetic no-game AYA harness smoke produced reparsable FBX and valid PNG output without stage residue.",
+      "residualBoundary": "After finalized bytes leave delete-pending quarantine, a hostile process running with the same user authority can copy them or create a byte-identical hardlink, as it can immediately after publication. Commit rejects unexpected link count or identity, no writes occur after quarantine clears, and no pre-existing source/game identity may be changed. Same-user confidentiality after finalization is not claimed.",
+      "highPriorityGaps": [],
       "mediumPriorityGaps": [
         "Launch attestation does not fully revalidate mutable profile options/save/data identities after profile creation.",
         "Control/music content can commit before its accounting manifest.",
@@ -61,7 +63,7 @@
     },
     "uxAudit": {
       "runtimeScope": "Two isolated launches, including a no-game first run, covered Home, Save Lab, Game Options, Windowed & Mods, Media, Asset Library, Lore, Settings, and About.",
-      "verifiedBuildAndTests": "WinUI build passed with zero warnings/errors; UI tests passed 134 with 2 asset-dependent skips; AppCore passed 1240 after save/options safety hardening, including live SUBST physical-alias and deterministic staging/final-entry race coverage.",
+      "verifiedBuildAndTests": "WinUI build passed with zero warnings/errors; UI tests passed 134 with 2 asset-dependent skips; AppCore passed 1307 after save/options and generated asset-output hardening, including live alias/reparse probes and deterministic race coverage.",
       "priorityFindings": [
         "Show debug trace can leave a launch preset falsely selected even though launch arguments change.",
         "Cached navigation can retain stale live-region status and off-screen focus.",
@@ -85,12 +87,10 @@
     ]
   },
   "activeBlockers": [
-    "Cursor/Grok read-only consult is degraded: Windows lacks the required sandbox and WSL lacks separate model-catalog authentication.",
-    "Asset catalog and package-materialization filesystem identity boundaries need hardening before stronger safety claims or feature expansion."
+    "Native AYA runtime compatibility smoke is unavailable on this machine because the reference extractor requires Visual C++ targets that are not installed; synthetic harness compatibility evidence passed, and this does not weaken the accepted output-authority boundary."
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Bind asset catalogs, sidecar discovery, package sources, and package destinations to explicit trusted roots with hostile-path tests.",
     "Fix launch-preset equality and navigation status/focus, then address compact layout, setup hierarchy, and page headings.",
     "Define the rebuild evidence firewall and build the deterministic kernel."
   ]

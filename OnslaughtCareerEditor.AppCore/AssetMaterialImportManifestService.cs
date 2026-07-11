@@ -13,7 +13,7 @@ namespace Onslaught___Career_Editor
 
             rows.AddRange(snapshot.LooseMeshes.Select(mesh => BuildRow(
                 textureLinkService,
-                snapshot.Textures,
+                snapshot,
                 kind: "loose mesh",
                 catalogId: mesh.CatalogId,
                 label: mesh.DisplayName,
@@ -25,7 +25,7 @@ namespace Onslaught___Career_Editor
 
             rows.AddRange(snapshot.EmbeddedMeshes.Select(mesh => BuildRow(
                 textureLinkService,
-                snapshot.Textures,
+                snapshot,
                 kind: "embedded mesh",
                 catalogId: mesh.CatalogId,
                 label: mesh.DisplayName,
@@ -65,7 +65,7 @@ namespace Onslaught___Career_Editor
 
         private static AssetMaterialImportManifestModelRow BuildRow(
             AssetModelTextureLinkService textureLinkService,
-            IReadOnlyList<AssetTextureItem> textures,
+            AssetCatalogSnapshot snapshot,
             string kind,
             string catalogId,
             string label,
@@ -76,7 +76,7 @@ namespace Onslaught___Career_Editor
             string exportPath)
         {
             IReadOnlyList<AssetModelTextureBindingResolution> textureBindings =
-                textureLinkService.BuildBindingResolutions(textures, exportPath, summary);
+                textureLinkService.BuildBindingResolutions(snapshot, exportPath, summary);
 
             string readiness = textureBindings.Count switch
             {

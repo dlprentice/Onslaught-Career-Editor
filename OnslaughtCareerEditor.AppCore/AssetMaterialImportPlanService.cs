@@ -17,7 +17,7 @@ namespace Onslaught___Career_Editor
 
             rows.AddRange(snapshot.LooseMeshes.Select(mesh => BuildRow(
                 textureLinkService,
-                snapshot.Textures,
+                snapshot,
                 "loose mesh",
                 mesh.DisplayName,
                 mesh.CanonicalRef,
@@ -27,7 +27,7 @@ namespace Onslaught___Career_Editor
                 mesh.ModelSummary)));
             rows.AddRange(snapshot.EmbeddedMeshes.Select(mesh => BuildRow(
                 textureLinkService,
-                snapshot.Textures,
+                snapshot,
                 "embedded mesh",
                 mesh.DisplayName,
                 mesh.SourceArchive,
@@ -76,7 +76,7 @@ namespace Onslaught___Career_Editor
 
         private static AssetMaterialImportPlanRow BuildRow(
             AssetModelTextureLinkService textureLinkService,
-            IReadOnlyList<AssetTextureItem> textures,
+            AssetCatalogSnapshot snapshot,
             string kind,
             string label,
             string sourceLabel,
@@ -85,11 +85,11 @@ namespace Onslaught___Career_Editor
             bool exportExists,
             AssetModelSummary summary)
         {
-            AssetModelTextureLinks links = textureLinkService.Build(textures, summary);
+            AssetModelTextureLinks links = textureLinkService.Build(snapshot.Textures, summary);
             IReadOnlyList<AssetModelSidecarTexture> allSidecars =
-                textureLinkService.ResolveSidecarTextures(exportPath, links.TextureBindingFileNames);
+                textureLinkService.ResolveSidecarTextures(snapshot, exportPath, links.TextureBindingFileNames);
             IReadOnlyList<AssetModelSidecarTexture> missingSidecars =
-                textureLinkService.ResolveSidecarTextures(exportPath, links.CatalogMissingTextureFileNames);
+                textureLinkService.ResolveSidecarTextures(snapshot, exportPath, links.CatalogMissingTextureFileNames);
             HashSet<string> missingSidecarKeys = missingSidecars
                 .Select(static texture => NormalizeTextureKey(texture.FileName))
                 .Where(static key => !string.IsNullOrWhiteSpace(key))

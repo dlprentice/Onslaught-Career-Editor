@@ -16,23 +16,26 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Close the release-blocking filesystem authority gaps found by the normal and
-adversarial safety audit:
+Improve WinUI first-use clarity and accessibility using the existing visual
+language and native runtime evidence:
 
-1. commit save and options output through a shared guarded atomic transaction;
-2. reject in-place, hardlink, symlink, junction, device, network, alternate-data-
-   stream, wrong-extension, and installed-game-tree output targets;
-3. keep generated safe-copy control editing available only inside its separately
-   verified app-owned profile root;
-4. bind asset catalogs and sidecar discovery to one declared export root; and
-5. revalidate catalog sources, package destinations, manifests, and sidecars at
-   materialization time before copying.
+1. make missing game-folder setup the clear first action on a true first run;
+2. keep launch-preset selection truthful when debug-trace arguments change;
+3. clear stale live-region status and restore useful focus on cached navigation;
+4. fix the compact-width clipping in safe-copy executable selection;
+5. add semantic Level 1 page headings and consistent arrival focus; and
+6. repeat native visual and UI Automation checks in an isolated run so incidental
+   desktop input cannot contaminate acceptance evidence.
 
-The save/options advancement is accepted after iterative normal and adversarial
-review closed trusted-root, directory-creation, physical-alias, staging, and
-final-entry race findings. The trusted asset-root and materialization
-advancement remains active and is still a release blocker. This slice creates
-no release, gameplay, visual, online, Ghidra read-back, or rebuild proof.
+The preceding filesystem-safety slice is accepted. Save/options writes, asset
+catalog discovery, package materialization, downstream package outputs, Python
+generated-output tools, and the C# AYA export harness now use bounded roots,
+held identities, guarded final writes, and hostile-path tests. The remaining
+same-user boundary is explicit: after final bytes leave delete-pending
+quarantine, another process with the same account authority may copy or create
+a byte-identical hardlink, just as it can after publication. No nonfinal bytes
+or writes to pre-existing source/game identities are accepted. This creates no
+release, gameplay, visual-parity, online, Ghidra read-back, or rebuild proof.
 
 ## Verified Starting Point
 
@@ -100,46 +103,37 @@ This campaign uses Codex root and Codex-owned normal/adversarial lanes on
 archaeology, WinUI UX, patch/mod safety, binary RE quality, Lore quality,
 rebuild provenance/architecture, and holistic normal/adversarial review.
 
-The required external Cursor/Grok lane is currently degraded:
-
-- `CONSULT_UNAVAILABLE:cursor-grok-normal-adversarial`
-- Windows `cursor-agent` rejects the required sandbox because that sandbox is
-  unavailable on Windows.
-- WSL has the client but cannot fetch the model catalog without separate
-  authentication.
-- No unsafe non-sandbox or credential-copy fallback is allowed.
-
-Focused Codex-owned review covers the current non-release, non-runtime,
-non-destructive slice. The degraded lane must be reported at acceptance.
+The external Cursor/Grok lane is available through bounded, non-secret,
+read-only `cursor-agent --model grok-4.5-fast-xhigh` consults. The completed
+filesystem slice received normal and adversarial Cursor/Grok review, focused
+follow-ups on challenged assumptions, and separate Codex normal/adversarial
+review. Codex root retained edit, validation, state, commit, push, and final
+acceptance ownership.
 
 ## Current Slice Acceptance
 
-- Save and options outputs default to an app-owned output folder and retain
-  strict `.bes` / `.bea` type boundaries without creating directories during
-  path calculation.
-- Every save/options writer protects all source identities, stages a unique
-- Installed-game-shaped output trees and lexical, reparse, hardlink, reserved-
-  device, `SUBST`, mapped-drive, and network aliases fail closed after physical
-  final-path resolution; held ancestor handles prevent directory replacement.
-- Verified generated safe-copy edits require a minted capability for the
-  canonical app-owned `GameProfiles` root rather than a trusted path string.
-- Asset catalog lookup no longer searches arbitrary ancestors or the current
-  working directory, and resolved sources remain inside one trusted export root.
-- Package materialization revalidates source and destination identity before
-  every copy and cannot escape through reparse or hardlink aliases.
-- Focused hostile-path tests, full AppCore/WinUI tests, patch/safe-copy gates,
-  docs/state checks, and public payload boundaries pass before each push.
+- A true no-game first run presents setup as the primary next action and does
+  not make Save Lab appear usable before its prerequisites exist.
+- Launch-preset selection reflects the complete effective argument state,
+  including debug-trace changes.
+- Cached navigation does not announce stale status or retain focus in an
+  off-screen control.
+- The safe-copy executable source action remains readable and operable at the
+  supported compact width.
+- Principal pages expose one semantic Level 1 heading and a predictable focus
+  destination after navigation.
+- Focused logic tests, zero-warning WinUI build, native visual/UIA checks,
+  AppCore/WinUI suites, docs/state checks, and payload boundaries pass before
+  the next push.
 
 ## Next Slices
 
-1. Finish the trusted asset-root and package-materialization half of the active
-   filesystem safety slice.
-2. Apply the prioritized WinUI first-user and accessibility fixes, then
+1. Complete the prioritized WinUI first-user and accessibility fixes, then
    validate and expand patches/mods only behind evidence-backed safety gates.
-3. Define the sealed evidence/provenance firewall, then build a deterministic
+2. Define the sealed evidence/provenance firewall, then build a deterministic
    headless simulation kernel and runnable primitive 3D vertical slice under
    the accurate provenance label.
-4. Run deep evidence-based RE and Lore quality passes before expanding claims.
+3. Run deep evidence-based RE and Lore quality passes before expanding claims.
 
 ## Stop Conditions
 

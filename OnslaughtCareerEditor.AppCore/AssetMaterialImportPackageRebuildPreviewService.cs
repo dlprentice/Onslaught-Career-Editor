@@ -29,6 +29,13 @@ namespace Onslaught___Career_Editor
         private static AssetMaterialImportPackageRebuildPreviewResult Build(string packageRoot, bool executeWrite)
         {
             string fullPackageRoot = Path.GetFullPath(packageRoot);
+            using GuardedPackageOutputRoot? operationRoot = Directory.Exists(fullPackageRoot)
+                ? new GuardedPackageOutputRoot(
+                    fullPackageRoot,
+                    trustedSourceRoot: null,
+                    execute: false,
+                    requireExistingRoot: true)
+                : null;
             string packageRootName = BuildRootName(fullPackageRoot);
             AssetMaterialImportPackageImporterInputPlanResult inputPlan =
                 new AssetMaterialImportPackageImporterInputPlanService().Build(fullPackageRoot);
@@ -143,14 +150,31 @@ namespace Onslaught___Career_Editor
                 return BuildBlockedModelRow(model, modelInputRelativePath, model.PlanStatus);
             }
 
-            if (!TryResolveInsidePackage(fullPackageRoot, modelInputRelativePath, out string fullModelInputPath) ||
-                !File.Exists(fullModelInputPath))
+            if (!TryResolveInsidePackage(fullPackageRoot, modelInputRelativePath, out _))
             {
                 issues.Add(new AssetMaterialImportPackageRebuildPreviewIssue("model", modelInputRelativePath, "missing-input-file"));
                 return BuildBlockedModelRow(model, modelInputRelativePath, "missing-input-file");
             }
 
-            AssetModelSummary summary = FbxModelSummaryReader.Read(fullModelInputPath);
+            AssetModelSummary summary;
+            try
+            {
+                using GuardedPackageArtifactRead modelInput = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    modelInputRelativePath,
+                    "Rebuild-preview model input");
+                if (!modelInput.Exists)
+                {
+                    issues.Add(new AssetMaterialImportPackageRebuildPreviewIssue("model", modelInputRelativePath, "missing-input-file"));
+                    return BuildBlockedModelRow(model, modelInputRelativePath, "missing-input-file");
+                }
+                summary = FbxModelSummaryReader.Read(modelInput.Stream);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                issues.Add(new AssetMaterialImportPackageRebuildPreviewIssue("model", modelInputRelativePath, "unsafe-input-path"));
+                return BuildBlockedModelRow(model, modelInputRelativePath, "unsafe-input-path");
+            }
             if (!summary.GeometryPreview.Available)
             {
                 issues.Add(new AssetMaterialImportPackageRebuildPreviewIssue("model", modelInputRelativePath, "missing-wireframe-preview"));
@@ -160,8 +184,8 @@ namespace Onslaught___Career_Editor
             string outputToken = BuildOutputToken(model.Ordinal, model.CatalogId);
             string objRelativePath = $"{WorkspaceRootRelativePath}/models/{outputToken}.wire.obj";
             string bindingRelativePath = $"{WorkspaceRootRelativePath}/models/{outputToken}.bindings.json";
-            if (!TryResolveInsidePackage(fullPackageRoot, objRelativePath, out string fullObjPath) ||
-                !TryResolveInsidePackage(fullPackageRoot, bindingRelativePath, out string fullBindingPath))
+            if (!TryResolveInsidePackage(fullPackageRoot, objRelativePath, out _) ||
+                !TryResolveInsidePackage(fullPackageRoot, bindingRelativePath, out _))
             {
                 issues.Add(new AssetMaterialImportPackageRebuildPreviewIssue("model", objRelativePath, "unsafe-output-path"));
                 return BuildBlockedModelRow(model, modelInputRelativePath, "unsafe-output-path", objRelativePath, bindingRelativePath);
@@ -173,10 +197,41 @@ namespace Onslaught___Career_Editor
                     : [];
             string objContent = BuildObjContent(model, summary.GeometryPreview);
             string bindingContent = BuildBindingSidecarContent(model, textureJobs, objRelativePath);
-            bool objExists = File.Exists(fullObjPath);
-            bool bindingExists = File.Exists(fullBindingPath);
-            bool objMatches = objExists && string.Equals(File.ReadAllText(fullObjPath), objContent, StringComparison.Ordinal);
-            bool bindingMatches = bindingExists && string.Equals(File.ReadAllText(fullBindingPath), bindingContent, StringComparison.Ordinal);
+            bool objExists;
+            bool bindingExists;
+            bool objMatches;
+            bool bindingMatches;
+            try
+            {
+                using GuardedPackageArtifactRead objRead = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    objRelativePath,
+                    "Rebuild-preview OBJ output");
+                using GuardedPackageArtifactRead bindingRead = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    bindingRelativePath,
+                    "Rebuild-preview binding output");
+                objExists = objRead.Exists;
+                bindingExists = bindingRead.Exists;
+                objMatches = objExists && string.Equals(
+                    objRead.ReadAllText(Utf8NoBom),
+                    objContent,
+                    StringComparison.Ordinal);
+                bindingMatches = bindingExists && string.Equals(
+                    bindingRead.ReadAllText(Utf8NoBom),
+                    bindingContent,
+                    StringComparison.Ordinal);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                issues.Add(new AssetMaterialImportPackageRebuildPreviewIssue("model", objRelativePath, "unsafe-output-path"));
+                return BuildBlockedModelRow(
+                    model,
+                    modelInputRelativePath,
+                    "unsafe-output-path",
+                    objRelativePath,
+                    bindingRelativePath);
+            }
             if ((objExists && !objMatches) || (bindingExists && !bindingMatches))
             {
                 issues.Add(new AssetMaterialImportPackageRebuildPreviewIssue("model", objRelativePath, "blocked-existing-mismatch"));
@@ -198,18 +253,30 @@ namespace Onslaught___Career_Editor
             }
             else
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(fullObjPath)!);
-                if (!objExists)
+                try
                 {
-                    File.WriteAllText(fullObjPath, objContent, Utf8NoBom);
+                    GuardedArtifactWriteResult objWrite = GuardedPackageArtifactWriter.WriteText(
+                        fullPackageRoot,
+                        objRelativePath,
+                        objContent,
+                        Utf8NoBom);
+                    GuardedArtifactWriteResult bindingWrite = GuardedPackageArtifactWriter.WriteText(
+                        fullPackageRoot,
+                        bindingRelativePath,
+                        bindingContent,
+                        Utf8NoBom);
+                    status = objWrite.Existing && bindingWrite.Existing ? "skipped-existing" : "written";
                 }
-
-                if (!bindingExists)
+                catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
                 {
-                    File.WriteAllText(fullBindingPath, bindingContent, Utf8NoBom);
+                    issues.Add(new AssetMaterialImportPackageRebuildPreviewIssue("model", objRelativePath, "unsafe-output-path"));
+                    return BuildBlockedModelRow(
+                        model,
+                        modelInputRelativePath,
+                        "unsafe-output-path",
+                        objRelativePath,
+                        bindingRelativePath);
                 }
-
-                status = objExists && bindingExists ? "skipped-existing" : "written";
             }
 
             return BuildModelRowResult(
@@ -278,7 +345,9 @@ namespace Onslaught___Career_Editor
                 return (false, "preflight-not-written", 0);
             }
 
-            string manifestPath = Path.Combine(fullPackageRoot, ManifestFileName);
+            if (!completed)
+                return (false, "source-not-ready-not-written", 0);
+
             AssetMaterialImportPackageRebuildPreviewManifest manifest = new(
                 Schema: ManifestSchema,
                 GeneratedAtUtc: DateTimeOffset.UtcNow,
@@ -293,8 +362,19 @@ namespace Onslaught___Career_Editor
                 BindingSidecarRows: modelRows.Count(static row => !string.IsNullOrWhiteSpace(row.BindingSidecarRelativePath)),
                 Completed: completed,
                 Models: modelRows.OrderBy(static row => row.Ordinal).ToList());
-            File.WriteAllText(manifestPath, JsonSerializer.Serialize(manifest, WriteJsonOptions), Utf8NoBom);
-            return (true, "written", new FileInfo(manifestPath).Length);
+            try
+            {
+                GuardedArtifactWriteResult write = GuardedPackageArtifactWriter.ReplaceText(
+                    fullPackageRoot,
+                    ManifestFileName,
+                    JsonSerializer.Serialize(manifest, WriteJsonOptions),
+                    Utf8NoBom);
+                return (true, "written", write.Bytes);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                return (false, "unsafe-manifest-path", 0);
+            }
         }
 
         private static string BuildObjContent(
@@ -387,27 +467,8 @@ namespace Onslaught___Career_Editor
             return string.IsNullOrWhiteSpace(token) ? "asset" : token;
         }
 
-        private static bool TryResolveInsidePackage(string fullPackageRoot, string relativePath, out string fullPath)
-        {
-            fullPath = string.Empty;
-            if (string.IsNullOrWhiteSpace(relativePath) || Path.IsPathRooted(relativePath))
-            {
-                return false;
-            }
-
-            string candidate = Path.GetFullPath(Path.Combine(
-                fullPackageRoot,
-                relativePath.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar)));
-            string root = fullPackageRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) +
-                Path.DirectorySeparatorChar;
-            if (!candidate.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            fullPath = candidate;
-            return true;
-        }
+        private static bool TryResolveInsidePackage(string fullPackageRoot, string? relativePath, out string fullPath) =>
+            GuardedPackageArtifactReader.TryResolveRelativePath(fullPackageRoot, relativePath, out fullPath);
 
         private static bool IsReadyStatus(string status)
         {
@@ -419,9 +480,9 @@ namespace Onslaught___Career_Editor
             return Path.GetFileName(packageRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
         }
 
-        private static string NormalizeRelativePath(string value)
+        private static string NormalizeRelativePath(string? value)
         {
-            return value.Replace('\\', '/');
+            return (value ?? string.Empty).Replace('\\', '/');
         }
     }
 

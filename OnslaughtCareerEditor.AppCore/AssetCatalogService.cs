@@ -4,34 +4,38 @@ namespace Onslaught___Career_Editor
 {
     public sealed class AssetCatalogService
     {
-        private const string CatalogFileName = "catalog.json";
-        private const string AssetCatalogDirectoryName = "asset_catalog";
+        public const int SupportedSchemaVersion = 2;
+        public const string SupportedPathContract = "bundle-root-relative";
+        private const int MaxCatalogRowsPerSection = 100_000;
 
         public AssetCatalogSnapshot Load(string? catalogPathOrDirectory)
         {
-            string? catalogFilePath = ResolveCatalogFilePath(catalogPathOrDirectory);
-            if (catalogFilePath == null)
+            AssetCatalogSelection? selection = AssetCatalogFileSafety.ResolveSelection(catalogPathOrDirectory);
+            if (selection == null)
             {
                 return AssetCatalogSnapshot.Empty;
             }
 
             try
             {
-                using JsonDocument document = JsonDocument.Parse(File.ReadAllText(catalogFilePath));
+                using AssetCatalogLoadSession session = AssetCatalogFileSafety.BeginLoad(selection);
+                using JsonDocument document = JsonDocument.Parse(session.CatalogStream);
                 JsonElement root = document.RootElement;
+                if (!HasSupportedCatalogContract(root))
+                    return AssetCatalogSnapshot.Empty;
 
                 IReadOnlyList<AssetTextureItem> textures = ReadArray(root, "textures")
-                    .Select(row => BuildTextureItem(row, catalogFilePath))
+                    .Select(row => BuildTextureItem(row, session))
                     .OrderBy(static item => item.DisplayName, StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
                 IReadOnlyList<AssetLooseMeshItem> looseMeshes = ReadArray(root, "loose_meshes")
-                    .Select(row => BuildLooseMeshItem(row, catalogFilePath))
+                    .Select(row => BuildLooseMeshItem(row, session))
                     .OrderBy(static item => item.DisplayName, StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
                 IReadOnlyList<AssetEmbeddedMeshItem> embeddedMeshes = ReadArray(root, "embedded_meshes")
-                    .Select(row => BuildEmbeddedMeshItem(row, catalogFilePath))
+                    .Select(row => BuildEmbeddedMeshItem(row, session))
                     .OrderBy(static item => item.SourceArchive, StringComparer.OrdinalIgnoreCase)
                     .ThenBy(static item => item.DisplayName, StringComparer.OrdinalIgnoreCase)
                     .ToList();
@@ -40,14 +44,27 @@ namespace Onslaught___Career_Editor
                     .Select(BuildGoodieItem)
                     .OrderBy(static item => item.Index)
                     .ToList();
+                ValidateUniqueCatalogRows(textures, looseMeshes, embeddedMeshes, goodies);
 
-                return new AssetCatalogSnapshot(
-                    catalogFilePath,
+                IReadOnlyDictionary<string, IReadOnlyList<AssetModelSidecarTexture>> sealedSidecars =
+                    AssetModelTextureLinkService.CaptureSnapshotSidecars(
+                        session,
+                        looseMeshes.Select(static item => item.ExportPath)
+                            .Concat(embeddedMeshes.Select(static item => item.ExportPath)));
+
+                AssetCatalogSnapshot snapshot = new(
+                    session.CatalogFilePath,
                     BuildSummary(root, textures.Count, looseMeshes.Count, embeddedMeshes.Count, goodies.Count),
                     textures,
                     looseMeshes,
                     embeddedMeshes,
-                    goodies);
+                    goodies,
+                    session.TrustedExportRoot);
+                return snapshot with
+                {
+                    TrustEvidence = session.CaptureTrustEvidence(),
+                    SealedSidecarTexturesByModelPath = sealedSidecars,
+                };
             }
             catch (JsonException)
             {
@@ -57,34 +74,30 @@ namespace Onslaught___Career_Editor
             {
                 return AssetCatalogSnapshot.Empty;
             }
+            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                return AssetCatalogSnapshot.Empty;
+            }
         }
 
         public static string? ResolveCatalogFilePath(string? catalogPathOrDirectory)
         {
-            if (string.IsNullOrWhiteSpace(catalogPathOrDirectory))
+            AssetCatalogSelection? selection = AssetCatalogFileSafety.ResolveValidatedSelection(catalogPathOrDirectory);
+            if (selection is null)
+                return null;
+
+            try
+            {
+                using AssetCatalogLoadSession session = AssetCatalogFileSafety.BeginLoad(selection);
+                using JsonDocument document = JsonDocument.Parse(session.CatalogStream);
+                return HasSupportedCatalogContract(document.RootElement)
+                    ? session.CatalogFilePath
+                    : null;
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or JsonException or NotSupportedException or UnauthorizedAccessException)
             {
                 return null;
             }
-
-            string fullPath = Path.GetFullPath(catalogPathOrDirectory);
-            if (File.Exists(fullPath))
-            {
-                return fullPath;
-            }
-
-            if (!Directory.Exists(fullPath))
-            {
-                return null;
-            }
-
-            string directCatalog = Path.Combine(fullPath, CatalogFileName);
-            if (File.Exists(directCatalog))
-            {
-                return directCatalog;
-            }
-
-            string nestedCatalog = Path.Combine(fullPath, AssetCatalogDirectoryName, CatalogFileName);
-            return File.Exists(nestedCatalog) ? nestedCatalog : null;
         }
 
         public static IReadOnlyList<string> FindCatalogCandidates(params string?[] catalogPathOrDirectoryCandidates)
@@ -127,53 +140,119 @@ namespace Onslaught___Career_Editor
                 GetInt(summary, "total_catalog_entries", textureCount + looseMeshCount + embeddedMeshCount + goodieCount));
         }
 
-        private static AssetTextureItem BuildTextureItem(JsonElement row, string catalogFilePath)
+        private static void ValidateUniqueCatalogRows(
+            IReadOnlyList<AssetTextureItem> textures,
+            IReadOnlyList<AssetLooseMeshItem> looseMeshes,
+            IReadOnlyList<AssetEmbeddedMeshItem> embeddedMeshes,
+            IReadOnlyList<AssetGoodieItem> goodies)
+        {
+            IReadOnlyList<string> catalogIds = textures.Select(static row => row.CatalogId)
+                .Concat(looseMeshes.Select(static row => row.CatalogId))
+                .Concat(embeddedMeshes.Select(static row => row.CatalogId))
+                .Concat(goodies.Select(static row => row.CatalogId))
+                .ToList();
+            if (catalogIds.Any(string.IsNullOrWhiteSpace) ||
+                catalogIds.Distinct(StringComparer.OrdinalIgnoreCase).Count() != catalogIds.Count)
+            {
+                throw new InvalidOperationException("Asset catalog IDs must be non-empty and unique.");
+            }
+
+            IReadOnlyList<string> exportPaths = textures.Select(static row => row.ExportPath)
+                .Concat(looseMeshes.Select(static row => row.ExportPath))
+                .Concat(embeddedMeshes.Select(static row => row.ExportPath))
+                .Where(static path => !string.IsNullOrWhiteSpace(path))
+                .ToList();
+            if (exportPaths.Distinct(FileMutationSafety.PathComparer).Count() != exportPaths.Count)
+                throw new InvalidOperationException("Asset catalog primary export paths must be unique.");
+            if (goodies.Select(static row => row.Index).Distinct().Count() != goodies.Count)
+                throw new InvalidOperationException("Asset catalog Goodie indexes must be unique.");
+        }
+
+        private static bool HasSupportedPathContract(JsonElement root)
+        {
+            return root.ValueKind == JsonValueKind.Object &&
+                root.TryGetProperty("schema_version", out JsonElement schemaVersion) &&
+                schemaVersion.ValueKind == JsonValueKind.Number &&
+                schemaVersion.TryGetInt32(out int parsedSchemaVersion) &&
+                parsedSchemaVersion == SupportedSchemaVersion &&
+                root.TryGetProperty("path_contract", out JsonElement pathContract) &&
+                pathContract.ValueKind == JsonValueKind.String &&
+                string.Equals(
+                    pathContract.GetString(),
+                    SupportedPathContract,
+                    StringComparison.Ordinal);
+        }
+
+        private static bool HasSupportedCatalogContract(JsonElement root)
+        {
+            if (!HasSupportedPathContract(root))
+                return false;
+
+            foreach (string propertyName in new[] { "textures", "loose_meshes", "embedded_meshes", "goodies" })
+            {
+                if (!root.TryGetProperty(propertyName, out JsonElement section) ||
+                    section.ValueKind != JsonValueKind.Array ||
+                    section.GetArrayLength() > MaxCatalogRowsPerSection ||
+                    section.EnumerateArray().Any(static row => row.ValueKind != JsonValueKind.Object))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static AssetTextureItem BuildTextureItem(JsonElement row, AssetCatalogLoadSession session)
         {
             string canonicalRef = GetString(row, "canonical_ref");
-            string exportPath = ResolveFirstPath(catalogFilePath, ReadStringArray(row, "export_png_paths"));
+            using AssetCatalogSourceRead export = ResolveFirstPath(session, ReadStringArray(row, "export_png_paths"), "Catalog texture export");
             return new AssetTextureItem(
                 GetString(row, "catalog_id"),
                 canonicalRef,
                 BuildTextureDisplayName(canonicalRef),
                 FirstOrDefault(ReadStringArray(row, "source_roots"), "Textures"),
-                exportPath,
-                Path.GetFileName(exportPath),
-                File.Exists(exportPath),
+                export.Path,
+                Path.GetFileName(export.Path),
+                export.Exists,
                 GetInt(row, "source_aya_count"),
                 GetInt(row, "export_png_count"),
                 GetInt(row, "packed_text_ref_count") + GetInt(row, "gdie_ref_count"));
         }
 
-        private static AssetLooseMeshItem BuildLooseMeshItem(JsonElement row, string catalogFilePath)
+        private static AssetLooseMeshItem BuildLooseMeshItem(JsonElement row, AssetCatalogLoadSession session)
         {
             string canonicalRef = GetString(row, "canonical_ref");
-            string exportPath = ResolveFirstPath(catalogFilePath, ReadStringArray(row, "export_fbx_paths"));
+            using AssetCatalogSourceRead export = ResolveFirstPath(session, ReadStringArray(row, "export_fbx_paths"), "Catalog loose-mesh export");
             return new AssetLooseMeshItem(
                 GetString(row, "catalog_id"),
                 canonicalRef,
                 string.IsNullOrWhiteSpace(canonicalRef) ? "Loose mesh" : canonicalRef,
-                exportPath,
-                Path.GetFileName(exportPath),
-                File.Exists(exportPath),
+                export.Path,
+                Path.GetFileName(export.Path),
+                export.Exists,
                 GetInt(row, "source_aya_count"),
                 GetInt(row, "export_fbx_count"),
                 GetInt(row, "packed_reference_count") + GetInt(row, "gdie_ref_count"),
-                FbxModelSummaryReader.Read(exportPath));
+                export.Exists
+                    ? FbxModelSummaryReader.Read(export.Stream)
+                    : AssetModelSummary.Unavailable(0, "FBX export is not available at the recorded local path."));
         }
 
-        private static AssetEmbeddedMeshItem BuildEmbeddedMeshItem(JsonElement row, string catalogFilePath)
+        private static AssetEmbeddedMeshItem BuildEmbeddedMeshItem(JsonElement row, AssetCatalogLoadSession session)
         {
             string bodyName = GetString(row, "body_name");
-            string exportPath = ResolvePath(catalogFilePath, GetString(row, "export_fbx_path"));
+            using AssetCatalogSourceRead export = ResolvePath(session, GetString(row, "export_fbx_path"), "Catalog embedded-mesh export");
             return new AssetEmbeddedMeshItem(
                 GetString(row, "catalog_id"),
                 GetString(row, "source_archive"),
                 bodyName,
                 string.IsNullOrWhiteSpace(bodyName) ? "Embedded mesh" : bodyName,
-                exportPath,
-                Path.GetFileName(exportPath),
-                File.Exists(exportPath),
-                FbxModelSummaryReader.Read(exportPath));
+                export.Path,
+                Path.GetFileName(export.Path),
+                export.Exists,
+                export.Exists
+                    ? FbxModelSummaryReader.Read(export.Stream)
+                    : AssetModelSummary.Unavailable(0, "FBX export is not available at the recorded local path."));
         }
 
         private static AssetGoodieItem BuildGoodieItem(JsonElement row)
@@ -240,7 +319,7 @@ namespace Onslaught___Career_Editor
 
             return value.ValueKind == JsonValueKind.String
                 ? value.GetString() ?? string.Empty
-                : value.ToString();
+                : string.Empty;
         }
 
         private static int GetInt(JsonElement element, string propertyName, int fallback = 0)
@@ -263,10 +342,15 @@ namespace Onslaught___Career_Editor
         private static IReadOnlyList<string> ReadStringArray(JsonElement element, string propertyName)
         {
             if (element.ValueKind != JsonValueKind.Object ||
-                !element.TryGetProperty(propertyName, out JsonElement value) ||
-                value.ValueKind != JsonValueKind.Array)
+                !element.TryGetProperty(propertyName, out JsonElement value))
             {
                 return Array.Empty<string>();
+            }
+
+            if (value.ValueKind != JsonValueKind.Array ||
+                value.EnumerateArray().Any(static item => item.ValueKind != JsonValueKind.String))
+            {
+                throw new InvalidOperationException($"Asset catalog property '{propertyName}' must be an array of strings.");
             }
 
             return value
@@ -277,49 +361,45 @@ namespace Onslaught___Career_Editor
                 .ToList();
         }
 
-        private static string ResolveFirstPath(string catalogFilePath, IReadOnlyList<string> paths)
+        private static AssetCatalogSourceRead ResolveFirstPath(
+            AssetCatalogLoadSession session,
+            IReadOnlyList<string> paths,
+            string label)
         {
-            return paths.Count == 0 ? string.Empty : ResolvePath(catalogFilePath, paths[0]);
+            if (paths.Count == 0)
+                return AssetCatalogSourceRead.Missing(string.Empty);
+
+            AssetCatalogSourceRead primary = ResolvePath(session, paths[0], label);
+            try
+            {
+                for (int index = 1; index < paths.Count; index++)
+                {
+                    using AssetCatalogSourceRead ignored = ResolvePath(
+                        session,
+                        paths[index],
+                        $"{label} alternative {index + 1}");
+                }
+
+                return primary;
+            }
+            catch
+            {
+                primary.Dispose();
+                throw;
+            }
         }
 
-        private static string ResolvePath(string catalogFilePath, string path)
+        private static AssetCatalogSourceRead ResolvePath(
+            AssetCatalogLoadSession session,
+            string path,
+            string label)
         {
             if (string.IsNullOrWhiteSpace(path))
             {
-                return string.Empty;
+                return AssetCatalogSourceRead.Missing(string.Empty);
             }
 
-            if (Path.IsPathRooted(path))
-            {
-                return Path.GetFullPath(path);
-            }
-
-            string normalized = path.Replace('/', Path.DirectorySeparatorChar);
-            string catalogDirectory = Path.GetDirectoryName(catalogFilePath) ?? Environment.CurrentDirectory;
-            foreach (string candidateRoot in EnumerateCandidateRoots(catalogDirectory))
-            {
-                string candidate = Path.GetFullPath(Path.Combine(candidateRoot, normalized));
-                if (File.Exists(candidate))
-                {
-                    return candidate;
-                }
-            }
-
-            return Path.GetFullPath(Path.Combine(catalogDirectory, normalized));
-        }
-
-        private static IEnumerable<string> EnumerateCandidateRoots(string catalogDirectory)
-        {
-            yield return catalogDirectory;
-
-            DirectoryInfo? directory = new(catalogDirectory);
-            while (directory.Parent != null)
-            {
-                directory = directory.Parent;
-                yield return directory.FullName;
-            }
-
-            yield return Environment.CurrentDirectory;
+            return session.OpenSource(path, label, requireRelative: true);
         }
 
         private static string BuildTextureDisplayName(string canonicalRef)
@@ -348,15 +428,25 @@ namespace Onslaught___Career_Editor
         IReadOnlyList<AssetTextureItem> Textures,
         IReadOnlyList<AssetLooseMeshItem> LooseMeshes,
         IReadOnlyList<AssetEmbeddedMeshItem> EmbeddedMeshes,
-        IReadOnlyList<AssetGoodieItem> Goodies)
+        IReadOnlyList<AssetGoodieItem> Goodies,
+        string TrustedExportRoot = "")
     {
+        internal AssetCatalogTrustEvidence TrustEvidence { get; init; } =
+            AssetCatalogTrustEvidence.Empty;
+
+        internal IReadOnlyDictionary<string, IReadOnlyList<AssetModelSidecarTexture>>
+            SealedSidecarTexturesByModelPath { get; init; } =
+                new Dictionary<string, IReadOnlyList<AssetModelSidecarTexture>>(
+                    FileMutationSafety.PathComparer);
+
         public static AssetCatalogSnapshot Empty { get; } = new(
             string.Empty,
             AssetCatalogSummary.Empty,
             Array.Empty<AssetTextureItem>(),
             Array.Empty<AssetLooseMeshItem>(),
             Array.Empty<AssetEmbeddedMeshItem>(),
-            Array.Empty<AssetGoodieItem>());
+            Array.Empty<AssetGoodieItem>(),
+            string.Empty);
     }
 
     public sealed record AssetCatalogSummary(

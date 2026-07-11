@@ -22,25 +22,42 @@ namespace Onslaught___Career_Editor
                 return AssetModelSummary.Unavailable(0, "FBX export is not available at the recorded local path.");
             }
 
-            FileInfo file = new(path);
             try
             {
-                using FileStream stream = File.OpenRead(file.FullName);
-                using BinaryReader reader = new(stream, Encoding.ASCII, leaveOpen: false);
+                using FileStream stream = File.OpenRead(Path.GetFullPath(path));
+                return Read(stream);
+            }
+            catch (Exception ex) when (ex is EndOfStreamException or IOException or InvalidDataException or ArgumentOutOfRangeException)
+            {
+                return AssetModelSummary.Unavailable(0, "FBX export exists, but model metadata could not be read.");
+            }
+        }
+
+        public static AssetModelSummary Read(Stream stream)
+        {
+            ArgumentNullException.ThrowIfNull(stream);
+            if (!stream.CanRead || !stream.CanSeek)
+                throw new ArgumentException("FBX input stream must be readable and seekable.", nameof(stream));
+
+            long byteSize = stream.Length;
+            try
+            {
+                stream.Position = 0;
+                using BinaryReader reader = new(stream, Encoding.ASCII, leaveOpen: true);
 
                 if (stream.Length < BinaryFbxMagic.Length + sizeof(int))
                 {
-                    return AssetModelSummary.Unavailable(file.Length, "FBX export is too small to inspect.");
+                    return AssetModelSummary.Unavailable(byteSize, "FBX export is too small to inspect.");
                 }
 
                 byte[] header = reader.ReadBytes(BinaryFbxMagic.Length);
                 if (!header.SequenceEqual(BinaryFbxMagic))
                 {
-                    return AssetModelSummary.Unavailable(file.Length, "FBX export is not the binary FBX format used by the asset exporter.");
+                    return AssetModelSummary.Unavailable(byteSize, "FBX export is not the binary FBX format used by the asset exporter.");
                 }
 
                 int version = reader.ReadInt32();
-                FbxStats stats = new(file.Length, version);
+                FbxStats stats = new(byteSize, version);
                 long sentinelSize = version >= 7500 ? 25 : 13;
 
                 while (stream.Position <= stream.Length - sentinelSize)
@@ -60,7 +77,7 @@ namespace Onslaught___Career_Editor
                 return new AssetModelSummary(
                     Format: "Binary FBX",
                     FormatVersion: version,
-                    ByteSize: file.Length,
+                    ByteSize: byteSize,
                     GeometryCount: stats.GeometryCount,
                     ModelCount: stats.ModelCount,
                     MaterialCount: stats.MaterialCount,
@@ -99,7 +116,7 @@ namespace Onslaught___Career_Editor
             }
             catch (Exception ex) when (ex is EndOfStreamException or IOException or InvalidDataException or ArgumentOutOfRangeException)
             {
-                return AssetModelSummary.Unavailable(file.Length, "FBX export exists, but model metadata could not be read.");
+                return AssetModelSummary.Unavailable(byteSize, "FBX export exists, but model metadata could not be read.");
             }
         }
 

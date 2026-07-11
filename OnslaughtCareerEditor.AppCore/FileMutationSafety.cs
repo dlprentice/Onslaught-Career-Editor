@@ -9,9 +9,18 @@ namespace Onslaught___Career_Editor
     internal static class FileMutationSafety
     {
         private const uint FileListDirectory = 0x0001;
+        private const uint FileReadAttributes = 0x0080;
+        private const uint DeleteAccess = 0x00010000;
         private const uint GenericRead = 0x80000000;
+        private const uint GenericWrite = 0x40000000;
         private const uint FileFlagOpenReparsePoint = 0x00200000;
+        private const uint FileFlagDeleteOnClose = 0x04000000;
+        private const uint FileFlagWriteThrough = 0x80000000;
         private const uint FileFlagBackupSemantics = 0x02000000;
+        private const uint FileAttributeTemporary = 0x00000100;
+        private const int FileDispositionInfoEx = 21;
+        private const uint FileDispositionFlagDelete = 0x00000001;
+        private const uint FileDispositionFlagPosixSemantics = 0x00000002;
         private static readonly object s_authorizationKey = new();
 
         private static readonly HashSet<string> s_reservedDosNames = new(StringComparer.OrdinalIgnoreCase)
@@ -87,8 +96,7 @@ namespace Onslaught___Career_Editor
 
             while (!string.IsNullOrWhiteSpace(current))
             {
-                if (Directory.Exists(current))
-                    RejectReparsePoint(current, label);
+                RejectReparsePoint(current, label);
 
                 string? parent = Path.GetDirectoryName(current);
                 if (string.Equals(parent, current, PathComparison))
@@ -152,7 +160,20 @@ namespace Onslaught___Career_Editor
             string outputPath,
             params string?[] protectedInputPaths)
         {
-            return new GuardedFileMutation(outputPath, authorization: null, protectedInputPaths);
+            return new GuardedFileMutation(
+                outputPath,
+                authorization: null,
+                protectedInputPaths,
+                requireProtectedInput: true);
+        }
+
+        internal static GuardedFileMutation BeginGenerated(string outputPath)
+        {
+            return new GuardedFileMutation(
+                outputPath,
+                authorization: null,
+                Array.Empty<string?>(),
+                requireProtectedInput: false);
         }
 
         internal static GuardedFileMutation BeginInAppOwnedProfile(
@@ -161,20 +182,79 @@ namespace Onslaught___Career_Editor
             params string?[] protectedInputPaths)
         {
             authorization.EnsureUsable();
-            return new GuardedFileMutation(outputPath, authorization, protectedInputPaths);
+            return new GuardedFileMutation(
+                outputPath,
+                authorization,
+                protectedInputPaths,
+                requireProtectedInput: true);
         }
 
-        internal static FileStream CreateStagedFile(string path)
+        internal static FileStream CreateStagedFile(
+            string path,
+            Action<string>? afterCreateForTest = null)
         {
-            return new FileStream(
+            if (!OperatingSystem.IsWindows())
+            {
+                return new FileStream(
+                    path,
+                    new FileStreamOptions
+                    {
+                        Mode = FileMode.CreateNew,
+                        Access = FileAccess.ReadWrite,
+                        Share = FileShare.Read,
+                        Options = FileOptions.WriteThrough,
+                    });
+            }
+
+            SafeFileHandle handle = CreateFileW(
                 path,
-                new FileStreamOptions
+                GenericRead | GenericWrite | DeleteAccess | FileReadAttributes,
+                FileShare.Read,
+                IntPtr.Zero,
+                FileMode.CreateNew,
+                FileFlagWriteThrough | FileFlagOpenReparsePoint,
+                IntPtr.Zero);
+            if (handle.IsInvalid)
+            {
+                int error = Marshal.GetLastWin32Error();
+                handle.Dispose();
+                throw new IOException(
+                    $"Could not create staged output. Win32 error: {error}",
+                    new Win32Exception(error));
+            }
+
+            FileStream? stream = null;
+            try
+            {
+                stream = new FileStream(handle, FileAccess.ReadWrite);
+                handle = null!;
+                afterCreateForTest?.Invoke(path);
+                SetFileDeleteDisposition(stream.SafeFileHandle, delete: true);
+                WindowsFileIdentity identity = GetWindowsIdentity(
+                    stream.SafeFileHandle,
+                    "staged output quarantine");
+                if (OperatingSystem.IsWindows() && identity.NumberOfLinks != 0)
                 {
-                    Mode = FileMode.CreateNew,
-                    Access = FileAccess.ReadWrite,
-                    Share = FileShare.Read,
-                    Options = FileOptions.WriteThrough,
-                });
+                    throw new InvalidOperationException(
+                        "Staged output gained an alias before its content was written.");
+                }
+                return stream;
+            }
+            catch
+            {
+                stream?.Dispose();
+                throw;
+            }
+            finally
+            {
+                handle?.Dispose();
+            }
+        }
+
+        internal static void ReleaseStagedFileQuarantine(FileStream stream)
+        {
+            ArgumentNullException.ThrowIfNull(stream);
+            SetFileDeleteDisposition(stream.SafeFileHandle, delete: false);
         }
 
         internal static AppOwnedProfileMutationAuthorization AuthorizeAppOwnedProfileRoot(
@@ -235,25 +315,77 @@ namespace Onslaught___Career_Editor
                 info.FileAttributes);
         }
 
-        internal static DirectoryLockSet LockDirectoryTree(string directoryPath, string label)
+        internal static DirectoryLockSet LockDirectoryTree(
+            string directoryPath,
+            string label,
+            Action? beforeFirstOpenForTest = null,
+            bool guardTargetMutation = false)
         {
             string logicalPath = NormalizeLocalPath(directoryPath, label);
             if (!Directory.Exists(logicalPath))
                 throw new DirectoryNotFoundException($"{label} does not exist.");
 
-            RejectExistingReparseAncestors(logicalPath, label);
             if (!OperatingSystem.IsWindows())
-                return new DirectoryLockSet(logicalPath, Array.Empty<SafeFileHandle>());
+            {
+                RejectExistingReparseAncestors(logicalPath, label);
+                return new DirectoryLockSet(
+                    logicalPath,
+                    Array.Empty<SafeFileHandle>(),
+                    default,
+                    mutationSentinel: null,
+                    mutationSentinelPath: null);
+            }
 
-            using SafeFileHandle initialHandle = OpenDirectoryHandle(logicalPath, label);
-            string physicalPath = GetFinalLocalPath(initialHandle, label);
-            WindowsFileIdentity initialIdentity = GetWindowsIdentity(initialHandle, label);
             var handles = new List<SafeFileHandle>();
             try
             {
+                beforeFirstOpenForTest?.Invoke();
+
+                SafeFileHandle? logicalTargetHandle = null;
+                string? previousPhysicalComponent = null;
+                foreach (string logicalComponent in EnumerateDirectoryAncestors(logicalPath))
+                {
+                    SafeFileHandle handle = OpenDirectoryHandle(logicalComponent, label);
+                    WindowsFileIdentity identity = GetWindowsIdentity(handle, label);
+                    if (identity.IsReparsePoint)
+                    {
+                        handle.Dispose();
+                        throw new InvalidOperationException(
+                            $"{label} cannot contain a symbolic link, junction, or other reparse point.");
+                    }
+
+                    string resolved = GetFinalLocalPath(handle, label);
+                    if (previousPhysicalComponent is not null &&
+                        !string.Equals(
+                            Path.GetDirectoryName(resolved),
+                            previousPhysicalComponent,
+                            PathComparison))
+                    {
+                        handle.Dispose();
+                        throw new InvalidOperationException($"{label} changed identity while it was being secured.");
+                    }
+
+                    handles.Add(handle);
+                    logicalTargetHandle = handle;
+                    previousPhysicalComponent = resolved;
+                }
+
+                if (logicalTargetHandle is null)
+                    throw new DirectoryNotFoundException($"{label} does not exist.");
+
+                string physicalPath = GetFinalLocalPath(logicalTargetHandle, label);
+                WindowsFileIdentity initialIdentity = GetWindowsIdentity(logicalTargetHandle, label);
                 foreach (string ancestor in EnumerateDirectoryAncestors(physicalPath))
                 {
                     SafeFileHandle handle = OpenDirectoryHandle(ancestor, label);
+                    WindowsFileIdentity identity = GetWindowsIdentity(handle, label);
+                    if (identity.IsReparsePoint)
+                    {
+                        handle.Dispose();
+                        throw new InvalidOperationException(
+                            $"{label} cannot contain a symbolic link, junction, or other reparse point.");
+                    }
+
                     string resolved = GetFinalLocalPath(handle, label);
                     if (!string.Equals(resolved, ancestor, PathComparison))
                     {
@@ -266,12 +398,23 @@ namespace Onslaught___Career_Editor
 
                 WindowsFileIdentity finalIdentity = GetWindowsIdentity(handles[^1], label);
                 if (!initialIdentity.IsSameFile(finalIdentity) ||
-                    !string.Equals(GetFinalLocalPath(initialHandle, label), physicalPath, PathComparison))
+                    !string.Equals(GetFinalLocalPath(logicalTargetHandle, label), physicalPath, PathComparison))
                 {
                     throw new InvalidOperationException($"{label} changed identity while it was being secured.");
                 }
 
-                DirectoryLockSet result = new(physicalPath, handles);
+                (SafeFileHandle Handle, string Path)? mutationSentinel = guardTargetMutation
+                    ? CreateDirectoryMutationSentinel(
+                        physicalPath,
+                        handles[^1],
+                        label)
+                    : null;
+                DirectoryLockSet result = new(
+                    physicalPath,
+                    handles,
+                    finalIdentity,
+                    mutationSentinel?.Handle,
+                    mutationSentinel?.Path);
                 handles = null!;
                 return result;
             }
@@ -323,7 +466,10 @@ namespace Onslaught___Career_Editor
                         Directory.CreateDirectory(nextPhysicalPath);
 
                     RejectReparsePoint(nextPhysicalPath, "App-owned output folder");
-                    DirectoryLockSet nextLocks = LockDirectoryTree(nextPhysicalPath, "App-owned output folder");
+                    DirectoryLockSet nextLocks = LockDirectoryTree(
+                        nextPhysicalPath,
+                        "App-owned output folder",
+                        guardTargetMutation: true);
                     heldLocks.Add(nextLocks);
                     if (!string.Equals(nextLocks.PhysicalPath, Path.GetFullPath(nextPhysicalPath), PathComparison))
                         throw new InvalidOperationException("App-owned output folder resolved outside its expected local path.");
@@ -349,7 +495,7 @@ namespace Onslaught___Career_Editor
                 FileShare.Read | FileShare.Write,
                 IntPtr.Zero,
                 FileMode.Open,
-                FileFlagBackupSemantics,
+                FileFlagBackupSemantics | FileFlagOpenReparsePoint,
                 IntPtr.Zero);
             if (handle.IsInvalid)
             {
@@ -361,12 +507,107 @@ namespace Onslaught___Career_Editor
             return handle;
         }
 
-        internal static SafeFileHandle OpenNoFollowReadHandle(string path, string label)
+        private static (SafeFileHandle Handle, string Path) CreateDirectoryMutationSentinel(
+            string physicalPath,
+            SafeFileHandle relaxedTargetHandle,
+            string label)
         {
+            using SafeFileHandle strictHandle = CreateFileW(
+                physicalPath,
+                FileListDirectory,
+                FileShare.Read,
+                IntPtr.Zero,
+                FileMode.Open,
+                FileFlagBackupSemantics | FileFlagOpenReparsePoint,
+                IntPtr.Zero);
+            if (strictHandle.IsInvalid)
+            {
+                int error = Marshal.GetLastWin32Error();
+                throw new IOException(
+                    $"Could not guard {label} against in-place directory mutation. Win32 error: {error}",
+                    new Win32Exception(error));
+            }
+
+            WindowsFileIdentity strictIdentity = GetWindowsIdentity(strictHandle, label);
+            WindowsFileIdentity relaxedIdentity = GetWindowsIdentity(relaxedTargetHandle, label);
+            if (strictIdentity.IsReparsePoint ||
+                !strictIdentity.IsSameFile(relaxedIdentity) ||
+                !string.Equals(
+                    GetFinalLocalPath(strictHandle, label),
+                    physicalPath,
+                    PathComparison))
+            {
+                throw new InvalidOperationException(
+                    $"{label} changed identity before its mutation guard was created.");
+            }
+
+            string sentinelPath = Path.Combine(
+                physicalPath,
+                $".onslaught-directory-guard-{Guid.NewGuid():N}.tmp");
+            SafeFileHandle sentinel = CreateFileW(
+                sentinelPath,
+                GenericRead | GenericWrite | DeleteAccess | FileReadAttributes,
+                FileShare.Read,
+                IntPtr.Zero,
+                FileMode.CreateNew,
+                FileAttributeTemporary | FileFlagDeleteOnClose | FileFlagOpenReparsePoint,
+                IntPtr.Zero);
+            if (sentinel.IsInvalid)
+            {
+                int error = Marshal.GetLastWin32Error();
+                sentinel.Dispose();
+                throw new IOException(
+                    $"Could not create {label} mutation guard. Win32 error: {error}",
+                    new Win32Exception(error));
+            }
+
+            try
+            {
+                WindowsFileIdentity sentinelIdentity = GetWindowsIdentity(
+                    sentinel,
+                    $"{label} mutation guard");
+                if (sentinelIdentity.IsReparsePoint ||
+                    sentinelIdentity.NumberOfLinks != 1 ||
+                    !string.Equals(
+                        GetFinalLocalPath(sentinel, $"{label} mutation guard"),
+                        sentinelPath,
+                        PathComparison))
+                {
+                    throw new InvalidOperationException(
+                        $"{label} mutation guard escaped its held directory.");
+                }
+                return (sentinel, sentinelPath);
+            }
+            catch
+            {
+                sentinel.Dispose();
+                throw;
+            }
+        }
+
+        internal static SafeFileHandle OpenNoFollowReadHandle(
+            string path,
+            string label,
+            bool allowDeleteShare = false,
+            bool allowWriteShare = false)
+        {
+            FileShare share = FileShare.Read |
+                (allowDeleteShare ? FileShare.Delete : 0) |
+                (allowWriteShare ? FileShare.Write : 0);
+            if (!OperatingSystem.IsWindows())
+            {
+                RejectReparsePoint(path, label);
+                return File.OpenHandle(
+                    path,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    share);
+            }
+
             SafeFileHandle handle = CreateFileW(
                 path,
                 GenericRead,
-                FileShare.Read,
+                share,
                 IntPtr.Zero,
                 FileMode.Open,
                 FileFlagOpenReparsePoint,
@@ -379,6 +620,108 @@ namespace Onslaught___Career_Editor
             }
 
             return handle;
+        }
+
+        internal static WindowsFileIdentity PublishDirectoryToVacantPath(
+            string sourceDirectory,
+            string destinationDirectory,
+            WindowsFileIdentity expectedSourceIdentity,
+            string? trustedSourceRoot,
+            Action<string, WindowsFileIdentity>? prepareSourceDirectory = null,
+            Action<string>? afterSourcePrepared = null,
+            Action<string, WindowsFileIdentity>? verifyPublishedDirectory = null)
+        {
+            string normalizedSource = NormalizeLocalPath(sourceDirectory, "Staged package directory");
+            string normalizedDestination = NormalizeLocalPath(destinationDirectory, "Published package directory");
+            if (!Directory.Exists(normalizedSource))
+                throw new DirectoryNotFoundException("The staged package directory no longer exists.");
+            if (Directory.Exists(normalizedDestination) || File.Exists(normalizedDestination))
+                throw new IOException("The published package path is no longer vacant.");
+
+            string? destinationParent = Path.GetDirectoryName(normalizedDestination);
+            string destinationName = Path.GetFileName(normalizedDestination);
+            if (string.IsNullOrWhiteSpace(destinationParent) || string.IsNullOrWhiteSpace(destinationName))
+                throw new InvalidOperationException("The published package path is invalid.");
+
+            if (!OperatingSystem.IsWindows())
+            {
+                RejectReparsePoint(normalizedSource, "Staged package directory");
+                RejectOutputInGameTree(Path.Combine(normalizedDestination, ".onslaught-package-root-probe"));
+                Directory.Move(normalizedSource, normalizedDestination);
+                return default;
+            }
+
+            using DirectoryLockSet destinationParentLocks = LockDirectoryTree(
+                destinationParent,
+                "Published package parent",
+                guardTargetMutation: true);
+            string physicalDestination = NormalizeLocalPath(
+                Path.Combine(destinationParentLocks.PhysicalPath, destinationName),
+                "Published package directory");
+            RejectOutputInGameTree(Path.Combine(physicalDestination, ".onslaught-package-root-probe"));
+
+            if (!string.IsNullOrWhiteSpace(trustedSourceRoot))
+            {
+                using DirectoryLockSet trustedSourceLocks = LockDirectoryTree(
+                    trustedSourceRoot,
+                    "Trusted asset export root");
+                if (IsSameOrUnderRoot(physicalDestination, trustedSourceLocks.PhysicalPath) ||
+                    IsSameOrUnderRoot(trustedSourceLocks.PhysicalPath, physicalDestination))
+                {
+                    throw new InvalidOperationException(
+                        "Published package directory cannot overlap the trusted generated asset export root.");
+                }
+            }
+
+            using SafeFileHandle sourceHandle = OpenDirectoryRenameHandle(
+                normalizedSource,
+                "Staged package directory");
+            WindowsFileIdentity sourceIdentity = GetWindowsIdentity(
+                sourceHandle,
+                "Staged package directory");
+            if (sourceIdentity.IsReparsePoint ||
+                !sourceIdentity.IsSameFile(expectedSourceIdentity) ||
+                !string.Equals(
+                    GetFinalLocalPath(sourceHandle, "Staged package directory"),
+                    normalizedSource,
+                    PathComparison))
+            {
+                throw new InvalidOperationException(
+                    "The staged package directory changed identity before publication.");
+            }
+
+            prepareSourceDirectory?.Invoke(normalizedSource, sourceIdentity);
+            afterSourcePrepared?.Invoke(normalizedSource);
+
+            if (Directory.Exists(physicalDestination) || File.Exists(physicalDestination))
+                throw new IOException("The published package path appeared during publication.");
+
+            RenameDirectoryHandle(sourceHandle, physicalDestination);
+            WindowsFileIdentity publishedIdentity = GetWindowsIdentity(
+                sourceHandle,
+                "Published package directory");
+            string publishedPath = GetFinalLocalPath(sourceHandle, "Published package directory");
+            if (!publishedIdentity.IsSameFile(sourceIdentity))
+            {
+                throw new IOException("The published package directory did not retain the staged directory identity.");
+            }
+            if (!string.Equals(publishedPath, physicalDestination, PathComparison))
+            {
+                throw new IOException(
+                    $"The published package directory resolved to '{publishedPath}' instead of '{physicalDestination}'.");
+            }
+
+            try
+            {
+                verifyPublishedDirectory?.Invoke(physicalDestination, publishedIdentity);
+            }
+            catch
+            {
+                RenameDirectoryHandle(sourceHandle, normalizedSource);
+                throw;
+            }
+
+            return publishedIdentity;
         }
 
         internal static string GetFinalLocalPath(SafeFileHandle handle, string label)
@@ -437,6 +780,92 @@ namespace Onslaught___Career_Editor
             return GetWindowsIdentity(handle, "file identity");
         }
 
+        private static SafeFileHandle OpenDirectoryRenameHandle(string path, string label)
+        {
+            SafeFileHandle handle = CreateFileW(
+                path,
+                DeleteAccess | FileReadAttributes,
+                FileShare.Read | FileShare.Write,
+                IntPtr.Zero,
+                FileMode.Open,
+                FileFlagBackupSemantics | FileFlagOpenReparsePoint,
+                IntPtr.Zero);
+            if (handle.IsInvalid)
+            {
+                int error = Marshal.GetLastWin32Error();
+                handle.Dispose();
+                throw new IOException($"Could not secure {label} for publication. Win32 error: {error}", new Win32Exception(error));
+            }
+
+            return handle;
+        }
+
+        private static void RenameDirectoryHandle(SafeFileHandle sourceHandle, string destinationPath)
+        {
+            byte[] nameBytes = Encoding.Unicode.GetBytes(destinationPath);
+            int rootDirectoryOffset = IntPtr.Size == 8 ? 8 : 4;
+            int fileNameLengthOffset = rootDirectoryOffset + IntPtr.Size;
+            int fileNameOffset = fileNameLengthOffset + sizeof(uint);
+            byte[] buffer = new byte[checked(fileNameOffset + nameBytes.Length + sizeof(char))];
+            BitConverter.GetBytes(FileRenameFlagPosixSemantics).CopyTo(buffer, 0);
+            BitConverter.GetBytes(nameBytes.Length).CopyTo(buffer, fileNameLengthOffset);
+            nameBytes.CopyTo(buffer, fileNameOffset);
+
+            IntPtr nativeBuffer = Marshal.AllocHGlobal(buffer.Length);
+            try
+            {
+                Marshal.Copy(buffer, 0, nativeBuffer, buffer.Length);
+                if (!SetFileInformationByHandle(
+                        sourceHandle,
+                        FileRenameInfoEx,
+                        nativeBuffer,
+                        (uint)buffer.Length))
+                {
+                    int error = Marshal.GetLastWin32Error();
+                    throw new IOException(
+                        $"Could not publish the staged package directory. Win32 error: {error}",
+                        new Win32Exception(error));
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(nativeBuffer);
+            }
+        }
+
+        private static void SetFileDeleteDisposition(
+            SafeFileHandle handle,
+            bool delete)
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            uint flags = delete
+                ? FileDispositionFlagDelete | FileDispositionFlagPosixSemantics
+                : 0;
+            byte[] buffer = BitConverter.GetBytes(flags);
+            IntPtr nativeBuffer = Marshal.AllocHGlobal(buffer.Length);
+            try
+            {
+                Marshal.Copy(buffer, 0, nativeBuffer, buffer.Length);
+                if (!SetFileInformationByHandle(
+                        handle,
+                        FileDispositionInfoEx,
+                        nativeBuffer,
+                        (uint)buffer.Length))
+                {
+                    int error = Marshal.GetLastWin32Error();
+                    throw new IOException(
+                        $"Could not update staged output quarantine state. Win32 error: {error}",
+                        new Win32Exception(error));
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(nativeBuffer);
+            }
+        }
+
         private static string NormalizeForPrefix(string path)
         {
             return Path.GetFullPath(path)
@@ -490,6 +919,16 @@ namespace Onslaught___Career_Editor
             SafeFileHandle hFile,
             out ByHandleFileInformation lpFileInformation);
 
+        private const int FileRenameInfoEx = 22;
+        private const uint FileRenameFlagPosixSemantics = 0x00000002;
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetFileInformationByHandle(
+            SafeFileHandle hFile,
+            int fileInformationClass,
+            IntPtr lpFileInformation,
+            uint dwBufferSize);
+
         [StructLayout(LayoutKind.Sequential)]
         private struct ByHandleFileInformation
         {
@@ -508,19 +947,50 @@ namespace Onslaught___Career_Editor
         internal sealed class DirectoryLockSet : IDisposable
         {
             private readonly IReadOnlyList<SafeFileHandle> _handles;
+            private SafeFileHandle? _mutationSentinel;
+            private readonly string? _mutationSentinelPath;
 
-            internal DirectoryLockSet(string physicalPath, IReadOnlyList<SafeFileHandle> handles)
+            internal DirectoryLockSet(
+                string physicalPath,
+                IReadOnlyList<SafeFileHandle> handles,
+                WindowsFileIdentity identity,
+                SafeFileHandle? mutationSentinel,
+                string? mutationSentinelPath)
             {
                 PhysicalPath = physicalPath;
                 _handles = handles;
+                Identity = identity;
+                _mutationSentinel = mutationSentinel;
+                _mutationSentinelPath = mutationSentinelPath;
             }
 
             internal string PhysicalPath { get; }
+
+            internal WindowsFileIdentity Identity { get; }
+
+            internal void ReleaseMutationSentinelIfDirectoryNonEmpty()
+            {
+                if (_mutationSentinel is null || string.IsNullOrWhiteSpace(_mutationSentinelPath))
+                    return;
+                if (!Directory.EnumerateFileSystemEntries(PhysicalPath)
+                        .Any(path => !string.Equals(
+                            path,
+                            _mutationSentinelPath,
+                            PathComparison)))
+                {
+                    return;
+                }
+
+                _mutationSentinel.Dispose();
+                _mutationSentinel = null;
+            }
 
             public void Dispose()
             {
                 for (int index = _handles.Count - 1; index >= 0; index--)
                     _handles[index].Dispose();
+                _mutationSentinel?.Dispose();
+                _mutationSentinel = null;
             }
         }
 
@@ -577,15 +1047,18 @@ namespace Onslaught___Career_Editor
     internal sealed class GuardedFileMutation : IDisposable
     {
         private readonly Dictionary<string, ProtectedInput> _inputs = new(FileMutationSafety.PathComparer);
+        private readonly List<WindowsFileIdentity> _externalInputIdentities = [];
         private readonly FileMutationSafety.AppOwnedProfileMutationAuthorization? _authorization;
         private FileMutationSafety.DirectoryLockSet? _outputDirectoryLocks;
+        private FileStream? _committedStream;
         private string _physicalOutputPath = string.Empty;
         private bool _committed;
 
         internal GuardedFileMutation(
             string outputPath,
             FileMutationSafety.AppOwnedProfileMutationAuthorization? authorization,
-            IReadOnlyList<string?> protectedInputPaths)
+            IReadOnlyList<string?> protectedInputPaths,
+            bool requireProtectedInput)
         {
             OutputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output path");
             _authorization = authorization;
@@ -599,7 +1072,10 @@ namespace Onslaught___Career_Editor
                 string directoryToLock = Directory.Exists(outputDirectory)
                     ? outputDirectory
                     : FileMutationSafety.EnsureDefaultOutputDirectory(outputDirectory);
-                _outputDirectoryLocks = FileMutationSafety.LockDirectoryTree(directoryToLock, "Output folder");
+                _outputDirectoryLocks = FileMutationSafety.LockDirectoryTree(
+                    directoryToLock,
+                    "Output folder",
+                    guardTargetMutation: true);
                 _physicalOutputPath = Path.Combine(_outputDirectoryLocks.PhysicalPath, Path.GetFileName(OutputPath));
                 ValidateOutputLocation();
 
@@ -628,7 +1104,7 @@ namespace Onslaught___Career_Editor
                     _inputs.Add(path, new ProtectedInput(stream, identity));
                 }
 
-                if (_inputs.Count == 0)
+                if (requireProtectedInput && _inputs.Count == 0)
                     throw new InvalidOperationException("At least one protected input file is required.");
 
                 ValidateDestination();
@@ -653,6 +1129,58 @@ namespace Onslaught___Career_Editor
 
         internal void Commit(byte[] bytes, Action<string>? beforeCommittedOpen = null)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
+            CommitCore(
+                write: destination => destination.Write(bytes),
+                expectedLength: bytes.LongLength,
+                expectedHash: SHA256.HashData(bytes),
+                beforeCommittedOpen: beforeCommittedOpen);
+        }
+
+        internal void CommitFromProtectedInput(
+            string path,
+            Action<string>? beforeCommittedOpen = null)
+        {
+            string normalized = FileMutationSafety.NormalizeLocalPath(path, "Protected input path");
+            if (!_inputs.TryGetValue(normalized, out ProtectedInput? input))
+                throw new InvalidOperationException("The requested file is not held by this guarded transaction.");
+
+            input.Stream.Position = 0;
+            byte[] expectedHash = SHA256.HashData(input.Stream);
+            input.Stream.Position = 0;
+            CommitCore(
+                write: destination => input.Stream.CopyTo(destination),
+                expectedLength: input.Stream.Length,
+                expectedHash: expectedHash,
+                beforeCommittedOpen: beforeCommittedOpen);
+        }
+
+        internal void CommitFromHeldSource(
+            Stream source,
+            WindowsFileIdentity sourceIdentity,
+            Action<string>? beforeCommittedOpen = null)
+        {
+            ArgumentNullException.ThrowIfNull(source);
+            if (!source.CanRead || !source.CanSeek)
+                throw new ArgumentException("Held source stream must be readable and seekable.", nameof(source));
+
+            source.Position = 0;
+            byte[] expectedHash = SHA256.HashData(source);
+            source.Position = 0;
+            _externalInputIdentities.Add(sourceIdentity);
+            CommitCore(
+                write: destination => source.CopyTo(destination),
+                expectedLength: source.Length,
+                expectedHash: expectedHash,
+                beforeCommittedOpen: beforeCommittedOpen);
+        }
+
+        private void CommitCore(
+            Action<FileStream> write,
+            long expectedLength,
+            byte[] expectedHash,
+            Action<string>? beforeCommittedOpen)
+        {
             if (_committed)
                 throw new InvalidOperationException("This guarded transaction has already committed.");
 
@@ -663,61 +1191,89 @@ namespace Onslaught___Career_Editor
             {
                 using FileStream temp = FileMutationSafety.CreateStagedFile(tempPath);
                 tempEntryExists = true;
-                temp.Write(bytes);
+                write(temp);
                 temp.Flush(flushToDisk: true);
 
                 WindowsFileIdentity tempIdentity = FileMutationSafety.GetWindowsIdentity(temp.SafeFileHandle, "staged output identity");
-                if (OperatingSystem.IsWindows() && tempIdentity.NumberOfLinks != 1)
-                    throw new InvalidOperationException("Staged output unexpectedly shares a file identity.");
+                if (OperatingSystem.IsWindows() && tempIdentity.NumberOfLinks != 0)
+                    throw new InvalidOperationException("Staged output gained an alias while it was quarantined.");
 
-                byte[] stagedReadback = ReadAllBytes(temp, "Staged output");
-                if (stagedReadback.Length != bytes.Length ||
-                    !CryptographicOperations.FixedTimeEquals(SHA256.HashData(stagedReadback), SHA256.HashData(bytes)))
+                temp.Position = 0;
+                byte[] stagedHash = SHA256.HashData(temp);
+                if (temp.Length != expectedLength ||
+                    !CryptographicOperations.FixedTimeEquals(stagedHash, expectedHash))
                 {
                     throw new IOException("Staged output verification failed after commit.");
                 }
+                WindowsFileIdentity sealedTempIdentity = FileMutationSafety.GetWindowsIdentity(
+                    temp.SafeFileHandle,
+                    "sealed staged output identity");
+                if (OperatingSystem.IsWindows() &&
+                    (!tempIdentity.IsSameFile(sealedTempIdentity) || sealedTempIdentity.NumberOfLinks != 0))
+                {
+                    throw new InvalidOperationException(
+                        "Staged output changed identity or gained an alias while it was quarantined.");
+                }
 
                 ValidateDestination();
+                FileMutationSafety.ReleaseStagedFileQuarantine(temp);
                 temp.Dispose();
                 File.Move(tempPath, _physicalOutputPath, overwrite: true);
                 tempEntryExists = false;
                 beforeCommittedOpen?.Invoke(_physicalOutputPath);
 
-                using SafeFileHandle committedHandle = FileMutationSafety.OpenNoFollowReadHandle(
+                SafeFileHandle? committedHandle = FileMutationSafety.OpenNoFollowReadHandle(
                     _physicalOutputPath,
                     "committed output file");
-                WindowsFileIdentity committedIdentity = FileMutationSafety.GetWindowsIdentity(committedHandle, "committed output identity");
-                if (OperatingSystem.IsWindows() && committedIdentity.IsReparsePoint)
-                    throw new IOException("Committed output is a symbolic link, junction, or other reparse point.");
-                if (OperatingSystem.IsWindows() && !tempIdentity.IsSameFile(committedIdentity))
-                    throw new IOException("Committed output identity does not match the staged file.");
-                if (OperatingSystem.IsWindows() && committedIdentity.NumberOfLinks != 1)
-                    throw new IOException("Committed output unexpectedly shares a file identity.");
-                if (OperatingSystem.IsWindows() && _inputs.Values.Any(input => input.Identity.IsSameFile(committedIdentity)))
-                    throw new IOException("Committed output aliases a protected input file.");
-
-                string committedPhysicalPath = FileMutationSafety.GetFinalLocalPath(
-                    committedHandle,
-                    "committed output file");
-                string? committedParent = Path.GetDirectoryName(committedPhysicalPath);
-                if (string.IsNullOrWhiteSpace(committedParent) ||
-                    !string.Equals(
-                        committedParent.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
-                        _outputDirectoryLocks!.PhysicalPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
-                        FileMutationSafety.PathComparison))
+                FileStream? committed = null;
+                try
                 {
-                    throw new IOException("Committed output resolved outside the locked physical output folder.");
-                }
+                    WindowsFileIdentity committedIdentity = FileMutationSafety.GetWindowsIdentity(committedHandle, "committed output identity");
+                    if (OperatingSystem.IsWindows() && committedIdentity.IsReparsePoint)
+                        throw new IOException("Committed output is a symbolic link, junction, or other reparse point.");
+                    if (OperatingSystem.IsWindows() && !tempIdentity.IsSameFile(committedIdentity))
+                        throw new IOException("Committed output identity does not match the staged file.");
+                    if (OperatingSystem.IsWindows() && committedIdentity.NumberOfLinks != 1)
+                        throw new IOException("Committed output unexpectedly shares a file identity.");
+                    if (OperatingSystem.IsWindows() && _inputs.Values.Any(input => input.Identity.IsSameFile(committedIdentity)))
+                        throw new IOException("Committed output aliases a protected input file.");
+                    if (OperatingSystem.IsWindows() && _externalInputIdentities.Any(identity => identity.IsSameFile(committedIdentity)))
+                        throw new IOException("Committed output aliases a held source file.");
 
-                using FileStream committed = new(committedHandle, FileAccess.Read);
-                byte[] readback = ReadAllBytes(committed, "Committed output");
-                if (readback.Length != bytes.Length ||
-                    !CryptographicOperations.FixedTimeEquals(SHA256.HashData(readback), SHA256.HashData(bytes)))
+                    string committedPhysicalPath = OperatingSystem.IsWindows()
+                        ? FileMutationSafety.GetFinalLocalPath(committedHandle, "committed output file")
+                        : _physicalOutputPath;
+                    string? committedParent = Path.GetDirectoryName(committedPhysicalPath);
+                    if (string.IsNullOrWhiteSpace(committedParent) ||
+                        !string.Equals(
+                            committedParent.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                            _outputDirectoryLocks!.PhysicalPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                            FileMutationSafety.PathComparison))
+                    {
+                        throw new IOException("Committed output resolved outside the locked physical output folder.");
+                    }
+
+                    committed = new FileStream(committedHandle, FileAccess.Read);
+                    committedHandle = null;
+                    committed.Position = 0;
+                    byte[] committedHash = SHA256.HashData(committed);
+                    if (committed.Length != expectedLength ||
+                        !CryptographicOperations.FixedTimeEquals(committedHash, expectedHash))
+                    {
+                        throw new IOException("Atomic output verification failed after commit.");
+                    }
+
+                    committed.Position = 0;
+                    _committedStream = committed;
+                    committed = null;
+                    _committed = true;
+                    _outputDirectoryLocks!.ReleaseMutationSentinelIfDirectoryNonEmpty();
+                }
+                finally
                 {
-                    throw new IOException("Atomic output verification failed after commit.");
+                    committed?.Dispose();
+                    committedHandle?.Dispose();
                 }
-
-                _committed = true;
             }
             finally
             {
@@ -731,6 +1287,9 @@ namespace Onslaught___Career_Editor
             foreach (ProtectedInput input in _inputs.Values)
                 input.Stream.Dispose();
             _inputs.Clear();
+            _externalInputIdentities.Clear();
+            _committedStream?.Dispose();
+            _committedStream = null;
             _outputDirectoryLocks?.Dispose();
             _outputDirectoryLocks = null;
         }
@@ -756,6 +1315,8 @@ namespace Onslaught___Career_Editor
 
             if (OperatingSystem.IsWindows() && _inputs.Values.Any(input => input.Identity.IsSameFile(outputIdentity)))
                 throw new InvalidOperationException("Refusing to patch in place. Output file must be different from every protected input file; aliased writes are also blocked.");
+            if (OperatingSystem.IsWindows() && _externalInputIdentities.Any(identity => identity.IsSameFile(outputIdentity)))
+                throw new InvalidOperationException("Refusing to overwrite a held source file identity.");
 
             if (_inputs.Keys.Any(path => string.Equals(path, OutputPath, FileMutationSafety.PathComparison)))
                 throw new InvalidOperationException("Refusing to patch in place. Output file must be different from every protected input file.");

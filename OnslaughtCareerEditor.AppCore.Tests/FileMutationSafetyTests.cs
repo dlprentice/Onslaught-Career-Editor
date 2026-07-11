@@ -164,6 +164,78 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void DirectoryLockSet_WritableTargetGuardPersistsUntilAnotherEntryExists()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempMutationRoot root = TempMutationRoot.Create();
+            string lockedDirectory = Path.Combine(root.Path, "guarded-output");
+            Directory.CreateDirectory(lockedDirectory);
+
+            using FileMutationSafety.DirectoryLockSet locks =
+                FileMutationSafety.LockDirectoryTree(
+                    lockedDirectory,
+                    "Guarded output directory",
+                    guardTargetMutation: true);
+            Assert.Single(Directory.EnumerateFiles(
+                lockedDirectory,
+                ".onslaught-directory-guard-*.tmp",
+                SearchOption.TopDirectoryOnly));
+
+            File.WriteAllText(Path.Combine(lockedDirectory, "payload.bin"), "payload");
+            locks.ReleaseMutationSentinelIfDirectoryNonEmpty();
+
+            Assert.Empty(Directory.EnumerateFiles(
+                lockedDirectory,
+                ".onslaught-directory-guard-*.tmp",
+                SearchOption.TopDirectoryOnly));
+            Assert.Equal("payload", File.ReadAllText(Path.Combine(lockedDirectory, "payload.bin")));
+        }
+
+        [Fact]
+        public void DirectoryLockSet_RejectsRootSwapBeforeFirstHandleAcquisition()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempMutationRoot root = TempMutationRoot.Create();
+            string selectedDirectory = Path.Combine(root.Path, "selected");
+            string originalDirectory = Path.Combine(root.Path, "selected-original");
+            string outsideDirectory = Path.Combine(root.Path, "outside");
+            Directory.CreateDirectory(selectedDirectory);
+            Directory.CreateDirectory(outsideDirectory);
+
+            try
+            {
+                InvalidOperationException error = Assert.Throws<InvalidOperationException>(() =>
+                {
+                    using FileMutationSafety.DirectoryLockSet _ = FileMutationSafety.LockDirectoryTree(
+                        selectedDirectory,
+                        "Test directory",
+                        beforeFirstOpenForTest: () =>
+                        {
+                            Directory.Move(selectedDirectory, originalDirectory);
+                            Directory.CreateSymbolicLink(selectedDirectory, outsideDirectory);
+                        });
+                });
+
+                Assert.Contains("reparse", error.Message, StringComparison.OrdinalIgnoreCase);
+            }
+            finally
+            {
+                if (Directory.Exists(selectedDirectory) &&
+                    (File.GetAttributes(selectedDirectory) & FileAttributes.ReparsePoint) != 0)
+                {
+                    Directory.Delete(selectedDirectory);
+                }
+
+                if (Directory.Exists(originalDirectory))
+                    Directory.Move(originalDirectory, selectedDirectory);
+            }
+        }
+
+        [Fact]
         public void StagedFile_DeniesRenameWhileWritable()
         {
             if (!OperatingSystem.IsWindows())
@@ -175,9 +247,33 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             using FileStream staged = FileMutationSafety.CreateStagedFile(stagedPath);
             staged.Write([0x01, 0x02, 0x03]);
 
-            Assert.ThrowsAny<IOException>(() => File.Move(stagedPath, movedPath));
+            Exception? error = Record.Exception(() => File.Move(stagedPath, movedPath));
+            Assert.True(error is IOException or UnauthorizedAccessException, error?.ToString());
             Assert.True(File.Exists(stagedPath));
             Assert.False(File.Exists(movedPath));
+        }
+
+        [Fact]
+        public void StagedFile_RejectsPreWriteHardlinkWithoutWritingAlias()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempMutationRoot root = TempMutationRoot.Create();
+            string stagedPath = Path.Combine(root.Path, "staged.tmp");
+            string aliasPath = Path.Combine(root.Path, "outside-alias.tmp");
+
+            Exception? error = Record.Exception(() =>
+                FileMutationSafety.CreateStagedFile(
+                    stagedPath,
+                    createdPath => Assert.True(
+                        CreateHardLink(aliasPath, createdPath, IntPtr.Zero),
+                        new Win32Exception(Marshal.GetLastWin32Error()).Message)));
+
+            Assert.True(error is IOException or InvalidOperationException, error?.ToString());
+            Assert.True(File.Exists(aliasPath));
+            Assert.Equal(0, new FileInfo(aliasPath).Length);
+            Assert.False(File.Exists(stagedPath));
         }
 
         [Fact]

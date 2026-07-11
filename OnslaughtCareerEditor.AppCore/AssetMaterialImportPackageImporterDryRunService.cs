@@ -81,41 +81,62 @@ namespace Onslaught___Career_Editor
         public AssetMaterialImportPackageImporterDryRunSidecarWriteResult WriteSidecar(string packageRoot)
         {
             string fullPackageRoot = Path.GetFullPath(packageRoot);
-            AssetMaterialImportPackageImporterDryRunResult dryRun = Build(fullPackageRoot);
-
             if (!Directory.Exists(fullPackageRoot))
             {
+                AssetMaterialImportPackageImporterDryRunResult missingDryRun = Build(fullPackageRoot);
                 return new AssetMaterialImportPackageImporterDryRunSidecarWriteResult(
                     SidecarRelativePath: DryRunFileName,
                     SidecarWritten: false,
                     SidecarStatus: "missing-package-root",
                     SidecarBytes: 0,
-                    ImporterDryRun: dryRun);
+                    ImporterDryRun: missingDryRun);
             }
 
-            if (!dryRun.Completed)
+            try
             {
+                using var operationRoot = new GuardedPackageOutputRoot(
+                    fullPackageRoot,
+                    trustedSourceRoot: null,
+                    execute: false,
+                    requireExistingRoot: true);
+                AssetMaterialImportPackageImporterDryRunResult dryRun = Build(fullPackageRoot);
+
+                if (!dryRun.Completed)
+                {
+                    return new AssetMaterialImportPackageImporterDryRunSidecarWriteResult(
+                        SidecarRelativePath: DryRunFileName,
+                        SidecarWritten: false,
+                        SidecarStatus: "source-not-ready-not-written",
+                        SidecarBytes: 0,
+                        ImporterDryRun: dryRun);
+                }
+
+                AssetMaterialImportPackageImporterDryRunSidecar sidecar = new(
+                    Schema: DryRunSchema,
+                    GeneratedAtUtc: DateTimeOffset.UtcNow,
+                    MaterialPackageImporterDryRun: dryRun);
+                GuardedArtifactWriteResult write = GuardedPackageArtifactWriter.ReplaceText(
+                    fullPackageRoot,
+                    DryRunFileName,
+                    JsonSerializer.Serialize(sidecar, WriteJsonOptions),
+                    System.Text.Encoding.UTF8);
+                return new AssetMaterialImportPackageImporterDryRunSidecarWriteResult(
+                    SidecarRelativePath: DryRunFileName,
+                    SidecarWritten: true,
+                    SidecarStatus: "written",
+                    SidecarBytes: write.Bytes,
+                    ImporterDryRun: dryRun);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                AssetMaterialImportPackageImporterDryRunResult unsafeDryRun = Build(fullPackageRoot);
                 return new AssetMaterialImportPackageImporterDryRunSidecarWriteResult(
                     SidecarRelativePath: DryRunFileName,
                     SidecarWritten: false,
-                    SidecarStatus: dryRun.SourceBatchStatus,
+                    SidecarStatus: "unsafe-sidecar-path",
                     SidecarBytes: 0,
-                    ImporterDryRun: dryRun);
+                    ImporterDryRun: unsafeDryRun);
             }
-
-            AssetMaterialImportPackageImporterDryRunSidecar sidecar = new(
-                Schema: DryRunSchema,
-                GeneratedAtUtc: DateTimeOffset.UtcNow,
-                MaterialPackageImporterDryRun: dryRun);
-            string sidecarPath = Path.Combine(fullPackageRoot, DryRunFileName);
-            File.WriteAllText(sidecarPath, JsonSerializer.Serialize(sidecar, WriteJsonOptions));
-
-            return new AssetMaterialImportPackageImporterDryRunSidecarWriteResult(
-                SidecarRelativePath: DryRunFileName,
-                SidecarWritten: true,
-                SidecarStatus: "written",
-                SidecarBytes: new FileInfo(sidecarPath).Length,
-                ImporterDryRun: dryRun);
         }
 
         public AssetMaterialImportPackageImporterDryRunSidecarValidationResult ValidateSidecar(string packageRoot)
@@ -123,7 +144,6 @@ namespace Onslaught___Career_Editor
             string fullPackageRoot = Path.GetFullPath(packageRoot);
             string packageRootName = BuildRootName(fullPackageRoot);
             AssetMaterialImportPackageImporterDryRunResult freshDryRun = Build(fullPackageRoot);
-            string sidecarPath = Path.Combine(fullPackageRoot, DryRunFileName);
 
             if (!Directory.Exists(fullPackageRoot))
             {
@@ -135,17 +155,37 @@ namespace Onslaught___Career_Editor
                     [new AssetMaterialImportPackageImporterDryRunSidecarValidationIssue("sidecar", DryRunFileName, "missing-package-root")]);
             }
 
-            if (!File.Exists(sidecarPath))
+            string sidecarJson;
+            long sidecarBytes;
+            try
+            {
+                using GuardedPackageArtifactRead sidecarRead = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    DryRunFileName,
+                    "Material package importer dry-run sidecar");
+                if (!sidecarRead.Exists)
+                {
+                    return BuildSidecarValidationFailure(
+                        packageRootName,
+                        "missing-sidecar",
+                        sidecarExists: false,
+                        freshDryRun,
+                        [new AssetMaterialImportPackageImporterDryRunSidecarValidationIssue("sidecar", DryRunFileName, "missing-sidecar")]);
+                }
+
+                sidecarJson = sidecarRead.ReadAllText(System.Text.Encoding.UTF8);
+                sidecarBytes = sidecarRead.Length;
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
             {
                 return BuildSidecarValidationFailure(
                     packageRootName,
-                    "missing-sidecar",
+                    "unsafe-sidecar-path",
                     sidecarExists: false,
                     freshDryRun,
-                    [new AssetMaterialImportPackageImporterDryRunSidecarValidationIssue("sidecar", DryRunFileName, "missing-sidecar")]);
+                    [new AssetMaterialImportPackageImporterDryRunSidecarValidationIssue("sidecar", DryRunFileName, "unsafe-sidecar-path")]);
             }
 
-            string sidecarJson = File.ReadAllText(sidecarPath);
             bool sidecarContainsPackageRoot = ContainsPathToken(sidecarJson, fullPackageRoot);
             AssetMaterialImportPackageImporterDryRunSidecar? sidecar;
             try
@@ -162,7 +202,7 @@ namespace Onslaught___Career_Editor
                     sidecarExists: true,
                     freshDryRun,
                     [new AssetMaterialImportPackageImporterDryRunSidecarValidationIssue("sidecar", DryRunFileName, "invalid-json")],
-                    sidecarBytes: new FileInfo(sidecarPath).Length,
+                    sidecarBytes: sidecarBytes,
                     sidecarContainsPackageRoot: sidecarContainsPackageRoot);
             }
 
@@ -174,7 +214,7 @@ namespace Onslaught___Career_Editor
                     sidecarExists: true,
                     freshDryRun,
                     [new AssetMaterialImportPackageImporterDryRunSidecarValidationIssue("sidecar", DryRunFileName, "empty-sidecar")],
-                    sidecarBytes: new FileInfo(sidecarPath).Length,
+                    sidecarBytes: sidecarBytes,
                     sidecarContainsPackageRoot: sidecarContainsPackageRoot);
             }
 
@@ -216,7 +256,7 @@ namespace Onslaught___Career_Editor
                 SidecarRelativePath: DryRunFileName,
                 SidecarExists: true,
                 SidecarStatus: status,
-                SidecarBytes: new FileInfo(sidecarPath).Length,
+                SidecarBytes: sidecarBytes,
                 Schema: sidecar.Schema,
                 SchemaValid: schemaValid,
                 SidecarContainsPackageRoot: sidecarContainsPackageRoot,

@@ -1,9 +1,15 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Threading;
+using System.Threading.Tasks;
 using Onslaught___Career_Editor;
 using Xunit;
 
@@ -19,6 +25,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
 
             Assert.Equal(catalog.CatalogFilePath, snapshot.CatalogFilePath);
+            Assert.Equal(catalog.RootPath, snapshot.TrustedExportRoot);
             Assert.Equal(3_820, snapshot.Summary.TotalCatalogEntries);
             Assert.Equal(828, snapshot.Summary.TextureCount);
             Assert.Equal(213, snapshot.Summary.LooseMeshCount);
@@ -76,6 +83,60 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Contains("FMV slot 33", videoGoodie.WallVisibilitySummary);
             Assert.Equal("Cutscenes", videoGoodie.WallGroupLabel);
             Assert.Equal("row 3, slot 32", videoGoodie.WallPositionLabel);
+        }
+
+        [Fact]
+        public void CatalogProducerAndAppCoreConsumer_RoundTripCurrentRelativePathContract()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            string bundleRoot = CreateTemporaryDirectory("oce-asset-catalog-producer-consumer");
+            try
+            {
+                string repoRoot = FindRepoRoot();
+                string producerPath = Path.Combine(repoRoot, "tools", "export_asset_catalog.py");
+                ProcessStartInfo startInfo = new("py")
+                {
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                    WorkingDirectory = repoRoot,
+                };
+                startInfo.ArgumentList.Add("-3");
+                startInfo.ArgumentList.Add(producerPath);
+                startInfo.ArgumentList.Add("--emit-consumer-contract-fixture");
+                startInfo.ArgumentList.Add(bundleRoot);
+                using Process process = Process.Start(startInfo)!;
+                string standardOutput = process.StandardOutput.ReadToEnd();
+                string standardError = process.StandardError.ReadToEnd();
+                process.WaitForExit();
+                Assert.True(
+                    process.ExitCode == 0,
+                    $"Catalog producer failed ({process.ExitCode}).\n{standardOutput}\n{standardError}");
+
+                string catalogPath = Path.Combine(bundleRoot, "asset_catalog", "catalog.json");
+                AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogPath);
+
+                Assert.Equal(catalogPath, snapshot.CatalogFilePath);
+                Assert.Equal(bundleRoot, snapshot.TrustedExportRoot);
+                AssetTextureItem texture = Assert.Single(snapshot.Textures);
+                Assert.Equal("texture:producer-contract", texture.CatalogId);
+                Assert.Equal(
+                    Path.Combine(bundleRoot, "exports", "producer_texture.png"),
+                    texture.ExportPath);
+                Assert.True(texture.ExportExists);
+                AssetTextureReadabilityRow readability = Assert.Single(
+                    new AssetCatalogReadabilityService().Build(snapshot, sampleLimit: 1).TextureSamples);
+                Assert.True(readability.ReadablePng);
+                Assert.Equal(1, readability.Width);
+                Assert.Equal(1, readability.Height);
+            }
+            finally
+            {
+                DeleteTestDirectory(bundleRoot);
+            }
         }
 
         [Theory]
@@ -263,6 +324,519 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
             Assert.Equal(byFile.CatalogFilePath, byDirectory.CatalogFilePath);
             Assert.Equal(byFile.Summary.TotalCatalogEntries, byDirectory.Summary.TotalCatalogEntries);
+        }
+
+        [Fact]
+        public void Load_DoesNotSearchParentDirectoriesForRelativeExports()
+        {
+            string parent = CreateTemporaryDirectory("oce-asset-catalog-parent-search");
+            string root = Path.Combine(parent, "bundle");
+            string parentExport = Path.Combine(parent, "exports", "outside.png");
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(parentExport)!);
+                File.WriteAllBytes(parentExport, BuildMinimalPng());
+                string catalogPath = WriteSingleTextureCatalog(root, "exports/outside.png");
+
+                AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogPath);
+
+                AssetTextureItem texture = Assert.Single(snapshot.Textures);
+                Assert.Equal(root, snapshot.TrustedExportRoot);
+                Assert.False(texture.ExportExists);
+                Assert.Equal(Path.Combine(root, "exports", "outside.png"), texture.ExportPath);
+            }
+            finally
+            {
+                DeleteTestDirectory(parent);
+            }
+        }
+
+        [Theory]
+        [InlineData("../outside.png")]
+        [InlineData("exports/../../outside.png")]
+        public void Load_RejectsRelativeExportEscapes(string exportPath)
+        {
+            string root = CreateTemporaryDirectory("oce-asset-catalog-relative-escape");
+            try
+            {
+                string catalogPath = WriteSingleTextureCatalog(root, exportPath);
+
+                AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogPath);
+
+                Assert.Equal(AssetCatalogSnapshot.Empty, snapshot);
+            }
+            finally
+            {
+                DeleteTestDirectory(root);
+            }
+        }
+
+        [Fact]
+        public void Load_RejectsAbsoluteExportOutsideTrustedRoot()
+        {
+            string parent = CreateTemporaryDirectory("oce-asset-catalog-absolute-escape");
+            string root = Path.Combine(parent, "bundle");
+            string outsidePath = Path.Combine(parent, "outside.png");
+            try
+            {
+                File.WriteAllBytes(outsidePath, BuildMinimalPng());
+                string catalogPath = WriteSingleTextureCatalog(root, outsidePath);
+
+                AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogPath);
+
+                Assert.Equal(AssetCatalogSnapshot.Empty, snapshot);
+            }
+            finally
+            {
+                DeleteTestDirectory(parent);
+            }
+        }
+
+        [Fact]
+        public void Load_RejectsAbsoluteExportEvenWhenItIsInsideTrustedRoot()
+        {
+            string root = CreateTemporaryDirectory("oce-asset-catalog-absolute-inside");
+            try
+            {
+                string exportPath = Path.Combine(root, "exports", "inside.png");
+                Directory.CreateDirectory(Path.GetDirectoryName(exportPath)!);
+                File.WriteAllBytes(exportPath, BuildMinimalPng());
+                string catalogPath = WriteSingleTextureCatalog(root, exportPath);
+
+                AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogPath);
+
+                Assert.Equal(AssetCatalogSnapshot.Empty, snapshot);
+            }
+            finally
+            {
+                DeleteTestDirectory(root);
+            }
+        }
+
+        [Fact]
+        public void Load_RejectsUnsafeAlternativeExportPath()
+        {
+            string parent = CreateTemporaryDirectory("oce-asset-catalog-alternative-escape");
+            string root = Path.Combine(parent, "bundle");
+            try
+            {
+                string validPath = Path.Combine(root, "exports", "valid.png");
+                Directory.CreateDirectory(Path.GetDirectoryName(validPath)!);
+                File.WriteAllBytes(validPath, BuildMinimalPng());
+                string catalogPath = WriteSingleTextureCatalog(
+                    root,
+                    "exports/valid.png",
+                    "../outside.png");
+
+                AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogPath);
+
+                Assert.Equal(AssetCatalogSnapshot.Empty, snapshot);
+            }
+            finally
+            {
+                DeleteTestDirectory(parent);
+            }
+        }
+
+        [Fact]
+        public void Load_RejectsHardlinkedExportSource()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            string parent = CreateTemporaryDirectory("oce-asset-catalog-hardlink");
+            string root = Path.Combine(parent, "bundle");
+            string outsidePath = Path.Combine(parent, "outside.png");
+            try
+            {
+                string catalogPath = WriteSingleTextureCatalog(root, "exports/linked.png");
+                string linkedPath = Path.Combine(root, "exports", "linked.png");
+                Directory.CreateDirectory(Path.GetDirectoryName(linkedPath)!);
+                File.WriteAllBytes(outsidePath, BuildMinimalPng());
+                Assert.True(CreateHardLink(linkedPath, outsidePath, IntPtr.Zero));
+
+                AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogPath);
+
+                Assert.Equal(AssetCatalogSnapshot.Empty, snapshot);
+            }
+            finally
+            {
+                DeleteTestDirectory(parent);
+            }
+        }
+
+        [Fact]
+        public void Load_RejectsSymlinkedExportSource()
+        {
+            string parent = CreateTemporaryDirectory("oce-asset-catalog-symlink");
+            string root = Path.Combine(parent, "bundle");
+            string outsidePath = Path.Combine(parent, "outside.png");
+            try
+            {
+                string catalogPath = WriteSingleTextureCatalog(root, "exports/linked.png");
+                string linkedPath = Path.Combine(root, "exports", "linked.png");
+                Directory.CreateDirectory(Path.GetDirectoryName(linkedPath)!);
+                File.WriteAllBytes(outsidePath, BuildMinimalPng());
+                try
+                {
+                    File.CreateSymbolicLink(linkedPath, outsidePath);
+                }
+                catch (Exception ex) when (ex is UnauthorizedAccessException or PlatformNotSupportedException)
+                {
+                    return;
+                }
+
+                AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogPath);
+
+                Assert.Equal(AssetCatalogSnapshot.Empty, snapshot);
+            }
+            finally
+            {
+                DeleteTestDirectory(parent);
+            }
+        }
+
+        [Fact]
+        public void Load_RejectsDanglingDirectorySymlinkAncestor()
+        {
+            string parent = CreateTemporaryDirectory("oce-asset-catalog-dangling-directory-link");
+            string root = Path.Combine(parent, "bundle");
+            try
+            {
+                string catalogPath = WriteSingleTextureCatalog(root, "exports/linked/missing.png");
+                string linkedDirectory = Path.Combine(root, "exports", "linked");
+                Directory.CreateDirectory(Path.GetDirectoryName(linkedDirectory)!);
+                try
+                {
+                    Directory.CreateSymbolicLink(linkedDirectory, Path.Combine(parent, "missing-outside"));
+                }
+                catch (Exception ex) when (ex is UnauthorizedAccessException or PlatformNotSupportedException)
+                {
+                    return;
+                }
+
+                AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogPath);
+
+                Assert.Equal(AssetCatalogSnapshot.Empty, snapshot);
+            }
+            finally
+            {
+                DeleteTestDirectory(parent);
+            }
+        }
+
+        [Fact]
+        public void ResolveCatalogFilePath_RejectsHardlinkedCatalog()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            string parent = CreateTemporaryDirectory("oce-asset-catalog-hardlinked-catalog");
+            string root = Path.Combine(parent, "bundle");
+            string outsideCatalog = Path.Combine(parent, "outside-catalog.json");
+            try
+            {
+                string catalogPath = WriteSingleTextureCatalog(root, "exports/missing.png");
+                string catalogJson = File.ReadAllText(catalogPath);
+                File.Delete(catalogPath);
+                File.WriteAllText(outsideCatalog, catalogJson);
+                Assert.True(CreateHardLink(catalogPath, outsideCatalog, IntPtr.Zero));
+
+                Assert.Null(AssetCatalogService.ResolveCatalogFilePath(catalogPath));
+                Assert.Equal(AssetCatalogSnapshot.Empty, new AssetCatalogService().Load(catalogPath));
+            }
+            finally
+            {
+                DeleteTestDirectory(parent);
+            }
+        }
+
+        [Fact]
+        public void ResolveCatalogFilePath_RejectsSymlinkedCatalog()
+        {
+            string parent = CreateTemporaryDirectory("oce-asset-catalog-symlinked-catalog");
+            string root = Path.Combine(parent, "bundle");
+            string outsideCatalog = Path.Combine(parent, "outside-catalog.json");
+            try
+            {
+                string catalogPath = WriteSingleTextureCatalog(root, "exports/missing.png");
+                string catalogJson = File.ReadAllText(catalogPath);
+                File.Delete(catalogPath);
+                File.WriteAllText(outsideCatalog, catalogJson);
+                try
+                {
+                    File.CreateSymbolicLink(catalogPath, outsideCatalog);
+                }
+                catch (Exception ex) when (ex is UnauthorizedAccessException or PlatformNotSupportedException)
+                {
+                    return;
+                }
+
+                Assert.Null(AssetCatalogService.ResolveCatalogFilePath(catalogPath));
+                Assert.Equal(AssetCatalogSnapshot.Empty, new AssetCatalogService().Load(catalogPath));
+            }
+            finally
+            {
+                DeleteTestDirectory(parent);
+            }
+        }
+
+        [Fact]
+        public void Load_RejectsCatalogInsideGameTree()
+        {
+            string root = CreateTemporaryDirectory("oce-asset-catalog-game-tree");
+            try
+            {
+                Directory.CreateDirectory(Path.Combine(root, "data"));
+                File.WriteAllText(Path.Combine(root, "BEA.exe"), "placeholder executable marker");
+                string catalogPath = WriteSingleTextureCatalog(root, "exports/missing.png");
+
+                AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogPath);
+
+                Assert.Equal(AssetCatalogSnapshot.Empty, snapshot);
+                Assert.Null(AssetCatalogService.ResolveCatalogFilePath(catalogPath));
+            }
+            finally
+            {
+                DeleteTestDirectory(root);
+            }
+        }
+
+        [Theory]
+        [InlineData(@"\\server\share\asset_catalog\catalog.json")]
+        [InlineData(@"\\?\C:\asset_catalog\catalog.json")]
+        [InlineData(@"C:asset_catalog\catalog.json")]
+        [InlineData(@"C:\asset_catalog\catalog.json:alternate")]
+        public void ResolveCatalogFilePath_RejectsNonLocalOrAmbiguousWindowsPaths(string path)
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            Assert.Null(AssetCatalogService.ResolveCatalogFilePath(path));
+        }
+
+        [Fact]
+        public void Load_RejectsCatalogWithoutCurrentBundlePathContract()
+        {
+            string root = CreateTemporaryDirectory("oce-asset-catalog-legacy-contract");
+            try
+            {
+                string catalogPath = WriteSingleTextureCatalog(root, "exports/missing.png");
+                JsonObject catalog = JsonNode.Parse(File.ReadAllText(catalogPath))!.AsObject();
+                catalog.Remove("path_contract");
+                File.WriteAllText(catalogPath, catalog.ToJsonString());
+
+                Assert.Equal(AssetCatalogSnapshot.Empty, new AssetCatalogService().Load(catalogPath));
+            }
+            finally
+            {
+                DeleteTestDirectory(root);
+            }
+        }
+
+        [Theory]
+        [InlineData("null")]
+        [InlineData("{}")]
+        [InlineData("[null]")]
+        public void Load_RejectsMalformedRequiredCatalogSection(string malformedSectionJson)
+        {
+            string root = CreateTemporaryDirectory("oce-asset-catalog-malformed-section");
+            try
+            {
+                string catalogPath = WriteSingleTextureCatalog(root, "exports/missing.png");
+                JsonObject catalog = JsonNode.Parse(File.ReadAllText(catalogPath))!.AsObject();
+                catalog["textures"] = JsonNode.Parse(malformedSectionJson);
+                File.WriteAllText(catalogPath, catalog.ToJsonString());
+
+                Assert.Equal(AssetCatalogSnapshot.Empty, new AssetCatalogService().Load(catalogPath));
+                Assert.Null(AssetCatalogService.ResolveCatalogFilePath(catalogPath));
+            }
+            finally
+            {
+                DeleteTestDirectory(root);
+            }
+        }
+
+        [Fact]
+        public void ResolveCatalogFilePath_RejectsDirectAndDualCatalogLayouts()
+        {
+            string root = CreateTemporaryDirectory("oce-asset-catalog-layout-contract");
+            try
+            {
+                string nestedCatalog = WriteSingleTextureCatalog(root, "exports/missing.png");
+                string directCatalog = Path.Combine(root, "catalog.json");
+                File.Copy(nestedCatalog, directCatalog);
+
+                Assert.Null(AssetCatalogService.ResolveCatalogFilePath(root));
+                Assert.Null(AssetCatalogService.ResolveCatalogFilePath(nestedCatalog));
+                Assert.Equal(AssetCatalogSnapshot.Empty, new AssetCatalogService().Load(root));
+
+                File.Delete(directCatalog);
+                File.Move(nestedCatalog, directCatalog);
+                Directory.Delete(Path.GetDirectoryName(nestedCatalog)!);
+
+                Assert.Null(AssetCatalogService.ResolveCatalogFilePath(root));
+                Assert.Null(AssetCatalogService.ResolveCatalogFilePath(directCatalog));
+                Assert.Equal(AssetCatalogSnapshot.Empty, new AssetCatalogService().Load(directCatalog));
+            }
+            finally
+            {
+                DeleteTestDirectory(root);
+            }
+        }
+
+        [Fact]
+        public void Readability_RejectsPostLoadHardlinkSourceSwap()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempAssetCatalog catalog = TempAssetCatalog.Create();
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string originalPath = Assert.Single(snapshot.Textures).ExportPath;
+            string outsideRoot = CreateTemporaryDirectory("oce-asset-catalog-post-load-swap");
+            try
+            {
+                Directory.CreateDirectory(Path.Combine(outsideRoot, "data"));
+                File.WriteAllText(Path.Combine(outsideRoot, "BEA.exe"), "placeholder executable marker");
+                string outsidePath = Path.Combine(outsideRoot, "outside.png");
+                byte[] outsidePng = BuildMinimalPng();
+                outsidePng[19] = 7;
+                outsidePng[23] = 9;
+                File.WriteAllBytes(outsidePath, outsidePng);
+                File.Delete(originalPath);
+                Assert.True(CreateHardLink(originalPath, outsidePath, IntPtr.Zero));
+
+                AssetCatalogReadability readability = new AssetCatalogReadabilityService().Build(snapshot, sampleLimit: 10);
+
+                AssetTextureReadabilityRow row = Assert.Single(readability.TextureSamples);
+                Assert.False(row.ExportExists);
+                Assert.False(row.ReadablePng);
+                Assert.Null(row.Width);
+                Assert.Null(row.Height);
+                Assert.Contains("validation", row.Status, StringComparison.OrdinalIgnoreCase);
+            }
+            finally
+            {
+                DeleteTestDirectory(outsideRoot);
+            }
+        }
+
+        [Fact]
+        public void SourceLease_RejectsPostLoadNormalSourceReplacement()
+        {
+            using TempAssetCatalog catalog = TempAssetCatalog.Create();
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string sourcePath = Assert.Single(snapshot.Textures).ExportPath;
+            byte[] replacement = BuildMinimalPng();
+            replacement[23] = 9;
+            File.Delete(sourcePath);
+            File.WriteAllBytes(sourcePath, replacement);
+
+            InvalidOperationException error = Assert.Throws<InvalidOperationException>(() =>
+            {
+                using AssetCatalogSourceLease _ = AssetCatalogSourceAccessService.Open(snapshot, sourcePath);
+            });
+
+            Assert.Contains("changed identity", error.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void SourceLease_HoldsIntermediateSourceDirectoryAgainstRetarget()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempAssetCatalog catalog = TempAssetCatalog.Create();
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string sourcePath = Assert.Single(snapshot.Textures).ExportPath;
+            string sourceDirectory = Path.GetDirectoryName(sourcePath)!;
+            string movedDirectory = $"{sourceDirectory}-moved";
+
+            using AssetCatalogSourceLease lease = AssetCatalogSourceAccessService.Open(snapshot, sourcePath);
+            Assert.True(lease.Stream.CanRead);
+            Exception? retargetError = Record.Exception(() => Directory.Move(sourceDirectory, movedDirectory));
+
+            Assert.NotNull(retargetError);
+            Assert.True(
+                retargetError is IOException or UnauthorizedAccessException,
+                $"Unexpected retarget failure: {retargetError}");
+            Assert.True(File.Exists(sourcePath));
+            Assert.False(Directory.Exists(movedDirectory));
+        }
+
+        [Fact]
+        public void SourceLease_RejectsPostLoadInPlaceSourceContentChange()
+        {
+            using TempAssetCatalog catalog = TempAssetCatalog.Create();
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string sourcePath = Assert.Single(snapshot.Textures).ExportPath;
+            byte[] changed = BuildMinimalPng();
+            changed[23] = 9;
+            File.WriteAllBytes(sourcePath, changed);
+
+            InvalidOperationException error = Assert.Throws<InvalidOperationException>(() =>
+            {
+                using AssetCatalogSourceLease _ = AssetCatalogSourceAccessService.Open(snapshot, sourcePath);
+            });
+
+            Assert.Contains("changed identity", error.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void SourceLease_RejectsPostLoadCatalogReplacement()
+        {
+            using TempAssetCatalog catalog = TempAssetCatalog.Create();
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string sourcePath = Assert.Single(snapshot.Textures).ExportPath;
+            byte[] catalogBytes = File.ReadAllBytes(catalog.CatalogFilePath);
+            File.Delete(catalog.CatalogFilePath);
+            File.WriteAllBytes(catalog.CatalogFilePath, catalogBytes);
+
+            InvalidOperationException error = Assert.Throws<InvalidOperationException>(() =>
+            {
+                using AssetCatalogSourceLease _ = AssetCatalogSourceAccessService.Open(snapshot, sourcePath);
+            });
+
+            Assert.Contains("catalog", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("identity", error.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void SourceLease_RejectsPostLoadRootReplacement()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempAssetCatalog catalog = TempAssetCatalog.Create();
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string sourcePath = Assert.Single(snapshot.Textures).ExportPath;
+            string originalRoot = $"{catalog.RootPath}-original";
+            Directory.Move(catalog.RootPath, originalRoot);
+            try
+            {
+                Directory.CreateDirectory(Path.Combine(catalog.RootPath, "asset_catalog"));
+                Directory.CreateDirectory(Path.Combine(catalog.RootPath, "exports"));
+                File.Copy(
+                    Path.Combine(originalRoot, "asset_catalog", "catalog.json"),
+                    catalog.CatalogFilePath);
+                File.Copy(
+                    Path.Combine(originalRoot, "exports", "texture_one.png"),
+                    sourcePath);
+
+                InvalidOperationException error = Assert.Throws<InvalidOperationException>(() =>
+                {
+                    using AssetCatalogSourceLease _ = AssetCatalogSourceAccessService.Open(snapshot, sourcePath);
+                });
+
+                Assert.Contains("root", error.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("identity", error.Message, StringComparison.OrdinalIgnoreCase);
+            }
+            finally
+            {
+                DeleteTestDirectory(catalog.RootPath);
+                Directory.Move(originalRoot, catalog.RootPath);
+            }
         }
 
         [Fact]
@@ -683,6 +1257,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 string looseMeshRoot = Path.Combine(root, "asset_export", "loose_meshes");
                 string meshTextureRoot = Path.Combine(looseMeshRoot, "MeshTextures");
                 Directory.CreateDirectory(meshTextureRoot);
+                File.WriteAllText(Path.Combine(looseMeshRoot, "direct.fbx"), "fbx");
+                File.WriteAllText(Path.Combine(looseMeshRoot, "sidecar.fbx"), "fbx");
                 File.WriteAllText(Path.Combine(meshTextureRoot, "sidecar_only_diffuse.png"), "png");
 
                 AssetTextureItem texture = new(
@@ -728,6 +1304,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     ],
                     Array.Empty<AssetEmbeddedMeshItem>(),
                     Array.Empty<AssetGoodieItem>());
+                snapshot = AttachTrustedCatalog(root, snapshot);
 
                 AssetMaterialImportPlan plan = new AssetMaterialImportPlanService().Build(snapshot, sampleLimit: 10);
 
@@ -799,6 +1376,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 string looseMeshRoot = Path.Combine(root, "asset_export", "loose_meshes");
                 string meshTextureRoot = Path.Combine(looseMeshRoot, "MeshTextures");
                 Directory.CreateDirectory(meshTextureRoot);
+                File.WriteAllText(Path.Combine(looseMeshRoot, "sidecar.fbx"), "fbx");
                 File.WriteAllText(Path.Combine(meshTextureRoot, "sidecar_only_diffuse.png"), "png");
 
                 AssetTextureItem texture = new(
@@ -831,6 +1409,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     ],
                     Array.Empty<AssetEmbeddedMeshItem>(),
                     Array.Empty<AssetGoodieItem>());
+                snapshot = AttachTrustedCatalog(root, snapshot);
 
                 AssetMaterialImportManifest manifest = new AssetMaterialImportManifestService().Build(snapshot);
 
@@ -905,6 +1484,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 string looseMeshRoot = Path.Combine(root, "asset_export", "loose_meshes");
                 string meshTextureRoot = Path.Combine(looseMeshRoot, "MeshTextures");
                 Directory.CreateDirectory(meshTextureRoot);
+                File.WriteAllText(Path.Combine(looseMeshRoot, "sidecar.fbx"), "fbx");
                 File.WriteAllText(Path.Combine(meshTextureRoot, "sidecar_only_diffuse.png"), "png");
 
                 AssetTextureItem texture = new(
@@ -937,6 +1517,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     ],
                     Array.Empty<AssetEmbeddedMeshItem>(),
                     Array.Empty<AssetGoodieItem>());
+                snapshot = AttachTrustedCatalog(root, snapshot);
                 AssetMaterialImportManifest manifest = new AssetMaterialImportManifestService().Build(snapshot);
 
                 AssetMaterialImportDryRunPlan plan = new AssetMaterialImportDryRunPlanService().Build(manifest);
@@ -1057,7 +1638,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             AssetMaterialImportPackageMaterializationService service = new();
 
             AssetMaterialImportPackageMaterializationResult preflight = service.Preflight(snapshot, outputRoot);
@@ -1158,18 +1739,544 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void MaterialImportPackageMaterializer_RejectsOutputInsideCatalogRoot()
+        {
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string overlappingOutput = Path.Combine(catalog.RootPath, "material-package");
+
+            InvalidOperationException error = Assert.Throws<InvalidOperationException>(() =>
+                new AssetMaterialImportPackageMaterializationService().Preflight(snapshot, overlappingOutput));
+
+            Assert.Contains("overlap", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Throws<InvalidOperationException>(() =>
+                new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, overlappingOutput));
+            Assert.False(Directory.Exists(overlappingOutput));
+        }
+
+        [Fact]
+        public void MaterialImportPackageMaterializer_DoesNotPublishPartialPackageWhenManifestFails()
+        {
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string? observedStagingRoot = null;
+            var service = new AssetMaterialImportPackageMaterializationService(stagingRoot =>
+            {
+                observedStagingRoot = stagingRoot;
+                throw new IOException("Injected manifest failure.");
+            });
+
+            AssetMaterialImportPackageMaterializationResult result =
+                service.Materialize(snapshot, catalog.PackageRootPath);
+
+            Assert.False(result.Completed);
+            Assert.False(result.ManifestWritten);
+            Assert.Equal("blocked-unsafe-manifest", result.ManifestStatus);
+            Assert.NotNull(observedStagingRoot);
+            Assert.Contains(".onslaught-package-stage-", observedStagingRoot, StringComparison.OrdinalIgnoreCase);
+            Assert.False(Directory.Exists(catalog.PackageRootPath));
+            Assert.False(Directory.Exists(Path.GetDirectoryName(observedStagingRoot)!));
+        }
+
+        [Fact]
+        public void MaterialImportPackageMaterializer_CleanupDoesNotFollowStagedDirectorySymlink()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string outsideRoot = CreateTemporaryDirectory("oce-asset-package-cleanup-outside");
+            string canaryPath = Path.Combine(outsideRoot, "canary.txt");
+            File.WriteAllText(canaryPath, "cleanup-canary");
+            string? observedStagingRoot = null;
+            Exception? linkCreationError = null;
+            try
+            {
+                var service = new AssetMaterialImportPackageMaterializationService(stagingRoot =>
+                {
+                    observedStagingRoot = stagingRoot;
+                    try
+                    {
+                        Directory.CreateSymbolicLink(
+                            Path.Combine(stagingRoot, "cleanup-link"),
+                            outsideRoot);
+                    }
+                    catch (Exception ex)
+                    {
+                        linkCreationError = ex;
+                        throw;
+                    }
+                    throw new IOException("Injected manifest failure after staged link creation.");
+                });
+
+                AssetMaterialImportPackageMaterializationResult result =
+                    service.Materialize(snapshot, catalog.PackageRootPath);
+
+                if (linkCreationError is UnauthorizedAccessException or PlatformNotSupportedException)
+                    return;
+                Assert.Null(linkCreationError);
+                Assert.False(result.Completed);
+                Assert.Equal("cleanup-canary", File.ReadAllText(canaryPath));
+                Assert.NotNull(observedStagingRoot);
+                Assert.False(Directory.Exists(catalog.PackageRootPath));
+                Assert.False(Directory.Exists(Path.GetDirectoryName(observedStagingRoot)!));
+            }
+            finally
+            {
+                if (observedStagingRoot is not null)
+                    DeleteTestDirectory(Path.GetDirectoryName(observedStagingRoot)!);
+                DeleteTestDirectory(outsideRoot);
+            }
+        }
+
+        [Fact]
+        public async Task MaterialImportPackageMaterializer_ConcurrentFirstPublishersYieldOneCompletePackage()
+        {
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            using var barrier = new Barrier(participantCount: 2);
+            var stagingRoots = new ConcurrentBag<string>();
+            Action<string> beforeManifest = stagingRoot =>
+            {
+                stagingRoots.Add(stagingRoot);
+                if (!barrier.SignalAndWait(TimeSpan.FromSeconds(30)))
+                    throw new TimeoutException("Concurrent materializer test barrier timed out.");
+            };
+
+            async Task<(AssetMaterialImportPackageMaterializationResult? Result, Exception? Error)> RunPublisher()
+            {
+                return await Task.Run(() =>
+                {
+                    try
+                    {
+                        AssetMaterialImportPackageMaterializationResult result =
+                            new AssetMaterialImportPackageMaterializationService(beforeManifest)
+                                .Materialize(snapshot, catalog.PackageRootPath);
+                        return (Result: result, Error: (Exception?)null);
+                    }
+                    catch (Exception ex)
+                    {
+                        return (Result: (AssetMaterialImportPackageMaterializationResult?)null, Error: ex);
+                    }
+                });
+            }
+
+            (AssetMaterialImportPackageMaterializationResult? Result, Exception? Error)[] outcomes =
+                await Task.WhenAll(RunPublisher(), RunPublisher());
+
+            Assert.Single(outcomes, outcome => outcome.Result?.Completed == true);
+            (AssetMaterialImportPackageMaterializationResult? Result, Exception? Error) loser =
+                Assert.Single(outcomes, outcome => outcome.Error is not null);
+            Assert.IsType<IOException>(loser.Error);
+            Assert.True(new AssetMaterialImportPackageInspectionService()
+                .Inspect(catalog.PackageRootPath)
+                .Completed);
+            Assert.Equal(2, stagingRoots.Count);
+            Assert.All(stagingRoots, stagingRoot =>
+                Assert.False(Directory.Exists(Path.GetDirectoryName(stagingRoot)!)));
+        }
+
+        [Fact]
+        public void MaterialImportPackageMaterializer_RejectsStagedRootIdentitySubstitutionBeforePublish()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string? observedStagingRoot = null;
+            var service = new AssetMaterialImportPackageMaterializationService(
+                beforeManifestWriteForTest: static _ => { },
+                beforeFirstPublicationForTest: stagingRoot =>
+                {
+                    observedStagingRoot = stagingRoot;
+                    string displacedRoot = stagingRoot + "-displaced";
+                    Directory.Move(stagingRoot, displacedRoot);
+                    Directory.CreateDirectory(stagingRoot);
+                    File.WriteAllText(Path.Combine(stagingRoot, "replacement.txt"), "replacement-root");
+                });
+
+            IOException error = Assert.Throws<IOException>(() =>
+                service.Materialize(snapshot, catalog.PackageRootPath));
+
+            Assert.Contains("denied", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.NotNull(observedStagingRoot);
+            Assert.False(Directory.Exists(catalog.PackageRootPath));
+            Assert.False(Directory.Exists(Path.GetDirectoryName(observedStagingRoot)!));
+        }
+
+        [Fact]
+        public void MaterialImportPackageMaterializer_DetectsChildMutationInRenameWindowAndRollsBack()
+        {
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string? observedStagingRoot = null;
+            var service = new AssetMaterialImportPackageMaterializationService(
+                beforeManifestWriteForTest: static _ => { },
+                afterSealPreparedForTest: stagingRoot =>
+                {
+                    observedStagingRoot = stagingRoot;
+                    File.WriteAllText(
+                        Path.Combine(
+                            stagingRoot,
+                            AssetMaterialImportPackageMaterializationService.ManifestFileName),
+                        "{\"schema\":\"attacker\",\"completed\":false}");
+                });
+
+            IOException error = Assert.Throws<IOException>(() =>
+                service.Materialize(snapshot, catalog.PackageRootPath));
+
+            Assert.Contains("changed", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.NotNull(observedStagingRoot);
+            Assert.False(Directory.Exists(catalog.PackageRootPath));
+            Assert.False(Directory.Exists(Path.GetDirectoryName(observedStagingRoot)!));
+        }
+
+        [Fact]
+        public void MaterialImportPackageMaterializer_DoesNotPopulateRootRemovedAfterExistingBranch()
+        {
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            Directory.CreateDirectory(catalog.PackageRootPath);
+            var service = new AssetMaterialImportPackageMaterializationService(
+                beforeManifestWriteForTest: static _ => { },
+                afterExistingRootBranchForTest: root => Directory.Delete(root));
+
+            Assert.Throws<DirectoryNotFoundException>(() =>
+                service.Materialize(snapshot, catalog.PackageRootPath));
+
+            Assert.False(Directory.Exists(catalog.PackageRootPath));
+        }
+
+        [Theory]
+        [InlineData("work-order")]
+        [InlineData("importer-dry-run")]
+        [InlineData("importer-input")]
+        [InlineData("rebuild-preview")]
+        [InlineData("rebuild-scene")]
+        [InlineData("rebuild-mesh")]
+        [InlineData("rebuild-mesh-import")]
+        public void MaterialImportPackageDownstreamWriters_DoNotMutateCatalogExportRoot(string lane)
+        {
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            IReadOnlyList<string> before = CaptureDirectoryTree(catalog.RootPath);
+
+            switch (lane)
+            {
+                case "work-order":
+                    Assert.False(new AssetMaterialImportPackageWorkOrderService()
+                        .WriteSidecar(catalog.RootPath)
+                        .SidecarWritten);
+                    break;
+                case "importer-dry-run":
+                    Assert.False(new AssetMaterialImportPackageImporterDryRunService()
+                        .WriteSidecar(catalog.RootPath)
+                        .SidecarWritten);
+                    break;
+                case "importer-input":
+                    Assert.False(new AssetMaterialImportPackageImporterInputService()
+                        .Materialize(catalog.RootPath)
+                        .ManifestWritten);
+                    break;
+                case "rebuild-preview":
+                    Assert.False(new AssetMaterialImportPackageRebuildPreviewService()
+                        .Materialize(catalog.RootPath)
+                        .ManifestWritten);
+                    break;
+                case "rebuild-scene":
+                    Assert.False(new AssetMaterialImportPackageRebuildSceneService()
+                        .Materialize(catalog.RootPath)
+                        .ManifestWritten);
+                    break;
+                case "rebuild-mesh":
+                    Assert.False(new AssetMaterialImportPackageRebuildMeshService()
+                        .Materialize(catalog.RootPath)
+                        .ManifestWritten);
+                    break;
+                case "rebuild-mesh-import":
+                    Assert.False(new AssetMaterialImportPackageRebuildMeshImportService()
+                        .Materialize(catalog.RootPath)
+                        .ManifestWritten);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(lane), lane, "Unknown downstream writer lane.");
+            }
+
+            Assert.Equal(before, CaptureDirectoryTree(catalog.RootPath));
+        }
+
+        [Fact]
+        public void MaterialImportPackageMaterializer_RejectsJunctionOutputRoot()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string outsideRoot = CreateTemporaryDirectory("oce-asset-package-output-junction");
+            try
+            {
+                try
+                {
+                    Directory.CreateSymbolicLink(catalog.PackageRootPath, outsideRoot);
+                }
+                catch (Exception ex) when (ex is UnauthorizedAccessException or PlatformNotSupportedException)
+                {
+                    return;
+                }
+
+                Assert.Throws<InvalidOperationException>(() =>
+                    new AssetMaterialImportPackageMaterializationService().Materialize(
+                        snapshot,
+                        catalog.PackageRootPath));
+                Assert.Empty(Directory.EnumerateFileSystemEntries(outsideRoot));
+            }
+            finally
+            {
+                if (Directory.Exists(catalog.PackageRootPath) &&
+                    (File.GetAttributes(catalog.PackageRootPath) & FileAttributes.ReparsePoint) != 0)
+                {
+                    Directory.Delete(catalog.PackageRootPath);
+                }
+                DeleteTestDirectory(outsideRoot);
+            }
+        }
+
+        [Fact]
+        public void MaterialImportPackageMaterializer_DoesNotReplaceHardlinkedManifest()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string outsideRoot = CreateTemporaryDirectory("oce-asset-package-hardlinked-manifest");
+            string outsidePath = Path.Combine(outsideRoot, "outside.json");
+            byte[] sentinel = Encoding.UTF8.GetBytes("outside-sentinel");
+            try
+            {
+                Directory.CreateDirectory(catalog.PackageRootPath);
+                File.WriteAllBytes(outsidePath, sentinel);
+                string manifestPath = Path.Combine(
+                    catalog.PackageRootPath,
+                    AssetMaterialImportPackageMaterializationService.ManifestFileName);
+                Assert.True(CreateHardLink(manifestPath, outsidePath, IntPtr.Zero));
+
+                AssetMaterialImportPackageMaterializationService service = new();
+                Assert.Throws<InvalidOperationException>(() =>
+                    service.Preflight(snapshot, catalog.PackageRootPath));
+                Assert.Throws<InvalidOperationException>(() =>
+                    service.Materialize(snapshot, catalog.PackageRootPath));
+                Assert.False(Directory.Exists(Path.Combine(catalog.PackageRootPath, "models")));
+                Assert.False(Directory.Exists(Path.Combine(catalog.PackageRootPath, "textures")));
+                Assert.Equal(sentinel, File.ReadAllBytes(outsidePath));
+            }
+            finally
+            {
+                DeleteTestDirectory(outsideRoot);
+            }
+        }
+
+        [Fact]
+        public void MaterialImportPackageMaterializer_BlocksHardlinkedPayloadDestination()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            AssetMaterialImportManifest manifest = new AssetMaterialImportManifestService().Build(snapshot);
+            AssetMaterialImportPackagePlan plan = new AssetMaterialImportPackagePlanService().Build(manifest);
+            string destinationRelativePath = plan.ModelOperations[0].DestinationRelativePath;
+            string destinationPath = Path.Combine(
+                catalog.PackageRootPath,
+                destinationRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            string outsideRoot = CreateTemporaryDirectory("oce-asset-package-hardlinked-payload");
+            string outsidePath = Path.Combine(outsideRoot, "outside.fbx");
+            byte[] sentinel = Encoding.UTF8.GetBytes("outside-model-sentinel");
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+                File.WriteAllBytes(outsidePath, sentinel);
+                Assert.True(CreateHardLink(destinationPath, outsidePath, IntPtr.Zero));
+
+                AssetMaterialImportPackageMaterializationResult result =
+                    new AssetMaterialImportPackageMaterializationService().Materialize(
+                        snapshot,
+                        catalog.PackageRootPath);
+
+                Assert.False(result.Completed);
+                Assert.Equal(3, result.UnsafeDestinationFiles);
+                Assert.Contains(
+                    result.Files,
+                    file => file.DestinationRelativePath == destinationRelativePath &&
+                            file.Status == "blocked-unsafe-destination");
+                Assert.Equal(sentinel, File.ReadAllBytes(outsidePath));
+            }
+            finally
+            {
+                DeleteTestDirectory(outsideRoot);
+            }
+        }
+
+        [Fact]
+        public void MaterialImportPackageMaterializer_BlocksDifferentExistingPayload()
+        {
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            AssetMaterialImportPackagePlan plan = new AssetMaterialImportPackagePlanService().Build(
+                new AssetMaterialImportManifestService().Build(snapshot));
+            string destinationRelativePath = plan.ModelOperations[0].DestinationRelativePath;
+            string destinationPath = Path.Combine(
+                catalog.PackageRootPath,
+                destinationRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            byte[] sentinel = Encoding.UTF8.GetBytes("different-existing-model");
+            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+            File.WriteAllBytes(destinationPath, sentinel);
+
+            AssetMaterialImportPackageMaterializationResult result =
+                new AssetMaterialImportPackageMaterializationService().Materialize(
+                    snapshot,
+                    catalog.PackageRootPath);
+
+            Assert.False(result.Completed);
+            Assert.Equal(3, result.UnsafeDestinationFiles);
+            Assert.Contains(
+                result.Files,
+                file => file.DestinationRelativePath == destinationRelativePath &&
+                        file.Status == "blocked-existing-different");
+            Assert.Equal(sentinel, File.ReadAllBytes(destinationPath));
+        }
+
+        [Fact]
+        public void MaterialImportPackageMaterializer_DoesNotRepairOrPopulateEmptyExistingRoot()
+        {
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            Directory.CreateDirectory(catalog.PackageRootPath);
+
+            AssetMaterialImportPackageMaterializationResult result =
+                new AssetMaterialImportPackageMaterializationService().Materialize(
+                    snapshot,
+                    catalog.PackageRootPath);
+
+            Assert.False(result.Completed);
+            Assert.Equal(3, result.UnsafeDestinationFiles);
+            Assert.All(result.Files, file => Assert.Equal("blocked-incomplete-existing-package", file.Status));
+            Assert.Empty(Directory.EnumerateFileSystemEntries(catalog.PackageRootPath));
+        }
+
+        [Fact]
+        public void MaterialImportPackageMaterializer_RejectsPostLoadHardlinkedSourceSwap()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string texturePath = Assert.Single(snapshot.Textures).ExportPath;
+            string outsideRoot = CreateTemporaryDirectory("oce-asset-package-hardlinked-source");
+            try
+            {
+                Directory.CreateDirectory(Path.Combine(outsideRoot, "data"));
+                File.WriteAllText(Path.Combine(outsideRoot, "BEA.exe"), "placeholder executable marker");
+                string outsidePath = Path.Combine(outsideRoot, "outside.png");
+                byte[] outsideBytes = BuildMinimalPng();
+                File.WriteAllBytes(outsidePath, outsideBytes);
+                File.Delete(texturePath);
+                Assert.True(CreateHardLink(texturePath, outsidePath, IntPtr.Zero));
+
+                AssetMaterialImportPackageMaterializationResult result =
+                    new AssetMaterialImportPackageMaterializationService().Materialize(
+                        snapshot,
+                        catalog.PackageRootPath);
+
+                Assert.False(result.Completed);
+                Assert.Equal(1, result.UnsafeSourceFiles);
+                Assert.Contains(
+                    result.Files,
+                    file => file.Role == "texture" && file.Status == "blocked-unsafe-source");
+                Assert.Equal(outsideBytes, File.ReadAllBytes(outsidePath));
+            }
+            finally
+            {
+                DeleteTestDirectory(outsideRoot);
+            }
+        }
+
+        [Fact]
+        public void MaterialImportPackageMaterializer_RejectsSidecarChangedAfterSnapshot()
+        {
+            string root = CreateTemporaryDirectory("oce-asset-sidecar-snapshot");
+            string packageRoot = root + "-package";
+            try
+            {
+                string looseMeshRoot = Path.Combine(root, "asset_export", "loose_meshes");
+                string meshTextureRoot = Path.Combine(looseMeshRoot, "MeshTextures");
+                Directory.CreateDirectory(meshTextureRoot);
+                string modelPath = Path.Combine(looseMeshRoot, "sidecar.fbx");
+                string sidecarPath = Path.Combine(meshTextureRoot, "sidecar_only_diffuse.png");
+                File.WriteAllText(modelPath, "fbx-model");
+                File.WriteAllBytes(sidecarPath, BuildMinimalPng());
+
+                AssetCatalogSnapshot snapshot = new(
+                    string.Empty,
+                    AssetCatalogSummary.Empty,
+                    Array.Empty<AssetTextureItem>(),
+                    [
+                        new AssetLooseMeshItem(
+                            "mesh:sidecar",
+                            "mesh/sidecar.msh",
+                            "Sidecar model",
+                            modelPath,
+                            Path.GetFileName(modelPath),
+                            ExportExists: true,
+                            SourceFileCount: 1,
+                            ExportFileCount: 1,
+                            PackedReferenceCount: 1,
+                            CreateModelSummary(["sidecar_only_diffuse.tga"])),
+                    ],
+                    Array.Empty<AssetEmbeddedMeshItem>(),
+                    Array.Empty<AssetGoodieItem>());
+                snapshot = AttachTrustedCatalog(root, snapshot);
+
+                byte[] changedSidecar = BuildMinimalPng();
+                changedSidecar[^1] ^= 0x01;
+                File.WriteAllBytes(sidecarPath, changedSidecar);
+
+                AssetMaterialImportPackageMaterializationResult result =
+                    new AssetMaterialImportPackageMaterializationService().Materialize(
+                        snapshot,
+                        packageRoot);
+
+                Assert.False(result.Completed);
+                Assert.Equal(1, result.UnsafeSourceFiles);
+                Assert.Contains(
+                    result.Files,
+                    file => file.Role == "texture" && file.Status == "blocked-unsafe-source");
+                Assert.False(Directory.Exists(packageRoot));
+            }
+            finally
+            {
+                DeleteTestDirectory(root);
+                DeleteTestDirectory(packageRoot);
+            }
+        }
+
+        [Fact]
         public void MaterialImportPackageMaterializer_DoesNotOverwriteExistingOutputFiles()
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             AssetMaterialImportPackageMaterializationService service = new();
 
             AssetMaterialImportPackageMaterializationResult first = service.Materialize(snapshot, outputRoot);
             AssetMaterialImportPackageMaterializationResult second = service.Materialize(snapshot, outputRoot);
 
-            Assert.True(first.Completed);
-            Assert.True(second.Completed);
+            Assert.True(first.Completed, JsonSerializer.Serialize(first));
+            Assert.True(second.Completed, JsonSerializer.Serialize(second));
             Assert.Equal(3, first.CopiedFiles);
             Assert.Equal(0, second.CopiedFiles);
             Assert.Equal(3, second.ExistingFilesSkipped);
@@ -1190,7 +2297,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
 
             AssetMaterialImportPackageInspectionResult inspection =
@@ -1219,11 +2326,228 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void MaterialImportPackageInspector_RejectsNullManifestCollectionsWithoutThrowing()
+        {
+            string packageRoot = CreateTemporaryDirectory("oce-asset-package-null-manifest");
+            try
+            {
+                string manifestPath = Path.Combine(
+                    packageRoot,
+                    AssetMaterialImportPackageMaterializationService.ManifestFileName);
+                File.WriteAllText(
+                    manifestPath,
+                    """
+                    {
+                      "schema": "onslaught.asset-material-package-manifest.v1",
+                      "files": null,
+                      "models": null
+                    }
+                    """);
+
+                AssetMaterialImportPackageInspectionResult inspection =
+                    new AssetMaterialImportPackageInspectionService().Inspect(packageRoot);
+
+                Assert.False(inspection.Completed);
+                Assert.Equal("invalid-structure", inspection.ManifestStatus);
+                Assert.Contains(inspection.Issues, issue => issue.Status == "invalid-structure");
+            }
+            finally
+            {
+                DeleteTestDirectory(packageRoot);
+            }
+        }
+
+        [Fact]
+        public void MaterialImportPackageInspector_RejectsNullNestedRowsWithoutThrowing()
+        {
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string outputRoot = catalog.PackageRootPath;
+            Assert.True(new AssetMaterialImportPackageMaterializationService()
+                .Materialize(snapshot, outputRoot)
+                .Completed);
+            string manifestPath = Path.Combine(
+                outputRoot,
+                AssetMaterialImportPackageMaterializationService.ManifestFileName);
+            JsonObject manifest = JsonNode.Parse(File.ReadAllText(manifestPath))!.AsObject();
+            JsonArray models = manifest["models"]!.AsArray();
+            models[0]!["textureReferences"]!.AsArray().Add(null);
+            File.WriteAllText(manifestPath, manifest.ToJsonString());
+
+            AssetMaterialImportPackageInspectionResult inspection =
+                new AssetMaterialImportPackageInspectionService().Inspect(outputRoot);
+
+            Assert.False(inspection.Completed);
+            Assert.Equal("invalid-structure", inspection.ManifestStatus);
+        }
+
+        [Fact]
+        public void MaterialImportPackageInspector_RejectsNullTextureReferenceCollectionWithoutThrowing()
+        {
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string outputRoot = catalog.PackageRootPath;
+            Assert.True(new AssetMaterialImportPackageMaterializationService()
+                .Materialize(snapshot, outputRoot)
+                .Completed);
+            string manifestPath = Path.Combine(
+                outputRoot,
+                AssetMaterialImportPackageMaterializationService.ManifestFileName);
+            JsonObject manifest = JsonNode.Parse(File.ReadAllText(manifestPath))!.AsObject();
+            manifest["models"]!.AsArray()[0]!["textureReferences"] = null;
+            File.WriteAllText(manifestPath, manifest.ToJsonString());
+
+            AssetMaterialImportPackageInspectionResult inspection =
+                new AssetMaterialImportPackageInspectionService().Inspect(outputRoot);
+            AssetMaterialImportPackageWorkOrderResult workOrder =
+                new AssetMaterialImportPackageWorkOrderService().Build(outputRoot);
+
+            Assert.False(inspection.Completed);
+            Assert.Equal("invalid-structure", inspection.ManifestStatus);
+            Assert.False(workOrder.Completed);
+            Assert.Equal("invalid-structure", workOrder.ManifestStatus);
+        }
+
+        [Fact]
+        public void MaterialImportPackageWorkOrderWriter_HoldsRootIdentityAcrossValidationAndWrite()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            Assert.True(new AssetMaterialImportPackageMaterializationService()
+                .Materialize(snapshot, catalog.PackageRootPath)
+                .Completed);
+            File.Delete(Path.Combine(
+                catalog.PackageRootPath,
+                AssetMaterialImportPackageWorkOrderService.WorkOrderFileName));
+            string displacedRoot = catalog.PackageRootPath + "-displaced";
+            Exception? renameError = null;
+            var service = new AssetMaterialImportPackageWorkOrderService(root =>
+            {
+                try
+                {
+                    Directory.Move(root, displacedRoot);
+                }
+                catch (Exception ex)
+                {
+                    renameError = ex;
+                }
+            });
+
+            AssetMaterialImportPackageWorkOrderSidecarWriteResult result =
+                service.WriteSidecar(catalog.PackageRootPath);
+
+            Assert.NotNull(renameError);
+            Assert.IsAssignableFrom<IOException>(renameError);
+            Assert.True(result.SidecarWritten);
+            Assert.True(result.WorkOrder.Completed);
+            Assert.True(Directory.Exists(catalog.PackageRootPath));
+            Assert.False(Directory.Exists(displacedRoot));
+            Assert.True(new AssetMaterialImportPackageInspectionService()
+                .Inspect(catalog.PackageRootPath)
+                .Completed);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("models/../escape.fbx")]
+        [InlineData("models/./escape.fbx")]
+        [InlineData("models/escape.fbx\0suffix")]
+        public void MaterialImportPackageInspector_RejectsMalformedFilePathWithoutThrowing(string? malformedPath)
+        {
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string outputRoot = catalog.PackageRootPath;
+            Assert.True(new AssetMaterialImportPackageMaterializationService()
+                .Materialize(snapshot, outputRoot)
+                .Completed);
+            string manifestPath = Path.Combine(
+                outputRoot,
+                AssetMaterialImportPackageMaterializationService.ManifestFileName);
+            JsonObject manifest = JsonNode.Parse(File.ReadAllText(manifestPath))!.AsObject();
+            manifest["files"]!.AsArray()[0]!["destinationRelativePath"] = malformedPath;
+            File.WriteAllText(manifestPath, manifest.ToJsonString());
+
+            AssetMaterialImportPackageInspectionResult inspection =
+                new AssetMaterialImportPackageInspectionService().Inspect(outputRoot);
+
+            Assert.False(inspection.Completed);
+            Assert.True(inspection.UnsafeManifestPaths > 0);
+            Assert.Contains(inspection.Issues, issue => issue.Status == "unsafe-manifest-path");
+        }
+
+        [Fact]
+        public void MaterialImportPackageInspector_RejectsDuplicateNormalizedManifestPaths()
+        {
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string outputRoot = catalog.PackageRootPath;
+            Assert.True(new AssetMaterialImportPackageMaterializationService()
+                .Materialize(snapshot, outputRoot)
+                .Completed);
+            string manifestPath = Path.Combine(
+                outputRoot,
+                AssetMaterialImportPackageMaterializationService.ManifestFileName);
+            JsonObject manifest = JsonNode.Parse(File.ReadAllText(manifestPath))!.AsObject();
+            JsonArray files = manifest["files"]!.AsArray();
+            files.Add(files[0]!.DeepClone());
+            manifest["totalPackageFiles"] = files.Count;
+            manifest["plannedFiles"] = files.Count;
+            File.WriteAllText(manifestPath, manifest.ToJsonString());
+
+            AssetMaterialImportPackageInspectionResult inspection =
+                new AssetMaterialImportPackageInspectionService().Inspect(outputRoot);
+
+            Assert.False(inspection.Completed);
+            Assert.Equal("issues-found", inspection.ManifestStatus);
+            Assert.Contains(inspection.Issues, issue => issue.Status == "duplicate-manifest-path");
+        }
+
+        [Fact]
+        public void MaterialImportPackageInspector_RejectsHardlinkedManifestWithoutReadingAlias()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string outputRoot = catalog.PackageRootPath;
+            Assert.True(new AssetMaterialImportPackageMaterializationService()
+                .Materialize(snapshot, outputRoot)
+                .Completed);
+            string manifestPath = Path.Combine(
+                outputRoot,
+                AssetMaterialImportPackageMaterializationService.ManifestFileName);
+            byte[] manifestBytes = File.ReadAllBytes(manifestPath);
+            File.Delete(manifestPath);
+            string outsideRoot = CreateTemporaryDirectory("oce-asset-package-inspector-hardlink");
+            string outsidePath = Path.Combine(outsideRoot, "outside.json");
+            try
+            {
+                File.WriteAllBytes(outsidePath, manifestBytes);
+                Assert.True(CreateHardLink(manifestPath, outsidePath, IntPtr.Zero));
+
+                AssetMaterialImportPackageInspectionResult inspection =
+                    new AssetMaterialImportPackageInspectionService().Inspect(outputRoot);
+
+                Assert.False(inspection.Completed);
+                Assert.Equal("unsafe-package-tree", inspection.ManifestStatus);
+                Assert.Equal(manifestBytes, File.ReadAllBytes(outsidePath));
+            }
+            finally
+            {
+                DeleteTestDirectory(outsideRoot);
+            }
+        }
+
+        [Fact]
         public void MaterialImportPackageWorkOrder_BuildsImporterReadyRowsFromManifestGraph()
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
 
             AssetMaterialImportPackageWorkOrderResult workOrder =
@@ -1275,7 +2599,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
 
             AssetMaterialImportPackageWorkOrderSidecarValidationResult validation =
@@ -1307,11 +2631,48 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void MaterialImportPackageWorkOrder_DoesNotReplaceHardlinkedSidecar()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string outputRoot = catalog.PackageRootPath;
+            Assert.True(new AssetMaterialImportPackageMaterializationService()
+                .Materialize(snapshot, outputRoot)
+                .Completed);
+            string sidecarPath = Path.Combine(
+                outputRoot,
+                AssetMaterialImportPackageWorkOrderService.WorkOrderFileName);
+            File.Delete(sidecarPath);
+            string outsideRoot = CreateTemporaryDirectory("oce-asset-package-workorder-hardlink");
+            string outsidePath = Path.Combine(outsideRoot, "outside.json");
+            byte[] sentinel = Encoding.UTF8.GetBytes("outside-workorder-sentinel");
+            try
+            {
+                File.WriteAllBytes(outsidePath, sentinel);
+                Assert.True(CreateHardLink(sidecarPath, outsidePath, IntPtr.Zero));
+
+                AssetMaterialImportPackageWorkOrderSidecarWriteResult result =
+                    new AssetMaterialImportPackageWorkOrderService().WriteSidecar(outputRoot);
+
+                Assert.False(result.SidecarWritten);
+                Assert.Equal("unsafe-sidecar-path", result.SidecarStatus);
+                Assert.Equal(sentinel, File.ReadAllBytes(outsidePath));
+            }
+            finally
+            {
+                DeleteTestDirectory(outsideRoot);
+            }
+        }
+
+        [Fact]
         public void MaterialImportPackageWorkOrderSidecarValidation_FailsWhenPayloadFileChangedAfterSidecarWrite()
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             AssetMaterialImportPackageMaterializationResult materialization =
                 new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
             AssetMaterialImportPackageMaterializedFile removedFile = materialization.Files.First(file => file.Role == "model");
@@ -1345,7 +2706,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
 
             AssetMaterialImportPackageImporterBatchResult batch =
@@ -1383,7 +2744,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
 
             AssetMaterialImportPackageImporterDryRunResult dryRun =
@@ -1426,7 +2787,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
 
             AssetMaterialImportPackageImporterDryRunSidecarValidationResult validation =
@@ -1459,7 +2820,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             AssetMaterialImportPackageMaterializationResult materialization =
                 new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
             AssetMaterialImportPackageMaterializedFile removedFile = materialization.Files.First(file => file.Role == "model");
@@ -1494,7 +2855,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
             AssetMaterialImportPackageImporterInputService service = new();
 
@@ -1569,12 +2930,118 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Equal(0, inspection.ExtraPayloadFiles);
         }
 
+        [Theory]
+        [InlineData("importer-input")]
+        [InlineData("rebuild-preview")]
+        [InlineData("rebuild-scene")]
+        [InlineData("rebuild-mesh")]
+        public void MaterialImportPackageDownstreamWriters_RejectSymlinkedWorkspace(string lane)
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
+            string outputRoot = catalog.PackageRootPath;
+            Assert.True(new AssetMaterialImportPackageMaterializationService()
+                .Materialize(snapshot, outputRoot)
+                .Completed);
+
+            if (lane != "importer-input")
+            {
+                Assert.True(new AssetMaterialImportPackageImporterInputService()
+                    .Materialize(outputRoot)
+                    .Completed);
+            }
+            if (lane is "rebuild-scene" or "rebuild-mesh")
+            {
+                Assert.True(new AssetMaterialImportPackageRebuildPreviewService()
+                    .Materialize(outputRoot)
+                    .Completed);
+            }
+            if (lane == "rebuild-mesh")
+            {
+                Assert.True(new AssetMaterialImportPackageRebuildSceneService()
+                    .Materialize(outputRoot)
+                    .Completed);
+            }
+
+            string workspaceRelativePath = lane switch
+            {
+                "importer-input" => AssetMaterialImportPackageImporterInputService.ImporterInputRootRelativePath,
+                "rebuild-preview" => AssetMaterialImportPackageRebuildPreviewService.WorkspaceRootRelativePath,
+                "rebuild-scene" => AssetMaterialImportPackageRebuildSceneService.WorkspaceRootRelativePath,
+                "rebuild-mesh" => AssetMaterialImportPackageRebuildMeshService.WorkspaceRootRelativePath,
+                _ => throw new ArgumentOutOfRangeException(nameof(lane))
+            };
+            string workspacePath = Path.Combine(
+                outputRoot,
+                workspaceRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            string outsideRoot = CreateTemporaryDirectory($"oce-asset-package-{lane}-symlink");
+            try
+            {
+                try
+                {
+                    Directory.CreateSymbolicLink(workspacePath, outsideRoot);
+                }
+                catch (Exception ex) when (ex is UnauthorizedAccessException or PlatformNotSupportedException)
+                {
+                    return;
+                }
+
+                bool completed;
+                int unsafeOutputPaths;
+                switch (lane)
+                {
+                    case "importer-input":
+                        AssetMaterialImportPackageImporterInputMaterializationResult importer =
+                            new AssetMaterialImportPackageImporterInputService().Materialize(outputRoot);
+                        completed = importer.Completed;
+                        unsafeOutputPaths = importer.UnsafeDestinationPaths;
+                        break;
+                    case "rebuild-preview":
+                        AssetMaterialImportPackageRebuildPreviewResult preview =
+                            new AssetMaterialImportPackageRebuildPreviewService().Materialize(outputRoot);
+                        completed = preview.Completed;
+                        unsafeOutputPaths = preview.UnsafeOutputPaths;
+                        break;
+                    case "rebuild-scene":
+                        AssetMaterialImportPackageRebuildSceneResult scene =
+                            new AssetMaterialImportPackageRebuildSceneService().Materialize(outputRoot);
+                        completed = scene.Completed;
+                        unsafeOutputPaths = scene.UnsafeOutputPaths;
+                        break;
+                    case "rebuild-mesh":
+                        AssetMaterialImportPackageRebuildMeshResult mesh =
+                            new AssetMaterialImportPackageRebuildMeshService().Materialize(outputRoot);
+                        completed = mesh.Completed;
+                        unsafeOutputPaths = mesh.UnsafeOutputPaths;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(lane));
+                }
+
+                Assert.False(completed);
+                Assert.True(unsafeOutputPaths > 0);
+                Assert.Empty(Directory.EnumerateFileSystemEntries(outsideRoot));
+            }
+            finally
+            {
+                if (Directory.Exists(workspacePath) &&
+                    (File.GetAttributes(workspacePath) & FileAttributes.ReparsePoint) != 0)
+                {
+                    Directory.Delete(workspacePath);
+                }
+                DeleteTestDirectory(outsideRoot);
+            }
+        }
+
         [Fact]
         public void MaterialImportPackageImporterInputPlan_BuildsConsumerJobsFromStagedInput()
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
             new AssetMaterialImportPackageImporterInputService().Materialize(outputRoot);
 
@@ -1651,7 +3118,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
             new AssetMaterialImportPackageImporterInputService().Materialize(outputRoot);
             AssetMaterialImportPackageRebuildPreviewService service = new();
@@ -1747,7 +3214,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
             new AssetMaterialImportPackageImporterInputService().Materialize(outputRoot);
             new AssetMaterialImportPackageRebuildPreviewService().Materialize(outputRoot);
@@ -1862,7 +3329,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
             new AssetMaterialImportPackageImporterInputService().Materialize(outputRoot);
             new AssetMaterialImportPackageRebuildPreviewService().Materialize(outputRoot);
@@ -1983,7 +3450,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
             new AssetMaterialImportPackageImporterInputService().Materialize(outputRoot);
             new AssetMaterialImportPackageRebuildPreviewService().Materialize(outputRoot);
@@ -2078,7 +3545,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
             new AssetMaterialImportPackageImporterInputService().Materialize(outputRoot);
             new AssetMaterialImportPackageRebuildPreviewService().Materialize(outputRoot);
@@ -2106,7 +3573,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
             new AssetMaterialImportPackageImporterInputService().Materialize(outputRoot);
             AssetMaterialImportPackageRebuildPreviewResult preview =
@@ -2139,7 +3606,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
             AssetMaterialImportPackageImporterInputMaterializationResult input =
                 new AssetMaterialImportPackageImporterInputService().Materialize(outputRoot);
@@ -2166,7 +3633,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             AssetMaterialImportPackageMaterializationResult materialization =
                 new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
             AssetMaterialImportPackageMaterializedFile removedFile = materialization.Files.First(file => file.Role == "model");
@@ -2196,7 +3663,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             AssetMaterialImportPackageMaterializationResult materialization =
                 new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
             AssetMaterialImportPackageMaterializedFile removedFile = materialization.Files.First(file => file.Role == "model");
@@ -2222,7 +3689,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             AssetMaterialImportPackageMaterializationResult materialization =
                 new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
             AssetMaterialImportPackageMaterializedFile removedFile = materialization.Files.First(file => file.Role == "model");
@@ -2249,7 +3716,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             AssetMaterialImportPackageMaterializationResult materialization =
                 new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
             AssetMaterialImportPackageMaterializedFile removedFile = materialization.Files.First(file => file.Role == "model");
@@ -2287,7 +3754,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             using TempAssetCatalog catalog = TempAssetCatalog.Create(withModelPreviewExports: true);
             AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalog.CatalogFilePath);
-            string outputRoot = Path.Combine(catalog.RootPath, "material-package");
+            string outputRoot = catalog.PackageRootPath;
             AssetMaterialImportPackageMaterializationResult materialization =
                 new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot);
             AssetMaterialImportPackageMaterializedFile removedFile = materialization.Files.First(file => file.Role == "model");
@@ -2467,16 +3934,54 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 Directory.CreateDirectory(looseMeshRoot);
                 Directory.CreateDirectory(embeddedMeshRoot);
                 Directory.CreateDirectory(meshTextureRoot);
+                string looseModelPath = Path.Combine(looseMeshRoot, "ship_body.msh_binary.fbx");
+                string embeddedModelPath = Path.Combine(embeddedMeshRoot, "body00_binary.fbx");
+                File.WriteAllText(looseModelPath, "fbx");
+                File.WriteAllText(embeddedModelPath, "fbx");
                 File.WriteAllText(Path.Combine(meshTextureRoot, "texture_one.png"), "png");
                 File.WriteAllText(Path.Combine(meshTextureRoot, "texture_two.png"), "png");
                 File.WriteAllText(Path.Combine(meshTextureRoot, "notes.txt"), "ignore");
+                string catalogPath = WriteSingleTextureCatalog(root, "exports/missing.png");
+                AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogPath);
+                snapshot = snapshot with
+                {
+                    LooseMeshes =
+                    [
+                        new AssetLooseMeshItem(
+                            "mesh:loose",
+                            "mesh/loose.msh",
+                            "Loose model",
+                            looseModelPath,
+                            Path.GetFileName(looseModelPath),
+                            ExportExists: true,
+                            SourceFileCount: 1,
+                            ExportFileCount: 1,
+                            PackedReferenceCount: 1,
+                            CreateModelSummary(["texture_one.png", "texture_two.tga"])),
+                    ],
+                    EmbeddedMeshes =
+                    [
+                        new AssetEmbeddedMeshItem(
+                            "mesh:embedded",
+                            "archive.aya",
+                            "body00",
+                            "Embedded model",
+                            embeddedModelPath,
+                            Path.GetFileName(embeddedModelPath),
+                            ExportExists: true,
+                            CreateModelSummary(["texture_one.png"])),
+                    ],
+                };
+                snapshot = AttachTrustedCatalog(root, snapshot);
 
                 AssetModelTextureLinkService service = new();
                 IReadOnlyList<AssetModelSidecarTexture> looseMatches = service.ResolveSidecarTextures(
-                    Path.Combine(looseMeshRoot, "ship_body.msh_binary.fbx"),
+                    snapshot,
+                    looseModelPath,
                     [@"textures\texture_one.png", "texture_two.tga"]);
                 IReadOnlyList<AssetModelSidecarTexture> embeddedMatches = service.ResolveSidecarTextures(
-                    Path.Combine(embeddedMeshRoot, "body00_binary.fbx"),
+                    snapshot,
+                    embeddedModelPath,
                     ["texture_one.png"]);
 
                 Assert.Equal(2, looseMatches.Count);
@@ -2560,11 +4065,16 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         private sealed class TempAssetCatalog : IDisposable
         {
             public string RootPath { get; }
+            public string PackageRootPath { get; }
             public string CatalogFilePath { get; }
 
-            private TempAssetCatalog(string rootPath, string catalogFilePath)
+            private TempAssetCatalog(
+                string rootPath,
+                string packageRootPath,
+                string catalogFilePath)
             {
                 RootPath = rootPath;
+                PackageRootPath = packageRootPath;
                 CatalogFilePath = catalogFilePath;
             }
 
@@ -2590,6 +4100,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 string catalogPath = Path.Combine(catalogDir, "catalog.json");
                 File.WriteAllText(catalogPath, """
                 {
+                  "schema_version": 2,
+                  "path_contract": "bundle-root-relative",
                   "summary": {
                     "texture_catalog_entries": 828,
                     "loose_mesh_catalog_entries": 213,
@@ -2694,7 +4206,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 }
                 """);
 
-                return new TempAssetCatalog(root, catalogPath);
+                string packageRoot = Path.Combine(
+                    Path.GetDirectoryName(root)!,
+                    $"{Path.GetFileName(root)}-material-package");
+                return new TempAssetCatalog(root, packageRoot, catalogPath);
             }
 
             public void Dispose()
@@ -2705,11 +4220,137 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     {
                         Directory.Delete(RootPath, recursive: true);
                     }
+                    if (Directory.Exists(PackageRootPath))
+                    {
+                        Directory.Delete(PackageRootPath, recursive: true);
+                    }
                 }
                 catch
                 {
                     // Best effort test cleanup only.
                 }
+            }
+        }
+
+        private static string FindRepoRoot()
+        {
+            DirectoryInfo? current = new(AppContext.BaseDirectory);
+            while (current is not null)
+            {
+                if (File.Exists(Path.Combine(current.FullName, "tools", "export_asset_catalog.py")))
+                    return current.FullName;
+                current = current.Parent;
+            }
+
+            throw new DirectoryNotFoundException("Could not locate the repository root for the catalog producer contract test.");
+        }
+
+        private static string CreateTemporaryDirectory(string prefix)
+        {
+            string path = Path.Combine(Path.GetTempPath(), prefix, Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(path);
+            return path;
+        }
+
+        private static IReadOnlyList<string> CaptureDirectoryTree(string root)
+        {
+            return Directory
+                .EnumerateFileSystemEntries(root, "*", SearchOption.AllDirectories)
+                .Select(path =>
+                {
+                    string relativePath = Path.GetRelativePath(root, path).Replace('\\', '/');
+                    if (Directory.Exists(path))
+                        return $"D|{relativePath}";
+
+                    byte[] hash = System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(path));
+                    return $"F|{relativePath}|{new FileInfo(path).Length}|{Convert.ToHexString(hash)}";
+                })
+                .OrderBy(static entry => entry, StringComparer.Ordinal)
+                .ToList();
+        }
+
+        private static string WriteSingleTextureCatalog(string root, params string[] exportPaths)
+        {
+            string catalogDirectory = Path.Combine(root, "asset_catalog");
+            Directory.CreateDirectory(catalogDirectory);
+            string catalogPath = Path.Combine(catalogDirectory, "catalog.json");
+            File.WriteAllText(catalogPath, JsonSerializer.Serialize(new
+            {
+                schema_version = 2,
+                path_contract = "bundle-root-relative",
+                summary = new
+                {
+                    texture_catalog_entries = 1,
+                    total_catalog_entries = 1,
+                },
+                textures = new[]
+                {
+                    new
+                    {
+                        catalog_id = "texture:test",
+                        canonical_ref = "textures/test.tga",
+                        export_png_paths = exportPaths,
+                    },
+                },
+                loose_meshes = Array.Empty<object>(),
+                embedded_meshes = Array.Empty<object>(),
+                goodies = Array.Empty<object>(),
+            }));
+            return catalogPath;
+        }
+
+        private static AssetCatalogSnapshot AttachTrustedCatalog(
+            string root,
+            AssetCatalogSnapshot snapshot)
+        {
+            string catalogPath = WriteSingleTextureCatalog(root, "exports/missing.png");
+            AssetCatalogSelection selection = AssetCatalogFileSafety.ResolveSelection(catalogPath)
+                ?? throw new InvalidOperationException("Synthetic test catalog selection was rejected.");
+            using AssetCatalogLoadSession session = AssetCatalogFileSafety.BeginLoad(selection);
+            IReadOnlyList<string> sourcePaths = snapshot.Textures
+                .Select(static item => item.ExportPath)
+                .Concat(snapshot.LooseMeshes.Select(static item => item.ExportPath))
+                .Concat(snapshot.EmbeddedMeshes.Select(static item => item.ExportPath))
+                .Where(static path => !string.IsNullOrWhiteSpace(path))
+                .Distinct(FileMutationSafety.PathComparer)
+                .ToList();
+            foreach (string sourcePath in sourcePaths)
+            {
+                using AssetCatalogSourceRead _ = session.OpenSource(
+                    sourcePath,
+                    "Synthetic catalog snapshot source");
+            }
+            IReadOnlyDictionary<string, IReadOnlyList<AssetModelSidecarTexture>> sidecars =
+                AssetModelTextureLinkService.CaptureSnapshotSidecars(
+                    session,
+                    snapshot.LooseMeshes.Select(static item => item.ExportPath)
+                        .Concat(snapshot.EmbeddedMeshes.Select(static item => item.ExportPath)));
+            AssetCatalogTrustEvidence trust = session.CaptureTrustEvidence();
+            if (string.IsNullOrWhiteSpace(session.CatalogFilePath) ||
+                string.IsNullOrWhiteSpace(session.TrustedExportRoot))
+            {
+                throw new InvalidOperationException("Synthetic test catalog did not establish a trusted export root.");
+            }
+
+            return snapshot with
+            {
+                CatalogFilePath = session.CatalogFilePath,
+                TrustedExportRoot = session.TrustedExportRoot,
+                TrustEvidence = trust,
+                SealedSidecarTexturesByModelPath = sidecars,
+            };
+        }
+
+        private static void DeleteTestDirectory(string path)
+        {
+            try
+            {
+                if (Directory.Exists(path))
+                    Directory.Delete(path, recursive: true);
+            }
+            catch
+            {
+                // Best effort test cleanup only.
             }
         }
 
@@ -3115,5 +4756,12 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             writer.Write(new byte[13]);
         }
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool CreateHardLink(
+            string lpFileName,
+            string lpExistingFileName,
+            IntPtr lpSecurityAttributes);
     }
 }

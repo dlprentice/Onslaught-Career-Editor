@@ -20,6 +20,16 @@ namespace Onslaught___Career_Editor
         {
             WriteIndented = true
         };
+        private readonly Action<string>? _beforeSidecarWriteForTest;
+
+        public AssetMaterialImportPackageWorkOrderService()
+        {
+        }
+
+        internal AssetMaterialImportPackageWorkOrderService(Action<string> beforeSidecarWriteForTest)
+        {
+            _beforeSidecarWriteForTest = beforeSidecarWriteForTest;
+        }
 
         public AssetMaterialImportPackageWorkOrderResult Build(string packageRoot)
         {
@@ -32,22 +42,43 @@ namespace Onslaught___Career_Editor
                 return Failure(inspection, inspection.ManifestStatus);
             }
 
-            string manifestPath = Path.Combine(fullPackageRoot, AssetMaterialImportPackageMaterializationService.ManifestFileName);
             AssetMaterialImportPackageOutputManifest? manifest;
             try
             {
+                using GuardedPackageArtifactRead manifestRead = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    AssetMaterialImportPackageMaterializationService.ManifestFileName,
+                    "Material package manifest");
+                if (!manifestRead.Exists)
+                    return Failure(inspection, "missing-manifest");
                 manifest = JsonSerializer.Deserialize<AssetMaterialImportPackageOutputManifest>(
-                    File.ReadAllText(manifestPath),
+                    manifestRead.ReadAllText(System.Text.Encoding.UTF8),
                     JsonOptions);
             }
             catch (JsonException)
             {
                 return Failure(inspection, "invalid-json");
             }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                return Failure(inspection, "unsafe-manifest-path");
+            }
 
             if (manifest is null)
             {
                 return Failure(inspection, "empty-manifest");
+            }
+
+            if (manifest.Files is null || manifest.Models is null ||
+                manifest.Files.Count > 100_000 || manifest.Models.Count > 100_000 ||
+                manifest.Files.Any(static file => file is null) ||
+                manifest.Models.Any(static model =>
+                    model is null ||
+                    model.TextureReferences is null ||
+                    model.TextureReferences.Count > 100_000 ||
+                    model.TextureReferences.Any(static texture => texture is null)))
+            {
+                return Failure(inspection, "invalid-structure");
             }
 
             Dictionary<string, AssetMaterialImportPackageMaterializedFile> filesByDestination = manifest.Files
@@ -94,30 +125,62 @@ namespace Onslaught___Career_Editor
         public AssetMaterialImportPackageWorkOrderSidecarWriteResult WriteSidecar(string packageRoot)
         {
             string fullPackageRoot = Path.GetFullPath(packageRoot);
-            AssetMaterialImportPackageWorkOrderResult workOrder = Build(fullPackageRoot);
             if (!Directory.Exists(fullPackageRoot))
             {
+                AssetMaterialImportPackageWorkOrderResult missingWorkOrder = Build(fullPackageRoot);
                 return new AssetMaterialImportPackageWorkOrderSidecarWriteResult(
                     SidecarRelativePath: WorkOrderFileName,
                     SidecarWritten: false,
                     SidecarStatus: "missing-package-root",
                     SidecarBytes: 0,
-                    WorkOrder: workOrder);
+                    WorkOrder: missingWorkOrder);
             }
 
-            AssetMaterialImportPackageWorkOrderSidecar sidecar = new(
-                Schema: WorkOrderSchema,
-                GeneratedAtUtc: DateTimeOffset.UtcNow,
-                MaterialPackageWorkOrder: workOrder);
-            string sidecarPath = Path.Combine(fullPackageRoot, WorkOrderFileName);
-            File.WriteAllText(sidecarPath, JsonSerializer.Serialize(sidecar, WriteJsonOptions));
+            try
+            {
+                using var operationRoot = new GuardedPackageOutputRoot(
+                    fullPackageRoot,
+                    trustedSourceRoot: null,
+                    execute: false,
+                    requireExistingRoot: true);
+                AssetMaterialImportPackageWorkOrderResult workOrder = Build(fullPackageRoot);
+                if (!workOrder.Completed)
+                {
+                    return new AssetMaterialImportPackageWorkOrderSidecarWriteResult(
+                        SidecarRelativePath: WorkOrderFileName,
+                        SidecarWritten: false,
+                        SidecarStatus: "source-not-ready-not-written",
+                        SidecarBytes: 0,
+                        WorkOrder: workOrder);
+                }
 
-            return new AssetMaterialImportPackageWorkOrderSidecarWriteResult(
-                SidecarRelativePath: WorkOrderFileName,
-                SidecarWritten: true,
-                SidecarStatus: "written",
-                SidecarBytes: new FileInfo(sidecarPath).Length,
-                WorkOrder: workOrder);
+                AssetMaterialImportPackageWorkOrderSidecar sidecar = new(
+                    Schema: WorkOrderSchema,
+                    GeneratedAtUtc: DateTimeOffset.UtcNow,
+                    MaterialPackageWorkOrder: workOrder);
+                _beforeSidecarWriteForTest?.Invoke(fullPackageRoot);
+                GuardedArtifactWriteResult write = GuardedPackageArtifactWriter.ReplaceText(
+                    fullPackageRoot,
+                    WorkOrderFileName,
+                    JsonSerializer.Serialize(sidecar, WriteJsonOptions),
+                    System.Text.Encoding.UTF8);
+                return new AssetMaterialImportPackageWorkOrderSidecarWriteResult(
+                    SidecarRelativePath: WorkOrderFileName,
+                    SidecarWritten: true,
+                    SidecarStatus: "written",
+                    SidecarBytes: write.Bytes,
+                    WorkOrder: workOrder);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                AssetMaterialImportPackageWorkOrderResult unsafeWorkOrder = Build(fullPackageRoot);
+                return new AssetMaterialImportPackageWorkOrderSidecarWriteResult(
+                    SidecarRelativePath: WorkOrderFileName,
+                    SidecarWritten: false,
+                    SidecarStatus: "unsafe-sidecar-path",
+                    SidecarBytes: 0,
+                    WorkOrder: unsafeWorkOrder);
+            }
         }
 
         public AssetMaterialImportPackageWorkOrderSidecarValidationResult ValidateSidecar(string packageRoot)
@@ -125,8 +188,6 @@ namespace Onslaught___Career_Editor
             string fullPackageRoot = Path.GetFullPath(packageRoot);
             string packageRootName = BuildRootName(fullPackageRoot);
             AssetMaterialImportPackageWorkOrderResult freshWorkOrder = Build(fullPackageRoot);
-            string sidecarPath = Path.Combine(fullPackageRoot, WorkOrderFileName);
-
             if (!Directory.Exists(fullPackageRoot))
             {
                 return BuildSidecarValidationFailure(
@@ -137,17 +198,37 @@ namespace Onslaught___Career_Editor
                     [new AssetMaterialImportPackageWorkOrderSidecarValidationIssue("sidecar", WorkOrderFileName, "missing-package-root")]);
             }
 
-            if (!File.Exists(sidecarPath))
+            string sidecarJson;
+            long sidecarBytes;
+            try
+            {
+                using GuardedPackageArtifactRead sidecarRead = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    WorkOrderFileName,
+                    "Material package work-order sidecar");
+                if (!sidecarRead.Exists)
+                {
+                    return BuildSidecarValidationFailure(
+                        packageRootName,
+                        "missing-sidecar",
+                        sidecarExists: false,
+                        freshWorkOrder,
+                        [new AssetMaterialImportPackageWorkOrderSidecarValidationIssue("sidecar", WorkOrderFileName, "missing-sidecar")]);
+                }
+
+                sidecarJson = sidecarRead.ReadAllText(System.Text.Encoding.UTF8);
+                sidecarBytes = sidecarRead.Length;
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
             {
                 return BuildSidecarValidationFailure(
                     packageRootName,
-                    "missing-sidecar",
+                    "unsafe-sidecar-path",
                     sidecarExists: false,
                     freshWorkOrder,
-                    [new AssetMaterialImportPackageWorkOrderSidecarValidationIssue("sidecar", WorkOrderFileName, "missing-sidecar")]);
+                    [new AssetMaterialImportPackageWorkOrderSidecarValidationIssue("sidecar", WorkOrderFileName, "unsafe-sidecar-path")]);
             }
 
-            string sidecarJson = File.ReadAllText(sidecarPath);
             bool sidecarContainsPackageRoot = ContainsPathToken(sidecarJson, fullPackageRoot);
             AssetMaterialImportPackageWorkOrderSidecar? sidecar;
             try
@@ -162,7 +243,7 @@ namespace Onslaught___Career_Editor
                     sidecarExists: true,
                     freshWorkOrder,
                     [new AssetMaterialImportPackageWorkOrderSidecarValidationIssue("sidecar", WorkOrderFileName, "invalid-json")],
-                    sidecarBytes: new FileInfo(sidecarPath).Length,
+                    sidecarBytes: sidecarBytes,
                     sidecarContainsPackageRoot: sidecarContainsPackageRoot);
             }
 
@@ -174,7 +255,7 @@ namespace Onslaught___Career_Editor
                     sidecarExists: true,
                     freshWorkOrder,
                     [new AssetMaterialImportPackageWorkOrderSidecarValidationIssue("sidecar", WorkOrderFileName, "empty-sidecar")],
-                    sidecarBytes: new FileInfo(sidecarPath).Length,
+                    sidecarBytes: sidecarBytes,
                     sidecarContainsPackageRoot: sidecarContainsPackageRoot);
             }
 
@@ -216,7 +297,7 @@ namespace Onslaught___Career_Editor
                 SidecarRelativePath: WorkOrderFileName,
                 SidecarExists: true,
                 SidecarStatus: status,
-                SidecarBytes: new FileInfo(sidecarPath).Length,
+                SidecarBytes: sidecarBytes,
                 Schema: sidecar.Schema,
                 SchemaValid: schemaValid,
                 SidecarContainsPackageRoot: sidecarContainsPackageRoot,
@@ -269,10 +350,13 @@ namespace Onslaught___Career_Editor
             IReadOnlyDictionary<string, AssetMaterialImportPackageMaterializedFile> filesByDestination)
         {
             string modelDestination = NormalizeRelativePath(model.DestinationRelativePath);
-            string modelPathStatus = ResolvePackagePathStatus(fullPackageRoot, modelDestination, out string fullModelPath);
-            bool modelPackageFileExists = modelPathStatus == "inside-package-root" && File.Exists(fullModelPath);
+            string modelPathStatus = ResolvePackagePathStatus(fullPackageRoot, modelDestination, out _);
+            bool modelPackageFileExists = PackageFileExists(
+                fullPackageRoot,
+                modelDestination,
+                ref modelPathStatus);
             string modelFileStatus = LookupFileStatus(filesByDestination, modelDestination);
-            IReadOnlyList<AssetMaterialImportPackageWorkOrderTexture> textures = model.TextureReferences
+            IReadOnlyList<AssetMaterialImportPackageWorkOrderTexture> textures = (model.TextureReferences ?? [])
                 .OrderBy(static texture => NormalizeRelativePath(texture.DestinationRelativePath), StringComparer.OrdinalIgnoreCase)
                 .ThenBy(static texture => texture.BindingFileName, StringComparer.OrdinalIgnoreCase)
                 .Select(texture => BuildTexture(fullPackageRoot, texture, filesByDestination))
@@ -307,8 +391,11 @@ namespace Onslaught___Career_Editor
             IReadOnlyDictionary<string, AssetMaterialImportPackageMaterializedFile> filesByDestination)
         {
             string destination = NormalizeRelativePath(texture.DestinationRelativePath);
-            string pathStatus = ResolvePackagePathStatus(fullPackageRoot, destination, out string fullTexturePath);
-            bool packageFileExists = texture.SourceAvailable && pathStatus == "inside-package-root" && File.Exists(fullTexturePath);
+            string pathStatus = ResolvePackagePathStatus(fullPackageRoot, destination, out _);
+            bool packageFileExists = texture.SourceAvailable && PackageFileExists(
+                fullPackageRoot,
+                destination,
+                ref pathStatus);
             string fileStatus = string.IsNullOrWhiteSpace(destination)
                 ? "not-in-manifest"
                 : LookupFileStatus(filesByDestination, destination);
@@ -326,6 +413,29 @@ namespace Onslaught___Career_Editor
                 PackageFileExists: packageFileExists,
                 TextureReadiness: readiness,
                 ReadyForImporter: readiness == "ready-for-importer");
+        }
+
+        private static bool PackageFileExists(
+            string fullPackageRoot,
+            string relativePath,
+            ref string pathStatus)
+        {
+            if (pathStatus != "inside-package-root")
+                return false;
+
+            try
+            {
+                using GuardedPackageArtifactRead read = GuardedPackageArtifactReader.Open(
+                    fullPackageRoot,
+                    relativePath,
+                    "Material package payload");
+                return read.Exists;
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                pathStatus = "unsafe-package-path";
+                return false;
+            }
         }
 
         private static string BuildImportReadiness(

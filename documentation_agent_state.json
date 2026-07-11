@@ -23,7 +23,9 @@
     "rebuild": "No complete rebuild runtime, renderer, gameplay loop, or parity proof exists. Current maintainers have read GPL source and detailed RE material, so near-term implementation must be labeled RE-informed unless a separately staffed sealed-spec process supports a clean-room claim.",
     "authorityMap": "roadmap/repo-structure-and-archive-map.md now classifies current front doors, canonical sources, protected projections, history, and local payloads with explicit conflict rules.",
     "contributorPath": "npm test is the verified common active-product baseline; normal setup no longer requires submodules or archived Electron npm installation.",
-    "saveOptionsSafety": "Save Lab calculates an app-owned patched-output default without creating it. Guarded writers resolve DOS drive aliases to physical local paths, hold physical ancestor identities, and reject in-place, aliased, reparse-routed, reserved-device, device/network, wrong-type, and installed-game-tree destinations. Safe-copy control edits require a minted capability for the canonical app-owned GameProfiles root."
+    "saveOptionsSafety": "Save Lab calculates an app-owned patched-output default without creating it. Guarded writers resolve DOS drive aliases to physical local paths, hold physical ancestor identities, and reject in-place, aliased, reparse-routed, reserved-device, device/network, wrong-type, and installed-game-tree destinations. Safe-copy control edits require a minted capability for the canonical app-owned GameProfiles root.",
+    "assetOutputSafety": "Asset catalogs use one declared schema-2 bundle root and relative paths. Catalog/package sources, sidecars, destinations, downstream package outputs, Python generators, and the C# AYA export harness use held identities and guarded writes. New files remain delete-pending with link count zero until final bytes are complete, then publication verifies identity, path, length, hash, and link count.",
+    "assetOutputResidual": "A same-user hostile process may copy finalized bytes or create a byte-identical hardlink after delete-pending quarantine clears, as it can after publication. No nonfinal bytes or writes to pre-existing source/game identities are accepted; same-user confidentiality after finalization is not claimed."
   },
   "verifiedAuditFacts": {
     "trackedMarkdownFiles": 3760,
@@ -38,8 +40,7 @@
     "CURRENT_CAPABILITIES.md and reverse-engineering/RE-INDEX.md bury orientation beneath evidence streams.",
     "release/readiness/ and tools/ lack useful generated front-door indexes for their scale.",
     "The reader-facing Lore pack needs an explicit editorial allowlist, third-party-text inventory, rights/provenance review, and generated canonical projections before another release.",
-    "The grouped WinUI action/reaction map omits four Save Lab handler families and claims twelve matrix fields while the TSV currently has nine.",
-    "External Cursor/Grok review is degraded by sandbox/authentication constraints; focused Codex review is being used for the current safe slice."
+    "The grouped WinUI action/reaction map omits four Save Lab handler families and claims twelve matrix fields while the TSV currently has nine."
   ],
   "openQuestions": [],
   "nextSteps": [

@@ -16,12 +16,16 @@ Example:
 from __future__ import annotations
 
 import argparse
+import atexit
 import json
 import os
+import shutil
 import subprocess
 import sys
 from datetime import date
 from pathlib import Path
+
+from safe_generated_output import SecuredOutputRoot
 
 
 def default_repo_root() -> Path:
@@ -39,8 +43,8 @@ def read_json(path: Path) -> object:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def write_json(path: Path, payload: object) -> None:
-    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+def write_json(output: SecuredOutputRoot, path: Path, payload: object) -> None:
+    output.atomic_write_json(path, payload)
 
 
 def render_cmd(cmd: list[str]) -> str:
@@ -52,10 +56,44 @@ def require_existing(path: Path, description: str) -> None:
         raise SystemExit(f"{description} does not exist: {path}")
 
 
-def run_step(cmd: list[str], *, cwd: Path, log_path: Path) -> None:
-    log_path.parent.mkdir(parents=True, exist_ok=True)
+def resolve_executable(command: str, *, label: str) -> Path:
+    candidate = Path(command)
+    if candidate.is_absolute() or candidate.parent != Path("."):
+        resolved = candidate.resolve(strict=True)
+    else:
+        located = shutil.which(command)
+        if located is None:
+            raise SystemExit(f"{label} executable was not found on PATH: {command}")
+        resolved = Path(located).resolve(strict=True)
+    if not resolved.is_file():
+        raise SystemExit(f"{label} executable is not a file: {resolved}")
+    return resolved
+
+
+def require_trusted_executables(args: argparse.Namespace) -> None:
+    requested_python = resolve_executable(args.python_exe, label="Python")
+    running_python = Path(sys.executable).resolve(strict=True)
+    if not os.path.samefile(requested_python, running_python):
+        raise SystemExit(
+            "--python-exe must resolve to the interpreter running export_game_assets.py"
+        )
+
+    requested_dotnet = resolve_executable(args.dotnet_exe, label="dotnet")
+    trusted_dotnet_path = shutil.which("dotnet")
+    if trusted_dotnet_path is None:
+        raise SystemExit("dotnet was not found on PATH")
+    trusted_dotnet = Path(trusted_dotnet_path).resolve(strict=True)
+    if not os.path.samefile(requested_dotnet, trusted_dotnet):
+        raise SystemExit("--dotnet-exe must resolve to the dotnet executable on PATH")
+
+    args.python_exe = str(running_python)
+    args.dotnet_exe = str(trusted_dotnet)
+
+
+def run_step(cmd: list[str], *, cwd: Path, log_path: Path, output: SecuredOutputRoot) -> None:
+    output.refresh_tree()
     print(f"$ {render_cmd(cmd)}")
-    with log_path.open("w", encoding="utf-8", newline="\n") as log:
+    with output.atomic_text_writer(log_path) as log:
         process = subprocess.run(
             [str(part) for part in cmd],
             cwd=str(cwd),
@@ -64,6 +102,7 @@ def run_step(cmd: list[str], *, cwd: Path, log_path: Path) -> None:
             text=True,
             check=False,
         )
+    output.refresh_tree()
     if process.returncode != 0:
         tail = log_path.read_text(encoding="utf-8", errors="replace").splitlines()[-40:]
         print("\n".join(tail), file=sys.stderr)
@@ -121,7 +160,7 @@ def lane_result_from_manifest(asset_export_root: Path, lane: str) -> dict[str, o
     }
 
 
-def write_asset_export_summary(asset_export_root: Path) -> dict[str, object]:
+def write_asset_export_summary(output: SecuredOutputRoot, asset_export_root: Path) -> dict[str, object]:
     summary = {
         "command": "export-all",
         "out_dir": str(asset_export_root),
@@ -132,7 +171,7 @@ def write_asset_export_summary(asset_export_root: Path) -> dict[str, object]:
             lane_result_from_manifest(asset_export_root, "embedded_meshes"),
         ],
     }
-    write_json(asset_export_root / "summary.json", summary)
+    write_json(output, asset_export_root / "summary.json", summary)
     return summary
 
 
@@ -146,7 +185,7 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--game-root", type=Path, default=game_root)
     ap.add_argument("--out-root", type=Path, default=default_out)
     ap.add_argument("--python-exe", default=sys.executable)
-    ap.add_argument("--dotnet-exe", default=os.environ.get("DOTNET_EXE", "dotnet"))
+    ap.add_argument("--dotnet-exe", default="dotnet")
     ap.add_argument(
         "--extractor-runtime-dir",
         type=Path,
@@ -169,10 +208,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    require_trusted_executables(args)
     repo_root = args.repo_root.resolve()
     game_root = args.game_root.resolve()
     out_root = args.out_root.resolve()
-    out_root.mkdir(parents=True, exist_ok=True)
 
     data_root = game_root / "data"
     resources_root = pick_existing(data_root / "resources")
@@ -194,6 +233,20 @@ def main() -> int:
     require_existing(args.extractor_runtime_dir / "AYAResourceExtractor.dll", "AYAResourceExtractor runtime dll")
     require_existing(args.extractor_runtime_dir / "DDSTextureUncompress.dll", "DDSTextureUncompress runtime dll")
 
+    output = SecuredOutputRoot(
+        out_root,
+        protected_sources=(
+            game_root,
+            resources_root,
+            language_dir,
+            video_root,
+            stf_path,
+            args.extractor_root.resolve(strict=True),
+            args.extractor_runtime_dir.resolve(strict=True),
+        ),
+    )
+    atexit.register(output.close)
+
     logs_dir = out_root / "logs"
     embedded_root = out_root / "aya_embedded_meshes"
     asset_manifest_path = out_root / "aya_asset_manifest.json"
@@ -201,6 +254,20 @@ def main() -> int:
     language_out = out_root / "language_export"
     video_out = out_root / "video_manifest"
     catalog_out = out_root / "asset_catalog"
+
+    for directory in (
+        logs_dir,
+        embedded_root,
+        asset_export_root,
+        asset_export_root / "loose_textures",
+        asset_export_root / "loose_meshes",
+        asset_export_root / "embedded_meshes",
+        language_out,
+        video_out,
+        catalog_out,
+    ):
+        output.ensure_directory(directory)
+    output.refresh_tree()
 
     inventory_cmd = [
         args.python_exe,
@@ -253,6 +320,8 @@ def main() -> int:
         str(repo_root / "tools" / "export_asset_catalog.py"),
         "--repo-root",
         str(repo_root),
+        "--bundle-root",
+        str(out_root),
         "--packed-manifest",
         str(asset_manifest_path),
         "--texture-manifest",
@@ -269,15 +338,15 @@ def main() -> int:
         str(catalog_out),
     ]
 
-    run_step(inventory_cmd, cwd=repo_root, log_path=logs_dir / "01_aya_inventory.log")
+    run_step(inventory_cmd, cwd=repo_root, log_path=logs_dir / "01_aya_inventory.log", output=output)
     for log_name, harness_cmd in harness_steps:
-        run_step(harness_cmd, cwd=repo_root, log_path=logs_dir / log_name)
-    run_step(language_cmd, cwd=repo_root, log_path=logs_dir / "03_language_export.log")
-    run_step(video_cmd, cwd=repo_root, log_path=logs_dir / "04_video_manifest.log")
-    run_step(catalog_cmd, cwd=repo_root, log_path=logs_dir / "05_asset_catalog.log")
+        run_step(harness_cmd, cwd=repo_root, log_path=logs_dir / log_name, output=output)
+    run_step(language_cmd, cwd=repo_root, log_path=logs_dir / "03_language_export.log", output=output)
+    run_step(video_cmd, cwd=repo_root, log_path=logs_dir / "04_video_manifest.log", output=output)
+    run_step(catalog_cmd, cwd=repo_root, log_path=logs_dir / "05_asset_catalog.log", output=output)
 
     asset_manifest = read_json(asset_manifest_path)
-    asset_export_summary = write_asset_export_summary(asset_export_root)
+    asset_export_summary = write_asset_export_summary(output, asset_export_root)
     language_summary = read_json(language_out / "summary.json")
     video_summary = read_json(video_out / "summary.json")
     catalog_summary = read_json(catalog_out / "summary.json")
@@ -309,9 +378,10 @@ def main() -> int:
         },
     }
     summary_path = out_root / "extraction_summary.json"
-    write_json(summary_path, summary)
+    write_json(output, summary_path, summary)
     print(json.dumps(summary, indent=2))
     print(f"[OK] wrote backend summary: {summary_path}")
+    output.close()
     return 0
 
 

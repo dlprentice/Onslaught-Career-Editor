@@ -24,6 +24,7 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import json
 import struct
@@ -33,6 +34,8 @@ from collections import Counter
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Iterable
+
+from safe_generated_output import SecuredOutputRoot
 
 
 COMMON_TAG_SCAN = (
@@ -641,6 +644,7 @@ def dump_selected_chunks(
     raw: bytes,
     chunks: list[ChunkEntry],
     *,
+    output: SecuredOutputRoot,
     dump_dir: Path,
     dump_tags: set[str],
     dump_indices: set[int],
@@ -660,7 +664,7 @@ def dump_selected_chunks(
 
     dumped: list[dict[str, object]] = []
     archive_dir = dump_dir / _safe_name(archive_path.stem)
-    archive_dir.mkdir(parents=True, exist_ok=True)
+    output.ensure_directory(archive_dir)
 
     for chunk in selected:
         payload = _payload_bytes(raw, chunk)
@@ -674,7 +678,7 @@ def dump_selected_chunks(
         file_stem = f"{chunk.index:03d}_{_safe_name(chunk.tag)}_{suffix}"
         blob_path = archive_dir / f"{file_stem}.bin"
         meta_path = archive_dir / f"{file_stem}.json"
-        blob_path.write_bytes(blob)
+        output.atomic_write_bytes(blob_path, blob)
 
         record = _chunk_record(
             raw,
@@ -698,7 +702,7 @@ def dump_selected_chunks(
             carve_blob = payload[carve_off:]
             carve_stem = f"{file_stem}_carve_{_safe_name(carve_tag)}"
             carve_path = archive_dir / f"{carve_stem}.bin"
-            carve_path.write_bytes(carve_blob)
+            output.atomic_write_bytes(carve_path, carve_blob)
             carved_streams.append(
                 {
                     "tag": carve_tag,
@@ -721,13 +725,13 @@ def dump_selected_chunks(
                 for body, body_record in embedded_bodies:
                     body_stem = f"{file_stem}_embedded_body{body_record['body_index']:02d}_CMSH"
                     body_path = archive_dir / f"{body_stem}.bin"
-                    body_path.write_bytes(body)
+                    output.atomic_write_bytes(body_path, body)
                     body_record["dump_path"] = str(body_path)
                     body_records.append(body_record)
 
                 record["embedded_mesh_bodies"] = body_records
 
-        meta_path.write_text(json.dumps(record, indent=2), encoding="utf-8")
+        output.atomic_write_json(meta_path, record)
         dumped.append(record)
 
     return dumped
@@ -940,6 +944,28 @@ def main(argv: list[str]) -> int:
     if args.limit > 0:
         paths = paths[: args.limit]
 
+    paths = [path.resolve(strict=True) for path in paths]
+    protected_sources = tuple(paths)
+    output_stack = contextlib.ExitStack()
+    dump_output = None
+    json_output = None
+    asset_manifest_output = None
+    if args.dump_dir is not None:
+        args.dump_dir = args.dump_dir.resolve()
+        dump_output = output_stack.enter_context(
+            SecuredOutputRoot(args.dump_dir, protected_sources=protected_sources)
+        )
+    if args.json_out is not None:
+        args.json_out = args.json_out.resolve()
+        json_output = output_stack.enter_context(
+            SecuredOutputRoot(args.json_out.parent, protected_sources=protected_sources)
+        )
+    if args.asset_manifest_out is not None:
+        args.asset_manifest_out = args.asset_manifest_out.resolve()
+        asset_manifest_output = output_stack.enter_context(
+            SecuredOutputRoot(args.asset_manifest_out.parent, protected_sources=protected_sources)
+        )
+
     manifest: list[dict[str, object]] = []
     archive_cache: list[tuple[Path, bytes, list[ChunkEntry]]] = []
     had_error = False
@@ -964,10 +990,12 @@ def main(argv: list[str]) -> int:
                 ]
 
             if args.dump_dir is not None:
+                assert dump_output is not None
                 dumped = dump_selected_chunks(
                     path,
                     raw,
                     chunks,
+                    output=dump_output,
                     dump_dir=args.dump_dir,
                     dump_tags=dump_tags,
                     dump_indices=dump_indices,
@@ -992,14 +1020,17 @@ def main(argv: list[str]) -> int:
             print("")
 
     if args.json_out is not None:
-        args.json_out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        assert json_output is not None
+        json_output.atomic_write_json(args.json_out, manifest)
         print(f"[OK] wrote JSON manifest: {args.json_out}")
 
     if args.asset_manifest_out is not None:
+        assert asset_manifest_output is not None
         asset_manifest = build_asset_manifest(archive_cache, resolver=resolver)
-        args.asset_manifest_out.write_text(json.dumps(asset_manifest, indent=2), encoding="utf-8")
+        asset_manifest_output.atomic_write_json(args.asset_manifest_out, asset_manifest)
         print(f"[OK] wrote asset manifest: {args.asset_manifest_out}")
 
+    output_stack.close()
     return 1 if had_error else 0
 
 

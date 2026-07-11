@@ -17,6 +17,8 @@ import tempfile
 from collections import Counter
 from pathlib import Path
 
+from safe_generated_output import SecuredOutputRoot, UnsafeGeneratedOutputError
+
 
 BRIEFING_RE = re.compile(r"^PC_(\d{3})_exact\.vid$", re.IGNORECASE)
 CUTSCENE_RE = re.compile(r"^(\d{2})\.vid$", re.IGNORECASE)
@@ -39,8 +41,11 @@ def classify_family(relative_path: str) -> tuple[str, str | None]:
     return "named_root", None
 
 
-def build_manifest(video_root: Path) -> dict[str, object]:
-    files = sorted(video_root.rglob("*.vid"))
+def build_manifest(
+    video_root: Path,
+    files: list[Path] | None = None,
+) -> dict[str, object]:
+    files = sorted(video_root.rglob("*.vid")) if files is None else files
     records: list[dict[str, object]] = []
     family_counts: Counter[str] = Counter()
     briefing_episode_counts: Counter[str] = Counter()
@@ -93,7 +98,7 @@ def build_manifest(video_root: Path) -> dict[str, object]:
     }
 
 
-def write_tsv(path: Path, manifest: dict[str, object]) -> None:
+def write_tsv(output: SecuredOutputRoot, path: Path, manifest: dict[str, object]) -> None:
     rows = [
         "relative_path\tfamily\tsequence_id\tsize\tsha256\tmagic",
     ]
@@ -110,7 +115,26 @@ def write_tsv(path: Path, manifest: dict[str, object]) -> None:
                 ]
             )
         )
-    path.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    output.atomic_write_text(path, "\n".join(rows) + "\n")
+
+
+def write_manifest_outputs(video_root: Path, out_dir: Path) -> tuple[Path, Path, Path]:
+    video_root = video_root.resolve(strict=True)
+    out_dir = out_dir.resolve()
+    video_files = sorted(path.resolve(strict=True) for path in video_root.rglob("*.vid"))
+    json_path = out_dir / "manifest.json"
+    tsv_path = out_dir / "manifest.tsv"
+    summary_path = out_dir / "summary.json"
+
+    with SecuredOutputRoot(
+        out_dir,
+        protected_sources=(video_root, *video_files),
+    ) as output:
+        manifest = build_manifest(video_root, video_files)
+        output.atomic_write_json(json_path, manifest)
+        write_tsv(output, tsv_path, manifest)
+        output.atomic_write_json(summary_path, manifest["summary"])
+    return json_path, tsv_path, summary_path
 
 
 def parse_args() -> argparse.Namespace:
@@ -147,6 +171,21 @@ def run_self_test() -> int:
         assert summary["cutscene_range_max"] == 1
         assert 32 in summary["missing_cutscene_numbers"]
 
+        out_dir = Path(tmp) / "out"
+        out_dir.mkdir()
+        external = Path(tmp) / "outside.json"
+        external.write_text("outside-canary", encoding="utf-8")
+        try:
+            (out_dir / "manifest.json").hardlink_to(external)
+        except OSError:
+            pass
+        else:
+            try:
+                write_manifest_outputs(root, out_dir)
+                raise AssertionError("hardlinked child destination should be rejected")
+            except UnsafeGeneratedOutputError:
+                assert external.read_text(encoding="utf-8") == "outside-canary"
+
     print("export_video_manifest self-test: PASS")
     return 0
 
@@ -160,16 +199,10 @@ def main() -> int:
         print(f"ERROR: video root does not exist or is not a directory: {args.video_root}")
         return 1
 
-    args.out_dir.mkdir(parents=True, exist_ok=True)
-
-    manifest = build_manifest(args.video_root)
-    json_path = args.out_dir / "manifest.json"
-    tsv_path = args.out_dir / "manifest.tsv"
-    summary_path = args.out_dir / "summary.json"
-
-    json_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    write_tsv(tsv_path, manifest)
-    summary_path.write_text(json.dumps(manifest["summary"], indent=2), encoding="utf-8")
+    json_path, tsv_path, summary_path = write_manifest_outputs(
+        args.video_root,
+        args.out_dir,
+    )
 
     print(json.dumps({"json": str(json_path), "tsv": str(tsv_path), "summary": str(summary_path)}, indent=2))
     return 0
