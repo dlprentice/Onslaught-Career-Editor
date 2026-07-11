@@ -90,6 +90,8 @@ namespace Onslaught___Career_Editor
             string profileRoot = ValidateProfileRoot(request.ProfileRoot, request.AppOwnedProfilesRoot);
             string manifestPath = ValidateControlOptionsManifestTarget(profileRoot);
             _ = GameProfilePreflightService.BuildLaunchPlan(profileRoot, Array.Empty<string>());
+            using FileMutationSafety.AppOwnedProfileMutationAuthorization outputAuthorization =
+                FileMutationSafety.AuthorizeAppOwnedProfileRoot(profileRoot, request.AppOwnedProfilesRoot);
 
             string optionsPath = Path.Combine(profileRoot, "defaultoptions.bea");
             if (!File.Exists(optionsPath))
@@ -115,7 +117,8 @@ namespace Onslaught___Career_Editor
                     InvertWalkerP2Override = request.InvertWalkerP2Override,
                     InvertFlightP1Override = request.InvertFlightP1Override,
                     InvertFlightP2Override = request.InvertFlightP2Override,
-                    KeybindRows = request.KeybindRows ?? Array.Empty<ConfigurationKeybindRow>()
+                    KeybindRows = request.KeybindRows ?? Array.Empty<ConfigurationKeybindRow>(),
+                    OutputAuthorization = outputAuthorization
                 });
                 if (!result.Success)
                     throw new InvalidOperationException(result.Message);

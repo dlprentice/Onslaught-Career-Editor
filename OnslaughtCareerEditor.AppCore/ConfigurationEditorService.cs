@@ -126,6 +126,7 @@ namespace Onslaught___Career_Editor
         public bool CopyOptionsEntries { get; init; }
         public bool CopyOptionsTail { get; init; }
         public IReadOnlyList<ConfigurationKeybindRow> KeybindRows { get; init; } = Array.Empty<ConfigurationKeybindRow>();
+        internal FileMutationSafety.AppOwnedProfileMutationAuthorization? OutputAuthorization { get; init; }
     }
 
     public static class ConfigurationEditorService
@@ -302,9 +303,14 @@ namespace Onslaught___Career_Editor
                 return PatchResult.Fail("Game Options requires .bea/defaultoptions.bea input and output paths.");
             }
 
-            if (AreSamePaths(inputPath, outputPath))
+            try
             {
-                return PatchResult.Fail("Output file must be different from input file. In-place options patching is blocked.");
+                if (FileMutationSafety.AreLexicallySamePath(inputPath, outputPath))
+                    return PatchResult.Fail("Output file must be different from input file. In-place options patching is blocked.");
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException)
+            {
+                return PatchResult.Fail(ex.Message);
             }
 
             if (!File.Exists(inputPath))
@@ -349,7 +355,8 @@ namespace Onslaught___Career_Editor
                 CopyOptionsFromPath = NormalizeOptionalPath(request.CopyOptionsFromPath),
                 CopyOptionsEntries = request.CopyOptionsEntries,
                 CopyOptionsTail = request.CopyOptionsTail,
-                OptionsEntryOverrides = keybindOverrides
+                OptionsEntryOverrides = keybindOverrides,
+                OutputAuthorization = request.OutputAuthorization
             };
 
             return patcher.PatchFile(inputPath, outputPath);
@@ -768,26 +775,6 @@ namespace Onslaught___Career_Editor
         private static string? NormalizeOptionalPath(string? value)
         {
             return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-        }
-
-        private static bool AreSamePaths(string? left, string? right)
-        {
-            if (string.IsNullOrWhiteSpace(left) || string.IsNullOrWhiteSpace(right))
-            {
-                return false;
-            }
-
-            try
-            {
-                return string.Equals(
-                    Path.GetFullPath(left.Trim()),
-                    Path.GetFullPath(right.Trim()),
-                    StringComparison.OrdinalIgnoreCase);
-            }
-            catch
-            {
-                return false;
-            }
         }
 
     }

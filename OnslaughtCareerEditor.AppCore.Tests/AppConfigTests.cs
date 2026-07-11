@@ -5,6 +5,7 @@ using Xunit;
 
 namespace OnslaughtCareerEditor.AppCore.Tests
 {
+    [Collection(AppConfigEnvironmentCollection.Name)]
     public sealed class AppConfigTests
     {
         private const string ConfigRootEnvironmentVariable = "ONSLAUGHT_APP_CONFIG_ROOT";
@@ -42,6 +43,128 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 {
                     Directory.Delete(root, recursive: true);
                 }
+            }
+        }
+
+        [Fact]
+        public void BuildDefaultSaveOutputPath_UsesAppOwnedConfigRootWithoutCreatingIt()
+        {
+            string? previous = Environment.GetEnvironmentVariable(ConfigRootEnvironmentVariable);
+            string root = Path.Combine(Path.GetTempPath(), $"onslaught-patched-output-{Guid.NewGuid():N}");
+
+            try
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, root);
+
+                string output = SaveEditorService.BuildDefaultSaveOutputPath(@"C:\game\savegames\career.bes");
+
+                Assert.Equal(
+                    Path.Combine(Path.GetFullPath(root), "OnslaughtCareerEditor", "patched-output", "career_patched.bes"),
+                    output);
+                Assert.False(Directory.Exists(root));
+                Assert.False(Directory.Exists(Path.Combine(root, "OnslaughtCareerEditor")));
+                Assert.False(Directory.Exists(Path.GetDirectoryName(output)));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, previous);
+                if (Directory.Exists(root))
+                {
+                    Directory.Delete(root, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
+        public void PatchFile_CreatesValidatedAppOwnedDefaultOutputDirectory()
+        {
+            string? previous = Environment.GetEnvironmentVariable(ConfigRootEnvironmentVariable);
+            string root = Path.Combine(Path.GetTempPath(), $"onslaught-patched-output-write-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(root);
+            string input = Path.Combine(root, "input.bes");
+            WriteValidSaveLikeFile(input);
+
+            try
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, root);
+                string output = SaveEditorService.BuildDefaultSaveOutputPath(input);
+                Assert.False(Directory.Exists(Path.GetDirectoryName(output)));
+
+                PatchResult result = CreateNoOpPatcher().PatchFile(input, output);
+
+                Assert.True(result.Success, result.Message);
+                Assert.True(File.Exists(output));
+                Assert.Equal(File.ReadAllBytes(input), File.ReadAllBytes(output));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, previous);
+                if (Directory.Exists(root))
+                    Directory.Delete(root, recursive: true);
+            }
+        }
+
+        [Fact]
+        public void PatchFile_RejectsDefaultOutputRootInsideGameTreeBeforeDirectoryCreation()
+        {
+            string? previous = Environment.GetEnvironmentVariable(ConfigRootEnvironmentVariable);
+            string root = Path.Combine(Path.GetTempPath(), $"onslaught-patched-output-game-{Guid.NewGuid():N}");
+            string gameRoot = Path.Combine(root, "fake-game");
+            Directory.CreateDirectory(Path.Combine(gameRoot, "data"));
+            File.WriteAllBytes(Path.Combine(gameRoot, "BEA.exe"), [0x4D, 0x5A]);
+            string input = Path.Combine(root, "input.bes");
+            WriteValidSaveLikeFile(input);
+
+            try
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, gameRoot);
+                string output = SaveEditorService.BuildDefaultSaveOutputPath(input);
+
+                PatchResult result = CreateNoOpPatcher().PatchFile(input, output);
+
+                Assert.False(result.Success);
+                Assert.Contains("game folder", result.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.False(Directory.Exists(Path.Combine(gameRoot, "OnslaughtCareerEditor")));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, previous);
+                if (Directory.Exists(root))
+                    Directory.Delete(root, recursive: true);
+            }
+        }
+
+        [Fact]
+        public void PatchFile_RejectsReparseConfigRootBeforeDirectoryCreation()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            string? previous = Environment.GetEnvironmentVariable(ConfigRootEnvironmentVariable);
+            string root = Path.Combine(Path.GetTempPath(), $"onslaught-patched-output-link-{Guid.NewGuid():N}");
+            string realRoot = Path.Combine(root, "real-root");
+            string linkedRoot = Path.Combine(root, "linked-root");
+            Directory.CreateDirectory(realRoot);
+            Directory.CreateSymbolicLink(linkedRoot, realRoot);
+            string input = Path.Combine(root, "input.bes");
+            WriteValidSaveLikeFile(input);
+
+            try
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, linkedRoot);
+                string output = SaveEditorService.BuildDefaultSaveOutputPath(input);
+
+                PatchResult result = CreateNoOpPatcher().PatchFile(input, output);
+
+                Assert.False(result.Success);
+                Assert.Contains("reparse", result.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.False(Directory.Exists(Path.Combine(realRoot, "OnslaughtCareerEditor")));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, previous);
+                if (Directory.Exists(root))
+                    Directory.Delete(root, recursive: true);
             }
         }
 
@@ -286,5 +409,13 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             data[1] = 0x4B;
             File.WriteAllBytes(path, data);
         }
+
+        private static BesFilePatcher CreateNoOpPatcher() => new()
+        {
+            PatchNodes = false,
+            PatchLinks = false,
+            PatchGoodies = false,
+            PatchKills = false,
+        };
     }
 }

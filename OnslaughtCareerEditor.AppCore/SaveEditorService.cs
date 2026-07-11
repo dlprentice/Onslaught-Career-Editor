@@ -42,12 +42,27 @@ namespace Onslaught___Career_Editor
                 || fileNameOnly.StartsWith("defaultoptions.bea", StringComparison.OrdinalIgnoreCase);
         }
 
-        public static string BuildDefaultSaveOutputPath(string inputPath)
+        public static bool IsCareerSaveFilePath(string? filePath)
         {
-            string? directory = Path.GetDirectoryName(inputPath);
+            return !string.IsNullOrWhiteSpace(filePath) &&
+                string.Equals(Path.GetExtension(filePath.Trim()), ".bes", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static string BuildDefaultSaveOutputPath(string inputPath, string? outputDirectory = null)
+        {
             string fileName = Path.GetFileNameWithoutExtension(inputPath);
             string extension = Path.GetExtension(inputPath);
-            directory ??= string.Empty;
+            if (string.IsNullOrWhiteSpace(fileName))
+                fileName = "patched-output";
+            if (!string.Equals(extension, ".bes", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(extension, ".bea", StringComparison.OrdinalIgnoreCase))
+            {
+                extension = ".bes";
+            }
+
+            string directory = string.IsNullOrWhiteSpace(outputDirectory)
+                ? AppConfig.GetPatchedOutputDir()
+                : Path.GetFullPath(outputDirectory);
             return Path.Combine(directory, $"{fileName}_patched{extension}");
         }
 
@@ -106,16 +121,19 @@ namespace Onslaught___Career_Editor
                 return PatchResult.Fail("Select both input and output files before patching.");
             }
 
-            if (IsOptionsLikeFilePath(inputPath) || IsOptionsLikeFilePath(outputPath))
+            if (!IsCareerSaveFilePath(inputPath) || !IsCareerSaveFilePath(outputPath))
             {
-                return PatchResult.Fail("Save Editor common mode expects .bes career save paths only.");
+                return PatchResult.Fail("Save Editor requires .bes career save input and output paths.");
             }
 
-            if (TryGetCanonicalPath(inputPath, out string canonicalInput) &&
-                TryGetCanonicalPath(outputPath, out string canonicalOutput) &&
-                string.Equals(canonicalInput, canonicalOutput, StringComparison.OrdinalIgnoreCase))
+            try
             {
-                return PatchResult.Fail("Output file must be different from input file. In-place save patching is blocked.");
+                if (FileMutationSafety.AreLexicallySamePath(inputPath, outputPath))
+                    return PatchResult.Fail("Output file must be different from input file. In-place save patching is blocked.");
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException)
+            {
+                return PatchResult.Fail(ex.Message);
             }
 
             if (!File.Exists(inputPath))
@@ -159,23 +177,5 @@ namespace Onslaught___Career_Editor
             return value;
         }
 
-        private static bool TryGetCanonicalPath(string? path, out string canonicalPath)
-        {
-            canonicalPath = string.Empty;
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                return false;
-            }
-
-            try
-            {
-                canonicalPath = Path.GetFullPath(path.Trim());
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
     }
 }

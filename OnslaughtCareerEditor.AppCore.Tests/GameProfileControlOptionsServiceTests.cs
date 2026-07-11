@@ -5,6 +5,7 @@ using Xunit;
 
 namespace OnslaughtCareerEditor.AppCore.Tests
 {
+    [Collection(AppConfigEnvironmentCollection.Name)]
     public sealed class GameProfileControlOptionsServiceTests
     {
         [Fact]
@@ -25,8 +26,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         public void ApplyToSafeCopy_WritesCopiedDefaultOptionsOnlyAndCreatesBackup()
         {
             string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-control-options-{Guid.NewGuid():N}");
+            using AppConfigRootScope appConfigRoot = new(tempRoot);
             string sourceRoot = Path.Combine(tempRoot, "source-game");
-            string outputRoot = Path.Combine(tempRoot, "profiles");
+            string outputRoot = AppConfig.GetGameProfilesDir();
             PrepareSourceGameRoot(sourceRoot);
             string sourceOptionsPath = Path.Combine(sourceRoot, "defaultoptions.bea");
             byte[] sourceOptionsBefore = File.ReadAllBytes(sourceOptionsPath);
@@ -85,8 +87,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         public void ApplyToSafeCopy_ManifestMakesLaunchPlanRejectOptionsDrift()
         {
             string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-control-options-drift-{Guid.NewGuid():N}");
+            using AppConfigRootScope appConfigRoot = new(tempRoot);
             string sourceRoot = Path.Combine(tempRoot, "source-game");
-            string outputRoot = Path.Combine(tempRoot, "profiles");
+            string outputRoot = AppConfig.GetGameProfilesDir();
             PrepareSourceGameRoot(sourceRoot);
 
             try
@@ -129,8 +132,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         public void ApplyToSafeCopy_RejectsUnsupportedMouseSensitivityPreset()
         {
             string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-control-options-mouse-{Guid.NewGuid():N}");
+            using AppConfigRootScope appConfigRoot = new(tempRoot);
             string sourceRoot = Path.Combine(tempRoot, "source-game");
-            string outputRoot = Path.Combine(tempRoot, "profiles");
+            string outputRoot = AppConfig.GetGameProfilesDir();
             PrepareSourceGameRoot(sourceRoot);
 
             try
@@ -167,8 +171,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         public void ApplyToSafeCopy_AllowsBoundedMouseSensitivityPresets(float mouseSensitivity)
         {
             string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-control-options-bounded-mouse-{Guid.NewGuid():N}");
+            using AppConfigRootScope appConfigRoot = new(tempRoot);
             string sourceRoot = Path.Combine(tempRoot, "source-game");
-            string outputRoot = Path.Combine(tempRoot, "profiles");
+            string outputRoot = AppConfig.GetGameProfilesDir();
             PrepareSourceGameRoot(sourceRoot);
 
             try
@@ -206,8 +211,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         public void ApplyToSafeCopy_WritesCopiedInvertOptionsOnly()
         {
             string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-control-options-invert-{Guid.NewGuid():N}");
+            using AppConfigRootScope appConfigRoot = new(tempRoot);
             string sourceRoot = Path.Combine(tempRoot, "source-game");
-            string outputRoot = Path.Combine(tempRoot, "profiles");
+            string outputRoot = AppConfig.GetGameProfilesDir();
             PrepareSourceGameRoot(sourceRoot);
             string sourceOptionsPath = Path.Combine(sourceRoot, "defaultoptions.bea");
             byte[] sourceOptionsBefore = File.ReadAllBytes(sourceOptionsPath);
@@ -258,8 +264,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         public void ApplyToSafeCopy_WritesCopiedInputIsolationForwardKeybindsOnly()
         {
             string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-control-options-input-isolation-{Guid.NewGuid():N}");
+            using AppConfigRootScope appConfigRoot = new(tempRoot);
             string sourceRoot = Path.Combine(tempRoot, "source-game");
-            string outputRoot = Path.Combine(tempRoot, "profiles");
+            string outputRoot = AppConfig.GetGameProfilesDir();
             PrepareSourceGameRoot(sourceRoot);
             string sourceOptionsPath = Path.Combine(sourceRoot, "defaultoptions.bea");
             byte[] sourceOptionsBefore = File.ReadAllBytes(sourceOptionsPath);
@@ -319,8 +326,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 return;
 
             string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-control-options-hardlink-{Guid.NewGuid():N}");
+            using AppConfigRootScope appConfigRoot = new(tempRoot);
             string sourceRoot = Path.Combine(tempRoot, "source-game");
-            string outputRoot = Path.Combine(tempRoot, "profiles");
+            string outputRoot = AppConfig.GetGameProfilesDir();
             string outsidePath = Path.Combine(tempRoot, "outside-defaultoptions.bea");
             PrepareSourceGameRoot(sourceRoot);
 
@@ -363,8 +371,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 return;
 
             string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-control-options-manifest-hardlink-{Guid.NewGuid():N}");
+            using AppConfigRootScope appConfigRoot = new(tempRoot);
             string sourceRoot = Path.Combine(tempRoot, "source-game");
-            string outputRoot = Path.Combine(tempRoot, "profiles");
+            string outputRoot = AppConfig.GetGameProfilesDir();
             string outsidePath = Path.Combine(tempRoot, "outside-control-manifest.json");
             PrepareSourceGameRoot(sourceRoot);
 
@@ -408,8 +417,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         public void ApplyToSafeCopy_RejectsReparsePointControlOptionsManifestBeforeOptionsMutationWhenSupported()
         {
             string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-control-options-manifest-reparse-{Guid.NewGuid():N}");
+            using AppConfigRootScope appConfigRoot = new(tempRoot);
             string sourceRoot = Path.Combine(tempRoot, "source-game");
-            string outputRoot = Path.Combine(tempRoot, "profiles");
+            string outputRoot = AppConfig.GetGameProfilesDir();
             string outsidePath = Path.Combine(tempRoot, "outside-control-manifest.json");
             PrepareSourceGameRoot(sourceRoot);
 
@@ -455,14 +465,53 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             }
         }
 
+        [Fact]
+        public void ApplyToSafeCopy_RejectsNonCanonicalProfilesRootBeforeOptionsMutation()
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-control-options-root-{Guid.NewGuid():N}");
+            using AppConfigRootScope appConfigRoot = new(tempRoot);
+            string sourceRoot = Path.Combine(tempRoot, "source-game");
+            string nonCanonicalRoot = Path.Combine(tempRoot, "other-profiles");
+            PrepareSourceGameRoot(sourceRoot);
+
+            try
+            {
+                GameProfilePrepareResult prepared = GameProfilePreflightService.PrepareWindowedCompatibilityProfile(
+                    new GameProfilePrepareOptions(
+                        SourceGameRoot: sourceRoot,
+                        OutputRoot: nonCanonicalRoot,
+                        ProfileName: "non-canonical-root",
+                        ApplyWindowedCompatibilityPatch: false));
+                string optionsPath = Path.Combine(prepared.TargetGameRoot, "defaultoptions.bea");
+                byte[] before = File.ReadAllBytes(optionsPath);
+
+                InvalidOperationException error = Assert.Throws<InvalidOperationException>(() =>
+                    GameProfileControlOptionsService.ApplyToSafeCopy(
+                        new GameProfileControlOptionsRequest(
+                            ProfileRoot: prepared.TargetGameRoot,
+                            AppOwnedProfilesRoot: nonCanonicalRoot,
+                            MouseSensitivityOverride: GameProfileControlOptionsService.SharperMouseLookSensitivity)));
+
+                Assert.Contains("canonical app-owned GameProfiles root", error.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(before, File.ReadAllBytes(optionsPath));
+                Assert.Empty(Directory.GetFiles(prepared.TargetGameRoot, "defaultoptions.bea.*.bak"));
+            }
+            finally
+            {
+                if (Directory.Exists(tempRoot))
+                    Directory.Delete(tempRoot, recursive: true);
+            }
+        }
+
         [Theory]
         [InlineData(0u)]
         [InlineData(5u)]
         public void ApplyToSafeCopy_RejectsOutOfRangeControllerConfigurations(uint controllerConfig)
         {
             string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-control-options-range-{Guid.NewGuid():N}");
+            using AppConfigRootScope appConfigRoot = new(tempRoot);
             string sourceRoot = Path.Combine(tempRoot, "source-game");
-            string outputRoot = Path.Combine(tempRoot, "profiles");
+            string outputRoot = AppConfig.GetGameProfilesDir();
             PrepareSourceGameRoot(sourceRoot);
 
             try
@@ -527,5 +576,22 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             string lpFileName,
             string lpExistingFileName,
             IntPtr lpSecurityAttributes);
+
+        private sealed class AppConfigRootScope : IDisposable
+        {
+            private const string EnvironmentVariable = "ONSLAUGHT_APP_CONFIG_ROOT";
+            private readonly string? _previous;
+
+            internal AppConfigRootScope(string root)
+            {
+                _previous = Environment.GetEnvironmentVariable(EnvironmentVariable);
+                Environment.SetEnvironmentVariable(EnvironmentVariable, root);
+            }
+
+            public void Dispose()
+            {
+                Environment.SetEnvironmentVariable(EnvironmentVariable, _previous);
+            }
+        }
     }
 }

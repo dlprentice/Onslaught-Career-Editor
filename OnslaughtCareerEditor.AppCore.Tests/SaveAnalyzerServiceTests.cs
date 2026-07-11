@@ -13,8 +13,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         [Fact]
         public void BuildDefaultSaveOutputPath_AppendsPatchedSuffix()
         {
-            string output = SaveEditorService.BuildDefaultSaveOutputPath(@"C:\temp\career.bes");
-            Assert.Equal(@"C:\temp\career_patched.bes", output);
+            string output = SaveEditorService.BuildDefaultSaveOutputPath(@"C:\temp\career.bes", @"C:\safe-output");
+            Assert.Equal(@"C:\safe-output\career_patched.bes", output);
         }
 
         [Fact]

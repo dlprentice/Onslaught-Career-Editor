@@ -1960,7 +1960,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private static string GetCopiedProfileWorkspaceRoot()
         {
-            return Path.Combine(AppConfig.GetConfigDir(), "GameProfiles");
+            return AppConfig.GetGameProfilesDir();
         }
 
         private static BinaryPatchTargetOptions BuildPatchTargetOptions(string exePath)

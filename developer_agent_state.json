@@ -1,6 +1,10 @@
 {
   "lastUpdated": "2026-07-11",
-  "currentFocus": "Sol Ultra repo-wide quality campaign: establish a trustworthy contributor baseline, then improve WinUI UX and safety, validate patch/mod/save/asset behavior, and build a runnable RE-informed original-code rebuild vertical slice under an accurate provenance label.",
+  "currentFocus": "Close release-blocking filesystem authority gaps: save/options guarded output is implemented and green; trusted asset-root discovery and package materialization remain active before WinUI UX and rebuild work.",
+  "currentCounters": {
+    "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
+    "catalogRows": "29/29 target specimen identity and policy metadata rows"
+  },
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -41,8 +45,12 @@
     "safetyAudit": {
       "safeCopyModel": "Retain it. Initial copied-profile creation, copied-executable target checks, catalog pinning, backup provenance, and process stop targeting are strong.",
       "patchCatalog": "29 total rows; 20 visible (9 stable, 11 experimental); 9 hidden companions.",
+      "closedThisWave": [
+        "Save/options outputs now require matching .bes/.bea types, calculate the app-owned patched-output default without creating it, resolve DOS drive aliases to physical local paths, hold physical ancestor identities, protect source file identities, reject in-place/hardlink/symlink/junction/device/network/alternate-stream/reserved-device and installed-game-tree targets, stage and flush a sibling file, atomically replace the destination, and verify staged plus committed identities and bytes.",
+        "Generated safe-copy control editing remains available only after profile/manifest validation mints a capability for the canonical app-owned GameProfiles root; a naked trusted-root string can no longer authorize writes."
+      ],
+      "acceptance": "Final bounded normal and adversarial reviewers both returned ACCEPT after earlier REJECT findings drove trusted-root capability, physical path, staging-handle, no-follow final-handle, and deterministic race-test corrections.",
       "highPriorityGaps": [
-        "Save/options output protection compares path strings but does not yet reject same-file hardlink/symlink identities or ancestor junction redirection.",
         "Asset catalogs can resolve rooted, ancestor, or current-directory sources instead of one declared trusted export root."
       ],
       "mediumPriorityGaps": [
@@ -53,7 +61,7 @@
     },
     "uxAudit": {
       "runtimeScope": "Two isolated launches, including a no-game first run, covered Home, Save Lab, Game Options, Windowed & Mods, Media, Asset Library, Lore, Settings, and About.",
-      "verifiedBuildAndTests": "WinUI build passed with zero warnings/errors; UI tests passed 134 with 2 asset-dependent skips; AppCore passed 1217.",
+      "verifiedBuildAndTests": "WinUI build passed with zero warnings/errors; UI tests passed 134 with 2 asset-dependent skips; AppCore passed 1240 after save/options safety hardening, including live SUBST physical-alias and deterministic staging/final-entry race coverage.",
       "priorityFindings": [
         "Show debug trace can leave a launch preset falsely selected even though launch arguments change.",
         "Cached navigation can retain stale live-region status and off-screen focus.",
@@ -78,12 +86,11 @@
   },
   "activeBlockers": [
     "Cursor/Grok read-only consult is degraded: Windows lacks the required sandbox and WSL lacks separate model-catalog authentication.",
-    "Save/options and asset-package filesystem identity boundaries need hardening before stronger safety claims or feature expansion."
+    "Asset catalog and package-materialization filesystem identity boundaries need hardening before stronger safety claims or feature expansion."
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Commit and push the contributor authority and quick-check slice after focused validation.",
-    "Implement the shared guarded/atomic filesystem transaction and trusted asset-root safety slice.",
+    "Bind asset catalogs, sidecar discovery, package sources, and package destinations to explicit trusted roots with hostile-path tests.",
     "Fix launch-preset equality and navigation status/focus, then address compact layout, setup hierarchy, and page headings.",
     "Define the rebuild evidence firewall and build the deterministic kernel."
   ]

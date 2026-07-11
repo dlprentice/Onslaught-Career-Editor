@@ -93,10 +93,14 @@ namespace Onslaught___Career_Editor
         /// </summary>
         public static string GetConfigDir()
         {
-            string appData = GetConfigRoot();
-            string configDir = Path.Combine(appData, ConfigDirName);
+            string configDir = GetConfigDirPath();
             Directory.CreateDirectory(configDir); // Ensure it exists
             return configDir;
+        }
+
+        public static string GetConfigDirPath()
+        {
+            return Path.Combine(GetConfigRoot(), ConfigDirName);
         }
 
         /// <summary>
@@ -105,6 +109,16 @@ namespace Onslaught___Career_Editor
         public static string GetConfigPath()
         {
             return Path.Combine(GetConfigDir(), ConfigFileName);
+        }
+
+        public static string GetPatchedOutputDir()
+        {
+            return Path.Combine(GetConfigDirPath(), "patched-output");
+        }
+
+        public static string GetGameProfilesDir()
+        {
+            return Path.Combine(GetConfigDirPath(), "GameProfiles");
         }
 
         /// <summary>

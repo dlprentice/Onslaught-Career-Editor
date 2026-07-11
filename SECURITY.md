@@ -7,7 +7,7 @@ This project handles local game paths, copied executable profiles, save/options 
 
 ## User Data Safety
 
-Save and options editing writes to a separate output file and refuses in-place patching. Executable patching applies only to app-owned safe copies or technical BEA.exe-only copies; the installed Steam game folder and original `BEA.exe` stay read-only.
+Save and options editing calculates its app-owned default path without creating directories and refuses in-place, hardlink, reparse-routed, reserved-device, wrong-type, device/network, alternate-stream, and installed-game-tree destinations. The guarded writer resolves DOS drive aliases to physical local paths, holds physical ancestor and source-file identities, stages and flushes a sibling file, atomically replaces the selected output, and verifies the staged and committed identities and bytes. Generated safe-copy control editing requires a capability minted after profile/manifest validation for the canonical app-owned `GameProfiles` root. Executable patching applies only to app-owned safe copies or technical BEA.exe-only copies; the installed Steam game folder and original `BEA.exe` stay read-only.
 
 ## What To Report Privately
 

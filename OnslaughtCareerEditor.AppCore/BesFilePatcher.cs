@@ -305,6 +305,7 @@ namespace Onslaught___Career_Editor
         public bool CopyOptionsEntries { get; set; } = true;
         public bool CopyOptionsTail { get; set; } = true;
         public Dictionary<int, OptionsEntryOverride>? OptionsEntryOverrides { get; set; } = null;
+        internal FileMutationSafety.AppOwnedProfileMutationAuthorization? OutputAuthorization { get; set; }
 
         // Selective patching flags (Dec 2025)
         // By default, all sections are patched. Set to false to skip specific sections.
@@ -370,12 +371,24 @@ namespace Onslaught___Career_Editor
         {
             try
             {
-                if (string.Equals(Path.GetFullPath(inputPath), Path.GetFullPath(outputPath), StringComparison.OrdinalIgnoreCase))
-                {
-                    return PatchResult.Fail("Refusing to patch in place. Please choose a different output path.");
-                }
+                inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input path");
+                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output path");
+                ValidatePatchExtensions(inputPath, outputPath);
 
-                byte[] buf = File.ReadAllBytes(inputPath);
+                string? copyOptionsPath = CopyOptionsEntries || CopyOptionsTail
+                    ? CopyOptionsFromPath
+                    : null;
+                using GuardedFileMutation mutation = OutputAuthorization is null
+                    ? FileMutationSafety.Begin(outputPath, inputPath, copyOptionsPath)
+                    : FileMutationSafety.BeginInAppOwnedProfile(
+                        outputPath,
+                        OutputAuthorization,
+                        inputPath,
+                        copyOptionsPath);
+                byte[] buf = mutation.ReadAllBytes(inputPath);
+                byte[]? copyOptionsBuffer = string.IsNullOrWhiteSpace(copyOptionsPath)
+                    ? null
+                    : mutation.ReadAllBytes(copyOptionsPath);
 
                 // Validate file size (strict check)
                 if (buf.Length != EXPECTED_FILE_SIZE)
@@ -463,7 +476,7 @@ namespace Onslaught___Career_Editor
                 ApplyCareerSettingsOverrides(buf);
 
                 // --- Options entries + tail snapshot (optional raw copy) ---
-                ApplyOptionsCopy(buf);
+                ApplyOptionsCopy(buf, copyOptionsBuffer);
 
                 // --- Options entry overrides (keybind edits) ---
                 ApplyOptionsEntryOverrides(buf);
@@ -471,7 +484,7 @@ namespace Onslaught___Career_Editor
                 // --- Options tail scalar overrides (boot-time global option values) ---
                 ApplyOptionsTailOverrides(buf);
 
-                File.WriteAllBytes(outputPath, buf);
+                mutation.Commit(buf);
                 return PatchResult.Ok($"Successfully patched: {outputPath}");
             }
             catch (Exception ex)
@@ -496,10 +509,15 @@ namespace Onslaught___Career_Editor
                     return PatchResult.Fail("Select both input and output files before patching.");
                 }
 
-                if (string.Equals(Path.GetFullPath(inputPath), Path.GetFullPath(outputPath), StringComparison.OrdinalIgnoreCase))
+                inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input path");
+                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output path");
+                if (!string.Equals(Path.GetExtension(inputPath), ".bes", StringComparison.OrdinalIgnoreCase) ||
+                    !string.Equals(Path.GetExtension(outputPath), ".bes", StringComparison.OrdinalIgnoreCase))
                 {
-                    return PatchResult.Fail("Refusing to patch in place. Please choose a different output path.");
+                    return PatchResult.Fail("Goodie state patching requires .bes input and output paths.");
                 }
+
+                using GuardedFileMutation mutation = FileMutationSafety.Begin(outputPath, inputPath);
 
                 foreach (var (index, state) in statesByIndex)
                 {
@@ -514,7 +532,7 @@ namespace Onslaught___Career_Editor
                     }
                 }
 
-                byte[] buf = File.ReadAllBytes(inputPath);
+                byte[] buf = mutation.ReadAllBytes(inputPath);
                 if (buf.Length != EXPECTED_FILE_SIZE)
                 {
                     return PatchResult.Fail($"Invalid .bes file. Expected {EXPECTED_FILE_SIZE} bytes, got {buf.Length}. This may not be a valid Battle Engine Aquila career save file.");
@@ -532,7 +550,7 @@ namespace Onslaught___Career_Editor
                     WriteUInt32(buf, GOODIE_BASE + index * 4, state);
                 }
 
-                File.WriteAllBytes(outputPath, buf);
+                mutation.Commit(buf);
                 return PatchResult.Ok($"Patched {statesByIndex.Count} Goodie state override(s): {outputPath}");
             }
             catch (Exception ex)
@@ -581,7 +599,7 @@ namespace Onslaught___Career_Editor
             return (n, tailStart, entriesSize, tailSize);
         }
 
-        private void ApplyOptionsCopy(byte[] destBuf)
+        private void ApplyOptionsCopy(byte[] destBuf, byte[]? srcBuf)
         {
             if (!CopyOptionsEntries && !CopyOptionsTail)
                 return;
@@ -589,7 +607,8 @@ namespace Onslaught___Career_Editor
             if (string.IsNullOrWhiteSpace(CopyOptionsFromPath))
                 return;
 
-            byte[] srcBuf = File.ReadAllBytes(CopyOptionsFromPath);
+            if (srcBuf is null)
+                throw new InvalidDataException("Options copy source could not be read safely.");
             if (srcBuf.Length != destBuf.Length)
                 throw new InvalidDataException(
                     $"Options copy requires matching file sizes. Source={srcBuf.Length:N0} bytes, Dest={destBuf.Length:N0} bytes.");
@@ -606,6 +625,27 @@ namespace Onslaught___Career_Editor
                 Array.Copy(srcBuf, optionsStart, destBuf, optionsStart, entriesSizeDest);
             if (CopyOptionsTail)
                 Array.Copy(srcBuf, tailStartDest, destBuf, tailStartDest, destBuf.Length - tailStartDest);
+        }
+
+        private static void ValidatePatchExtensions(string inputPath, string outputPath)
+        {
+            string inputExtension = Path.GetExtension(inputPath);
+            string outputExtension = Path.GetExtension(outputPath);
+            if (string.Equals(inputExtension, ".bes", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!string.Equals(outputExtension, ".bes", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("Career save patching requires a .bes output path.");
+                return;
+            }
+
+            if (string.Equals(inputExtension, ".bea", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!string.Equals(outputExtension, ".bea", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("Game options patching requires a .bea output path.");
+                return;
+            }
+
+            throw new InvalidOperationException("Patching requires a .bes career save or .bea options input path.");
         }
 
         private void ApplyOptionsEntryOverrides(byte[] buf)

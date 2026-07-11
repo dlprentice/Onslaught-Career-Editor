@@ -1,6 +1,10 @@
 {
   "lastUpdated": "2026-07-11",
   "currentFocus": "Make current documentation easy to navigate and authoritative while preserving historical RE, release, Lore, and campaign evidence as clearly derived or historical material.",
+  "currentCounters": {
+    "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
+    "catalogRows": "29/29 target specimen identity and policy metadata rows"
+  },
   "sourceOfTruth": {
     "readme": "README.MD",
     "contributorGuide": "CONTRIBUTING.md",
@@ -18,7 +22,8 @@
     "lore": "The release contains 949 offline documents selected from Lore, roadmap, and technical RE material. The count proves packaged breadth, not narrative completeness, editorial approval, freshness, provenance/rights review, or broad public-safety approval.",
     "rebuild": "No complete rebuild runtime, renderer, gameplay loop, or parity proof exists. Current maintainers have read GPL source and detailed RE material, so near-term implementation must be labeled RE-informed unless a separately staffed sealed-spec process supports a clean-room claim.",
     "authorityMap": "roadmap/repo-structure-and-archive-map.md now classifies current front doors, canonical sources, protected projections, history, and local payloads with explicit conflict rules.",
-    "contributorPath": "npm test is the verified common active-product baseline; normal setup no longer requires submodules or archived Electron npm installation."
+    "contributorPath": "npm test is the verified common active-product baseline; normal setup no longer requires submodules or archived Electron npm installation.",
+    "saveOptionsSafety": "Save Lab calculates an app-owned patched-output default without creating it. Guarded writers resolve DOS drive aliases to physical local paths, hold physical ancestor identities, and reject in-place, aliased, reparse-routed, reserved-device, device/network, wrong-type, and installed-game-tree destinations. Safe-copy control edits require a minted capability for the canonical app-owned GameProfiles root."
   },
   "verifiedAuditFacts": {
     "trackedMarkdownFiles": 3760,

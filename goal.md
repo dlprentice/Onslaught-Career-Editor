@@ -16,18 +16,23 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Make the normal contributor path small and authoritative without weakening the
-preservation archive or release signoff:
+Close the release-blocking filesystem authority gaps found by the normal and
+adversarial safety audit:
 
-1. publish canonical, derived, generated, historical, and local-only authority;
-2. make `npm test` the active-product quick check;
-3. remove submodule checkout and archived Electron dependency installation from
-   the normal first-hour path;
-4. separate focused lane checks from exhaustive public/release signoff;
-5. simplify the PR template to scope, evidence, safety, state, and risk.
+1. commit save and options output through a shared guarded atomic transaction;
+2. reject in-place, hardlink, symlink, junction, device, network, alternate-data-
+   stream, wrong-extension, and installed-game-tree output targets;
+3. keep generated safe-copy control editing available only inside its separately
+   verified app-owned profile root;
+4. bind asset catalogs and sidecar discovery to one declared export root; and
+5. revalidate catalog sources, package destinations, manifests, and sidecars at
+   materialization time before copying.
 
-This slice is repository and coordination hardening. It does not claim fresh
-runtime, gameplay, visual, patch-behavior, Ghidra read-back, or rebuild proof.
+The save/options advancement is accepted after iterative normal and adversarial
+review closed trusted-root, directory-creation, physical-alias, staging, and
+final-entry race findings. The trusted asset-root and materialization
+advancement remains active and is still a release blocker. This slice creates
+no release, gameplay, visual, online, Ghidra read-back, or rebuild proof.
 
 ## Verified Starting Point
 
@@ -37,6 +42,9 @@ runtime, gameplay, visual, patch-behavior, Ghidra read-back, or rebuild proof.
 - The Sol Ultra baseline was committed and pushed at
   `5a7bacecac5e813804355d68a8e51973100e0331`; local `main`, `origin/main`, and
   live remote `refs/heads/main` matched with divergence `0 0`.
+- The contributor authority and quick-check advancement was committed and
+  pushed at `798c339505fb85cc782abbd4b07df81e143c2284`; `npm test` is now the
+  normal active-product baseline.
 - Git reports one registered worktree. Seven Codex Desktop worktree entries
   were empty zero-byte shells with no Git metadata or linked conversations and
   were removed on 2026-07-11.
@@ -106,23 +114,26 @@ non-destructive slice. The degraded lane must be reported at acceptance.
 
 ## Current Slice Acceptance
 
-- The authority map resolves current source, protected projections,
-  materialized templates, history, and local payloads.
-- `npm test` runs the active docs/mirror, WinUI build, AppCore, and WinUI tests
-  without a game install, submodules, Ghidra, or `npm install`.
-- Contributor docs route archived Electron installation and exhaustive
-  public/release scans out of the normal first hour.
-- The PR template asks only for scope, exact validation, safety/claim
-  boundaries, state handoff, and remaining risk.
-- Root and materialized public package command surfaces expose the same new
-  quick-check aliases.
-- Dsync, docs/commands, focused product tests, and applicable public-boundary
-  gates pass before commit and push.
+- Save and options outputs default to an app-owned output folder and retain
+  strict `.bes` / `.bea` type boundaries without creating directories during
+  path calculation.
+- Every save/options writer protects all source identities, stages a unique
+- Installed-game-shaped output trees and lexical, reparse, hardlink, reserved-
+  device, `SUBST`, mapped-drive, and network aliases fail closed after physical
+  final-path resolution; held ancestor handles prevent directory replacement.
+- Verified generated safe-copy edits require a minted capability for the
+  canonical app-owned `GameProfiles` root rather than a trusted path string.
+- Asset catalog lookup no longer searches arbitrary ancestors or the current
+  working directory, and resolved sources remain inside one trusted export root.
+- Package materialization revalidates source and destination identity before
+  every copy and cannot escape through reparse or hardlink aliases.
+- Focused hostile-path tests, full AppCore/WinUI tests, patch/safe-copy gates,
+  docs/state checks, and public payload boundaries pass before each push.
 
 ## Next Slices
 
-1. Add a shared guarded/atomic filesystem transaction, close save/options alias
-   writes, and bind asset catalogs to a declared trusted export root.
+1. Finish the trusted asset-root and package-materialization half of the active
+   filesystem safety slice.
 2. Apply the prioritized WinUI first-user and accessibility fixes, then
    validate and expand patches/mods only behind evidence-backed safety gates.
 3. Define the sealed evidence/provenance firewall, then build a deterministic

@@ -1,6 +1,10 @@
 {
   "lastUpdated": "2026-07-11",
   "currentFocus": "Deep quality audit of tracked binary-analysis evidence and the agentic RE loop, followed by evidence-backed subsystem review and accurately labeled rebuild implementation work.",
+  "currentCounters": {
+    "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
+    "catalogRows": "29/29 target specimen identity and policy metadata rows"
+  },
   "sourceOfTruth": {
     "index": "reverse-engineering/RE-INDEX.md",
     "functionIndex": "reverse-engineering/binary-analysis/functions/_index.md",

@@ -816,7 +816,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             SavePatchRequest request = BuildEditorRequest(out string? advancedError);
             bool hasSections = SaveEditorService.HasAnySelectedSection(request);
-            bool outputIsSaveLike = !SaveEditorService.IsOptionsLikeFilePath(request.OutputPath);
+            bool outputIsSaveLike = SaveEditorService.IsCareerSaveFilePath(request.OutputPath);
             bool samePath = AreSamePaths(request.InputPath, request.OutputPath);
             bool hasInput = !string.IsNullOrWhiteSpace(request.InputPath);
             bool hasOutput = !string.IsNullOrWhiteSpace(request.OutputPath);
@@ -851,7 +851,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             else if (!outputIsSaveLike)
             {
-                EditorSafetyHintTextBlock.Text = "Output path must remain a .bes career save path.";
+                EditorSafetyHintTextBlock.Text = "Output path must end in .bes and stay outside every game folder.";
             }
             else
             {
