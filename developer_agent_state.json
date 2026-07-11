@@ -27,7 +27,7 @@
       "unreachableCommitsPreserved": 24,
       "stashesPreserved": 3,
       "bundleVerifyAndRestoreDrill": "pass",
-      "ordinaryCampaignBranchCleanup": "pending after baseline acceptance",
+      "ordinaryCampaignBranchCleanup": "complete: 61 obsolete local campaign/codex branch names removed after baseline acceptance",
       "backupRefsRetained": 4
     },
     "repositoryScale": {
@@ -35,7 +35,8 @@
       "reverseEngineeringFiles": 13385,
       "toolFiles": 2614,
       "releaseFiles": 1710,
-      "npmScripts": 1494
+      "npmScriptsBeforeQuickAliases": 1494,
+      "contributorQuickCheck": "npm test -> check:quick passed in 91.4 seconds (docsync, doc commands, zero-warning WinUI build, 1217 AppCore tests, 134 WinUI tests with 2 expected real-asset skips)"
     },
     "safetyAudit": {
       "safeCopyModel": "Retain it. Initial copied-profile creation, copied-executable target checks, catalog pinning, backup provenance, and process stop targeting are strong.",
@@ -77,14 +78,11 @@
   },
   "activeBlockers": [
     "Cursor/Grok read-only consult is degraded: Windows lacks the required sandbox and WSL lacks separate model-catalog authentication.",
-    "The repository still lacks a fast active-product contributor gate distinct from exhaustive signoff.",
-    "Current command, mirror, archive, and evidence authority needs an explicit maintained map before large moves or deletions.",
     "Save/options and asset-package filesystem identity boundaries need hardening before stronger safety claims or feature expansion."
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Commit and push the Sol Ultra baseline after focused validation and review.",
-    "Publish the authority map and archive-free first-hour contributor path.",
+    "Commit and push the contributor authority and quick-check slice after focused validation.",
     "Implement the shared guarded/atomic filesystem transaction and trusted asset-root safety slice.",
     "Fix launch-preset equality and navigation status/focus, then address compact layout, setup hierarchy, and page headings.",
     "Define the rebuild evidence firewall and build the deterministic kernel."

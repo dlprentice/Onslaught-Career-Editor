@@ -1,7 +1,7 @@
 # Collaboration Guide
 
 Status: active public-safe collaboration guide
-Last updated: 2026-06-23
+Last updated: 2026-07-11
 
 Use this guide when preparing work for another developer or an agent reviewer.
 This public repository is now the primary collaboration and day-to-day working
@@ -10,16 +10,17 @@ automation, or workflow scaffolding.
 
 ## Start Here
 
-1. Read [README.MD](README.MD), [CONTRIBUTING.md](CONTRIBUTING.md), and
-   [SECURITY.md](SECURITY.md).
-2. Pick one lane and keep the change scoped to that lane.
-3. Run the smallest relevant local gate set before review.
-4. Include the exact commands you ran in the handoff.
-5. Confirm that no game payloads, copied executables, screenshots/frame dumps,
+1. Run `npm test` once to establish the active-product baseline.
+2. Read [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and the
+   [repository authority map](roadmap/repo-structure-and-archive-map.md).
+3. Pick one lane and keep the change scoped to that lane.
+4. Run the smallest relevant local gate set before review.
+5. Include the exact commands you ran in the handoff.
+6. Confirm that no game payloads, copied executables, screenshots/frame dumps,
    raw CDB logs, arbitrary saves, secrets, or bulky generated proof payloads
    are in the change. Text state batons, compact proof summaries, and agent
    reports are allowed when they are useful and non-secret.
-6. For meaningful code, docs, runtime proof, release, or repo-boundary changes,
+7. For meaningful code, docs, runtime proof, release, or repo-boundary changes,
    update the relevant state baton or explain why the work was read-only.
 
 ## Lanes
@@ -29,8 +30,9 @@ automation, or workflow scaffolding.
 | WinUI app | `OnslaughtCareerEditor.WinUI/`, `OnslaughtCareerEditor.UiTests/` | `npm run build:winui`, `npm run test:winui`, `npm run test:winui-primary-lane` |
 | AppCore / CLI | `OnslaughtCareerEditor.AppCore/`, `OnslaughtCareerEditor.Cli/`, tests | `npm run test:appcore`, `npm run build:cli` |
 | Patch / mod safety | `patches/`, AppCore patch services, WinUI patch surfaces | `npm run test:winui-patch-engine-safety`, `npm run test:winui-safe-copy-preflight` |
-| Docs / release safety | `README.MD`, `CONTRIBUTING.md`, `release/readiness/`, `roadmap/`, `reverse-engineering/` | `npm run test:doc-commands`, `npm run test:md-links`, `npm run test:public-allowlist`, `npm run test:repo-hygiene`, `npm run test:winui-notices` |
-| RE docs / proof summaries | `reverse-engineering/`, `lore/`, `lore-book/`, `release/readiness/`, state batons | docs/release safety gates |
+| Docs | `README.MD`, `CONTRIBUTING.md`, `roadmap/`, current state | `npm run test:docsync`, `npm run test:doc-commands`, `npm run test:md-links` |
+| RE / Lore docs | `reverse-engineering/`, `lore/`, protected `lore-book/` projections | docs gates plus the focused owning checker |
+| Public/release boundary | `release/readiness/`, manifests, package inputs, ignore/boundary policy | full signoff block below and the affected package gate |
 
 <!-- public-package-commands:start -->
 ```powershell
@@ -42,8 +44,9 @@ npm run test:winui-notices
 ```
 <!-- public-package-commands:end -->
 
-This public repo's root `package.json` is the command authority for contributors
-and their agents. Maintainers may run additional local runtime, Ghidra, or
+The block above is public/release signoff, not ordinary edit-loop ceremony.
+This repo's root `package.json` is the command authority for contributors and
+their agents. Maintainers may run additional local runtime, Ghidra, or
 release-accounting gates when a change touches those areas.
 
 For public-primary boundary work, `npm run test:public-allowlist` runs the

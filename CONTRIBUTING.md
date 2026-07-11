@@ -1,7 +1,7 @@
 # Contributing To Onslaught Toolkit
 
 Status: active contributor guide
-Last updated: 2026-06-26
+Last updated: 2026-07-11
 
 This public source tree is the primary collaboration and day-to-day working repo
 for a WinUI-first Battle Engine Aquila preservation and tooling project. Raw
@@ -16,14 +16,18 @@ explicitly assigns a separate branch or private workspace.
 
 ## Developer Start Here
 
-1. Read this file, [SECURITY.md](SECURITY.md), [README.MD](README.MD), and
-   [COLLABORATION.md](COLLABORATION.md).
-2. Pick one lane: WinUI, AppCore, CLI, docs/release, or payload/secret-safe RE docs.
-3. Run only the relevant local gates for that lane before review.
-4. Keep actual game payloads, secrets, and bulky generated runtime captures out
+1. Run `npm test` from a fresh clone. It checks the active product without a
+   game install, submodules, Ghidra, or `npm install`.
+2. Run `npm run dev` and confirm the WinUI shell opens.
+3. Read the
+   [repository authority map](roadmap/repo-structure-and-archive-map.md), then
+   pick one lane: WinUI, AppCore/CLI, patch/mod safety, docs, or RE/Lore.
+4. Run the lane-specific gates below before review.
+5. Keep actual game payloads, secrets, and bulky generated runtime captures out
    of git. Maintainer policy changes may add narrow public-safe fixtures, but
    they do not authorize proprietary game payloads in public source.
-5. Use [PUBLIC_SIGNOFF_COMMANDS.md](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md) for public-source/release signoff checks.
+6. Use [PUBLIC_SIGNOFF_COMMANDS.md](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md)
+   only for public-source or release signoff.
 
 Read [LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md) before adding or moving local
 game, media, save, Ghidra, proof, or agent-output material.
@@ -34,7 +38,10 @@ game, media, save, Ghidra, proof, or agent-output material.
 - AppCore and the C# CLI are active support lanes for correctness, patching, and analysis.
 - Python under `tools/` is active RE/tooling/lab support, not a product GUI lane.
 - Electron, WPF, and the old Python GUI/CLI app are archived/reference surfaces only.
-- Static Ghidra RE is closed for function-quality and current-risk accounting; runtime behavior, patch behavior, online play, rebuild parity, and exact no-noticeable-difference parity are separate proof classes.
+- A prior Ghidra snapshot satisfied narrow name/comment/signature accounting;
+  binary-wide semantic completion is not proven and is under deep review.
+  Runtime behavior, patch behavior, online play, and rebuild parity are separate
+  proof classes.
 
 ## Safety Rules
 
@@ -60,16 +67,19 @@ Contributors must use a legally obtained local copy of the game and must not sub
 Required for normal product work:
 
 ```powershell
-git submodule update --init --recursive
+dotnet --version # must be .NET SDK 10.x
 node --version # must be v24.x
 npm --version  # must satisfy >=11.12 <12; npm@11.12.1 is the packageManager target
-npm run test:hard-payload-safety
-npm install
-dotnet build .\OnslaughtCareerEditor.WinUI.slnx --nologo
+py -3 --version
+npm test
 npm run dev
 ```
 
-All `npm run ...` gates are defined in the root `package.json`.
+No game install, Git submodule checkout, Ghidra database, or `npm install` is
+required for that path. Root `package.json` is the command authority. Its
+`npm install` path is retained only for deliberate archived Electron inspection.
+Initialize submodules before public allowlist or release signoff because those
+gates inspect reference boundaries.
 
 Tooling prerequisites:
 
@@ -84,7 +94,7 @@ Tooling prerequisites:
 Use `ONSLAUGHT_APP_CONFIG_ROOT` when you need isolated app config during local
 tests instead of the default `%APPDATA%\OnslaughtCareerEditor` location.
 
-Useful quick checks:
+Lane-specific checks:
 
 <!-- public-package-commands:start -->
 ```powershell
@@ -194,17 +204,11 @@ published source or ZIP payload.
 
 Before public-source packaging or sharing work, follow
 [PUBLIC_SIGNOFF_COMMANDS.md](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md).
-For ordinary PR work after a tree has build outputs, run the lane-relevant
-checks below:
-
-```powershell
-npm run test:doc-commands
-npm run test:md-links
-npm run test:public-allowlist
-npm run test:repo-hygiene
-npm run test:winui-notices
-npm run build:cli
-```
+For ordinary PR work, run `npm test` as the common active-product baseline and
+add only the lane-specific checks relevant to the change. The whole-repository
+`test:public-allowlist`, `test:repo-hygiene`, and notice/package gates are
+signoff checks for boundary, release, dependency, or broad documentation
+changes; they are not required for every narrow edit.
 
 Do not publish a public release, push a public release branch, sign binaries, ship an installer, or claim public package readiness without explicit maintainer authorization.
 

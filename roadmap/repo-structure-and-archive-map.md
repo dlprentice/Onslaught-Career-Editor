@@ -1,154 +1,136 @@
-# Repo Structure And Archive Map
+# Repository Authority Map
 
-Status: active
-Last updated: 2026-06-24
-Doc version: 3.0
+Status: active contributor authority map
+Last updated: 2026-07-11
+Doc version: 4.0
 
-This map classifies the public-primary repo layout so cleanup can proceed
-without breaking the WinUI product lane, active Python utility/tooling scripts,
-archived Electron/Python/WPF app references, public collaboration posture, or
-local runtime evidence overlays. Do not move or delete a surface from this map
-unless a later prompt proves all build, test, solution, and release references
-are updated.
+Use this map when two files appear to describe the same behavior, when deciding
+where new work belongs, or before moving or deleting a large surface. It
+separates current sources from projections, generated artifacts, history, and
+maintainer-local payloads.
 
-## Cleanup Rule
+## Conflict Rules
 
-- Active product source, validation tooling, and maintainer-run scripts stay in
-  place. This does not authorize or imply active standing automations.
-- Shared correctness/reference surfaces stay in place until their lane role is
-  explicitly retired.
-- Archived surfaces may remain tracked for provenance and tests, but they are
-  not product targets.
-- Public source should include useful source, docs, tools, RE contracts, state
-  batons, readiness notes, compact proof summaries, and text agent reports.
-- Local/runtime hard payloads stay ignored: game files, copied executables,
-  private media/input payloads, arbitrary saves, full Ghidra databases/backups,
-  raw frame dumps, raw CDB logs, secrets, and generated build output.
-- Public release ZIP contents are intentional package artifacts; they are not
-  the same thing as the public source repo.
+1. Current implementation and focused tests outrank prose summaries.
+2. Canonical source outranks a derived mirror or generated projection.
+3. Root contributor docs and root `package.json` outrank materialized release
+   templates and historical wave notes.
+4. A newer release note does not promote an unproven runtime, gameplay, online,
+   visual, RE-semantic, or rebuild claim.
+5. When authority is unclear, stop and classify the surface before editing it.
 
-## Active Shipping/Product Surfaces
+## Current Front Doors
 
-| Path | Classification | Release posture | Notes |
-| --- | --- | --- | --- |
-| `OnslaughtCareerEditor.WinUI/` | Primary WinUI 3 product lane | Tracked public source | Primary user-facing Windows product lane. Build/test health has been proven locally; signed/installer packaging remains a future proof. |
-| `OnslaughtCareerEditor.AppCore/` | Shared correctness/core support | Tracked public source | Core C# behavior support for the Windows lane and parity/reference checks. |
-| `lore/`, `lore-book/` | Active curated content | Tracked public docs/content | Lore and user-facing/reference content. Keep hard runtime payloads out. |
-| `patches/catalog/patches.v2.json` | Active patch catalog | Included | Byte-verified copied-executable patch catalog. |
+| Question | Start here | Authority |
+| --- | --- | --- |
+| What does the shipped app do? | `CURRENT_CAPABILITIES.md` | Current bounded capability summary |
+| How do I build or contribute? | `CONTRIBUTING.md` | Current human contributor workflow |
+| What may an agent change? | `AGENTS.md`, `goal.policy.md`, `goal.md` | Current execution and campaign boundaries |
+| Which commands should I run? | Root `package.json` | Current command definitions |
+| What is release signoff? | `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md` | Current source/package signoff guide |
+| What is current RE truth? | `re_orchestrator_state.json`, `reverse-engineering/RE-INDEX.md` | Current baton plus canonical RE index |
+| What is current Lore truth? | `documentation_agent_state.json`, `lore/LORE-INDEX.md` | Current baton plus canonical narrative index |
 
-## Active Automation/Tooling Surfaces
+Do not browse all 1,400-plus package scripts to begin work. Use `npm test` for
+the active-product quick check, then choose a focused command from
+`CONTRIBUTING.md`. The exhaustive public/release gates are intentionally
+separate.
 
-| Path | Classification | Release posture | Notes |
-| --- | --- | --- | --- |
-| `tools/` | Mixed active tooling | Tracked public source where not hard payload | Contains release scripts, AYA/media/export tooling, Ghidra helpers, CDB helpers, and game-harness helpers. Tools may require user-supplied local overlays. |
-| `tools/public_primary_migration_inventory.py` | Public-primary migration guard | Tracked | Verifies remaining private-only tracked delta is limited to hard payload or volatile scratch classes. |
-| `release/readiness/curated_release_manifest.json` | Historical/source release accounting input | Tracked public source | Retained for provenance and release-safety checks, but no longer means the public repo is a tiny curated export. |
-| `release/readiness/public_candidate_allowlist.tsv` | Generated public candidate allowlist | Tracked public source | Manifest-derived allowlist used by legacy release checks; not the full public-primary source boundary. |
-| `release/readiness/public_package.json` | Public package template | Tracked public source | Reference for reviewed npm command surfaces and package-shape checks. |
-| `release/readiness/public_AGENTS.md` | Public candidate agent guide | Tracked public source | Historical/materialized guide; root `AGENTS.md` is now the public-primary contributor guide. |
-| `release/readiness/public_gitignore.txt` | Public candidate ignore template | Tracked public source | Historical/materialized ignore template; root `.gitignore` is now the public-primary working ignore file. |
-| `reverse-engineering/binary-analysis/mapped-systems.md` | Active RE pointer index | Tracked public RE docs | The public repo now carries the RE pointer forest and static accounting docs, while full Ghidra databases/backups remain local. |
-| `reverse-engineering/source-code/stuart-source-requirements.md` | Active source-code RE planning note | Included by curated docs policy | Moved from the repo root after reference checks; source/build/symbol/tooling requirements now live beside source-code analysis docs. |
+## Canonical Active Sources
 
-## Shared Correctness/Reference Surfaces
+| Surface | Role | Edit posture |
+| --- | --- | --- |
+| `OnslaughtCareerEditor.WinUI/` | Primary WinUI 3 application | Normal product source |
+| `OnslaughtCareerEditor.AppCore/` | Shared save/options/patch/media/Lore/asset correctness | Prefer behavior here when it is not UI-specific |
+| `OnslaughtCareerEditor.Cli/` | Supported C# analysis/patch support CLI | Active support source |
+| `OnslaughtCareerEditor.AppCore.Tests/`, `OnslaughtCareerEditor.UiTests/` | Active regression and UI-contract tests | Update with affected behavior |
+| `patches/catalog/patches.v2.json` | Patch catalog | Byte-verified copied-target entries only |
+| `lore/` | Canonical narrative and research-facing Lore source | Edit here, then refresh protected projections |
+| `reverse-engineering/` | Canonical RE specifications, evidence summaries, and research | Keep proof classes explicit |
+| `roadmap/` | Current strategy, plans, and bounded proof queues | Plans are not implementation proof |
+| `tools/` | Active and historical validation/RE/lab scripts | Start at `tools/README.md`; do not assume every wave script is a current gate |
+| `developer_agent_state.json`, `documentation_agent_state.json`, `re_orchestrator_state.json` | Concise current batons | Current truth, not campaign changelogs |
 
-| Path | Classification | Release posture | Notes |
-| --- | --- | --- | --- |
-| `OnslaughtCareerEditor.AppCore.Host/` | Temporary parity bridge | Included while parity gates remain | JSON/stdio AppCore bridge used by Electron diagnostics/parity. |
-| `OnslaughtCareerEditor.AppCore.Tests/` | Temporary parity tests | Included | C# regression tests for the current oracle lane. |
-| `OnslaughtCareerEditor.Cli/` | Active C# support CLI | Included while public-safe and needed | C# analyzer/patcher CLI retained for Windows/AppCore workflows and comparison/reference. |
-| `OnslaughtCareerEditor.UiTests/` | Parity/static tests | Included | Some tests intentionally inspect archived WPF files, so archive paths must not move casually. |
-| `OnslaughtCareerEditor.WinUI.slnx` | Primary WinUI lane solution | Included | References the WinUI app, AppCore, AppCore.Tests, UiTests, and C# CLI for normal Windows-lane development. |
-| `OnslaughtCareerEditor.Release.slnx` | Active C# parity/support solution | Included | References AppCore, AppCore.Host, AppCore.Tests, C# CLI, and UiTests as support/parity coverage. The primary app solution is `OnslaughtCareerEditor.WinUI.slnx`. |
-| `references/` | Source/reference corpus | Tracked gitlinks | Contains submodule gitlinks to Stuart source and AYAResourceExtractor references. Submodule contents keep their own provenance/licensing; full game payloads do not belong here. |
+`OnslaughtCareerEditor.WinUI.slnx` is the normal product solution.
+`OnslaughtCareerEditor.Release.slnx`, AppCore.Host, and the CLI remain support
+surfaces, not a second GUI product.
 
-## Archived Or Non-Shipping Surfaces
+## Derived And Protected Projections
 
-| Path | Classification | Release posture | Notes |
-| --- | --- | --- | --- |
-| `archive/electron-workbench/` | Archived Electron/React/TypeScript workbench detour | Tracked reference source; not shipped app payload | Former Electron main process, React renderer, TypeScript contracts, TypeScript CLI, and Electron bundle helpers. Optional `archive:electron:*` npm scripts exist for reference checks only. |
-| `archive/legacy-winui-release/` | Archived WinUI portable-bundle helpers | Tracked reference source; not shipped app payload | Retained only as historical reference for the WinUI bundle; Electron release helpers are `archive/electron-workbench/release/Build-ElectronBundle.ps1`, `archive/electron-workbench/release/ELECTRON-BUNDLE-LAUNCHER.cmd`, and `archive/electron-workbench/release/ELECTRON-BUNDLE-README.MD`. |
-| `archive/legacy-wpf/` | Archived WPF app | Tracked reference source; not active product | Historical WPF surface. `OnslaughtCareerEditor.UiTests` still reads archived XAML resources, so do not move in cleanup-only passes. |
-| `archive/legacy-python/` | Archived Python GUI/CLI parity app | Tracked reference source; not active product | Historical PyQt GUI and Python CLI parity attempt. Active Python tooling should live under `tools/` or be deliberately reclassified one narrow piece at a time. |
-| Top-level legacy C#/WPF files | Archived elsewhere or absent at root | Excluded if reintroduced | The legacy WPF `App.xaml`, `MainWindow.xaml`, `Onslaught - Career Editor.csproj`, and `Onslaught - Career Editor.sln` live under `archive/legacy-wpf/`; release policy also excludes those root filenames if they reappear. |
-| `archive/historical-docs/WHAT_WE_CAN_DO_NOW.md` | Deprecated historical priority snapshot | Tracked historical docs | Archived after reference checks; current app direction is README, current capabilities, roadmap, and this map. |
-| `archive/historical-docs/USER_SANITY_CHECK.md` | Deprecated C#/WPF sanity checklist | Tracked historical docs | Archived after reference checks; use WinUI/AppCore `dotnet build` / `dotnet test` and `npm run test:winui-primary-lane` in active docs instead. Optional `npm run archive:electron:build` applies only when archived workbench health is deliberately in scope. |
-| `archive/historical-docs/winui-migration-plan.md` | Superseded WinUI migration record | Tracked historical docs | Archived after reference checks; active roadmap index points readers to the three-lane strategy instead. |
-| `wave_online_audit/`, `wave_online_audit2/` | Historical audit notes | Tracked if text/non-payload | Useful for audit provenance; raw runtime payloads still stay local. |
-| `.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md` | Documentation-only collaboration templates | Included where public-safe | Allowed public-primary collaboration templates. Do not add workflows, hosted CI, release automation, or Actions scaffolding. |
+These files are tracked because readers, release packaging, or checkers use
+them. They do not become independent sources of truth.
 
-## Private Local/Runtime-Only Surfaces
+| Surface | Derived from / purpose | Rule |
+| --- | --- | --- |
+| `lore-book/lore/` | Projection of canonical `lore/` | Change canonical source and run docsync |
+| `lore-book/roadmap/` | Projection of selected `roadmap/` content | Change canonical source and run docsync |
+| `lore-book/reverse-engineering/` | Broad technical archive projection | Not a reader-curation claim; change canonical RE source first |
+| `lore-book/CURRENT_CAPABILITIES.md` | Protected capability mirror | Keep byte/content parity through docsync |
+| `release/readiness/public_package.json` | Materialized public-package command template | Root `package.json` remains contributor command authority |
+| `release/readiness/public_AGENTS.md`, `public_gitignore.txt` | Materialized candidate templates | Root files remain current working authority |
+| Generated indexes, ledgers, reports, and snapshots | Checker or packaging inputs | Regenerate from declared inputs; do not hand-edit unless the owning tool says so |
 
-| Path | Classification | Release posture | Notes |
-| --- | --- | --- | --- |
-| `game/` | Local game mirror overlay | Ignored local payload | Read-only input for local proof only. Never patch repo-local `game/BEA.exe`. |
-| `media/` | Local media/input overlay | Ignored local payload | Must not be tracked unless a future public-safe subset is explicitly classified. |
-| `save-attempts/` | Local saves/options overlay | Ignored local payload | Useful for local tests and fixtures. The only tracked save-shaped exception is `tests_shared/fixtures/gold_career_save.bin`. |
-| `subagents/` | Agent/proof reports | Tracked when text/non-payload; generated payload reports ignored by path | Text reports and compact summaries may be tracked. Screenshots, raw CDB logs, frame dumps, copied-game proof payloads, and generated md-link reports stay ignored/local. |
-| `BEA.exe.gzf`, `BEA_Widescreen.exe`, `setuphistory.txt`, `winui-build.log` | Historical/private local artifacts | Excluded unless explicitly reviewed | Leave in place until a later inventory proves whether to archive, regenerate, or remove from private history. |
+The v1.0.9 offline pack contains 949 tracked Markdown/TXT documents from Lore,
+roadmap, and technical RE material. That number measures packaging breadth, not
+editorial curation, completeness, freshness, rights review, or public-safety
+approval.
 
-## Release-Excluded Evidence And Operator Surfaces
+## Historical And Archived Sources
 
-| Path | Classification | Release posture | Notes |
-| --- | --- | --- | --- |
-| `release/readiness/private_runtime_evidence/` | Historical runtime proof reports | Track compact text summaries only; portable app ZIP excluded | Raw screenshots/frame PNGs/proof JSON remain local/ignored. Folder name is historical; tracked files are compact proof summaries, not raw payloads. |
-| `.codex/` | Historical project goal/state notes where tracked; runtime cache local where untracked | Tracked only when compact and non-secret; portable app ZIP excluded | Do not publish runtime cache/session material. Compact historical project-goal notes may be tracked as public-primary source when useful. |
-| `release/artifacts/`, `release/out/` | Generated release/build output | Ignored local output | Regenerated as needed and never treated as source content. |
-| `reverse-engineering/binary-analysis/scratch/`, `lore-book/reverse-engineering/binary-analysis/scratch/` | RE scratch evidence and generated read-back archives | Track promoted summaries/checkers; keep volatile payload scratch local | Public-safe summaries should be promoted into canonical docs instead of shipping raw scratch trees. |
-| `onslaught_codex_directive.md` | Operator/development directive | Local/operator-only unless explicitly public-reviewed | Prompt-order contract when activated; do not publish secrets or authority-bearing local runtime material. |
-| `developer_agent_state.json` | Repo implementation state | Tracked state baton | Main-agent handoff state. Keep concise and non-secret. |
-| `documentation_agent_state.json` | Repo docs/review state | Tracked state baton | Main-agent handoff state. Keep concise and non-secret. |
-| `re_orchestrator_state.json` | RE orchestration state | Tracked state baton when active | RE coordination state. Keep concise and non-secret. |
-| `AGENTS.md` | Public-primary contributor agent guide | Tracked root guide | Required for public repo operation. |
-| `COLLABORATION.md` | Public-safe collaboration guide | Included | Handoff/PR/review expectations for collaborators working from the public-primary repo. |
-| `CONTRIBUTING.md`, `SECURITY.md`, `README.RELEASE.md`, `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md` | Public-safe contributor/release guides | Included where public-safe | Local validation, private-data reporting, and public-source sign-off guidance. |
-| `CURRENT_CAPABILITIES.md` | Public-primary capability summary | Tracked public source | Current capability surface for contributors and users; raw local proof payload paths and generated runtime evidence remain excluded. |
+| Surface | Classification | Normal contributor posture |
+| --- | --- | --- |
+| `archive/electron-workbench/` | Archived Electron/React/TypeScript product detour | Do not install or test by default |
+| `archive/legacy-wpf/` | Archived WPF app | Retained because some UI tests inspect historical resources |
+| `archive/legacy-python/` | Archived Python GUI/CLI attempt | Reference only; active Python tooling lives in `tools/` |
+| `archive/historical-docs/` | Superseded guidance | Never use as current product direction |
+| `wave_online_audit/`, `wave_online_audit2/` | Historical audit records | Evidence/history, not default work queues |
+| Dated `release/readiness/*release*` notes | Release snapshots | Historical after a newer published release |
+| Numbered Ghidra/wave scripts and reports | Campaign evidence and reproducibility material | Not ordinary contributor commands unless a current front door names them |
 
-## Move Decisions
+Historical files may remain useful and tracked. Their presence does not make
+them current, release-required, or a reason to install archived dependencies.
 
-Prompt 8 moved no files. The 2026-05-05 WinUI consolidation pass then archived the Electron/React/TypeScript detour.
+## Maintainer-Local And Generated Payloads
 
-- `OnslaughtCareerEditor.WinUI/` remains in place as the primary Windows product lane; no physical move occurs in the consolidation reset.
-- `archive/electron-workbench/` now contains the former Electron app, React renderer, TypeScript contracts, TypeScript CLI, and Electron bundle helpers. This is reference/provenance code, not an active product or release lane.
-- `archive/legacy-wpf/` remains in place because tests still reference its XAML.
-- `archive/legacy-python/` remains in place as archived historical Python GUI/CLI parity code. It is reference material, not the active Python tooling lane.
-- `game/`, `media/`, `save-attempts/`, and bulky runtime evidence remain local
-  overlays. `subagents/` may carry tracked text reports, but not raw game
-  payload, screenshots, frame dumps, raw CDB logs, or copied executable output.
-- Deprecated top-level guidance files are archived only after reference checks prove the move is safe; `WHAT_WE_CAN_DO_NOW.md` and `USER_SANITY_CHECK.md` moved to `archive/historical-docs/` because only historical audits and release-deny accounting referenced their root paths.
-- `MAPPED_SYSTEMS.md` moved to `reverse-engineering/binary-analysis/mapped-systems.md` after reference checks showed it was an active private RE pointer index, not a product root or public-candidate entrypoint.
-- `STUART_SOURCE_REQUIREMENTS_FOR_FULL_CLARITY.md` moved to `reverse-engineering/source-code/stuart-source-requirements.md` after reference checks showed it was an active source-code RE planning note, not a product root entrypoint.
-- Legacy WinUI portable-bundle helpers moved from `release/` to `archive/legacy-winui-release/`; this historical archive does not decide the current WinUI 3 product lane.
-- `roadmap/winui-migration-plan.md` moved to `archive/historical-docs/winui-migration-plan.md` because it was superseded and no longer belongs in public roadmap output.
+Keep these out of Git and out of public app ZIPs unless a narrow exception is
+explicitly reviewed:
 
-## Current Hard-Payload Excludes To Preserve
+- `game/`, `media/`, `save-attempts/`, `local-ghidra/`, `local-proofs/`, and
+  `local-rom-input/`;
+- copied executables, DLLs, game archives, extracted audio/video/model/texture
+  payloads, arbitrary saves/options, screenshots, frame captures, and raw CDB
+  logs;
+- full Ghidra project databases/backups, secrets, `.env*`, credentials, local
+  configuration, build output, and generated package output;
+- generated `subagents/` snapshots or raw proof payloads. Compact non-secret
+  text reviews may be tracked when they remain useful.
 
-The public source repo can carry source/docs/tools/history broadly. Git must
-exclude hard payloads, while app ZIP releases additionally exclude
-package-irrelevant project-history/accounting surfaces:
+The only tracked save-shaped exception is
+`tests_shared/fixtures/gold_career_save.bin`, the immutable regression fixture.
+Do not generalize that exception.
 
-- `game/**`
-- `media/**`
-- `save-attempts/**`
-- `subagents/md-link-check/**` and any generated/raw proof payload below
-  `subagents/**`
-- runtime `.codex` cache/session/auth/log material; compact non-secret
-  `.codex/goals/**` and `.codex/state/**` markdown may be tracked in source
-  when useful, but app ZIPs and legacy exports omit them
-- `release/artifacts/**`
-- `release/out/**`
-- full Ghidra project databases/backups
-- copied executables, DLLs, archives, extracted audio/video/model/texture
-  payloads, raw saves/options files, screenshots, frame captures, and raw CDB
-  logs
-- secrets, `.env*`, credentials, local config, and build/test output
+## Release Boundary
 
-## Next Cleanup Candidates
+The public source repository and a portable app ZIP have different boundaries.
+Source may contain useful tools, RE notes, plans, compact proof summaries, and
+history. A release ZIP contains the WinUI payload, launcher/readme/license, and
+deliberately selected offline content. Source validation does not publish a
+release, sign a binary, create an installer, or prove gameplay/runtime parity.
 
-- Continue replacing stale curated-export wording with public-primary wording
-  when encountered.
-- Decide whether any narrow algorithm, fixture, or script from `archive/legacy-python/` should be ported into active tooling after script-level inventory and validation.
-- Keep Ghidra rename-map Java/name preflight and read-back proof as a focused future hardening task.
-- Keep Electron archive health checks optional and separate from WinUI product packaging proof.
-- Keep release, UX, and Ralph-loop evidence reports traceable while hard
-  runtime payloads stay ignored/local.
+Use `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md` for signoff and a dated
+readiness note for one exact package. Do not infer current release truth from an
+older materialized template.
+
+## Safe Cleanup Order
+
+1. Identify the canonical owner and all generated/protected consumers.
+2. Prove active build, test, docs, and package references.
+3. Preserve unique history before deleting branches or files.
+4. Move or delete one classified surface at a time.
+5. Run docsync, focused product tests, and the appropriate public-boundary gate.
+6. Update current batons; archive long campaign detail instead of growing them.
+
+Do not casually move the primary solutions, archived WPF resources referenced
+by tests, protected Lore projections, release manifests, or large RE/tool trees.
+Create a generated front door or ownership index before restructuring a large
+directory.

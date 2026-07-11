@@ -17,7 +17,8 @@
     "re": "reverse-engineering/ is canonical. lore-book/reverse-engineering/ is a tracked derived mirror pending a safer generated projection.",
     "lore": "The release contains 949 offline documents selected from Lore, roadmap, and technical RE material. The count proves packaged breadth, not narrative completeness, editorial approval, freshness, provenance/rights review, or broad public-safety approval.",
     "rebuild": "No complete rebuild runtime, renderer, gameplay loop, or parity proof exists. Current maintainers have read GPL source and detailed RE material, so near-term implementation must be labeled RE-informed unless a separately staffed sealed-spec process supports a clean-room claim.",
-    "authorityProblem": "Current, generated, mirrored, archived, and historical documents are not consistently distinguished at their entry points."
+    "authorityMap": "roadmap/repo-structure-and-archive-map.md now classifies current front doors, canonical sources, protected projections, history, and local payloads with explicit conflict rules.",
+    "contributorPath": "npm test is the verified common active-product baseline; normal setup no longer requires submodules or archived Electron npm installation."
   },
   "verifiedAuditFacts": {
     "trackedMarkdownFiles": 3760,
@@ -31,16 +32,13 @@
   "activeBlockers": [
     "CURRENT_CAPABILITIES.md and reverse-engineering/RE-INDEX.md bury orientation beneath evidence streams.",
     "release/readiness/ and tools/ lack useful generated front-door indexes for their scale.",
-    "The normal contributor setup and PR guidance still overexpose archived dependencies and exhaustive ceremony.",
     "The reader-facing Lore pack needs an explicit editorial allowlist, third-party-text inventory, rights/provenance review, and generated canonical projections before another release.",
     "The grouped WinUI action/reaction map omits four Save Lab handler families and claims twelve matrix fields while the TSV currently has nine.",
     "External Cursor/Grok review is degraded by sandbox/authentication constraints; focused Codex review is being used for the current safe slice."
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Publish and enforce the canonical/derived/generated/historical/local-only authority map.",
-    "Create concise front doors before moving or deleting historical evidence.",
-    "Separate active-product quick checks from archive/history and release-signoff checks.",
+    "Create generated front-door indexes before moving or deleting large tools, release, or RE evidence trees.",
     "Add a Lore manifest/allowlist and rights/provenance inventory before claiming completeness or publishing another Lore pack."
   ]
 }

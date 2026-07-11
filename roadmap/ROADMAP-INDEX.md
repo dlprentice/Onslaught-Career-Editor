@@ -1,11 +1,18 @@
 # Roadmap Index
 
 Status: active
-Last updated: 2026-06-29
+Last updated: 2026-07-11
 
 Execution mode: WinUI-first strategy. WinUI 3 is the primary user-facing Windows product lane. Electron, WPF, and the old Python GUI/CLI app are archived/reference surfaces. Active Python scripts remain RE/tooling/lab support.
 
-Ghidra static RE (Steam retail): function-quality queue **6411/6411 = 100.00%** with `0 / 0 / 0` static debt. Wave1220 static closeout acceptance validates active current-risk focused accounting at **1179/1179 = 100.00%** with remaining active focused work `0`; static percentages live in `reverse-engineering/binary-analysis/static-reaudit-measurement-register.md`.
+Ghidra static RE (Steam retail): a historical local snapshot reports
+**6411/6411** rows passing a narrow name/comment/signature hygiene contract and
+**1179/1179** current-risk rows accounted for. Those counters do not prove
+binary-wide semantic completion, correct prototypes/types, runtime behavior, or
+rebuild parity. The active deep audit rates the tracked evidence roughly 2.5/5;
+current accounting context lives in
+`reverse-engineering/binary-analysis/static-reaudit-measurement-register.md` and
+`re_orchestrator_state.json`.
 
 ## Implementation Focus
 
@@ -28,7 +35,7 @@ Ghidra static RE (Steam retail): function-quality queue **6411/6411 = 100.00%** 
 | [rebuild-front-door-chain-map.md](/roadmap/rebuild-front-door-chain-map.md) | Compact static closure, proof-class, alias, and active rebuild-support scope map |
 | [static-to-proof-rebuild-transition-backlog.md](/roadmap/static-to-proof-rebuild-transition-backlog.md) | Active static-to-proof rebuild/spec proof queue and non-claim boundaries |
 | [original-binary-online-multiplayer-feasibility.md](/roadmap/original-binary-online-multiplayer-feasibility.md) | Original-binary online proof ladder and non-claims |
-| [repo-structure-and-archive-map.md](/roadmap/repo-structure-and-archive-map.md) | Current active/archive/private layout |
+| [repo-structure-and-archive-map.md](/roadmap/repo-structure-and-archive-map.md) | Current canonical/derived/generated/historical/local authority map |
 | [winui-lore-offline-pack-plan.md](/roadmap/winui-lore-offline-pack-plan.md) | Generated full-offline Lore content-pack shape for app ZIP candidates |
 | [patchbench-primitive-projection-contract.md](/roadmap/patchbench-primitive-projection-contract.md) | Design-only primitive receipt/source-summary presentation boundary for future PatchBench helper extraction; not extraction approval |
 | [resolved-archive.md](/roadmap/resolved-archive.md) | Historical completed work |

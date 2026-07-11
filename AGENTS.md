@@ -72,18 +72,20 @@ or backups, secrets, build output, and bulky generated runtime captures.
 From repo root:
 
 ```powershell
-git submodule update --init --recursive
+dotnet --version # must be .NET SDK 10.x
 node --version # must be v24.x
 npm --version  # must satisfy >=11.12 <12; npm@11.12.1 is the packageManager target
-npm run test:hard-payload-safety
-npm install
-dotnet build .\OnslaughtCareerEditor.WinUI.slnx --nologo
+py -3 --version
+npm test
 npm run dev
 ```
 
-Use this repo's `package.json` for contributor commands. Validation also
-requires Python 3 through the Windows `py` launcher because docs/release/tooling
-checks use `py -3`.
+This active-product path needs no game install, submodule checkout, Ghidra
+database, or `npm install`. Root `package.json` is the command authority;
+`npm install` is only for deliberate archived Electron inspection. Initialize
+submodules before public allowlist or release signoff. Validation also requires
+Python 3 through the Windows `py` launcher because docs/release/tooling checks
+use `py -3`.
 
 ## Common Local Gates
 

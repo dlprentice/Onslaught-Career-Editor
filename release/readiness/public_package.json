@@ -5,6 +5,8 @@
   "description": "WinUI-first source validation scripts for Onslaught Toolkit.",
   "packageManager": "npm@11.12.1",
   "scripts": {
+    "test": "npm run check:quick",
+    "check:quick": "npm run test:docsync && npm run test:doc-commands && npm run build:winui && npm run test:appcore && npm run test:winui",
     "dev": "dotnet run --project .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj",
     "build": "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo",
     "build:winui": "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo",
@@ -21,6 +23,7 @@
     "test:winui-msix-candidate-probe": "py -3 -B tools\\winui_msix_candidate_probe.py --check",
     "test:winui-installer-preflight": "py -3 -B tools\\winui_installer_preflight.py --check",
     "test:doc-commands": "py -3 -B tools\\public_package_doc_command_check.py --self-test && py -3 -B tools\\public_package_doc_command_check.py",
+    "test:docsync": "py -3 -B tools\\docsync_check.py",
     "test:md-links": "py -3 -B tools\\md_link_check.py --scope all --out-dir subagents\\md-link-check",
     "test:hard-payload-safety": "py -3 -B tools\\hard_payload_safety_check.py --self-test && py -3 -B tools\\hard_payload_safety_check.py",
     "test:public-allowlist": "py -3 -B tools\\public_allowlist_safety_check.py --self-test && py -3 -B tools\\public_allowlist_safety_check.py",

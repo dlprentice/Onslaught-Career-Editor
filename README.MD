@@ -85,20 +85,25 @@ product lanes and are not part of the default shipped app ZIP.
 
 ## Quick Start
 
-From repo root:
+The normal WinUI/AppCore path does not require a game install, Git submodules,
+or `npm install`. From repo root:
 
 ```powershell
-git submodule update --init --recursive
+dotnet --version # must be .NET SDK 10.x
 node --version # must be v24.x
 npm --version  # must satisfy >=11.12 <12; npm@11.12.1 is the packageManager target
-npm run test:hard-payload-safety
-npm install
-dotnet build .\OnslaughtCareerEditor.WinUI.slnx --nologo
+py -3 --version
+npm test
 npm run dev
 ```
 
-`npm run dev` launches the WinUI app (same as `dotnet run` on the WinUI project in this repo).
-All `npm run ...` gates are defined by this repo's `package.json`.
+`npm test` is the active-product quick check: docs/mirror consistency, the
+WinUI build, AppCore tests, and WinUI tests. `npm run dev` launches the WinUI
+app. Both commands use the tools already installed on the machine; the root
+`npm install` path exists only for deliberate inspection of the archived
+Electron workbench and is not normal product setup. Root `package.json` is the
+command authority.
+
 `npm run test:hard-payload-safety` checks that tracked files do not include
 actual copied game/runtime binaries, known local game payload roots, build
 outputs, `.env` files, or credential-like key material. It does not censor raw
@@ -106,13 +111,17 @@ RE notes, state batons, agent reports, or proof summaries.
 
 A fresh clone can build the source, run AppCore/WinUI tests, and inspect docs
 without a local game install, Ghidra database, or private proof archive.
-Initialize submodules before running public allowlist/release-safety gates
+Initialize submodules only before running public allowlist/release-safety gates
 because those gates also inspect reference submodule boundaries. A local
 Battle Engine Aquila install is only needed for game-aware workflows such as
 Media browsing, safe-copy patching, asset extraction, and live runtime proof.
 
 Archived app scripts are reference checks only. They are not the default product
 lane, but they remain part of the repository history.
+
+Use the
+[repository authority map](roadmap/repo-structure-and-archive-map.md) before
+editing mirrors, generated material, release history, or archived surfaces.
 
 Core public-source validation:
 

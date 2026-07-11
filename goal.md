@@ -16,15 +16,15 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Establish a trustworthy Sol Ultra baseline before broad source movement:
+Make the normal contributor path small and authoritative without weakening the
+preservation archive or release signoff:
 
-1. account for and preserve abandoned worktrees and campaign branches;
-2. align active coordination policy with the current review model;
-3. replace historical current-state batons with concise current truth;
-4. map canonical, derived, generated, historical, archived, and local-only
-   surfaces;
-5. define a fast contributor path that remains distinct from exhaustive
-   release/public-boundary signoff.
+1. publish canonical, derived, generated, historical, and local-only authority;
+2. make `npm test` the active-product quick check;
+3. remove submodule checkout and archived Electron dependency installation from
+   the normal first-hour path;
+4. separate focused lane checks from exhaustive public/release signoff;
+5. simplify the PR template to scope, evidence, safety, state, and risk.
 
 This slice is repository and coordination hardening. It does not claim fresh
 runtime, gameplay, visual, patch-behavior, Ghidra read-back, or rebuild proof.
@@ -34,9 +34,9 @@ runtime, gameplay, visual, patch-behavior, Ghidra read-back, or rebuild proof.
 - Public release `v1.0.9` remains the latest published unsigned portable WinUI
   ZIP. It includes the friendly root layout, SHA-256 sidecar, and 949-document
   offline Lore pack.
-- Before this slice, local `main`, `origin/main`, and live remote
-  `refs/heads/main` matched at `9f577b81ccaf0dc20a2f4da18ee1da938def1827`
-  with divergence `0 0`.
+- The Sol Ultra baseline was committed and pushed at
+  `5a7bacecac5e813804355d68a8e51973100e0331`; local `main`, `origin/main`, and
+  live remote `refs/heads/main` matched with divergence `0 0`.
 - Git reports one registered worktree. Seven Codex Desktop worktree entries
   were empty zero-byte shells with no Git metadata or linked conversations and
   were removed on 2026-07-11.
@@ -44,13 +44,15 @@ runtime, gameplay, visual, patch-behavior, Ghidra read-back, or rebuild proof.
   in a verified local Git bundle before branch cleanup. Twenty-four otherwise
   unreachable commits and all three stashes were also preserved. Both bundles
   passed `git bundle verify` and a disposable restore drill. Four
-  `backup/*` refs remain separate and outside every deletion list.
+  `backup/*` refs remain separate and outside every deletion list. After the
+  pushed baseline was accepted, the 61 obsolete local branch names were
+  removed; no backup ref, stash, archive ref, object, or Git GC was touched.
 - The repository currently has 19,389 tracked files, including 13,385 under
   `reverse-engineering/`, 2,614 under `tools/`, and 1,710 under
   `release/`.
-- Root `package.json` currently exposes 1,494 scripts, including 1,472 test
-  scripts and 840 Ghidra wave scripts. This is retained as evidence of the
-  contributor-workflow problem, not accepted as the desired interface.
+- Before this slice, root `package.json` exposed 1,494 scripts, including 1,472
+  test scripts and 840 Ghidra wave scripts, with no default `npm test`. The
+  history remains, but contributors now get one explicit quick-check entry.
 - Baseline checks passed on 2026-07-11:
   - `git diff --check`
   - state JSON parsing
@@ -88,7 +90,7 @@ work plus verified commits and pushes for this campaign.
 This campaign uses Codex root and Codex-owned normal/adversarial lanes on
 `gpt-5.6-sol`/`ultra`. The current broad audit covers repository DX, branch
 archaeology, WinUI UX, patch/mod safety, binary RE quality, Lore quality,
-clean-room rebuild architecture, and holistic normal/adversarial review.
+rebuild provenance/architecture, and holistic normal/adversarial review.
 
 The required external Cursor/Grok lane is currently degraded:
 
@@ -104,35 +106,29 @@ non-destructive slice. The degraded lane must be reported at acceptance.
 
 ## Current Slice Acceptance
 
-- Empty Codex worktree shells are removed without losing source.
-- Campaign branch tips are preserved before ordinary branch-name cleanup.
-- Ordinary campaign branch names remain in place until this baseline commit is
-  accepted; no backup ref, stash, archive ref, object pruning, or Git GC is part
-  of this slice.
-- Active model and consult policy names `gpt-5.6-sol`/`ultra` and
-  `grok-4.5-fast-xhigh`, with one envelope per substantive objective rather
-  than recursive per-operation ceremony.
-- `goal.md`, developer state, documentation state, and RE state are concise
-  current batons.
-- Generated WinUI automation snapshots are ignored as intended.
-- Relevant JSON, docs, mirror, hygiene, payload, and repository gates pass.
-- The verified slice is committed, pushed, and remote parity is confirmed.
+- The authority map resolves current source, protected projections,
+  materialized templates, history, and local payloads.
+- `npm test` runs the active docs/mirror, WinUI build, AppCore, and WinUI tests
+  without a game install, submodules, Ghidra, or `npm install`.
+- Contributor docs route archived Electron installation and exhaustive
+  public/release scans out of the normal first hour.
+- The PR template asks only for scope, exact validation, safety/claim
+  boundaries, state handoff, and remaining risk.
+- Root and materialized public package command surfaces expose the same new
+  quick-check aliases.
+- Dsync, docs/commands, focused product tests, and applicable public-boundary
+  gates pass before commit and push.
 
 ## Next Slices
 
-1. Publish the authority map and an archive-free first-hour contributor path.
-2. Introduce a small, discoverable quick-check interface while retaining
-   exhaustive signoff gates.
-3. Simplify the PR template and clarify sanitized toolkit UI evidence versus
-   prohibited proprietary game captures.
-4. Add a shared guarded/atomic filesystem transaction, close save/options alias
+1. Add a shared guarded/atomic filesystem transaction, close save/options alias
    writes, and bind asset catalogs to a declared trusted export root.
-5. Apply the prioritized WinUI first-user and accessibility fixes, then
+2. Apply the prioritized WinUI first-user and accessibility fixes, then
    validate and expand patches/mods only behind evidence-backed safety gates.
-6. Define the sealed evidence/provenance firewall, then build a deterministic
+3. Define the sealed evidence/provenance firewall, then build a deterministic
    headless simulation kernel and runnable primitive 3D vertical slice under
    the accurate provenance label.
-7. Run deep evidence-based RE and Lore quality passes before expanding claims.
+4. Run deep evidence-based RE and Lore quality passes before expanding claims.
 
 ## Stop Conditions
 

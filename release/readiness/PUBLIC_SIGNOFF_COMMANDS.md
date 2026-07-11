@@ -1,7 +1,7 @@
 # Public Sign-Off Commands
 
 Status: active source/release validation guide
-Last updated: 2026-06-27
+Last updated: 2026-07-11
 
 Use this guide for the public working repo and app-release signoff. It excludes
 live copied-game launch, raw CDB/debugger, full Ghidra database, second-host, and
@@ -25,13 +25,17 @@ node --version # must be v24.x
 npm --version  # must satisfy >=11.12 <12; npm@11.12.1 is the packageManager target
 ```
 
-For a fresh checkout, install dependencies after checking the hard-payload
-boundary if the change touches repo shape or release payload rules:
+The WinUI/AppCore source and release scripts do not require `npm install`.
+Initialize submodules as shown above, then run the hard-payload boundary before
+signoff when the change touches repo shape or release payload rules:
 
 ```powershell
 npm run test:hard-payload-safety
-npm install
 ```
+
+The root install/workspace dependencies are retained only for deliberate
+inspection of the archived Electron workbench; they are not release
+prerequisites for the WinUI product.
 
 ## App Release Candidate Gate
 
