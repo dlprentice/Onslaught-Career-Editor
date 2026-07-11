@@ -1,6 +1,9 @@
 # Reference Materials
 
-### Available in This Repository
+### Maintainer-Local Reference Inventory
+
+These paths describe optional local research material. The files are ignored
+and are not tracked in this repository or included in app releases.
 
 | File | Description |
 |------|-------------|

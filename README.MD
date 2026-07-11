@@ -36,9 +36,12 @@ The ZIP release does not include Battle Engine Aquila game files, copied
 executables, saves, media payloads, full Ghidra databases, or bulky generated
 proof captures. Published `v1.0.9` keeps `lore-book\BOOK.md` as a short entry
 point and adds `lore-pack\onslaught-lore.v1.jsonl` plus
-`lore-pack\onslaught-lore.v1.index.json` with 949 public-safe Markdown/TXT Lore
-documents, so the app can search and read broad offline Lore without raw deep
-`lore-book/` filenames breaking normal Explorer extraction. Its ZIP SHA-256 is
+`lore-pack\onslaught-lore.v1.index.json` with 949 tracked Markdown/TXT
+documents selected from the Lore, roadmap, and technical RE corpus, so the app
+can search and read broad offline material without raw deep `lore-book/`
+filenames breaking normal Explorer extraction. The count is a packaging fact,
+not a claim of narrative completeness, editorial review, freshness,
+provenance/rights review, or broad public-safety approval. Its ZIP SHA-256 is
 `e09439c40a4ff7197c4151e18651388b2515a71950ea2479b01266c00d918519`, with a
 published checksum sidecar. v1.0.9 also improves first-time-user wording around
 write/copy/shell actions and confirms before the app closes or force-stops a

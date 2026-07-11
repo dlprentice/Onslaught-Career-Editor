@@ -43,6 +43,7 @@ subagents/winui-launch-smoke/
 subagents/winui-lore-reader-interaction/
 subagents/winui-media-representative-playback/
 subagents/winui-runtime-accessibility-smoke/
+subagents/winui-agentic-ui-snapshot/
 subagents/winui-visual-qa/
 subagents/winui-zip-package-probe/
 subagents/winui-zip-release-candidate-probe/

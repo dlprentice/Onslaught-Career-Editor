@@ -1,7 +1,7 @@
 # Workstream Contract
 
 Status: active
-Last updated: 2026-07-03
+Last updated: 2026-07-11
 
 This contract applies when a coordinator assigns independent workers,
 reviewers, an integration owner, and an acceptance reviewer across one campaign.
@@ -54,7 +54,8 @@ Each write worker receives a self-contained assignment that names:
 - required files to read before editing
 - claim boundary and explicit non-claims
 - focused and broad-enough validation gates
-- required consult/review, or explicit none with rationale
+- review-envelope reference and any required refresh trigger, or explicit
+  `CONSULT_UNAVAILABLE` / `CONSULT_BOUNDARY` records for missing lanes
 - report paths and commit authority
 - stop conditions and integration dependencies
 - terminal record: exactly one of `ADVANCEMENT` or `BLOCKED_*`
@@ -129,19 +130,23 @@ A `BLOCKED_*` record must include `code`, `evidence`, `prior_attempt`, `owner`,
 Unresolved adversarial blocker findings also force a blocked terminal record
 unless the coordinator or integration owner records an explicit override.
 
-## Nontrivial Work And Authority
+## Substantive Work And Authority
 
-Treat product, source, test, tooling, docs, state, or policy work beyond a
-typo-only fix as nontrivial. RE maps, Ghidra/headless, proof, storage, release,
-runtime, account, spend, disputed, broad, or high-collision work is always
-nontrivial.
+Treat a coherent product, source, test, tooling, docs, state, or policy
+objective as substantive when its scope, behavior, authority, trust boundary,
+or acceptance evidence needs independent judgment. RE maps, Ghidra/headless,
+proof, storage, release, runtime, account, spend, disputed, broad, or
+high-collision work is substantive.
 
-Nontrivial work requires Codex normal/adversarial, Cursor Agent
-`composer-2.5-fast` normal/adversarial, and Grok Build normal/adversarial
-consult evidence unless a lane is unavailable with exact reason and Codex-root
-verification or coordinator/integration-owner override. Cursor Agent
-`gemini-3.1-pro` is suspended while the operator's Cursor API/model usage is
-exhausted; do not call it until the operator explicitly lifts that posture.
+Each substantive objective or related release batch gets one review envelope:
+Codex normal/adversarial using `gpt-5.6-sol`/`ultra`, plus bounded
+Cursor/Grok normal/adversarial using
+`cursor-agent --model grok-4.5-fast-xhigh` when the required read-only
+sandbox and authentication are available. Routine implementation, validation,
+formatting, and state follow-through inside that envelope do not recursively
+launch new reviews. If a lane is unavailable or unsafe to brief, record the
+exact reason and the focused Codex-root verification or
+coordinator/integration-owner override used to continue.
 
 Runtime proof, live Ghidra mutation, destructive cleanup, release,
 external-account action, and spend require a structured baton authority naming

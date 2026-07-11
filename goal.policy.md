@@ -1,7 +1,7 @@
 # Goal Policy
 
 Status: active public-primary charter
-Last updated: 2026-07-03
+Last updated: 2026-07-11
 
 This file is the durable charter for repo `/goal` loops. It should change
 rarely. The mutable current slice lives in `goal.md`.
@@ -45,18 +45,19 @@ proof summaries, and reproducible checkers instead of shipping the payloads.
   frames, caches, and test saves.
 - Codex root remains final owner of edits, validation, state updates, commits,
   pushes, publication, and acceptance.
-- Every nontrivial operation requires bounded consult evidence before terminal
-  success: Codex normal review, Codex adversarial review, Cursor Agent
-  `composer-2.5-fast` normal/adversarial review, and Grok Build
-  normal/adversarial review. Nontrivial means any product behavior, shared
-  AppCore/WinUI/CLI/tooling contract, package script, coordination policy,
-  canonical state, release posture, runtime/RE proof claim, storage/Ghidra
-  posture, cross-file docs truth, disputed scope, or work beyond typo/format
-  cleanup. If a required lane is unavailable, usage-limited, unsafe to brief,
-  or locally failing, record `CONSULT_UNAVAILABLE:<lane>:<reason>` plus the
-  exact tool/command reason. Continue only for non-authority, non-release,
-  non-runtime, non-destructive work after Codex-root verification or an
-  explicit coordinator/integration-owner override.
+- Each substantive objective or related release batch requires one bounded
+  normal/adversarial review envelope before terminal acceptance. Codex root and
+  Codex-owned subagents use `gpt-5.6-sol`/`ultra`; bounded external
+  normal/adversarial consults use
+  `cursor-agent --model grok-4.5-fast-xhigh` when the required read-only
+  sandbox and authentication are available. Trivial lookups, formatting, and
+  routine follow-through inside an accepted envelope do not create recursive
+  consult loops. If an external prompt cannot be safely bounded, record
+  `CONSULT_BOUNDARY:<lane>:<reason>` and use focused Codex-owned review. If a
+  required lane is unavailable, record
+  `CONSULT_UNAVAILABLE:<lane>:<reason>` with the exact failure. Refresh the
+  envelope only when target, scope, mutation class, authority, trust boundary,
+  or acceptance evidence materially changes.
 - Runtime proof, live Ghidra mutation/read-back, destructive cleanup,
   release/publication, account/provider action, and paid spend require explicit
   baton authority naming the action family, allowed commands, forbidden

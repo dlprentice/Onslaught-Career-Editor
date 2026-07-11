@@ -1,7 +1,7 @@
 # AGENTS.md
 
 Status: public-primary contributor agent guide
-Last updated: 2026-06-26
+Last updated: 2026-07-11
 
 This file is the public-primary agent guide for Onslaught Toolkit. Treat this
 checkout as the normal collaboration and day-to-day working repo. Raw project
@@ -29,6 +29,15 @@ or backups, secrets, build output, and bulky generated runtime captures.
 - Read `README.MD`, `CONTRIBUTING.md`, `SECURITY.md`, and
   `COLLABORATION.md` before making changes.
 - Keep changes narrow and path-scoped.
+- Give each substantive objective or related release batch one normal/adversarial
+  review envelope. Codex root and Codex-owned subagents use
+  `gpt-5.6-sol`/`ultra`; bounded external normal/adversarial consults use
+  `cursor-agent --model grok-4.5-fast-xhigh` when the required read-only
+  sandbox and authentication are available. Trivial lookups and routine
+  follow-through inside an accepted envelope do not create recursive consult
+  loops. External prompts stay bounded and non-secret; Codex root owns edits,
+  validation, state, commits, pushes, publication decisions, and final
+  acceptance.
 - Do not add game binaries, extracted assets, copied executables, arbitrary
   local save payloads, screenshots/frame dumps, raw CDB logs, full Ghidra
   databases, credentials, or `.env*` files. The narrow exception is the tracked

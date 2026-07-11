@@ -1,43 +1,46 @@
 {
-  "lastUpdated": "2026-07-05",
-  "currentFocus": "Documentation/state are aligned with the published v1.0.9 portable ZIP release. Current docs promote the first-time-user UX/code-flow safety repairs as the latest unsigned WinUI ZIP release while preserving no-signing/no-installer/no-gameplay/no-online/no-rebuild/no-original-BEA-mutation boundaries.",
+  "lastUpdated": "2026-07-11",
+  "currentFocus": "Make current documentation easy to navigate and authoritative while preserving historical RE, release, Lore, and campaign evidence as clearly derived or historical material.",
   "sourceOfTruth": {
-    "agentGuide": "AGENTS.md",
+    "readme": "README.MD",
     "contributorGuide": "CONTRIBUTING.md",
-    "securityGuide": "SECURITY.md",
     "collaborationGuide": "COLLABORATION.md",
-    "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
-    "coordinationGuide": "coordination/README.md",
+    "securityGuide": "SECURITY.md",
     "activeGoal": "goal.md",
-    "goalPolicy": "goal.policy.md"
+    "capabilities": "CURRENT_CAPABILITIES.md",
+    "reIndex": "reverse-engineering/RE-INDEX.md",
+    "loreIndex": "lore/_index.md"
   },
   "currentDocsTruth": {
-    "wave1220StaticCloseout": "Wave1220 static closeout acceptance: active current-risk focused accounting is `1179/1179 = 100.00%`; remaining active focused work: 0",
-    "preSolUltraQualityWave": "Current tracked changes are bounded source/docs/tooling hygiene for AppCore save analysis, Lore path containment, ZIP extraction safety, validation-tool behavior, release-profile freshness, private-path redaction checks, and concise baton state. They are not release, runtime, live-Ghidra, gameplay, or online-readiness evidence.",
-    "releaseDocs": "v1.0.9 is the latest public GitHub Release. It publishes OnslaughtToolkit-winui-v1.0.9-win-x64.zip and its SHA-256 sidecar for commit 75c7c973bb32e8a308c6607e39035ba7286d8194, with 949 Lore documents, friendly root layout, passing launch/Home/Lore/representative Media smokes, and process cleanup. The release tag remains the package-producing commit; post-publication source-truth cleanup lives on main. v1.0.8 remains historical. `release/readiness/winui_zip_release_v1_0_9_2026-07-05.md` records the published release facts; `release/readiness/winui_action_reaction_map_v1_0_9_2026-07-05.md` records harder release questions plus a source-derived WinUI handler-family action/reaction map; `release/readiness/winui_control_action_matrix_v1_0_9_2026-07-05.tsv` records the per-control source matrix. Do not promote signing, installer/MSIX/Store, announcement, gameplay proof, online capability, rebuild parity, visual parity, or installed-game/original BEA.exe mutation.",
-    "lore": "Lore docs and mirrored roadmap material should remain public-safe and source/tooling scoped. Lore pack and browser hardening is traversal/path-boundary support, not a full filesystem proof or runtime UI proof.",
-    "patchBenchAndWinUI": "WinUI copy and metrics surfaces are source/static or local-build aids unless native UIA or visual proof is freshly run and recorded. PatchBench remains disabled/safety-scoped where runtime proof is absent.",
-    "reAndRebuild": "Static RE closeout and rebuild planning docs remain planning and static-accounting surfaces. They are not runtime parser proof, visual/gameplay proof, live Ghidra read-back, generated asset output, or rebuild parity."
+    "release": "v1.0.9 is the latest published unsigned portable WinUI ZIP; historical v1.0.7 and v1.0.8 material remains historical.",
+    "product": "WinUI 3 is the only forward-facing GUI lane. Electron, WPF, and the old Python GUI are archived references.",
+    "re": "reverse-engineering/ is canonical. lore-book/reverse-engineering/ is a tracked derived mirror pending a safer generated projection.",
+    "lore": "The release contains 949 offline documents selected from Lore, roadmap, and technical RE material. The count proves packaged breadth, not narrative completeness, editorial approval, freshness, provenance/rights review, or broad public-safety approval.",
+    "rebuild": "No complete rebuild runtime, renderer, gameplay loop, or parity proof exists. Current maintainers have read GPL source and detailed RE material, so near-term implementation must be labeled RE-informed unless a separately staffed sealed-spec process supports a clean-room claim.",
+    "authorityProblem": "Current, generated, mirrored, archived, and historical documents are not consistently distinguished at their entry points."
   },
-  "hardPayloadBoundary": "Tracked docs/state must not add hard payloads, secrets, raw local campaign paths, raw storage manifests, private proof paths, copied executables, screenshots/frame dumps, full Ghidra databases, .env files, build output, package output, or runtime cache material.",
-  "validation": {
-    "passedFocusedChecksBeforeFinalSuite": [
-      "Static-to-proof transition backlog probe",
-      "Repo text hygiene tests",
-      "Lore pack builder self-test",
-      "ZIP package probe tests"
-    ],
-    "remainingGatePlan": [
-      "No additional v1.0.9 package release, tag, upload, or release-body mutation is required by the current consult evidence; this cleanup is source-truth housekeeping on main.",
-      "Keep signing, installer/MSIX/Store work, announcement, gameplay proof, online capability, rebuild parity, visual parity, and installed-game/original BEA.exe mutation out of scope."
-    ]
+  "verifiedAuditFacts": {
+    "trackedMarkdownFiles": 3760,
+    "releaseReadinessFiles": 1710,
+    "documentedNpmCommandMentions": 4387,
+    "currentCapabilitiesBytes": 124490,
+    "reIndexBytes": 610552,
+    "goalLinesBeforeReset": 622,
+    "byteIdenticalLoreMirrorPairsApproximate": 1126
   },
-  "blockers": [],
+  "activeBlockers": [
+    "CURRENT_CAPABILITIES.md and reverse-engineering/RE-INDEX.md bury orientation beneath evidence streams.",
+    "release/readiness/ and tools/ lack useful generated front-door indexes for their scale.",
+    "The normal contributor setup and PR guidance still overexpose archived dependencies and exhaustive ceremony.",
+    "The reader-facing Lore pack needs an explicit editorial allowlist, third-party-text inventory, rights/provenance review, and generated canonical projections before another release.",
+    "The grouped WinUI action/reaction map omits four Save Lab handler families and claims twelve matrix fields while the TSV currently has nine.",
+    "External Cursor/Grok review is degraded by sandbox/authentication constraints; focused Codex review is being used for the current safe slice."
+  ],
   "openQuestions": [],
   "nextSteps": [
-    "Next UX hardening, if authorized, should focus on Asset Library first-run guidance, Windowed & Mods density, and replacing any remaining dense maintainer phrasing with plain user flow text.",
-    "Keep historical v1.0.7 release notes intact as historical records.",
-    "Leave any future signing, installer, announcement, or stronger proof work to a separate authorized slice.",
-    "Keep future state updates concise and current-state oriented rather than historical."
+    "Publish and enforce the canonical/derived/generated/historical/local-only authority map.",
+    "Create concise front doors before moving or deleting historical evidence.",
+    "Separate active-product quick checks from archive/history and release-signoff checks.",
+    "Add a Lore manifest/allowlist and rights/provenance inventory before claiming completeness or publishing another Lore pack."
   ]
 }

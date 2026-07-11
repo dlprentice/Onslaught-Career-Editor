@@ -1,78 +1,92 @@
 {
-  "lastUpdated": "2026-07-05",
-  "currentFocus": "v1.0.9 portable ZIP release is published and closed. Current source truth records the first-time-user UX/code-flow safety repairs as the latest unsigned WinUI ZIP release while preserving boundaries: no signing, installer/MSIX/Store work, gameplay proof, Host/Join/player-ready online claim, rebuild parity, visual parity, installed-game mutation, or original BEA.exe mutation.",
+  "lastUpdated": "2026-07-11",
+  "currentFocus": "Sol Ultra repo-wide quality campaign: establish a trustworthy contributor baseline, then improve WinUI UX and safety, validate patch/mod/save/asset behavior, and build a runnable RE-informed original-code rebuild vertical slice under an accurate provenance label.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
-    "contributorGuide": "CONTRIBUTING.md",
-    "securityGuide": "SECURITY.md",
-    "collaborationGuide": "COLLABORATION.md",
-    "localOverlayGuide": "LOCAL_LAB_OVERLAY.md",
+    "goalPolicy": "goal.policy.md",
     "activeGoal": "goal.md",
-    "goalPolicy": "goal.policy.md"
+    "contributorGuide": "CONTRIBUTING.md",
+    "capabilities": "CURRENT_CAPABILITIES.md",
+    "reState": "re_orchestrator_state.json"
   },
-  "currentTruth": {
-    "wave1220StaticCloseout": "Wave1220 static closeout acceptance: active current-risk focused accounting is `1179/1179 = 100.00%`; remaining active focused work: 0",
-    "preSolUltraQualityWave": {
-      "status": "implementation-review-validation",
-      "summary": "The current wave is fixing small, reviewable correctness and hygiene gaps found by local workers and bounded root review. It is not a runtime-proof, release-publication, live-Ghidra, or game-mutation lane.",
-      "implementedRepairs": [
-        "Save analyzer now rejects same-size .bes buffers when the version word is wrong and covers the regression in AppCore tests.",
-        "Lore index and internal-target fallback now reject links that resolve outside the lore root and cover above-root file-backed cases.",
-        "ZIP package extraction rejects absolute, drive-qualified, empty, dot, dot-dot, and outside-root members before extraction.",
-        "Lore pack redaction consumes full maintainer-local path families before broad drive-root replacement.",
-        "Static-to-proof and Wave1220 probes are more tolerant of current canonical forms while retaining fail-closed checks.",
-        "Ghidra static queue probe no longer writes queue artifacts during read-only --check runs; writing now requires --write-report.",
-        "WinUI agentic UI hardening metrics script was added as advisory local tooling.",
-        "Repo text hygiene now flags private repo-root path families in directive and subagent text surfaces.",
-        "package.json includes the local docsync check wrapper."
+  "verifiedTruth": {
+    "release": {
+      "latest": "v1.0.9",
+      "status": "published unsigned portable WinUI ZIP",
+      "releaseTarget": "75c7c973bb32e8a308c6607e39035ba7286d8194",
+      "zipSha256": "e09439c40a4ff7197c4151e18651388b2515a71950ea2479b01266c00d918519",
+      "loreDocuments": 949,
+      "newReleaseAuthorized": false
+    },
+    "gitBaseline": {
+      "mainBeforeCampaign": "9f577b81ccaf0dc20a2f4da18ee1da938def1827",
+      "mainOriginDivergenceBeforeCampaign": "0 0",
+      "registeredWorktrees": 1,
+      "emptyCodexWorktreeShellsRemoved": 7,
+      "campaignBranchesBundled": 61,
+      "unreachableCommitsPreserved": 24,
+      "stashesPreserved": 3,
+      "bundleVerifyAndRestoreDrill": "pass",
+      "ordinaryCampaignBranchCleanup": "pending after baseline acceptance",
+      "backupRefsRetained": 4
+    },
+    "repositoryScale": {
+      "trackedFiles": 19389,
+      "reverseEngineeringFiles": 13385,
+      "toolFiles": 2614,
+      "releaseFiles": 1710,
+      "npmScripts": 1494
+    },
+    "safetyAudit": {
+      "safeCopyModel": "Retain it. Initial copied-profile creation, copied-executable target checks, catalog pinning, backup provenance, and process stop targeting are strong.",
+      "patchCatalog": "29 total rows; 20 visible (9 stable, 11 experimental); 9 hidden companions.",
+      "highPriorityGaps": [
+        "Save/options output protection compares path strings but does not yet reject same-file hardlink/symlink identities or ancestor junction redirection.",
+        "Asset catalogs can resolve rooted, ancestor, or current-directory sources instead of one declared trusted export root."
+      ],
+      "mediumPriorityGaps": [
+        "Launch attestation does not fully revalidate mutable profile options/save/data identities after profile creation.",
+        "Control/music content can commit before its accounting manifest.",
+        "Copied executable writes are verified but not committed through a fully atomic replacement transaction."
       ]
     },
-    "v109Release": {
-      "status": "published",
-      "summary": "v1.0.9 is the latest public GitHub Release. It publishes the first-time-user UX/code-flow safety repairs as an unsigned portable WinUI ZIP with the friendly root layout, 949-document Lore pack, checksum sidecar, passing release-candidate probe, and process cleanup. The release tag remains the package-producing commit; post-publication source-truth cleanup lives on main. v1.0.8 remains historical.",
-      "releaseUrl": "https://github.com/dlprentice/Onslaught-Career-Editor/releases/tag/v1.0.9",
-      "releaseTarget": "75c7c973bb32e8a308c6607e39035ba7286d8194",
-      "zipAsset": "OnslaughtToolkit-winui-v1.0.9-win-x64.zip",
-      "zipSha256": "e09439c40a4ff7197c4151e18651388b2515a71950ea2479b01266c00d918519",
-      "zipSizeBytes": 246804448,
-      "loreDocumentCount": 949,
-      "finalGate": "npm run test:winui-zip-release-candidate-probe",
-      "finalGateStatus": "pass; extracted launch, Home navigation, Lore reader, representative Media smoke, root layout, payload safety, Lore pack checks, and process cleanup passed",
-      "userFacingDelta": "Write/copy/shell/process actions now use clearer first-time-user labels; Stop copied game and app close with a managed copied game now require explicit user confirmation.",
-      "nonClaims": [
-        "No signing, installer, MSIX, Store package, SmartScreen/reputation claim, or announcement.",
-        "No hard payload, copied executable, raw proof bundle, full Ghidra database, secret, installed-game mutation, original BEA.exe mutation, Host/Join enablement, online-ready claim, gameplay claim, rebuild claim, or visual parity claim."
-      ],
-      "winuiActionReactionMap": "release/readiness/winui_action_reaction_map_v1_0_9_2026-07-05.md records harder release questions plus a source-derived handler-family map for visible WinUI buttons, toggles, selections, text edits, sliders, and launch/copy actions. release/readiness/winui_control_action_matrix_v1_0_9_2026-07-05.tsv records the per-control source matrix."
+    "uxAudit": {
+      "runtimeScope": "Two isolated launches, including a no-game first run, covered Home, Save Lab, Game Options, Windowed & Mods, Media, Asset Library, Lore, Settings, and About.",
+      "verifiedBuildAndTests": "WinUI build passed with zero warnings/errors; UI tests passed 134 with 2 asset-dependent skips; AppCore passed 1217.",
+      "priorityFindings": [
+        "Show debug trace can leave a launch preset falsely selected even though launch arguments change.",
+        "Cached navigation can retain stale live-region status and off-screen focus.",
+        "The safe-copy BEA.exe source action clips at the tested compact width.",
+        "True first run promotes Save Lab over the missing game-folder setup action.",
+        "Six principal pages lack semantic Level1 headings and consistent arrival focus."
+      ]
     },
-    "hardPayloadBoundary": "No hard payloads, secrets, raw local campaign paths, storage manifests, private proof paths, copied executables, screenshots/frame dumps, full Ghidra databases, .env files, build output, package output, or local runtime caches belong in tracked docs/state.",
-    "nonClaims": [
-      "No installed Battle Engine Aquila folder or original BEA.exe mutation.",
-      "No BEA executable/CDB/gameplay launch, visual proof, gameplay proof, or runtime causality proof. The v1.0.9 package evidence is limited to WinUI UIA launch/Home/Lore/representative Media smokes.",
-      "No live Ghidra mutation, decompiler read-back, private asset access, extractor/importer execution, or generated asset output.",
-      "No Host/Join enablement, online/player-ready promotion, additional release publication, retag, asset upload, installer, MSIX, Store work, or announcement beyond the already-published v1.0.9 ZIP release."
-    ]
-  },
-  "validation": {
-    "passedFocusedChecksBeforeFinalSuite": [
-      "Focused SaveAnalyzerService wrong-version test",
-      "Focused LoreBrowserService outside-root tests",
-      "tools/winui_zip_package_probe_test.py",
-      "tools/winui_lore_pack_builder.py --self-test",
-      "npm run test:winui-agentic-ui-hardening-metrics",
-      "tools/static_to_proof_transition_backlog_probe.py --check",
-      "tools/repo_text_hygiene_check_test.py"
+    "baselineValidation": [
+      "git diff --check",
+      "state JSON parse",
+      "npm run test:doc-commands",
+      "npm run test:repo-hygiene",
+      "npm run test:hard-payload-safety",
+      "npm run test:public-allowlist"
     ],
-    "knownLocalOnlyGateBehavior": "tools/ghidra_static_reaudit_queue_probe.py --check is expected to fail closed when no local quality snapshot exists; it no longer writes queue output unless --write-report is passed.",
-    "remainingGatePlan": [
-      "No additional v1.0.9 package release, tag, upload, or release-body mutation is required by the current consult evidence; this cleanup is source-truth housekeeping on main.",
-      "Keep signing, installer/MSIX/Store work, announcement, gameplay proof, Host/Join/player-ready online, rebuild parity, visual parity, installed-game mutation, and original BEA.exe mutation out of scope."
+    "boundaries": [
+      "Installed game and original BEA.exe remain read-only.",
+      "No release, signing, installer/MSIX/Store, live Ghidra mutation, gameplay, online-ready, rebuild-parity, or visual-parity claim is created by the baseline slice.",
+      "Static RE accounting and source-derived names remain evidence inputs, not runtime behavior proof."
     ]
   },
-  "blockers": [],
+  "activeBlockers": [
+    "Cursor/Grok read-only consult is degraded: Windows lacks the required sandbox and WSL lacks separate model-catalog authentication.",
+    "The repository still lacks a fast active-product contributor gate distinct from exhaustive signoff.",
+    "Current command, mirror, archive, and evidence authority needs an explicit maintained map before large moves or deletions.",
+    "Save/options and asset-package filesystem identity boundaries need hardening before stronger safety claims or feature expansion."
+  ],
   "openQuestions": [],
   "nextSteps": [
-    "Next UX hardening, if authorized, should focus on Asset Library first-run guidance, Windowed & Mods density, and replacing any remaining dense maintainer phrasing with plain user flow text.",
-    "Leave any future signing, installer, announcement, or stronger proof work to a separate authorized slice."
+    "Commit and push the Sol Ultra baseline after focused validation and review.",
+    "Publish the authority map and archive-free first-hour contributor path.",
+    "Implement the shared guarded/atomic filesystem transaction and trusted asset-root safety slice.",
+    "Fix launch-preset equality and navigation status/focus, then address compact layout, setup hierarchy, and page headings.",
+    "Define the rebuild evidence firewall and build the deterministic kernel."
   ]
 }

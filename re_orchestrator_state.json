@@ -1,49 +1,55 @@
 {
-  "lastUpdated": "2026-07-04",
-  "currentFocus": "RE/Ghidra posture remains source-only during the pre-Sol-Ultra quality wave. The current edits preserve static-accounting truth and fail-closed local Ghidra snapshot behavior without running live Ghidra, reading private assets, mutating projects, launching BEA, or generating payloads.",
-  "staticClosure": {
-    "wave1220StaticCloseout": "Wave1220 static closeout acceptance: active current-risk focused accounting is `1179/1179 = 100.00%`; remaining active focused work: 0",
-    "functionQuality": "6411/6411 = 100.00%",
-    "staticDebt": "0 / 0 / 0",
-    "activeCurrentRisk": "1179/1179 = 100.00%",
-    "measurementFrontDoor": "reverse-engineering/binary-analysis/static-reaudit-measurement-register.md"
+  "lastUpdated": "2026-07-11",
+  "currentFocus": "Deep quality audit of tracked binary-analysis evidence and the agentic RE loop, followed by evidence-backed subsystem review and accurately labeled rebuild implementation work.",
+  "sourceOfTruth": {
+    "index": "reverse-engineering/RE-INDEX.md",
+    "functionIndex": "reverse-engineering/binary-analysis/functions/_index.md",
+    "measurementRegister": "reverse-engineering/binary-analysis/static-reaudit-measurement-register.md",
+    "ghidraRunbook": "reverse-engineering/binary-analysis/ghydra-mcp-runbook.md",
+    "mutationLedger": "reverse-engineering/binary-analysis/function_mutation_ledger.jsonl",
+    "rebuildMap": "roadmap/rebuild-front-door-chain-map.md"
   },
-  "currentTruth": {
-    "ghidraQueueProbe": "tools/ghidra_static_reaudit_queue_probe.py --check is read-only and no longer writes queue artifacts. It fails closed when a local quality snapshot is absent; report writing requires --write-report.",
-    "wave1220Probe": "tools/static_reaudit_final_closeout_wave1220.py accepts the tracked static closeout when canonical docs and state batons contain the closeout token and the local optional queue snapshot is either valid or absent with progress provenance present.",
-    "scope": "Current RE-facing source changes are validator and state hygiene only."
+  "retainedStaticAccounting": {
+    "functionRows": "6411/6411",
+    "activeCurrentRiskRows": "1179/1179",
+    "status": "Retained as prior static accounting pending a deep quality audit; these counters are not runtime, signature, semantic, gameplay, or rebuild proof."
   },
-  "nonClaims": [
-    "No live Ghidra mutation, decompiler read-back, project backup mutation, or private binary/asset read.",
-    "No BEA launch, CDB attach, audio capture, visual/runtime proof, generated asset output, runtime texture decode proof, runtime parser proof, or rebuild parity proof.",
-    "No command arming, extractor/importer execution, AppCore/WinUI/CLI/Godot product exposure, release action, Host/Join enablement, or online/player-ready claim."
+  "auditVerdict": {
+    "maturity": "Approximately 2.5/5: mature static cataloguing and selectively strong subsystem analysis, but not binary-wide semantic completion.",
+    "claimBoundary": "The claim that every function is fully reverse engineered is not supported. The defensible claim is that a historical local snapshot reportedly satisfied a narrow name/comment/signature hygiene contract.",
+    "reproducibility": "The tracked checkout does not contain the current functions_quality.tsv needed to re-prove the historical 6411-function snapshot.",
+    "trackedCoverage": {
+      "historicalDecompileFiles": 8527,
+      "uniqueFunctionAddressesInTrackedDecompiles": 2704,
+      "approximateCurrentDenominatorCoveragePercent": 42.18,
+      "dedicatedFunctionMarkdownFiles": 282,
+      "dedicatedFunctionDocsWithEvidenceSection": 37
+    },
+    "principalRisk": "Automation optimized placeholder-name and comment metrics faster than owner, ABI, type, semantics, provenance, and runtime confidence were established."
+  },
+  "currentTruth": [
+    "The repository contains extensive source-derived and Ghidra-derived function documentation, ledgers, checks, and wave artifacts.",
+    "A complete clean-room Battle Engine Aquila runtime, renderer, gameplay loop, or parity demo does not yet exist.",
+    "Stuart's Onslaught source is architecture and naming evidence; Steam retail binary, real files, and runtime read-back remain higher authority.",
+    "No live Ghidra mutation or copied-runtime proof is authorized by the current baseline slice."
   ],
-  "hardPayloadBoundary": "Full Ghidra databases/backups, copied executable bytes, extracted assets, raw captures, raw proof bundles, screenshots/frame dumps, secrets, local proof roots, and local campaign paths remain outside tracked state.",
-  "runtimeProofBoundary": {
-    "musicAudibleOutputProof": false,
-    "readyToRunLiveAttempt": false,
-    "liveArmAllowed": false,
-    "onlineMultiplayer": "not player-ready; Host/Join remains disabled until required distinct-endpoint command-source proof and source-bound copied-runtime causality proof are accepted",
-    "installedGameOriginalBea": "read-only"
-  },
-  "validation": {
-    "passedFocusedChecksBeforeFinalSuite": [
-      "tools/static_to_proof_transition_backlog_probe.py --check",
-      "tools/repo_text_hygiene_check_test.py",
-      "tools/ghidra_static_reaudit_queue_probe.py --check confirmed fail-closed no-snapshot behavior without writing output"
-    ],
-    "remainingGatePlan": [
-      "Run Wave1220 closeout probe after state refresh.",
-      "Run public-boundary and hard-payload gates before commit/push."
-    ]
-  },
-  "blockers": [
-    "No local Ghidra quality snapshot is available for a positive queue probe result in this lane.",
-    "Optional runtime or representative Media proof requires separate authority and proof-root handling."
+  "boundaries": [
+    "Keep the installed game and original BEA.exe read-only.",
+    "Do not commit copied executable bytes, extracted assets, full Ghidra databases, raw debugger logs, screenshots/frame dumps, or private proof roots.",
+    "Ghidra mutation requires a separate structured baton, exclusive lease, backup, dry run, serialized write/read-back, and ledger update.",
+    "Any future strict clean-room lane must not expose implementation agents to source or decompilation material; all rebuild code must avoid proprietary code and payloads and carry explicit provenance."
+  ],
+  "activeBlockers": [
+    "A fresh whole-binary denominator and current complete export are required before another closure claim.",
+    "Prior 100 percent counters measure review and hygiene accounting, not binary-wide semantic completion.",
+    "A defensible clean-room label requires implementation-room separation and license review; near-term code must use an RE-informed provenance label.",
+    "External Cursor/Grok review is degraded by the required sandbox/authentication boundary."
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Keep RE tooling changes source-only unless a later bounded proof lane explicitly authorizes local runtime or Ghidra work.",
-    "When future live proof is authorized, record exact authority, leases, private proof-root cleanup, and non-claims before running it."
+    "Publish a measured RE quality rubric separating boundary, name/owner, prototype, type/decompile, semantics, provenance, and runtime confidence.",
+    "Rebuild the function denominator with two independent discovery methods and one canonical current manifest.",
+    "Review 5-20-function call-chain clusters around targeting, weapon/projectile/stealth, damage/shields, morph/energy, MissionScript, and renderer/asset boundaries.",
+    "Define a sealed evidence packet and implement the first runnable RE-informed vertical slice with public-safe synthetic fixtures and deterministic tests."
   ]
 }

@@ -22,8 +22,9 @@ ZIP and run `Launch Onslaught Toolkit.cmd` from the clean top-level folder. The
 self-contained WinUI payload lives under `app\`; run
 `app\OnslaughtCareerEditor.WinUI.exe` only as a fallback. The `v1.0.8` package
 was superseded by `v1.0.9`, which bundles a generated short-path `lore-pack/`
-with 949 public-safe Markdown/TXT Lore documents, rewrites unbundled source
-links to GitHub source/search pages, and verifies the exact ZIP with
+with 949 tracked Markdown/TXT documents selected from Lore, roadmap, and
+technical RE material, rewrites unbundled source links to GitHub source/search
+pages, and verifies the exact ZIP with
 Explorer-safe entry paths, packaged-Lore copy truth, extracted launch, Home,
 Lore, representative Media UI smokes, and process cleanup. The `v1.0.9` ZIP
 SHA-256 is
@@ -37,6 +38,10 @@ force-stops a managed copied-game process. `v1.0.7` superseded
 v1.0.4 did not rewrite deeper unbundled Lore links, v1.0.5 did not yet surface
 the source-link boundary clearly inside the app, and v1.0.6 did not yet include
 the generated broad offline Lore content pack.
+
+The 949 count records packaged breadth. It does not prove narrative
+completeness, editorial quality, freshness, provenance/rights review, or that
+every technical/archive document belongs in a future reader-facing pack.
 
 `release/readiness/WINUI-ZIP-README.txt` describes ZIPs built from the current
 source candidate. The published `v1.0.7` asset is documented historically by

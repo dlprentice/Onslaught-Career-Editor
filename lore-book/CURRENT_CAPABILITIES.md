@@ -6,11 +6,15 @@ Last public downloadable app release shape: the public `v1.0.9` release is an
 unsigned portable Windows x64 ZIP with a SHA-256 checksum sidecar. The package
 uses a friendly top-level launcher/readme/license layout, keeps the
 self-contained WinUI payload under `app/`, includes a generated short-path
-`lore-pack/` with 949 public-safe Markdown/TXT Lore documents beside the short
-`lore-book/BOOK.md` entry point, rewrites unbundled source links to GitHub
+`lore-pack/` with 949 tracked Markdown/TXT documents selected from Lore,
+roadmap, and technical RE material beside the short `lore-book/BOOK.md` entry
+point, rewrites unbundled source links to GitHub
 source/search pages, rejects raw root DLL/EXE layouts, rejects Explorer-unsafe
 long ZIP entry paths, and passes extracted launch, Home, Lore, and
 representative Media UI smokes with no skipped test rows and process cleanup.
+The document count proves packaged breadth, not narrative completeness,
+editorial quality, freshness, provenance/rights review, or broad
+public-safety approval.
 ZIP SHA-256:
 `e09439c40a4ff7197c4151e18651388b2515a71950ea2479b01266c00d918519`.
 Evidence: `release/readiness/winui_zip_release_v1_0_9_2026-07-05.md`.

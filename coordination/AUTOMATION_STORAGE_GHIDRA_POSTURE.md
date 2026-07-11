@@ -1,7 +1,7 @@
 # Automation, Storage, Ghidra, And Proof Posture
 
 Status: active coordination posture
-Last updated: 2026-07-03
+Last updated: 2026-07-11
 
 Use this document before assigning, accepting, or integrating coordinated work
 that touches recurring automation, storage retention, Ghidra/headless work, or
@@ -127,13 +127,13 @@ named blocker and name the next real advancement slice. A producing lane cannot
 self-accept terminal success; acceptance must come from a distinct reviewer,
 integration owner, acceptance owner, or human gate.
 
-Each nontrivial automated slice should name:
+Each substantive automated slice or related batch should name:
 
 - the bounded question it answers;
 - the files and resources it owns;
 - the proof class it may claim and the proof classes it does not claim;
-- required consult/review lanes, including adversarial review when risk is not
-  trivial;
+- its normal/adversarial review envelope and any material refresh trigger, plus
+  `CONSULT_UNAVAILABLE` / `CONSULT_BOUNDARY` records for missing lanes;
 - exact validation commands or a bounded reason they could not run;
 - integration-owner state/doc updates if canonical batons are under lease.
 - closeout markers:
@@ -217,18 +217,18 @@ reporting, or consult preparation.
 
 ## Consult Posture
 
-Nontrivial automation, storage deletion/retention, Ghidra mutation, public
-claim promotion, release posture, and broad collaboration-policy work require
-bounded consult evidence or an explicit `CONSULT_UNAVAILABLE` record for each
-missing lane. Required lanes are Codex normal, Codex adversarial, Cursor Agent
-`composer-2.5-fast` normal, Cursor Agent `composer-2.5-fast` adversarial,
-Grok Build normal, and Grok Build adversarial. Cursor Agent `gemini-3.1-pro`
-is suspended while the operator's Cursor API/model usage is exhausted; do not
-call it until the operator explicitly lifts that posture. Consults are
-advisory; Codex root or the integration owner remains responsible for final
-scope, safety, state reconciliation, and acceptance. Unresolved adversarial
-blockers prevent terminal success unless the coordinator or integration owner
-records a specific override rationale.
+Each substantive automation, storage, Ghidra, public-claim, release-posture, or
+collaboration-policy objective gets one bounded normal/adversarial review
+envelope. Codex root and Codex-owned subagents use
+`gpt-5.6-sol`/`ultra`; external normal/adversarial consults use
+`cursor-agent --model grok-4.5-fast-xhigh` when the required read-only
+sandbox and authentication are available. Routine follow-through inside the
+envelope does not create recursive consult loops. If an external prompt cannot
+stay bounded and non-secret, record the boundary and use focused Codex-owned
+review. Consults are advisory; Codex root or the integration owner remains
+responsible for final scope, safety, state reconciliation, and acceptance.
+Unresolved adversarial blockers prevent terminal success unless the
+coordinator or integration owner records a specific override rationale.
 
 Each `CONSULT_UNAVAILABLE` record must include the exact tool, command, model,
 authentication, usage-limit, or safety-boundary reason and the Codex-root
@@ -238,9 +238,8 @@ Prepared consult lanes for this posture class:
 
 | Lane | Normal brief focus | Adversarial brief focus |
 | --- | --- | --- |
-| Codex | Check whether the patch makes the storage/Ghidra/proof posture durable, concise, and consistent with repo contracts. | Attack for hidden authority expansion, state/write conflicts, hard-payload leakage, stale legacy-drive reliance, weak proof-class separation, and missing validation. |
-| Cursor Agent `composer-2.5-fast` | Review docs for practical contributor clarity and collision risk in coordinated campaigns. | Attack for ambiguous ownership, unsafe automation shortcuts, overbroad cleanup language, or claims that exceed evidence. |
-| Grok Build | Review policy reasoning, authority boundaries, and evidence sufficiency for broad or high-risk coordinated work. | Attack for unsafe deletion, mutation, proof-retention, external-tool, or campaign-control assumptions. |
+| Codex `gpt-5.6-sol`/`ultra` | Check whether the patch makes the storage/Ghidra/proof posture durable, concise, and consistent with repo contracts. | Attack for hidden authority expansion, state/write conflicts, hard-payload leakage, stale legacy-drive reliance, weak proof-class separation, and missing validation. |
+| Cursor/Grok `grok-4.5-fast-xhigh` | Review practical contributor clarity, collision risk, policy reasoning, and evidence sufficiency from a bounded sanitized brief. | Attack for ambiguous ownership, unsafe deletion or mutation, overbroad cleanup language, proof-retention mistakes, and claims that exceed evidence. |
 
 Consult briefs must not include secrets, `.env` values, auth/session/cache/log
 material, raw local manifests, exact local proof roots, hard payloads, copied

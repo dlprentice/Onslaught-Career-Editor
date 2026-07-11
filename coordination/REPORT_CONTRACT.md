@@ -1,7 +1,7 @@
 # Report Contract
 
 Status: active
-Last updated: 2026-07-03
+Last updated: 2026-07-11
 
 Worker, review, integration, and acceptance reports are campaign-control
 artifacts first. Write them to the local campaign root unless an integration
@@ -45,18 +45,15 @@ A write worker report must include:
 
 ### Consult Evidence
 
-Every worker report must include a `Consult Evidence` entry. If no consults
-were mandated, record `NO_MANDATED_CONSULTS`. When an assignment requires
-specific consult lanes, the report must list each required lane separately:
-Codex normal review, Codex adversarial review, Cursor Agent
-`composer-2.5-fast` normal review, Cursor Agent `composer-2.5-fast`
-adversarial review, Grok Build normal review, and Grok Build adversarial
-review. Cursor Agent `gemini-3.1-pro` remains suspended while the operator's
-Cursor API/model usage is exhausted; do not call it or treat it as required
-until the operator explicitly lifts that posture. If a lane is unavailable,
-mark it unavailable with exact tool/command/model/auth/safety reason.
-Optional additional consults may be recorded as supplemental evidence, but they
-do not replace any required lane in the current consult stack.
+Every worker report must include a `Consult Evidence` entry. For substantive
+objectives or related release batches, name the active review envelope and list
+its lanes separately: Codex normal, Codex adversarial, Cursor/Grok normal, and
+Cursor/Grok adversarial. Codex-owned lanes use `gpt-5.6-sol`/`ultra`;
+external lanes use `cursor-agent --model grok-4.5-fast-xhigh` from bounded,
+non-secret context when the required read-only sandbox and authentication are
+available. Routine follow-through may reference the existing envelope instead
+of launching another review. Refresh it only when target, material scope,
+mutation class, authority, trust boundary, or acceptance evidence changes.
 
 The consult entry must include a brief non-sensitive task-scope summary,
 accepted consult findings, rejected consult findings with reasons, unresolved
@@ -67,10 +64,10 @@ coordinator or integration-owner override rationale. Do not paste raw prompts,
 raw logs, local paths, active campaign IDs, secrets, private proof artifacts, or
 full local campaign reports into tracked docs or public summaries.
 
-For nontrivial work, a `CONSULT_UNAVAILABLE` entry must identify the exact
-missing command, tool, model, authentication state, safety boundary, or usage
-limit, plus the Codex-root verification or coordinator/integration-owner
-override used to continue.
+When a required lane is unavailable, a `CONSULT_UNAVAILABLE` entry must
+identify the exact command, tool, model, authentication state, sandbox or
+safety boundary, or usage limit, plus the focused Codex-root verification or
+coordinator/integration-owner override used to continue.
 
 A worker cannot claim complete while validation failures are hidden, a required
 report is missing, a forbidden path changed, a resource lease remains active,

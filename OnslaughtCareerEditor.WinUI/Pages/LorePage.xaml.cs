@@ -92,7 +92,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             CancelPendingSearchFilter();
             ShowReaderPlaceholder(
                 "Loading lore library...",
-                "Refreshing the curated document tree and embedded reader.");
+                "Refreshing the offline document tree and embedded reader.");
             LibrarySummaryTextBlock.Text = "Loading lore library...";
             LibraryCountTextBlock.Text = "Scanning lore-book...";
             PaneStateTextBlock.Text = "Scanning lore-book...";
