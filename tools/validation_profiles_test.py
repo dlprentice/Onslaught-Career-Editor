@@ -21,6 +21,7 @@ REMOVED_ALIASES = {
 RUNTIME_HELPERS = {
     "test:runtime-profile-helper-safety",
     "test:runtime-cdb-helper-safety",
+    "test:runtime-input-helper-safety",
     "test:winui-safe-copy-live-runtime-smoke-helper",
 }
 READINESS_COMMANDS = {

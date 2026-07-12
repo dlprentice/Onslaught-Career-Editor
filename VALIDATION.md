@@ -18,7 +18,7 @@ checker self-binding, families, and profile reachability from current tracked
 source. `npm run test:validation-inventory` validates its parser and the current
 profile contracts.
 
-After this simplification wave the inventory reports 1,511 scripts, 123 npm-run
+After this simplification wave the inventory reports 1,512 scripts, 125 npm-run
 edges, and two exact duplicate-command groups. It classifies 1,087 Ghidra/wave
 commands as historical proof and 98 copied-runtime/original-binary commands as
 runtime proof. Those commands remain invocable; they are not in the 12-command
@@ -55,7 +55,7 @@ two test projects from that same build, shut down build servers, and passed in
 | --- | --- | --- | --- |
 | Minor docs/state | `npm run test:doc-commands`, `npm run test:md-links:public-core` | `npm run test:docsync` for canonical/mirror inputs; `npm run test:doc-commands-all` and `npm run test:md-links` for broad historical/tree changes | current command truth, navigable front doors, mirror integrity |
 | AppCore/WinUI | focused project test while editing; `npm run test:winui-primary-lane` before handoff | `npm run test:winui-safe-copy-preflight` for copied-profile setup; `npm run test:winui-patch-engine-safety` for patch/catalog/mutation paths | data/API behavior, accessibility, primary UI, copied-target and patch safety |
-| Runtime tooling | changed helper's self-tests and `npm run test:runtime-tooling-safety` | the owning runtime-proof checker only when its evidence/schema changes | app-owned profile prep, exact PID/executable/working-directory identity, bounded CDB commands, cleanup |
+| Runtime tooling | changed helper's self-tests and `npm run test:runtime-tooling-safety` | the owning runtime-proof checker only when its evidence/schema changes | app-owned profile prep, exact PID/executable/working-directory identity, input receipt/HWND binding, finally-based key release, bounded CDB commands, cleanup |
 | Rebuild | `npm run test:rebuild` | `npm run test:rebuild-godot-smoke` only for engine setup, rendering, native input, launch, or clean-exit changes | deterministic Core/client, frozen trace/final-state contracts, owned-process cleanup |
 | Payload/provenance | focused scanner self-test while editing | `npm run test:public-allowlist` for repo shape, submodules, fixture/hash, ignore, export, or boundary changes | hard-payload and secret exclusion, exact exceptions, submodule and migration provenance |
 | Release/publication | affected build/accounting gate | the complete commands in [Public Sign-Off Commands](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md), including ZIP candidate proof before publication | notices, package contents/layout, extracted smoke, release accounting |
@@ -72,8 +72,9 @@ installer probes, and ZIP publication remain separately triggered.
 - Installed game and original `BEA.exe` remain read-only; patch tests still
   require copied targets and verified transitions.
 - `test:runtime-tooling-safety` keeps profile preparation, exact CDB process
-  identity, bounded observer commands, and safe-copy cleanup active while the
-  95-child proof sweep remains non-routine.
+  identity, input receipt/HWND binding and key-release cleanup, bounded observer
+  commands, and safe-copy cleanup active while the 95-child proof sweep remains
+  non-routine.
 - The four commands emitted by `OnlineMultiplayerReadinessService` are locked by
   inventory/source-reference tests and remain fail-closed readiness tools.
 - `test:public-allowlist` still runs the full payload self-test, one root plus
@@ -116,6 +117,11 @@ The final broad-enough source closeout passed in 749.2 seconds:
 Release profile, curated-manifest, docsync, JSON, and diff checks also passed.
 No live-game, Ghidra, native Godot, installer, ZIP, signing, publication, or
 release action was run.
+
+A focused integration follow-up added the previously omitted window-input helper
+self-test to both runtime safety profiles. The corrected
+`test:runtime-tooling-safety` profile runs 8 profile-prep, 11 exact CDB identity,
+9 input-helper, and 14 safe-copy smoke-helper tests.
 
 ## Residual Risks
 

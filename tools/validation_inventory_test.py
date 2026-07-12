@@ -38,14 +38,17 @@ def main() -> int:
                 "test:runtime-tooling-safety": (
                     "npm run test:runtime-profile-helper-safety && "
                     "npm run test:runtime-cdb-helper-safety && "
+                    "npm run test:runtime-input-helper-safety && "
                     "npm run test:winui-safe-copy-live-runtime-smoke-helper"
                 ),
                 "test:runtime-profile-helper-safety": "py -3 tools/profile.py",
                 "test:runtime-cdb-helper-safety": "py -3 tools/cdb.py",
+                "test:runtime-input-helper-safety": "py -3 tools/input.py",
                 "test:winui-safe-copy-live-runtime-smoke-helper": "py -3 tools/smoke.py",
                 "test:ghidra-wave1": "py -3 tools/wave.py --check",
                 "test:winui-copied-profile-runtime": (
-                    "npm run test:proof-child && npm run test:runtime-cdb-helper-safety"
+                    "npm run test:proof-child && npm run test:runtime-cdb-helper-safety && "
+                    "npm run test:runtime-input-helper-safety"
                 ),
                 "test:proof-child": "py -3 tools/proof.py",
                 "broken": "npm run missing-script",
@@ -77,8 +80,8 @@ def main() -> int:
         )
         scripts = {item["name"]: item for item in inventory["scripts"]}
 
-        assert inventory["summary"]["scriptCount"] == 12
-        assert inventory["summary"]["edgeCount"] == 6
+        assert inventory["summary"]["scriptCount"] == 13
+        assert inventory["summary"]["edgeCount"] == 8
         assert inventory["summary"]["unknownDependencyCount"] == 1
         assert scripts["broken"]["unknownDependencies"] == ["missing-script"]
         assert scripts["test:ghidra-wave1"]["family"] == "historical-proof"
