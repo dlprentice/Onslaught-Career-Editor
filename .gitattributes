@@ -37,6 +37,7 @@ LICENSE text eol=lf
 *.scss text eol=lf
 *.html text eol=lf
 *.toml text eol=lf
+*.tmpl text eol=lf
 *.txt text eol=lf
 *.patch text eol=lf
 *.csv text eol=lf
