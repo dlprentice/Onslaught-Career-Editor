@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-12",
-  "currentFocus": "Close, export, review, and push the hardened playable Godot First Flight slice, then resume evidence-backed patch/mod verification.",
+  "currentFocus": "Audit the 29-row patch/profile contract, harden dependency and copied-target invariants, then close one bounded evidence-backed patch/mod or launch-attestation gap.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -19,7 +19,8 @@
       "registeredWorktrees": 1,
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "3cc382e8fa206c3a3f885f9dec4dedd2297b9f97"
+      "lastPushedBeforeCurrentSlice": "3cc382e8fa206c3a3f885f9dec4dedd2297b9f97",
+      "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
       "primaryGui": "WinUI 3",
@@ -67,12 +68,13 @@
       "review": "Codex normal and adversarial Core follow-ups accepted after their blockers were fixed; focused Codex adversarial export review accepted payload-mode command construction. Cursor/Grok normal accepted the revised self-contained package architecture. Cursor/Grok adversarial first blocked the unattested real-save export and ambient-input/exclusion evidence, then accepted after the save returned to R4_DENY, negative-surface tests passed, the fixture-free artifact passed, and the producer contract passed from a non-sibling root. Codex root retains final acceptance."
     },
     "rebuildFirstFlight": {
-      "status": "implementation and focused acceptance green; final broad gates, follow-up review, exact export, commit, and push pending",
+      "status": "accepted in source at 0ed4e706753c350ae1ec835d6dd466feddd587c7",
       "architecture": "Godot 4.7 is a procedural view/input adapter over the pure net8 Client and deterministic Core; OnslaughtRebuild.slnx stays engine-free and the visual solution is separate",
       "input": "exact rational 30 Hz accumulation, 250 ms frame cap, held input sampling, one-shot toggle/reset edges, one-tick movement/fire pulses, focus-handler clear, and neutral rearm",
       "toolchain": "fixed tracked manifest and SHA-256, exact official archive/runtime identity, 82-file tree, fixed per-user cache, reparse rejection, held read-only file lease, setup lock through consumers, locked archive-local Godot restore, and explicit same-user non-sandbox boundary",
-      "acceptance": "38 Core, 21 Client, 12 toolchain, 6 evidence-validator, and 6 owned-process tests pass. Cache-only native smoke passes at 1280x720 and 1200x675 with tick 120, state hash 87b9d09a3afec0bebd97f06793b83baabe3ff330b2378ff149194d6d6a4f779d, heuristic semantic HUD/player/sentry/world anchors, synthetic notification-handler clear/rearm, and kernel-owned Job Object cleanup. The rendered-frame checks are regression heuristics, not tamper-resistant or independent visual proof. The exact double-click launcher was manually played with Q/W/Space/R/Esc and exited without a process orphan.",
-      "package": "curated accounting currently selects 721 tracked files; First Flight is source-only and is not in the published v1.0.9 WinUI ZIP"
+      "acceptance": "Source npm test passed a zero-warning WinUI build, 1307 AppCore, 136 WinUI plus 2 expected private-catalog skips, 38 Core, 21 Client, 12 toolchain, 6 evidence-validator, and 6 owned-process tests. Cache-only native smoke passed at 1280x720 and 1200x675 with tick 120, state hash 87b9d09a3afec0bebd97f06793b83baabe3ff330b2378ff149194d6d6a4f779d, heuristic semantic anchors, synthetic notification-handler clear/rearm, and kernel-owned Job Object cleanup. The exact launcher was manually played with Q/W/Space/R/Esc and exited without an orphan. Full docs, 19453-file payload, 19637-file submodule payload, 18600-file hygiene, 74-package notices, and curated gates passed.",
+      "package": "The 721-selected/726-materialized exact source candidate passed payload/inventory, 463-file/138-link Markdown, standalone zero-warning npm test with 1307 AppCore, 123 WinUI plus 15 expected fixture/catalog skips, all 83 rebuild tests, 74-package notices, and 718-file hygiene. First Flight remains source-only and is not in the published v1.0.9 WinUI ZIP.",
+      "review": "Codex and bounded Cursor/Grok normal/adversarial reviews accepted the slice after input, toolchain, smoke-evidence, package, and process-ownership challenges were fixed. The final Codex adversarial follow-up accepted the suspended-root kill-on-close Job Object and explicitly heuristic visual-evidence boundary."
     },
     "boundaries": [
       "No installed-game or original BEA.exe mutation.",
@@ -85,7 +87,8 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Run final broad source gates and normal/adversarial follow-up review, materialize the exact 721-file curated candidate from the terminal commit, then commit and push the First Flight slice.",
-    "Resume evidence-backed patch/mod expansion, then deep RE and Lore quality passes."
+    "Account for all 29 patch rows and safe-copy profile expansions in one machine-checked dependency/conflict/evidence matrix.",
+    "Select and close one bounded high-value patch/mod or launch-attestation gap without touching the installed game or original BEA.exe.",
+    "Continue with generated contributor indexes and the deep RE/Lore quality passes after the patch slice."
   ]
 }

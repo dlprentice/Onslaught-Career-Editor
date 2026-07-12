@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-12",
-  "currentFocus": "Close and push the hardened playable First Flight source truth, then generate contributor indexes and resume patch/mod, RE, and Lore quality work.",
+  "currentFocus": "Audit patch/profile source truth and user-facing evidence labels, then close one bounded patch/mod gap before the deep RE and Lore passes.",
   "sourceOfTruth": {
     "readme": "README.MD",
     "contributorGuide": "CONTRIBUTING.md",
@@ -19,7 +19,7 @@
     "re": "reverse-engineering/ is canonical; static Ghidra closure remains evidence input rather than automatic runtime or rebuild proof.",
     "lore": "The 949-document package count proves packaged breadth, not editorial completeness, freshness, provenance/rights review, or broad public-safety approval.",
     "rebuild": "The GPL-3.0-or-later RE-informed source rebuild now includes the deterministic net8 Core/headless verifier, pure real-time Client adapter, and playable procedural Godot 4.7 First Flight view. The source client needs no retail payload and is not in the published v1.0.9 WinUI ZIP. Current evidence covers exact replay/state hashes, two native viewport sizes, heuristic semantic rendered anchors, a synthetic Godot notification-handler probe, kernel-owned Job Object cleanup, and a fixed verified toolchain cache. The rendered-frame checks are regression heuristics, not tamper-resistant or independent visual proof; the evidence does not prove retail content/parity, a real OS focus transition, strict clean-room status, or same-user sandbox isolation.",
-    "curatedSourcePackage": "The curated artifact is a self-contained, plain non-Git convenience package over the already-public canonical repo, not a replacement checkout or a private/public legal cut. Current tracked accounting selects 721 source files and excludes the real game-generated save baseline; the exact terminal-commit candidate inventory and standalone gates remain pending for this slice."
+    "curatedSourcePackage": "The curated artifact is a self-contained, plain non-Git convenience package over the already-public canonical repo, not a replacement checkout or a private/public legal cut. The accepted First Flight source candidate selected 721 files, materialized 726 files with export metadata, excluded the real game-generated save baseline, and passed standalone payload/inventory, docs, npm test, notices, and hygiene gates."
   },
   "activeBlockers": [
     "CURRENT_CAPABILITIES.md and reverse-engineering/RE-INDEX.md remain too large for fast contributor orientation.",
@@ -29,7 +29,8 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Run final broad source gates and follow-up review, export and validate the exact terminal-commit 721-file candidate, then commit and push the hardened First Flight slice without publishing a release.",
+    "Generate a canonical audit of all 29 patch rows, profile expansions, dependency/conflict edges, exact byte spans, and evidence classes.",
+    "Correct stale or overstated Patch Bench and patch README wording found by that audit, then close one bounded evidence gap.",
     "Generate contributor front-door indexes before reorganizing large RE, tools, or release trees.",
     "Run the deep Lore and RE quality passes after the runnable rebuild foundation is accepted."
   ]

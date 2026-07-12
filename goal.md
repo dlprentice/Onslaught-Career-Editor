@@ -1,7 +1,7 @@
 # Active Goal
 
 Status: ACTIVE
-Last updated: 2026-07-11
+Last updated: 2026-07-12
 Policy: `goal.policy.md`
 
 ## Objective
@@ -16,8 +16,7 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Establish the rebuild provenance firewall and deliver the first runnable
-RE-informed original-code vertical slice:
+Audit and harden the patch/mod contract, then close one evidence-backed gap:
 
 Existing guidance, architecture notes, and process ceremony are reviewable
 project artifacts, not authority to preserve earlier agent choices. Rewrite or
@@ -25,25 +24,25 @@ remove constraints that are stale, redundant, unsupported, or misaligned with
 the product; retain evidence-backed safety, provenance, legal, and user-authority
 boundaries while improving how they are implemented.
 
-1. inventory the current rebuild/source-reference prototypes and choose one
-   bounded path rather than creating another parallel lane;
-2. document the evidence/provenance firewall that distinguishes the current
-   RE-informed implementation from a separately staffed sealed-spec clean-room
-   path;
-3. define a deterministic headless simulation contract with replayable inputs,
-   state transitions, and hashes;
-4. expose a small runnable visual experience that uses original project code and
-   non-proprietary placeholder/generated assets; and
-5. add contributor commands, tests, run instructions, and bounded non-claims so
-   the result is something a maintainer can actually launch and inspect.
+1. account for all 29 rows in `patches/catalog/patches.v2.json`, including
+   visible/hidden status, stability, exact original/patched bytes, dependencies,
+   conflicts, clean-executable identity, evidence references, and proof class;
+2. cross-check `safe-copy-profiles.v1.json`, AppCore planning/apply/verify logic,
+   WinUI copy, and `patches/README.md` against that machine-readable truth;
+3. add deterministic checks for orphaned or invalid dependency/conflict graphs,
+   hidden companion misuse, profile expansion, and copied-target-only policy;
+4. use the audit to select one bounded high-value unverified patch/mod or
+   launch-attestation/accounting gap, then improve it test-first without
+   broadening runtime claims; and
+5. rewrite or remove any stale policy, label, or ceremony discovered along the
+   path instead of preserving earlier agent choices by default.
 
-The preceding WinUI first-use/accessibility slice is accepted locally. True
-first run now prioritizes game-folder setup without blocking manual Save Lab
-files and preserves a remembered folder when its drive is temporarily unavailable;
-shell status/focus ownership, Level 1 headings, compact source actions,
-launch/admin preset truth, and lazy Media VLC initialization have native UIA
-and visual evidence. No installed-game mutation, release, signing, gameplay
-parity, online readiness, or clean-room implementation claim was created.
+The rebuild provenance/Core/First Flight slice is accepted at `0ed4e706`. The
+source-only Godot 4.7 client is playable without retail payloads, and its exact
+curated candidate passed standalone build/test, payload, docs, notices, and
+hygiene gates. This is RE-informed original code, not retail parity or a strict
+clean-room claim. No installed-game mutation, release, signing, Host/Join, or
+online-ready claim was created.
 
 ## Verified Starting Point
 
@@ -56,6 +55,12 @@ parity, online readiness, or clean-room implementation claim was created.
 - The contributor authority and quick-check advancement was committed and
   pushed at `798c339505fb85cc782abbd4b07df81e143c2284`; `npm test` is now the
   normal active-product baseline.
+- The deterministic rebuild Core was accepted and pushed at
+  `3cc382e8fa206c3a3f885f9dec4dedd2297b9f97`. The playable First Flight client
+  was accepted in source at `0ed4e706753c350ae1ec835d6dd466feddd587c7`;
+  its 721-selected/726-materialized plain candidate passed the standalone test
+  suite, payload/inventory, 463-file/138-link Markdown, 74-package notices, and
+  718-file hygiene/line-ending gates.
 - Git reports one registered worktree. Seven Codex Desktop worktree entries
   were empty zero-byte shells with no Git metadata or linked conversations and
   were removed on 2026-07-11.
@@ -124,32 +129,36 @@ follow-ups on challenged assumptions, and separate Codex normal/adversarial
 review. The WinUI slice received Codex normal/adversarial review whose two
 concrete edge-case blockers were fixed with native regressions; independent
 Cursor/Grok normal and adversarial closeout reviews then returned `ACCEPT` with
-no commit blockers. Codex root retained edit, validation, state, commit, push,
+no commit blockers. First Flight received Codex and bounded Cursor/Grok normal
+and adversarial review; the final Codex adversarial follow-up accepted the
+suspended-root Job Object ownership model and explicitly heuristic visual-
+evidence boundary. Codex root retained edit, validation, state, commit, push,
 and final acceptance ownership.
 
 ## Current Slice Acceptance
 
-- The repo has one explicit provenance/firewall contract for RE-informed work
-  and a separately staffable sealed-spec clean-room path.
-- A documented command launches a runnable original-code vertical slice without
-  requiring proprietary game payloads.
-- A deterministic headless test replays the same input sequence to the same
-  rolling trace and final-state hashes and fails on contract drift.
-- The visual slice has bounded input, update, camera/render, reset, and exit
-  behavior plus native screenshot/runtime evidence.
-- Contributor docs/state name what is implemented, what evidence informed it,
-  and what remains unproven; they do not claim gameplay/rebuild parity.
+- A reproducible audit accounts for all 29 patch rows and every profile key,
+  dependency, conflict, hidden companion, exact byte span, and evidence class.
+- Catalog/AppCore checks fail closed on invalid graphs, hidden direct selection,
+  unverified clean-executable identity, byte mismatch, or non-copied targets.
+- User-facing labels distinguish bytes-checked stability, runtime evidence, and
+  unproven/experimental behavior without converting one class into another.
+- One high-value gap selected from the audit receives a bounded implementation
+  and regression test, or a well-formed blocker with the missing evidence and
+  next executable action.
+- Contributor docs/state describe the resulting patch/mod truth without
+  gameplay, online, compatibility, or safety overclaims.
 - Focused tests, broad quick checks, payload boundaries, normal/adversarial
   review, and a verified push pass before advancing.
 
 ## Next Slices
 
-1. Complete the rebuild evidence firewall, deterministic kernel, and runnable
-   RE-informed vertical slice.
-2. Validate and expand patches/mods only behind evidence-backed copy/runtime
-   safety gates, including the remaining launch-attestation/accounting gaps.
-3. Run deep evidence-based RE and Lore quality passes, generated front-door
+1. Audit and harden the 29-row patch/profile contract, then close one bounded
+   evidence-backed patch/mod or launch-attestation gap.
+2. Run deep evidence-based RE and Lore quality passes, generated front-door
    indexing, and stale-claim cleanup before expanding claims or publishing.
+3. Extend the original-code rebuild in small deterministic vertical slices
+   while preserving the separate sealed-spec clean-room option.
 
 ## Stop Conditions
 
