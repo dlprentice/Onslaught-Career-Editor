@@ -71,6 +71,11 @@ feeds ambiguities back to RE instead of promoting its own assumptions.
   corroboration. The user pre-authorized the recommended continuation. Runtime
   execution remains pending the structured local baton, resource leases,
   implementation, and validation.
+- The Stage A implementation is decomposed in
+  `roadmap/battleengine-morph-identity-canary-implementation-plan-2026-07-12.md`.
+  It reuses AppCore and the existing live harness, adds no product API or
+  package-script chain, and reserves broad validation for one integrated
+  runtime-slice closeout.
 - Normal and adversarial review found and closed stale active-index, deep-link
   historical-label, include-parser/count, and current-roadmap contradictions.
   The corrected include inventory is 254 unique quoted targets with 202 absent.
