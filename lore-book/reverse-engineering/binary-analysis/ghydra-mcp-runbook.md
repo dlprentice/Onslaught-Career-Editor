@@ -1,7 +1,7 @@
 # GhydraMCP Runbook (BEA.exe)
 
 > Practical operating guide for this repo's Ghidra workflow, with historical MCP notes.
-> Last updated: 2026-07-03
+> Last updated: 2026-07-12
 
 ## Active Environment (Authoritative)
 
@@ -11,8 +11,15 @@
 - Live BEA project (maintainer-local): exact project/store paths are kept in ignored local overlay notes or maintainer-private manifests.
 - Active GhydraMCP bundle: none. The prior local bundle was removed after the workstation moved project scratch/backup/tooling posture to maintainer-local removable/tooling storage.
 - Repo-local `tools/GhydraMCP/` has been removed from this repo to avoid runtime-bundle confusion.
-- Canonical workstation setup, mutation discipline, backup-root posture, and static closeout truth live in `AGENTS.md` sections `Ghidra / Headless Rules` and `Current Known Gaps`.
-- After any chat context reset/compaction or Ghidra restart/deadlock, reread `AGENTS.md`, this runbook, the three repo state batons, and the relevant wave evidence before attempting mutations.
+- Repo safety and routing live in `AGENTS.md` First Rules, Task Router And
+  Validation, and Patch/Mod Rules. This runbook is the canonical tracked
+  Ghidra/headless operating route; current semantic confidence lives in the
+  active RE front door and per-cluster evidence, not in historical closure
+  counters.
+- After context reset/compaction or Ghidra restart/deadlock, reread the current
+  task authority/lease, this runbook, and the specific evidence for the target
+  addresses before attempting mutations. In a coordinated campaign, canonical
+  state batons remain integration-owned.
 - Backup root note (2026-06-25): external backup storage is machine-local and can be attached or detached. The exact backup root and latest verified backup name are kept outside tracked docs. If the preferred external root is unavailable during a new backup-producing Ghidra wave, use another explicit local backup root and record that temporary root in private evidence/state.
 
 ## Current Access Mode
@@ -37,14 +44,13 @@ Continue strict serialized mutation/read-back rules regardless of chosen transpo
 From WSL, use Windows gateway IP instead of localhost:
 
 ```bash
-ip route
-# Example default gateway observed on this machine:
-# 172.26.112.1
+WINDOWS_HOST_IP="$(ip route | awk '/default/ {print $3; exit}')"
+test -n "$WINDOWS_HOST_IP"
 
-curl http://172.26.112.1:8193/
-curl http://172.26.112.1:8193/instances
-curl http://172.26.112.1:8193/program
-curl http://172.26.112.1:8193/analysis/status
+curl "http://${WINDOWS_HOST_IP}:8193/"
+curl "http://${WINDOWS_HOST_IP}:8193/instances"
+curl "http://${WINDOWS_HOST_IP}:8193/program"
+curl "http://${WINDOWS_HOST_IP}:8193/analysis/status"
 ```
 
 Use the root `_links` response as the live source of available API routes for the currently running plugin.
@@ -102,7 +108,11 @@ Avoid automating project-open during active RE sessions:
 
 ## Mutation Safety Pattern
 
-Scope gate: this section applies only when an explicit RE mutation lane is active. It is not the default app-development workflow.
+Scope gate: the per-address delay and HTTP read-back procedure below applies
+only when an explicit MCP/HTTP mutation lane has been restored. Headless
+dry/apply/final-dry wrappers follow their own tracked contract; do not add fixed
+sleeps or duplicate scans unless current tool evidence requires them. Neither is
+the default app-development workflow.
 
 For each edit (rename/signature/comment/type):
 
@@ -111,7 +121,8 @@ For each edit (rename/signature/comment/type):
 3. If read-back is good, enforce a 5-second inter-command delay (`sleep 5`) before the next mutation command.
 4. For owner-correction batches (`<Class>__Unk_*`), filter out non-owner/system caller labels even if singular (`entry`, CRT/stdio wrappers, `_longjmp`, `FatalError`, empty owner, parser artefacts). Promote only class/subsystem owners backed by evidence.
 5. Log every touched address in `function_mutation_ledger.jsonl` and `function_mutation_attempt_log.jsonl` (success/failure + transport + operation details).
-6. Update `function_mutation_tracking_state.json` in the same work window (counters + last touched + pending set).
+6. If the active mutation baton supplies a tracking-state artifact, update it in
+   the same work window. Do not invent an ad-hoc tracked state path.
 7. Mirror status in `MCP-MUTATION-BACKLOG.md` pending/completed sections.
 8. Update docs only after read-back confirms change.
 
@@ -124,18 +135,20 @@ Wave sizing rule (this workstation):
 5. Save/checkpoint opportunistically (for example after risky operations or long runs), then confirm `saved`.
 6. If timeout/deadlock/mismatch occurs, verify survival read-back first, then continue on the healthiest path (HTTP if available) or recover/restart and resume from the first unverified address.
 
-Tracking files (mandatory):
+Tracked mutation records (mandatory):
 
 1. `function_mutation_ledger.jsonl`: canonical per-address task ledger (pending/completed mutation intent).
 2. `function_mutation_attempt_log.jsonl`: per-attempt execution log (transport + operation + read-back result).
-3. `function_mutation_tracking_state.json`: synchronized counters/pending set/next attempt id for fast resume after deadlocks.
+
+An additional tracking-state file is campaign-local/conditional and exists only
+when the active mutation baton defines its schema and owner.
 
 Recommended verification snippets:
 
 ```bash
-curl -sS http://172.26.112.1:8193/functions/00401000
-curl -sS 'http://172.26.112.1:8193/data?addr=0083d130&limit=1'
-curl -sS 'http://172.26.112.1:8193/functions?name_contains=FUN_&offset=0&limit=1'
+curl -sS "http://${WINDOWS_HOST_IP}:8193/functions/00401000"
+curl -sS "http://${WINDOWS_HOST_IP}:8193/data?addr=0083d130&limit=1"
+curl -sS "http://${WINDOWS_HOST_IP}:8193/functions?name_contains=FUN_&offset=0&limit=1"
 ```
 
 ## Documentation Audit (Read-Only)
@@ -143,7 +156,7 @@ curl -sS 'http://172.26.112.1:8193/functions?name_contains=FUN_&offset=0&limit=1
 This repo includes a read-only “online semantic audit” that cross-checks documented function mappings against the live Ghidra instance via HTTP `GET /functions/<addr>`:
 
 ```bash
-python3 tools/semantic_audit_online.py --base http://172.26.112.1:8193 --timeout 2
+python3 tools/semantic_audit_online.py --base "http://${WINDOWS_HOST_IP}:8193" --timeout 2
 ```
 
 Outputs (dated):
@@ -175,7 +188,11 @@ This keeps mutation on the CodeBrowser/UI side (same mechanism as manual `L` ren
 
 ## Current Known Limits
 
-Coverage closure note (2026-03-04): strong semantic naming is at 100% in the canonical tracker. Treat older per-address create-function "gaps" in historical notes as archived unless re-opened with fresh evidence.
+Coverage accounting note: the historical `6411/6411` tracker closes its narrow
+name/comment/signature metadata contract. It does not prove binary-wide owner,
+prototype/type, or semantic correctness. Treat every saved name as revisable by
+fresh static/runtime evidence, and treat older create-function gaps as
+historical unless a current subsystem record reopens them.
 
 - No reliable API route is currently documented/verified for explicit "save program now" from GhydraMCP.
 - Use UI save (`Save BEA.exe`) for durability.
@@ -197,7 +214,8 @@ Coverage closure note (2026-03-04): strong semantic naming is at 100% in the can
   - `domainFileStatusChanged ... fileIDset=false` is a dirty-state signal (unsaved changes available), not the root cause of create-function rejection.
   - Treat as Ghidra/plugin create-function behavior on those addresses and keep comment-first fallback until manual/UI recovery succeeds.
 - Historical recovered-address narratives and prior create-function hotspots are intentionally tracked in mutation logs/backlog, not repeated here to avoid stale runbook drift.
-- For other limitations and workarounds, see `MCP_LIMITATIONS.md`.
+- Record current limitations and workarounds in this section and
+  `MCP-MUTATION-BACKLOG.md`; historical reports are not active instructions.
 
 ## Sources / References
 

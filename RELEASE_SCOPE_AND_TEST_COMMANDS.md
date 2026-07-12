@@ -38,8 +38,12 @@ The active product/support source shape is:
 
 Ghidra static RE posture (Steam retail, loaded database):
 
-- Function-quality closure remains **6411/6411 = 100.00%** with static debt `0 / 0 / 0`.
-- Wave1220 aggregate static closeout acceptance validates active current-risk focused accounting at **1179/1179 = 100.00%** with remaining active focused work `0`.
+- The historical tracker accounts for **6411/6411** rows under a narrow
+  name/comment/signature metadata contract; it does not establish binary-wide
+  semantic correctness.
+- Wave1220 accounts for **1179/1179** current-risk rows under its recorded
+  review rubric. Owner, prototype/type, semantics, provenance, and runtime
+  confidence remain per-cluster, evidence-backed, and revisable.
 - Public static summary front door: `reverse-engineering/RE-INDEX.md`. The
   detailed measurement registers under `reverse-engineering/binary-analysis/`
   are tracked source material. Static closeout does not prove runtime behavior,

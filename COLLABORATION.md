@@ -10,17 +10,20 @@ automation, or workflow scaffolding.
 
 ## Start Here
 
-1. Run `npm test` once to establish the active-product baseline.
-2. Read [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and the
-   [repository authority map](roadmap/repo-structure-and-archive-map.md).
-3. Pick one lane and keep the change scoped to that lane.
-4. Run the smallest relevant local gate set before review.
-5. Include the exact commands you ran in the handoff.
-6. Confirm that no game payloads, copied executables, screenshots/frame dumps,
+1. Read [CONTRIBUTING.md](CONTRIBUTING.md), pick one lane, and keep the change
+   scoped to it. Read [SECURITY.md](SECURITY.md) and
+   [LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md) when the work touches game
+   files/copies, saves, assets, Ghidra/runtime proof, or payload boundaries.
+2. Use `npm test` for fresh setup, broad active-product changes, or integrated
+   closeout. For a narrow lane or documentation-only change, start with the
+   smallest relevant gate in the table below.
+3. Run the selected local gates before review and include the exact commands in
+   the handoff, including any broader gates intentionally skipped.
+4. Confirm that no game payloads, copied executables, screenshots/frame dumps,
    raw CDB logs, arbitrary saves, secrets, or bulky generated proof payloads
    are in the change. Text state batons, compact proof summaries, and agent
    reports are allowed when they are useful and non-secret.
-7. For meaningful code, docs, runtime proof, release, or repo-boundary changes,
+5. For meaningful code, docs, runtime proof, release, or repo-boundary changes,
    update the relevant state baton or explain why the work was read-only.
 
 ## Lanes
@@ -88,9 +91,9 @@ Required answers:
   release manifest entries, copied-game proof summaries, or local evidence.
 - `State baton update` names updated state files, or says `read-only/no state
   edit`.
-- `Installed game / original BEA.exe mutation` must be `none` unless a private
-  maintainer intentionally performed a copied-profile/runtime proof. Public
-  contributors should never mutate the installed game or original executable.
+- `Installed game / original BEA.exe mutation` must always be `none`.
+  Copied-profile/runtime proof is reported under validation and local evidence;
+  it is never an exception to the installed/original read-only rule.
 
 ## Review Expectations
 
