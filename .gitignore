@@ -41,6 +41,7 @@ subagents/md-link-check/
 subagents/winui-home-navigation/
 subagents/winui-launch-smoke/
 subagents/winui-lore-reader-interaction/
+subagents/winui-media-interaction/
 subagents/winui-media-representative-playback/
 subagents/winui-runtime-accessibility-smoke/
 subagents/winui-agentic-ui-snapshot/

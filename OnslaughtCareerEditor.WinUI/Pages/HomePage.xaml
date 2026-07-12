@@ -20,6 +20,23 @@
                            Style="{StaticResource SectionBodyTextStyle}" />
             </StackPanel>
 
+            <InfoBar x:Name="HomeSetupInfoBar"
+                     AutomationProperties.AutomationId="HomeSetupInfoBar"
+                     IsClosable="False"
+                     IsOpen="False"
+                     Severity="Informational"
+                     Title="Choose your game folder">
+                <InfoBar.ActionButton>
+                    <Button x:Name="HomeSetupActionButton"
+                            AutomationProperties.AutomationId="HomeSetupActionButton"
+                            AutomationProperties.Name="Choose game folder"
+                            Content="Choose game folder"
+                            Tag="settings"
+                            Style="{StaticResource PrimaryActionButtonStyle}"
+                            Click="NavigateButton_Click" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+
             <Grid ColumnSpacing="16"
                   RowSpacing="16">
                 <Grid.ColumnDefinitions>
@@ -31,7 +48,8 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <Border Grid.Row="0"
+                <Border x:Name="SaveOptionsCardBorder"
+                        Grid.Row="0"
                         Grid.Column="0"
                         Style="{StaticResource SectionCardStyle}"
                         Margin="0">
@@ -45,7 +63,8 @@
                                    Style="{StaticResource SectionBodyTextStyle}" />
                         <StackPanel Orientation="Horizontal"
                                     Spacing="10">
-                            <Button Content="Open Save Lab"
+                            <Button x:Name="HomeOpenSaveLabButton"
+                                    Content="Open Save Lab"
                                     AutomationProperties.AutomationId="HomeOpenSaveLabButton"
                                     AutomationProperties.Name="Open Save Lab"
                                     Tag="saves"
@@ -55,21 +74,18 @@
                                     AutomationProperties.AutomationId="HomeOpenConfigurationEditorButton"
                                     AutomationProperties.Name="Open Game Options"
                                     Click="OpenConfigurationEditorButton_Click" />
-                            <Button Content="Review Settings"
-                                    AutomationProperties.AutomationId="HomeReviewSettingsButton"
-                                    AutomationProperties.Name="Review Settings"
-                                    Tag="settings"
-                                    Click="NavigateButton_Click" />
                         </StackPanel>
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Row="0"
+                <Border x:Name="SetupCardBorder"
+                        Grid.Row="0"
                         Grid.Column="1"
                         Style="{StaticResource SectionCardStyle}"
                         Margin="0">
                     <StackPanel Spacing="10">
-                        <TextBlock Text="Setup"
+                        <TextBlock x:Name="SetupTitleTextBlock"
+                                   Text="Setup"
                                    AutomationProperties.AutomationId="HomeSetupTitle"
                                    AutomationProperties.HeadingLevel="Level2"
                                    FontSize="18"
@@ -77,8 +93,15 @@
                         <TextBlock x:Name="SetupStatusTextBlock"
                                    AutomationProperties.AutomationId="HomeSetupStatus"
                                    Style="{StaticResource SectionBodyTextStyle}" />
-                        <TextBlock Text="Windowed &amp; Mods creates a safe game copy, patches only that copy, and plays only that copy without changing the Steam/game install."
+                        <TextBlock x:Name="SetupGuidanceTextBlock"
+                                   Text="Windowed &amp; Mods creates a safe game copy, patches only that copy, and plays only that copy without changing the Steam/game install."
                                    Style="{StaticResource SectionBodyTextStyle}" />
+                        <Button Content="Review Settings"
+                                AutomationProperties.AutomationId="HomeReviewSettingsButton"
+                                AutomationProperties.Name="Review Settings"
+                                Tag="settings"
+                                HorizontalAlignment="Left"
+                                Click="NavigateButton_Click" />
                     </StackPanel>
                 </Border>
 

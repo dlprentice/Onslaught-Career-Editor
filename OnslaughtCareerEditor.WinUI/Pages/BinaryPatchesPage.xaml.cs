@@ -65,6 +65,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ControlConfig3,
             ControlConfig4,
         }
+        private static readonly LaunchPresetChoice[] s_namedLaunchPresetChoices =
+        {
+            LaunchPresetChoice.QuietCapture,
+            LaunchPresetChoice.HighDetail,
+            LaunchPresetChoice.ControlBaseline,
+            LaunchPresetChoice.ControlSharpened,
+            LaunchPresetChoice.ControlConfig2,
+            LaunchPresetChoice.ControlConfig3,
+            LaunchPresetChoice.ControlConfig4,
+        };
 
         private sealed record LaunchPresetSelection(
             bool SkipFmv,
@@ -73,6 +83,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             bool HighDetail,
             bool NoStaticShadows,
             bool NoRumble,
+            bool ShowDebugTrace,
             string LevelId,
             int ControllerConfigurationIndex,
             bool PersistControllerConfig,
@@ -399,6 +410,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void UpdateLaunchPresetVisualState()
         {
+            _selectedLaunchPresetChoice = ResolveMatchingLaunchPresetChoice();
             PatchBenchChoiceVisualState.ApplyPatchBenchChoiceStyles(
                 new[]
                 {
@@ -420,17 +432,25 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 return;
             }
 
-            if (CurrentLaunchOptionsMatchSelectedPreset())
-            {
-                return;
-            }
-
-            _selectedLaunchPresetChoice = LaunchPresetChoice.None;
+            _selectedLaunchPresetChoice = ResolveMatchingLaunchPresetChoice();
         }
 
-        private bool CurrentLaunchOptionsMatchSelectedPreset()
+        private LaunchPresetChoice ResolveMatchingLaunchPresetChoice()
         {
-            return _selectedLaunchPresetChoice switch
+            foreach (LaunchPresetChoice choice in s_namedLaunchPresetChoices)
+            {
+                if (CurrentLaunchOptionsMatchPreset(choice))
+                {
+                    return choice;
+                }
+            }
+
+            return LaunchPresetChoice.None;
+        }
+
+        private bool CurrentLaunchOptionsMatchPreset(LaunchPresetChoice choice)
+        {
+            return choice switch
             {
                 LaunchPresetChoice.QuietCapture => CurrentLaunchOptionsMatch(
                     skipFmv: true,
@@ -439,6 +459,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     highDetail: false,
                     noStaticShadows: false,
                     noRumble: false,
+                    showDebugTrace: false,
                     levelId: string.Empty,
                     controllerConfigurationIndex: 0,
                     persistControllerConfig: false,
@@ -454,6 +475,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     highDetail: true,
                     noStaticShadows: false,
                     noRumble: false,
+                    showDebugTrace: false,
                     levelId: string.Empty,
                     controllerConfigurationIndex: 0,
                     persistControllerConfig: false,
@@ -469,6 +491,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     highDetail: false,
                     noStaticShadows: false,
                     noRumble: false,
+                    showDebugTrace: false,
                     levelId: string.Empty,
                     controllerConfigurationIndex: 1,
                     persistControllerConfig: false,
@@ -484,6 +507,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     highDetail: false,
                     noStaticShadows: false,
                     noRumble: false,
+                    showDebugTrace: false,
                     levelId: string.Empty,
                     controllerConfigurationIndex: 1,
                     persistControllerConfig: true,
@@ -499,6 +523,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     highDetail: false,
                     noStaticShadows: false,
                     noRumble: false,
+                    showDebugTrace: false,
                     levelId: string.Empty,
                     controllerConfigurationIndex: 2,
                     persistControllerConfig: true,
@@ -514,6 +539,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     highDetail: false,
                     noStaticShadows: false,
                     noRumble: false,
+                    showDebugTrace: false,
                     levelId: string.Empty,
                     controllerConfigurationIndex: 3,
                     persistControllerConfig: true,
@@ -529,6 +555,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     highDetail: false,
                     noStaticShadows: false,
                     noRumble: false,
+                    showDebugTrace: false,
                     levelId: string.Empty,
                     controllerConfigurationIndex: 4,
                     persistControllerConfig: true,
@@ -548,6 +575,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             bool highDetail,
             bool noStaticShadows,
             bool noRumble,
+            bool showDebugTrace,
             string levelId,
             int controllerConfigurationIndex,
             bool persistControllerConfig,
@@ -563,14 +591,15 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 && PatchBenchHighDetailLaunchOption.IsChecked == highDetail
                 && PatchBenchNoStaticShadowsLaunchOption.IsChecked == noStaticShadows
                 && PatchBenchNoRumbleLaunchOption.IsChecked == noRumble
-                && string.Equals(PatchBenchLevelLaunchOption.Text ?? string.Empty, levelId, StringComparison.Ordinal)
+                && PatchBenchShowDebugTraceLaunchOption.IsChecked == showDebugTrace
+                && string.Equals((PatchBenchLevelLaunchOption.Text ?? string.Empty).Trim(), levelId, StringComparison.Ordinal)
                 && PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex == controllerConfigurationIndex
                 && PatchBenchPersistControllerConfigOption.IsChecked == persistControllerConfig
                 && PatchBenchSharpenMouseLookOption.IsChecked == sharpenMouseLook
                 && PatchBenchMouseSensitivityPresetComboBox.SelectedIndex == mouseSensitivityPresetIndex
                 && PatchBenchInvertWalkerYOption.IsChecked == invertWalkerY
                 && PatchBenchInvertFlightYOption.IsChecked == invertFlightY
-                && string.Equals(PatchBenchTextureRamLimitLaunchOption.Text ?? string.Empty, textureRamLimitMb, StringComparison.Ordinal);
+                && string.Equals((PatchBenchTextureRamLimitLaunchOption.Text ?? string.Empty).Trim(), textureRamLimitMb, StringComparison.Ordinal);
         }
 
         private bool IsLaunchPresetOwnedCheckBox(object sender)
@@ -788,6 +817,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 HighDetail: false,
                 NoStaticShadows: false,
                 NoRumble: false,
+                ShowDebugTrace: false,
                 LevelId: LocalMultiplayerProbeLevelId,
                 ControllerConfigurationIndex: 0,
                 PersistControllerConfig: false,
@@ -979,9 +1009,31 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void AdminLevelPresetComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            int selectedIndex = PatchBenchAdminLevelPresetComboBox.SelectedIndex;
-            if (selectedIndex <= NoAdminLevelPresetIndex)
+            if (_isApplyingLaunchPreset)
                 return;
+
+            int selectedIndex = PatchBenchAdminLevelPresetComboBox.SelectedIndex;
+            if (selectedIndex < NoAdminLevelPresetIndex)
+                return;
+
+            if (selectedIndex == NoAdminLevelPresetIndex)
+            {
+                bool hadLevelArgument = !string.IsNullOrEmpty(PatchBenchLevelLaunchOption.Text);
+                if (!hadLevelArgument && _selectedLaunchPresetChoice == LaunchPresetChoice.None)
+                {
+                    return;
+                }
+
+                ClearSelectedLaunchPresetChoiceForManualEdit();
+                PatchBenchLevelLaunchOption.Text = string.Empty;
+                RefreshCopiedProfileLaunchPlanPreview();
+                UpdateControlState();
+                if (hadLevelArgument)
+                {
+                    AppStatusService.SetStatus("Windowed & Mods: admin level launch option cleared");
+                }
+                return;
+            }
 
             int presetIndex = selectedIndex - 1;
             if (presetIndex < 0 || presetIndex >= s_adminLevelPresets.Length)
@@ -1004,6 +1056,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 HighDetail: false,
                 NoStaticShadows: false,
                 NoRumble: false,
+                ShowDebugTrace: false,
                 LevelId: string.Empty,
                 ControllerConfigurationIndex: 0,
                 PersistControllerConfig: false,
@@ -1024,6 +1077,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 HighDetail: false,
                 NoStaticShadows: false,
                 NoRumble: false,
+                ShowDebugTrace: false,
                 LevelId: string.Empty,
                 ControllerConfigurationIndex: 1,
                 PersistControllerConfig: false,
@@ -1044,6 +1098,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 HighDetail: false,
                 NoStaticShadows: false,
                 NoRumble: false,
+                ShowDebugTrace: false,
                 LevelId: string.Empty,
                 ControllerConfigurationIndex: 1,
                 PersistControllerConfig: true,
@@ -1085,6 +1140,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 HighDetail: false,
                 NoStaticShadows: false,
                 NoRumble: false,
+                ShowDebugTrace: false,
                 LevelId: string.Empty,
                 ControllerConfigurationIndex: controllerConfigurationIndex,
                 PersistControllerConfig: true,
@@ -1105,6 +1161,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 HighDetail: true,
                 NoStaticShadows: false,
                 NoRumble: false,
+                ShowDebugTrace: false,
                 LevelId: string.Empty,
                 ControllerConfigurationIndex: 0,
                 PersistControllerConfig: false,
@@ -1126,6 +1183,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 HighDetail: false,
                 NoStaticShadows: false,
                 NoRumble: false,
+                ShowDebugTrace: false,
                 LevelId: string.Empty,
                 ControllerConfigurationIndex: 0,
                 PersistControllerConfig: false,
@@ -1139,14 +1197,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void ApplyLaunchPreset(LaunchPresetChoice selectedChoice, LaunchPresetSelection preset)
         {
-            _selectedLaunchPresetChoice = selectedChoice;
             ApplyLaunchPreset(preset);
-            UpdateLaunchPresetVisualState();
-            _ = DispatcherQueue.TryEnqueue(() =>
+            _selectedLaunchPresetChoice = ResolveMatchingLaunchPresetChoice();
+            if (_selectedLaunchPresetChoice != selectedChoice)
             {
-                _selectedLaunchPresetChoice = selectedChoice;
-                UpdateLaunchPresetVisualState();
-            });
+                throw new InvalidOperationException("Applied launch preset does not match its effective controls.");
+            }
+            UpdateLaunchPresetVisualState();
         }
 
         private void ApplyLaunchPreset(LaunchPresetSelection preset)
@@ -1161,8 +1218,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 PatchBenchHighDetailLaunchOption.IsChecked = preset.HighDetail;
                 PatchBenchNoStaticShadowsLaunchOption.IsChecked = preset.NoStaticShadows;
                 PatchBenchNoRumbleLaunchOption.IsChecked = preset.NoRumble;
-                PatchBenchShowDebugTraceLaunchOption.IsChecked = false;
+                PatchBenchShowDebugTraceLaunchOption.IsChecked = preset.ShowDebugTrace;
                 PatchBenchLevelLaunchOption.Text = preset.LevelId;
+                PatchBenchAdminLevelPresetComboBox.SelectedIndex = ResolveAdminLevelPresetIndex(preset.LevelId);
                 PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex = Math.Clamp(preset.ControllerConfigurationIndex, 0, 4);
                 PatchBenchPersistControllerConfigOption.IsChecked = preset.PersistControllerConfig;
                 PatchBenchSharpenMouseLookOption.IsChecked = preset.SharpenMouseLook;
@@ -1221,6 +1279,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void LaunchOptionTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            if (!_isApplyingLaunchPreset && ReferenceEquals(sender, PatchBenchLevelLaunchOption))
+            {
+                SynchronizeAdminLevelPresetSelection(PatchBenchLevelLaunchOption.Text);
+            }
+
             if (IsLaunchPresetOwnedTextBox(sender))
             {
                 ClearSelectedLaunchPresetChoiceForManualEdit();
@@ -1228,6 +1291,40 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             RefreshCopiedProfileLaunchPlanPreview();
             UpdateControlState();
+        }
+
+        private static int ResolveAdminLevelPresetIndex(string? levelId)
+        {
+            string normalizedLevelId = (levelId ?? string.Empty).Trim();
+            for (int index = 0; index < s_adminLevelPresets.Length; index++)
+            {
+                if (string.Equals(s_adminLevelPresets[index].LevelId, normalizedLevelId, StringComparison.Ordinal))
+                {
+                    return index + 1;
+                }
+            }
+
+            return NoAdminLevelPresetIndex;
+        }
+
+        private void SynchronizeAdminLevelPresetSelection(string? levelId)
+        {
+            int selectedIndex = ResolveAdminLevelPresetIndex(levelId);
+            if (PatchBenchAdminLevelPresetComboBox.SelectedIndex == selectedIndex)
+            {
+                return;
+            }
+
+            bool wasApplyingLaunchPreset = _isApplyingLaunchPreset;
+            _isApplyingLaunchPreset = true;
+            try
+            {
+                PatchBenchAdminLevelPresetComboBox.SelectedIndex = selectedIndex;
+            }
+            finally
+            {
+                _isApplyingLaunchPreset = wasApplyingLaunchPreset;
+            }
         }
 
         private void LaunchOptionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

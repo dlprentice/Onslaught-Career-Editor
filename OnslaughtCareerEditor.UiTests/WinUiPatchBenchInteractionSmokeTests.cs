@@ -103,11 +103,45 @@ public class WinUiPatchBenchInteractionSmokeTests
             AssertAutomationNameContains(window, "PatchBenchMenuColorClearButton", "Selected: no menu background color");
             AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected menu background: none.");
 
+            CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-safe-copy-source-actions-narrow.png", "PatchBenchSafeCopyUseGameFolderButton", 760, 640);
+            AssertSourceActionLayout(
+                window,
+                "PatchBenchSafeCopyUseGameFolderButton",
+                "Use configured game folder",
+                "PatchBenchSafeCopyBrowseSourceButton",
+                "Browse BEA.exe source");
+
+            ExpandByAutomationId(window, "PatchBenchAdvancedTechnicalExpander");
+            CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-advanced-source-actions-narrow.png", "PatchBenchBrowseSourceButton", 760, 640);
+            AssertSourceActionLayout(
+                window,
+                "PatchBenchBrowseSourceButton",
+                "Browse read-only BEA.exe source",
+                "PatchBenchUseGameFolderButton",
+                "Use configured source game folder");
+
             ExpandByAutomationId(window, "PatchBenchAdvancedLaunchOptionsExpander");
+            SelectComboBoxItem(window, "PatchBenchAdminLevelPresetComboBox", "Campaign training world 100");
+            AssertTextBoxText(window, "PatchBenchLevelLaunchOption", "100");
+            SelectComboBoxItem(window, "PatchBenchAdminLevelPresetComboBox", "Choose admin level preset");
+            AssertTextBoxText(window, "PatchBenchLevelLaunchOption", string.Empty);
+            AssertComboBoxSelectedText(window, "PatchBenchAdminLevelPresetComboBox", "Choose admin level preset");
+
+            SelectComboBoxItem(window, "PatchBenchAdminLevelPresetComboBox", "Campaign training world 100");
+            AssertTextBoxText(window, "PatchBenchLevelLaunchOption", "100");
             ClickByAutomationId(window, "PatchBenchQuietCaptureLaunchPresetButton");
             AssertAutomationNameContains(window, "PatchBenchQuietCaptureLaunchPresetButton", "Selected: quiet capture launch preset");
             AssertAutomationNameContains(window, "PatchBenchHighDetailLaunchPresetButton", "Set high detail launch options for safe copy");
+            AssertComboBoxSelectedText(window, "PatchBenchAdminLevelPresetComboBox", "Choose admin level preset");
+            AssertTextBoxText(window, "PatchBenchLevelLaunchOption", string.Empty);
             AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
+
+            ToggleCheckBoxByAutomationId(window, "PatchBenchShowDebugTraceLaunchOption");
+            AssertAutomationNameContains(window, "PatchBenchQuietCaptureLaunchPresetButton", "Set quiet capture launch options for safe copy");
+            ToggleCheckBoxByAutomationId(window, "PatchBenchShowDebugTraceLaunchOption");
+            AssertAutomationNameContains(window, "PatchBenchQuietCaptureLaunchPresetButton", "Selected: quiet capture launch preset");
+            SetTextBoxText(window, "PatchBenchLevelLaunchOption", "  ");
+            AssertAutomationNameContains(window, "PatchBenchQuietCaptureLaunchPresetButton", "Selected: quiet capture launch preset");
 
             ClickByAutomationId(window, "PatchBenchHighDetailLaunchPresetButton");
             AssertAutomationNameContains(window, "PatchBenchHighDetailLaunchPresetButton", "Selected: high detail launch preset");
@@ -137,6 +171,10 @@ public class WinUiPatchBenchInteractionSmokeTests
             AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Selected: control diagnostics swapped alternate config 4");
             SetTextBoxText(window, "PatchBenchLevelLaunchOption", "100");
             AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Set control diagnostics swapped alternate config 4");
+            AssertComboBoxSelectedText(window, "PatchBenchAdminLevelPresetComboBox", "Campaign training world 100");
+            ClickByAutomationId(window, "PatchBenchLocalMultiplayerProbeButton");
+            AssertTextBoxText(window, "PatchBenchLevelLaunchOption", "850");
+            AssertComboBoxSelectedText(window, "PatchBenchAdminLevelPresetComboBox", "Local split-screen test world 850");
             AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
         }
         finally
@@ -319,7 +357,8 @@ public class WinUiPatchBenchInteractionSmokeTests
         if (element.Patterns.Invoke.IsSupported)
         {
             element.Patterns.Invoke.Pattern.Invoke();
-            Thread.Sleep(150);
+            Thread.Sleep(350);
+            return;
         }
 
         element.Click();
@@ -370,6 +409,17 @@ public class WinUiPatchBenchInteractionSmokeTests
         element.AsTextBox().Text = text;
     }
 
+    private static void AssertTextBoxText(Window window, string automationId, string expectedText)
+    {
+        bool matched = Retry.WhileFalse(
+            () => string.Equals(
+                FindByAutomationId(window, automationId).AsTextBox().Text,
+                expectedText,
+                StringComparison.Ordinal),
+            TimeSpan.FromSeconds(5)).Success;
+        Assert.That(matched, Is.True, $"Expected {automationId} text to equal: {expectedText}");
+    }
+
     private static void SelectComboBoxItem(Window window, string automationId, string itemText)
     {
         AutomationElement element = FindByAutomationId(window, automationId);
@@ -411,9 +461,42 @@ public class WinUiPatchBenchInteractionSmokeTests
         Assert.That(matched, Is.True, $"Expected {automationId} automation name to contain: {expectedText}. Actual: {actualName ?? "<null>"}");
     }
 
+    private static void AssertSourceActionLayout(
+        Window window,
+        string firstAutomationId,
+        string firstExpectedName,
+        string secondAutomationId,
+        string secondExpectedName)
+    {
+        AutomationElement first = FindByAutomationId(window, firstAutomationId);
+        AutomationElement second = FindByAutomationId(window, secondAutomationId);
+        Assert.That(first.Name, Is.EqualTo(firstExpectedName));
+        Assert.That(second.Name, Is.EqualTo(secondExpectedName));
+        Assert.That(first.IsEnabled, Is.True);
+        Assert.That(second.IsEnabled, Is.True);
+
+        System.Drawing.Rectangle windowBounds = window.BoundingRectangle;
+        foreach (AutomationElement action in new[] { first, second })
+        {
+            ScrollIntoView(action);
+            Assert.That(
+                Retry.WhileFalse(() => !action.IsOffscreen, TimeSpan.FromSeconds(5)).Success,
+                Is.True,
+                $"{action.AutomationId} should be reachable in the compact workflow.");
+            System.Drawing.Rectangle bounds = action.BoundingRectangle;
+            Assert.That(bounds.Left, Is.GreaterThanOrEqualTo(windowBounds.Left));
+            Assert.That(bounds.Right, Is.LessThanOrEqualTo(windowBounds.Right));
+            Assert.That(bounds.Height, Is.GreaterThanOrEqualTo(40));
+        }
+    }
+
     private static void CaptureChoiceStateScreenshot(Window window, IntPtr windowHandle, string evidenceDir, string fileName, string anchorAutomationId, int width, int height)
     {
         NormalizeWindowForCapture(windowHandle, width, height);
+        Assert.That(
+            window.BoundingRectangle.Width,
+            Is.InRange(width - 40, width + 40),
+            "Compact-layout evidence must use the requested window width.");
         ScrollIntoView(FindByAutomationId(window, anchorAutomationId));
         string outputPath = Path.Combine(evidenceDir, fileName);
         window.Focus();

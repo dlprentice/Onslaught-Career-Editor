@@ -17,6 +17,8 @@
         <StackPanel Grid.Row="0"
                     Spacing="6">
             <TextBlock Text="Lore"
+                       AutomationProperties.AutomationId="LorePageTitle"
+                       AutomationProperties.HeadingLevel="Level1"
                        Style="{StaticResource SectionTitleTextStyle}" />
             <TextBlock Text="Read included Lore documents offline with searchable navigation and document history. Source and External links open in your browser."
                        Style="{StaticResource SectionBodyTextStyle}" />

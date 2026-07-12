@@ -1,15 +1,10 @@
 {
   "lastUpdated": "2026-07-11",
-  "currentFocus": "The filesystem-authority slice is accepted and green. Advance through WinUI first-use clarity, accessibility, compact layout, navigation focus/status, and truthful launch-preset state before rebuild work.",
-  "currentCounters": {
-    "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
-    "catalogRows": "29/29 target specimen identity and policy metadata rows"
-  },
+  "currentFocus": "Build the provenance firewall, deterministic headless kernel, and first runnable RE-informed original-code vertical slice without making a strict clean-room or parity claim.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
     "activeGoal": "goal.md",
-    "contributorGuide": "CONTRIBUTING.md",
     "capabilities": "CURRENT_CAPABILITIES.md",
     "reState": "re_orchestrator_state.json"
   },
@@ -17,81 +12,67 @@
     "release": {
       "latest": "v1.0.9",
       "status": "published unsigned portable WinUI ZIP",
-      "releaseTarget": "75c7c973bb32e8a308c6607e39035ba7286d8194",
-      "zipSha256": "e09439c40a4ff7197c4151e18651388b2515a71950ea2479b01266c00d918519",
       "loreDocuments": 949,
       "newReleaseAuthorized": false
     },
-    "gitBaseline": {
-      "mainBeforeCampaign": "9f577b81ccaf0dc20a2f4da18ee1da938def1827",
-      "mainOriginDivergenceBeforeCampaign": "0 0",
+    "repository": {
       "registeredWorktrees": 1,
       "emptyCodexWorktreeShellsRemoved": 7,
-      "campaignBranchesBundled": 61,
-      "unreachableCommitsPreserved": 24,
-      "stashesPreserved": 3,
-      "bundleVerifyAndRestoreDrill": "pass",
-      "ordinaryCampaignBranchCleanup": "complete: 61 obsolete local campaign/codex branch names removed after baseline acceptance",
-      "backupRefsRetained": 4
+      "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
+      "lastPushedBeforeCurrentSlice": "53dccf4b2c44dc724e454bcb5878fb30ff27e007"
     },
-    "repositoryScale": {
-      "trackedFiles": 19389,
-      "reverseEngineeringFiles": 13385,
-      "toolFiles": 2614,
-      "releaseFiles": 1710,
-      "npmScriptsBeforeQuickAliases": 1494,
-      "contributorQuickCheck": "npm test passed after generated-output hardening (docsync, doc commands, generated-output safety, zero-warning WinUI build, 1307 AppCore tests, 134 WinUI tests with 2 expected real-asset skips)"
-    },
-    "safetyAudit": {
-      "safeCopyModel": "Retain it. Initial copied-profile creation, copied-executable target checks, catalog pinning, backup provenance, and process stop targeting are strong.",
-      "patchCatalog": "29 total rows; 20 visible (9 stable, 11 experimental); 9 hidden companions.",
-      "closedThisWave": [
-        "Save/options outputs now require matching .bes/.bea types, calculate the app-owned patched-output default without creating it, resolve DOS drive aliases to physical local paths, hold physical ancestor identities, protect source file identities, reject in-place/hardlink/symlink/junction/device/network/alternate-stream/reserved-device and installed-game-tree targets, stage and flush a sibling file, atomically replace the destination, and verify staged plus committed identities and bytes.",
-        "Generated safe-copy control editing remains available only after profile/manifest validation mints a capability for the canonical app-owned GameProfiles root; a naked trusted-root string can no longer authorize writes.",
-        "Asset catalog discovery is bound to one schema-2 bundle root and relative catalog paths. Catalog sources and sidecars are pinned and revalidated through held identities before use.",
-        "First material-package publication uses a sibling stage, exact member and hash sealing, guarded vacant-name publication, final reopen/reverification, and rollback. Existing packages must already be complete and byte-identical.",
-        "Downstream package writers, Python export tools, and the C# AYA export harness use guarded output identities. New output files remain delete-pending with link count zero while bytes are written, then are committed only after final identity, path, length, and hash checks."
+    "product": {
+      "primaryGui": "WinUI 3",
+      "archivedGuiLanes": [
+        "Electron",
+        "WPF",
+        "old Python GUI/CLI"
       ],
-      "acceptance": "Codex and Cursor/Grok normal and adversarial reviewers returned ACCEPT after focused follow-ups. Full npm test passed with 1307 AppCore tests, 134 WinUI tests, 2 expected real-asset skips, and a zero-warning build. A synthetic no-game AYA harness smoke produced reparsable FBX and valid PNG output without stage residue.",
-      "residualBoundary": "After finalized bytes leave delete-pending quarantine, a hostile process running with the same user authority can copy them or create a byte-identical hardlink, as it can immediately after publication. Commit rejects unexpected link count or identity, no writes occur after quarantine clears, and no pre-existing source/game identity may be changed. Same-user confidentiality after finalization is not claimed.",
-      "highPriorityGaps": [],
-      "mediumPriorityGaps": [
-        "Launch attestation does not fully revalidate mutable profile options/save/data identities after profile creation.",
-        "Control/music content can commit before its accounting manifest.",
-        "Copied executable writes are verified but not committed through a fully atomic replacement transaction."
+      "patchCatalog": "29 total rows; 20 visible options (9 stable, 11 experimental); 9 hidden companions",
+      "safeCopyPosture": "retain: installed game and original BEA.exe remain read-only; mutations use copied targets and app-owned roots"
+    },
+    "winUiFirstUseCloseout": {
+      "status": "accepted in the current source slice",
+      "behavior": [
+        "True first run distinguishes unset, invalid, and ready game-folder states and prioritizes setup while preserving manual Save Lab file browsing.",
+        "A temporarily unavailable remembered game folder remains visible as Needs review and survives unrelated preference saves instead of being erased.",
+        "Shell navigation has one owner, page-scoped status filtering, generation-guarded arrival focus, active Media-tab focus, and one semantic Level 1 heading per principal page.",
+        "Launch preset selection is derived from effective controls; debug trace, normalized text, Admin Level, manual level edits, and the local split-screen helper stay synchronized.",
+        "Both copied-executable source action groups stack and wrap at compact width.",
+        "Audio-first and restored-Video page construction defer native VLC; current-session Video demand and real local playback remain functional.",
+        "Visual fixture catalogs use schema 2 and capture evidence rejects incompletely rendered headers."
+      ],
+      "acceptance": [
+        "zero-warning solution build",
+        "npm test: 1307 AppCore passed; 136 WinUI passed; 2 expected private-catalog skips",
+        "12 explicit Home state/route UIA cases passed",
+        "shell accessibility and restored-Video lazy-VLC UIA passed",
+        "compact Patch Bench interaction UIA passed",
+        "real read-only audio/video playback passed",
+        "11-screen primary visual smoke passed",
+        "Markdown links, notices, public allowlist/hard-payload, and repo hygiene passed",
+        "independent Cursor/Grok normal and adversarial closeout reviews accepted the slice with no commit blockers"
       ]
     },
-    "uxAudit": {
-      "runtimeScope": "Two isolated launches, including a no-game first run, covered Home, Save Lab, Game Options, Windowed & Mods, Media, Asset Library, Lore, Settings, and About.",
-      "verifiedBuildAndTests": "WinUI build passed with zero warnings/errors; UI tests passed 134 with 2 asset-dependent skips; AppCore passed 1307 after save/options and generated asset-output hardening, including live alias/reparse probes and deterministic race coverage.",
-      "priorityFindings": [
-        "Show debug trace can leave a launch preset falsely selected even though launch arguments change.",
-        "Cached navigation can retain stale live-region status and off-screen focus.",
-        "The safe-copy BEA.exe source action clips at the tested compact width.",
-        "True first run promotes Save Lab over the missing game-folder setup action.",
-        "Six principal pages lack semantic Level1 headings and consistent arrival focus."
-      ]
+    "filesystemSafety": {
+      "status": "accepted",
+      "summary": "Save/options, asset catalog/package, downstream package, Python generated output, and C# AYA output paths use bounded roots, held identities, guarded writes, hostile-path tests, and final byte/identity verification.",
+      "residualBoundary": "After finalized bytes leave delete-pending quarantine, a same-user process can copy them or create a byte-identical hardlink; no confidentiality after finalization is claimed."
     },
-    "baselineValidation": [
-      "git diff --check",
-      "state JSON parse",
-      "npm run test:doc-commands",
-      "npm run test:repo-hygiene",
-      "npm run test:hard-payload-safety",
-      "npm run test:public-allowlist"
-    ],
     "boundaries": [
-      "Installed game and original BEA.exe remain read-only.",
-      "No release, signing, installer/MSIX/Store, live Ghidra mutation, gameplay, online-ready, rebuild-parity, or visual-parity claim is created by the baseline slice.",
-      "Static RE accounting and source-derived names remain evidence inputs, not runtime behavior proof."
+      "No installed-game or original BEA.exe mutation.",
+      "No release, signing, installer/MSIX/Store, Host/Join, online-ready, gameplay-parity, visual-parity, or rebuild-parity claim.",
+      "Current rebuild implementation must be labeled RE-informed unless a separately staffed sealed-spec process and license review support a stronger clean-room claim."
     ]
   },
   "activeBlockers": [
-    "Native AYA runtime compatibility smoke is unavailable on this machine because the reference extractor requires Visual C++ targets that are not installed; synthetic harness compatibility evidence passed, and this does not weaken the accepted output-authority boundary."
+    "Native AYA runtime compatibility smoke is unavailable because the reference extractor requires Visual C++ targets not installed on this machine; synthetic harness output passed."
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Fix launch-preset equality and navigation status/focus, then address compact layout, setup hierarchy, and page headings.",
-    "Define the rebuild evidence firewall and build the deterministic kernel."
+    "Audit existing guidance and rebuild/reference prototypes; remove stale constraints and choose one evidence-backed implementation lane.",
+    "Write the RE-informed versus sealed-spec provenance firewall.",
+    "Implement a deterministic replayable kernel and runnable visual vertical slice with no proprietary payload dependency.",
+    "Resume evidence-backed patch/mod expansion, then deep RE and Lore quality passes."
   ]
 }

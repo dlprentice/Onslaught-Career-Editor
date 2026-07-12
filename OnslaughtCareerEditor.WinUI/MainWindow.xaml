@@ -113,7 +113,8 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Name="StatusTextBlock"
                            Grid.Column="0"
-                           AutomationProperties.Name="Application status"
+                           AutomationProperties.AutomationId="AppStatusText"
+                           AutomationProperties.Name="Application status: Ready"
                            AutomationProperties.LiveSetting="Polite"
                            FontSize="12"
                            FontWeight="SemiBold"
@@ -127,6 +128,8 @@
                                FontWeight="SemiBold"
                                Foreground="{ThemeResource ShellMutedTextBrush}" />
                     <TextBlock x:Name="GameDirectoryTextBlock"
+                               AutomationProperties.AutomationId="ShellGameDirectoryStatus"
+                               AutomationProperties.Name="Game folder: Not set"
                                MaxWidth="420"
                                FontSize="12"
                                Foreground="{ThemeResource ShellTextBrush}"

@@ -21,7 +21,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _isLoadingSettings = true;
 
             AppConfig config = AppConfig.Load();
-            string? gameDir = config.GetGameDirOrDetect(persistDetection: true);
+            string? gameDir = config.GetGameDirOrDetect(persistDetection: true) ?? config.GameDirectory;
 
             RenderGameDirectory(gameDir);
             if (!string.IsNullOrWhiteSpace(gameDir))
@@ -47,13 +47,17 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void RenderGameDirectory(string? gameDir)
         {
+            GameDirectoryInspection inspection = AppConfig.InspectGameDirectory(gameDir);
+            bool isFullInstall = inspection.Status == GameDirectoryStatus.FullInstall;
             GameDirectoryTextBox.Text = gameDir ?? string.Empty;
             GameDirectorySummaryTextBlock.Text = string.IsNullOrWhiteSpace(gameDir)
                 ? "Not configured"
-                : BuildFolderSummary(gameDir, "Configured install");
+                : BuildFolderSummary(gameDir, isFullInstall ? "Configured install" : "Saved folder needs review");
             GameDirectoryRoleTextBlock.Text = string.IsNullOrWhiteSpace(gameDir)
                 ? "Choose your installed game folder. The app reads it to create playable copies; it does not edit that folder."
-                : "Read-only source material. Editing and patching workflows use copied files or app-managed working folders.";
+                : isFullInstall
+                    ? "Read-only source material. Editing and patching workflows use copied files or app-managed working folders."
+                    : "This saved folder is incomplete. Choose the full install before using automatic discovery, Media, or playable safe copies.";
         }
 
         private void ValidateGameDirectory(string path)
@@ -74,7 +78,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             else if (inspection.Status == GameDirectoryStatus.MediaOnly)
             {
-                GameDirectoryStatusTextBlock.Text = "Partial game directory detected: media/data is present, but BEA.exe is missing. Media browsing may work; patching and safe-copy launch need the full install.";
+                GameDirectoryStatusTextBlock.Text = "Partial game directory detected: media/data is present, but BEA.exe is missing. Choose the full install before using Media or playable safe copies.";
                 GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
             }
             else if (inspection.Status == GameDirectoryStatus.ExecutableOnly)
@@ -158,7 +162,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             UpdateSaveFileInfo(path);
             AppConfigChangedService.NotifyChanged(config);
             App.MainWindowInstance?.RefreshFooter();
-            AppStatusService.SetStatus("Settings: game directory updated");
+            AppStatusService.SetStatus(
+                AppConfig.InspectGameDirectory(path).Status == GameDirectoryStatus.FullInstall
+                    ? "Settings: game directory updated"
+                    : "Settings: folder saved but the full game install is still required");
         }
 
         private void MediaPreferenceChanged(object sender, RoutedEventArgs e)

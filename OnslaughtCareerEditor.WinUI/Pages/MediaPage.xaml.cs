@@ -77,9 +77,15 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private bool _isUpdatingVideoSlider;
         private bool _hasLoaded;
         private bool _isLoading;
+        private bool _isPageLoaded;
+        private bool _videoInitializationDeferred;
+        private string? _videoInitializationError;
         private MediaVideoItem? _pendingVideoHandoffSelection;
         private int _selectedMediaTabIndex;
         private int _videoFrameRenderQueued;
+
+        internal string PreferredFocusTargetName =>
+            _selectedMediaTabIndex == VideoTabIndex ? "VideoTabButton" : "AudioTabButton";
 
         public MediaPage()
         {
@@ -113,7 +119,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AudioVolumeTextBlock.Text = $"{(int)AudioVolumeSlider.Value}%";
             VideoVolumeTextBlock.Text = $"{(int)VideoVolumeSlider.Value}%";
 
-            SelectMediaTab(GetInitialMediaTabIndex(), persistSelection: false);
+            SelectMediaTab(GetInitialMediaTabIndex(), persistSelection: false, initializeVideo: false);
             UpdateAudioControlsState();
             UpdateVideoControlsState();
         }
@@ -132,11 +138,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private async void MediaPage_Loaded(object sender, RoutedEventArgs e)
         {
-            EnsureInlineVideoPlayer();
+            _isPageLoaded = true;
 
             if (!_hasLoaded && !_isLoading)
             {
                 await LoadMediaCatalogAsync();
+            }
+
+            if (!_isPageLoaded)
+            {
+                return;
             }
 
             ApplyPendingVideoHandoff();
@@ -146,6 +157,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void MediaPage_Unloaded(object sender, RoutedEventArgs e)
         {
+            _isPageLoaded = false;
             AppConfig config = AppConfig.Load();
             _audioTimer.Stop();
             _videoTimer.Stop();
@@ -413,15 +425,17 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AudioVisualizerHintTextBlock.Text = "Press Play or double-click the selected track to begin.";
         }
 
-        private void EnsureInlineVideoPlayer()
+        private bool EnsureInlineVideoPlayer()
         {
+            _videoInitializationDeferred = false;
             if (_videoSurfaceReady && _videoPlayer != null && _libVlc != null)
             {
-                return;
+                return true;
             }
 
             try
             {
+                _videoInitializationError = null;
                 Core.Initialize();
                 _libVlc ??= new LibVLC(false, InlineVideoVlcOptions);
                 _videoPlayer ??= new MediaPlayer(_libVlc)
@@ -452,16 +466,59 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
                 RefreshPlaybackState();
                 QueuePendingVideoPlayback();
+                return true;
             }
             catch (Exception ex)
             {
-                _videoSurfaceReady = false;
-                VideoPlaceholderBorder.Visibility = Visibility.Visible;
-                VideoPlayerStatusTextBlock.Text = "Inline video unavailable";
-                VideoPlaceholderBodyTextBlock.Text = ex.Message;
+                ResetInlineVideoPlayerAfterInitializationFailure();
+                _videoInitializationError = ex.Message;
+                _pendingVideoPath = null;
+                UpdateVideoSurfaceState();
                 AppStatusService.SetStatus("Media: video player initialization failed");
                 UpdateVideoControlsState();
+                return false;
             }
+        }
+
+        private void ResetInlineVideoPlayerAfterInitializationFailure()
+        {
+            _videoSurfaceReady = false;
+
+            if (_videoPlayer != null)
+            {
+                _videoPlayer.Playing -= VideoPlayer_Playing;
+                _videoPlayer.Paused -= VideoPlayer_Paused;
+                _videoPlayer.Stopped -= VideoPlayer_Stopped;
+                _videoPlayer.EndReached -= VideoPlayer_EndReached;
+                _videoPlayer.EncounteredError -= VideoPlayer_EncounteredError;
+                _videoPlayer.LengthChanged -= VideoPlayer_LengthChanged;
+                try
+                {
+                    _videoPlayer.Dispose();
+                }
+                catch
+                {
+                    // Preserve the original initialization failure for the user.
+                }
+
+                _videoPlayer = null;
+            }
+
+            if (_libVlc != null)
+            {
+                try
+                {
+                    _libVlc.Dispose();
+                }
+                catch
+                {
+                    // Preserve the original initialization failure for the user.
+                }
+
+                _libVlc = null;
+            }
+
+            ReleaseVideoFrameResources();
         }
 
         private IntPtr VideoBufferLock(IntPtr opaque, IntPtr planes)
@@ -626,9 +683,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 try
                 {
                     PlayInlineVideo(path);
-                    AppStatusService.SetStatus(_selectedVideo == null
-                        ? "Media: video playing"
-                        : $"Media: playing {_selectedVideo.Name}");
                 }
                 catch (Exception ex)
                 {
@@ -689,6 +743,22 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             bool isReady = _videoSurfaceReady && _videoPlayer != null;
             bool isPlaying = _videoPlayer?.IsPlaying == true;
             bool isPaused = _videoPlayer?.State == VLCState.Paused;
+
+            if (!string.IsNullOrWhiteSpace(_videoInitializationError))
+            {
+                VideoPlaceholderBorder.Visibility = Visibility.Visible;
+                VideoPlayerStatusTextBlock.Text = "Inline video unavailable";
+                VideoPlaceholderBodyTextBlock.Text = _videoInitializationError;
+                return;
+            }
+
+            if (_videoInitializationDeferred)
+            {
+                VideoPlaceholderBorder.Visibility = Visibility.Visible;
+                VideoPlayerStatusTextBlock.Text = "Video player starts on demand";
+                VideoPlaceholderBodyTextBlock.Text = "Choose a video and press Play, or select the Video tab again, to initialize inline playback.";
+                return;
+            }
 
             if (!isReady)
             {
@@ -1325,7 +1395,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 throw new FileNotFoundException("The selected video file was not found.", fullPath);
             }
 
-            EnsureInlineVideoPlayer();
+            if (!EnsureInlineVideoPlayer())
+            {
+                return;
+            }
+
             _pendingVideoPath = fullPath;
 
             if (!_videoSurfaceReady)
@@ -1482,7 +1556,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             SelectMediaTab(VideoTabIndex);
         }
 
-        private void SelectMediaTab(int tabIndex, bool persistSelection = true)
+        private void SelectMediaTab(
+            int tabIndex,
+            bool persistSelection = true,
+            bool initializeVideo = true)
         {
             tabIndex = tabIndex == VideoTabIndex ? VideoTabIndex : AudioTabIndex;
             _selectedMediaTabIndex = tabIndex;
@@ -1511,8 +1588,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             if (tabIndex == VideoTabIndex)
             {
-                EnsureInlineVideoPlayer();
-                QueuePendingVideoPlayback();
+                _videoInitializationDeferred = !initializeVideo;
+                if (initializeVideo && EnsureInlineVideoPlayer())
+                {
+                    QueuePendingVideoPlayback();
+                }
             }
 
             ApplyMediaPolicyNow(config);

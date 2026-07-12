@@ -43,6 +43,8 @@
                     Margin="0,0,0,14"
                     Spacing="6">
             <TextBlock Text="Save Lab"
+                       AutomationProperties.AutomationId="SavesPageTitle"
+                       AutomationProperties.HeadingLevel="Level1"
                        Style="{StaticResource SectionTitleTextStyle}" />
             <TextBlock Text="Inspect your career saves and options files, then make safe edits. The app preserves everything it does not change and writes patches to a separate file."
                        Style="{StaticResource SectionBodyTextStyle}" />
@@ -64,7 +66,8 @@
                                FontWeight="SemiBold" />
                     <TextBlock Text="Start here when you want to understand a save or options snapshot before making any change."
                                Style="{StaticResource SectionBodyTextStyle}" />
-                    <Button AutomationProperties.AutomationId="AnalyzeTaskButton"
+                    <Button x:Name="AnalyzeTaskButton"
+                            AutomationProperties.AutomationId="AnalyzeTaskButton"
                             Content="Analyze a save"
                             HorizontalAlignment="Left"
                             Style="{StaticResource AccentButtonStyle}"

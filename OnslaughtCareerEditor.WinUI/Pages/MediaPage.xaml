@@ -28,6 +28,8 @@
         <StackPanel Grid.Row="0"
                     Spacing="6">
             <TextBlock Text="Media"
+                       AutomationProperties.AutomationId="MediaPageTitle"
+                       AutomationProperties.HeadingLevel="Level1"
                        Style="{StaticResource SectionTitleTextStyle}" />
             <TextBlock Text="Browse installed music, voice, cutscenes, and briefings from the current game directory. Audio and video now play inline on the page."
                        Style="{StaticResource SectionBodyTextStyle}" />

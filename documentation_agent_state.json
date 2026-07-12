@@ -1,10 +1,6 @@
 {
   "lastUpdated": "2026-07-11",
-  "currentFocus": "Make current documentation easy to navigate and authoritative while preserving historical RE, release, Lore, and campaign evidence as clearly derived or historical material.",
-  "currentCounters": {
-    "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
-    "catalogRows": "29/29 target specimen identity and policy metadata rows"
-  },
+  "currentFocus": "Document the rebuild provenance firewall and runnable RE-informed vertical slice while preserving accurate current-product, RE, Lore, and release boundaries.",
   "sourceOfTruth": {
     "readme": "README.MD",
     "contributorGuide": "CONTRIBUTING.md",
@@ -16,35 +12,24 @@
     "loreIndex": "lore/_index.md"
   },
   "currentDocsTruth": {
-    "release": "v1.0.9 is the latest published unsigned portable WinUI ZIP; historical v1.0.7 and v1.0.8 material remains historical.",
-    "product": "WinUI 3 is the only forward-facing GUI lane. Electron, WPF, and the old Python GUI are archived references.",
-    "re": "reverse-engineering/ is canonical. lore-book/reverse-engineering/ is a tracked derived mirror pending a safer generated projection.",
-    "lore": "The release contains 949 offline documents selected from Lore, roadmap, and technical RE material. The count proves packaged breadth, not narrative completeness, editorial approval, freshness, provenance/rights review, or broad public-safety approval.",
-    "rebuild": "No complete rebuild runtime, renderer, gameplay loop, or parity proof exists. Current maintainers have read GPL source and detailed RE material, so near-term implementation must be labeled RE-informed unless a separately staffed sealed-spec process supports a clean-room claim.",
-    "authorityMap": "roadmap/repo-structure-and-archive-map.md now classifies current front doors, canonical sources, protected projections, history, and local payloads with explicit conflict rules.",
-    "contributorPath": "npm test is the verified common active-product baseline; normal setup no longer requires submodules or archived Electron npm installation.",
-    "saveOptionsSafety": "Save Lab calculates an app-owned patched-output default without creating it. Guarded writers resolve DOS drive aliases to physical local paths, hold physical ancestor identities, and reject in-place, aliased, reparse-routed, reserved-device, device/network, wrong-type, and installed-game-tree destinations. Safe-copy control edits require a minted capability for the canonical app-owned GameProfiles root.",
-    "assetOutputSafety": "Asset catalogs use one declared schema-2 bundle root and relative paths. Catalog/package sources, sidecars, destinations, downstream package outputs, Python generators, and the C# AYA export harness use held identities and guarded writes. New files remain delete-pending with link count zero until final bytes are complete, then publication verifies identity, path, length, hash, and link count.",
-    "assetOutputResidual": "A same-user hostile process may copy finalized bytes or create a byte-identical hardlink after delete-pending quarantine clears, as it can after publication. No nonfinal bytes or writes to pre-existing source/game identities are accepted; same-user confidentiality after finalization is not claimed."
-  },
-  "verifiedAuditFacts": {
-    "trackedMarkdownFiles": 3760,
-    "releaseReadinessFiles": 1710,
-    "documentedNpmCommandMentions": 4387,
-    "currentCapabilitiesBytes": 124490,
-    "reIndexBytes": 610552,
-    "goalLinesBeforeReset": 622,
-    "byteIdenticalLoreMirrorPairsApproximate": 1126
+    "release": "v1.0.9 remains the latest published unsigned portable WinUI ZIP with 949 packaged Lore documents; this source slice does not publish a release.",
+    "product": "WinUI 3 is the only forward-facing GUI. Electron, WPF, and the old Python GUI/CLI remain archived references; Python remains active for tooling, validation, asset, and RE support.",
+    "winUiFirstUse": "CURRENT_CAPABILITIES.md and its byte-identical Lore mirror record the verified three-state setup hierarchy, preservation of temporarily unavailable remembered folders, manual Save Lab availability, shell status/focus ownership, Level 1 headings, compact wrapped source actions, truthful launch/Admin Level preset state, and demand-loaded Media VLC behavior.",
+    "filesystemSafety": "Save/options and generated asset/package outputs use bounded roots, held identities, guarded writes, final verification, and explicit same-user post-finalization limits.",
+    "re": "reverse-engineering/ is canonical; static Ghidra closure remains evidence input rather than automatic runtime or rebuild proof.",
+    "lore": "The 949-document package count proves packaged breadth, not editorial completeness, freshness, provenance/rights review, or broad public-safety approval.",
+    "rebuild": "No complete rebuild runtime, renderer, gameplay loop, or parity proof exists. Current implementation work is RE-informed; a strict clean-room claim requires a separately staffed sealed-spec process and license review."
   },
   "activeBlockers": [
-    "CURRENT_CAPABILITIES.md and reverse-engineering/RE-INDEX.md bury orientation beneath evidence streams.",
-    "release/readiness/ and tools/ lack useful generated front-door indexes for their scale.",
-    "The reader-facing Lore pack needs an explicit editorial allowlist, third-party-text inventory, rights/provenance review, and generated canonical projections before another release.",
-    "The grouped WinUI action/reaction map omits four Save Lab handler families and claims twelve matrix fields while the TSV currently has nine."
+    "CURRENT_CAPABILITIES.md and reverse-engineering/RE-INDEX.md remain too large for fast contributor orientation.",
+    "release/readiness/ and tools/ still need generated front-door indexes before broad movement or deletion.",
+    "Lore needs an explicit editorial allowlist, third-party-text inventory, rights/provenance review, and generated canonical projections before another release.",
+    "The grouped WinUI action/reaction map still needs a verified control-by-control refresh against the current GUI."
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Create generated front-door indexes before moving or deleting large tools, release, or RE evidence trees.",
-    "Add a Lore manifest/allowlist and rights/provenance inventory before claiming completeness or publishing another Lore pack."
+    "Audit and rewrite stale guidance while documenting the rebuild evidence/provenance firewall beside the first runnable vertical slice.",
+    "Generate contributor front-door indexes before reorganizing large RE, tools, or release trees.",
+    "Run the deep Lore and RE quality passes after the runnable rebuild foundation is accepted."
   ]
 }

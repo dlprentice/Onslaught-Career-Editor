@@ -299,7 +299,7 @@ public class WinUiAccessibilityAuditTests
     }
 
     [Test]
-    public void HomeAndAboutOrientationHeadings_ExposeSemanticHeadingLevels()
+    public void PrincipalPageOrientationHeadings_ExposeOneSemanticLevelOneHeading()
     {
         Dictionary<string, (string RelativePath, string ExpectedLevel)[]> expectedHeadingsByFile = new()
         {
@@ -322,6 +322,30 @@ public class WinUiAccessibilityAuditTests
                 ("AboutProjectNotesTitle", "Level2"),
                 ("AboutRetailBehaviorTitle", "Level2"),
                 ("AboutVersionTitle", "Level2")
+            ],
+            ["OnslaughtCareerEditor.WinUI/Pages/SavesPage.xaml"] =
+            [
+                ("SavesPageTitle", "Level1")
+            ],
+            ["OnslaughtCareerEditor.WinUI/Pages/MediaPage.xaml"] =
+            [
+                ("MediaPageTitle", "Level1")
+            ],
+            ["OnslaughtCareerEditor.WinUI/Pages/AssetLibraryPage.xaml"] =
+            [
+                ("AssetLibraryPageTitle", "Level1")
+            ],
+            ["OnslaughtCareerEditor.WinUI/Pages/LorePage.xaml"] =
+            [
+                ("LorePageTitle", "Level1")
+            ],
+            ["OnslaughtCareerEditor.WinUI/Pages/BinaryPatchesPage.xaml"] =
+            [
+                ("BinaryPatchesPageTitle", "Level1")
+            ],
+            ["OnslaughtCareerEditor.WinUI/Pages/SettingsPage.xaml"] =
+            [
+                ("SettingsPageTitle", "Level1")
             ]
         };
 
@@ -329,6 +353,17 @@ public class WinUiAccessibilityAuditTests
         foreach ((string relativePath, (string AutomationId, string ExpectedLevel)[] expectedHeadings) in expectedHeadingsByFile)
         {
             XDocument document = XDocument.Parse(ReadRepoFile(relativePath.Split('/')));
+            int levelOneCount = document
+                .Descendants()
+                .Count(element => string.Equals(
+                    (string?)element.Attribute("AutomationProperties.HeadingLevel"),
+                    "Level1",
+                    System.StringComparison.Ordinal));
+            if (levelOneCount != 1)
+            {
+                missing.Add($"{relativePath}: expected exactly one Level1 heading, found {levelOneCount}");
+            }
+
             foreach ((string automationId, string expectedLevel) in expectedHeadings)
             {
                 XElement element = ExtractControlElementByAutomationId(document, automationId);
@@ -340,7 +375,7 @@ public class WinUiAccessibilityAuditTests
             }
         }
 
-        Assert.That(missing, Is.Empty, "Home and About orientation headings should expose semantic heading levels for screen-reader navigation.");
+        Assert.That(missing, Is.Empty, "Each principal page should expose one Level1 title, with subordinate Home/About headings retaining their semantic levels.");
     }
 
     [Test]

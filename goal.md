@@ -16,26 +16,34 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Improve WinUI first-use clarity and accessibility using the existing visual
-language and native runtime evidence:
+Establish the rebuild provenance firewall and deliver the first runnable
+RE-informed original-code vertical slice:
 
-1. make missing game-folder setup the clear first action on a true first run;
-2. keep launch-preset selection truthful when debug-trace arguments change;
-3. clear stale live-region status and restore useful focus on cached navigation;
-4. fix the compact-width clipping in safe-copy executable selection;
-5. add semantic Level 1 page headings and consistent arrival focus; and
-6. repeat native visual and UI Automation checks in an isolated run so incidental
-   desktop input cannot contaminate acceptance evidence.
+Existing guidance, architecture notes, and process ceremony are reviewable
+project artifacts, not authority to preserve earlier agent choices. Rewrite or
+remove constraints that are stale, redundant, unsupported, or misaligned with
+the product; retain evidence-backed safety, provenance, legal, and user-authority
+boundaries while improving how they are implemented.
 
-The preceding filesystem-safety slice is accepted. Save/options writes, asset
-catalog discovery, package materialization, downstream package outputs, Python
-generated-output tools, and the C# AYA export harness now use bounded roots,
-held identities, guarded final writes, and hostile-path tests. The remaining
-same-user boundary is explicit: after final bytes leave delete-pending
-quarantine, another process with the same account authority may copy or create
-a byte-identical hardlink, just as it can after publication. No nonfinal bytes
-or writes to pre-existing source/game identities are accepted. This creates no
-release, gameplay, visual-parity, online, Ghidra read-back, or rebuild proof.
+1. inventory the current rebuild/source-reference prototypes and choose one
+   bounded path rather than creating another parallel lane;
+2. document the evidence/provenance firewall that distinguishes the current
+   RE-informed implementation from a separately staffed sealed-spec clean-room
+   path;
+3. define a deterministic headless simulation contract with replayable inputs,
+   state transitions, and hashes;
+4. expose a small runnable visual experience that uses original project code and
+   non-proprietary placeholder/generated assets; and
+5. add contributor commands, tests, run instructions, and bounded non-claims so
+   the result is something a maintainer can actually launch and inspect.
+
+The preceding WinUI first-use/accessibility slice is accepted locally. True
+first run now prioritizes game-folder setup without blocking manual Save Lab
+files and preserves a remembered folder when its drive is temporarily unavailable;
+shell status/focus ownership, Level 1 headings, compact source actions,
+launch/admin preset truth, and lazy Media VLC initialization have native UIA
+and visual evidence. No installed-game mutation, release, signing, gameplay
+parity, online readiness, or clean-room implementation claim was created.
 
 ## Verified Starting Point
 
@@ -71,6 +79,12 @@ release, gameplay, visual-parity, online, Ghidra read-back, or rebuild proof.
   - `npm run test:repo-hygiene`
   - `npm run test:hard-payload-safety`
   - `npm run test:public-allowlist`
+- The WinUI first-use/accessibility closeout passed a zero-warning solution
+  build, `npm test` (1,307 AppCore tests; 136 WinUI tests plus 2 expected
+  private-catalog skips), twelve explicit Home state/route cases, shell accessibility,
+  restored-Video lazy-VLC, compact Patch Bench interaction, real read-only
+  audio/video playback, and the 11-screen visual smoke. Full Markdown links,
+  notices, public allowlist/hard-payload, and repository hygiene gates passed.
 
 The exhaustive hygiene and payload gates each scan roughly the entire tracked
 tree and took about two to four minutes locally. They remain valuable signoff
@@ -107,33 +121,35 @@ The external Cursor/Grok lane is available through bounded, non-secret,
 read-only `cursor-agent --model grok-4.5-fast-xhigh` consults. The completed
 filesystem slice received normal and adversarial Cursor/Grok review, focused
 follow-ups on challenged assumptions, and separate Codex normal/adversarial
-review. Codex root retained edit, validation, state, commit, push, and final
-acceptance ownership.
+review. The WinUI slice received Codex normal/adversarial review whose two
+concrete edge-case blockers were fixed with native regressions; independent
+Cursor/Grok normal and adversarial closeout reviews then returned `ACCEPT` with
+no commit blockers. Codex root retained edit, validation, state, commit, push,
+and final acceptance ownership.
 
 ## Current Slice Acceptance
 
-- A true no-game first run presents setup as the primary next action and does
-  not make Save Lab appear usable before its prerequisites exist.
-- Launch-preset selection reflects the complete effective argument state,
-  including debug-trace changes.
-- Cached navigation does not announce stale status or retain focus in an
-  off-screen control.
-- The safe-copy executable source action remains readable and operable at the
-  supported compact width.
-- Principal pages expose one semantic Level 1 heading and a predictable focus
-  destination after navigation.
-- Focused logic tests, zero-warning WinUI build, native visual/UIA checks,
-  AppCore/WinUI suites, docs/state checks, and payload boundaries pass before
-  the next push.
+- The repo has one explicit provenance/firewall contract for RE-informed work
+  and a separately staffable sealed-spec clean-room path.
+- A documented command launches a runnable original-code vertical slice without
+  requiring proprietary game payloads.
+- A deterministic headless test replays the same input sequence to the same
+  state hash and fails on contract drift.
+- The visual slice has bounded input, update, camera/render, reset, and exit
+  behavior plus native screenshot/runtime evidence.
+- Contributor docs/state name what is implemented, what evidence informed it,
+  and what remains unproven; they do not claim gameplay/rebuild parity.
+- Focused tests, broad quick checks, payload boundaries, normal/adversarial
+  review, and a verified push pass before advancing.
 
 ## Next Slices
 
-1. Complete the prioritized WinUI first-user and accessibility fixes, then
-   validate and expand patches/mods only behind evidence-backed safety gates.
-2. Define the sealed evidence/provenance firewall, then build a deterministic
-   headless simulation kernel and runnable primitive 3D vertical slice under
-   the accurate provenance label.
-3. Run deep evidence-based RE and Lore quality passes before expanding claims.
+1. Complete the rebuild evidence firewall, deterministic kernel, and runnable
+   RE-informed vertical slice.
+2. Validate and expand patches/mods only behind evidence-backed copy/runtime
+   safety gates, including the remaining launch-attestation/accounting gaps.
+3. Run deep evidence-based RE and Lore quality passes, generated front-door
+   indexing, and stale-claim cleanup before expanding claims or publishing.
 
 ## Stop Conditions
 

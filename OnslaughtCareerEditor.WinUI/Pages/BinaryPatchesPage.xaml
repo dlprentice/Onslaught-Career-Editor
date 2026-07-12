@@ -32,6 +32,8 @@
                   AutomationProperties.Name="Windowed &amp; Mods workflow">
         <StackPanel Padding="20,18,20,24">
             <TextBlock Text="Windowed &amp; Mods"
+                       AutomationProperties.AutomationId="BinaryPatchesPageTitle"
+                       AutomationProperties.HeadingLevel="Level1"
                        Style="{StaticResource SectionTitleTextStyle}" />
             <TextBlock Margin="0,6,0,14"
                        Text="A safe game copy is a separate folder this app creates from your installed game. Mods, patches, launch options, and music swaps happen there only. Your Steam install is never changed."
@@ -553,13 +555,27 @@
                                        AutomationProperties.AutomationId="PatchBenchSafeCopySourceStatus"
                                        Text="Installed game source: not set. Use Settings or browse a read-only BEA.exe source below."
                                        Style="{StaticResource SectionBodyTextStyle}" />
-                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                <Button Content="Use configured game folder"
-                                        AutomationProperties.AutomationId="PatchBenchSafeCopyUseGameFolderButton"
-                                        Click="UseGameDirButton_Click" />
-                                <Button Content="Browse BEA.exe source"
-                                        AutomationProperties.AutomationId="PatchBenchSafeCopyBrowseSourceButton"
-                                        Click="BrowseButton_Click" />
+                            <StackPanel Spacing="8">
+                                <Button AutomationProperties.AutomationId="PatchBenchSafeCopyUseGameFolderButton"
+                                        AutomationProperties.Name="Use configured game folder"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                        MinHeight="40"
+                                        Click="UseGameDirButton_Click">
+                                    <TextBlock Text="Use configured game folder"
+                                               TextAlignment="Center"
+                                               TextWrapping="WrapWholeWords" />
+                                </Button>
+                                <Button AutomationProperties.AutomationId="PatchBenchSafeCopyBrowseSourceButton"
+                                        AutomationProperties.Name="Browse BEA.exe source"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                        MinHeight="40"
+                                        Click="BrowseButton_Click">
+                                    <TextBlock Text="Browse BEA.exe source"
+                                               TextAlignment="Center"
+                                               TextWrapping="WrapWholeWords" />
+                                </Button>
                             </StackPanel>
                             <CheckBox x:Name="PatchBenchIncludeSavegamesOption"
                                       AutomationProperties.AutomationId="PatchBenchIncludeSavegamesOption"
@@ -1244,13 +1260,27 @@
                                                      PlaceholderText="Select BEA.exe or BEA.exe.original.backup as read-only source" />
                                         </Expander>
                                     </StackPanel>
-                                    <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <Button Content="Browse read-only BEA.exe source"
-                                                AutomationProperties.AutomationId="PatchBenchBrowseSourceButton"
-                                                Click="BrowseButton_Click" />
-                                        <Button Content="Use configured source game folder"
-                                                AutomationProperties.AutomationId="PatchBenchUseGameFolderButton"
-                                                Click="UseGameDirButton_Click" />
+                                    <StackPanel Spacing="8">
+                                        <Button AutomationProperties.AutomationId="PatchBenchBrowseSourceButton"
+                                                AutomationProperties.Name="Browse read-only BEA.exe source"
+                                                HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Stretch"
+                                                MinHeight="40"
+                                                Click="BrowseButton_Click">
+                                            <TextBlock Text="Browse read-only BEA.exe source"
+                                                       TextAlignment="Center"
+                                                       TextWrapping="WrapWholeWords" />
+                                        </Button>
+                                        <Button AutomationProperties.AutomationId="PatchBenchUseGameFolderButton"
+                                                AutomationProperties.Name="Use configured source game folder"
+                                                HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Stretch"
+                                                MinHeight="40"
+                                                Click="UseGameDirButton_Click">
+                                            <TextBlock Text="Use configured source game folder"
+                                                       TextAlignment="Center"
+                                                       TextWrapping="WrapWholeWords" />
+                                        </Button>
                                     </StackPanel>
                                     <Button x:Name="CreateWorkingCopyButton"
                                             AutomationProperties.AutomationId="PatchBenchCreateWorkingCopyButton"

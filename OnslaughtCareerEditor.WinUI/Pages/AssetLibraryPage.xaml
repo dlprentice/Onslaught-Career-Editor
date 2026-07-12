@@ -17,6 +17,8 @@
         <StackPanel Grid.Row="0"
                     Spacing="6">
             <TextBlock Text="Asset Library"
+                       AutomationProperties.AutomationId="AssetLibraryPageTitle"
+                       AutomationProperties.HeadingLevel="Level1"
                        Style="{StaticResource SectionTitleTextStyle}" />
             <TextBlock Text="Open a generated local asset catalog to browse extracted textures and meshes."
                        Style="{StaticResource SectionBodyTextStyle}" />
@@ -98,7 +100,8 @@
                              Grid.Column="0"
                              AutomationProperties.AutomationId="AssetCatalogPathTextBox"
                              PlaceholderText="Paste catalog.json path or browse to a generated export folder" />
-                    <Button Grid.Column="1"
+                    <Button x:Name="BrowseCatalogButton"
+                            Grid.Column="1"
                             AutomationProperties.AutomationId="AssetBrowseCatalogButton"
                             AutomationProperties.Name="Browse generated export folder"
                             Content="Browse export folder"

@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using OnslaughtCareerEditor.WinUI.Pages;
 using Onslaught___Career_Editor;
 using Windows.Graphics;
@@ -15,11 +17,22 @@ namespace OnslaughtCareerEditor.WinUI
 {
     public sealed partial class MainWindow : Window
     {
+        private enum NavigationEntrySource
+        {
+            NavigationView,
+            InPageAction,
+            Programmatic,
+        }
+
         private readonly Dictionary<string, NavigationViewItem> _itemByTag;
         private readonly Dictionary<string, Type> _pageByTag;
         private readonly Dictionary<Type, object> _pageCache = new();
         private readonly AppWindow? _appWindow;
         private bool _closeConfirmedAfterSafeCopyWarning;
+        private bool _isSelectingNavigationItem;
+        private bool _navigationInProgress;
+        private int _navigationGeneration;
+        private string _activeTag = "home";
 
         public MainWindow()
         {
@@ -59,21 +72,27 @@ namespace OnslaughtCareerEditor.WinUI
 
             Closed += MainWindow_Closed;
             RefreshFooter();
-            NavigateToTag(GetInitialTag());
+            NavigateToTagCore(GetInitialTag(), saveSubTab: null, NavigationEntrySource.Programmatic);
         }
 
         public void RefreshFooter()
         {
             AppConfig config = AppConfig.Load();
-            string? gameDir = config.GetGameDirOrDetect(persistDetection: true);
-            GameDirectoryTextBlock.Text = BuildGameDirectoryLabel(gameDir);
+            string? gameDir = config.GetGameDirOrDetect(persistDetection: true) ?? config.GameDirectory;
+            bool gameDirectoryReady = AppConfig.InspectGameDirectory(gameDir).Status == GameDirectoryStatus.FullInstall;
+            string gameDirectoryLabel = gameDirectoryReady
+                ? BuildGameDirectoryLabel(gameDir)
+                : string.IsNullOrWhiteSpace(gameDir) ? "Not set" : "Needs review";
+            GameDirectoryTextBlock.Text = gameDirectoryLabel;
+            AutomationProperties.SetName(GameDirectoryTextBlock, $"Game folder: {gameDirectoryLabel}");
             ToolTipService.SetToolTip(
                 GameDirectoryTextBlock,
-                string.IsNullOrWhiteSpace(gameDir) ? "Set the game directory in Settings." : gameDir);
-            StatusTextBlock.Text = AppStatusService.CurrentStatus;
+                gameDirectoryReady
+                    ? gameDir
+                    : "Open Settings and choose the full Battle Engine Aquila install.");
             ToolTipService.SetToolTip(
                 ReviewSetupButton,
-                string.IsNullOrWhiteSpace(gameDir)
+                !gameDirectoryReady
                     ? "Open Settings to choose the Battle Engine Aquila install used as read-only source material."
                     : "Open Settings to review the configured install and safe app-owned workspace behavior.");
         }
@@ -88,7 +107,33 @@ namespace OnslaughtCareerEditor.WinUI
 
         private void HandleStatusChanged(string status)
         {
-            DispatcherQueue.TryEnqueue(() => StatusTextBlock.Text = status);
+            if (_navigationInProgress || !IsStatusVisibleForActivePage(status, _activeTag))
+            {
+                return;
+            }
+
+            if (DispatcherQueue.HasThreadAccess)
+            {
+                SetDisplayedStatus(status);
+                return;
+            }
+
+            string activeTagAtQueue = _activeTag;
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (!_navigationInProgress &&
+                    string.Equals(activeTagAtQueue, _activeTag, StringComparison.OrdinalIgnoreCase) &&
+                    IsStatusVisibleForActivePage(status, _activeTag))
+                {
+                    SetDisplayedStatus(status);
+                }
+            });
+        }
+
+        private void SetDisplayedStatus(string status)
+        {
+            StatusTextBlock.Text = status;
+            AutomationProperties.SetName(StatusTextBlock, $"Application status: {status}");
         }
 
         private string GetInitialTag()
@@ -115,13 +160,18 @@ namespace OnslaughtCareerEditor.WinUI
 
         private void ShellNavigationView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
         {
-            if (args.SelectedItemContainer?.Tag is string tag)
+            if (!_isSelectingNavigationItem && args.SelectedItemContainer?.Tag is string tag)
             {
-                NavigateToTag(tag);
+                NavigateToTagCore(tag, saveSubTab: null, NavigationEntrySource.NavigationView);
             }
         }
 
         public void NavigateToTag(string tag, int? saveSubTab = null)
+        {
+            NavigateToTagCore(tag, saveSubTab, NavigationEntrySource.InPageAction);
+        }
+
+        private void NavigateToTagCore(string tag, int? saveSubTab, NavigationEntrySource entrySource)
         {
             if (!_pageByTag.TryGetValue(tag, out Type? pageType) ||
                 !_itemByTag.TryGetValue(tag, out NavigationViewItem? navItem))
@@ -129,28 +179,239 @@ namespace OnslaughtCareerEditor.WinUI
                 return;
             }
 
-            ShellNavigationView.SelectedItem = navItem;
-            ContentFrame.Content = GetOrCreatePage(pageType);
-
-            if (saveSubTab is int tabIndex && ContentFrame.Content is SavesPage savesPage)
+            int navigationGeneration = ++_navigationGeneration;
+            _activeTag = tag;
+            _navigationInProgress = true;
+            object page;
+            try
             {
-                savesPage.NavigateToSubTab(tabIndex);
+                if (!ReferenceEquals(ShellNavigationView.SelectedItem, navItem))
+                {
+                    _isSelectingNavigationItem = true;
+                    try
+                    {
+                        ShellNavigationView.SelectedItem = navItem;
+                    }
+                    finally
+                    {
+                        _isSelectingNavigationItem = false;
+                    }
+                }
+
+                page = GetOrCreatePage(pageType);
+                ContentFrame.Content = page;
+
+                if (page is HomePage homePage)
+                {
+                    homePage.RefreshForNavigation();
+                }
+
+                if (saveSubTab is int tabIndex && page is SavesPage savesPage)
+                {
+                    savesPage.NavigateToSubTab(tabIndex);
+                }
+
+                AppConfig config = AppConfig.Load();
+                config.LastTab = tag switch
+                {
+                    "home" => -1,
+                    "saves" => 0,
+                    "media" => 1,
+                    "assets" => 6,
+                    "lore" => 2,
+                    "binary" => 3,
+                    "settings" => 4,
+                    "about" => 5,
+                    _ => 0,
+                };
+                config.Save();
+            }
+            finally
+            {
+                _navigationInProgress = false;
             }
 
-            AppConfig config = AppConfig.Load();
-            config.LastTab = tag switch
+            AppStatusService.SetStatus(BuildPageEntryStatus(tag));
+            ScheduleNavigationFocus(page, navItem, tag, saveSubTab, entrySource, navigationGeneration);
+        }
+
+        private void ScheduleNavigationFocus(
+            object page,
+            NavigationViewItem navItem,
+            string tag,
+            int? saveSubTab,
+            NavigationEntrySource entrySource,
+            int navigationGeneration)
+        {
+            if (page is not FrameworkElement pageRoot)
             {
-                "home" => -1,
-                "saves" => 0,
-                "media" => 1,
-                "assets" => 6,
-                "lore" => 2,
-                "binary" => 3,
-                "settings" => 4,
-                "about" => 5,
-                _ => 0,
+                navItem.Focus(FocusState.Programmatic);
+                return;
+            }
+
+            void QueueFocus()
+            {
+                DispatcherQueue.TryEnqueue(() =>
+                    MoveFocusAfterNavigationAsync(pageRoot, navItem, tag, saveSubTab, entrySource, navigationGeneration));
+            }
+
+            if (pageRoot.IsLoaded)
+            {
+                QueueFocus();
+                return;
+            }
+
+            RoutedEventHandler? loadedHandler = null;
+            loadedHandler = (_, _) =>
+            {
+                pageRoot.Loaded -= loadedHandler;
+                QueueFocus();
             };
-            config.Save();
+            pageRoot.Loaded += loadedHandler;
+        }
+
+        private async void MoveFocusAfterNavigationAsync(
+            FrameworkElement pageRoot,
+            NavigationViewItem navItem,
+            string tag,
+            int? saveSubTab,
+            NavigationEntrySource entrySource,
+            int navigationGeneration)
+        {
+            try
+            {
+                if (navigationGeneration != _navigationGeneration ||
+                    !ReferenceEquals(ContentFrame.Content, pageRoot))
+                {
+                    return;
+                }
+
+                bool focusContent = entrySource == NavigationEntrySource.InPageAction ||
+                    (entrySource == NavigationEntrySource.Programmatic && string.Equals(tag, "home", StringComparison.OrdinalIgnoreCase));
+                if (focusContent)
+                {
+                    foreach (string targetName in GetContentFocusTargetNames(pageRoot, tag, saveSubTab))
+                    {
+                        if (pageRoot.FindName(targetName) is not FrameworkElement target ||
+                            target.XamlRoot is null ||
+                            target.ActualWidth <= 0 ||
+                            target.ActualHeight <= 0 ||
+                            target.Visibility != Visibility.Visible ||
+                            target is Control { IsEnabled: false })
+                        {
+                            continue;
+                        }
+
+                        FocusMovementResult result = await FocusManager.TryFocusAsync(target, FocusState.Programmatic);
+                        if (navigationGeneration != _navigationGeneration ||
+                            !ReferenceEquals(ContentFrame.Content, pageRoot))
+                        {
+                            return;
+                        }
+
+                        if (result.Succeeded)
+                        {
+                            return;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Fall back to the selected visible navigation item below.
+            }
+
+            if (navigationGeneration == _navigationGeneration &&
+                ReferenceEquals(ContentFrame.Content, pageRoot))
+            {
+                navItem.Focus(FocusState.Programmatic);
+            }
+        }
+
+        private static IReadOnlyList<string> GetContentFocusTargetNames(
+            FrameworkElement pageRoot,
+            string tag,
+            int? saveSubTab)
+        {
+            return tag.ToLowerInvariant() switch
+            {
+                "home" => ["HomeSetupActionButton", "HomeOpenSaveLabButton"],
+                "saves" when saveSubTab == 2 => ["ConfigurationInputFileTextBox"],
+                "saves" when saveSubTab == 1 => ["EditorInputFileTextBox"],
+                "saves" => ["AnalyzeTaskButton"],
+                "media" when MediaHandoffService.HasPendingVideoRequest => ["VideoTabButton"],
+                "media" when pageRoot is MediaPage mediaPage => [mediaPage.PreferredFocusTargetName],
+                "assets" => ["BrowseCatalogButton", "LoadCatalogButton"],
+                "lore" => ["SearchTextBox"],
+                "binary" => ["PatchBenchTopUseGameFolderButton"],
+                "settings" => ["SettingsBrowseGameDirectoryButton"],
+                _ => [],
+            };
+        }
+
+        private static string BuildPageEntryStatus(string tag)
+        {
+            return tag.ToLowerInvariant() switch
+            {
+                "home" => "Home: choose a task",
+                "saves" => "Save Lab: page ready",
+                "media" => "Media: page ready",
+                "assets" => "Asset Library: page ready",
+                "lore" => "Lore: page ready",
+                "binary" => "Windowed & Mods: page ready",
+                "settings" => "Settings: page ready",
+                "about" => "About: page ready",
+                _ => "Ready",
+            };
+        }
+
+        private static bool IsStatusVisibleForActivePage(string status, string activeTag)
+        {
+            string? ownerTag = GetStatusOwnerTag(status);
+            return ownerTag is null || string.Equals(ownerTag, activeTag, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string? GetStatusOwnerTag(string status)
+        {
+            if (status.StartsWith("Home:", StringComparison.OrdinalIgnoreCase))
+            {
+                return "home";
+            }
+
+            if (status.StartsWith("Save Lab:", StringComparison.OrdinalIgnoreCase) ||
+                status.StartsWith("Save Analyzer:", StringComparison.OrdinalIgnoreCase) ||
+                status.StartsWith("Save Editor:", StringComparison.OrdinalIgnoreCase) ||
+                status.StartsWith("Game Options:", StringComparison.OrdinalIgnoreCase))
+            {
+                return "saves";
+            }
+
+            if (status.StartsWith("Media:", StringComparison.OrdinalIgnoreCase))
+            {
+                return "media";
+            }
+
+            if (status.StartsWith("Asset Library:", StringComparison.OrdinalIgnoreCase))
+            {
+                return "assets";
+            }
+
+            if (status.StartsWith("Lore:", StringComparison.OrdinalIgnoreCase))
+            {
+                return "lore";
+            }
+
+            if (status.StartsWith("Windowed & Mods:", StringComparison.OrdinalIgnoreCase))
+            {
+                return "binary";
+            }
+
+            if (status.StartsWith("Settings:", StringComparison.OrdinalIgnoreCase))
+            {
+                return "settings";
+            }
+
+            return status.StartsWith("About:", StringComparison.OrdinalIgnoreCase) ? "about" : null;
         }
 
         private object GetOrCreatePage(Type pageType)
@@ -273,7 +534,6 @@ namespace OnslaughtCareerEditor.WinUI
         private void ReviewSetupButton_Click(object sender, RoutedEventArgs e)
         {
             NavigateToTag("settings");
-            AppStatusService.SetStatus("Settings: review the read-only game install and app-owned working-copy behavior");
             RefreshFooter();
         }
     }

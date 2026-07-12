@@ -11,6 +11,8 @@
                   AutomationProperties.Name="Settings page content">
         <StackPanel Padding="20,18,20,24">
             <TextBlock Text="Settings"
+                       AutomationProperties.AutomationId="SettingsPageTitle"
+                       AutomationProperties.HeadingLevel="Level1"
                        Style="{StaticResource SectionTitleTextStyle}" />
             <TextBlock Margin="0,6,0,14"
                        Text="Point the app at your Battle Engine Aquila install, confirm what save/options files are being detected, and control the media behavior defaults the shell uses."
@@ -54,7 +56,8 @@
                                           Text="Choose your install folder as read-only source material to enable saves, media, and playable copied-game workflows."
                                            Style="{StaticResource SectionBodyTextStyle}" />
                             </StackPanel>
-                            <Button Grid.Column="1"
+                            <Button x:Name="SettingsBrowseGameDirectoryButton"
+                                    Grid.Column="1"
                                     AutomationProperties.AutomationId="SettingsBrowseGameDirectoryButton"
                                     Content="Browse..."
                                     VerticalAlignment="Center"

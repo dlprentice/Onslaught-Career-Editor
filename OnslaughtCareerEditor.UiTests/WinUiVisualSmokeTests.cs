@@ -886,11 +886,51 @@ public class WinUiVisualSmokeTests
     private static void Capture(Window window, string evidenceDir, string fileName, string label)
     {
         string outputPath = Path.Combine(evidenceDir, fileName);
-        window.Focus();
-        Thread.Sleep(350);
-        window.CaptureToFile(outputPath);
+        const int maxCaptureAttempts = 4;
+        bool renderedCaptureSaved = false;
+        for (int attempt = 1; attempt <= maxCaptureAttempts; attempt++)
+        {
+            window.Focus();
+            Thread.Sleep(attempt == 1 ? 350 : 750);
+            using FlaUI.Core.Capturing.CaptureImage capture = FlaUI.Core.Capturing.Capture.Element(window);
+            if (!HasRenderedHeader(capture.Bitmap))
+            {
+                continue;
+            }
+
+            capture.ToFile(outputPath);
+            renderedCaptureSaved = true;
+            break;
+        }
+
+        Assert.That(renderedCaptureSaved, Is.True, $"Screenshot for {label} never produced a fully rendered app header.");
         Assert.That(File.Exists(outputPath), Is.True, $"Expected screenshot for {label}: {outputPath}");
         Assert.That(new FileInfo(outputPath).Length, Is.GreaterThan(10_000), $"Screenshot for {label} should not be empty.");
+    }
+
+    private static bool HasRenderedHeader(System.Drawing.Bitmap bitmap)
+    {
+        if (bitmap.Width < 4 || bitmap.Height < 91)
+        {
+            return false;
+        }
+
+        int renderedSamples = 0;
+        foreach (int x in new[] { bitmap.Width / 4, bitmap.Width / 2, bitmap.Width * 3 / 4 })
+        {
+            foreach (int y in new[] { 50, 70, 90 })
+            {
+                System.Drawing.Color headerPixel = bitmap.GetPixel(x, y);
+                if (headerPixel.A > 240 &&
+                    headerPixel.B > headerPixel.R &&
+                    headerPixel.R + headerPixel.G + headerPixel.B > 100)
+                {
+                    renderedSamples++;
+                }
+            }
+        }
+
+        return renderedSamples >= 6;
     }
 
     [DllImport("user32.dll", SetLastError = true)]
@@ -958,6 +998,8 @@ public class WinUiVisualSmokeTests
         string catalogPath = Path.Combine(catalogDir, "catalog.json");
         File.WriteAllText(catalogPath, """
         {
+          "schema_version": 2,
+          "path_contract": "bundle-root-relative",
           "summary": {
             "texture_catalog_entries": 1,
             "loose_mesh_catalog_entries": 1,
@@ -1053,6 +1095,8 @@ public class WinUiVisualSmokeTests
         string catalogPath = Path.Combine(catalogDir, "catalog.json");
         File.WriteAllText(catalogPath, """
         {
+          "schema_version": 2,
+          "path_contract": "bundle-root-relative",
           "summary": {
             "texture_catalog_entries": 0,
             "loose_mesh_catalog_entries": 1,

@@ -35,6 +35,7 @@ public class WinUiProductLaneTests
         string shellXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "MainWindow.xaml");
         string shellCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "MainWindow.xaml.cs");
         string homeXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "HomePage.xaml");
+        string homeCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "HomePage.xaml.cs");
 
         Assert.That(shellXaml, Does.Contain("HomeNavigationItem"));
         Assert.That(shellCode, Does.Contain("typeof(HomePage)"));
@@ -45,10 +46,20 @@ public class WinUiProductLaneTests
         Assert.That(homeXaml, Does.Contain("Open Asset Library"));
         Assert.That(homeXaml, Does.Contain("Open Lore"));
         Assert.That(homeXaml, Does.Contain("Open Windowed &amp; Mods"));
+        Assert.That(homeXaml, Does.Contain("HomeSetupInfoBar"));
+        Assert.That(homeXaml, Does.Contain("HomeSetupActionButton"));
+        Assert.That(homeXaml, Does.Contain("Choose game folder"));
+        Assert.That(homeXaml.IndexOf("HomeSetupInfoBar", StringComparison.Ordinal), Is.LessThan(homeXaml.IndexOf("SaveOptionsCardBorder", StringComparison.Ordinal)));
         Assert.That(homeXaml, Does.Contain("configured game install is treated as source material"));
         Assert.That(homeXaml, Does.Contain("What stays unchanged"));
         Assert.That(homeXaml, Does.Contain("installed game and original BEA.exe stay unchanged"));
         Assert.That(homeXaml, Does.Contain("online play is not available in this release"));
+        Assert.That(homeCode, Does.Contain("HomeGameFolderState.Unset"));
+        Assert.That(homeCode, Does.Contain("HomeGameFolderState.Invalid"));
+        Assert.That(homeCode, Does.Contain("HomeGameFolderState.Ready"));
+        Assert.That(homeCode, Does.Contain("GameDirectoryStatus.FullInstall"));
+        Assert.That(homeCode, Does.Contain("Save Lab can still open files you choose manually"));
+        Assert.That(homeCode, Does.Contain("public void RefreshForNavigation()"));
         Assert.That(homeXaml, Does.Not.Contain("Electron, WPF, and the old Python GUI/CLI"));
     }
 
@@ -81,6 +92,35 @@ public class WinUiProductLaneTests
 
         Assert.That(configCode, Does.Contain("public int LastTab { get; set; } = -1;"));
         Assert.That(restoreSwitch, Does.Contain("_ => \"home\""));
+    }
+
+    [Test]
+    public void ShellNavigation_OwnsArrivalStatusAndFocusForCachedPages()
+    {
+        string shellXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "MainWindow.xaml");
+        string shellCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "MainWindow.xaml.cs");
+        string mediaCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "MediaPage.xaml.cs");
+        string handoffCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "MediaHandoffService.cs");
+        string refreshFooter = ExtractCodeSlice(shellCode, "public void RefreshFooter()", "private void HandleStatusChanged");
+
+        Assert.That(shellXaml, Does.Contain("AutomationProperties.AutomationId=\"AppStatusText\""));
+        Assert.That(shellCode, Does.Contain("private enum NavigationEntrySource"));
+        Assert.That(shellCode, Does.Contain("_isSelectingNavigationItem"));
+        Assert.That(shellCode, Does.Contain("NavigateToTagCore(tag, saveSubTab: null, NavigationEntrySource.NavigationView)"));
+        Assert.That(shellCode, Does.Contain("NavigateToTagCore(tag, saveSubTab, NavigationEntrySource.InPageAction)"));
+        Assert.That(shellCode, Does.Contain("navigationGeneration != _navigationGeneration"));
+        Assert.That(shellCode, Does.Contain("MoveFocusAfterNavigationAsync"));
+        Assert.That(shellCode, Does.Contain("SettingsBrowseGameDirectoryButton"));
+        Assert.That(shellCode, Does.Contain("ConfigurationInputFileTextBox"));
+        Assert.That(shellCode, Does.Contain("IsStatusVisibleForActivePage"));
+        Assert.That(shellCode, Does.Contain("status.StartsWith(\"Lore:\""));
+        Assert.That(shellCode, Does.Contain("status.StartsWith(\"Media:\""));
+        Assert.That(shellCode, Does.Contain("homePage.RefreshForNavigation()"));
+        Assert.That(refreshFooter, Does.Not.Contain("SetDisplayedStatus"));
+        Assert.That(shellCode, Does.Contain("MediaHandoffService.HasPendingVideoRequest"));
+        Assert.That(shellCode, Does.Contain("mediaPage.PreferredFocusTargetName"));
+        Assert.That(mediaCode, Does.Contain("internal string PreferredFocusTargetName"));
+        Assert.That(handoffCode, Does.Contain("public static bool HasPendingVideoRequest"));
     }
 
     [Test]
@@ -1528,8 +1568,17 @@ public class WinUiProductLaneTests
 
         Assert.That(code, Does.Contain("TextureRamLimitMb: HighDetailTextureRamLimitMb"));
         Assert.That(code, Does.Contain("PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex = Math.Clamp(preset.ControllerConfigurationIndex, 0, 4)"));
-        Assert.That(code, Does.Contain("PatchBenchShowDebugTraceLaunchOption.IsChecked = false"));
+        Assert.That(code, Does.Contain("bool ShowDebugTrace"));
+        Assert.That(code, Does.Contain("ShowDebugTrace: false"));
+        Assert.That(code, Does.Contain("PatchBenchShowDebugTraceLaunchOption.IsChecked = preset.ShowDebugTrace"));
+        Assert.That(code, Does.Contain("PatchBenchShowDebugTraceLaunchOption.IsChecked == showDebugTrace"));
+        Assert.That(code, Does.Contain("ResolveMatchingLaunchPresetChoice()"));
+        Assert.That(code, Does.Contain("(PatchBenchLevelLaunchOption.Text ?? string.Empty).Trim()"));
+        Assert.That(code, Does.Contain("(PatchBenchTextureRamLimitLaunchOption.Text ?? string.Empty).Trim()"));
+        Assert.That(code, Does.Not.Contain("_ = DispatcherQueue.TryEnqueue(() =>"));
         Assert.That(code, Does.Contain("PatchBenchAdminLevelPresetComboBox.SelectedIndex = NoAdminLevelPresetIndex"));
+        Assert.That(code, Does.Contain("PatchBenchAdminLevelPresetComboBox.SelectedIndex = ResolveAdminLevelPresetIndex(preset.LevelId)"));
+        Assert.That(code, Does.Contain("SynchronizeAdminLevelPresetSelection(PatchBenchLevelLaunchOption.Text)"));
         Assert.That(code, Does.Contain("s_adminLevelPresets"));
         Assert.That(code, Does.Contain("AdminLevelPresetComboBox_SelectionChanged"));
         Assert.That(code, Does.Contain("args.Add(\"-showdebugtrace\")"));
@@ -2063,6 +2112,35 @@ public class WinUiProductLaneTests
     }
 
     [Test]
+    public void MediaPage_DefersVideoInitializationUntilVideoIsRequested()
+    {
+        string code = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "MediaPage.xaml.cs");
+        int loadedStart = code.IndexOf("private async void MediaPage_Loaded", StringComparison.Ordinal);
+        int unloadedStart = code.IndexOf("private void MediaPage_Unloaded", loadedStart, StringComparison.Ordinal);
+        int playbackStart = code.IndexOf("private void StartVideoPlayback(MediaVideoItem item)", StringComparison.Ordinal);
+        int policyStart = code.IndexOf("private void ApplyMediaPolicyNow", playbackStart, StringComparison.Ordinal);
+        int selectTabStart = code.IndexOf("private void SelectMediaTab", StringComparison.Ordinal);
+        int audioSearchStart = code.IndexOf("private void AudioSearchTextBox_TextChanged", selectTabStart, StringComparison.Ordinal);
+
+        Assert.That(loadedStart, Is.GreaterThanOrEqualTo(0));
+        Assert.That(unloadedStart, Is.GreaterThan(loadedStart));
+        Assert.That(playbackStart, Is.GreaterThanOrEqualTo(0));
+        Assert.That(policyStart, Is.GreaterThan(playbackStart));
+        Assert.That(selectTabStart, Is.GreaterThanOrEqualTo(0));
+        Assert.That(audioSearchStart, Is.GreaterThan(selectTabStart));
+        Assert.That(code[loadedStart..unloadedStart], Does.Not.Contain("EnsureInlineVideoPlayer"));
+        Assert.That(code[loadedStart..unloadedStart], Does.Contain("if (!_isPageLoaded)"));
+        Assert.That(code, Does.Contain("_isPageLoaded = false;"));
+        Assert.That(code, Does.Contain("SelectMediaTab(GetInitialMediaTabIndex(), persistSelection: false, initializeVideo: false)"));
+        Assert.That(code, Does.Contain("Video player starts on demand"));
+        Assert.That(code[selectTabStart..audioSearchStart], Does.Contain("if (tabIndex == VideoTabIndex)"));
+        Assert.That(code[selectTabStart..audioSearchStart], Does.Contain("if (initializeVideo && EnsureInlineVideoPlayer())"));
+        Assert.That(code[playbackStart..policyStart], Does.Contain("if (!EnsureInlineVideoPlayer())"));
+        Assert.That(code, Does.Contain("_videoInitializationError = ex.Message;"));
+        Assert.That(code, Does.Contain("VideoPlayerStatusTextBlock.Text = \"Inline video unavailable\";"));
+    }
+
+    [Test]
     public void SaveLab_InfoBars_ExposeStatusAutomationIdsAndVisibilityHelpers()
     {
         string savesXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.xaml");
@@ -2102,7 +2180,7 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("BuildGameDirectoryLabel"));
         Assert.That(code, Does.Contain("ToolTipService.SetToolTip("));
         Assert.That(code, Does.Contain("NavigateToTag(\"settings\")"));
-        Assert.That(code, Does.Contain("read-only game install"));
+        Assert.That(code, Does.Contain("read-only source material"));
         Assert.That(code, Does.Not.Contain("Process.Start"));
         Assert.That(code, Does.Not.Contain("ResolveGameExecutablePath"));
     }

@@ -6,6 +6,8 @@ namespace OnslaughtCareerEditor.WinUI
     {
         private static MediaHandoffRequest? _pendingVideoRequest;
 
+        public static bool HasPendingVideoRequest => _pendingVideoRequest != null;
+
         public static void RequestVideo(string searchText, string displayLabel)
         {
             _pendingVideoRequest = new MediaHandoffRequest(searchText, displayLabel);
