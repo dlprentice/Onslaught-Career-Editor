@@ -235,29 +235,28 @@ def _event_command(
     event: str, identity: str, object_expression: str, register: str, breakpoint_id: int
 ) -> str:
     return (
-        f'ba{breakpoint_id} e1 /1 {_rva(PROBE_RVAS[event])} ".if ({identity}) '
-        f'{{ .printf \\"MORPH_CANARY_EVENT event={event} identityEqual=1 '
-        f'rawStateU32=0x%08x\\n\\", poi({object_expression}+0x260); r @{register}=1; gc }} '
-        f'.else {{ .printf \\"MORPH_CANARY_EVENT event={event} identityEqual=0 '
-        f'rawStateU32=0x%08x\\n\\", poi({object_expression}+0x260); r @{register}=1; gc }}"'
+        f'ba{breakpoint_id} e1 /1 {_rva(PROBE_RVAS[event])} ".printf '
+        f'\\"MORPH_CANARY_EVENT event={event} identityEqual=%d '
+        f'rawStateU32=0x%08x\\n\\", ({identity}), poi({object_expression}+0x260); '
+        f'r @{register}=1; gc"'
     )
 
 
 def _arm_input_breakpoint() -> str:
     hardware_commands = (
-        _event_command("battleEngineMorph", "@ecx==@$t3", "@ecx", "$t0", 0),
-        _event_command("battleEngineMove", "@ecx==@$t3", "@ecx", "$t1", 1),
-        _event_command("jetPartMove", "poi(@ecx+0x18)==@$t3", "@ecx", "$t2", 2),
+        _event_command("battleEngineMorph", "@ecx==@$t3", "@$t3", "$t0", 0),
+        _event_command("battleEngineMove", "@ecx==@$t3", "@$t3", "$t1", 1),
+        _event_command("jetPartMove", "poi(@ecx+0x18)==@$t3", "@$t3", "$t2", 2),
     )
     hardware = "; ".join(
         part for breakpoint_id, command in enumerate(hardware_commands) for part in (command, f"bd {breakpoint_id}")
     )
     input_breakpoint = (
-        f"bp3 {_rva(PROBE_RVAS['playerTransformAction'])} \""
+        f"ba3 e1 {_rva(PROBE_RVAS['playerTransformAction'])} \""
         f".if ((poi(@esp+0x4)==0x21) && (@ecx==poi({_rva(P0_GLOBAL_RVA)}))) {{ "
         f"bc 3; r @$t3=poi(@ecx+0x1c); .printf \\\"MORPH_CANARY_EVENT "
         f"event=playerTransformAction identityEqual=1 rawStateU32=0x%08x\\n\\\", "
-        f"poi(@ecx+0x260); be 0 1 2; g }} .else {{ gc }}\""
+        f"poi(@$t3+0x260); be 0 1 2; g }} .else {{ gc }}\""
     )
     return f"{hardware}; {input_breakpoint}"
 
@@ -437,10 +436,15 @@ def _parse_events(cdb_log: str | Path) -> tuple[list[dict[str, Any]], str]:
     except UnicodeDecodeError as exc:
         raise ValueError("raw CDB capture must be ASCII") from exc
     lines = [line.strip() for line in text.splitlines()]
+    if any("MORPH_CANARY_CODE_MISMATCH" in line for line in lines):
+        raise ValueError("raw CDB capture contains MORPH_CANARY_CODE_MISMATCH")
     for marker in ("MORPH_CANARY_BEGIN", "MORPH_CANARY_READY"):
         if lines.count(marker) != 1:
             raise ValueError(f"raw CDB capture must contain exactly one {marker} marker")
+    begin_index = lines.index("MORPH_CANARY_BEGIN")
     ready_index = lines.index("MORPH_CANARY_READY")
+    if begin_index >= ready_index:
+        raise ValueError("MORPH_CANARY_BEGIN must appear before MORPH_CANARY_READY")
     events: list[dict[str, Any]] = []
     for line_index, line in enumerate(lines):
         if not line.startswith("MORPH_CANARY_EVENT"):

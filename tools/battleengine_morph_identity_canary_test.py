@@ -7,6 +7,7 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+import re
 import struct
 import tempfile
 import unittest
@@ -179,17 +180,24 @@ class Pe32AndRenderingTests(unittest.TestCase):
         self.assertTrue(all(not target.relocation_overlap for target in rendered.targets))
         self.assertNotIn(rendered.targets[0].sha256, rendered.text)
         self.assertNotRegex(rendered.text, r"(?i)\b(?:pid|hwnd|0x004081c0)\b")
+        hardware_slots = re.findall(
+            r"(?<!\S)ba(\d+) e1(?: /1)? BEA\+0x[0-9a-f]{8}", rendered.text
+        )
+        self.assertEqual(["0", "1", "2", "3"], hardware_slots)
         self.assertEqual(3, rendered.text.count(" e1 /1 "))
-        self.assertIn('ba0 e1 /1 BEA+0x0000a580 ".if', rendered.text)
+        self.assertIn('ba0 e1 /1 BEA+0x0000a580 ".printf', rendered.text)
         self.assertIn("bd 0", rendered.text)
         self.assertIn("bd 1", rendered.text)
         self.assertIn("bd 2", rendered.text)
-        self.assertIn("bp3 BEA+0x000d3110", rendered.text)
-        self.assertNotIn("bp3 /1", rendered.text)
+        self.assertIn('ba3 e1 BEA+0x000d3110 ".if', rendered.text)
+        self.assertNotIn("ba3 e1 /1", rendered.text)
+        self.assertNotRegex(rendered.text, r"(?<![A-Za-z0-9_$])bp\d*\s")
+        self.assertEqual(1, rendered.text.count("bc 3"))
         self.assertIn("bc 3; r @$t3=poi(@ecx+0x1c)", rendered.text)
         self.assertIn("be 0 1 2", rendered.text)
         self.assertNotIn("$bpnum", rendered.text)
-        self.assertRegex(rendered.text, r"event=jetPartMove.*poi\(@ecx\+0x260\)")
+        self.assertEqual(4, rendered.text.count("poi(@$t3+0x260)"))
+        self.assertNotIn("poi(@ecx+0x260)", rendered.text)
         self.assertIn("poi(@esp+0x4)==0x21", rendered.text)
         self.assertIn("@ecx==poi(BEA+0x004a9d3c)", rendered.text)
         self.assertIn("r @$t3=poi(@ecx+0x1c)", rendered.text)
@@ -358,6 +366,26 @@ class MaterializerTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "before.*READY"):
             canary.materialize_run(artifact, pre_ready, "noInputControl")
+
+    def test_rejects_inconsistent_gate_markers(self) -> None:
+        artifact = private_artifact(self.rendered, self.exe, self.root / "gate-live.json")
+        reversed_markers = self.root / "reversed-markers.log"
+        reversed_markers.write_text(
+            "MORPH_CANARY_READY\nMORPH_CANARY_BEGIN\n",
+            encoding="ascii",
+        )
+        with self.assertRaisesRegex(ValueError, "BEGIN.*before.*READY"):
+            canary.materialize_run(artifact, reversed_markers, "noInputControl")
+
+        contradictory = self.root / "contradictory-gate.log"
+        contradictory.write_text(
+            "MORPH_CANARY_BEGIN\n"
+            "MORPH_CANARY_CODE_MISMATCH\n"
+            "MORPH_CANARY_READY\n",
+            encoding="ascii",
+        )
+        with self.assertRaisesRegex(ValueError, "CODE_MISMATCH"):
+            canary.materialize_run(artifact, contradictory, "noInputControl")
 
     def test_matrix_enforces_roles_outcomes_and_exact_public_keys(self) -> None:
         runs = []
