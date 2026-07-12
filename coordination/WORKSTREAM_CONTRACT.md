@@ -138,10 +138,11 @@ or acceptance evidence needs independent judgment. RE maps, Ghidra/headless,
 proof, storage, release, runtime, account, spend, disputed, broad, or
 high-collision work is substantive.
 
-Each substantive objective or related release batch gets one review envelope:
-Codex normal/adversarial using `gpt-5.6-sol`/`ultra`, plus bounded
-Cursor/Grok normal/adversarial using
-`cursor-agent --model grok-4.5-fast-xhigh` when the required read-only
+Each substantive objective or related release batch gets one review envelope
+under the global Codex multi-agent lane contract. Codex-owned normal/adversarial
+subagents inherit the parent effort by default or use an explicit task-specific
+supported effort override. The envelope also includes bounded external
+normal/adversarial consults when the required read-only
 sandbox and authentication are available. Routine implementation, validation,
 formatting, and state follow-through inside that envelope do not recursively
 launch new reviews. If a lane is unavailable or unsafe to brief, record the

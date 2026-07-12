@@ -237,7 +237,7 @@ Durable operating lessons from the long WinUI product and reverse-engineering ca
 ## Delegation Lessons
 
 - Use subagents only for independent, bounded work that can run without blocking the immediate next local step.
-- Worker agents should run with effective `gpt-5.5` and `xhigh` reasoning unless a higher-priority instruction forbids it.
+- Codex-owned worker agents inherit the parent model and effort by default; select an explicit task-specific supported effort only when risk, complexity, latency, or the usage budget justifies it.
 - Give workers disjoint ownership. Tell them they are not alone in the codebase and must not revert other edits.
 - Subagents should not edit repo state files. The main agent owns state and final integration.
 - Read-only explorer output is useful for broad audits, but final claims still need local review and validation.

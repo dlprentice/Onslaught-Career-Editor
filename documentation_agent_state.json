@@ -1,5 +1,6 @@
 {
   "lastUpdated": "2026-07-12",
+  "routingPolicy": "Active docs consume the global Codex multi-agent lane contract, keep Codex-owned subagent effort task-flexible, and preserve historical wave provenance.",
   "currentFocus": "Document the Steam-binary/Stuart-source/exporter/rebuild evidence hierarchy and one authentic behavior slice without promoting source or prototype assumptions to retail truth.",
   "sourceOfTruth": {
     "readme": "README.MD",

@@ -79,7 +79,7 @@ For delegated subagent work:
 
 ```text
 1. SCOPE: Delegate only independent, bounded work with a clear file or question boundary.
-2. MODEL: Worker subagents must run with effective gpt-5.5 and xhigh reasoning unless a higher-priority instruction forbids it; do not downshift workers for speed or routine implementation.
+2. MODEL: Codex-owned worker subagents inherit the parent model and effort by default; use an explicit task-specific supported effort override only when justified by risk, complexity, latency, or usage budget.
 3. COORDINATION: Workers are not alone in the codebase; they must not revert unrelated edits and must report changed paths.
 4. STATE: The main agent owns developer_agent_state.json and documentation_agent_state.json.
 5. EVIDENCE: Put temporary subagent outputs under subagents/ and summarize durable truth in canonical docs/state.

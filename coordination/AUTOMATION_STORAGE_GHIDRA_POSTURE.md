@@ -219,9 +219,10 @@ reporting, or consult preparation.
 
 Each substantive automation, storage, Ghidra, public-claim, release-posture, or
 collaboration-policy objective gets one bounded normal/adversarial review
-envelope. Codex root and Codex-owned subagents use
-`gpt-5.6-sol`/`ultra`; external normal/adversarial consults use
-`cursor-agent --model grok-4.5-fast-xhigh` when the required read-only
+envelope under the global Codex multi-agent lane contract. Codex-owned subagents
+inherit the parent effort by default or use an explicit task-specific supported
+effort override. External normal/adversarial consults use the canonical command
+binding when the required read-only
 sandbox and authentication are available. Routine follow-through inside the
 envelope does not create recursive consult loops. If an external prompt cannot
 stay bounded and non-secret, record the boundary and use focused Codex-owned
@@ -238,8 +239,8 @@ Prepared consult lanes for this posture class:
 
 | Lane | Normal brief focus | Adversarial brief focus |
 | --- | --- | --- |
-| Codex `gpt-5.6-sol`/`ultra` | Check whether the patch makes the storage/Ghidra/proof posture durable, concise, and consistent with repo contracts. | Attack for hidden authority expansion, state/write conflicts, hard-payload leakage, stale legacy-drive reliance, weak proof-class separation, and missing validation. |
-| Cursor/Grok `grok-4.5-fast-xhigh` | Review practical contributor clarity, collision risk, policy reasoning, and evidence sufficiency from a bounded sanitized brief. | Attack for ambiguous ownership, unsafe deletion or mutation, overbroad cleanup language, proof-retention mistakes, and claims that exceed evidence. |
+| Codex root and task-flexible Codex-owned subagents | Check whether the patch makes the storage/Ghidra/proof posture durable, concise, and consistent with repo contracts. | Attack for hidden authority expansion, state/write conflicts, hard-payload leakage, stale legacy-drive reliance, weak proof-class separation, and missing validation. |
+| Canonical external consult lane | Review practical contributor clarity, collision risk, policy reasoning, and evidence sufficiency from a bounded sanitized brief. | Attack for ambiguous ownership, unsafe deletion or mutation, overbroad cleanup language, proof-retention mistakes, and claims that exceed evidence. |
 
 Consult briefs must not include secrets, `.env` values, auth/session/cache/log
 material, raw local manifests, exact local proof roots, hard payloads, copied

@@ -47,11 +47,11 @@ proof summaries, and reproducible checkers instead of shipping the payloads.
 - Codex root remains final owner of edits, validation, state updates, commits,
   pushes, publication, and acceptance.
 - Each substantive objective or related release batch requires one bounded
-  normal/adversarial review envelope before terminal acceptance. Codex root and
-  Codex-owned subagents use `gpt-5.6-sol`/`ultra`; bounded external
-  normal/adversarial consults use
-  `cursor-agent --model grok-4.5-fast-xhigh` when the required read-only
-  sandbox and authentication are available. Trivial lookups, formatting, and
+  normal/adversarial review envelope under the global Codex multi-agent lane
+  contract before terminal acceptance. Codex-owned subagents inherit the parent
+  effort by default or use an explicit task-specific supported effort override.
+  Bounded external normal/adversarial consults use the canonical read-only
+  posture when the required sandbox and authentication are available. Trivial lookups, formatting, and
   routine follow-through inside an accepted envelope do not create recursive
   consult loops. If an external prompt cannot be safely bounded, record
   `CONSULT_BOUNDARY:<lane>:<reason>` and use focused Codex-owned review. If a

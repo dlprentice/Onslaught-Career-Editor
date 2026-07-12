@@ -11,6 +11,8 @@ tooling. Ignored local overlays are reserved for hard payloads such as actual
 game files, copied executables, private media/input files, full Ghidra databases
 or backups, secrets, build output, and bulky generated runtime captures.
 
+Canonical model and consult routing: `$CODEX_HOME/docs/multi-agent-lane-contract.md`.
+
 ## Current Direction
 
 - WinUI 3 is the primary user-facing Windows app.
@@ -33,10 +35,10 @@ or backups, secrets, build output, and bulky generated runtime captures.
   `COLLABORATION.md` before making changes.
 - Keep changes narrow and path-scoped.
 - Give each substantive objective or related release batch one normal/adversarial
-  review envelope. Codex root and Codex-owned subagents use
-  `gpt-5.6-sol`/`ultra`; bounded external normal/adversarial consults use
-  `cursor-agent --model grok-4.5-fast-xhigh` when the required read-only
-  sandbox and authentication are available. Trivial lookups and routine
+  review envelope under the global Codex multi-agent lane contract. Codex-owned
+  subagents inherit the parent effort by default or use an explicit task-specific
+  supported effort override. Bounded external consults require the canonical
+  read-only sandbox and authentication posture. Trivial lookups and routine
   follow-through inside an accepted envelope do not create recursive consult
   loops. External prompts stay bounded and non-secret; Codex root owns edits,
   validation, state, commits, pushes, publication decisions, and final

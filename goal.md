@@ -125,13 +125,14 @@ work plus verified commits and pushes for this campaign.
 
 ## Review Envelope
 
-This campaign uses Codex root and Codex-owned normal/adversarial lanes on
-`gpt-5.6-sol`/`ultra`. The current broad audit covers repository DX, branch
+This campaign follows the global Codex multi-agent lane contract. Codex-owned
+normal/adversarial lanes inherit the parent effort by default or use
+an explicit task-specific supported effort override. The current broad audit covers repository DX, branch
 archaeology, WinUI UX, patch/mod safety, binary RE quality, Lore quality,
 rebuild provenance/architecture, and holistic normal/adversarial review.
 
 The external Cursor/Grok lane is available through bounded, non-secret,
-read-only `cursor-agent --model grok-4.5-fast-xhigh` consults. The completed
+read-only external consults through the canonical command binding. The completed
 filesystem slice received normal and adversarial Cursor/Grok review, focused
 follow-ups on challenged assumptions, and separate Codex normal/adversarial
 review. The WinUI slice received Codex normal/adversarial review whose two

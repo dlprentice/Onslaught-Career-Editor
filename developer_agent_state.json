@@ -1,5 +1,6 @@
 {
   "lastUpdated": "2026-07-12",
+  "routingPolicy": "Follow the global Codex multi-agent lane contract; Codex-owned subagents inherit the parent effort or use an explicit task-specific supported effort override.",
   "currentFocus": "Crosswalk the Steam binary, Stuart source, AYA exporter, and rebuild, then implement one recognizable evidence-backed behavior slice.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
