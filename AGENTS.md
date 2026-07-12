@@ -97,6 +97,9 @@ use `py -3`.
 ## Common Local Gates
 
 Run the smallest gate set that matches your change.
+Use [VALIDATION.md](VALIDATION.md) for the measured change-class matrix. Do not
+run the individual WinUI build/AppCore/UI commands cumulatively with
+`test:winui-primary-lane` unless diagnosing a failure.
 
 <!-- public-package-commands:start -->
 ```powershell
@@ -121,6 +124,12 @@ npm run test:rebuild
 Run `npm run test:hard-payload-safety` before pushing boundary-sensitive work.
 It checks for tracked hard payloads and obvious secrets; it is not meant to hide
 normal RE notes, state batons, agent reports, or proof summaries.
+
+Current-doc edit loops use `npm run test:doc-commands` and
+`npm run test:md-links:public-core`. Broad historical-doc closeout uses
+`npm run test:doc-commands-all` and `npm run test:md-links`. Runtime-helper
+changes use `npm run test:runtime-tooling-safety`; the 95-child copied-runtime
+proof aggregate is not an ordinary contributor gate.
 
 Run .NET build/test commands serially. UI Automation and visual claims require
 native WinUI checks; browser or fixture success is not native runtime proof.

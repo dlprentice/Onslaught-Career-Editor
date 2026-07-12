@@ -794,6 +794,119 @@ def run_self_test() -> int:
             print("- malformed .gitmodules did not fail closed")
             print(f"- findings: {findings!r}")
             return 1
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        (root / ".gitmodules").write_text(
+            '[submodule "missing"]\n\tpath = references/missing\n\turl = ../missing.git\n',
+            encoding="utf-8",
+        )
+        (root / "README.MD").write_text("# OK\n", encoding="utf-8")
+        subprocess.run(["git", "add", "."], cwd=root, check=True)
+        findings = check_repo(root, include_submodules=True)
+        if not any(
+            finding.label == "deny-missing-submodule-scan"
+            and finding.path == "references/missing"
+            for finding in findings
+        ):
+            print("Public payload safety self-test: FAIL")
+            print("- missing declared submodule did not fail closed")
+            print(f"- findings: {findings!r}")
+            return 1
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        submodule = root / "references" / "payload-fixture"
+        submodule.mkdir(parents=True)
+        subprocess.run(["git", "init", "-q"], cwd=submodule, check=True)
+        (submodule / "game").mkdir()
+        (submodule / "game" / "BEA.exe").write_bytes(b"not ok")
+        subprocess.run(["git", "add", "."], cwd=submodule, check=True)
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "user.name=Payload Fixture",
+                "-c",
+                "user.email=payload-fixture@example.invalid",
+                "commit",
+                "-q",
+                "-m",
+                "payload fixture",
+            ],
+            cwd=submodule,
+            check=True,
+        )
+        (root / ".gitmodules").write_text(
+            '[submodule "payload-fixture"]\n'
+            "\tpath = references/payload-fixture\n"
+            "\turl = ../payload-fixture.git\n",
+            encoding="utf-8",
+        )
+        (root / "README.MD").write_text("# OK\n", encoding="utf-8")
+        subprocess.run(
+            ["git", "-c", "advice.addEmbeddedRepo=false", "add", "."],
+            cwd=root,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        findings = check_repo(root, include_submodules=True)
+        if not any(
+            finding.path == "references/payload-fixture/game/BEA.exe"
+            for finding in findings
+        ):
+            print("Public payload safety self-test: FAIL")
+            print("- initialized submodule hard payload was not rejected")
+            print(f"- findings: {findings!r}")
+            return 1
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        (root / "game").mkdir()
+        (root / "game" / "BEA.exe").write_bytes(b"root payload")
+        submodule = root / "references" / "clean-fixture"
+        submodule.mkdir(parents=True)
+        subprocess.run(["git", "init", "-q"], cwd=submodule, check=True)
+        (submodule / "README.MD").write_text("# Clean fixture\n", encoding="utf-8")
+        subprocess.run(["git", "add", "."], cwd=submodule, check=True)
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "user.name=Clean Fixture",
+                "-c",
+                "user.email=clean-fixture@example.invalid",
+                "commit",
+                "-q",
+                "-m",
+                "clean fixture",
+            ],
+            cwd=submodule,
+            check=True,
+        )
+        (root / ".gitmodules").write_text(
+            '[submodule "clean-fixture"]\n'
+            "\tpath = references/clean-fixture\n"
+            "\turl = ../clean-fixture.git\n",
+            encoding="utf-8",
+        )
+        (root / "README.MD").write_text("# Root fixture\n", encoding="utf-8")
+        subprocess.run(
+            ["git", "-c", "advice.addEmbeddedRepo=false", "add", "."],
+            cwd=root,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        root_findings = set(check_repo(root))
+        combined_findings = set(check_repo(root, include_submodules=True))
+        if not root_findings or not root_findings.issubset(combined_findings):
+            print("Public payload safety self-test: FAIL")
+            print("- root findings changed when submodule scanning was enabled")
+            print(f"- root findings: {sorted(root_findings, key=lambda item: item.path)!r}")
+            print(f"- combined findings: {sorted(combined_findings, key=lambda item: item.path)!r}")
+            return 1
     print("Public payload safety self-test: PASS")
     return 0
 

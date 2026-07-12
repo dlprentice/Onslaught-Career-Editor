@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-12",
   "routingPolicy": "Follow the global Codex multi-agent lane contract; Codex-owned subagents inherit the parent effort or use an explicit task-specific supported effort override.",
-  "currentFocus": "Plan and implement the copied-runtime BattleEngine identity canary before measuring fields or changing synthetic rebuild behavior.",
+  "currentFocus": "Branch-local validation simplification is in closeout; the Chief retains the copied-runtime BattleEngine identity-canary focus on main.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -22,6 +22,14 @@
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
       "lastPushedBeforeCurrentSlice": "81a5d19c2fdbd22030f52f4aa552da3789660f16",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
+    },
+    "validationSimplification": {
+      "status": "implemented, independently accepted, and broad-closeout green on codex/validation-simplification-20260712; commit/push pending",
+      "inventory": "Executable inventory reports 1511 scripts, 123 npm-run edges, 2 exact duplicate-command groups, a 12-command transitive quick profile, a 4-command active runtime-tooling safety profile, and retained historical/runtime-proof families.",
+      "routing": "npm test now uses active docs/public-core links, generated-output safety, one WinUI solution build plus same-build AppCore/UI tests, and deterministic rebuild. Whole-tree payload/hygiene, copied-runtime proof, Ghidra, native Godot, installer, and ZIP publication remain separately triggered.",
+      "safety": "Runtime profile prep, exact CDB PID/executable/working-directory identity, bounded observer commands, safe-copy cleanup, AppCore-emitted readiness commands, payload/submodule/hash/secret checks, patch safety, deterministic rebuild cleanup, and full release/ZIP signoff are retained.",
+      "measured": "Read-only representative baseline was 781.3s; hard-payload plus hygiene consumed 482.1s. The non-duplicated WinUI wrapper passed in 158.1s versus 207.6s for separately measured build/AppCore/UI steps.",
+      "focusedValidation": "Final 749.2s closeout passed npm test, 33 runtime-tooling safety tests, 3766-file/4363-command history validation, 3674-file/6336-link Markdown, 19474-file payload/submodule plus migration inventory, and 18619-file hygiene/line-ending coverage. WinUI passed a zero-warning build, 1316 AppCore tests, and 138 UI tests plus 2 expected skips; all rebuild contract suites passed."
     },
     "product": {
       "primaryGui": "WinUI 3",
@@ -110,6 +118,8 @@
   ],
   "openQuestions": [],
   "nextSteps": [
+    "Run final fast JSON/diff/accounting checks, then commit and push the dedicated validation branch.",
+    "Send the pushed branch and retained-protection/residual-risk handoff to the Chief for review and integration; do not merge main from this worker.",
     "Write the implementation plan, create the expiring local runtime-authority baton and exclusive leases, then implement the identity canary with focused tests.",
     "Run the Level 850 no-input control, positive transform, and fresh-repeat matrix; do not promote timing or field semantics from Stage A.",
     "Design a public synthetic AYA/DDS/FBX export-contract fixture and dependency preflight before changing the legacy extractor lane.",

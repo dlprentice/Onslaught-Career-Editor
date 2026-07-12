@@ -27,6 +27,8 @@ COMMANDS = [
         "test",
         "OnslaughtCareerEditor.AppCore.Tests/OnslaughtCareerEditor.AppCore.Tests.csproj",
         "--nologo",
+        "--no-build",
+        "--no-restore",
     ],
     [
         "dotnet",
@@ -35,6 +37,8 @@ COMMANDS = [
         "--nologo",
         "--filter",
         "FullyQualifiedName!~LegacyWpf",
+        "--no-build",
+        "--no-restore",
     ],
 ]
 
@@ -95,6 +99,17 @@ def run_self_test() -> int:
     assert not should_warn_about_windows_xaml_path(short_root, platform_name="nt")
     assert should_warn_about_windows_xaml_path(long_root, platform_name="nt")
     assert not should_warn_about_windows_xaml_path(long_root, platform_name="posix")
+
+    assert COMMANDS[0] == [
+        "dotnet",
+        "build",
+        "OnslaughtCareerEditor.WinUI.slnx",
+        "--nologo",
+    ], "primary lane must build the complete solution exactly once"
+    assert len(COMMANDS) == 3, "primary lane must run one build and two test commands"
+    for command in COMMANDS[1:]:
+        assert "--no-build" in command, "tests must consume the same-run solution build"
+        assert "--no-restore" in command, "tests must not repeat the same-run restore"
 
     print("self-test: PASS", flush=True)
     return 0

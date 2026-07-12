@@ -27,11 +27,12 @@ automation, or workflow scaffolding.
 
 | Lane | Main paths | Normal local gates |
 | --- | --- | --- |
-| WinUI app | `OnslaughtCareerEditor.WinUI/`, `OnslaughtCareerEditor.UiTests/` | `npm run build:winui`, `npm run test:winui`, `npm run test:winui-primary-lane` |
-| AppCore / CLI | `OnslaughtCareerEditor.AppCore/`, `OnslaughtCareerEditor.Cli/`, tests | `npm run test:appcore`, `npm run build:cli` |
+| WinUI app | `OnslaughtCareerEditor.WinUI/`, `OnslaughtCareerEditor.UiTests/` | focused `build:winui` or `test:winui` while editing; `npm run test:winui-primary-lane` for broad handoff |
+| AppCore / CLI | `OnslaughtCareerEditor.AppCore/`, `OnslaughtCareerEditor.Cli/`, tests | focused `npm run test:appcore`; primary-lane handoff; `npm run build:cli` for CLI changes |
 | RE-informed rebuild | `rebuild/` | `npm run test:rebuild`; add `npm run test:rebuild-godot-smoke` for native client changes |
 | Patch / mod safety | `patches/`, AppCore patch services, WinUI patch surfaces | `npm run test:winui-patch-engine-safety`, `npm run test:winui-safe-copy-preflight` |
-| Docs | `README.MD`, `CONTRIBUTING.md`, `roadmap/`, current state | `npm run test:docsync`, `npm run test:doc-commands`, `npm run test:md-links` |
+| Runtime tooling | profile/CDB/safe-copy smoke helpers | `npm run test:runtime-tooling-safety`; add only the owning proof checker |
+| Docs | current front doors/state | `npm run test:doc-commands`, `npm run test:md-links:public-core`; add docsync/all-history checks when their inputs change |
 | RE / Lore docs | `reverse-engineering/`, `lore/`, protected `lore-book/` projections | docs gates plus the focused owning checker |
 | Public/release boundary | `release/readiness/`, manifests, package inputs, ignore/boundary policy | full signoff block below and the affected package gate |
 
@@ -50,6 +51,10 @@ The block above is public/release signoff, not ordinary edit-loop ceremony.
 This repo's root `package.json` is the command authority for contributors and
 their agents. Maintainers may run additional local runtime, Ghidra, or
 release-accounting gates when a change touches those areas.
+
+See [VALIDATION.md](VALIDATION.md) for the measured matrix. In the source repo,
+broad documentation closeout also runs `npm run test:doc-commands-all`; a
+materialized candidate intentionally validates only its smaller public-doc set.
 
 In the full public-primary source repo, `npm run test:public-allowlist` runs the
 hard-payload, submodule payload, and migration inventory gates. Use

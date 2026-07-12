@@ -16,8 +16,11 @@ current command authority.
 The root `package.json` is the command authority for external contributors.
 Start with:
 
+- `npm test` for the common active-product profile
+- `npm run test:validation-inventory` for package/profile contract checks
 - `npm run test:doc-commands`
-- `npm run test:md-links`
+- `npm run test:md-links:public-core`
+- `npm run test:runtime-tooling-safety` for runtime-helper changes
 - `npm run test:public-allowlist`
 - `npm run test:repo-hygiene`
 - `npm run test:winui-primary-lane`
@@ -27,6 +30,11 @@ Start with:
 Use `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md` for the public source and
 portable app sign-off sequence.
 
+Use `VALIDATION.md` for the measured change-class matrix. Run
+`py -3 tools\validation_inventory.py --json` when the full machine-readable
+graph is needed. Historical Ghidra/wave and copied-runtime proof commands remain
+invocable, but they are not routine contributor gates.
+
 `npm run test:winui-primary-lane` runs `tools/winui_primary_lane_validation.py`
 from the resolved repo/worktree root. On Windows, the wrapper warns when that
 root is long enough that Windows App SDK/XAML compiler intermediate paths may be
@@ -34,6 +42,10 @@ fragile. The warning is diagnostic only: retry path-length diagnostics involving
 generated XAML or intermediate compiler paths from a shorter clone/worktree
 before classifying them, but treat unrelated build and test failures as real
 failures.
+
+The wrapper builds `OnslaughtCareerEditor.WinUI.slnx` once and runs AppCore and
+WinUI tests from that same build with restore/build disabled for the test steps.
+The individual build/test commands remain focused diagnostics.
 
 ## Legacy Export Helpers
 

@@ -24,13 +24,20 @@ CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 class StartCdbServerTests(unittest.TestCase):
     def run_powershell(self, command: str) -> subprocess.CompletedProcess[str]:
-        encoded_command = base64.b64encode(command.encode("utf-16le")).decode("ascii")
+        wrapped_command = (
+            "$ErrorActionPreference = 'Stop'; "
+            f"try {{ {command} }} catch {{ "
+            "[Console]::Error.WriteLine($_.Exception.Message); exit 1 }"
+        )
+        encoded_command = base64.b64encode(wrapped_command.encode("utf-16le")).decode("ascii")
         return subprocess.run(
             [
                 POWERSHELL,
                 "-NoProfile",
                 "-ExecutionPolicy",
                 "Bypass",
+                "-OutputFormat",
+                "Text",
                 "-EncodedCommand",
                 encoded_command,
             ],

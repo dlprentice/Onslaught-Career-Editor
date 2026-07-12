@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-12",
   "routingPolicy": "Active docs consume the global Codex multi-agent lane contract, keep Codex-owned subagent effort task-flexible, and preserve historical wave provenance.",
-  "currentFocus": "Keep the movement crosswalk and approved runtime-observer design authoritative while Stage A moves into planning and implementation.",
+  "currentFocus": "Keep the Chief's movement/runtime-observer truth authoritative while closing the branch-local validation matrix and contributor front doors.",
   "sourceOfTruth": {
     "readme": "README.MD",
     "contributorGuide": "CONTRIBUTING.md",
@@ -23,7 +23,8 @@
     "referenceCorpora": "The pinned audit records Onslaught 792545b as an incomplete/non-buildable architecture corpus (110 tracked files; 202/254 quoted includes absent) and AYAResourceExtractor 6f3df296 as a Windows x86 static model/texture exporter with format, fixture, build, and component-license gaps. Older 111/75 manifests counted .git control files.",
     "lore": "The 949-document package count proves packaged breadth, not editorial completeness, freshness, provenance/rights review, or broad public-safety approval.",
     "rebuild": "The GPL-3.0-or-later RE-informed source rebuild includes the deterministic net8 Core/headless verifier, pure real-time Client adapter, and playable procedural Godot 4.7 First Flight view. Transform, energy, shield, movement, arena, and presentation choices remain synthetic; no retail-informed behavior change should land before the copied-runtime movement contract is accepted. The client needs no retail payload and is not in the published v1.0.9 WinUI ZIP.",
-    "curatedSourcePackage": "The curated artifact is a self-contained, plain non-Git convenience package over the already-public canonical repo, not a replacement checkout or a private/public legal cut. The accepted First Flight source candidate selected 721 files, materialized 726 files with export metadata, excluded the real game-generated save baseline, and passed standalone payload/inventory, docs, npm test, notices, and hygiene gates."
+    "curatedSourcePackage": "The curated artifact is a self-contained, plain non-Git convenience package over the already-public canonical repo, not a replacement checkout or a private/public legal cut. The accepted First Flight source candidate selected 721 files, materialized 726 files with export metadata, excluded the real game-generated save baseline, and passed standalone payload/inventory, docs, npm test, notices, and hygiene gates.",
+    "validation": "VALIDATION.md is the concise current audit and change-class matrix. Its 749.2s closeout records active-product, runtime safety, all-history docs/links, payload/submodule/migration, hygiene, and deterministic rebuild evidence. npm test is not release signoff; copied-runtime proof, historical Ghidra/wave checkers, native Godot, installer, and ZIP publication remain explicit separate profiles."
   },
   "activeBlockers": [
     "CURRENT_CAPABILITIES.md and reverse-engineering/RE-INDEX.md remain too large for fast contributor orientation.",
@@ -34,6 +35,7 @@
   ],
   "openQuestions": [],
   "nextSteps": [
+    "After final fast checks, commit/push the validation branch and hand it to the Chief for integration reconciliation.",
     "Implement the approved observer and document only sanitized, hash-bound accepted measurements without publishing raw private paths, pointers, process identifiers, or logs.",
     "Document and test a public synthetic AYA/DDS/FBX export contract before promoting exporter completeness.",
     "Freeze one accepted public-safe behavior contract, then keep rebuild and GUI wording bounded to the measured result.",

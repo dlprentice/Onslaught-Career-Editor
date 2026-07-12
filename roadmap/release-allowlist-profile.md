@@ -1,12 +1,12 @@
 # Release Allowlist Profile
 
-> Generated: 2026-07-12 01:55:11 -0400
+> Generated: 2026-07-12 17:49:47 -0400
 
 ## Classification Summary
 
 | Class | Count | Meaning |
 |---|---:|---|
-| R0_ALLOW | 6235 | Default allow bucket for portable/export release accounting (still requires human review before publishing an artifact) |
+| R0_ALLOW | 6288 | Default allow bucket for portable/export release accounting (still requires human review before publishing an artifact) |
 | R2_REVIEW | 0 | Volatile/generated/binary artifacts; include only when intentional |
 | R3_CONDITIONAL | 3 | Reference submodule families requiring licensing/scope review |
 | R4_DENY | 13181 | Excluded from portable app ZIPs and legacy curated export payloads; may still be tracked public source when compact, non-secret project history |
@@ -34,6 +34,7 @@ outputs, and secrets.
 - `RELEASE_SCOPE_AND_TEST_COMMANDS.md`
 - `COLLABORATION.md`
 - `CURRENT_CAPABILITIES.md`
+- `VALIDATION.md`
 - `release/readiness/public_AGENTS.md`
 - `release/readiness/public_README.txt`
 - `release/readiness/public_CONTRIBUTING.txt`
@@ -83,6 +84,7 @@ outputs, and secrets.
 - `tools/winui_installer_preflight.py`
 - `tools/winui_msix_candidate_probe.py`
 - `tools/winui_patch_catalog_accounting_check.py`
+- `tools/winui_patch_catalog_accounting_check_test.py`
 - `tools/winui_primary_lane_validation.py`
 - `reverse-engineering/RE-INDEX.md`
 - `reverse-engineering/public-static-contracts.md`

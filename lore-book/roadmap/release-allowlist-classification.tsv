@@ -41,6 +41,7 @@ OnslaughtCareerEditor.AppCore.Tests/AppConfigEnvironmentCollection.cs	R0_ALLOW	d
 OnslaughtCareerEditor.AppCore.Tests/AppConfigTests.cs	R0_ALLOW	default
 OnslaughtCareerEditor.AppCore.Tests/AppCoreSaveOptionsContractTests.cs	R0_ALLOW	default
 OnslaughtCareerEditor.AppCore.Tests/AssetCatalogServiceTests.cs	R0_ALLOW	default
+OnslaughtCareerEditor.AppCore.Tests/BinaryPatchCatalogContractTests.cs	R0_ALLOW	default
 OnslaughtCareerEditor.AppCore.Tests/FbxModelSummaryReaderTests.cs	R0_ALLOW	default
 OnslaughtCareerEditor.AppCore.Tests/FileMutationSafetyTests.cs	R0_ALLOW	default
 OnslaughtCareerEditor.AppCore.Tests/GameProfileControlOptionsServiceTests.cs	R0_ALLOW	default
@@ -53,6 +54,7 @@ OnslaughtCareerEditor.AppCore.Tests/MissionScriptGoodieStateSaveCodecTests.cs	R0
 OnslaughtCareerEditor.AppCore.Tests/MissionScriptSlotBitsetSaveCodecTests.cs	R0_ALLOW	default
 OnslaughtCareerEditor.AppCore.Tests/OnlineMultiplayerReadinessServiceTests.cs	R0_ALLOW	default
 OnslaughtCareerEditor.AppCore.Tests/OnslaughtCareerEditor.AppCore.Tests.csproj	R0_ALLOW	default
+OnslaughtCareerEditor.AppCore.Tests/SafeCopyProfileCatalogContractTests.cs	R0_ALLOW	default
 OnslaughtCareerEditor.AppCore.Tests/SaveAnalyzerServiceTests.cs	R0_ALLOW	default
 OnslaughtCareerEditor.AppCore/AppConfig.cs	R0_ALLOW	default
 OnslaughtCareerEditor.AppCore/AssetCatalogFileSafety.cs	R0_ALLOW	default
@@ -191,6 +193,7 @@ README.MD	R0_ALLOW	default
 README.RELEASE.md	R0_ALLOW	default
 RELEASE_SCOPE_AND_TEST_COMMANDS.md	R0_ALLOW	default
 SECURITY.md	R0_ALLOW	default
+VALIDATION.md	R0_ALLOW	default
 archive/README.md	R4_DENY	archive/
 archive/electron-workbench/README.md	R4_DENY	archive/
 archive/electron-workbench/apps/electron/package.json	R4_DENY	archive/
@@ -366,6 +369,8 @@ lore-book/reverse-engineering/binary-analysis/README.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/_index.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/audio-media-cutscene-camera-proof-plan.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/audio-media-cutscene-static-review-2026-05-26.md	R0_ALLOW	default
+lore-book/reverse-engineering/binary-analysis/battleengine-morph-runtime-observer-design-2026-07-12.md	R0_ALLOW	default
+lore-book/reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/capture-menu-behavior.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/career-progression-static-bridge-contract.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/deep-validation-status.md	R0_ALLOW	default
@@ -396,6 +401,7 @@ lore-book/reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattle
 lore-book/reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__GroundParticleEffect.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Init.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__IsCurrentResolvedEntry.md	R0_ALLOW	default
+lore-book/reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Move.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__SelectNearestForwardTargetFromGlobalSet.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__SwapPrimarySecondaryPartReadersForState.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__UpdateAutoTargetSetAndFireProjectiles.md	R0_ALLOW	default
@@ -406,6 +412,7 @@ lore-book/reverse-engineering/binary-analysis/functions/BattleEngineConfiguratio
 lore-book/reverse-engineering/binary-analysis/functions/BattleEngineDataManager.cpp/_index.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__Gravity.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__HandleSkimming.md	R0_ALLOW	default
+lore-book/reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__Move.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__Pitch.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__ResetConfiguration.md	R0_ALLOW	default
 lore-book/reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__Thrust.md	R0_ALLOW	default
@@ -1448,6 +1455,7 @@ lore-book/reverse-engineering/source-code/io/chunker-system.md	R0_ALLOW	default
 lore-book/reverse-engineering/source-code/io/event-system.md	R0_ALLOW	default
 lore-book/reverse-engineering/source-code/io/storage-system.md	R0_ALLOW	default
 lore-book/reverse-engineering/source-code/original-system-internal-tooling-vocabulary-map.md	R0_ALLOW	default
+lore-book/reverse-engineering/source-code/reference-submodule-audit-2026-07-12.md	R0_ALLOW	default
 lore-book/reverse-engineering/source-code/source-file-inventory.md	R0_ALLOW	default
 lore-book/reverse-engineering/source-code/stuart-source-file-manifest-2026-02-11.tsv	R4_DENY	lore-book/reverse-engineering/source-code/*-file-manifest-2026-02-11.tsv
 lore-book/reverse-engineering/source-code/stuart-source-requirements.md	R0_ALLOW	default
@@ -1496,6 +1504,7 @@ lore/world-lore.md	R0_ALLOW	default
 onslaught_codex_directive.md	R4_DENY	onslaught_codex_directive.md
 package-lock.json	R4_DENY	package-lock.json
 package.json	R0_ALLOW	default
+patches/CATALOG_CONTRACT.md	R0_ALLOW	default
 patches/README.md	R0_ALLOW	default
 patches/archive/patch_ischeatactive_always_true_BROKEN.py	R0_ALLOW	default
 patches/archive/patch_ischeatactive_return_path_bypass.py	R0_ALLOW	default
@@ -1506,6 +1515,15 @@ patches/patch_display_mode_flow.py	R0_ALLOW	default
 re_orchestrator_state.json	R4_DENY	re_orchestrator_state.json
 rebuild/AGENTS.md	R0_ALLOW	default
 rebuild/LICENSE	R0_ALLOW	default
+rebuild/Launch First Flight.cmd	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Client.Tests/GlobalUsings.cs	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Client.Tests/InteractiveSessionTests.cs	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Client.Tests/OnslaughtRebuild.Client.Tests.csproj	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Client/FirstFlightSmokeScenario.cs	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Client/InteractiveInput.cs	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Client/InteractiveSession.cs	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Client/OnslaughtRebuild.Client.csproj	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Client/packages.lock.json	R0_ALLOW	default
 rebuild/OnslaughtRebuild.Core.Tests/GlobalUsings.cs	R0_ALLOW	default
 rebuild/OnslaughtRebuild.Core.Tests/HeadlessApplicationTests.cs	R0_ALLOW	default
 rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj	R0_ALLOW	default
@@ -1518,13 +1536,38 @@ rebuild/OnslaughtRebuild.Core/Simulation.cs	R0_ALLOW	default
 rebuild/OnslaughtRebuild.Core/SimulationConstants.cs	R0_ALLOW	default
 rebuild/OnslaughtRebuild.Core/SimulationTypes.cs	R0_ALLOW	default
 rebuild/OnslaughtRebuild.Core/StateHasher.cs	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Core/packages.lock.json	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Godot/FirstFlightGame.cs	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Godot/FirstFlightGame.cs.uid	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Godot/FirstFlightHud.cs	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Godot/FirstFlightHud.cs.uid	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs.uid	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Godot/Main.tscn	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Godot/OnslaughtRebuild.Godot.csproj	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Godot/VisualPrimitives.cs	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Godot/VisualPrimitives.cs.uid	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Godot/packages.lock.json	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Godot/project.godot	R0_ALLOW	default
 rebuild/OnslaughtRebuild.Headless/HeadlessApplication.cs	R0_ALLOW	default
 rebuild/OnslaughtRebuild.Headless/OnslaughtRebuild.Headless.csproj	R0_ALLOW	default
 rebuild/OnslaughtRebuild.Headless/Program.cs	R0_ALLOW	default
+rebuild/OnslaughtRebuild.Visual.slnx	R0_ALLOW	default
 rebuild/OnslaughtRebuild.slnx	R0_ALLOW	default
 rebuild/PROVENANCE.md	R0_ALLOW	default
 rebuild/README.md	R0_ALLOW	default
 rebuild/scenarios/first-flight.v1.json	R0_ALLOW	default
+rebuild/toolchains/godot-4.7-stable-win-x64.json	R0_ALLOW	default
+rebuild/tools/Build-FirstFlight.ps1	R0_ALLOW	default
+rebuild/tools/FirstFlightSmokeRunner.Tests.ps1	R0_ALLOW	default
+rebuild/tools/FirstFlightSmokeRunner.psm1	R0_ALLOW	default
+rebuild/tools/FirstFlightSmokeValidation.Tests.ps1	R0_ALLOW	default
+rebuild/tools/FirstFlightSmokeValidation.psm1	R0_ALLOW	default
+rebuild/tools/GodotToolchain.Tests.ps1	R0_ALLOW	default
+rebuild/tools/GodotToolchain.psm1	R0_ALLOW	default
+rebuild/tools/Run-FirstFlight.ps1	R0_ALLOW	default
+rebuild/tools/Setup-Godot.ps1	R0_ALLOW	default
+rebuild/tools/Smoke-FirstFlight.ps1	R0_ALLOW	default
 references/AYAResourceExtractor	R3_CONDITIONAL	references-submodules
 references/Onslaught	R3_CONDITIONAL	references-submodules
 release/readiness/LOCAL_SIGNOFF_COMMANDS.md	R4_DENY	release/readiness/LOCAL_SIGNOFF_COMMANDS.md
@@ -3246,6 +3289,8 @@ reverse-engineering/binary-analysis/README.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/_index.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/audio-media-cutscene-camera-proof-plan.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/audio-media-cutscene-static-review-2026-05-26.md	R0_ALLOW	default
+reverse-engineering/binary-analysis/battleengine-morph-runtime-observer-design-2026-07-12.md	R0_ALLOW	default
+reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/capture-menu-behavior.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/career-progression-static-bridge-contract.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/deep-validation-status.md	R0_ALLOW	default
@@ -3276,6 +3321,7 @@ reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Fi
 reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__GroundParticleEffect.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Init.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__IsCurrentResolvedEntry.md	R0_ALLOW	default
+reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Move.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__SelectNearestForwardTargetFromGlobalSet.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__SwapPrimarySecondaryPartReadersForState.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__UpdateAutoTargetSetAndFireProjectiles.md	R0_ALLOW	default
@@ -3286,6 +3332,7 @@ reverse-engineering/binary-analysis/functions/BattleEngineConfigurations.cpp/_in
 reverse-engineering/binary-analysis/functions/BattleEngineDataManager.cpp/_index.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__Gravity.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__HandleSkimming.md	R0_ALLOW	default
+reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__Move.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__Pitch.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__ResetConfiguration.md	R0_ALLOW	default
 reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__Thrust.md	R0_ALLOW	default
@@ -16620,6 +16667,7 @@ reverse-engineering/source-code/io/chunker-system.md	R0_ALLOW	default
 reverse-engineering/source-code/io/event-system.md	R0_ALLOW	default
 reverse-engineering/source-code/io/storage-system.md	R0_ALLOW	default
 reverse-engineering/source-code/original-system-internal-tooling-vocabulary-map.md	R0_ALLOW	default
+reverse-engineering/source-code/reference-submodule-audit-2026-07-12.md	R0_ALLOW	default
 reverse-engineering/source-code/source-file-inventory.md	R0_ALLOW	default
 reverse-engineering/source-code/stuart-source-file-manifest-2026-02-11.tsv	R4_DENY	reverse-engineering/source-code/*-file-manifest-2026-02-11.tsv
 reverse-engineering/source-code/stuart-source-requirements.md	R0_ALLOW	default
@@ -18899,6 +18947,7 @@ tools/missionscript_vm_datatype_opcode_schema_probe.py	R0_ALLOW	default
 tools/model_texture_linkage_probe.py	R0_ALLOW	default
 tools/model_texture_linkage_probe_test.py	R0_ALLOW	default
 tools/npm_script_doc_check.py	R0_ALLOW	default
+tools/npm_script_doc_check_test.py	R0_ALLOW	default
 tools/options_entries_decode.py	R0_ALLOW	default
 tools/original_system_internal_tooling_vocabulary_map_probe.py	R0_ALLOW	default
 tools/physics_script_component_rebuild_fixture_proof_plan.py	R0_ALLOW	default
@@ -19132,6 +19181,9 @@ tools/texture_resource_decode_static_contract_probe.py	R0_ALLOW	default
 tools/transition_hud_helper_ghidra_readback_probe.py	R0_ALLOW	default
 tools/unit_battleengine_gameplay_static_contract_probe.py	R0_ALLOW	default
 tools/unit_targeting_active_reader_proof_plan_probe.py	R0_ALLOW	default
+tools/validation_inventory.py	R0_ALLOW	default
+tools/validation_inventory_test.py	R0_ALLOW	default
+tools/validation_profiles_test.py	R0_ALLOW	default
 tools/wave1108_current_risk_rank.py	R0_ALLOW	default
 tools/wave1109_cfastvb_current_risk_head_supersession.py	R0_ALLOW	default
 tools/wave1110_cfastvb_wave1053_remainder_supersession.py	R0_ALLOW	default
@@ -19277,6 +19329,7 @@ tools/winui_original_binary_second_host_live_readiness_test.py	R4_DENY	tools/win
 tools/winui_original_binary_second_host_live_run_kit.py	R4_DENY	tools/winui_original_binary_*
 tools/winui_original_binary_second_host_live_run_kit_test.py	R4_DENY	tools/winui_original_binary_*
 tools/winui_patch_catalog_accounting_check.py	R0_ALLOW	default
+tools/winui_patch_catalog_accounting_check_test.py	R0_ALLOW	default
 tools/winui_pause_o_scan_initializer_catalog_check.py	R0_ALLOW	default
 tools/winui_pause_o_scan_initializer_runtime_artifact_check.py	R4_DENY	tools/*runtime*
 tools/winui_primary_lane_validation.py	R0_ALLOW	default

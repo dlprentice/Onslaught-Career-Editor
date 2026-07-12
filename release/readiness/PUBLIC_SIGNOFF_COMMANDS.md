@@ -58,11 +58,8 @@ source tree is not enough for app release publication without this package gate.
 
 <!-- public-package-commands:start -->
 ```powershell
-npm run build:winui
 npm run build:cli
 npm run build:host
-npm run test:appcore
-npm run test:winui
 npm run test:winui-primary-lane
 npm run test:winui-safe-copy-preflight
 npm run test:winui-patch-engine-safety
@@ -79,6 +76,11 @@ failures that explicitly mention path-length diagnostics involving generated
 XAML or intermediate compiler paths from a shorter clone/worktree before
 classifying them.
 
+The wrapper restores/builds the complete solution once, then runs AppCore and
+WinUI tests with `--no-build --no-restore` against that same successful build.
+Use the component commands for focused diagnosis; do not stack them on the
+wrapper as duplicate signoff work.
+
 `npm run test:rebuild` is the ordinary deterministic rebuild gate. It tests the
 deterministic Core, real-time client adapter, pinned-engine/extraction contract,
 and native-smoke evidence/process contracts without invoking the Godot downloader
@@ -89,6 +91,10 @@ separate native gate may populate the verified per-user Godot cache and writes
 ignored local evidence; it is not an app ZIP publication gate.
 
 ## Docs And Release-Safety Gates
+
+The public-primary source repo also runs `npm run test:doc-commands-all` before
+broad docs/release closeout. A materialized public candidate intentionally has
+only its smaller public-document command checker.
 
 <!-- public-package-commands:start -->
 ```powershell
@@ -109,8 +115,10 @@ outputs, `.env` files, and credential-like key material. It is not supposed to
 hide normal RE notes, state batons, agent reports, or proof summaries.
 
 In the canonical public-primary source repo, `npm run test:public-allowlist`
-runs the hard-payload gate, the submodule payload scan, and the public-primary
-migration/hash inventory. In a materialized curated candidate, its replacement
+runs the payload self-test, one root-plus-submodule scan, and the public-primary
+migration/hash inventory. Focused hard-payload and submodule commands remain
+available for diagnosis; the aggregate does not scan the root twice. In a
+materialized curated candidate, its replacement
 `package.json` runs the same named command in filesystem payload mode and uses
 `npm run test:public-candidate-inventory` for candidate shape; the candidate
 does not pretend to have Git-index or sibling-comparison evidence. Run both
