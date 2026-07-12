@@ -436,7 +436,7 @@ def _parse_events(cdb_log: str | Path) -> tuple[list[dict[str, Any]], str]:
     except UnicodeDecodeError as exc:
         raise ValueError("raw CDB capture must be ASCII") from exc
     lines = [line.strip() for line in text.splitlines()]
-    if any("MORPH_CANARY_CODE_MISMATCH" in line for line in lines):
+    if "MORPH_CANARY_CODE_MISMATCH" in lines:
         raise ValueError("raw CDB capture contains MORPH_CANARY_CODE_MISMATCH")
     for marker in ("MORPH_CANARY_BEGIN", "MORPH_CANARY_READY"):
         if lines.count(marker) != 1:

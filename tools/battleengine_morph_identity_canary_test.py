@@ -387,6 +387,21 @@ class MaterializerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "CODE_MISMATCH"):
             canary.materialize_run(artifact, contradictory, "noInputControl")
 
+        echoed_command = self.root / "echoed-command.log"
+        echoed_command.write_text(
+            "0:000> .if (fingerprints) { .echo MORPH_CANARY_READY; g } "
+            ".else { .echo MORPH_CANARY_CODE_MISMATCH; qd }\n"
+            "MORPH_CANARY_BEGIN\n"
+            "MORPH_CANARY_READY\n",
+            encoding="ascii",
+        )
+        try:
+            control = canary.materialize_run(artifact, echoed_command, "noInputControl")
+        except ValueError as exc:
+            self.fail(f"echoed mismatch command must not fail the control: {exc}")
+        self.assertEqual("noInputControl", control["role"])
+        self.assertEqual([], control["events"])
+
     def test_matrix_enforces_roles_outcomes_and_exact_public_keys(self) -> None:
         runs = []
         for index, role in enumerate(canary.RUN_ROLES):
