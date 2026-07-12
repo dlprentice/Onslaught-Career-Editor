@@ -14,6 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "tools" / "send_game_window_input.ps1"
 POWERSHELL = shutil.which("pwsh") or shutil.which("powershell") or "powershell"
+TEST_INPUT_ARM = "ALLOW TEST-ONLY INPUT SIMULATION"
 
 
 class SendGameWindowInputTests(unittest.TestCase):
@@ -48,6 +49,25 @@ class SendGameWindowInputTests(unittest.TestCase):
             capture_output=True,
             check=False,
         )
+
+    def run_simulated_input(
+        self,
+        sequence: str,
+        results: str,
+    ) -> subprocess.CompletedProcess[str]:
+        return self.run_helper(
+            sequence,
+            print_only=False,
+            extra_args=(
+                f"-TestOnlyInputResults {self.ps_quote(results)} "
+                f"-TestOnlyInputArm {self.ps_quote(TEST_INPUT_ARM)}"
+            ),
+        )
+
+    def parse_last_json(self, result: subprocess.CompletedProcess[str]) -> dict[str, object]:
+        json_lines = [line for line in result.stdout.splitlines() if line.strip().startswith("{")]
+        self.assertTrue(json_lines, result.stdout)
+        return json.loads(json_lines[-1])
 
     def test_accepts_backslash_and_click_for_cloak_probe(self) -> None:
         result = self.run_helper("tap:BACKSLASH,wait:250,click:320x240")
@@ -183,17 +203,63 @@ class SendGameWindowInputTests(unittest.TestCase):
         self.assertLess(calls[-1], action_loop)
         self.assertIn("-RequireWindow", script[calls[-1] : action_loop])
 
-    def test_successful_key_downs_are_released_in_reverse_order_from_finally(self) -> None:
-        script = SCRIPT.read_text(encoding="utf-8")
-        held_keys = script.index("$heldKeys = [System.Collections.Generic.List[object]]::new()")
-        action_loop = script.index("foreach ($action in $actions)", held_keys)
-        finally_block = script.index("finally", action_loop)
-        reverse_loop = script.index("$heldKeys.Count - 1", finally_block)
-        release_call = script.index("SendScanKey", reverse_loop)
-        self.assertLess(held_keys, action_loop)
-        self.assertLess(action_loop, finally_block)
-        self.assertLess(finally_block, reverse_loop)
-        self.assertLess(reverse_loop, release_call)
+    def test_test_only_input_simulation_requires_exact_arm(self) -> None:
+        result = self.run_helper(
+            "tap:Q",
+            print_only=False,
+            extra_args="-TestOnlyInputResults 'true,true' -TestOnlyInputArm 'WRONG'",
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("test-only", result.stderr.lower())
+
+    def test_explicit_up_removes_only_after_confirmed_send_scan_key(self) -> None:
+        result = self.run_simulated_input("down:Q,up:Q", "true,false,true")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = self.parse_last_json(result)
+        calls = payload["testOnlySendCalls"]
+        self.assertEqual(
+            [(call["kind"], call["key"], call.get("keyUp"), call.get("result")) for call in calls],
+            [
+                ("sendScanKey", "Q", False, True),
+                ("sendScanKey", "Q", True, False),
+                ("keybdEvent", "Q", True, None),
+                ("sendScanKey", "Q", True, True),
+            ],
+        )
+        self.assertEqual(payload["unconfirmedReleaseKeys"], [])
+
+    def test_successful_downs_are_released_in_reverse_order(self) -> None:
+        result = self.run_simulated_input("down:Q,down:W", "true,true,true,true")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = self.parse_last_json(result)
+        calls = [call for call in payload["testOnlySendCalls"] if call["kind"] == "sendScanKey"]
+        self.assertEqual(
+            [(call["key"], call["keyUp"]) for call in calls],
+            [("Q", False), ("W", False), ("W", True), ("Q", True)],
+        )
+        self.assertEqual(payload["unconfirmedReleaseKeys"], [])
+
+    def test_injected_key_up_failure_still_releases_held_key_from_finally(self) -> None:
+        result = self.run_simulated_input("down:Q,up:Q", "true,throw,true")
+
+        self.assertNotEqual(result.returncode, 0)
+        payload = self.parse_last_json(result)
+        calls = payload["testOnlySendCalls"]
+        self.assertEqual((calls[-1]["key"], calls[-1]["keyUp"], calls[-1]["result"]), ("Q", True, True))
+        self.assertIn("injected", str(payload["deliveryFailure"]).lower())
+        self.assertEqual(payload["unconfirmedReleaseKeys"], [])
+
+    def test_unconfirmed_final_release_is_retained_reported_and_fails(self) -> None:
+        result = self.run_simulated_input("down:Q", "true,false")
+
+        self.assertNotEqual(result.returncode, 0)
+        payload = self.parse_last_json(result)
+        self.assertEqual(payload["status"], "release-failed")
+        self.assertEqual(payload["unconfirmedReleaseKeys"], ["Q"])
+        self.assertIn("unconfirmed", result.stderr.lower())
 
 
 if __name__ == "__main__":

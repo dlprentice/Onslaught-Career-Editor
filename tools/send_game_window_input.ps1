@@ -11,15 +11,35 @@ param(
     [string]$ExpectedReceiptSha256 = "",
     [switch]$AllowBackgroundWindowMessages,
     [string]$BackgroundWindowMessagesArm = "",
+    [string]$TestOnlyInputResults = "",
+    [string]$TestOnlyInputArm = "",
     [switch]$PrintOnly
 )
 
 $ErrorActionPreference = "Stop"
 $backgroundWindowMessageArmPhrase = "ALLOW BACKGROUND BEA WINDOW MESSAGES"
+$testOnlyInputArmPhrase = "ALLOW TEST-ONLY INPUT SIMULATION"
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $canaryMode = -not [string]::IsNullOrWhiteSpace($RuntimeReceiptPath) -or
     -not [string]::IsNullOrWhiteSpace($ExpectedReceiptSha256)
 $validatedReceipt = $null
+$testOnlyInputRequested = -not [string]::IsNullOrWhiteSpace($TestOnlyInputResults) -or
+    -not [string]::IsNullOrWhiteSpace($TestOnlyInputArm)
+$testOnlyInputMode = $false
+
+if ($testOnlyInputRequested) {
+    if ([string]::IsNullOrWhiteSpace($TestOnlyInputResults) -or
+        $TestOnlyInputArm -cne $testOnlyInputArmPhrase) {
+        Write-Error ("Test-only input simulation requires results and exact arm phrase '{0}'." -f
+            $testOnlyInputArmPhrase)
+        exit 1
+    }
+    if ($canaryMode -or $AllowBackgroundWindowMessages -or $PrintOnly) {
+        Write-Error "Test-only input simulation refuses canary, background-message, and print-only modes."
+        exit 1
+    }
+    $testOnlyInputMode = $true
+}
 
 if ($canaryMode) {
     if ([string]::IsNullOrWhiteSpace($RuntimeReceiptPath) -or
@@ -222,6 +242,19 @@ function Parse-InputSequence {
 }
 
 $actions = @(Parse-InputSequence -RawSequence $Sequence)
+$script:testOnlyResultTokens = @()
+$script:testOnlyResultIndex = 0
+$script:testOnlySendCalls = [System.Collections.Generic.List[object]]::new()
+if ($testOnlyInputMode) {
+    $script:testOnlyResultTokens = @($TestOnlyInputResults -split ',' | ForEach-Object {
+        $_.Trim().ToLowerInvariant()
+    })
+    if ($script:testOnlyResultTokens.Count -lt 1 -or
+        @($script:testOnlyResultTokens | Where-Object { @("true", "false", "throw") -notcontains $_ }).Count -gt 0) {
+        Write-Error "Test-only input results must be a comma-separated list containing only true, false, or throw."
+        exit 1
+    }
+}
 
 if ($canaryMode) {
     Import-Module (Join-Path $scriptRoot "runtime_process_identity.psm1") -Force -ErrorAction Stop
@@ -264,7 +297,8 @@ if ($canaryMode) {
     $ExpectedWorkingDirectory = $receiptWorkingDirectory
 }
 
-if (-not $PrintOnly -and ($ProcessId -le 0 -or [string]::IsNullOrWhiteSpace($HwndHex))) {
+if (-not $PrintOnly -and -not $testOnlyInputMode -and
+    ($ProcessId -le 0 -or [string]::IsNullOrWhiteSpace($HwndHex))) {
     [PSCustomObject]@{
         schemaVersion = "game-window-input.v1"
         generatedAt = (Get-Date).ToString("o")
@@ -286,7 +320,8 @@ if (-not $PrintOnly -and ($ProcessId -le 0 -or [string]::IsNullOrWhiteSpace($Hwn
     exit 1
 }
 
-if (-not $PrintOnly -and ([string]::IsNullOrWhiteSpace($ExpectedExecutablePath) -or [string]::IsNullOrWhiteSpace($ExpectedWorkingDirectory))) {
+if (-not $PrintOnly -and -not $testOnlyInputMode -and
+    ([string]::IsNullOrWhiteSpace($ExpectedExecutablePath) -or [string]::IsNullOrWhiteSpace($ExpectedWorkingDirectory))) {
     Write-Error "Real scoped input requires ExpectedExecutablePath and ExpectedWorkingDirectory so input cannot target an unrelated BEA.exe window."
     exit 1
 }
@@ -445,6 +480,60 @@ public static class GameWindowInputNative {
 "@
 }
 
+function Invoke-ScanKey {
+    param([object]$Action, [bool]$KeyUp)
+
+    if (-not $testOnlyInputMode) {
+        return [GameWindowInputNative]::SendScanKey(
+            [uint16]$Action.scanCode, $KeyUp, [bool]$Action.extended)
+    }
+    if ($script:testOnlyResultIndex -ge $script:testOnlyResultTokens.Count) {
+        throw "Injected test-only SendScanKey results were exhausted."
+    }
+    $token = $script:testOnlyResultTokens[$script:testOnlyResultIndex]
+    $script:testOnlyResultIndex++
+    if ($token -ceq "throw") {
+        $script:testOnlySendCalls.Add([PSCustomObject]@{
+            kind = "sendScanKey"
+            key = [string]$Action.key
+            keyUp = $KeyUp
+            result = "throw"
+        }) | Out-Null
+        throw "Injected test-only SendScanKey failure."
+    }
+    $result = $token -ceq "true"
+    $script:testOnlySendCalls.Add([PSCustomObject]@{
+        kind = "sendScanKey"
+        key = [string]$Action.key
+        keyUp = $KeyUp
+        result = $result
+    }) | Out-Null
+    return $result
+}
+
+function Invoke-KeybdEventFallback {
+    param([object]$Action, [bool]$KeyUp)
+
+    $flags = $KEYEVENTF_SCANCODE
+    if ($KeyUp) {
+        $flags = $flags -bor $KEYEVENTF_KEYUP
+    }
+    if ([bool]$Action.extended) {
+        $flags = $flags -bor $KEYEVENTF_EXTENDEDKEY
+    }
+    if ($testOnlyInputMode) {
+        $script:testOnlySendCalls.Add([PSCustomObject]@{
+            kind = "keybdEvent"
+            key = [string]$Action.key
+            keyUp = $KeyUp
+            result = $null
+        }) | Out-Null
+    } else {
+        [GameWindowInputNative]::keybd_event(
+            0, [byte]$Action.scanCode, $flags, [UIntPtr]::Zero)
+    }
+}
+
 function Resolve-TargetWindow {
     $targetProcessName = [System.IO.Path]::GetFileNameWithoutExtension($ProcessName).ToLowerInvariant()
     $matches = New-Object System.Collections.Generic.List[object]
@@ -591,13 +680,29 @@ function Set-TargetWindowForeground {
 function Assert-TargetStillForeground {
     param([IntPtr]$Handle)
 
+    if ($testOnlyInputMode) {
+        return
+    }
     if (-not (Test-ForegroundWindow -Handle $Handle)) {
         Write-Error "Foreground window changed before scoped input delivery; aborting global input."
         exit 1
     }
 }
 
-$matches = @(Resolve-TargetWindow)
+$matches = if ($testOnlyInputMode) {
+    @([PSCustomObject]@{
+        processId = 0
+        processName = "test-only.exe"
+        title = "test-only input simulation"
+        hwndHex = "0x0"
+        minimized = $false
+        executablePath = $null
+        workingDirectory = $null
+        handle = [IntPtr]::Zero
+    })
+} else {
+    @(Resolve-TargetWindow)
+}
 
 $status = if ($matches.Count -eq 0) {
     "no-window"
@@ -641,12 +746,12 @@ if ($PrintOnly -or $status -ne "ready") {
     exit 1
 }
 
-if ($selected.minimized) {
+if (-not $testOnlyInputMode -and $selected.minimized) {
     [void][GameWindowInputNative]::ShowWindow($selected.handle, 9)
     Start-Sleep -Milliseconds 120
 }
 
-$focused = Set-TargetWindowForeground -Handle $selected.handle
+$focused = if ($testOnlyInputMode) { $true } else { Set-TargetWindowForeground -Handle $selected.handle }
 $useWindowMessages = -not $focused
 
 if ($useWindowMessages -and (-not $AllowBackgroundWindowMessages -or $BackgroundWindowMessagesArm -ne $backgroundWindowMessageArmPhrase)) {
@@ -703,6 +808,8 @@ $scanKeybdEventsSent = 0
 $windowMessageEventsSent = 0
 $mouseEventsSent = 0
 $heldKeys = [System.Collections.Generic.List[object]]::new()
+$deliveryFailure = ""
+$releaseFailures = [System.Collections.Generic.List[string]]::new()
 try {
 foreach ($action in $actions) {
     if ($action.kind -eq "wait") {
@@ -750,19 +857,16 @@ foreach ($action in $actions) {
             }
         } else {
             Assert-TargetStillForeground -Handle $selected.handle
-            if ([GameWindowInputNative]::SendScanKey($scanCode, $false, $extended)) {
+            if (Invoke-ScanKey $action $false) {
                 $sent++
                 $sendInputEventsSent++
             } else {
-                $flags = $KEYEVENTF_SCANCODE
-                if ($extended) {
-                    $flags = $flags -bor $KEYEVENTF_EXTENDEDKEY
-                }
-                [GameWindowInputNative]::keybd_event(0, [byte]$scanCode, $flags, [UIntPtr]::Zero)
+                Invoke-KeybdEventFallback $action $false
                 $sent++
                 $scanKeybdEventsSent++
             }
             $heldKeys.Add([PSCustomObject]@{
+                key = [string]$action.key
                 scanCode = $scanCode
                 extended = $extended
             }) | Out-Null
@@ -779,23 +883,22 @@ foreach ($action in $actions) {
             }
         } else {
             Assert-TargetStillForeground -Handle $selected.handle
-            if ([GameWindowInputNative]::SendScanKey($scanCode, $true, $extended)) {
+            $confirmedKeyUp = Invoke-ScanKey $action $true
+            if ($confirmedKeyUp) {
                 $sent++
                 $sendInputEventsSent++
             } else {
-                $flags = $KEYEVENTF_SCANCODE -bor $KEYEVENTF_KEYUP
-                if ($extended) {
-                    $flags = $flags -bor $KEYEVENTF_EXTENDEDKEY
-                }
-                [GameWindowInputNative]::keybd_event(0, [byte]$scanCode, $flags, [UIntPtr]::Zero)
+                Invoke-KeybdEventFallback $action $true
                 $sent++
                 $scanKeybdEventsSent++
             }
-            for ($heldIndex = $heldKeys.Count - 1; $heldIndex -ge 0; $heldIndex--) {
-                $heldKey = $heldKeys[$heldIndex]
-                if ([uint16]$heldKey.scanCode -eq $scanCode -and [bool]$heldKey.extended -eq $extended) {
-                    $heldKeys.RemoveAt($heldIndex)
-                    break
+            if ($confirmedKeyUp) {
+                for ($heldIndex = $heldKeys.Count - 1; $heldIndex -ge 0; $heldIndex--) {
+                    $heldKey = $heldKeys[$heldIndex]
+                    if ([uint16]$heldKey.scanCode -eq $scanCode -and [bool]$heldKey.extended -eq $extended) {
+                        $heldKeys.RemoveAt($heldIndex)
+                        break
+                    }
                 }
             }
         }
@@ -804,30 +907,47 @@ foreach ($action in $actions) {
         Start-Sleep -Milliseconds $StepDelayMs
     }
 }
+} catch {
+    $deliveryFailure = $_.Exception.Message
 } finally {
     for ($index = $heldKeys.Count - 1; $index -ge 0; $index--) {
         $key = $heldKeys[$index]
         try {
-            if ([GameWindowInputNative]::SendScanKey([uint16]$key.scanCode, $true, [bool]$key.extended)) {
+            if (Invoke-ScanKey $key $true) {
                 $sent++
                 $sendInputEventsSent++
+                $heldKeys.RemoveAt($index)
             } else {
-                $releaseFlags = $KEYEVENTF_SCANCODE -bor $KEYEVENTF_KEYUP
-                if ([bool]$key.extended) {
-                    $releaseFlags = $releaseFlags -bor $KEYEVENTF_EXTENDEDKEY
-                }
-                [GameWindowInputNative]::keybd_event(0, [byte]$key.scanCode, $releaseFlags, [UIntPtr]::Zero)
+                Invoke-KeybdEventFallback $key $true
                 $sent++
                 $scanKeybdEventsSent++
+                $releaseFailures.Add(("Unconfirmed key-up for {0}." -f $key.key)) | Out-Null
             }
         } catch {
-            # Continue attempting key-up for the remaining held keys.
+            $releaseException = $_.Exception.Message
+            try {
+                Invoke-KeybdEventFallback $key $true
+                $sent++
+                $scanKeybdEventsSent++
+            } catch {
+                # The unconfirmed key remains tracked below.
+            }
+            $releaseFailures.Add(("Unconfirmed key-up for {0}: {1}" -f
+                $key.key, $releaseException)) | Out-Null
         }
     }
-    $heldKeys.Clear()
 }
 
-[PSCustomObject]@{
+$unconfirmedReleaseKeys = @($heldKeys | ForEach-Object { [string]$_.key })
+$finalStatus = if ($unconfirmedReleaseKeys.Count -gt 0) {
+    "release-failed"
+} elseif (-not [string]::IsNullOrWhiteSpace($deliveryFailure)) {
+    "delivery-failed"
+} else {
+    "sent"
+}
+
+$resultPayload = [PSCustomObject]@{
     schemaVersion = "game-window-input.v1"
     generatedAt = (Get-Date).ToString("o")
     mutation = $true
@@ -835,7 +955,7 @@ foreach ($action in $actions) {
     processName = $selected.processName
     processId = $selected.processId
     hwndHex = $selected.hwndHex
-    status = "sent"
+    status = $finalStatus
     plannedOnly = $false
     focused = [bool]$focused
     backgroundWindowMessagesAllowed = [bool]($useWindowMessages -and $AllowBackgroundWindowMessages -and $BackgroundWindowMessagesArm -eq $backgroundWindowMessageArmPhrase)
@@ -845,6 +965,10 @@ foreach ($action in $actions) {
     scanKeybdEventsSent = $scanKeybdEventsSent
     windowMessageEventsSent = $windowMessageEventsSent
     mouseEventsSent = $mouseEventsSent
+    deliveryFailure = if ([string]::IsNullOrWhiteSpace($deliveryFailure)) { $null } else { $deliveryFailure }
+    releaseFailures = @($releaseFailures)
+    unconfirmedReleaseKeys = @($unconfirmedReleaseKeys)
+    testOnlySendCalls = if ($testOnlyInputMode) { @($script:testOnlySendCalls) } else { $null }
     actions = @($actions)
     selectedWindow = [PSCustomObject]@{
         processId = $selected.processId
@@ -864,4 +988,20 @@ foreach ($action in $actions) {
     } else {
         "Focused the selected BEA.exe top-level window, rechecked foreground before each global event, then issued bounded scan-code keyboard input with SendInput."
     }
-} | ConvertTo-Json -Depth 8
+}
+
+if ($testOnlyInputMode) {
+    $resultPayload | ConvertTo-Json -Depth 8 -Compress
+} else {
+    $resultPayload | ConvertTo-Json -Depth 8
+}
+
+if ($finalStatus -ne "sent") {
+    $failureSummary = if ($unconfirmedReleaseKeys.Count -gt 0) {
+        "Input delivery ended with unconfirmed key releases: {0}." -f ($unconfirmedReleaseKeys -join ", ")
+    } else {
+        "Input delivery failed: {0}" -f $deliveryFailure
+    }
+    Write-Error $failureSummary -ErrorAction Continue
+    exit 1
+}

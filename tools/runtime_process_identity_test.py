@@ -87,7 +87,7 @@ class CopiedCmdFixture:
             ),
             encoding="utf-8",
         )
-        self.launch_arguments = ["/c", "ping -n 30 127.0.0.1 > nul"]
+        self.launch_arguments = ["/c", "ping -n 180 127.0.0.1 > nul"]
         self.processes: list[subprocess.Popen[bytes]] = []
         self.process = self.start_process()
 
@@ -181,10 +181,14 @@ class RuntimeProcessIdentityTests(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory(prefix="runtime-receipt-test-")
         self.root = Path(self.temp_dir.name)
         self.fixture = CopiedCmdFixture(self.root)
+        self.valid_payload = self.fixture.receipt_payload()
 
     def tearDown(self) -> None:
         self.fixture.stop()
         self.temp_dir.cleanup()
+
+    def receipt_payload(self) -> dict[str, Any]:
+        return copy.deepcopy(self.valid_payload)
 
     def assert_receipt(
         self,
@@ -219,7 +223,7 @@ class RuntimeProcessIdentityTests(unittest.TestCase):
         self.assertIn(message.lower(), result.stderr.lower())
 
     def test_accepts_exact_matching_receipt_and_returns_only_receipt_and_process(self) -> None:
-        result = self.assert_receipt(self.fixture.receipt_payload())
+        result = self.assert_receipt(self.receipt_payload())
 
         self.assertEqual(result.returncode, 0, result.stderr)
         output = json.loads(result.stdout)
@@ -235,41 +239,91 @@ class RuntimeProcessIdentityTests(unittest.TestCase):
             source_executable=WOW64_CMD_EXE,
             profile_name="wow64-profile",
         )
+        self.valid_payload = self.fixture.receipt_payload()
 
-        result = self.assert_receipt(self.fixture.receipt_payload())
+        result = self.assert_receipt(self.receipt_payload())
 
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_rejects_schema_name_and_exact_key_drift(self) -> None:
-        wrong_schema = self.fixture.receipt_payload()
+        wrong_schema = self.receipt_payload()
         wrong_schema["schemaVersion"] = "runtime-process-receipt.v2"
         self.assert_rejected(wrong_schema, "schema")
 
-        extra_key = self.fixture.receipt_payload()
+        extra_key = self.receipt_payload()
         extra_key["unexpected"] = True
         self.assert_rejected(extra_key, "exact keys")
 
-        missing_key = self.fixture.receipt_payload()
+        missing_key = self.receipt_payload()
         del missing_key["runId"]
         self.assert_rejected(missing_key, "exact keys")
 
-        wrong_key_case = self.fixture.receipt_payload()
+        wrong_key_case = self.receipt_payload()
         wrong_key_case["SchemaVersion"] = wrong_key_case.pop("schemaVersion")
         self.assert_rejected(wrong_key_case, "exact keys")
 
-        nested_extra_key = self.fixture.receipt_payload()
+        nested_extra_key = self.receipt_payload()
         nested_extra_key["process"]["executable"]["unexpected"] = True
         self.assert_rejected(nested_extra_key, "exact keys")
 
+    def test_rejects_non_string_scalar_and_argument_fields(self) -> None:
+        payload = self.receipt_payload()
+        string_cases = (
+            (("schemaVersion",), [payload["schemaVersion"]]),
+            (("runId",), [payload["runId"]]),
+            (("process", "startedAtUtc"), [payload["process"]["startedAtUtc"]]),
+            (("process", "workingDirectory"), [payload["process"]["workingDirectory"]]),
+            (("process", "executable", "path"), [payload["process"]["executable"]["path"]]),
+            (("process", "executable", "sha256"), [payload["process"]["executable"]["sha256"]]),
+            (("profileManifest", "path"), [payload["profileManifest"]["path"]]),
+            (("sourceExecutableSha256",), [payload["sourceExecutableSha256"]]),
+            (("commandTemplateSha256",), [payload["commandTemplateSha256"]]),
+        )
+        for path, value in string_cases:
+            with self.subTest(path=".".join(path)):
+                candidate = self.receipt_payload()
+                target: dict[str, Any] = candidate
+                for part in path[:-1]:
+                    target = target[part]
+                target[path[-1]] = value
+                self.assert_rejected(candidate, "json string")
+
+        candidate = self.receipt_payload()
+        candidate["process"]["launchArguments"][1] = [candidate["process"]["launchArguments"][1]]
+        self.assert_rejected(candidate, "json string")
+
+    def test_rejects_quoted_integral_double_boolean_array_and_object_numbers(self) -> None:
+        numeric_cases = (
+            (("process", "id"), str(self.fixture.process.pid)),
+            (("process", "id"), float(self.fixture.process.pid)),
+            (("process", "id"), True),
+            (("process", "id"), [self.fixture.process.pid]),
+            (("process", "id"), {"value": self.fixture.process.pid}),
+            (("process", "executable", "size"), str(self.fixture.executable.stat().st_size)),
+            (("process", "executable", "size"), float(self.fixture.executable.stat().st_size)),
+            (("profileManifest", "size"), str(self.fixture.manifest.stat().st_size)),
+            (("profileManifest", "size"), float(self.fixture.manifest.stat().st_size)),
+            (("module", "size"), str(self.valid_payload["module"]["size"])),
+            (("module", "size"), float(self.valid_payload["module"]["size"])),
+        )
+        for path, value in numeric_cases:
+            with self.subTest(path=".".join(path), value=repr(value)):
+                candidate = self.receipt_payload()
+                target: dict[str, Any] = candidate
+                for part in path[:-1]:
+                    target = target[part]
+                target[path[-1]] = value
+                self.assert_rejected(candidate, "json integer")
+
     def test_rejects_receipt_hash_mismatch(self) -> None:
         self.assert_rejected(
-            self.fixture.receipt_payload(),
+            self.receipt_payload(),
             "receipt sha-256",
             expected_sha256="0" * 64,
         )
 
     def test_rejects_pid_reuse_start_time_mismatch(self) -> None:
-        payload = self.fixture.receipt_payload()
+        payload = self.receipt_payload()
         payload["process"]["startedAtUtc"] = "2000-01-01T00:00:00.0000000Z"
         self.assert_rejected(payload, "start time")
 
@@ -281,7 +335,7 @@ class RuntimeProcessIdentityTests(unittest.TestCase):
         }
         for field, value in cases.items():
             with self.subTest(field=field):
-                payload = self.fixture.receipt_payload()
+                payload = self.receipt_payload()
                 payload["process"]["executable"][field] = value
                 self.assert_rejected(payload, f"executable {field}")
 
@@ -293,7 +347,7 @@ class RuntimeProcessIdentityTests(unittest.TestCase):
         }
         for field, value in cases.items():
             with self.subTest(field=field):
-                payload = self.fixture.receipt_payload()
+                payload = self.receipt_payload()
                 payload["profileManifest"][field] = value
                 if field == "path":
                     payload["profileManifest"]["sha256"] = sha256_file(self.fixture.executable)
@@ -301,18 +355,25 @@ class RuntimeProcessIdentityTests(unittest.TestCase):
                 self.assert_rejected(payload, f"manifest {field}")
 
     def test_rejects_working_directory_and_launch_argument_drift(self) -> None:
-        payload = self.fixture.receipt_payload()
+        payload = self.receipt_payload()
         payload["process"]["workingDirectory"] = str(self.root.resolve())
         self.assert_rejected(payload, "working directory")
 
-        payload = self.fixture.receipt_payload()
+        payload = self.receipt_payload()
         payload["process"]["launchArguments"] = ["/c", "exit 0"]
         self.assert_rejected(payload, "launch arguments")
+
+    def test_launch_arguments_use_the_same_peb_process_handle_as_working_directory(self) -> None:
+        module_text = MODULE.read_text(encoding="utf-8")
+
+        self.assertNotIn("Get-CimInstance", module_text)
+        self.assertIn("GetProcessParameters", module_text)
 
     def test_rejects_live_process_working_directory_drift(self) -> None:
         self.fixture.stop_process(self.fixture.process)
         self.fixture.process = self.fixture.start_process(cwd=self.root)
-        payload = self.fixture.receipt_payload()
+        self.valid_payload = self.fixture.receipt_payload()
+        payload = self.receipt_payload()
 
         self.assert_rejected(payload, "live process working directory")
 
@@ -320,11 +381,11 @@ class RuntimeProcessIdentityTests(unittest.TestCase):
         cases = {
             "path": str(CMD_EXE.resolve()),
             "baseAddressHex": "0x1",
-            "size": self.fixture.receipt_payload()["module"]["size"] + 1,
+            "size": self.valid_payload["module"]["size"] + 1,
         }
         for field, value in cases.items():
             with self.subTest(field=field):
-                payload = self.fixture.receipt_payload()
+                payload = self.receipt_payload()
                 payload["module"][field] = value
                 self.assert_rejected(payload, f"module {field}")
 
@@ -337,17 +398,17 @@ class RuntimeProcessIdentityTests(unittest.TestCase):
         }
         for field, value in cases.items():
             with self.subTest(field=field):
-                payload = self.fixture.receipt_payload()
+                payload = self.receipt_payload()
                 payload[field] = value
                 self.assert_rejected(payload, field)
 
     def test_rejects_second_process_using_the_same_executable_path(self) -> None:
-        payload = self.fixture.receipt_payload()
+        payload = self.receipt_payload()
         self.fixture.start_process()
         self.assert_rejected(payload, "multiple running processes")
 
     def test_require_window_rejects_hwnd_ownership_mismatch(self) -> None:
-        payload = self.fixture.receipt_payload()
+        payload = self.receipt_payload()
         payload["window"]["hwndHex"] = "0x1"
         self.assert_rejected(payload, "window", require_window=True)
 
@@ -356,7 +417,7 @@ class RuntimeProcessIdentityTests(unittest.TestCase):
         real_directory = self.root / "real-receipt"
         alias_directory = self.root / "receipt-alias"
         receipt_path = real_directory / "runtime-process-receipt.v1.json"
-        payload = self.fixture.receipt_payload()
+        payload = self.receipt_payload()
         digest = write_receipt(receipt_path, payload)
         junction = subprocess.run(
             [str(CMD_EXE), "/c", "mklink", "/J", str(alias_directory), str(real_directory)],

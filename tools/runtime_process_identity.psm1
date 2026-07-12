@@ -9,7 +9,7 @@ function Assert-ExactPropertySet {
         [string]$Label
     )
 
-    if ($null -eq $Value) {
+    if ($null -eq $Value -or $Value.GetType() -ne [System.Management.Automation.PSCustomObject]) {
         throw "$Label must be a JSON object with exact keys."
     }
 
@@ -21,10 +21,22 @@ function Assert-ExactPropertySet {
     }
 }
 
+function Assert-JsonString {
+    param([object]$Value, [string]$Label, [switch]$AllowEmpty)
+
+    if ($null -eq $Value -or $Value.GetType() -ne [string]) {
+        throw "$Label must be a JSON string."
+    }
+    if (-not $AllowEmpty -and [string]::IsNullOrWhiteSpace($Value)) {
+        throw "$Label must be a non-empty JSON string."
+    }
+    return $Value
+}
+
 function Assert-Sha256 {
     param([object]$Value, [string]$Label)
 
-    $text = [string]$Value
+    $text = Assert-JsonString -Value $Value -Label $Label
     if ($text -cnotmatch '^[0-9a-f]{64}$') {
         throw "$Label must be a lowercase 64-character SHA-256 digest."
     }
@@ -34,15 +46,16 @@ function Assert-Sha256 {
 function Assert-PositiveInt64 {
     param([object]$Value, [string]$Label)
 
-    [long]$parsed = 0
-    if ($null -eq $Value -or -not [long]::TryParse(
-        ([string]$Value),
-        [System.Globalization.NumberStyles]::Integer,
-        [System.Globalization.CultureInfo]::InvariantCulture,
-        [ref]$parsed) -or $parsed -le 0) {
-        throw "$Label must be a positive integer."
+    $integerTypes = @(
+        [byte], [sbyte], [int16], [uint16], [int32], [uint32], [int64], [uint64]
+    )
+    if ($null -eq $Value -or $integerTypes -notcontains $Value.GetType()) {
+        throw "$Label must be a positive JSON integer number."
     }
-    return $parsed
+    if ([decimal]$Value -le 0 -or [decimal]$Value -gt [long]::MaxValue) {
+        throw "$Label must be a positive JSON integer number within the Int64 range."
+    }
+    return [long]$Value
 }
 
 function Assert-NoReparsePoint {
@@ -68,7 +81,7 @@ function Assert-NoReparsePoint {
 function Resolve-ReceiptFilePath {
     param([object]$Value, [string]$Label)
 
-    $text = [string]$Value
+    $text = Assert-JsonString -Value $Value -Label $Label
     $pathRoot = if ([string]::IsNullOrWhiteSpace($text)) { "" } else { [System.IO.Path]::GetPathRoot($text) }
     if ([string]::IsNullOrWhiteSpace($text) -or
         -not [System.IO.Path]::IsPathRooted($text) -or
@@ -87,7 +100,7 @@ function Resolve-ReceiptFilePath {
 function Resolve-ReceiptDirectoryPath {
     param([object]$Value, [string]$Label)
 
-    $text = [string]$Value
+    $text = Assert-JsonString -Value $Value -Label $Label
     $pathRoot = if ([string]::IsNullOrWhiteSpace($text)) { "" } else { [System.IO.Path]::GetPathRoot($text) }
     if ([string]::IsNullOrWhiteSpace($text) -or
         -not [System.IO.Path]::IsPathRooted($text) -or
@@ -218,6 +231,16 @@ public static class RuntimeProcessIdentityNative {
     [DllImport("user32.dll")]
     public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
 
+    public sealed class ProcessParametersSnapshot {
+        public string WorkingDirectory { get; private set; }
+        public string CommandLine { get; private set; }
+
+        public ProcessParametersSnapshot(string workingDirectory, string commandLine) {
+            WorkingDirectory = workingDirectory;
+            CommandLine = commandLine;
+        }
+    }
+
     public static string[] ParseCommandLine(string commandLine) {
         int argc;
         IntPtr argv = CommandLineToArgvW(commandLine, out argc);
@@ -251,10 +274,11 @@ public static class RuntimeProcessIdentityNative {
         return pointerSize == 4 ? BitConverter.ToUInt32(value, 0) : BitConverter.ToInt64(value, 0);
     }
 
-    private static string ReadUnicodeString(IntPtr process, long address, int pointerSize) {
+    private static string ReadUnicodeString(
+        IntPtr process, long address, int pointerSize, string label) {
         ushort length = BitConverter.ToUInt16(ReadBytes(process, address, 2), 0);
         if ((length & 1) != 0 || length > 32766) {
-            throw new InvalidOperationException("Remote current-directory string length is invalid.");
+            throw new InvalidOperationException("Remote " + label + " string length is invalid.");
         }
         int bufferOffset = pointerSize == 4 ? 4 : 8;
         long buffer = ReadPointer(process, address + bufferOffset, pointerSize);
@@ -262,12 +286,12 @@ public static class RuntimeProcessIdentityNative {
             return String.Empty;
         }
         if (buffer == 0) {
-            throw new InvalidOperationException("Remote current-directory string has a null buffer.");
+            throw new InvalidOperationException("Remote " + label + " string has a null buffer.");
         }
         return System.Text.Encoding.Unicode.GetString(ReadBytes(process, buffer, length));
     }
 
-    public static string GetWorkingDirectory(int processId) {
+    public static ProcessParametersSnapshot GetProcessParameters(int processId) {
         IntPtr process = OpenProcess(ProcessQueryInformation | ProcessVmRead, false, processId);
         if (process == IntPtr.Zero) {
             throw new Win32Exception(Marshal.GetLastWin32Error(), "OpenProcess failed");
@@ -306,7 +330,10 @@ public static class RuntimeProcessIdentityNative {
                 throw new InvalidOperationException("Remote process parameters pointer is null.");
             }
             long currentDirectory = processParameters + (pointerSize == 4 ? 0x24 : 0x38);
-            return ReadUnicodeString(process, currentDirectory, pointerSize);
+            long commandLine = processParameters + (pointerSize == 4 ? 0x40 : 0x70);
+            return new ProcessParametersSnapshot(
+                ReadUnicodeString(process, currentDirectory, pointerSize, "current-directory"),
+                ReadUnicodeString(process, commandLine, pointerSize, "command-line"));
         } finally {
             CloseHandle(process);
         }
@@ -316,13 +343,12 @@ public static class RuntimeProcessIdentityNative {
 }
 
 function Get-CurrentLaunchArguments {
-    param([int]$ProcessId)
+    param([string]$CommandLine, [int]$ProcessId)
 
-    $processInfo = Get-CimInstance Win32_Process -Filter ("ProcessId = {0}" -f $ProcessId) -ErrorAction Stop
-    if ($null -eq $processInfo -or [string]::IsNullOrWhiteSpace([string]$processInfo.CommandLine)) {
+    if ([string]::IsNullOrWhiteSpace($CommandLine)) {
         throw ("Could not resolve launch arguments for receipt process id {0}." -f $ProcessId)
     }
-    $allArguments = @([RuntimeProcessIdentityNative]::ParseCommandLine([string]$processInfo.CommandLine))
+    $allArguments = @([RuntimeProcessIdentityNative]::ParseCommandLine($CommandLine))
     if ($allArguments.Count -lt 1) {
         throw ("Process id {0} has an empty command line." -f $ProcessId)
     }
@@ -333,18 +359,18 @@ function Get-CurrentLaunchArguments {
 }
 
 function Assert-LaunchArguments {
-    param([object]$ReceiptArguments, [int]$ProcessId)
+    param([object]$ReceiptArguments, [string]$LiveCommandLine, [int]$ProcessId)
 
-    if ($null -eq $ReceiptArguments -or $ReceiptArguments -is [string]) {
+    if ($null -eq $ReceiptArguments -or $ReceiptArguments -isnot [System.Array]) {
         throw "process launchArguments must be a JSON array of strings."
     }
     $expected = @($ReceiptArguments)
     foreach ($argument in $expected) {
         if ($null -eq $argument -or $argument -isnot [string]) {
-            throw "process launchArguments must contain only strings."
+            throw "process launchArguments must contain only JSON strings."
         }
     }
-    $actual = @(Get-CurrentLaunchArguments -ProcessId $ProcessId)
+    $actual = @(Get-CurrentLaunchArguments -CommandLine $LiveCommandLine -ProcessId $ProcessId)
     if ($actual.Count -ne $expected.Count) {
         throw ("Process launch arguments mismatch: expected {0} arguments, found {1}." -f
             $expected.Count, $actual.Count)
@@ -362,23 +388,25 @@ function Assert-LaunchArguments {
 function Assert-UniqueExecutableProcess {
     param([System.Diagnostics.Process]$ExpectedProcess, [string]$ExecutablePath)
 
+    $candidates = @(Get-Process -Name $ExpectedProcess.ProcessName -ErrorAction SilentlyContinue)
     $matches = New-Object System.Collections.Generic.List[int]
-    foreach ($candidate in @(Get-Process -ErrorAction SilentlyContinue)) {
+    foreach ($candidate in $candidates) {
         try {
             $candidatePath = Get-ExactProcessExecutablePath -Process $candidate
-            if ([string]::Equals(
-                $candidatePath,
-                $ExecutablePath,
-                [System.StringComparison]::OrdinalIgnoreCase)) {
-                $matches.Add($candidate.Id)
-            }
         } catch {
-            continue
+            throw ("Could not resolve executable path for same-name process id {0}; identity is ambiguous: {1}" -f
+                $candidate.Id, $_.Exception.Message)
+        }
+        if ([string]::Equals(
+            $candidatePath,
+            $ExecutablePath,
+            [System.StringComparison]::OrdinalIgnoreCase)) {
+            $matches.Add($candidate.Id)
         }
     }
-    if ($matches.Count -ne 1 -or $matches[0] -ne $ExpectedProcess.Id) {
+    if ($candidates.Count -ne 1 -or $matches.Count -ne 1 -or $matches[0] -ne $ExpectedProcess.Id) {
         throw ("Found multiple running processes using executable path '{0}' or the exact receipt process was ambiguous: {1}." -f
-            $ExecutablePath, ($matches -join ", "))
+            $ExecutablePath, (($candidates | ForEach-Object { $_.Id }) -join ", "))
     }
 }
 
@@ -431,12 +459,11 @@ function Assert-RuntimeProcessReceipt {
         "commandTemplateSha256",
         "generatedCommandSha256"
     ) -Label "runtime receipt"
-    if ([string]$receipt.schemaVersion -cne $script:ReceiptSchema) {
+    $schemaVersion = Assert-JsonString -Value $receipt.schemaVersion -Label "Runtime receipt schemaVersion"
+    if ($schemaVersion -cne $script:ReceiptSchema) {
         throw ("Runtime receipt schema must be exactly '{0}'." -f $script:ReceiptSchema)
     }
-    if ($receipt.runId -isnot [string] -or [string]::IsNullOrWhiteSpace([string]$receipt.runId)) {
-        throw "Runtime receipt runId must be a non-empty string."
-    }
+    [void](Assert-JsonString -Value $receipt.runId -Label "Runtime receipt runId")
 
     Assert-ExactPropertySet -Value $receipt.process -Expected @(
         "id", "startedAtUtc", "executable", "workingDirectory", "launchArguments"
@@ -450,10 +477,9 @@ function Assert-RuntimeProcessReceipt {
         throw ("Runtime receipt process id {0} is not running." -f $receiptProcessId)
     }
 
-    $startText = [string]$receipt.process.startedAtUtc
+    $startText = Assert-JsonString -Value $receipt.process.startedAtUtc -Label "Process startedAtUtc"
     [DateTimeOffset]$expectedStart = [DateTimeOffset]::MinValue
-    if ($receipt.process.startedAtUtc -isnot [string] -or
-        -not $startText.EndsWith("Z", [System.StringComparison]::Ordinal) -or
+    if (-not $startText.EndsWith("Z", [System.StringComparison]::Ordinal) -or
         -not [DateTimeOffset]::TryParseExact(
             $startText,
             "o",
@@ -488,8 +514,9 @@ function Assert-RuntimeProcessReceipt {
             $workingDirectory, $executableDirectory)
     }
     try {
+        $liveParameters = [RuntimeProcessIdentityNative]::GetProcessParameters($process.Id)
         $liveWorkingDirectory = [System.IO.Path]::GetFullPath(
-            [RuntimeProcessIdentityNative]::GetWorkingDirectory($process.Id)).TrimEnd(
+            $liveParameters.WorkingDirectory).TrimEnd(
                 [char[]]@([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar))
     } catch {
         throw ("Could not inspect live process working directory for id {0}: {1}" -f
@@ -502,7 +529,10 @@ function Assert-RuntimeProcessReceipt {
         throw ("Live process working directory mismatch: process uses '{0}', receipt requires '{1}'." -f
             $liveWorkingDirectory, $workingDirectory)
     }
-    Assert-LaunchArguments -ReceiptArguments $receipt.process.launchArguments -ProcessId $process.Id
+    Assert-LaunchArguments `
+        -ReceiptArguments $receipt.process.launchArguments `
+        -LiveCommandLine $liveParameters.CommandLine `
+        -ProcessId $process.Id
 
     $manifestIdentity = Assert-ReceiptFileIdentity -Identity $receipt.profileManifest -Label "manifest"
     $expectedManifestPath = [System.IO.Path]::GetFullPath((Join-Path $workingDirectory "onslaught-profile-manifest.json"))
@@ -516,8 +546,8 @@ function Assert-RuntimeProcessReceipt {
 
     Assert-ExactPropertySet -Value $receipt.module -Expected @("path", "baseAddressHex", "size") -Label "runtime receipt module"
     $modulePath = Resolve-ReceiptFilePath -Value $receipt.module.path -Label "module path"
-    $baseAddressText = [string]$receipt.module.baseAddressHex
-    if ($receipt.module.baseAddressHex -isnot [string] -or $baseAddressText -cnotmatch '^0x[0-9A-F]+$') {
+    $baseAddressText = Assert-JsonString -Value $receipt.module.baseAddressHex -Label "Module baseAddressHex"
+    if ($baseAddressText -cnotmatch '^0x[0-9A-F]+$') {
         throw "Module baseAddressHex must use canonical uppercase 0x hexadecimal form."
     }
     [long]$expectedModuleBase = [Convert]::ToInt64($baseAddressText.Substring(2), 16)
@@ -544,8 +574,8 @@ function Assert-RuntimeProcessReceipt {
     }
 
     Assert-ExactPropertySet -Value $receipt.window -Expected @("hwndHex") -Label "runtime receipt window"
-    $hwndText = [string]$receipt.window.hwndHex
-    if ($receipt.window.hwndHex -isnot [string] -or $hwndText -cnotmatch '^0x(?:0|[1-9A-F][0-9A-F]*)$') {
+    $hwndText = Assert-JsonString -Value $receipt.window.hwndHex -Label "Window hwndHex"
+    if ($hwndText -cnotmatch '^0x(?:0|[1-9A-F][0-9A-F]*)$') {
         throw "Window hwndHex must use canonical uppercase 0x hexadecimal form."
     }
     [long]$hwndValue = [Convert]::ToInt64($hwndText.Substring(2), 16)

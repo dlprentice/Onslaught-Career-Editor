@@ -17,12 +17,15 @@ param(
     [switch]$AllowProcessNameAttach,
     [string]$RemoteServerArmPhrase = "",
     [int]$LogReadyTimeoutMilliseconds = 5000,
+    [string]$TestOnlyCdbExecutablePath = "",
+    [string]$TestOnlyCdbExecutableArm = "",
     [switch]$EnableRemoteServer,
     [switch]$PrintOnly
 )
 
 $ErrorActionPreference = "Stop"
 $RequiredRemoteServerArmPhrase = "ALLOW CDB REMOTE SERVER"
+$RequiredTestOnlyCdbExecutableArm = "ALLOW TEST-ONLY CDB EXECUTABLE"
 
 if ($Password -notmatch '^[A-Za-z0-9_]+$') {
     Write-Error "Password must contain only letters, digits, or underscores. CDB can exit before logging when the TCP server password contains punctuation."
@@ -42,7 +45,6 @@ if ($EnableRemoteServer) {
 }
 
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$cdbPath = & (Join-Path $scriptRoot "get_cdb_path.ps1") -AsLiteral
 $runtimeIdentityModule = Join-Path $scriptRoot "runtime_process_identity.psm1"
 $canaryInputs = @(
     $RuntimeReceiptPath,
@@ -52,6 +54,28 @@ $canaryInputs = @(
 )
 $canaryMode = @($canaryInputs | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) }).Count -gt 0
 $validatedReceipt = $null
+$testOnlyCdbRequested = -not [string]::IsNullOrWhiteSpace($TestOnlyCdbExecutablePath) -or
+    -not [string]::IsNullOrWhiteSpace($TestOnlyCdbExecutableArm)
+if ($testOnlyCdbRequested) {
+    if ([string]::IsNullOrWhiteSpace($TestOnlyCdbExecutablePath) -or
+        $TestOnlyCdbExecutableArm -cne $RequiredTestOnlyCdbExecutableArm) {
+        Write-Error ("Test-only CDB executable use requires -TestOnlyCdbExecutablePath and exact arm phrase '{0}'." -f
+            $RequiredTestOnlyCdbExecutableArm)
+        exit 1
+    }
+    if (-not $canaryMode) {
+        Write-Error "Test-only CDB executable use is restricted to receipt-bound canary mode."
+        exit 1
+    }
+    if (-not (Test-Path -LiteralPath $TestOnlyCdbExecutablePath -PathType Leaf)) {
+        Write-Error ("Test-only CDB executable '{0}' does not exist." -f $TestOnlyCdbExecutablePath)
+        exit 1
+    }
+    $cdbPath = [System.IO.Path]::GetFullPath(
+        (Resolve-Path -LiteralPath $TestOnlyCdbExecutablePath -ErrorAction Stop).Path)
+} else {
+    $cdbPath = & (Join-Path $scriptRoot "get_cdb_path.ps1") -AsLiteral
+}
 
 if ($canaryMode) {
     if (@($canaryInputs | Where-Object { [string]::IsNullOrWhiteSpace([string]$_) }).Count -gt 0 -or
@@ -268,8 +292,7 @@ function Assert-NoReparsePath([string]$Path, [string]$Label) {
         if (Test-Path -LiteralPath $currentPath) {
             $item = Get-Item -LiteralPath $currentPath -Force -ErrorAction Stop
             if (($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
-                Write-Error ("{0} traverses reparse point '{1}'." -f $Label, $currentPath)
-                exit 1
+                throw ("{0} traverses reparse point '{1}'." -f $Label, $currentPath)
             }
         }
         $parent = Split-Path -Parent $currentPath
@@ -277,6 +300,117 @@ function Assert-NoReparsePath([string]$Path, [string]$Label) {
             break
         }
         $currentPath = $parent
+    }
+}
+
+function Get-StreamSha256([System.IO.Stream]$Stream) {
+    $originalPosition = $Stream.Position
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $Stream.Position = 0
+        return ([System.BitConverter]::ToString($sha256.ComputeHash($Stream))).Replace("-", "").ToLowerInvariant()
+    } finally {
+        $Stream.Position = $originalPosition
+        $sha256.Dispose()
+    }
+}
+
+function Assert-HeldCommandIdentity(
+    [string]$OriginalPath,
+    [string]$ResolvedPath,
+    [string]$ExpectedSha256,
+    [System.IO.FileStream]$ReadHandle
+) {
+    Assert-NoReparsePath $OriginalPath "Command file path"
+    Assert-NoReparsePath $ResolvedPath "Resolved command file path"
+    $currentResolvedPath = [System.IO.Path]::GetFullPath(
+        (Resolve-Path -LiteralPath $OriginalPath -ErrorAction Stop).Path)
+    if (-not [string]::Equals(
+        $currentResolvedPath,
+        $ResolvedPath,
+        [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw ("Command path identity changed: expected '{0}', found '{1}'." -f
+            $ResolvedPath, $currentResolvedPath)
+    }
+    $actualSha256 = Get-StreamSha256 $ReadHandle
+    if ($actualSha256 -cne $ExpectedSha256) {
+        throw ("Command SHA-256 mismatch: expected {0}, found {1}." -f
+            $ExpectedSha256, $actualSha256)
+    }
+    return $actualSha256
+}
+
+function Read-BoundedLogText([string]$Path, [int64]$MaximumBytes) {
+    $stream = [System.IO.File]::Open(
+        $Path,
+        [System.IO.FileMode]::Open,
+        [System.IO.FileAccess]::Read,
+        [System.IO.FileShare]::ReadWrite -bor [System.IO.FileShare]::Delete)
+    $memory = New-Object System.IO.MemoryStream
+    try {
+        $buffer = New-Object byte[] 8192
+        [int64]$total = 0
+        while ($total -le $MaximumBytes) {
+            $remaining = [Math]::Min([int64]$buffer.Length, ($MaximumBytes + 1) - $total)
+            if ($remaining -le 0) {
+                break
+            }
+            $read = $stream.Read($buffer, 0, [int]$remaining)
+            if ($read -eq 0) {
+                break
+            }
+            $memory.Write($buffer, 0, $read)
+            $total += $read
+        }
+        if ($total -gt $MaximumBytes) {
+            throw "CDB readiness log exceeded the 16 MiB bound before the required marker appeared."
+        }
+        $bytes = $memory.ToArray()
+        $text = [System.Text.Encoding]::UTF8.GetString($bytes)
+        return $text.TrimStart([char]0xFEFF)
+    } finally {
+        $memory.Dispose()
+        $stream.Dispose()
+    }
+}
+
+function Get-ProcessExecutablePath([System.Diagnostics.Process]$Process, [string]$Label) {
+    $Process.Refresh()
+    try {
+        if ($Process.Path) {
+            return [System.IO.Path]::GetFullPath($Process.Path)
+        }
+    } catch {
+        # MainModule is required for Windows PowerShell 5.1 process objects.
+    }
+    try {
+        return [System.IO.Path]::GetFullPath($Process.MainModule.FileName)
+    } catch {
+        throw ("Could not resolve {0} executable path for process id {1}: {2}" -f
+            $Label, $Process.Id, $_.Exception.Message)
+    }
+}
+
+function Stop-ExactStartedProcess(
+    [int]$StartedProcessId,
+    [DateTime]$StartedAtUtc,
+    [string]$ExecutablePath
+) {
+    $candidate = Get-Process -Id $StartedProcessId -ErrorAction SilentlyContinue
+    if ($null -eq $candidate) {
+        return
+    }
+    $candidate.Refresh()
+    $candidateStartedAtUtc = $candidate.StartTime.ToUniversalTime()
+    $candidatePath = Get-ProcessExecutablePath $candidate "cleanup candidate"
+    if ($candidateStartedAtUtc.Ticks -ne $StartedAtUtc.Ticks -or
+        -not [string]::Equals($candidatePath, $ExecutablePath, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw ("CDB cleanup identity mismatch for process id {0}; refusing to stop a reused or replaced process." -f
+            $StartedProcessId)
+    }
+    Stop-Process -Id $StartedProcessId -Force -ErrorAction Stop
+    if (-not $candidate.WaitForExit(5000)) {
+        throw ("CDB cleanup timed out waiting for process id {0} to exit." -f $StartedProcessId)
     }
 }
 
@@ -311,6 +445,7 @@ if ($ProcessId -gt 0) {
 }
 
 $arguments = @()
+$commandReadHandle = $null
 if ($EnableRemoteServer) {
     $arguments += @("-server", ("tcp:port={0},password={1}" -f $Port, $Password))
 }
@@ -327,15 +462,25 @@ $arguments += @(
 if ($CommandFile) {
     $resolvedCommandFile = Resolve-ExistingCommandFile $CommandFile $AllowedCommandRoot
     if ($canaryMode) {
-        Assert-NoReparsePath $CommandFile "Command file path"
-        Assert-NoReparsePath $resolvedCommandFile "Resolved command file path"
         if ($ExpectedCommandSha256 -cnotmatch '^[0-9a-f]{64}$') {
             Write-Error "ExpectedCommandSha256 must be a lowercase 64-character SHA-256 digest."
             exit 1
         }
-        $actualCommandSha256 = (Get-FileHash -LiteralPath $resolvedCommandFile -Algorithm SHA256).Hash.ToLowerInvariant()
-        if ($actualCommandSha256 -cne $ExpectedCommandSha256) {
-            Write-Error ("Command SHA-256 mismatch: expected {0}, found {1}." -f $ExpectedCommandSha256, $actualCommandSha256)
+        try {
+            Assert-NoReparsePath $CommandFile "Command file path"
+            Assert-NoReparsePath $resolvedCommandFile "Resolved command file path"
+            $commandReadHandle = [System.IO.File]::Open(
+                $resolvedCommandFile,
+                [System.IO.FileMode]::Open,
+                [System.IO.FileAccess]::Read,
+                [System.IO.FileShare]::Read)
+            $actualCommandSha256 = Assert-HeldCommandIdentity `
+                $CommandFile $resolvedCommandFile $ExpectedCommandSha256 $commandReadHandle
+        } catch {
+            if ($null -ne $commandReadHandle) {
+                $commandReadHandle.Dispose()
+            }
+            Write-Error $_.Exception.Message
             exit 1
         }
         if ([string]$validatedReceipt.Receipt.generatedCommandSha256 -cne $ExpectedCommandSha256) {
@@ -398,22 +543,37 @@ if ($ProcessId -gt 0) {
 }
 
 if ($canaryMode) {
-    Assert-NoReparsePath $CommandFile "Command file path"
-    Assert-NoReparsePath $resolvedCommandFile "Resolved command file path"
-    $finalCommandSha256 = (Get-FileHash -LiteralPath $resolvedCommandFile -Algorithm SHA256).Hash.ToLowerInvariant()
-    if ($finalCommandSha256 -cne $ExpectedCommandSha256) {
-        Write-Error ("Command SHA-256 drifted before CDB attach: expected {0}, found {1}." -f $ExpectedCommandSha256, $finalCommandSha256)
+    try {
+        [void](Assert-HeldCommandIdentity `
+            $CommandFile $resolvedCommandFile $ExpectedCommandSha256 $commandReadHandle)
+    } catch {
+        $commandReadHandle.Dispose()
+        Write-Error ("Command identity drifted before CDB attach: {0}" -f $_.Exception.Message)
         exit 1
     }
-    $validatedReceipt = Assert-RuntimeProcessReceipt `
-        -ReceiptPath $RuntimeReceiptPath `
-        -ExpectedReceiptSha256 $ExpectedReceiptSha256
+    try {
+        $validatedReceipt = Assert-RuntimeProcessReceipt `
+            -ReceiptPath $RuntimeReceiptPath `
+            -ExpectedReceiptSha256 $ExpectedReceiptSha256
+    } catch {
+        $commandReadHandle.Dispose()
+        throw
+    }
     $process = $validatedReceipt.Process
 }
 
 if ($PrintOnly) {
+    if ($null -ne $commandReadHandle) {
+        $commandReadHandle.Dispose()
+    }
     Write-Output $commandPreview
     exit 0
+}
+
+if ($canaryMode -and (Test-Path -LiteralPath $LogPath)) {
+    $commandReadHandle.Dispose()
+    Write-Error ("Canary CDB startup requires a fresh log path; '{0}' already exists." -f $LogPath)
+    exit 1
 }
 
 $logDirectory = Split-Path -Parent $LogPath
@@ -428,17 +588,41 @@ if ($EnableRemoteServer) {
 } else {
     Write-Output "Remote server: disabled"
 }
-$started = Start-Process -FilePath $cdbPath -ArgumentList $arguments -WindowStyle Hidden -PassThru
+$resolvedCdbPath = [System.IO.Path]::GetFullPath((Resolve-Path -LiteralPath $cdbPath -ErrorAction Stop).Path)
+try {
+    $started = Start-Process -FilePath $resolvedCdbPath -ArgumentList $arguments -WindowStyle Hidden -PassThru
+} catch {
+    if ($null -ne $commandReadHandle) {
+        $commandReadHandle.Dispose()
+    }
+    throw
+}
 Write-Output ("CDB PID: {0}" -f $started.Id)
-$started.Refresh()
-$cdbStartedAtUtc = $started.StartTime.ToUniversalTime().ToString("o")
-$cdbExecutablePath = [System.IO.Path]::GetFullPath($cdbPath)
 $requiredLogMarkerFound = $false
 $maximumReadinessLogBytes = 16MB
 $failureMessage = ""
+$cdbStartedAtUtcValue = [DateTime]::MinValue
+$cdbStartedAtUtc = ""
+$cdbExecutablePath = ""
+
+try {
+    $started.Refresh()
+    $cdbStartedAtUtcValue = $started.StartTime.ToUniversalTime()
+    $cdbStartedAtUtc = $cdbStartedAtUtcValue.ToString("o")
+    $cdbExecutablePath = Get-ProcessExecutablePath $started "started CDB"
+    if (-not [string]::Equals(
+        $cdbExecutablePath,
+        $resolvedCdbPath,
+        [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw ("Started debugger executable path '{0}' does not match resolved CDB path '{1}'." -f
+            $cdbExecutablePath, $resolvedCdbPath)
+    }
+} catch {
+    $failureMessage = "Could not validate started CDB process identity: {0}" -f $_.Exception.Message
+}
 
 $deadline = (Get-Date).AddMilliseconds([Math]::Max(0, $LogReadyTimeoutMilliseconds))
-while ((Get-Date) -lt $deadline) {
+while (-not $failureMessage -and (Get-Date) -lt $deadline) {
     $started.Refresh()
     if ($started.HasExited) {
         $failureMessage = "CDB exited before attach/log readiness. Exit code: {0}" -f $started.ExitCode
@@ -448,14 +632,15 @@ while ((Get-Date) -lt $deadline) {
     if (Test-Path -LiteralPath $LogPath) {
         if ($canaryMode) {
             try {
-                $logFile = Get-Item -LiteralPath $LogPath -Force -ErrorAction Stop
-                if ($logFile.Length -gt $maximumReadinessLogBytes) {
-                    $failureMessage = "CDB readiness log exceeded the 16 MiB bound before the required marker appeared."
+                $logText = Read-BoundedLogText $LogPath $maximumReadinessLogBytes
+                $requiredLogMarkerFound = @($logText -split "`r?`n" | Where-Object {
+                    $_.Trim() -ceq $RequiredLogMarker
+                }).Count -gt 0
+            } catch {
+                if ($_.Exception.Message -like "*16 MiB*") {
+                    $failureMessage = $_.Exception.Message
                     break
                 }
-                $logText = Get-Content -LiteralPath $LogPath -Raw -ErrorAction Stop
-                $requiredLogMarkerFound = [bool]($logText | Select-String -SimpleMatch -Pattern $RequiredLogMarker -Quiet)
-            } catch {
                 $requiredLogMarkerFound = $false
             }
             if (-not $requiredLogMarkerFound) {
@@ -467,12 +652,18 @@ while ((Get-Date) -lt $deadline) {
                     -ReceiptPath $RuntimeReceiptPath `
                     -ExpectedReceiptSha256 $ExpectedReceiptSha256
                 $process = $validatedReceipt.Process
+                [void](Assert-HeldCommandIdentity `
+                    $CommandFile $resolvedCommandFile $ExpectedCommandSha256 $commandReadHandle)
             } catch {
-                $failureMessage = "Runtime receipt identity changed before CDB marker readiness: {0}" -f $_.Exception.Message
+                $failureMessage = "Runtime receipt or command identity changed before CDB marker readiness: {0}" -f $_.Exception.Message
                 break
             }
         }
 
+        if ($null -ne $commandReadHandle) {
+            $commandReadHandle.Dispose()
+            $commandReadHandle = $null
+        }
         Write-Output ("Log ready: {0}" -f $LogPath)
         [PSCustomObject]@{
             schemaVersion = "cdb-attach-helper.v1"
@@ -494,20 +685,25 @@ while ((Get-Date) -lt $deadline) {
     Start-Sleep -Milliseconds 200
 }
 
-try {
-    $started.Refresh()
-    if (-not $started.HasExited) {
-        Stop-Process -InputObject $started -Force -ErrorAction SilentlyContinue
-    }
-} catch {
-    # Best-effort cleanup after a failed debugger attach.
-}
-
 if (-not $failureMessage) {
     if ($canaryMode) {
         $failureMessage = "CDB required log marker '{0}' did not appear within {1} ms." -f $RequiredLogMarker, $LogReadyTimeoutMilliseconds
     } else {
         $failureMessage = "CDB log was not created within {0} ms. Attach aborted; retry with the exact copied-profile -ProcessId and inspect CDB setup." -f $LogReadyTimeoutMilliseconds
+    }
+}
+
+try {
+    if ($cdbStartedAtUtcValue -eq [DateTime]::MinValue) {
+        throw "Started CDB start time was not captured, so exact cleanup identity cannot be proven."
+    }
+    Stop-ExactStartedProcess $started.Id $cdbStartedAtUtcValue $resolvedCdbPath
+} catch {
+    $failureMessage = "{0} Cleanup failure: {1}" -f $failureMessage, $_.Exception.Message
+} finally {
+    if ($null -ne $commandReadHandle) {
+        $commandReadHandle.Dispose()
+        $commandReadHandle = $null
     }
 }
 Write-Error $failureMessage
