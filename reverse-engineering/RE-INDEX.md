@@ -7,6 +7,9 @@ Current RE front door (2026-07-12):
   corrects `0x004081c0` to `CBattleEngine__Move`, `0x00410c50` to
   `CBattleEngineJetPart__Move`, and selected adjacent JetPart helpers while
   preserving runtime and live-Ghidra boundaries.
+- [BattleEngine morph runtime observer design](binary-analysis/battleengine-morph-runtime-observer-design-2026-07-12.md)
+  defines the accepted identity-canary, controlled Level 850, and Level 100
+  progression without promoting debugger stops into timing or parity claims.
 
 Older campaign entries below are historical evidence and planning records; they
 do not override these current authority documents.

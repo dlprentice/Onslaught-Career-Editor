@@ -63,6 +63,14 @@ feeds ambiguities back to RE instead of promoting its own assumptions.
   public end-to-end synthetic AYA/DDS/FBX fixture exists yet.
 - The behavior contract and rebuild implementation remain pending copied-runtime
   evidence. First Flight's transform/resource/movement choices remain synthetic.
+- The user selected the reviewed identity-canary progression. The durable design
+  in
+  `reverse-engineering/binary-analysis/battleengine-morph-runtime-observer-design-2026-07-12.md`
+  starts with an unpatched safe-copy Level 850 control/positive/repeat matrix,
+  defers field semantics and timing, and uses Level 100 only as later
+  corroboration. The user pre-authorized the recommended continuation. Runtime
+  execution remains pending the structured local baton, resource leases,
+  implementation, and validation.
 - Normal and adversarial review found and closed stale active-index, deep-link
   historical-label, include-parser/count, and current-roadmap contradictions.
   The corrected include inventory is 254 unique quoted targets with 202 absent.

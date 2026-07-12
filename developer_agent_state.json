@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-12",
   "routingPolicy": "Follow the global Codex multi-agent lane contract; Codex-owned subagents inherit the parent effort or use an explicit task-specific supported effort override.",
-  "currentFocus": "Design a copied-runtime BattleEngine morph/movement observer, then freeze one measured behavior contract before changing synthetic rebuild behavior.",
+  "currentFocus": "Plan and implement the copied-runtime BattleEngine identity canary before measuring fields or changing synthetic rebuild behavior.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -20,7 +20,7 @@
       "registeredWorktrees": 1,
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "7c3544957d8555d2d488eac28d0c54f7fbfc3b7e",
+      "lastPushedBeforeCurrentSlice": "81a5d19c2fdbd22030f52f4aa552da3789660f16",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
@@ -91,6 +91,12 @@
       "rebuildBoundary": "First Flight transform, energy, shield, movement, arena, and presentation choices remain synthetic. No authentic behavior change is allowed before an accepted copied-runtime contract.",
       "validation": "Final source-truth closeout passes docsync, 4329 documented-command checks, 3663-file/6323-link Markdown validation, 18604-file hygiene/line endings, 19465-file hard-payload safety, 19649-file submodule-aware payload safety, migration inventory, JSON parsing, active stale-truth scanning, and git diff --check."
     },
+    "runtimeObserverDesign": {
+      "decision": "Identity canary in controlled Level 850, then controlled raw-state observation, then Level 100 corroboration.",
+      "stageABoundary": "The first control/positive/repeat matrix proves exact specimen, module/RVA, player-one/runtime-P0 input, BattleEngine, Morph, Move, and JetPart causality only; it makes no timing, field-semantic, handling, or parity claim.",
+      "safety": "Fresh unpatched AppCore safe copy, exact launch receipt and window identity, module-relative one-shot probes, private raw evidence, sanitized hash-bound materialization, before/after hashes, owned-process cleanup, and no installed-game or process-memory writes.",
+      "status": "User selected the design and pre-authorized the recommended continuation; implementation, runtime baton, leases, and validation remain pending."
+    },
     "boundaries": [
       "No installed-game or original BEA.exe mutation.",
       "No release, signing, installer/MSIX/Store, Host/Join, online-ready, gameplay-parity, visual-parity, or rebuild-parity claim.",
@@ -104,7 +110,8 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Design the separately authorized copied-runtime morph/movement observer around state, transform acceptance/rejection, energy, shield, velocity, grounded/stall state, and event timing.",
+    "Write the implementation plan, create the expiring local runtime-authority baton and exclusive leases, then implement the identity canary with focused tests.",
+    "Run the Level 850 no-input control, positive transform, and fresh-repeat matrix; do not promote timing or field semantics from Stage A.",
     "Design a public synthetic AYA/DDS/FBX export-contract fixture and dependency preflight before changing the legacy extractor lane.",
     "After runtime evidence is accepted, freeze measured constants/tolerances and implement the authentic behavior in deterministic Core plus the Godot adapter."
   ]
