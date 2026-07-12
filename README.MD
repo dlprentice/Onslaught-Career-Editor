@@ -102,14 +102,17 @@ npm test
 npm run dev
 ```
 
-`npm test` is the active-product quick check: docs/mirror consistency, the
-WinUI build, AppCore tests, WinUI tests, and deterministic rebuild Core/client
-and toolchain-contract tests. It does not download or launch Godot.
+`npm test` is the active-product quick check: validation-profile accounting,
+current docs and public-core links, generated-output safety, one complete WinUI
+solution build followed by AppCore/WinUI tests from that build, and deterministic
+rebuild Core/client/toolchain-contract tests. It does not run whole-tree payload
+or hygiene scans, historical proof sweeps, Ghidra, or native Godot.
 `npm run dev` launches the WinUI app. Both commands use the tools already
 installed on the machine; the root
 `npm install` path exists only for deliberate inspection of the archived
 Electron workbench and is not normal product setup. Root `package.json` is the
-command authority.
+command authority. Use [VALIDATION.md](VALIDATION.md) for measured gate costs,
+the change-class matrix, and the machine-readable script inventory command.
 
 To play the original-code rebuild prototype, double-click
 `rebuild\Launch First Flight.cmd` or run `npm run run:rebuild-godot`. The first
@@ -144,17 +147,12 @@ Core public-source validation:
 
 <!-- public-package-commands:start -->
 ```powershell
-dotnet test .\OnslaughtCareerEditor.AppCore.Tests\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo
-dotnet test .\OnslaughtCareerEditor.UiTests\OnslaughtCareerEditor.UiTests.csproj --nologo --filter "FullyQualifiedName!~LegacyWpf"
 npm run test:winui-primary-lane
 npm run test:winui-safe-copy-preflight
 npm run test:winui-patch-engine-safety
 npm run build:host
 dotnet run --project .\OnslaughtCareerEditor.Cli\OnslaughtCareerEditor.Cli.csproj -- --help
-npm run build:rebuild-core
 npm run test:rebuild
-npm run run:rebuild-headless
-npm run run:rebuild-godot
 ```
 <!-- public-package-commands:end -->
 

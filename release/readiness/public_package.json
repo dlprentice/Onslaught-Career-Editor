@@ -6,7 +6,7 @@
   "packageManager": "npm@11.12.1",
   "scripts": {
     "test": "npm run check:quick",
-    "check:quick": "npm run test:doc-commands && npm run build:winui && npm run test:appcore && npm run test:winui && npm run test:rebuild",
+    "check:quick": "npm run test:doc-commands && npm run test:winui-primary-lane && npm run test:rebuild",
     "dev": "dotnet run --project .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj",
     "build": "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo",
     "build:winui": "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo",

@@ -111,7 +111,12 @@ class StartCdbServerTests(unittest.TestCase):
 
     @staticmethod
     def run_powershell(command: str) -> subprocess.CompletedProcess[str]:
-        encoded_command = base64.b64encode(command.encode("utf-16le")).decode("ascii")
+        wrapped_command = (
+            "$ErrorActionPreference = 'Stop'; "
+            f"try {{ {command} }} catch {{ "
+            "[Console]::Error.WriteLine($_.Exception.Message); exit 1 }"
+        )
+        encoded_command = base64.b64encode(wrapped_command.encode("utf-16le")).decode("ascii")
         return subprocess.run(
             [
                 POWERSHELL,

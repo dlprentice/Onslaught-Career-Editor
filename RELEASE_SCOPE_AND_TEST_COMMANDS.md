@@ -150,6 +150,10 @@ valid game install, copied proof root, CDB log root, or local Ghidra project.
 Public contributors should use the package commands in
 `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md` and `package.json`.
 
+The measured change-class matrix and executable inventory are in
+[VALIDATION.md](VALIDATION.md). Historical proof commands remain reproducible,
+but they are not ordinary product or release gates.
+
 `npm run test:md-links` writes ignored reports under `subagents/md-link-check`; it is still a local validation gate, not a public payload.
 
 `npm run test:public-primary-migration-inventory` compares this public repo to

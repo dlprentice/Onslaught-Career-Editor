@@ -100,6 +100,62 @@ gates in the handoff.
 - Explicit `/goal`: read `goal.policy.md` before `goal.md`. Coordinated workers
   leave canonical goal/state reconciliation to integration.
 
+## Setup
+
+```powershell
+dotnet --version # must be .NET SDK 10.x
+dotnet --list-runtimes # must include Microsoft.NETCore.App 8.x
+node --version # must be v24.x
+npm --version  # must satisfy >=11.12 <12; npm@11.12.1 is the packageManager target
+py -3 --version
+npm test
+npm run dev
+```
+
+This active-product path needs no game install, submodule checkout, Ghidra
+database, or `npm install`. Root `package.json` is the command authority;
+`npm install` is only for deliberate archived Electron inspection. Initialize
+submodules before public allowlist or release signoff. Validation also requires
+Python 3 through the Windows `py` launcher because docs/release/tooling checks
+use `py -3`.
+
+## Common Local Gates
+
+Run the smallest gate set that matches your change.
+Use [VALIDATION.md](VALIDATION.md) for the measured change-class matrix. Do not
+run the individual WinUI build/AppCore/UI commands cumulatively with
+`test:winui-primary-lane` unless diagnosing a failure.
+
+<!-- public-package-commands:start -->
+```powershell
+npm run build:winui
+npm run test:appcore
+npm run test:winui
+npm run test:winui-primary-lane
+npm run test:winui-safe-copy-preflight
+npm run test:winui-patch-engine-safety
+npm run build:host
+npm run build:cli
+npm run test:doc-commands
+npm run test:md-links
+npm run test:public-allowlist
+npm run test:repo-hygiene
+npm run test:winui-notices
+npm run build:rebuild-core
+npm run test:rebuild
+```
+<!-- public-package-commands:end -->
+
+Run `npm run test:hard-payload-safety` before pushing boundary-sensitive work.
+It checks for tracked hard payloads and obvious secrets; it is not meant to hide
+normal RE notes, state batons, agent reports, or proof summaries.
+
+Current-doc edit loops use `npm run test:doc-commands` and
+`npm run test:md-links:public-core`. Broad historical-doc closeout uses
+`npm run test:doc-commands-all` and `npm run test:md-links`. Runtime-helper
+changes use `npm run test:runtime-tooling-safety`; the 95-child copied-runtime
+proof aggregate is not an ordinary contributor gate.
+
 Run .NET build/test commands serially. UI Automation and visual claims require
 native WinUI checks; browser or fixture success is not native runtime proof.
 In `reverse-engineering/RE-INDEX.md`, start with the short current front door

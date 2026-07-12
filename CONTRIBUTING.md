@@ -30,6 +30,10 @@ explicitly assigns a separate branch or private workspace.
 6. Use [PUBLIC_SIGNOFF_COMMANDS.md](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md)
    only for public-source or release signoff.
 
+[VALIDATION.md](VALIDATION.md) is the current measured change-class matrix. It
+separates focused edit-loop checks, active-product handoff, runtime-tooling
+safety, boundary closeout, release signoff, and historical proof.
+
 Read [LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md) before adding or moving local
 game, media, save, Ghidra, proof, or agent-output material.
 
@@ -133,7 +137,19 @@ npm run test:winui-notices
 ```
 <!-- public-package-commands:end -->
 
-Run only the gates relevant to your change, but run them locally before asking for review. `npm run test:md-links` writes ignored reports under `subagents/md-link-check`; do not commit those reports.
+Run only the gates relevant to your change, but run them locally before asking
+for review. Do not stack `build:winui`, `test:appcore`, and `test:winui` on top
+of `test:winui-primary-lane` for the same broad handoff: the wrapper builds the
+complete solution once, runs both test projects from that build, and shuts down
+build servers. The individual commands remain focused diagnostics.
+
+For minor current-doc changes use `npm run test:doc-commands` and
+`npm run test:md-links:public-core`; add `test:doc-commands-all` and the normal
+all-tree `test:md-links` only when historical or broad tree documentation
+changes. Runtime-helper changes use `npm run test:runtime-tooling-safety`; the
+copied-runtime proof sweep is maintainer research, not ordinary AppCore
+acceptance. `npm run test:md-links` writes ignored reports under
+`subagents/md-link-check`; do not commit those reports.
 
 ## Change Expectations
 

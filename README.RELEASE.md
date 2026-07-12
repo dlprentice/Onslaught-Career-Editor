@@ -96,9 +96,6 @@ future proof, not a current public claim.
 From repo root:
 
 ```powershell
-dotnet build ".\OnslaughtCareerEditor.WinUI\OnslaughtCareerEditor.WinUI.csproj" --nologo
-dotnet test ".\OnslaughtCareerEditor.AppCore.Tests\OnslaughtCareerEditor.AppCore.Tests.csproj" --nologo
-dotnet test ".\OnslaughtCareerEditor.UiTests\OnslaughtCareerEditor.UiTests.csproj" --nologo --filter "FullyQualifiedName!~LegacyWpf"
 npm run test:winui-primary-lane
 npm run test:rebuild
 dotnet run --project ".\OnslaughtCareerEditor.Cli\OnslaughtCareerEditor.Cli.csproj" -- --help
@@ -130,6 +127,10 @@ Run only the gates relevant to the change. `npm run test:md-links` may write
 generated reports under `subagents/md-link-check`; those reports are validation
 artifacts, not app release payload. Archived Electron checks are reference
 checks only, not product release gates.
+
+Use [VALIDATION.md](VALIDATION.md) for the current measured matrix. Individual
+WinUI/AppCore/UI commands are focused diagnostics; the primary-lane wrapper is
+the non-duplicated broad source handoff.
 
 Source-tree safety gates:
 

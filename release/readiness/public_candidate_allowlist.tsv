@@ -166,6 +166,7 @@ README.MD	R0_ALLOW	default	allow_with_normal_review
 README.RELEASE.md	R0_ALLOW	default	allow_with_normal_review
 RELEASE_SCOPE_AND_TEST_COMMANDS.md	R0_ALLOW	default	allow_with_normal_review
 SECURITY.md	R0_ALLOW	default	allow_with_normal_review
+VALIDATION.md	R0_ALLOW	default	allow_with_normal_review
 global.json	R0_ALLOW	default	allow_with_normal_review
 lore-book/BOOK.md	R0_ALLOW	default	allow_with_normal_review
 lore-book/Start-Here.md	R0_ALLOW	default	allow_with_normal_review

@@ -21,20 +21,16 @@ import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
+try:
+    from npm_script_doc_check import ACTIVE_MARKDOWN_FILES
+except ModuleNotFoundError:  # Support import as tools.md_link_check.
+    from tools.npm_script_doc_check import ACTIVE_MARKDOWN_FILES
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
-PUBLIC_CORE_MARKDOWN = (
-    "README.MD",
-    "CONTRIBUTING.md",
-    "SECURITY.md",
-    "CURRENT_CAPABILITIES.md",
-    "README.RELEASE.md",
-    "RELEASE_SCOPE_AND_TEST_COMMANDS.md",
-    "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
-    "release/readiness/public_AGENTS.md",
-)
+PUBLIC_CORE_MARKDOWN = ACTIVE_MARKDOWN_FILES
 
 
 def utc_now_iso() -> str:
