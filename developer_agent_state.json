@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-12",
   "routingPolicy": "Follow the global Codex multi-agent lane contract; Codex-owned subagents inherit the parent effort or use an explicit task-specific supported effort override.",
-  "currentFocus": "Plan and implement the copied-runtime BattleEngine identity canary before measuring fields or changing synthetic rebuild behavior.",
+  "currentFocus": "Implement Stage A Task 2 receipt-bound CDB and exact-window input safety with synthetic fixtures only; do not launch the game or debugger in this task.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -17,10 +17,11 @@
       "newReleaseAuthorized": false
     },
     "repository": {
-      "registeredWorktrees": 1,
+      "registeredWorktrees": 3,
+      "worktreeOwnership": "main coordinator checkout, validation-simplification user task, and a user-owned Cursor lane; the completed morph-canary worker and agent-guidance audit worktrees were removed after patch-equivalence verification",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "81a5d19c2fdbd22030f52f4aa552da3789660f16",
+      "lastPushedBeforeCurrentSlice": "b1458c0df536b7c3129aa820ec73564e823c996b (Stage A Task 1); guidance integration 56738f9b is included in the current state-closeout batch",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
@@ -95,7 +96,13 @@
       "decision": "Identity canary in controlled Level 850, then controlled raw-state observation, then Level 100 corroboration.",
       "stageABoundary": "The first control/positive/repeat matrix proves exact specimen, module/RVA, player-one/runtime-P0 input, BattleEngine, Morph, Move, and JetPart causality only; it makes no timing, field-semantic, handling, or parity claim.",
       "safety": "Fresh unpatched AppCore safe copy, exact launch receipt and window identity, module-relative one-shot probes, private raw evidence, sanitized hash-bound materialization, before/after hashes, owned-process cleanup, and no installed-game or process-memory writes.",
-      "status": "User selected the design and pre-authorized the recommended continuation; implementation, runtime baton, leases, and validation remain pending."
+      "task1Implementation": "Pushed through b1458c0d: PE32/RVA/relocation-safe canonical fingerprinting, four hardware-only execution probes, strict private artifact revalidation, exact public matrix schemas, contradictory-log rejection, and 10 passing focused synthetic tests. No BEA/CDB process was launched.",
+      "status": "Task 1 is accepted. Task 2 receipt-bound CDB/input safety is active; harness integration, authority-gated executor, and live control/positive/repeat runs remain pending."
+    },
+    "agentGuidanceAudit": {
+      "integrated": "56738f9b",
+      "result": "Progressive task routing, risk-based validation, exact runtime identity, Steam/source/rebuild evidence hierarchy, Ghidra runbook truth, and semantic-closure wording are corrected.",
+      "implementationFollowups": "Retire/fail-close stale CMonitor BattleEngine probes and mutators before Ghidra mutation; add fail-fast Fbx.dll and FBX-template preflight plus tests to the AYA export orchestrator."
     },
     "boundaries": [
       "No installed-game or original BEA.exe mutation.",
@@ -110,9 +117,10 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Write the implementation plan, create the expiring local runtime-authority baton and exclusive leases, then implement the identity canary with focused tests.",
-    "Run the Level 850 no-input control, positive transform, and fresh-repeat matrix; do not promote timing or field semantics from Stage A.",
-    "Design a public synthetic AYA/DDS/FBX export-contract fixture and dependency preflight before changing the legacy extractor lane.",
+    "Implement and review Stage A Task 2 exact receipt-bound CDB/input safety with focused synthetic tests only.",
+    "Integrate the locked canary mode and authority-gated three-run executor, then run Level 850 control/positive/repeat without promoting timing or field semantics.",
+    "Retire stale BattleEngine ownership probes/mutators and add Fbx.dll plus FBX-template fail-fast preflight before the next Ghidra/export mutation slice.",
+    "Design a public synthetic AYA/DDS/FBX export-contract fixture before promoting legacy extractor completeness.",
     "After runtime evidence is accepted, freeze measured constants/tolerances and implement the authentic behavior in deterministic Core plus the Godot adapter."
   ]
 }

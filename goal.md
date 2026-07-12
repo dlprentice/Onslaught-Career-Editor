@@ -16,31 +16,18 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Crosswalk the released Steam binary, Stuart's in-house PC source, the existing
-AYA exporter, and the rebuild into one evidence hierarchy, then implement one
-recognizable evidence-backed rebuild behavior slice.
+Implement Stage A Task 2: receipt-bound CDB and exact-window input safety for
+the BattleEngine identity canary, using synthetic process/receipt fixtures only.
 
-The work can proceed in parallel, but evidence promotion is sequential:
-source suggests ownership and architecture; the Steam binary and bounded
-runtime observations decide released behavior; exporter tests decide format
-coverage; the rebuild consumes only an accepted behavior specification and
-feeds ambiguities back to RE instead of promoting its own assumptions.
-
-1. inventory `references/Onslaught` and `references/AYAResourceExtractor` at
-   their pinned commits, including remote/fork provenance, license, build/test
-   posture, supported formats, and known gaps;
-2. choose one recognizable gameplay subsystem and crosswalk source owners,
-   Steam binary functions/data, tracked decompilation, runtime evidence, asset
-   dependencies, and rebuild-facing behavior fields;
-3. re-review that binary call-chain cluster under a measured quality rubric
-   separating name/owner, prototype/type, semantics, provenance, and runtime
-   confidence; live Ghidra mutation still requires a separate baton;
-4. exercise and improve the exporter against public/synthetic fixtures and
-   explicitly authorized ignored local inputs, recording supported and missing
-   mesh, material, texture, animation, archive, and conversion behavior; and
-5. freeze one public-safe behavior contract with evidence references, measured
-   constants, tolerances, and non-claims, then implement it in deterministic
-   Core plus the Godot adapter with headless and native acceptance evidence.
+1. extend the existing CDB launcher with exact PID/start-time/path/hash binding,
+   local-only `-pd`/`-noshell` posture, a ready marker, and a digest-bound
+   receipt without broadening its command grammar;
+2. extend exact-window input binding to the same receipt and guarantee key-up
+   cleanup through `finally`, including failure and cancellation paths;
+3. share process-identity checks where that removes real duplication without
+   adding a new product API or package-script chain; and
+4. prove the changed contracts with focused synthetic tests and review. Do not
+   launch Battle Engine Aquila or CDB in this task.
 
 ## Current Slice Progress - 2026-07-12
 
@@ -76,6 +63,19 @@ feeds ambiguities back to RE instead of promoting its own assumptions.
   It reuses AppCore and the existing live harness, adds no product API or
   package-script chain, and reserves broad validation for one integrated
   runtime-slice closeout.
+- Stage A Task 1 is implemented and pushed through `b1458c0d`. The new private
+  renderer parses PE32 sections/relocations, verifies the canonical specimen
+  and module-relative code fingerprints, emits four hardware-only execution
+  probes, and materializes an exact-schema public control/positive/repeat
+  matrix without paths, pointers, code bytes, PIDs, windows, or raw logs. Ten
+  focused synthetic tests pass; no game or debugger process was launched.
+- The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
+  progressive task routing and targeted validation, makes Steam/runtime
+  evidence outrank source hypotheses, and keeps RE-informed versus future
+  strict clean-room claims distinct. It also found two separately owned code
+  follow-ups: stale BattleEngine probes/mutators can reapply withdrawn
+  `CMonitor` ownership, and AYA export preflight omits `Fbx.dll` plus the FBX
+  template.
 - Normal and adversarial review found and closed stale active-index, deep-link
   historical-label, include-parser/count, and current-roadmap contradictions.
   The corrected include inventory is 254 unique quoted targets with 202 absent.
@@ -196,29 +196,25 @@ claim against an already malicious process running as the same Windows user.
 
 ## Current Slice Acceptance
 
-- Both reference submodules have a reproducible provenance, license, build,
-  test, and capability inventory at their pinned commits.
-- One subsystem crosswalk distinguishes source suggestion, Steam static proof,
-  runtime proof, exporter support, rebuild implementation, and unresolved
-  disagreement at function/data-field granularity.
-- The reviewed binary cluster has measured quality scores and no unsupported
-  whole-binary or fully-reversed claim.
-- Exporter coverage has executable fixtures/checks and either closes one real
-  format gap or records a bounded blocker with the missing input/evidence.
-- One recognizable rebuild behavior is implemented from an accepted public-safe
-  contract with deterministic headless tests and native visual/input evidence.
-- No proprietary payload, full Ghidra store, original-game mutation, generic
-  parity claim, or implementation-room assumption enters Git.
-- Focused and broad-enough gates, normal/adversarial review, state/docs, and a
-  verified push pass before advancing.
+- CDB and input actions reject stale, mismatched, or incompletely identified
+  receipts before attachment or input.
+- CDB remains local-only, uses the locked canary command, reports readiness,
+  and has receipt-bound detach/cleanup behavior.
+- Every input path releases held keys even when foregrounding, sending,
+  waiting, or receipt revalidation fails.
+- Focused synthetic tests and independent review pass without launching the
+  game/debugger or adding payloads, raw proof, product APIs, or broad scripts.
+- Goal/state are reconciled and the green slice is pushed before Task 3 begins.
 
 ## Next Slices
 
-1. Crosswalk the Steam binary, Stuart source, exporter, and rebuild; ship one
-   authentic evidence-backed behavior slice.
-2. Run the deep Lore editorial/provenance pass and generated contributor
+1. Complete Stage A Tasks 2-5, run the authorized Level 850 identity matrix,
+   and publish only its sanitized identity/causality result.
+2. Retire or fail-close active BattleEngine tools that can reapply withdrawn
+   ownership, then harden AYA export dependency/template preflight.
+3. Run the deep Lore editorial/provenance pass and generated contributor
    front-door indexing in parallel where it does not compete for RE evidence.
-3. Continue subsystem-by-subsystem binary re-review and rebuild fidelity work
+4. Continue subsystem-by-subsystem binary re-review and rebuild fidelity work
    while preserving the separate sealed-spec clean-room option.
 
 ## Stop Conditions

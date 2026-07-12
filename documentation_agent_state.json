@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-12",
   "routingPolicy": "Active docs consume the global Codex multi-agent lane contract, keep Codex-owned subagent effort task-flexible, and preserve historical wave provenance.",
-  "currentFocus": "Keep the movement crosswalk and approved runtime-observer design authoritative while Stage A moves into planning and implementation.",
+  "currentFocus": "Keep the evidence hierarchy and simplified contributor routing authoritative while Stage A Task 2 implements receipt-bound debugger/input safety.",
   "sourceOfTruth": {
     "readme": "README.MD",
     "contributorGuide": "CONTRIBUTING.md",
@@ -18,8 +18,8 @@
     "winUiFirstUse": "CURRENT_CAPABILITIES.md and its byte-identical Lore mirror record the verified three-state setup hierarchy, preservation of temporarily unavailable remembered folders, manual Save Lab availability, shell status/focus ownership, Level 1 headings, compact wrapped source actions, truthful launch/Admin Level preset state, and demand-loaded Media VLC behavior.",
     "filesystemSafety": "Save/options, AppCore copied-executable patching, and generated asset/package outputs use bounded roots, guarded or staged writes, final verification, recoverable full-file backups, and explicit same-user post-finalization limits.",
     "patchContract": "The normative contract accounts for 29 catalog rows, 20 visible options, 9 hidden companions, 17 dependency edges, and 118 conflict edges. AppCore accepts only exact pinned mutation rows, publishes backup/checksum/apply/restore files atomically, and repairs damaged or truncated copies only from an integrity- and provenance-verified full-file backup. Standalone Python patch scripts remain lab helpers without the AppCore atomic-publication guarantee.",
-    "re": "reverse-engineering/ is canonical. The 2026-07-12 crosswalk corrects 0x004081c0 to CBattleEngine__Move, 0x00410c50 to CBattleEngineJetPart__Move, and four adjacent JetPart helpers. The 6411/6411 metric is metadata closure, not semantic completeness; live Ghidra mutation and runtime proof remain pending.",
-    "runtimeObserver": "The approved design progresses from an exact-specimen Level 850 identity canary to controlled raw-state observation and then Level 100 corroboration. Stage A proves object/input/call-chain causality only and explicitly excludes timing, field semantics, handling, and parity claims.",
+    "re": "reverse-engineering/ is canonical. The 2026-07-12 crosswalk corrects 0x004081c0 to CBattleEngine__Move, 0x00410c50 to CBattleEngineJetPart__Move, and four adjacent JetPart helpers. The 6411/6411 metric is metadata closure, not semantic completeness. Active historical probes/mutators that can reapply withdrawn CMonitor ownership remain a tooling follow-up before Ghidra mutation.",
+    "runtimeObserver": "The approved design progresses from an exact-specimen Level 850 identity canary to controlled raw-state observation and then Level 100 corroboration. Task 1 now provides PE32-safe fingerprints, hardware-only identity probes, and strict sanitized matrix materialization; no live run has occurred. Stage A excludes timing, field semantics, handling, and parity claims.",
     "referenceCorpora": "The pinned audit records Onslaught 792545b as an incomplete/non-buildable architecture corpus (110 tracked files; 202/254 quoted includes absent) and AYAResourceExtractor 6f3df296 as a Windows x86 static model/texture exporter with format, fixture, build, and component-license gaps. Older 111/75 manifests counted .git control files.",
     "lore": "The 949-document package count proves packaged breadth, not editorial completeness, freshness, provenance/rights review, or broad public-safety approval.",
     "rebuild": "The GPL-3.0-or-later RE-informed source rebuild includes the deterministic net8 Core/headless verifier, pure real-time Client adapter, and playable procedural Godot 4.7 First Flight view. Transform, energy, shield, movement, arena, and presentation choices remain synthetic; no retail-informed behavior change should land before the copied-runtime movement contract is accepted. The client needs no retail payload and is not in the published v1.0.9 WinUI ZIP.",
@@ -30,11 +30,14 @@
     "release/readiness/ and tools/ still need generated front-door indexes before broad movement or deletion.",
     "Lore needs an explicit editorial allowlist, third-party-text inventory, rights/provenance review, and generated canonical projections before another release.",
     "The grouped WinUI action/reaction map still needs a verified control-by-control refresh against the current GUI.",
-    "The movement slice still lacks copied-runtime measurements, and the AYA lane lacks a tracked public end-to-end synthetic export fixture plus resolved component-license posture."
+    "The movement slice still lacks copied-runtime measurements, and the AYA lane lacks a tracked public end-to-end synthetic export fixture plus resolved component-license posture.",
+    "Active BattleEngine historical probes/mutators can still reapply withdrawn CMonitor ownership; they must be retired or fail-closed before another related Ghidra mutation wave.",
+    "The AYA export orchestrator preflights only legacy AYA/DDS DLLs even though the harness also requires Fbx.dll and an FBX template."
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Implement the approved observer and document only sanitized, hash-bound accepted measurements without publishing raw private paths, pointers, process identifiers, or logs.",
+    "Implement Stage A Task 2 receipt-bound CDB/input safety, then complete the locked harness/executor before any live observation.",
+    "Retire stale BattleEngine ownership tooling and add fail-fast Fbx.dll plus FBX-template preflight with focused tests.",
     "Document and test a public synthetic AYA/DDS/FBX export contract before promoting exporter completeness.",
     "Freeze one accepted public-safe behavior contract, then keep rebuild and GUI wording bounded to the measured result.",
     "Generate contributor front-door indexes and run the deep Lore editorial/provenance pass after the crosswalk foundation is in place."
