@@ -76,6 +76,13 @@ the BattleEngine identity canary, using synthetic process/receipt fixtures only.
   follow-ups: stale BattleEngine probes/mutators can reapply withdrawn
   `CMonitor` ownership, and AYA export preflight omits `Fbx.dll` plus the FBX
   template.
+- A user-owned Cursor lane has the long-running exclusive live-Ghidra mutation
+  lease for a deep semantic pass. The user reports 15 backed-up mutations so
+  far: semantic corrections at `0x00407310` and `0x00408120`, plus 13 cosmetic
+  name/comment cleanups. Deep mode is `6/4324`; earlier rushed heuristic
+  batches do not count. Treat these as pending external-lane evidence until its
+  reviewed branch and read-back ledger are integrated, and do not publish its
+  machine-local backup path.
 - Normal and adversarial review found and closed stale active-index, deep-link
   historical-label, include-parser/count, and current-roadmap contradictions.
   The corrected include inventory is 254 unique quoted targets with 202 absent.
@@ -158,6 +165,9 @@ work plus verified commits and pushes for this campaign.
   databases, secrets, build output, or generated package output.
 - Release publication, signing, installer/MSIX/Store work, live Ghidra
   mutation, and destructive private-payload cleanup are separate decisions.
+- While the Cursor semantic lane holds the live-Ghidra mutation lease, this
+  coordinator and its workers must not mutate that project or its backups.
+  Consume reviewed branch/read-back artifacts when they become available.
 - Static accounting is not runtime proof. Source naming is not retail behavior
   proof. A clean-room plan is not a runnable rebuild.
 - Because the current maintainers and agents have read GPL-licensed source and

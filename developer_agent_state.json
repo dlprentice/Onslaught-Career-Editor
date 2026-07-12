@@ -18,7 +18,7 @@
     },
     "repository": {
       "registeredWorktrees": 3,
-      "worktreeOwnership": "main coordinator checkout, validation-simplification user task, and a user-owned Cursor lane; the completed morph-canary worker and agent-guidance audit worktrees were removed after patch-equivalence verification",
+      "worktreeOwnership": "main coordinator checkout, validation-simplification user task, and a user-owned long-running Cursor live-Ghidra semantic lane; the completed morph-canary worker and agent-guidance audit worktrees were removed after patch-equivalence verification",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
       "lastPushedBeforeCurrentSlice": "b1458c0df536b7c3129aa820ec73564e823c996b (Stage A Task 1); guidance integration 56738f9b is included in the current state-closeout batch",
@@ -103,6 +103,11 @@
       "integrated": "56738f9b",
       "result": "Progressive task routing, risk-based validation, exact runtime identity, Steam/source/rebuild evidence hierarchy, Ghidra runbook truth, and semantic-closure wording are corrected.",
       "implementationFollowups": "Retire/fail-close stale CMonitor BattleEngine probes and mutators before Ghidra mutation; add fail-fast Fbx.dll and FBX-template preflight plus tests to the AYA export orchestrator."
+    },
+    "liveGhidraSemanticLane": {
+      "ownership": "User-owned Cursor lane holds the exclusive live-Ghidra mutation lease; coordinator lanes must not mutate the project or private backups.",
+      "reportedProgress": "Pending external-lane integration: 15 backed-up mutations, including semantic corrections at 0x00407310 and 0x00408120 plus 13 cosmetic cleanups; deep mode is 6/4324 and rushed heuristic batches are excluded.",
+      "evidenceBoundary": "The chat checkpoint is not canonical read-back evidence. Integrate only the reviewed branch and mutation/read-back ledger; PASS_STATIC_OK_REBUILD_THIN does not prove rebuild parity."
     },
     "boundaries": [
       "No installed-game or original BEA.exe mutation.",
