@@ -1,5 +1,11 @@
 # Ghidra Walker Dash / Surface Correction - 2026-05-10
 
+> **Owner/name supersession (2026-07-12):** this file remains the historical
+> record of what the saved Ghidra project held after this wave. Current
+> read-only caller, object-layout, and source-order evidence identifies
+> `0x00412900` as `CBattleEngineJetPart__AutoLevel`, not a Monitor helper.
+> See the [current movement crosswalk](../../reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md).
+
 ## Scope
 
 This note records a saved Ghidra correction tranche for the `0x004127a0` through `0x00413cf0` dash/surface cluster after fresh read-back showed a saved intermediate interpretation had over-promoted several functions to JetPart/WalkerPart names. This is public-safe static RE evidence only: no BEA launch, no debugger attach, no executable patching, no installed-game mutation, and no private decompile excerpts are included here.

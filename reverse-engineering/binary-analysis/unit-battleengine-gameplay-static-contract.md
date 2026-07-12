@@ -1,5 +1,12 @@
 # Unit / BattleEngine / Gameplay Static Contract
 
+> **Current movement correction (2026-07-12):** `0x004081c0` is
+> `CBattleEngine__Move`; `0x00410c50` is
+> `CBattleEngineJetPart__Move`; `0x00411630`, `0x00411aa0`, `0x00411b70`, and
+> `0x00412900` resolve to selected JetPart helpers. See
+> [battleengine-movement-static-crosswalk-2026-07-12.md](battleengine-movement-static-crosswalk-2026-07-12.md).
+> Older wave names below are historical, and runtime behavior remains pending.
+
 Wave1220 static closeout acceptance: active current-risk focused accounting is `1179/1179 = 100.00%`; remaining active focused work: 0. This is static Ghidra/read-back/system-map acceptance for the current-risk lane, not runtime gameplay proof, exact layout proof, exact source-body identity, BEA patching proof, rebuild parity, or no-noticeable-difference parity.
 
 MissionScript Player-State / Score Command-Effect static proof (`missionscript-player-state-score-command-effect-static-proof.md` and `missionscript-player-state-score-command-effect.v1.json`) records `AddScore`, `ToggleCockpit`, and `SetStealth` as descriptor/corpus/source-context evidence only: descriptor rows `84/136/137`, raw entries `IScript__Unk_00534410` / `&LAB_00533950` / `&LAB_00533980`, the `0x00534410 IScript__SecondaryObjectiveComplete` alias boundary, loose-MSL counts `15 / 0 / 10`, file counts `12 / 0 / 4`, `CGame::IncScore`, `CBattleEngine::ToggleCockpit`, and `CBattleEngine__HandleCloak`. Runtime score behavior, cockpit behavior, stealth behavior, `weapon_fire_breaks_stealth`, exact player-state layouts, patch behavior, visual QA, Godot, rebuild parity, and no-noticeable-difference parity remain separate proof.

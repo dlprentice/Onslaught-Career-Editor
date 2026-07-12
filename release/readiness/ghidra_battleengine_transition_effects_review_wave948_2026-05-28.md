@@ -1,5 +1,11 @@
 # Ghidra BattleEngine Transition/Effects Review Wave948
 
+> **Owner/name supersession (2026-07-12):** Wave948 remains a historical
+> read-back record. Current static evidence identifies `0x004081c0` as
+> `CBattleEngine__Move`, `0x00410c50` as `CBattleEngineJetPart__Move`, and
+> `0x00411630` as `CBattleEngineJetPart__HandleGroundEffect`. See the
+> [current movement crosswalk](../../reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md).
+
 Status: complete read-only static read-back evidence
 Date: 2026-05-28
 Scope: `battleengine-transition-effects-review-wave948`

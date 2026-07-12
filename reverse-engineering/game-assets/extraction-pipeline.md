@@ -8,6 +8,12 @@ doc_version: 1.2
 
 ## Purpose
 
+Current pinned extractor authority:
+[`reference-submodule-audit-2026-07-12.md`](../source-code/reference-submodule-audit-2026-07-12.md).
+The legacy dependency chain and private corpus coverage below are useful, but a
+tracked public end-to-end synthetic AYA/DDS/FBX fixture is still missing and
+the component-license posture is not yet a redistribution approval.
+
 This is the current backend extraction workflow for Battle Engine Aquila assets.
 
 It exists so the project can:

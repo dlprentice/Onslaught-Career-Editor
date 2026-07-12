@@ -2,6 +2,11 @@
 
 Status: public-safe bounded read-only retail-candidate evidence, not exact cloak identity or runtime proof
 
+> **Current name correction (2026-07-12):** references below to
+> `CMonitor__Process` at `0x004081c0` now mean `CBattleEngine__Move`. The body
+> tokens remain historical static evidence; the Monitor owner interpretation is
+> superseded by the current BattleEngine movement crosswalk.
+
 ## Objective
 
 Narrow the remaining source-only BattleEngine cloak/stealth gap without mutating the installed game, the original `BEA.exe`, or the Ghidra project.

@@ -1,6 +1,13 @@
 # Ghidra Deferred 0x00410c50 Correction - 2026-05-09
 
-Status: public-safe saved Ghidra rename/comment evidence
+Status: historical saved Ghidra evidence; owner/name superseded 2026-07-12
+
+> **Supersession:** read-only caller, constructor, object-layout, body-order,
+> and source evidence now identifies `0x00410c50` as
+> `CBattleEngineJetPart__Move`. The saved
+> `CMonitor__UpdateMovementTransitionAndEffects` name remains in the live Ghidra
+> project until a separately authorized mutation baton. See
+> `reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md`.
 
 ## Objective
 

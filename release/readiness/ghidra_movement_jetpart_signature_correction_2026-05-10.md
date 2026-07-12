@@ -1,5 +1,13 @@
 # Ghidra Movement / JetPart Signature Correction - 2026-05-10
 
+> **Owner/name supersession (2026-07-12):** this file remains the historical
+> saved-name/read-back record. Current read-only caller, object-layout, and
+> source-order evidence identifies `0x00411630` as
+> `CBattleEngineJetPart__HandleGroundEffect`, `0x00411aa0` as
+> `CBattleEngineJetPart__GetFriction`, and `0x00411b70` as
+> `CBattleEngineJetPart__GetIsDoingSpecialAirMove`. See the
+> [current movement crosswalk](../../reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md).
+
 ## Scope
 
 This note records a saved Ghidra name/signature/comment correction tranche for movement, vector, and BattleEngine JetPart weapon helper functions. It is public-safe static RE evidence only: no BEA launch, no debugger attach, no executable patching, no installed-game mutation, and no private decompile excerpt is included here.

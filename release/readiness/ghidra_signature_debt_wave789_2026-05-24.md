@@ -1,5 +1,13 @@
 # Ghidra Signature Debt Wave789 Readiness Note
 
+> **Owner/name supersession (2026-07-12):** Wave789 remains a historical
+> signature/read-back record. Current read-only caller, object-layout, and
+> source-order evidence identifies `0x00410c50` as
+> `CBattleEngineJetPart__Move`, called by `0x004081c0 CBattleEngine__Move`.
+> The owner and method at `0x00412ad0` are unresolved; its saved Monitor label
+> is not current identity proof. See the
+> [current movement crosswalk](../../reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md).
+
 Status: complete static read-back evidence
 Date: 2026-05-24
 Scope: `signature-debt-wave789`

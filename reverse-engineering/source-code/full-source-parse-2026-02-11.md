@@ -3,6 +3,13 @@
 > Complete inventory-level parse of all provided Stuart and AYA extractor source repositories.
 > This refresh supersedes older partial-count notes.
 
+> **Current correction (2026-07-12):** this historical filesystem parse counted
+> each submodule worktree's `.git` control file. The current pins contain 110
+> Git-tracked Onslaught files and 74 Git-tracked AYAResourceExtractor files.
+> See [reference-submodule-audit-2026-07-12.md](reference-submodule-audit-2026-07-12.md)
+> for current provenance, buildability, format, test, and license posture. The
+> metrics below remain the at-the-time parse result.
+
 ## Scope and Method
 
 Repositories parsed:

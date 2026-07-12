@@ -64,6 +64,13 @@ dumps or broad ad hoc scans.
 
 ## Generated Asset Export Safety
 
+The pinned Onslaught/AYA provenance, build, format, test, and license inventory
+is recorded in
+`reverse-engineering/source-code/reference-submodule-audit-2026-07-12.md`.
+Output-safety tests protect destination handling; they do not substitute for a
+tracked end-to-end synthetic legacy importer/DDS/FBX fixture or prove exporter
+format completeness.
+
 `export_game_assets.py` writes only to a local output root that is physically
 separate from the selected game tree. It validates every required source before
 creating that root, holds source and output directory chains without following

@@ -1,5 +1,11 @@
 # Ghidra Monitor / Gameplay Signature Tranche - 2026-05-09
 
+> **Owner/name supersession (2026-07-12):** this file remains the historical
+> saved-signature/read-back record. Current read-only RTTI, vtable, caller,
+> object-layout, and source-order evidence identifies `0x004081c0` as
+> `CBattleEngine__Move`, not `CMonitor__Process`. See the
+> [current movement crosswalk](../../reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md).
+
 ## Summary
 
 This wave reparsed six monitor/gameplay-adjacent functions from the current static re-audit queue after fresh metadata, decompile, xref, and instruction exports showed commentless `param_N` signature debt. A serial headless dry/apply pass saved corrected signatures and proof-boundary comments, followed by fresh read-back and a focused probe.

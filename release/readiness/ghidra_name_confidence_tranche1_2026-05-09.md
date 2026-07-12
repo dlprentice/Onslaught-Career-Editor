@@ -1,5 +1,10 @@
 # Ghidra Name-Confidence Tranche 1 - 2026-05-09
 
+> **Owner/name supersession (2026-07-12):** this classification remains a
+> historical queue record. Current static evidence identifies `0x00410c50` as
+> `CBattleEngineJetPart__Move`, not a Monitor helper. See the
+> [current movement crosswalk](../../reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md).
+
 Status: public-safe read-only name-confidence classification, not a mutation or final identity proof
 
 ## Objective

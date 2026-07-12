@@ -1,5 +1,11 @@
 # Wave1154 UnitAI Deploy/Target Current-Risk Readiness Note
 
+> **Owner/name supersession (2026-07-12):** the Wave1154 exports remain valid
+> historical read-back evidence, but their owner interpretation does not.
+> Current static evidence identifies `0x00410c50` as
+> `CBattleEngineJetPart__Move`, called by `0x004081c0 CBattleEngine__Move`.
+> See the [current movement crosswalk](../../reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md).
+
 Status: complete static read-only evidence
 Date: 2026-06-05
 Scope: `wave1154-unitai-deploy-target-current-risk-review`

@@ -1,7 +1,10 @@
 # Source Code Analysis - Index
 
-> Comprehensive analysis of ALL source files in `references/Onslaught/` and `references/AYAResourceExtractor/`
-> Last updated: 2026-02-11
+> Current pinned-corpus authority:
+> [reference-submodule-audit-2026-07-12.md](reference-submodule-audit-2026-07-12.md).
+> The February full parse remains a useful historical manifest, but its raw
+> file totals included each submodule worktree's `.git` control file and do not
+> establish build completeness or semantic correctness.
 
 ## Overview
 
@@ -23,10 +26,10 @@ Full-corpus inventory parse completed for both reference repositories:
 
 Refresh metrics:
 
-| Corpus | Files | Notes |
-|--------|------:|-------|
-| `references/Onslaught` | 111 | 52 `.cpp`, 53 `.h`, full file-level hashes/line counts |
-| `references/AYAResourceExtractor` | 75 | 54 source files parsed (`.cs/.cpp/.c/.h`) |
+| Corpus | Historical manifest rows | Current Git-tracked files | Notes |
+|--------|------:|------:|-------|
+| `references/Onslaught` | 111 | 110 | Historical manifest includes `.git`; current pin has 52 `.cpp` and 54 `.h` files |
+| `references/AYAResourceExtractor` | 75 | 74 | Historical manifest includes `.git`; current pin has 54 `.cs/.cpp/.c/.h` source files |
 
 ---
 
@@ -250,7 +253,10 @@ The game was internally called "Onslaught":
 - Platform.cpp/h
 
 **Historical upload-batch summary only.**
-Current authoritative totals are tracked in `full-source-parse-2026-02-11.md` and the two manifest TSV files (111 files in `references/Onslaught`, 75 files in `references/AYAResourceExtractor`).
+The two February TSVs preserve their historical 111/75 raw-worktree rows.
+Current Git-tracked counts, pins, build posture, completeness gaps, and license
+boundaries are recorded in
+[`reference-submodule-audit-2026-07-12.md`](reference-submodule-audit-2026-07-12.md).
 
 ---
 

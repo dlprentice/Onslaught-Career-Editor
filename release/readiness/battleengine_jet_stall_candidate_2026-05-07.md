@@ -1,6 +1,14 @@
 # BattleEngine Jet Energy/Stall Candidate Bridge - 2026-05-07
 
-Status: public-safe partial retail candidate evidence, not exact source-method identity proof
+Status: historical candidate report; address interpretation superseded 2026-07-12
+
+> **Supersession:** `0x004081c0` is now statically identified as
+> `CBattleEngine__Move`, not the JetPart movement routine. The energy-like
+> `+0x280` subtraction and counter/vfunc path described below are withdrawn as
+> evidence for JetPart energy drain or stall behavior. The current static
+> JetPart Move identity is `0x00410c50`; see
+> `reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md`.
+> The body export and at-the-time result remain historical evidence.
 
 ## Objective
 

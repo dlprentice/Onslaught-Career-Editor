@@ -2,6 +2,10 @@
 
 Status: public-safe read-only operand-token triage, not retail identity proof
 
+> **Current name correction (2026-07-12):** references below to
+> `CMonitor__Process` at `0x004081c0` now mean `CBattleEngine__Move`. This owner
+> correction does not promote the weapon-fire/stealth behavior to runtime proof.
+
 ## Objective
 
 Narrow the remaining `weapon_fire_breaks_stealth` source-only anchor without mutating the installed game, the original `BEA.exe`, or the Ghidra project.

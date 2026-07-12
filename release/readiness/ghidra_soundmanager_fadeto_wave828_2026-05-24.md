@@ -1,5 +1,11 @@
 # Ghidra SoundManager FadeTo Wave828 Readiness Note
 
+> **Owner/name supersession (2026-07-12):** Wave828 remains a historical
+> callsite/read-back record. Current static evidence identifies `0x004081c0`
+> as `CBattleEngine__Move`, not `CMonitor__Process`; the observed sound-manager
+> call remains evidence within that body. See the
+> [current movement crosswalk](../../reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md).
+
 Status: complete static read-back evidence
 Date: 2026-05-24
 Scope: `soundmanager-fadeto-wave828`

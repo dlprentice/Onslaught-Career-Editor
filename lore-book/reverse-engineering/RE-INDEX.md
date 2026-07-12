@@ -1,3 +1,16 @@
+Current RE front door (2026-07-12):
+
+- [Pinned reference-submodule audit](source-code/reference-submodule-audit-2026-07-12.md)
+  separates Stuart source and AYA exporter provenance, buildability, format
+  support, tests, and licensing gaps.
+- [BattleEngine movement static crosswalk](binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md)
+  corrects `0x004081c0` to `CBattleEngine__Move`, `0x00410c50` to
+  `CBattleEngineJetPart__Move`, and selected adjacent JetPart helpers while
+  preserving runtime and live-Ghidra boundaries.
+
+Older campaign entries below are historical evidence and planning records; they
+do not override these current authority documents.
+
 Materialized Texture / Mesh Material Sidecar Importer Private Corpus Real Importer Dry-Run Harness Command Arm Checklist Command Arm Checklist Command Arm Checklist Command Arm Checklist Readiness Gate Proof Plan slot: [Texture / Mesh Material Sidecar Importer Private Corpus Real Importer Dry-Run Harness Command Arm Checklist Command Arm Checklist Command Arm Checklist Command Arm Checklist Readiness Gate Proof Plan](game-assets/texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan.md). Alias: `tmm-arm4-readiness-gate`. Status: public-safe proof-plan slot and continuity guard only, not readiness-gate execution and not readiness-gate proof completion. Scope: texture-mesh-material-sidecar-importer-private-corpus-real-importer-dry-run-harness-command-arm-checklist-command-arm-checklist-command-arm-checklist-command-arm-checklist-readiness-gate-proof-plan. Source evidence: completed `tmm-arm4-validation`, backed by `texture-mesh-material-sidecar-command-arm-checklist-command-arm-checklist-validation-proof.v1.json`. Checker: `py -3 tools\rebuild_tmm_arm4_readiness_gate_proof_plan_probe.py --self-test --check`. This is no runtime proof, no rebuild proof, no rebuild parity, no runtime parity, no visual parity, no gameplay proof, and no no-noticeable-difference proof.
 
 Current Original-Binary Local Multiplayer / Online Ladder status: `binary-analysis/local-multiplayer-static-runtime-contract.md` records the split-screen/local-controller proof ladder plus local loopback, localhost relay/session, private relay-delivery, one hardened single-host private-interface TCP JSONL transport/auth smoke, one same-workstation process-separated private remote-client command-source smoke, one same-workstation two-client host-authority scheduler smoke, two host-authority runtime-delivery proofs, one runtime executor proof, one runtime movement-state bridge proof, N-slot process/concurrent-process proofs, one N-slot runtime bridge proof, and one N-slot-derived P1/P2 copied-host state-authority graph proof with `hostAuthorityScope=single-copied-host-exact-pid-state-graph`, `stateAuthorityGraphProven=true`, `distinctPlayers=true`, and `waitWindowsClean=true`. Boundary: still no multi-host LAN play, public matchmaking, native BEA netcode, active P3/P4 original-binary gameplay, more-than-two original-binary runtime proof, deterministic sync, rollback, anti-cheat, physical gamepad runtime proof, rebuild parity, or no-noticeable-difference parity.

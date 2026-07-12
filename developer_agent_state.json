@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-12",
   "routingPolicy": "Follow the global Codex multi-agent lane contract; Codex-owned subagents inherit the parent effort or use an explicit task-specific supported effort override.",
-  "currentFocus": "Crosswalk the Steam binary, Stuart source, AYA exporter, and rebuild, then implement one recognizable evidence-backed behavior slice.",
+  "currentFocus": "Design a copied-runtime BattleEngine morph/movement observer, then freeze one measured behavior contract before changing synthetic rebuild behavior.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -20,7 +20,7 @@
       "registeredWorktrees": 1,
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "461195dc7fe9d2d96cbe7aa33509d95616ad1514",
+      "lastPushedBeforeCurrentSlice": "7c3544957d8555d2d488eac28d0c54f7fbfc3b7e",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
@@ -84,6 +84,13 @@
       "package": "The 721-selected/726-materialized exact source candidate passed payload/inventory, 463-file/138-link Markdown, standalone zero-warning npm test with 1307 AppCore, 123 WinUI plus 15 expected fixture/catalog skips, all 83 rebuild tests, 74-package notices, and 718-file hygiene. First Flight remains source-only and is not in the published v1.0.9 WinUI ZIP.",
       "review": "Codex and bounded Cursor/Grok normal/adversarial reviews accepted the slice after input, toolchain, smoke-evidence, package, and process-ownership challenges were fixed. The final Codex adversarial follow-up accepted the suspended-root kill-on-close Job Object and explicitly heuristic visual-evidence boundary."
     },
+    "movementCrosswalk": {
+      "sourceAudit": "Pinned Onslaught 792545b and AYAResourceExtractor 6f3df296 are inventoried with fork/upstream provenance, tracked-file counts, build/test posture, supported lanes, completeness gaps, and license boundaries. Older 111/75 manifests counted submodule .git control files; current tracked counts are 110/74.",
+      "staticCorrection": "Read-only Steam Ghidra evidence identifies 0x004081c0 as CBattleEngine__Move, 0x00410c50 as CBattleEngineJetPart__Move, and 0x00411630/0x00411aa0/0x00411b70/0x00412900 as selected JetPart helpers. The May jet-stall interpretation at 0x004081c0 is withdrawn. Live Ghidra names remain unchanged.",
+      "qualityBoundary": "The 6411/6411 metric is comment/signature export-contract closure, not semantic completeness. Owner/prototype/static-semantics/source-provenance/runtime confidence are now scored separately.",
+      "rebuildBoundary": "First Flight transform, energy, shield, movement, arena, and presentation choices remain synthetic. No authentic behavior change is allowed before an accepted copied-runtime contract.",
+      "validation": "Final source-truth closeout passes docsync, 4329 documented-command checks, 3663-file/6323-link Markdown validation, 18604-file hygiene/line endings, 19465-file hard-payload safety, 19649-file submodule-aware payload safety, migration inventory, JSON parsing, active stale-truth scanning, and git diff --check."
+    },
     "boundaries": [
       "No installed-game or original BEA.exe mutation.",
       "No release, signing, installer/MSIX/Store, Host/Join, online-ready, gameplay-parity, visual-parity, or rebuild-parity claim.",
@@ -91,12 +98,14 @@
     ]
   },
   "activeBlockers": [
-    "Native AYA runtime compatibility smoke is unavailable because the reference extractor requires Visual C++ targets not installed on this machine; synthetic harness output passed."
+    "A fresh AYAResourceExtractor solution build fails with MSB4278 because the Visual C++ targets/VCTargetsPath are unavailable; existing ignored runtime binaries are not a reproducible build.",
+    "No accepted copied-runtime morph/movement timeline exists yet, so retail constants and transition behavior cannot be frozen into the rebuild.",
+    "AYA lacks a tracked public end-to-end synthetic importer/DDS/FBX fixture, and bundled-component redistribution posture remains unresolved."
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Inventory references/Onslaught and references/AYAResourceExtractor at their pinned commits, including provenance, license, build/test posture, supported formats, and gaps.",
-    "Choose one recognizable subsystem and crosswalk Stuart source ownership against Steam binary/static/runtime truth and rebuild-facing behavior fields.",
-    "Exercise and improve the exporter, freeze one accepted behavior contract, and implement that authentic slice in deterministic Core plus the Godot adapter."
+    "Design the separately authorized copied-runtime morph/movement observer around state, transform acceptance/rejection, energy, shield, velocity, grounded/stall state, and event timing.",
+    "Design a public synthetic AYA/DDS/FBX export-contract fixture and dependency preflight before changing the legacy extractor lane.",
+    "After runtime evidence is accepted, freeze measured constants/tolerances and implement the authentic behavior in deterministic Core plus the Godot adapter."
   ]
 }

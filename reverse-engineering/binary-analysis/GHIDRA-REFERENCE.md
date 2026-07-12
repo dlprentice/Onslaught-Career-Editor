@@ -1,6 +1,6 @@
 # Ghidra Analysis Skill Reference - BEA.exe
 
-> **Current authority (2026-06-21):** Active static accounting is centralized in `reverse-engineering/binary-analysis/static-reaudit-measurement-register.md` and validated by Wave1220. Current closure is `6411/6411 = 100.00%`, static debt is `0 / 0 / 0`, active current-risk focused accounting is `1179/1179 = 100.00%`, and Wave911 focused remains historical-retired/non-reconstructable at `812/1408 = 57.67%`. Older wave paragraphs below preserve at-wave evidence and must not be used as current progress.
+> **Current authority (2026-07-12):** Active accounting remains centralized in `reverse-engineering/binary-analysis/static-reaudit-measurement-register.md`, but `6411/6411` is metadata export-contract closure, not universal semantic correctness. A fresh read-only re-review identifies `0x004081c0` as `CBattleEngine__Move`, `0x00410c50` as `CBattleEngineJetPart__Move`, and selected adjacent Monitor-labeled rows as JetPart helpers. See [battleengine-movement-static-crosswalk-2026-07-12.md](battleengine-movement-static-crosswalk-2026-07-12.md). Older wave paragraphs below preserve at-wave evidence and names; they must not override the current erratum. Live Ghidra mutation remains pending a separate baton.
 
 Wave1197 current-risk update: Wave1197 (`wave1197-fepbeconfig-frontend-residual-current-risk-review`) accounts for `4 FEPBEConfig/frontend residual score15-16 current-risk rows` from the `wave1108-current-risk-rank` current-risk denominator with fresh Ghidra export evidence and saved comment/tag normalization for `CFEPBEConfig__Init`, `CFEPMultiplayerStart__SetConfigDescriptionByIndex`, `CFEPBEConfig__PlayWeaponSound`, and `CFEPBEConfig__PlayWeaponSoundAlt`. Dry/apply/final-dry: `updated=0 skipped=0 renamed=0 would_rename=0 signature_updated=0 comment_only_updated=4 tags_added=52 missing=0 bad=0`; `updated=4 skipped=0 renamed=0 would_rename=0 signature_updated=0 comment_only_updated=4 tags_added=52 missing=0 bad=0`; final dry updated=0 skipped=4. No rename, no signature change, no function-boundary change, and no executable-byte change occurred. Codex read-only consults used; no Cursor/Composer. Static closure remains `6411/6411 = 100.00%` with `0 / 0 / 0`; Wave1108 current focused accounting is `885/1179 = 75.06%`; current risk candidates: 6166; current focused candidates: 1142; live regenerated current focused candidates: 1142; remaining active focused work: 294; current-risk denominator; focused threshold `15`; not Wave911 reconstruction. Fresh exports verified `4 xref rows`, `860 instruction rows`, and `4 decompile rows`. Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-211310_post_wave1197_fepbeconfig_frontend_residual_current_risk_review_verified`. Static target: rebuild-grade static contracts and rebuild-grade specification for no noticeable difference; runtime frontend/config loading behavior, runtime frontend audio/text behavior, exact layouts, source identity, patching, rebuild parity, and no-noticeable-difference parity remain separate proof.
 
@@ -9574,7 +9574,7 @@ Wave 307 revisited the adjacent Walker dash, monitor surface-alignment, and Gene
 | Address | Saved signature evidence | Confidence note |
 |---------|--------------------------|-----------------|
 | `0x004127a0` | Saved as `void __thiscall CGeneralVolume__EnableLinkedEntriesByName(void * this, char * entryName)`. | Corrects stale `CBattleEngineJetPart__EnableWeapon`; body compares linked entry names and sets entry flag `+0x9c`. |
-| `0x00412900` | Saved as `int __thiscall CMonitor__CanUseTrackingUpdate(void * this)`. | Corrects stale `CBattleEngineJetPart__AutoLevel`; monitor/main-part movement predicate, not JetPart auto-level proof. |
+| `0x00412900` | Saved as `int __thiscall CMonitor__CanUseTrackingUpdate(void * this)`. | Saved owner/comment are stale. Current static identity is `CBattleEngineJetPart__AutoLevel` from main-part, ground/velocity, energy, and barrel-count agreement; live rename/runtime proof remain pending. |
 | `0x004129a0` | Saved as `int __thiscall LinkedObjectList__CountFlag9C(void * this)`. | Corrects stale JetPart active-weapon counter; behavior is owner-neutral linked-list flag counting. |
 | `0x00412bc0` | Saved as `void * __thiscall CBattleEngineWalkerPart__ctor(void * this, void * mainPart)`. | WalkerPart constructor context; concrete layout and runtime dash behavior remain unproven. |
 | `0x00412cf0` | Saved as `void __thiscall CBattleEngineWalkerPart__dtor_base(void * this)`. | WalkerPart destructor-base weapon cleanup context; destructor completeness remains bounded to static read-back. |
@@ -9598,10 +9598,10 @@ Wave 306 revisited the queue head around monitor terrain movement, `Vec3__Cross`
 
 | Address | Saved signature evidence | Confidence note |
 |---------|--------------------------|-----------------|
-| `0x00411630` | Saved as `void __thiscall CMonitor__IntegrateMovementAgainstTerrain(void * this)`. | Monitor terrain/static-shadow integration context; runtime movement behavior remains unproven. |
+| `0x00411630` | Saved as `void __thiscall CMonitor__IntegrateMovementAgainstTerrain(void * this)`. | Saved owner/name are stale. Current static identity is `CBattleEngineJetPart__HandleGroundEffect`; live rename/runtime proof remain pending. |
 | `0x00411a60` | Saved as `void __thiscall Vec3__Cross(void * this, void * outCross, void * rhs)`. | Generic vector cross-product helper with `ret 0x8` evidence; concrete vector layout remains unproven. |
-| `0x00411aa0` | Saved as `float __thiscall CMonitor__ComputeTerrainVelocityScalar(void * this)`. | Monitor terrain/static-shadow velocity scalar context; runtime movement behavior remains unproven. |
-| `0x00411b70` | Saved as `int __thiscall CBattleEngineJetPart__IsStateMachineActive(void * this)`. | Corrects the older `CGeneralVolume` owner label using BattleEngine morph caller context; exact source method name remains bounded. |
+| `0x00411aa0` | Saved as `float __thiscall CMonitor__ComputeTerrainVelocityScalar(void * this)`. | Saved owner/name are stale. Current static identity is `CBattleEngineJetPart__GetFriction`; live rename/runtime proof remain pending. |
+| `0x00411b70` | Saved as `int __thiscall CBattleEngineJetPart__IsStateMachineActive(void * this)`. | Owner is correct but method name is stale. Current static identity is `CBattleEngineJetPart__GetIsDoingSpecialAirMove`; live rename/runtime proof remain pending. |
 | `0x00411e70` | Saved as `void __thiscall CBattleEngineJetPart__ChangeWeapon(void * this)`. | Corrects the older cockpit weapon-cycle label to JetPart weapon selection context; runtime weapon switching remains unproven. |
 | `0x00412000` | Saved as `void __thiscall CBattleEngineJetPart__LoseWeaponCharge(void * this)`. | Corrects the older monitor tracked-entry label; exact weapon layout and runtime charge behavior remain unproven. |
 | `0x00412050` | Saved as `int __thiscall CBattleEngineJetPart__WeaponFired(void * this, void * weapon)`. | JetPart weapon-fired bookkeeping helper; does not prove exact retail `CBattleEngine::WeaponFired` or stealth reset behavior. |
@@ -10079,7 +10079,7 @@ Wave 287 revisited six monitor/gameplay-adjacent helpers after the refreshed que
 | `0x004080f0` | Saved as `bool __fastcall CGame__IsWalkerGroundedOrCollision(void * battleEngine)`. | Decompile read-back shows a boolean mode `+0x260` plus collision/height-delta predicate; current owner/source-method identity remains provisional. |
 | `0x00408120` | Saved as `bool __fastcall CUnitAI__IsState2AndBelowHeightDeltaThreshold_00408120(void * unitAi)`. | Decompile read-back shows a boolean mode/timestamp threshold predicate using `DAT_00672fd0`, `+0xcc`, and `+0x260`. |
 | `0x00408150` | Saved as `void __fastcall CUnit__ProcessStateSwapAndDeathChecks(void * unit)`. | Decompile read-back swaps primary/secondary part readers, checks `+0x2c & 4`, dispatches pickup/death paths, and resets `+0xd0`. |
-| `0x004081c0` | Saved as `void __fastcall CMonitor__Process(void * monitor)`. | Decompile read-back covers active-reader expiry, tracked-list update, `0x5d8`/`0x5dc` interpolation, vibration, cloak/fade timer decay, actor move, camera update, and target/effect updates. This is context evidence, not runtime cloak activation or fire-while-cloaked proof. |
+| `0x004081c0` | Saved as `void __fastcall CMonitor__Process(void * monitor)`. | Saved owner/signature/comment are stale. `CBattleEngine` RTTI vtable slot 66 plus constructor/field/call/source agreement identifies `CBattleEngine__Move`; live correction and runtime behavior remain pending. |
 
 The refreshed quality queue after this pass reports `5866` function objects, `459` commented functions, `5407` commentless functions, `2076` `undefined` signatures, `2492` `param_N` signatures, and `0` helper/wrapper/uncertain-owner names. Tags, locals, structures, exact source identity, runtime behavior, and rebuild parity remain broad open work.
 
@@ -11341,16 +11341,16 @@ Prior Wave956 read-only re-audit anchor (`cfepdemo-main-review-wave956`): `0x004
 | 0x00401fd0 | HeightDelta__Below015_D4 | Threshold helper: returns true when `(height_ref - field_d4) < 0.15` |
 | 0x00409760 | LinkedPtrCursor__MoveFirstAndGet | Linked-pointer cursor helper: move to first node and return payload pointer/value; saved `void *` cursor signature on 2026-05-09 |
 | 0x00409780 | LinkedPtrCursor__MoveNextAndGet | Linked-pointer cursor helper: move to next node and return payload pointer/value; saved `void *` cursor signature on 2026-05-09 |
-| 0x00412900 | CMonitor__CanUseTrackingUpdate | Monitor-side state gate helper deciding if tracking-update path should run. |
+| 0x00412900 | CBattleEngineJetPart__AutoLevel (saved name stale) | Source-compatible JetPart auto-level predicate; runtime behavior remains unproven. |
 | 0x004129a0 | LinkedObjectList__CountFlag9C | Counts list elements where object field `+0x9c` is non-zero |
 | 0x00413a70 | CBattleEngineWalkerPart__GoingIntoWater | Wave 308 source-parity correction supersedes the Wave 307 monitor-side terrain/height gate label. |
 | 0x00413660 | CGeneralVolume__ApplyYawInputByWeaponClass | Applies yaw-axis input delta through the mode-2 GeneralVolume group; signatures and exact source identity remain deferred. |
 | 0x004136e0 | CGeneralVolume__ApplyPitchInputByWeaponClass | Applies pitch-axis input delta through the mode-2 GeneralVolume group; signatures and exact source identity remain deferred. |
 | 0x00413760 | CBattleEngineWalkerPart__Move | Wave 308 source-parity correction supersedes the Wave 307 monitor tracking/surface-alignment label. |
 | 0x00414b70 | CGeneralVolume__CountEnabledEntriesIncludingPrimary | Wave 310 correction: counts linked entries with enable flag `+0x9c` and includes primary entry at `+0x18` when enabled. |
-| 0x00410c50 | CMonitor__UpdateMovementTransitionAndEffects | Behavior-backed Monitor movement/transition/effects update body called by `CMonitor__Process`; exact source method identity and signature remain deferred. |
-| 0x00411630 | CMonitor__IntegrateMovementAgainstTerrain | Monitor-side movement/terrain integration helper (caller: `CMonitor__UpdateMovementTransitionAndEffects`). |
-| 0x00411aa0 | CMonitor__ComputeTerrainVelocityScalar | Monitor-side scalar helper using terrain-height and velocity gates (caller: `CMonitor__UpdateMovementTransitionAndEffects`). |
+| 0x00410c50 | CBattleEngineJetPart__Move (saved name stale) | BattleEngine JetPart movement body; live Ghidra correction and copied-runtime proof remain pending. |
+| 0x00411630 | CBattleEngineJetPart__HandleGroundEffect (saved name stale) | JetPart terrain/ground-effect helper; runtime behavior remains unproven. |
+| 0x00411aa0 | CBattleEngineJetPart__GetFriction (saved name stale) | JetPart terrain/velocity friction helper; runtime behavior remains unproven. |
 | 0x00412000 | CBattleEngineJetPart__LoseWeaponCharge | Supersedes the older monitor tracked-entry label; current saved body clears JetPart selected weapon charge/progress context. |
 | 0x00414010 | CMonitor__ClearCurrentTrackedEntryFlag60 | Wave388 hardened the saved signature/comment/tag; calls `CBattleEngineWalkerPart__GetCurrentWeapon` from the receiver and clears field `+0x60` on the current weapon/tracked entry when present. |
 | 0x004a1270 | CMonitor__SelectNearestHostileTargetReader | Selects nearest hostile/eligible target in radius and sets active target reader. |
@@ -12071,7 +12071,7 @@ Artifacts:
 
 | Address | Function | Description |
 |---------|----------|-------------|
-| 0x004081c0 | CMonitor__Process | Primary monitor process/update routine coordinating per-frame monitor state transitions. |
+| 0x004081c0 | CBattleEngine__Move (saved name stale) | Primary BattleEngine per-frame movement/update routine; live Ghidra correction and runtime proof remain pending. |
 | 0x00407a50 | CMonitor__UpdateCameraVectorsAndInput | Updates camera-direction vectors and input-derived monitor orientation state. |
 | 0x0040de40 | CBattleEngine__AugmentWeapon | Corrected 2026-05-09 from the stale `CMonitor__HandleTargetStateChangeAndHudPrompt` label; strong static bridge to Stuart `CBattleEngine::AugmentWeapon()` through aug timestamps, max-value store, active flag, selected-weapon context, and `hud_weapon_augmented`. Runtime augmented-weapon behavior and concrete layout remain unproven. |
 | 0x0040e940 | CMonitor__UpdateTrackedList_59C | Maintains tracked-entry list anchored at monitor offset `+0x59c`. |
@@ -12098,7 +12098,7 @@ Artifacts:
 | 0x004136e0 | CGeneralVolume__ApplyPitchInputByWeaponClass | Applies pitch-axis input delta through the mode-2 GeneralVolume group; signatures and exact source identity remain deferred. |
 | 0x00413760 | CBattleEngineWalkerPart__Move | Wave 308 source-parity correction supersedes the Wave 307 monitor tracking/surface-alignment label. |
 | 0x00413a70 | CBattleEngineWalkerPart__GoingIntoWater | Wave 308 source-parity correction supersedes the Wave 307 monitor path-gate label. |
-| 0x00412900 | CMonitor__CanUseTrackingUpdate | Checks movement/height/state gates to allow or block tracking-update path. |
+| 0x00412900 | CBattleEngineJetPart__AutoLevel (saved name stale) | JetPart auto-level eligibility predicate; runtime behavior remains unproven. |
 
 ### Semantic Wave29 Promotions (Headless 2026-02-26)
 
@@ -12112,8 +12112,8 @@ Artifacts:
 
 | Address | Function | Description |
 |---------|----------|-------------|
-| 0x00411630 | CMonitor__IntegrateMovementAgainstTerrain | Integrates monitor movement/orientation state against terrain/static-shadow constraints in tracked-render update flow. |
-| 0x00411aa0 | CMonitor__ComputeTerrainVelocityScalar | Computes terrain/velocity-based scalar used by monitor movement-adjustment logic. |
+| 0x00411630 | CBattleEngineJetPart__HandleGroundEffect (saved name stale) | Applies JetPart near-ground terrain/water movement and orientation response; runtime behavior remains unproven. |
+| 0x00411aa0 | CBattleEngineJetPart__GetFriction (saved name stale) | Returns the JetPart terrain/velocity-dependent friction scalar; runtime behavior remains unproven. |
 
 ### Semantic Wave30 Promotions (Headless 2026-02-26)
 
@@ -12152,7 +12152,7 @@ Artifacts:
 
 | Address | Function | Description |
 |---------|----------|-------------|
-| 0x00411b70 | CBattleEngineJetPart__IsStateMachineActive | JetPart state-machine active predicate reached from BattleEngine morph context; exact source method name remains bounded. |
+| 0x00411b70 | CBattleEngineJetPart__GetIsDoingSpecialAirMove (saved name stale) | Source-compatible loop/barrel special-air-move predicate; runtime behavior remains unproven. |
 | 0x004121b0 | CBattleEngineJetPart__GetWeaponAmmoPercentage | JetPart ammo percentage helper using selected weapon store/capacity context. |
 | 0x004122b0 | CBattleEngineJetPart__IsEnergyWeapon | Wave 308 corrected the prior heat/energy swap; JetPart selected weapon energy predicate. |
 | 0x00412310 | CBattleEngineJetPart__IsWeaponOverheated | Wave 308 corrected the prior heat/energy swap; JetPart selected weapon overheat flag helper. |

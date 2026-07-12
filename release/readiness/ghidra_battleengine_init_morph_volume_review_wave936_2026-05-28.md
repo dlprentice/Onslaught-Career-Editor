@@ -1,5 +1,11 @@
 # Ghidra BattleEngine Init Morph Volume Review Wave936 Readiness
 
+> **Owner/name supersession (2026-07-12):** Wave936 remains a historical
+> read-back record. Current static evidence identifies `0x00411b70` as
+> `CBattleEngineJetPart__GetIsDoingSpecialAirMove`, not
+> `CBattleEngineJetPart__IsStateMachineActive`. See the
+> [current movement crosswalk](../../reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md).
+
 Status: complete read-only static read-back evidence
 Date: 2026-05-28
 Scope: `battleengine-init-morph-volume-review-wave936`

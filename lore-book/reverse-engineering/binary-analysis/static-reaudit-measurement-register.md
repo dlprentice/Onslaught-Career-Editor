@@ -1,5 +1,13 @@
 # Static Re-Audit Measurement Register
 
+> **Semantic-confidence correction (2026-07-12):** this register remains the
+> authority for accounting, not for universal owner/method correctness. A
+> read-only re-review found high-confidence BattleEngine/JetPart owner errors
+> while every accounting gate remained green. See
+> [battleengine-movement-static-crosswalk-2026-07-12.md](battleengine-movement-static-crosswalk-2026-07-12.md).
+> Future reports must state metadata closure and semantic confidence
+> separately.
+
 Wave1220 static closeout acceptance: active current-risk focused accounting is
 `1179/1179 = 100.00%`; remaining active focused work: 0. Wave1219 remains the
 latest measured row anchor, while Wave1220 is the accepted closeout state for

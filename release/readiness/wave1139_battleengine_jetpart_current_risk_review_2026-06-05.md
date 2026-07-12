@@ -1,5 +1,11 @@
 # Wave1139 BattleEngine JetPart Current-Risk Readiness Note
 
+> **Owner/name supersession (2026-07-12):** Wave1139 remains a historical
+> read-back record. Current static evidence identifies `0x00411b70` as
+> `CBattleEngineJetPart__GetIsDoingSpecialAirMove`, not
+> `CBattleEngineJetPart__IsStateMachineActive`. See the
+> [current movement crosswalk](../../reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md).
+
 Status: complete static read-back evidence
 Date: 2026-06-05
 Scope: `wave1139-battleengine-jetpart-current-risk-review`

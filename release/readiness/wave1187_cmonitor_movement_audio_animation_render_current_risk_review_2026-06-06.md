@@ -1,5 +1,13 @@
 # Wave1187 CMonitor Movement / Audio / Animation / Render Current-Risk Readiness Note
 
+> **Owner/name supersession (2026-07-12):** the Wave1187 exports and mutation
+> log remain historical evidence. Current static evidence reassigns
+> `0x00411630` to `CBattleEngineJetPart__HandleGroundEffect` and `0x00411aa0`
+> to `CBattleEngineJetPart__GetFriction`; their caller is
+> `0x00410c50 CBattleEngineJetPart__Move`, reached from
+> `0x004081c0 CBattleEngine__Move`. See the
+> [current movement crosswalk](../../reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md).
+
 Status: complete static current-risk comment/tag normalization; artifact commit `ad48dcdc3def8645e4b717b4beeb645b8e316e40`; state closeout commit `f15722628d73b96e36d851ec7249fc8266c6a87c`; handoff pointer `25cbb46928c123c29519095bd5b36ba245f39bf5`; pushed to origin/main
 Date: 2026-06-06
 Scope: `wave1187-cmonitor-movement-audio-animation-render-current-risk-review`

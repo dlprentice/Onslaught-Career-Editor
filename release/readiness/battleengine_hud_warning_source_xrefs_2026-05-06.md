@@ -2,6 +2,11 @@
 
 Status: public-safe reverse-engineering evidence
 
+> **Current name correction (2026-07-12):** the `hud_armour_low` and
+> `hud_energy_low` xrefs described below land in the function now statically
+> identified as `CBattleEngine__Move` at `0x004081c0`, not a Monitor process
+> method. Runtime HUD behavior remains unproven.
+
 Source branch: `wip/sandbox`
 
 Source commit before this wave: `c7c88a3c580b7cda609b383fe5d03250adc85642`

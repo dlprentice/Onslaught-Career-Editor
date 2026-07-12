@@ -12,6 +12,12 @@ itself is not an Asset Library catalog.
 
 Current extraction workflow: [extraction-pipeline.md](extraction-pipeline.md)
 
+Pinned extractor provenance/build/format/test/license audit:
+[reference-submodule-audit-2026-07-12.md](../source-code/reference-submodule-audit-2026-07-12.md).
+Private corpus counts demonstrate breadth in the supported static model/texture
+lane; they do not establish animation, bones, multipart fidelity, complete
+multitexture handling, normal correctness, or whole-format completeness.
+
 Local overlay rules: [LOCAL_LAB_OVERLAY.md](/LOCAL_LAB_OVERLAY.md)
 
 The public repo tracks tools, docs, contracts, and public-safe summaries. It does

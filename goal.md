@@ -42,6 +42,36 @@ feeds ambiguities back to RE instead of promoting its own assumptions.
    constants, tolerances, and non-claims, then implement it in deterministic
    Core plus the Godot adapter with headless and native acceptance evidence.
 
+## Current Slice Progress - 2026-07-12
+
+- Reference inventory is drafted in
+  `reverse-engineering/source-code/reference-submodule-audit-2026-07-12.md`:
+  pinned fork/upstream provenance, current tracked counts, source completeness,
+  build/test posture, AYA format limits, and component-license gaps are explicit.
+- The selected recognizable subsystem is BattleEngine/JetPart movement and
+  morphing. Read-only Steam static evidence is crosswalked in
+  `reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md`.
+- High-confidence static corrections identify `0x004081c0` as
+  `CBattleEngine__Move`, `0x00410c50` as `CBattleEngineJetPart__Move`, and four
+  adjacent JetPart helpers. The old May jet-stall interpretation is withdrawn;
+  live Ghidra names remain unchanged under the separate-mutation boundary.
+- The old `6411/6411` closure is now explicitly metadata accounting rather than
+  whole-binary semantic correctness. This cluster separately scores owner,
+  prototype/type, static semantics, source provenance, and runtime confidence.
+- Exporter improvement is still pending design. A fresh native extractor build
+  is blocked locally by missing Visual C++ targets (`MSB4278`), and no tracked
+  public end-to-end synthetic AYA/DDS/FBX fixture exists yet.
+- The behavior contract and rebuild implementation remain pending copied-runtime
+  evidence. First Flight's transform/resource/movement choices remain synthetic.
+- Normal and adversarial review found and closed stale active-index, deep-link
+  historical-label, include-parser/count, and current-roadmap contradictions.
+  The corrected include inventory is 254 unique quoted targets with 202 absent.
+- Source-truth closeout passes exact canonical/Lore synchronization, 4,329
+  documented-command checks, 3,663-file/6,323-link Markdown validation, 18,604
+  files passing hygiene/line endings, 19,465-file hard-payload safety, 19,649-file
+  submodule-aware payload safety, migration inventory, JSON parsing, active
+  stale-truth scanning, and `git diff --check`.
+
 Do not expand the generic First Flight arena as a substitute for fidelity. The
 target is one small authentic behavior slice whose provenance and differences
 from retail are inspectable.

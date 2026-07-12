@@ -2,6 +2,11 @@
 
 Status: public-safe evidence
 
+> **Current name correction (2026-07-12):** historical
+> `0x004081c0 CMonitor__Process` references now mean
+> `0x004081c0 CBattleEngine__Move`. The xref rows remain historical evidence;
+> the old owner name is superseded.
+
 Source branch: `wip/sandbox`
 
 Source commit before this wave: `9dfa76407f99bfe63b5e1bc5e24134c1b97f67b4`

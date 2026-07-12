@@ -4,10 +4,16 @@
 
 > **Queue status (2026-06-01):** Ghidra export-contract closure **6246/6246** (Wave1056: every current function object commented with clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
 
+> **Current semantic correction (2026-07-12):** read-only caller, constructor,
+> object-layout, body-order, and source evidence identifies `0x00410c50` as
+> `CBattleEngineJetPart__Move` and resolves four adjacent helpers. See the
+> [movement static crosswalk](../../battleengine-movement-static-crosswalk-2026-07-12.md).
+> Saved Ghidra names remain unchanged pending a separate mutation baton.
+
 ## Overview
 
-- **Functions Mapped:** 23
-- **Status:** ACTIVE (source-parity signature correction)
+- **Functions Mapped:** 27
+- **Status:** ACTIVE (static owner correction; live Ghidra update pending)
 - **Class:** `CBattleEngineJetPart`
 
 ## Function List
@@ -21,9 +27,12 @@
 | 0x00410670 | CBattleEngineJetPart__Pitch | NAMED/SIGNED | [CBattleEngineJetPart__Pitch.md](CBattleEngineJetPart__Pitch.md) |
 | 0x00410740 | CBattleEngineJetPart__YawLeft | NAMED/SIGNED | [CBattleEngineJetPart__YawLeft.md](CBattleEngineJetPart__YawLeft.md) |
 | 0x004109d0 | CBattleEngineJetPart__YawRight | NAMED/SIGNED | [CBattleEngineJetPart__YawRight.md](CBattleEngineJetPart__YawRight.md) |
+| 0x00410c50 | CBattleEngineJetPart__Move | HIGH STATIC; SAVED NAME STALE | [CBattleEngineJetPart__Move.md](CBattleEngineJetPart__Move.md) |
 | 0x004114d0 | CBattleEngineJetPart__Gravity | NAMED/SIGNED | [CBattleEngineJetPart__Gravity.md](CBattleEngineJetPart__Gravity.md) |
 | 0x00411500 | CBattleEngineJetPart__HandleSkimming | NAMED/SIGNED | [CBattleEngineJetPart__HandleSkimming.md](CBattleEngineJetPart__HandleSkimming.md) |
-| 0x00411b70 | CBattleEngineJetPart__IsStateMachineActive | NAMED/SIGNED | Wave 306 |
+| 0x00411630 | CBattleEngineJetPart__HandleGroundEffect | HIGH STATIC; SAVED NAME STALE | [Crosswalk](../../battleengine-movement-static-crosswalk-2026-07-12.md) |
+| 0x00411aa0 | CBattleEngineJetPart__GetFriction | HIGH STATIC; SAVED NAME STALE | [Crosswalk](../../battleengine-movement-static-crosswalk-2026-07-12.md) |
+| 0x00411b70 | CBattleEngineJetPart__GetIsDoingSpecialAirMove | HIGH STATIC; SAVED NAME STALE | [Crosswalk](../../battleengine-movement-static-crosswalk-2026-07-12.md) |
 | 0x00411e70 | CBattleEngineJetPart__ChangeWeapon | NAMED/SIGNED | Wave 306 |
 | 0x00412000 | CBattleEngineJetPart__LoseWeaponCharge | NAMED/SIGNED | Wave 306 |
 | 0x00412050 | CBattleEngineJetPart__WeaponFired | NAMED/SIGNED | Wave 306 |
@@ -37,8 +46,14 @@
 | 0x00412570 | CBattleEngineJetPart__CanWeaponFire | NAMED/SIGNED | Wave 306 |
 | 0x00412610 | CBattleEngineJetPart__GetCurrentWeapon | NAMED/SIGNED | Wave 306 |
 | 0x00412650 | CBattleEngineJetPart__ResetConfiguration | NAMED/SIGNED | [CBattleEngineJetPart__ResetConfiguration.md](CBattleEngineJetPart__ResetConfiguration.md) |
+| 0x00412900 | CBattleEngineJetPart__AutoLevel | HIGH STATIC; SAVED NAME STALE | [Crosswalk](../../battleengine-movement-static-crosswalk-2026-07-12.md) |
 
 ## Notes
+
+- The 2026-07-12 re-review adds four previously misowned JetPart functions to
+  this page and corrects the source identity of the existing `0x00411b70` row.
+  The count changed from 23 to 27 because that existing row is a rename, not a
+  fifth newly mapped address.
 
 - Wave1056 (`battleengine-jet-walker-residual-review-wave1056`) re-read `0x004114d0 CBattleEngineJetPart__Gravity` and `0x00411500 CBattleEngineJetPart__HandleSkimming` with no mutation. `CBattleEngineJetPart__Gravity` remains source/decompile coherent with `CBattleEngineJetPart::Gravity`: it returns the small gravity factor when linked main-part energy is zero and otherwise returns `0.0`. `CBattleEngineJetPart__HandleSkimming` remains coherent with the low-altitude/high-speed skimming source path and decompile evidence that calls `CBattleEngine__HostileEnvironment`. The same Wave1056 pass covered WalkerPart accessors/fire gate and BattleEngine dispatch context. Fresh primary exports verified 6 metadata rows, 6 tag rows, 7 xref rows, 157 body-instruction rows, and 6 decompile rows; context exports verified 14 metadata rows, 14 tag rows, 48 xref rows, 1142 instruction rows, and 14 decompile rows. Queue closure remains `6246/6246 = 100.00%`; Wave911 focused progress advances to `775/1408 = 55.04%`; expanded static surface progress advances to `1097/1509 = 72.70%`; top-500 coverage remains `500/500 = 100.00%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-180430_post_wave1056_battleengine_jet_walker_residual_review_verified`. Runtime flight/skimming behavior, concrete terrain/map/BattleEngine/JetPart layouts, exact source-body identity, BEA patching, gameplay outcomes, and rebuild parity remain separate proof. Probe token anchor: Wave1056; battleengine-jet-walker-residual-review-wave1056; 0x004114d0 CBattleEngineJetPart__Gravity; 0x00411500 CBattleEngineJetPart__HandleSkimming; 0x004145a0 CBattleEngineWalkerPart__GetWeaponName; 0x004145d0 CBattleEngineWalkerPart__GetWeaponPhysicsName; 0x00414610 CBattleEngineWalkerPart__GetWeaponIconName; 0x00414630 CBattleEngineWalkerPart__CanWeaponFire; CBattleEngine__GetWeaponName; CBattleEngine__UpdateAutoTargetSetAndFireProjectiles; CText__GetStringById; CBattleEngine__HostileEnvironment; weapon_fire_breaks_stealth; 775/1408 = 55.04%; 1097/1509 = 72.70%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-180430_post_wave1056_battleengine_jet_walker_residual_review_verified; no mutation.
 - Wave1029 (`battleengine-jetpart-weapon-status-review-wave1029`) re-read the JetPart weapon/status/accessor/reset spine with no mutation. Primary anchors were `0x00411e70 CBattleEngineJetPart__ChangeWeapon`, `0x00412050 CBattleEngineJetPart__WeaponFired`, `0x004122b0 CBattleEngineJetPart__IsEnergyWeapon`, `0x00412310 CBattleEngineJetPart__IsWeaponOverheated`, and `0x00412650 CBattleEngineJetPart__ResetConfiguration`, with all thirteen weapon rows from `0x00411e70` through `0x00412650` covered. Fresh exports verified 13 primary metadata rows, 13 tag rows, 19 xref rows, 790 body-instruction rows, 13 decompile rows, 11 context metadata rows, 11 context tag rows, 20 context xref rows, 1583 context body-instruction rows, and 11 context decompile rows. Queue closure remains `6238/6238 = 100.00%`; Wave911 focused progress is `618/1408 = 43.89%`; expanded static surface progress is `847/1493 = 56.73%`; top-500 coverage remains `500/500 = 100.00%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-025247_post_wave1029_battleengine_jetpart_weapon_status_review_verified`. Runtime firing, charging, HUD, audio, heat, overheat, zoom, stealth, cloak behavior, exact `CBattleEngine::WeaponFired` identity, `weapon_fire_breaks_stealth`, exact layouts, BEA patching, gameplay outcomes, and rebuild parity remain separate proof.

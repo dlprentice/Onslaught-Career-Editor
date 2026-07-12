@@ -1,5 +1,11 @@
 # Ghidra BattleEngine/JetPart Movement Review Wave925
 
+> **Owner/name supersession (2026-07-12):** Wave925 remains a historical
+> read-back record. Current static evidence identifies `0x00411b70` as
+> `CBattleEngineJetPart__GetIsDoingSpecialAirMove`, not
+> `CBattleEngineJetPart__IsStateMachineActive`. See the
+> [current movement crosswalk](../../reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md).
+
 Status: complete read-only static review
 Date: 2026-05-27
 Scope: `battleengine-jetpart-movement-review-wave925`

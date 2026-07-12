@@ -2,6 +2,11 @@
 
 Status: public-safe evidence
 
+> **Current name correction (2026-07-12):** the broad body described below at
+> `0x004081c0` is now statically identified as `CBattleEngine__Move`, not
+> `CMonitor__Process`. Historical token/xref evidence remains useful; the old
+> owner name is superseded and runtime HUD behavior remains unproven.
+
 Source branch: `wip/sandbox`
 
 Source commit before this wave: `720082f5a7550b64de40dfbf37631675bdc08744`

@@ -2,6 +2,12 @@
 
 Status: public-safe static candidate evidence, not runtime proof or rename-map mutation
 
+> **Current name correction (2026-07-12):** references below to
+> `0x004081c0 CMonitor__Process` now mean `0x004081c0 CBattleEngine__Move`.
+> The selected xref/body evidence remains historical static evidence, while the
+> old Monitor owner and unresolved-caller-owner wording is superseded by
+> `reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md`.
+
 ## Objective
 
 Add a bounded read-back layer for the source `CBattleEngine::AugmentWeapon()` anchor. The goal is to identify and validate the strongest current retail candidate for augmented-weapon activation without claiming final owner/name/signature correctness or live weapon behavior.

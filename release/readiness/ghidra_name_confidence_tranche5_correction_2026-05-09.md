@@ -1,5 +1,9 @@
 # Ghidra Name-Confidence Tranche 5 Correction - 2026-05-09
 
+> **Identity status update (2026-07-12):** `0x00412ad0` remains unresolved.
+> Its historical Monitor surface-alignment label is not current owner or
+> method proof. See the [current movement crosswalk](../../reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md).
+
 Status: public-safe saved Ghidra name/comment correction evidence, not final identity or runtime proof
 
 ## Objective

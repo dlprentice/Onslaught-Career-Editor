@@ -6,6 +6,12 @@ Branch: `wip/sandbox`
 Source head before pass: `0eedd163`
 Evidence-report commit: 43de4a6f077194b430a616e8c73e58b90a57fe4f
 
+> **Current supersession (2026-07-12):** this report preserves the gap state as
+> measured in May. A later read-only re-review now resolves selected
+> BattleEngine/JetPart movement owners at high static confidence. Runtime
+> behavior and measured constants remain pending; see
+> `reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md`.
+
 ## Purpose
 
 This pass adds a read-only gap probe that compares the selected BattleEngine source-anchor mechanics coverage with the existing retail-binary function mapping docs. It prevents an overclaim: source mechanics anchors are now machine-checked, and related binary function families are documented, but the individual mechanics anchors still need retail-binary/Ghidra read-back before exact Steam function identity can be claimed.
