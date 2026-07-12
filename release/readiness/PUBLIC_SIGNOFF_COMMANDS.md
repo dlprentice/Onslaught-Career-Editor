@@ -15,8 +15,9 @@ separate maintainer actions.
 
 ## Start
 
-Prerequisites: Windows 10/11, .NET 10 SDK, Node.js 24.x, npm `>=11.12 <12`, and
-Python 3 available through the Windows `py` launcher.
+Prerequisites: Windows 10/11, .NET 10 SDK, .NET 8 SDK/runtime, PowerShell 7,
+Node.js 24.x, npm `>=11.12 <12`, and Python 3 available through the Windows
+`py` launcher.
 
 ```powershell
 cd <repo-root>
@@ -65,6 +66,7 @@ npm run test:winui
 npm run test:winui-primary-lane
 npm run test:winui-safe-copy-preflight
 npm run test:winui-patch-engine-safety
+npm run test:rebuild
 dotnet run --project .\OnslaughtCareerEditor.Cli\OnslaughtCareerEditor.Cli.csproj -- --help
 ```
 <!-- public-package-commands:end -->
@@ -76,6 +78,15 @@ path-length sensitive. The warning does not downgrade failures: only retry
 failures that explicitly mention path-length diagnostics involving generated
 XAML or intermediate compiler paths from a shorter clone/worktree before
 classifying them.
+
+`npm run test:rebuild` is the ordinary deterministic rebuild gate. It tests the
+deterministic Core, real-time client adapter, pinned-engine/extraction contract,
+and native-smoke evidence/process contracts without invoking the Godot downloader
+or opening a window. Normal .NET restore may still use configured package
+sources. When a change touches the Godot client, engine setup, native input,
+rendering, or launch path, also run `npm run test:rebuild-godot-smoke`. That
+separate native gate may populate the verified per-user Godot cache and writes
+ignored local evidence; it is not an app ZIP publication gate.
 
 ## Docs And Release-Safety Gates
 

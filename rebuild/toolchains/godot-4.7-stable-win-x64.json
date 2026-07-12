@@ -1,0 +1,435 @@
+{
+  "schemaVersion": "onslaught-godot-toolchain.v1",
+  "engine": {
+    "version": "4.7-stable",
+    "versionOutput": "4.7.stable.mono.official.5b4e0cb0f",
+    "godotNetSdkVersion": "4.7.0",
+    "license": "MIT",
+    "officialReleasePage": "https://godotengine.org/download/archive/4.7-stable/"
+  },
+  "archive": {
+    "fileName": "Godot_v4.7-stable_mono_win64.zip",
+    "uri": "https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_mono_win64.zip",
+    "size": 114324762,
+    "sha256": "73087f2ef4940be2c0bff358280053912182aca82b85891d6e42d9ebc5c26880",
+    "allowedRedirectHosts": [
+      "github.com",
+      "release-assets.githubusercontent.com"
+    ]
+  },
+  "rootDirectory": "Godot_v4.7-stable_mono_win64",
+  "executable": "Godot_v4.7-stable_mono_win64.exe",
+  "consoleExecutable": "Godot_v4.7-stable_mono_win64_console.exe",
+  "files": [
+    {
+      "path": "Godot_v4.7-stable_mono_win64_console.exe",
+      "length": 198152,
+      "sha256": "c5fc2d0bb24826a6757fa1e6bf2991effb294859c7dd03d09a122ef217484896"
+    },
+    {
+      "path": "Godot_v4.7-stable_mono_win64.exe",
+      "length": 179074568,
+      "sha256": "baa909d0a905021da80cfc831713e9d3ba4bd0935ac3b93ba4c77dc140cfecc4"
+    },
+    {
+      "path": "GodotSharp/Api/Debug/GodotPlugins.dll",
+      "length": 12288,
+      "sha256": "f67c5d0b4e162bf5749ab88c3750ae8a7fe072a1ea3d64f243acd260594ad53f"
+    },
+    {
+      "path": "GodotSharp/Api/Debug/GodotPlugins.pdb",
+      "length": 13556,
+      "sha256": "e583507258c340876f95fe0389712f6a9b4e4dc8e46608f484b1430969de44b7"
+    },
+    {
+      "path": "GodotSharp/Api/Debug/GodotPlugins.runtimeconfig.json",
+      "length": 291,
+      "sha256": "f7ecefae96040c2437e1c98914954b211546391ed2bf6dfb8fa8836600ec1491"
+    },
+    {
+      "path": "GodotSharp/Api/Debug/GodotSharp.dll",
+      "length": 6362112,
+      "sha256": "a923d03e9e44e5ce424d2d030582732e9f1818df13b78c8ce1a2512aef0826e3"
+    },
+    {
+      "path": "GodotSharp/Api/Debug/GodotSharp.pdb",
+      "length": 6054624,
+      "sha256": "816b8640799615880384ed09e1b0bb3775c7facc6dce5462ccd21d7717081639"
+    },
+    {
+      "path": "GodotSharp/Api/Debug/GodotSharp.xml",
+      "length": 16392661,
+      "sha256": "7c5f65c0cbd47febf39a608ebb20c876dc4439e9509aa82819ea230c085cc66f"
+    },
+    {
+      "path": "GodotSharp/Api/Debug/GodotSharpEditor.dll",
+      "length": 325120,
+      "sha256": "def5c35c094f09a8b5fa7442e223989b5ae1598f19fe25589f3658b067ce76c5"
+    },
+    {
+      "path": "GodotSharp/Api/Debug/GodotSharpEditor.pdb",
+      "length": 359712,
+      "sha256": "77ee9f3fca7e00bd661ef8d35260ed7c855d08ca8674e72f49c7d5fd9da75a2e"
+    },
+    {
+      "path": "GodotSharp/Api/Debug/GodotSharpEditor.xml",
+      "length": 785453,
+      "sha256": "fc911c63f2cbefe26109a022b31daf9415b594596c8afcfd4c239a415a5eeaf0"
+    },
+    {
+      "path": "GodotSharp/Api/Release/GodotPlugins.dll",
+      "length": 11776,
+      "sha256": "a8b94ac13d1aa40228c34e3a99d8194511545a632f8d82e01fe0a245aedadca1"
+    },
+    {
+      "path": "GodotSharp/Api/Release/GodotPlugins.pdb",
+      "length": 12920,
+      "sha256": "c3bc859ad5f998fca0fa7cc0970e386df4df5696ba8064ad490d20552b44e454"
+    },
+    {
+      "path": "GodotSharp/Api/Release/GodotPlugins.runtimeconfig.json",
+      "length": 362,
+      "sha256": "163a87196bb2c5607973cbf99e6215bf4b2623dadedeb86e65bc465ce309b988"
+    },
+    {
+      "path": "GodotSharp/Api/Release/GodotSharp.dll",
+      "length": 5928960,
+      "sha256": "c09b4a1be6a2d56ffbd4992ee6e5ef0cf406d49b99620da5c462da261c7f787e"
+    },
+    {
+      "path": "GodotSharp/Api/Release/GodotSharp.pdb",
+      "length": 5472892,
+      "sha256": "756274ee94557f8422df4476f8f61dfc86f55db6c8c2bb179d85262c0727df54"
+    },
+    {
+      "path": "GodotSharp/Api/Release/GodotSharp.xml",
+      "length": 16392661,
+      "sha256": "7c5f65c0cbd47febf39a608ebb20c876dc4439e9509aa82819ea230c085cc66f"
+    },
+    {
+      "path": "GodotSharp/Api/Release/GodotSharpEditor.dll",
+      "length": 303104,
+      "sha256": "c3d08b9b28999ccf5e2f0512761ea7014735f6dec2c53c21d2ce572409bae835"
+    },
+    {
+      "path": "GodotSharp/Api/Release/GodotSharpEditor.pdb",
+      "length": 328688,
+      "sha256": "db5e5275f5db54fab4adb465dd61c041667dc8355b5f41d9e8da99d4184a22ca"
+    },
+    {
+      "path": "GodotSharp/Api/Release/GodotSharpEditor.xml",
+      "length": 785453,
+      "sha256": "fc911c63f2cbefe26109a022b31daf9415b594596c8afcfd4c239a415a5eeaf0"
+    },
+    {
+      "path": "GodotSharp/Tools/cs/Microsoft.CodeAnalysis.CSharp.resources.dll",
+      "length": 431776,
+      "sha256": "b770a8c39ded76ee883149128c0b343a23c4930e8c0599a61ea4a189d468a52c"
+    },
+    {
+      "path": "GodotSharp/Tools/cs/Microsoft.CodeAnalysis.resources.dll",
+      "length": 47880,
+      "sha256": "4dd085aa3824c42e69d24b45ddbca9cf7f9fcad7dc3ee956be79922fa60a4e51"
+    },
+    {
+      "path": "GodotSharp/Tools/de/Microsoft.CodeAnalysis.CSharp.resources.dll",
+      "length": 462600,
+      "sha256": "0f3bae26e249638ca2c9204cbbbbce2b1ccfeaf784f6bd77b7121d148f671f29"
+    },
+    {
+      "path": "GodotSharp/Tools/de/Microsoft.CodeAnalysis.resources.dll",
+      "length": 49944,
+      "sha256": "49d491534fbde2485ed66bd14a28b6dfa1a961782dde0e536df9e8e0f0c5cbdf"
+    },
+    {
+      "path": "GodotSharp/Tools/envdte.dll",
+      "length": 28192,
+      "sha256": "7cae2269c6dc59edb16a1fd16672f184a4690c6d720c1faae9616fe0c8d5cb46"
+    },
+    {
+      "path": "GodotSharp/Tools/es/Microsoft.CodeAnalysis.CSharp.resources.dll",
+      "length": 452360,
+      "sha256": "aeba908aa1132fa3a6297a24f52683db4fa6bd7e7f0b4eac2eb89f22c53492b1"
+    },
+    {
+      "path": "GodotSharp/Tools/es/Microsoft.CodeAnalysis.resources.dll",
+      "length": 49416,
+      "sha256": "0de25f386025993a0a0315a94f0347067d977975cae6dca2bd045ec0033a6ae0"
+    },
+    {
+      "path": "GodotSharp/Tools/fr/Microsoft.CodeAnalysis.CSharp.resources.dll",
+      "length": 464144,
+      "sha256": "3c6348490e9ac51209c8105c30181c3f7985cb68e9cb917e6f391c068f4583dc"
+    },
+    {
+      "path": "GodotSharp/Tools/fr/Microsoft.CodeAnalysis.resources.dll",
+      "length": 49928,
+      "sha256": "21a58fa053094b95ab9a9ac3ae8215633c4ec278b062e3c1b06ae69f45f95223"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.BuildLogger.dll",
+      "length": 9216,
+      "sha256": "3bcb5e43403bf273225d46e7c48c42298b1a69895649d4b4aed893644cc5c1cd"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.BuildLogger.pdb",
+      "length": 11968,
+      "sha256": "cc56e63cfb80e5b976c15a763e07d6edd29b66272202ad777ea75802ee6c1d1a"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.Core.dll",
+      "length": 7680,
+      "sha256": "176f149d79ec035f97d098a1c30432487b9a6eb73f4b56f0bf34d4ed60234a43"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.Core.pdb",
+      "length": 11972,
+      "sha256": "a240c69df8f7358646946dc65b44583e0989a429efb6dbc030f3b9d16fc4b686"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.deps.json",
+      "length": 57342,
+      "sha256": "49cc27f5b5e5d03f8b781c5cc4abb0d088a4747685034b89ced53253c2ad74ca"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.dll",
+      "length": 174080,
+      "sha256": "e688cab37812cadc82d7760581032412f315701a47f575a357193ff611f6de7b"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.IdeMessaging.dll",
+      "length": 44544,
+      "sha256": "caa9be4f6fdf2e104ab6f5de587a12c612f14db539791c7d1d6abfcdc9b45273"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.IdeMessaging.pdb",
+      "length": 18476,
+      "sha256": "f5c966c94832cfdbe20ebbda7d0665b3ccceed0322d87ae4f097b41a08a2e405"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.OpenVisualStudio",
+      "length": 87592,
+      "sha256": "42c4e5a047b9315c35718b262096947134026b35ce77fdc7bc7702652dfaaebc"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.OpenVisualStudio.deps.json",
+      "length": 1723,
+      "sha256": "d99115cfb02bacfb09b3996c5ea3d717f1d4e34e0060305eb6f56bc74a60a907"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.OpenVisualStudio.dll",
+      "length": 11264,
+      "sha256": "c7635fd9d5c92a6f1f31446caa9dca8895e95544f225cd756eda7474edbebab0"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.OpenVisualStudio.pdb",
+      "length": 12412,
+      "sha256": "7062ec3cf1e16728e20e9a8485307de03411ceab7974afaf813121a67f757c38"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.OpenVisualStudio.runtimeconfig.json",
+      "length": 362,
+      "sha256": "163a87196bb2c5607973cbf99e6215bf4b2623dadedeb86e65bc465ce309b988"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.pdb",
+      "length": 105664,
+      "sha256": "0986cf3f7cabc67601c8f99ba0b69e79ef42f24e2c24544e07dcb765b7f7bec9"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.ProjectEditor.dll",
+      "length": 22528,
+      "sha256": "3f3b5085c6b731ea20087e9a78cf15c6d3b12ea0ed3014d3adf18b44f3dd72da"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.ProjectEditor.pdb",
+      "length": 18964,
+      "sha256": "8ca33fedc47346f945aa332178075a6e28a43fcc215498640cd69f5a317bcd9d"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.runtimeconfig.json",
+      "length": 362,
+      "sha256": "4b4546da4fd9175f86782c08db3492baf602ca67a2a6afe53e20a0d47222ab4f"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.Shared.dll",
+      "length": 4096,
+      "sha256": "253e9b1ecb6c647945e5d66ea36d9e94042857b76d5da58a975894d99e21a686"
+    },
+    {
+      "path": "GodotSharp/Tools/GodotTools.Shared.pdb",
+      "length": 11064,
+      "sha256": "eee5552c401c530607e03460d01086c7e49710234fef2534276afba8b1ebaf9e"
+    },
+    {
+      "path": "GodotSharp/Tools/it/Microsoft.CodeAnalysis.CSharp.resources.dll",
+      "length": 457992,
+      "sha256": "90e447f763e50bfed0936e10f6c1f079446e982a9079e26095e91aca479421fa"
+    },
+    {
+      "path": "GodotSharp/Tools/it/Microsoft.CodeAnalysis.resources.dll",
+      "length": 49936,
+      "sha256": "c7d7366236036bb7d44a4950d58915b9dff48235ecf17b38f7d9564743fd4ede"
+    },
+    {
+      "path": "GodotSharp/Tools/ja/Microsoft.CodeAnalysis.CSharp.resources.dll",
+      "length": 506144,
+      "sha256": "168a4471831f7db588eb1e610740c5e8d8a76b0f82566a98fcb42ef8bb755ad1"
+    },
+    {
+      "path": "GodotSharp/Tools/ja/Microsoft.CodeAnalysis.resources.dll",
+      "length": 53512,
+      "sha256": "819bc27aecd1d40a954ed59505ced8798b37dc6471ca4186508876c70396b3c7"
+    },
+    {
+      "path": "GodotSharp/Tools/JetBrains.Lifetimes.dll",
+      "length": 272896,
+      "sha256": "93ab87c36b4a6dacd45b48a2effb982724ecb8b868db0995c438d90da6d93219"
+    },
+    {
+      "path": "GodotSharp/Tools/JetBrains.RdFramework.dll",
+      "length": 203264,
+      "sha256": "05b454e30510940eddd4d75689052fc79e6618a4d52025e08979fa5f5f56d3f4"
+    },
+    {
+      "path": "GodotSharp/Tools/JetBrains.Rider.PathLocator.dll",
+      "length": 20480,
+      "sha256": "ea69b571eb3ec3c831377bcdf6c002679007654be903591f13c036bc8c35ae9d"
+    },
+    {
+      "path": "GodotSharp/Tools/ko/Microsoft.CodeAnalysis.CSharp.resources.dll",
+      "length": 463648,
+      "sha256": "a8eaaf9ea2979975be5d223f5fbfc582d426c2c23990e02acdc76bbc0d1d3ffb"
+    },
+    {
+      "path": "GodotSharp/Tools/ko/Microsoft.CodeAnalysis.resources.dll",
+      "length": 49944,
+      "sha256": "b4b9fb05e0cea71f79f1101408ea2b55e75f53d32d34260c34c609d22a96218b"
+    },
+    {
+      "path": "GodotSharp/Tools/Microsoft.Build.Locator.dll",
+      "length": 27512,
+      "sha256": "ec3d31e3bde953231228853e7a31df2fcd2cafb30380b0148c3e7e38aeb607ca"
+    },
+    {
+      "path": "GodotSharp/Tools/Microsoft.CodeAnalysis.CSharp.dll",
+      "length": 6523664,
+      "sha256": "c46e884a3f2910fd6098b104131cae600c1716ae14b27ffe2d22c54c7f71ff11"
+    },
+    {
+      "path": "GodotSharp/Tools/Microsoft.CodeAnalysis.dll",
+      "length": 2985224,
+      "sha256": "8d919bcf3e2f0e74dc1e79c713f06934201cd2338ad23b9a430e53944ebc0408"
+    },
+    {
+      "path": "GodotSharp/Tools/Microsoft.VisualStudio.Interop.dll",
+      "length": 2422200,
+      "sha256": "9775451527b8f71836a6a86182fb889098254a5fff55e64a02da3029af49632c"
+    },
+    {
+      "path": "GodotSharp/Tools/Microsoft.VisualStudio.SolutionPersistence.dll",
+      "length": 172072,
+      "sha256": "a1150f4a162d9c9992b6e99b2949e2de092017182264218b7b5666ceebbc16d4"
+    },
+    {
+      "path": "GodotSharp/Tools/Newtonsoft.Json.dll",
+      "length": 695336,
+      "sha256": "72cf291d4bab0edd08a9b07c6173e1e7ad1abb7ab727fd7044bf6305d7515661"
+    },
+    {
+      "path": "GodotSharp/Tools/NuGet.Frameworks.dll",
+      "length": 123944,
+      "sha256": "42972564d5632852fddf484c6badb1f91cd5167b4f540b23e30663aa84f795f0"
+    },
+    {
+      "path": "GodotSharp/Tools/nupkgs/Godot.NET.Sdk.4.7.0.nupkg",
+      "length": 6880,
+      "sha256": "cde2347ca8cf161a868e9484082a731fd87870218466d8ef85abd3dd7c88fff5"
+    },
+    {
+      "path": "GodotSharp/Tools/nupkgs/Godot.SourceGenerators.4.7.0.nupkg",
+      "length": 45677,
+      "sha256": "da1eecc4ce02675a28d7c48455b2306926999331f938b839cfbd90b3e5120b85"
+    },
+    {
+      "path": "GodotSharp/Tools/nupkgs/GodotSharp.4.7.0.nupkg",
+      "length": 3221711,
+      "sha256": "dd17a91ee3adb9add5658e2d8acbd19a725099fe5b32409218868cd8f764a9f3"
+    },
+    {
+      "path": "GodotSharp/Tools/nupkgs/GodotSharp.4.7.0.snupkg",
+      "length": 4163451,
+      "sha256": "7e3c20a13446b5f9bc026165733ba1a4dc63abacac5989e8ce10b9f1dd602d72"
+    },
+    {
+      "path": "GodotSharp/Tools/nupkgs/GodotSharpEditor.4.7.0.nupkg",
+      "length": 177760,
+      "sha256": "bbf327533a22989947bcf30164377ba594f1fcbbd91197c60124bef2daf2f735"
+    },
+    {
+      "path": "GodotSharp/Tools/nupkgs/GodotSharpEditor.4.7.0.snupkg",
+      "length": 261787,
+      "sha256": "dfaa371e340eaad66b978c536b75d6858e3fb7718b4e06033ce6aac419e31055"
+    },
+    {
+      "path": "GodotSharp/Tools/pl/Microsoft.CodeAnalysis.CSharp.resources.dll",
+      "length": 464160,
+      "sha256": "f368012ee07c6edd49df17a11dc52524516877a2afa444600c76297cd23b8a35"
+    },
+    {
+      "path": "GodotSharp/Tools/pl/Microsoft.CodeAnalysis.resources.dll",
+      "length": 49928,
+      "sha256": "d12771a7017bd996edd50de8b34dd9de02474eeb3b9bf1b62d04a14178b4c059"
+    },
+    {
+      "path": "GodotSharp/Tools/pt-BR/Microsoft.CodeAnalysis.CSharp.resources.dll",
+      "length": 444680,
+      "sha256": "96f67f5e846bddfde6e958d450bae72943816b0800a5ee1844b4c69b9593a343"
+    },
+    {
+      "path": "GodotSharp/Tools/pt-BR/Microsoft.CodeAnalysis.resources.dll",
+      "length": 48928,
+      "sha256": "ade69198534b8c6149ad2160cbc0d66ce8c9e7f65cdf4525abd4b3084f2dd935"
+    },
+    {
+      "path": "GodotSharp/Tools/ru/Microsoft.CodeAnalysis.CSharp.resources.dll",
+      "length": 609032,
+      "sha256": "25093104d71c3c980bc0baf6c01c072f42f5d7d918e275d2601d41ba21c3c612"
+    },
+    {
+      "path": "GodotSharp/Tools/ru/Microsoft.CodeAnalysis.resources.dll",
+      "length": 60192,
+      "sha256": "f624329c45687998a2f7000182be4dab3c33f07fcbdf482505a0472fed01dee4"
+    },
+    {
+      "path": "GodotSharp/Tools/tr/Microsoft.CodeAnalysis.CSharp.resources.dll",
+      "length": 440584,
+      "sha256": "76c1f8a8bd7d748170cf0e9b93039fb2bc2ee074ba19eedc10f9a9bc026ec197"
+    },
+    {
+      "path": "GodotSharp/Tools/tr/Microsoft.CodeAnalysis.resources.dll",
+      "length": 48408,
+      "sha256": "660fa2661a524dd05402991750509edb72c5cce4ddec9cdc56126c1e1c50bcdc"
+    },
+    {
+      "path": "GodotSharp/Tools/zh-Hans/Microsoft.CodeAnalysis.CSharp.resources.dll",
+      "length": 391944,
+      "sha256": "eb9fd086af40d5d6ec24123c25a6a5e9f69b45e9db4f1a85269b62774c87f4b4"
+    },
+    {
+      "path": "GodotSharp/Tools/zh-Hans/Microsoft.CodeAnalysis.resources.dll",
+      "length": 44824,
+      "sha256": "966487734ddbd371ccfadd6521a8a7e36ba74a5ad777c749df90ea26118212bb"
+    },
+    {
+      "path": "GodotSharp/Tools/zh-Hant/Microsoft.CodeAnalysis.CSharp.resources.dll",
+      "length": 391448,
+      "sha256": "1f4bcaed17f6b189a0a68813a8cf5f3d8d31b6269fd10bcc824b9dd45c2b9a8d"
+    },
+    {
+      "path": "GodotSharp/Tools/zh-Hant/Microsoft.CodeAnalysis.resources.dll",
+      "length": 44808,
+      "sha256": "537fd03e590ca4502980dfe08d5163a4a115d7b33040cd495a795818dbde315f"
+    }
+  ]
+}

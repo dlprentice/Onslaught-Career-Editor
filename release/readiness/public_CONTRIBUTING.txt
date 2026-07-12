@@ -28,7 +28,7 @@ public repository named in `EXPORT_PROVENANCE.json`.
 | --- | --- | --- |
 | WinUI | `OnslaughtCareerEditor.WinUI/`, `OnslaughtCareerEditor.UiTests/` | `npm run build:winui`, `npm run test:winui` |
 | Shared core / CLI | `OnslaughtCareerEditor.AppCore/`, `OnslaughtCareerEditor.Cli/` | `npm run test:appcore`, `npm run build:cli` |
-| Rebuild | `rebuild/` | `npm run test:rebuild-core`, `npm run run:rebuild-headless` |
+| Rebuild | `rebuild/` | `npm run test:rebuild`; add `npm run test:rebuild-godot-smoke` for native client changes |
 | Patch/mod safety | `patches/`, AppCore patch services, WinUI patch surfaces | `npm run test:winui-patch-engine-safety`, `npm run test:winui-safe-copy-preflight` |
 | Docs / public package | root docs, `roadmap/`, `release/readiness/` | `npm run test:doc-commands`, `npm run test:md-links`, `npm run test:public-allowlist` |
 
@@ -56,7 +56,7 @@ npm run test:md-links
 npm run test:winui-notices
 npm run test:public-allowlist
 npm run test:repo-hygiene
-npm run test:rebuild-core
+npm run test:rebuild
 ```
 <!-- public-package-commands:end -->
 

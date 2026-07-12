@@ -29,7 +29,7 @@ automation, or workflow scaffolding.
 | --- | --- | --- |
 | WinUI app | `OnslaughtCareerEditor.WinUI/`, `OnslaughtCareerEditor.UiTests/` | `npm run build:winui`, `npm run test:winui`, `npm run test:winui-primary-lane` |
 | AppCore / CLI | `OnslaughtCareerEditor.AppCore/`, `OnslaughtCareerEditor.Cli/`, tests | `npm run test:appcore`, `npm run build:cli` |
-| RE-informed rebuild | `rebuild/` | `npm run build:rebuild-core`, `npm run test:rebuild-core`, `npm run run:rebuild-headless` |
+| RE-informed rebuild | `rebuild/` | `npm run test:rebuild`; add `npm run test:rebuild-godot-smoke` for native client changes |
 | Patch / mod safety | `patches/`, AppCore patch services, WinUI patch surfaces | `npm run test:winui-patch-engine-safety`, `npm run test:winui-safe-copy-preflight` |
 | Docs | `README.MD`, `CONTRIBUTING.md`, `roadmap/`, current state | `npm run test:docsync`, `npm run test:doc-commands`, `npm run test:md-links` |
 | RE / Lore docs | `reverse-engineering/`, `lore/`, protected `lore-book/` projections | docs gates plus the focused owning checker |
@@ -42,7 +42,7 @@ npm run test:md-links
 npm run test:winui-notices
 npm run test:public-allowlist
 npm run test:repo-hygiene
-npm run test:rebuild-core
+npm run test:rebuild
 ```
 <!-- public-package-commands:end -->
 

@@ -22,6 +22,8 @@ MsixPackages/
 # IDE and OS local state
 .vs/
 .idea/
+.godot/
+.mono/
 *.user
 *.suo
 .DS_Store

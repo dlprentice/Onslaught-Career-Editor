@@ -84,7 +84,7 @@ product lanes and are not part of the default shipped app ZIP.
 | `OnslaughtCareerEditor.UiTests` | Active tests | WinUI product-lane, static, contrast, and launch-smoke coverage |
 | `OnslaughtCareerEditor.Cli` | Active C# support CLI | Supported analyzer/patcher CLI for Windows/AppCore workflows |
 | `OnslaughtCareerEditor.AppCore.Host` | Support/reference bridge | JSON/stdio diagnostics including save patch plans and public-safe asset model preview coverage |
-| `rebuild` | Active RE-informed rebuild | GPL deterministic Core, command-tape replay, and independent trace/final-state golden verification; visual client follows as a separate slice |
+| `rebuild` | Active RE-informed rebuild | GPL deterministic Core/headless verifier plus the playable procedural Godot First Flight client; no retail payload or parity claim |
 | `tools` | Active tooling | Release, docs, RE, extraction, validation, Ghidra/CDB, and local utility scripts |
 
 ## Quick Start
@@ -103,12 +103,23 @@ npm run dev
 ```
 
 `npm test` is the active-product quick check: docs/mirror consistency, the
-WinUI build, AppCore tests, WinUI tests, and deterministic rebuild Core tests.
+WinUI build, AppCore tests, WinUI tests, and deterministic rebuild Core/client
+and toolchain-contract tests. It does not download or launch Godot.
 `npm run dev` launches the WinUI app. Both commands use the tools already
 installed on the machine; the root
 `npm install` path exists only for deliberate inspection of the archived
 Electron workbench and is not normal product setup. Root `package.json` is the
 command authority.
+
+To play the original-code rebuild prototype, double-click
+`rebuild\Launch First Flight.cmd` or run `npm run run:rebuild-godot`. The first
+launch downloads and verifies the pinned official Godot 4.7 .NET archive (about
+114 MB) in a per-user cache; later launches reuse the verified cache. First
+Flight needs no Battle Engine Aquila installation or proprietary game content.
+Use WASD to move, Space to fire, Q to transform, R to reset, and Esc to exit.
+The resizable window starts at 1280x720 and has a supported 1200x675 minimum.
+It is a small playable RE-informed prototype, not retail gameplay/visual parity
+and not a strict clean-room implementation.
 
 `npm run test:hard-payload-safety` checks that tracked files do not include
 actual copied game/runtime binaries, known local game payload roots, build
@@ -141,8 +152,9 @@ npm run test:winui-patch-engine-safety
 npm run build:host
 dotnet run --project .\OnslaughtCareerEditor.Cli\OnslaughtCareerEditor.Cli.csproj -- --help
 npm run build:rebuild-core
-npm run test:rebuild-core
+npm run test:rebuild
 npm run run:rebuild-headless
+npm run run:rebuild-godot
 ```
 <!-- public-package-commands:end -->
 
@@ -185,9 +197,10 @@ reference implementations, but WinUI/AppCore remains the release lane.
 ## Requirements
 
 - Windows 10/11 for WinUI 3.
-- .NET 10 SDK for WinUI/AppCore/C# CLI, plus the .NET 8 runtime/targeting pack
-  for the rebuild Core, tests, and headless host. Installing the .NET 8 SDK is
-  the simplest way to supply the latter and prepares the Godot .NET lane.
+- .NET 10 SDK for WinUI/AppCore/C# CLI, plus the .NET 8 SDK/runtime for the
+  rebuild Core, tests, headless host, and Godot .NET client.
+- PowerShell 7 (`pwsh`) for rebuild toolchain contract tests and the npm Godot
+  setup/build/run/smoke commands.
 - Node.js 24.x and npm `>=11.12 <12` for repo docs/release checks and optional archived Electron inspection. The tracked `packageManager` target is `npm@11.12.1`.
 - Python 3 with the Windows `py` launcher for public-safe tooling checks.
 - A valid Battle Engine Aquila installation for game-aware workflows.

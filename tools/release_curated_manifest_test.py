@@ -114,7 +114,8 @@ class ReleaseCuratedManifestTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
-        quick_check = package["scripts"]["check:quick"]
+        scripts = package["scripts"]
+        quick_check = scripts["check:quick"]
 
         self.assertTrue(tracked_only)
         self.assertIn("global.json", include)
@@ -123,7 +124,12 @@ class ReleaseCuratedManifestTests(unittest.TestCase):
         self.assertIn("tools/export_asset_catalog.py", include)
         self.assertIn("tools/aya_archive_inventory.py", include)
         self.assertIn("tools/safe_generated_output.py", include)
-        self.assertIn("test:rebuild-core", quick_check)
+        self.assertIn("test:rebuild", quick_check)
+        self.assertNotIn("test:rebuild-core", quick_check)
+        self.assertIn("test:rebuild-core", scripts["test:rebuild"])
+        self.assertIn("test:rebuild-client", scripts["test:rebuild"])
+        self.assertIn("test:rebuild-godot-toolchain", scripts["test:rebuild"])
+        self.assertIn("test:rebuild-godot-smoke-validation", scripts["test:rebuild"])
         self.assertNotIn("test:docsync", quick_check)
 
     def test_export_facing_signoff_blocks_match(self) -> None:

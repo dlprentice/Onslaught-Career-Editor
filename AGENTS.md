@@ -112,7 +112,7 @@ npm run test:public-allowlist
 npm run test:repo-hygiene
 npm run test:winui-notices
 npm run build:rebuild-core
-npm run test:rebuild-core
+npm run test:rebuild
 ```
 <!-- public-package-commands:end -->
 

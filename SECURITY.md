@@ -36,6 +36,12 @@ prevents in-place reparse conversion during publication while preserving normal
 child creation/rename behavior; the guard is released only after another held
 entry keeps the directory nonempty.
 
+The optional First Flight source client uses a fixed tracked Godot manifest,
+exact archive/tree hashes, reparse-path rejection, a setup lock, and held
+read-only file handles through restore/build/run. Its per-user developer cache
+is integrity-hardened, not a sandbox: the project does not claim isolation from
+another malicious process already running with the same Windows-user authority.
+
 New generated files are content-quarantined before their first write: they are
 made POSIX-delete-pending, must have zero links while bytes are written and
 flushed, and regain a name only after content is final. A hostile process under

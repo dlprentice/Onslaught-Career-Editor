@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-12",
-  "currentFocus": "Close and push the deterministic rebuild Core/headless foundation, then add the pinned Godot .NET playable client as a view/input adapter.",
+  "currentFocus": "Close, export, review, and push the hardened playable Godot First Flight slice, then resume evidence-backed patch/mod verification.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -19,7 +19,7 @@
       "registeredWorktrees": 1,
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "d1d67ee86b73dd9e11e4d412f0c20d9b108b2b0d"
+      "lastPushedBeforeCurrentSlice": "3cc382e8fa206c3a3f885f9dec4dedd2297b9f97"
     },
     "product": {
       "primaryGui": "WinUI 3",
@@ -60,11 +60,19 @@
       "residualBoundary": "After finalized bytes leave delete-pending quarantine, a same-user process can copy them or create a byte-identical hardlink; no confidentiality after finalization is claimed."
     },
     "rebuildCore": {
-      "status": "accepted local commit candidate; final provenance export and push pending",
+      "status": "accepted and pushed at 3cc382e8fa206c3a3f885f9dec4dedd2297b9f97",
       "architecture": "GPL-3.0-or-later RE-informed original-code net8 Core plus headless command-tape verifier; Core owns deterministic simulation and has no filesystem, process, clock, network, presentation, package, project-reference, or custom-build inputs",
       "implemented": "fixed-step integer simulation, walker/jet transformation, bounded movement, energy/shield state, held-fire cooldowns, projectiles/targets, reset, immutable snapshots, strict frozen command tapes, canonical continuation-state and rolling input/post-step trace hashing, independent built-in goldens, bounded replay work, and distinct headless exit semantics",
       "acceptance": "Fresh source gates passed: zero-warning npm test with 1307 AppCore, 136 WinUI plus 2 expected private-catalog skips, and 38 rebuild tests; 100 repeated first-flight runs matched trace 235f4e28a9c7cce0da79bafdd29929f9a2beceb818005abd24ee7802e9c7f4d1 and final state 0fd93451622e272e9f413472df3f9b0505d7a618f077194b27348305f8aa9d01; historical-register, docsync, command-doc, 3662-file/6264-link Markdown, 19419-file hard-payload, 19603-file submodule allowlist, migration, hygiene, 74-package notices, release-profile, and 687-file curated-manifest gates passed. The fixture-free candidate materialized exactly 692 files; pre-build inventory/payload and 463-file/138-link checks passed; standalone npm test passed a zero-warning WinUI build, 1307 AppCore tests, 123 WinUI tests with 13 explicit real-save-dependent plus 2 private-catalog skips, and 38 rebuild tests; post-build notices/hygiene passed. A focused producer/consumer contract also restored, rebuilt, and passed 1/1 from a non-sibling temporary root.",
       "review": "Codex normal and adversarial Core follow-ups accepted after their blockers were fixed; focused Codex adversarial export review accepted payload-mode command construction. Cursor/Grok normal accepted the revised self-contained package architecture. Cursor/Grok adversarial first blocked the unattested real-save export and ambient-input/exclusion evidence, then accepted after the save returned to R4_DENY, negative-surface tests passed, the fixture-free artifact passed, and the producer contract passed from a non-sibling root. Codex root retains final acceptance."
+    },
+    "rebuildFirstFlight": {
+      "status": "implementation and focused acceptance green; final broad gates, follow-up review, exact export, commit, and push pending",
+      "architecture": "Godot 4.7 is a procedural view/input adapter over the pure net8 Client and deterministic Core; OnslaughtRebuild.slnx stays engine-free and the visual solution is separate",
+      "input": "exact rational 30 Hz accumulation, 250 ms frame cap, held input sampling, one-shot toggle/reset edges, one-tick movement/fire pulses, focus-handler clear, and neutral rearm",
+      "toolchain": "fixed tracked manifest and SHA-256, exact official archive/runtime identity, 82-file tree, fixed per-user cache, reparse rejection, held read-only file lease, setup lock through consumers, locked archive-local Godot restore, and explicit same-user non-sandbox boundary",
+      "acceptance": "38 Core, 21 Client, 12 toolchain, 6 evidence-validator, and 6 owned-process tests pass. Cache-only native smoke passes at 1280x720 and 1200x675 with tick 120, state hash 87b9d09a3afec0bebd97f06793b83baabe3ff330b2378ff149194d6d6a4f779d, heuristic semantic HUD/player/sentry/world anchors, synthetic notification-handler clear/rearm, and kernel-owned Job Object cleanup. The rendered-frame checks are regression heuristics, not tamper-resistant or independent visual proof. The exact double-click launcher was manually played with Q/W/Space/R/Esc and exited without a process orphan.",
+      "package": "curated accounting currently selects 721 tracked files; First Flight is source-only and is not in the published v1.0.9 WinUI ZIP"
     },
     "boundaries": [
       "No installed-game or original BEA.exe mutation.",
@@ -77,8 +85,7 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Amend this accepted state, run one final provenance export from the terminal commit, then push the green deterministic Core/headless and guidance-retirement slice.",
-    "Add a pinned Godot .NET client that samples input, steps Core, and renders original procedural content without owning simulation truth.",
+    "Run final broad source gates and normal/adversarial follow-up review, materialize the exact 721-file curated candidate from the terminal commit, then commit and push the First Flight slice.",
     "Resume evidence-backed patch/mod expansion, then deep RE and Lore quality passes."
   ]
 }

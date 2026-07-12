@@ -100,7 +100,8 @@ Tooling prerequisites:
 | --- | --- |
 | Windows 10/11 | WinUI 3 desktop app and UIA tests |
 | .NET 10 SDK | WinUI, AppCore, AppCore.Host, CLI, and toolkit tests |
-| .NET 8 SDK/runtime | Rebuild Core/headless tests and the Godot .NET direction |
+| .NET 8 SDK/runtime | Rebuild Core/client/headless tests and the Godot .NET client |
+| PowerShell 7 (`pwsh`) | Pinned Godot toolchain tests, setup, build, launch, and native smoke |
 | Node.js 24.x with npm `>=11.12 <12` (`npm@11.12.1` packageManager target) | local script runner and docs/release checks |
 | Python 3 with Windows `py` launcher | public-safe tooling, release, patch, and docs checks |
 | Git Bash or another `bash` provider | release dry-run scripts when packaging requires Bash |
@@ -121,8 +122,9 @@ npm run test:winui-patch-engine-safety
 npm run build:host
 npm run build:cli
 npm run build:rebuild-core
-npm run test:rebuild-core
+npm run test:rebuild
 npm run run:rebuild-headless
+npm run run:rebuild-godot
 npm run test:doc-commands
 npm run test:md-links
 npm run test:public-allowlist
@@ -205,8 +207,14 @@ For WinUI patch/mod UX, the preferred user shape is a safe-copy launcher/mod-man
 - Treat the current implementation as RE-informed original code. A strict
   clean-room claim requires separately staffed specification, implementation,
   and acceptance teams with documented information barriers.
-- Run `npm run test:rebuild-core`; intentional state or replay-contract changes
-  must update and review the independent final-state and rolling-trace goldens.
+- Run `npm run test:rebuild` for the ordinary deterministic contract gate; it
+  does not invoke the Godot downloader or native window, though normal .NET
+  restore may use configured package sources. Intentional state or replay-
+  contract changes must update and review the independent final-state and
+  rolling-trace goldens.
+- Run `npm run test:rebuild-godot-smoke` when Godot launch, rendering, input,
+  toolchain, or native smoke behavior changes. This separate gate may download
+  the pinned engine on first use and must leave no process running.
 
 ## Online Multiplayer Work
 

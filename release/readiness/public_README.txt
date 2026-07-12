@@ -18,7 +18,8 @@ mistaken for source-package content.
   safe-copy correctness logic.
 - `OnslaughtCareerEditor.Cli/`: supported C# analysis and patch-planning CLI.
 - `rebuild/`: GPL-3.0-or-later, RE-informed original-code deterministic Core,
-  tests, and headless replay verifier.
+  tests, headless replay verifier, and playable procedural Godot First Flight
+  client.
 - `reverse-engineering/`, `roadmap/`, `lore/`, and `lore-book/`: selected
   public-safe reference material.
 
@@ -31,6 +32,7 @@ Use a legally obtained local game installation for game-aware toolkit workflows.
 
 - Windows 10 or 11 for the WinUI app and native UI tests.
 - .NET 10 SDK for the toolkit, plus .NET 8 SDK/runtime for the rebuild.
+- PowerShell 7 (`pwsh`) for rebuild toolchain tests and npm Godot commands.
 - Node.js 24.x with npm `>=11.12 <12`.
 - Python 3 through the Windows `py` launcher for package checks.
 
@@ -47,21 +49,27 @@ npm test
 npm run dev
 ```
 
-`npm test` builds WinUI and runs AppCore, WinUI, and rebuild tests. `npm run
-dev` launches the WinUI toolkit. The inventory and allowlist commands are for a
-fresh candidate; run both before build/test output is created. They intentionally
-reject generated binaries rather than hiding them.
+`npm test` builds WinUI and runs AppCore, WinUI, and deterministic rebuild
+Core/client/toolchain-contract tests without downloading or launching Godot.
+`npm run dev` launches the WinUI toolkit. The inventory and allowlist commands
+are for a fresh candidate; run both before build/test output is created. They
+intentionally reject generated binaries rather than hiding them.
 
 Run the deterministic rebuild directly with:
 
 ```powershell
-npm run test:rebuild-core
+npm run test:rebuild
 npm run run:rebuild-headless -- --repeat 100
+npm run run:rebuild-godot
 ```
 
-The rebuild requires no retail game payload. It is an early deterministic
-vertical slice, not gameplay, visual, or rebuild parity and not a strict
-clean-room implementation.
+The First Flight client starts in a resizable window. Use WASD to move, Space to
+fire, Q to transform, R to reset, and Esc to exit. Its first launch downloads
+and verifies the pinned official Godot 4.7 .NET archive (about 114 MB) into a
+per-user cache; later launches reuse the verified cache. The resizable window
+starts at 1280x720 and has a supported 1200x675 minimum. The rebuild requires no
+retail game payload. It is a small playable prototype, not retail gameplay or
+visual parity and not a strict clean-room implementation.
 
 ## Package Sign-Off
 
@@ -72,7 +80,7 @@ npm run test:md-links
 npm run test:winui-notices
 npm run test:public-allowlist
 npm run test:repo-hygiene
-npm run test:rebuild-core
+npm run test:rebuild
 ```
 <!-- public-package-commands:end -->
 

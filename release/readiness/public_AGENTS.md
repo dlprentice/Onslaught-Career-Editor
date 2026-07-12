@@ -17,8 +17,9 @@ repo is no longer a sparse subset of a private source tree.
 - Python under `tools/` supports repo tooling, validation, asset/RE support,
   local lab workflows, and release-policy support. It is not a product GUI lane.
 - `rebuild/` is the active GPL-3.0-or-later, RE-informed original-code game
-  implementation. Its deterministic Core/headless baseline is separate from
-  WinUI and requires no proprietary game payloads.
+  implementation. Its deterministic Core/headless verifier and playable
+  procedural Godot First Flight client are separate from WinUI and require no
+  proprietary game payloads.
 - Electron, WPF, and the old Python GUI/CLI are archived/reference lanes only.
 - Static reverse-engineering docs, wave notes, state batons, agent reports, and
   compact proof summaries are tracked project material. Actual game payloads,
@@ -87,7 +88,7 @@ npm run test:winui-safe-copy-preflight
 npm run test:winui-patch-engine-safety
 npm run build:host
 npm run build:rebuild-core
-npm run test:rebuild-core
+npm run test:rebuild
 ```
 
 For public/export boundary signoff, use the common block:
@@ -99,7 +100,7 @@ npm run test:md-links
 npm run test:winui-notices
 npm run test:public-allowlist
 npm run test:repo-hygiene
-npm run test:rebuild-core
+npm run test:rebuild
 ```
 <!-- public-package-commands:end -->
 

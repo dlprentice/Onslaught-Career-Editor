@@ -1,7 +1,7 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-07-11
+Last updated: 2026-07-12
 
 ## Current Lane
 
@@ -44,6 +44,8 @@ values are presented as measured retail constants.
 | Walker/jet mode, energy use, shield behavior, firing, and targets | Original prototype mechanics inspired only by the high-level project premise | No retail control-flow, gameplay, or parity claim |
 | Seeded target positions and `first-flight` command tape | Synthetic regression content | Determinism input only; not a retail mission or asset |
 | Binary state serializer, final-state hash, and rolling replay trace hash | Original test/acceptance format | Canonical continuation-state and replay-history stability only |
+| Real-time input adapter, edge/pulse latching, and catch-up policy | Original client scheduling design | Deterministic adapter behavior only; no retail input/timing claim |
+| First Flight arena, craft, sentries, projectiles, HUD, camera, colors, and layout | Original procedural Godot presentation | A playable renderer/input proof only; no retail asset, mission, visual, or gameplay parity claim |
 
 The Core test project copies the Core sources and project file into test output,
 rejects filesystem/process/clock/network API tokens, linked source/build inputs,

@@ -1,7 +1,7 @@
 # Onslaught Toolkit Release Notes
 
 Status: active release note
-Last updated: 2026-07-05
+Last updated: 2026-07-12
 
 This file describes the current source-release and public-safety posture. The repo is WinUI-first for the user-facing Windows product. Electron, WPF, and the old Python GUI/CLI parity app are archived/reference surfaces.
 
@@ -73,6 +73,7 @@ Active product/runtime surfaces:
 - `OnslaughtCareerEditor.AppCore` - shared correctness/core support for the Windows lane
 - `OnslaughtCareerEditor.Cli` - C# analyzer/patcher CLI support lane
 - `OnslaughtCareerEditor.AppCore.Tests` and `OnslaughtCareerEditor.UiTests` - active regression/static/launch-smoke coverage
+- `rebuild/` - separate GPL RE-informed source lane with deterministic Core/headless verification and a playable procedural Godot First Flight client; not part of the published WinUI ZIP
 - Python scripts under `tools/` - RE/tooling/lab support, not a product GUI lane
 
 Archived non-shipping app/reference surfaces:
@@ -99,6 +100,7 @@ dotnet build ".\OnslaughtCareerEditor.WinUI\OnslaughtCareerEditor.WinUI.csproj" 
 dotnet test ".\OnslaughtCareerEditor.AppCore.Tests\OnslaughtCareerEditor.AppCore.Tests.csproj" --nologo
 dotnet test ".\OnslaughtCareerEditor.UiTests\OnslaughtCareerEditor.UiTests.csproj" --nologo --filter "FullyQualifiedName!~LegacyWpf"
 npm run test:winui-primary-lane
+npm run test:rebuild
 dotnet run --project ".\OnslaughtCareerEditor.Cli\OnslaughtCareerEditor.Cli.csproj" -- --help
 ```
 
@@ -139,6 +141,7 @@ npm run test:hard-payload-safety
 npm run test:public-allowlist
 npm run test:repo-hygiene
 npm run test:winui-notices
+npm run test:rebuild
 ```
 <!-- public-package-commands:end -->
 

@@ -5,7 +5,8 @@ Last updated: 2026-07-12
 
 This file defines repo validation and public safety/release gates. WinUI 3 is
 the primary preservation/modding GUI. The separately GPL-licensed `rebuild/`
-lane is active headless source and will use a Godot .NET visual client;
+lane includes a deterministic Core/headless verifier and the playable
+procedural Godot .NET First Flight client;
 Electron, WPF, and the old Python GUI/CLI app are archived/reference surfaces.
 
 Important distinction: the public source repo is now the primary working repo
@@ -26,8 +27,9 @@ The active product/support source shape is:
 - `OnslaughtCareerEditor.AppCore.Host/**`
 - `OnslaughtCareerEditor.WinUI.slnx`
 - `OnslaughtCareerEditor.Release.slnx`
-- `rebuild/**` and `rebuild/OnslaughtRebuild.slnx` for the GPL RE-informed
-  deterministic Core/headless lane
+- `rebuild/**`, `rebuild/OnslaughtRebuild.slnx`, and
+  `rebuild/OnslaughtRebuild.Visual.slnx` for the GPL RE-informed deterministic
+  Core/headless and playable Godot client lane
 - `patches/**`
 - `tools/**` for package gates, local validation, RE/runtime proof support, and
   public-primary migration checks
@@ -81,8 +83,8 @@ The payload/secret-safe public source repo can include:
 
 - WinUI 3 product code
 - AppCore/C# CLI/C# support projects and tests
-- GPL rebuild Core/headless source, tests, synthetic scenarios, license, and
-  provenance boundary
+- GPL rebuild Core/client/headless/Godot source, tests, synthetic scenarios,
+  pinned engine verification, license, and provenance boundary
 - patch catalog and safe patch helpers
 - reverse-engineering, lore, roadmap, readiness, state, and compact proof docs
   rooted at public indexes
@@ -177,7 +179,7 @@ npm run test:md-links
 npm run test:winui-notices
 npm run test:public-allowlist
 npm run test:repo-hygiene
-npm run test:rebuild-core
+npm run test:rebuild
 ```
 <!-- public-package-commands:end -->
 
@@ -235,8 +237,10 @@ Public-primary source/release-ready means:
 - Relevant lane gates pass for the lane being changed.
 - WinUI/AppCore gates pass before claiming Windows product health.
 - C# CLI help/build smoke passes before claiming CLI health.
-- Rebuild Core tests and the independent built-in trace/final-state golden pass
-  before claiming rebuild-headless health.
+- Rebuild Core/client/toolchain-validator tests and the independent built-in
+  trace/final-state golden pass before claiming deterministic rebuild health.
+- The separate native Godot smoke must pass before claiming First Flight launch,
+  rendering, scripted input, or clean-exit health.
 - Public-primary migration inventory passes when the former private checkout is
   available.
 - Hard-payload safety passes and no game/runtime payload, secret, build output,

@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: public-safe capability summary
-Last updated: 2026-06-24
+Last updated: 2026-07-12
 
 This package/export summary describes what outside contributors can rely on in
 the public-primary source tree and downloadable release artifacts. The public
@@ -23,6 +23,10 @@ future proof, not current release claims.
 - AppCore backs save/options, patch planning, media/catalog, lore, and
   safe-copy workflows.
 - The C# CLI is an active support surface for analyzer and patch-planning work.
+- The separately GPL-licensed source rebuild has a deterministic Core/headless
+  verifier and a playable procedural Godot First Flight client. It requires no
+  retail payload, is not bundled in the WinUI app ZIP, and does not claim
+  retail gameplay/visual parity or strict clean-room status.
 - Current patch catalog accounting: 29 total rows; 20 visible options (9 stable, 11 experimental); 9 hidden companions.
 - Windowed & Mods supports safe-copy patch planning, copied executable workflows,
   and a local split-screen launch preset for safe copies.
@@ -59,6 +63,7 @@ npm run test:md-links
 npm run test:public-allowlist
 npm run test:repo-hygiene
 npm run test:winui-notices
+npm run test:rebuild
 ```
 <!-- public-package-commands:end -->
 
