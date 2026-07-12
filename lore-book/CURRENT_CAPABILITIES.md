@@ -29,6 +29,20 @@ private proof material, MSIX/installer packaging, signing, Store distribution,
 SmartScreen/reputation proof, player-ready online multiplayer, or gameplay
 parity proof.
 
+Rebuild implementation status: the source checkout now contains a separately
+GPL-licensed, RE-informed original-code lane under `rebuild/`. Its deterministic
+Core provides fixed-step integer simulation, walker/jet mode changes, bounded
+movement, energy/shield state, projectile/target interactions, reset behavior,
+synthetic command-tape replay, and canonical SHA-256 state hashing. The
+headless host also hashes the complete input/post-step trace, loads its built-in
+scenario only from packaged output, and checks both hashes against independent
+compiled golden constants. Explicit tapes require an operator-supplied trace
+hash or explicit no-verification mode. This baseline does not
+require the retail game, reference-source submodule, or proprietary assets.
+It is not a strict clean-room implementation and does not yet provide the
+interactive Godot visual client, retail gameplay parity, visual parity, retail
+content, missions, persistence, audio, or online play.
+
 Music audible-output proof now has complete producer coverage for the next
 private live raw-bundle attempt:
 `tools/winui_safe_copy_music_audible_output_live_bundle_gate.py` plus

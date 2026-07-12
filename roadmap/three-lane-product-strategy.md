@@ -1,185 +1,114 @@
-# Three-Lane Product Strategy
+# Product And Implementation Strategy
 
-Status: active canonical strategy
-Last updated: 2026-06-19
+Status: active
+Last updated: 2026-07-11
 
-This document supersedes the Electron-first product strategy. The repo now has a WinUI-first product lane with archived app detours and active script/tooling support.
+The filename is retained for existing links. The former three-lane framing is
+superseded: the project now has two deliverables, one research/tooling support
+surface, and archived application history.
 
-Static-to-proof/rebuild transition planning is tracked in `static-to-proof-rebuild-transition-backlog.md`. It does not reactivate runtime, visual, patch, Godot, or rebuild proof by itself; it records which static contract slices are strong enough to become the next bounded proof candidates.
+## Deliverables
 
-Player-facing patch/mod/runtime/rebuild proof accounting is tracked in `mod-patch-runtime-rebuild-register.md`. Keep those measurements separate from static RE percentages.
+| Surface | User outcome | Direction |
+| --- | --- | --- |
+| WinUI 3 toolkit | Preserve, inspect, edit, patch, and launch safe copies of a user-owned game | Primary Windows toolkit; AppCore owns shared correctness |
+| GPL rebuild | Play an original-code game implementation without the retail executable or proprietary payloads | Deterministic Core plus a Godot .NET visual client |
+| RE, Lore, and tools | Make the game understandable, documented, testable, and moddable | Evidence-backed support for both deliverables |
+| Archived Electron, WPF, and Python apps | Preserve project history and potentially useful ideas | Reference only; no parity obligation or default setup cost |
 
-## Strategic Decision
+These surfaces do not compete for the same responsibility. WinUI is not the
+game renderer. Godot does not own saves, patching, Lore, or copied-retail-game
+management. Archived apps do not define current UX or architecture.
 
-WinUI 3 is the primary user-facing Windows product lane. Electron, WPF, and the old Python GUI/CLI parity app are archived/reference surfaces rather than competing community product apps. Active Python work is limited to focused scripts and lab utilities under `tools/`.
+## WinUI Toolkit
 
-| Lane | Role | Product priority |
-| --- | --- | ---: |
-| WinUI 3 Windows app | Primary user-facing Windows desktop product | Active focus |
-| Electron workbench | Archived maintainer/agentic RE workbench detour under `archive/electron-workbench/` | Archived/reference |
-| Python tooling | Active `tools/` scripts and explicitly reactivated utilities | Support/lab |
-| Legacy Python GUI/CLI | Historical parity app under `archive/legacy-python/` | Archived/reference |
-| WPF | Archived/reference historical app | Archived |
+WinUI is the normal application for players and preservation users. It owns:
 
-## WinUI 3 Product Lane
+- first-run game-folder setup and truthful unavailable-path states;
+- Save Lab and options workflows backed by AppCore;
+- copied-game profiles, byte-verified patches, and guarded launch/process
+  control;
+- Media, Asset Library, and offline Lore access; and
+- accessible native Windows navigation, status, focus, and error behavior.
 
-WinUI 3 is the lane normal users should see first. It should own player-facing Windows UX, save/options editing, safe copied-target workflows, user-facing patch flows, and product polish.
+Patch and write operations remain copy-first because the installed game and
+original `BEA.exe` are user-owned source material, not app scratch space. That
+boundary is a safety property, not a reason to make ordinary read-only browsing
+or first-run setup cumbersome.
 
-Toolchain and QA direction for this lane is tracked in `roadmap/winui-toolchain-and-qa-direction.md`. In short: keep WinUI 3 / Windows App SDK as the native product shell, keep AppCore as shared correctness support, keep UI Automation/FlaUI for native automation, and escalate graphics work to Win2D or Direct3D planning only when a concrete product need exceeds the current XAML/wireframe approach.
+## Rebuild
 
-Current scope:
+`rebuild/` is an active GPL-3.0-or-later, RE-informed original-code game
+implementation. It is not strict clean-room and does not claim retail parity.
 
-- `OnslaughtCareerEditor.WinUI/`
-- `OnslaughtCareerEditor.AppCore/`
-- `OnslaughtCareerEditor.AppCore.Tests/`
-- `OnslaughtCareerEditor.UiTests/` where tests apply to active Windows behavior
-- C# solution/project files needed to build and validate the Windows lane
+Architecture:
 
-Reactivating WinUI means restoring build/run/test confidence and product focus. It does not mean immediately redesigning the UI, moving Electron features into WinUI, or expanding public release scope without review.
+1. `OnslaughtRebuild.Core` owns deterministic fixed-step simulation.
+2. Command tapes, canonical final-state hashes, and rolling input/post-step
+   trace hashes provide repeatable headless regression evidence.
+3. The Godot .NET client owns input sampling, camera, rendering, audio, and
+   presentation only; it advances and reads Core rather than duplicating game
+   rules.
+4. Synthetic scenarios and original procedural assets keep the baseline build
+   independent of proprietary game files.
 
-## Archived Electron Workbench Lane
-
-Electron is archived as a reference/provenance app, not a product or active maintainer lane. Its code lives under `archive/electron-workbench/` with its React renderer, TypeScript contracts, TypeScript CLI, and Electron bundle helpers.
-
-Allowed Electron archive work:
-
-- read-only inspection
-- restoring optional archive health checks
-- porting a narrow, reviewed idea into the active WinUI/AppCore/tools lane
-- fixing archive-only broken links or references when they confuse active docs
-
-Halted Electron work:
-
-- broad community-product polish
-- broad visual redesign
-- attempts to make Electron mimic the WinUI product app
-- TypeScript job-runner/CLI expansion
-- Electron packaged-runtime proof as a product milestone
-- using Browser Use renderer success as product proof
-
-If the archive is revived later, that should be a new explicit strategy decision with its own validation plan.
-
-## Python Tooling And Archived Python App
-
-Python remains useful for reverse engineering and tooling, but the active lane is script-level utility work, not a Python GUI or product CLI. The old Python GUI/CLI parity app under `archive/legacy-python/` was a historical attempt to track WPF/WinUI behavior visually and from the command line; it is now archived/reference.
-
-Allowed Python work:
-
-- extraction and analysis helpers
-- asset/media/data transforms
-- validation scripts
-- fast experiments
-- one-off RE inspection tools
-- scripts under `tools/`
-- narrow, deliberately ported ideas from `archive/legacy-python/` after review
-
-Halted Python work:
-
-- Python GUI/product app work
-- Python CLI parity-app work from `archive/legacy-python/`
-- attempts to maintain a third product UX
-- broad packaging or parity work unless explicitly scoped
-
-Do not describe `archive/legacy-python/` as an active lab lane. If a useful algorithm or fixture from that archive is needed, port or reclassify the narrow piece deliberately and validate it in the active lane.
-
-## WPF Archived/Reference Lane
-
-WPF remains archived/reference only under `archive/legacy-wpf/`. Do not grow WPF product work. Tests that inspect archived WPF resources may remain until replaced.
-
-## Shared Core And Automation Roles
-
-AppCore is shared correctness/core support for the Windows product lane and a useful oracle while the lane is stabilized. It should not be described merely as throwaway Electron parity while WinUI is active again.
-
-The archived TypeScript CLI and Electron job runner remain preserved under `archive/electron-workbench/`. They are not active automation surfaces. Current automation should prefer C# AppCore/C# CLI or focused scripts under `tools/` unless a later prompt explicitly reactivates archived TypeScript pieces.
-
-## Public-Primary Source / Local Overlay Boundary
-
-The public repo is now the normal working source repo, not a sparse export. Keep
-the public-primary migration inventory, hard-payload safety checks, and release
-packaging checks intact and framework-neutral.
-
-The source repo and shipped ZIP are different artifacts. The source repo should
-track useful project-owned source, docs, tools, tests, RE notes, state batons,
-agent reports, readiness notes, compact proof summaries, and text scratch
-evidence. Release ZIPs should contain only the app package payload and required
-notices/docs. `.gitignore` is a local-overlay guard, not a substitute for
-release-package validation.
-
-Hard payload families remain local/ignored unless a future explicit review
-reclassifies a narrow subset:
-
-- `game/**`
-- `media/**`
-- `save-attempts/**`
-- raw generated proof payload below `subagents/**`
-- Codex/runtime session caches, auth, logs, and temp data
-- `release/readiness/private_runtime_evidence/**`
-- operator directives
-- raw binaries, saves, screenshots, frames, cache paths, full Ghidra
-  databases/backups, raw CDB logs, copied runtime output, and secrets
-
-Compact non-secret project-history text may be tracked when useful:
-`.codex/goals/**`, `.codex/state/**`, state batons, concise subagent reports,
-readiness notes, proof summaries, and RE notes are source material, not hard
-payloads. They remain excluded from portable app ZIPs unless a package manifest
-explicitly includes them.
-
-Do not claim signed installer readiness until packaging, signing,
-install/uninstall, dependency, and hard-payload impact are reviewed.
-
-## Validation Gates
-
-Use only the gates relevant to a change.
-
-### Windows Lane
+Current commands:
 
 ```powershell
-dotnet build .\OnslaughtCareerEditor.WinUI\OnslaughtCareerEditor.WinUI.csproj --nologo
-dotnet test .\OnslaughtCareerEditor.AppCore.Tests\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo
-dotnet test .\OnslaughtCareerEditor.UiTests\OnslaughtCareerEditor.UiTests.csproj --nologo --filter "FullyQualifiedName!~LegacyWpf"
+npm run build:rebuild-core
+npm run test:rebuild-core
+npm run run:rebuild-headless
 ```
 
-WinUI run command:
+Read `rebuild/PROVENANCE.md` before implementation. A future strict clean-room
+lane requires separately staffed specification, unexposed implementation, and
+independent acceptance teams; it cannot be created by renaming the current
+exposed code.
 
-```powershell
-dotnet run --project .\OnslaughtCareerEditor.WinUI\OnslaughtCareerEditor.WinUI.csproj
-```
+## Research, Lore, And Tooling
 
-Do not require UI launch proof when the environment cannot display the app.
+Canonical RE material lives under `reverse-engineering/`; canonical narrative
+and research-facing Lore lives under `lore/`; active scripts live under
+`tools/`. Python is appropriate for validation, extraction, static/runtime
+research, and lab automation. It is not a fourth product GUI.
 
-### Archived Electron Workbench Lane
+Evidence classes stay distinct:
 
-```powershell
-npm run archive:electron:build
-npm run archive:electron:test:renderer-smoke
-npm run archive:electron:test:cli-smoke
-```
+- static names/comments/types do not prove runtime behavior;
+- source architecture does not prove retail implementation identity;
+- copied-runtime observation does not authorize installed-game mutation;
+- a deterministic Core hash does not prove visual or gameplay parity; and
+- a screenshot does not prove deterministic simulation.
 
-These are optional archive-reference checks only. They are not WinUI product gates.
+Historical proof plans can explain what was measured or deliberately excluded.
+They are not authority to generate another readiness/checklist/proof-plan layer
+before writing executable code. Use a focused test or name one concrete blocked
+dependency instead.
 
-### Python Lab Lane
+## Archived Apps
 
-Identify script-specific validation during Python work. Prefer existing `py -3 ...` checks and focused fixtures over inventing heavy packaging.
+`archive/electron-workbench/`, `archive/legacy-wpf/`, and
+`archive/legacy-python/` are retained for provenance and selective idea mining.
+They are excluded from the normal setup, test, release, and parity contract.
+New user-facing work goes to WinUI, AppCore, or the rebuild according to
+ownership above.
 
-### Docs And Public Safety
+## Delivery Sequence
 
-```powershell
-npm run test:doc-commands
-npm run test:md-links
-npm run test:repo-hygiene
-npm run test:public-allowlist
-py -3 tools\docsync_check.py
-py -3 tools\release_profile_snapshot.py --check
-py -3 tools\release_curated_manifest.py --check
-```
+1. Keep the WinUI toolkit safe, understandable, accessible, and releaseable as
+   an unsigned portable ZIP while signing remains intentionally deferred.
+2. Land deterministic rebuild mechanics in small reviewed Core slices, then
+   expose them through one pinned Godot client.
+3. Expand patches and mods only with copied-target byte and runtime evidence
+   appropriate to the claim.
+4. Deep-review RE and Lore for semantics, provenance, navigation, duplication,
+   and stale claims; do not treat file count as quality.
+5. Add online behavior only behind distinct-endpoint, authority, security, and
+   source-bound runtime evidence. Do not expose Host/Join as player-ready early.
 
-## Next Recommended Work Sequence
+## Decision Rule
 
-1. Three-lane strategy reset: complete.
-2. Static Ghidra closeout: complete at **6411/6411 = 100.00%** with `0 / 0 / 0` static debt and Wave1220 active current-risk closeout **1179/1179 = 100.00%**. Reopen static/Ghidra only when source, decompile, xref, runtime, or patch evidence contradicts the current contract.
-3. Active runtime/mod/patch proof: continue safe-copy WinUI/AppCore work through bounded copied-profile artifacts. Current public front door is `roadmap/mod-patch-runtime-rebuild-register.md`; raw copied-runtime bundles, screenshots/frame dumps, and raw CDB logs remain local overlays.
-4. Online multiplayer proof ladder: continue toward private multi-host proof when a second host/session is available; otherwise keep improving same-host authority/control evidence without claiming multi-host LAN, public matchmaking, native BEA netcode, active P3/P4 original-binary gameplay, or 4+ player runtime behavior.
-5. WinUI 3 UX/product polish: keep dedicated UI/UX critique active after clean runtime/proof checkpoints. UI/UX and copy changes should receive helpful and skeptical review, but implementation, validation, and release acceptance stay with the maintainer lane.
-6. Public-primary repo cleanup: keep the public source repo tidy and collaboration-ready while preserving local-overlay hard-payload boundaries; do not publish a public release without explicit operator approval.
-7. Python tooling inventory: keep active work under script/tooling paths and leave the archived Python GUI/CLI parity app as reference unless a narrow piece is deliberately ported.
-8. Archived Electron workbench: do not resume unless a later explicit strategy prompt reactivates it.
+Prefer the path that produces a safer, clearer user workflow or executable,
+testable behavior with the fewest competing owners. Add a new framework or lane
+only when the current architecture cannot meet a concrete requirement and the
+migration cost is justified by evidence.

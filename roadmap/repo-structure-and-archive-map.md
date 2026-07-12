@@ -2,7 +2,7 @@
 
 Status: active contributor authority map
 Last updated: 2026-07-11
-Doc version: 4.0
+Doc version: 4.1
 
 Use this map when two files appear to describe the same behavior, when deciding
 where new work belongs, or before moving or deleting a large surface. It
@@ -30,6 +30,7 @@ maintainer-local payloads.
 | What is release signoff? | `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md` | Current source/package signoff guide |
 | What is current RE truth? | `re_orchestrator_state.json`, `reverse-engineering/RE-INDEX.md` | Current baton plus canonical RE index |
 | What is current Lore truth? | `documentation_agent_state.json`, `lore/LORE-INDEX.md` | Current baton plus canonical narrative index |
+| Where is the active rebuild? | `rebuild/README.md`, `roadmap/rebuild-front-door-chain-map.md` | Executable rebuild and evidence/provenance routing |
 
 Do not browse all 1,400-plus package scripts to begin work. Use `npm test` for
 the active-product quick check, then choose a focused command from
@@ -44,6 +45,7 @@ separate.
 | `OnslaughtCareerEditor.AppCore/` | Shared save/options/patch/media/Lore/asset correctness | Prefer behavior here when it is not UI-specific |
 | `OnslaughtCareerEditor.Cli/` | Supported C# analysis/patch support CLI | Active support source |
 | `OnslaughtCareerEditor.AppCore.Tests/`, `OnslaughtCareerEditor.UiTests/` | Active regression and UI-contract tests | Update with affected behavior |
+| `rebuild/` | GPL RE-informed original-code rebuild | Follow `rebuild/AGENTS.md` and `rebuild/PROVENANCE.md`; Core owns simulation truth |
 | `patches/catalog/patches.v2.json` | Patch catalog | Byte-verified copied-target entries only |
 | `lore/` | Canonical narrative and research-facing Lore source | Edit here, then refresh protected projections |
 | `reverse-engineering/` | Canonical RE specifications, evidence summaries, and research | Keep proof classes explicit |
@@ -51,7 +53,8 @@ separate.
 | `tools/` | Active and historical validation/RE/lab scripts | Start at `tools/README.md`; do not assume every wave script is a current gate |
 | `developer_agent_state.json`, `documentation_agent_state.json`, `re_orchestrator_state.json` | Concise current batons | Current truth, not campaign changelogs |
 
-`OnslaughtCareerEditor.WinUI.slnx` is the normal product solution.
+`OnslaughtCareerEditor.WinUI.slnx` is the normal toolkit solution.
+`rebuild/OnslaughtRebuild.slnx` is the rebuild Core/headless solution.
 `OnslaughtCareerEditor.Release.slnx`, AppCore.Host, and the CLI remain support
 surfaces, not a second GUI product.
 
@@ -86,6 +89,7 @@ approval.
 | `wave_online_audit/`, `wave_online_audit2/` | Historical audit records | Evidence/history, not default work queues |
 | Dated `release/readiness/*release*` notes | Release snapshots | Historical after a newer published release |
 | Numbered Ghidra/wave scripts and reports | Campaign evidence and reproducibility material | Not ordinary contributor commands unless a current front door names them |
+| `roadmap/static-to-proof-rebuild-transition-backlog.md` | Historical recursive proof-chain register | Preserve evidence; do not extend it as an implementation prerequisite |
 
 Historical files may remain useful and tracked. Their presence does not make
 them current, release-required, or a reason to install archived dependencies.

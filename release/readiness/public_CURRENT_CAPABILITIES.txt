@@ -65,8 +65,11 @@ npm run test:winui-notices
 For WinUI/AppCore work, also run the relevant build and test commands from
 `PUBLIC_SIGNOFF_COMMANDS.md`.
 For a fresh candidate intended for sharing, run
-`npm run test:public-candidate-inventory` before install/build/test outputs are
-created and verify `EXPORT_PROVENANCE.json` is present.
+`npm run test:public-candidate-inventory` and `npm run test:public-allowlist`
+before install/build/test outputs are created and verify
+`EXPORT_PROVENANCE.json` is present. Payload mode intentionally rejects
+generated `bin/obj` binaries; re-materialize a fresh candidate to repeat the
+package-boundary proof after building.
 
 ## Claim Boundary
 

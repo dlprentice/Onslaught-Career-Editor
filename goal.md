@@ -134,7 +134,7 @@ and final acceptance ownership.
 - A documented command launches a runnable original-code vertical slice without
   requiring proprietary game payloads.
 - A deterministic headless test replays the same input sequence to the same
-  state hash and fails on contract drift.
+  rolling trace and final-state hashes and fails on contract drift.
 - The visual slice has bounded input, update, camera/render, reset, and exit
   behavior plus native screenshot/runtime evidence.
 - Contributor docs/state name what is implemented, what evidence informed it,

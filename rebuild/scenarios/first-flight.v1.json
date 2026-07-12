@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "onslaught-rebuild-command-tape.v1",
+  "name": "first-flight",
+  "seed": 2836905711,
+  "durationTicks": 150,
+  "expectedFinalStateHash": "0fd93451622e272e9f413472df3f9b0505d7a618f077194b27348305f8aa9d01",
+  "expectedTraceHash": "235f4e28a9c7cce0da79bafdd29929f9a2beceb818005abd24ee7802e9c7f4d1",
+  "spans": [
+    {
+      "startTick": 0,
+      "durationTicks": 20,
+      "moveX": 0,
+      "moveZ": 1,
+      "toggleMode": false,
+      "fire": false,
+      "reset": false
+    },
+    {
+      "startTick": 20,
+      "durationTicks": 25,
+      "moveX": 0,
+      "moveZ": 0,
+      "toggleMode": false,
+      "fire": true,
+      "reset": false
+    },
+    {
+      "startTick": 45,
+      "durationTicks": 1,
+      "moveX": 0,
+      "moveZ": 0,
+      "toggleMode": true,
+      "fire": false,
+      "reset": false
+    },
+    {
+      "startTick": 60,
+      "durationTicks": 30,
+      "moveX": 1,
+      "moveZ": 1,
+      "toggleMode": false,
+      "fire": false,
+      "reset": false
+    },
+    {
+      "startTick": 90,
+      "durationTicks": 1,
+      "moveX": 0,
+      "moveZ": 0,
+      "toggleMode": true,
+      "fire": false,
+      "reset": false
+    },
+    {
+      "startTick": 105,
+      "durationTicks": 30,
+      "moveX": -1,
+      "moveZ": 0,
+      "toggleMode": false,
+      "fire": false,
+      "reset": false
+    }
+  ]
+}

@@ -1,0 +1,207 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+using OnslaughtRebuild.Core;
+
+namespace OnslaughtRebuild.Core.Tests;
+
+public sealed class SimulationTests
+{
+    [Fact]
+    public void Constructor_RejectsZeroSeed()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new Simulation(0));
+    }
+
+    [Fact]
+    public void ToggleMode_UsesEnergyAndDisablesJetShield()
+    {
+        var simulation = new Simulation(1);
+
+        WorldSnapshot state = simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
+
+        Assert.Equal(VehicleMode.Jet, state.Mode);
+        Assert.Equal(0, state.Shield);
+        Assert.Equal(
+            SimulationConstants.MaximumEnergy -
+                SimulationConstants.TransformEnergyCost -
+                SimulationConstants.JetEnergyDrainPerTick,
+            state.Energy);
+        Assert.Equal(SimulationConstants.TransformDurationTicks, state.TransformTicksRemaining);
+    }
+
+    [Fact]
+    public void FirstTickFire_ConsumesResourcesAndAdvancesTheSpawnedProjectile()
+    {
+        var simulation = new Simulation(1);
+
+        WorldSnapshot state = simulation.Step(new SimInput(0, 0, SimActions.Fire));
+
+        ProjectileSnapshot projectile = Assert.Single(state.Projectiles);
+        Assert.Equal(new SimVector2(0, SimulationConstants.ProjectileSpeedPerTick), projectile.Position);
+        Assert.Equal(SimulationConstants.ProjectileLifetimeTicks - 1, projectile.RemainingTicks);
+        Assert.Equal(SimulationConstants.MaximumEnergy - SimulationConstants.FireEnergyCost, state.Energy);
+        Assert.Equal(SimulationConstants.FireCooldownTicks, state.FireCooldownTicksRemaining);
+    }
+
+    [Fact]
+    public void Reset_DominatesOtherActionsInTheSameInputSlot()
+    {
+        var simulation = new Simulation(1);
+        simulation.Step(new SimInput(1, 0, SimActions.Fire));
+
+        WorldSnapshot reset = simulation.Step(new SimInput(
+            1,
+            1,
+            SimActions.Reset | SimActions.Fire | SimActions.ToggleMode));
+
+        Assert.Equal(2, reset.Tick);
+        Assert.Equal(VehicleMode.Walker, reset.Mode);
+        Assert.Equal(SimVector2.Zero, reset.PlayerPosition);
+        Assert.Equal(SimulationConstants.MaximumEnergy, reset.Energy);
+        Assert.Equal(SimulationConstants.MaximumShield, reset.Shield);
+        Assert.Empty(reset.Projectiles);
+    }
+
+    [Fact]
+    public void Movement_ClampsPlayerToArena()
+    {
+        var simulation = new Simulation(1);
+
+        for (int tick = 0; tick < 500; tick++)
+        {
+            simulation.Step(new SimInput(1, 1));
+        }
+
+        Assert.Equal(SimulationConstants.ArenaHalfExtent, simulation.Snapshot.PlayerPosition.X);
+        Assert.Equal(SimulationConstants.ArenaHalfExtent, simulation.Snapshot.PlayerPosition.Z);
+        Assert.Equal(SimVector2.Zero, simulation.Snapshot.PlayerVelocity);
+    }
+
+    [Fact]
+    public void RepeatedFire_DestroysTheForwardTargetDeterministically()
+    {
+        var simulation = new Simulation(0xA917BEEFu);
+        for (int tick = 0; tick < 20; tick++)
+        {
+            simulation.Step(new SimInput(0, 1));
+        }
+
+        for (int tick = 0; tick < 25; tick++)
+        {
+            simulation.Step(new SimInput(0, 0, SimActions.Fire));
+        }
+
+        Assert.Equal(1, simulation.Snapshot.TargetsDestroyed);
+        Assert.False(simulation.Snapshot.Targets.Single(target => target.Id == 1).IsActive);
+    }
+
+    [Fact]
+    public void Reset_RestoresDynamicStateWithoutRewindingReplayTick()
+    {
+        var simulation = new Simulation(42);
+        simulation.Step(new SimInput(1, 0));
+        simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
+
+        WorldSnapshot reset = simulation.Step(new SimInput(0, 0, SimActions.Reset));
+
+        Assert.Equal(3, reset.Tick);
+        Assert.Equal(VehicleMode.Walker, reset.Mode);
+        Assert.Equal(SimVector2.Zero, reset.PlayerPosition);
+        Assert.Equal(SimulationConstants.MaximumEnergy, reset.Energy);
+        Assert.Equal(SimulationConstants.MaximumShield, reset.Shield);
+        Assert.Equal(0, reset.TargetsDestroyed);
+        Assert.Empty(reset.Projectiles);
+    }
+
+    [Fact]
+    public void StateHash_IncludesNextProjectileIdentityWhenNoProjectileIsActive()
+    {
+        var fired = new Simulation(1);
+        var didNotFire = new Simulation(1);
+
+        fired.Step(new SimInput(1, 0, SimActions.Fire));
+        didNotFire.Step(new SimInput(1, 0));
+        for (int tick = 1; tick < SimulationConstants.ProjectileLifetimeTicks; tick++)
+        {
+            fired.Step(SimInput.Idle);
+            didNotFire.Step(SimInput.Idle);
+        }
+
+        Assert.Empty(fired.Snapshot.Projectiles);
+        Assert.Empty(didNotFire.Snapshot.Projectiles);
+        Assert.NotEqual(
+            StateHasher.ComputeHex(fired.Snapshot),
+            StateHasher.ComputeHex(didNotFire.Snapshot));
+
+        WorldSnapshot firedAgain = fired.Step(new SimInput(0, 0, SimActions.Fire));
+        WorldSnapshot firstFire = didNotFire.Step(new SimInput(0, 0, SimActions.Fire));
+        Assert.NotEqual(firedAgain.Projectiles.Single().Id, firstFire.Projectiles.Single().Id);
+    }
+
+    [Fact]
+    public void SnapshotCollections_DoNotExposeMutableArrays()
+    {
+        var simulation = new Simulation(1);
+        WorldSnapshot state = simulation.Step(new SimInput(0, 0, SimActions.Fire));
+
+        Assert.False(state.Targets.GetType().IsArray);
+        Assert.False(state.Projectiles.GetType().IsArray);
+
+        var targets = Assert.IsAssignableFrom<IList<TargetSnapshot>>(state.Targets);
+        var projectiles = Assert.IsAssignableFrom<IList<ProjectileSnapshot>>(state.Projectiles);
+        Assert.True(targets.IsReadOnly);
+        Assert.True(projectiles.IsReadOnly);
+        Assert.Throws<NotSupportedException>(() => targets[0] = targets[0] with { Hull = 0 });
+        Assert.Throws<NotSupportedException>(() => projectiles[0] = projectiles[0] with { RemainingTicks = 0 });
+    }
+
+    [Fact]
+    public void TransformPeriod_BlocksMovementAndFireUntilItCompletes()
+    {
+        var simulation = new Simulation(1);
+        simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
+
+        for (int tick = 1; tick < SimulationConstants.TransformDurationTicks; tick++)
+        {
+            WorldSnapshot blocked = simulation.Step(new SimInput(1, 0, SimActions.Fire));
+            Assert.Equal(SimVector2.Zero, blocked.PlayerPosition);
+            Assert.Empty(blocked.Projectiles);
+        }
+
+        WorldSnapshot active = simulation.Step(new SimInput(1, 0, SimActions.Fire));
+        Assert.NotEqual(SimVector2.Zero, active.PlayerPosition);
+        Assert.Single(active.Projectiles);
+    }
+
+    [Fact]
+    public void EmptyJetEnergy_ForcesWalkerModeAndStartsTransformLock()
+    {
+        var simulation = new Simulation(1);
+        simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
+
+        for (int tick = 0; tick < 1_000 && simulation.Snapshot.Mode == VehicleMode.Jet; tick++)
+        {
+            simulation.Step(SimInput.Idle);
+        }
+
+        Assert.Equal(VehicleMode.Walker, simulation.Snapshot.Mode);
+        Assert.Equal(0, simulation.Snapshot.Energy);
+        Assert.Equal(SimulationConstants.TransformDurationTicks, simulation.Snapshot.TransformTicksRemaining);
+    }
+
+    [Fact]
+    public void FireCooldown_PreventsProjectileSpamWhileFireIsHeld()
+    {
+        var simulation = new Simulation(1);
+        simulation.Step(new SimInput(1, 0, SimActions.Fire));
+
+        for (int tick = 1; tick < SimulationConstants.FireCooldownTicks; tick++)
+        {
+            simulation.Step(new SimInput(0, 0, SimActions.Fire));
+            Assert.Single(simulation.Snapshot.Projectiles);
+        }
+
+        simulation.Step(new SimInput(0, 0, SimActions.Fire));
+        Assert.Equal(2, simulation.Snapshot.Projectiles.Count);
+    }
+}

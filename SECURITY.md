@@ -82,6 +82,14 @@ It is normally fine to discuss:
 
 ## License Boundary
 
-The MIT license in this repository applies only to original project code, docs, metadata, and public-safe tooling. Battle Engine Aquila, its trademarks, executable, media, manuals, save files, screenshots, extracted assets, and third-party runtime components are not licensed by this repository.
+The root MIT license applies only to original toolkit code, docs, metadata, and
+public-safe tooling. `rebuild/` and the `references/Onslaught` submodule are
+separately GPL-licensed; the root license does not relicense them. The active
+rebuild is explicitly RE-informed. See `rebuild/PROVENANCE.md` for the source
+and clean-room boundaries.
+
+Battle Engine Aquila, its trademarks, executable, media, manuals, save files,
+screenshots, extracted assets, and third-party runtime components are not
+licensed by this repository.
 
 Contributors must use a legally obtained local copy of the game and must not submit proprietary game content.

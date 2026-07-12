@@ -1,11 +1,12 @@
 # Release Scope And Test Commands
 
 Status: active public-primary source and release gate
-Last updated: 2026-06-24
+Last updated: 2026-07-12
 
 This file defines repo validation and public safety/release gates. WinUI 3 is
-the primary and only forward-facing GUI product lane. Electron, WPF, and the old
-Python GUI/CLI app are archived/reference surfaces.
+the primary preservation/modding GUI. The separately GPL-licensed `rebuild/`
+lane is active headless source and will use a Godot .NET visual client;
+Electron, WPF, and the old Python GUI/CLI app are archived/reference surfaces.
 
 Important distinction: the public source repo is now the primary working repo
 and intentionally contains broad source/docs/tools/RE history. The downloadable
@@ -25,6 +26,8 @@ The active product/support source shape is:
 - `OnslaughtCareerEditor.AppCore.Host/**`
 - `OnslaughtCareerEditor.WinUI.slnx`
 - `OnslaughtCareerEditor.Release.slnx`
+- `rebuild/**` and `rebuild/OnslaughtRebuild.slnx` for the GPL RE-informed
+  deterministic Core/headless lane
 - `patches/**`
 - `tools/**` for package gates, local validation, RE/runtime proof support, and
   public-primary migration checks
@@ -78,6 +81,8 @@ The payload/secret-safe public source repo can include:
 
 - WinUI 3 product code
 - AppCore/C# CLI/C# support projects and tests
+- GPL rebuild Core/headless source, tests, synthetic scenarios, license, and
+  provenance boundary
 - patch catalog and safe patch helpers
 - reverse-engineering, lore, roadmap, readiness, state, and compact proof docs
   rooted at public indexes
@@ -121,7 +126,9 @@ compact text files invalid in the public-primary source repo.
 
 Narrow exception: `tests_shared/fixtures/gold_career_save.bin` is the tracked
 immutable 10,004-byte regression baseline. Do not generalize that exception to
-arbitrary `.bes`, `.bea`, options, or `save-attempts/` payloads.
+arbitrary `.bes`, `.bea`, options, or `save-attempts/` payloads. Curated/package
+candidates exclude this real game-generated save because a hash proves identity,
+not redistribution provenance; fixture-dependent UI tests skip when it is absent.
 
 Do not treat the former private repo as source authority. Do not treat Electron,
 Python GUI, or WPF as the primary community product surfaces. Do not publish
@@ -167,10 +174,10 @@ export:
 ```powershell
 npm run test:doc-commands
 npm run test:md-links
-npm run test:public-primary-migration-inventory
 npm run test:winui-notices
 npm run test:public-allowlist
 npm run test:repo-hygiene
+npm run test:rebuild-core
 ```
 <!-- public-package-commands:end -->
 
@@ -213,7 +220,13 @@ public source repo.
 Run `npm run test:public-candidate-inventory` from a fresh exported candidate if
 that candidate is being treated as a publishable payload. For normal development
 in this public-primary repo, run `npm run test:hard-payload-safety` and
-`npm run test:public-primary-migration-inventory`.
+`npm run test:public-primary-migration-inventory`. The curated candidate omits
+the migration command and tool because a materialized non-Git tree cannot
+perform tracked-index or sibling-checkout comparison; its payload and inventory
+commands use explicit filesystem mode instead. Run both candidate inventory and
+public allowlist before any build; they intentionally reject generated
+`bin/obj` binaries. Re-materialize a fresh candidate when package cleanliness
+must be re-proven after build/test work.
 
 ## 6. Pass Criteria
 
@@ -222,6 +235,8 @@ Public-primary source/release-ready means:
 - Relevant lane gates pass for the lane being changed.
 - WinUI/AppCore gates pass before claiming Windows product health.
 - C# CLI help/build smoke passes before claiming CLI health.
+- Rebuild Core tests and the independent built-in trace/final-state golden pass
+  before claiming rebuild-headless health.
 - Public-primary migration inventory passes when the former private checkout is
   available.
 - Hard-payload safety passes and no game/runtime payload, secret, build output,
@@ -230,5 +245,6 @@ Public-primary source/release-ready means:
 - Mutating workflows refuse repo-local/install-local originals and operate only on copied targets.
 - App release ZIP/package contents exclude hard payloads and generated proof
   roots.
-- Release docs identify WinUI 3 as the product lane.
+- Release docs identify WinUI 3 as the toolkit product and `rebuild/` as the
+  separate GPL game-implementation lane.
 - Electron, Python GUI, and WPF are documented as archived/reference only.

@@ -1,7 +1,7 @@
 # Public Sign-Off Commands
 
 Status: active source/release validation guide
-Last updated: 2026-07-11
+Last updated: 2026-07-12
 
 Use this guide for the public working repo and app-release signoff. It excludes
 live copied-game launch, raw CDB/debugger, full Ghidra database, second-host, and
@@ -97,10 +97,16 @@ expected to reject actual game/runtime binaries, local game payload roots, build
 outputs, `.env` files, and credential-like key material. It is not supposed to
 hide normal RE notes, state batons, agent reports, or proof summaries.
 
-`npm run test:public-allowlist` runs the hard-payload gate, the submodule
-payload scan, and the public-primary migration/hash inventory for the current
-public checkout. That public gate can run without the archived private checkout;
-maintainer private-parity proof must run
+In the canonical public-primary source repo, `npm run test:public-allowlist`
+runs the hard-payload gate, the submodule payload scan, and the public-primary
+migration/hash inventory. In a materialized curated candidate, its replacement
+`package.json` runs the same named command in filesystem payload mode and uses
+`npm run test:public-candidate-inventory` for candidate shape; the candidate
+does not pretend to have Git-index or sibling-comparison evidence. Run both
+candidate commands before building because they intentionally reject generated
+`bin/obj` binaries; use a fresh candidate to repeat package-boundary proof. The
+source gate can run without the archived private checkout; maintainer
+private-parity proof must run
 `py -3 tools\public_primary_migration_inventory.py --check --private-root <private-root> --require-private-root`.
 Keep
 `npm run test:public-submodule-payload-safety` available as a focused diagnostic

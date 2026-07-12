@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-07-11",
-  "currentFocus": "Document the rebuild provenance firewall and runnable RE-informed vertical slice while preserving accurate current-product, RE, Lore, and release boundaries.",
+  "lastUpdated": "2026-07-12",
+  "currentFocus": "Close the executable rebuild Core/headless source truth, then document and verify the playable Godot client without overstating parity or clean-room status.",
   "sourceOfTruth": {
     "readme": "README.MD",
     "contributorGuide": "CONTRIBUTING.md",
@@ -13,12 +13,13 @@
   },
   "currentDocsTruth": {
     "release": "v1.0.9 remains the latest published unsigned portable WinUI ZIP with 949 packaged Lore documents; this source slice does not publish a release.",
-    "product": "WinUI 3 is the only forward-facing GUI. Electron, WPF, and the old Python GUI/CLI remain archived references; Python remains active for tooling, validation, asset, and RE support.",
+    "product": "WinUI 3 is the primary preservation/modding GUI. The separate GPL rebuild now has a deterministic headless Core and will use one Godot .NET visual client; Electron, WPF, and the old Python GUI/CLI remain archived references.",
     "winUiFirstUse": "CURRENT_CAPABILITIES.md and its byte-identical Lore mirror record the verified three-state setup hierarchy, preservation of temporarily unavailable remembered folders, manual Save Lab availability, shell status/focus ownership, Level 1 headings, compact wrapped source actions, truthful launch/Admin Level preset state, and demand-loaded Media VLC behavior.",
     "filesystemSafety": "Save/options and generated asset/package outputs use bounded roots, held identities, guarded writes, final verification, and explicit same-user post-finalization limits.",
     "re": "reverse-engineering/ is canonical; static Ghidra closure remains evidence input rather than automatic runtime or rebuild proof.",
     "lore": "The 949-document package count proves packaged breadth, not editorial completeness, freshness, provenance/rights review, or broad public-safety approval.",
-    "rebuild": "No complete rebuild runtime, renderer, gameplay loop, or parity proof exists. Current implementation work is RE-informed; a strict clean-room claim requires a separately staffed sealed-spec process and license review."
+    "rebuild": "The source checkout now has a GPL-3.0-or-later, RE-informed net8 deterministic Core, strict frozen synthetic command tapes, canonical continuation-state plus rolling input/post-step trace hashes, and independent built-in headless goldens. Explicit tapes require an operator trace hash or explicit no-verification mode. It does not yet have the Godot visual client, retail content, gameplay/visual parity, or strict clean-room status. The former recursive static-to-proof backlog is historical evidence, not an active implementation queue. Curated-export accounting includes the rebuild but excludes the real game-generated save baseline: a hash proves identity, not redistribution provenance, and fixture-dependent UI tests skip when it is absent.",
+    "curatedSourcePackage": "The curated artifact is a self-contained, plain non-Git convenience package over the already-public canonical repo, not a replacement checkout or a private/public legal cut. Package-specific README/CONTRIBUTING front doors omit source-only goals, coordination, local-overlay, and migration authority. The accepted fixture-free shape is 687 selected source files and 692 final files; clean-tree inventory/payload, all local links, standalone active-product tests, notices, and hygiene passed."
   },
   "activeBlockers": [
     "CURRENT_CAPABILITIES.md and reverse-engineering/RE-INDEX.md remain too large for fast contributor orientation.",
@@ -28,7 +29,8 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Audit and rewrite stale guidance while documenting the rebuild evidence/provenance firewall beside the first runnable vertical slice.",
+    "Run the final provenance export from the accepted commit, then push the Core/headless implementation, provenance boundary, current strategy, export contract, and retired proof-chain guidance.",
+    "Add and document the pinned Godot .NET playable client with native runtime and screenshot evidence.",
     "Generate contributor front-door indexes before reorganizing large RE, tools, or release trees.",
     "Run the deep Lore and RE quality passes after the runnable rebuild foundation is accepted."
   ]

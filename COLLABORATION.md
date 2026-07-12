@@ -1,7 +1,7 @@
 # Collaboration Guide
 
 Status: active public-safe collaboration guide
-Last updated: 2026-07-11
+Last updated: 2026-07-12
 
 Use this guide when preparing work for another developer or an agent reviewer.
 This public repository is now the primary collaboration and day-to-day working
@@ -29,6 +29,7 @@ automation, or workflow scaffolding.
 | --- | --- | --- |
 | WinUI app | `OnslaughtCareerEditor.WinUI/`, `OnslaughtCareerEditor.UiTests/` | `npm run build:winui`, `npm run test:winui`, `npm run test:winui-primary-lane` |
 | AppCore / CLI | `OnslaughtCareerEditor.AppCore/`, `OnslaughtCareerEditor.Cli/`, tests | `npm run test:appcore`, `npm run build:cli` |
+| RE-informed rebuild | `rebuild/` | `npm run build:rebuild-core`, `npm run test:rebuild-core`, `npm run run:rebuild-headless` |
 | Patch / mod safety | `patches/`, AppCore patch services, WinUI patch surfaces | `npm run test:winui-patch-engine-safety`, `npm run test:winui-safe-copy-preflight` |
 | Docs | `README.MD`, `CONTRIBUTING.md`, `roadmap/`, current state | `npm run test:docsync`, `npm run test:doc-commands`, `npm run test:md-links` |
 | RE / Lore docs | `reverse-engineering/`, `lore/`, protected `lore-book/` projections | docs gates plus the focused owning checker |
@@ -38,9 +39,10 @@ automation, or workflow scaffolding.
 ```powershell
 npm run test:doc-commands
 npm run test:md-links
+npm run test:winui-notices
 npm run test:public-allowlist
 npm run test:repo-hygiene
-npm run test:winui-notices
+npm run test:rebuild-core
 ```
 <!-- public-package-commands:end -->
 
@@ -49,11 +51,17 @@ This repo's root `package.json` is the command authority for contributors and
 their agents. Maintainers may run additional local runtime, Ghidra, or
 release-accounting gates when a change touches those areas.
 
-For public-primary boundary work, `npm run test:public-allowlist` runs the
+In the full public-primary source repo, `npm run test:public-allowlist` runs the
 hard-payload, submodule payload, and migration inventory gates. Use
 `npm run test:public-primary-migration-inventory` or
-`npm run test:hard-payload-safety` as focused diagnostics when one of those
-sub-gates needs isolated triage.
+`npm run test:hard-payload-safety` as focused source-repo diagnostics. In a
+materialized curated candidate, the replacement `package.json` runs
+`test:public-allowlist` in filesystem payload mode; run
+`test:public-candidate-inventory` and `test:public-allowlist` before build output
+exists. Payload mode intentionally rejects generated binaries, so use a fresh
+candidate to re-prove package cleanliness after building. Migration inventory
+is intentionally source-only because it requires Git indexes and may compare a
+sibling maintainer checkout.
 
 ## Handoff Template
 

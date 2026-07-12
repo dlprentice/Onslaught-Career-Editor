@@ -88,11 +88,11 @@ DENY_EXACT = (
     "tools/semantic_audit_online.py",
     "setuphistory.txt",
 )
-ALLOW_EXACT = (
-    "tools/runtime-probes/local-multiplayer-level854-fire-damage-outcome-observer.cdb.txt",
-    "tools/runtime-probes/local-multiplayer-level854-fire-handoff-observer.cdb.txt",
-    "tools/runtime-probes/local-multiplayer-level854-input-assisted-outcome-observer.cdb.txt",
-)
+ALLOW_EXACT = {
+    "tools/runtime-probes/local-multiplayer-level854-fire-damage-outcome-observer.cdb.txt": "public-safe-runtime-probe",
+    "tools/runtime-probes/local-multiplayer-level854-fire-handoff-observer.cdb.txt": "public-safe-runtime-probe",
+    "tools/runtime-probes/local-multiplayer-level854-input-assisted-outcome-observer.cdb.txt": "public-safe-runtime-probe",
+}
 DENY_GLOBS = (
     "OnslaughtCareerEditor.UiTests/TestResults/**",
     "**/GameProfiles/**",
@@ -272,9 +272,9 @@ def classify_path(path: str) -> Classification:
     if path == ".gitmodules":
         return Classification(path, "R3_CONDITIONAL", "submodule-map-review")
 
-    for exact in ALLOW_EXACT:
-        if path == exact:
-            return Classification(path, "R0_ALLOW", "public-safe-runtime-probe")
+    allow_reason = ALLOW_EXACT.get(path)
+    if allow_reason is not None:
+        return Classification(path, "R0_ALLOW", allow_reason)
 
     for prefix in DENY_PREFIXES:
         if path.startswith(prefix):

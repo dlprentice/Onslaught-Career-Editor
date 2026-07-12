@@ -9,10 +9,11 @@ rarely. The mutable current slice lives in `goal.md`.
 ## Long-Horizon Charter
 
 Preserve and reverse engineer Battle Engine Aquila / Onslaught, keep the WinUI 3
-product lane primary for current user-facing tooling, and turn the
-static/rebuild evidence into practical tooling for patches, mods, asset
-workflows, runtime proofs, online-play research, and eventual clean-room rebuild
-work.
+product lane primary for current user-facing tooling, and turn static/runtime
+evidence into practical tooling, patches, mods, asset workflows, online-play
+research, and an executable RE-informed original-code rebuild. Preserve a
+separately staffed strict clean-room path as a future option rather than
+mislabeling exposed implementation work.
 
 The public repository is now the primary collaboration and day-to-day working
 repo. The goal is not a sparse export. Track source, tools, tests, docs, RE
@@ -80,8 +81,15 @@ proof summaries, and reproducible checkers instead of shipping the payloads.
   explicit strategy change replaces it.
 - Electron, WPF, and old Python GUI/CLI lanes stay archived/reference-only.
 - Python remains active for RE/tooling/lab support.
-- Godot .NET, Blazor Hybrid, Tauri, and other rebuild/product UI options remain
-  evaluation lanes until explicitly promoted.
+- `rebuild/OnslaughtRebuild.Core` is the active deterministic simulation lane.
+  Godot .NET is the promoted visual-client direction for the rebuild and must
+  remain an adapter over Core. Blazor Hybrid, Tauri, and other alternatives are
+  not parallel implementation lanes unless an evidence-backed decision changes
+  the architecture.
+- Historical proof plans are evidence, not implementation authority. Do not
+  create recursive readiness/checklist/proof-plan chains when executable code,
+  a focused test, or one plainly documented blocked dependency is the more
+  direct artifact.
 
 ## Loop Contract
 

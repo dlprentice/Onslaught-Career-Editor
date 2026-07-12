@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-07-11",
-  "currentFocus": "Build the provenance firewall, deterministic headless kernel, and first runnable RE-informed original-code vertical slice without making a strict clean-room or parity claim.",
+  "lastUpdated": "2026-07-12",
+  "currentFocus": "Close and push the deterministic rebuild Core/headless foundation, then add the pinned Godot .NET playable client as a view/input adapter.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -19,7 +19,7 @@
       "registeredWorktrees": 1,
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "53dccf4b2c44dc724e454bcb5878fb30ff27e007"
+      "lastPushedBeforeCurrentSlice": "d1d67ee86b73dd9e11e4d412f0c20d9b108b2b0d"
     },
     "product": {
       "primaryGui": "WinUI 3",
@@ -59,6 +59,13 @@
       "summary": "Save/options, asset catalog/package, downstream package, Python generated output, and C# AYA output paths use bounded roots, held identities, guarded writes, hostile-path tests, and final byte/identity verification.",
       "residualBoundary": "After finalized bytes leave delete-pending quarantine, a same-user process can copy them or create a byte-identical hardlink; no confidentiality after finalization is claimed."
     },
+    "rebuildCore": {
+      "status": "accepted local commit candidate; final provenance export and push pending",
+      "architecture": "GPL-3.0-or-later RE-informed original-code net8 Core plus headless command-tape verifier; Core owns deterministic simulation and has no filesystem, process, clock, network, presentation, package, project-reference, or custom-build inputs",
+      "implemented": "fixed-step integer simulation, walker/jet transformation, bounded movement, energy/shield state, held-fire cooldowns, projectiles/targets, reset, immutable snapshots, strict frozen command tapes, canonical continuation-state and rolling input/post-step trace hashing, independent built-in goldens, bounded replay work, and distinct headless exit semantics",
+      "acceptance": "Fresh source gates passed: zero-warning npm test with 1307 AppCore, 136 WinUI plus 2 expected private-catalog skips, and 38 rebuild tests; 100 repeated first-flight runs matched trace 235f4e28a9c7cce0da79bafdd29929f9a2beceb818005abd24ee7802e9c7f4d1 and final state 0fd93451622e272e9f413472df3f9b0505d7a618f077194b27348305f8aa9d01; historical-register, docsync, command-doc, 3662-file/6264-link Markdown, 19419-file hard-payload, 19603-file submodule allowlist, migration, hygiene, 74-package notices, release-profile, and 687-file curated-manifest gates passed. The fixture-free candidate materialized exactly 692 files; pre-build inventory/payload and 463-file/138-link checks passed; standalone npm test passed a zero-warning WinUI build, 1307 AppCore tests, 123 WinUI tests with 13 explicit real-save-dependent plus 2 private-catalog skips, and 38 rebuild tests; post-build notices/hygiene passed. A focused producer/consumer contract also restored, rebuilt, and passed 1/1 from a non-sibling temporary root.",
+      "review": "Codex normal and adversarial Core follow-ups accepted after their blockers were fixed; focused Codex adversarial export review accepted payload-mode command construction. Cursor/Grok normal accepted the revised self-contained package architecture. Cursor/Grok adversarial first blocked the unattested real-save export and ambient-input/exclusion evidence, then accepted after the save returned to R4_DENY, negative-surface tests passed, the fixture-free artifact passed, and the producer contract passed from a non-sibling root. Codex root retains final acceptance."
+    },
     "boundaries": [
       "No installed-game or original BEA.exe mutation.",
       "No release, signing, installer/MSIX/Store, Host/Join, online-ready, gameplay-parity, visual-parity, or rebuild-parity claim.",
@@ -70,9 +77,8 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Audit existing guidance and rebuild/reference prototypes; remove stale constraints and choose one evidence-backed implementation lane.",
-    "Write the RE-informed versus sealed-spec provenance firewall.",
-    "Implement a deterministic replayable kernel and runnable visual vertical slice with no proprietary payload dependency.",
+    "Amend this accepted state, run one final provenance export from the terminal commit, then push the green deterministic Core/headless and guidance-retirement slice.",
+    "Add a pinned Godot .NET client that samples input, steps Core, and renders original procedural content without owning simulation truth.",
     "Resume evidence-backed patch/mod expansion, then deep RE and Lore quality passes."
   ]
 }

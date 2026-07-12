@@ -1,6 +1,9 @@
 # Onslaught Toolkit
 
-Onslaught Toolkit is a Battle Engine Aquila (2003) preservation and patching toolkit. The only forward-facing GUI product lane is now the WinUI 3 Windows app.
+Onslaught Toolkit is a Battle Engine Aquila (2003) preservation, patching, and
+rebuild project. The WinUI 3 Windows app is the primary end-user toolkit. A
+separate GPL-licensed, RE-informed original-code rebuild now lives under
+[`rebuild/`](rebuild/README.md); it does not replace or modify the retail game.
 
 This public repository is the primary collaboration and day-to-day working
 checkout. The former maintainer-only tree has been folded into this repo as
@@ -81,6 +84,7 @@ product lanes and are not part of the default shipped app ZIP.
 | `OnslaughtCareerEditor.UiTests` | Active tests | WinUI product-lane, static, contrast, and launch-smoke coverage |
 | `OnslaughtCareerEditor.Cli` | Active C# support CLI | Supported analyzer/patcher CLI for Windows/AppCore workflows |
 | `OnslaughtCareerEditor.AppCore.Host` | Support/reference bridge | JSON/stdio diagnostics including save patch plans and public-safe asset model preview coverage |
+| `rebuild` | Active RE-informed rebuild | GPL deterministic Core, command-tape replay, and independent trace/final-state golden verification; visual client follows as a separate slice |
 | `tools` | Active tooling | Release, docs, RE, extraction, validation, Ghidra/CDB, and local utility scripts |
 
 ## Quick Start
@@ -90,6 +94,7 @@ or `npm install`. From repo root:
 
 ```powershell
 dotnet --version # must be .NET SDK 10.x
+dotnet --list-runtimes # must include Microsoft.NETCore.App 8.x for rebuild tests/host
 node --version # must be v24.x
 npm --version  # must satisfy >=11.12 <12; npm@11.12.1 is the packageManager target
 py -3 --version
@@ -98,8 +103,9 @@ npm run dev
 ```
 
 `npm test` is the active-product quick check: docs/mirror consistency, the
-WinUI build, AppCore tests, and WinUI tests. `npm run dev` launches the WinUI
-app. Both commands use the tools already installed on the machine; the root
+WinUI build, AppCore tests, WinUI tests, and deterministic rebuild Core tests.
+`npm run dev` launches the WinUI app. Both commands use the tools already
+installed on the machine; the root
 `npm install` path exists only for deliberate inspection of the archived
 Electron workbench and is not normal product setup. Root `package.json` is the
 command authority.
@@ -134,6 +140,9 @@ npm run test:winui-safe-copy-preflight
 npm run test:winui-patch-engine-safety
 npm run build:host
 dotnet run --project .\OnslaughtCareerEditor.Cli\OnslaughtCareerEditor.Cli.csproj -- --help
+npm run build:rebuild-core
+npm run test:rebuild-core
+npm run run:rebuild-headless
 ```
 <!-- public-package-commands:end -->
 
@@ -176,7 +185,9 @@ reference implementations, but WinUI/AppCore remains the release lane.
 ## Requirements
 
 - Windows 10/11 for WinUI 3.
-- .NET 10 SDK for WinUI/AppCore/C# CLI.
+- .NET 10 SDK for WinUI/AppCore/C# CLI, plus the .NET 8 runtime/targeting pack
+  for the rebuild Core, tests, and headless host. Installing the .NET 8 SDK is
+  the simplest way to supply the latter and prepares the Godot .NET lane.
 - Node.js 24.x and npm `>=11.12 <12` for repo docs/release checks and optional archived Electron inspection. The tracked `packageManager` target is `npm@11.12.1`.
 - Python 3 with the Windows `py` launcher for public-safe tooling checks.
 - A valid Battle Engine Aquila installation for game-aware workflows.
@@ -212,6 +223,11 @@ Common Steam path:
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+The toolkit code, docs, and tooling are MIT-licensed; see [LICENSE](LICENSE).
+The [`rebuild/`](rebuild/README.md) subtree is separately licensed
+GPL-3.0-or-later, as is the `references/Onslaught` source submodule under its
+own license. The root MIT license does not relicense either GPL subtree.
 
-The MIT license applies to original project code/docs/tooling only. Battle Engine Aquila, its executable, media, saves, screenshots, extracted assets, trademarks, and third-party runtime components are not licensed by this repository.
+Battle Engine Aquila, its executable, media, saves, screenshots, extracted
+assets, trademarks, and third-party runtime components are not licensed by
+this repository.

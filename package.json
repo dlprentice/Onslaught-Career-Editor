@@ -14,12 +14,15 @@
   ],
   "scripts": {
     "test": "npm run check:quick",
-    "check:quick": "npm run test:docsync && npm run test:doc-commands && npm run test:generated-output-safety && npm run build:winui && npm run test:appcore && npm run test:winui",
+    "check:quick": "npm run test:docsync && npm run test:doc-commands && npm run test:generated-output-safety && npm run build:winui && npm run test:appcore && npm run test:winui && npm run test:rebuild-core",
     "dev": "dotnet run --project .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj",
     "build": "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo",
     "build:winui": "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo",
     "build:cli": "dotnet build .\\OnslaughtCareerEditor.Cli\\OnslaughtCareerEditor.Cli.csproj --nologo",
     "build:host": "dotnet build .\\OnslaughtCareerEditor.AppCore.Host\\OnslaughtCareerEditor.AppCore.Host.csproj --nologo",
+    "build:rebuild-core": "dotnet build .\\rebuild\\OnslaughtRebuild.slnx --nologo",
+    "test:rebuild-core": "dotnet test .\\rebuild\\OnslaughtRebuild.Core.Tests\\OnslaughtRebuild.Core.Tests.csproj --nologo",
+    "run:rebuild-headless": "dotnet run --project .\\rebuild\\OnslaughtRebuild.Headless\\OnslaughtRebuild.Headless.csproj --",
     "build:release": "dotnet build .\\OnslaughtCareerEditor.Release.slnx --nologo",
     "test:appcore": "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo",
     "test:winui": "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName!~LegacyWpf\"",
@@ -1508,7 +1511,7 @@
     "test:winui-original-binary-second-host-runtime-causality-candidate": "py -3 tools\\winui_original_binary_second_host_live_candidate_gate.py --check runtime-causality-candidate",
     "test:winui-original-binary-host-join-candidate-gate": "py -3 tools\\winui_original_binary_second_host_live_candidate_gate.py --check host-join-candidate",
     "release:profile-check": "py -3 tools\\release_profile_snapshot.py --check",
-    "release:curated-check": "py -3 tools\\release_curated_manifest.py --check",
+    "release:curated-check": "py -3 tools\\release_curated_manifest_test.py && py -3 tools\\release_curated_manifest.py --check",
     "test:winui-safe-copy-music-capture-source-correlation-builder": "py -3 tools\\winui_safe_copy_music_capture_source_correlation_builder_test.py && py -3 tools\\winui_safe_copy_music_capture_source_correlation_builder.py --self-test"
   },
   "devDependencies": {

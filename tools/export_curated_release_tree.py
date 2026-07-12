@@ -21,6 +21,8 @@ PUBLIC_PACKAGE_SOURCE = "release/readiness/public_package.json"
 PUBLIC_AGENTS_SOURCE = "release/readiness/public_AGENTS.md"
 PUBLIC_GITIGNORE_SOURCE = "release/readiness/public_gitignore.txt"
 MATERIALIZED_FILES = {
+    "release/readiness/public_README.txt": "README.MD",
+    "release/readiness/public_CONTRIBUTING.txt": "CONTRIBUTING.md",
     "release/readiness/public_CURRENT_CAPABILITIES.txt": "CURRENT_CAPABILITIES.md",
     PUBLIC_PACKAGE_SOURCE: "package.json",
     PUBLIC_AGENTS_SOURCE: "AGENTS.md",
@@ -268,9 +270,8 @@ def validate_exported_inventory(files: list[str], dest: Path) -> None:
     print(f"Exported-tree inventory check: PASS ({len(actual)} files)")
 
 
-def run_exported_tree_checks(files: list[str], dest: Path) -> None:
-    validate_exported_inventory(files, dest)
-    commands = [
+def exported_tree_check_commands(dest: Path) -> list[list[str]]:
+    return [
         [
             sys.executable,
             str(ROOT / "tools" / "public_allowlist_safety_check.py"),
@@ -285,10 +286,20 @@ def run_exported_tree_checks(files: list[str], dest: Path) -> None:
             str(dest),
         ],
         [sys.executable, str(dest / "tools" / "public_allowlist_safety_check.py"), "--self-test"],
-        [sys.executable, str(dest / "tools" / "public_allowlist_safety_check.py")],
+        [
+            sys.executable,
+            str(dest / "tools" / "public_allowlist_safety_check.py"),
+            "--payload-root",
+            str(dest),
+            "--require-private-text-guard",
+        ],
         [sys.executable, str(dest / "tools" / "md_link_check.py"), "--scope", "all", "--check-only"],
     ]
-    for cmd in commands:
+
+
+def run_exported_tree_checks(files: list[str], dest: Path) -> None:
+    validate_exported_inventory(files, dest)
+    for cmd in exported_tree_check_commands(dest):
         subprocess.run(cmd, cwd=dest, check=True)
     cleanup_transient_check_artifacts(dest)
     validate_exported_inventory(files, dest)

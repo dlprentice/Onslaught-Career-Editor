@@ -21,7 +21,8 @@ explicitly assigns a separate branch or private workspace.
 2. Run `npm run dev` and confirm the WinUI shell opens.
 3. Read the
    [repository authority map](roadmap/repo-structure-and-archive-map.md), then
-   pick one lane: WinUI, AppCore/CLI, patch/mod safety, docs, or RE/Lore.
+   pick one lane: WinUI, AppCore/CLI, the rebuild, patch/mod safety, docs, or
+   RE/Lore.
 4. Run the lane-specific gates below before review.
 5. Keep actual game payloads, secrets, and bulky generated runtime captures out
    of git. Maintainer policy changes may add narrow public-safe fixtures, but
@@ -37,6 +38,9 @@ game, media, save, Ghidra, proof, or agent-output material.
 - WinUI 3 is the primary user-facing Windows app.
 - AppCore and the C# CLI are active support lanes for correctness, patching, and analysis.
 - Python under `tools/` is active RE/tooling/lab support, not a product GUI lane.
+- `rebuild/` is the active GPL-licensed, RE-informed original-code rebuild
+  lane. Its deterministic Core is independent of WinUI and proprietary game
+  payloads; it is not a strict clean-room or parity claim.
 - Electron, WPF, and the old Python GUI/CLI app are archived/reference surfaces only.
 - A prior Ghidra snapshot satisfied narrow name/comment/signature accounting;
   binary-wide semantic completion is not proven and is under deep review.
@@ -58,7 +62,15 @@ game, media, save, Ghidra, proof, or agent-output material.
 
 ## License And Game Content Boundary
 
-The MIT license applies only to original project code, docs, metadata, and public-safe tooling. Battle Engine Aquila, its trademarks, executable, media, manuals, save files, screenshots, extracted assets, and third-party runtime components are not licensed by this repository.
+The root MIT license applies only to original toolkit code, docs, metadata, and
+public-safe tooling. `rebuild/` and `references/Onslaught` are separate
+GPL-licensed subtrees; the root license does not relicense them. Read
+[`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before contributing rebuild
+code.
+
+Battle Engine Aquila, its trademarks, executable, media, manuals, save files,
+screenshots, extracted assets, and third-party runtime components are not
+licensed by this repository.
 
 Contributors must use a legally obtained local copy of the game and must not submit proprietary game content.
 
@@ -68,6 +80,7 @@ Required for normal product work:
 
 ```powershell
 dotnet --version # must be .NET SDK 10.x
+dotnet --list-runtimes # must include Microsoft.NETCore.App 8.x
 node --version # must be v24.x
 npm --version  # must satisfy >=11.12 <12; npm@11.12.1 is the packageManager target
 py -3 --version
@@ -86,7 +99,8 @@ Tooling prerequisites:
 | Tool | Why it is needed |
 | --- | --- |
 | Windows 10/11 | WinUI 3 desktop app and UIA tests |
-| .NET 10 SDK | WinUI, AppCore, AppCore.Host, CLI, and tests |
+| .NET 10 SDK | WinUI, AppCore, AppCore.Host, CLI, and toolkit tests |
+| .NET 8 SDK/runtime | Rebuild Core/headless tests and the Godot .NET direction |
 | Node.js 24.x with npm `>=11.12 <12` (`npm@11.12.1` packageManager target) | local script runner and docs/release checks |
 | Python 3 with Windows `py` launcher | public-safe tooling, release, patch, and docs checks |
 | Git Bash or another `bash` provider | release dry-run scripts when packaging requires Bash |
@@ -106,6 +120,9 @@ npm run test:winui-safe-copy-preflight
 npm run test:winui-patch-engine-safety
 npm run build:host
 npm run build:cli
+npm run build:rebuild-core
+npm run test:rebuild-core
+npm run run:rebuild-headless
 npm run test:doc-commands
 npm run test:md-links
 npm run test:public-allowlist
@@ -123,6 +140,9 @@ Run only the gates relevant to your change, but run them locally before asking f
 - Preserve existing user changes and do not clean up unrelated files.
 - Prefer existing AppCore, WinUI, patch catalog, and tooling patterns over new frameworks.
 - Put canonical RE findings under `reverse-engineering/`, product strategy under `roadmap/`, and release posture under `release/readiness/`.
+- Put active rebuild implementation under `rebuild/`; do not extend historical
+  proof-plan chains as a substitute for executable source, tests, or a
+  documented blocked dependency.
 - Keep user-facing WinUI wording plain. Avoid internal proof IDs, raw offsets, and maintainer jargon in normal app surfaces.
 - Bulky live runtime proof artifacts should use an approved external artifact
   root plus the documented arm phrase. Track compact proof summaries, checkers,
@@ -172,6 +192,21 @@ Executable patch work must be byte-verified and specimen-specific:
 - Do not imply runtime behavior, online play, or gameplay improvement without a matching runtime proof.
 
 For WinUI patch/mod UX, the preferred user shape is a safe-copy launcher/mod-manager flow: choose a source game, create a copied game profile, apply selected patches to the copy, and launch the copy from the app. A later native-feeling mega patch can exist only after its individual behaviors are proven.
+
+## Rebuild Work
+
+- Read [`rebuild/AGENTS.md`](rebuild/AGENTS.md) and
+  [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) first.
+- Keep simulation truth in the deterministic Core. Render clients consume
+  inputs and snapshots; they do not own gameplay state.
+- Use synthetic command tapes and original procedural content. Do not import
+  retail binaries, extracted assets, decompiler output, or mechanically
+  translated reference-source code.
+- Treat the current implementation as RE-informed original code. A strict
+  clean-room claim requires separately staffed specification, implementation,
+  and acceptance teams with documented information barriers.
+- Run `npm run test:rebuild-core`; intentional state or replay-contract changes
+  must update and review the independent final-state and rolling-trace goldens.
 
 ## Online Multiplayer Work
 
@@ -253,6 +288,7 @@ Before opening a PR or handing work to another developer:
 - [roadmap/ROADMAP-INDEX.md](roadmap/ROADMAP-INDEX.md)
 - [roadmap/public-roadmap.md](roadmap/public-roadmap.md)
 - [roadmap/repo-structure-and-archive-map.md](roadmap/repo-structure-and-archive-map.md)
+- [rebuild/README.md](rebuild/README.md)
 - RE docs are indexed through `reverse-engineering/RE-INDEX.md`. Track compact
   proof summaries and checkers; keep copied-game payloads, frames, raw CDB logs,
   and full Ghidra databases in local overlays.

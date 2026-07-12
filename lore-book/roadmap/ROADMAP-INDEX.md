@@ -3,7 +3,10 @@
 Status: active
 Last updated: 2026-07-11
 
-Execution mode: WinUI-first strategy. WinUI 3 is the primary user-facing Windows product lane. Electron, WPF, and the old Python GUI/CLI app are archived/reference surfaces. Active Python scripts remain RE/tooling/lab support.
+Execution mode: WinUI-first toolkit plus an active RE-informed rebuild. WinUI 3
+is the primary user-facing preservation/modding app. `rebuild/` owns the
+separate GPL game implementation. Electron, WPF, and the old Python GUI/CLI app
+are archived/reference surfaces; Python scripts remain RE/tooling/lab support.
 
 Ghidra static RE (Steam retail): a historical local snapshot reports
 **6411/6411** rows passing a narrow name/comment/signature hygiene contract and
@@ -20,6 +23,7 @@ current accounting context lives in
 |---|---|---|
 | `OnslaughtCareerEditor.WinUI` | Primary product lane | WinUI 3 Windows app |
 | `OnslaughtCareerEditor.AppCore` / `OnslaughtCareerEditor.Cli` / `OnslaughtCareerEditor.AppCore.Host` | Shared correctness/reference | Retained while Windows lane needs them |
+| `rebuild` | Active GPL rebuild | Deterministic Core/headless host now; Godot .NET visual adapter next |
 | `tools` | Active tooling | Release, docs, RE, extraction, and validation scripts |
 | `archive/electron-workbench` | Archived reference | Former Electron/React/TypeScript detour |
 | `archive/legacy-python` | Archived reference | Historical Python GUI/CLI parity app |
@@ -32,8 +36,8 @@ current accounting context lives in
 | [three-lane-product-strategy.md](/roadmap/three-lane-product-strategy.md) | Canonical lane strategy and next sequence |
 | [status-current.md](/roadmap/status-current.md) | Current product/release state |
 | [mod-patch-runtime-rebuild-register.md](/roadmap/mod-patch-runtime-rebuild-register.md) | Player-facing mod/patch/runtime/rebuild proof accounting |
-| [rebuild-front-door-chain-map.md](/roadmap/rebuild-front-door-chain-map.md) | Compact static closure, proof-class, alias, and active rebuild-support scope map |
-| [static-to-proof-rebuild-transition-backlog.md](/roadmap/static-to-proof-rebuild-transition-backlog.md) | Active static-to-proof rebuild/spec proof queue and non-claim boundaries |
+| [rebuild-front-door-chain-map.md](/roadmap/rebuild-front-door-chain-map.md) | Active implementation, provenance, evidence, and system routing map |
+| [static-to-proof-rebuild-transition-backlog.md](/roadmap/static-to-proof-rebuild-transition-backlog.md) | Historical proof-chain evidence register; not an active queue |
 | [original-binary-online-multiplayer-feasibility.md](/roadmap/original-binary-online-multiplayer-feasibility.md) | Original-binary online proof ladder and non-claims |
 | [repo-structure-and-archive-map.md](/roadmap/repo-structure-and-archive-map.md) | Current canonical/derived/generated/historical/local authority map |
 | [winui-lore-offline-pack-plan.md](/roadmap/winui-lore-offline-pack-plan.md) | Generated full-offline Lore content-pack shape for app ZIP candidates |

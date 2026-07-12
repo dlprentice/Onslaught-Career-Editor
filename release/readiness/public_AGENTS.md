@@ -1,7 +1,7 @@
 # AGENTS.md
 
 Status: package/export compatibility agent guide; root AGENTS.md is the canonical public-primary contributor guide
-Last updated: 2026-06-24
+Last updated: 2026-07-12
 
 This file is the public-primary contributor agent guide for Onslaught Toolkit.
 The root `AGENTS.md` is now the normal working guide. Public candidate exports
@@ -16,6 +16,9 @@ repo is no longer a sparse subset of a private source tree.
 - `OnslaughtCareerEditor.Cli` is a C# support CLI.
 - Python under `tools/` supports repo tooling, validation, asset/RE support,
   local lab workflows, and release-policy support. It is not a product GUI lane.
+- `rebuild/` is the active GPL-3.0-or-later, RE-informed original-code game
+  implementation. Its deterministic Core/headless baseline is separate from
+  WinUI and requires no proprietary game payloads.
 - Electron, WPF, and the old Python GUI/CLI are archived/reference lanes only.
 - Static reverse-engineering docs, wave notes, state batons, agent reports, and
   compact proof summaries are tracked project material. Actual game payloads,
@@ -51,6 +54,7 @@ repo is no longer a sparse subset of a private source tree.
 | C# CLI | Active support | `OnslaughtCareerEditor.Cli/` |
 | Tests | Active | `OnslaughtCareerEditor.AppCore.Tests/`, `OnslaughtCareerEditor.UiTests/` |
 | Tooling | Active support | `tools/` |
+| RE-informed rebuild | Active GPL implementation | `rebuild/` |
 | Reverse-engineering docs | Payload/secret-safe specs/research | `reverse-engineering/RE-INDEX.md`, `reverse-engineering/quick-reference/`, `roadmap/ROADMAP-INDEX.md` |
 | Archived apps | Reference only | `archive/` is tracked reference source, not shipped app payload |
 
@@ -59,9 +63,10 @@ repo is no longer a sparse subset of a private source tree.
 From repo root:
 
 ```powershell
+dotnet --version # .NET SDK 10.x
+dotnet --list-runtimes # includes Microsoft.NETCore.App 8.x
 npm run test:hard-payload-safety
-npm install
-dotnet build .\OnslaughtCareerEditor.WinUI.slnx --nologo
+npm test
 npm run dev
 ```
 
@@ -73,7 +78,6 @@ docs/release/tooling checks use `py -3`.
 
 Run the smallest gate set that matches your change.
 
-<!-- public-package-commands:start -->
 ```powershell
 npm run build:winui
 npm run test:appcore
@@ -82,11 +86,20 @@ npm run test:winui-primary-lane
 npm run test:winui-safe-copy-preflight
 npm run test:winui-patch-engine-safety
 npm run build:host
+npm run build:rebuild-core
+npm run test:rebuild-core
+```
+
+For public/export boundary signoff, use the common block:
+
+<!-- public-package-commands:start -->
+```powershell
 npm run test:doc-commands
 npm run test:md-links
+npm run test:winui-notices
 npm run test:public-allowlist
 npm run test:repo-hygiene
-npm run test:winui-notices
+npm run test:rebuild-core
 ```
 <!-- public-package-commands:end -->
 
@@ -96,7 +109,13 @@ root `AGENTS.md` and `npm run test:hard-payload-safety`; run
 `npm run test:public-candidate-inventory` only on a fresh materialized
 package/export candidate before install/build/test outputs are created. Before
 trusting a shared export candidate, verify `EXPORT_PROVENANCE.json` is present
-and then run `npm run test:public-candidate-inventory` on a clean tree.
+and then run `npm run test:public-candidate-inventory` and
+`npm run test:public-allowlist` on a clean tree before any build. Payload mode
+intentionally rejects generated `bin/obj` binaries; use a fresh candidate to
+re-prove package cleanliness after building.
+Migration inventory remains a canonical source-repo gate; it is intentionally
+absent here because a materialized candidate has no Git index or maintainer
+sibling-comparison authority.
 
 Run .NET build/test commands serially. UI Automation and visual claims require
 native WinUI checks; browser or fixture success is not native runtime proof.
@@ -149,6 +168,13 @@ Use `SECURITY.md` for private-data reporting and `README.RELEASE.md` /
 - Keep patch descriptions bounded to what is proven.
 - Do not claim gameplay improvement, online play, or runtime behavior unless a
   matching proof exists.
+
+## Rebuild Rules
+
+- Read `rebuild/AGENTS.md` and `rebuild/PROVENANCE.md` before editing.
+- Keep deterministic simulation in Core and presentation in the Godot adapter.
+- Do not import proprietary payloads, reference-source bodies, or decompiler
+  output, and do not call the current RE-informed lane strict clean-room.
 
 ## Online/Multiplayer Boundary
 

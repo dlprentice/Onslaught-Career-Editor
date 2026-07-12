@@ -1,12 +1,12 @@
 # Release Allowlist Profile
 
-> Generated: 2026-07-04 21:07:06 -0400
+> Generated: 2026-07-12 01:55:11 -0400
 
 ## Classification Summary
 
 | Class | Count | Meaning |
 |---|---:|---|
-| R0_ALLOW | 6205 | Default allow bucket for portable/export release accounting (still requires human review before publishing an artifact) |
+| R0_ALLOW | 6235 | Default allow bucket for portable/export release accounting (still requires human review before publishing an artifact) |
 | R2_REVIEW | 0 | Volatile/generated/binary artifacts; include only when intentional |
 | R3_CONDITIONAL | 3 | Reference submodule families requiring licensing/scope review |
 | R4_DENY | 13181 | Excluded from portable app ZIPs and legacy curated export payloads; may still be tracked public source when compact, non-secret project history |
@@ -22,6 +22,7 @@ outputs, and secrets.
 
 - `.gitattributes`
 - `.editorconfig`
+- `global.json`
 - `.github/PULL_REQUEST_TEMPLATE.md`
 - `.github/ISSUE_TEMPLATE/bug_report.md`
 - `.github/ISSUE_TEMPLATE/feature_request.md`
@@ -34,6 +35,8 @@ outputs, and secrets.
 - `COLLABORATION.md`
 - `CURRENT_CAPABILITIES.md`
 - `release/readiness/public_AGENTS.md`
+- `release/readiness/public_README.txt`
+- `release/readiness/public_CONTRIBUTING.txt`
 - `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`
 - `release/readiness/public_gitignore.txt`
 - `release/readiness/public_package.json`
@@ -58,9 +61,13 @@ outputs, and secrets.
 - `OnslaughtCareerEditor.AppCore.Tests/**`
 - `OnslaughtCareerEditor.Cli/**`
 - `OnslaughtCareerEditor.UiTests/**`
+- `rebuild/**`
 - `tests_shared/**`
 - `patches/**`
 - `tools/README.md`
+- `tools/export_asset_catalog.py`
+- `tools/aya_archive_inventory.py`
+- `tools/safe_generated_output.py`
 - `tools/generate_winui_third_party_notices.py`
 - `tools/md_link_check.py`
 - `tools/prepare_game_profile.ps1`
@@ -94,6 +101,7 @@ outputs, and secrets.
 - `roadmap/public-roadmap.md`
 - `roadmap/status-current.md`
 - `roadmap/mod-patch-runtime-rebuild-register.md`
+- `roadmap/rebuild-front-door-chain-map.md`
 - `roadmap/music-audible-proof-contract.v1.json`
 - `roadmap/original-binary-online-level854-input-assisted-outcome.v1.json`
 - `roadmap/original-binary-online-level854-fire-handoff.v1.json`

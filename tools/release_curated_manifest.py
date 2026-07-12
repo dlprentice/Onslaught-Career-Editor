@@ -21,6 +21,8 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = ROOT / "release" / "readiness" / "curated_release_manifest.json"
 OUT_ALLOWLIST = ROOT / "release" / "readiness" / "public_candidate_allowlist.tsv"
 MATERIALIZED_PUBLIC_SOURCES = {
+    "README.MD": "release/readiness/public_README.txt",
+    "CONTRIBUTING.md": "release/readiness/public_CONTRIBUTING.txt",
     "CURRENT_CAPABILITIES.md": "release/readiness/public_CURRENT_CAPABILITIES.txt",
     "lore-book/BOOK.md": "release/readiness/public_lore_book_BOOK.txt",
     "lore-book/Start-Here.md": "release/readiness/public_lore_book_Start-Here.txt",

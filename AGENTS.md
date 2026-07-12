@@ -19,6 +19,9 @@ or backups, secrets, build output, and bulky generated runtime captures.
 - `OnslaughtCareerEditor.Cli` is a C# support CLI.
 - Python under `tools/` supports repo tooling, validation, asset/RE support,
   and local lab workflows. It is not a product GUI lane.
+- `rebuild/` is the active GPL-licensed, RE-informed original-code rebuild
+  lane. Its deterministic Core remains independent of WinUI, render engines,
+  reference-source projects, and proprietary payloads.
 - Electron, WPF, and the old Python GUI/CLI are archived/reference lanes only.
 - Static reverse-engineering docs, runtime proof summaries, state batons, and
   agent reports are tracked project material unless they embed actual game
@@ -64,6 +67,7 @@ or backups, secrets, build output, and bulky generated runtime captures.
 | C# CLI | Active support | `OnslaughtCareerEditor.Cli/` |
 | Tests | Active | `OnslaughtCareerEditor.AppCore.Tests/`, `OnslaughtCareerEditor.UiTests/` |
 | Tooling | Active support | `tools/` |
+| RE-informed rebuild | Active GPL implementation | `rebuild/` |
 | Reverse-engineering docs | Specs/research/proof summaries | `reverse-engineering/RE-INDEX.md`, `reverse-engineering/quick-reference/`, `roadmap/ROADMAP-INDEX.md` |
 | Archived apps | Reference only | `archive/` |
 
@@ -73,6 +77,7 @@ From repo root:
 
 ```powershell
 dotnet --version # must be .NET SDK 10.x
+dotnet --list-runtimes # must include Microsoft.NETCore.App 8.x
 node --version # must be v24.x
 npm --version  # must satisfy >=11.12 <12; npm@11.12.1 is the packageManager target
 py -3 --version
@@ -106,6 +111,8 @@ npm run test:md-links
 npm run test:public-allowlist
 npm run test:repo-hygiene
 npm run test:winui-notices
+npm run build:rebuild-core
+npm run test:rebuild-core
 ```
 <!-- public-package-commands:end -->
 
@@ -178,6 +185,17 @@ owner records a clear lease.
 - Keep patch descriptions bounded to what is proven.
 - Do not claim gameplay improvement, online play, or runtime behavior unless a
   matching proof exists.
+
+## Rebuild Rules
+
+- Read `rebuild/AGENTS.md` and `rebuild/PROVENANCE.md` before editing the
+  rebuild.
+- Keep deterministic simulation in `OnslaughtRebuild.Core`; rendering clients
+  are input/snapshot adapters and must not own simulation truth.
+- Do not use recursive proof-plan generation as a prerequisite for ordinary
+  implementation. Require a concrete safety, provenance, legal, or technical
+  dependency and record it plainly when work is actually blocked.
+- Do not call the active implementation strict clean-room or parity-complete.
 
 ## Online/Multiplayer Boundary
 
