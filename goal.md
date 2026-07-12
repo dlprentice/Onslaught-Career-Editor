@@ -1,6 +1,6 @@
 # Active Goal
 
-Status: ACTIVE
+Status: COMPLETE
 Last updated: 2026-07-12
 Policy: `goal.policy.md`
 Campaign: validation simplification
@@ -103,9 +103,8 @@ edit/reset/stage/process control in the Chief's main checkout.
 
 ## Next Executable Slice
 
-Run final fast JSON, generated-accounting, diff, and staged-scope checks. If
-green, commit and push the dedicated branch, then hand it to the Chief for
-review/integration without merging `main`.
+Chief review and integration reconciliation. The dedicated branch is pushed;
+this worker must not merge `main` or overwrite the Chief's active Stage A baton.
 
 ## Slice Checkpoint - Implementation Green
 
@@ -124,7 +123,9 @@ review/integration without merging `main`.
   3,766-file/4,363-command history validation, 3,674-file/6,336-link Markdown,
   19,474-file payload/submodule plus migration inventory, and 18,619-file
   hygiene/line-ending coverage.
-- Commit, push, and Chief handoff remain pending.
+- Implementation commit `09036807` is pushed to
+  `codex/validation-simplification-20260712`; the Chief received the retained
+  protections, measured evidence, residual risks, and integration cautions.
 
 ## Stop Conditions
 

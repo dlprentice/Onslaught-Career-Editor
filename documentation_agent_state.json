@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-12",
   "routingPolicy": "Active docs consume the global Codex multi-agent lane contract, keep Codex-owned subagent effort task-flexible, and preserve historical wave provenance.",
-  "currentFocus": "Keep the Chief's movement/runtime-observer truth authoritative while closing the branch-local validation matrix and contributor front doors.",
+  "currentFocus": "Keep the Chief's movement/runtime-observer truth authoritative while the pushed validation matrix and contributor front doors await integration review.",
   "sourceOfTruth": {
     "readme": "README.MD",
     "contributorGuide": "CONTRIBUTING.md",
@@ -35,7 +35,7 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "After final fast checks, commit/push the validation branch and hand it to the Chief for integration reconciliation.",
+    "Chief reviews the pushed validation branch and reconciles its branch-local goal/state and generated release-accounting changes with active Stage A truth.",
     "Implement the approved observer and document only sanitized, hash-bound accepted measurements without publishing raw private paths, pointers, process identifiers, or logs.",
     "Document and test a public synthetic AYA/DDS/FBX export contract before promoting exporter completeness.",
     "Freeze one accepted public-safe behavior contract, then keep rebuild and GUI wording bounded to the measured result.",

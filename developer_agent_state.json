@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-12",
   "routingPolicy": "Follow the global Codex multi-agent lane contract; Codex-owned subagents inherit the parent effort or use an explicit task-specific supported effort override.",
-  "currentFocus": "Branch-local validation simplification is in closeout; the Chief retains the copied-runtime BattleEngine identity-canary focus on main.",
+  "currentFocus": "Branch-local validation simplification is pushed and handed off for integration review; the Chief retains the copied-runtime BattleEngine identity-canary focus on main.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -24,7 +24,7 @@
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "validationSimplification": {
-      "status": "implemented, independently accepted, and broad-closeout green on codex/validation-simplification-20260712; commit/push pending",
+      "status": "implemented, independently accepted, broad-closeout green, and pushed at 09036807 on codex/validation-simplification-20260712; Chief handoff complete",
       "inventory": "Executable inventory reports 1511 scripts, 123 npm-run edges, 2 exact duplicate-command groups, a 12-command transitive quick profile, a 4-command active runtime-tooling safety profile, and retained historical/runtime-proof families.",
       "routing": "npm test now uses active docs/public-core links, generated-output safety, one WinUI solution build plus same-build AppCore/UI tests, and deterministic rebuild. Whole-tree payload/hygiene, copied-runtime proof, Ghidra, native Godot, installer, and ZIP publication remain separately triggered.",
       "safety": "Runtime profile prep, exact CDB PID/executable/working-directory identity, bounded observer commands, safe-copy cleanup, AppCore-emitted readiness commands, payload/submodule/hash/secret checks, patch safety, deterministic rebuild cleanup, and full release/ZIP signoff are retained.",
@@ -118,8 +118,7 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Run final fast JSON/diff/accounting checks, then commit and push the dedicated validation branch.",
-    "Send the pushed branch and retained-protection/residual-risk handoff to the Chief for review and integration; do not merge main from this worker.",
+    "Chief reviews the pushed validation branch and reconciles its goal/state/release-accounting changes with the active Stage A baton; this worker does not merge main.",
     "Write the implementation plan, create the expiring local runtime-authority baton and exclusive leases, then implement the identity canary with focused tests.",
     "Run the Level 850 no-input control, positive transform, and fresh-repeat matrix; do not promote timing or field semantics from Stage A.",
     "Design a public synthetic AYA/DDS/FBX export-contract fixture and dependency preflight before changing the legacy extractor lane.",
