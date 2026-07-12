@@ -234,7 +234,7 @@ public class BinaryPatchRegressionTests
     }
 
     [Test]
-    public void BinaryPatch_RestoreRejectsUnexpectedCurrentPatchBytesWithoutOverwriting()
+    public void BinaryPatch_RestoreRepairsUnexpectedCurrentPatchBytesFromVerifiedBackup()
     {
         string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-binary-restore-mismatch-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
@@ -254,10 +254,68 @@ public class BinaryPatchRegressionTests
 
             var restore = BinaryPatchEngine.RestoreFromBackup(BuildTestTarget(exePath, tempDir));
 
-            Assert.That(restore.success, Is.False);
-            Assert.That(restore.message, Does.Contain("unexpected patch state"));
-            Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(corrupted), "Restore must not overwrite a target whose current patch bytes are not verified.");
+            Assert.That(restore.success, Is.True, restore.message);
+            Assert.That(restore.message, Does.Contain("unexpected current patch bytes"));
+            Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(original), "Restore must recover a damaged copied executable from its verified backup.");
             Assert.That(File.ReadAllBytes(BinaryPatchEngine.BuildBackupPath(exePath)), Is.EqualTo(original));
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Test]
+    public void BinaryPatch_RestoreRepairsTruncatedCopyFromVerifiedBackup()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-binary-restore-truncated-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        string exePath = Path.Combine(tempDir, "BEA.exe");
+
+        try
+        {
+            byte[] original = SeedExe(exePath, includeOptional: true);
+            var selected = BinaryPatchPlanBuilder.BuildSelectedSpecs(new[] { "resolution_gate", "force_windowed" });
+            var apply = BinaryPatchEngine.ApplyPatchesToFile(BuildTestTarget(exePath, tempDir), selected);
+            Assert.That(apply.success, Is.True, apply.message);
+
+            File.WriteAllBytes(exePath, File.ReadAllBytes(exePath).Take(1024).ToArray());
+
+            var restore = BinaryPatchEngine.RestoreFromBackup(BuildTestTarget(exePath, tempDir));
+
+            Assert.That(restore.success, Is.True, restore.message);
+            Assert.That(restore.message, Does.Contain("unexpected current patch bytes"));
+            Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(original), "Restore must recover a truncated copied executable from its verified backup.");
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Test]
+    public void BinaryPatch_ApplyRejectsBackupHashSidecarWithoutBackupSnapshot()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-binary-stale-backup-hash-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        string exePath = Path.Combine(tempDir, "BEA.exe");
+
+        try
+        {
+            byte[] original = SeedExe(exePath, includeOptional: true);
+            string backupHashPath = BinaryPatchEngine.BuildBackupHashPath(exePath);
+            File.WriteAllText(backupHashPath, "stale-sidecar");
+            var selected = BinaryPatchPlanBuilder.BuildSelectedSpecs(new[] { "resolution_gate", "force_windowed" });
+
+            var apply = BinaryPatchEngine.ApplyPatchesToFile(BuildTestTarget(exePath, tempDir), selected);
+
+            Assert.That(apply.success, Is.False);
+            Assert.That(apply.message, Does.Contain("without its backup snapshot"));
+            Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(original));
+            Assert.That(File.Exists(BinaryPatchEngine.BuildBackupPath(exePath)), Is.False);
+            Assert.That(File.ReadAllText(backupHashPath), Is.EqualTo("stale-sidecar"));
         }
         finally
         {
@@ -681,9 +739,9 @@ public class BinaryPatchRegressionTests
     }
 
     [Test]
-    public void BinaryPatch_ApplyRejectsAlreadyPatchedKnownSizeCopyWithUnrelatedByteDrift()
+    public void BinaryPatch_ApplyRejectsCallerSuppliedTargetIdentityOutsidePinnedCatalog()
     {
-        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-binary-idempotent-drift-{Guid.NewGuid():N}");
+        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-binary-caller-identity-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
         string exePath = Path.Combine(tempDir, "BEA.exe");
 
@@ -701,22 +759,14 @@ public class BinaryPatchRegressionTests
                 TargetBinaryHashes: new[] { Sha256Hex(original) },
                 TargetBinarySize: original.LongLength);
 
-            var firstApply = BinaryPatchEngine.ApplyPatchesToFile(
-                BuildTestTarget(exePath, tempDir, allowByteLayoutOnly: false),
-                new[] { selectedSpec });
-            Assert.That(firstApply.success, Is.True, firstApply.message);
-
-            byte[] drifted = File.ReadAllBytes(exePath);
-            drifted[0x20] = 0x42;
-            File.WriteAllBytes(exePath, drifted);
-
-            var secondApply = BinaryPatchEngine.ApplyPatchesToFile(
+            var apply = BinaryPatchEngine.ApplyPatchesToFile(
                 BuildTestTarget(exePath, tempDir, allowByteLayoutOnly: false),
                 new[] { selectedSpec });
 
-            Assert.That(secondApply.success, Is.False, secondApply.message);
-            Assert.That(secondApply.message, Does.Contain("known clean Steam retail BEA.exe"));
-            Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(drifted), "Rejected idempotent apply must not overwrite unrelated drift.");
+            Assert.That(apply.success, Is.False, apply.message);
+            Assert.That(apply.message, Does.Contain("pinned patch catalog"));
+            Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(original), "Rejected caller metadata must not mutate the copied executable.");
+            Assert.That(File.Exists(BinaryPatchEngine.BuildBackupPath(exePath)), Is.False);
         }
         finally
         {
@@ -726,7 +776,7 @@ public class BinaryPatchRegressionTests
     }
 
     [Test]
-    public void BinaryPatch_ApplyRejectsAlreadyPatchedRowsWithoutTargetIdentityMetadata()
+    public void BinaryPatch_ApplyRejectsCatalogRowMissingPinnedIdentityMetadata()
     {
         string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-binary-missing-identity-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
@@ -753,7 +803,7 @@ public class BinaryPatchRegressionTests
                 new[] { missingIdentitySpec });
 
             Assert.That(apply.success, Is.False);
-            Assert.That(apply.message, Does.Contain("known clean Steam retail BEA.exe"));
+            Assert.That(apply.message, Does.Contain("pinned patch catalog"));
             Assert.That(File.Exists(BinaryPatchEngine.BuildBackupPath(exePath)), Is.False);
         }
         finally
@@ -1168,6 +1218,8 @@ public class BinaryPatchRegressionTests
             freeCameraKeyboardForwardSelection,
             Is.EquivalentTo(new[]
             {
+                "resolution_gate",
+                "force_windowed",
                 "free_camera_aurore_gate_bypass",
                 "free_camera_keyboard_forward_q_cave",
                 "free_camera_keyboard_forward_q_hook"
@@ -1181,6 +1233,8 @@ public class BinaryPatchRegressionTests
             freeCameraKeyboardBackwardSelection,
             Is.EquivalentTo(new[]
             {
+                "resolution_gate",
+                "force_windowed",
                 "free_camera_aurore_gate_bypass",
                 "free_camera_keyboard_backward_q_cave",
                 "free_camera_keyboard_backward_q_hook"
@@ -1194,6 +1248,8 @@ public class BinaryPatchRegressionTests
             freeCameraKeyboardStrafeLeftSelection,
             Is.EquivalentTo(new[]
             {
+                "resolution_gate",
+                "force_windowed",
                 "free_camera_aurore_gate_bypass",
                 "free_camera_keyboard_strafe_left_q_cave",
                 "free_camera_keyboard_strafe_left_q_hook"
@@ -1207,6 +1263,8 @@ public class BinaryPatchRegressionTests
             freeCameraKeyboardStrafeRightSelection,
             Is.EquivalentTo(new[]
             {
+                "resolution_gate",
+                "force_windowed",
                 "free_camera_aurore_gate_bypass",
                 "free_camera_keyboard_strafe_right_q_cave",
                 "free_camera_keyboard_strafe_right_q_hook"
@@ -1220,6 +1278,8 @@ public class BinaryPatchRegressionTests
             freeCameraKeyboardYawLeftSelection,
             Is.EquivalentTo(new[]
             {
+                "resolution_gate",
+                "force_windowed",
                 "free_camera_aurore_gate_bypass",
                 "free_camera_keyboard_yaw_left_q_cave",
                 "free_camera_keyboard_yaw_left_q_hook"
@@ -1233,6 +1293,8 @@ public class BinaryPatchRegressionTests
             freeCameraKeyboardYawRightSelection,
             Is.EquivalentTo(new[]
             {
+                "resolution_gate",
+                "force_windowed",
                 "free_camera_aurore_gate_bypass",
                 "free_camera_keyboard_yaw_right_q_cave",
                 "free_camera_keyboard_yaw_right_q_hook"
@@ -1246,6 +1308,8 @@ public class BinaryPatchRegressionTests
             freeCameraKeyboardPitchUpSelection,
             Is.EquivalentTo(new[]
             {
+                "resolution_gate",
+                "force_windowed",
                 "free_camera_aurore_gate_bypass",
                 "free_camera_keyboard_pitch_up_q_cave",
                 "free_camera_keyboard_pitch_up_q_hook"
@@ -1259,6 +1323,8 @@ public class BinaryPatchRegressionTests
             freeCameraKeyboardPitchDownSelection,
             Is.EquivalentTo(new[]
             {
+                "resolution_gate",
+                "force_windowed",
                 "free_camera_aurore_gate_bypass",
                 "free_camera_keyboard_pitch_down_q_cave",
                 "free_camera_keyboard_pitch_down_q_hook"
@@ -1470,19 +1536,19 @@ public class BinaryPatchRegressionTests
     }
 
     [Test]
-    public void BinaryPatchPlanBuilder_RequiresWindowedPairForExperimentalFullscreenFallback()
+    public void BinaryPatchPlanBuilder_InjectsWindowedPairForExperimentalRows()
     {
         Assert.That(
             BinaryPatchPlanBuilder.ValidateVisibleSelection(new[] { "skip_auto_toggle" }),
-            Does.Contain("Allow non-4:3 mode candidates"));
+            Is.Null);
 
         Assert.That(
             BinaryPatchPlanBuilder.ValidateVisibleSelection(new[] { "skip_auto_toggle", "version_overlay_use_patched_format_pointer" }),
-            Does.Contain("Allow non-4:3 mode candidates"));
+            Is.Null);
 
         Assert.That(
             BinaryPatchPlanBuilder.ValidateVisibleSelection(new[] { "skip_auto_toggle", "extra_graphics_default_on" }),
-            Does.Contain("Allow non-4:3 mode candidates"));
+            Is.Null);
 
         Assert.That(
             BinaryPatchPlanBuilder.ValidateVisibleSelection(new[] { "skip_auto_toggle", "resolution_gate", "force_windowed" }),
@@ -1538,43 +1604,43 @@ public class BinaryPatchRegressionTests
 
         Assert.That(
             BinaryPatchPlanBuilder.ValidateVisibleSelection(new[] { "free_camera_aurore_gate_bypass", "extra_graphics_default_on" }),
-            Does.Contain("baseline windowed compatibility pair"));
+            Is.Null);
 
         Assert.That(
             BinaryPatchPlanBuilder.ValidateVisibleSelection(new[] { "pause_o_scan_initializer_experiment", "extra_graphics_default_on" }),
-            Does.Contain("baseline windowed compatibility pair"));
+            Is.Null);
 
         Assert.That(
             BinaryPatchPlanBuilder.ValidateVisibleSelection(new[] { "free_camera_keyboard_forward_q_hook", "extra_graphics_default_on" }),
-            Does.Contain("baseline windowed compatibility pair"));
+            Is.Null);
 
         Assert.That(
             BinaryPatchPlanBuilder.ValidateVisibleSelection(new[] { "free_camera_keyboard_backward_q_hook", "extra_graphics_default_on" }),
-            Does.Contain("baseline windowed compatibility pair"));
+            Is.Null);
 
         Assert.That(
             BinaryPatchPlanBuilder.ValidateVisibleSelection(new[] { "free_camera_keyboard_strafe_left_q_hook", "extra_graphics_default_on" }),
-            Does.Contain("baseline windowed compatibility pair"));
+            Is.Null);
 
         Assert.That(
             BinaryPatchPlanBuilder.ValidateVisibleSelection(new[] { "free_camera_keyboard_strafe_right_q_hook", "extra_graphics_default_on" }),
-            Does.Contain("baseline windowed compatibility pair"));
+            Is.Null);
 
         Assert.That(
             BinaryPatchPlanBuilder.ValidateVisibleSelection(new[] { "free_camera_keyboard_yaw_left_q_hook", "extra_graphics_default_on" }),
-            Does.Contain("baseline windowed compatibility pair"));
+            Is.Null);
 
         Assert.That(
             BinaryPatchPlanBuilder.ValidateVisibleSelection(new[] { "free_camera_keyboard_yaw_right_q_hook", "extra_graphics_default_on" }),
-            Does.Contain("baseline windowed compatibility pair"));
+            Is.Null);
 
         Assert.That(
             BinaryPatchPlanBuilder.ValidateVisibleSelection(new[] { "free_camera_keyboard_pitch_up_q_hook", "extra_graphics_default_on" }),
-            Does.Contain("baseline windowed compatibility pair"));
+            Is.Null);
 
         Assert.That(
             BinaryPatchPlanBuilder.ValidateVisibleSelection(new[] { "free_camera_keyboard_pitch_down_q_hook", "extra_graphics_default_on" }),
-            Does.Contain("baseline windowed compatibility pair"));
+            Is.Null);
     }
 
     [Test]

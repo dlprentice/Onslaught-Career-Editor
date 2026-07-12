@@ -15,14 +15,16 @@ import os
 import shutil
 import sys
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Iterable
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CATALOG = REPO_ROOT / "patches" / "catalog" / "patches.v2.json"
-EXPECTED_CATALOG_SHA256 = "a674df99c9a11c914a803b8b133a677e4b87c6ae138b183d3bcfbaa7d6130753"
+EXPECTED_CATALOG_SHA256 = "283fe89355f3ffa017e1812709cd59c95d67fa991886f72636d1fd0001d624c8"
+KNOWN_RETAIL_STEAM_SHA256 = "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+KNOWN_RETAIL_STEAM_SIZE = 2_506_752
 BACKUP_SUFFIX = ".original.backup"
 BACKUP_HASH_SUFFIX = ".sha256"
 PROFILE_MANIFEST_NAME = "onslaught-profile-manifest.json"
@@ -61,6 +63,7 @@ class PatchSpec:
     preset_eligibility: tuple[str, ...]
     requires_windowed_pair: bool
     target_binary_size: int | None
+    target_binary_hashes: tuple[str, ...]
 
 
 def _parse_hex_bytes(raw: str) -> bytes:
@@ -87,13 +90,16 @@ def _parse_string_tuple(value: object) -> tuple[str, ...]:
     if not isinstance(value, list):
         return ()
     values: list[str] = []
+    seen: set[str] = set()
     for item in value:
         if not isinstance(item, str):
             continue
         cleaned = item.strip()
-        if cleaned:
+        normalized = cleaned.casefold()
+        if cleaned and normalized not in seen:
+            seen.add(normalized)
             values.append(cleaned)
-    return tuple(dict.fromkeys(values))
+    return tuple(values)
 
 
 def _parse_optional_string(value: object) -> str:
@@ -127,7 +133,7 @@ def load_catalog(catalog_path: Path) -> list[PatchSpec]:
         patched = _parse_hex_bytes(str(row.get("patched_bytes", "")))
         if not patch_id or not title or not track:
             continue
-        if len(original) != len(patched):
+        if len(original) != len(patched) or original == patched:
             continue
         specs.append(
             PatchSpec(
@@ -146,6 +152,7 @@ def load_catalog(catalog_path: Path) -> list[PatchSpec]:
                 preset_eligibility=_parse_string_tuple(row.get("preset_eligibility")),
                 requires_windowed_pair=bool(row.get("requires_windowed_pair", False)),
                 target_binary_size=_parse_optional_int(row.get("target_binary_size")),
+                target_binary_hashes=_parse_string_tuple(row.get("target_binary_hashes")),
             )
         )
     if not specs:
@@ -219,10 +226,24 @@ def validate_catalog_trust_for_mutation(catalog_path: Path) -> None:
 
 
 def write_backup_hash(backup_path: Path) -> None:
-    Path(str(backup_path) + BACKUP_HASH_SUFFIX).write_text(
-        sha256_bytes(backup_path.read_bytes()),
-        encoding="utf-8",
-    )
+    hash_path = Path(str(backup_path) + BACKUP_HASH_SUFFIX)
+    with hash_path.open("x", encoding="utf-8") as stream:
+        stream.write(sha256_bytes(backup_path.read_bytes()))
+
+
+def validate_backup_hash_sidecar_path(backup_path: Path, root: Path) -> None:
+    hash_path = Path(str(backup_path) + BACKUP_HASH_SUFFIX)
+    reject_reparse_ancestors(hash_path, root)
+    if not hash_path.exists():
+        return
+    if is_reparse_point(hash_path):
+        raise ValueError(f"refusing to trust reparse-point backup hash sidecar: {hash_path}")
+    if not hash_path.is_file():
+        raise ValueError(f"backup hash sidecar is not a regular file: {hash_path}")
+    if getattr(os.stat(hash_path), "st_nlink", 1) > 1:
+        raise ValueError(f"refusing to write hardlinked backup hash sidecar: {hash_path}")
+    if not backup_path.exists():
+        raise ValueError(f"backup hash sidecar exists without its backup snapshot: {hash_path}")
 
 
 def validate_generated_profile_manifest(root: Path, exe_path: Path, patch_ids: set[str]) -> None:
@@ -280,7 +301,8 @@ def validate_generated_profile_manifest(root: Path, exe_path: Path, patch_ids: s
     manifest_patch_keys = patch_result.get("patchKeys")
     if not isinstance(manifest_patch_keys, list) or not all(isinstance(key, str) for key in manifest_patch_keys):
         raise ValueError("generated playable copied game manifest is missing patchResult.patchKeys")
-    missing_patch_keys = sorted(patch_ids - set(manifest_patch_keys))
+    manifest_patch_ids = {key.casefold() for key in manifest_patch_keys}
+    missing_patch_keys = sorted(key for key in patch_ids if key.casefold() not in manifest_patch_ids)
     if missing_patch_keys:
         raise ValueError(
             "generated playable copied game manifest does not list selected patch keys: "
@@ -305,6 +327,63 @@ def validate_backup_snapshot(backup_path: Path, specs: Iterable[PatchSpec]) -> N
             raise ValueError(f"backup snapshot does not contain original bytes for {spec.patch_id}")
 
 
+def validate_current_against_backup_catalog_transitions(
+    current_bytes: bytes,
+    backup_bytes: bytes,
+    catalog_specs: Iterable[PatchSpec],
+) -> None:
+    if len(current_bytes) != len(backup_bytes):
+        raise ValueError("current BEA.exe size differs from the verified full-file backup")
+
+    allowed_differences = bytearray(len(current_bytes))
+    for spec in catalog_specs:
+        start = spec.file_offset
+        end = start + len(spec.original)
+        if start < 0 or end > len(current_bytes):
+            continue
+        if backup_bytes[start:end] == spec.original and current_bytes[start:end] == spec.patched:
+            allowed_differences[start:end] = b"\x01" * (end - start)
+
+    for index, (current, original) in enumerate(zip(current_bytes, backup_bytes, strict=True)):
+        if current != original and not allowed_differences[index]:
+            raise ValueError(
+                "current BEA.exe differs from the verified backup outside known catalog patch spans"
+            )
+
+
+def validate_supported_specimen_identity(
+    exe_path: Path,
+    selected_specs: Iterable[PatchSpec],
+    catalog_specs: Iterable[PatchSpec],
+    *,
+    allow_byte_layout_only_target: bool,
+) -> None:
+    selected_list = list(selected_specs)
+    catalog_list = list(catalog_specs)
+    current_bytes = exe_path.read_bytes()
+    backup_path = build_backup_path(exe_path)
+    if backup_path.exists():
+        validate_backup_snapshot(backup_path, selected_list)
+        identity_bytes = backup_path.read_bytes()
+        validate_current_against_backup_catalog_transitions(
+            current_bytes,
+            identity_bytes,
+            catalog_list,
+        )
+    else:
+        identity_bytes = current_bytes
+
+    if allow_byte_layout_only_target:
+        return
+
+    digest = sha256_bytes(identity_bytes).lower()
+    if digest != KNOWN_RETAIL_STEAM_SHA256 or len(identity_bytes) != KNOWN_RETAIL_STEAM_SIZE:
+        raise ValueError(
+            "mutating modes require the canonical clean specimen or its verified full-file backup; "
+            "synthetic byte-layout fixtures require --allow-byte-layout-only-target"
+        )
+
+
 def ensure_safe_target(
     exe_path: Path,
     *,
@@ -312,6 +391,8 @@ def ensure_safe_target(
     mutating: bool,
     patch_ids: set[str] | None = None,
     specs: Iterable[PatchSpec] | None = None,
+    catalog_specs: Iterable[PatchSpec] | None = None,
+    allow_byte_layout_only_target: bool = False,
 ) -> Path:
     if mutating and allowed_root is None:
         raise ValueError("mutating modes require --allowed-root pointing at an app-owned copied-target workspace")
@@ -366,10 +447,17 @@ def ensure_safe_target(
             if is_reparse_point(backup_path):
                 raise ValueError(f"refusing to trust reparse-point backup: {backup_path}")
             reject_hardlinked_file(backup_path)
+        validate_backup_hash_sidecar_path(backup_path, root)
         validate_generated_profile_manifest(root, resolved, patch_ids or set())
         known_sizes = {spec.target_binary_size for spec in specs or () if spec.target_binary_size}
         if known_sizes and resolved.stat().st_size not in known_sizes:
             raise ValueError("target BEA.exe size does not match the supported patch catalog specimen size")
+        validate_supported_specimen_identity(
+            resolved,
+            specs or (),
+            catalog_specs or specs or (),
+            allow_byte_layout_only_target=allow_byte_layout_only_target,
+        )
     return resolved
 
 
@@ -403,27 +491,37 @@ def verify(data: bytes | bytearray, specs: Iterable[PatchSpec]) -> list[dict[str
 def validate_patch_selection_policy(specs: list[PatchSpec]) -> None:
     by_id: dict[str, PatchSpec] = {}
     for spec in specs:
-        if spec.patch_id in by_id:
+        normalized_id = spec.patch_id.casefold()
+        if normalized_id in by_id:
             raise ValueError(f"patch selection contains duplicate row: {spec.patch_id}")
-        by_id[spec.patch_id] = spec
+        by_id[normalized_id] = spec
 
     selected_ids = set(by_id)
     for spec in specs:
+        if spec.original == spec.patched:
+            raise ValueError(f"patch selection contains no-op row: {spec.patch_id}")
         for dependency in spec.dependencies:
-            if dependency not in selected_ids:
+            if dependency.casefold() not in selected_ids:
                 raise ValueError(f"patch selection is missing dependency {dependency} required by {spec.patch_id}")
         for conflict in spec.conflicts:
-            if conflict in selected_ids:
+            if conflict.casefold() in selected_ids:
                 raise ValueError(f"patch selection contains conflicting rows: {spec.patch_id} and {conflict}")
-        if spec.selectability.lower() == "hidden_companion":
-            has_visible_dependent = any(spec.patch_id in candidate.dependencies for candidate in specs)
+        if spec.selectability.casefold() == "hidden_companion":
+            has_visible_dependent = any(
+                candidate.selectability.casefold() != "hidden_companion"
+                and any(
+                    dependency.casefold() == spec.patch_id.casefold()
+                    for dependency in candidate.dependencies
+                )
+                for candidate in specs
+            )
             if not has_visible_dependent:
                 raise ValueError(f"patch selection contains hidden companion row without its visible dependent: {spec.patch_id}")
 
     exclusive_groups: dict[str, list[str]] = {}
     for spec in specs:
         if spec.exclusive_group:
-            exclusive_groups.setdefault(spec.exclusive_group.lower(), []).append(spec.patch_id)
+            exclusive_groups.setdefault(spec.exclusive_group.casefold(), []).append(spec.patch_id)
     for group, members in exclusive_groups.items():
         if len(members) > 1:
             raise ValueError(f"patch selection contains multiple rows from exclusive group {group}: {', '.join(members)}")
@@ -438,13 +536,19 @@ def validate_patch_selection_policy(specs: list[PatchSpec]) -> None:
     for index, (left_start, left_end, left_spec) in enumerate(ranges):
         for right_start, right_end, right_spec in ranges[index + 1 :]:
             overlaps = left_start < right_end and right_start < left_end
-            if overlaps and left_spec.patched != right_spec.patched:
+            identical_mutation = (
+                left_start == right_start
+                and left_end == right_end
+                and left_spec.original == right_spec.original
+                and left_spec.patched == right_spec.patched
+            )
+            if overlaps and not identical_mutation:
                 raise ValueError(f"patch selection contains overlapping rows: {left_spec.patch_id} and {right_spec.patch_id}")
 
 
 def choose_specs(all_specs: list[PatchSpec], patch_ids: list[str]) -> list[PatchSpec]:
-    by_id = {spec.patch_id: spec for spec in all_specs}
-    missing = [patch_id for patch_id in patch_ids if patch_id not in by_id]
+    by_id = {spec.patch_id.casefold(): spec for spec in all_specs}
+    missing = [patch_id for patch_id in patch_ids if patch_id.casefold() not in by_id]
     if missing:
         raise ValueError(f"unknown patch id(s): {', '.join(missing)}")
 
@@ -452,13 +556,14 @@ def choose_specs(all_specs: list[PatchSpec], patch_ids: list[str]) -> list[Patch
     selected_ids: set[str] = set()
 
     def add_with_dependencies(patch_id: str) -> None:
-        spec = by_id[patch_id]
-        if spec.patch_id in selected_ids:
+        normalized_id = patch_id.casefold()
+        spec = by_id[normalized_id]
+        if normalized_id in selected_ids:
             return
         selected.append(spec)
-        selected_ids.add(spec.patch_id)
+        selected_ids.add(normalized_id)
         for dependency in spec.dependencies:
-            if dependency not in by_id:
+            if dependency.casefold() not in by_id:
                 raise ValueError(f"patch selection references unknown dependency {dependency} required by {spec.patch_id}")
             add_with_dependencies(dependency)
 
@@ -475,6 +580,7 @@ def run_patch(
     *,
     apply: bool,
     dry_run: bool,
+    catalog_specs: Iterable[PatchSpec] | None = None,
 ) -> dict[str, object]:
     data = bytearray(exe_path.read_bytes())
     before = verify(data, specs)
@@ -507,6 +613,12 @@ def run_patch(
         write_backup_hash(backup_path)
     else:
         validate_backup_snapshot(backup_path, specs)
+    backup_bytes = backup_path.read_bytes()
+    validate_current_against_backup_catalog_transitions(
+        bytes(data),
+        backup_bytes,
+        catalog_specs or specs,
+    )
 
     for spec, row in zip(specs, before, strict=True):
         if row["state"] == STATE_ORIGINAL:
@@ -541,7 +653,33 @@ def render_report(result: dict[str, object]) -> str:
 
 
 def self_test() -> int:
+    if _parse_string_tuple(["custom", "CUSTOM"]) != ("custom",):
+        print("self-test case-insensitive list normalization failed", file=sys.stderr)
+        return 1
+
     catalog_specs = load_catalog(DEFAULT_CATALOG)
+    selected = choose_specs(catalog_specs, ["FORCE_WINDOWED"])
+    if [spec.patch_id for spec in selected] != ["force_windowed"]:
+        print("self-test case-insensitive patch selection failed", file=sys.stderr)
+        return 1
+    selected = choose_specs(
+        catalog_specs,
+        ["resolution_gate", "force_windowed", "free_camera_keyboard_forward_q_hook"],
+    )
+    casefolded_selection = [
+        replace(
+            spec,
+            patch_id=spec.patch_id.upper(),
+            dependencies=tuple(dependency.upper() for dependency in spec.dependencies),
+            conflicts=tuple(conflict.upper() for conflict in spec.conflicts),
+        )
+        for spec in selected
+    ]
+    try:
+        validate_patch_selection_policy(casefolded_selection)
+    except ValueError as exc:
+        print(f"self-test case-insensitive selection policy failed: {exc}", file=sys.stderr)
+        return 1
     try:
         choose_specs(catalog_specs, ["frontend_clear_screen_dark_red", "frontend_clear_screen_dark_green"])
         print("self-test conflict policy failed", file=sys.stderr)
@@ -577,6 +715,21 @@ def self_test() -> int:
         print("self-test dependency closure failed", file=sys.stderr)
         return 1
 
+    overlap_first = choose_specs(catalog_specs, ["force_windowed"])[0]
+    overlap_second = replace(
+        overlap_first,
+        patch_id="self_test_shifted_overlap",
+        file_offset=overlap_first.file_offset + 1,
+    )
+    try:
+        validate_patch_selection_policy([overlap_first, overlap_second])
+        print("self-test shifted-overlap policy failed", file=sys.stderr)
+        return 1
+    except ValueError as exc:
+        if "overlapping" not in str(exc):
+            print(f"self-test shifted-overlap policy wrong error: {exc}", file=sys.stderr)
+            return 1
+
     specs = choose_specs(catalog_specs, ["force_windowed"])
     spec = specs[0]
     with tempfile.TemporaryDirectory(prefix="bea-patch-self-test-") as temp:
@@ -591,7 +744,7 @@ def self_test() -> int:
             print("self-test dry-run failed", file=sys.stderr)
             return 1
 
-        applied = run_patch(exe_path, specs, apply=True, dry_run=False)
+        applied = run_patch(exe_path, specs, apply=True, dry_run=False, catalog_specs=catalog_specs)
         if not applied["success"] or applied["after"][0]["state"] != STATE_PATCHED:  # type: ignore[index]
             print("self-test apply failed", file=sys.stderr)
             return 1
@@ -612,6 +765,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--patch-id", action="append", default=[])
     parser.add_argument("--list", action="store_true", help="List available patch IDs.")
     parser.add_argument("--apply", action="store_true", help="Write selected patch bytes.")
+    parser.add_argument(
+        "--allow-byte-layout-only-target",
+        action="store_true",
+        help="Test-only: permit a synthetic same-size fixture instead of the canonical specimen.",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Verify without writing.")
     parser.add_argument("--json-out", type=Path, help="Optional JSON report path.")
     parser.add_argument("--self-test", action="store_true")
@@ -640,6 +798,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("at least one --patch-id is required")
     if args.apply and args.dry_run:
         parser.error("--apply and --dry-run are mutually exclusive")
+    if args.allow_byte_layout_only_target and not args.apply:
+        parser.error("--allow-byte-layout-only-target is valid only with --apply")
 
     try:
         selected = choose_specs(specs, args.patch_id)
@@ -649,8 +809,16 @@ def main(argv: list[str] | None = None) -> int:
             mutating=args.apply,
             patch_ids={spec.patch_id for spec in selected} if args.apply else None,
             specs=selected,
+            catalog_specs=specs,
+            allow_byte_layout_only_target=args.allow_byte_layout_only_target,
         )
-        result = run_patch(exe_path, selected, apply=args.apply, dry_run=args.dry_run)
+        result = run_patch(
+            exe_path,
+            selected,
+            apply=args.apply,
+            dry_run=args.dry_run,
+            catalog_specs=specs,
+        )
     except Exception as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2

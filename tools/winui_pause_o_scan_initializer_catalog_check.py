@@ -53,17 +53,28 @@ def _assert_row(row: dict, root: Path) -> None:
         raise AssertionError("purpose must cite the accepted ordered same-window runtime proof")
 
     evidence_refs = row.get("evidence_refs", [])
-    required_refs = {
+    required_evidence_refs = {
         "reverse-engineering/binary-analysis/pause-key-default-row-patch.md",
         "release/readiness/winui_pause_o_scan_initializer_runtime_2026-06-18.md",
-        "release/readiness/winui_controller_mapping_table_diagnostic_2026-06-18.md",
-        "release/readiness/winui_free_camera_pause_context_diagnostic_2026-06-18.md",
+        "release/readiness/winui_pause_o_scan_initializer_normal_gameplay_resume_2026-06-19.md",
         "patches/README.md",
     }
-    missing = sorted(required_refs.difference(evidence_refs))
+    missing = sorted(required_evidence_refs.difference(evidence_refs))
     if missing:
         raise AssertionError(f"missing evidence refs: {missing}")
-    for ref in evidence_refs:
+
+    diagnostic_refs = row.get("diagnostic_refs", [])
+    required_diagnostic_refs = {
+        "release/readiness/winui_controller_mapping_table_diagnostic_2026-06-18.md",
+        "release/readiness/winui_free_camera_pause_context_diagnostic_2026-06-18.md",
+    }
+    missing = sorted(required_diagnostic_refs.difference(diagnostic_refs))
+    if missing:
+        raise AssertionError(f"missing diagnostic refs: {missing}")
+    if set(evidence_refs).intersection(diagnostic_refs):
+        raise AssertionError("accepted evidence refs and diagnostic refs must be disjoint")
+
+    for ref in [*evidence_refs, *diagnostic_refs]:
         if ref.startswith("reverse-engineering/") or ref.startswith("release/") or ref.startswith("patches/"):
             if not (root / ref).exists():
                 raise AssertionError(f"evidence ref does not exist: {ref}")

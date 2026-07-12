@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-12",
-  "currentFocus": "Audit patch/profile source truth and user-facing evidence labels, then close one bounded patch/mod gap before the deep RE and Lore passes.",
+  "currentFocus": "Document the Steam-binary/Stuart-source/exporter/rebuild evidence hierarchy and one authentic behavior slice without promoting source or prototype assumptions to retail truth.",
   "sourceOfTruth": {
     "readme": "README.MD",
     "contributorGuide": "CONTRIBUTING.md",
@@ -15,7 +15,8 @@
     "release": "v1.0.9 remains the latest published unsigned portable WinUI ZIP with 949 packaged Lore documents; this source slice does not publish a release.",
     "product": "WinUI 3 is the primary preservation/modding GUI. The separate GPL rebuild has a deterministic Core/headless verifier and one playable procedural Godot .NET First Flight client; Electron, WPF, and the old Python GUI/CLI remain archived references.",
     "winUiFirstUse": "CURRENT_CAPABILITIES.md and its byte-identical Lore mirror record the verified three-state setup hierarchy, preservation of temporarily unavailable remembered folders, manual Save Lab availability, shell status/focus ownership, Level 1 headings, compact wrapped source actions, truthful launch/Admin Level preset state, and demand-loaded Media VLC behavior.",
-    "filesystemSafety": "Save/options and generated asset/package outputs use bounded roots, held identities, guarded writes, final verification, and explicit same-user post-finalization limits.",
+    "filesystemSafety": "Save/options, AppCore copied-executable patching, and generated asset/package outputs use bounded roots, guarded or staged writes, final verification, recoverable full-file backups, and explicit same-user post-finalization limits.",
+    "patchContract": "The normative contract accounts for 29 catalog rows, 20 visible options, 9 hidden companions, 17 dependency edges, and 118 conflict edges. AppCore accepts only exact pinned mutation rows, publishes backup/checksum/apply/restore files atomically, and repairs damaged or truncated copies only from an integrity- and provenance-verified full-file backup. Standalone Python patch scripts remain lab helpers without the AppCore atomic-publication guarantee.",
     "re": "reverse-engineering/ is canonical; static Ghidra closure remains evidence input rather than automatic runtime or rebuild proof.",
     "lore": "The 949-document package count proves packaged breadth, not editorial completeness, freshness, provenance/rights review, or broad public-safety approval.",
     "rebuild": "The GPL-3.0-or-later RE-informed source rebuild now includes the deterministic net8 Core/headless verifier, pure real-time Client adapter, and playable procedural Godot 4.7 First Flight view. The source client needs no retail payload and is not in the published v1.0.9 WinUI ZIP. Current evidence covers exact replay/state hashes, two native viewport sizes, heuristic semantic rendered anchors, a synthetic Godot notification-handler probe, kernel-owned Job Object cleanup, and a fixed verified toolchain cache. The rendered-frame checks are regression heuristics, not tamper-resistant or independent visual proof; the evidence does not prove retail content/parity, a real OS focus transition, strict clean-room status, or same-user sandbox isolation.",
@@ -29,9 +30,9 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Generate a canonical audit of all 29 patch rows, profile expansions, dependency/conflict edges, exact byte spans, and evidence classes.",
-    "Correct stale or overstated Patch Bench and patch README wording found by that audit, then close one bounded evidence gap.",
-    "Generate contributor front-door indexes before reorganizing large RE, tools, or release trees.",
-    "Run the deep Lore and RE quality passes after the runnable rebuild foundation is accepted."
+    "Inventory and document the pinned Onslaught source and AYAResourceExtractor submodules, including provenance, licenses, build/test posture, supported formats, and known gaps.",
+    "Create one subsystem crosswalk that separates source suggestion, Steam static/runtime proof, exporter support, rebuild implementation, and open disagreement.",
+    "Freeze one accepted public-safe behavior contract for a recognizable rebuild slice, then keep its GUI/user documentation bounded to proven behavior.",
+    "Generate contributor front-door indexes and run the deep Lore editorial/provenance pass after the crosswalk foundation is in place."
   ]
 }

@@ -155,7 +155,7 @@
                                   <TextBlock Text="Pick what the safe copy should include. Required compatibility fixes stay selected; optional changes can be added or cleared before you create the copy."
                                            Margin="0,6,0,0"
                                            Style="{StaticResource SectionBodyTextStyle}" />
-                                <TextBlock Text="Available changes include windowed startup, wider display-mode support, graphics defaults, menu color presets, music swaps, Goodies preview, title marker, launch options, control-option presets, and experimental camera/control rows."
+                                <TextBlock Text="Available changes include windowed startup, wider display-mode support, graphics defaults, frontend margin colors, music swaps, Goodies preview, title marker, launch options, control-option presets, and experimental camera/control rows."
                                             Margin="0,6,0,0"
                                             Style="{StaticResource SectionBodyTextStyle}" />
                                 <TextBlock Text="Open Details and limits on a row when you want the technical checks and remaining limits."
@@ -174,7 +174,7 @@
                                                FontWeight="SemiBold" />
                                     <TextBlock Text="Profiles are presets for normal play and testing. The app still verifies every selected row before creating or launching the safe copy."
                                                Style="{StaticResource SectionBodyTextStyle}" />
-                                    <TextBlock Text="Enhanced Profile Preview combines the windowed setup, graphics defaults, PATCHED title marker, red menu background, Goodies preview, and copied-options control starting values."
+                                    <TextBlock Text="Enhanced Profile Preview combines the windowed setup, graphics defaults, PATCHED title marker, red frontend margins, Goodies preview, and copied-options control starting values."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <TextBlock Text="Debug Camera Preview selects the camera toggle plus one Q-forward movement test."
                                                Style="{StaticResource SectionBodyTextStyle}" />
@@ -266,7 +266,7 @@
                                                 Content="Enhanced Profile Preview"
                                                 AutomationProperties.AutomationId="PatchBenchEnhancedPreviewProfileButton"
                                                 AutomationProperties.Name="Select Enhanced Profile Preview profile"
-                                                ToolTipService.ToolTip="Preview profile: compatibility, graphics defaults, PATCHED title marker, red menu background, Goodies preview, and copied-options control tweaks. Open row details for what was checked and current limits."
+                                                ToolTipService.ToolTip="Preview profile: compatibility, graphics defaults, PATCHED title marker, red frontend margins, Goodies preview, and copied-options control tweaks. Open row details for what was checked and current limits."
                                                 Grid.Row="1"
                                                 Grid.Column="0"
                                                 HorizontalAlignment="Stretch"
@@ -311,10 +311,10 @@
                                     Padding="12"
                                     Background="{ThemeResource ShellMutedSurfaceBrush}">
                                 <StackPanel Spacing="10">
-                                    <TextBlock Text="Menu background color"
+                                    <TextBlock Text="Frontend margin color"
                                                FontSize="14"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Text="Choose one frontend clear-screen color for the safe copy. This affects the background and margins behind menu screens; it does not replace textures, fonts, or HUD colors."
+                                    <TextBlock Text="Choose one clear-screen color for the safe copy. Accepted checks cover title-screen margins and one navigated Goodies-menu run; they do not cover every menu background or replace textures, fonts, or HUD colors."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <Grid ColumnSpacing="8"
                                           RowSpacing="8">
@@ -327,36 +327,36 @@
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
                                         <Button x:Name="PatchBenchMenuColorRedButton"
-                                                Content="Red background"
+                                                Content="Red margins"
                                                 AutomationProperties.AutomationId="PatchBenchMenuColorRedButton"
-                                                AutomationProperties.Name="Select red menu background color"
+                                                AutomationProperties.Name="Select red frontend margins"
                                                 Grid.Row="0"
                                                 Grid.Column="0"
                                                 HorizontalAlignment="Stretch"
                                                 Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                 Click="MenuColorRedButton_Click" />
                                         <Button x:Name="PatchBenchMenuColorGreenButton"
-                                                Content="Green background"
+                                                Content="Green margins"
                                                 AutomationProperties.AutomationId="PatchBenchMenuColorGreenButton"
-                                                AutomationProperties.Name="Select green menu background color"
+                                                AutomationProperties.Name="Select green frontend margins"
                                                 Grid.Row="0"
                                                 Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
                                                 Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                 Click="MenuColorGreenButton_Click" />
                                         <Button x:Name="PatchBenchMenuColorBlackButton"
-                                                Content="Black background"
+                                                Content="Black margins"
                                                 AutomationProperties.AutomationId="PatchBenchMenuColorBlackButton"
-                                                AutomationProperties.Name="Select black menu background color"
+                                                AutomationProperties.Name="Select black frontend margins"
                                                 Grid.Row="1"
                                                 Grid.Column="0"
                                                 HorizontalAlignment="Stretch"
                                                 Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                 Click="MenuColorBlackButton_Click" />
                                         <Button x:Name="PatchBenchMenuColorClearButton"
-                                                Content="Clear menu color"
+                                                Content="Clear margin color"
                                                 AutomationProperties.AutomationId="PatchBenchMenuColorClearButton"
-                                                AutomationProperties.Name="Clear menu background color selection"
+                                                AutomationProperties.Name="Clear frontend margin color selection"
                                                 Grid.Row="1"
                                                 Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
@@ -365,8 +365,8 @@
                                     </Grid>
                                     <TextBlock x:Name="PatchBenchMenuColorSelectionStatus"
                                                AutomationProperties.AutomationId="PatchBenchMenuColorSelectionStatus"
-                                               AutomationProperties.Name="Selected menu background color status"
-                                               Text="Selected menu background: none."
+                                               AutomationProperties.Name="Selected frontend margin color status"
+                                               Text="Selected frontend margins: none."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                 </StackPanel>
                             </Border>
@@ -380,7 +380,7 @@
                                     <TextBlock Text="Title marker and Goodies preview"
                                                FontSize="14"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Text="PATCHED marker shows the word PATCHED on the title screen so you can tell a modded copy apart. Goodies preview shows Goodies as unlocked in the gallery view of the safe copy; it does not change your save."
+                                    <TextBlock Text="PATCHED marker shows the word PATCHED on the title screen so you can tell a modded copy apart. Goodies preview changes gallery display state for the bounded entries checked so far in the safe copy; it does not change your save or permanently award Goodies."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <Grid ColumnSpacing="8"
                                           RowSpacing="8">

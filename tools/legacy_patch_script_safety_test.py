@@ -7,6 +7,7 @@ import tempfile
 import json
 import hashlib
 import importlib.util
+import os
 from pathlib import Path
 
 
@@ -292,8 +293,16 @@ def test_catalog_patch_helper_requires_allowed_root_and_manifest() -> None:
         write_profile_manifest(Path(temp), exe_path, ["force_windowed"])
 
         result = run_script(allowed_root_args)
+        if result.returncode == 0:
+            raise AssertionError("Catalog helper accepted a synthetic byte-layout target without explicit test-only opt-in.")
+        if "canonical clean specimen" not in result.stdout.lower():
+            raise AssertionError(f"Expected canonical specimen refusal.\n{result.stdout}")
+        if exe_path.read_bytes() != original:
+            raise AssertionError("Catalog helper changed bytes while refusing a non-canonical target.")
+
+        result = run_script([*allowed_root_args, "--allow-byte-layout-only-target"])
         if result.returncode != 0:
-            raise AssertionError(f"Expected catalog helper to patch under --allowed-root.\n{result.stdout}")
+            raise AssertionError(f"Expected explicit byte-layout test mode to patch the synthetic target.\n{result.stdout}")
         patched = exe_path.read_bytes()
         if patched[0x12A644 : 0x12A649] != bytes([0xB8, 0x01, 0x00, 0x00, 0x00]):
             raise AssertionError("Catalog helper did not apply the force-windowed bytes under --allowed-root.")
@@ -341,6 +350,118 @@ def test_catalog_patch_helper_rejects_untrusted_catalog_for_apply() -> None:
             raise AssertionError(f"Expected refusal to mention supported catalog hash.\n{result.stdout}")
         if exe_path.read_bytes() != original:
             raise AssertionError("Catalog helper mutated BEA.exe with an untrusted catalog.")
+
+
+def test_catalog_patch_helper_rejects_unrelated_drift_with_verified_backup() -> None:
+    with tempfile.TemporaryDirectory(prefix="onslaught-catalog-helper-backup-drift-") as temp:
+        root = Path(temp)
+        exe_path = root / "BEA.exe"
+        seed_exe(
+            exe_path,
+            {
+                0x129696: bytes([0xCC]),
+                0x12A644: bytes([0xA1, 0xF0, 0x2D, 0x66, 0x00]),
+            },
+            size=KNOWN_RETAIL_STEAM_SIZE,
+        )
+        write_profile_manifest(root, exe_path, ["force_windowed", "resolution_gate"])
+
+        common_args = [
+            "tools/apply_bea_catalog_patch.py",
+            "--exe",
+            str(exe_path),
+            "--apply",
+            "--allowed-root",
+            str(root),
+            "--allow-byte-layout-only-target",
+        ]
+        first = run_script([*common_args, "--patch-id", "force_windowed"])
+        if first.returncode != 0:
+            raise AssertionError(f"Expected first catalog mutation to create a verified backup.\n{first.stdout}")
+
+        drifted = bytearray(exe_path.read_bytes())
+        drifted[0x20] = 0x42
+        exe_path.write_bytes(drifted)
+        write_profile_manifest(root, exe_path, ["force_windowed", "resolution_gate"])
+
+        second = run_script([*common_args, "--patch-id", "resolution_gate"])
+        if second.returncode == 0:
+            raise AssertionError("Catalog helper accepted unrelated executable drift beside a verified backup.")
+        if "outside known catalog patch spans" not in second.stdout.lower():
+            raise AssertionError(f"Expected unrelated-drift refusal.\n{second.stdout}")
+        if exe_path.read_bytes() != bytes(drifted):
+            raise AssertionError("Catalog helper changed bytes while refusing unrelated executable drift.")
+
+
+def test_catalog_patch_helper_rejects_preexisting_backup_hash_link() -> None:
+    with tempfile.TemporaryDirectory(prefix="onslaught-catalog-helper-sidecar-link-") as temp:
+        root = Path(temp)
+        exe_path = root / "BEA.exe"
+        original = seed_exe(
+            exe_path,
+            {
+                0x12A644: bytes([0xA1, 0xF0, 0x2D, 0x66, 0x00]),
+            },
+            size=KNOWN_RETAIL_STEAM_SIZE,
+        )
+        write_profile_manifest(root, exe_path, ["force_windowed"])
+
+        sentinel = root / "sentinel.txt"
+        sentinel.write_text("do not overwrite", encoding="utf-8")
+        hash_path = Path(str(exe_path) + ".original.backup.sha256")
+        os.link(sentinel, hash_path)
+
+        result = run_script(
+            [
+                "tools/apply_bea_catalog_patch.py",
+                "--exe",
+                str(exe_path),
+                "--patch-id",
+                "force_windowed",
+                "--apply",
+                "--allowed-root",
+                str(root),
+                "--allow-byte-layout-only-target",
+            ]
+        )
+        if result.returncode == 0:
+            raise AssertionError("Catalog helper accepted a pre-existing hardlinked backup hash sidecar.")
+        if "backup hash sidecar" not in result.stdout.lower():
+            raise AssertionError(f"Expected sidecar-link refusal.\n{result.stdout}")
+        if sentinel.read_text(encoding="utf-8") != "do not overwrite":
+            raise AssertionError("Catalog helper overwrote the hardlink source through the backup hash sidecar.")
+        if exe_path.read_bytes() != original:
+            raise AssertionError("Catalog helper mutated BEA.exe while refusing the backup hash sidecar.")
+
+
+def test_catalog_patch_helper_manifest_patch_ids_are_case_insensitive() -> None:
+    with tempfile.TemporaryDirectory(prefix="onslaught-catalog-helper-manifest-case-") as temp:
+        root = Path(temp)
+        exe_path = root / "BEA.exe"
+        seed_exe(
+            exe_path,
+            {
+                0x12A644: bytes([0xA1, 0xF0, 0x2D, 0x66, 0x00]),
+            },
+            size=KNOWN_RETAIL_STEAM_SIZE,
+        )
+        write_profile_manifest(root, exe_path, ["FORCE_WINDOWED"])
+
+        result = run_script(
+            [
+                "tools/apply_bea_catalog_patch.py",
+                "--exe",
+                str(exe_path),
+                "--patch-id",
+                "force_windowed",
+                "--apply",
+                "--allowed-root",
+                str(root),
+                "--allow-byte-layout-only-target",
+            ]
+        )
+        if result.returncode != 0:
+            raise AssertionError(f"Catalog helper rejected a case-equivalent manifest patch ID.\n{result.stdout}")
 
 
 def test_catalog_patch_helper_rejects_steam_library_shape_even_with_manifest() -> None:
@@ -418,6 +539,9 @@ def main() -> int:
     test_goodies_script_requires_allowed_root()
     test_catalog_patch_helper_requires_allowed_root_and_manifest()
     test_catalog_patch_helper_rejects_untrusted_catalog_for_apply()
+    test_catalog_patch_helper_rejects_unrelated_drift_with_verified_backup()
+    test_catalog_patch_helper_rejects_preexisting_backup_hash_link()
+    test_catalog_patch_helper_manifest_patch_ids_are_case_insensitive()
     test_catalog_patch_helper_rejects_steam_library_shape_even_with_manifest()
     test_archival_cheat_patch_scripts_are_disabled()
     print("legacy patch script safety checks passed")

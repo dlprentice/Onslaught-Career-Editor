@@ -14,6 +14,7 @@ OnslaughtCareerEditor.AppCore.Tests/AppConfigEnvironmentCollection.cs	R0_ALLOW	d
 OnslaughtCareerEditor.AppCore.Tests/AppConfigTests.cs	R0_ALLOW	default	allow_with_normal_review
 OnslaughtCareerEditor.AppCore.Tests/AppCoreSaveOptionsContractTests.cs	R0_ALLOW	default	allow_with_normal_review
 OnslaughtCareerEditor.AppCore.Tests/AssetCatalogServiceTests.cs	R0_ALLOW	default	allow_with_normal_review
+OnslaughtCareerEditor.AppCore.Tests/BinaryPatchCatalogContractTests.cs	R0_ALLOW	default	allow_with_normal_review
 OnslaughtCareerEditor.AppCore.Tests/FbxModelSummaryReaderTests.cs	R0_ALLOW	default	allow_with_normal_review
 OnslaughtCareerEditor.AppCore.Tests/FileMutationSafetyTests.cs	R0_ALLOW	default	allow_with_normal_review
 OnslaughtCareerEditor.AppCore.Tests/GameProfileControlOptionsServiceTests.cs	R0_ALLOW	default	allow_with_normal_review
@@ -26,6 +27,7 @@ OnslaughtCareerEditor.AppCore.Tests/MissionScriptGoodieStateSaveCodecTests.cs	R0
 OnslaughtCareerEditor.AppCore.Tests/MissionScriptSlotBitsetSaveCodecTests.cs	R0_ALLOW	default	allow_with_normal_review
 OnslaughtCareerEditor.AppCore.Tests/OnlineMultiplayerReadinessServiceTests.cs	R0_ALLOW	default	allow_with_normal_review
 OnslaughtCareerEditor.AppCore.Tests/OnslaughtCareerEditor.AppCore.Tests.csproj	R0_ALLOW	default	allow_with_normal_review
+OnslaughtCareerEditor.AppCore.Tests/SafeCopyProfileCatalogContractTests.cs	R0_ALLOW	default	allow_with_normal_review
 OnslaughtCareerEditor.AppCore.Tests/SaveAnalyzerServiceTests.cs	R0_ALLOW	default	allow_with_normal_review
 OnslaughtCareerEditor.AppCore/AppConfig.cs	R0_ALLOW	default	allow_with_normal_review
 OnslaughtCareerEditor.AppCore/AssetCatalogFileSafety.cs	R0_ALLOW	default	allow_with_normal_review
@@ -198,6 +200,7 @@ lore/reference-materials.md	R0_ALLOW	default	allow_with_normal_review
 lore/team-roster.md	R0_ALLOW	default	allow_with_normal_review
 lore/technical-deep-dive.md	R0_ALLOW	default	allow_with_normal_review
 lore/world-lore.md	R0_ALLOW	default	allow_with_normal_review
+patches/CATALOG_CONTRACT.md	R0_ALLOW	default	allow_with_normal_review
 patches/README.md	R0_ALLOW	default	allow_with_normal_review
 patches/catalog/patches.v2.json	R0_ALLOW	default	allow_with_normal_review
 patches/catalog/safe-copy-profiles.v1.json	R0_ALLOW	default	allow_with_normal_review
@@ -718,5 +721,6 @@ tools/safe_generated_output.py	R0_ALLOW	default	allow_with_normal_review
 tools/winui_installer_preflight.py	R0_ALLOW	default	allow_with_normal_review
 tools/winui_msix_candidate_probe.py	R0_ALLOW	default	allow_with_normal_review
 tools/winui_patch_catalog_accounting_check.py	R0_ALLOW	default	allow_with_normal_review
+tools/winui_patch_catalog_accounting_check_test.py	R0_ALLOW	default	allow_with_normal_review
 tools/winui_primary_lane_validation.py	R0_ALLOW	default	allow_with_normal_review
 tsconfig.base.json	R0_ALLOW	default	allow_with_normal_review

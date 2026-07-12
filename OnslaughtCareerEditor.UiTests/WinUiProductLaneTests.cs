@@ -516,7 +516,7 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("Compatibility Copy"));
         Assert.That(pageXaml, Does.Contain("Windowed + Graphics Defaults"));
         Assert.That(pageXaml, Does.Contain("Enhanced Profile Preview"));
-        Assert.That(pageXaml, Does.Contain("Enhanced Profile Preview combines the windowed setup, graphics defaults, PATCHED title marker, red menu background, Goodies preview, and copied-options control starting values."));
+        Assert.That(pageXaml, Does.Contain("Enhanced Profile Preview combines the windowed setup, graphics defaults, PATCHED title marker, red frontend margins, Goodies preview, and copied-options control starting values."));
         Assert.That(pageXaml, Does.Contain("Debug Camera Preview selects the camera toggle plus one Q-forward movement test."));
         Assert.That(pageXaml, Does.Contain("PatchBenchDebugCameraProofMatrixStatus"));
         Assert.That(pageXaml, Does.Contain("Debug Camera Preview keeps the other camera-key experiments manual so you can opt into them one at a time."));
@@ -663,22 +663,25 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("PatchBenchModernGraphicsPresetButton"));
         Assert.That(pageXaml, Does.Contain("PatchBenchStableDefaultsButton"));
         Assert.That(pageXaml, Does.Contain("PatchBenchClearSelectionButton"));
-        Assert.That(pageXaml, Does.Contain("Menu background color"));
-        Assert.That(pageXaml, Does.Contain("Choose one frontend clear-screen color for the safe copy"));
-        Assert.That(pageXaml, Does.Contain("it does not replace textures, fonts, or HUD colors"));
+        Assert.That(pageXaml, Does.Contain("Frontend margin color"));
+        Assert.That(pageXaml, Does.Contain("Choose one clear-screen color for the safe copy"));
+        Assert.That(pageXaml, Does.Contain("they do not cover every menu background or replace textures, fonts, or HUD colors"));
         Assert.That(pageXaml, Does.Contain("PatchBenchMenuColorRedButton"));
         Assert.That(pageXaml, Does.Contain("PatchBenchMenuColorGreenButton"));
         Assert.That(pageXaml, Does.Contain("PatchBenchMenuColorBlackButton"));
         Assert.That(pageXaml, Does.Contain("PatchBenchMenuColorClearButton"));
         Assert.That(pageXaml, Does.Contain("PatchBenchMenuColorSelectionStatus"));
-        Assert.That(pageXaml, Does.Contain("Selected menu background: none."));
-        Assert.That(pageXaml, Does.Contain("Red background"));
-        Assert.That(pageXaml, Does.Contain("Green background"));
-        Assert.That(pageXaml, Does.Contain("Black background"));
-        Assert.That(pageXaml, Does.Contain("Clear menu color"));
+        Assert.That(pageXaml, Does.Contain("Selected frontend margins: none."));
+        Assert.That(pageXaml, Does.Contain("Red margins"));
+        Assert.That(pageXaml, Does.Contain("Green margins"));
+        Assert.That(pageXaml, Does.Contain("Black margins"));
+        Assert.That(pageXaml, Does.Contain("Clear margin color"));
         Assert.That(pageXaml, Does.Contain("Title marker and Goodies preview"));
         Assert.That(pageXaml, Does.Contain("PATCHED marker shows the word PATCHED on the title screen"));
-        Assert.That(pageXaml, Does.Contain("Goodies preview shows Goodies as unlocked in the gallery view of the safe copy"));
+        Assert.That(pageXaml, Does.Contain("Goodies preview changes gallery display state for the bounded entries checked so far in the safe copy"));
+        Assert.That(pageXaml, Does.Contain("does not change your save or permanently award Goodies"));
+        Assert.That(pageXaml, Does.Not.Contain("shows Goodies as unlocked"));
+        Assert.That(pageXaml, Does.Not.Contain("red menu background"));
         Assert.That(pageXaml, Does.Contain("PatchBenchAddVersionMarkerButton"));
         Assert.That(pageXaml, Does.Contain("PatchBenchClearVersionMarkerButton"));
         Assert.That(pageXaml, Does.Contain("PatchBenchAddGoodiesPreviewButton"));
@@ -723,9 +726,9 @@ public class WinUiProductLaneTests
         Assert.That(menuColorKindModel, Does.Contain("Black"));
         Assert.That(menuColorTextHelper, Does.Contain("internal static class PatchBenchMenuColorSelectionText"));
         Assert.That(menuColorTextHelper, Does.Contain("public static string BuildStatus(PatchBenchMenuColorSelectionKind selection)"));
-        Assert.That(menuColorTextHelper, Does.Contain("Selected menu background: red."));
-        Assert.That(menuColorTextHelper, Does.Contain("Selected menu background: green."));
-        Assert.That(menuColorTextHelper, Does.Contain("Selected menu background: black."));
+        Assert.That(menuColorTextHelper, Does.Contain("Selected frontend margins: red."));
+        Assert.That(menuColorTextHelper, Does.Contain("Selected frontend margins: green."));
+        Assert.That(menuColorTextHelper, Does.Contain("Selected frontend margins: black."));
         Assert.That(menuColorTextHelper, Does.Not.Contain("frontend_clear_screen_"));
         Assert.That(menuColorTextHelper, Does.Not.Contain("BinaryPatch"));
         Assert.That(menuColorTextHelper, Does.Not.Contain("GameProfile"));
@@ -736,9 +739,9 @@ public class WinUiProductLaneTests
         Assert.That(menuColorTextHelper, Does.Not.Contain("Online"));
         Assert.That(menuColorTextHelper, Does.Not.Contain("Process.Start"));
         Assert.That(menuColorTextHelper, Does.Not.Contain("File."));
-        Assert.That(code, Does.Contain("red menu background selected"));
-        Assert.That(code, Does.Contain("green menu background selected"));
-        Assert.That(code, Does.Contain("black menu background selected"));
+        Assert.That(code, Does.Contain("red frontend margins selected"));
+        Assert.That(code, Does.Contain("green frontend margins selected"));
+        Assert.That(code, Does.Contain("black frontend margins selected"));
         Assert.That(code, Does.Contain("AddVersionMarkerButton_Click"));
         Assert.That(code, Does.Contain("ClearVersionMarkerButton_Click"));
         Assert.That(code, Does.Contain("AddGoodiesPreviewButton_Click"));
@@ -751,7 +754,7 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("Goodies display preview row selected"));
         Assert.That(code, Does.Contain("Goodies display preview row cleared"));
         Assert.That(code, Does.Contain("Patch row is not available: {key}"));
-        Assert.That(pageXaml, Does.Contain("Available changes include windowed startup, wider display-mode support, graphics defaults, menu color presets, music swaps, Goodies preview, title marker, launch options, control-option presets, and experimental camera/control rows."));
+        Assert.That(pageXaml, Does.Contain("Available changes include windowed startup, wider display-mode support, graphics defaults, frontend margin colors, music swaps, Goodies preview, title marker, launch options, control-option presets, and experimental camera/control rows."));
         Assert.That(pageXaml, Does.Contain("Open Details and limits on a row when you want the technical checks and remaining limits."));
         Assert.That(pageXaml, Does.Contain("Details and limits"));
         Assert.That(itemModel, Does.Contain("public string RowAutomationId => BuildAutomationId(\"PatchBenchPatchRow\", Spec.Key);"));
@@ -786,7 +789,7 @@ public class WinUiProductLaneTests
         Assert.That(patchGroupsHelper, Does.Contain("Controls & Pause"));
         Assert.That(patchGroupsHelper, Does.Contain("visible patch rows without a rendered group"));
         Assert.That(code, Does.Contain("Version overlay support payload (auto-selected)"));
-        Assert.That(patchGroupsHelper, Does.Contain("these affect frontend clear-screen backgrounds, not textures, fonts, or HUD colors"));
+        Assert.That(patchGroupsHelper, Does.Contain("accepted checks cover bounded clear-screen margins, not every menu background, texture, font, or HUD color"));
         Assert.That(patchGroupsHelper, Does.Contain("These may be unstable; open Details on a row for exactly what has been tested."));
         Assert.That(patchGroupsHelper, Does.Contain("Open Details on a row for tested behavior, remaining limits, and proof notes."));
         Assert.That(patchGroupsHelper, Does.Not.Contain("frontend_clear_screen_"));
@@ -809,11 +812,11 @@ public class WinUiProductLaneTests
         Assert.That(launchTextHelper, Does.Contain("Prepared safe game copy is stale"));
         Assert.That(code, Does.Contain("No safe game copy prepared in this session."));
         Assert.That(itemModel, Does.Contain("frontend_clear_screen_dark_red"));
-        Assert.That(itemModel, Does.Contain("Red menu background"));
+        Assert.That(itemModel, Does.Contain("Red frontend margins"));
         Assert.That(itemModel, Does.Contain("frontend_clear_screen_dark_green"));
-        Assert.That(itemModel, Does.Contain("Green menu background"));
+        Assert.That(itemModel, Does.Contain("Green frontend margins"));
         Assert.That(itemModel, Does.Contain("frontend_clear_screen_black"));
-        Assert.That(itemModel, Does.Contain("Black menu background"));
+        Assert.That(itemModel, Does.Contain("Black frontend margins"));
         Assert.That(itemModel, Does.Contain("Visible proof: one safe-copy title-screen capture and one navigated Goodies-menu run show red-family margins"));
         Assert.That(itemModel, Does.Contain("Visible proof: one safe-copy title-screen capture and one navigated Goodies-menu run show green-family margins"));
         Assert.That(itemModel, Does.Contain("Visible proof: one safe-copy title-screen capture and one navigated Goodies-menu run show black-family margins"));
@@ -851,7 +854,7 @@ public class WinUiProductLaneTests
         Assert.That(itemModel, Does.Contain("public string DetailsHeader => $\"Details and limits for {DisplayName}\";"));
         Assert.That(itemModel, Does.Contain("SAFE COPY REQUIRED"));
         Assert.That(itemModel, Does.Contain("VISIBLE MARKER"));
-        Assert.That(itemModel, Does.Contain("MENU COLOR CHECK"));
+        Assert.That(itemModel, Does.Contain("FRONTEND MARGIN CHECK"));
         Assert.That(itemModel, Does.Contain("GOODIES DISPLAY CHECK"));
         Assert.That(itemModel, Does.Contain("BASIC LAUNCH CHECK"));
         Assert.That(itemModel, Does.Not.Contain("LAUNCH SMOKE"));
@@ -1264,7 +1267,7 @@ public class WinUiProductLaneTests
         {
             "Display & Startup|Windowed startup, wider display-mode acceptance, and the optional fullscreen fallback all live together here.",
             "Graphics & Hardware Overrides|Use these when you want the safe copy to use executable defaults instead of legacy GPU override rules.",
-            "Frontend Color Mods|Menu background color choices for the safe copy. Choose only one color preset at a time; these affect frontend clear-screen backgrounds, not textures, fonts, or HUD colors.",
+            "Frontend Color Mods|Frontend margin color choices for the safe copy. Choose only one preset at a time; accepted checks cover bounded clear-screen margins, not every menu background, texture, font, or HUD color.",
             "Goodies Gallery Mods|Opt-in Goodies gallery display changes for the safe copy. These do not edit saves or permanently award Goodies.",
             "Debug Camera Mods|Experimental debug-camera changes for safe copies only. These may be unstable; open Details on a row for exactly what has been tested.",
             "Controls & Pause|Experimental safe-copy control changes. Open Details on a row for tested behavior, remaining limits, and proof notes.",

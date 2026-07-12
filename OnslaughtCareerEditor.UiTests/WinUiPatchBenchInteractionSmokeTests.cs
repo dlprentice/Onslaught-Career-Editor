@@ -84,24 +84,24 @@ public class WinUiPatchBenchInteractionSmokeTests
             AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "compatibility-only safe copy");
 
             InvokeByAutomationId(window, "PatchBenchMenuColorRedButton");
-            AssertAutomationNameContains(window, "PatchBenchMenuColorRedButton", "Selected: red menu background color");
-            AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected menu background: red.");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorRedButton", "Selected: red frontend margins");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected frontend margins: red.");
 
             InvokeByAutomationId(window, "PatchBenchMenuColorGreenButton");
-            AssertAutomationNameContains(window, "PatchBenchMenuColorGreenButton", "Selected: green menu background color");
-            AssertAutomationNameContains(window, "PatchBenchMenuColorRedButton", "Select red menu background color");
-            AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected menu background: green.");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorGreenButton", "Selected: green frontend margins");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorRedButton", "Select red frontend margins");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected frontend margins: green.");
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-menu-color-selected-normal.png", "PatchBenchMenuColorRedButton", 1000, 640);
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-menu-color-selected-narrow.png", "PatchBenchMenuColorRedButton", 760, 640);
 
             InvokeByAutomationId(window, "PatchBenchMenuColorBlackButton");
-            AssertAutomationNameContains(window, "PatchBenchMenuColorBlackButton", "Selected: black menu background color");
-            AssertAutomationNameContains(window, "PatchBenchMenuColorGreenButton", "Select green menu background color");
-            AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected menu background: black.");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorBlackButton", "Selected: black frontend margins");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorGreenButton", "Select green frontend margins");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected frontend margins: black.");
 
             InvokeByAutomationId(window, "PatchBenchMenuColorClearButton");
-            AssertAutomationNameContains(window, "PatchBenchMenuColorClearButton", "Selected: no menu background color");
-            AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected menu background: none.");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorClearButton", "Selected: no frontend margin color");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected frontend margins: none.");
 
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-safe-copy-source-actions-narrow.png", "PatchBenchSafeCopyUseGameFolderButton", 760, 640);
             AssertSourceActionLayout(

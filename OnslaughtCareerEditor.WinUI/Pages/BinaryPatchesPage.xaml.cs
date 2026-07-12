@@ -398,10 +398,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     PatchBenchChoiceVisualState.Bind(PatchBenchClearSelectionButton, "Clear optional mod rows; safe copies still include required compatibility", "Selected: no optional mod rows", selectedKeys.Count == 0),
                     PatchBenchChoiceVisualState.Bind(PatchBenchModernGraphicsPresetButton, "Select extra graphics flag rows only", "Selected: graphics flag rows only", SetEquals(selectedKeys, s_modernGraphicsKeys)),
                     PatchBenchChoiceVisualState.Bind(PatchBenchDebugCameraPreviewProfileButton, "Select Debug Camera Preview profile", "Selected: Debug Camera Preview profile", string.Equals(profileId, BinaryPatchPlanBuilder.DebugCameraPreviewProfileId, StringComparison.OrdinalIgnoreCase)),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorRedButton, "Select red menu background color", "Selected: red menu background color", string.Equals(selectedMenuColorKey, "frontend_clear_screen_dark_red", StringComparison.OrdinalIgnoreCase)),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorGreenButton, "Select green menu background color", "Selected: green menu background color", string.Equals(selectedMenuColorKey, "frontend_clear_screen_dark_green", StringComparison.OrdinalIgnoreCase)),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorBlackButton, "Select black menu background color", "Selected: black menu background color", string.Equals(selectedMenuColorKey, "frontend_clear_screen_black", StringComparison.OrdinalIgnoreCase)),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorClearButton, "Clear menu background color selection", "Selected: no menu background color", selectedMenuColorKey is null),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorRedButton, "Select red frontend margins", "Selected: red frontend margins", string.Equals(selectedMenuColorKey, "frontend_clear_screen_dark_red", StringComparison.OrdinalIgnoreCase)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorGreenButton, "Select green frontend margins", "Selected: green frontend margins", string.Equals(selectedMenuColorKey, "frontend_clear_screen_dark_green", StringComparison.OrdinalIgnoreCase)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorBlackButton, "Select black frontend margins", "Selected: black frontend margins", string.Equals(selectedMenuColorKey, "frontend_clear_screen_black", StringComparison.OrdinalIgnoreCase)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorClearButton, "Clear frontend margin color selection", "Selected: no frontend margin color", selectedMenuColorKey is null),
                 },
                 Resources);
             PatchBenchMenuColorSelectionStatus.Text = PatchBenchMenuColorSelectionText.BuildStatus(menuColorSelection);
@@ -724,17 +724,17 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void MenuColorRedButton_Click(object sender, RoutedEventArgs e)
         {
-            SelectFrontendColorPatch("frontend_clear_screen_dark_red", "red menu background selected");
+            SelectFrontendColorPatch("frontend_clear_screen_dark_red", "red frontend margins selected");
         }
 
         private void MenuColorGreenButton_Click(object sender, RoutedEventArgs e)
         {
-            SelectFrontendColorPatch("frontend_clear_screen_dark_green", "green menu background selected");
+            SelectFrontendColorPatch("frontend_clear_screen_dark_green", "green frontend margins selected");
         }
 
         private void MenuColorBlackButton_Click(object sender, RoutedEventArgs e)
         {
-            SelectFrontendColorPatch("frontend_clear_screen_black", "black menu background selected");
+            SelectFrontendColorPatch("frontend_clear_screen_black", "black frontend margins selected");
         }
 
         private void MenuColorClearButton_Click(object sender, RoutedEventArgs e)

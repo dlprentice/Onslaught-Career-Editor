@@ -8,10 +8,10 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         {
             return selection switch
             {
-                PatchBenchMenuColorSelectionKind.Red => "Selected menu background: red.",
-                PatchBenchMenuColorSelectionKind.Green => "Selected menu background: green.",
-                PatchBenchMenuColorSelectionKind.Black => "Selected menu background: black.",
-                _ => "Selected menu background: none."
+                PatchBenchMenuColorSelectionKind.Red => "Selected frontend margins: red.",
+                PatchBenchMenuColorSelectionKind.Green => "Selected frontend margins: green.",
+                PatchBenchMenuColorSelectionKind.Black => "Selected frontend margins: black.",
+                _ => "Selected frontend margins: none."
             };
         }
     }

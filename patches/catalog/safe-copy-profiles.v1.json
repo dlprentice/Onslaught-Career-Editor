@@ -1,6 +1,6 @@
 {
   "schema_version": "safe-copy-profiles.v1",
-  "generated_at": "2026-06-18",
+  "last_reviewed_at": "2026-07-12",
   "profiles": [
     {
       "id": "compatibility-copy",
@@ -32,7 +32,8 @@
           "evidence_refs": [
             "patches/README.md",
             "roadmap/mod-patch-runtime-rebuild-register.md",
-            "reverse-engineering/binary-analysis/windowed-mode-analysis.md"
+            "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
+            "reverse-engineering/binary-analysis/widescreen-patch-analysis.md"
           ],
           "non_claims": [
             "No widescreen field-of-view parity.",
@@ -74,7 +75,8 @@
           "evidence_refs": [
             "patches/README.md",
             "roadmap/mod-patch-runtime-rebuild-register.md",
-            "reverse-engineering/binary-analysis/windowed-mode-analysis.md"
+            "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
+            "reverse-engineering/binary-analysis/widescreen-patch-analysis.md"
           ],
           "non_claims": [
             "No widescreen field-of-view parity.",
@@ -143,7 +145,8 @@
           "evidence_refs": [
             "patches/README.md",
             "roadmap/mod-patch-runtime-rebuild-register.md",
-            "reverse-engineering/binary-analysis/windowed-mode-analysis.md"
+            "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
+            "reverse-engineering/binary-analysis/widescreen-patch-analysis.md"
           ],
           "non_claims": [
             "No widescreen field-of-view parity.",
@@ -302,7 +305,8 @@
           "evidence_refs": [
             "patches/README.md",
             "roadmap/mod-patch-runtime-rebuild-register.md",
-            "reverse-engineering/binary-analysis/windowed-mode-analysis.md"
+            "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
+            "reverse-engineering/binary-analysis/widescreen-patch-analysis.md"
           ],
           "non_claims": [
             "No widescreen field-of-view parity.",

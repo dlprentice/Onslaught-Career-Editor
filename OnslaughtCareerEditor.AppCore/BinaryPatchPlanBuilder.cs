@@ -57,7 +57,6 @@ namespace Onslaught___Career_Editor
         private const string FreeCameraKeyboardPitchDownQCaveKey = "free_camera_keyboard_pitch_down_q_cave";
         private const string ResolutionGateKey = "resolution_gate";
         private const string ForceWindowedKey = "force_windowed";
-        private const string SkipAutoToggleKey = "skip_auto_toggle";
         private const string ProfileCatalogRelativePath = "patches/catalog/safe-copy-profiles.v1.json";
         private const string ProfileCatalogSchemaVersion = "safe-copy-profiles.v1";
         public const string CompatibilityProfileId = "compatibility-copy";
@@ -401,6 +400,12 @@ namespace Onslaught___Career_Editor
                 .ToList();
 
             AddDependencySpecs(selected);
+            if (selected.Any(spec => spec.RequiresWindowedPair))
+            {
+                AddCatalogSpec(selected, ResolutionGateKey);
+                AddCatalogSpec(selected, ForceWindowedKey);
+                AddDependencySpecs(selected);
+            }
 
             return selected;
         }
@@ -426,10 +431,6 @@ namespace Onslaught___Career_Editor
                 return "Select at least one patch first.";
             }
 
-            bool hasExperimental = selected.Any(x => string.Equals(x.Track, "Experimental", StringComparison.OrdinalIgnoreCase));
-            bool hasWindowedPair = selected.Any(x => string.Equals(x.Key, ResolutionGateKey, StringComparison.OrdinalIgnoreCase)) &&
-                selected.Any(x => string.Equals(x.Key, ForceWindowedKey, StringComparison.OrdinalIgnoreCase));
-            bool hasSkipAutoToggle = selected.Any(x => string.Equals(x.Key, SkipAutoToggleKey, StringComparison.OrdinalIgnoreCase));
             string[] selectedFrontendColorKeys = selected
                 .Select(x => x.Key)
                 .Where(key => s_frontendClearScreenColorKeys.Contains(key))
@@ -446,16 +447,6 @@ namespace Onslaught___Career_Editor
             if (exclusiveGroupConflict is not null)
             {
                 return $"Choose only one {FormatExclusiveGroupLabel(exclusiveGroupConflict.Key)} preset at a time.";
-            }
-
-            if ((hasSkipAutoToggle || selected.Any(spec => spec.RequiresWindowedPair)) && !hasWindowedPair)
-            {
-                return "Rows that require the baseline windowed compatibility pair must be layered on top of Allow non-4:3 mode candidates and Prefer windowed launch.";
-            }
-
-            if (hasExperimental && !hasWindowedPair)
-            {
-                return "Experimental patch rows require the baseline windowed compatibility pair in this workflow.";
             }
 
             var resolvedSelectionPolicy = BinaryPatchEngine.ValidatePatchSelectionPolicy(BuildSelectedSpecs(visibleKeySet));
@@ -515,6 +506,17 @@ namespace Onslaught___Career_Editor
             {
                 selected.Add(legacyVersionOverlayCompanion);
             }
+        }
+
+        private static void AddCatalogSpec(List<BinaryPatchSpec> selected, string key)
+        {
+            if (selected.Any(spec => string.Equals(spec.Key, key, StringComparison.OrdinalIgnoreCase)))
+                return;
+
+            BinaryPatchSpec? spec = BinaryPatchEngine.PatchSpecs.FirstOrDefault(candidate =>
+                string.Equals(candidate.Key, key, StringComparison.OrdinalIgnoreCase));
+            if (spec is not null)
+                selected.Add(spec);
         }
 
         private static bool IsHiddenCompanionSpec(BinaryPatchSpec spec)
@@ -799,15 +801,7 @@ namespace Onslaught___Career_Editor
             foreach (SafeCopyProfilePreset expected in s_safeCopyProfilePresets)
             {
                 SafeCopyProfilePreset actual = loadedById[expected.Id];
-                if (!string.Equals(actual.DisplayName, expected.DisplayName, StringComparison.Ordinal) ||
-                    !string.Equals(actual.Description, expected.Description, StringComparison.Ordinal) ||
-                    actual.IsSelectable != expected.IsSelectable ||
-                    !string.Equals(actual.ProofStatus, expected.ProofStatus, StringComparison.Ordinal) ||
-                    actual.DefaultControllerConfiguration != expected.DefaultControllerConfiguration ||
-                    actual.DefaultPersistControllerConfigInOptions != expected.DefaultPersistControllerConfigInOptions ||
-                    actual.DefaultSharpenMouseLook != expected.DefaultSharpenMouseLook ||
-                    !StringSequenceEquals(actual.PatchKeys, expected.PatchKeys) ||
-                    !StringSequenceEquals(actual.Modules.Select(module => module.Id).ToArray(), expected.Modules.Select(module => module.Id).ToArray()))
+                if (!ProfilePresetEquals(expected, actual))
                 {
                     mismatch = actual.Id;
                     return false;
@@ -816,6 +810,46 @@ namespace Onslaught___Career_Editor
 
             mismatch = string.Empty;
             return true;
+        }
+
+        internal static bool ProfilePresetEquals(SafeCopyProfilePreset expected, SafeCopyProfilePreset actual)
+        {
+            if (!string.Equals(actual.Id, expected.Id, StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(actual.DisplayName, expected.DisplayName, StringComparison.Ordinal) ||
+                !string.Equals(actual.Description, expected.Description, StringComparison.Ordinal) ||
+                actual.IsSelectable != expected.IsSelectable ||
+                !string.Equals(actual.ProofStatus, expected.ProofStatus, StringComparison.Ordinal) ||
+                actual.DefaultControllerConfiguration != expected.DefaultControllerConfiguration ||
+                actual.DefaultPersistControllerConfigInOptions != expected.DefaultPersistControllerConfigInOptions ||
+                actual.DefaultSharpenMouseLook != expected.DefaultSharpenMouseLook ||
+                !StringSequenceEquals(actual.PatchKeys, expected.PatchKeys) ||
+                actual.Modules.Count != expected.Modules.Count)
+            {
+                return false;
+            }
+
+            for (int index = 0; index < expected.Modules.Count; index++)
+            {
+                if (!ProfileModuleEquals(expected.Modules[index], actual.Modules[index]))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static bool ProfileModuleEquals(SafeCopyProfileModule expected, SafeCopyProfileModule actual)
+        {
+            return string.Equals(actual.Id, expected.Id, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(actual.DisplayName, expected.DisplayName, StringComparison.Ordinal) &&
+                string.Equals(actual.Category, expected.Category, StringComparison.Ordinal) &&
+                string.Equals(actual.ProofStatus, expected.ProofStatus, StringComparison.Ordinal) &&
+                string.Equals(actual.ClaimBoundary, expected.ClaimBoundary, StringComparison.Ordinal) &&
+                StringSequenceEquals(actual.PatchKeys, expected.PatchKeys) &&
+                StringSequenceEquals(actual.LaunchArguments, expected.LaunchArguments) &&
+                StringSequenceEquals(actual.CopiedOptionsEdits, expected.CopiedOptionsEdits) &&
+                string.Equals(actual.RestoreStrategy, expected.RestoreStrategy, StringComparison.Ordinal) &&
+                StringSequenceEquals(actual.EvidenceRefs, expected.EvidenceRefs) &&
+                StringSequenceEquals(actual.NonClaims, expected.NonClaims);
         }
 
         private static bool StringSequenceEquals(IReadOnlyList<string> left, IReadOnlyList<string> right)

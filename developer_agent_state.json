@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-12",
-  "currentFocus": "Audit the 29-row patch/profile contract, harden dependency and copied-target invariants, then close one bounded evidence-backed patch/mod or launch-attestation gap.",
+  "currentFocus": "Crosswalk the Steam binary, Stuart source, AYA exporter, and rebuild, then implement one recognizable evidence-backed behavior slice.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -19,7 +19,7 @@
       "registeredWorktrees": 1,
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "3cc382e8fa206c3a3f885f9dec4dedd2297b9f97",
+      "lastPushedBeforeCurrentSlice": "461195dc7fe9d2d96cbe7aa33509d95616ad1514",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
@@ -30,7 +30,14 @@
         "old Python GUI/CLI"
       ],
       "patchCatalog": "29 total rows; 20 visible options (9 stable, 11 experimental); 9 hidden companions",
-      "safeCopyPosture": "retain: installed game and original BEA.exe remain read-only; mutations use copied targets and app-owned roots"
+      "safeCopyPosture": "retain: installed game and original BEA.exe remain read-only; AppCore atomically publishes copied-target backup/checksum/apply/restore files and recovers damaged copies only from verified full-file backups"
+    },
+    "patchContractCloseout": {
+      "accounting": "29 rows: 20 visible options (9 stable, 11 experimental), 9 hidden companions, 17 dependency edges, 118 conflict edges",
+      "safety": "Exact pinned-catalog mutation membership, canonical specimen or verified-clean-backup identity, complete known transition attestation, case-consistent dependency/conflict/profile semantics, sidecar link/stale-state rejection, and atomic damaged-copy recovery",
+      "ux": "Windowed & Mods separates stable/experimental evidence, injects required windowed rows and hidden companions, and exposes bounded proof/non-claim details without raw offsets in the normal path",
+      "validation": "Focused closeout passed 9 AppCore catalog/profile tests, 34 C# patch regressions, Python helper safety/self-tests, and 30 accounting tests. Final npm test passed a zero-warning WinUI build, 1316 AppCore tests, 138 WinUI tests plus 2 expected private-catalog skips, and all rebuild suites; the isolated native Patch Bench interaction smoke, 3662-file/6264-link Markdown, 19457-file payload, 19641-file submodule payload, migration inventory, 18600-file hygiene/line endings, and 74-package notices gates passed.",
+      "review": "Codex and bounded Cursor/Grok normal/adversarial review converged after catalog-binding, transition-attestation, case, sidecar, and interrupted-write recovery blockers were fixed; hostile same-user process isolation remains explicitly out of scope"
     },
     "winUiFirstUseCloseout": {
       "status": "accepted in the current source slice",
@@ -57,7 +64,7 @@
     },
     "filesystemSafety": {
       "status": "accepted",
-      "summary": "Save/options, asset catalog/package, downstream package, Python generated output, and C# AYA output paths use bounded roots, held identities, guarded writes, hostile-path tests, and final byte/identity verification.",
+      "summary": "Save/options, AppCore executable patching, asset catalog/package, downstream package, Python generated output, and C# AYA output paths use bounded roots, guarded or staged writes, hostile-path tests, and final byte/identity verification.",
       "residualBoundary": "After finalized bytes leave delete-pending quarantine, a same-user process can copy them or create a byte-identical hardlink; no confidentiality after finalization is claimed."
     },
     "rebuildCore": {
@@ -87,8 +94,8 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Account for all 29 patch rows and safe-copy profile expansions in one machine-checked dependency/conflict/evidence matrix.",
-    "Select and close one bounded high-value patch/mod or launch-attestation gap without touching the installed game or original BEA.exe.",
-    "Continue with generated contributor indexes and the deep RE/Lore quality passes after the patch slice."
+    "Inventory references/Onslaught and references/AYAResourceExtractor at their pinned commits, including provenance, license, build/test posture, supported formats, and gaps.",
+    "Choose one recognizable subsystem and crosswalk Stuart source ownership against Steam binary/static/runtime truth and rebuild-facing behavior fields.",
+    "Exercise and improve the exporter, freeze one accepted behavior contract, and implement that authentic slice in deterministic Core plus the Godot adapter."
   ]
 }

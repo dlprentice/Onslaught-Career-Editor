@@ -1,6 +1,6 @@
 {
-  "catalog_version": "2.0",
-  "generated_at": "2026-03-05 16:08:00 -0500",
+  "catalog_version": "2.1",
+  "last_reviewed_at": "2026-07-12",
   "binary": "BEA.exe",
   "patches": [
     {
@@ -23,12 +23,13 @@
         "Enables non-4:3 candidates in mode enumeration path.",
         "Does not by itself force startup window mode."
       ],
-      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original byte at file offset.",
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "high",
       "evidence_refs": [
         "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
-        "patches/README.md"
+        "patches/README.md",
+        "release/readiness/winui_safe_copy_live_runtime_smoke_2026-06-17.md"
       ],
       "optional": false,
       "dependencies": [],
@@ -65,12 +66,13 @@
         "Biases startup toward windowed mode.",
         "Some environments may still require wrapper/driver companion settings."
       ],
-      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "high",
       "evidence_refs": [
         "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
-        "patches/README.md"
+        "patches/README.md",
+        "release/readiness/winui_safe_copy_live_runtime_smoke_2026-06-17.md"
       ],
       "optional": false,
       "dependencies": [],
@@ -107,12 +109,13 @@
         "Extra graphics feature gate defaults to enabled at startup.",
         "cardid.txt can still override tweak values if matching vendor/device rules apply."
       ],
-      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "high",
       "evidence_refs": [
         "reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md",
-        "patches/README.md"
+        "patches/README.md",
+        "release/readiness/winui_modern_graphics_live_runtime_smoke_2026-06-17.md"
       ],
       "optional": false,
       "dependencies": [],
@@ -147,12 +150,13 @@
         "cardid.txt vendor/device/version tweak overrides are not applied.",
         "Intended code-path effect is for BEA.exe default tweak values to be used; visible graphics effect and rendering correctness remain separate runtime proof."
       ],
-      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "high",
       "evidence_refs": [
         "reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md",
-        "patches/README.md"
+        "patches/README.md",
+        "release/readiness/winui_modern_graphics_live_runtime_smoke_2026-06-17.md"
       ],
       "optional": false,
       "dependencies": [],
@@ -187,12 +191,13 @@
         "Version overlay render uses cave-hosted format string.",
         "Used together with version cave string payload patch."
       ],
-      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "high",
       "evidence_refs": [
         "reverse-engineering/binary-analysis/version-overlay-patch.md",
-        "patches/README.md"
+        "patches/README.md",
+        "release/readiness/winui_version_overlay_runtime_smoke_2026-06-17.md"
       ],
       "optional": true,
       "dependencies": [
@@ -228,12 +233,13 @@
         "Installs the cave-hosted format string expected to display suffix '- PATCHED' after version digits once the companion pointer redirect is selected.",
         "Used together with version overlay pointer redirect patch."
       ],
-      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "high",
       "evidence_refs": [
         "reverse-engineering/binary-analysis/version-overlay-patch.md",
-        "patches/README.md"
+        "patches/README.md",
+        "release/readiness/winui_version_overlay_runtime_smoke_2026-06-17.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -266,13 +272,15 @@
         "Does not replace textures, menu art, fonts, HUD colors, or gameplay rendering colors.",
         "Runtime screenshots remain the visual proof gate for this specific color preset."
       ],
-      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "medium-high",
       "evidence_refs": [
         "reverse-engineering/binary-analysis/frontend-clear-screen-color-patch.md",
         "reverse-engineering/binary-analysis/functions/FrontEnd.cpp/_index.md",
-        "references/Onslaught/DXFrontend.cpp"
+        "references/Onslaught/DXFrontend.cpp",
+        "release/readiness/winui_frontend_clear_screen_color_patch_2026-06-16.md",
+        "release/readiness/winui_frontend_color_navigated_runtime_proof_2026-06-18.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -311,13 +319,15 @@
         "Does not replace textures, menu art, fonts, HUD colors, or gameplay rendering colors.",
         "Runtime screenshots remain the visual proof gate for this specific color preset."
       ],
-      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "medium",
       "evidence_refs": [
         "reverse-engineering/binary-analysis/frontend-clear-screen-color-patch.md",
         "reverse-engineering/binary-analysis/functions/FrontEnd.cpp/_index.md",
-        "references/Onslaught/DXFrontend.cpp"
+        "references/Onslaught/DXFrontend.cpp",
+        "release/readiness/winui_frontend_clear_screen_color_patch_2026-06-16.md",
+        "release/readiness/winui_frontend_color_navigated_runtime_proof_2026-06-18.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -355,13 +365,15 @@
         "Does not replace textures, menu art, fonts, HUD colors, or gameplay rendering colors.",
         "Runtime screenshots remain the visual proof gate for this specific color preset."
       ],
-      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "medium",
       "evidence_refs": [
         "reverse-engineering/binary-analysis/frontend-clear-screen-color-patch.md",
         "reverse-engineering/binary-analysis/functions/FrontEnd.cpp/_index.md",
-        "references/Onslaught/DXFrontend.cpp"
+        "references/Onslaught/DXFrontend.cpp",
+        "release/readiness/winui_frontend_clear_screen_color_patch_2026-06-16.md",
+        "release/readiness/winui_frontend_color_navigated_runtime_proof_2026-06-18.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -398,14 +410,15 @@
         "Forces only the MALLOY-derived Goodies display flag path in CFEPGoodies Process.",
         "Does not patch save files, award goodies permanently, force the lat\\xEAte/developer Goodies override, or change the career buffer."
       ],
-      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "medium-high",
       "evidence_refs": [
         "reverse-engineering/binary-analysis/goodies-gallery-display-unlock-patch.md",
         "reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__Process.md",
         "references/Onslaught/FEPGoodies.cpp",
-        "patches/README.md"
+        "patches/README.md",
+        "release/readiness/winui_goodies_gallery_display_unlock_2026-06-17.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -439,7 +452,7 @@
         "Alters one startup decision branch only; not a universal fullscreen fix.",
         "Runtime effect can vary by environment and wrapper stack."
       ],
-      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "medium",
       "evidence_refs": [
@@ -479,14 +492,16 @@
         "Does not edit defaultoptions.bea, save files, controller configuration entries, or the installed Steam executable.",
         "Accepted proof covers ordered same-window copied-profile free-camera pause/unpause evidence; full debugger call-chain causality, normal gameplay pause-menu UX, broad pause/menu safety, long-session safety, and control-feel behavior remain separate proof."
       ],
-      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original byte at file offset.",
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched; runtime proof checker must show copied byte 0x18, live pause row keyArg 0x18, exact safe-copy PID/path binding, and ordered same-window O-query -> BUTTON_PAUSE dispatch -> pause/unpause evidence in the bounded context.",
       "confidence": "medium-high",
       "evidence_refs": [
         "reverse-engineering/binary-analysis/pause-key-default-row-patch.md",
         "reverse-engineering/binary-analysis/functions/Controller.cpp/ControlBindings.md",
         "roadmap/mod-patch-runtime-rebuild-register.md",
-        "patches/README.md"
+        "patches/README.md",
+        "release/readiness/winui_pause_o_scan_initializer_runtime_2026-06-18.md",
+        "release/readiness/winui_pause_o_scan_initializer_normal_gameplay_resume_2026-06-19.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -497,7 +512,11 @@
       "preset_eligibility": [
         "custom"
       ],
-      "requires_windowed_pair": true
+      "requires_windowed_pair": true,
+      "diagnostic_refs": [
+        "release/readiness/winui_controller_mapping_table_diagnostic_2026-06-18.md",
+        "release/readiness/winui_free_camera_pause_context_diagnostic_2026-06-18.md"
+      ]
     },
     {
       "id": "free_camera_aurore_gate_bypass",
@@ -521,14 +540,16 @@
         "Does not prove all camera controls, gameplay safety, pause/menu behavior, or free-camera rendering at runtime.",
         "Can expose debug-camera behavior during gameplay if the corresponding debug button is reachable."
       ],
-      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "medium",
       "evidence_refs": [
         "reverse-engineering/binary-analysis/functions/game.cpp/CGame__ReceiveButtonAction.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
         "roadmap/mod-patch-runtime-rebuild-register.md",
-        "patches/README.md"
+        "patches/README.md",
+        "release/readiness/winui_free_camera_aurore_gate_bypass_2026-06-17.md",
+        "release/readiness/winui_safe_copy_free_camera_toggle_2026-06-18.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -564,7 +585,7 @@
         "Does not run unless the companion hook redirects CControllableCamera::ReceiveButtonAction into this cave.",
         "One Q-forward copied-runtime CDB movement path is proven by the companion hook artifact; broader control feel and visible behavior remain separate proof."
       ],
-      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "medium",
       "evidence_refs": [
@@ -572,7 +593,8 @@
         "references/Onslaught/Controller.h",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
         "roadmap/mod-patch-runtime-rebuild-register.md",
-        "patches/README.md"
+        "patches/README.md",
+        "release/readiness/winui_free_camera_q_forward_runtime_2026-06-18.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -614,7 +636,7 @@
         "Maps button 31 to camera-forward only while execution is in CControllableCamera::ReceiveButtonAction.",
         "Does not prove control feel, joystick/analog behavior, gameplay safety, pause/menu behavior, or rebuild parity."
       ],
-      "rollback_strategy": "Restore BEA.exe.original.backup or rewrite original bytes at file offset.",
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
       "confidence": "medium",
       "evidence_refs": [
@@ -622,7 +644,8 @@
         "references/Onslaught/Controller.h",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
         "roadmap/mod-patch-runtime-rebuild-register.md",
-        "patches/README.md"
+        "patches/README.md",
+        "release/readiness/winui_free_camera_q_forward_runtime_2026-06-18.md"
       ],
       "optional": true,
       "dependencies": [
@@ -669,14 +692,6 @@
         "Restore verifies patched bytes before restoring the original CC padding.",
         "This row is not selectable by itself; it is added only as a dependency of free_camera_keyboard_backward_q_hook."
       ],
-      "references": [
-        "references/Onslaught/Controller.h",
-        "references/Onslaught/Camera.cpp",
-        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
-        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
-        "patches/README.md"
-      ],
       "optional": true,
       "dependencies": [],
       "conflicts": [
@@ -692,7 +707,19 @@
       "proof_level": "experimental_copied_runtime_cdb_q_backward_proof",
       "selectability": "hidden_companion",
       "preset_eligibility": [],
-      "requires_windowed_pair": true
+      "requires_windowed_pair": true,
+      "evidence_refs": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "patches/README.md",
+        "release/readiness/winui_free_camera_q_backward_runtime_2026-06-18.md"
+      ],
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
+      "verification_probe": "Verify dependency expansion selected the companion, then verify its offset reports ready or already patched.",
+      "confidence": "medium"
     },
     {
       "id": "free_camera_keyboard_backward_q_hook",
@@ -718,14 +745,6 @@
         "Restore verifies patched bytes before restoring the original CControllableCamera::ReceiveButtonAction prologue bytes.",
         "Runtime proof must show scoped Q input reaching the hook/cave path and producing CDB-observed free-camera position deltas before any claim broadens beyond this one path."
       ],
-      "references": [
-        "references/Onslaught/Controller.h",
-        "references/Onslaught/Camera.cpp",
-        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
-        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
-        "patches/README.md"
-      ],
       "optional": true,
       "dependencies": [
         "free_camera_aurore_gate_bypass",
@@ -746,7 +765,19 @@
       "preset_eligibility": [
         "custom"
       ],
-      "requires_windowed_pair": true
+      "requires_windowed_pair": true,
+      "evidence_refs": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "patches/README.md",
+        "release/readiness/winui_free_camera_q_backward_runtime_2026-06-18.md"
+      ],
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
+      "verification_probe": "Verify selected patch state and ensure the offset reports ready or already patched.",
+      "confidence": "medium"
     },
     {
       "id": "free_camera_keyboard_strafe_left_q_cave",
@@ -770,14 +801,6 @@
         "Restore verifies patched bytes before restoring the original CC padding.",
         "This row is not selectable by itself; it is added only as a dependency of free_camera_keyboard_strafe_left_q_hook."
       ],
-      "references": [
-        "references/Onslaught/Controller.h",
-        "references/Onslaught/Camera.cpp",
-        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
-        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
-        "patches/README.md"
-      ],
       "optional": true,
       "dependencies": [],
       "conflicts": [
@@ -793,7 +816,19 @@
       "proof_level": "experimental_copied_runtime_cdb_q_strafe_left_proof",
       "selectability": "hidden_companion",
       "preset_eligibility": [],
-      "requires_windowed_pair": true
+      "requires_windowed_pair": true,
+      "evidence_refs": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "patches/README.md",
+        "release/readiness/winui_free_camera_q_strafe_left_runtime_2026-06-18.md"
+      ],
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
+      "verification_probe": "Verify dependency expansion selected the companion, then verify its offset reports ready or already patched.",
+      "confidence": "medium"
     },
     {
       "id": "free_camera_keyboard_strafe_left_q_hook",
@@ -819,14 +854,6 @@
         "Restore verifies patched bytes before restoring the original CControllableCamera::ReceiveButtonAction prologue bytes.",
         "Runtime proof must show scoped Q input reaching the hook/cave path and producing CDB-observed free-camera position deltas before any claim broadens beyond this one path."
       ],
-      "references": [
-        "references/Onslaught/Controller.h",
-        "references/Onslaught/Camera.cpp",
-        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
-        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
-        "patches/README.md"
-      ],
       "optional": true,
       "dependencies": [
         "free_camera_aurore_gate_bypass",
@@ -847,7 +874,19 @@
       "preset_eligibility": [
         "custom"
       ],
-      "requires_windowed_pair": true
+      "requires_windowed_pair": true,
+      "evidence_refs": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "patches/README.md",
+        "release/readiness/winui_free_camera_q_strafe_left_runtime_2026-06-18.md"
+      ],
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
+      "verification_probe": "Verify selected patch state and ensure the offset reports ready or already patched.",
+      "confidence": "medium"
     },
     {
       "id": "free_camera_keyboard_strafe_right_q_cave",
@@ -871,14 +910,6 @@
         "Restore verifies patched bytes before restoring the original CC padding.",
         "This row is not selectable by itself; it is added only as a dependency of free_camera_keyboard_strafe_right_q_hook."
       ],
-      "references": [
-        "references/Onslaught/Controller.h",
-        "references/Onslaught/Camera.cpp",
-        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
-        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
-        "patches/README.md"
-      ],
       "optional": true,
       "dependencies": [],
       "conflicts": [
@@ -894,7 +925,19 @@
       "proof_level": "experimental_copied_runtime_cdb_q_strafe_right_proof",
       "selectability": "hidden_companion",
       "preset_eligibility": [],
-      "requires_windowed_pair": true
+      "requires_windowed_pair": true,
+      "evidence_refs": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "patches/README.md",
+        "release/readiness/winui_free_camera_q_strafe_right_runtime_2026-06-18.md"
+      ],
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
+      "verification_probe": "Verify dependency expansion selected the companion, then verify its offset reports ready or already patched.",
+      "confidence": "medium"
     },
     {
       "id": "free_camera_keyboard_strafe_right_q_hook",
@@ -920,14 +963,6 @@
         "Restore verifies patched bytes before restoring the original CControllableCamera::ReceiveButtonAction prologue bytes.",
         "Runtime proof must show scoped Q input reaching the hook/cave path and producing CDB-observed free-camera position deltas before any claim broadens beyond this one path."
       ],
-      "references": [
-        "references/Onslaught/Controller.h",
-        "references/Onslaught/Camera.cpp",
-        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
-        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
-        "patches/README.md"
-      ],
       "optional": true,
       "dependencies": [
         "free_camera_aurore_gate_bypass",
@@ -948,7 +983,19 @@
       "preset_eligibility": [
         "custom"
       ],
-      "requires_windowed_pair": true
+      "requires_windowed_pair": true,
+      "evidence_refs": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "patches/README.md",
+        "release/readiness/winui_free_camera_q_strafe_right_runtime_2026-06-18.md"
+      ],
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
+      "verification_probe": "Verify selected patch state and ensure the offset reports ready or already patched.",
+      "confidence": "medium"
     },
     {
       "id": "free_camera_keyboard_yaw_left_q_cave",
@@ -972,14 +1019,6 @@
         "Restore verifies patched bytes before restoring the original CC padding.",
         "This row is not selectable by itself; it is added only as a dependency of free_camera_keyboard_yaw_left_q_hook."
       ],
-      "references": [
-        "references/Onslaught/Controller.h",
-        "references/Onslaught/Camera.cpp",
-        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
-        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
-        "patches/README.md"
-      ],
       "optional": true,
       "dependencies": [],
       "conflicts": [
@@ -999,7 +1038,19 @@
       "side_effects": [
         "Uses the same code cave bytes as the other mutually exclusive Q remap companions.",
         "Only one Q remap companion can occupy the cave at a time; selecting the visible yaw-left hook auto-selects this hidden companion."
-      ]
+      ],
+      "evidence_refs": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "patches/README.md",
+        "release/readiness/winui_free_camera_q_yaw_left_runtime_2026-06-18.md"
+      ],
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
+      "verification_probe": "Verify dependency expansion selected the companion, then verify its offset reports ready or already patched.",
+      "confidence": "medium"
     },
     {
       "id": "free_camera_keyboard_yaw_left_q_hook",
@@ -1025,14 +1076,6 @@
         "The hidden yaw-left cave companion is selected automatically and byte-verified.",
         "Restore verifies patched bytes before restoring the original ReceiveButtonAction prologue bytes."
       ],
-      "references": [
-        "references/Onslaught/Controller.h",
-        "references/Onslaught/Camera.cpp",
-        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
-        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
-        "patches/README.md"
-      ],
       "optional": true,
       "dependencies": [
         "free_camera_aurore_gate_bypass",
@@ -1057,7 +1100,19 @@
       "side_effects": [
         "Mutually exclusive with the other Q remap hooks because all patch the same ReceiveButtonAction entry bytes.",
         "This does not prove full free-camera controls, pitch, pause/menu safety, control feel, gameplay safety, render parity, or long-session behavior."
-      ]
+      ],
+      "evidence_refs": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "patches/README.md",
+        "release/readiness/winui_free_camera_q_yaw_left_runtime_2026-06-18.md"
+      ],
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
+      "verification_probe": "Verify selected patch state and ensure the offset reports ready or already patched.",
+      "confidence": "medium"
     },
     {
       "id": "free_camera_keyboard_yaw_right_q_cave",
@@ -1081,14 +1136,6 @@
         "Restore verifies patched bytes before restoring the original CC padding.",
         "This row is not selectable by itself; it is added only as a dependency of free_camera_keyboard_yaw_right_q_hook."
       ],
-      "references": [
-        "references/Onslaught/Controller.h",
-        "references/Onslaught/Camera.cpp",
-        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
-        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
-        "patches/README.md"
-      ],
       "optional": true,
       "dependencies": [],
       "conflicts": [
@@ -1104,7 +1151,19 @@
       "proof_level": "experimental_copied_runtime_cdb_q_yaw_right_proof",
       "selectability": "hidden_companion",
       "preset_eligibility": [],
-      "requires_windowed_pair": true
+      "requires_windowed_pair": true,
+      "evidence_refs": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "patches/README.md",
+        "release/readiness/winui_free_camera_q_yaw_right_runtime_2026-06-18.md"
+      ],
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
+      "verification_probe": "Verify dependency expansion selected the companion, then verify its offset reports ready or already patched.",
+      "confidence": "medium"
     },
     {
       "id": "free_camera_keyboard_yaw_right_q_hook",
@@ -1130,14 +1189,6 @@
         "Restore verifies patched bytes before restoring the original CControllableCamera::ReceiveButtonAction prologue bytes.",
         "Runtime proof must show scoped Q input reaching the hook/cave path and producing CDB-observed free-camera orientation deltas before any claim broadens beyond this one path."
       ],
-      "references": [
-        "references/Onslaught/Controller.h",
-        "references/Onslaught/Camera.cpp",
-        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
-        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
-        "patches/README.md"
-      ],
       "optional": true,
       "dependencies": [
         "free_camera_aurore_gate_bypass",
@@ -1158,7 +1209,19 @@
       "preset_eligibility": [
         "custom"
       ],
-      "requires_windowed_pair": true
+      "requires_windowed_pair": true,
+      "evidence_refs": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "patches/README.md",
+        "release/readiness/winui_free_camera_q_yaw_right_runtime_2026-06-18.md"
+      ],
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
+      "verification_probe": "Verify selected patch state and ensure the offset reports ready or already patched.",
+      "confidence": "medium"
     },
     {
       "id": "free_camera_keyboard_pitch_up_q_cave",
@@ -1182,14 +1245,6 @@
         "Restore verifies patched bytes before restoring the original CC padding.",
         "This row is not selectable by itself; it is added only as a dependency of free_camera_keyboard_pitch_up_q_hook."
       ],
-      "references": [
-        "references/Onslaught/Controller.h",
-        "references/Onslaught/Camera.cpp",
-        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
-        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "patches/README.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md"
-      ],
       "optional": true,
       "dependencies": [],
       "conflicts": [
@@ -1209,7 +1264,19 @@
       "side_effects": [
         "Uses the same code-cave address as the other mutually exclusive Q-key free-camera remap companions.",
         "Only one Q-key remap companion can occupy the cave at a time; selecting the visible pitch-up hook auto-selects this hidden companion."
-      ]
+      ],
+      "evidence_refs": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "patches/README.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "release/readiness/winui_free_camera_q_pitch_up_runtime_2026-06-18.md"
+      ],
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
+      "verification_probe": "Verify dependency expansion selected the companion, then verify its offset reports ready or already patched.",
+      "confidence": "medium"
     },
     {
       "id": "free_camera_keyboard_pitch_up_q_hook",
@@ -1235,14 +1302,6 @@
         "Restore verifies patched bytes before restoring the original CControllableCamera::ReceiveButtonAction prologue bytes.",
         "Runtime proof must show scoped Q-key input reaching the hook/cave path and producing CDB-observed free-camera orientation deltas before any claim broadens beyond this pitch-up path."
       ],
-      "references": [
-        "references/Onslaught/Controller.h",
-        "references/Onslaught/Camera.cpp",
-        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
-        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "patches/README.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md"
-      ],
       "optional": true,
       "dependencies": [
         "free_camera_aurore_gate_bypass",
@@ -1267,7 +1326,19 @@
       "side_effects": [
         "Mutually exclusive with the other Q-key remap hooks because all patch the same ReceiveButtonAction entry bytes.",
         "This does not prove full free-camera controls, joystick/analog coverage, pause/menu safety, control feel, gameplay safety, render parity, online/netcode, rebuild parity, or long-session behavior."
-      ]
+      ],
+      "evidence_refs": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "patches/README.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "release/readiness/winui_free_camera_q_pitch_up_runtime_2026-06-18.md"
+      ],
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
+      "verification_probe": "Verify selected patch state and ensure the offset reports ready or already patched.",
+      "confidence": "medium"
     },
     {
       "id": "free_camera_keyboard_pitch_down_q_cave",
@@ -1291,14 +1362,6 @@
         "Restore verifies patched bytes before restoring the original CC padding.",
         "This row is not selectable by itself; it is added only as a dependency of free_camera_keyboard_pitch_down_q_hook."
       ],
-      "references": [
-        "references/Onslaught/Controller.h",
-        "references/Onslaught/Camera.cpp",
-        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
-        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "patches/README.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md"
-      ],
       "optional": true,
       "dependencies": [],
       "conflicts": [
@@ -1318,7 +1381,19 @@
       "side_effects": [
         "Uses the same code-cave address as the other mutually exclusive Q-key free-camera remap companions.",
         "Only one Q-key remap companion can occupy the cave at a time; selecting the visible pitch-down hook auto-selects this hidden companion."
-      ]
+      ],
+      "evidence_refs": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "patches/README.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "release/readiness/winui_free_camera_q_pitch_down_runtime_2026-06-18.md"
+      ],
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
+      "verification_probe": "Verify dependency expansion selected the companion, then verify its offset reports ready or already patched.",
+      "confidence": "medium"
     },
     {
       "id": "free_camera_keyboard_pitch_down_q_hook",
@@ -1344,14 +1419,6 @@
         "Restore verifies patched bytes before restoring the original CControllableCamera::ReceiveButtonAction prologue bytes.",
         "Runtime proof must show scoped Q-key input reaching the hook/cave path and producing CDB-observed free-camera orientation deltas before any claim broadens beyond this pitch-down path."
       ],
-      "references": [
-        "references/Onslaught/Controller.h",
-        "references/Onslaught/Camera.cpp",
-        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
-        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "patches/README.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md"
-      ],
       "optional": true,
       "dependencies": [
         "free_camera_aurore_gate_bypass",
@@ -1376,7 +1443,19 @@
       "side_effects": [
         "Mutually exclusive with the other Q-key remap hooks because all patch the same ReceiveButtonAction entry bytes.",
         "This does not prove full free-camera controls, joystick/analog coverage, pause/menu safety, control feel, gameplay safety, render parity, online/netcode, rebuild parity, or long-session behavior."
-      ]
+      ],
+      "evidence_refs": [
+        "references/Onslaught/Controller.h",
+        "references/Onslaught/Camera.cpp",
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+        "patches/README.md",
+        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "release/readiness/winui_free_camera_q_pitch_down_runtime_2026-06-18.md"
+      ],
+      "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
+      "verification_probe": "Verify selected patch state and ensure the offset reports ready or already patched.",
+      "confidence": "medium"
     }
   ]
 }

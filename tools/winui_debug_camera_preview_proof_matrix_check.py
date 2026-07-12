@@ -66,14 +66,15 @@ DOC_TOKENS = {
     ],
     "OnslaughtCareerEditor.WinUI/Pages/BinaryPatchesPage.xaml": [
         "PatchBenchDebugCameraProofMatrixStatus",
-        "Debug Camera Preview only selects Q-forward. Seven other Q remap rows are manual/custom-only and mutually exclusive; their accepted CDB movement/orientation proofs are tracked for future work.",
-        "This matrix is a proof-boundary consistency guard, not a new runtime run.",
-        "Pause-context proof currently covers Q-forward and Q-backward only; key-census proof currently covers Q-forward only.",
-        "Experimental profile: Q-forward only; not full camera controls, joystick or analog camera proof, pause/menu safety, or gameplay safety.",
+        "Debug Camera Preview selects the camera toggle plus one Q-forward movement test.",
+        "Debug Camera Preview keeps the other camera-key experiments manual so you can opt into them one at a time.",
+        "Use this preview as a small camera-control trial, not a full camera overhaul.",
+        "Some camera-key combinations still need broader menu and pause testing before they become presets.",
     ],
     "OnslaughtCareerEditor.UiTests/WinUiProductLaneTests.cs": [
         "PatchBenchDebugCameraProofMatrixStatus",
-        "Debug Camera Preview only selects Q-forward. Seven other Q remap rows are manual/custom-only and mutually exclusive; their accepted CDB movement/orientation proofs are tracked for future work.",
+        "Debug Camera Preview selects the camera toggle plus one Q-forward movement test.",
+        "Debug Camera Preview keeps the other camera-key experiments manual so you can opt into them one at a time.",
     ],
     "package.json": [
         '"test:winui-debug-camera-preview-proof-matrix"',

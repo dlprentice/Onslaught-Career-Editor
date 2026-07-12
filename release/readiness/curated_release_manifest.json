@@ -66,6 +66,7 @@
     "tools/winui_installer_preflight.py",
     "tools/winui_msix_candidate_probe.py",
     "tools/winui_patch_catalog_accounting_check.py",
+    "tools/winui_patch_catalog_accounting_check_test.py",
     "tools/winui_primary_lane_validation.py",
     "reverse-engineering/RE-INDEX.md",
     "reverse-engineering/public-static-contracts.md",

@@ -16,39 +16,47 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Audit and harden the patch/mod contract, then close one evidence-backed gap:
+Crosswalk the released Steam binary, Stuart's in-house PC source, the existing
+AYA exporter, and the rebuild into one evidence hierarchy, then implement one
+recognizable evidence-backed rebuild behavior slice.
 
-Existing guidance, architecture notes, and process ceremony are reviewable
-project artifacts, not authority to preserve earlier agent choices. Rewrite or
-remove constraints that are stale, redundant, unsupported, or misaligned with
-the product; retain evidence-backed safety, provenance, legal, and user-authority
-boundaries while improving how they are implemented.
+The work can proceed in parallel, but evidence promotion is sequential:
+source suggests ownership and architecture; the Steam binary and bounded
+runtime observations decide released behavior; exporter tests decide format
+coverage; the rebuild consumes only an accepted behavior specification and
+feeds ambiguities back to RE instead of promoting its own assumptions.
 
-1. account for all 29 rows in `patches/catalog/patches.v2.json`, including
-   visible/hidden status, stability, exact original/patched bytes, dependencies,
-   conflicts, clean-executable identity, evidence references, and proof class;
-2. cross-check `safe-copy-profiles.v1.json`, AppCore planning/apply/verify logic,
-   WinUI copy, and `patches/README.md` against that machine-readable truth;
-3. add deterministic checks for orphaned or invalid dependency/conflict graphs,
-   hidden companion misuse, profile expansion, and copied-target-only policy;
-4. use the audit to select one bounded high-value unverified patch/mod or
-   launch-attestation/accounting gap, then improve it test-first without
-   broadening runtime claims; and
-5. rewrite or remove any stale policy, label, or ceremony discovered along the
-   path instead of preserving earlier agent choices by default.
+1. inventory `references/Onslaught` and `references/AYAResourceExtractor` at
+   their pinned commits, including remote/fork provenance, license, build/test
+   posture, supported formats, and known gaps;
+2. choose one recognizable gameplay subsystem and crosswalk source owners,
+   Steam binary functions/data, tracked decompilation, runtime evidence, asset
+   dependencies, and rebuild-facing behavior fields;
+3. re-review that binary call-chain cluster under a measured quality rubric
+   separating name/owner, prototype/type, semantics, provenance, and runtime
+   confidence; live Ghidra mutation still requires a separate baton;
+4. exercise and improve the exporter against public/synthetic fixtures and
+   explicitly authorized ignored local inputs, recording supported and missing
+   mesh, material, texture, animation, archive, and conversion behavior; and
+5. freeze one public-safe behavior contract with evidence references, measured
+   constants, tolerances, and non-claims, then implement it in deterministic
+   Core plus the Godot adapter with headless and native acceptance evidence.
 
-The rebuild provenance/Core/First Flight slice is accepted at `0ed4e706`. The
-source-only Godot 4.7 client is playable without retail payloads, and its exact
-curated candidate passed standalone build/test, payload, docs, notices, and
-hygiene gates. This is RE-informed original code, not retail parity or a strict
-clean-room claim. No installed-game mutation, release, signing, Host/Join, or
-online-ready claim was created.
+Do not expand the generic First Flight arena as a substitute for fidelity. The
+target is one small authentic behavior slice whose provenance and differences
+from retail are inspectable.
 
 ## Verified Starting Point
 
 - Public release `v1.0.9` remains the latest published unsigned portable WinUI
   ZIP. It includes the friendly root layout, SHA-256 sidecar, and 949-document
   offline Lore pack.
+- The 29-row patch/profile contract is machine-accounted at 20 visible options
+  (9 stable, 11 experimental), 9 hidden companions, 17 dependency edges, and
+  118 conflict edges. AppCore binds mutations to exact pinned catalog rows,
+  publishes backup/checksum/apply/restore files atomically, and restores
+  damaged or truncated copies only from an integrity- and provenance-verified
+  full-file backup. The Python patch helper remains a lab surface.
 - The Sol Ultra baseline was committed and pushed at
   `5a7bacecac5e813804355d68a8e51973100e0331`; local `main`, `origin/main`, and
   live remote `refs/heads/main` matched with divergence `0 0`.
@@ -135,29 +143,38 @@ suspended-root Job Object ownership model and explicitly heuristic visual-
 evidence boundary. Codex root retained edit, validation, state, commit, push,
 and final acceptance ownership.
 
+The patch-contract slice received Codex and bounded Cursor/Grok normal and
+adversarial review. Review challenges produced pinned-catalog membership,
+known-transition attestation, transitive window-pair planning, sidecar-link
+guards, case-consistent graph semantics, diagnostic-evidence separation, and
+atomic damaged-copy recovery regressions. The accepted residual is no sandbox
+claim against an already malicious process running as the same Windows user.
+
 ## Current Slice Acceptance
 
-- A reproducible audit accounts for all 29 patch rows and every profile key,
-  dependency, conflict, hidden companion, exact byte span, and evidence class.
-- Catalog/AppCore checks fail closed on invalid graphs, hidden direct selection,
-  unverified clean-executable identity, byte mismatch, or non-copied targets.
-- User-facing labels distinguish bytes-checked stability, runtime evidence, and
-  unproven/experimental behavior without converting one class into another.
-- One high-value gap selected from the audit receives a bounded implementation
-  and regression test, or a well-formed blocker with the missing evidence and
-  next executable action.
-- Contributor docs/state describe the resulting patch/mod truth without
-  gameplay, online, compatibility, or safety overclaims.
-- Focused tests, broad quick checks, payload boundaries, normal/adversarial
-  review, and a verified push pass before advancing.
+- Both reference submodules have a reproducible provenance, license, build,
+  test, and capability inventory at their pinned commits.
+- One subsystem crosswalk distinguishes source suggestion, Steam static proof,
+  runtime proof, exporter support, rebuild implementation, and unresolved
+  disagreement at function/data-field granularity.
+- The reviewed binary cluster has measured quality scores and no unsupported
+  whole-binary or fully-reversed claim.
+- Exporter coverage has executable fixtures/checks and either closes one real
+  format gap or records a bounded blocker with the missing input/evidence.
+- One recognizable rebuild behavior is implemented from an accepted public-safe
+  contract with deterministic headless tests and native visual/input evidence.
+- No proprietary payload, full Ghidra store, original-game mutation, generic
+  parity claim, or implementation-room assumption enters Git.
+- Focused and broad-enough gates, normal/adversarial review, state/docs, and a
+  verified push pass before advancing.
 
 ## Next Slices
 
-1. Audit and harden the 29-row patch/profile contract, then close one bounded
-   evidence-backed patch/mod or launch-attestation gap.
-2. Run deep evidence-based RE and Lore quality passes, generated front-door
-   indexing, and stale-claim cleanup before expanding claims or publishing.
-3. Extend the original-code rebuild in small deterministic vertical slices
+1. Crosswalk the Steam binary, Stuart source, exporter, and rebuild; ship one
+   authentic evidence-backed behavior slice.
+2. Run the deep Lore editorial/provenance pass and generated contributor
+   front-door indexing in parallel where it does not compete for RE evidence.
+3. Continue subsystem-by-subsystem binary re-review and rebuild fidelity work
    while preserving the separate sealed-spec clean-room option.
 
 ## Stop Conditions

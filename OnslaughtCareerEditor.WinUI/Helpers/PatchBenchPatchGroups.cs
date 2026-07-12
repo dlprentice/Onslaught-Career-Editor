@@ -31,7 +31,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 "Use these when you want the safe copy to use executable defaults instead of legacy GPU override rules.");
             AddGroup(
                 "Frontend Color Mods",
-                "Menu background color choices for the safe copy. Choose only one color preset at a time; these affect frontend clear-screen backgrounds, not textures, fonts, or HUD colors.");
+                "Frontend margin color choices for the safe copy. Choose only one preset at a time; accepted checks cover bounded clear-screen margins, not every menu background, texture, font, or HUD color.");
             AddGroup(
                 "Goodies Gallery Mods",
                 "Opt-in Goodies gallery display changes for the safe copy. These do not edit saves or permanently award Goodies.");

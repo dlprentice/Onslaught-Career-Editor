@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-07-11",
-  "currentFocus": "Deep quality audit of tracked binary-analysis evidence and the agentic RE loop, followed by evidence-backed subsystem review and accurately labeled rebuild implementation work.",
+  "lastUpdated": "2026-07-12",
+  "currentFocus": "Crosswalk one authentic subsystem across the Steam binary, pinned Stuart source, pinned AYA exporter, and rebuild, then implement only the accepted behavior contract.",
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
     "catalogRows": "29/29 target specimen identity and policy metadata rows"
@@ -35,6 +35,8 @@
     "The repository contains extensive source-derived and Ghidra-derived function documentation, ledgers, checks, and wave artifacts.",
     "A complete clean-room Battle Engine Aquila runtime, renderer, gameplay loop, or parity demo does not yet exist.",
     "Stuart's Onslaught source is architecture and naming evidence; Steam retail binary, real files, and runtime read-back remain higher authority.",
+    "references/Onslaught is pinned at 792545b996365f383781c666d145ea6cbda83f3a and references/AYAResourceExtractor at 6f3df296201ecc62bc09c39f7a93d8a4fb2f1638; provenance, licenses, build posture, and capability gaps require a fresh inventory.",
+    "Binary review, source crosswalk, and exporter coverage may proceed in parallel; rebuild implementation consumes only a separately accepted evidence contract and feeds ambiguities back to RE.",
     "No live Ghidra mutation or copied-runtime proof is authorized by the current baseline slice."
   ],
   "boundaries": [
@@ -46,14 +48,13 @@
   "activeBlockers": [
     "A fresh whole-binary denominator and current complete export are required before another closure claim.",
     "Prior 100 percent counters measure review and hygiene accounting, not binary-wide semantic completion.",
-    "A defensible clean-room label requires implementation-room separation and license review; near-term code must use an RE-informed provenance label.",
-    "External Cursor/Grok review is degraded by the required sandbox/authentication boundary."
+    "A defensible clean-room label requires implementation-room separation and license review; near-term code must use an RE-informed provenance label."
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Publish a measured RE quality rubric separating boundary, name/owner, prototype, type/decompile, semantics, provenance, and runtime confidence.",
-    "Rebuild the function denominator with two independent discovery methods and one canonical current manifest.",
-    "Review 5-20-function call-chain clusters around targeting, weapon/projectile/stealth, damage/shields, morph/energy, MissionScript, and renderer/asset boundaries.",
-    "Define a sealed evidence packet and implement the first runnable RE-informed vertical slice with public-safe synthetic fixtures and deterministic tests."
+    "Inventory the two pinned reference submodules: fork/upstream provenance, license, build/test posture, source ownership, exporter format coverage, and known gaps.",
+    "Select one recognizable subsystem and review its 5-20-function Steam call-chain cluster under the measured quality rubric.",
+    "Crosswalk source owners and exporter/asset dependencies against Steam static/runtime evidence, recording every disagreement instead of choosing by intuition.",
+    "Freeze an accepted public-safe behavior contract and implement that authentic slice in deterministic Core plus the Godot adapter with headless and native evidence."
   ]
 }

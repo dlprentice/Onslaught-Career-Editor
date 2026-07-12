@@ -63,7 +63,7 @@ namespace Onslaught___Career_Editor
         public const string BackupSuffix = ".original.backup";
         private const string BackupHashSuffix = ".sha256";
         private const string CatalogRelativePath = "patches/catalog/patches.v2.json";
-        private const string ExpectedPatchCatalogSha256 = "a674df99c9a11c914a803b8b133a677e4b87c6ae138b183d3bcfbaa7d6130753";
+        private const string ExpectedPatchCatalogSha256 = "283fe89355f3ffa017e1812709cd59c95d67fa991886f72636d1fd0001d624c8";
         private const string TargetFileName = "BEA.exe";
         private const string KnownRetailSteamSha256 = "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750";
         private const long KnownRetailSteamSize = 2_506_752;
@@ -80,6 +80,8 @@ namespace Onslaught___Career_Editor
                 Patched: new byte[] { 0x00 },
                 TargetBinaryHashes: s_knownRetailSteamHashes,
                 TargetBinarySize: KnownRetailSteamSize,
+                ProofLevel: "byte_verified_static_and_copied_launch_pair",
+                Selectability: "profile_visible",
                 PresetEligibility: new[] { "compatibility-copy", "recommended-safe-copy", "enhanced-edition-preview", "debug-camera-preview", "custom" }),
             new(
                 Key: "force_windowed",
@@ -90,6 +92,8 @@ namespace Onslaught___Career_Editor
                 Patched: new byte[] { 0xB8, 0x01, 0x00, 0x00, 0x00 },
                 TargetBinaryHashes: s_knownRetailSteamHashes,
                 TargetBinarySize: KnownRetailSteamSize,
+                ProofLevel: "byte_verified_static_and_copied_launch_pair",
+                Selectability: "profile_visible",
                 PresetEligibility: new[] { "compatibility-copy", "recommended-safe-copy", "enhanced-edition-preview", "debug-camera-preview", "custom" }),
             new(
                 Key: "extra_graphics_default_on",
@@ -99,7 +103,10 @@ namespace Onslaught___Career_Editor
                 Original: new byte[] { 0x6A, 0x00 },
                 Patched: new byte[] { 0x6A, 0x01 },
                 TargetBinaryHashes: s_knownRetailSteamHashes,
-                TargetBinarySize: KnownRetailSteamSize),
+                TargetBinarySize: KnownRetailSteamSize,
+                ProofLevel: "byte_verified_static_and_copied_launch_smoke",
+                Selectability: "profile_visible",
+                PresetEligibility: new[] { "recommended-safe-copy", "enhanced-edition-preview", "custom" }),
             new(
                 Key: "ignore_cardid_tweak_overrides",
                 Track: "Stable",
@@ -108,7 +115,10 @@ namespace Onslaught___Career_Editor
                 Original: new byte[] { 0xE8, 0x9C, 0xD7, 0xFF, 0xFF },
                 Patched: new byte[] { 0x90, 0x90, 0x90, 0x90, 0x90 },
                 TargetBinaryHashes: s_knownRetailSteamHashes,
-                TargetBinarySize: KnownRetailSteamSize),
+                TargetBinarySize: KnownRetailSteamSize,
+                ProofLevel: "byte_verified_static_and_copied_launch_smoke",
+                Selectability: "profile_visible",
+                PresetEligibility: new[] { "recommended-safe-copy", "enhanced-edition-preview", "custom" }),
             new(
                 Key: "version_overlay_use_patched_format_pointer",
                 Track: "Stable",
@@ -118,7 +128,11 @@ namespace Onslaught___Career_Editor
                 Patched: new byte[] { 0x44, 0xA4, 0x5A, 0x00 },
                 Optional: true,
                 TargetBinaryHashes: s_knownRetailSteamHashes,
-                TargetBinarySize: KnownRetailSteamSize),
+                TargetBinarySize: KnownRetailSteamSize,
+                Dependencies: new[] { "version_overlay_patched_format_cave_string" },
+                ProofLevel: "title_screen_runtime_visual_smoke",
+                Selectability: "optional_visible",
+                PresetEligibility: new[] { "enhanced-edition-preview", "custom" }),
             new(
                 Key: "version_overlay_patched_format_cave_string",
                 Track: "Stable",
@@ -128,7 +142,10 @@ namespace Onslaught___Career_Editor
                 Patched: new byte[] { 0x56, 0x25, 0x31, 0x64, 0x2E, 0x25, 0x30, 0x32, 0x64, 0x20, 0x2D, 0x20, 0x50, 0x41, 0x54, 0x43, 0x48, 0x45, 0x44, 0x00 },
                 Optional: true,
                 TargetBinaryHashes: s_knownRetailSteamHashes,
-                TargetBinarySize: KnownRetailSteamSize),
+                TargetBinarySize: KnownRetailSteamSize,
+                ProofLevel: "companion_payload_byte_verified",
+                Selectability: "hidden_companion",
+                PresetEligibility: Array.Empty<string>()),
             new(
                 Key: "frontend_clear_screen_dark_red",
                 Track: "Stable",
@@ -138,7 +155,12 @@ namespace Onslaught___Career_Editor
                 Patched: new byte[] { 0x1F, 0x1F, 0xBF, 0x00 },
                 Optional: true,
                 TargetBinaryHashes: s_knownRetailSteamHashes,
-                TargetBinarySize: KnownRetailSteamSize),
+                TargetBinarySize: KnownRetailSteamSize,
+                Conflicts: new[] { "frontend_clear_screen_dark_green", "frontend_clear_screen_black" },
+                ExclusiveGroup: "frontend_clear_screen_color",
+                ProofLevel: "title_screen_runtime_visual_smoke",
+                Selectability: "optional_visible",
+                PresetEligibility: new[] { "enhanced-edition-preview", "custom" }),
             new(
                 Key: "frontend_clear_screen_dark_green",
                 Track: "Stable",
@@ -148,7 +170,12 @@ namespace Onslaught___Career_Editor
                 Patched: new byte[] { 0x1F, 0xBF, 0x1F, 0x00 },
                 Optional: true,
                 TargetBinaryHashes: s_knownRetailSteamHashes,
-                TargetBinarySize: KnownRetailSteamSize),
+                TargetBinarySize: KnownRetailSteamSize,
+                Conflicts: new[] { "frontend_clear_screen_dark_red", "frontend_clear_screen_black" },
+                ExclusiveGroup: "frontend_clear_screen_color",
+                ProofLevel: "title_screen_runtime_visual_smoke",
+                Selectability: "optional_visible",
+                PresetEligibility: new[] { "custom" }),
             new(
                 Key: "frontend_clear_screen_black",
                 Track: "Stable",
@@ -158,7 +185,12 @@ namespace Onslaught___Career_Editor
                 Patched: new byte[] { 0x00, 0x00, 0x00, 0x00 },
                 Optional: true,
                 TargetBinaryHashes: s_knownRetailSteamHashes,
-                TargetBinarySize: KnownRetailSteamSize),
+                TargetBinarySize: KnownRetailSteamSize,
+                Conflicts: new[] { "frontend_clear_screen_dark_red", "frontend_clear_screen_dark_green" },
+                ExclusiveGroup: "frontend_clear_screen_color",
+                ProofLevel: "title_screen_runtime_visual_smoke",
+                Selectability: "optional_visible",
+                PresetEligibility: new[] { "custom" }),
             new(
                 Key: "goodies_gallery_display_unlock",
                 Track: "Stable",
@@ -168,7 +200,10 @@ namespace Onslaught___Career_Editor
                 Patched: new byte[] { 0x83, 0xC4, 0x04, 0x83, 0xC8, 0xFF, 0x90, 0x90, 0x90 },
                 Optional: true,
                 TargetBinaryHashes: s_knownRetailSteamHashes,
-                TargetBinarySize: KnownRetailSteamSize),
+                TargetBinarySize: KnownRetailSteamSize,
+                ProofLevel: "goodies_wall_runtime_visual_smoke",
+                Selectability: "optional_visible",
+                PresetEligibility: new[] { "enhanced-edition-preview", "custom" }),
             new(
                 Key: "skip_auto_toggle",
                 Track: "Experimental",
@@ -178,7 +213,11 @@ namespace Onslaught___Career_Editor
                 Patched: new byte[] { 0xEB, 0x20 },
                 Optional: true,
                 TargetBinaryHashes: s_knownRetailSteamHashes,
-                TargetBinarySize: KnownRetailSteamSize),
+                TargetBinarySize: KnownRetailSteamSize,
+                ProofLevel: "experimental_byte_verified_startup_path",
+                Selectability: "experimental_visible",
+                PresetEligibility: new[] { "custom" },
+                RequiresWindowedPair: true),
             new(
                 Key: "pause_o_scan_initializer_experiment",
                 Track: "Experimental",
@@ -626,14 +665,7 @@ namespace Onslaught___Career_Editor
                     return false;
                 }
 
-                if (!string.Equals(actual.Track, expected.Track, StringComparison.OrdinalIgnoreCase) ||
-                    !string.Equals(actual.DisplayName, expected.DisplayName, StringComparison.Ordinal) ||
-                    actual.FileOffset != expected.FileOffset ||
-                    actual.Optional != expected.Optional ||
-                    actual.TargetBinarySize != expected.TargetBinarySize ||
-                    !actual.Original.SequenceEqual(expected.Original) ||
-                    !actual.Patched.SequenceEqual(expected.Patched) ||
-                    !StringSetEquals(actual.TargetBinaryHashes, expected.TargetBinaryHashes))
+                if (!MutationPolicyEquals(expected, actual))
                 {
                     mismatch = actual.Key;
                     return false;
@@ -642,6 +674,26 @@ namespace Onslaught___Career_Editor
 
             mismatch = string.Empty;
             return true;
+        }
+
+        internal static bool MutationPolicyEquals(BinaryPatchSpec expected, BinaryPatchSpec actual)
+        {
+            return string.Equals(actual.Key, expected.Key, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(actual.Track, expected.Track, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(actual.DisplayName, expected.DisplayName, StringComparison.Ordinal) &&
+                actual.FileOffset == expected.FileOffset &&
+                actual.Optional == expected.Optional &&
+                actual.TargetBinarySize == expected.TargetBinarySize &&
+                actual.Original.SequenceEqual(expected.Original) &&
+                actual.Patched.SequenceEqual(expected.Patched) &&
+                StringSetEquals(actual.TargetBinaryHashes, expected.TargetBinaryHashes) &&
+                StringSetEquals(actual.Dependencies, expected.Dependencies) &&
+                StringSetEquals(actual.Conflicts, expected.Conflicts) &&
+                string.Equals(actual.ExclusiveGroup ?? string.Empty, expected.ExclusiveGroup ?? string.Empty, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(actual.ProofLevel ?? string.Empty, expected.ProofLevel ?? string.Empty, StringComparison.Ordinal) &&
+                string.Equals(actual.Selectability ?? string.Empty, expected.Selectability ?? string.Empty, StringComparison.OrdinalIgnoreCase) &&
+                StringSetEquals(actual.PresetEligibility, expected.PresetEligibility) &&
+                actual.RequiresWindowedPair == expected.RequiresWindowedPair;
         }
 
         private static bool StringSetEquals(IReadOnlyList<string>? left, IReadOnlyList<string>? right)
@@ -669,7 +721,7 @@ namespace Onslaught___Career_Editor
             }
             byte[] originalBytes = originalBytesMaybe!;
             byte[] patchedBytes = patchedBytesMaybe!;
-            if (originalBytes.Length != patchedBytes.Length)
+            if (originalBytes.Length != patchedBytes.Length || originalBytes.SequenceEqual(patchedBytes))
                 return false;
 
             bool optional = false;
@@ -1032,8 +1084,17 @@ namespace Onslaught___Career_Editor
             }
             else
             {
-                File.Copy(exePath, backupPath, overwrite: false);
-                WriteBackupHash(validation.info.BackupHashPath, File.ReadAllBytes(backupPath));
+                try
+                {
+                    PublishFileAtomically(backupPath, data, overwrite: false, "patch backup snapshot");
+                    WriteBackupHash(validation.info.BackupHashPath, data);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+                {
+                    return (false,
+                        "Apply aborted: the verified full-file backup could not be created, and the BEA.exe-only copy was not modified.\n" +
+                        ex.Message);
+                }
             }
 
             foreach (var row in rows)
@@ -1044,9 +1105,17 @@ namespace Onslaught___Career_Editor
                 }
             }
 
-            File.WriteAllBytes(exePath, data);
-
-            byte[] readBackData = File.ReadAllBytes(exePath);
+            byte[] readBackData;
+            try
+            {
+                readBackData = PublishFileAtomically(exePath, data, overwrite: true, "patched BEA.exe-only copy");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+            {
+                return (false,
+                    "Patch apply failed before atomic publication completed. The verified full-file backup remains available.\n" +
+                    ex.Message);
+            }
             var (_, allPatchedAfterWrite, afterRows) = VerifyPatchSpecs(readBackData, selected);
             if (!allPatchedAfterWrite)
             {
@@ -1076,6 +1145,11 @@ namespace Onslaught___Career_Editor
             var selectedByKey = new Dictionary<string, BinaryPatchSpec>(StringComparer.OrdinalIgnoreCase);
             foreach (BinaryPatchSpec spec in selected)
             {
+                if (spec.Original.SequenceEqual(spec.Patched))
+                {
+                    return (false, $"Patch selection contains no-op row '{spec.Key}'.");
+                }
+
                 if (!selectedByKey.TryAdd(spec.Key, spec))
                 {
                     return (false, $"Patch selection contains duplicate row '{spec.Key}'.");
@@ -1103,7 +1177,9 @@ namespace Onslaught___Career_Editor
                 }
 
                 if (string.Equals(spec.Selectability, "hidden_companion", StringComparison.OrdinalIgnoreCase) &&
-                    !selected.Any(candidate => (candidate.Dependencies ?? Array.Empty<string>()).Contains(spec.Key, StringComparer.OrdinalIgnoreCase)))
+                    !selected.Any(candidate =>
+                        !string.Equals(candidate.Selectability, "hidden_companion", StringComparison.OrdinalIgnoreCase) &&
+                        (candidate.Dependencies ?? Array.Empty<string>()).Contains(spec.Key, StringComparer.OrdinalIgnoreCase)))
                 {
                     return (false, $"Patch selection contains hidden companion row '{spec.Key}' without its visible dependent row.");
                 }
@@ -1140,11 +1216,25 @@ namespace Onslaught___Career_Editor
                 {
                     bool overlaps = selectedRanges[i].Start < selectedRanges[j].End &&
                         selectedRanges[j].Start < selectedRanges[i].End;
-                    if (overlaps &&
-                        !selectedRanges[i].Spec.Patched.SequenceEqual(selectedRanges[j].Spec.Patched))
+                    bool identicalMutation =
+                        selectedRanges[i].Start == selectedRanges[j].Start &&
+                        selectedRanges[i].End == selectedRanges[j].End &&
+                        selectedRanges[i].Spec.Original.SequenceEqual(selectedRanges[j].Spec.Original) &&
+                        selectedRanges[i].Spec.Patched.SequenceEqual(selectedRanges[j].Spec.Patched);
+                    if (overlaps && !identicalMutation)
                     {
                         return (false, $"Patch selection contains overlapping rows '{selectedRanges[i].Spec.Key}' and '{selectedRanges[j].Spec.Key}'.");
                     }
+                }
+            }
+
+            var catalogByKey = PatchSpecs.ToDictionary(spec => spec.Key, StringComparer.OrdinalIgnoreCase);
+            foreach (BinaryPatchSpec spec in selected)
+            {
+                if (!catalogByKey.TryGetValue(spec.Key, out BinaryPatchSpec? canonical) ||
+                    !MutationPolicyEquals(canonical, spec))
+                {
+                    return (false, $"Patch selection row '{spec.Key}' is not an exact mutation from the pinned patch catalog.");
                 }
             }
 
@@ -1162,18 +1252,6 @@ namespace Onslaught___Career_Editor
             if (!File.Exists(backupPath))
                 return (false, $"Backup file not found: {backupPath}");
 
-            var (_, _, currentRows) = VerifyPatchSpecs(validation.info.Data, PatchSpecs);
-            IReadOnlyList<BinaryPatchVerifyRow> unexpectedRestoreRows =
-                FindUnexpectedRestorePatchRows(validation.info.Data, PatchSpecs, currentRows);
-            if (unexpectedRestoreRows.Count > 0)
-            {
-                var guardSb = new StringBuilder();
-                guardSb.AppendLine("Restore aborted: unexpected patch state detected in the current BEA.exe-only copy.");
-                foreach (var row in unexpectedRestoreRows)
-                    guardSb.AppendLine($"[{row.Spec.Track} | {row.Spec.DisplayName}] @ 0x{row.Spec.FileOffset:X}: {StateLabel(row.State)}");
-                return (false, guardSb.ToString());
-            }
-
             byte[] backupBytes = File.ReadAllBytes(backupPath);
             var backupIntegrity = ValidateBackupSnapshotIntegrity(validation.info.BackupHashPath, backupBytes);
             if (!backupIntegrity.success)
@@ -1182,6 +1260,10 @@ namespace Onslaught___Career_Editor
             var backupProvenance = ValidateBackupSnapshotProvenance(backupBytes, PatchSpecs, target);
             if (!backupProvenance.success)
                 return (false, backupProvenance.message);
+
+            var (_, _, currentRows) = VerifyPatchSpecs(validation.info.Data, PatchSpecs);
+            IReadOnlyList<BinaryPatchVerifyRow> unexpectedRestoreRows =
+                FindUnexpectedRestorePatchRows(validation.info.Data, PatchSpecs, currentRows);
 
             if (!currentRows.Any(row => row.State == BinaryPatchState.Patched) &&
                 validation.info.Data.SequenceEqual(backupBytes))
@@ -1192,8 +1274,17 @@ namespace Onslaught___Career_Editor
                     $"Backup source: {backupPath}");
             }
 
-            File.Copy(backupPath, exePath, overwrite: true);
-            byte[] restoredBytes = File.ReadAllBytes(exePath);
+            byte[] restoredBytes;
+            try
+            {
+                restoredBytes = PublishFileAtomically(exePath, backupBytes, overwrite: true, "restored BEA.exe-only copy");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+            {
+                return (false,
+                    "Restore failed before atomic publication completed. The verified backup snapshot was left unchanged.\n" +
+                    ex.Message);
+            }
             if (!restoredBytes.SequenceEqual(backupBytes))
             {
                 return (false,
@@ -1206,6 +1297,9 @@ namespace Onslaught___Career_Editor
                 "Restore complete.\n" +
                 $"Target: {exePath}\n" +
                 $"Backup source: {backupPath}\n" +
+                (unexpectedRestoreRows.Count > 0
+                    ? "Recovery: unexpected current patch bytes were replaced from the verified full-file backup.\n"
+                    : string.Empty) +
                 "Result: full executable restored from the original backup snapshot.\n" +
                 "On-disk verification matched the backup snapshot.");
         }
@@ -1306,6 +1400,9 @@ namespace Onslaught___Career_Editor
             if (!filesystemSafety.success)
                 return (false, filesystemSafety.message, null);
 
+            if (File.Exists(backupHashPath) && !File.Exists(backupPath))
+                return (false, "Patch backup hash sidecar exists without its backup snapshot; remove the stale copied-workspace sidecar before applying patches.", null);
+
             if (requireCatalog && UsingFallbackCatalog && !target.AllowFallbackCatalogForTests)
                 return (false, "Patch catalog is unavailable; built-in fallback patch specs are verification-only for product mutation.", null);
 
@@ -1326,7 +1423,63 @@ namespace Onslaught___Career_Editor
 
         private static void WriteBackupHash(string backupHashPath, byte[] backupBytes)
         {
-            File.WriteAllText(backupHashPath, ComputeSha256Hex(backupBytes), Encoding.UTF8);
+            byte[] hashBytes = Encoding.UTF8.GetBytes(ComputeSha256Hex(backupBytes));
+            PublishFileAtomically(backupHashPath, hashBytes, overwrite: false, "patch backup hash sidecar");
+        }
+
+        private static byte[] PublishFileAtomically(
+            string destinationPath,
+            byte[] bytes,
+            bool overwrite,
+            string label)
+        {
+            string? directory = Path.GetDirectoryName(destinationPath);
+            if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+                throw new DirectoryNotFoundException($"The containing folder for {label} does not exist.");
+
+            string stagedPath = Path.Combine(directory, $".onslaught-patch-{Guid.NewGuid():N}.tmp");
+            bool stagedEntryExists = false;
+            try
+            {
+                using (FileStream staged = FileMutationSafety.CreateStagedFile(stagedPath))
+                {
+                    stagedEntryExists = true;
+                    staged.Write(bytes);
+                    staged.Flush(flushToDisk: true);
+                    staged.Position = 0;
+                    byte[] stagedHash = SHA256.HashData(staged);
+                    if (staged.Length != bytes.LongLength ||
+                        !CryptographicOperations.FixedTimeEquals(stagedHash, SHA256.HashData(bytes)))
+                    {
+                        throw new IOException($"Staged {label} verification failed.");
+                    }
+
+                    FileMutationSafety.ReleaseStagedFileQuarantine(staged);
+                }
+
+                File.Move(stagedPath, destinationPath, overwrite);
+                stagedEntryExists = false;
+
+                using SafeFileHandle handle = FileMutationSafety.OpenNoFollowReadHandle(destinationPath, label);
+                WindowsFileIdentity identity = FileMutationSafety.GetWindowsIdentity(handle, label);
+                if (OperatingSystem.IsWindows() && (identity.IsReparsePoint || identity.NumberOfLinks != 1))
+                    throw new IOException($"Published {label} has an unsafe file identity.");
+
+                using var stream = new FileStream(handle, FileAccess.Read);
+                if (stream.Length > int.MaxValue)
+                    throw new IOException($"Published {label} is too large to verify.");
+                byte[] readBack = new byte[checked((int)stream.Length)];
+                stream.ReadExactly(readBack);
+                if (!readBack.SequenceEqual(bytes))
+                    throw new IOException($"Published {label} verification did not match the staged bytes.");
+
+                return readBack;
+            }
+            finally
+            {
+                if (stagedEntryExists && File.Exists(stagedPath))
+                    File.Delete(stagedPath);
+            }
         }
 
         private static (bool success, string message) ValidateBackupSnapshotIntegrity(string backupHashPath, byte[] backupBytes)
@@ -1356,19 +1509,8 @@ namespace Onslaught___Career_Editor
             BinaryPatchTargetOptions target)
         {
             string actualHash = ComputeSha256Hex(backupBytes);
-            var knownHashes = specs
-                .SelectMany(spec => spec.TargetBinaryHashes ?? Array.Empty<string>())
-                .Where(hash => !string.IsNullOrWhiteSpace(hash))
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-            bool trustedHash = knownHashes.Contains(actualHash);
-
-            long[] knownSizes = specs
-                .Select(spec => spec.TargetBinarySize)
-                .Where(size => size.HasValue)
-                .Select(size => size!.Value)
-                .Distinct()
-                .ToArray();
-            bool trustedSize = knownSizes.Length > 0 && knownSizes.Contains(backupBytes.LongLength);
+            bool trustedHash = s_knownRetailSteamHashes.Contains(actualHash, StringComparer.OrdinalIgnoreCase);
+            bool trustedSize = backupBytes.LongLength == KnownRetailSteamSize;
 
             if (!target.AllowByteLayoutOnlyTarget && (!trustedHash || !trustedSize))
             {
@@ -1400,33 +1542,15 @@ namespace Onslaught___Career_Editor
             BinaryPatchTargetOptions target)
         {
             string actualHash = Convert.ToHexString(SHA256.HashData(data)).ToLowerInvariant();
-            var knownHashes = selected
-                .SelectMany(spec => spec.TargetBinaryHashes ?? Array.Empty<string>())
-                .Where(hash => !string.IsNullOrWhiteSpace(hash))
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            if (knownHashes.Contains(actualHash))
+            if (s_knownRetailSteamHashes.Contains(actualHash, StringComparer.OrdinalIgnoreCase) &&
+                data.LongLength == KnownRetailSteamSize)
                 return "known clean Steam retail BEA.exe SHA-256";
 
-            var knownSizes = selected
-                .Select(spec => spec.TargetBinarySize)
-                .Where(size => size.HasValue)
-                .Select(size => size!.Value)
-                .Distinct()
-                .ToArray();
-
-            bool sizeMatches = knownSizes.Length > 0 && knownSizes.Contains(data.LongLength);
+            bool sizeMatches = data.LongLength == KnownRetailSteamSize;
             if (sizeMatches && !target.AllowByteLayoutOnlyTarget && selected.Count > 0)
             {
-                var (_, allPatched, rows) = VerifyPatchSpecs(data, selected);
-                if (allPatched && rows.Count == selected.Count)
-                {
-                    var backupTrust = CurrentBytesMatchTrustedCleanBackupWithSelectedPatches(data, target, selected);
-                    if (backupTrust)
-                        return "trusted clean backup plus selected patch bytes already applied";
-
-                    return string.Empty;
-                }
+                if (CurrentBytesMatchTrustedCleanBackupWithCatalogTransitions(data, target))
+                    return "trusted clean backup plus complete known catalog transitions";
             }
 
             if (!sizeMatches && !target.AllowByteLayoutOnlyTarget)
@@ -1437,10 +1561,9 @@ namespace Onslaught___Career_Editor
                 : string.Empty;
         }
 
-        private static bool CurrentBytesMatchTrustedCleanBackupWithSelectedPatches(
+        private static bool CurrentBytesMatchTrustedCleanBackupWithCatalogTransitions(
             byte[] currentBytes,
-            BinaryPatchTargetOptions target,
-            IReadOnlyList<BinaryPatchSpec> selected)
+            BinaryPatchTargetOptions target)
         {
             try
             {
@@ -1454,24 +1577,51 @@ namespace Onslaught___Career_Editor
                 if (!integrity.success)
                     return false;
 
-                var provenance = ValidateBackupSnapshotProvenance(backupBytes, selected, target);
+                var provenance = ValidateBackupSnapshotProvenance(backupBytes, PatchSpecs, target);
                 if (!provenance.success || backupBytes.Length != currentBytes.Length)
                     return false;
 
-                byte[] expected = (byte[])backupBytes.Clone();
-                foreach (BinaryPatchSpec spec in selected)
-                {
-                    if (spec.FileOffset < 0 || spec.FileOffset + spec.Patched.Length > expected.Length)
-                        return false;
-                    spec.Patched.CopyTo(expected, spec.FileOffset);
-                }
-
-                return expected.SequenceEqual(currentBytes);
+                return CurrentBytesContainOnlyKnownCatalogTransitions(currentBytes, backupBytes, PatchSpecs);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
             {
                 return false;
             }
+        }
+
+        internal static bool CurrentBytesContainOnlyKnownCatalogTransitions(
+            byte[] currentBytes,
+            byte[] backupBytes,
+            IReadOnlyList<BinaryPatchSpec> catalogSpecs)
+        {
+            if (currentBytes.Length != backupBytes.Length)
+                return false;
+
+            var allowedDifferences = new bool[currentBytes.Length];
+            foreach (BinaryPatchSpec spec in catalogSpecs)
+            {
+                if (spec.FileOffset < 0 ||
+                    spec.Original.Length != spec.Patched.Length ||
+                    spec.FileOffset > currentBytes.Length - spec.Original.Length)
+                {
+                    return false;
+                }
+
+                ReadOnlySpan<byte> original = backupBytes.AsSpan(spec.FileOffset, spec.Original.Length);
+                ReadOnlySpan<byte> current = currentBytes.AsSpan(spec.FileOffset, spec.Patched.Length);
+                if (!original.SequenceEqual(spec.Original) || !current.SequenceEqual(spec.Patched))
+                    continue;
+
+                Array.Fill(allowedDifferences, true, spec.FileOffset, spec.Patched.Length);
+            }
+
+            for (int index = 0; index < currentBytes.Length; index++)
+            {
+                if (currentBytes[index] != backupBytes[index] && !allowedDifferences[index])
+                    return false;
+            }
+
+            return true;
         }
 
         private static string NormalizeDirectoryRoot(string root)

@@ -39,6 +39,10 @@ The canonical machine-readable safe-copy profile catalog is:
 
 - `patches/catalog/safe-copy-profiles.v1.json`
 
+The normative schema, graph, evidence, and copied-target rules are in
+[`CATALOG_CONTRACT.md`](CATALOG_CONTRACT.md). Historical patch plans and agent
+notes do not override that contract or current executable tests.
+
 This catalog is consumed by:
 
 - C# `BinaryPatchEngine` through the WinUI Windowed & Mods/AppCore lane (legacy/internal automation IDs may still say Patch Bench).
@@ -55,9 +59,15 @@ Important: file patches cannot directly set `g_bAllCheatsEnabled` because it liv
 - A runtime memory trainer, or
 - Whatever in-game logic sets the flag (e.g. the `GameLoop_DevModeEasterEgg` timing path).
 
-The WinUI/AppCore product path is the preferred patch lane. It prepares a playable copied game folder under an app-owned root, patches only the copied `BEA.exe`, verifies patch bytes, and leaves the installed game untouched.
+The WinUI/AppCore product path is the preferred patch lane. It prepares a playable copied game folder under an app-owned root, patches only the copied `BEA.exe`, verifies patch bytes, and leaves the installed game untouched. Backup, checksum, apply, and restore outputs are flushed and verified in same-directory staging files before atomic publication. Restore accepts only an integrity- and provenance-verified full-file backup and can repair a copied executable with unexpected patch bytes or truncation.
 
-Standalone active scripts are lab/reference helpers. Mutating modes require an explicit copied `BEA.exe` path plus `--allowed-root`, a generated playable copied-game manifest, verified backup hash sidecars, and refuse Program Files, Steam-library-shaped roots, reparse-point targets, and hardlinked targets. Broken/legacy scripts under `patches/archive/` are archival only and intentionally refuse to write bytes.
+Standalone active scripts are lab/reference helpers. Mutating modes require an explicit copied `BEA.exe` path plus `--allowed-root`, a generated playable copied-game manifest, verified backup hash sidecars, and refuse Program Files, Steam-library-shaped roots, reparse-point targets, and hardlinked targets. They do not carry AppCore's atomic product-publication guarantee. Broken/legacy scripts under `patches/archive/` are archival only and intentionally refuse to write bytes.
+
+`tools/apply_bea_catalog_patch.py --apply` also requires the canonical clean
+specimen or its verified full-file backup. Its
+`--allow-byte-layout-only-target` switch exists only for synthetic regression
+fixtures; using it is byte-layout testing, not supported-game identity or
+runtime proof.
 
 Custom path (if needed):
 ```bash
