@@ -38,6 +38,8 @@ class SendGameWindowInputTests(unittest.TestCase):
                 "-NoProfile",
                 "-ExecutionPolicy",
                 "Bypass",
+                "-OutputFormat",
+                "Text",
                 "-EncodedCommand",
                 encoded_command,
             ],
@@ -147,6 +149,51 @@ class SendGameWindowInputTests(unittest.TestCase):
             fallback_index,
         )
         self.assertLess(refusal_index, post_message_index)
+
+    def test_canary_mode_requires_receipt_and_rejects_background_messages(self) -> None:
+        missing_hash = self.run_helper(
+            "tap:Q",
+            extra_args="-RuntimeReceiptPath 'missing-receipt.json'",
+        )
+        self.assertNotEqual(missing_hash.returncode, 0)
+        self.assertIn("requires", missing_hash.stderr.lower())
+
+        background = self.run_helper(
+            "tap:Q",
+            extra_args=(
+                "-RuntimeReceiptPath 'missing-receipt.json' "
+                f"-ExpectedReceiptSha256 {'a' * 64} "
+                "-AllowBackgroundWindowMessages "
+                "-BackgroundWindowMessagesArm 'ALLOW BACKGROUND BEA WINDOW MESSAGES'"
+            ),
+        )
+        self.assertNotEqual(background.returncode, 0)
+        self.assertIn("background", background.stderr.lower())
+
+    def test_canary_revalidates_same_receipt_immediately_before_actions(self) -> None:
+        script = SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("runtime_process_identity.psm1", script)
+        calls = [
+            index
+            for index in range(len(script))
+            if script.startswith("Assert-RuntimeProcessReceipt", index)
+        ]
+        self.assertGreaterEqual(len(calls), 2)
+        action_loop = script.index("foreach ($action in $actions)")
+        self.assertLess(calls[-1], action_loop)
+        self.assertIn("-RequireWindow", script[calls[-1] : action_loop])
+
+    def test_successful_key_downs_are_released_in_reverse_order_from_finally(self) -> None:
+        script = SCRIPT.read_text(encoding="utf-8")
+        held_keys = script.index("$heldKeys = [System.Collections.Generic.List[object]]::new()")
+        action_loop = script.index("foreach ($action in $actions)", held_keys)
+        finally_block = script.index("finally", action_loop)
+        reverse_loop = script.index("$heldKeys.Count - 1", finally_block)
+        release_call = script.index("SendScanKey", reverse_loop)
+        self.assertLess(held_keys, action_loop)
+        self.assertLess(action_loop, finally_block)
+        self.assertLess(finally_block, reverse_loop)
+        self.assertLess(reverse_loop, release_call)
 
 
 if __name__ == "__main__":

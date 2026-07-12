@@ -7,6 +7,8 @@ param(
     [int]$StepDelayMs = 60,
     [string]$ExpectedExecutablePath = "",
     [string]$ExpectedWorkingDirectory = "",
+    [string]$RuntimeReceiptPath = "",
+    [string]$ExpectedReceiptSha256 = "",
     [switch]$AllowBackgroundWindowMessages,
     [string]$BackgroundWindowMessagesArm = "",
     [switch]$PrintOnly
@@ -14,6 +16,22 @@ param(
 
 $ErrorActionPreference = "Stop"
 $backgroundWindowMessageArmPhrase = "ALLOW BACKGROUND BEA WINDOW MESSAGES"
+$scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$canaryMode = -not [string]::IsNullOrWhiteSpace($RuntimeReceiptPath) -or
+    -not [string]::IsNullOrWhiteSpace($ExpectedReceiptSha256)
+$validatedReceipt = $null
+
+if ($canaryMode) {
+    if ([string]::IsNullOrWhiteSpace($RuntimeReceiptPath) -or
+        [string]::IsNullOrWhiteSpace($ExpectedReceiptSha256)) {
+        Write-Error "Canary input requires RuntimeReceiptPath and ExpectedReceiptSha256."
+        exit 1
+    }
+    if ($AllowBackgroundWindowMessages) {
+        Write-Error "Canary input refuses background window messages and requires exact foreground SendInput."
+        exit 1
+    }
+}
 
 if ($StepDelayMs -lt 0 -or $StepDelayMs -gt 1000) {
     Write-Error "StepDelayMs must be between 0 and 1000."
@@ -204,6 +222,47 @@ function Parse-InputSequence {
 }
 
 $actions = @(Parse-InputSequence -RawSequence $Sequence)
+
+if ($canaryMode) {
+    Import-Module (Join-Path $scriptRoot "runtime_process_identity.psm1") -Force -ErrorAction Stop
+    $validatedReceipt = Assert-RuntimeProcessReceipt `
+        -ReceiptPath $RuntimeReceiptPath `
+        -ExpectedReceiptSha256 $ExpectedReceiptSha256
+    $receiptProcessId = [int]$validatedReceipt.Receipt.process.id
+    $receiptHwndHex = [string]$validatedReceipt.Receipt.window.hwndHex
+    $receiptExecutablePath = [string]$validatedReceipt.Receipt.process.executable.path
+    $receiptWorkingDirectory = [string]$validatedReceipt.Receipt.process.workingDirectory
+    $receiptProcessName = [System.IO.Path]::GetFileName($receiptExecutablePath)
+
+    if ($ProcessId -gt 0 -and $ProcessId -ne $receiptProcessId) {
+        Write-Error ("ProcessId '{0}' does not match runtime receipt process id '{1}'." -f $ProcessId, $receiptProcessId)
+        exit 1
+    }
+    if (-not [string]::IsNullOrWhiteSpace($HwndHex) -and
+        -not [string]::Equals($HwndHex, $receiptHwndHex, [System.StringComparison]::OrdinalIgnoreCase)) {
+        Write-Error ("HwndHex '{0}' does not match runtime receipt window '{1}'." -f $HwndHex, $receiptHwndHex)
+        exit 1
+    }
+    if (-not [string]::Equals($ProcessName, $receiptProcessName, [System.StringComparison]::OrdinalIgnoreCase)) {
+        Write-Error ("ProcessName '{0}' does not match runtime receipt executable '{1}'." -f $ProcessName, $receiptProcessName)
+        exit 1
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedExecutablePath) -and
+        -not [string]::Equals($ExpectedExecutablePath, $receiptExecutablePath, [System.StringComparison]::OrdinalIgnoreCase)) {
+        Write-Error "ExpectedExecutablePath does not match the runtime receipt executable path."
+        exit 1
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedWorkingDirectory) -and
+        -not [string]::Equals($ExpectedWorkingDirectory, $receiptWorkingDirectory, [System.StringComparison]::OrdinalIgnoreCase)) {
+        Write-Error "ExpectedWorkingDirectory does not match the runtime receipt working directory."
+        exit 1
+    }
+
+    $ProcessId = $receiptProcessId
+    $HwndHex = $receiptHwndHex
+    $ExpectedExecutablePath = $receiptExecutablePath
+    $ExpectedWorkingDirectory = $receiptWorkingDirectory
+}
 
 if (-not $PrintOnly -and ($ProcessId -le 0 -or [string]::IsNullOrWhiteSpace($HwndHex))) {
     [PSCustomObject]@{
@@ -616,6 +675,21 @@ if ($useWindowMessages -and (-not $AllowBackgroundWindowMessages -or $Background
     exit 1
 }
 
+if ($canaryMode) {
+    $validatedReceipt = Assert-RuntimeProcessReceipt `
+        -ReceiptPath $RuntimeReceiptPath `
+        -ExpectedReceiptSha256 $ExpectedReceiptSha256 `
+        -RequireWindow
+    if ($validatedReceipt.Process.Id -ne $selected.processId -or
+        -not [string]::Equals(
+            [string]$validatedReceipt.Receipt.window.hwndHex,
+            [string]$selected.hwndHex,
+            [System.StringComparison]::OrdinalIgnoreCase)) {
+        Write-Error "Runtime receipt process/window identity changed before scoped input delivery."
+        exit 1
+    }
+}
+
 $KEYEVENTF_KEYUP = 0x0002
 $KEYEVENTF_EXTENDEDKEY = 0x0001
 $KEYEVENTF_SCANCODE = 0x0008
@@ -628,6 +702,8 @@ $sendInputEventsSent = 0
 $scanKeybdEventsSent = 0
 $windowMessageEventsSent = 0
 $mouseEventsSent = 0
+$heldKeys = [System.Collections.Generic.List[object]]::new()
+try {
 foreach ($action in $actions) {
     if ($action.kind -eq "wait") {
         Start-Sleep -Milliseconds $action.durationMs
@@ -686,6 +762,10 @@ foreach ($action in $actions) {
                 $sent++
                 $scanKeybdEventsSent++
             }
+            $heldKeys.Add([PSCustomObject]@{
+                scanCode = $scanCode
+                extended = $extended
+            }) | Out-Null
         }
     }
     if ($action.kind -eq "tap") {
@@ -711,11 +791,40 @@ foreach ($action in $actions) {
                 $sent++
                 $scanKeybdEventsSent++
             }
+            for ($heldIndex = $heldKeys.Count - 1; $heldIndex -ge 0; $heldIndex--) {
+                $heldKey = $heldKeys[$heldIndex]
+                if ([uint16]$heldKey.scanCode -eq $scanCode -and [bool]$heldKey.extended -eq $extended) {
+                    $heldKeys.RemoveAt($heldIndex)
+                    break
+                }
+            }
         }
     }
     if ($StepDelayMs -gt 0) {
         Start-Sleep -Milliseconds $StepDelayMs
     }
+}
+} finally {
+    for ($index = $heldKeys.Count - 1; $index -ge 0; $index--) {
+        $key = $heldKeys[$index]
+        try {
+            if ([GameWindowInputNative]::SendScanKey([uint16]$key.scanCode, $true, [bool]$key.extended)) {
+                $sent++
+                $sendInputEventsSent++
+            } else {
+                $releaseFlags = $KEYEVENTF_SCANCODE -bor $KEYEVENTF_KEYUP
+                if ([bool]$key.extended) {
+                    $releaseFlags = $releaseFlags -bor $KEYEVENTF_EXTENDEDKEY
+                }
+                [GameWindowInputNative]::keybd_event(0, [byte]$key.scanCode, $releaseFlags, [UIntPtr]::Zero)
+                $sent++
+                $scanKeybdEventsSent++
+            }
+        } catch {
+            # Continue attempting key-up for the remaining held keys.
+        }
+    }
+    $heldKeys.Clear()
 }
 
 [PSCustomObject]@{

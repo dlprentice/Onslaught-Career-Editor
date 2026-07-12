@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -23,6 +25,8 @@ CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
 class StartCdbServerTests(unittest.TestCase):
+    ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
+
     def run_powershell(self, command: str) -> subprocess.CompletedProcess[str]:
         encoded_command = base64.b64encode(command.encode("utf-16le")).decode("ascii")
         return subprocess.run(
@@ -31,6 +35,8 @@ class StartCdbServerTests(unittest.TestCase):
                 "-NoProfile",
                 "-ExecutionPolicy",
                 "Bypass",
+                "-OutputFormat",
+                "Text",
                 "-EncodedCommand",
                 encoded_command,
             ],
@@ -43,6 +49,10 @@ class StartCdbServerTests(unittest.TestCase):
     def ps_quote(self, value: str | Path) -> str:
         text = str(value)
         return "'" + text.replace("'", "''") + "'"
+
+    def normalized_stderr(self, result: subprocess.CompletedProcess[str]) -> str:
+        tokens = self.ANSI_ESCAPE.sub("", result.stderr).split()
+        return " ".join(token for token in tokens if token != "|")
 
     def write_profile_manifest(self, profile_root: Path) -> None:
         (profile_root / "onslaught-profile-manifest.json").write_text(
@@ -122,6 +132,86 @@ class StartCdbServerTests(unittest.TestCase):
         )
         if log_path is not None:
             command += f"-LogPath {self.ps_quote(log_path)} "
+        return command + "-PrintOnly"
+
+    def write_runtime_receipt(
+        self,
+        profile_root: Path,
+        process: subprocess.Popen[bytes],
+        command_file: Path,
+        *,
+        started_at: str | None = None,
+    ) -> tuple[Path, str, str]:
+        identity_result = self.run_powershell(
+            f"$p = Get-Process -Id {process.pid} -ErrorAction Stop; $p.Refresh(); "
+            "[PSCustomObject]@{ "
+            "startedAtUtc = $p.StartTime.ToUniversalTime().ToString('o'); "
+            "modulePath = [System.IO.Path]::GetFullPath($p.MainModule.FileName); "
+            "moduleBaseAddressHex = ('0x{0:X}' -f $p.MainModule.BaseAddress.ToInt64()); "
+            "moduleSize = [int64]$p.MainModule.ModuleMemorySize "
+            "} | ConvertTo-Json -Compress"
+        )
+        self.assertEqual(identity_result.returncode, 0, identity_result.stderr)
+        identity = json.loads(identity_result.stdout)
+        executable = profile_root / "BEA.exe"
+        manifest = profile_root / "onslaught-profile-manifest.json"
+        executable_hash = hashlib.sha256(executable.read_bytes()).hexdigest()
+        command_hash = hashlib.sha256(command_file.read_bytes()).hexdigest()
+        payload = {
+            "schemaVersion": "runtime-process-receipt.v1",
+            "runId": "synthetic-cdb-test",
+            "process": {
+                "id": process.pid,
+                "startedAtUtc": started_at or identity["startedAtUtc"],
+                "executable": {
+                    "path": str(executable.resolve()),
+                    "sha256": executable_hash,
+                    "size": executable.stat().st_size,
+                },
+                "workingDirectory": str(profile_root.resolve()),
+                "launchArguments": ["/c", "ping -n 30 127.0.0.1 > nul"],
+            },
+            "profileManifest": {
+                "path": str(manifest.resolve()),
+                "sha256": hashlib.sha256(manifest.read_bytes()).hexdigest(),
+                "size": manifest.stat().st_size,
+            },
+            "window": {"hwndHex": "0x0"},
+            "module": {
+                "path": identity["modulePath"],
+                "baseAddressHex": identity["moduleBaseAddressHex"],
+                "size": identity["moduleSize"],
+            },
+            "sourceExecutableSha256": executable_hash,
+            "copiedExecutableSha256": executable_hash,
+            "commandTemplateSha256": "a" * 64,
+            "generatedCommandSha256": command_hash,
+        }
+        receipt = profile_root / "runtime-process-receipt.v1.json"
+        receipt.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+        return receipt, hashlib.sha256(receipt.read_bytes()).hexdigest(), command_hash
+
+    def build_canary_command(
+        self,
+        *,
+        receipt: Path,
+        receipt_sha256: str,
+        command_file: Path,
+        command_sha256: str,
+        allowed_command_root: Path,
+        extra_args: str = "",
+    ) -> str:
+        command = (
+            f"& {self.ps_quote(SCRIPT)} "
+            f"-RuntimeReceiptPath {self.ps_quote(receipt)} "
+            f"-ExpectedReceiptSha256 {receipt_sha256} "
+            f"-CommandFile {self.ps_quote(command_file)} "
+            f"-ExpectedCommandSha256 {command_sha256} "
+            "-RequiredLogMarker MORPH_CANARY_READY "
+            f"-AllowedCommandRoot {self.ps_quote(allowed_command_root)} "
+        )
+        if extra_args:
+            command += f"{extra_args} "
         return command + "-PrintOnly"
 
     def test_printonly_exact_pid_accepts_generated_copied_profile_identity(self) -> None:
@@ -249,7 +339,7 @@ class StartCdbServerTests(unittest.TestCase):
                 self.stop_process(process)
 
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn("must be inside app-owned profiles root", result.stderr)
+            self.assertIn("must be inside app-owned profiles root", self.normalized_stderr(result))
 
     def test_rejects_command_file_outside_default_probe_root(self) -> None:
         with tempfile.TemporaryDirectory(prefix="bea-cdb-test-") as temp:
@@ -265,7 +355,7 @@ class StartCdbServerTests(unittest.TestCase):
             result = self.run_powershell(command)
 
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn("must stay under allowed command root", result.stderr)
+            self.assertIn("must stay under allowed command root", self.normalized_stderr(result))
 
     def test_printonly_does_not_create_log_directory(self) -> None:
         with tempfile.TemporaryDirectory(prefix="bea-cdb-test-") as temp:
@@ -309,7 +399,7 @@ class StartCdbServerTests(unittest.TestCase):
                 self.stop_process(process)
 
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn("must be the copied BEA.exe", result.stderr)
+            self.assertIn("must be the copied BEA.exe", self.normalized_stderr(result))
 
     def test_remote_server_requires_arm_phrase_and_non_default_password(self) -> None:
         missing_arm = (
@@ -336,6 +426,184 @@ class StartCdbServerTests(unittest.TestCase):
         default_password_result = self.run_powershell(default_password)
         self.assertNotEqual(default_password_result.returncode, 0)
         self.assertIn("non-default", default_password_result.stderr)
+
+    def test_canary_printonly_validates_receipt_and_adds_local_safety_flags(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="bea-cdb-canary-test-") as temp:
+            root = Path(temp)
+            profile = root / "profiles" / "safe-profile"
+            command_file = root / "commands" / "canary.cdb.txt"
+            command_file.parent.mkdir()
+            command_file.write_text(".echo MORPH_CANARY_READY\n", encoding="utf-8")
+            process = self.start_fake_copied_bea(profile)
+            try:
+                receipt, receipt_hash, command_hash = self.write_runtime_receipt(
+                    profile, process, command_file
+                )
+                result = self.run_powershell(
+                    self.build_canary_command(
+                        receipt=receipt,
+                        receipt_sha256=receipt_hash,
+                        command_file=command_file,
+                        command_sha256=command_hash,
+                        allowed_command_root=command_file.parent,
+                    )
+                )
+            finally:
+                self.stop_process(process)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("-pd", result.stdout)
+        self.assertIn("-noshell", result.stdout)
+        self.assertNotIn("-server", result.stdout)
+
+    def test_canary_printonly_rejects_stale_receipt_start_time(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="bea-cdb-canary-test-") as temp:
+            root = Path(temp)
+            profile = root / "profiles" / "safe-profile"
+            command_file = root / "commands" / "canary.cdb.txt"
+            command_file.parent.mkdir()
+            command_file.write_text(".echo MORPH_CANARY_READY\n", encoding="utf-8")
+            process = self.start_fake_copied_bea(profile)
+            try:
+                receipt, receipt_hash, command_hash = self.write_runtime_receipt(
+                    profile,
+                    process,
+                    command_file,
+                    started_at="2000-01-01T00:00:00.0000000Z",
+                )
+                result = self.run_powershell(
+                    self.build_canary_command(
+                        receipt=receipt,
+                        receipt_sha256=receipt_hash,
+                        command_file=command_file,
+                        command_sha256=command_hash,
+                        allowed_command_root=command_file.parent,
+                    )
+                )
+            finally:
+                self.stop_process(process)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("start time", result.stderr.lower())
+
+    def test_canary_requires_all_receipt_command_and_marker_inputs(self) -> None:
+        parameter_names = (
+            "RuntimeReceiptPath",
+            "ExpectedReceiptSha256",
+            "ExpectedCommandSha256",
+            "RequiredLogMarker",
+        )
+        for missing in parameter_names:
+            with self.subTest(missing=missing):
+                arguments = {
+                    "RuntimeReceiptPath": "missing-receipt.json",
+                    "ExpectedReceiptSha256": "a" * 64,
+                    "ExpectedCommandSha256": "b" * 64,
+                    "RequiredLogMarker": "MORPH_CANARY_READY",
+                }
+                del arguments[missing]
+                rendered = " ".join(
+                    f"-{name} {self.ps_quote(value)}" for name, value in arguments.items()
+                )
+                result = self.run_powershell(
+                    f"& {self.ps_quote(SCRIPT)} {rendered} -PrintOnly"
+                )
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("requires", result.stderr.lower())
+
+    def test_canary_rejects_command_digest_drift_and_remote_server(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="bea-cdb-canary-test-") as temp:
+            root = Path(temp)
+            profile = root / "profiles" / "safe-profile"
+            command_file = root / "commands" / "canary.cdb.txt"
+            command_file.parent.mkdir()
+            command_file.write_text(".echo MORPH_CANARY_READY\n", encoding="utf-8")
+            process = self.start_fake_copied_bea(profile)
+            try:
+                receipt, receipt_hash, command_hash = self.write_runtime_receipt(
+                    profile, process, command_file
+                )
+                digest_result = self.run_powershell(
+                    self.build_canary_command(
+                        receipt=receipt,
+                        receipt_sha256=receipt_hash,
+                        command_file=command_file,
+                        command_sha256="0" * 64,
+                        allowed_command_root=command_file.parent,
+                    )
+                )
+                remote_result = self.run_powershell(
+                    self.build_canary_command(
+                        receipt=receipt,
+                        receipt_sha256=receipt_hash,
+                        command_file=command_file,
+                        command_sha256=command_hash,
+                        allowed_command_root=command_file.parent,
+                        extra_args=(
+                            "-EnableRemoteServer "
+                            "-RemoteServerArmPhrase 'ALLOW CDB REMOTE SERVER' "
+                            "-Password safer_token"
+                        ),
+                    )
+                )
+            finally:
+                self.stop_process(process)
+
+        self.assertNotEqual(digest_result.returncode, 0)
+        self.assertIn("command sha-256", digest_result.stderr.lower())
+        self.assertNotEqual(remote_result.returncode, 0)
+        self.assertIn("remote", remote_result.stderr.lower())
+
+    @unittest.skipUnless(os.name == "nt", "junction test requires Windows")
+    def test_canary_rejects_command_path_through_reparse_directory(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="bea-cdb-canary-test-") as temp:
+            root = Path(temp)
+            profile = root / "profiles" / "safe-profile"
+            real_commands = root / "commands" / "real"
+            alias_commands = root / "commands" / "alias"
+            real_commands.mkdir(parents=True)
+            command_file = real_commands / "canary.cdb.txt"
+            command_file.write_text(".echo MORPH_CANARY_READY\n", encoding="utf-8")
+            junction = subprocess.run(
+                [str(CMD_EXE), "/c", "mklink", "/J", str(alias_commands), str(real_commands)],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(junction.returncode, 0, junction.stderr)
+            aliased_command = alias_commands / command_file.name
+            process = self.start_fake_copied_bea(profile)
+            try:
+                receipt, receipt_hash, command_hash = self.write_runtime_receipt(
+                    profile, process, command_file
+                )
+                result = self.run_powershell(
+                    self.build_canary_command(
+                        receipt=receipt,
+                        receipt_sha256=receipt_hash,
+                        command_file=aliased_command,
+                        command_sha256=command_hash,
+                        allowed_command_root=root / "commands",
+                    )
+                )
+            finally:
+                self.stop_process(process)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("reparse", result.stderr.lower())
+
+    def test_canary_marker_readiness_and_result_identity_are_explicit(self) -> None:
+        script = SCRIPT.read_text(encoding="utf-8")
+        for token in (
+            "$RequiredLogMarker",
+            "requiredLogMarkerFound",
+            "cdbStartedAtUtc",
+            "cdbExecutablePath",
+            "targetReceiptSha256",
+            "commandSha256",
+        ):
+            self.assertIn(token, script)
+        self.assertIn("-SimpleMatch", script)
 
 
 if __name__ == "__main__":
