@@ -2,7 +2,9 @@
 
 Set-StrictMode -Version Latest
 
-if (-not ('Onslaught.LocalFileInfo' -as [type])) {
+$localFileLeaseType = 'Onslaught.LocalFileLease' -as [type]
+$directoryLeaseSetType = 'Onslaught.DirectoryLeaseSet' -as [type]
+if ($null -eq $localFileLeaseType -and $null -eq $directoryLeaseSetType) {
     Add-Type -TypeDefinition @'
 using System;
 using System.IO;
@@ -148,6 +150,9 @@ namespace Onslaught {
 }
 '@
 }
+elseif ($null -eq $localFileLeaseType -or $null -eq $directoryLeaseSetType) {
+    throw 'Local asset workspace native type registration is incomplete.'
+}
 
 $script:LocalAssetRepoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..')).TrimEnd('\', '/')
 
@@ -266,7 +271,14 @@ function Write-GuardedTextFile {
 }
 
 function Copy-GuardedFile {
-    param([Parameter(Mandatory)][string]$RepoRoot, [Parameter(Mandatory)][string]$OutputRoot, [Parameter(Mandatory)][string]$Source, [Parameter(Mandatory)][string]$Destination)
+    param(
+        [Parameter(Mandatory)][string]$RepoRoot,
+        [Parameter(Mandatory)][string]$OutputRoot,
+        [Parameter(Mandatory)][string]$Source,
+        [Parameter(Mandatory)][string]$Destination,
+        [string]$ExpectedSha256 = '',
+        [long]$ExpectedLength = -1
+    )
     Assert-LocalAssetWritePlan -RepoRoot $RepoRoot -OutputRoot $OutputRoot -DestinationPaths @($Destination) | Out-Null
     $sourceFull = Get-NormalizedPath $Source
     $destinationFull = Get-NormalizedPath $Destination
@@ -284,6 +296,10 @@ function Copy-GuardedFile {
         $output = [IO.File]::Open($temp, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
         try { $sourceHash = $input.CopyToAndHash($output); $output.Flush($true) } finally { $output.Dispose() }
         $input.Revalidate()
+        if ((-not [string]::IsNullOrWhiteSpace($ExpectedSha256) -and $sourceHash -ne $ExpectedSha256) -or
+            ($ExpectedLength -ge 0 -and $input.Length -ne $ExpectedLength)) {
+            throw 'Source mesh changed after role receipt creation.'
+        }
         if ($input.ComputeHash() -ne $sourceHash) { throw 'Source mesh contents changed while held for copy.' }
         $staged = [Onslaught.LocalFileLease]::OpenRead($temp)
         try {

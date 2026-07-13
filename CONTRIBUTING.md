@@ -222,7 +222,8 @@ For WinUI patch/mod UX, the preferred user shape is a safe-copy launcher/mod-man
   user-extracted retail assets, may load only from ignored
   `local-lab/rebuild-godot/` through the dedicated exact-root local command.
   Bootstrap accepts converted GLB/OBJ only from `staging/from-export`, requires
-  explicit or unambiguous player and terrain roles, and never activates FBX.
+  explicit or unambiguous player and terrain roles, verifies one immutable
+  content-addressed generation, publishes its manifest last, and never activates FBX.
   Runtime wording stays origin-neutral unless an exporter receipt/hash is bound.
   These files are never committed, redistributed, simulation truth, or parity
   evidence. Do not import retail binaries, decompiler output, or mechanically

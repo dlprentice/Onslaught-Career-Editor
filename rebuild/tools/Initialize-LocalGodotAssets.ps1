@@ -35,10 +35,9 @@ try {
 This workspace is an optional user-supplied local presentation input. Keep any retail-derived files ignored and never treat them as simulation truth, redistribution material, or parity evidence.
 
 - `export/` - trusted-local AYA export output
-- `player/aquila/` - explicitly selected converted `.glb` or bounded `.obj`
-- `terrain/subset/` - explicitly selected converted `.glb` or bounded `.obj`
+- `versions/<content-id>/` - immutable verified player/terrain `.glb` or bounded `.obj` generations
 - `staging/from-export/` - local staging only; FBX is never activated directly
-- `manifest.json` - created only after unambiguous player and terrain roles are selected
+- `manifest.json` - atomically published last after both files in one generation verify
 
 Run `npm run run:rebuild-godot:local -- --LocalAssetsRoot <exact-root>` to opt in. Ordinary run and smoke commands stay synthetic.
 '@

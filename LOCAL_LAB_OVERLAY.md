@@ -42,8 +42,10 @@ exact `references/AYAResourceExtractor/BoxWithTextures.fbx` template plus the
 three mutable trusted-local extractor DLLs before output. After manual FBX
 conversion, place only the selected GLB/OBJ candidates under
 `local-lab/rebuild-godot/staging/from-export/`; bootstrap never activates FBX or
-searches export output directly. A path or manifest does not prove retail
-origin, redistribution rights, or parity.
+searches export output directly. Bootstrap verifies both role files under one
+content-addressed `versions/` generation before publishing `manifest.json` last,
+so a failed generation cannot mix with the active manifest. A path or manifest
+does not prove retail origin, redistribution rights, or parity.
 
 ## Tracked Public Material
 

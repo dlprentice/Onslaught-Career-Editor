@@ -13,7 +13,7 @@ original code. It is deliberately separate from the WinUI toolkit:
   stable rolling trace hash plus final-state hash; and
 - `OnslaughtRebuild.Godot` is the playable First Flight visual/input adapter.
   Default visuals are original procedural geometry and UI. Optional local-only
-  retail mesh preview can load ignored assets from `local-lab/rebuild-godot/`
+  local mesh preview can load ignored user-supplied assets from `local-lab/rebuild-godot/`
   (never committed; non-parity).
 
 No Battle Engine Aquila installation, executable, save, media, or extracted
@@ -76,10 +76,13 @@ All generated/staged files stay under the ignored
 `rebuild/local-assets.layout.json`). FBX may be staged but is never activated;
 bootstrap reads converted files only from `staging/from-export` and fails on
 missing or ambiguous roles. Runtime support is limited to self-contained GLB
-with a nonempty mesh primitive and bounded OBJ. Ordinary run and smoke commands
-stay synthetic; the dedicated local command supplies the exact `--local-assets`
-root. Failed or empty roles keep procedural geometry, and the HUD describes a
-neutral user-supplied local mesh only after a nonempty renderable surface loads.
+with bounded core-glTF arrays/accessors/BIN ranges and a nonempty mesh primitive,
+or bounded OBJ. Bootstrap writes both verified roles into one immutable
+`versions/<content-id>/` generation and atomically publishes `manifest.json`
+last; an interrupted generation remains unreferenced. Ordinary run and smoke
+commands stay synthetic; the dedicated local command supplies the exact
+`--local-assets` root. Failed or empty roles keep procedural geometry, and the
+HUD describes a neutral user-supplied local mesh only after a nonempty renderable surface loads.
 No retail-origin claim is made without a separately bound exporter receipt and
 hash. Local assets are never simulation truth, redistribution material, or
 parity evidence.

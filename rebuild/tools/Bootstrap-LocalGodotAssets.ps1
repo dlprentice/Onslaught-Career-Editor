@@ -7,7 +7,8 @@ param(
     [string]$TerrainMesh = '',
     [string]$PlayerSearch = 'aquila',
     [string]$TerrainSearch = 'ground',
-    [switch]$Initialize
+    [switch]$Initialize,
+    [switch]$InjectFailureAfterPlayerCopy
 )
 
 $ErrorActionPreference = 'Stop'
@@ -45,22 +46,57 @@ foreach ($mesh in @($player, $terrain)) {
     if ($mesh.Extension.ToLowerInvariant() -notin @('.glb', '.obj')) { throw "Manifest activation supports only converted GLB/OBJ: $($mesh.FullName)" }
 }
 
-$playerName = 'aquila' + $player.Extension.ToLowerInvariant()
-$terrainName = 'ground' + $terrain.Extension.ToLowerInvariant()
-$playerDest = Join-Path $AssetRoot "player\aquila\$playerName"
-$terrainDest = Join-Path $AssetRoot "terrain\subset\$terrainName"
+function Get-RoleReceipt([string]$Path) {
+    $fileLease = [Onslaught.LocalFileLease]::OpenRead($Path)
+    try {
+        $hash = $fileLease.ComputeHash()
+        $fileLease.Revalidate()
+        return [pscustomobject]@{ Hash = $hash; Length = $fileLease.Length }
+    }
+    finally { $fileLease.Dispose() }
+}
+
+function Assert-VersionFile([string]$Path, [object]$Receipt, [string]$Label) {
+    $fileLease = [Onslaught.LocalFileLease]::OpenRead($Path)
+    try {
+        if ($fileLease.Length -ne $Receipt.Length -or $fileLease.ComputeHash() -ne $Receipt.Hash) {
+            throw "$Label version file does not match its held source receipt: $Path"
+        }
+        $fileLease.Revalidate()
+    }
+    finally { $fileLease.Dispose() }
+}
+
+$playerReceipt = Get-RoleReceipt $player.FullName
+$terrainReceipt = Get-RoleReceipt $terrain.FullName
+$playerExtension = $player.Extension.ToLowerInvariant()
+$terrainExtension = $terrain.Extension.ToLowerInvariant()
+$generationText = "onslaught-local-assets.v1`nplayer:$($playerReceipt.Hash):$playerExtension`nterrain:$($terrainReceipt.Hash):$terrainExtension"
+$generationBytes = [Text.UTF8Encoding]::new($false).GetBytes($generationText)
+$generationId = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($generationBytes)).ToLowerInvariant()
+$generationRoot = Join-Path $AssetRoot "versions\$generationId"
+$playerName = 'player' + $playerExtension
+$terrainName = 'terrain' + $terrainExtension
+$playerDest = Join-Path $generationRoot $playerName
+$terrainDest = Join-Path $generationRoot $terrainName
 $manifestPath = Join-Path $AssetRoot 'manifest.json'
 $destinations = @($playerDest, $terrainDest, $manifestPath)
 Assert-LocalAssetWritePlan -RepoRoot $RepoRoot -OutputRoot $AssetRoot -ForbiddenRoots @((Join-Path $RepoRoot 'rebuild'), (Join-Path $RepoRoot 'references')) -DestinationPaths $destinations | Out-Null
 $lease = $null
 try {
-    $lease = [Onslaught.DirectoryLeaseSet]::Open($RepoRoot, [string[]]@((Split-Path -Parent $playerDest), (Split-Path -Parent $terrainDest)))
-    Copy-GuardedFile -RepoRoot $RepoRoot -OutputRoot $AssetRoot -Source $player.FullName -Destination $playerDest
-    Copy-GuardedFile -RepoRoot $RepoRoot -OutputRoot $AssetRoot -Source $terrain.FullName -Destination $terrainDest
+    $lease = [Onslaught.DirectoryLeaseSet]::Open($RepoRoot, [string[]]@($generationRoot))
+    if (Test-Path -LiteralPath $playerDest -PathType Leaf) { Assert-VersionFile $playerDest $playerReceipt 'Player' }
+    else { Copy-GuardedFile -RepoRoot $RepoRoot -OutputRoot $AssetRoot -Source $player.FullName -Destination $playerDest -ExpectedSha256 $playerReceipt.Hash -ExpectedLength $playerReceipt.Length }
+    Assert-VersionFile $playerDest $playerReceipt 'Player'
+    if ($InjectFailureAfterPlayerCopy) { throw 'Injected failure after player copy.' }
+
+    if (Test-Path -LiteralPath $terrainDest -PathType Leaf) { Assert-VersionFile $terrainDest $terrainReceipt 'Terrain' }
+    else { Copy-GuardedFile -RepoRoot $RepoRoot -OutputRoot $AssetRoot -Source $terrain.FullName -Destination $terrainDest -ExpectedSha256 $terrainReceipt.Hash -ExpectedLength $terrainReceipt.Length }
+    Assert-VersionFile $terrainDest $terrainReceipt 'Terrain'
     $manifest = [ordered]@{
         schemaVersion = 'onslaught-rebuild-local-godot-assets-manifest.v1'; presentationMode = 'local-user-mesh-preview'; nonParityClaim = $true
-        player = [ordered]@{ mesh = "player/aquila/$playerName"; scale = 1.0; yawDegrees = 0.0; yOffsetMeters = 0.0 }
-        terrain = [ordered]@{ mesh = "terrain/subset/$terrainName"; scale = 1.0; yawDegrees = 0.0; yOffsetMeters = 0.0 }
+        player = [ordered]@{ mesh = "versions/$generationId/$playerName"; scale = 1.0; yawDegrees = 0.0; yOffsetMeters = 0.0 }
+        terrain = [ordered]@{ mesh = "versions/$generationId/$terrainName"; scale = 1.0; yawDegrees = 0.0; yOffsetMeters = 0.0 }
     }
     Write-GuardedTextFile -RepoRoot $RepoRoot -OutputRoot $AssetRoot -Destination $manifestPath -Content ($manifest | ConvertTo-Json -Depth 6)
 }

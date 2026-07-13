@@ -198,6 +198,64 @@ public sealed class LocalPresentationContractTests : IDisposable
     }
 
     [Fact]
+    public void ValidateFile_RejectsExtremeAndAggregateAccessorCounts()
+    {
+        string path = Path.Combine(_root, "extreme-accessors.glb");
+        const string extreme = "{\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":36}],\"bufferViews\":[{\"buffer\":0,\"byteLength\":36}],\"accessors\":[{\"bufferView\":0,\"componentType\":5126,\"count\":2147483647,\"type\":\"VEC3\"}],\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0}}]}]}";
+        File.WriteAllBytes(path, BuildGlb(extreme, new byte[36]));
+        Assert.False(LocalMeshSafety.ValidateFile(path).IsValid);
+
+        const string aggregate = "{\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":36}],\"bufferViews\":[{\"buffer\":0,\"byteLength\":36}],\"accessors\":[{\"bufferView\":0,\"componentType\":5126,\"count\":3000000,\"type\":\"VEC3\"},{\"bufferView\":0,\"componentType\":5126,\"count\":3000000,\"type\":\"VEC3\"}],\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0}}]}]}";
+        File.WriteAllBytes(path, BuildGlb(aggregate, new byte[36]));
+        Assert.False(LocalMeshSafety.ValidateFile(path).IsValid);
+    }
+
+    [Theory]
+    [InlineData("{\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":36}],\"bufferViews\":[{\"buffer\":0,\"byteOffset\":20,\"byteLength\":20}],\"accessors\":[{\"bufferView\":0,\"componentType\":5126,\"count\":3,\"type\":\"VEC3\"}],\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0}}]}]}")]
+    [InlineData("{\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":36}],\"bufferViews\":[{\"buffer\":0,\"byteLength\":36,\"byteStride\":8}],\"accessors\":[{\"bufferView\":0,\"componentType\":5126,\"count\":3,\"type\":\"VEC3\"}],\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0}}]}]}")]
+    public void ValidateFile_RejectsBufferViewAndAccessorRanges(string json)
+    {
+        string path = Path.Combine(_root, "bad-range.glb");
+        File.WriteAllBytes(path, BuildGlb(json, new byte[36]));
+        Assert.False(LocalMeshSafety.ValidateFile(path).IsValid);
+    }
+
+    [Fact]
+    public void ValidateFile_RejectsSparseAccessorOutsideExactBinRange()
+    {
+        string path = Path.Combine(_root, "bad-sparse.glb");
+        const string json = "{\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":40}],\"bufferViews\":[{\"buffer\":0,\"byteLength\":4},{\"buffer\":0,\"byteOffset\":4,\"byteLength\":36}],\"accessors\":[{\"componentType\":5126,\"count\":3,\"type\":\"VEC3\",\"sparse\":{\"count\":3,\"indices\":{\"bufferView\":0,\"byteOffset\":3,\"componentType\":5123},\"values\":{\"bufferView\":1}}}],\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0}}]}]}";
+        File.WriteAllBytes(path, BuildGlb(json, new byte[40]));
+        Assert.False(LocalMeshSafety.ValidateFile(path).IsValid);
+    }
+
+    [Fact]
+    public void ValidateFile_RejectsOversizedAllocationDrivingArrays()
+    {
+        string path = Path.Combine(_root, "many-materials.glb");
+        string materials = string.Join(',', Enumerable.Repeat("{}", 10_001));
+        string json = $"{{\"asset\":{{\"version\":\"2.0\"}},\"buffers\":[{{\"byteLength\":36}}],\"bufferViews\":[{{\"buffer\":0,\"byteLength\":36}}],\"accessors\":[{{\"bufferView\":0,\"componentType\":5126,\"count\":3,\"type\":\"VEC3\"}}],\"meshes\":[{{\"primitives\":[{{\"attributes\":{{\"POSITION\":0}}}}]}}],\"materials\":[{materials}]}}";
+        File.WriteAllBytes(path, BuildGlb(json, new byte[36]));
+        Assert.False(LocalMeshSafety.ValidateFile(path).IsValid);
+    }
+
+    [Fact]
+    public void ValidateFile_RejectsAggregatePrimitiveVertexAndIndexBudgets()
+    {
+        string path = Path.Combine(_root, "aggregate-primitives.glb");
+        const int vertexBytes = 1_100_000 * 12;
+        string vertices = $"{{\"asset\":{{\"version\":\"2.0\"}},\"buffers\":[{{\"byteLength\":{vertexBytes}}}],\"bufferViews\":[{{\"buffer\":0,\"byteLength\":{vertexBytes}}}],\"accessors\":[{{\"bufferView\":0,\"componentType\":5126,\"count\":1100000,\"type\":\"VEC3\"}}],\"meshes\":[{{\"primitives\":[{{\"attributes\":{{\"POSITION\":0}}}},{{\"attributes\":{{\"POSITION\":0}}}}]}}]}}";
+        File.WriteAllBytes(path, BuildGlb(vertices, new byte[vertexBytes]));
+        Assert.False(LocalMeshSafety.ValidateFile(path).IsValid);
+
+        const int indexCount = 3_100_000;
+        const int indexBufferBytes = 36 + indexCount;
+        string indices = $"{{\"asset\":{{\"version\":\"2.0\"}},\"buffers\":[{{\"byteLength\":{indexBufferBytes}}}],\"bufferViews\":[{{\"buffer\":0,\"byteLength\":36}},{{\"buffer\":0,\"byteOffset\":36,\"byteLength\":{indexCount}}}],\"accessors\":[{{\"bufferView\":0,\"componentType\":5126,\"count\":3,\"type\":\"VEC3\"}},{{\"bufferView\":1,\"componentType\":5121,\"count\":{indexCount},\"type\":\"SCALAR\"}}],\"meshes\":[{{\"primitives\":[{{\"attributes\":{{\"POSITION\":0}},\"indices\":1}},{{\"attributes\":{{\"POSITION\":0}},\"indices\":1}}]}}]}}";
+        File.WriteAllBytes(path, BuildGlb(indices, new byte[indexBufferBytes]));
+        Assert.False(LocalMeshSafety.ValidateFile(path).IsValid);
+    }
+
+    [Fact]
     public void GodotLoader_ConsumesHeldGlbBytesAndRequiresRenderableMesh()
     {
         string source = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-source", "LocalAssetMeshLoader.cs"));
@@ -212,6 +270,27 @@ public sealed class LocalPresentationContractTests : IDisposable
         string source = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-source", "FirstFlightHud.cs"));
         Assert.Contains("user-supplied local mesh", source, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("retail-derived", source, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void LocalPresentationLabels_AreOriginNeutralWithoutReceiptBinding()
+    {
+        string[] files =
+        [
+            Path.Combine(AppContext.BaseDirectory, "godot-source", "FirstFlightHud.cs"),
+            Path.Combine(AppContext.BaseDirectory, "local-presentation", "README.md"),
+            Path.Combine(AppContext.BaseDirectory, "local-presentation", "local-assets.layout.json"),
+            Path.Combine(AppContext.BaseDirectory, "local-presentation", "Initialize-LocalGodotAssets.ps1"),
+        ];
+        foreach (string file in files)
+        {
+            string source = File.ReadAllText(file);
+            Assert.DoesNotContain("retail mesh preview", source, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("retail preview assets", source, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("retail-derived presentation", source, StringComparison.OrdinalIgnoreCase);
+        }
+        Assert.Contains("user-supplied local", File.ReadAllText(files[1]), StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("user-supplied local", File.ReadAllText(files[2]), StringComparison.OrdinalIgnoreCase);
     }
 
     public void Dispose()

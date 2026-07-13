@@ -38,6 +38,15 @@
     <Content Include="..\OnslaughtRebuild.Godot\FirstFlightHud.cs"
              Link="godot-source\FirstFlightHud.cs"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\README.md"
+             Link="local-presentation\README.md"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\local-assets.layout.json"
+             Link="local-presentation\local-assets.layout.json"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\tools\Initialize-LocalGodotAssets.ps1"
+             Link="local-presentation\Initialize-LocalGodotAssets.ps1"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

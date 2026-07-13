@@ -49,6 +49,10 @@ single-link source identity against write/delete, stage and hash locally, then
 verify the final identity, link count, size, and hash after atomic rename. This
 closes avoidable path-reopen and unchecked-final-state gaps; it does not claim a
 sandbox against a hostile process running as the same Windows user.
+Bootstrap places both verified role files in one content-addressed generation
+and publishes only the manifest atomically after both succeed. A failure between
+role copies can leave an ignored unreferenced file, but cannot alter the active
+manifest or its referenced generation.
 
 New generated files are content-quarantined before their first write: they are
 made POSIX-delete-pending, must have zero links while bytes are written and

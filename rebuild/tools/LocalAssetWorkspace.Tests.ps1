@@ -3,6 +3,18 @@
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 Import-Module (Join-Path $PSScriptRoot 'LocalAssetWorkspace.psm1') -Force
+$modulePath = Join-Path $PSScriptRoot 'LocalAssetWorkspace.psm1'
+Import-Module $modulePath -Force
+& { Import-Module $modulePath -Force; & { Import-Module $modulePath -Force } }
+if (-not ('Onslaught.LocalFileLease' -as [type]) -or -not ('Onslaught.DirectoryLeaseSet' -as [type])) {
+    throw 'Repeated/nested module import did not preserve both guarded workspace types.'
+}
+$moduleSource = [IO.File]::ReadAllText($modulePath)
+if ($moduleSource -match 'Onslaught[.]LocalFileInfo' -or
+    $moduleSource -notmatch "Onslaught[.]LocalFileLease' -as \[type\]" -or
+    $moduleSource -notmatch "Onslaught[.]DirectoryLeaseSet' -as \[type\]") {
+    throw 'LocalAssetWorkspace Add-Type guard must name both types it actually defines.'
+}
 
 function Assert-Throws([scriptblock]$Action, [string]$Pattern) {
     $caught = $null
@@ -80,6 +92,30 @@ try {
     [IO.File]::WriteAllText((Join-Path $handoffStage 'ground-terrain.obj'), "v 0 0 0`nv 1 0 0`nv 0 1 0`nf 1 2 3`n")
     & (Join-Path $PSScriptRoot 'Bootstrap-LocalGodotAssets.ps1') -AssetRoot $handoffRoot | Out-Null
     if (-not (Test-Path -LiteralPath (Join-Path $handoffRoot 'manifest.json') -PathType Leaf)) { throw 'Staged converted meshes did not activate a manifest.' }
+    $manifestPath = Join-Path $handoffRoot 'manifest.json'
+    $manifestBefore = [IO.File]::ReadAllBytes($manifestPath)
+    $manifestObject = [Text.Encoding]::UTF8.GetString($manifestBefore) | ConvertFrom-Json
+    if ([string]$manifestObject.player.mesh -notmatch '^versions/[0-9a-f]{64}/player[.](glb|obj)$' -or
+        [string]$manifestObject.terrain.mesh -notmatch '^versions/[0-9a-f]{64}/terrain[.](glb|obj)$') {
+        throw 'Bootstrap manifest roles are not bound to one content-addressed version.'
+    }
+    $oldPlayer = Join-Path $handoffRoot ([string]$manifestObject.player.mesh).Replace('/', '\')
+    $oldTerrain = Join-Path $handoffRoot ([string]$manifestObject.terrain.mesh).Replace('/', '\')
+    $oldPlayerHash = (Get-FileHash -LiteralPath $oldPlayer -Algorithm SHA256).Hash
+    $oldTerrainHash = (Get-FileHash -LiteralPath $oldTerrain -Algorithm SHA256).Hash
+    $versionFilesBefore = @(Get-ChildItem -LiteralPath (Join-Path $handoffRoot 'versions') -Recurse -File).Count
+    [IO.File]::WriteAllText((Join-Path $handoffStage 'aquila-player.obj'), "v 0 0 0`nv 2 0 0`nv 0 2 0`nf 1 2 3`n")
+    [IO.File]::WriteAllText((Join-Path $handoffStage 'ground-terrain.obj'), "v 0 0 0`nv 3 0 0`nv 0 3 0`nf 1 2 3`n")
+    Assert-Throws {
+        & (Join-Path $PSScriptRoot 'Bootstrap-LocalGodotAssets.ps1') -AssetRoot $handoffRoot -InjectFailureAfterPlayerCopy
+    } 'Injected failure after player copy'
+    if ([Convert]::ToHexString($manifestBefore) -ne [Convert]::ToHexString([IO.File]::ReadAllBytes($manifestPath))) { throw 'Injected bootstrap failure changed the active manifest.' }
+    if ((Get-FileHash -LiteralPath $oldPlayer -Algorithm SHA256).Hash -ne $oldPlayerHash -or
+        (Get-FileHash -LiteralPath $oldTerrain -Algorithm SHA256).Hash -ne $oldTerrainHash) {
+        throw 'Injected bootstrap failure changed a role file referenced by the active manifest.'
+    }
+    $versionFilesAfter = @(Get-ChildItem -LiteralPath (Join-Path $handoffRoot 'versions') -Recurse -File).Count
+    if ($versionFilesAfter -le $versionFilesBefore) { throw 'Failure injection did not occur after publishing the next versioned player file.' }
 
     $assetRoot = Join-Path $scratch 'bootstrap'
     & (Join-Path $PSScriptRoot 'Initialize-LocalGodotAssets.ps1') -AssetRoot $assetRoot | Out-Null
