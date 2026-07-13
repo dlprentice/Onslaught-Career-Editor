@@ -16,22 +16,25 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Use the accepted six-candidate anonymous contact sheet to obtain a human Aquila
-selection, then verify only that ignored local role through the guarded Godot
-presentation bridge before any stronger asset identity claim. Do not install or
-revive the legacy x86 extractor toolchain.
+Use the integrated scalar walker tooling to obtain exactly two accepted fresh
+copied-runtime measurements, publish one bounded public-safe movement contract,
+and implement that contract in deterministic Core. In parallel, correct and
+re-accept the Home first-run keyboard-focus behavior without weakening its
+normal/760 visual contract. Do not install or revive the legacy x86 extractor
+toolchain.
 
-1. run the integrated REFR-only profile against the six ignored local
-   `be_trans`, `be1`, and `be2` leads and emit one fresh guarded OBJ session;
-2. preserve anonymous human-facing labels and path-free aggregate evidence; do
-   not track or externalize retail paths, hashes, bytes, or generated payloads;
-3. render a bounded local contact sheet for those six assembled candidates and
-   obtain an explicit human selection rather than inferring identity from names;
-4. record the human-selected Aquila role only in an ignored local manifest and
-   verify it through the existing guarded Godot presentation bridge; and
-5. close with focused parser/presentation tests, process cleanup, payload
-   safety, review, state reconciliation, commit, and push. Keep textures/GLB,
-   DDS decoding, LNDS terrain, animation/bones, movement/camera fidelity, and
+1. finish, review, and integrate the exact four-path copied-runtime measurement
+   lifecycle adapter without launching the game;
+2. execute exactly two fresh receipt-bound scalar walker-forward attempts only
+   after the adapter and cleanup gates are accepted; one invalid attempt stops
+   the pair without a third run;
+3. publish a path-free scalar response contract only when both attempts pass the
+   predeclared cadence, drift, latency, release, and cross-run stability rules;
+4. implement that accepted contract in deterministic Core and verify it through
+   the existing client/headless boundaries; and
+5. separately correct the proven Home first-run focus failure, then obtain the
+   already-defined no-click normal/760 native evidence. Keep textures/GLB, DDS
+   decoding, LNDS terrain, animation/bones, broader camera/morph fidelity, and
    parity as later contracts. Do not create a release or tag.
 
 ## Current Slice Progress - 2026-07-13
@@ -49,8 +52,16 @@ revive the legacy x86 extractor toolchain.
   then narrowed the next pass to six multipart BattleEngine-name records. The
   exact-empty REFR wrapper correction is integrated at `b2aca609`; one ignored
   run assembled all six into validated OBJs (40,530 vertices and 35,386 faces)
-  and produced an accepted 1536x768 anonymous three-view contact sheet. Human
-  Aquila selection and the selected-role Godot preview remain pending.
+  and produced an accepted 1536x768 anonymous three-view contact sheet. The
+  human selected anonymous candidate 0003 singularly as the normal walker-mode
+  Aquila. A guarded player-only local manifest then passed mesh/config preflight
+  and one receipt-bound Godot 4.7 launch rendered it in First Flight at 1280x720
+  on synthetic terrain. Initial and post-movement views kept the multipart mesh
+  upright and bounded with the exact local-player/synthetic-terrain/non-parity
+  HUD; input, asset-integrity, owned-process cleanup, and final zero checks
+  passed. Candidate 0004 remains distinct despite byte-identical OBJ content.
+  This proves local presentation only, not retail identity, transforms, fidelity,
+  textures, or parity.
 - Reference inventory is drafted in
   `reverse-engineering/source-code/reference-submodule-audit-2026-07-12.md`:
   pinned fork/upstream provenance, current tracked counts, source completeness,
