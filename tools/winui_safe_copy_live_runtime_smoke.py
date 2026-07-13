@@ -1300,6 +1300,7 @@ static bool TryReadFinalizedCdbExitEvidence(
     FileStream retainedLogStream,
     long logLengthAtReadiness,
     int expectedTargetProcessId,
+    string expectedCdbExecutablePath,
     out bool cleanupMarkerObserved,
     out bool gracefulQuitObserved,
     out bool targetExitEventObserved,
@@ -1363,8 +1364,38 @@ static bool TryReadFinalizedCdbExitEvidence(
             @"\A[0-9A-Fa-f]{1,8}:[0-9A-Fa-f]{1,8}> \.echo MORPH_CANARY_LASTEVENT_BEGIN; \.lastevent; \.echo MORPH_CANARY_LASTEVENT_END; \.echo MORPH_CANARY_CLEANUP_Q; q\z",
             System.Text.RegularExpressions.RegexOptions.CultureInvariant);
 
-    static bool IsKnownBenignPostQuitLine(string line) =>
-        string.Equals(line, "NatVis script unloaded from 'windows.natvis'", StringComparison.Ordinal);
+    static bool IsKnownBenignPostQuitLine(string line, string cdbExecutablePath)
+    {
+        const string prefix = "NatVis script unloaded from '";
+        try
+        {
+            if (!Path.IsPathFullyQualified(cdbExecutablePath))
+                return false;
+            string? cdbDirectory = Path.GetDirectoryName(Path.GetFullPath(cdbExecutablePath));
+            if (string.IsNullOrEmpty(cdbDirectory) ||
+                !line.StartsWith(prefix, StringComparison.Ordinal) ||
+                !line.EndsWith("'", StringComparison.Ordinal) ||
+                line.Length <= prefix.Length + 1)
+                return false;
+
+            string unloadedPath = line[prefix.Length..^1];
+            if (!Path.IsPathFullyQualified(unloadedPath) ||
+                unloadedPath.Any(char.IsControl))
+                return false;
+            string fileName = Path.GetFileName(unloadedPath);
+            if (fileName.Length <= ".natvis".Length ||
+                !fileName.EndsWith(".natvis", StringComparison.OrdinalIgnoreCase) ||
+                fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+                return false;
+
+            string expectedPath = Path.Combine(cdbDirectory, "Visualizers", fileName);
+            return string.Equals(unloadedPath, expectedPath, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception ex) when (ex is ArgumentException or IOException or NotSupportedException)
+        {
+            return false;
+        }
+    }
 
     cleanupMarkerObserved = false;
     gracefulQuitObserved = false;
@@ -1372,6 +1403,7 @@ static bool TryReadFinalizedCdbExitEvidence(
     targetExitCode = 0;
     terminalRegionDiagnosticClean = false;
     if (expectedTargetProcessId <= 0 || logLengthAtReadiness < 0 ||
+        string.IsNullOrWhiteSpace(expectedCdbExecutablePath) ||
         !retainedLogStream.CanRead || !retainedLogStream.CanSeek)
         return false;
     const long maximumLogBytes = 16L * 1024L * 1024L;
@@ -1514,7 +1546,7 @@ static bool TryReadFinalizedCdbExitEvidence(
                 postReadinessQuitSeen = true;
             continue;
         }
-        if (trimmed.Length > 0 && !IsKnownBenignPostQuitLine(trimmed))
+        if (line.Length > 0 && !IsKnownBenignPostQuitLine(line, expectedCdbExecutablePath))
             postReadinessDiagnosticClean = false;
     }
 
@@ -2454,7 +2486,7 @@ static JsonElement FinalizeExactCdbObserverAfterManagedStop(
     bool cdbExitedNormally = exited && observedCdbExitCode == 0;
     bool finalizedLogAccepted = !forced && exited && managedProcessStopped && stopResult is not null &&
         boundCdbLogStream is not null &&
-        TryReadFinalizedCdbExitEvidence(boundCdbLogStream, cdbLogLengthAtReadiness, stopResult.ProcessId, out cleanupMarkerObserved, out gracefulQuitObserved, out targetExitEventObserved, out targetExitCode, out terminalRegionDiagnosticClean);
+        TryReadFinalizedCdbExitEvidence(boundCdbLogStream, cdbLogLengthAtReadiness, stopResult.ProcessId, executablePath, out cleanupMarkerObserved, out gracefulQuitObserved, out targetExitEventObserved, out targetExitCode, out terminalRegionDiagnosticClean);
     var cleanupDecision = EvaluateFinalizedCdbCleanupEvidence(
         exited, forced, preStopBound, processWasRetained, processIdentityRevalidated,
         managedProcessStopped, finalizedLogAccepted, targetExitEventObserved,

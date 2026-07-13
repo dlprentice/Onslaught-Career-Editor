@@ -509,7 +509,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn("TryReadFinalizedCdbExitEvidence", body)
         self.assertEqual(
             generated.count(
-                "TryReadFinalizedCdbExitEvidence(boundCdbLogStream, cdbLogLengthAtReadiness, stopResult.ProcessId"
+                "TryReadFinalizedCdbExitEvidence(boundCdbLogStream, cdbLogLengthAtReadiness, stopResult.ProcessId, executablePath"
             ),
             1,
         )
@@ -527,6 +527,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn("MORPH_CANARY_LASTEVENT_END", reader_body)
         self.assertIn("Exit process 0:", reader_body)
         self.assertIn("expectedTargetProcessId", reader_body)
+        self.assertIn("expectedCdbExecutablePath", reader_body)
         self.assertIn("TryParseCdbDebuggerTime", reader_body)
         self.assertIn("new DateTime(year, month, day, hour, minute, second, millisecond", reader_body)
         self.assertIn("localTime.DayOfWeek != weekday", reader_body)
@@ -534,6 +535,10 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn("postReadinessTranscript", reader_body)
         self.assertIn("IsKnownBenignPreBeginLine", reader_body)
         self.assertIn("IsKnownBenignPostQuitLine", reader_body)
+        self.assertIn('Path.Combine(cdbDirectory, "Visualizers", fileName)', reader_body)
+        self.assertIn('fileName.EndsWith(".natvis"', reader_body)
+        self.assertIn("unloadedPath.Any(char.IsControl)", reader_body)
+        self.assertIn("line.Length > 0 && !IsKnownBenignPostQuitLine", reader_body)
         self.assertIn("postReadinessDiagnosticClean", reader_body)
         self.assertNotIn("cdbExitTimeUtc >= managedExitTimeUtc", body)
         self.assertNotIn("cdbExitTimeUtc <= managedExitTimeUtc", body)
