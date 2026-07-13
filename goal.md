@@ -340,6 +340,13 @@ from retail are inspectable.
   publishes backup/checksum/apply/restore files atomically, and restores
   damaged or truncated copies only from an integrity- and provenance-verified
   full-file backup. The Python patch helper remains a lab surface.
+- Windowed & Mods now separates the required compatibility/recovery path and
+  two bounded optional Player Mods from a collapsed structured Lab of legacy,
+  research, visual, executable, and launch/control diagnostics; no patch bytes
+  changed. Save Lab Game Options also presents the official modern-controller
+  Steam Input setup path, in-game binding/sensitivity steps, and explicit
+  limits: Toolkit edits copied options only and does not configure Steam Input,
+  detect a controller, or prove improved control feel.
 - The Sol Ultra baseline was committed and pushed at
   `5a7bacecac5e813804355d68a8e51973100e0331`; local `main`, `origin/main`, and
   live remote `refs/heads/main` matched with divergence `0 0`.
