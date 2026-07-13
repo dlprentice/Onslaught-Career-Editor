@@ -20,6 +20,7 @@ public class PatchBenchPrimitiveProjectionBoundaryTests
         new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchPatchGroups.cs", BoundaryProfile.PatchGroups),
         new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyReceiptText.cs", BoundaryProfile.ReceiptSourceProjection),
         new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopyOutcomeText.cs", BoundaryProfile.SafeCopyOutcome),
+        new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopySelectionReadiness.cs", BoundaryProfile.ChoiceVisualBinding),
         new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSelectedProfileText.cs", BoundaryProfile.SelectedProfile),
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchLaunchReadinessTextResult.cs", BoundaryProfile.LaunchReadiness),
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchLaunchReadinessTextState.cs", BoundaryProfile.LaunchReadiness),
@@ -30,6 +31,7 @@ public class PatchBenchPrimitiveProjectionBoundaryTests
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyMusicSwapTextState.cs", BoundaryProfile.SafeCopyOutcome),
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyOutcomeTextState.cs", BoundaryProfile.SafeCopyOutcome),
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopyReceiptTextState.cs", BoundaryProfile.ReceiptSourceProjection),
+        new("OnslaughtCareerEditor.WinUI/Models/PatchBenchSafeCopySelectionReadinessState.cs", BoundaryProfile.ChoiceVisualBinding),
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchSelectedChoiceState.cs", BoundaryProfile.ChoiceVisualBinding),
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchSelectedProfileTextState.cs", BoundaryProfile.SelectedProfile),
     ];

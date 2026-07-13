@@ -506,7 +506,8 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("PatchBenchTopCreateSafeCopyButton"));
         Assert.That(pageXaml, Does.Contain("PatchBenchTopPlaySafeCopyButton"));
         Assert.That(pageXaml, Does.Contain("These shortcuts use the same guarded safe-copy workflow below"));
-        Assert.That(code, Does.Contain("PatchBenchTopCreateSafeCopyButton.IsEnabled = PatchBenchPrepareCopiedProfileButton.IsEnabled"));
+        Assert.That(code, Does.Contain("PatchBenchPrepareCopiedProfileButton.IsEnabled = readiness.CanCreate"));
+        Assert.That(code, Does.Contain("PatchBenchTopCreateSafeCopyButton.IsEnabled = readiness.CanCreate"));
         Assert.That(code, Does.Contain("PatchBenchTopPlaySafeCopyButton.IsEnabled = PatchBenchLaunchCopiedProfileButton.IsEnabled"));
         Assert.That(code, Does.Contain("No configured game folder with BEA.exe was found"));
         Assert.That(code, Does.Contain("if (_isLaunchingCopiedProfile)"));
@@ -1351,6 +1352,7 @@ public class WinUiProductLaneTests
             "PatchBenchPatchGroups.cs",
             "PatchBenchSafeCopyOutcomeText.cs",
             "PatchBenchSafeCopyReceiptText.cs",
+            "PatchBenchSafeCopySelectionReadiness.cs",
             "PatchBenchSelectedProfileText.cs",
         };
         string[] actualHelperFiles = Directory.GetFiles(helperRoot, "PatchBench*.cs")
@@ -1666,7 +1668,8 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("PatchBenchInvertFlightYOption.IsChecked = false"));
         Assert.That(code, Does.Contain("ProfilePresetId: MatchSelectableSafeCopyProfileId(selectedPatchKeys)"));
         Assert.That(code, Does.Contain("string? selectedProfileId = MatchSelectableSafeCopyProfileId(visibleSelectedKeys)"));
-        Assert.That(code, Does.Contain("bool isModernGraphicsOnly = SetEquals(visibleSelectedKeys, s_modernGraphicsKeys)"));
+        Assert.That(code, Does.Contain("bool isModernGraphicsOnly = SetEquals("));
+        Assert.That(code, Does.Contain("_requiredCompatibilityKeys.Concat(s_modernGraphicsKeys)"));
         Assert.That(code, Does.Contain("MatchSelectableSafeCopyProfileId(IReadOnlyCollection<string> selectedKeys)"));
         Assert.That(code, Does.Contain("if (SetEquals(selectedKeys, preset.PatchKeys))"));
         Assert.That(code, Does.Contain("MusicSwapPresetId: createMusicSwapPresetId"));
@@ -1845,7 +1848,8 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("ClearMusicTrackChoices"));
         Assert.That(code, Does.Contain("StageCopiedTrackSwapButton_Click"));
         Assert.That(code, Does.Contain("StageMusicSwapPresetAsync"));
-        Assert.That(code, Does.Contain("hasSourceExe && !_isPreparingCopiedProfile && !_isLaunchingCopiedProfile && !_isStoppingCopiedProfile && _managedCopiedProfileProcess is null"));
+        Assert.That(code, Does.Contain("bool isBusy ="));
+        Assert.That(code, Does.Contain("PatchBenchPrepareCopiedProfileButton.IsEnabled = readiness.CanCreate"));
         Assert.That(code, Does.Contain("AllowByteLayoutOnlyTarget: false"));
         Assert.That(code, Does.Not.Contain("AllowByteLayoutOnlyTarget: true"));
         Assert.That(code, Does.Contain("await Task.Run"));
