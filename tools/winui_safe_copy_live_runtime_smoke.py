@@ -1306,6 +1306,66 @@ static bool TryReadFinalizedCdbExitEvidence(
     out uint targetExitCode,
     out bool terminalRegionDiagnosticClean)
 {
+    static bool TryParseCdbDebuggerTime(string line)
+    {
+        var match = System.Text.RegularExpressions.Regex.Match(
+            line,
+            @"\Adebugger time: (?<weekday>Mon|Tue|Wed|Thu|Fri|Sat|Sun) (?<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) {1,2}(?<day>[1-9]|[12][0-9]|3[01]) (?<hour>[0-9]{2}):(?<minute>[0-9]{2}):(?<second>[0-9]{2})\.(?<millisecond>[0-9]{3}) (?<year>[0-9]{4}) \(UTC (?<sign>[+-]) (?<offsetHour>[0-9]|1[0-4]):(?<offsetMinute>[0-9]{2})\)\z",
+            System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+        if (!match.Success)
+            return false;
+
+        string[] monthNames = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+        int month = Array.IndexOf(monthNames, match.Groups["month"].Value) + 1;
+        if (month == 0 ||
+            !int.TryParse(match.Groups["day"].Value, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int day) ||
+            !int.TryParse(match.Groups["hour"].Value, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int hour) ||
+            !int.TryParse(match.Groups["minute"].Value, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int minute) ||
+            !int.TryParse(match.Groups["second"].Value, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int second) ||
+            !int.TryParse(match.Groups["millisecond"].Value, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int millisecond) ||
+            !int.TryParse(match.Groups["year"].Value, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int year) ||
+            !int.TryParse(match.Groups["offsetHour"].Value, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int offsetHour) ||
+            !int.TryParse(match.Groups["offsetMinute"].Value, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int offsetMinute) ||
+            year < 1601 || offsetHour > 14 || offsetMinute > 59 || (offsetHour == 14 && offsetMinute != 0))
+            return false;
+
+        try
+        {
+            var localTime = new DateTime(year, month, day, hour, minute, second, millisecond, DateTimeKind.Unspecified);
+            DayOfWeek weekday = match.Groups["weekday"].Value switch
+            {
+                "Mon" => DayOfWeek.Monday,
+                "Tue" => DayOfWeek.Tuesday,
+                "Wed" => DayOfWeek.Wednesday,
+                "Thu" => DayOfWeek.Thursday,
+                "Fri" => DayOfWeek.Friday,
+                "Sat" => DayOfWeek.Saturday,
+                "Sun" => DayOfWeek.Sunday,
+                _ => throw new ArgumentException("Unsupported debugger weekday."),
+            };
+            if (localTime.DayOfWeek != weekday)
+                return false;
+            TimeSpan offset = new(offsetHour, offsetMinute, 0);
+            if (string.Equals(match.Groups["sign"].Value, "-", StringComparison.Ordinal))
+                offset = -offset;
+            _ = new DateTimeOffset(localTime, offset);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
+
+    static bool IsKnownBenignPreBeginLine(string line) =>
+        System.Text.RegularExpressions.Regex.IsMatch(
+            line,
+            @"\A[0-9A-Fa-f]{1,8}:[0-9A-Fa-f]{1,8}> \.echo MORPH_CANARY_LASTEVENT_BEGIN; \.lastevent; \.echo MORPH_CANARY_LASTEVENT_END; \.echo MORPH_CANARY_CLEANUP_Q; q\z",
+            System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+    static bool IsKnownBenignPostQuitLine(string line) =>
+        string.Equals(line, "NatVis script unloaded from 'windows.natvis'", StringComparison.Ordinal);
+
     cleanupMarkerObserved = false;
     gracefulQuitObserved = false;
     targetExitEventObserved = false;
@@ -1316,6 +1376,7 @@ static bool TryReadFinalizedCdbExitEvidence(
         return false;
     const long maximumLogBytes = 16L * 1024L * 1024L;
     string transcript;
+    string postReadinessTranscript;
     try
     {
         retainedLogStream.Flush();
@@ -1335,9 +1396,16 @@ static bool TryReadFinalizedCdbExitEvidence(
         if (retainedLogStream.ReadByte() != -1 || retainedLogStream.Length != finalizedLength)
             return false;
         retainedLogStream.Seek(0, SeekOrigin.Begin);
-        transcript = new UTF8Encoding(false, true).GetString(raw);
+        var strictUtf8 = new UTF8Encoding(false, true);
+        transcript = strictUtf8.GetString(raw);
+        postReadinessTranscript = strictUtf8.GetString(
+            raw,
+            checked((int)logLengthAtReadiness),
+            checked((int)(finalizedLength - logLengthAtReadiness)));
         if (transcript.Length > 0 && transcript[0] == '\uFEFF')
             transcript = transcript[1..];
+        if (logLengthAtReadiness == 0 && postReadinessTranscript.Length > 0 && postReadinessTranscript[0] == '\uFEFF')
+            postReadinessTranscript = postReadinessTranscript[1..];
     }
     catch (Exception ex) when (ex is IOException or NotSupportedException or ObjectDisposedException or DecoderFallbackException or OverflowException)
     {
@@ -1420,18 +1488,38 @@ static bool TryReadFinalizedCdbExitEvidence(
     bool exactOrder = beginIndex < endIndex && endIndex < cleanupIndex && cleanupIndex < quitIndex;
     cleanupMarkerObserved = cleanupCount == 1;
     gracefulQuitObserved = quitCount == 1;
-    bool debuggerTimeMatches = sectionLines.Count == 2 &&
-        System.Text.RegularExpressions.Regex.IsMatch(
-            sectionLines[1],
-            @"\Adebugger time: (?:Mon|Tue|Wed|Thu|Fri|Sat|Sun) (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) {1,2}(?:[1-9]|[12][0-9]|3[01]) (?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]\.[0-9]{3} [0-9]{4} \(UTC [+-] (?:[0-9]|1[0-4]):[0-5][0-9]\)\z",
-            System.Text.RegularExpressions.RegexOptions.CultureInvariant |
-            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    bool debuggerTimeMatches = sectionLines.Count == 2 && TryParseCdbDebuggerTime(sectionLines[1]);
     if (!exactCardinality || !exactOrder || insideSection || malformedProofLine ||
         globalLastEventCount != 1 || sectionLines.Count != 2 ||
         !debuggerTimeMatches)
         return false;
 
+    bool postReadinessDiagnosticClean = true;
+    bool postReadinessBeginSeen = false;
+    bool postReadinessQuitSeen = false;
+    foreach (string line in postReadinessTranscript.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None))
+    {
+        string trimmed = line.Trim();
+        if (!postReadinessBeginSeen)
+        {
+            if (string.Equals(trimmed, beginMarker, StringComparison.Ordinal))
+                postReadinessBeginSeen = true;
+            else if (trimmed.Length > 0 && !IsKnownBenignPreBeginLine(trimmed))
+                postReadinessDiagnosticClean = false;
+            continue;
+        }
+        if (!postReadinessQuitSeen)
+        {
+            if (string.Equals(trimmed, quitMarker, StringComparison.Ordinal))
+                postReadinessQuitSeen = true;
+            continue;
+        }
+        if (trimmed.Length > 0 && !IsKnownBenignPostQuitLine(trimmed))
+            postReadinessDiagnosticClean = false;
+    }
+
     terminalRegionDiagnosticClean = terminalRegionStarted && terminalRegionEnded &&
+        postReadinessBeginSeen && postReadinessQuitSeen && postReadinessDiagnosticClean &&
         terminalRegionLines.Count == 6 &&
         string.Equals(terminalRegionLines[0], beginMarker, StringComparison.Ordinal) &&
         string.Equals(terminalRegionLines[1], sectionLines[0], StringComparison.Ordinal) &&
