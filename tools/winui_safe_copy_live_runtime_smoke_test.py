@@ -533,10 +533,23 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn("targetExitEventObserved", body)
         self.assertIn("observedCdbExitCode = process.ExitCode", body)
         self.assertIn("bool cdbExitedNormally = exited && observedCdbExitCode == 0", body)
-        self.assertIn("cdbExitedNormally && finalizedLogAccepted", body)
+        predicate = re.search(
+            r"static bool CdbExitCodeMatchesCleanupEvidence\b(?P<body>.*?)(?=\nstatic\s)",
+            generated,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(predicate)
+        predicate_body = predicate.group("body")
+        self.assertIn("cdbExitCode == 0", predicate_body)
+        self.assertIn("cdbExitCode == -1", predicate_body)
+        self.assertIn("targetExitCode == uint.MaxValue", predicate_body)
+        self.assertIn("managedForceRequested && managedExitObserved", predicate_body)
+        self.assertIn("CdbExitCodeMatchesCleanupEvidence", body)
+        self.assertIn("cdbExitCodeAccepted && finalizedLogAccepted", body)
         self.assertIn("cdbExitCode = observedCdbExitCode", body)
+        self.assertIn("targetExitCode", body)
         self.assertIn('status = graceful ? "exited-after-managed-stop"', body)
-        self.assertIn('"cdb-exited-nonzero"', body)
+        self.assertIn('"cdb-exit-code-unbound"', body)
         self.assertIn('"forced-stopped-after-timeout"', body)
         self.assertLess(body.index("WaitForExit"), body.index("Kill(entireProcessTree: false)"))
         self.assertNotIn("detached-exited", body)
@@ -550,7 +563,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn('"exited-after-managed-stop"', acceptance)
         self.assertIn('JsonBool(cdbCleanupResult, "gracefulQuitObserved")', acceptance)
         self.assertIn('JsonBool(cdbCleanupResult, "targetExitEventObserved")', acceptance)
-        self.assertIn('JsonBool(cdbCleanupResult, "cdbExitedNormally")', acceptance)
+        self.assertIn('JsonBool(cdbCleanupResult, "cdbExitCodeAccepted")', acceptance)
         self.assertNotIn("forced-stopped-after-timeout", acceptance)
 
     def test_generated_canary_retains_exact_log_stream_without_delete_sharing(self) -> None:

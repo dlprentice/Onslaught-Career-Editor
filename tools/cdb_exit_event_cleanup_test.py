@@ -35,15 +35,18 @@ class CdbExitEventCleanupTests(unittest.TestCase):
         cls.generated = generated
         opener_start = generated.find("static FileStream OpenRetainedCdbLogStream")
         start = generated.find("static bool TryReadFinalizedCdbExitEvidence")
-        if opener_start < 0 or start < 0:
+        predicate_start = generated.find("static bool CdbExitCodeMatchesCleanupEvidence")
+        if opener_start < 0 or start < 0 or predicate_start < 0:
             cls.project = None
             return
         opener_end = generated.find("\nstatic ", opener_start + 1)
         end = generated.find("\nstatic ", start + 1)
-        if opener_end < 0 or end < 0:
+        predicate_end = generated.find("\nstatic ", predicate_start + 1)
+        if opener_end < 0 or end < 0 or predicate_end < 0:
             raise AssertionError("could not isolate generated CDB retained-log helpers")
         opener = generated[opener_start:opener_end]
         method = generated[start:end]
+        predicate = generated[predicate_start:predicate_end]
         harness = cls.root / "parser-harness"
         harness.mkdir()
         (harness / "parser-harness.csproj").write_text(
@@ -58,10 +61,18 @@ class CdbExitEventCleanupTests(unittest.TestCase):
             + opener
             + "\n\n"
             + method
+            + "\n\n"
+            + predicate
             + "\n\nif (args.Length != 4) return 2;\n"
             + "string mode = args[0]; string logPath = args[1];\n"
             + "using FileStream retained = OpenRetainedCdbLogStream(logPath);\n"
             + "long readinessLength = long.Parse(args[3], CultureInfo.InvariantCulture);\n"
+            + "if (mode.StartsWith(\"exit-code-\", StringComparison.Ordinal)) {\n"
+            + "  bool forceRequested = mode.Contains(\"-force\", StringComparison.Ordinal);\n"
+            + "  bool exitObserved = mode.Contains(\"-exit\", StringComparison.Ordinal);\n"
+            + "  bool matched = CdbExitCodeMatchesCleanupEvidence(int.Parse(args[2], CultureInfo.InvariantCulture), checked((uint)readinessLength), forceRequested, exitObserved);\n"
+            + "  Console.WriteLine(matched); return matched ? 0 : 1;\n"
+            + "}\n"
             + "if (readinessLength < 0) readinessLength = retained.Length;\n"
             + "bool deleteBlocked = true; bool replacementBlocked = true;\n"
             + "if (mode == \"lock\") {\n"
@@ -70,8 +81,8 @@ class CdbExitEventCleanupTests(unittest.TestCase):
             + "  try { File.Move(replacement, logPath, true); replacementBlocked = false; } catch (IOException) { } catch (UnauthorizedAccessException) { }\n"
             + "}\n"
             + "bool accepted = TryReadFinalizedCdbExitEvidence(retained, readinessLength, int.Parse(args[2], CultureInfo.InvariantCulture), "
-            + "out bool cleanup, out bool quit, out bool exitEvent);\n"
-            + 'Console.WriteLine($"{accepted}|{cleanup}|{quit}|{exitEvent}|{deleteBlocked}|{replacementBlocked}");\n'
+            + "out bool cleanup, out bool quit, out bool exitEvent, out uint targetExitCode);\n"
+            + 'Console.WriteLine($"{accepted}|{cleanup}|{quit}|{exitEvent}|{targetExitCode}|{deleteBlocked}|{replacementBlocked}");\n'
             + "return accepted && deleteBlocked && replacementBlocked ? 0 : 1;\n",
             encoding="utf-8",
         )
@@ -152,7 +163,7 @@ class CdbExitEventCleanupTests(unittest.TestCase):
 
     def test_accepts_actual_disposable_exit_process_shape(self) -> None:
         self.assertEqual(
-            (0, "True|True|True|True|True|True"),
+            (0, "True|True|True|True|4294967295|True|True"),
             self.validate(self.valid_log()),
         )
 
@@ -169,7 +180,77 @@ class CdbExitEventCleanupTests(unittest.TestCase):
     def test_retained_stream_blocks_path_delete_and_replacement(self) -> None:
         code, output = self.validate(self.valid_log(), mode="lock")
         self.assertEqual(0, code)
-        self.assertEqual("True|True|True|True|True|True", output)
+        self.assertEqual("True|True|True|True|4294967295|True|True", output)
+
+    def test_rejects_exit_status_wider_than_target_process_status(self) -> None:
+        malformed = self.valid_log().replace("code ffffffff", "code 00000000ffffffff")
+        self.assertEqual(1, self.validate(malformed)[0])
+
+    def test_accepts_exact_forced_target_status_propagation(self) -> None:
+        self.assertEqual(
+            (0, "True"),
+            self.validate(
+                self.valid_log(),
+                mode="exit-code-force-exit",
+                pid=-1,
+                readiness_length=0xFFFFFFFF,
+            ),
+        )
+
+    def test_accepts_zero_cdb_exit_without_forced_target(self) -> None:
+        self.assertEqual(
+            (0, "True"),
+            self.validate(
+                self.valid_log(),
+                mode="exit-code-normal",
+                pid=0,
+                readiness_length=0,
+            ),
+        )
+
+    def test_rejects_minus_one_without_force_requested(self) -> None:
+        self.assertEqual(
+            1,
+            self.validate(
+                self.valid_log(),
+                mode="exit-code-exit",
+                pid=-1,
+                readiness_length=0xFFFFFFFF,
+            )[0],
+        )
+
+    def test_rejects_minus_one_without_exit_observed(self) -> None:
+        self.assertEqual(
+            1,
+            self.validate(
+                self.valid_log(),
+                mode="exit-code-force",
+                pid=-1,
+                readiness_length=0xFFFFFFFF,
+            )[0],
+        )
+
+    def test_rejects_minus_one_without_matching_target_status(self) -> None:
+        self.assertEqual(
+            1,
+            self.validate(
+                self.valid_log(),
+                mode="exit-code-force-exit",
+                pid=-1,
+                readiness_length=0xFFFFFFFE,
+            )[0],
+        )
+
+    def test_rejects_arbitrary_nonzero_cdb_exit(self) -> None:
+        self.assertEqual(
+            1,
+            self.validate(
+                self.valid_log(),
+                mode="exit-code-force-exit",
+                pid=1,
+                readiness_length=1,
+            )[0],
+        )
 
     def test_rejects_unrelated_pid(self) -> None:
         self.assertEqual(1, self.validate(self.valid_log(), pid=0x73B5)[0])

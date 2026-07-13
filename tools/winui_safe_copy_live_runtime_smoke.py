@@ -1302,11 +1302,13 @@ static bool TryReadFinalizedCdbExitEvidence(
     int expectedTargetProcessId,
     out bool cleanupMarkerObserved,
     out bool gracefulQuitObserved,
-    out bool targetExitEventObserved)
+    out bool targetExitEventObserved,
+    out uint targetExitCode)
 {
     cleanupMarkerObserved = false;
     gracefulQuitObserved = false;
     targetExitEventObserved = false;
+    targetExitCode = 0;
     if (expectedTargetProcessId <= 0 || logLengthAtReadiness < 0 ||
         !retainedLogStream.CanRead || !retainedLogStream.CanSeek)
         return false;
@@ -1412,7 +1414,7 @@ static bool TryReadFinalizedCdbExitEvidence(
 
     var match = System.Text.RegularExpressions.Regex.Match(
         sectionLines[0],
-        @"\ALast event: (?<eventPid>[0-9A-Fa-f]{1,8})\.(?<threadId>[0-9A-Fa-f]{1,8}): Exit process 0:(?<exitPid>[0-9A-Fa-f]{1,8}), code [0-9A-Fa-f]{1,16}\z",
+        @"\ALast event: (?<eventPid>[0-9A-Fa-f]{1,8})\.(?<threadId>[0-9A-Fa-f]{1,8}): Exit process 0:(?<exitPid>[0-9A-Fa-f]{1,8}), code (?<exitCode>[0-9A-Fa-f]{1,8})\z",
         System.Text.RegularExpressions.RegexOptions.CultureInvariant);
     if (!match.Success ||
         !int.TryParse(
@@ -1430,12 +1432,28 @@ static bool TryReadFinalizedCdbExitEvidence(
             System.Globalization.NumberStyles.AllowHexSpecifier,
             System.Globalization.CultureInfo.InvariantCulture,
             out int threadId) ||
+        !uint.TryParse(
+            match.Groups["exitCode"].Value,
+            System.Globalization.NumberStyles.AllowHexSpecifier,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out targetExitCode) ||
         threadId <= 0)
         return false;
 
     targetExitEventObserved = eventProcessId == expectedTargetProcessId &&
         exitProcessId == expectedTargetProcessId;
     return cleanupMarkerObserved && gracefulQuitObserved && targetExitEventObserved;
+}
+
+static bool CdbExitCodeMatchesCleanupEvidence(
+    int cdbExitCode,
+    uint targetExitCode,
+    bool managedForceRequested,
+    bool managedExitObserved)
+{
+    return cdbExitCode == 0 ||
+        (cdbExitCode == -1 && targetExitCode == uint.MaxValue &&
+         managedForceRequested && managedExitObserved);
 }
 
 static JsonElement? TryParseLastJsonPayload(string stdout)
@@ -2274,19 +2292,27 @@ static JsonElement FinalizeExactCdbObserverAfterManagedStop(
     bool cleanupMarkerObserved = false;
     bool gracefulQuitObserved = false;
     bool targetExitEventObserved = false;
+    uint targetExitCode = 0;
     bool cdbExitedNormally = exited && observedCdbExitCode == 0;
-    bool finalizedLogAccepted = !forced && cdbExitedNormally && managedProcessStopped && stopResult is not null &&
+    bool finalizedLogAccepted = !forced && exited && managedProcessStopped && stopResult is not null &&
         boundCdbLogStream is not null &&
-        TryReadFinalizedCdbExitEvidence(boundCdbLogStream, cdbLogLengthAtReadiness, stopResult.ProcessId, out cleanupMarkerObserved, out gracefulQuitObserved, out targetExitEventObserved);
+        TryReadFinalizedCdbExitEvidence(boundCdbLogStream, cdbLogLengthAtReadiness, stopResult.ProcessId, out cleanupMarkerObserved, out gracefulQuitObserved, out targetExitEventObserved, out targetExitCode);
+    bool cdbExitCodeAccepted = exited && observedCdbExitCode.HasValue && stopResult is not null &&
+        CdbExitCodeMatchesCleanupEvidence(
+            observedCdbExitCode.Value,
+            targetExitCode,
+            stopResult.ForceRequested,
+            stopResult.ExitObserved);
+    bool cdbExitCodeMatchedForcedTargetTermination = cdbExitCodeAccepted && !cdbExitedNormally;
     bool graceful = preStopBound && processWasRetained && processIdentityRevalidated &&
-        managedProcessStopped && cdbExitedNormally && finalizedLogAccepted && targetExitEventObserved &&
+        managedProcessStopped && cdbExitCodeAccepted && finalizedLogAccepted && targetExitEventObserved &&
         cleanupMarkerObserved && gracefulQuitObserved;
     string status = graceful ? "exited-after-managed-stop" :
         forced && exited ? "forced-stopped-after-timeout" :
         forced ? "forced-stop-failed" :
         !preStopBound ? "exited-without-pre-stop-binding" :
         !managedProcessStopped ? "exited-after-unbound-managed-stop" :
-        !cdbExitedNormally ? "cdb-exited-nonzero" :
+        !cdbExitCodeAccepted ? "cdb-exit-code-unbound" :
         !targetExitEventObserved ? "exited-without-target-exit-event" :
         "exited-without-queued-quit";
     return JsonPayload(new
@@ -2297,7 +2323,10 @@ static JsonElement FinalizeExactCdbObserverAfterManagedStop(
         gracefulQuitObserved,
         cleanupMarkerObserved,
         targetExitEventObserved,
+        targetExitCode,
         cdbExitedNormally,
+        cdbExitCodeMatchedForcedTargetTermination,
+        cdbExitCodeAccepted,
         processWasRetained,
         processIdentityRevalidated,
         forced,
@@ -2830,7 +2859,7 @@ __CANARY_CLEANUP_PHASE_BLOCK__
         JsonBool(cdbCleanupResult, "receiptBound") &&
         JsonBool(cdbCleanupResult, "gracefulQuitObserved") &&
         JsonBool(cdbCleanupResult, "targetExitEventObserved") &&
-        JsonBool(cdbCleanupResult, "cdbExitedNormally");
+        JsonBool(cdbCleanupResult, "cdbExitCodeAccepted");
     bool managedProcessStopped = stopReceiptBound && stopResult?.Success == true &&
         stopResult.LiveBeforeStop && stopResult.StopRequested && stopResult.ExitObserved &&
         !stopResult.AlreadyGone && stopResult.ExitTime.HasValue;
