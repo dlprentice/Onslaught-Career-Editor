@@ -1179,7 +1179,17 @@ static bool HasExactlyOneLogMarker(string logPath, string marker)
     if (!File.Exists(logPath))
         return false;
     int count = 0;
-    foreach (string line in File.ReadLines(logPath))
+    using FileStream stream = new(
+        logPath,
+        FileMode.Open,
+        FileAccess.Read,
+        FileShare.ReadWrite);
+    using StreamReader reader = new(
+        stream,
+        Encoding.UTF8,
+        detectEncodingFromByteOrderMarks: true);
+    string? line;
+    while ((line = reader.ReadLine()) is not null)
     {
         if (!string.Equals(line.Trim(), marker, StringComparison.Ordinal))
             continue;

@@ -174,8 +174,21 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   the success predicate, public schema, input, or process behavior. Its 36
   focused tests and a fresh generated-runner build pass with zero
   warnings/errors. Retry 4 and 5 have ignored failed-run closeouts and lease
-  releases; neither published a matrix. A fresh diagnostic retry requires
-  review, commit/push, new controls, and an absent proof root.
+  releases; neither published a matrix. The diagnostic was reviewed, committed,
+  and pushed at `a6a0962e`. Retry 6 then used fresh controls, passed dry run,
+  and again reached exact marker-ready no-input control evidence with zero
+  events, integrity, and complete cleanup. Its new private diagnostic recovered
+  the actual caught failure: the runner reopened active `windbg.log` through
+  `File.ReadLines` while CDB still owned a write handle, so the default sharing
+  mode threw before input. No positive role or public matrix ran; the failed
+  evidence closeout and lease release are preserved. The TDD correction keeps
+  the exact pre-input on-disk marker gate but reads through a read-only
+  `FileStream` with `FileShare.ReadWrite`, UTF-8/BOM detection, and the same
+  exact one-line/duplicate rejection. All 37 focused helper tests pass, a fresh
+  generated runner builds with zero warnings/errors, and a disposable .NET
+  proof reproduced the old sharing violation while the new reader accepted one
+  marker without closing the writer. Review, commit/push, and fresh retry 7
+  remain.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future

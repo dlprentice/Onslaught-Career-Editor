@@ -630,6 +630,28 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertLess(attach_index, guard_index)
         self.assertLess(guard_index, input_index)
 
+    def test_generated_morph_runner_reads_active_cdb_log_with_writer_sharing(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory(prefix="morph-cdb-log-sharing-test-") as temp:
+            project = module.write_runner(Path(temp) / "runner")
+            generated = project.with_name("Program.cs").read_text(encoding="utf-8")
+
+        match = re.search(
+            r"static bool HasExactlyOneLogMarker\b(?P<body>.*?)(?=\nstatic\s)",
+            generated,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(match)
+        body = match.group("body")
+        self.assertIn("FileMode.Open", body)
+        self.assertIn("FileAccess.Read", body)
+        self.assertIn("FileShare.ReadWrite", body)
+        self.assertIn("detectEncodingFromByteOrderMarks: true", body)
+        self.assertIn("string.Equals(line.Trim(), marker, StringComparison.Ordinal)", body)
+        self.assertIn("if (count > 1)", body)
+        self.assertIn("return count == 1;", body)
+        self.assertNotIn("File.ReadLines", body)
+
     def test_generated_morph_runner_preserves_private_failure_diagnostic(self) -> None:
         module = self.live_smoke_module()
         with tempfile.TemporaryDirectory(prefix="morph-failure-diagnostic-test-") as temp:

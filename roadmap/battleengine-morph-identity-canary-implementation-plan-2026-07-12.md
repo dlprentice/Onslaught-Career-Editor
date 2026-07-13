@@ -629,6 +629,9 @@ py -3 tools\run_battleengine_morph_identity_canary.py --proof-root local-proofs\
 
 If user input or an unrelated process interferes, discard the affected run and
 repeat it from a fresh copy. Do not relax an identity or event condition.
+While CDB remains attached, reopen its role-local log read-only with sharing
+that permits the existing writer; retain the exact trimmed marker count before
+input and repeat the same check after cleanup.
 
 - [ ] **Step 4: Validate terminal cleanup and the sanitized summary**
 
