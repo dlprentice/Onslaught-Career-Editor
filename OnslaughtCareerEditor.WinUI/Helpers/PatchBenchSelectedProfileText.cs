@@ -20,7 +20,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
             if (string.Equals(matchedProfileId, BinaryPatchPlanBuilder.CompatibilityProfileId, StringComparison.OrdinalIgnoreCase))
             {
-                return "Selected profile: Compatibility Copy. Safest default: windowed startup plus non-4:3 display-mode acceptance only.";
+                return "Selected profile: Compatibility Copy. Required lowest-change base: windowed startup plus non-4:3 display-mode acceptance only.";
             }
 
             if (string.Equals(matchedProfileId, BinaryPatchPlanBuilder.RecommendedProfileId, StringComparison.OrdinalIgnoreCase))
@@ -49,6 +49,23 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             }
 
             return $"Selected profile: manual patch selection with {state.SelectedVisibleRowCount} visible row(s). Create safe copy will add required compatibility and these selected rows.";
+        }
+
+        public static string BuildPlayerModsStatus(bool hasPatchedMarker, bool hasGoodiesPreview)
+        {
+            if (hasPatchedMarker && hasGoodiesPreview)
+            {
+                return "Player mods selected: PATCHED identity marker and Goodies wall preview.";
+            }
+
+            if (hasPatchedMarker)
+            {
+                return "Player mods selected: PATCHED identity marker.";
+            }
+
+            return hasGoodiesPreview
+                ? "Player mods selected: Goodies wall preview."
+                : "Player mods selected: none.";
         }
 
         public static string BuildDetails(PatchBenchSelectedProfileTextState state)

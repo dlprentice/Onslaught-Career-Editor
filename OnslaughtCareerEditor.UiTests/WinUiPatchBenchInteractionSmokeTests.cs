@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading;
 using FlaUI.Core;
 using FlaUI.Core.AutomationElements;
+using FlaUI.Core.Definitions;
 using FlaUI.Core.Tools;
 using FlaUI.UIA3;
 using NUnit.Framework;
@@ -61,20 +62,35 @@ public class WinUiPatchBenchInteractionSmokeTests
             WaitForText(window, "Safe game copy", TimeSpan.FromSeconds(20));
             AssertAutomationNameContains(window, "PatchBenchWindowedPresetButton", "Selected: Compatibility Copy profile");
             AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Compatibility Copy");
+            CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-player-mods-normal.png", "PatchBenchAddVersionMarkerButton", 1000, 720);
+            InvokeByAutomationId(window, "PatchBenchAddVersionMarkerButton");
+            AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "PATCHED identity marker");
+            InvokeByAutomationId(window, "PatchBenchClearVersionMarkerButton");
+            AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "Player mods selected: none");
+            InvokeByAutomationId(window, "PatchBenchAddGoodiesPreviewButton");
+            AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "Goodies wall preview");
+            InvokeByAutomationId(window, "PatchBenchClearGoodiesPreviewButton");
+            AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "Player mods selected: none");
+
+            AssertExpandCollapseState(window, "PatchBenchLabExpander", ExpandCollapseState.Collapsed);
+            ExpandByAutomationId(window, "PatchBenchLabExpander");
+            AssertExpandCollapseState(window, "PatchBenchLabExpander", ExpandCollapseState.Expanded);
+            CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-lab-expanded-header.png", "PatchBenchLabExpander", 1000, 720);
+            CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-lab-visual-experiments.png", "PatchBenchMenuColorRedButton", 1000, 720);
 
             InvokeByAutomationId(window, "PatchBenchStableDefaultsButton");
-            AssertAutomationNameContains(window, "PatchBenchStableDefaultsButton", "Selected: Windowed and Graphics Defaults profile");
+            AssertAutomationNameContains(window, "PatchBenchStableDefaultsButton", "Selected: legacy graphics-default Lab recipe");
             AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Windowed + Graphics Defaults");
 
             SelectComboBoxItem(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
             AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
             InvokeByAutomationId(window, "PatchBenchEnhancedPreviewProfileButton");
-            AssertAutomationNameContains(window, "PatchBenchEnhancedPreviewProfileButton", "Selected: Enhanced Profile Preview profile");
+            AssertAutomationNameContains(window, "PatchBenchEnhancedPreviewProfileButton", "Selected: retained legacy Enhanced Profile Preview Lab recipe");
             AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Enhanced Profile Preview");
             AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
 
             InvokeByAutomationId(window, "PatchBenchDebugCameraPreviewProfileButton");
-            AssertAutomationNameContains(window, "PatchBenchDebugCameraPreviewProfileButton", "Selected: Debug Camera Preview profile");
+            AssertAutomationNameContains(window, "PatchBenchDebugCameraPreviewProfileButton", "Selected: experimental Debug Camera Preview Lab research recipe");
             AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Debug Camera Preview");
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-profile-selected-normal.png", "PatchBenchDebugCameraPreviewProfileButton", 1000, 640);
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-profile-selected-narrow.png", "PatchBenchDebugCameraPreviewProfileButton", 760, 640);
@@ -400,6 +416,13 @@ public class WinUiPatchBenchInteractionSmokeTests
         }
 
         Thread.Sleep(250);
+    }
+
+    private static void AssertExpandCollapseState(Window window, string automationId, ExpandCollapseState expected)
+    {
+        AutomationElement element = FindByAutomationId(window, automationId);
+        Assert.That(element.Patterns.ExpandCollapse.IsSupported, Is.True, $"{automationId} should expose ExpandCollapsePattern.");
+        Assert.That(element.Patterns.ExpandCollapse.Pattern.ExpandCollapseState.Value, Is.EqualTo(expected));
     }
 
     private static void SetTextBoxText(Window window, string automationId, string text)
