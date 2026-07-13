@@ -60,7 +60,7 @@ class CdbExitEventCleanupTests(unittest.TestCase):
                 'if (mode.StartsWith("finalize-", StringComparison.Ordinal)) {\n'
                 '  bool forceRequested = mode.Contains("-force", StringComparison.Ordinal);\n'
                 '  bool exitObserved = mode.Contains("-exit", StringComparison.Ordinal);\n'
-                '  bool parsed = TryReadFinalizedCdbExitEvidence(retained, retained.Length, 0x73b4, out bool finalCleanup, out bool finalQuit, out bool finalExitEvent, out uint finalTargetExitCode, out bool finalTerminalRegionClean);\n'
+                '  bool parsed = TryReadFinalizedCdbExitEvidence(retained, readinessLength, 0x73b4, out bool finalCleanup, out bool finalQuit, out bool finalExitEvent, out uint finalTargetExitCode, out bool finalTerminalRegionClean);\n'
                 '  var decision = EvaluateFinalizedCdbCleanupEvidence(true, false, true, true, true, true, parsed, finalExitEvent, finalCleanup, finalQuit, int.Parse(args[2], CultureInfo.InvariantCulture), finalTargetExitCode, forceRequested, exitObserved, finalTerminalRegionClean);\n'
                 '  Console.WriteLine($"{decision.Graceful}|{decision.Status}|{decision.CdbExitCodeAccepted}|{decision.CdbExitCodeMatchedForcedTargetTermination}|{finalTerminalRegionClean}");\n'
                 '  return decision.Graceful ? 0 : 1;\n'
@@ -88,6 +88,7 @@ class CdbExitEventCleanupTests(unittest.TestCase):
             + "string mode = args[0]; string logPath = args[1];\n"
             + "using FileStream retained = OpenRetainedCdbLogStream(logPath);\n"
             + "long readinessLength = long.Parse(args[3], CultureInfo.InvariantCulture);\n"
+            + "if (readinessLength < 0) readinessLength = 0;\n"
             + finalize_harness
             + "if (mode.StartsWith(\"exit-code-\", StringComparison.Ordinal)) {\n"
             + "  bool forceRequested = mode.Contains(\"-force\", StringComparison.Ordinal);\n"
@@ -95,7 +96,6 @@ class CdbExitEventCleanupTests(unittest.TestCase):
             + "  bool matched = CdbExitCodeMatchesCleanupEvidence(int.Parse(args[2], CultureInfo.InvariantCulture), checked((uint)readinessLength), forceRequested, exitObserved, true);\n"
             + "  Console.WriteLine(matched); return matched ? 0 : 1;\n"
             + "}\n"
-            + "if (readinessLength < 0) readinessLength = retained.Length;\n"
             + "bool deleteBlocked = true; bool replacementBlocked = true;\n"
             + "if (mode == \"lock\") {\n"
             + "  string replacement = logPath + \".replacement\"; File.WriteAllText(replacement, \"replacement\");\n"
@@ -172,7 +172,14 @@ class CdbExitEventCleanupTests(unittest.TestCase):
         )
         return result.returncode, result.stdout.strip()
 
-    def finalize(self, text: str, *, cdb_exit_code: int, mode: str) -> tuple[int, str]:
+    def finalize(
+        self,
+        text: str,
+        *,
+        cdb_exit_code: int,
+        mode: str,
+        readiness_length: int = 0,
+    ) -> tuple[int, str]:
         self.assertTrue(
             self.has_finalizer_evaluator,
             "generated runner is missing executable finalized-cleanup evaluator",
@@ -181,7 +188,7 @@ class CdbExitEventCleanupTests(unittest.TestCase):
             text,
             mode=mode,
             pid=cdb_exit_code,
-            readiness_length=-1,
+            readiness_length=readiness_length,
         )
 
     @staticmethod
@@ -202,14 +209,21 @@ class CdbExitEventCleanupTests(unittest.TestCase):
         )
 
     def test_accepts_known_cdb_boilerplate_around_proof(self) -> None:
+        startup = "Microsoft (R) Windows Debugger Version 10.0 X86\n"
         transcript = (
-            "Microsoft (R) Windows Debugger Version 10.0 X86\n"
-            "0:004> .echo MORPH_CANARY_LASTEVENT_BEGIN; .lastevent; "
+            startup
+            + "0:004> .echo MORPH_CANARY_LASTEVENT_BEGIN; .lastevent; "
             ".echo MORPH_CANARY_LASTEVENT_END; .echo MORPH_CANARY_CLEANUP_Q; q\n"
             + self.valid_log()
             + "NatVis script unloaded from 'windows.natvis'\n"
         )
-        self.assertEqual(0, self.validate(transcript)[0])
+        self.assertEqual(
+            0,
+            self.validate(
+                transcript,
+                readiness_length=len(startup.encode("utf-8")),
+            )[0],
+        )
 
     def test_retained_stream_blocks_path_delete_and_replacement(self) -> None:
         code, output = self.validate(self.valid_log(), mode="lock")
@@ -284,6 +298,73 @@ class CdbExitEventCleanupTests(unittest.TestCase):
             "MORPH_CANARY_CLEANUP_Q",
             "Unable to continue, system error 5\nMORPH_CANARY_CLEANUP_Q",
         )
+        self.assertEqual(
+            (0, "True|exited-after-managed-stop|True|False|False"),
+            self.finalize(
+                transcript,
+                cdb_exit_code=0,
+                mode="finalize-exit",
+            ),
+        )
+
+    def test_complete_finalizer_rejects_unexpected_post_quit_diagnostic(self) -> None:
+        transcript = self.valid_log() + "Unable to unload debugger extension\n"
+        self.assertEqual(
+            (1, "False|cdb-exit-code-unbound|False|False|False"),
+            self.finalize(
+                transcript,
+                cdb_exit_code=-1,
+                mode="finalize-force-exit",
+            ),
+        )
+
+    def test_complete_finalizer_rejects_post_readiness_pre_begin_error(self) -> None:
+        transcript = "Unable to continue, system error 5\n" + self.valid_log()
+        self.assertEqual(
+            (1, "False|cdb-exit-code-unbound|False|False|False"),
+            self.finalize(
+                transcript,
+                cdb_exit_code=-1,
+                mode="finalize-force-exit",
+            ),
+        )
+
+    def test_complete_finalizer_rejects_unrecognized_pre_begin_output(self) -> None:
+        transcript = "debugger transport reset\n" + self.valid_log()
+        self.assertEqual(
+            (1, "False|cdb-exit-code-unbound|False|False|False"),
+            self.finalize(
+                transcript,
+                cdb_exit_code=-1,
+                mode="finalize-force-exit",
+            ),
+        )
+
+    def test_complete_finalizer_ignores_diagnostic_before_readiness_boundary(self) -> None:
+        prefix = "Unable to continue, system error 5\n"
+        self.assertEqual(
+            (0, "True|exited-after-managed-stop|True|True|True"),
+            self.finalize(
+                prefix + self.valid_log(),
+                cdb_exit_code=-1,
+                mode="finalize-force-exit",
+                readiness_length=len(prefix.encode("utf-8")),
+            ),
+        )
+
+    def test_complete_finalizer_allows_known_post_quit_shutdown_boilerplate(self) -> None:
+        transcript = self.valid_log() + "NatVis script unloaded from 'windows.natvis'\n"
+        self.assertEqual(
+            (0, "True|exited-after-managed-stop|True|True|True"),
+            self.finalize(
+                transcript,
+                cdb_exit_code=-1,
+                mode="finalize-force-exit",
+            ),
+        )
+
+    def test_complete_finalizer_preserves_zero_exit_with_post_quit_diagnostic(self) -> None:
+        transcript = self.valid_log() + "Unable to unload debugger extension\n"
         self.assertEqual(
             (0, "True|exited-after-managed-stop|True|False|False"),
             self.finalize(
@@ -408,6 +489,63 @@ class CdbExitEventCleanupTests(unittest.TestCase):
             "2026 (UTC - 4:00) Unable to continue, system error 5",
         )
         self.assertEqual(1, self.validate(malformed)[0])
+
+    def test_rejects_impossible_debugger_calendar_date(self) -> None:
+        malformed = self.valid_log().replace("Mon Jul 13", "Mon Feb 31")
+        self.assertEqual(1, self.validate(malformed)[0])
+
+    def test_rejects_mismatched_debugger_weekday(self) -> None:
+        malformed = self.valid_log().replace("Mon Jul 13", "Tue Jul 13")
+        self.assertEqual(1, self.validate(malformed)[0])
+
+    def test_rejects_zero_and_unsupported_debugger_years(self) -> None:
+        for invalid_year in ("0000", "1600"):
+            with self.subTest(year=invalid_year):
+                malformed = self.valid_log().replace("2026 (UTC", f"{invalid_year} (UTC")
+                self.assertEqual(1, self.validate(malformed)[0])
+
+    def test_rejects_invalid_debugger_clock_components(self) -> None:
+        replacements = {
+            "hour": ("10:45:10.061", "24:45:10.061"),
+            "minute": ("10:45:10.061", "10:60:10.061"),
+            "second": ("10:45:10.061", "10:45:60.061"),
+            "millisecond": ("10:45:10.061", "10:45:10.1000"),
+        }
+        for name, (old, new) in replacements.items():
+            with self.subTest(component=name):
+                self.assertEqual(1, self.validate(self.valid_log().replace(old, new))[0])
+
+    def test_rejects_invalid_debugger_utc_offsets(self) -> None:
+        for invalid_offset in ("+ 14:59", "- 14:01", "+ 15:00"):
+            with self.subTest(offset=invalid_offset):
+                malformed = self.valid_log().replace("- 4:00", invalid_offset)
+                self.assertEqual(1, self.validate(malformed)[0])
+
+    def test_accepts_maximum_valid_debugger_utc_offset(self) -> None:
+        transcript = self.valid_log().replace("- 4:00", "+ 14:00")
+        self.assertEqual(0, self.validate(transcript)[0])
+
+    def test_complete_finalizer_rejects_semantically_invalid_debugger_times(self) -> None:
+        replacements = {
+            "date": ("Mon Jul 13", "Mon Feb 31"),
+            "weekday": ("Mon Jul 13", "Tue Jul 13"),
+            "year-zero": ("2026 (UTC", "0000 (UTC"),
+            "year-unsupported": ("2026 (UTC", "1600 (UTC"),
+            "hour": ("10:45:10.061", "24:45:10.061"),
+            "minute": ("10:45:10.061", "10:60:10.061"),
+            "second": ("10:45:10.061", "10:45:60.061"),
+            "millisecond": ("10:45:10.061", "10:45:10.1000"),
+            "offset": ("- 4:00", "+ 14:59"),
+        }
+        for name, (old, new) in replacements.items():
+            with self.subTest(case=name):
+                code, output = self.finalize(
+                    self.valid_log().replace(old, new),
+                    cdb_exit_code=-1,
+                    mode="finalize-force-exit",
+                )
+                self.assertEqual(1, code)
+                self.assertTrue(output.startswith("False|"), output)
 
     def test_rejects_proof_like_marker_line_outside_section(self) -> None:
         self.assertEqual(
