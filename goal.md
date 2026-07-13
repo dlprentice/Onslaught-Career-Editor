@@ -16,21 +16,25 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Execute Stage A Task 5: run the accepted authority-gated Level 850
-BattleEngine morph-identity matrix and close the bounded evidence slice.
+Deliver the first recognizable local-asset First Flight presentation run: one
+user-supplied Aquila mesh/material set plus one terrain/environment subset,
+loaded through the existing ignored Godot bridge while deterministic Core and
+ordinary synthetic smoke remain unchanged.
 
-1. create ignored, hash-bound authority and resource-lease records with exact
-   zero-spend, expiration, cleanup, validation, and exclusive-resource terms;
-2. run the no-side-effect dry run against the read-only resource root and its
-   canonical effective in-root executable override, then announce the
-   hands-off native window;
-3. execute the fixed no-input control, positive transform, and fresh positive
-   repeat roles without weakening any identity, event, or cleanup condition;
-4. publish only a validated sanitized identity/causality summary if all three
-   roles pass, otherwise record a bounded blocker and stop before Stage B; and
-5. close with the one integrated runtime-slice validation and review envelope,
-   then commit and push. Do not claim timing, field semantics, handling,
-   gameplay, or rebuild parity, and do not create a release or tag.
+1. choose and document one reproducible local-only route for the pinned x86 AYA
+   extractor dependencies and one explicit FBX-to-self-contained-GLB converter;
+2. make dependency/template/converter preflight fail early and clearly without
+   weakening the installed-game, ignored-payload, or component-license boundary;
+3. initialize the ignored workspace, export from the read-only local game
+   mirror, select exactly one Aquila role and one terrain/environment role,
+   convert them, and publish the content-addressed manifest last;
+4. run First Flight offline and accept only native visual evidence of nonempty,
+   recognizable player and terrain presentation plus working existing
+   movement/fire/transform/reset; and
+5. close with focused pipeline/rebuild tests, payload safety, normal/adversarial
+   review, state reconciliation, commit, and push. Keep movement, camera,
+   handling, animation, audio, visual fidelity, and parity explicitly unproven.
+   Do not create a release or tag.
 
 ## Current Slice Progress - 2026-07-13
 
@@ -325,6 +329,18 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   result. Retry 12 remains failed and cannot be reinterpreted; another live run
   requires an integrated, adversarially tested correction and wholly fresh
   controls.
+- An independent campaign-governance adversarial review returned
+  `GO-WITH-COURSE-CORRECTION`: the canary produced useful runtime-safety
+  infrastructure, but twelve failed runs moved it into diminishing-return
+  churn. The bounded repeated-NatVis parser correction may finish, but no
+  automatic Retry 13 is authorized. Runtime identity is now a timeboxed side
+  lane rather than the playable rebuild's critical path.
+- A read-only workstation presentation audit found the canonical ignored game
+  mirror, FBX template, and pinned Godot cache, but no usable combined
+  AYA/DDS/Fbx runtime directory, no exported GLB/OBJ, and no integrated FBX
+  converter. The exact next player-visible blocker is therefore extractor
+  runtime provisioning/build plus one FBX-to-self-contained-GLB step, not more
+  renderer or simulation work.
 - The optional local presentation lane is integrated on `main`. It pins the
   Stuart Onslaught reference at `5352a81` and the AYA reference plus narrow
   rectangular-DDS correction at `53b10b0`; adds an ignored exporter/bootstrap
@@ -346,6 +362,11 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   final source/build suite passes 1,319 AppCore and 155 UI tests with two
   expected private-corpus skips; focused preflight and native hands-off proof
   also pass without creating a copy or launching BEA.
+- The two normal compatibility actions now keep their exact labels complete at
+  760px through centered whole-word wrapping and equal minimum height. Stable
+  automation names, handlers, selection semantics, and two-column placement
+  are unchanged. A fresh hands-off native run passed with empty pre/post
+  process census and no copy or game action; focused integration tests pass.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future
@@ -451,23 +472,26 @@ time. Passing one bounded slice does not satisfy the overall goal.
   PR workflow is usable; validation is proportionate; finished tasks/worktrees
   are retired after evidence absorption; and clean `main`, `origin/main`, and
   the live remote ref match with divergence `0 0`.
-- **WinUI Toolkit:** every visible control has a verified action/reaction map;
-  first-run setup, accessibility, copy/layout, Lore, Media, save/options,
-  safe-copy, and patch workflows pass their focused native checks without
-  unexplained or misleading controls.
-- **Patches and mods:** every shipped option is exact-specimen/byte bound,
-  dependency/conflict accounted, copied-target-only, truthfully labeled, and
-  covered by focused tests; no known stale active helper can reapply withdrawn
-  ownership or bypass the copied-target boundary.
+- **WinUI Toolkit:** one coherent first-time player journey is accepted from
+  game-source setup through safe-copy creation, optional normal Player Mods,
+  launch, and recovery/recreation. Accessibility and native checks cover that
+  journey; remaining page/control audit debt is ranked rather than treated as
+  an unbounded terminal gate.
+- **Patches and mods:** all normal surfaced options are exact-specimen/byte
+  bound, dependency/conflict accounted, copied-target-only, truthfully labeled,
+  and covered by focused tests. Research/legacy rows are clearly segregated in
+  Lab, and no known stale active helper can reapply withdrawn ownership or
+  bypass the copied-target boundary.
 - **Reverse engineering:** the Ghidra closeout is integrated; accepted
   corrections are reflected in current RE/Lore truth; stale mutators are
   retired; and the selected movement/morph slice has accepted Steam static plus
   copied-runtime identity/behavior evidence. Inventory counts alone do not
   satisfy this criterion.
-- **Lore and documentation:** canonical/mirror synchronization, stale-current-
-  truth checks, editorial/provenance inventory, and contributor front doors are
-  accepted. Historical uncertainty remains labeled rather than rewritten as
-  fact.
+- **Lore and documentation:** canonical/mirror synchronization, selected
+  current-truth checks, provenance boundaries, and contributor front doors are
+  accepted for the active product/rebuild path. Broader editorial review remains
+  a ranked follow-on program; historical uncertainty stays labeled rather than
+  rewritten as fact.
 - **Authentic rebuild vertical slice:** a user can reproducibly launch a
   BYO-asset Aquila/terrain experience that is recognizably BEA-like, with at
   least one measured movement/morph/camera behavior contract implemented in
@@ -563,8 +587,11 @@ claim against an already malicious process running as the same Windows user.
    path-bound tests that continue rejecting unknown diagnostics, then run a
    wholly fresh identity matrix and publish only a complete validated sanitized
    identity/causality result.
-2. Use the integrated ignored local-asset path for the next evidence-backed
-   presentation slice while keeping synthetic smoke and non-parity boundaries.
+2. Provision a reproducible pinned x86 AYA extractor runtime, add one explicit
+   FBX-to-self-contained-GLB conversion step, then bootstrap and visually run
+   one recognizable Aquila mesh plus one terrain/environment subset through
+   the integrated ignored local-asset path. Keep synthetic smoke, deterministic
+   Core, and non-parity boundaries unchanged.
 3. Perform the separate bounded review needed to correct the remaining
    `0x004dac90` live metadata debt without reviving the rejected manifest row.
 4. Retire or fail-close active BattleEngine tools that can reapply withdrawn
