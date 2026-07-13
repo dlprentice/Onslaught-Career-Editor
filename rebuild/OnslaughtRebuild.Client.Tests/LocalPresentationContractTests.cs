@@ -293,6 +293,22 @@ public sealed class LocalPresentationContractTests : IDisposable
         Assert.Contains("user-supplied local", File.ReadAllText(files[2]), StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void CmshProfileV0GoldenObj_IsAcceptedByPureMeshSafetyContract()
+    {
+        const string goldenText = "v 12.0 19.0 -33.0\n"
+            + "v 15.0 16.0 -36.0\n"
+            + "v 18.0 13.0 -39.0\n"
+            + "v 12.0 18.0 -33.0\n"
+            + "f 1 3 2\n"
+            + "f 1 4 3\n";
+        byte[] goldenObj = Encoding.UTF8.GetBytes(goldenText);
+
+        LocalMeshValidation validation = LocalMeshSafety.ValidateObjBytes(goldenObj);
+
+        Assert.True(validation.IsValid, validation.Error);
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true);
