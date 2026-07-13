@@ -15,6 +15,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import textwrap
 from pathlib import Path
 from typing import Any, Callable, Mapping, NamedTuple
 
@@ -98,6 +99,152 @@ class RuntimeProtocolPlan(NamedTuple):
     required_cdb_log_marker: str
     input_step_delay_ms: int
     cdb_log_ready_timeout_ms: int
+
+
+class CanaryCleanupPhase(NamedTuple):
+    name: str
+    callback_uses_binding: bool
+    failure_label: str
+    csharp_action: str
+    csharp_failure: str
+
+
+CANARY_CLEANUP_PHASE_PLAN = (
+    CanaryCleanupPhase(
+        name="release_keys",
+        callback_uses_binding=False,
+        failure_label="release-keys",
+        csharp_action=r"""
+            if (managed is not null && !string.IsNullOrWhiteSpace(receiptSha256))
+            {
+                string releaseArtifact = Path.Combine(artifactRoot, "input", "canary-release-keys.json");
+                if (inputDeliveryAttempted)
+                {
+                    if (!ValidateCanaryBinding(
+                            powershellExe,
+                            runtimeIdentityModule,
+                            runtimeReceiptPath,
+                            receiptSha256,
+                            cdbCommandFile,
+                            expectedCommandSha256,
+                            templatePath,
+                            expectedTemplateSha256,
+                            true,
+                            out string releaseBindingFailure))
+                        throw new InvalidOperationException("Runtime binding changed before best-effort key release: " + releaseBindingFailure);
+                    AssertFreshCanaryWriteTarget(releaseArtifact, artifactRoot);
+                }
+                _ = BestEffortReleaseCanaryKeys(
+                    inputDeliveryAttempted,
+                    powershellExe,
+                    inputScript,
+                    managed.ProcessId,
+                    observedMainWindowHandle,
+                    managed.ExecutablePath,
+                    managed.WorkingDirectory,
+                    inputStepDelayMs,
+                    releaseArtifact,
+                    runtimeReceiptPath,
+                    receiptSha256);
+            }
+        """,
+        csharp_failure="",
+    ),
+    CanaryCleanupPhase(
+        name="cleanup_cdb",
+        callback_uses_binding=True,
+        failure_label="cdb",
+        csharp_action=r"""
+            cdbCleanupResult = CleanupExactCdbObserver(
+                cdbAttachResult,
+                powershellExe,
+                runtimeIdentityModule,
+                runtimeReceiptPath,
+                receiptSha256,
+                cdbCommandFile,
+                expectedCommandSha256,
+                templatePath,
+                expectedTemplateSha256);
+        """,
+        csharp_failure=r"""
+            cdbCleanupResult = JsonPayload(new { status = "failed", receiptBound = false, exited = false, error = ex.GetType().Name + ": " + ex.Message });
+        """,
+    ),
+    CanaryCleanupPhase(
+        name="stop_managed",
+        callback_uses_binding=True,
+        failure_label="managed-stop",
+        csharp_action=r"""
+            stopResult = StopReceiptBoundManagedProcess(
+                managed,
+                profilesRoot,
+                powershellExe,
+                runtimeIdentityModule,
+                runtimeReceiptPath,
+                receiptSha256,
+                cdbCommandFile,
+                expectedCommandSha256,
+                templatePath,
+                expectedTemplateSha256,
+                out stopReceiptBound,
+                out string stopFailure);
+            if (managed is not null && !stopReceiptBound)
+                failure = string.IsNullOrWhiteSpace(failure)
+                    ? "Managed stop was not receipt-bound: " + stopFailure
+                    : failure + " | Managed stop was not receipt-bound: " + stopFailure;
+        """,
+        csharp_failure=r"""
+            stopReceiptBound = false;
+        """,
+    ),
+    CanaryCleanupPhase(
+        name="census",
+        callback_uses_binding=False,
+        failure_label="census",
+        csharp_action=r"""
+            ownedProcessCount = CountOwnedProcesses(runtimeReceiptPath, managed?.ExecutablePath, cdbAttachResult);
+        """,
+        csharp_failure=r"""
+            ownedProcessCount = -1;
+        """,
+    ),
+)
+
+CANARY_CLEANUP_FIELDS = (
+    "keysReleased",
+    "cdbDetached",
+    "managedProcessStopped",
+    "ownedProcessCount",
+)
+
+
+def render_canary_cleanup_phase_block() -> str:
+    blocks: list[str] = []
+    for phase in CANARY_CLEANUP_PHASE_PLAN:
+        action = textwrap.indent(textwrap.dedent(phase.csharp_action).strip(), " " * 12)
+        failure = textwrap.indent(textwrap.dedent(phase.csharp_failure).strip(), " " * 12)
+        blocks.append(
+            "\n".join(
+                (
+                    f"        // CANARY_CLEANUP_PHASE: {phase.name}",
+                    "        try",
+                    "        {",
+                    action,
+                    "        }",
+                    "        catch (Exception ex)",
+                    "        {",
+                    failure,
+                    f'            failure = AppendCleanupFailure(failure, "{phase.failure_label}", ex);',
+                    "        }",
+                )
+            )
+        )
+    return "\n".join(blocks)
+
+
+def render_canary_cleanup_object() -> str:
+    fields = "\n".join(f"        {field}," for field in CANARY_CLEANUP_FIELDS)
+    return "\n".join(("    var canaryCleanup = new", "    {", fields, "    };"))
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -311,19 +458,19 @@ def run_synthetic_runtime_orchestration(
     except Exception as exc:  # Synthetic seam records active failures before teardown.
         active_failure = f"{type(exc).__name__}: {exc}"
     finally:
-        for phase_name in ("release_keys", "cleanup_cdb", "stop_managed", "census"):
-            cleanup_order.append(phase_name)
+        for phase in CANARY_CLEANUP_PHASE_PLAN:
+            cleanup_order.append(phase.name)
             try:
-                if phase_name in {"cleanup_cdb", "stop_managed"}:
-                    value = callbacks[phase_name](receipt_sha256, command_sha256, required_marker)
+                if phase.callback_uses_binding:
+                    value = callbacks[phase.name](receipt_sha256, command_sha256, required_marker)
                 else:
-                    value = callbacks[phase_name]()
-                if phase_name == "release_keys":
+                    value = callbacks[phase.name]()
+                if phase.name == "release_keys":
                     best_effort_release = value
-                if phase_name == "census":
+                if phase.name == "census":
                     owned_process_count = value
             except Exception as exc:
-                cleanup_failures[phase_name] = f"{type(exc).__name__}: {exc}"
+                cleanup_failures[phase.name] = f"{type(exc).__name__}: {exc}"
     keys_released = None
     if plan.runtime_protocol == MORPH_CANARY_RUNTIME_PROTOCOL:
         keys_released = (
@@ -458,6 +605,52 @@ def validate_canary_digest_set(canonical: str, **digests: str) -> None:
     drifted = sorted(name for name, digest in digests.items() if digest != canonical)
     if drifted:
         raise ValueError("Canary executable digest mismatch: " + ", ".join(drifted))
+
+
+def build_canary_private_artifact_payload(
+    *,
+    executable_path: Path,
+    template_path: Path,
+    command_path: Path,
+    receipt_sha256: str,
+    rendered: Any,
+    source_unchanged: bool,
+    copy_unchanged: bool,
+    keys_released: bool,
+    cdb_detached: bool,
+    managed_process_stopped: bool,
+    owned_process_count: int,
+) -> dict[str, Any]:
+    cleanup_values = {
+        "keysReleased": keys_released,
+        "cdbDetached": cdb_detached,
+        "managedProcessStopped": managed_process_stopped,
+        "ownedProcessCount": owned_process_count,
+    }
+    if tuple(cleanup_values) != CANARY_CLEANUP_FIELDS:
+        raise AssertionError("Canary cleanup producer fields drifted from the generated runner schema.")
+    return {
+        "schema": "winui-original-binary-battleengine-morph-identity-canary-private-run.v1",
+        "executablePath": str(executable_path),
+        "templatePath": str(template_path),
+        "commandPath": str(command_path),
+        "receiptSha256": receipt_sha256,
+        "commandSha256": rendered.sha256,
+        "templateSha256": rendered.template_sha256,
+        "executableSha256": rendered.executable_sha256,
+        "fingerprints": [
+            {
+                "event": target.event,
+                "rva": target.rva,
+                "length": target.size,
+                "sha256": target.sha256,
+            }
+            for target in rendered.targets
+        ],
+        "sourceUnchanged": source_unchanged,
+        "copyUnchanged": copy_unchanged,
+        "cleanup": cleanup_values,
+    }
 
 
 def run(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
@@ -1657,7 +1850,6 @@ static int RunMorphCanary()
     GameProfileManagedProcess? managed = null;
     GameProfileStopResult? stopResult = null;
     JsonElement? cdbAttachResult = null;
-    JsonElement releaseResult = JsonPayload(new { status = "not-started", bestEffort = true });
     JsonElement cdbCleanupResult = JsonPayload(new { status = "not-started", receiptBound = false, exited = true });
     List<JsonElement> inputResults = new();
     string receiptSha256 = string.Empty;
@@ -1838,102 +2030,7 @@ static int RunMorphCanary()
                 failure = AppendCleanupFailure(failure, "receipt-materialization", ex);
             }
         }
-        try
-        {
-            if (managed is not null && !string.IsNullOrWhiteSpace(receiptSha256))
-            {
-                string releaseArtifact = Path.Combine(artifactRoot, "input", "canary-release-keys.json");
-                if (inputDeliveryAttempted)
-                {
-                    if (!ValidateCanaryBinding(
-                            powershellExe,
-                            runtimeIdentityModule,
-                            runtimeReceiptPath,
-                            receiptSha256,
-                            cdbCommandFile,
-                            expectedCommandSha256,
-                            templatePath,
-                            expectedTemplateSha256,
-                            true,
-                            out string releaseBindingFailure))
-                        throw new InvalidOperationException("Runtime binding changed before best-effort key release: " + releaseBindingFailure);
-                    AssertFreshCanaryWriteTarget(releaseArtifact, artifactRoot);
-                }
-                releaseResult = BestEffortReleaseCanaryKeys(
-                    inputDeliveryAttempted,
-                    powershellExe,
-                    inputScript,
-                    managed.ProcessId,
-                    observedMainWindowHandle,
-                    managed.ExecutablePath,
-                    managed.WorkingDirectory,
-                    inputStepDelayMs,
-                    releaseArtifact,
-                    runtimeReceiptPath,
-                    receiptSha256);
-            }
-            else
-            {
-                releaseResult = JsonPayload(new { status = "not-available", bestEffort = true });
-            }
-        }
-        catch (Exception ex)
-        {
-            releaseResult = JsonPayload(new { status = "failed", bestEffort = true, error = ex.GetType().Name + ": " + ex.Message });
-            failure = AppendCleanupFailure(failure, "release-keys", ex);
-        }
-        try
-        {
-            cdbCleanupResult = CleanupExactCdbObserver(
-                cdbAttachResult,
-                powershellExe,
-                runtimeIdentityModule,
-                runtimeReceiptPath,
-                receiptSha256,
-                cdbCommandFile,
-                expectedCommandSha256,
-                templatePath,
-                expectedTemplateSha256);
-        }
-        catch (Exception ex)
-        {
-            cdbCleanupResult = JsonPayload(new { status = "failed", receiptBound = false, exited = false, error = ex.GetType().Name + ": " + ex.Message });
-            failure = AppendCleanupFailure(failure, "cdb", ex);
-        }
-        try
-        {
-            stopResult = StopReceiptBoundManagedProcess(
-                managed,
-                profilesRoot,
-                powershellExe,
-                runtimeIdentityModule,
-                runtimeReceiptPath,
-                receiptSha256,
-                cdbCommandFile,
-                expectedCommandSha256,
-                templatePath,
-                expectedTemplateSha256,
-                out stopReceiptBound,
-                out string stopFailure);
-            if (managed is not null && !stopReceiptBound)
-                failure = string.IsNullOrWhiteSpace(failure)
-                    ? "Managed stop was not receipt-bound: " + stopFailure
-                    : failure + " | Managed stop was not receipt-bound: " + stopFailure;
-        }
-        catch (Exception ex)
-        {
-            stopReceiptBound = false;
-            failure = AppendCleanupFailure(failure, "managed-stop", ex);
-        }
-        try
-        {
-            ownedProcessCount = CountOwnedProcesses(runtimeReceiptPath, managed?.ExecutablePath, cdbAttachResult);
-        }
-        catch (Exception ex)
-        {
-            ownedProcessCount = -1;
-            failure = AppendCleanupFailure(failure, "census", ex);
-        }
+__CANARY_CLEANUP_PHASE_BLOCK__
     }
 
     if (prepared is null || string.IsNullOrWhiteSpace(receiptSha256))
@@ -1973,14 +2070,7 @@ static int RunMorphCanary()
     bool cdbDetached = JsonStringIn(cdbCleanupResult, "status", "detached-exited", "already-exited") &&
         JsonBool(cdbCleanupResult, "receiptBound");
     bool managedProcessStopped = stopReceiptBound && stopResult?.Success == true;
-    var canaryCleanup = new
-    {
-        keysReleased,
-        bestEffortKeyRelease = releaseResult,
-        cdbDetached,
-        managedProcessStopped,
-        ownedProcessCount,
-    };
+__CANARY_CLEANUP_OBJECT__
     var privateArtifact = new
     {
         schema = "winui-original-binary-battleengine-morph-identity-canary-private-run.v1",
@@ -2675,6 +2765,13 @@ catch
     throw;
 }
 """
+    program_text = program_text.replace(
+        "__CANARY_CLEANUP_PHASE_BLOCK__",
+        render_canary_cleanup_phase_block(),
+    ).replace(
+        "__CANARY_CLEANUP_OBJECT__",
+        render_canary_cleanup_object(),
+    )
     if create_new:
         with program.open("x", encoding="utf-8", newline="\n") as stream:
             stream.write(program_text)

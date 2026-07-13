@@ -5,9 +5,12 @@ from __future__ import annotations
 
 import ast
 from contextlib import redirect_stderr
+import hashlib
 import importlib.util
 import io
+import json
 import os
+import re
 import shlex
 import tempfile
 import unittest
@@ -214,7 +217,19 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
             "--canary-role positiveTransform",
         )
         plan = module.validate_runtime_protocol(args)
-        expected_order = ["release_keys", "cleanup_cdb", "stop_managed", "census"]
+        expected_order = [phase.name for phase in module.CANARY_CLEANUP_PHASE_PLAN]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = module.write_runner(Path(tmp) / "runner")
+            generated = project.with_name("Program.cs").read_text(encoding="utf-8")
+        generated_order = re.findall(r"CANARY_CLEANUP_PHASE: ([a-z_]+)", generated)
+        self.assertEqual(expected_order, generated_order)
+        phase_segments = re.split(r"// CANARY_CLEANUP_PHASE: [a-z_]+", generated)[1:]
+        self.assertEqual(len(expected_order), len(phase_segments))
+        for phase_name, segment in zip(expected_order, phase_segments, strict=True):
+            with self.subTest(generated_phase=phase_name):
+                self.assertIn("try", segment)
+                self.assertIn("catch (Exception ex)", segment)
 
         for failing_phase in expected_order:
             calls: list[str] = []
@@ -247,6 +262,45 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
                 self.assertEqual(expected_order, calls)
                 self.assertEqual(expected_order, result["cleanup_order"])
                 self.assertIn(failing_phase, result["cleanup_failures"])
+
+    def test_produced_canary_artifact_matches_task1_cleanup_schema(self) -> None:
+        import battleengine_morph_identity_canary as task1
+        import battleengine_morph_identity_canary_test as task1_support
+
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            executable = task1_support.build_pe32_fixture(root / "BEA.exe")
+            canonical_sha256 = hashlib.sha256(executable.read_bytes()).hexdigest()
+            command_path = root / "canary.cdb"
+            artifact_path = root / "private-run.json"
+            log_path = root / "cdb.log"
+            with patch.object(task1, "CANONICAL_SIZE", executable.stat().st_size), patch.object(
+                task1, "CANONICAL_SHA256", canonical_sha256
+            ):
+                rendered = task1.render_private_command(executable, task1_support.TEMPLATE)
+                command_path.write_bytes(rendered.text.encode("ascii"))
+                produced = module.build_canary_private_artifact_payload(
+                    executable_path=executable,
+                    template_path=task1_support.TEMPLATE,
+                    command_path=command_path,
+                    receipt_sha256="1" * 64,
+                    rendered=rendered,
+                    source_unchanged=True,
+                    copy_unchanged=True,
+                    keys_released=True,
+                    cdb_detached=True,
+                    managed_process_stopped=True,
+                    owned_process_count=0,
+                )
+                artifact_path.write_text(json.dumps(produced), encoding="utf-8")
+                task1_support.event_log(log_path)
+
+                self.assertEqual(task1._CLEANUP_KEYS, set(produced["cleanup"]))
+                materialized = task1.materialize_run(artifact_path, log_path, "positiveTransform")
+
+            self.assertEqual(produced["cleanup"], materialized["cleanup"])
+            self.assertNotIn("bestEffortKeyRelease", produced["cleanup"])
 
     def test_synthetic_default_orchestration_preserves_capture_behavior(self) -> None:
         module, args = self.parse("--runtime-protocol default")
