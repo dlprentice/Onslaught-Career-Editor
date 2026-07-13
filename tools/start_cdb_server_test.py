@@ -690,6 +690,7 @@ class StartCdbServerTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("-pd", result.stdout)
         self.assertIn("-noshell", result.stdout)
+        self.assertIn("-ee masm", result.stdout)
         self.assertNotIn("-server", result.stdout)
 
     def test_canary_printonly_rejects_stale_receipt_start_time(self) -> None:

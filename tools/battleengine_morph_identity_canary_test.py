@@ -168,28 +168,45 @@ def event_log(path: Path, *, include_events: bool = True, state_seed: int = 0) -
 
 
 class Pe32AndRenderingTests(unittest.TestCase):
+    def test_rendered_conditions_use_masm_boolean_grammar(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            exe = build_pe32_fixture(Path(temp) / "BEA.exe")
+            rendered = render_fixture(exe)
+
+        self.assertNotIn("&&", rendered.text)
+        self.assertRegex(
+            rendered.text,
+            r"by\(!BEA\+0x000081c0\)==0x[0-9a-f]{2} and "
+            r"by\(!BEA\+0x000081c1\)==0x[0-9a-f]{2}",
+        )
+        self.assertIn(
+            ".if ((poi(@esp+0x4)==0x21) and (@ecx==poi(!BEA+0x004a9d3c)))",
+            rendered.text,
+        )
+        self.assertNotRegex(rendered.text, r"(?<!!)\bBEA\+0x[0-9a-f]+")
+
     def test_render_uses_rvas_and_private_relocation_free_fingerprints(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             exe = build_pe32_fixture(Path(temp) / "BEA.exe")
             rendered = render_fixture(exe)
 
-        self.assertIn("BEA+0x000081c0", rendered.text)
-        self.assertIn("BEA+0x0000a580", rendered.text)
+        self.assertIn("!BEA+0x000081c0", rendered.text)
+        self.assertIn("!BEA+0x0000a580", rendered.text)
         self.assertNotIn("0x004081c0", rendered.text)
         self.assertEqual(8, rendered.fingerprint_size)
         self.assertTrue(all(not target.relocation_overlap for target in rendered.targets))
         self.assertNotIn(rendered.targets[0].sha256, rendered.text)
         self.assertNotRegex(rendered.text, r"(?i)\b(?:pid|hwnd|0x004081c0)\b")
         hardware_slots = re.findall(
-            r"(?<!\S)ba(\d+) e1(?: /1)? BEA\+0x[0-9a-f]{8}", rendered.text
+            r"(?<!\S)ba(\d+) e1(?: /1)? !BEA\+0x[0-9a-f]{8}", rendered.text
         )
         self.assertEqual(["0", "1", "2", "3"], hardware_slots)
         self.assertEqual(3, rendered.text.count(" e1 /1 "))
-        self.assertIn('ba0 e1 /1 BEA+0x0000a580 ".printf', rendered.text)
+        self.assertIn('ba0 e1 /1 !BEA+0x0000a580 ".printf', rendered.text)
         self.assertIn("bd 0", rendered.text)
         self.assertIn("bd 1", rendered.text)
         self.assertIn("bd 2", rendered.text)
-        self.assertIn('ba3 e1 BEA+0x000d3110 ".if', rendered.text)
+        self.assertIn('ba3 e1 !BEA+0x000d3110 ".if', rendered.text)
         self.assertNotIn("ba3 e1 /1", rendered.text)
         self.assertNotRegex(rendered.text, r"(?<![A-Za-z0-9_$])bp\d*\s")
         self.assertEqual(1, rendered.text.count("bc 3"))
@@ -199,11 +216,11 @@ class Pe32AndRenderingTests(unittest.TestCase):
         self.assertEqual(4, rendered.text.count("poi(@$t3+0x260)"))
         self.assertNotIn("poi(@ecx+0x260)", rendered.text)
         self.assertIn("poi(@esp+0x4)==0x21", rendered.text)
-        self.assertIn("@ecx==poi(BEA+0x004a9d3c)", rendered.text)
+        self.assertIn("@ecx==poi(!BEA+0x004a9d3c)", rendered.text)
         self.assertIn("r @$t3=poi(@ecx+0x1c)", rendered.text)
         self.assertGreaterEqual(rendered.text.count("@ecx==@$t3"), 2)
         self.assertIn("poi(@ecx+0x18)==@$t3", rendered.text)
-        self.assertRegex(rendered.text, r"by\(BEA\+0x000081c0\)==0x[0-9a-f]{2}")
+        self.assertRegex(rendered.text, r"by\(!BEA\+0x000081c0\)==0x[0-9a-f]{2}")
         self.assertEqual(
             hashlib.sha256(TEMPLATE.read_bytes()).hexdigest(), canary.TEMPLATE_SHA256
         )

@@ -228,7 +228,7 @@ def _load_template(template: str | Path) -> tuple[str, str]:
 
 
 def _rva(rva: int) -> str:
-    return f"BEA+0x{rva:08x}"
+    return f"!BEA+0x{rva:08x}"
 
 
 def _event_command(
@@ -253,7 +253,7 @@ def _arm_input_breakpoint() -> str:
     )
     input_breakpoint = (
         f"ba3 e1 {_rva(PROBE_RVAS['playerTransformAction'])} \""
-        f".if ((poi(@esp+0x4)==0x21) && (@ecx==poi({_rva(P0_GLOBAL_RVA)}))) {{ "
+        f".if ((poi(@esp+0x4)==0x21) and (@ecx==poi({_rva(P0_GLOBAL_RVA)}))) {{ "
         f"bc 3; r @$t3=poi(@ecx+0x1c); .printf \\\"MORPH_CANARY_EVENT "
         f"event=playerTransformAction identityEqual=1 rawStateU32=0x%08x\\n\\\", "
         f"poi(@$t3+0x260); be 0 1 2; g }} .else {{ gc }}\""
@@ -289,7 +289,7 @@ def render_private_command(executable: str | Path, template: str | Path) -> Rend
         )
 
     rendered_text = template_text.replace(
-        "{{FINGERPRINT_CONDITION}}", " && ".join(conditions)
+        "{{FINGERPRINT_CONDITION}}", " and ".join(conditions)
     ).replace("{{ARM_INPUT_BREAKPOINT}}", _arm_input_breakpoint())
     if "{{" in rendered_text or "}}" in rendered_text:
         raise ValueError("unresolved CDB template placeholder")

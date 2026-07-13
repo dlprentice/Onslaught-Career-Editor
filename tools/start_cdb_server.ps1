@@ -457,7 +457,7 @@ if ($EnableRemoteServer) {
     $arguments += @("-server", ("tcp:port={0},password={1}" -f $Port, $Password))
 }
 if ($canaryMode) {
-    $arguments += @("-pd", "-noshell")
+    $arguments += @("-pd", "-noshell", "-ee", "masm")
 }
 
 $arguments += @(

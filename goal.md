@@ -141,8 +141,21 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   binding before any input, and retains the original launched Process object
   through revalidation, kill, and wait. The six focused suites pass 127 tests,
   the generated runner builds with zero warnings, and normal/adversarial Codex
-  review approved. Push precedes any fresh third authority/lease set and proof
-  root.
+  review approved. That correction was pushed at `aa2ec621`. Retry 3 used a
+  fresh authority/lease set and absent proof root; its dry run passed and its
+  live no-input control reached copied-profile launch, exact receipt creation,
+  and x86 CDB attachment. The generated command then failed before
+  `MORPH_CANARY_READY`: it used C++ `&&` under CDB's MASM evaluator, and bare
+  `BEA+RVA` was parsed as numeric `0xBEA+RVA` because `BEA` is all hexadecimal
+  digits. No input, positive role, or matrix materialization ran. Ignored
+  closeout and lease-release evidence are preserved, owned BEA/CDB counts are
+  zero, and authority, lease, source, ambient, and effective-executable hashes
+  remained unchanged. The bounded correction uses MASM `and`, explicit
+  `!BEA+RVA` module symbols, and canary-only `-ee masm`. The six focused suites
+  pass 128 tests; a disposable native x86 CDB proof accepted all 32 corrected
+  byte comparisons, rejected a deliberate mismatch, and cleaned up exactly.
+  Normal and adversarial Codex re-review approved. Retry 4 requires a new
+  authority/lease set and absent proof root after this correction is pushed.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future

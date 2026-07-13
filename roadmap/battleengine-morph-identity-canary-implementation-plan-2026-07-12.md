@@ -113,8 +113,8 @@ def test_render_uses_rvas_and_private_relocation_free_fingerprints(tmp_path):
         relocation_rvas=(0x000081D0,),
     )
     rendered = canary.render_private_command(exe, TEMPLATE)
-    assert "BEA+0x000081c0" in rendered.text
-    assert "BEA+0x0000a580" in rendered.text
+    assert "!BEA+0x000081c0" in rendered.text
+    assert "!BEA+0x0000a580" in rendered.text
     assert "0x004081c0" not in rendered.text
     assert rendered.fingerprint_size == 8
     assert all(not target.relocation_overlap for target in rendered.targets)
@@ -169,9 +169,10 @@ class RenderedCommand:
 - [ ] **Step 4: Implement the tracked template and exact renderer**
 
 The template must contain only named placeholders and module-relative
-expressions. The renderer substitutes private `by(BEA+RVA)==byte` conditions
-from the verified executable. The generated command remains under
-`local-proofs/`.
+expressions. Because `BEA` is also a valid hexadecimal literal in MASM, the
+renderer must prefix it with `!` to force module-symbol resolution. It
+substitutes private `by(!BEA+RVA)==byte` conditions from the verified
+executable. The generated command remains under `local-proofs/`.
 
 ```text
 .echo MORPH_CANARY_BEGIN
@@ -181,7 +182,7 @@ r @$t0=0; r @$t1=0; r @$t2=0; r @$t3=0
 ```
 
 The input breakpoint accepts only button `0x21` where `@ecx` equals
-`poi(BEA+0x004a9d3c)`, stores `poi(@ecx+0x1c)` in debugger pseudo-register
+`poi(!BEA+0x004a9d3c)`, stores `poi(@ecx+0x1c)` in debugger pseudo-register
 `@$t3`, then arms at most three hardware execution breakpoints. Morph and Move
 require `@ecx==@$t3`; JetPart requires `poi(@ecx+0x18)==@$t3`. Event output
 contains equality booleans and raw `+0x260` dwords, not pointer values.
@@ -290,8 +291,8 @@ arguments, source/copy hashes, and command-template/generated-command digests.
 
 Add `-RuntimeReceiptPath`, `-ExpectedReceiptSha256`,
 `-ExpectedCommandSha256`, and `-RequiredLogMarker`. Canary mode requires all
-four. Add CDB arguments `-pd` and `-noshell`. Readiness means the required marker
-appeared in the bounded log, not merely that the file exists.
+four. Add CDB arguments `-pd`, `-noshell`, and `-ee masm`. Readiness means the
+required marker appeared in the bounded log, not merely that the file exists.
 
 The JSON result records CDB PID, CDB start time, CDB executable path, target
 receipt digest, command digest, and marker status so cleanup can reject PID
