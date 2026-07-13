@@ -203,6 +203,84 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
 
     [Test]
     [Category("WinUIRuntime")]
+    [Explicit("Launches WinUI directly into Game Options and verifies the modern-controller guidance without opening its external link.")]
+    [Apartment(ApartmentState.STA)]
+    public void ConfigurationEditor_ExposesModernControllerSetupWithoutOpeningBrowser()
+    {
+        string exePath = ResolveWinUiAppPath();
+        if (!File.Exists(exePath))
+        {
+            Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
+        }
+
+        string evidenceDir = Path.Combine(Path.GetTempPath(), "onslaught-winui-controller-guidance-2026-07-13");
+        Directory.CreateDirectory(evidenceDir);
+        string appDataDir = PrepareIsolatedAppData(evidenceDir);
+        var startInfo = new ProcessStartInfo(exePath)
+        {
+            WorkingDirectory = Path.GetDirectoryName(exePath) ?? ResolveRepoRoot()
+        };
+        startInfo.Environment["APPDATA"] = appDataDir;
+        startInfo.Environment["ONSLAUGHT_APP_CONFIG_ROOT"] = appDataDir;
+        startInfo.Environment["ONSLAUGHT_WINUI_TEST_INITIAL_TAG"] = "saves";
+        startInfo.Environment["ONSLAUGHT_WINUI_TEST_INITIAL_SAVE_TAB"] = "2";
+
+        Application? app = null;
+        try
+        {
+            app = Application.Launch(startInfo);
+            using var automation = new UIA3Automation();
+            Window window = WaitForMainWindow(app, automation);
+
+            AutomationElement heading = FindByAutomationId(window, "ModernControllerSetupHeading");
+            AutomationElement steps = FindByAutomationId(window, "ModernControllerSetupSteps");
+            AutomationElement boundary = FindByAutomationId(window, "ModernControllerSetupBoundary");
+            AutomationElement guideButton = FindByAutomationId(window, "OpenZigguratControllerGuideButton");
+            AutomationElement numericCaveat = FindByAutomationId(window, "ControllerConfigNumericCaveat");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(TryGetName(heading), Does.Contain("Modern controller setup"));
+                Assert.That(TryGetName(steps), Does.Contain("Aquila - Gamepad with Mouse Aiming"));
+                Assert.That(TryGetName(steps), Does.Contain("Movement: Forward"));
+                Assert.That(TryGetName(steps), Does.Contain("mouse sensitivity to minimum"));
+                Assert.That(TryGetName(boundary), Does.Contain("does not configure Steam Input"));
+                Assert.That(TryGetName(boundary), Does.Contain("detect your connected controller"));
+                Assert.That(TryGetName(boundary), Does.Contain("prove improved control feel"));
+                Assert.That(TryGetName(guideButton), Is.EqualTo("Open Ziggurat's Steam setup guide in browser"));
+                Assert.That(guideButton.IsEnabled, Is.True);
+                Assert.That(TryGetName(numericCaveat), Does.Contain("raw numeric values"));
+                Assert.That(TryGetName(numericCaveat), Does.Contain("not named modern-gamepad profiles"));
+            });
+
+            string screenshotPath = Path.Combine(evidenceDir, "01-modern-controller-setup.png");
+            ScrollIntoView(heading);
+            window.Focus();
+            Thread.Sleep(1_000);
+            window.CaptureToFile(screenshotPath);
+            Assert.That(File.Exists(screenshotPath), Is.True, $"Expected screenshot: {screenshotPath}");
+            Assert.That(new FileInfo(screenshotPath).Length, Is.GreaterThan(10_000), "Controller guidance screenshot should not be empty.");
+        }
+        finally
+        {
+            try
+            {
+                app?.Close();
+            }
+            catch
+            {
+                // Fall through to process termination below.
+            }
+
+            if (app != null && !app.HasExited)
+            {
+                app.Kill();
+            }
+        }
+    }
+
+    [Test]
+    [Category("WinUIRuntime")]
     [Explicit("Requires a private real options path in ONSLAUGHT_WINUI_REAL_OPTIONS_PATH and writes only copied outputs under subagents/.")]
     [Apartment(ApartmentState.STA)]
     public void ConfigurationEditor_PatchesCopiedOptionsThroughUiWhenProvided()

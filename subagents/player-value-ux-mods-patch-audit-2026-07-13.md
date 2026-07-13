@@ -268,11 +268,11 @@ visible rows; 11 experimental visible rows.
 
 Scores use 1 (low) to 5 (high). For effort and risk, lower is better.
 
-| Rank | Opportunity | Value | Evidence | Effort | Risk | Dependency | Why now |
+| Rank | Opportunity | Value | Evidence | Effort | Risk | Dependency | Status / why now |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| 1 | Split normal safe-copy workflow from a proof-stratified Lab; keep Compatibility exact and visible | 5 | 5 | 3 | 2 | 2 | Reduces the largest comprehension/trust defect without changing bytes |
-| 2 | Demote/recompose Enhanced and Debug Camera; preserve them as labeled legacy Lab recipes | 5 | 5 | 2 | 2 | 1 | Removes direct overclaim while avoiding a silent recipe disappearance |
-| 3 | Add player-facing controller setup guidance grounded in the Steam developer workaround; do not imply current experiments fix right-stick behavior | 5 | 4 | 2 | 1 | 1 | Addresses an observed recurring friction with low implementation risk |
+| 1 | Split normal safe-copy workflow from a proof-stratified Lab; keep Compatibility exact and visible | 5 | 5 | 3 | 2 | 2 | Implemented on the current player-value branch; pending primary integration |
+| 2 | Demote/recompose Enhanced and Debug Camera; preserve them as labeled legacy Lab recipes | 5 | 5 | 2 | 2 | 1 | Implemented as retained, truthfully labeled Lab recipes; pending primary integration |
+| 3 | Add player-facing controller setup guidance grounded in the Steam developer workaround; do not imply current experiments fix right-stick behavior | 5 | 4 | 2 | 1 | 1 | Implemented on Game Options with explicit nonclaims; pending primary integration |
 | 4 | Make required compatibility a locked base module and continuously validate optional selection before Create | 5 | 5 | 3 | 3 | 2 | Aligns UI with actual plan-builder behavior and prevents selection surprise |
 | 5 | Add an actionable Asset Library first-run route (“how to create a catalog” or an app-owned generator when legally/technically ready) | 4 | 5 | 2 for guidance / 5 for generator | 2 / 4 | 2 / 5 | Current first run has no usable next action |
 | 6 | Add a guided common save journey: source → copied output → one edit → write → where to use it | 5 | 4 | 4 | 3 | 2 | Converts a powerful editor into a first-time task |
@@ -401,10 +401,10 @@ change patch bytes or the installed-game boundary.
 
 This coordinated worker did not edit `goal.md`, `developer_agent_state.json`,
 or `documentation_agent_state.json`. Integration should update the canonical
-state with: player-value audit complete; strongest opportunity is normal/Lab
-curation; Enhanced/Debug should be demoted without deleting IDs; controller
-guidance is the strongest low-risk observed-demand follow-up; baseline `npm
-test` remains blocked by primary-owned morph-observer docsync drift.
+  state with: player-value audit complete; normal/Lab curation and bounded
+  controller guidance are implemented on the player-value branch; Enhanced and
+  Debug remain discoverable as labeled legacy/research recipes; baseline `npm
+  test` remains blocked by primary-owned morph-observer docsync drift.
 
 ## First implementation slice disposition
 
@@ -432,3 +432,32 @@ patch-engine safety command passed its .NET and legacy-script stages but its
 accounting stage cannot run in this worktree because the intentionally
 uninitialized `references/Onslaught` submodule omits `DXFrontend.cpp`; no
 catalog or submodule change belongs to this slice.
+
+## Controller guidance slice disposition
+
+The next bounded slice implements the approved Game Options guidance without
+changing copied-options semantics:
+
+- An always-visible **Modern controller setup** card gives the Ziggurat
+  developer workaround in three steps: select **Aquila - Gamepad with Mouse
+  Aiming** in Steam Input, bind buttons and left-stick movement in the game's
+  Controller Options, then lower mouse sensitivity and adjust inversion there
+  if needed.
+- The card says the Toolkit can edit a copied options file but does not
+  configure Steam Input, detect the connected controller, or prove improved
+  control feel. The raw P1/P2 fields are identified as numeric copied-options
+  values, not named modern-gamepad profiles.
+- The fixed Ziggurat Steam action is explicitly labeled as opening in a browser
+  and runs only after a user click. Automated smoke discovers but never invokes
+  it.
+- Stable automation IDs and a level-2 heading expose the full contract to
+  assistive technology.
+
+Fresh acceptance evidence: the full WinUI primary lane passed with zero build
+warnings/errors, 1,319 AppCore tests, and 143 UI tests plus two expected
+private-catalog visual skips. A hands-off native UIA rerun passed after a clean
+process census, its temp-only screenshot was visually clean with file selection
+still immediately reachable, and the post-run census was also clean. The
+source contract, documentation commands, public-core links, hard-payload
+safety, and whitespace gates passed. Independent Codex and sanitized serial
+Cursor/Grok normal/adversarial reviews found no blockers.
