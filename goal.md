@@ -260,6 +260,22 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   Cursor/Grok normal/adversarial consultation used
   `cursor-grok-4.5-high-fast`; its only material PID-reuse concern was withdrawn
   after reconciliation with the retained Windows process-handle lifetime.
+- The exact-handle correction was pushed at `e5a6b275`. Retry 10 then used
+  fresh ignored controls, passed dry run, launched the exact clean copied
+  retail target, and completed the no-input target/debugger cleanup with exact
+  managed target exit-time readback, finalized cleanup/quit markers, unchanged
+  source/copy hashes, and a clear process census. It still failed closed and
+  published no matrix because the retained CDB process's final `ExitTime` was
+  about 160 ms earlier than the managed target's final `ExitTime`. Independent
+  normal/adversarial review concluded that cross-process timestamp inequality
+  is not a valid Windows debugger lifecycle invariant: CDB can receive the
+  target exit debug event and detach/quit before the target's kernel shutdown
+  completes. Retry 10 remains failed because its log does not explicitly prove
+  which event released `g`. The accepted correction direction requires exact
+  receipt-owned target exit-event evidence from CDB (for example a strictly
+  parsed `.lastevent` section), preserves every identity/marker/census guard,
+  and forbids timestamp tolerance or marker-only acceptance. A fresh Retry 11
+  is allowed only after that reviewed correction lands.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future
@@ -308,8 +324,9 @@ from retail are inspectable.
   its 721-selected/726-materialized plain candidate passed the standalone test
   suite, payload/inventory, 463-file/138-link Markdown, 74-package notices, and
   718-file hygiene/line-ending gates.
-- Git reports two registered worktrees: this `main` checkout and the dedicated
-  user-owned Codex Ghidra full-reaudit closeout task. Completed Task 2,
+- Git reports three registered worktrees: this `main` checkout, the dedicated
+  user-owned Codex Ghidra full-reaudit closeout task, and the completed Cursor
+  submodule/local-retail-presentation branch awaiting reviewed integration. Completed Task 2,
   validation, and agent-guidance worktrees were removed after integration and
   preservation checks.
   Seven earlier empty Codex Desktop worktree shells were removed on 2026-07-11.
@@ -343,6 +360,46 @@ from retail are inspectable.
 The exhaustive hygiene and payload gates each scan roughly the entire tracked
 tree and took about two to four minutes locally. They remain valuable signoff
 gates, but they are not an ergonomic default for every small contribution.
+
+## Campaign Completion Criteria
+
+This campaign is complete only when all of the following are true at the same
+time. Passing one bounded slice does not satisfy the overall goal.
+
+- **Repository and collaboration:** current docs/state agree; contributor and
+  PR workflow is usable; validation is proportionate; finished tasks/worktrees
+  are retired after evidence absorption; and clean `main`, `origin/main`, and
+  the live remote ref match with divergence `0 0`.
+- **WinUI Toolkit:** every visible control has a verified action/reaction map;
+  first-run setup, accessibility, copy/layout, Lore, Media, save/options,
+  safe-copy, and patch workflows pass their focused native checks without
+  unexplained or misleading controls.
+- **Patches and mods:** every shipped option is exact-specimen/byte bound,
+  dependency/conflict accounted, copied-target-only, truthfully labeled, and
+  covered by focused tests; no known stale active helper can reapply withdrawn
+  ownership or bypass the copied-target boundary.
+- **Reverse engineering:** the Ghidra closeout is integrated; accepted
+  corrections are reflected in current RE/Lore truth; stale mutators are
+  retired; and the selected movement/morph slice has accepted Steam static plus
+  copied-runtime identity/behavior evidence. Inventory counts alone do not
+  satisfy this criterion.
+- **Lore and documentation:** canonical/mirror synchronization, stale-current-
+  truth checks, editorial/provenance inventory, and contributor front doors are
+  accepted. Historical uncertainty remains labeled rather than rewritten as
+  fact.
+- **Authentic rebuild vertical slice:** a user can reproducibly launch a
+  BYO-asset Aquila/terrain experience that is recognizably BEA-like, with at
+  least one measured movement/morph/camera behavior contract implemented in
+  deterministic Core and consumed by the Godot adapter. Remaining visual,
+  handling, mission, audio, and gameplay gaps are explicit.
+- **Safety and closeout:** installed game/original `BEA.exe` are untouched; no
+  proprietary payload or private proof is published; reviews converge; state is
+  reconciled; commits are pushed; and no release/tag/upload occurs without its
+  separate current authorization.
+
+These criteria require one authentic, evidence-backed playable vertical slice,
+not full-game or perfect parity. A complete retail-equivalent rebuild remains a
+longer program after this campaign.
 
 ## Authority And Boundaries
 
@@ -421,14 +478,19 @@ claim against an already malicious process running as the same Windows user.
 
 ## Next Slices
 
-1. Complete review and push of the target-first graceful-CDB cleanup
-   correction, then run a fresh authorized Level 850 retry 9 and publish only a fully validated
-   sanitized identity/causality result.
-2. Retire or fail-close active BattleEngine tools that can reapply withdrawn
+1. Land the target-exit-event CDB cleanup proof, then run a fresh authorized
+   Level 850 Retry 11 and publish only a fully validated sanitized identity/
+   causality result.
+2. Review, harden, and integrate the completed Cursor submodule/local-retail-
+   presentation branch without weakening local-payload or synthetic-smoke
+   boundaries.
+3. Integrate the reviewed Ghidra closeout commits, reconcile current truth, and
+   retire its task/worktree only after ignored evidence absorption is accepted.
+4. Retire or fail-close active BattleEngine tools that can reapply withdrawn
    ownership, then harden AYA export dependency/template preflight.
-3. Run the deep Lore editorial/provenance pass and generated contributor
+5. Run the deep Lore editorial/provenance pass and generated contributor
    front-door indexing in parallel where it does not compete for RE evidence.
-4. Continue subsystem-by-subsystem binary re-review and rebuild fidelity work
+6. Continue subsystem-by-subsystem binary re-review and rebuild fidelity work
    while preserving the separate sealed-spec clean-room option.
 
 ## Stop Conditions
