@@ -26,4 +26,13 @@
     <ProjectReference Include="..\OnslaughtCareerEditor.AppCore\OnslaughtCareerEditor.AppCore.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\ExplorerRevealService.cs" Link="WinUI\Helpers\ExplorerRevealService.cs" />
+    <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\SaveEditorFirstSaveJourneyText.cs" Link="WinUI\Helpers\SaveEditorFirstSaveJourneyText.cs" />
+    <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\SaveEditorJourneyStateMachine.cs" Link="WinUI\Helpers\SaveEditorJourneyStateMachine.cs" />
+    <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\SaveEditorPlanFingerprint.cs" Link="WinUI\Helpers\SaveEditorPlanFingerprint.cs" />
+    <Compile Include="..\OnslaughtCareerEditor.WinUI\Models\SaveEditorFirstSaveJourneyState.cs" Link="WinUI\Models\SaveEditorFirstSaveJourneyState.cs" />
+    <Compile Include="..\OnslaughtCareerEditor.WinUI\Models\SaveEditorJourneyState.cs" Link="WinUI\Models\SaveEditorJourneyState.cs" />
+  </ItemGroup>
+
 </Project>

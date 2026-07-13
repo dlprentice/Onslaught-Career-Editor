@@ -456,6 +456,28 @@
                                           Title="Save editor common path"
                                           Message="Edit career progress, goodies, mission ranks, and kills here. Startup settings, audio levels, and controls are in Game Options." />
 
+                        <Border x:Name="SaveEditorFirstSaveGuide"
+                                AutomationProperties.AutomationId="SaveEditorFirstSaveGuide"
+                                Style="{StaticResource SavesSectionCardStyle}">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Your first copied save"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           AutomationProperties.HeadingLevel="Level2" />
+                                <TextBlock Text="1. Choose an existing .bes career save.  2. Keep the separate suggested output.  3. Choose at least one change and review Pending changes.  4. Write the copied save."
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords" />
+                                <TextBlock Text="The Toolkit writes a separate file and does not install it. After a successful write, close the copied game, back up any save you replace, then manually copy the new file into a Safe Game Copy's savegames folder."
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords" />
+                                <TextBlock x:Name="SaveEditorFirstSaveStatus"
+                                           AutomationProperties.AutomationId="SaveEditorFirstSaveStatus"
+                                           AutomationProperties.LiveSetting="Polite"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="WrapWholeWords" />
+                            </StackPanel>
+                        </Border>
+
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="1.15*" />
@@ -515,13 +537,16 @@
                                                FontWeight="SemiBold" />
                                     <TextBlock Text="Set the broad patch behavior here first. Advanced mission and per-category overrides stay below."
                                                Style="{StaticResource SectionBodyTextStyle}" />
+                                    <TextBlock Text="Mission rank applies with Patch missions; NEW/OLD applies with Patch goodies; the kill value applies with Patch kill counts."
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               TextWrapping="WrapWholeWords" />
                                     <ComboBox x:Name="EditorPatchPresetComboBox"
                                               AutomationProperties.AutomationId="SaveEditorPatchPresetComboBox"
                                               Header="Patch preset"
                                               SelectionChanged="EditorPatchPresetComboBox_SelectionChanged">
-                                        <ComboBoxItem Content="Quick Unlock" Tag="QUICK" />
-                                        <ComboBoxItem Content="Safe Edit" Tag="SAFE" />
-                                        <ComboBoxItem Content="Custom" Tag="CUSTOM" />
+                                        <ComboBoxItem Content="Start empty — choose sections" Tag="SAFE" />
+                                        <ComboBoxItem Content="Quick Unlock — all sections" Tag="QUICK" />
+                                        <ComboBoxItem Content="Custom selection" Tag="CUSTOM" />
                                     </ComboBox>
                                     <ComboBox x:Name="EditorRankComboBox"
                                               AutomationProperties.AutomationId="SaveEditorRankComboBox"
@@ -608,13 +633,24 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Style="{StaticResource SavesSectionCardStyle}">
-                            <StackPanel Spacing="16">
+                        <StackPanel Spacing="6">
+                            <TextBlock x:Name="SaveEditorAdvancedOverridesStatus"
+                                       AutomationProperties.AutomationId="SaveEditorAdvancedOverridesStatus"
+                                       Style="{StaticResource SectionBodyTextStyle}"
+                                       Text="No advanced overrides active"
+                                       TextWrapping="WrapWholeWords" />
+                            <Expander x:Name="SaveEditorAdvancedOverridesExpander"
+                                      AutomationProperties.AutomationId="SaveEditorAdvancedOverridesExpander"
+                                      AutomationProperties.Name="Advanced: per-mission ranks and category kills. No advanced overrides active"
+                                      Header="Advanced: per-mission ranks and category kills"
+                                      IsExpanded="False">
+                                <Border Style="{StaticResource SavesSectionCardStyle}">
+                                  <StackPanel Spacing="16">
                                 <StackPanel Spacing="4">
                                     <TextBlock Text="Advanced save overrides"
                                                FontSize="18"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Text="Keep these deeper controls visible in the normal page flow so mission-rank and kill overrides remain part of the same editing workspace."
+                                    <TextBlock Text="Ordinary first edits do not need these controls. Mission overrides require Patch missions; category-kill overrides require Patch kill counts. Collapsing this section keeps active values unchanged."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                 </StackPanel>
 
@@ -627,6 +663,8 @@
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="Per-mission rank overrides"
+                                                       AutomationProperties.AutomationId="SaveEditorMissionOverridesHeading"
+                                                       AutomationProperties.HeadingLevel="Level3"
                                                        FontSize="16"
                                                        FontWeight="SemiBold" />
                                             <Button Grid.Column="1"
@@ -642,7 +680,8 @@
                                         </Grid>
                                         <TextBlock Text="Leave a row on Keep to use the default rank above. These overrides still run through the node patch pass, so Patch missions must stay enabled."
                                                    Style="{StaticResource SectionBodyTextStyle}" />
-                                        <ItemsControl x:Name="EditorMissionRanksListView">
+                                        <ItemsControl x:Name="EditorMissionRanksListView"
+                                                      AutomationProperties.AutomationId="EditorMissionRanksListView">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -682,11 +721,14 @@
                                 <Border Style="{StaticResource SavesMetricCardStyle}">
                                     <StackPanel Spacing="10">
                                         <TextBlock Text="Per-category kill overrides"
+                                                   AutomationProperties.AutomationId="SaveEditorCategoryKillOverridesHeading"
+                                                   AutomationProperties.HeadingLevel="Level3"
                                                    FontSize="16"
                                                    FontWeight="SemiBold" />
                                         <TextBlock Text="These overrides stay inline with the rest of the save-editing flow so category counts read as a separate section instead of a hidden follow-up."
                                                    Style="{StaticResource SectionBodyTextStyle}" />
-                                        <ItemsControl x:Name="EditorCategoryKillsListView">
+                                        <ItemsControl x:Name="EditorCategoryKillsListView"
+                                                      AutomationProperties.AutomationId="EditorCategoryKillsListView">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -734,8 +776,10 @@
                                         </ItemsControl>
                                     </StackPanel>
                                 </Border>
-                            </StackPanel>
-                        </Border>
+                                  </StackPanel>
+                                </Border>
+                            </Expander>
+                        </StackPanel>
 
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
@@ -764,6 +808,13 @@
                                             Click="EditorPatchButton_Click"
                                             HorizontalAlignment="Left"
                                             MinWidth="180" />
+                                    <Button x:Name="SaveEditorShowWrittenSaveButton"
+                                            AutomationProperties.AutomationId="SaveEditorShowWrittenSaveButton"
+                                            AutomationProperties.Name="Show written save in File Explorer"
+                                            Content="Show written save in File Explorer"
+                                            Click="SaveEditorShowWrittenSaveButton_Click"
+                                            IsEnabled="False"
+                                            HorizontalAlignment="Left" />
                                 </StackPanel>
                             </Border>
 

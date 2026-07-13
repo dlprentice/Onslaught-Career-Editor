@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using OnslaughtCareerEditor.WinUI.Helpers;
 using Onslaught___Career_Editor;
@@ -22,12 +23,15 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private IReadOnlyList<SaveAnalyzerFileItem> _editorDetectedFiles = Array.Empty<SaveAnalyzerFileItem>();
         private SaveAnalyzerDocument? _currentDocument;
         private bool _editorInputValid;
+        private bool _editorOutputWasAutoSuggested;
+        private bool _suppressEditorOutputProvenance;
         private bool _suppressEditorPresetSync;
         private bool _editorKillsOnlyRestoreCaptured;
         private bool _editorRestoreNodes = true;
         private bool _editorRestoreLinks = true;
         private bool _editorRestoreGoodies = true;
         private bool _editorRestoreKills = true;
+        private Models.SaveEditorCompletionState? _lastWrittenCompletion;
         private int _selectedSavesTabIndex = SaveAnalyzerTabIndex;
 
         public SavesPage()
@@ -143,7 +147,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             EditorPatchPresetComboBox.SelectedIndex = 0;
             EditorGlobalKillNumberBox.Value = 100;
             EditorGoodiesAsNewToggle.IsOn = false;
-            ApplyEditorPreset("QUICK");
+            ApplyEditorPreset("SAFE");
             EditorOutputTextBox.Text = "Select a career save to begin. Use this page for the normal .bes patch workflow.";
             UpdateEditorActionState();
         }
@@ -462,7 +466,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (EditorDetectedFilesComboBox.SelectedItem is SaveAnalyzerFileItem selected)
             {
                 EditorInputFileTextBox.Text = selected.Path;
-                EditorOutputFileTextBox.Text = SaveEditorService.BuildDefaultSaveOutputPath(selected.Path);
+                SetEditorSuggestedOutputPath(selected.Path);
                 ValidateEditorInputPath();
                 LoadEditorAdvancedSnapshot();
                 AppStatusService.SetStatus($"Save Editor: selected {selected.Name}");
@@ -480,10 +484,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (!string.IsNullOrWhiteSpace(path))
             {
                 EditorInputFileTextBox.Text = path;
-                if (string.IsNullOrWhiteSpace(EditorOutputFileTextBox.Text))
-                {
-                    EditorOutputFileTextBox.Text = SaveEditorService.BuildDefaultSaveOutputPath(path);
-                }
+                SetEditorSuggestedOutputPath(path);
                 ValidateEditorInputPath();
                 LoadEditorAdvancedSnapshot();
             }
@@ -506,19 +507,28 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string fileName = File.Exists(inputPath)
                 ? Path.GetFileName(SaveEditorService.BuildDefaultSaveOutputPath(inputPath))
                 : "career_patched.bes";
-            EditorOutputFileTextBox.Text = Path.Combine(folder, fileName);
+            Models.SaveEditorOutputSelectionState outputState = SaveEditorJourneyStateMachine.ApplyManualOutput(
+                new Models.SaveEditorOutputSelectionState(EditorOutputFileTextBox.Text ?? string.Empty, _editorOutputWasAutoSuggested),
+                Path.Combine(folder, fileName));
+            ApplyEditorOutputSelectionState(outputState);
             UpdateEditorActionState();
         }
 
         private void EditorPathTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (ReferenceEquals(sender, EditorInputFileTextBox) && string.IsNullOrWhiteSpace(EditorOutputFileTextBox.Text))
+            if (ReferenceEquals(sender, EditorOutputFileTextBox) && !_suppressEditorOutputProvenance)
+            {
+                Models.SaveEditorOutputSelectionState outputState = SaveEditorJourneyStateMachine.ApplyManualOutput(
+                    new Models.SaveEditorOutputSelectionState(EditorOutputFileTextBox.Text ?? string.Empty, _editorOutputWasAutoSuggested),
+                    EditorOutputFileTextBox.Text ?? string.Empty);
+                _editorOutputWasAutoSuggested = outputState.OutputWasAutoSuggested;
+            }
+
+            if (ReferenceEquals(sender, EditorInputFileTextBox)
+                && (string.IsNullOrWhiteSpace(EditorOutputFileTextBox.Text) || _editorOutputWasAutoSuggested))
             {
                 string inputPath = (EditorInputFileTextBox.Text ?? string.Empty).Trim();
-                if (inputPath.Length > 0 && !SaveEditorService.IsOptionsLikeFilePath(inputPath))
-                {
-                    EditorOutputFileTextBox.Text = SaveEditorService.BuildDefaultSaveOutputPath(inputPath);
-                }
+                SetEditorSuggestedOutputPath(inputPath);
             }
 
             ValidateEditorInputPath();
@@ -526,6 +536,37 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 LoadEditorAdvancedSnapshot();
             }
+        }
+
+        private void SetEditorSuggestedOutputPath(string inputPath)
+        {
+            if (!string.IsNullOrWhiteSpace(EditorOutputFileTextBox.Text) && !_editorOutputWasAutoSuggested)
+            {
+                return;
+            }
+
+            string suggestedPath = string.IsNullOrWhiteSpace(inputPath) || SaveEditorService.IsOptionsLikeFilePath(inputPath)
+                ? string.Empty
+                : SaveEditorService.BuildDefaultSaveOutputPath(inputPath);
+            Models.SaveEditorOutputSelectionState outputState = SaveEditorJourneyStateMachine.ApplyInputSuggestion(
+                new Models.SaveEditorOutputSelectionState(EditorOutputFileTextBox.Text ?? string.Empty, _editorOutputWasAutoSuggested),
+                suggestedPath);
+            ApplyEditorOutputSelectionState(outputState);
+        }
+
+        private void ApplyEditorOutputSelectionState(Models.SaveEditorOutputSelectionState outputState)
+        {
+            _suppressEditorOutputProvenance = true;
+            try
+            {
+                EditorOutputFileTextBox.Text = outputState.OutputPath;
+            }
+            finally
+            {
+                _suppressEditorOutputProvenance = false;
+            }
+
+            _editorOutputWasAutoSuggested = outputState.OutputWasAutoSuggested;
         }
 
         private void EditorPatchPresetComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -630,6 +671,15 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AppStatusService.SetStatus("Save Editor: patching save...");
 
             PatchResult result = SaveEditorService.PatchSave(request);
+            if (result.Success && File.Exists(outputPath))
+            {
+                _lastWrittenCompletion = SaveEditorJourneyStateMachine.RecordSuccessfulWrite(request, outputPath);
+            }
+            else
+            {
+                ClearLastWrittenSave();
+            }
+
             string displayMessage = FormatEditorPatchResultForUi(result, request);
             EditorOutputTextBox.Text = displayMessage;
             EditorCopyOutputButton.IsEnabled = !string.IsNullOrWhiteSpace(result.Message);
@@ -641,12 +691,82 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             UpdateEditorActionState();
         }
 
+        private void SaveEditorShowWrittenSaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            SavePatchRequest request = BuildEditorRequest(out string? advancedError);
+            string outputPath;
+            try
+            {
+                outputPath = Path.GetFullPath(request.OutputPath.Trim());
+            }
+            catch
+            {
+                FailWrittenSaveReveal(
+                    "The written-copy details changed. Write the separate copy again before showing it.",
+                    clearCompletion: true);
+                return;
+            }
+
+            Models.SaveEditorCompletionEvaluation completion = SaveEditorJourneyStateMachine.EvaluateCompletion(
+                _lastWrittenCompletion,
+                request,
+                File.Exists(outputPath),
+                AppConfig.GetPatchedOutputDir());
+            if (!string.IsNullOrWhiteSpace(advancedError) || !completion.IsCurrent || !completion.CanReveal)
+            {
+                _lastWrittenCompletion = SaveEditorJourneyStateMachine.ApplyRevealAttempt(
+                    _lastWrittenCompletion,
+                    preconditionsCurrent: false,
+                    launcherSucceeded: false);
+                FailWrittenSaveReveal(
+                    "The written-copy details changed or the app-owned output is missing. Write the separate copy again before showing it.",
+                    clearCompletion: true);
+                return;
+            }
+
+            bool launcherSucceeded = ExplorerRevealService.TryReveal(outputPath);
+            _lastWrittenCompletion = SaveEditorJourneyStateMachine.ApplyRevealAttempt(
+                _lastWrittenCompletion,
+                preconditionsCurrent: true,
+                launcherSucceeded: launcherSucceeded);
+            if (launcherSucceeded)
+            {
+                AppStatusService.SetStatus("Save Editor: showing written copy in File Explorer");
+            }
+            else
+            {
+                FailWrittenSaveReveal(
+                    "File Explorer could not be opened. The successful written save remains unchanged in the app-owned output folder; try Show again.",
+                    clearCompletion: false);
+            }
+        }
+
+        private void FailWrittenSaveReveal(string message, bool clearCompletion)
+        {
+            if (clearCompletion)
+            {
+                ClearLastWrittenSave();
+            }
+
+            EditorInfoBar.Title = "Written copy could not be shown";
+            EditorInfoBar.Message = message;
+            EditorInfoBar.Severity = InfoBarSeverity.Warning;
+            EditorInfoBar.Visibility = Visibility.Visible;
+            AppStatusService.SetStatus("Save Editor: written-copy reveal blocked");
+            UpdateEditorActionState();
+        }
+
+        private void ClearLastWrittenSave()
+        {
+            _lastWrittenCompletion = null;
+        }
+
         private static string FormatEditorPatchResultForUi(PatchResult result, SavePatchRequest request)
         {
             if (result.Success)
             {
                 string outputName = BuildFileNameSummary(request.OutputPath, "chosen output file");
-                return $"Successfully patched copied save to selected output file.\nOutput file: {outputName}\nThe source save was not modified.";
+                return $"Successfully patched copied save to selected output file.\nOutput file: {outputName}\nThe source save was not modified. Close the copied game first and back up any save you replace. The Toolkit does not install this file; to try it, manually copy it into a Safe Game Copy's savegames folder.";
             }
 
             return RedactEditorPatchPaths(result.Message, request);
@@ -754,29 +874,18 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _suppressEditorPresetSync = true;
             try
             {
-                switch (preset)
-                {
-                    case "SAFE":
-                        EditorKillsOnlyCheckBox.IsChecked = false;
-                        EditorPatchNodesCheckBox.IsChecked = false;
-                        EditorPatchLinksCheckBox.IsChecked = false;
-                        EditorPatchGoodiesCheckBox.IsChecked = false;
-                        EditorPatchKillsCheckBox.IsChecked = false;
-                        break;
-                    case "QUICK":
-                    default:
-                        EditorKillsOnlyCheckBox.IsChecked = false;
-                        EditorPatchNodesCheckBox.IsChecked = true;
-                        EditorPatchLinksCheckBox.IsChecked = true;
-                        EditorPatchGoodiesCheckBox.IsChecked = true;
-                        EditorPatchKillsCheckBox.IsChecked = true;
-                        break;
-                }
-
-                EditorPatchNodesCheckBox.IsEnabled = true;
-                EditorPatchLinksCheckBox.IsEnabled = true;
-                EditorPatchGoodiesCheckBox.IsEnabled = true;
-                EditorPatchKillsCheckBox.IsEnabled = true;
+                Models.SaveEditorSectionSelection current = BuildEditorSectionSelection();
+                Models.SaveEditorPresetTransition transition = SaveEditorJourneyStateMachine.ApplyPreset(preset, current);
+                EditorKillsOnlyCheckBox.IsChecked = transition.Selection.KillsOnly;
+                EditorPatchNodesCheckBox.IsChecked = transition.Selection.PatchNodes;
+                EditorPatchLinksCheckBox.IsChecked = transition.Selection.PatchLinks;
+                EditorPatchGoodiesCheckBox.IsChecked = transition.Selection.PatchGoodies;
+                EditorPatchKillsCheckBox.IsChecked = transition.Selection.PatchKills;
+                EditorPatchNodesCheckBox.IsEnabled = !transition.Selection.KillsOnly;
+                EditorPatchLinksCheckBox.IsEnabled = !transition.Selection.KillsOnly;
+                EditorPatchGoodiesCheckBox.IsEnabled = !transition.Selection.KillsOnly;
+                EditorPatchKillsCheckBox.IsEnabled = !transition.Selection.KillsOnly;
+                SetEditorPresetSelection(transition.VisiblePreset);
             }
             finally
             {
@@ -786,21 +895,21 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void UpdateEditorPresetSelection()
         {
-            bool quick =
-                EditorKillsOnlyCheckBox.IsChecked != true &&
-                EditorPatchNodesCheckBox.IsChecked == true &&
-                EditorPatchLinksCheckBox.IsChecked == true &&
-                EditorPatchGoodiesCheckBox.IsChecked == true &&
-                EditorPatchKillsCheckBox.IsChecked == true;
+            SetEditorPresetSelection(SaveEditorJourneyStateMachine.ClassifyPreset(BuildEditorSectionSelection()));
+        }
 
-            bool safe =
-                EditorKillsOnlyCheckBox.IsChecked != true &&
-                EditorPatchNodesCheckBox.IsChecked != true &&
-                EditorPatchLinksCheckBox.IsChecked != true &&
-                EditorPatchGoodiesCheckBox.IsChecked != true &&
-                EditorPatchKillsCheckBox.IsChecked != true;
+        private Models.SaveEditorSectionSelection BuildEditorSectionSelection()
+        {
+            return new Models.SaveEditorSectionSelection(
+                EditorKillsOnlyCheckBox.IsChecked == true,
+                EditorPatchNodesCheckBox.IsChecked == true,
+                EditorPatchLinksCheckBox.IsChecked == true,
+                EditorPatchGoodiesCheckBox.IsChecked == true,
+                EditorPatchKillsCheckBox.IsChecked == true);
+        }
 
-            string target = quick ? "QUICK" : safe ? "SAFE" : "CUSTOM";
+        private void SetEditorPresetSelection(string target)
+        {
             _suppressEditorPresetSync = true;
             try
             {
@@ -829,6 +938,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             bool hasOutput = !string.IsNullOrWhiteSpace(request.OutputPath);
             int missionOverrideCount = SaveEditorAdvancedService.CountMissionRankOverrides(_editorMissionRankRows);
             int categoryKillOverrideCount = SaveEditorAdvancedService.CountCategoryKillOverrides(_editorCategoryKillRows);
+            bool overrideDependenciesSatisfied =
+                (missionOverrideCount == 0 || request.PatchNodes)
+                && (categoryKillOverrideCount == 0 || request.PatchKills);
 
             EditorPendingChangesTextBlock.Text = SaveEditorService.BuildPendingChangesSummary(request);
 
@@ -865,14 +977,51 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 EditorSafetyHintTextBlock.Text = "Save patching is ready. Mission rank and category-kill overrides are supported here; startup settings and keybind overrides still belong in Game Options.";
             }
 
-            EditorPatchButton.IsEnabled =
+            bool canWrite =
                 _editorInputValid &&
                 hasInput &&
                 hasOutput &&
                 hasSections &&
                 string.IsNullOrWhiteSpace(advancedError) &&
+                overrideDependenciesSatisfied &&
                 !samePath &&
                 outputIsSaveLike;
+            EditorPatchButton.IsEnabled = canWrite;
+
+            Models.SaveEditorCompletionEvaluation completion = SaveEditorJourneyStateMachine.EvaluateCompletion(
+                _lastWrittenCompletion,
+                request,
+                File.Exists(_lastWrittenCompletion?.OutputPath),
+                AppConfig.GetPatchedOutputDir());
+            if (!completion.IsCurrent && _lastWrittenCompletion is not null)
+            {
+                ClearLastWrittenSave();
+            }
+
+            bool hasCompletedCurrentPlan = completion.IsCurrent;
+            bool canRevealWrittenCopy = completion.CanReveal;
+            SaveEditorShowWrittenSaveButton.IsEnabled = canRevealWrittenCopy;
+
+            var journeyState = new Models.SaveEditorFirstSaveJourneyState(
+                HasValidInput: _editorInputValid,
+                HasValidOutput: hasOutput && outputIsSaveLike,
+                HasSelectedChanges: hasSections,
+                CanWrite: canWrite,
+                HasCompletedCurrentPlan: hasCompletedCurrentPlan,
+                CanRevealWrittenCopy: canRevealWrittenCopy);
+            string journeyStatus = SaveEditorFirstSaveJourneyText.BuildStatus(journeyState);
+            if (!string.Equals(SaveEditorFirstSaveStatus.Text, journeyStatus, StringComparison.Ordinal))
+            {
+                SaveEditorFirstSaveStatus.Text = journeyStatus;
+            }
+
+            string advancedStatus = SaveEditorFirstSaveJourneyText.BuildAdvancedOverrideStatus(
+                missionOverrideCount,
+                categoryKillOverrideCount);
+            SaveEditorAdvancedOverridesStatus.Text = advancedStatus;
+            AutomationProperties.SetName(
+                SaveEditorAdvancedOverridesExpander,
+                $"Advanced: per-mission ranks and category kills. {advancedStatus}");
             EditorCopyOutputButton.IsEnabled = !string.IsNullOrWhiteSpace(EditorOutputTextBox.Text);
         }
 
