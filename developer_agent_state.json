@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-13",
   "routingPolicy": "Follow the global Codex multi-agent lane contract. Under current direct user policy, every new or resumed Codex-owned worker uses gpt-5.6-sol at medium effort by default; harder work may raise Sol effort, and Terra/Luna fallback or lower effort requires a newer direct user instruction.",
-  "currentFocus": "Resolve Retry 11's exact CDB/target exit-status contract and integrate the hardened local-presentation branch; the Ghidra closeout is absorbed.",
+  "currentFocus": "Resolve Retry 11's exact CDB/target exit-status contract, run a wholly fresh Retry 12, and use the integrated bounded local-presentation path for the next authentic rebuild slice.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -85,10 +85,11 @@
       "toolchain": "fixed tracked manifest and SHA-256, exact official archive/runtime identity, 82-file tree, fixed per-user cache, reparse rejection, held read-only file lease, setup lock through consumers, locked archive-local Godot restore, and explicit same-user non-sandbox boundary",
       "acceptance": "Source npm test passed a zero-warning WinUI build, 1307 AppCore, 136 WinUI plus 2 expected private-catalog skips, 38 Core, 21 Client, 12 toolchain, 6 evidence-validator, and 6 owned-process tests. Cache-only native smoke passed at 1280x720 and 1200x675 with tick 120, state hash 87b9d09a3afec0bebd97f06793b83baabe3ff330b2378ff149194d6d6a4f779d, heuristic semantic anchors, synthetic notification-handler clear/rearm, and kernel-owned Job Object cleanup. The exact launcher was manually played with Q/W/Space/R/Esc and exited without an orphan. Full docs, 19453-file payload, 19637-file submodule payload, 18600-file hygiene, 74-package notices, and curated gates passed.",
       "package": "The 721-selected/726-materialized exact source candidate passed payload/inventory, 463-file/138-link Markdown, standalone zero-warning npm test with 1307 AppCore, 123 WinUI plus 15 expected fixture/catalog skips, all 83 rebuild tests, 74-package notices, and 718-file hygiene. First Flight remains source-only and is not in the published v1.0.9 WinUI ZIP.",
-      "review": "Codex and bounded Cursor/Grok normal/adversarial reviews accepted the slice after input, toolchain, smoke-evidence, package, and process-ownership challenges were fixed. The final Codex adversarial follow-up accepted the suspended-root kill-on-close Job Object and explicitly heuristic visual-evidence boundary."
+      "review": "Codex and bounded Cursor/Grok normal/adversarial reviews accepted the slice after input, toolchain, smoke-evidence, package, and process-ownership challenges were fixed. The final Codex adversarial follow-up accepted the suspended-root kill-on-close Job Object and explicitly heuristic visual-evidence boundary.",
+      "localPresentation": "Integrated on main with Onslaught 5352a81 and AYA 53b10b0. Optional ignored user-supplied meshes are presentation-only: self-contained GLB and custom-parsed OBJ are size/complexity/range bounded, held bytes are revalidated, content-addressed role files publish before an atomic manifest, and ordinary smoke remains synthetic. Core is unchanged; no retail origin, visual fidelity, handling, or parity is claimed. Post-merge Core 38, Client 71, toolchain 12, smoke 12, local-asset fail-closed, docsync, 279-command, and 19,523-file payload gates pass; one transient helper PID-record miss passed on an immediate isolated six-case rerun."
     },
     "movementCrosswalk": {
-      "sourceAudit": "Pinned Onslaught 792545b and AYAResourceExtractor 6f3df296 are inventoried with fork/upstream provenance, tracked-file counts, build/test posture, supported lanes, completeness gaps, and license boundaries. Older 111/75 manifests counted submodule .git control files; current tracked counts are 110/74.",
+      "sourceAudit": "Pinned Onslaught 5352a81 and AYAResourceExtractor 53b10b0 are inventoried with fork/upstream provenance, tracked-file counts, build/test posture, supported lanes, completeness gaps, and license boundaries. AYA is Stuart master plus one narrow rectangular-DDS copy-bound correction; neither source corpus is Steam behavior or format-completeness authority.",
       "staticCorrection": "Read-only Steam Ghidra evidence identifies 0x004081c0 as CBattleEngine__Move, 0x00410c50 as CBattleEngineJetPart__Move, and 0x00411630/0x00411aa0/0x00411b70/0x00412900 as selected JetPart helpers. The May jet-stall interpretation at 0x004081c0 is withdrawn. Live Ghidra names remain unchanged.",
       "qualityBoundary": "The 6411/6411 metric is comment/signature export-contract closure, not semantic completeness. Owner/prototype/static-semantics/source-provenance/runtime confidence are now scored separately.",
       "rebuildBoundary": "First Flight transform, energy, shield, movement, arena, and presentation choices remain synthetic. No authentic behavior change is allowed before an accepted copied-runtime contract.",
@@ -134,8 +135,8 @@
   "openQuestions": [],
   "nextSteps": [
     "Integrate and review the exact Retry-11 CDB/target exit-status relationship, then create wholly fresh Retry-12 controls and publish only if the complete fixed-role matrix validates.",
-    "Independently harden and integrate the completed Cursor submodule/local-retail-presentation branch while preserving ignored payloads, synthetic smoke, bounded paths, and non-parity wording.",
-    "Retire the integrated Ghidra closeout task/worktree, preserving its ignored recovery overlay and transcript evidence until explicit retention acceptance.",
+    "Use the integrated ignored local-asset exporter/bootstrap and Godot adapter in the next evidence-backed presentation slice while preserving synthetic smoke and non-parity wording.",
+    "Preserve the integrated Ghidra recovery overlay and transcript evidence until explicit retention acceptance; the task worktree is already retired.",
     "Retire stale BattleEngine ownership probes/mutators and add Fbx.dll plus FBX-template fail-fast preflight before the next Ghidra/export mutation slice.",
     "After runtime evidence is accepted, freeze one measured movement/morph/camera contract and implement it in deterministic Core plus the Godot adapter for the authentic BYO-asset vertical slice."
   ]

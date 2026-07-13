@@ -300,6 +300,16 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   requires CDB exit code zero before parsing the retained evidence. This is now
   a bounded harness-contract investigation. Arbitrary nonzero CDB exits are not
   accepted, Retry 11 remains failed, and no positive-role causality claim exists.
+- The optional local presentation lane is integrated on `main`. It pins the
+  Stuart Onslaught reference at `5352a81` and the AYA reference plus narrow
+  rectangular-DDS correction at `53b10b0`; adds an ignored exporter/bootstrap
+  workspace; and lets the Godot adapter load only bounded, self-contained GLB
+  or bounded custom-parsed OBJ presentation meshes. Core remains unchanged,
+  ordinary smoke remains synthetic, publication is content-addressed and
+  manifest-last, and no asset origin, visual fidelity, handling, or parity is
+  inferred. Post-merge rebuild, docs, and 19,523-file payload gates pass. One
+  initial smoke-runner helper missed its PID record; an immediate isolated
+  rerun passed all six cases and supersedes that transient attempt.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future
@@ -517,9 +527,8 @@ claim against an already malicious process running as the same Windows user.
    by Retry 11 with a failing disposable test and narrow identity-bound rule,
    then run a wholly fresh Retry 12 and publish only a complete validated
    sanitized identity/causality result.
-2. Review, harden, and integrate the completed Cursor submodule/local-retail-
-   presentation branch without weakening local-payload or synthetic-smoke
-   boundaries.
+2. Use the integrated ignored local-asset path for the next evidence-backed
+   presentation slice while keeping synthetic smoke and non-parity boundaries.
 3. Perform the separate bounded review needed to correct the remaining
    `0x004dac90` live metadata debt without reviving the rejected manifest row.
 4. Retire or fail-close active BattleEngine tools that can reapply withdrawn
