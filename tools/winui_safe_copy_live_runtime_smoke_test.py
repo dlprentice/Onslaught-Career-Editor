@@ -4,7 +4,10 @@
 from __future__ import annotations
 
 import ast
+from contextlib import redirect_stderr
 import importlib.util
+import io
+import shlex
 import tempfile
 import unittest
 from pathlib import Path
@@ -27,6 +30,154 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
+
+    def parse(self, *arguments: str):
+        module = self.live_smoke_module()
+        return module, module.parse_args(shlex.split(" ".join(arguments), posix=False))
+
+    def test_morph_canary_protocol_is_unpatched_fixed_and_capture_free(self) -> None:
+        module, args = self.parse(
+            "--runtime-protocol battleengine-morph-identity-canary-v1",
+            "--canary-role noInputControl",
+            "--capture-count 0",
+        )
+
+        plan = module.validate_runtime_protocol(args)
+
+        self.assertEqual(
+            ["-skipfmv", "-level", "850", "-configuration", "2"],
+            plan.launch_arguments,
+        )
+        self.assertEqual([], plan.patch_keys)
+        self.assertFalse(plan.apply_windowed_compatibility_patch)
+        self.assertEqual(0x21, plan.transform_entry_id)
+        self.assertEqual(8, plan.transform_keyboard_device_code)
+        self.assertEqual("Q", plan.transform_player1_token)
+        self.assertEqual("", plan.transform_player2_token)
+        self.assertEqual(0, plan.capture_count)
+        self.assertEqual([], plan.input_sequences)
+        self.assertFalse(plan.include_modern_graphics)
+        self.assertFalse(plan.stage_music_replacement)
+        self.assertFalse(plan.allow_background_window_messages)
+        self.assertEqual("MORPH_CANARY_READY", plan.required_cdb_log_marker)
+
+    def test_morph_canary_protocol_derives_exact_positive_role_input(self) -> None:
+        module, transform_args = self.parse(
+            "--runtime-protocol battleengine-morph-identity-canary-v1",
+            "--canary-role positiveTransform",
+        )
+        transform_plan = module.validate_runtime_protocol(transform_args)
+        self.assertEqual(["tap:Q"], transform_plan.input_sequences)
+
+        _, repeat_args = self.parse(
+            "--runtime-protocol battleengine-morph-identity-canary-v1",
+            "--canary-role positiveRepeat",
+        )
+        repeat_plan = module.validate_runtime_protocol(repeat_args)
+        self.assertEqual(["tap:Q", "tap:Q"], repeat_plan.input_sequences)
+
+    def test_morph_canary_protocol_rejects_mixed_proof_levers(self) -> None:
+        rejected_arguments = (
+            "--capture-count 1",
+            "--pre-input-capture-count 1",
+            "--capture-after-each-input-sequence",
+            "--focus-before-pre-input-capture",
+            "--input-sequence tap:E",
+            "--input-step-delay-ms 61",
+            "--allow-background-window-messages --arm-background-window-messages \"ALLOW BACKGROUND BEA WINDOW MESSAGES\"",
+            "--level-id 851",
+            "--controller-configuration 1",
+            "--persist-controller-config-in-options",
+            "--bind-forward-qe-for-input-isolation",
+            "--bind-fire-qe-for-weapon-handoff",
+            "--bind-look-down-qe-for-config2-forward-discovery",
+            "--bind-config2-census-row-qe movement-forward",
+            "--sharpen-mouse-look",
+            "--include-modern-graphics",
+            "--extra-patch-key frontend_clear_screen_black",
+            "--profile-preset-id split-screen-local",
+            "--stage-music-replacement",
+            "--music-swap-preset-id use-bea02-for-bea01",
+            "--launch-nomusic",
+            "--launch-nosound",
+            "--cdb-command-file tools\\runtime-probes\\local-multiplayer-level850-observer.cdb.txt",
+            "--cdb-log-ready-timeout-ms 11000",
+            "--cdb-attach-phase after-launch",
+        )
+
+        for rejected in rejected_arguments:
+            with self.subTest(arguments=rejected):
+                module, args = self.parse(
+                    "--runtime-protocol battleengine-morph-identity-canary-v1",
+                    "--canary-role noInputControl",
+                    rejected,
+                )
+                with self.assertRaises(ValueError):
+                    module.validate_runtime_protocol(args)
+
+    def test_default_protocol_preserves_explicit_armed_background_mode(self) -> None:
+        module, args = self.parse(
+            "--runtime-protocol default",
+            "--allow-background-window-messages",
+            "--arm-background-window-messages \"ALLOW BACKGROUND BEA WINDOW MESSAGES\"",
+        )
+
+        plan = module.validate_runtime_protocol(args)
+
+        self.assertEqual("default", plan.runtime_protocol)
+        self.assertTrue(plan.allow_background_window_messages)
+        self.assertEqual(["force_windowed", "resolution_gate"], plan.patch_keys)
+        self.assertTrue(plan.apply_windowed_compatibility_patch)
+        self.assertEqual(1, plan.capture_count)
+
+    def test_morph_canary_protocol_requires_one_role_and_exact_choice(self) -> None:
+        module, args = self.parse("--runtime-protocol battleengine-morph-identity-canary-v1")
+        with self.assertRaises(ValueError):
+            module.validate_runtime_protocol(args)
+
+        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            module.parse_args(["--runtime-protocol", "battleengine-morph-identity-canary-v2"])
+
+    def test_generated_runner_binds_canary_command_receipt_and_cleanup(self) -> None:
+        text = self.script_text()
+
+        self.assertIn("battleengine-morph-identity-canary-v1", text)
+        self.assertIn("runtime-process-receipt.v1", text)
+        self.assertIn("ONSLAUGHT_LIVE_RUNTIME_RECEIPT_PATH", text)
+        self.assertIn("ONSLAUGHT_LIVE_RUNTIME_RECEIPT_SHA256", text)
+        self.assertIn("ONSLAUGHT_LIVE_CDB_COMMAND_SHA256", text)
+        self.assertIn("ONSLAUGHT_LIVE_CDB_TEMPLATE_SHA256", text)
+        self.assertIn("-RuntimeReceiptPath", text)
+        self.assertIn("-ExpectedReceiptSha256", text)
+        self.assertIn("-ExpectedCommandSha256", text)
+        self.assertIn("-RequiredLogMarker", text)
+        self.assertIn("Assert-RuntimeProcessReceipt", text)
+        self.assertIn("-RequireWindow", text)
+        self.assertIn('GetProperty("commandTemplateSha256")', text)
+        self.assertIn("ownedProcessIds", text)
+        self.assertIn("cdbStartedAtUtc", text)
+        self.assertIn("cdbExecutablePath", text)
+        self.assertIn("MORPH_CANARY_READY", text)
+        self.assertIn("HasExactlyOneLogMarker", text)
+        self.assertIn("winui-original-binary-battleengine-morph-identity-canary-private-run.v1", text)
+        self.assertIn("ApplyWindowedCompatibilityPatch: !morphCanaryMode", text)
+        self.assertIn('ActionLabel = "Transform"', text)
+        self.assertIn("EntryId = 0x21", text)
+        self.assertIn("KeyboardDeviceCode = 8u", text)
+        self.assertIn('Player2Token = ""', text)
+        self.assertIn("captureCount = morphCanaryMode", text)
+        self.assertIn("canaryCdbReady", text)
+        self.assertIn("canaryFocusedInputSucceeded", text)
+        self.assertIn("canaryCopyUnchanged", text)
+        self.assertIn("canarySourceUnchanged", text)
+        self.assertIn("canaryCleanup", text)
+        release_index = text.index("ReleaseTrackedCanaryKeys")
+        cdb_index = text.index("CleanupExactCdbObserver")
+        stop_index = text.index("StopReceiptBoundManagedProcess")
+        census_index = text.index("CountOwnedProcesses")
+        self.assertLess(release_index, cdb_index)
+        self.assertLess(cdb_index, stop_index)
+        self.assertLess(stop_index, census_index)
 
     def stable_extra_patch_keys(self) -> set[str]:
         tree = ast.parse(self.script_text(), filename=str(SCRIPT))
