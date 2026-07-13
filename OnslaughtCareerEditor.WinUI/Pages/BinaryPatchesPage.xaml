@@ -180,21 +180,31 @@
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
                                         <Button x:Name="PatchBenchWindowedPresetButton"
-                                                Content="Reset to Compatibility Copy"
                                                 AutomationProperties.AutomationId="PatchBenchWindowedPresetButton"
                                                 AutomationProperties.Name="Select Compatibility Copy profile"
                                                 Grid.Column="0"
                                                 HorizontalAlignment="Stretch"
+                                                MinHeight="56"
                                                 Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                                Click="WindowedPresetButton_Click" />
+                                                Click="WindowedPresetButton_Click">
+                                            <TextBlock Text="Reset to Compatibility Copy"
+                                                       TextWrapping="WrapWholeWords"
+                                                       TextAlignment="Center"
+                                                       HorizontalAlignment="Center" />
+                                        </Button>
                                         <Button x:Name="PatchBenchClearSelectionButton"
-                                                Content="Clear optional mods"
                                                 AutomationProperties.AutomationId="PatchBenchClearSelectionButton"
                                                 AutomationProperties.Name="Clear optional mod rows; safe copies still include required compatibility"
                                                 Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
+                                                MinHeight="56"
                                                 Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                                Click="ClearSelectionButton_Click" />
+                                                Click="ClearSelectionButton_Click">
+                                            <TextBlock Text="Clear optional mods"
+                                                       TextWrapping="WrapWholeWords"
+                                                       TextAlignment="Center"
+                                                       HorizontalAlignment="Center" />
+                                        </Button>
                                     </Grid>
                                     <Border Background="{ThemeResource ShellSurfaceBrush}"
                                             BorderBrush="{ThemeResource ShellBorderBrush}"

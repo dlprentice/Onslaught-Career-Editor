@@ -65,6 +65,14 @@ public class WinUiPatchBenchInteractionSmokeTests
             WaitForText(window, "Safe game copy", TimeSpan.FromSeconds(20));
             AssertAutomationNameContains(window, "PatchBenchWindowedPresetButton", "Selected: Compatibility Copy profile");
             AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Compatibility Copy");
+            CaptureChoiceStateScreenshot(
+                window,
+                app.MainWindowHandle,
+                evidenceDir,
+                "patch-compatibility-actions-narrow.png",
+                "PatchBenchWindowedPresetButton",
+                760,
+                640);
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-player-mods-normal.png", "PatchBenchAddVersionMarkerButton", 1000, 720);
             InvokeByAutomationId(window, "PatchBenchAddVersionMarkerButton");
             AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "PATCHED identity marker");
