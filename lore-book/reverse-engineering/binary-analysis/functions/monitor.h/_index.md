@@ -1,5 +1,9 @@
 # monitor.h / Monitor.h (Deletion Event System)
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** 6 correction records referenced in this document. Older conflicting text below is superseded for these rows. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 > **Current semantic correction (2026-07-12):** several rows historically
 > assigned to Monitor are BattleEngine/JetPart methods. Current authority is the
 > [movement static crosswalk](../../battleengine-movement-static-crosswalk-2026-07-12.md).

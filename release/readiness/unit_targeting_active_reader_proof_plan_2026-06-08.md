@@ -1,5 +1,9 @@
 # Unit Targeting / Active-Reader Proof Plan Readiness Note
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** Historical record; `0x0044e640` → `CFenrirMainGunAI__ScanListsAndSelectSupportTarget` (was `CSquadNormalReader__ScanListsAndSelectSupportTarget_0044e640`). The original text below remains provenance rather than current semantic authority. Use the [closeout](../../reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Status: proof plan complete, not runtime proof
 Date: 2026-06-08
 Scope: `unit-targeting-active-reader-proof-plan`

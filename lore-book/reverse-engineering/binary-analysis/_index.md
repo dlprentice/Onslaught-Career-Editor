@@ -1,3 +1,15 @@
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** 14 correction records referenced in this document. Older conflicting text below is superseded for these rows. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
+Current Ghidra semantic authority: the
+[2026-07-13 full re-audit closeout](ghidra-full-reaudit-closeout-2026-07-13.md)
+records the independently checked `459`-address Cursor delta, its `71`
+correction records, and the `22`-record targeted pack with one explicit overlap
+(`92` unique correction addresses), plus verified
+backup survivability, and the pending live-mutation lease. Older campaign rows
+below remain provenance and do not override that closeout.
+
 Career progression static bridge contract: [career-progression-static-bridge-contract.md](career-progression-static-bridge-contract.md). Alias: `career-progression-static-bridge-contract`. Status: source/static bridge contract that routes `CCareer`, `level_structure`, `CGame`, and `CEndLevelData` vocabulary into save/career static docs only; not runtime save/load proof, runtime mission-outcome proof, runtime objective UI proof, Goodies behavior proof, patch proof, gameplay proof, rebuild parity, or release action.
 
 Render/resource bridge static contract: [render-resource-bridge-static-contract.md](render-resource-bridge-static-contract.md). Alias: `render-resource-bridge-static-contract`. Status: source/static bridge contract that routes `MESH` and `TEXT` loader vocabulary into mesh/texture renderer static docs only; not runtime proof, GPU upload proof, texture pixel proof, importer execution, generated asset output, renderer implementation, visual proof, rebuild parity, or release action.

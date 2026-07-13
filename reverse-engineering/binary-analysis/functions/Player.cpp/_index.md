@@ -1,5 +1,9 @@
 # Player.cpp Function Mappings
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x004d2b40` comment correction. Older conflicting text below is superseded for these rows. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 > Functions from `references/Onslaught/Player.cpp` mapped to `BEA.exe`.
 
 > **Queue status (2026-05-28):** Ghidra export-contract closure **6211/6211** (Wave974: every function object commented with clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.

@@ -1,5 +1,9 @@
 # DestructableSegmentsController.cpp
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x00494ce0` comment correction. Older conflicting text below is superseded for these rows. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 > Destructible object segment management from BEA.exe
 
 **Debug Path**: `[maintainer-local-source-export-root]\DestructableSegmentsController.cpp` (0x006287b4)

@@ -1,5 +1,9 @@
 # Ghidra OID Target/Profile Ballistic Review Wave1072 Readiness Note
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** Historical record; `0x00507ab0` comment correction. The original text below remains provenance rather than current semantic authority. Use the [closeout](../../reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Status: complete static read-only evidence
 Date: 2026-06-02
 Scope: `oid-target-profile-ballistic-review-wave1072`

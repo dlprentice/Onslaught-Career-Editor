@@ -1,5 +1,9 @@
 # Current Status
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x00406560` → `CBattleEngine__HandleLocks` (was `CBattleEngine__UpdateAutoTargetSetAndFireProjectiles`); `0x004081c0` → `CBattleEngine__Move` (was `CMonitor__Process`); `0x00410c50` → `CBattleEngineJetPart__Move` (was `CMonitor__UpdateMovementTransitionAndEffects`). Older conflicting text below is superseded for these rows. Use the [closeout](../reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Status: active
 Last updated: 2026-06-24
 
@@ -77,7 +81,7 @@ Repo cleanup and archive decisions are tracked in `roadmap/repo-structure-and-ar
 - A historical source-to-binary gap probe classified all 12 selected mechanics anchors as source-only at that time. Later static work now identifies selected retail rows, including `0x0040a580 CBattleEngine__Morph`, `0x004081c0 CBattleEngine__Move`, and `0x00410c50 CBattleEngineJetPart__Move`; complete anchor coverage, ABI recovery, copied-runtime behavior, measured constants, and rebuild parity remain open.
 - A config-defaults binary-doc probe adds value-level support for selected `CBattleEngineData__Initialise` defaults, and a fresh headless Ghidra read-back probe now validates selected `CBattleEngineData__Initialise`, `CBattleEngine__Init`, and `CPlayer__Init` tokens. Broader exact retail identity for individual gameplay mechanics and runtime interpretation remain unproven.
 - A fresh Unit/Mech mechanics read-back probe validates selected `CUnit__ApplyDamage`, `CUnit__Init`, `CUnit__UpdateTransform`, `CMech__InitCockpit`, and `CMech__InitTargeting` decompile tokens. Runtime gameplay-state interpretation, exact identity for every selected source anchor, and rebuild parity remain unproven.
-- A fresh BattleEngine helper read-back probe validates selected transform/target/projectile helper tokens for `CBattleEngine__SwapPrimarySecondaryPartReadersForState`, `CBattleEngine__UpdateAutoTargetSetAndFireProjectiles`, `CBattleEngine__SelectNearestForwardTargetFromGlobalSet`, and `CBattleEngine__IsCurrentResolvedEntry`. Runtime gameplay-state interpretation and rebuild parity remain unproven.
+- A historical BattleEngine helper read-back probe validated the body at `0x00406560` under its then-saved projectile-helper name; current static review identifies it as `CBattleEngine__HandleLocks`. The probe also covers `CBattleEngine__SwapPrimarySecondaryPartReadersForState`, `CBattleEngine__SelectNearestForwardTargetFromGlobalSet`, and `CBattleEngine__IsCurrentResolvedEntry`. Runtime gameplay-state interpretation and rebuild parity remain unproven.
 - A historical transform-string xref probe validates `flytowalk`/`walktofly` references under the names saved at that time. The HUD-warning references occur inside the body now identified as `0x004081c0 CBattleEngine__Move`; the xrefs alone do not prove runtime playback or trigger behavior.
 - The transition/HUD helper read-back remains useful body and call-chain evidence, but the 2026-07-12 movement crosswalk supersedes its affected Monitor owner labels. Runtime transform/HUD behavior, measured values, and rebuild parity remain unproven.
 - Static event, state-gate, animation, reader-swap, and source-order evidence identifies `0x0040a580` as `CBattleEngine__Morph`. Copied-runtime transform timing, rejection behavior, camera response, energy behavior, and rebuild parity remain unproven.

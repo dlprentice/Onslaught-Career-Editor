@@ -1,5 +1,9 @@
 # Ghidra BattleEngineData / Config Signature Tranche - 2026-05-09
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** Historical record; `0x0040f890` comment correction. The original text below remains provenance rather than current semantic authority. Use the [closeout](../../reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 ## Summary
 
 This wave reparsed seven already named functions in the BattleEngine configuration and `CBattleEngineData` load/default-data cluster. Fresh metadata, decompile, xref, instruction, callsite-instruction, and full-load-body exports showed the saved names were useful, but the signatures still carried stale or incomplete argument evidence.

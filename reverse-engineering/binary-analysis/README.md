@@ -6,6 +6,14 @@
 
 This folder contains documentation from analyzing the `BEA.exe` executable using Ghidra and other RE tools. Focus is on understanding runtime behavior that can't be determined from source code alone.
 
+Current semantic authority: the
+[2026-07-13 Ghidra full re-audit closeout](ghidra-full-reaudit-closeout-2026-07-13.md)
+verifies the stable `6,411`-address endpoint inventory, independently reviews
+all `459` Cursor metadata changes, and records `71` Cursor-delta plus `22`
+targeted records with one explicit overlap (`92` unique correction addresses).
+It documents the pending
+exclusive-lease requirement before live Ghidra correction.
+
 ## Verified Binary
 
 **Canonical retail analysis is rooted in the unmodified Steam release of `BEA.exe`.** Some documents in this folder also discuss derived patch targets (`BEA_Widescreen.exe`) or the byte-verified patches shipped by this repo, but the Steam hash below remains the base authority for retail behavior claims.
@@ -32,6 +40,7 @@ If your BEA.exe has a different hash, it may be modified or from a different rel
 
 | Document | Description |
 |----------|-------------|
+| [ghidra-full-reaudit-closeout-2026-07-13.md](ghidra-full-reaudit-closeout-2026-07-13.md) | Current trusted-snapshot comparison, semantic revalidation, backup retention, and claim boundary |
 | [executable-analysis.md](executable-analysis.md) | PE metadata, DLL dependencies, source file paths |
 | [GHIDRA-REFERENCE.md](GHIDRA-REFERENCE.md) | Ghidra workspace reference, project notes |
 | [string-locations-index.md](functions/string-locations-index.md) | Historical Phase-1 string dump snapshot (legacy 196-address list) |

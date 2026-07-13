@@ -1,5 +1,9 @@
 # FrontEnd.cpp - Function Index
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x004530a0` → `CTweak__dtor_base_thunk_004530a0` (was `CTweak__dtor_unlink_from_static_list_004530a0`). Older conflicting text below is superseded for these rows. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 > Source File: FrontEnd.cpp | Category: Frontend/Menu System
 
 ## Overview

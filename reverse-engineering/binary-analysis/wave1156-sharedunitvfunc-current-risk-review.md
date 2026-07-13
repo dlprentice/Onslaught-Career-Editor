@@ -1,5 +1,9 @@
 # Wave1156 SharedUnitVFunc Current-Risk Review
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x00401910` comment correction. Older conflicting text below is superseded for these rows. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Wave1156 (`wave1156-sharedunitvfunc-current-risk-review`) accounts for `29 SharedUnitVFunc current-risk rows` from the Wave1108 current focused denominator. It is a fresh Ghidra read-only review with no mutation.
 
 Probe token anchor: Wave1156; wave1156-sharedunitvfunc-current-risk-review; 453/1179 = 38.42%; 29 SharedUnitVFunc current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 726; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; Codex read-only consults used; 0 / 0 / 0; 6411/6411 = 100.00%; 951 DATA xrefs; 442 instruction rows; wave1083-readback-verified=6; wave1085-readback-verified=23; SharedUnitVFunc__WriteVector1cMinus8cToOut_00401550; SharedUnitVFunc__TestField17c19cReadiness_004fd440; SharedUnitVFunc__CopySourceVectors114120AndRefresh_004fe4a0; SharedUnitVFunc__ForwardField208Slot10_004fce00; SharedUnitVFunc__TestField17cEntryNameMatch_004fe310; [maintainer-local-ghidra-backup-root]\BEA_20260605-231547_post_wave1156_sharedunitvfunc_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.

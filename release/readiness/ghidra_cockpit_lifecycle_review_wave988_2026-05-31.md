@@ -1,5 +1,9 @@
 # Ghidra Cockpit Lifecycle Review Wave988 Readiness Note
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** Historical record; `0x00405990` → `CDXCockpit__dtor_base_thunk` (was `CDXCockpit__dtor_base`). The original text below remains provenance rather than current semantic authority. Use the [closeout](../../reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Status: complete read-only static evidence review
 Date: 2026-05-31
 Scope: `cockpit-lifecycle-review-wave988`

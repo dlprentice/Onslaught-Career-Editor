@@ -1,5 +1,9 @@
 # CRT/SEH Runtime Helper Function Mappings
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x0056c684` comment correction. Older conflicting text below is superseded for these rows. Use the [closeout](../ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 > Static Ghidra notes for C runtime and structured-exception helpers in the Steam retail `BEA.exe`.
 > Last updated: 2026-05-26
 

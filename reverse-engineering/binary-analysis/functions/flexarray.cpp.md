@@ -1,5 +1,9 @@
 # flexarray.cpp - Flexible Array Container
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x0044b290` → `CFlexArray__Free_thunk` (was `CFlexArray__Free`). Older conflicting text below is superseded for these rows. Use the [closeout](../ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 **Source File:** `[maintainer-local-source-export-root]\flexarray.cpp`
 **Debug String Address:** `0x00629a9c`
 **Functions Found:** 9 (including 1 thunk)

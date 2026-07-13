@@ -1,5 +1,9 @@
 # Static-To-Proof Next Safe Slice Selection Refresh Readiness Note
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** Historical record; `0x005345d0` comment correction; `0x00534b80` comment correction; `0x00534c10` comment correction; `0x00534ca0` comment correction. The original text below remains provenance rather than current semantic authority. Use the [closeout](../../reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Status: complete post-matrix next safe slice selection, not runtime proof
 Date: 2026-06-09
 Scope: `static-to-proof-next-safe-slice-selection-refresh`

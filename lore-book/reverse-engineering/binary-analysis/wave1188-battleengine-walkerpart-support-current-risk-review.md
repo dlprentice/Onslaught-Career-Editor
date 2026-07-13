@@ -1,5 +1,9 @@
 # Wave1188 BattleEngine / WalkerPart Support Current-Risk Review
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x00406560` → `CBattleEngine__HandleLocks` (was `CBattleEngine__UpdateAutoTargetSetAndFireProjectiles`). Older conflicting text below is superseded for these rows. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Status: complete static current-risk comment/tag normalization; artifact and state closeout pushed
 Date: 2026-06-06
 Scope tag: `wave1188-battleengine-walkerpart-support-current-risk-review`

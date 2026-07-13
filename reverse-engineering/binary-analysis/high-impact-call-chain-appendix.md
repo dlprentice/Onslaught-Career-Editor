@@ -1,5 +1,9 @@
 # High-Impact Call-Chain Appendix (Phase 5)
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x0050b9c0` signature/comment correction. Older conflicting text below is superseded for these rows. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 > Scope: side-effect call-chain depth for frontend/world/text contracts in the static RE completion gate.
 > Last updated: 2026-05-18
 
@@ -60,7 +64,7 @@ Post-run authoritative read-back:
 | `0x004f4730` | `CThunderHead__CreateLegMotion` | `void __thiscall CThunderHead__CreateLegMotion(void * this, void * param_1)` | verified typed |
 | `0x004f86d0` | `CUnit__Init` | `void __thiscall CUnit__Init(void * this, void * init)` | Wave526 supersedes older no-stack-argument snapshot; focused `RET 0x4` read-back verified |
 | `0x004f9a90` | `CUnit__ApplyDamage` | `void __thiscall CUnit__ApplyDamage(void * this, float damageAmount, int damageType)` | verified typed |
-| `0x0050b9c0` | `CWorld__LoadWorld` | `bool __thiscall CWorld__LoadWorld(void * this, void * levelName)` | verified typed |
+| `0x0050b9c0` | `CWorld__LoadWorld` | `bool __thiscall CWorld__LoadWorld(void * this, void * mem_buffer, int is_base_world, int initialize_world_state)` | high-static ABI; live Ghidra correction pending |
 
 Execution queue artifact (completed):
 - `scratch/program_2026-03-01/phase5_signature_hardening_queue.tsv`

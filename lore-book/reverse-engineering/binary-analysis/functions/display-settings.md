@@ -1,5 +1,9 @@
 # Display Settings & Screen Mode Analysis
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x005be628` comment correction. Older conflicting text below is superseded for these rows. Use the [closeout](../ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 > **Source**: Ghidra analysis of BEA.exe (Steam release)
 > **Date**: December 2025
 > **Related**: See `../windowed-mode-analysis.md` for windowed mode investigation
@@ -35,7 +39,11 @@ Battle Engine Aquila retail imports `d3d9.dll` for rendering, but parts of its a
 Wave739 D3D runtime tail saved comments/tags/signatures for `0x005be622 Direct3DCreate9` and `0x005be628 HResultToString` with the `d3d-runtime-tail-wave739` and `wave739-readback-verified` tags.
 
 - `Direct3DCreate9(uint sdk_version)` is a six-byte import thunk that jumps through IAT pointer `0x005d8348`. `CD3DApplication__Create` caller `0x005290bc` pushes SDK version `0x1f` and stores returned EAX at `CD3DApplication +0x32e9c`.
-- `HResultToString(int hresult)` is used by 22 D3D/render/texture error paths. Xref-site instruction evidence shows one HRESULT pushed before each call and returned EAX used as a log/message string; the full instruction export has a single `RET 0x4` at `0x005c9c66`, and sampled return target `0x0060bc44` resolves to `E_ABORT`.
+- `HResultToString(int hresult)` has 21 current direct call sites. The old count
+  of 22 combined those calls with one adjacent `Direct3DCreate9` reference in a
+  two-target export. The mapper has one `RET 0x4` at `0x005c9c66`; a later
+  read-only 300-second decompile succeeded and confirmed 3,497 unique literal
+  string returns plus the `Unknown` fallback.
 
 Queue telemetry after Wave739: `6098` total, `4351` commented, `1747` commentless, `1215` exact-undefined signatures, `36` `param_N`, comment-backed proxy `4351/6098 = 71.35%`, strict proxy `4293/6098 = 70.40%`, raw commentless head `0x0042f220 CSPtrSet__Clear`, and high-signal head `0x005d04e0 DirectInput8Create`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260522-135016_post_wave739_d3d_runtime_tail_verified`.
 

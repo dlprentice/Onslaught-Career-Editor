@@ -1,6 +1,22 @@
 # Current Capabilities
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x00406560` → `CBattleEngine__HandleLocks` (was `CBattleEngine__UpdateAutoTargetSetAndFireProjectiles`); `0x004081c0` → `CBattleEngine__Move` (was `CMonitor__Process`); `0x00410c50` → `CBattleEngineJetPart__Move` (was `CMonitor__UpdateMovementTransitionAndEffects`). Older conflicting text below is superseded for these rows. Use the [closeout](reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Deployment shape: offline safe-copy patches should feel like "choose a preset, prepare a copied game folder, launch the copied executable." Any future first-generation online experiment is expected to require WinUI or a bundled companion helper during the session for identity/auth, invitations, relay/host authority, input delivery, cleanup, and rollback. A later native-feeling mega patch or in-game menu remains a promotion target for proven features, not the first netplay deployment shape.
+
+Static RE quality status: the
+[2026-07-13 Ghidra full re-audit closeout](reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md)
+verifies a stable `6,411`-address inventory across the trusted snapshots and
+independently reviews all `459` Cursor metadata changes. It accepts `388` and
+records `71` correction-required Cursor-delta rows plus `22` targeted records,
+including one explicit superseding overlap, for `92` unique correction
+addresses. The targeted records cover recovered conflicts, research, inherited
+metadata, and rebuild/runtime-critical review. The live project still awaits an
+exclusive mutation lease for those
+corrections. Static quality is not runtime proof, rebuild parity, or strict
+clean-room proof.
 
 Last public downloadable app release shape: the public `v1.0.9` release is an
 unsigned portable Windows x64 ZIP with a SHA-256 checksum sidecar. The package
@@ -366,7 +382,7 @@ Save Lab is the native career-save and global-options workflow. It reads the con
 - A historical source-to-binary gap probe classified 12 selected mechanics anchors as source-only at that time. The 2026-07-12 re-review now establishes selected BattleEngine/JetPart movement owner identities at high static confidence, while copied-runtime behavior, measured constants, and rebuild parity remain pending.
 - A config-defaults binary-doc probe checks selected BattleEngine source default values against existing binary-doc float/hex tokens for the function now saved as `CBattleEngineData__Initialise`, and a fresh headless Ghidra read-back probe validates selected `CBattleEngineData__Initialise`, `CBattleEngine__Init`, and `CPlayer__Init` tokens. This is selected function evidence, not full gameplay-mechanics runtime proof.
 - A fresh Unit/Mech mechanics read-back probe validates selected `CUnit__ApplyDamage`, `CUnit__Init`, `CUnit__UpdateTransform`, `CMech__InitCockpit`, and `CMech__InitTargeting` decompile tokens. This upgrades five named retail functions from source-only mapping toward selected binary read-back, but it still does not prove runtime gameplay-state interpretation or rebuild parity.
-- A fresh BattleEngine helper read-back probe validates selected `CBattleEngine__SwapPrimarySecondaryPartReadersForState`, `CBattleEngine__UpdateAutoTargetSetAndFireProjectiles`, `CBattleEngine__SelectNearestForwardTargetFromGlobalSet`, and `CBattleEngine__IsCurrentResolvedEntry` decompile tokens. This improves transform/target/projectile helper evidence without claiming runtime behavior or rebuild parity.
+- A historical BattleEngine helper read-back probe validated the body at `0x00406560` under its then-saved projectile-helper name. Current static review identifies it as `CBattleEngine__HandleLocks`; the probe also covers `CBattleEngine__SwapPrimarySecondaryPartReadersForState`, `CBattleEngine__SelectNearestForwardTargetFromGlobalSet`, and `CBattleEngine__IsCurrentResolvedEntry`. This improves transform/target/lock helper evidence without claiming runtime behavior or rebuild parity.
 - A historical transform-string xref probe records `flytowalk`, `walktofly`, `hud_armour_low`, and `hud_energy_low` references under the names saved at that time. Later static work identifies `0x0040a580` as `CBattleEngine__Morph` and the HUD-warning-containing process body at `0x004081c0` as `CBattleEngine__Move`; the xrefs alone still do not prove runtime transform or HUD behavior.
 - The transition/HUD helper read-back remains useful body and call-chain evidence, but its old Monitor owner labels are superseded where the 2026-07-12 movement crosswalk says so. Exact ABI details, runtime behavior, and measured values remain open.
 - Static event, state-gate, animation, reader-swap, and source-order evidence identifies `0x0040a580` as `CBattleEngine__Morph`. This is high-confidence static identity, not copied-runtime transform timing, camera behavior, energy behavior, or rebuild parity.

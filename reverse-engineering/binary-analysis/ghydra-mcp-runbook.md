@@ -1,7 +1,13 @@
 # GhydraMCP Runbook (BEA.exe)
 
 > Practical operating guide for this repo's Ghidra workflow, with historical MCP notes.
-> Last updated: 2026-07-12
+> Last updated: 2026-07-13
+
+Current campaign closeout: the
+[2026-07-13 full re-audit recovery and revalidation](ghidra-full-reaudit-closeout-2026-07-13.md)
+verified both trusted endpoints and all ten full-sized intermediates through a
+recursive copy/hash/read-only-open gate. Its proposed semantic corrections are
+not yet live; applying them requires a separate exclusive mutation lease.
 
 ## Active Environment (Authoritative)
 
@@ -29,6 +35,78 @@ The active non-interactive lane is Ghidra headless CLI through the repo wrappers
 1. Set `GHIDRA_HOME` when the default does not match the workstation.
 2. Run `tools/run_ghidra_headless_postscript.sh` or `tools/run_ghidra_batch_rename_headless.sh`.
 3. Keep the target Ghidra project closed in the GUI before headless runs.
+
+## Verified Project Backups
+
+A verified backup is the complete `<project>.gpr` marker plus the recursive
+`<project>.rep` store. A directory name, top-level copy, byte total, or
+zero-length `.gpr` by itself is not a backup proof. Keep the source project
+closed while copying.
+
+Use the tracked standard-library tool against explicit local/ignored roots:
+
+```powershell
+py -3 tools\ghidra_project_backup.py copy <closed-project-root> <new-backup-root> --project-name BEA
+py -3 tools\ghidra_project_backup.py verify <new-backup-root> `
+  --scratch-root <ignored-scratch-root> `
+  --receipt <ignored-receipt.json> `
+  --project-name BEA `
+  --program BEA.exe `
+  --program-md5 <expected-import-md5> `
+  --analyze-headless <analyzeHeadless.bat>
+```
+
+`copy` refuses an existing destination, rejects symlink/reparse traversal,
+hashes the source before and after copying, recursively copies only the project
+pair through a same-parent partial directory, and requires zero missing, extra,
+size-different, or SHA-256-different project files before publication.
+Structural inspection also requires a non-empty `idata/~index.dat` and a
+non-empty recursive `idata/*.db/` payload; arbitrary nonzero files do not turn
+a shell into a project backup.
+`verify` makes another hash-matched scratch copy, opens only that copy with
+`-readOnly -noanalysis`, requires the expected-program sentinel from
+`GhidraProjectOpenProbe.java`, and, when `--program-md5` is supplied, binds the
+open to Ghidra's imported-executable MD5 rather than the program name alone. It
+then re-hashes the copy and source, writes the detailed receipt to a new
+ignored-evidence path without overwriting an earlier receipt, and removes only
+its exact tool-created scratch copy after success or failure unless
+`--keep-probe-copy` was explicit. Embedded backup manifests omit source,
+destination, and staging roots.
+
+Source, destination, scratch, inspection-output, and verification-receipt paths
+are checked before resolution for symlink/reparse ancestry and must be mutually
+safe: copy and scratch roots are disjoint from the source, and receipts cannot
+be written inside the source or scratch tree. The default Ghidra open probe
+fails closed after `300` seconds rather than waiting without a bound.
+
+For mutation rollback, stop at the first mismatch and preserve the failed pair
+and receipt. The exclusive mutation baton must name a verified pre-mutation
+endpoint. Restore only while holding that lease and with all project users
+closed, preserve the failed pair first, then re-run complete-store hashes,
+disposable read-only open, and restart read-back before resuming. Duplicate
+correction addresses are an apply-preflight failure unless a manifest explicitly
+marks a superseding record.
+
+Do not treat a rendered signature string as blanket prototype authority.
+Rendering-only corrections use scoped name or parameter-label operations. A
+structured prototype correction requires an explicitly leased dry run with an
+expected calling convention/type/storage/purge key and exact prototype-key
+read-back before the batch may continue.
+
+Do not probe an incomplete shell directly. Ghidra may materialize owner-only
+project scaffolding such as `project.prp` even when `-readOnly` is set and no
+program can be opened. Structural validation must pass before Ghidra starts,
+and retained backups are verified through a disposable copy rather than opened
+in place.
+
+Focused offline tests:
+
+```powershell
+py -3 tools\ghidra_project_backup_test.py
+py -3 tools\ghidra_full_reaudit_compare_test.py
+py -3 tools\ghidra_full_reaudit_review_ledger_test.py
+py -3 tools\ghidra_full_reaudit_conflict_review_test.py
+```
 
 ## Historical MCP Access Modes
 

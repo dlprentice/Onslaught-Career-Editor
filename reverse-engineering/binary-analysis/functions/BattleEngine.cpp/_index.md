@@ -1,5 +1,9 @@
 # BattleEngine.cpp Function Mappings
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** 6 correction records referenced in this document. Older conflicting text below is superseded for these rows. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 > Functions from BattleEngine.cpp mapped to BEA.exe binary
 > Source: references/Onslaught/BattleEngine.cpp (Stuart's code)
 > Discovered: 2025-12-15 via Ghidra analysis
@@ -8,10 +12,10 @@
 
 > **Queue status (2026-06-01):** Ghidra export-contract closure **6246/6246** (Wave1056: every current function object commented with clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
 
-> **Current semantic correction (2026-07-12):** read-only RTTI, vtable,
-> constructor, caller, object-layout, and source-order evidence identifies
+> **Current semantic corrections (2026-07-13):** read-only evidence identifies
+> `0x00406560` as `CBattleEngine__HandleLocks`, not a projectile helper, and
 > `0x004081c0` as `CBattleEngine__Move`, not `CMonitor__Process`. See the
-> [movement static crosswalk](../../battleengine-movement-static-crosswalk-2026-07-12.md).
+> [full re-audit closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md).
 > The live Ghidra project has not yet been mutated.
 
 - **Curated direct CBattleEngine rows below:** 10 (non-exhaustive)
@@ -139,7 +143,7 @@ These entry-selection helpers are used by combat/runtime selection paths that re
 | Address | Name | Notes |
 |---------|------|-------|
 | 0x00406460 | [CBattleEngine__SwapPrimarySecondaryPartReadersForState](CBattleEngine__SwapPrimarySecondaryPartReadersForState.md) | State-gated morph helper that swaps active reader/object pointers and reparents active part links between walker/jet paths. |
-| 0x00406560 | [CBattleEngine__UpdateAutoTargetSetAndFireProjectiles](CBattleEngine__UpdateAutoTargetSetAndFireProjectiles.md) | Maintains/filters tracked target set and emits projectiles under resolved-entry, range, and forward-angle gates. |
+| 0x00406560 | [CBattleEngine__HandleLocks](CBattleEngine__UpdateAutoTargetSetAndFireProjectiles.md) | Source-aligned lock maintenance/acquisition; the legacy filename is retained for link stability and the live Ghidra name remains stale pending an exclusive mutation lease. |
 | 0x00406da0 | [CBattleEngine__SelectNearestForwardTargetFromGlobalSet](CBattleEngine__SelectNearestForwardTargetFromGlobalSet.md) | Selects nearest forward-facing in-range target from global candidate set, excluding entries already in current tracking set; Wave 309 hardened the profile/vector/range-scale signature. |
 
 ## CWeapon Distance-Profile Helpers Reached From BattleEngine Firing Paths (Wave539, 2026-05-18)
@@ -151,7 +155,7 @@ Wave539 corrected stale `CBattleEngine__...` owner labels for seven helpers beca
 | 0x005061f0 | CWeapon__DoesTargetMaskMatchDistanceProfile | `RET 0x4` proves one explicit `target_unit` argument after current weapon `ECX`; body filters target state, buckets weapon distance from `this+0x60`, walks `DAT_008553ec`, and tests profile mask `+0xa4` against `target_unit+0x34`. |
 | 0x00506350 | CWeapon__GetDistanceProfileField90 | Register-only current-weapon helper returning selected profile entry `+0x90` or `0`. |
 | 0x00506440 | CWeapon__GetDistanceProfileField94 | Register-only current-weapon helper returning selected profile float `+0x94` as a double or `0.0`; called before projectile add paths. |
-| 0x00506530 | CWeapon__GetDistanceProfileFieldA8 | Register-only current-weapon helper returning selected profile entry `+0xa8` or `0`; used as a firing-mode selector by `CBattleEngine__UpdateAutoTargetSetAndFireProjectiles`. |
+| 0x00506530 | CWeapon__GetDistanceProfileFieldA8 | Register-only current-weapon helper returning selected profile entry `+0xa8` or `0`; used as a lock-mode selector by `CBattleEngine__HandleLocks`. |
 | 0x00506620 | CWeapon__GetDistanceProfileField98 | Register-only current-weapon helper returning selected profile float `+0x98` as a double or `0.0`; used before facing/range checks. |
 | 0x00506710 | CWeapon__GetDistanceProfileField9C | Register-only current-weapon helper returning selected profile float `+0x9c` as a double or `0.0`; used as a target-search range scale. |
 | 0x00506800 | CWeapon__GetDistanceProfileFieldA0 | Register-only current-weapon helper returning selected profile float `+0xa0` as a double or `0.0`; used as an alternate target-search range scale. |

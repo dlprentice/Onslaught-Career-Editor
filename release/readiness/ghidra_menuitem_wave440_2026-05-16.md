@@ -1,5 +1,9 @@
 # Ghidra CMenuItem Base Wave440 Correction
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** Historical record; `0x004a43a0` comment correction; `0x004cf050` → `CMenuItem__Destructor_Thunk` (was `CMenuItem__Destructor`). The original text below remains provenance rather than current semantic authority. Use the [closeout](../../reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Status: public-safe static Ghidra evidence note
 Date: 2026-05-16
 Scope: saved retail `BEA.exe` Ghidra signature/comment/tag correction

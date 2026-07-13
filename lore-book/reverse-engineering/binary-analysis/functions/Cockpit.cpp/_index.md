@@ -1,5 +1,9 @@
 # Cockpit.cpp Functions
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x00405990` → `CDXCockpit__dtor_base_thunk` (was `CDXCockpit__dtor_base`). Older conflicting text below is superseded for these rows. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 > Source File: Cockpit.cpp owner group | Binary: BEA.exe
 > Debug Path: not confirmed in the tracked Stuart-source corpus
 

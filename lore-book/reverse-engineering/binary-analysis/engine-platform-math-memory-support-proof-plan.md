@@ -1,5 +1,9 @@
 # Engine / Platform / Math / Memory Support Proof Plan
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x004081c0` → `CBattleEngine__Move` (was `CMonitor__Process`). Older conflicting text below is superseded for these rows. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Status: active public-safe proof plan, not runtime proof
 Last updated: 2026-06-08
 Scope: `engine-platform-math-memory-support-proof-plan`

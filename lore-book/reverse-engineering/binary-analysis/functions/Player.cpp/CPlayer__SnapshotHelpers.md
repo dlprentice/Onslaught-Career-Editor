@@ -1,5 +1,9 @@
 # CPlayer Snapshot Helpers
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x004d2b40` comment correction. Older conflicting text below is superseded for these rows. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 > Addresses: `0x004d2a70`, `0x004d2ae0`, `0x004d2b40`, `0x004d2bb0`
 >
 > Source: `references/Onslaught/Player.cpp` / `references/Onslaught/Player.h`

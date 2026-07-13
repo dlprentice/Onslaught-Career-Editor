@@ -1,5 +1,9 @@
 # Hud.cpp
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x004de8b0` → `CHudComponent__GetField60Float` (was `CHudComponent__IsFadeComplete`). Older conflicting text below is superseded for these rows. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Wave1216 (`wave1216-render-resource-texture-hud-tail-current-risk-review`) re-read `CHudComponent__RenderPassEntry` as part of the HUD/render tail current-risk review. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-101007_post_wave1216_render_resource_texture_hud_tail_current_risk_review_verified`. Runtime HUD behavior, exact layouts, exact source identity, BEA patching behavior, rebuild parity, and no-noticeable-difference parity remain separate proof.
 
 > HUD (Heads-Up Display) functions from BEA.exe

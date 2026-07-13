@@ -1,5 +1,9 @@
 # Static Re-Audit Measurement Register
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x0044e640` → `CFenrirMainGunAI__ScanListsAndSelectSupportTarget` (was `CSquadNormalReader__ScanListsAndSelectSupportTarget_0044e640`); `0x004530a0` → `CTweak__dtor_base_thunk_004530a0` (was `CTweak__dtor_unlink_from_static_list_004530a0`). Older conflicting text below is superseded for these rows. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 > **Semantic-confidence correction (2026-07-12):** this register remains the
 > authority for accounting, not for universal owner/method correctness. A
 > read-only re-review found high-confidence BattleEngine/JetPart owner errors
@@ -36,8 +40,15 @@ Wave1210 measured anchor: unique-address accounting governs active current-risk 
 
 
 Status: active anti-churn measurement register
-Last updated: 2026-06-22
+Last updated: 2026-07-13
 Scope: static-first Ghidra re-audit, system maps, and pre-runtime completion gates
+
+Semantic-quality overlay: the
+[2026-07-13 full re-audit closeout](ghidra-full-reaudit-closeout-2026-07-13.md)
+confirms the `6,411`-address inventory while showing that the historical closure
+counters did not prove universal semantic correctness. Its `71` Cursor-delta
+corrections and separate `22` targeted corrections are current authority;
+applying them to live Ghidra remains pending an exclusive mutation lease.
 
 This is the path register for the static RE percentages and maps. Use it to decide which file owns each number, how the number is derived, which command validates it, and which files must move together after a wave. The register is the human front door; the generated ledger is the machine authority for current-risk unique-address accounting.
 
@@ -109,7 +120,11 @@ Map completeness is measurable at the document level, not only by function perce
 2. Create ignored evidence under `subagents/ghidra-static-reaudit/waveNNNN-<tag>/`.
 3. Export fresh metadata, tags, xrefs, instructions, and decompile evidence, unless the wave is explicitly a bounded supersession.
 4. Mutate only after dry-run evidence, source/decompile/xref/instruction agreement, read-back plan, and claim boundary are strong.
-5. Verify a Ghidra project backup and record only the path/count/hash-diff summary in public docs.
+5. Verify a complete Ghidra project backup with
+   `tools/ghidra_project_backup.py`: recursively copy the `.gpr` plus `.rep`,
+   require source stability and zero relative-path/size/SHA-256 differences,
+   and prove the expected program opens read-only from a disposable copy.
+   Record only the sanitized count/hash/open summary in public docs.
 6. Add or update the focused probe, wave note, readiness note, canonical docs, lore-book mirrors, ledgers, and state batons.
 7. Regenerate `static-reaudit-current-risk-ledger.json` with `py -3 tools/static_reaudit_accounting_guard.py --write-ledger`.
 8. Update `static-reaudit-progress.json`, this register, `mapped-systems.md`, and `static-reaudit-accounting-guard.md` only from the generated ledger and validated wave evidence.

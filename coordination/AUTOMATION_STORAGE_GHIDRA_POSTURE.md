@@ -1,7 +1,7 @@
 # Automation, Storage, Ghidra, And Proof Posture
 
 Status: active coordination posture
-Last updated: 2026-07-11
+Last updated: 2026-07-13
 
 Use this document before assigning, accepting, or integrating coordinated work
 that touches recurring automation, storage retention, Ghidra/headless work, or
@@ -182,12 +182,36 @@ Mutation is a separate gate. A Ghidra mutation lane requires:
 
 - explicit mutation authority and an exclusive `live-ghidra-project` lease;
 - a current backup plan to the active ignored scratch/backup root or another
-  explicit local/app-owned ignored root;
+  explicit local/app-owned ignored root, using the complete `.gpr` plus
+  recursive `.rep` store rather than a top-level or marker-only copy;
+- per-relative-file hash equality and a disposable read-only program-open
+  receipt before mutation; use `tools/ghidra_project_backup.py` and
+  `tools/GhidraProjectOpenProbe.java` for the supported focused gate;
 - dry-run or probe evidence before apply when a script can mutate the project;
 - serialized write/read-back per address or data item;
 - ledger and attempt-log updates for every attempted mutation;
 - explicit save/checkpoint discipline and read-back after restart when needed;
 - public docs updated only after read-back confirms the intended state.
+
+After a mutation batch, create a new complete backup and repeat the same hash,
+read-only open, and zero-post-open-drift verification. A project shell, partial
+store, or unverified copy cannot satisfy either the pre-mutation or closeout
+gate.
+
+Stop the batch at the first apply or read-back mismatch. Preserve the failed
+state and attempt receipt; do not continue to later addresses. The mutation
+baton must name the verified rollback endpoint before apply. Any restoration is
+a separate exclusive-lease action: close all project users, preserve the failed
+pair, restore the complete `.gpr` plus recursive `.rep` pair, then repeat hashes,
+the disposable read-only open, and restart read-back before resuming. When
+correction packs share an address, preflight must reject ambiguity unless one
+record explicitly declares supersession; for the 2026-07-13 closeout,
+`0x00481060` in the targeted pack supersedes the Cursor-delta record.
+Rendered signature strings are not blanket prototype authority. Rendering-only
+rows must use field-scoped rename/parameter-label operations. A structured
+prototype row requires its own leased mutation, an expected calling
+convention/type/storage/purge key from dry-run, and exact prototype-key
+read-back before continuing.
 
 Headless apply mode must fail closed on bad rows, missing targets, lock
 contention, dry-run mismatches, absent backups, or unclear ownership. It must

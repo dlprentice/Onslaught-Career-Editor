@@ -1,27 +1,46 @@
 # CWorld__LoadWorld
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x0050b9c0` signature/comment correction. Older conflicting text below is superseded for these rows. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 > Address: 0x0050b9c0 | Source: World.cpp (source file not present in `references/Onslaught/` snapshot)
 
 ## Status
 - **Named in Ghidra:** Yes
-- **Signature Set:** Yes (preserved/read-back verified again in Wave844, 2026-05-25)
+- **Current live-Ghidra signature:** stale one-argument prototype
+- **Revalidated ABI:** three explicit arguments; tracked correction pending an exclusive mutation lease
 - **Verified vs Source:** Partial (behavior-level; source file is not present in current `references/Onslaught/` snapshot)
-- **Latest static treatment:** Wave844 `cworld-load-world-wave844`
+- **Latest static treatment:** 2026-07-13 runtime-critical revalidation
 
 ## Purpose
 
-Loads a game world/level from an .aya asset archive file. This is the main entry point for level loading.
+Loads serialized world state from a `CDXMemBuffer`-style input. The body is the
+main retail world-load worker reached from `CWorld__LoadWorldFile`; static
+evidence does not establish that its input is an `.aya` archive.
 
 ## Signature
 ```c
-bool __thiscall CWorld__LoadWorld(void * this, void * levelName);
+bool __thiscall CWorld__LoadWorld(
+    void * this,
+    void * mem_buffer,
+    int is_base_world,
+    int initialize_world_state);
 ```
 
-Read-back verified in `scratch/program_2026-03-01/phase5_signature_readback/index.tsv` (`status=OK`) and preserved during Wave844 CWorld LoadWorld (`cworld-load-world-wave844`, `wave844-readback-verified`).
+Raw prologue stack accounting maps entry argument 1 to the memory-buffer read
+receiver, argument 2 to the base-world gate forwarded into
+`CWorld__LoadWorldHeader`, and nonzero argument 3 to initial teardown/LOD/global
+world setup. The sole return is `RET 0xc`, proving three stack arguments. The
+argument names are bounded semantic labels; arity, order, and callee cleanup are
+direct ABI evidence.
 
-## Wave844 Static Read-Back
+## Historical Wave844 Static Read-Back
 
-Wave844 saved comment/tag evidence for `0x0050b9c0 CWorld__LoadWorld` and preserved the existing `bool __thiscall CWorld__LoadWorld(void * this, void * levelName)` signature. The pass made no rename, no signature change, no function-boundary change, and no executable-byte change.
+Wave844 saved comment/tag evidence and preserved the then-existing one-argument
+signature. That preservation is historical read-back, not semantic validation;
+the 2026-07-13 raw ABI review supersedes it. Wave844 made no function-boundary
+or executable-byte change.
 
 Key static anchors:
 
@@ -37,20 +56,21 @@ Boundary: this is static retail Ghidra evidence only. Exact world-buffer schema,
 
 ## Loading Process
 
-1. **Parse AYA Header** - Read archive structure
-2. **Extract Terrain** - Load heightmap and terrain textures
-3. **Load Entities** - Spawn buildings, vehicles, units
-4. **Initialize Scripts** - Load and compile MSL scripts
-5. **Setup Audio** - Load level-specific sounds
-6. **Finalize** - Post-processing and optimization
+1. Read and validate the observed world version range (`43..50`).
+2. Load the world header and script-event data from the memory buffer.
+3. Load heightfield and named-mesh state.
+4. Create squads, things, effects, triggers, and related world objects.
+5. Load or skip influence-map data and load waypoints.
+6. For the non-base path, spawn initial things and finalize influence and
+   occupancy state.
 
 ## Call-Chain Anchors (Pass 2)
 
 - `CWorld__LoadWorldFile` delegates into this function (`functions/World.cpp/_index.md`).
 - This function fans out into header/LOD/spawn setup helpers (`CWorld__LoadWorldHeader`, `CWorld__InitLODLists`, `CWorld__SpawnInitialThings`).
 - Waypoint loading is called from this world-load chain (`functions/WaypointManager.cpp/_index.md`).
-- Additional caller anchor captured in xref export:
-  - `scratch/deep_semantic_tail_2026-02-27/pass2_semantic_wave145_prep/xrefs.tsv` line 21 (`CDXEngine__Unk_005475d0` call at `0x0050d11e`).
+- The fresh targeted xref export retains one direct caller:
+  `0x0050b720 CWorld__LoadWorldFile`.
 
 ## Level Naming
 

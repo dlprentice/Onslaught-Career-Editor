@@ -1,6 +1,10 @@
 # BattleEngine Movement Static Crosswalk - 2026-07-12
 
-Status: high-confidence static owner/source mapping; runtime behavior and live Ghidra mutation remain pending
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** 7 correction records referenced in this document. Older conflicting text below is superseded for these rows. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
+Status: high-confidence static owner/source mapping; targeted revalidation completed 2026-07-13; runtime behavior and live Ghidra mutation remain pending
 
 ## Scope
 
@@ -46,7 +50,7 @@ These are dimension scores, not a whole-binary completion percentage.
 | `0x004081c0 CBattleEngine__Move` | 4 | 2 | 3 | 4 | 0 |
 | `0x00410c50 CBattleEngineJetPart__Move` | 4 | 2 | 3 | 4 | 0 |
 | `0x00411630` / `0x00411aa0` / `0x00411b70` / `0x00412900` helpers | 4 | 2 | 3 | 4 | 0 |
-| `0x00412ad0` unresolved helper | 1 | 1 | 1 | 1 | 0 |
+| `0x00412ad0 CBattleEngineWalkerPart__UpdateWalkCycle` | 4 | 2 | 3 | 4 | 0 |
 
 ## Corrected Static Map
 
@@ -58,7 +62,7 @@ These are dimension scores, not a whole-binary completion percentage.
 | `0x00411aa0` | `CMonitor__ComputeTerrainVelocityScalar` | `CBattleEngineJetPart__GetFriction` | Called from JetPart Move and returns the source-compatible terrain/velocity-gated friction scalar. | High static; runtime pending |
 | `0x00411b70` | `CBattleEngineJetPart__IsStateMachineActive` | `CBattleEngineJetPart__GetIsDoingSpecialAirMove` | Returns true when the JetPart loop field or barrel-count field is active, exactly matching the source predicate. | High static; runtime pending |
 | `0x00412900` | `CMonitor__CanUseTrackingUpdate` | `CBattleEngineJetPart__AutoLevel` | Uses the JetPart main-part pointer, on-ground and velocity virtuals, main-part energy, and local barrel-count field in the same decision sequence as source. | High static; caller name/prototype cleanup and runtime pending |
-| `0x00412ad0` | `CMonitor__UpdateSurfaceAlignmentAngle` | unresolved helper before WalkerPart construction | The body is reached from WalkerPart movement context, but this pass did not establish an exact source method or owner strongly enough to rename it. | Provisional; keep unresolved |
+| `0x00412ad0` | `CMonitor__UpdateSurfaceAlignmentAngle` | `CBattleEngineWalkerPart__UpdateWalkCycle` | Its sole caller is `CBattleEngineWalkerPart__Move`; the receiver uses `+0x20` as the main-part pointer and `+0x24/+0x28` as current/old walk-cycle fields. The body copies the old cycle, transposes the main-part orientation, projects velocity into local space, advances by the larger-magnitude X/Y component, and wraps through plus/minus pi exactly like the source method. The old comment's smaller-component claim was false. | High static; runtime pending |
 
 `0x00411a60 Vec3__Cross` remains a shared math helper and is not reassigned to
 JetPart ownership.
@@ -83,6 +87,8 @@ Camera, FOV, animation frames, audio, and presentation remain separate lanes.
 - The Monitor owner/name at `0x004081c0` is wrong.
 - The Monitor owner/name at `0x00410c50` and its selected child helpers is
   wrong.
+- The Monitor owner/name and smaller-component description at `0x00412ad0`
+  are wrong; the body is `CBattleEngineWalkerPart__UpdateWalkCycle`.
 - The May 7 jet energy/stall report used the broad BattleEngine Move body at
   `0x004081c0` as if it were the JetPart movement method. Its specific
   `+0x280` subtraction and counter interpretation is withdrawn. The actual

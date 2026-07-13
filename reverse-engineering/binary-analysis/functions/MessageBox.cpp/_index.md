@@ -1,5 +1,9 @@
 # MessageBox.cpp
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 semantic revalidation:** `0x004e1200` comment correction. Older conflicting text below is superseded for these rows. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Wave1172 current-risk update: Wave1172 (`wave1172-message-particle-global-list-cleanup-current-risk-review`) re-read `0x004b6f10 CMessage__scalar_deleting_dtor` and `0x004b7160 CMessage__dtor_base` from the active current-risk denominator with fresh Ghidra export evidence and no mutation. The same wave also covers `ParticleEffectLink__PushGlobalList` and `CParticleManager__RemoveFromGlobalList`; it accounts for `4 message/particle global-list current-risk rows`. Current focused accounting is `672/1179 = 57.00%`, remaining active focused work: 507, current focused candidates: 1178, live regenerated current focused candidates: 1178, current risk candidates: 6166. Fresh exports verified `90 xref rows` and `64 instruction rows`; read-only review; no mutation; Codex read-only consult used; static debt `0 / 0 / 0`; `6411/6411 = 100.00%`; backup `[maintainer-local-ghidra-backup-root]\BEA_20260606-071000_post_wave1172_message_particle_global_list_cleanup_current_risk_review_verified`; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction. Runtime message display, runtime voice/dialog behavior, exact `CMessage` layout, exact source-body identity, and rebuild parity remain separate proof.
 
 > Retail static evidence bucket for `CMessageBox` helpers in `BEA.exe`.
