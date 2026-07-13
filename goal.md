@@ -357,6 +357,15 @@ which the selected role may load through the existing guarded Godot bridge.
   WinUI/AppCore and deterministic Core/Godot, but changes the campaign scoreboard
   to player outcomes and accepted behavior contracts while freezing recursive
   proof growth and framework-rewrite churn.
+- The coherent Patch Bench boundary is integrated through `a1924ed5`: the
+  ordinary copied-profile journey remains visible while five specialist groups
+  live under one collapsed Lab; next-copy choices remain disclosed, copied-
+  options values are snapshotted before confirmation, narrow actions are fully
+  readable, and native smoke now rejects stale default-path builds.
+- The reviewed observed CMSH contract is integrated at `90f46237` and explicitly
+  supersedes `3f6c41c4`. Implementation is leased only for the GPL parser,
+  generated fixture/tests, pure client safety oracle, and focused package route;
+  native Godot/bootstrap and retail identity remain later serialized steps.
 - The optional local presentation lane is integrated on `main`. It pins the
   Stuart Onslaught reference at `5352a81` and the AYA reference plus narrow
   rectangular-DDS correction at `53b10b0`; adds an ignored exporter/bootstrap

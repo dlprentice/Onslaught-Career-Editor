@@ -17,8 +17,8 @@
       "newReleaseAuthorized": false
     },
     "repository": {
-      "registeredWorktrees": 7,
-      "worktreeOwnership": "main coordinator; Player Value & UX; Rebuild Asset Pipeline; Lore & Provenance; RE Behavior Contracts; Contributor Experience; temporary superseded CMSH design checkout pending asset-spec absorption",
+      "registeredWorktrees": 5,
+      "worktreeOwnership": "main coordinator; Player Value & UX; Rebuild Asset Pipeline; Lore & Provenance; RE Behavior Contracts",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
       "lastPushedBeforeCurrentSlice": "a3b3af7c (CMSH profile-versus-identity goal/state correction); main and origin/main divergence 0 0",
@@ -37,7 +37,7 @@
     "patchContractCloseout": {
       "accounting": "29 rows: 20 visible options (9 stable, 11 experimental), 9 hidden companions, 17 dependency edges, 118 conflict edges",
       "safety": "Exact pinned-catalog mutation membership, canonical specimen or verified-clean-backup identity, complete known transition attestation, case-consistent dependency/conflict/profile semantics, sidecar link/stale-state rejection, and atomic damaged-copy recovery",
-      "ux": "Windowed & Mods now separates exact compatibility/recovery from two initially unselected bounded Player Mods (PATCHED identity marker and non-save-awarding Goodies wall preview); retained legacy/research recipes, visual/executable experiments, and launch/control diagnostics live in a structured collapsed Lab. The required resolution_gate and force_windowed rows remain visible with stable IDs/details but are checked, disabled, and explicitly automatic. All preset/reset paths reassert them, Clear removes only optional mods, both Create paths share readiness and a synchronous busy latch, and invalid selection is rejected before confirmation. The two normal compatibility actions retain complete centered labels at 760px through whole-word wrapping and equal height without changing IDs, handlers, or semantics.",
+      "ux": "Windowed & Mods now keeps compatibility, player mods, source/Create/receipt/Play/Stop, and local split-screen in the normal journey. A full-width collapsed Lab owns five purpose groups for patch experiments, launch/control, online research, music experiments, and BEA-only diagnostics. Visible Lab status and Create confirmation count only settings affecting the next copy; copied-options values are immutable pre-confirm snapshots. Required compatibility rows remain checked/locked, all ten constrained two-column actions wrap completely at 760px, and the native smoke rejects a default-path WinUI DLL older than current source so an alternate-output build cannot false-pass.",
       "validation": "Focused closeout passed 9 AppCore catalog/profile tests, 34 C# patch regressions, Python helper safety/self-tests, and 30 accounting tests. Final npm test passed a zero-warning WinUI build, 1316 AppCore tests, 138 WinUI tests plus 2 expected private-catalog skips, and all rebuild suites; the isolated native Patch Bench interaction smoke, 3662-file/6264-link Markdown, 19457-file payload, 19641-file submodule payload, migration inventory, 18600-file hygiene/line endings, and 74-package notices gates passed.",
       "review": "Codex and bounded Cursor/Grok normal/adversarial review converged after catalog-binding, transition-attestation, case, sidecar, and interrupted-write recovery blockers were fixed; hostile same-user process isolation remains explicitly out of scope"
     },
