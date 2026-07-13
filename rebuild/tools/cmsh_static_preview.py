@@ -103,6 +103,9 @@ class _Part:
     transform: _Transform
     vertices: tuple[tuple[float, float, float], ...]
     groups: tuple[tuple[int, ...], ...]
+    children: tuple[int, ...] = ()
+    parent: int | None = None
+    reference: int | None = None
 
 
 @dataclass(frozen=True)
@@ -129,6 +132,8 @@ _PART_ORDERS = {
         "PRNT NMIC BBOX VHFM HORI HPOS PBKT CPOS PMVB",
         "CHLD PRNT BBOX VHFM HORI HPOS CPOS CORI PMVB",
         "CHLD PRNT BBOX VHFM HORI HPOS CPOS PMVB",
+        "PRNT BBOX VHFM HORI HPOS CPOS CORI REFR PMVB",
+        "CHLD PRNT BBOX VHFM HORI HPOS CPOS CORI REFR PMVB",
     )
 }
 _SIBLING_ORDERS = {
@@ -280,6 +285,17 @@ def _parse_pm_vb(payload: memoryview, origin: int, budget: _Budget) -> tuple[tup
     return owned, tuple(groups)
 
 
+def _validate_reference_source_pm_vb(payload: memoryview, origin: int) -> None:
+    reader = _Reader(payload, origin=origin, limit_role="REFR source PMVB")
+    cmvb = reader.expected(b"CMVB", "CMVB", length=296)
+    if cmvb.payload[264] != 0:
+        raise CmshProfileError("unsupported bones/reference graph", cmvb.offset, "REFR populated source PMVB")
+    stride, fvf, topology = struct.unpack_from("<III", cmvb.payload, 276)
+    if stride != 36 or fvf != 0x152 or topology != 4:
+        raise CmshProfileError("unsupported profile", cmvb.offset, "REFR source stride/FVF/topology")
+    reader.require_end()
+
+
 def _parse_part(chunk: _Chunk, part_index: int, part_count: int, budget: _Budget) -> _Part:
     reader = _Reader(chunk.payload, origin=chunk.offset + 8, limit_role="MESP")
     cmsp = reader.expected(b"CMSP", "CMSP", length=316)
@@ -300,6 +316,9 @@ def _parse_part(chunk: _Chunk, part_index: int, part_count: int, budget: _Budget
     tags: list[str] = []
     vertices: tuple[tuple[float, float, float], ...] = ()
     groups: tuple[tuple[int, ...], ...] = ()
+    children: tuple[int, ...] = ()
+    parent: int | None = None
+    reference: int | None = None
     while reader.pos < len(reader.data):
         record = reader.chunk("MESP record")
         try:
@@ -307,7 +326,7 @@ def _parse_part(chunk: _Chunk, part_index: int, part_count: int, budget: _Budget
         except UnicodeDecodeError as error:
             raise CmshProfileError("unexpected tag/order", record.offset, "non-ASCII MESP tag") from error
         tags.append(tag)
-        if record.tag in {b"BONE", b"BONW", b"BONS", b"REFR"}:
+        if record.tag in {b"BONE", b"BONW", b"BONS"}:
             raise CmshProfileError("unsupported bones/reference graph", record.offset, tag)
         if record.tag == b"CHLD":
             if len(record.payload) != child_count * 4 or child_count == 0:
@@ -318,8 +337,17 @@ def _parse_part(chunk: _Chunk, part_index: int, part_count: int, budget: _Budget
         elif record.tag in {b"PRNT", b"NMIC"}:
             if len(record.payload) != 4:
                 raise CmshProfileError("invalid declared length/count", record.offset, tag)
-            if struct.unpack("<I", record.payload)[0] >= part_count:
+            target = struct.unpack("<I", record.payload)[0]
+            if target >= part_count:
                 raise CmshProfileError("index out of bounds", record.offset, tag)
+            if record.tag == b"PRNT":
+                parent = target
+        elif record.tag == b"REFR":
+            if len(record.payload) != 4:
+                raise CmshProfileError("invalid declared length/count", record.offset, "REFR")
+            reference = struct.unpack("<I", record.payload)[0]
+            if reference >= part_count:
+                raise CmshProfileError("index out of bounds", record.offset, "REFR")
         elif record.tag == b"BBOX":
             nested = _Reader(record.payload, origin=record.offset + 8, limit_role="outer BBOX")
             nested.expected(b"BBOX", "inner BBOX", length=40)
@@ -342,7 +370,13 @@ def _parse_part(chunk: _Chunk, part_index: int, part_count: int, budget: _Budget
             if len(record.payload) > MAX_OPAQUE:
                 raise CmshProfileError("limit exceeded", record.offset, tag)
         elif record.tag == b"PMVB":
-            vertices, groups = _parse_pm_vb(record.payload, record.offset + 8, budget)
+            if reference is None:
+                vertices, groups = _parse_pm_vb(record.payload, record.offset + 8, budget)
+            else:
+                try:
+                    _validate_reference_source_pm_vb(record.payload, record.offset + 8)
+                except CmshProfileError as error:
+                    raise CmshProfileError("unsupported bones/reference graph", record.offset, "REFR source PMVB") from error
         else:
             raise CmshProfileError("unexpected tag/order", record.offset, tag)
     if tuple(tags) not in _PART_ORDERS:
@@ -350,7 +384,69 @@ def _parse_part(chunk: _Chunk, part_index: int, part_count: int, budget: _Budget
     if ("CHLD" in tags) != (child_count > 0):
         raise CmshProfileError("invalid declared length/count", chunk.offset, "CHLD presence")
     rows = ((base[0], base[1], base[2]), (base[4], base[5], base[6]), (base[8], base[9], base[10]))
-    return _Part(_Transform(rows, position), vertices, groups)
+    return _Part(_Transform(rows, position), vertices, groups, children, parent, reference)
+
+
+def _checked_add(total: int, increment: int, limit: int, role: str) -> int:
+    if increment < 0 or total > limit or increment > limit - total:
+        raise CmshProfileError("limit exceeded", 0, role)
+    return total + increment
+
+
+def _validate_reference_hierarchy(parts: tuple[_Part, ...]) -> None:
+    roots = [index for index, part in enumerate(parts) if part.parent is None]
+    if len(roots) != 1:
+        raise CmshProfileError("unsupported bones/reference graph", 0, "REFR hierarchy roots")
+    claimed: dict[int, int] = {}
+    for parent_index, part in enumerate(parts):
+        for child in part.children:
+            if child in claimed:
+                raise CmshProfileError("unsupported bones/reference graph", 0, "REFR duplicate parent")
+            claimed[child] = parent_index
+    for index, part in enumerate(parts):
+        if part.parent is None:
+            if index in claimed:
+                raise CmshProfileError("unsupported bones/reference graph", 0, "REFR root has parent")
+        elif claimed.get(index) != part.parent:
+            raise CmshProfileError("unsupported bones/reference graph", 0, "REFR hierarchy reciprocity")
+    for start in range(len(parts)):
+        seen: set[int] = set()
+        current: int | None = start
+        while current is not None:
+            if current in seen:
+                raise CmshProfileError("unsupported bones/reference graph", 0, "REFR parent cycle")
+            seen.add(current)
+            current = parts[current].parent
+
+
+def _resolve_references(parts: tuple[_Part, ...]) -> tuple[_Part, ...]:
+    if not any(part.reference is not None for part in parts):
+        return parts
+    _validate_reference_hierarchy(parts)
+    resolved: list[_Part] = []
+    for index, part in enumerate(parts):
+        if part.reference is None:
+            resolved.append(part)
+            continue
+        target_index = part.reference
+        if target_index >= index:
+            raise CmshProfileError("unsupported bones/reference graph", 0, "REFR must target earlier part")
+        target = parts[target_index]
+        if target.reference is not None or not target.vertices or not target.groups:
+            raise CmshProfileError("unsupported bones/reference graph", 0, "REFR direct geometry target")
+        if part.vertices or part.groups:
+            raise CmshProfileError("unsupported bones/reference graph", 0, "REFR ambiguous geometry source")
+        resolved.append(_Part(part.transform, target.vertices, target.groups, part.children, part.parent, part.reference))
+
+    expanded_vertices = expanded_indices = expanded_groups = expanded_triangles = 0
+    for part in resolved:
+        expanded_vertices = _checked_add(expanded_vertices, len(part.vertices), MAX_VERTICES, "expanded vertex count")
+        expanded_groups = _checked_add(expanded_groups, len(part.groups), MAX_GROUPS, "expanded group count")
+        for indices in part.groups:
+            expanded_indices = _checked_add(expanded_indices, len(indices), MAX_INDICES, "expanded index count")
+            surviving = sum(len({indices[k], indices[k + 1], indices[k + 2]}) == 3 for k in range(len(indices) - 2))
+            expanded_triangles = _checked_add(expanded_triangles, surviving, MAX_TRIANGLES, "expanded triangle count")
+    return tuple(resolved)
 
 
 def parse_cmsh_stream(data: bytes) -> ParsedMesh:
@@ -375,7 +471,7 @@ def parse_cmsh_stream(data: bytes) -> ParsedMesh:
         nested.require_end()
     part_chunks = [reader.expected(b"MESP", f"MESP {index}") for index in range(part_count)]
     budget = _Budget()
-    parts = tuple(_parse_part(chunk, index, part_count, budget) for index, chunk in enumerate(part_chunks))
+    parts = _resolve_references(tuple(_parse_part(chunk, index, part_count, budget) for index, chunk in enumerate(part_chunks)))
     reader.absolute_limit = None
     siblings: list[bytes] = []
     while reader.pos < len(reader.data):
@@ -400,9 +496,7 @@ def emit_obj(mesh: ParsedMesh) -> bytes:
 
     def append_line(line: str) -> None:
         nonlocal encoded_bytes
-        encoded_bytes += len(line.encode("utf-8")) + 1
-        if encoded_bytes > MAX_OBJ:
-            raise CmshProfileError("limit exceeded", 0, "OBJ bytes")
+        encoded_bytes = _checked_add(encoded_bytes, len(line.encode("utf-8")) + 1, MAX_OBJ, "OBJ bytes")
         lines.append(line)
 
     bases: list[int | None] = []
@@ -424,7 +518,7 @@ def emit_obj(mesh: ParsedMesh) -> bytes:
             if any(abs(value) > MAX_COORDINATE for value in values):
                 raise CmshProfileError("limit exceeded", 0, "transformed position")
             append_line("v " + " ".join(_number(value) for value in values))
-            emitted_vertices += 1
+            emitted_vertices = _checked_add(emitted_vertices, 1, MAX_VERTICES, "OBJ vertices")
     faces = 0
     for part, base in zip(mesh.parts, bases, strict=True):
         if base is None:
@@ -441,9 +535,7 @@ def emit_obj(mesh: ParsedMesh) -> bytes:
                 if not (1 <= a <= emitted_vertices and 1 <= b <= emitted_vertices and 1 <= c <= emitted_vertices):
                     raise CmshProfileError("OBJ rejection", 0, "face index")
                 append_line(f"f {a} {b} {c}")
-                faces += 1
-                if faces > MAX_TRIANGLES:
-                    raise CmshProfileError("limit exceeded", 0, "OBJ faces")
+                faces = _checked_add(faces, 1, MAX_TRIANGLES, "OBJ faces")
     if emitted_vertices == 0 or faces == 0:
         raise CmshProfileError("OBJ rejection", 0, "empty geometry")
     result = ("\n".join(lines) + "\n").encode("utf-8")
