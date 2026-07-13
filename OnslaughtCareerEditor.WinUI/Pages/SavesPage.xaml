@@ -815,6 +815,28 @@
                                           Title="Game options"
                                           Message="Edit startup options, audio levels, and controls from a .bea options file. Career progress stays in Save Editor." />
 
+                        <Border AutomationProperties.AutomationId="ModernControllerSetupCard"
+                                Style="{StaticResource SavesSectionCardStyle}">
+                            <StackPanel Spacing="8">
+                                <TextBlock AutomationProperties.AutomationId="ModernControllerSetupHeading"
+                                           AutomationProperties.HeadingLevel="Level2"
+                                           Text="Modern controller setup"
+                                           FontSize="18"
+                                           FontWeight="SemiBold" />
+                                <TextBlock AutomationProperties.AutomationId="ModernControllerSetupSteps"
+                                           Text="1. In Steam Input, select Aquila - Gamepad with Mouse Aiming.&#x0a;2. In the game's Controller Options, bind the buttons, then map left-stick up to Movement: Forward so the movement directions are assigned.&#x0a;3. Lower the game's mouse sensitivity to minimum. Adjust walking and flying inversion there if needed."
+                                           Style="{StaticResource SectionBodyTextStyle}" />
+                                <TextBlock AutomationProperties.AutomationId="ModernControllerSetupBoundary"
+                                           Text="The Toolkit can edit a copied options file. It does not configure Steam Input, detect your connected controller, or prove improved control feel."
+                                           Style="{StaticResource SectionBodyTextStyle}" />
+                                <Button AutomationProperties.AutomationId="OpenZigguratControllerGuideButton"
+                                        AutomationProperties.Name="Open Ziggurat's Steam setup guide in browser"
+                                        Content="Open Ziggurat's Steam setup guide in browser"
+                                        HorizontalAlignment="Left"
+                                        Click="OpenZigguratControllerGuideButton_Click" />
+                            </StackPanel>
+                        </Border>
+
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="1.1*" />
@@ -931,6 +953,9 @@
                                     <TextBlock Text="Control and device overrides"
                                                FontSize="18"
                                                FontWeight="SemiBold" />
+                                    <TextBlock AutomationProperties.AutomationId="ControllerConfigNumericCaveat"
+                                               Text="These P1/P2 controller config fields are raw numeric values preserved or written in the copied options data; they are not named modern-gamepad profiles."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
                                     <Grid ColumnSpacing="12"
                                           RowSpacing="10">
                                         <Grid.ColumnDefinitions>
