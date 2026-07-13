@@ -78,6 +78,79 @@ def _pmvb(*, populated: bool) -> bytes:
     return _chunk(b"PMVB", _cmvb(2) + _group((0, 1, 2, 2, 3), owns_vertices=True) + _group((0, 2, 3), owns_vertices=False))
 
 
+def _reference_group(indices: tuple[int, ...], *, owns_vertices: bool) -> bytes:
+    rows = ((1.0, 2.0, 3.0), (4.0, 5.0, 6.0), (7.0, 8.0, 9.0))
+    vertex_payload = (
+        b"".join(struct.pack("<6fI2f", *position, 0.0, 1.0, 0.0, 0xFFFFFFFF, 0.0, 0.0) for position in rows)
+        if owns_vertices
+        else b""
+    )
+    index_payload = struct.pack(f"<{len(indices)}H", *indices)
+    mmpt = struct.pack("<6I", 3 * 36, len(index_payload), len(indices), 3, len(indices) - 2, 1)
+    return (
+        _chunk(b"MMPT", mmpt)
+        + _chunk(b"IBUF", index_payload)
+        + _chunk(b"VBUF", vertex_payload)
+        + _chunk(b"TEXR", bytes(24))
+    )
+
+
+def _reference_geometry() -> bytes:
+    return _chunk(
+        b"PMVB",
+        _cmvb(2)
+        + _reference_group((0, 1, 2), owns_vertices=True)
+        + _reference_group((0, 2, 1), owns_vertices=False),
+    )
+
+
+def _multipart_part(
+    part: int,
+    *,
+    parent: int | None,
+    children: tuple[int, ...] = (),
+    base_position: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    rotated: bool = False,
+    geometry: bytes | None = None,
+    reference_payload: bytes | None = None,
+    before_reference: bytes = b"",
+    after_reference: bytes = b"",
+) -> bytes:
+    records = b""
+    if children:
+        records += _chunk(b"CHLD", struct.pack(f"<{len(children)}I", *children))
+    if parent is not None:
+        records += _chunk(b"PRNT", struct.pack("<I", parent))
+    records += _bbox() + _chunk(b"VHFM", b"\x01") + _chunk(b"HORI", bytes(48)) + _chunk(b"HPOS", bytes(16))
+    records += _chunk(b"CPOS", b"") + _chunk(b"CORI", b"") + before_reference
+    if reference_payload is not None:
+        records += _chunk(b"REFR", reference_payload)
+    records += after_reference + (geometry if geometry is not None else _pmvb(populated=False))
+    return _chunk(
+        b"MESP",
+        _cmsp(part=part, children=len(children), base_position=base_position, rotated=rotated) + records,
+    )
+
+
+def reference_fixture_parts() -> list[bytes]:
+    return [
+        _multipart_part(0, parent=None, children=(1, 2, 3), base_position=(100.0, 200.0, 300.0), rotated=True),
+        _multipart_part(1, parent=0, base_position=(10.0, 20.0, 30.0), rotated=True, geometry=_reference_geometry()),
+        _multipart_part(2, parent=0, base_position=(40.0, 50.0, 60.0), reference_payload=struct.pack("<I", 1)),
+        _multipart_part(3, parent=0, children=(4,), base_position=(-10.0, -20.0, -30.0), rotated=True, reference_payload=struct.pack("<I", 1)),
+        _multipart_part(4, parent=3),
+    ]
+
+
+def build_reference_fixture_stream(parts: list[bytes] | None = None) -> bytes:
+    selected = reference_fixture_parts() if parts is None else parts
+    header = bytearray(380)
+    header[0:4] = b"CMSH"
+    struct.pack_into("<I", header, 4, 372)
+    struct.pack_into("<I", header, 0x164, len(selected))
+    return bytes(header) + _chunk(b"CMST", b"") + b"".join(selected)
+
+
 def _part(*, parent: bool) -> bytes:
     if parent:
         records = (
@@ -199,6 +272,24 @@ f 1 4 3
 """
 EXPECTED_SHA256 = "3bee52cf5bf193beb090e8065c7eb057490730cd87977a268507f1091870c848"
 
+EXPECTED_REFERENCE_OBJ = b"""v 12.0 19.0 -33.0
+v 15.0 16.0 -36.0
+v 18.0 13.0 -39.0
+v 41.0 52.0 -63.0
+v 44.0 55.0 -66.0
+v 47.0 58.0 -69.0
+v -8.0 -21.0 27.0
+v -5.0 -24.0 24.0
+v -2.0 -27.0 21.0
+f 1 3 2
+f 1 2 3
+f 4 6 5
+f 4 5 6
+f 7 9 8
+f 7 8 9
+"""
+EXPECTED_REFERENCE_SHA256 = "ddf266ab5650cc4dc234e23595dac092f873a9b9222b91efff3f17dd6917b93e"
+
 
 def _validate_obj_semantics(value: bytes) -> None:
     text = value.decode("utf-8")
@@ -217,6 +308,150 @@ class CmshStaticPreviewTests(unittest.TestCase):
         self.assertEqual(EXPECTED_OBJ, result)
         self.assertEqual(EXPECTED_SHA256, hashlib.sha256(result).hexdigest())
         _validate_obj_semantics(result)
+
+    def test_reference_fixture_emits_owner_and_instances_in_part_sequence_order(self) -> None:
+        result = preview.emit_obj(preview.parse_cmsh_stream(build_reference_fixture_stream()))
+        self.assertEqual(EXPECTED_REFERENCE_OBJ, result)
+        self.assertEqual(EXPECTED_REFERENCE_SHA256, hashlib.sha256(result).hexdigest())
+        self.assertEqual(9, sum(line.startswith(b"v ") for line in result.splitlines()))
+        self.assertEqual(6, sum(line.startswith(b"f ") for line in result.splitlines()))
+
+    def test_reference_length_target_and_geometry_source_fail_closed(self) -> None:
+        for length in (0, 3, 8):
+            parts = reference_fixture_parts()
+            parts[2] = _multipart_part(2, parent=0, reference_payload=bytes(length))
+            with self.subTest(case="length", length=length):
+                with self.assertRaisesRegex(preview.CmshProfileError, "invalid declared length/count"):
+                    preview.parse_cmsh_stream(build_reference_fixture_stream(parts))
+
+        target_cases = {
+            "self": 2,
+            "forward_last_index": 4,
+            "out_of_range": 5,
+            "empty_target": 0,
+        }
+        for case, target in target_cases.items():
+            parts = reference_fixture_parts()
+            parts[2] = _multipart_part(2, parent=0, reference_payload=struct.pack("<I", target))
+            pattern = "index out of bounds" if case == "out_of_range" else "unsupported bones/reference graph"
+            with self.subTest(case=case):
+                with self.assertRaisesRegex(preview.CmshProfileError, pattern):
+                    preview.parse_cmsh_stream(build_reference_fixture_stream(parts))
+
+        for case, geometry in (
+            ("populated", _reference_geometry()),
+            ("residual", _chunk(b"PMVB", _cmvb(0) + b"x")),
+        ):
+            parts = reference_fixture_parts()
+            parts[2] = _multipart_part(2, parent=0, geometry=geometry, reference_payload=struct.pack("<I", 1))
+            with self.subTest(case=case):
+                with self.assertRaisesRegex(preview.CmshProfileError, "unsupported bones/reference graph"):
+                    preview.parse_cmsh_stream(build_reference_fixture_stream(parts))
+
+    def test_reference_chains_cycles_order_and_hierarchy_fail_closed(self) -> None:
+        chain = [
+            _multipart_part(0, parent=None, children=(1, 2), geometry=_reference_geometry()),
+            _multipart_part(1, parent=0, reference_payload=struct.pack("<I", 0)),
+            _multipart_part(2, parent=0, reference_payload=struct.pack("<I", 1)),
+        ]
+        cycle = [
+            _multipart_part(0, parent=None, children=(1, 2)),
+            _multipart_part(1, parent=0, reference_payload=struct.pack("<I", 2)),
+            _multipart_part(2, parent=0, reference_payload=struct.pack("<I", 1)),
+        ]
+        for case, parts in (("chain", chain), ("cycle", cycle)):
+            with self.subTest(case=case):
+                with self.assertRaisesRegex(preview.CmshProfileError, "unsupported bones/reference graph"):
+                    preview.parse_cmsh_stream(build_reference_fixture_stream(parts))
+
+        duplicate = reference_fixture_parts()
+        duplicate[2] = _multipart_part(
+            2,
+            parent=0,
+            reference_payload=struct.pack("<I", 1),
+            before_reference=_chunk(b"REFR", struct.pack("<I", 1)),
+        )
+        wrong_order = reference_fixture_parts()
+        wrong_order[2] = _multipart_part(
+            2,
+            parent=0,
+            reference_payload=struct.pack("<I", 1),
+            after_reference=_chunk(b"CPOS", b""),
+        )
+        for case, parts in (("duplicate", duplicate), ("wrong_order", wrong_order)):
+            with self.subTest(case=case):
+                with self.assertRaisesRegex(preview.CmshProfileError, "unexpected tag/order"):
+                    preview.parse_cmsh_stream(build_reference_fixture_stream(parts))
+
+        missing_reciprocal = reference_fixture_parts()
+        missing_reciprocal[0] = _multipart_part(0, parent=None, children=(1, 3), base_position=(100.0, 200.0, 300.0), rotated=True)
+        duplicate_parent = reference_fixture_parts()
+        duplicate_parent[3] = _multipart_part(3, parent=0, children=(2, 4), reference_payload=struct.pack("<I", 1))
+        parent_cycle = reference_fixture_parts()
+        parent_cycle[0] = _multipart_part(0, parent=3, children=(1, 2, 3))
+        parent_cycle[3] = _multipart_part(3, parent=0, children=(0, 4), reference_payload=struct.pack("<I", 1))
+        for case, parts in (
+            ("missing_reciprocal", missing_reciprocal),
+            ("duplicate_parent", duplicate_parent),
+            ("parent_cycle", parent_cycle),
+        ):
+            with self.subTest(case=case):
+                with self.assertRaisesRegex(preview.CmshProfileError, "unsupported bones/reference graph"):
+                    preview.parse_cmsh_stream(build_reference_fixture_stream(parts))
+
+    def test_reference_expansion_caps_count_every_instance(self) -> None:
+        stream = build_reference_fixture_stream()
+        for cap_name, at_cap, above_cap in (
+            ("MAX_VERTICES", 9, 8),
+            ("MAX_GROUPS", 6, 5),
+            ("MAX_INDICES", 18, 17),
+            ("MAX_TRIANGLES", 6, 5),
+        ):
+            with self.subTest(cap=cap_name, boundary="cap"):
+                with mock.patch.object(preview, cap_name, at_cap):
+                    self.assertEqual(EXPECTED_REFERENCE_OBJ, preview.emit_obj(preview.parse_cmsh_stream(stream)))
+            with self.subTest(cap=cap_name, boundary="cap_plus_one"):
+                with mock.patch.object(preview, cap_name, above_cap):
+                    with self.assertRaisesRegex(preview.CmshProfileError, "limit exceeded"):
+                        preview.emit_obj(preview.parse_cmsh_stream(stream))
+
+        with mock.patch.object(preview, "MAX_OBJ", len(EXPECTED_REFERENCE_OBJ)):
+            self.assertEqual(EXPECTED_REFERENCE_OBJ, preview.emit_obj(preview.parse_cmsh_stream(stream)))
+        with mock.patch.object(preview, "MAX_OBJ", len(EXPECTED_REFERENCE_OBJ) - 1):
+            with self.assertRaisesRegex(preview.CmshProfileError, "limit exceeded"):
+                preview.emit_obj(preview.parse_cmsh_stream(stream))
+
+    def test_reference_profile_does_not_admit_bones_or_stride48(self) -> None:
+        bone_parts = reference_fixture_parts()
+        bone_parts[2] = _multipart_part(
+            2,
+            parent=0,
+            reference_payload=struct.pack("<I", 1),
+            after_reference=_chunk(b"BONE", b""),
+        )
+        with self.assertRaisesRegex(preview.CmshProfileError, "unsupported bones/reference graph"):
+            preview.parse_cmsh_stream(build_reference_fixture_stream(bone_parts))
+
+        stride48 = bytearray(_reference_geometry())
+        cmvb = stride48.find(b"CMVB")
+        struct.pack_into("<I", stride48, cmvb + 8 + 276, 48)
+        stride_parts = reference_fixture_parts()
+        stride_parts[1] = _multipart_part(1, parent=0, geometry=bytes(stride48))
+        with self.assertRaisesRegex(preview.CmshProfileError, "unsupported profile"):
+            preview.parse_cmsh_stream(build_reference_fixture_stream(stride_parts))
+
+        empty_stride48 = bytearray(_pmvb(populated=False))
+        empty_cmvb = empty_stride48.find(b"CMVB")
+        struct.pack_into("<I", empty_stride48, empty_cmvb + 8 + 276, 48)
+        source_stride_parts = reference_fixture_parts()
+        source_stride_parts[2] = _multipart_part(
+            2,
+            parent=0,
+            geometry=bytes(empty_stride48),
+            reference_payload=struct.pack("<I", 1),
+        )
+        with self.assertRaisesRegex(preview.CmshProfileError, "unsupported bones/reference graph"):
+            preview.parse_cmsh_stream(build_reference_fixture_stream(source_stride_parts))
 
     def test_parser_rejects_every_truncation_without_partial_output(self) -> None:
         stream = build_fixture_stream()
@@ -279,7 +514,7 @@ class CmshStaticPreviewTests(unittest.TestCase):
                 with self.subTest(order=order, mutation=mutation):
                     with self.assertRaises(preview.CmshProfileError):
                         preview.parse_cmsh_stream(build_order_stream(mutation))
-        with self.assertRaisesRegex(preview.CmshProfileError, "unsupported bones/reference graph"):
+        with self.assertRaisesRegex(preview.CmshProfileError, "invalid declared length/count"):
             preview.parse_cmsh_stream(build_order_stream(("REFR",) + ACCEPTED_PART_ORDERS[0]))
 
     def test_numeric_index_and_primitive_mutations_fail_closed(self) -> None:
