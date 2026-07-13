@@ -16,25 +16,29 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Deliver the first recognizable local-asset First Flight presentation run: one
-user-supplied Aquila mesh/material set plus one terrain/environment subset,
-loaded through the existing ignored Godot bridge while deterministic Core and
-ordinary synthetic smoke remain unchanged.
+Deliver the first local static Aquila geometry preview on procedural terrain
+without installing or reviving the legacy x86 extractor toolchain. Add one
+public-safe, fail-closed `CMSH profile v0` parser and geometry-only OBJ emitter
+outside deterministic Core, then load one ignored local Aquila role through the
+existing guarded Godot bridge.
 
-1. choose and document one reproducible local-only route for the pinned x86 AYA
-   extractor dependencies and one explicit FBX-to-self-contained-GLB converter;
-2. make dependency/template/converter preflight fail early and clearly without
-   weakening the installed-game, ignored-payload, or component-license boundary;
-3. initialize the ignored workspace, export from the read-only local game
-   mirror, select exactly one Aquila role and one terrain/environment role,
-   convert them, and publish the content-addressed manifest last;
-4. run First Flight offline and accept only native visual evidence of nonempty,
-   recognizable player and terrain presentation plus working existing
-   movement/fire/transform/reset; and
-5. close with focused pipeline/rebuild tests, payload safety, normal/adversarial
-   review, state reconciliation, commit, and push. Keep movement, camera,
-   handling, animation, audio, visual fidelity, and parity explicitly unproven.
-   Do not create a release or tag.
+1. freeze one exact fixture-backed CMSH tag/order, vertex layout/stride,
+   finite-value/count/length contract, 16-bit strip topology, handedness/axis
+   transform, and strip-to-triangle policy; reject every unknown profile;
+2. keep the layers explicit: existing bounded AYA inflate/carve, CMSH v0 parse,
+   exact loader-subset OBJ emission, existing content-addressed role bootstrap,
+   and existing Godot load;
+3. prove the parser/emitter with a generated public-safe packed AYA/CMSH fixture,
+   exact golden OBJ digest, objective geometry oracles, and malformed-input
+   rejection before using any ignored local payload;
+4. run one ignored local player-role preview on existing procedural terrain and
+   treat human silhouette recognition as secondary confirmation, not format or
+   fidelity authority; and
+5. close with focused parser/rebuild tests, native visual/process cleanup,
+   payload safety, normal/adversarial review, state reconciliation, commit, and
+   push. Keep textures/GLB, DDS decoding, LNDS terrain, animation/bones,
+   movement/camera fidelity, and parity as separate later contracts. Do not
+   create a release or tag.
 
 ## Current Slice Progress - 2026-07-13
 
@@ -336,11 +340,13 @@ ordinary synthetic smoke remain unchanged.
   automatic Retry 13 is authorized. Runtime identity is now a timeboxed side
   lane rather than the playable rebuild's critical path.
 - A read-only workstation presentation audit found the canonical ignored game
-  mirror, FBX template, and pinned Godot cache, but no usable combined
-  AYA/DDS/Fbx runtime directory, no exported GLB/OBJ, and no integrated FBX
-  converter. The exact next player-visible blocker is therefore extractor
-  runtime provisioning/build plus one FBX-to-self-contained-GLB step, not more
-  renderer or simulation work.
+  mirror and pinned Godot cache, but no usable combined AYA/DDS/Fbx runtime
+  directory and no exported GLB/OBJ. Normal review initially recommended
+  rebuilding the legacy extractor; adversarial code-path review instead found
+  that Python already performs bounded AYA inflation/CMSH carving and that the
+  missing durable link is a CMSH vertex/index parser. Codex and sanitized Grok
+  review converged on one narrow `CMSH profile v0` geometry-only OBJ milestone;
+  Visual Studio, Blender, FBX, DDS/textures, and LNDS terrain are deferred.
 - The optional local presentation lane is integrated on `main`. It pins the
   Stuart Onslaught reference at `5352a81` and the AYA reference plus narrow
   rectangular-DDS correction at `53b10b0`; adds an ignored exporter/bootstrap
@@ -583,22 +589,23 @@ claim against an already malicious process running as the same Windows user.
 
 ## Next Slices
 
-1. Correct Retry 12's repeated post-quit NatVis shutdown grammar with strict
-   path-bound tests that continue rejecting unknown diagnostics, then run a
-   wholly fresh identity matrix and publish only a complete validated sanitized
-   identity/causality result.
-2. Provision a reproducible pinned x86 AYA extractor runtime, add one explicit
-   FBX-to-self-contained-GLB conversion step, then bootstrap and visually run
-   one recognizable Aquila mesh plus one terrain/environment subset through
-   the integrated ignored local-asset path. Keep synthetic smoke, deterministic
-   Core, and non-parity boundaries unchanged.
-3. Perform the separate bounded review needed to correct the remaining
+1. After the CMSH v0 geometry preview, inspect one selected local DDS profile,
+   implement only its independently specified BC decoder, and emit one guarded
+   self-contained textured GLB without broad format claims.
+2. Freeze and implement one measured movement/morph/camera behavior contract in
+   deterministic Core; use a simpler bounded retail observation when possible.
+3. Complete the coherent normal Toolkit journey while the Player Value lane
+   moves specialist launch/control/online/music/BEA diagnostics behind Lab.
+4. Integrate the bounded repeated-NatVis parser correction as runtime
+   infrastructure, but do not run Retry 13 unless a later behavior contract
+   directly requires it.
+5. Perform the separate bounded review needed to correct the remaining
    `0x004dac90` live metadata debt without reviving the rejected manifest row.
-4. Retire or fail-close active BattleEngine tools that can reapply withdrawn
+6. Retire or fail-close active BattleEngine tools that can reapply withdrawn
    ownership, then harden AYA export dependency/template preflight.
-5. Run the deep Lore editorial/provenance pass and generated contributor
+7. Run the deep Lore editorial/provenance pass and generated contributor
    front-door indexing in parallel where it does not compete for RE evidence.
-6. Continue subsystem-by-subsystem binary re-review and rebuild fidelity work
+8. Continue subsystem-by-subsystem binary re-review and rebuild fidelity work
    while preserving the separate sealed-spec clean-room option.
 
 ## Stop Conditions
