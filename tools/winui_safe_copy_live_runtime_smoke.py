@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import importlib.util
 import json
 import os
@@ -13,8 +14,9 @@ import shutil
 import stat
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
-from typing import NamedTuple
+from typing import Any, Callable, Mapping, NamedTuple
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -94,11 +96,13 @@ class RuntimeProtocolPlan(NamedTuple):
     cdb_observer_enabled: bool
     cdb_attach_phase: str
     required_cdb_log_marker: str
+    input_step_delay_ms: int
+    cdb_log_ready_timeout_ms: int
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     raw_arguments = list(sys.argv[1:] if argv is None else argv)
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
     parser.add_argument(
         "--runtime-protocol",
         default=DEFAULT_RUNTIME_PROTOCOL,
@@ -195,6 +199,8 @@ def validate_runtime_protocol(args: argparse.Namespace) -> RuntimeProtocolPlan:
             cdb_observer_enabled=args.enable_cdb_observer,
             cdb_attach_phase=args.cdb_attach_phase,
             required_cdb_log_marker="",
+            input_step_delay_ms=args.input_step_delay_ms,
+            cdb_log_ready_timeout_ms=args.cdb_log_ready_timeout_ms,
         )
 
     if not args.canary_role:
@@ -248,7 +254,7 @@ def validate_runtime_protocol(args: argparse.Namespace) -> RuntimeProtocolPlan:
     role_input = {
         "noInputControl": [],
         "positiveTransform": ["tap:Q"],
-        "positiveRepeat": ["tap:Q", "tap:Q"],
+        "positiveRepeat": ["tap:Q"],
     }[args.canary_role]
     return RuntimeProtocolPlan(
         runtime_protocol=MORPH_CANARY_RUNTIME_PROTOCOL,
@@ -268,7 +274,76 @@ def validate_runtime_protocol(args: argparse.Namespace) -> RuntimeProtocolPlan:
         cdb_observer_enabled=True,
         cdb_attach_phase="after-window",
         required_cdb_log_marker=MORPH_CANARY_READY_MARKER,
+        input_step_delay_ms=60,
+        cdb_log_ready_timeout_ms=10000,
     )
+
+
+def run_synthetic_runtime_orchestration(
+    plan: RuntimeProtocolPlan,
+    callbacks: Mapping[str, Callable[..., Any]],
+    *,
+    receipt_sha256: str,
+    command_sha256: str,
+    required_marker: str,
+) -> dict[str, Any]:
+    active_failure = ""
+    cleanup_order: list[str] = []
+    cleanup_failures: dict[str, str] = {}
+    owned_process_count: int | None = None
+    input_results: list[Any] = []
+    best_effort_release: Any = None
+    try:
+        if plan.runtime_protocol == MORPH_CANARY_RUNTIME_PROTOCOL:
+            callbacks["attach_cdb"](receipt_sha256, command_sha256, required_marker)
+            for sequence in plan.input_sequences:
+                input_results.append(
+                    callbacks["send_input"](
+                        sequence,
+                        receipt_sha256,
+                        command_sha256,
+                        required_marker,
+                    )
+                )
+        else:
+            for _ in range(plan.capture_count):
+                callbacks["capture"]()
+    except Exception as exc:  # Synthetic seam records active failures before teardown.
+        active_failure = f"{type(exc).__name__}: {exc}"
+    finally:
+        for phase_name in ("release_keys", "cleanup_cdb", "stop_managed", "census"):
+            cleanup_order.append(phase_name)
+            try:
+                if phase_name in {"cleanup_cdb", "stop_managed"}:
+                    value = callbacks[phase_name](receipt_sha256, command_sha256, required_marker)
+                else:
+                    value = callbacks[phase_name]()
+                if phase_name == "release_keys":
+                    best_effort_release = value
+                if phase_name == "census":
+                    owned_process_count = value
+            except Exception as exc:
+                cleanup_failures[phase_name] = f"{type(exc).__name__}: {exc}"
+    keys_released = None
+    if plan.runtime_protocol == MORPH_CANARY_RUNTIME_PROTOCOL:
+        keys_released = (
+            len(input_results) == 0
+            if plan.canary_role == "noInputControl"
+            else len(input_results) == len(plan.input_sequences)
+            and all(
+                isinstance(result, Mapping)
+                and result.get("unconfirmedReleaseKeys") == []
+                for result in input_results
+            )
+        )
+    return {
+        "active_failure": active_failure,
+        "cleanup_order": cleanup_order,
+        "cleanup_failures": cleanup_failures,
+        "owned_process_count": owned_process_count,
+        "keys_released": keys_released,
+        "best_effort_release": best_effort_release,
+    }
 
 
 def load_morph_canary_module():
@@ -288,7 +363,24 @@ def select_artifact_root_inputs(args: argparse.Namespace, stamp: str) -> tuple[P
     artifact_base_env = os.environ.get(ARTIFACT_BASE_ENV, "").strip()
     artifact_base_arm_env = os.environ.get(ARTIFACT_BASE_ARM_ENV, "").strip()
     explicit_artifact_root = bool(args.artifact_root)
-    artifact_parent_raw = Path(artifact_base_env) if artifact_base_env else default_artifact_parent_raw
+    canary_private_default = (
+        getattr(args, "runtime_protocol", DEFAULT_RUNTIME_PROTOCOL) == MORPH_CANARY_RUNTIME_PROTOCOL
+        and not explicit_artifact_root
+        and not artifact_base_env
+    )
+    canary_private_parent = (
+        Path(os.environ.get("LOCALAPPDATA") or tempfile.gettempdir())
+        / "OnslaughtToolkit"
+        / "private-runtime"
+        / "battleengine-morph-identity-canary"
+    )
+    artifact_parent_raw = (
+        Path(artifact_base_env)
+        if artifact_base_env
+        else canary_private_parent
+        if canary_private_default
+        else default_artifact_parent_raw
+    )
     artifact_root_raw = Path(args.artifact_root) if explicit_artifact_root else artifact_parent_raw / stamp
     profiles_root_raw = Path(args.profiles_root) if args.profiles_root else artifact_root_raw / "GameProfiles"
     cli_external_artifact_armed = args.arm_external_artifact_root == EXTERNAL_ARTIFACT_ROOT_ARM_PHRASE
@@ -300,23 +392,89 @@ def select_artifact_root_inputs(args: argparse.Namespace, stamp: str) -> tuple[P
     return (
         artifact_root_raw,
         profiles_root_raw,
-        cli_external_artifact_armed or env_external_artifact_armed,
+        cli_external_artifact_armed or env_external_artifact_armed or canary_private_default,
         env_external_artifact_armed,
         artifact_parent_raw,
     )
+
+
+def create_fresh_canary_artifact_root(root: Path) -> Path:
+    candidate = root.absolute()
+    if candidate.exists():
+        raise ValueError(f"Canary artifact root must be fresh and absent: {candidate}")
+    if has_reparse_or_symlink_ancestor(candidate):
+        raise ValueError("Canary artifact root includes a reparse/symlink path component.")
+    candidate.parent.mkdir(parents=True, exist_ok=True)
+    if has_reparse_or_symlink_ancestor(candidate.parent):
+        raise ValueError("Canary artifact root parent includes a reparse/symlink path component.")
+    candidate.mkdir(exist_ok=False)
+    if has_reparse_or_symlink_ancestor(candidate):
+        raise ValueError("Canary artifact root became reparse/symlink-routed during creation.")
+    return candidate.resolve()
+
+
+def assert_fresh_canary_write_target(target: Path, artifact_root: Path) -> None:
+    resolved_root = artifact_root.resolve()
+    resolved_target = target.absolute()
+    if not is_same_or_under(resolved_target, resolved_root) or resolved_target == resolved_root:
+        raise ValueError(f"Canary write target is outside the private artifact root: {resolved_target}")
+    if not resolved_root.is_dir() or has_reparse_or_symlink_ancestor(resolved_target):
+        raise ValueError("Canary write target includes a missing or reparse/symlink-routed artifact root.")
+    if resolved_target.exists():
+        raise ValueError(f"Canary write target already exists: {resolved_target}")
+
+
+def create_fresh_canary_directory(path: Path, artifact_root: Path) -> Path:
+    assert_fresh_canary_write_target(path, artifact_root)
+    path.mkdir(exist_ok=False)
+    if has_reparse_or_symlink_ancestor(path):
+        raise ValueError(f"Canary directory became reparse/symlink-routed: {path}")
+    return path.resolve()
+
+
+def write_new_private_bytes(path: Path, data: bytes, artifact_root: Path) -> None:
+    assert_fresh_canary_write_target(path, artifact_root)
+    with path.open("xb") as stream:
+        stream.write(data)
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def write_new_private_text(path: Path, text: str, artifact_root: Path) -> None:
+    write_new_private_bytes(path, text.encode("utf-8"), artifact_root)
+
+
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def validate_canary_digest_set(canonical: str, **digests: str) -> None:
+    if not re.fullmatch(r"[0-9a-f]{64}", canonical):
+        raise ValueError("Canonical executable digest must be lowercase SHA-256.")
+    drifted = sorted(name for name, digest in digests.items() if digest != canonical)
+    if drifted:
+        raise ValueError("Canary executable digest mismatch: " + ", ".join(drifted))
 
 
 def run(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=False)
 
 
-def write_runner(runner_root: Path) -> Path:
-    runner_root.mkdir(parents=True, exist_ok=True)
-    (runner_root / RUNNER_MARKER).write_text("tool-owned runner scratch\n", encoding="utf-8")
+def write_runner(runner_root: Path, *, create_new: bool = False) -> Path:
+    runner_root.mkdir(parents=True, exist_ok=not create_new)
+    marker_path = runner_root / RUNNER_MARKER
+    if create_new:
+        with marker_path.open("x", encoding="utf-8", newline="\n") as stream:
+            stream.write("tool-owned runner scratch\n")
+    else:
+        marker_path.write_text("tool-owned runner scratch\n", encoding="utf-8")
     appcore = ROOT / "OnslaughtCareerEditor.AppCore" / "OnslaughtCareerEditor.AppCore.csproj"
     project = runner_root / "LiveSafeCopySmoke.csproj"
-    project.write_text(
-        f"""<Project Sdk=\"Microsoft.NET.Sdk\">
+    project_text = f"""<Project Sdk=\"Microsoft.NET.Sdk\">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
@@ -327,14 +485,17 @@ def write_runner(runner_root: Path) -> Path:
     <ProjectReference Include=\"{appcore}\" />
   </ItemGroup>
 </Project>
-""",
-        encoding="utf-8",
-    )
+"""
+    if create_new:
+        with project.open("x", encoding="utf-8", newline="\n") as stream:
+            stream.write(project_text)
+    else:
+        project.write_text(project_text, encoding="utf-8")
     program = runner_root / "Program.cs"
-    program.write_text(
-        r"""
+    program_text = r"""
 using System.Diagnostics;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Onslaught___Career_Editor;
 
@@ -512,7 +673,8 @@ static JsonElement SendInputSequence(
     string backgroundWindowMessagesArm,
     string outputJson,
     string runtimeReceiptPath = "",
-    string expectedReceiptSha256 = "")
+    string expectedReceiptSha256 = "",
+    bool createNewOutput = false)
 {
     Directory.CreateDirectory(Path.GetDirectoryName(outputJson)!);
     var startInfo = new ProcessStartInfo
@@ -579,11 +741,29 @@ static JsonElement SendInputSequence(
             note = "Bounded scoped input failed for the exact process/window target."
         };
         string failureJson = JsonSerializer.Serialize(failure, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(outputJson, failureJson);
+        if (createNewOutput)
+        {
+            using FileStream output = new(outputJson, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+            using StreamWriter writer = new(output, new UTF8Encoding(false));
+            writer.Write(failureJson);
+        }
+        else
+        {
+            File.WriteAllText(outputJson, failureJson);
+        }
         return JsonSerializer.Deserialize<JsonElement>(failureJson);
     }
 
-    File.WriteAllText(outputJson, stdout);
+    if (createNewOutput)
+    {
+        using FileStream output = new(outputJson, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        using StreamWriter writer = new(output, new UTF8Encoding(false));
+        writer.Write(stdout);
+    }
+    else
+    {
+        File.WriteAllText(outputJson, stdout);
+    }
     return JsonSerializer.Deserialize<JsonElement>(stdout);
 }
 
@@ -737,7 +917,8 @@ static JsonElement StartCdbObserver(
     string runtimeReceiptPath = "",
     string expectedReceiptSha256 = "",
     string expectedCommandSha256 = "",
-    string requiredLogMarker = "")
+    string requiredLogMarker = "",
+    bool createNewOutput = false)
 {
     Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
     Directory.CreateDirectory(Path.GetDirectoryName(outputJson)!);
@@ -814,7 +995,16 @@ static JsonElement StartCdbObserver(
         note = "Exact-PID copied-profile CDB observer attach. Command file is expected to use printf/disassembly/continue-style observations only."
     };
     string payloadJson = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
-    File.WriteAllText(outputJson, payloadJson);
+    if (createNewOutput)
+    {
+        using FileStream output = new(outputJson, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        using StreamWriter writer = new(output, new UTF8Encoding(false));
+        writer.Write(payloadJson);
+    }
+    else
+    {
+        File.WriteAllText(outputJson, payloadJson);
+    }
     return JsonSerializer.Deserialize<JsonElement>(payloadJson);
 }
 
@@ -990,8 +1180,41 @@ static object ReceiptFileIdentity(string path)
     };
 }
 
+static void AssertFreshCanaryWriteTarget(string path, string artifactRoot)
+{
+    string resolvedRoot = Path.GetFullPath(artifactRoot).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+    string resolvedPath = Path.GetFullPath(path);
+    if (!resolvedPath.StartsWith(resolvedRoot, StringComparison.OrdinalIgnoreCase))
+        throw new InvalidOperationException("Canary write target escaped the private artifact root.");
+    if (File.Exists(resolvedPath) || Directory.Exists(resolvedPath))
+        throw new IOException("Canary write target already exists: " + resolvedPath);
+    string? current = Path.GetDirectoryName(resolvedPath);
+    while (!string.IsNullOrWhiteSpace(current) &&
+           current.StartsWith(resolvedRoot, StringComparison.OrdinalIgnoreCase))
+    {
+        if (File.Exists(current) || Directory.Exists(current))
+        {
+            FileAttributes attributes = File.GetAttributes(current);
+            if ((attributes & FileAttributes.ReparsePoint) != 0)
+                throw new IOException("Canary write path crosses a reparse point: " + current);
+        }
+        current = Path.GetDirectoryName(current);
+    }
+}
+
+static void WriteNewCanaryText(string path, string artifactRoot, string contents)
+{
+    AssertFreshCanaryWriteTarget(path, artifactRoot);
+    using FileStream stream = new(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+    using StreamWriter writer = new(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+    writer.Write(contents);
+    writer.Flush();
+    stream.Flush(flushToDisk: true);
+}
+
 static string WriteRuntimeProcessReceipt(
     string receiptPath,
+    string artifactRoot,
     GameProfileManagedProcess managed,
     string manifestPath,
     string hwndHex,
@@ -1032,8 +1255,10 @@ static string WriteRuntimeProcessReceipt(
         commandTemplateSha256,
         generatedCommandSha256,
     };
-    Directory.CreateDirectory(Path.GetDirectoryName(receiptPath)!);
-    File.WriteAllText(receiptPath, JsonSerializer.Serialize(receipt, new JsonSerializerOptions { WriteIndented = true }));
+    WriteNewCanaryText(
+        receiptPath,
+        artifactRoot,
+        JsonSerializer.Serialize(receipt, new JsonSerializerOptions { WriteIndented = true }));
     return Sha256File(receiptPath);
 }
 
@@ -1047,50 +1272,98 @@ static bool ValidateRuntimeReceipt(
     bool requireWindow,
     out string failure)
 {
-    var startInfo = new ProcessStartInfo
+    try
     {
-        FileName = powershellExe,
-        UseShellExecute = false,
-        RedirectStandardOutput = true,
-        RedirectStandardError = true,
-    };
-    startInfo.ArgumentList.Add("-NoProfile");
-    startInfo.ArgumentList.Add("-Command");
-    startInfo.ArgumentList.Add("& { param($modulePath, $receiptPath, $receiptSha256, $requireWindow) Import-Module -Name $modulePath -Force -ErrorAction Stop; $parameters = @{ ReceiptPath = $receiptPath; ExpectedReceiptSha256 = $receiptSha256 }; if ($requireWindow -eq '1') { Assert-RuntimeProcessReceipt @parameters -RequireWindow | Out-Null } else { Assert-RuntimeProcessReceipt @parameters | Out-Null } }");
-    startInfo.ArgumentList.Add(runtimeIdentityModule);
-    startInfo.ArgumentList.Add(runtimeReceiptPath);
-    startInfo.ArgumentList.Add(expectedReceiptSha256);
-    startInfo.ArgumentList.Add(requireWindow ? "1" : "0");
-    using Process? validator = Process.Start(startInfo);
-    if (validator is null)
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = powershellExe,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        };
+        startInfo.ArgumentList.Add("-NoProfile");
+        startInfo.ArgumentList.Add("-Command");
+        startInfo.ArgumentList.Add("& { param($modulePath, $receiptPath, $receiptSha256, $requireWindow) Import-Module -Name $modulePath -Force -ErrorAction Stop; $parameters = @{ ReceiptPath = $receiptPath; ExpectedReceiptSha256 = $receiptSha256 }; if ($requireWindow -eq '1') { Assert-RuntimeProcessReceipt @parameters -RequireWindow | Out-Null } else { Assert-RuntimeProcessReceipt @parameters | Out-Null } }");
+        startInfo.ArgumentList.Add(runtimeIdentityModule);
+        startInfo.ArgumentList.Add(runtimeReceiptPath);
+        startInfo.ArgumentList.Add(expectedReceiptSha256);
+        startInfo.ArgumentList.Add(requireWindow ? "1" : "0");
+        using Process? validator = Process.Start(startInfo);
+        if (validator is null)
+        {
+            failure = "Could not start runtime receipt validator.";
+            return false;
+        }
+        string stdout = validator.StandardOutput.ReadToEnd();
+        string stderr = validator.StandardError.ReadToEnd();
+        validator.WaitForExit();
+        if (validator.ExitCode != 0)
+        {
+            failure = string.IsNullOrWhiteSpace(stderr) ? stdout : stderr;
+            return false;
+        }
+        using JsonDocument receipt = JsonDocument.Parse(File.ReadAllText(runtimeReceiptPath));
+        if (!receipt.RootElement.TryGetProperty("generatedCommandSha256", out JsonElement commandDigest) ||
+            !string.Equals(commandDigest.GetString(), expectedCommandSha256, StringComparison.Ordinal) ||
+            !string.Equals(
+                receipt.RootElement.GetProperty("commandTemplateSha256").GetString(),
+                expectedTemplateSha256,
+                StringComparison.Ordinal))
+        {
+            failure = "Runtime receipt command or template digest changed.";
+            return false;
+        }
+        failure = string.Empty;
+        return true;
+    }
+    catch (Exception ex)
     {
-        failure = "Could not start runtime receipt validator.";
+        failure = ex.GetType().Name + ": " + ex.Message;
         return false;
     }
-    string stdout = validator.StandardOutput.ReadToEnd();
-    string stderr = validator.StandardError.ReadToEnd();
-    validator.WaitForExit();
-    if (validator.ExitCode != 0)
-    {
-        failure = string.IsNullOrWhiteSpace(stderr) ? stdout : stderr;
-        return false;
-    }
-    using JsonDocument receipt = JsonDocument.Parse(File.ReadAllText(runtimeReceiptPath));
-    if (!receipt.RootElement.TryGetProperty("generatedCommandSha256", out JsonElement commandDigest) ||
-        !string.Equals(commandDigest.GetString(), expectedCommandSha256, StringComparison.Ordinal) ||
-        !string.Equals(
-            receipt.RootElement.GetProperty("commandTemplateSha256").GetString(),
-            expectedTemplateSha256,
-            StringComparison.Ordinal))
-    {
-        failure = "Runtime receipt command or template digest changed.";
-        return false;
-    }
-    failure = string.Empty;
-    return true;
 }
 
-static JsonElement ReleaseTrackedCanaryKeys(
+static bool ValidateCanaryBinding(
+    string powershellExe,
+    string runtimeIdentityModule,
+    string runtimeReceiptPath,
+    string expectedReceiptSha256,
+    string commandFile,
+    string expectedCommandSha256,
+    string templatePath,
+    string expectedTemplateSha256,
+    bool requireWindow,
+    out string failure)
+{
+    if (!ValidateRuntimeReceipt(
+            powershellExe,
+            runtimeIdentityModule,
+            runtimeReceiptPath,
+            expectedReceiptSha256,
+            expectedCommandSha256,
+            expectedTemplateSha256,
+            requireWindow,
+            out failure))
+        return false;
+    try
+    {
+        if (!string.Equals(Sha256File(commandFile), expectedCommandSha256, StringComparison.Ordinal) ||
+            !string.Equals(Sha256File(templatePath), expectedTemplateSha256, StringComparison.Ordinal))
+        {
+            failure = "Rendered command or tracked template digest changed.";
+            return false;
+        }
+        failure = string.Empty;
+        return true;
+    }
+    catch (Exception ex)
+    {
+        failure = ex.GetType().Name + ": " + ex.Message;
+        return false;
+    }
+}
+
+static JsonElement BestEffortReleaseCanaryKeys(
     bool roleHadInput,
     string powershellExe,
     string inputScript,
@@ -1104,7 +1377,7 @@ static JsonElement ReleaseTrackedCanaryKeys(
     string expectedReceiptSha256)
 {
     if (!roleHadInput)
-        return JsonPayload(new { status = "not-needed", keysReleased = true });
+        return JsonPayload(new { status = "not-needed", bestEffort = true });
     try
     {
         JsonElement result = SendInputSequence(
@@ -1120,15 +1393,14 @@ static JsonElement ReleaseTrackedCanaryKeys(
             string.Empty,
             outputJson,
             runtimeReceiptPath,
-            expectedReceiptSha256);
-        bool released = JsonStringIn(result, "status", "sent") &&
-            result.TryGetProperty("unconfirmedReleaseKeys", out JsonElement keys) &&
-            keys.ValueKind == JsonValueKind.Array && keys.GetArrayLength() == 0;
-        return JsonPayload(new { status = released ? "released" : "failed", keysReleased = released, result });
+            expectedReceiptSha256,
+            true);
+        bool attempted = JsonStringIn(result, "status", "sent");
+        return JsonPayload(new { status = attempted ? "best-effort-sent" : "failed", bestEffort = true, result });
     }
     catch (Exception ex)
     {
-        return JsonPayload(new { status = "failed", keysReleased = false, error = ex.GetType().Name + ": " + ex.Message });
+        return JsonPayload(new { status = "failed", bestEffort = true, error = ex.GetType().Name + ": " + ex.Message });
     }
 }
 
@@ -1138,7 +1410,9 @@ static JsonElement CleanupExactCdbObserver(
     string runtimeIdentityModule,
     string runtimeReceiptPath,
     string expectedReceiptSha256,
+    string commandFile,
     string expectedCommandSha256,
+    string templatePath,
     string expectedTemplateSha256)
 {
     if (!attachResult.HasValue ||
@@ -1149,12 +1423,14 @@ static JsonElement CleanupExactCdbObserver(
     int? cdbProcessId = JsonNullableInt(helper, "cdbProcessId");
     string? startedAtUtc = helper.TryGetProperty("cdbStartedAtUtc", out JsonElement started) ? started.GetString() : null;
     string? executablePath = helper.TryGetProperty("cdbExecutablePath", out JsonElement executable) ? executable.GetString() : null;
-    bool receiptBound = ValidateRuntimeReceipt(
+    bool receiptBound = ValidateCanaryBinding(
         powershellExe,
         runtimeIdentityModule,
         runtimeReceiptPath,
         expectedReceiptSha256,
+        commandFile,
         expectedCommandSha256,
+        templatePath,
         expectedTemplateSha256,
         true,
         out string receiptFailure);
@@ -1204,10 +1480,17 @@ static GameProfileStopResult? StopReceiptBoundManagedProcess(
     string runtimeIdentityModule,
     string runtimeReceiptPath,
     string expectedReceiptSha256,
+    string commandFile,
     string expectedCommandSha256,
+    string templatePath,
     string expectedTemplateSha256,
-    out bool receiptBound)
+    out bool receiptBound,
+    out string failure)
 {
+    receiptBound = false;
+    failure = string.Empty;
+    if (managed is null)
+        return null;
     bool requireWindow = true;
     if (File.Exists(runtimeReceiptPath))
     {
@@ -1217,16 +1500,18 @@ static GameProfileStopResult? StopReceiptBoundManagedProcess(
             "0x0",
             StringComparison.Ordinal);
     }
-    receiptBound = managed is not null && ValidateRuntimeReceipt(
+    receiptBound = ValidateCanaryBinding(
         powershellExe,
         runtimeIdentityModule,
         runtimeReceiptPath,
         expectedReceiptSha256,
+        commandFile,
         expectedCommandSha256,
+        templatePath,
         expectedTemplateSha256,
         requireWindow,
-        out _);
-    return receiptBound && managed is not null
+        out failure);
+    return receiptBound
         ? GameProfileRuntimeService.StopCopiedProfile(managed, profilesRoot, gracefulTimeout: TimeSpan.FromSeconds(3))
         : null;
 }
@@ -1252,17 +1537,33 @@ static bool ExactProcessStillRunning(int processId, string startedAtUtc, string 
     }
 }
 
-static int CountOwnedProcesses(string runtimeReceiptPath, JsonElement? cdbAttachResult)
+static int CountOwnedProcesses(
+    string runtimeReceiptPath,
+    string? managedExecutablePath,
+    JsonElement? cdbAttachResult)
 {
     var ownedProcessIds = new HashSet<int>();
+    string? executablePath = string.IsNullOrWhiteSpace(managedExecutablePath)
+        ? null
+        : Path.GetFullPath(managedExecutablePath);
     if (File.Exists(runtimeReceiptPath))
     {
-        using JsonDocument receipt = JsonDocument.Parse(File.ReadAllText(runtimeReceiptPath));
-        string executablePath = receipt.RootElement
-            .GetProperty("process")
-            .GetProperty("executable")
-            .GetProperty("path")
-            .GetString()!;
+        try
+        {
+            using JsonDocument receipt = JsonDocument.Parse(File.ReadAllText(runtimeReceiptPath));
+            executablePath = receipt.RootElement
+                .GetProperty("process")
+                .GetProperty("executable")
+                .GetProperty("path")
+                .GetString()!;
+        }
+        catch
+        {
+            // Keep the managed executable fallback so receipt corruption cannot suppress census.
+        }
+    }
+    if (!string.IsNullOrWhiteSpace(executablePath))
+    {
         foreach (Process process in Process.GetProcessesByName("BEA"))
         {
             using (process)
@@ -1293,6 +1594,11 @@ static int CountOwnedProcesses(string runtimeReceiptPath, JsonElement? cdbAttach
     return ownedProcessIds.Count;
 }
 
+static string AppendCleanupFailure(string failure, string phase, Exception ex) =>
+    string.IsNullOrWhiteSpace(failure)
+        ? $"Cleanup {phase} failed: {ex.GetType().Name}: {ex.Message}"
+        : failure + $" | Cleanup {phase} failed: {ex.GetType().Name}: {ex.Message}";
+
 static int RunMorphCanary()
 {
     string sourceRoot = RequiredEnv("ONSLAUGHT_LIVE_SOURCE_ROOT");
@@ -1308,9 +1614,18 @@ static int RunMorphCanary()
     string runtimeIdentityModule = RequiredEnv("ONSLAUGHT_LIVE_RUNTIME_IDENTITY_MODULE");
     string expectedCommandSha256 = RequiredEnv("ONSLAUGHT_LIVE_CDB_COMMAND_SHA256");
     string expectedTemplateSha256 = RequiredEnv("ONSLAUGHT_LIVE_CDB_TEMPLATE_SHA256");
+    string canonicalExecutableSha256 = RequiredEnv("ONSLAUGHT_LIVE_CANONICAL_EXECUTABLE_SHA256");
     string templatePath = RequiredEnv("ONSLAUGHT_LIVE_CDB_TEMPLATE_PATH");
     string requiredLogMarker = RequiredEnv("ONSLAUGHT_LIVE_CDB_REQUIRED_MARKER");
     string role = RequiredEnv("ONSLAUGHT_LIVE_CANARY_ROLE");
+    string artifactRoot = Path.GetDirectoryName(artifactJson)!;
+    if (canonicalExecutableSha256.Length != 64 || !canonicalExecutableSha256.All(Uri.IsHexDigit))
+        throw new InvalidOperationException("Canonical executable digest is not a SHA-256 digest.");
+    if (!string.Equals(RequiredEnv("ONSLAUGHT_LIVE_INPUT_STEP_DELAY_MS"), "60", StringComparison.Ordinal) ||
+        !string.Equals(RequiredEnv("ONSLAUGHT_LIVE_CDB_LOG_READY_TIMEOUT_MS"), "10000", StringComparison.Ordinal))
+        throw new InvalidOperationException("Morph canary timing inputs drifted from the locked protocol.");
+    const int inputStepDelayMs = 60;
+    const int cdbLogReadyTimeoutMs = 10000;
     string[] launchArguments = JsonSerializer.Deserialize<string[]>(RequiredEnv("ONSLAUGHT_LIVE_LAUNCH_ARGUMENTS_JSON")) ?? Array.Empty<string>();
     string[] inputSequences = JsonSerializer.Deserialize<string[]>(RequiredEnv("ONSLAUGHT_LIVE_INPUT_SEQUENCES_JSON")) ?? Array.Empty<string>();
     JsonElement[] fingerprints = JsonSerializer.Deserialize<JsonElement[]>(RequiredEnv("ONSLAUGHT_LIVE_CDB_FINGERPRINTS_JSON")) ?? Array.Empty<JsonElement>();
@@ -1319,7 +1634,7 @@ static int RunMorphCanary()
     {
         "noInputControl" => Array.Empty<string>(),
         "positiveTransform" => new[] { "tap:Q" },
-        "positiveRepeat" => new[] { "tap:Q", "tap:Q" },
+        "positiveRepeat" => new[] { "tap:Q" },
         _ => throw new InvalidOperationException("Unsupported morph canary role."),
     };
     if (!launchArguments.SequenceEqual(expectedLaunchArguments, StringComparer.Ordinal) ||
@@ -1330,6 +1645,10 @@ static int RunMorphCanary()
     string installedExe = Path.Combine(sourceRoot, "BEA.exe");
     string installedHashBefore = Sha256File(installedExe);
     string overrideHashBefore = Sha256File(exeOverride);
+    if (!string.Equals(installedHashBefore, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) ||
+        !string.Equals(overrideHashBefore, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) ||
+        !string.Equals(installedHashBefore, overrideHashBefore, StringComparison.OrdinalIgnoreCase))
+        throw new InvalidOperationException("Installed and override executables do not match the canonical renderer digest.");
     SortedDictionary<string, string> sourceHashesBefore = SnapshotRelativeHashes(sourceRoot, "defaultoptions.bea", "savegames");
     if (SnapshotBeaProcesses().Length != 0)
         throw new InvalidOperationException("Refusing morph canary while any BEA.exe process is already running.");
@@ -1338,7 +1657,7 @@ static int RunMorphCanary()
     GameProfileManagedProcess? managed = null;
     GameProfileStopResult? stopResult = null;
     JsonElement? cdbAttachResult = null;
-    JsonElement releaseResult = JsonPayload(new { status = "not-started", keysReleased = true });
+    JsonElement releaseResult = JsonPayload(new { status = "not-started", bestEffort = true });
     JsonElement cdbCleanupResult = JsonPayload(new { status = "not-started", receiptBound = false, exited = true });
     List<JsonElement> inputResults = new();
     string receiptSha256 = string.Empty;
@@ -1364,6 +1683,10 @@ static int RunMorphCanary()
                 LaunchArguments: launchArguments,
                 ProfilePresetId: null));
         copiedExecutableHashBefore = Sha256File(prepared.ExecutablePath);
+        if (!string.Equals(copiedExecutableHashBefore, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(copiedExecutableHashBefore, installedHashBefore, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(copiedExecutableHashBefore, overrideHashBefore, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Copied executable does not match the canonical renderer digest.");
         _ = GameProfileControlOptionsService.ApplyToSafeCopy(
             new GameProfileControlOptionsRequest(
                 ProfileRoot: prepared.TargetGameRoot,
@@ -1408,15 +1731,31 @@ static int RunMorphCanary()
             throw new InvalidOperationException("Managed copied BEA did not expose an exact top-level window.");
         receiptSha256 = WriteRuntimeProcessReceipt(
             runtimeReceiptPath,
+            artifactRoot,
             managed,
             prepared.ManifestPath,
             observedMainWindowHandle,
             launchArguments,
-            copiedExecutableHashBefore,
+            overrideHashBefore,
             copiedExecutableHashBefore,
             expectedTemplateSha256,
             expectedCommandSha256);
         Environment.SetEnvironmentVariable("ONSLAUGHT_LIVE_RUNTIME_RECEIPT_SHA256", receiptSha256);
+        string cdbObserverArtifact = Path.Combine(artifactRoot, "cdb", "cdb-observer.json");
+        if (!ValidateCanaryBinding(
+                powershellExe,
+                runtimeIdentityModule,
+                runtimeReceiptPath,
+                receiptSha256,
+                cdbCommandFile,
+                expectedCommandSha256,
+                templatePath,
+                expectedTemplateSha256,
+                true,
+                out string attachBindingFailure))
+            throw new InvalidOperationException("Runtime binding changed before CDB attach: " + attachBindingFailure);
+        AssertFreshCanaryWriteTarget(cdbLogPath, artifactRoot);
+        AssertFreshCanaryWriteTarget(cdbObserverArtifact, artifactRoot);
         cdbAttachResult = StartCdbObserver(
             powershellExe,
             cdbStartScript,
@@ -1426,25 +1765,30 @@ static int RunMorphCanary()
             profilesRoot,
             cdbCommandFile,
             cdbLogPath,
-            BoundedIntEnv("ONSLAUGHT_LIVE_CDB_LOG_READY_TIMEOUT_MS", 10000, 1000, 30000),
-            Path.Combine(Path.GetDirectoryName(artifactJson)!, "cdb", "cdb-observer.json"),
+            cdbLogReadyTimeoutMs,
+            cdbObserverArtifact,
             runtimeReceiptPath,
             receiptSha256,
             expectedCommandSha256,
-            requiredLogMarker);
+            requiredLogMarker,
+            true);
         for (int i = 0; i < inputSequences.Length; i++)
         {
-            if (!ValidateRuntimeReceipt(
+            if (!ValidateCanaryBinding(
                 powershellExe,
                 runtimeIdentityModule,
                 runtimeReceiptPath,
                 receiptSha256,
+                cdbCommandFile,
                 expectedCommandSha256,
+                templatePath,
                 expectedTemplateSha256,
                 true,
                 out string inputReceiptFailure))
                 throw new InvalidOperationException("Runtime receipt changed before input: " + inputReceiptFailure);
             inputDeliveryAttempted = true;
+            string inputArtifact = Path.Combine(artifactRoot, "input", $"canary-input-{i + 1:D2}.json");
+            AssertFreshCanaryWriteTarget(inputArtifact, artifactRoot);
             inputResults.Add(SendInputSequence(
                 powershellExe,
                 inputScript,
@@ -1453,12 +1797,13 @@ static int RunMorphCanary()
                 managed.ExecutablePath,
                 managed.WorkingDirectory,
                 inputSequences[i],
-                BoundedIntEnv("ONSLAUGHT_LIVE_INPUT_STEP_DELAY_MS", 60, 0, 1000),
+                inputStepDelayMs,
                 false,
                 string.Empty,
-                Path.Combine(Path.GetDirectoryName(artifactJson)!, "input", $"canary-input-{i + 1:D2}.json"),
+                inputArtifact,
                 runtimeReceiptPath,
-                receiptSha256));
+                receiptSha256,
+                true));
         }
     }
     catch (Exception ex)
@@ -1476,43 +1821,87 @@ static int RunMorphCanary()
                     : copiedExecutableHashBefore;
                 receiptSha256 = WriteRuntimeProcessReceipt(
                     runtimeReceiptPath,
+                    artifactRoot,
                     managed,
                     prepared.ManifestPath,
                     "0x0",
                     launchArguments,
-                    copiedExecutableHashBefore,
+                    overrideHashBefore,
                     copiedExecutableHashBefore,
                     expectedTemplateSha256,
                     expectedCommandSha256);
                 Environment.SetEnvironmentVariable("ONSLAUGHT_LIVE_RUNTIME_RECEIPT_SHA256", receiptSha256);
             }
-            catch
+            catch (Exception ex)
             {
                 receiptSha256 = string.Empty;
+                failure = AppendCleanupFailure(failure, "receipt-materialization", ex);
             }
         }
-        if (managed is not null && !string.IsNullOrWhiteSpace(receiptSha256))
+        try
         {
-            releaseResult = ReleaseTrackedCanaryKeys(
-                inputDeliveryAttempted,
-                powershellExe,
-                inputScript,
-                managed.ProcessId,
-                observedMainWindowHandle,
-                managed.ExecutablePath,
-                managed.WorkingDirectory,
-                BoundedIntEnv("ONSLAUGHT_LIVE_INPUT_STEP_DELAY_MS", 60, 0, 1000),
-                Path.Combine(Path.GetDirectoryName(artifactJson)!, "input", "canary-release-keys.json"),
-                runtimeReceiptPath,
-                receiptSha256);
+            if (managed is not null && !string.IsNullOrWhiteSpace(receiptSha256))
+            {
+                string releaseArtifact = Path.Combine(artifactRoot, "input", "canary-release-keys.json");
+                if (inputDeliveryAttempted)
+                {
+                    if (!ValidateCanaryBinding(
+                            powershellExe,
+                            runtimeIdentityModule,
+                            runtimeReceiptPath,
+                            receiptSha256,
+                            cdbCommandFile,
+                            expectedCommandSha256,
+                            templatePath,
+                            expectedTemplateSha256,
+                            true,
+                            out string releaseBindingFailure))
+                        throw new InvalidOperationException("Runtime binding changed before best-effort key release: " + releaseBindingFailure);
+                    AssertFreshCanaryWriteTarget(releaseArtifact, artifactRoot);
+                }
+                releaseResult = BestEffortReleaseCanaryKeys(
+                    inputDeliveryAttempted,
+                    powershellExe,
+                    inputScript,
+                    managed.ProcessId,
+                    observedMainWindowHandle,
+                    managed.ExecutablePath,
+                    managed.WorkingDirectory,
+                    inputStepDelayMs,
+                    releaseArtifact,
+                    runtimeReceiptPath,
+                    receiptSha256);
+            }
+            else
+            {
+                releaseResult = JsonPayload(new { status = "not-available", bestEffort = true });
+            }
+        }
+        catch (Exception ex)
+        {
+            releaseResult = JsonPayload(new { status = "failed", bestEffort = true, error = ex.GetType().Name + ": " + ex.Message });
+            failure = AppendCleanupFailure(failure, "release-keys", ex);
+        }
+        try
+        {
             cdbCleanupResult = CleanupExactCdbObserver(
                 cdbAttachResult,
                 powershellExe,
                 runtimeIdentityModule,
                 runtimeReceiptPath,
                 receiptSha256,
+                cdbCommandFile,
                 expectedCommandSha256,
+                templatePath,
                 expectedTemplateSha256);
+        }
+        catch (Exception ex)
+        {
+            cdbCleanupResult = JsonPayload(new { status = "failed", receiptBound = false, exited = false, error = ex.GetType().Name + ": " + ex.Message });
+            failure = AppendCleanupFailure(failure, "cdb", ex);
+        }
+        try
+        {
             stopResult = StopReceiptBoundManagedProcess(
                 managed,
                 profilesRoot,
@@ -1520,11 +1909,31 @@ static int RunMorphCanary()
                 runtimeIdentityModule,
                 runtimeReceiptPath,
                 receiptSha256,
+                cdbCommandFile,
                 expectedCommandSha256,
+                templatePath,
                 expectedTemplateSha256,
-                out stopReceiptBound);
+                out stopReceiptBound,
+                out string stopFailure);
+            if (managed is not null && !stopReceiptBound)
+                failure = string.IsNullOrWhiteSpace(failure)
+                    ? "Managed stop was not receipt-bound: " + stopFailure
+                    : failure + " | Managed stop was not receipt-bound: " + stopFailure;
         }
-        ownedProcessCount = CountOwnedProcesses(runtimeReceiptPath, cdbAttachResult);
+        catch (Exception ex)
+        {
+            stopReceiptBound = false;
+            failure = AppendCleanupFailure(failure, "managed-stop", ex);
+        }
+        try
+        {
+            ownedProcessCount = CountOwnedProcesses(runtimeReceiptPath, managed?.ExecutablePath, cdbAttachResult);
+        }
+        catch (Exception ex)
+        {
+            ownedProcessCount = -1;
+            failure = AppendCleanupFailure(failure, "census", ex);
+        }
     }
 
     if (prepared is null || string.IsNullOrWhiteSpace(receiptSha256))
@@ -1533,10 +1942,16 @@ static int RunMorphCanary()
     string overrideHashAfter = Sha256File(exeOverride);
     SortedDictionary<string, string> sourceHashesAfter = SnapshotRelativeHashes(sourceRoot, "defaultoptions.bea", "savegames");
     string copiedExecutableHashAfter = Sha256File(prepared.ExecutablePath);
-    bool canarySourceUnchanged = string.Equals(installedHashBefore, installedHashAfter, StringComparison.OrdinalIgnoreCase) &&
-        string.Equals(overrideHashBefore, overrideHashAfter, StringComparison.OrdinalIgnoreCase) &&
+    bool canarySourceUnchanged = string.Equals(installedHashBefore, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(overrideHashBefore, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(installedHashAfter, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(overrideHashAfter, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(installedHashBefore, overrideHashBefore, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(installedHashAfter, overrideHashAfter, StringComparison.OrdinalIgnoreCase) &&
         HashMapsEqual(sourceHashesBefore, sourceHashesAfter);
-    bool canaryCopyUnchanged = string.Equals(copiedExecutableHashBefore, copiedExecutableHashAfter, StringComparison.OrdinalIgnoreCase);
+    bool canaryCopyUnchanged = string.Equals(copiedExecutableHashBefore, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(copiedExecutableHashAfter, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(copiedExecutableHashBefore, copiedExecutableHashAfter, StringComparison.OrdinalIgnoreCase);
     bool canaryCdbReady = cdbAttachResult.HasValue &&
         cdbAttachResult.Value.TryGetProperty("helperPayload", out JsonElement cdbHelper) &&
         JsonStringIn(cdbHelper, "status", "marker-ready") &&
@@ -1550,13 +1965,18 @@ static int RunMorphCanary()
             JsonStringIn(result, "status", "sent") && JsonBool(result, "focused") &&
             result.TryGetProperty("unconfirmedReleaseKeys", out JsonElement keys) &&
             keys.ValueKind == JsonValueKind.Array && keys.GetArrayLength() == 0);
-    bool keysReleased = JsonBool(releaseResult, "keysReleased");
+    bool keysReleased = role == "noInputControl"
+        ? inputResults.Count == 0
+        : inputResults.Count == expectedInputSequences.Length && inputResults.All(result =>
+            result.TryGetProperty("unconfirmedReleaseKeys", out JsonElement keys) &&
+            keys.ValueKind == JsonValueKind.Array && keys.GetArrayLength() == 0);
     bool cdbDetached = JsonStringIn(cdbCleanupResult, "status", "detached-exited", "already-exited") &&
         JsonBool(cdbCleanupResult, "receiptBound");
     bool managedProcessStopped = stopReceiptBound && stopResult?.Success == true;
     var canaryCleanup = new
     {
         keysReleased,
+        bestEffortKeyRelease = releaseResult,
         cdbDetached,
         managedProcessStopped,
         ownedProcessCount,
@@ -1570,14 +1990,16 @@ static int RunMorphCanary()
         receiptSha256,
         commandSha256 = expectedCommandSha256,
         templateSha256 = expectedTemplateSha256,
-        executableSha256 = copiedExecutableHashBefore,
+        executableSha256 = canonicalExecutableSha256,
         fingerprints,
         sourceUnchanged = canarySourceUnchanged,
         copyUnchanged = canaryCopyUnchanged,
         cleanup = canaryCleanup,
     };
-    Directory.CreateDirectory(Path.GetDirectoryName(artifactJson)!);
-    File.WriteAllText(artifactJson, JsonSerializer.Serialize(privateArtifact, new JsonSerializerOptions { WriteIndented = true }));
+    WriteNewCanaryText(
+        artifactJson,
+        artifactRoot,
+        JsonSerializer.Serialize(privateArtifact, new JsonSerializerOptions { WriteIndented = true }));
     bool succeeded = string.IsNullOrWhiteSpace(failure) && canaryCdbReady && canaryFocusedInputSucceeded &&
         canarySourceUnchanged && canaryCopyUnchanged && keysReleased && cdbDetached &&
         managedProcessStopped && ownedProcessCount == 0;
@@ -2252,9 +2674,12 @@ catch
 
     throw;
 }
-""",
-        encoding="utf-8",
-    )
+"""
+    if create_new:
+        with program.open("x", encoding="utf-8", newline="\n") as stream:
+            stream.write(program_text)
+    else:
+        program.write_text(program_text, encoding="utf-8")
     return project
 
 
@@ -2513,6 +2938,13 @@ def main() -> int:
     if paths_overlap(artifact_root, source_root) or paths_overlap(profiles_root, source_root):
         print("Refusing artifact/profile roots that overlap the source game root.", file=sys.stderr)
         return 2
+    if morph_canary_mode:
+        try:
+            artifact_root = create_fresh_canary_artifact_root(artifact_root_raw)
+            profiles_root = profiles_root_raw.resolve()
+        except (OSError, ValueError) as exc:
+            print(f"Refusing non-fresh canary artifact root: {exc}", file=sys.stderr)
+            return 2
     cdb_command_file_raw = Path(args.cdb_command_file)
     cdb_command_file = cdb_command_file_raw if cdb_command_file_raw.is_absolute() else (ROOT / cdb_command_file_raw)
     cdb_command_file = cdb_command_file.resolve()
@@ -2548,12 +2980,22 @@ def main() -> int:
         try:
             morph_canary = load_morph_canary_module()
             cdb_command_file = artifact_root / "cdb" / "battleengine-morph-identity-canary.cdb.txt"
-            cdb_command_file.parent.mkdir(parents=True, exist_ok=True)
+            create_fresh_canary_directory(cdb_command_file.parent, artifact_root)
             rendered_canary_command = morph_canary.render_private_command(
                 exe_override,
                 morph_canary.DEFAULT_TEMPLATE,
             )
-            cdb_command_file.write_bytes(rendered_canary_command.text.encode("ascii"))
+            validate_canary_digest_set(
+                rendered_canary_command.executable_sha256,
+                installed_before=file_sha256(source_root / "BEA.exe"),
+                override_before=file_sha256(exe_override),
+            )
+            write_new_private_bytes(
+                cdb_command_file,
+                rendered_canary_command.text.encode("ascii"),
+                artifact_root,
+            )
+            create_fresh_canary_directory(artifact_root / "input", artifact_root)
             morph_canary.validate_private_command(
                 cdb_command_file,
                 exe_override,
@@ -2564,6 +3006,9 @@ def main() -> int:
             return 2
 
     if runner_root.exists():
+        if morph_canary_mode:
+            print(f"Refusing pre-existing canary runner directory: {runner_root}", file=sys.stderr)
+            return 2
         if has_reparse_or_symlink_ancestor(runner_root_raw) or has_reparse_or_symlink_ancestor(runner_root):
             print(f"Refusing to remove runner directory through a reparse/symlink path: {runner_root}", file=sys.stderr)
             return 2
@@ -2572,7 +3017,7 @@ def main() -> int:
             print(f"Refusing to remove existing non-tool-owned runner directory: {runner_root}", file=sys.stderr)
             return 2
         shutil.rmtree(runner_root)
-    project = write_runner(runner_root)
+    project = write_runner(runner_root, create_new=morph_canary_mode)
 
     env = os.environ.copy()
     env["ONSLAUGHT_LIVE_SOURCE_ROOT"] = str(source_root)
@@ -2602,11 +3047,11 @@ def main() -> int:
     env["ONSLAUGHT_LIVE_CDB_START_SCRIPT"] = str(ROOT / "tools" / "start_cdb_server.ps1")
     env["ONSLAUGHT_LIVE_CDB_COMMAND_FILE"] = str(cdb_command_file)
     env["ONSLAUGHT_LIVE_CDB_LOG_PATH"] = str(cdb_log_path)
-    env["ONSLAUGHT_LIVE_CDB_LOG_READY_TIMEOUT_MS"] = str(args.cdb_log_ready_timeout_ms)
+    env["ONSLAUGHT_LIVE_CDB_LOG_READY_TIMEOUT_MS"] = str(protocol.cdb_log_ready_timeout_ms)
     env["ONSLAUGHT_LIVE_CDB_POST_ATTACH_WAIT_SECONDS"] = str(args.cdb_post_attach_wait_seconds)
     env["ONSLAUGHT_LIVE_CDB_ATTACH_PHASE"] = protocol.cdb_attach_phase
     env["ONSLAUGHT_LIVE_LAUNCH_ARGUMENTS_JSON"] = json.dumps(launch_arguments)
-    env["ONSLAUGHT_LIVE_INPUT_STEP_DELAY_MS"] = str(args.input_step_delay_ms)
+    env["ONSLAUGHT_LIVE_INPUT_STEP_DELAY_MS"] = str(protocol.input_step_delay_ms)
     env["ONSLAUGHT_LIVE_PATCH_KEYS_JSON"] = json.dumps(patch_keys)
     env["ONSLAUGHT_LIVE_PROFILE_PRESET_ID"] = args.profile_preset_id.strip()
     env["ONSLAUGHT_LIVE_STAGE_MUSIC_REPLACEMENT"] = "1" if stage_music_replacement else "0"
@@ -2628,6 +3073,7 @@ def main() -> int:
         env["ONSLAUGHT_LIVE_CDB_COMMAND_SHA256"] = rendered_canary_command.sha256
         env["ONSLAUGHT_LIVE_CDB_TEMPLATE_PATH"] = str(morph_canary.DEFAULT_TEMPLATE)
         env["ONSLAUGHT_LIVE_CDB_TEMPLATE_SHA256"] = rendered_canary_command.template_sha256
+        env["ONSLAUGHT_LIVE_CANONICAL_EXECUTABLE_SHA256"] = rendered_canary_command.executable_sha256
         env["ONSLAUGHT_LIVE_CDB_FINGERPRINTS_JSON"] = json.dumps(
             [
                 {
@@ -2642,8 +3088,12 @@ def main() -> int:
 
     command = ["dotnet", "run", "--project", str(project), "--nologo"]
     result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, check=False, env=env)
-    (artifact_root / "dotnet-stdout.log").write_text(result.stdout, encoding="utf-8")
-    (artifact_root / "dotnet-stderr.log").write_text(result.stderr, encoding="utf-8")
+    if morph_canary_mode:
+        write_new_private_text(artifact_root / "dotnet-stdout.log", result.stdout, artifact_root)
+        write_new_private_text(artifact_root / "dotnet-stderr.log", result.stderr, artifact_root)
+    else:
+        (artifact_root / "dotnet-stdout.log").write_text(result.stdout, encoding="utf-8")
+        (artifact_root / "dotnet-stderr.log").write_text(result.stderr, encoding="utf-8")
     if result.returncode != 0:
         print(result.stdout)
         print(result.stderr, file=sys.stderr)

@@ -7,6 +7,7 @@ import ast
 from contextlib import redirect_stderr
 import importlib.util
 import io
+import os
 import shlex
 import tempfile
 import unittest
@@ -60,6 +61,20 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertFalse(plan.stage_music_replacement)
         self.assertFalse(plan.allow_background_window_messages)
         self.assertEqual("MORPH_CANARY_READY", plan.required_cdb_log_marker)
+        self.assertEqual(60, plan.input_step_delay_ms)
+        self.assertEqual(10000, plan.cdb_log_ready_timeout_ms)
+
+    def test_parser_rejects_abbreviated_protocol_and_canary_timing_options(self) -> None:
+        module = self.live_smoke_module()
+        abbreviated = (
+            ["--runtime-prot", "battleengine-morph-identity-canary-v1"],
+            ["--runtime-protocol", "battleengine-morph-identity-canary-v1", "--canary-role", "noInputControl", "--input-step-del", "60"],
+            ["--runtime-protocol", "battleengine-morph-identity-canary-v1", "--canary-role", "noInputControl", "--cdb-log-ready-time", "10000"],
+        )
+
+        for arguments in abbreviated:
+            with self.subTest(arguments=arguments), redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                module.parse_args(arguments)
 
     def test_morph_canary_protocol_derives_exact_positive_role_input(self) -> None:
         module, transform_args = self.parse(
@@ -74,7 +89,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
             "--canary-role positiveRepeat",
         )
         repeat_plan = module.validate_runtime_protocol(repeat_args)
-        self.assertEqual(["tap:Q", "tap:Q"], repeat_plan.input_sequences)
+        self.assertEqual(["tap:Q"], repeat_plan.input_sequences)
 
     def test_morph_canary_protocol_rejects_mixed_proof_levers(self) -> None:
         rejected_arguments = (
@@ -138,46 +153,171 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             module.parse_args(["--runtime-protocol", "battleengine-morph-identity-canary-v2"])
 
-    def test_generated_runner_binds_canary_command_receipt_and_cleanup(self) -> None:
-        text = self.script_text()
+    def test_synthetic_canary_orchestration_propagates_identity_and_skips_capture(self) -> None:
+        module, args = self.parse(
+            "--runtime-protocol battleengine-morph-identity-canary-v1",
+            "--canary-role positiveTransform",
+        )
+        plan = module.validate_runtime_protocol(args)
+        calls: list[tuple[object, ...]] = []
+        receipt = "1" * 64
+        command = "2" * 64
+        marker = "MORPH_CANARY_READY"
+        callbacks = {
+            "attach_cdb": lambda *values: calls.append(("attach_cdb", *values)),
+            "send_input": lambda *values: calls.append(("send_input", *values)) or {"unconfirmedReleaseKeys": []},
+            "capture": lambda: calls.append(("capture",)),
+            "release_keys": lambda: calls.append(("release_keys",)) or {"status": "failed", "bestEffort": True},
+            "cleanup_cdb": lambda *values: calls.append(("cleanup_cdb", *values)),
+            "stop_managed": lambda *values: calls.append(("stop_managed", *values)),
+            "census": lambda: calls.append(("census",)) or 0,
+        }
 
-        self.assertIn("battleengine-morph-identity-canary-v1", text)
-        self.assertIn("runtime-process-receipt.v1", text)
-        self.assertIn("ONSLAUGHT_LIVE_RUNTIME_RECEIPT_PATH", text)
-        self.assertIn("ONSLAUGHT_LIVE_RUNTIME_RECEIPT_SHA256", text)
-        self.assertIn("ONSLAUGHT_LIVE_CDB_COMMAND_SHA256", text)
-        self.assertIn("ONSLAUGHT_LIVE_CDB_TEMPLATE_SHA256", text)
-        self.assertIn("-RuntimeReceiptPath", text)
-        self.assertIn("-ExpectedReceiptSha256", text)
-        self.assertIn("-ExpectedCommandSha256", text)
-        self.assertIn("-RequiredLogMarker", text)
-        self.assertIn("Assert-RuntimeProcessReceipt", text)
-        self.assertIn("-RequireWindow", text)
-        self.assertIn('GetProperty("commandTemplateSha256")', text)
-        self.assertIn("ownedProcessIds", text)
-        self.assertIn("cdbStartedAtUtc", text)
-        self.assertIn("cdbExecutablePath", text)
-        self.assertIn("MORPH_CANARY_READY", text)
-        self.assertIn("HasExactlyOneLogMarker", text)
-        self.assertIn("winui-original-binary-battleengine-morph-identity-canary-private-run.v1", text)
-        self.assertIn("ApplyWindowedCompatibilityPatch: !morphCanaryMode", text)
-        self.assertIn('ActionLabel = "Transform"', text)
-        self.assertIn("EntryId = 0x21", text)
-        self.assertIn("KeyboardDeviceCode = 8u", text)
-        self.assertIn('Player2Token = ""', text)
-        self.assertIn("captureCount = morphCanaryMode", text)
-        self.assertIn("canaryCdbReady", text)
-        self.assertIn("canaryFocusedInputSucceeded", text)
-        self.assertIn("canaryCopyUnchanged", text)
-        self.assertIn("canarySourceUnchanged", text)
-        self.assertIn("canaryCleanup", text)
-        release_index = text.index("ReleaseTrackedCanaryKeys")
-        cdb_index = text.index("CleanupExactCdbObserver")
-        stop_index = text.index("StopReceiptBoundManagedProcess")
-        census_index = text.index("CountOwnedProcesses")
-        self.assertLess(release_index, cdb_index)
-        self.assertLess(cdb_index, stop_index)
-        self.assertLess(stop_index, census_index)
+        result = module.run_synthetic_runtime_orchestration(
+            plan,
+            callbacks,
+            receipt_sha256=receipt,
+            command_sha256=command,
+            required_marker=marker,
+        )
+
+        self.assertEqual(("attach_cdb", receipt, command, marker), calls[0])
+        self.assertEqual(("send_input", "tap:Q", receipt, command, marker), calls[1])
+        self.assertEqual(("cleanup_cdb", receipt, command, marker), calls[3])
+        self.assertEqual(("stop_managed", receipt, command, marker), calls[4])
+        self.assertNotIn(("capture",), calls)
+        self.assertEqual(
+            ["release_keys", "cleanup_cdb", "stop_managed", "census"],
+            result["cleanup_order"],
+        )
+        self.assertEqual({}, result["cleanup_failures"])
+        self.assertEqual(0, result["owned_process_count"])
+        self.assertTrue(result["keys_released"])
+        self.assertEqual({"status": "failed", "bestEffort": True}, result["best_effort_release"])
+
+        held_result = module.run_synthetic_runtime_orchestration(
+            plan,
+            {
+                **callbacks,
+                "send_input": lambda *_: {"unconfirmedReleaseKeys": ["Q"]},
+                "release_keys": lambda: {"status": "best-effort-sent", "keysReleased": True},
+            },
+            receipt_sha256=receipt,
+            command_sha256=command,
+            required_marker=marker,
+        )
+        self.assertFalse(held_result["keys_released"])
+
+    def test_synthetic_cleanup_continues_after_each_phase_failure(self) -> None:
+        module, args = self.parse(
+            "--runtime-protocol battleengine-morph-identity-canary-v1",
+            "--canary-role positiveTransform",
+        )
+        plan = module.validate_runtime_protocol(args)
+        expected_order = ["release_keys", "cleanup_cdb", "stop_managed", "census"]
+
+        for failing_phase in expected_order:
+            calls: list[str] = []
+
+            def phase(name: str, value=None):
+                def invoke(*_):
+                    calls.append(name)
+                    if name == failing_phase:
+                        raise RuntimeError(f"injected {name} failure")
+                    return value
+                return invoke
+
+            result = module.run_synthetic_runtime_orchestration(
+                plan,
+                {
+                    "attach_cdb": lambda *_: None,
+                    "send_input": lambda *_: None,
+                    "capture": lambda: None,
+                    "release_keys": phase("release_keys"),
+                    "cleanup_cdb": phase("cleanup_cdb"),
+                    "stop_managed": phase("stop_managed"),
+                    "census": phase("census", 0),
+                },
+                receipt_sha256="1" * 64,
+                command_sha256="2" * 64,
+                required_marker="MORPH_CANARY_READY",
+            )
+
+            with self.subTest(failing_phase=failing_phase):
+                self.assertEqual(expected_order, calls)
+                self.assertEqual(expected_order, result["cleanup_order"])
+                self.assertIn(failing_phase, result["cleanup_failures"])
+
+    def test_synthetic_default_orchestration_preserves_capture_behavior(self) -> None:
+        module, args = self.parse("--runtime-protocol default")
+        plan = module.validate_runtime_protocol(args)
+        calls: list[str] = []
+        callbacks = {
+            "attach_cdb": lambda *_: calls.append("attach_cdb"),
+            "send_input": lambda *_: calls.append("send_input"),
+            "capture": lambda: calls.append("capture"),
+            "release_keys": lambda: calls.append("release_keys"),
+            "cleanup_cdb": lambda *_: calls.append("cleanup_cdb"),
+            "stop_managed": lambda *_: calls.append("stop_managed"),
+            "census": lambda: calls.append("census") or 0,
+        }
+
+        module.run_synthetic_runtime_orchestration(
+            plan,
+            callbacks,
+            receipt_sha256="",
+            command_sha256="",
+            required_marker="",
+        )
+
+        self.assertEqual(["capture", "release_keys", "cleanup_cdb", "stop_managed", "census"], calls)
+
+    def test_canary_default_artifact_root_is_outside_repo_and_untrackable(self) -> None:
+        module, args = self.parse(
+            "--runtime-protocol battleengine-morph-identity-canary-v1",
+            "--canary-role noInputControl",
+        )
+
+        with patch.dict(os.environ, {}, clear=True):
+            artifact_root, profiles_root, armed, _, _ = module.select_artifact_root_inputs(args, "stamp")
+
+        self.assertFalse(module.is_same_or_under(artifact_root, module.ROOT))
+        self.assertFalse(module.is_same_or_under(profiles_root, module.ROOT))
+        self.assertTrue(armed)
+
+    def test_canary_fresh_root_rejects_preplanted_child_and_reparse_signal(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "canary-run"
+            root.mkdir()
+            (root / "cdb").mkdir()
+            with self.assertRaises(ValueError):
+                module.create_fresh_canary_artifact_root(root)
+
+            fresh = Path(tmp) / "fresh-run"
+            with patch.object(module, "has_reparse_or_symlink_ancestor", return_value=True):
+                with self.assertRaises(ValueError):
+                    module.create_fresh_canary_artifact_root(fresh)
+
+    def test_canary_digest_set_requires_canonical_equality(self) -> None:
+        module = self.live_smoke_module()
+        canonical = "a" * 64
+        labels = (
+            "installed_before",
+            "override_before",
+            "copied_before",
+            "installed_after",
+            "override_after",
+            "copied_after",
+        )
+        exact = {label: canonical for label in labels}
+        module.validate_canary_digest_set(canonical, **exact)
+
+        for label in labels:
+            drifted = dict(exact)
+            drifted[label] = "b" * 64
+            with self.subTest(label=label), self.assertRaises(ValueError):
+                module.validate_canary_digest_set(canonical, **drifted)
 
     def stable_extra_patch_keys(self) -> set[str]:
         tree = ast.parse(self.script_text(), filename=str(SCRIPT))
@@ -309,7 +449,6 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn("artifact_base_arm_env = os.environ.get(ARTIFACT_BASE_ARM_ENV", text)
         self.assertIn("select_artifact_root_inputs", text)
         self.assertIn("explicit_artifact_root = bool(args.artifact_root)", text)
-        self.assertIn("artifact_parent_raw = Path(artifact_base_env) if artifact_base_env else default_artifact_parent_raw", text)
         self.assertIn('profiles_root_raw = Path(args.profiles_root) if args.profiles_root else artifact_root_raw / "GameProfiles"', text)
         self.assertIn("and not explicit_artifact_root", text)
         self.assertIn("artifact_base_arm_env == EXTERNAL_ARTIFACT_ROOT_ARM_PHRASE", text)
