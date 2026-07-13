@@ -288,6 +288,18 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   start-CDB/census gates was rejected against the exact authority and package
   gate definitions. A fresh Retry 11 is now allowed. Retry 10 remains failed
   and cannot be promoted or reinterpreted.
+- Retry 11 used new ignored authority/lease controls, a new absent proof root,
+  fresh copied targets, and the integrated exit-event parser. Dry run passed.
+  The live no-input role again stopped before either positive role and
+  published no matrix. Its retained log contains one exact target exit event
+  for the receipt-owned PID, the ordered `.lastevent` delimiters, cleanup
+  marker, and `quit:` marker. The exact managed stop succeeded, source/copy
+  hashes remained unchanged, and the final owned-process census was clear.
+  The role still failed closed because CDB returned `-1` while reporting the
+  intentionally stopped target's exit code as `0xFFFFFFFF`; the current runner
+  requires CDB exit code zero before parsing the retained evidence. This is now
+  a bounded harness-contract investigation. Arbitrary nonzero CDB exits are not
+  accepted, Retry 11 remains failed, and no positive-role causality claim exists.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future
@@ -490,9 +502,10 @@ claim against an already malicious process running as the same Windows user.
 
 ## Next Slices
 
-1. Run a fresh authorized Level 850 Retry 11 using new ignored controls, copies,
-   processes, and proof root; publish only a complete fully validated sanitized
-   identity/causality result.
+1. Resolve the exact CDB-versus-managed-target exit-status relationship exposed
+   by Retry 11 with a failing disposable test and narrow identity-bound rule,
+   then run a wholly fresh Retry 12 and publish only a complete validated
+   sanitized identity/causality result.
 2. Review, harden, and integrate the completed Cursor submodule/local-retail-
    presentation branch without weakening local-payload or synthetic-smoke
    boundaries.
