@@ -23,8 +23,8 @@ re-accept the Home first-run keyboard-focus behavior without weakening its
 normal/760 visual contract. Do not install or revive the legacy x86 extractor
 toolchain.
 
-1. finish, review, and integrate the exact four-path copied-runtime measurement
-   lifecycle adapter without launching the game;
+1. use the integrated four-path copied-runtime measurement lifecycle adapter
+   without changing its accepted receipt, cleanup, or two-attempt contract;
 2. execute exactly two fresh receipt-bound scalar walker-forward attempts only
    after the adapter and cleanup gates are accepted; one invalid attempt stops
    the pair without a third run;
@@ -62,6 +62,14 @@ toolchain.
   passed. Candidate 0004 remains distinct despite byte-identical OBJ content.
   This proves local presentation only, not retail identity, transforms, fidelity,
   textures, or parity.
+- The selected mapping is now deterministic through the local corpus boundary:
+  candidate 0003 maps to lexicographic loose-corpus ordinal 0044,
+  `m_f_be1.msh.aya`, and internal `f_be1.msh`. The asset is a non-skeletal but
+  articulated 63-part PRNT/CHLD hierarchy with 15 direct REFR instances, rich
+  frame data, and four currently visible texture dependencies
+  (`cockpit.tga`, `BE_texB.tga`, `Chrome3.tga`, and `BE_texA.tga`). Exact
+  parent/runtime transform composition, eight-slot material binding, DDS
+  resolution, faction/player role, and released-runtime identity remain open.
 - Reference inventory is drafted in
   `reverse-engineering/source-code/reference-submodule-audit-2026-07-12.md`:
   pinned fork/upstream provenance, current tracked counts, source completeness,
@@ -81,6 +89,15 @@ toolchain.
   public end-to-end synthetic AYA/DDS/FBX fixture exists yet.
 - The behavior contract and rebuild implementation remain pending copied-runtime
   evidence. First Flight's transform/resource/movement choices remain synthetic.
+- The cleanup-first copied-runtime walker measurement adapter is integrated at
+  `9c22a5b6`. Its integrated focused gates pass 20 adapter tests and 49
+  safe-copy/lifecycle tests. It adds no live result: exactly two fresh accepted
+  attempts are still required before publishing a contract or changing Core.
+- Two dedicated user-owned lanes now aggressively mine the pinned Onslaught C++
+  source and the legacy AYAResourceExtractor/current Python extractor. Their
+  purpose is executable source-to-Steam reconstruction and extractor/GUI
+  completeness, not additional documentation inventories or a second competing
+  Python pipeline.
 - The user selected the reviewed identity-canary progression. The durable design
   in
   `reverse-engineering/binary-analysis/battleengine-morph-runtime-observer-design-2026-07-12.md`

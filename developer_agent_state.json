@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-13",
   "routingPolicy": "Follow the global Codex multi-agent lane contract. Under current direct user policy, every new or resumed Codex-owned worker uses gpt-5.6-sol at medium effort by default; harder work may raise Sol effort, and Terra/Luna fallback or lower effort requires a newer direct user instruction.",
-  "currentFocus": "Finish and integrate the copied-runtime walker measurement lifecycle, obtain exactly two accepted scalar-response attempts, and turn the resulting bounded contract into deterministic Core behavior. In parallel, correct the proven Home first-run focus failure and re-run its no-click normal/760 acceptance.",
+  "currentFocus": "Use the integrated copied-runtime walker measurement lifecycle to obtain exactly two accepted scalar-response attempts and turn the resulting bounded contract into deterministic Core behavior. In parallel, aggressively crosswalk the Onslaught C++/Steam/AYA resource systems, extend the existing Python extractor, and correct the proven Home first-run focus failure.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -17,11 +17,11 @@
       "newReleaseAuthorized": false
     },
     "repository": {
-      "registeredWorktrees": 8,
-      "worktreeOwnership": "main owner/integration; read-only Task-Lane Coordinator and Campaign Steward; Player Value & UX; Rebuild Asset Pipeline; read-only Runtime Fidelity, Lore Editorial, and Ghidra Semantic Debt lanes",
+      "registeredWorktrees": 10,
+      "worktreeOwnership": "main owner/integration; read-only Task-Lane Coordinator and Campaign Steward; active Player Value & UX, Rebuild Asset Pipeline, Onslaught C++ Source Mining, and AYA Extractor/Python Tool lanes; completed Runtime Fidelity, Lore Editorial, and Ghidra Semantic Debt registrations pending archive/removal when handles allow",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "f65f2dcf (Lore/history README front door); REFR integration and its state reconciliation are pushed on main",
+      "lastPushedBeforeCurrentSlice": "9c22a5b6 (bounded walker trajectory measurement adapter); selected-asset presentation state is pushed at 57f6a63e",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
@@ -107,7 +107,7 @@
       "status": "Tasks 1-4 are accepted. Task 5 has twelve preserved failed executions and no published identity claim. Retry 12 proves neither Q causality nor Transform/Morph/Move/JetPart identity; it exposed a repeated post-quit NatVis shutdown-grammar defect. Another live run requires an integrated strict path-bound correction and wholly fresh controls."
     },
     "walkerTrajectoryMeasurement": {
-      "tooling": "Integrated at aee7916b: a platform-neutral scalar walker-forward sampler, strict public-safe projection schema, and 18 synthetic tests for coherent P0/BattleEngine/Walker reads, receipt and foreground identity, unconditional key-up and cleanup, cadence/drift/response/release analysis, exact two-run stability, and private-data rejection.",
+      "tooling": "The platform-neutral scalar sampler/schema is integrated at aee7916b. The cleanup-first copied-runtime lifecycle adapter is integrated at 9c22a5b6 with 20 focused adapter tests and 49 safe-copy/lifecycle tests passing on main; it binds receipt/process/module/window identity, read-only process-memory access, exact Q down/up cleanup, fresh attempt roots, AppCore launch/stop/census, and no-third/no-public-output behavior.",
       "claimBoundary": "The future measurement is scalar motion response only. It does not establish actor- or camera-relative direction, grounded or terrain state, turning, morph, handling, timing below the 10 ms cadence, parity, or Core acceptance.",
       "executionBoundary": "No copied-runtime attempt, input action, CDB/Ghidra action, public JSON/Markdown contract, or Core change has occurred. Exactly two fresh accepted attempts are required before a separate public-contract lease; one invalid attempt stops the pair without a third run."
     },
@@ -122,9 +122,9 @@
       "acceptance": "Inventory/profile, 73 runtime-helper, 274 active documented-command, 62 current-link, release-profile, curated-manifest, JSON, and diff checks pass; generated accounting is R0=6291, R2=0, R3=3, R4=13184."
     },
     "liveGhidraSemanticLane": {
-      "ownership": "The dedicated Ghidra closeout commits c33f2f1e and a96a1a5f are integrated; its exclusive mutation lease is released and the task/worktree may be retired after push verification.",
+      "ownership": "The dedicated Ghidra closeout commits c33f2f1e and a96a1a5f are integrated. The later read-only 0x004dac90 evidence export and offline recovery are closed: the exact scratch root was removed after 20 raw/receipt artifacts were retained and rehashed, protected packet roots stayed unchanged, and final census was zero.",
       "reportedProgress": "The integrated closeout verifies a stable 6,411-function inventory and 459-address endpoint delta, independently reviews 92 unique proposed corrections, applies and exactly reads back 91 confirmed rows, rejects the erroneous 0x004dac90 manifest row, applies the separately leased 0x0050b9c0 structured prototype correction, and verifies complete pre/post project backups.",
-      "evidenceBoundary": "The recovered Cursor ledger remains incomplete and no missing verdict is invented. Static metadata quality does not prove runtime behavior or rebuild parity. The stale 0x004dac90 live metadata requires a separate bounded review and mutation lease rather than reuse of the rejected manifest row."
+      "evidenceBoundary": "The recovered Cursor ledger remains incomplete and no missing verdict is invented. The 0x004dac90 evidence shows one stack push at both direct callers and RET 4 while stored metadata/decompiler disagree, but no ABI/metadata correction was accepted or applied. Static metadata quality does not prove runtime behavior or rebuild parity."
     },
     "boundaries": [
       "No installed-game or original BEA.exe mutation.",
