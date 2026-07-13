@@ -429,6 +429,12 @@ public static class GameWindowInputNative {
     public struct InputUnion {
         [FieldOffset(0)]
         public KEYBDINPUT ki;
+
+        [FieldOffset(0)]
+        public MOUSEINPUT mi;
+
+        [FieldOffset(0)]
+        public HARDWAREINPUT hi;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -440,8 +446,35 @@ public static class GameWindowInputNative {
         public UIntPtr dwExtraInfo;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MOUSEINPUT {
+        public int dx;
+        public int dy;
+        public uint mouseData;
+        public uint dwFlags;
+        public uint time;
+        public UIntPtr dwExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct HARDWAREINPUT {
+        public uint uMsg;
+        public ushort wParamL;
+        public ushort wParamH;
+    }
+
     [DllImport("user32.dll", SetLastError = true)]
     public static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+
+    public static int LastSendInputError { get; private set; }
+
+    public static int InputStructSize {
+        get { return Marshal.SizeOf(typeof(INPUT)); }
+    }
+
+    public static int ExpectedInputStructSize {
+        get { return IntPtr.Size == 8 ? 40 : 28; }
+    }
 
     public static bool SendScanKey(ushort scanCode, bool keyUp, bool extended) {
         INPUT[] inputs = new INPUT[1];
@@ -451,7 +484,9 @@ public static class GameWindowInputNative {
         inputs[0].U.ki.dwFlags = 0x0008 | (keyUp ? 0x0002u : 0u) | (extended ? 0x0001u : 0u);
         inputs[0].U.ki.time = 0;
         inputs[0].U.ki.dwExtraInfo = UIntPtr.Zero;
-        return SendInput(1, inputs, Marshal.SizeOf(typeof(INPUT))) == 1;
+        uint sent = SendInput(1, inputs, InputStructSize);
+        LastSendInputError = sent == 1 ? 0 : Marshal.GetLastWin32Error();
+        return sent == 1;
     }
 
     public static bool SendClientMouseClick(IntPtr hWnd, int clientX, int clientY) {
@@ -478,6 +513,18 @@ public static class GameWindowInputNative {
     public static extern uint GetCurrentThreadId();
 }
 "@
+}
+
+$nativeInputLayout = [PSCustomObject]@{
+    pointerSize = [IntPtr]::Size
+    structSize = [GameWindowInputNative]::InputStructSize
+    expectedStructSize = [GameWindowInputNative]::ExpectedInputStructSize
+    valid = [GameWindowInputNative]::InputStructSize -eq [GameWindowInputNative]::ExpectedInputStructSize
+}
+if (-not $nativeInputLayout.valid) {
+    Write-Error ("Native INPUT layout mismatch: marshaled size {0}, expected {1} for pointer size {2}." -f
+        $nativeInputLayout.structSize, $nativeInputLayout.expectedStructSize, $nativeInputLayout.pointerSize)
+    exit 1
 }
 
 function Invoke-ScanKey {
@@ -511,6 +558,13 @@ function Invoke-ScanKey {
     return $result
 }
 
+function Get-LastSendInputError {
+    if ($testOnlyInputMode) {
+        return $null
+    }
+    return [GameWindowInputNative]::LastSendInputError
+}
+
 function Invoke-KeybdEventFallback {
     param([object]$Action, [bool]$KeyUp)
 
@@ -532,6 +586,22 @@ function Invoke-KeybdEventFallback {
         [GameWindowInputNative]::keybd_event(
             0, [byte]$Action.scanCode, $flags, [UIntPtr]::Zero)
     }
+}
+
+function Ensure-HeldKeyTracked {
+    param([object]$HeldKeyList, [object]$Action)
+
+    foreach ($heldKey in $HeldKeyList) {
+        if ([uint16]$heldKey.scanCode -eq [uint16]$Action.scanCode -and
+            [bool]$heldKey.extended -eq [bool]$Action.extended) {
+            return
+        }
+    }
+    $HeldKeyList.Add([PSCustomObject]@{
+        key = [string]$Action.key
+        scanCode = [uint16]$Action.scanCode
+        extended = [bool]$Action.extended
+    }) | Out-Null
 }
 
 function Resolve-TargetWindow {
@@ -810,6 +880,7 @@ $mouseEventsSent = 0
 $heldKeys = [System.Collections.Generic.List[object]]::new()
 $deliveryFailure = ""
 $releaseFailures = [System.Collections.Generic.List[string]]::new()
+$sendInputFailures = [System.Collections.Generic.List[object]]::new()
 try {
 foreach ($action in $actions) {
     if ($action.kind -eq "wait") {
@@ -861,6 +932,18 @@ foreach ($action in $actions) {
                 $sent++
                 $sendInputEventsSent++
             } else {
+                $lastError = Get-LastSendInputError
+                $sendInputFailures.Add([PSCustomObject]@{
+                    key = [string]$action.key
+                    keyUp = $false
+                    phase = "primary"
+                    win32Error = $lastError
+                }) | Out-Null
+                if ($canaryMode) {
+                    $errorDetail = if ($null -eq $lastError) { "" } else { " (Win32 error {0})" -f $lastError }
+                    throw ("Exact foreground SendInput key-down failed for {0}{1}." -f
+                        $action.key, $errorDetail)
+                }
                 Invoke-KeybdEventFallback $action $false
                 $sent++
                 $scanKeybdEventsSent++
@@ -882,12 +965,25 @@ foreach ($action in $actions) {
                 $windowMessageEventsSent++
             }
         } else {
+            Ensure-HeldKeyTracked -HeldKeyList $heldKeys -Action $action
             Assert-TargetStillForeground -Handle $selected.handle
             $confirmedKeyUp = Invoke-ScanKey $action $true
             if ($confirmedKeyUp) {
                 $sent++
                 $sendInputEventsSent++
             } else {
+                $lastError = Get-LastSendInputError
+                $sendInputFailures.Add([PSCustomObject]@{
+                    key = [string]$action.key
+                    keyUp = $true
+                    phase = "primary"
+                    win32Error = $lastError
+                }) | Out-Null
+                if ($canaryMode) {
+                    $errorDetail = if ($null -eq $lastError) { "" } else { " (Win32 error {0})" -f $lastError }
+                    throw ("Exact foreground SendInput key-up failed for {0}{1}." -f
+                        $action.key, $errorDetail)
+                }
                 Invoke-KeybdEventFallback $action $true
                 $sent++
                 $scanKeybdEventsSent++
@@ -918,6 +1014,13 @@ foreach ($action in $actions) {
                 $sendInputEventsSent++
                 $heldKeys.RemoveAt($index)
             } else {
+                $lastError = Get-LastSendInputError
+                $sendInputFailures.Add([PSCustomObject]@{
+                    key = [string]$key.key
+                    keyUp = $true
+                    phase = "cleanup"
+                    win32Error = $lastError
+                }) | Out-Null
                 Invoke-KeybdEventFallback $key $true
                 $sent++
                 $scanKeybdEventsSent++
@@ -968,6 +1071,8 @@ $resultPayload = [PSCustomObject]@{
     deliveryFailure = if ([string]::IsNullOrWhiteSpace($deliveryFailure)) { $null } else { $deliveryFailure }
     releaseFailures = @($releaseFailures)
     unconfirmedReleaseKeys = @($unconfirmedReleaseKeys)
+    nativeInputLayout = $nativeInputLayout
+    sendInputFailures = @($sendInputFailures)
     testOnlySendCalls = if ($testOnlyInputMode) { @($script:testOnlySendCalls) } else { $null }
     actions = @($actions)
     selectedWindow = [PSCustomObject]@{

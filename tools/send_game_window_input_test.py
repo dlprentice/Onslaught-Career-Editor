@@ -213,6 +213,101 @@ class SendGameWindowInputTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("test-only", result.stderr.lower())
 
+    def test_native_input_layout_matches_the_process_abi(self) -> None:
+        result = self.run_simulated_input("tap:Q", "true,true")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = self.parse_last_json(result)
+        layout = payload["nativeInputLayout"]
+        self.assertIn(layout["pointerSize"], (4, 8))
+        self.assertEqual(
+            layout["expectedStructSize"],
+            40 if layout["pointerSize"] == 8 else 28,
+        )
+        self.assertEqual(layout["structSize"], layout["expectedStructSize"])
+        self.assertTrue(layout["valid"])
+
+    def test_canary_primary_sendinput_failure_cannot_reach_legacy_fallback(self) -> None:
+        script = SCRIPT.read_text(encoding="utf-8")
+
+        down_start = script.index("if (Invoke-ScanKey $action $false)")
+        down_fallback = script.index(
+            "Invoke-KeybdEventFallback $action $false",
+            down_start,
+        )
+        down_guard = script.index("if ($canaryMode)", down_start, down_fallback)
+        self.assertIn("throw", script[down_guard:down_fallback])
+
+        up_start = script.index("$confirmedKeyUp = Invoke-ScanKey $action $true")
+        up_fallback = script.index(
+            "Invoke-KeybdEventFallback $action $true",
+            up_start,
+        )
+        up_guard = script.index("if ($canaryMode)", up_start, up_fallback)
+        self.assertIn("throw", script[up_guard:up_fallback])
+
+    def test_non_canary_primary_fallback_remains_available(self) -> None:
+        result = self.run_simulated_input("tap:Q", "false,true")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = self.parse_last_json(result)
+        calls = payload["testOnlySendCalls"]
+        self.assertEqual(
+            [(call["kind"], call["key"], call.get("keyUp")) for call in calls],
+            [
+                ("sendScanKey", "Q", False),
+                ("keybdEvent", "Q", False),
+                ("sendScanKey", "Q", True),
+            ],
+        )
+        self.assertEqual(payload["status"], "sent")
+        self.assertEqual(payload["scanKeybdEventsSent"], 1)
+        self.assertEqual(
+            payload["sendInputFailures"],
+            [{"key": "Q", "keyUp": False, "phase": "primary", "win32Error": None}],
+        )
+
+    def test_standalone_up_failure_is_retried_and_remains_unconfirmed(self) -> None:
+        result = self.run_simulated_input("up:Q", "false,false")
+
+        self.assertNotEqual(result.returncode, 0)
+        payload = self.parse_last_json(result)
+        self.assertEqual(payload["status"], "release-failed")
+        self.assertEqual(payload["unconfirmedReleaseKeys"], ["Q"])
+        self.assertEqual(
+            [(failure["phase"], failure["keyUp"]) for failure in payload["sendInputFailures"]],
+            [("primary", True), ("cleanup", True)],
+        )
+        self.assertEqual(
+            [(call["kind"], call["key"], call.get("keyUp")) for call in payload["testOnlySendCalls"]],
+            [
+                ("sendScanKey", "Q", True),
+                ("keybdEvent", "Q", True),
+                ("sendScanKey", "Q", True),
+                ("keybdEvent", "Q", True),
+            ],
+        )
+
+    def test_standalone_up_failure_can_be_confirmed_by_final_retry(self) -> None:
+        result = self.run_simulated_input("up:Q", "false,true")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = self.parse_last_json(result)
+        self.assertEqual(payload["status"], "sent")
+        self.assertEqual(payload["unconfirmedReleaseKeys"], [])
+        self.assertEqual(
+            [(failure["phase"], failure["keyUp"]) for failure in payload["sendInputFailures"]],
+            [("primary", True)],
+        )
+        self.assertEqual(
+            [(call["kind"], call["key"], call.get("keyUp")) for call in payload["testOnlySendCalls"]],
+            [
+                ("sendScanKey", "Q", True),
+                ("keybdEvent", "Q", True),
+                ("sendScanKey", "Q", True),
+            ],
+        )
+
     def test_explicit_up_removes_only_after_confirmed_send_scan_key(self) -> None:
         result = self.run_simulated_input("down:Q,up:Q", "true,false,true")
 

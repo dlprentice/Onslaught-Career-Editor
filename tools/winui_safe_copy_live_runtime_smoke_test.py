@@ -13,6 +13,7 @@ import json
 import os
 import re
 import shlex
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -629,6 +630,101 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         )
         self.assertLess(attach_index, guard_index)
         self.assertLess(guard_index, input_index)
+
+    def test_generated_morph_runner_accepts_only_exact_sendinput_delivery(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory(prefix="morph-input-contract-test-") as temp:
+            project = module.write_runner(Path(temp) / "runner")
+            generated = project.with_name("Program.cs").read_text(encoding="utf-8")
+
+        start = generated.index("bool canaryFocusedInputSucceeded")
+        end = generated.index("bool keysReleased", start)
+        acceptance = generated[start:end]
+        self.assertIn('JsonStringIn(result, "status", "sent")', acceptance)
+        self.assertIn('JsonBool(result, "focused")', acceptance)
+        self.assertIn('JsonIntEquals(result, "sendInputEventsSent", 2)', acceptance)
+        self.assertIn('JsonIntEquals(result, "scanKeybdEventsSent", 0)', acceptance)
+        self.assertIn('JsonIntEquals(result, "windowMessageEventsSent", 0)', acceptance)
+        self.assertIn('result.TryGetProperty("nativeInputLayout"', acceptance)
+        self.assertIn('JsonBool(layout, "valid")', acceptance)
+        self.assertIn('result.TryGetProperty("sendInputFailures"', acceptance)
+        self.assertIn("failures.GetArrayLength() == 0", acceptance)
+        self.assertIn("keys.GetArrayLength() == 0", acceptance)
+
+    def test_generated_strict_integer_predicate_rejects_malformed_zeroes(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory(prefix="morph-json-int-test-") as temp:
+            root = Path(temp)
+            project = module.write_runner(root / "runner")
+            generated = project.with_name("Program.cs").read_text(encoding="utf-8")
+            helper_start = generated.index("static bool JsonIntEquals")
+            helper_end = generated.index("\nstatic ", helper_start + 1)
+            helper = generated[helper_start:helper_end]
+            self.assertIn("TryGetProperty", helper)
+            self.assertIn("JsonValueKind.Number", helper)
+            self.assertIn("TryGetInt32", helper)
+
+            probe = root / "probe"
+            probe.mkdir()
+            probe_project = probe / "StrictJsonIntProbe.csproj"
+            probe_project.write_text(
+                """<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+</Project>
+""",
+                encoding="utf-8",
+            )
+            indented_helper = "\n".join("    " + line for line in helper.splitlines())
+            (probe / "Program.cs").write_text(
+                "using System.Text.Json;\n\nstatic class Probe\n{\n"
+                + indented_helper
+                + r'''
+
+    public static int Main()
+    {
+        var cases = new (string Json, string Property, int Expected, bool Accepted)[]
+        {
+            ("{\"value\":0}", "value", 0, true),
+            ("{\"value\":2}", "value", 2, true),
+            ("{}", "value", 0, false),
+            ("{\"value\":null}", "value", 0, false),
+            ("{\"value\":\"0\"}", "value", 0, false),
+            ("{\"value\":1}", "value", 0, false),
+            ("[]", "value", 0, false),
+        };
+        foreach (var item in cases)
+        {
+            using JsonDocument document = JsonDocument.Parse(item.Json);
+            if (JsonIntEquals(document.RootElement, item.Property, item.Expected) != item.Accepted)
+                return 1;
+        }
+        return 0;
+    }
+}
+''',
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    "dotnet",
+                    "run",
+                    "--project",
+                    str(probe_project),
+                    "--configuration",
+                    "Release",
+                    "--no-launch-profile",
+                ],
+                cwd=probe,
+                text=True,
+                capture_output=True,
+                check=False,
+                timeout=120,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_generated_morph_runner_reads_active_cdb_log_with_writer_sharing(self) -> None:
         module = self.live_smoke_module()

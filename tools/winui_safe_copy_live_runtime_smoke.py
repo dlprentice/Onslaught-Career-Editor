@@ -910,6 +910,17 @@ static int JsonInt(JsonElement element, string propertyName)
         : 0;
 }
 
+static bool JsonIntEquals(JsonElement element, string propertyName, int expected)
+{
+    if (element.ValueKind != JsonValueKind.Object)
+        return false;
+
+    return element.TryGetProperty(propertyName, out JsonElement property) &&
+        property.ValueKind == JsonValueKind.Number &&
+        property.TryGetInt32(out int value) &&
+        value == expected;
+}
+
 static bool JsonBool(JsonElement element, string propertyName)
 {
     if (element.ValueKind != JsonValueKind.Object)
@@ -2236,6 +2247,13 @@ __CANARY_CLEANUP_PHASE_BLOCK__
         ? inputResults.Count == 0
         : inputResults.Count == expectedInputSequences.Length && inputResults.All(result =>
             JsonStringIn(result, "status", "sent") && JsonBool(result, "focused") &&
+            JsonIntEquals(result, "sendInputEventsSent", 2) &&
+            JsonIntEquals(result, "scanKeybdEventsSent", 0) &&
+            JsonIntEquals(result, "windowMessageEventsSent", 0) &&
+            result.TryGetProperty("nativeInputLayout", out JsonElement layout) &&
+            JsonBool(layout, "valid") &&
+            result.TryGetProperty("sendInputFailures", out JsonElement failures) &&
+            failures.ValueKind == JsonValueKind.Array && failures.GetArrayLength() == 0 &&
             result.TryGetProperty("unconfirmedReleaseKeys", out JsonElement keys) &&
             keys.ValueKind == JsonValueKind.Array && keys.GetArrayLength() == 0);
     bool keysReleased = role == "noInputControl"

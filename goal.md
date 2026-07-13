@@ -187,8 +187,28 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   exact one-line/duplicate rejection. All 37 focused helper tests pass, a fresh
   generated runner builds with zero warnings/errors, and a disposable .NET
   proof reproduced the old sharing violation while the new reader accepted one
-  marker without closing the writer. Review, commit/push, and fresh retry 7
-  remain.
+  marker without closing the writer. The correction was reviewed and pushed at
+  `9e438c11`. Retry 7 used fresh controls and passed the no-input role with one
+  exact ready marker, zero canary events, unchanged source/copy hashes, and
+  complete cleanup. The first positive role then failed closed before proving
+  Q causality: `SendInput` returned false for every attempted event, the legacy
+  helper fallback emitted no canary event, Q release was not confirmed through
+  `SendInput`, and the repeat role/public matrix did not run. A private immutable
+  correction note supersedes the initial cleanup interpretation; it records
+  only a best-effort legacy key-up before exact process teardown. Offline ABI
+  inspection found the root cause: the helper's 64-bit `INPUT` union contained
+  only `KEYBDINPUT`, marshaled to 32 bytes, while native Win32 requires 40. The
+  current TDD correction completes the union, validates 40-byte x64/28-byte x86
+  layout before input, records `SendInput` errors, forbids legacy fallback as
+  primary canary delivery, truthfully tracks standalone key-up failures, and
+  makes the generated runner require exactly two successful `SendInput` events
+  with no fallback. All 21 input-helper and 39 smoke-contract tests pass, and a
+  fresh generated runner builds with zero warnings/errors. Normal review found
+  and closed one fail-closed consumer gap for missing zero-valued counters;
+  the strict property/type/value predicate now has a compiled malformed-JSON
+  negative probe. Final normal and adversarial review accept the correction.
+  Commit/push and a fresh retry 8 remain; Stage A still has no positive identity
+  result.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future
@@ -348,8 +368,9 @@ claim against an already malicious process running as the same Windows user.
 
 ## Next Slices
 
-1. Complete Stage A Task 5, run the authorized Level 850 identity matrix, and
-   publish only its sanitized identity/causality result.
+1. Complete review and push of the exact-`SendInput` correction, then run a
+   fresh authorized Level 850 retry 8 and publish only a fully validated
+   sanitized identity/causality result.
 2. Retire or fail-close active BattleEngine tools that can reapply withdrawn
    ownership, then harden AYA export dependency/template preflight.
 3. Run the deep Lore editorial/provenance pass and generated contributor

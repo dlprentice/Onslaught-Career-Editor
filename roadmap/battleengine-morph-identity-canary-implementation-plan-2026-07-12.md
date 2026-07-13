@@ -633,6 +633,14 @@ While CDB remains attached, reopen its role-local log read-only with sharing
 that permits the existing writer; retain the exact trimmed marker count before
 input and repeat the same check after cleanup.
 
+Before exact-window input, validate the native Win32 `INPUT` ABI for the helper
+process (40 bytes on x64, 28 on x86). Positive-role primary delivery accepts
+only successful foreground `SendInput` calls: a legacy `keybd_event` may be
+used solely as an explicitly unconfirmed best-effort release during cleanup,
+never as canary input or proof of key release. One `tap:Q` must materialize as
+exactly two successful `SendInput` events with no fallback, window message,
+layout failure, or unconfirmed key.
+
 - [ ] **Step 4: Validate terminal cleanup and the sanitized summary**
 
 ```powershell
