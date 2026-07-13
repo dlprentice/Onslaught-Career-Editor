@@ -48,8 +48,10 @@ A write worker report must include:
 Every worker report must include a `Consult Evidence` entry. For substantive
 objectives or related release batches, name the active review envelope and list
 its lanes separately: Codex normal, Codex adversarial, Cursor/Grok normal, and
-Cursor/Grok adversarial. Codex-owned lanes inherit the parent effort or use an
-explicit task-specific supported effort override; external lanes use the
+Cursor/Grok adversarial. Under the current direct user policy, new or resumed
+Codex-owned lanes use `gpt-5.6-sol` at medium effort by default, with higher Sol
+effort allowed for harder work; Terra/Luna fallback or lower effort requires a
+newer direct user instruction. External lanes use the
 canonical global command binding from bounded,
 non-secret context when the required read-only sandbox and authentication are
 available. Routine follow-through may reference the existing envelope instead

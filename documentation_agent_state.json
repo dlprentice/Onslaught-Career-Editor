@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-13",
-  "routingPolicy": "Active docs consume the global Codex multi-agent lane contract, keep Codex-owned subagent effort task-flexible, and preserve historical wave provenance.",
+  "routingPolicy": "Active docs consume the global Codex multi-agent lane contract. Current direct user policy routes every new or resumed Codex-owned worker to gpt-5.6-sol at medium effort by default, permits higher Sol effort for harder work, and forbids Terra/Luna fallback or lower effort without a newer direct user instruction.",
   "currentFocus": "Record Retry 9's exact-process-handle failure and correction, then keep the evidence hierarchy authoritative through a fresh Stage A Retry 10.",
   "sourceOfTruth": {
     "readme": "README.MD",

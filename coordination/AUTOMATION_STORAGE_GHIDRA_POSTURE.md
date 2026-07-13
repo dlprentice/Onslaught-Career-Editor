@@ -219,9 +219,11 @@ reporting, or consult preparation.
 
 Each substantive automation, storage, Ghidra, public-claim, release-posture, or
 collaboration-policy objective gets one bounded normal/adversarial review
-envelope under the global Codex multi-agent lane contract. Codex-owned subagents
-inherit the parent effort by default or use an explicit task-specific supported
-effort override. External normal/adversarial consults use the canonical command
+envelope under the global Codex multi-agent lane contract. Under the current
+direct user policy, new or resumed Codex-owned subagents use `gpt-5.6-sol` at
+medium effort by default; harder work may raise the supported Sol effort.
+Terra/Luna fallback or lower effort requires a newer direct user instruction.
+External normal/adversarial consults use the canonical command
 binding when the required read-only
 sandbox and authentication are available. Routine follow-through inside the
 envelope does not create recursive consult loops. If an external prompt cannot
@@ -239,7 +241,7 @@ Prepared consult lanes for this posture class:
 
 | Lane | Normal brief focus | Adversarial brief focus |
 | --- | --- | --- |
-| Codex root and task-flexible Codex-owned subagents | Check whether the patch makes the storage/Ghidra/proof posture durable, concise, and consistent with repo contracts. | Attack for hidden authority expansion, state/write conflicts, hard-payload leakage, stale legacy-drive reliance, weak proof-class separation, and missing validation. |
+| Codex root and user-routed Sol Codex-owned subagents | Check whether the patch makes the storage/Ghidra/proof posture durable, concise, and consistent with repo contracts. | Attack for hidden authority expansion, state/write conflicts, hard-payload leakage, stale legacy-drive reliance, weak proof-class separation, and missing validation. |
 | Canonical external consult lane | Review practical contributor clarity, collision risk, policy reasoning, and evidence sufficiency from a bounded sanitized brief. | Attack for ambiguous ownership, unsafe deletion or mutation, overbroad cleanup language, proof-retention mistakes, and claims that exceed evidence. |
 
 Consult briefs must not include secrets, `.env` values, auth/session/cache/log

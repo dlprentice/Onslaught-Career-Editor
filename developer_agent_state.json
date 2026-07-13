@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-13",
-  "routingPolicy": "Follow the global Codex multi-agent lane contract; Codex-owned subagents inherit the parent effort or use an explicit task-specific supported effort override.",
+  "routingPolicy": "Follow the global Codex multi-agent lane contract. Under current direct user policy, every new or resumed Codex-owned worker uses gpt-5.6-sol at medium effort by default; harder work may raise Sol effort, and Terra/Luna fallback or lower effort requires a newer direct user instruction.",
   "currentFocus": "Commit and push the Retry 9 exact-process-handle correction, then execute Stage A Task 5 with fresh Retry 10 authority, leases, and proof storage.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",

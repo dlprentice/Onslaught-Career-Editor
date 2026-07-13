@@ -369,9 +369,11 @@ work plus verified commits and pushes for this campaign.
 
 ## Review Envelope
 
-This campaign follows the global Codex multi-agent lane contract. Codex-owned
-normal/adversarial lanes inherit the parent effort by default or use
-an explicit task-specific supported effort override. The current broad audit covers repository DX, branch
+This campaign follows the global Codex multi-agent lane contract. Under the
+current direct user policy, every new or resumed Codex-owned worker uses
+`gpt-5.6-sol` at medium effort by default; harder work may raise the supported
+Sol effort. Terra/Luna fallback and lower effort require a newer direct user
+instruction. The current broad audit covers repository DX, branch
 archaeology, WinUI UX, patch/mod safety, binary RE quality, Lore quality,
 rebuild provenance/architecture, and holistic normal/adversarial review.
 
