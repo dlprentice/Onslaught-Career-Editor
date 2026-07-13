@@ -16,7 +16,7 @@ from typing import Any, Mapping, Sequence
 
 ROOT = Path(__file__).resolve().parents[1]
 PRIVATE_PROOF_PARENT = ROOT / "local-proofs"
-AUTHORITY_SCHEMA = "onslaught-battleengine-morph-identity-canary-authority.v1"
+AUTHORITY_SCHEMA = "onslaught-battleengine-morph-identity-canary-authority.v2"
 LEASE_SCHEMA = "onslaught-battleengine-morph-identity-canary-resource-leases.v1"
 ACTION_FAMILY = "copied-runtime-battleengine-identity-canary"
 LIVE_ARM_PHRASE = "RUN BATTLEENGINE MORPH IDENTITY CANARY"
@@ -62,8 +62,9 @@ REQUIRED_VALIDATION_GATES = (
     "git diff --check",
 )
 REQUIRED_CLEANUP = (
-    "release held keys; detach exact receipt-bound CDB; stop exact receipt-bound "
-    "managed BEA; verify zero receipt-owned BEA/CDB processes"
+    "release held keys; retain exact receipt-bound CDB handle and effective arguments; "
+    "stop exact receipt-bound managed BEA root; require target-before-CDB exit ordering "
+    "and queued debugger quit or fail closed; verify zero receipt-owned BEA/CDB root processes"
 )
 REQUIRED_ROLLBACK = (
     "preserve failed private diagnostics; perform owned cleanup; discard the "

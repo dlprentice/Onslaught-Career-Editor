@@ -684,6 +684,7 @@ while (-not $failureMessage -and (Get-Date) -lt $deadline) {
             commandSha256 = if ($canaryMode) { $ExpectedCommandSha256 } else { $null }
             requiredLogMarkerFound = [bool]$requiredLogMarkerFound
             logPath = $LogPath
+            effectiveArguments = if ($canaryMode) { @($arguments) } else { $null }
             remoteServerEnabled = [bool]$EnableRemoteServer
         } | ConvertTo-Json -Compress
         exit 0

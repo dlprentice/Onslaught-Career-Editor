@@ -32,7 +32,14 @@ namespace Onslaught___Career_Editor
     public sealed record GameProfileStopResult(
         bool Success,
         int ProcessId,
-        string Message);
+        string Message,
+        bool LiveBeforeStop = false,
+        bool StopRequested = false,
+        bool CloseRequested = false,
+        bool ForceRequested = false,
+        bool ExitObserved = false,
+        bool AlreadyGone = false,
+        DateTimeOffset? ExitTime = null);
 
     public interface IGameProfileProcessRunner
     {
@@ -184,10 +191,9 @@ namespace Onslaught___Career_Editor
         }
     }
 
-internal sealed class DefaultGameProfileProcessRunner : IGameProfileProcessRunner
-{
-    public static DefaultGameProfileProcessRunner Instance { get; } = new();
-    private static readonly TimeSpan s_processStartTolerance = TimeSpan.FromSeconds(2);
+    internal sealed class DefaultGameProfileProcessRunner : IGameProfileProcessRunner
+    {
+        public static DefaultGameProfileProcessRunner Instance { get; } = new();
 
         public GameProfileProcessStartResult Start(GameProfileProcessStartRequest request)
         {
@@ -230,8 +236,13 @@ internal sealed class DefaultGameProfileProcessRunner : IGameProfileProcessRunne
                 }
 
                 if (running.HasExited)
-                    return new GameProfileStopResult(true, process.ProcessId, "Managed playable copied game folder process had already exited.");
+                    return new GameProfileStopResult(
+                        true,
+                        process.ProcessId,
+                        "Managed playable copied game folder process exited before the exact stop request.",
+                        AlreadyGone: true);
 
+                bool liveBeforeStop = true;
                 bool closeSent = false;
                 try
                 {
@@ -243,28 +254,40 @@ internal sealed class DefaultGameProfileProcessRunner : IGameProfileProcessRunne
                 }
 
                 if (closeSent && running.WaitForExit((int)gracefulTimeout.TotalMilliseconds))
-                    return new GameProfileStopResult(true, process.ProcessId, "Managed playable copied game folder process closed normally.");
+                {
+                    if (!TryGetExactExitTime(running, out DateTimeOffset exitTime))
+                        return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process exited but its exact exit time could not be read.", liveBeforeStop, true, true, false, true);
 
+                    return new GameProfileStopResult(true, process.ProcessId, "Managed playable copied game folder process closed normally.", liveBeforeStop, true, true, false, true, false, exitTime);
+                }
+
+                bool forceRequested = false;
                 if (!running.HasExited)
                 {
-                    running.Kill(entireProcessTree: true);
+                    forceRequested = true;
+                    running.Kill(entireProcessTree: false);
                     if (!running.WaitForExit((int)gracefulTimeout.TotalMilliseconds))
                     {
-                        return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process did not exit after stop request.");
+                        return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process did not exit after stop request.", liveBeforeStop, true, closeSent, forceRequested);
                     }
                 }
+
+                bool stopRequested = closeSent || forceRequested;
 
                 running.Refresh();
                 if (!running.HasExited)
                 {
-                    return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process is still running after stop request.");
+                    return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process is still running after stop request.", liveBeforeStop, stopRequested, closeSent, forceRequested);
                 }
 
-                return new GameProfileStopResult(true, process.ProcessId, "Managed playable copied game folder process was stopped.");
+                if (!TryGetExactExitTime(running, out DateTimeOffset stoppedAt))
+                    return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process stopped but its exact exit time could not be read.", liveBeforeStop, stopRequested, closeSent, forceRequested, true);
+
+                return new GameProfileStopResult(stopRequested, process.ProcessId, stopRequested ? "Managed playable copied game folder process was stopped." : "Managed playable copied game folder process exited before a stop request was sent.", liveBeforeStop, stopRequested, closeSent, forceRequested, true, !stopRequested, stoppedAt);
             }
             catch (ArgumentException)
             {
-                return new GameProfileStopResult(true, process.ProcessId, "Managed playable copied game folder process was already gone.");
+                return new GameProfileStopResult(true, process.ProcessId, "Managed playable copied game folder process was already gone before an exact stop handle could be acquired.", AlreadyGone: true);
             }
             catch (InvalidOperationException ex)
             {
@@ -302,8 +325,7 @@ internal sealed class DefaultGameProfileProcessRunner : IGameProfileProcessRunne
             string? modulePath,
             GameProfileManagedProcess expected)
         {
-            TimeSpan startDelta = (runningStartedAt.ToUniversalTime() - expected.StartedAt.ToUniversalTime()).Duration();
-            if (startDelta > s_processStartTolerance)
+            if (runningStartedAt.ToUniversalTime().Ticks != expected.StartedAt.ToUniversalTime().Ticks)
                 return false;
 
             if (string.IsNullOrWhiteSpace(modulePath))
@@ -313,6 +335,27 @@ internal sealed class DefaultGameProfileProcessRunner : IGameProfileProcessRunne
                 Path.GetFullPath(modulePath),
                 Path.GetFullPath(expected.ExecutablePath),
                 StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool TryGetExactExitTime(Process process, out DateTimeOffset exitTime)
+        {
+            try
+            {
+                process.Refresh();
+                if (!process.HasExited)
+                {
+                    exitTime = default;
+                    return false;
+                }
+
+                exitTime = new DateTimeOffset(process.ExitTime).ToUniversalTime();
+                return true;
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+            {
+                exitTime = default;
+                return false;
+            }
         }
     }
 }

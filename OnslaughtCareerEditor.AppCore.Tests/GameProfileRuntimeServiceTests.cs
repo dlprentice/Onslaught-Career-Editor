@@ -802,7 +802,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
-        public void DefaultRunnerIdentityRejectsPidReuseOutsideStartTimeTolerance()
+        public void DefaultRunnerIdentityRequiresExactStartTimeForPidReuseSafety()
         {
             DateTimeOffset startedAt = DateTimeOffset.UtcNow;
             string exePath = Path.Combine(Path.GetTempPath(), "safe-copy", "BEA.exe");
@@ -814,11 +814,33 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 StartedAt: startedAt,
                 ManifestPath: Path.Combine(Path.GetDirectoryName(exePath)!, "onslaught-profile-manifest.json"));
 
-            Assert.True(InvokeDefaultRunnerIdentityMatch(startedAt.AddSeconds(1), exePath, expected));
+            Assert.True(InvokeDefaultRunnerIdentityMatch(startedAt, exePath, expected));
+            Assert.False(InvokeDefaultRunnerIdentityMatch(startedAt.AddTicks(1), exePath, expected));
+            Assert.False(InvokeDefaultRunnerIdentityMatch(startedAt.AddSeconds(1), exePath, expected));
             Assert.False(InvokeDefaultRunnerIdentityMatch(startedAt.AddSeconds(5), exePath, expected));
             Assert.False(InvokeDefaultRunnerIdentityMatch(startedAt.AddSeconds(-5), exePath, expected));
             Assert.False(InvokeDefaultRunnerIdentityMatch(startedAt.AddSeconds(1), Path.Combine(Path.GetTempPath(), "other", "BEA.exe"), expected));
             Assert.False(InvokeDefaultRunnerIdentityMatch(startedAt.AddSeconds(1), null, expected));
+        }
+
+        [Fact]
+        public void DefaultRunnerStopReportsAlreadyGoneWithoutClaimingAnExactStop()
+        {
+            string exePath = Path.Combine(Path.GetTempPath(), "safe-copy", "BEA.exe");
+            var expected = new GameProfileManagedProcess(
+                ProcessId: int.MaxValue,
+                ExecutablePath: exePath,
+                WorkingDirectory: Path.GetDirectoryName(exePath)!,
+                Arguments: Array.Empty<string>(),
+                StartedAt: DateTimeOffset.UtcNow,
+                ManifestPath: Path.Combine(Path.GetDirectoryName(exePath)!, "onslaught-profile-manifest.json"));
+
+            GameProfileStopResult result = InvokeDefaultRunnerStop(expected);
+
+            Assert.True(result.Success);
+            Assert.True(result.AlreadyGone);
+            Assert.False(result.StopRequested);
+            Assert.False(result.ExitObserved);
         }
 
         private static string PrepareSourceGameRoot(string sourceRoot)
@@ -890,6 +912,17 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             MethodInfo method = runnerType.GetMethod("MatchesManagedProcessIdentity", BindingFlags.NonPublic | BindingFlags.Static)
                 ?? throw new InvalidOperationException("Default runner identity helper was not found.");
             return (bool)method.Invoke(null, new object?[] { runningStartedAt, modulePath, expected })!;
+        }
+
+        private static GameProfileStopResult InvokeDefaultRunnerStop(GameProfileManagedProcess expected)
+        {
+            Type runnerType = typeof(GameProfileRuntimeService).Assembly.GetType("Onslaught___Career_Editor.DefaultGameProfileProcessRunner")
+                ?? throw new InvalidOperationException("Default runner type was not found.");
+            object instance = runnerType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)?.GetValue(null)
+                ?? throw new InvalidOperationException("Default runner instance was not found.");
+            MethodInfo method = runnerType.GetMethod("Stop", BindingFlags.Public | BindingFlags.Instance)
+                ?? throw new InvalidOperationException("Default runner stop method was not found.");
+            return (GameProfileStopResult)method.Invoke(instance, new object[] { expected, TimeSpan.FromMilliseconds(50) })!;
         }
     }
 }

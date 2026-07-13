@@ -178,7 +178,7 @@ executable. The generated command remains under `local-proofs/`.
 .echo MORPH_CANARY_BEGIN
 lm m BEA
 r @$t0=0; r @$t1=0; r @$t2=0; r @$t3=0
-.if ({{FINGERPRINT_CONDITION}}) { {{ARM_INPUT_BREAKPOINT}}; .echo MORPH_CANARY_READY; g } .else { .echo MORPH_CANARY_CODE_MISMATCH; qd }
+.if ({{FINGERPRINT_CONDITION}}) { {{ARM_INPUT_BREAKPOINT}}; .echo MORPH_CANARY_READY; g; .echo MORPH_CANARY_CLEANUP_Q; q } .else { .echo MORPH_CANARY_CODE_MISMATCH; qd }
 ```
 
 The input breakpoint accepts only button `0x21` where `@ecx` equals
@@ -409,7 +409,10 @@ helpers.
 After the exact window appears, write `runtime-process-receipt.v1` from the
 managed process, actual main window, current `BEA` module, manifest, source/copy
 hashes, and launch arguments. Revalidate immediately before CDB attach, input,
-debugger cleanup, and managed stop.
+debugger cleanup, and managed stop. Managed stop requires exact start-time and
+executable-path identity. Ordinary AppCore cleanup may forget an already-gone
+managed process, but the canary rejects that result and any merely
+time-tolerant PID match as exact-stop evidence.
 
 - [ ] **Step 5: Make success and cleanup protocol-specific**
 
@@ -419,9 +422,12 @@ executable before/after canonical equality, ambient resource-root executable
 before/after equality, effective override before/after canonical equality, CDB
 identity-bound detach/exit, managed stop, and zero owned processes.
 
-Cleanup order on every path is: release keys, end the exact owned CDB session
-(`-pd` makes debugger exit detach), stop only the receipt-bound managed game
-process, then census. Do not terminate an unknown BEA or CDB PID.
+Cleanup order on every path is: release keys; retain the exact CDB root handle
+after binding its effective local `-pd` argument vector; stop only the exact
+receipt-bound managed game root; require the CDB handle to exit after the game
+with the queued cleanup and `quit:` markers; then run a fail-closed root-process
+census. A forced exact-CDB fallback or census inspection error fails evidence.
+Do not tree-kill unbound descendants or terminate an unknown BEA/CDB PID.
 
 - [ ] **Step 6: Run focused integration tests**
 
@@ -632,6 +638,14 @@ repeat it from a fresh copy. Do not relax an identity or event condition.
 While CDB remains attached, reopen its role-local log read-only with sharing
 that permits the existing writer; retain the exact trimmed marker count before
 input and repeat the same check after cleanup.
+
+Cleanup releases held keys, retains the exact receipt-bound CDB root handle and
+effective local `-pd` arguments, stops only the exact receipt-owned game root,
+and then lets the queued cleanup marker plus `q` run when `g` returns.
+Acceptance requires CDB's recorded exit time to be no earlier than the game's,
+followed by exactly one cleanup marker and one `quit:` marker in a finalized
+log. A timed-out exact CDB may be force-stopped only as failed cleanup; it cannot
+be reported as a graceful detach. Census inspection failures also fail closed.
 
 Before exact-window input, validate the native Win32 `INPUT` ABI for the helper
 process (40 bytes on x64, 28 on x86). Positive-role primary delivery accepts

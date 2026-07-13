@@ -207,8 +207,39 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   and closed one fail-closed consumer gap for missing zero-valued counters;
   the strict property/type/value predicate now has a compiled malformed-JSON
   negative probe. Final normal and adversarial review accept the correction.
-  Commit/push and a fresh retry 8 remain; Stage A still has no positive identity
-  result.
+  The correction was committed and pushed at `2983fef8`. Retry 8 used fresh
+  controls and again completed the no-input role. In `positiveTransform`, the
+  exact focused Q down/up reached `SendInput` with the valid 40-byte layout,
+  two confirmed events, no fallback, and confirmed release, but CDB emitted
+  zero exact canary events and the copied target was absent before the
+  receipt-bound managed-stop phase. The repeat role and public materialization
+  did not run; source/copy integrity held, zero owned BEA/CDB processes
+  remained, and an ignored failed-run closeout preserves the bounded truth.
+  The target-exit cause remains open.
+- A disposable x86 CDB/process lifecycle proof disproved the generic claim that
+  force-stopping CDB while `g` is active necessarily kills its target: the
+  disposable target remained alive. It also proved that stopping the target
+  first lets a queued `q` terminate CDB and emit `quit:` with zero leftovers.
+  This establishes the safer cleanup protocol but does not explain Retry 8 or
+  prove any BEA hook. The current TDD correction requires exact managed-process
+  start ticks, preserves ordinary AppCore already-gone cleanup while rejecting
+  it as canary exact-stop evidence, stops only the
+  exact root process, binds CDB's effective local `-pd` arguments, retains its
+  exact handle through teardown, compares target/CDB exit times, requires one
+  queued cleanup marker plus one `quit:` marker from a finalized log, and makes
+  census inspection failures fail closed. The generated runner builds with zero
+  warnings/errors; 1,317 AppCore and 148 focused runtime/canary tests pass.
+  The initial normal review approved while adversarial review found the exact
+  identity/order/census gaps now corrected. Fresh post-fix reviewers exhausted
+  the available subagent quota and were not substituted. Root acceptance
+  reconciled every blocker against the final diff: the retained CDB handle
+  prevents PID reopen, exact start ticks plus canary rejection of
+  `AlreadyGone` prevent stale-target acceptance, target/CDB exit ordering plus
+  unique finalized cleanup/quit markers prove ordered teardown, effective
+  local `-pd` arguments are bound, census inspection fails closed, and only
+  exact roots are stopped. Fresh final gates pass 1,317 AppCore tests, the
+  95-test runtime-helper profile, 23 orchestration tests, 17 process-identity
+  tests, 13 renderer/materializer tests, and a zero-warning generated build.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future
@@ -368,8 +399,8 @@ claim against an already malicious process running as the same Windows user.
 
 ## Next Slices
 
-1. Complete review and push of the exact-`SendInput` correction, then run a
-   fresh authorized Level 850 retry 8 and publish only a fully validated
+1. Complete review and push of the target-first graceful-CDB cleanup
+   correction, then run a fresh authorized Level 850 retry 9 and publish only a fully validated
    sanitized identity/causality result.
 2. Retire or fail-close active BattleEngine tools that can reapply withdrawn
    ownership, then harden AYA export dependency/template preflight.

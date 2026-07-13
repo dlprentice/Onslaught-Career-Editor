@@ -886,6 +886,22 @@ class StartCdbServerTests(unittest.TestCase):
                 self.assertEqual(Path(str(payload["cdbExecutablePath"])), self.fake_cdb.resolve())
                 self.assertTrue(str(payload["cdbStartedAtUtc"]).endswith("Z"))
                 self.assertEqual(
+                    payload["effectiveArguments"],
+                    [
+                        "-pd",
+                        "-noshell",
+                        "-ee",
+                        "masm",
+                        "-logo",
+                        str(exact_log),
+                        "-p",
+                        str(exact_target.pid),
+                        "-noio",
+                        "-cf",
+                        str((root / "exact" / "commands" / "canary.cdb.txt").resolve()),
+                    ],
+                )
+                self.assertEqual(
                     [line.strip() for line in exact_log.read_text(encoding="utf-8").splitlines()],
                     ["MORPH_CANARY_READY"],
                 )

@@ -162,11 +162,11 @@ CANARY_CLEANUP_PHASE_PLAN = (
         csharp_failure="",
     ),
     CanaryCleanupPhase(
-        name="cleanup_cdb",
+        name="validate_cdb",
         callback_uses_binding=True,
-        failure_label="cdb",
+        failure_label="cdb-pre-stop",
         csharp_action=r"""
-            cdbCleanupResult = CleanupExactCdbObserver(
+            cdbPreStopResult = ValidateExactCdbObserverForManagedStop(
                 cdbAttachResult,
                 powershellExe,
                 runtimeIdentityModule,
@@ -175,10 +175,17 @@ CANARY_CLEANUP_PHASE_PLAN = (
                 cdbCommandFile,
                 expectedCommandSha256,
                 templatePath,
-                expectedTemplateSha256);
+                expectedTemplateSha256,
+                cdbLogPath,
+                requiredLogMarker,
+                out boundCdbProcess);
+            if (!JsonStringIn(cdbPreStopResult, "status", "ready-for-managed-stop"))
+                failure = string.IsNullOrWhiteSpace(failure)
+                    ? "Exact CDB observer was not bound immediately before managed stop."
+                    : failure + " | Exact CDB observer was not bound immediately before managed stop.";
         """,
         csharp_failure=r"""
-            cdbCleanupResult = JsonPayload(new { status = "failed", receiptBound = false, exited = false, error = ex.GetType().Name + ": " + ex.Message });
+            cdbPreStopResult = JsonPayload(new { status = "failed", receiptBound = false, processBound = false, error = ex.GetType().Name + ": " + ex.Message });
         """,
     ),
     CanaryCleanupPhase(
@@ -203,9 +210,37 @@ CANARY_CLEANUP_PHASE_PLAN = (
                 failure = string.IsNullOrWhiteSpace(failure)
                     ? "Managed stop was not receipt-bound: " + stopFailure
                     : failure + " | Managed stop was not receipt-bound: " + stopFailure;
+            else if (managed is not null && stopResult?.Success != true)
+                failure = string.IsNullOrWhiteSpace(failure)
+                    ? "Exact managed stop failed: " + (stopResult?.Message ?? "no stop result")
+                    : failure + " | Exact managed stop failed: " + (stopResult?.Message ?? "no stop result");
         """,
         csharp_failure=r"""
             stopReceiptBound = false;
+        """,
+    ),
+    CanaryCleanupPhase(
+        name="cleanup_cdb",
+        callback_uses_binding=True,
+        failure_label="cdb-completion",
+        csharp_action=r"""
+            cdbCleanupResult = FinalizeExactCdbObserverAfterManagedStop(
+                cdbAttachResult,
+                cdbPreStopResult,
+                boundCdbProcess,
+                stopReceiptBound,
+                stopResult,
+                cdbLogPath);
+            boundCdbProcess = null;
+            if (!JsonStringIn(cdbCleanupResult, "status", "exited-after-managed-stop"))
+                failure = string.IsNullOrWhiteSpace(failure)
+                    ? "Exact CDB observer did not complete after the managed target stop."
+                    : failure + " | Exact CDB observer did not complete after the managed target stop.";
+        """,
+        csharp_failure=r"""
+            try { boundCdbProcess?.Dispose(); } catch { }
+            boundCdbProcess = null;
+            cdbCleanupResult = JsonPayload(new { status = "failed", receiptBound = false, exited = false, gracefulQuitObserved = false, error = ex.GetType().Name + ": " + ex.Message });
         """,
     ),
     CanaryCleanupPhase(
@@ -213,10 +248,16 @@ CANARY_CLEANUP_PHASE_PLAN = (
         callback_uses_binding=False,
         failure_label="census",
         csharp_action=r"""
-            ownedProcessCount = CountOwnedProcesses(runtimeReceiptPath, managed?.ExecutablePath, cdbAttachResult);
+            censusResult = InspectOwnedProcessCensus(runtimeReceiptPath, managed?.ExecutablePath, cdbAttachResult);
+            ownedProcessCount = JsonInt(censusResult, "ownedProcessCount");
+            if (!JsonStringIn(censusResult, "status", "clear"))
+                failure = string.IsNullOrWhiteSpace(failure)
+                    ? "Owned-process census was not clear."
+                    : failure + " | Owned-process census was not clear.";
         """,
         csharp_failure=r"""
             ownedProcessCount = -1;
+            censusResult = JsonPayload(new { status = "inspection-failed", ownedProcessCount = -1, inspectionFailureCount = 1, error = ex.GetType().Name + ": " + ex.Message });
         """,
     ),
 )
@@ -1211,6 +1252,44 @@ static bool HasExactlyOneLogMarker(string logPath, string marker)
     return count == 1;
 }
 
+static bool TryReadFinalizedCdbMarkers(
+    string logPath,
+    out bool cleanupMarkerObserved,
+    out bool gracefulQuitObserved)
+{
+    cleanupMarkerObserved = false;
+    gracefulQuitObserved = false;
+    if (!File.Exists(logPath))
+        return false;
+    int cleanupCount = 0;
+    int quitCount = 0;
+    using FileStream stream = new(
+        logPath,
+        FileMode.Open,
+        FileAccess.Read,
+        FileShare.Read);
+    if (stream.Length > 16L * 1024L * 1024L)
+        return false;
+    using StreamReader reader = new(
+        stream,
+        Encoding.UTF8,
+        detectEncodingFromByteOrderMarks: true);
+    string? line;
+    while ((line = reader.ReadLine()) is not null)
+    {
+        string trimmed = line.Trim();
+        if (string.Equals(trimmed, "MORPH_CANARY_CLEANUP_Q", StringComparison.Ordinal))
+            cleanupCount++;
+        else if (string.Equals(trimmed, "quit:", StringComparison.Ordinal))
+            quitCount++;
+        if (cleanupCount > 1 || quitCount > 1)
+            return false;
+    }
+    cleanupMarkerObserved = cleanupCount == 1;
+    gracefulQuitObserved = quitCount == 1;
+    return cleanupMarkerObserved && gracefulQuitObserved;
+}
+
 static JsonElement? TryParseLastJsonPayload(string stdout)
 {
     foreach (string line in stdout.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries).Reverse())
@@ -1745,7 +1824,115 @@ static JsonElement BestEffortReleaseCanaryKeys(
     }
 }
 
-static JsonElement CleanupExactCdbObserver(
+static bool TryReadCdbObserverIdentity(
+    JsonElement? attachResult,
+    out int cdbProcessId,
+    out string cdbStartedAtUtc,
+    out string cdbExecutablePath,
+    out string logPath,
+    out string failure)
+{
+    cdbProcessId = 0;
+    cdbStartedAtUtc = string.Empty;
+    cdbExecutablePath = string.Empty;
+    logPath = string.Empty;
+    failure = string.Empty;
+    try
+    {
+        if (!attachResult.HasValue || attachResult.Value.ValueKind != JsonValueKind.Object ||
+            !attachResult.Value.TryGetProperty("helperPayload", out JsonElement helper) ||
+            helper.ValueKind != JsonValueKind.Object)
+        {
+            failure = "CDB attach result did not contain a helper payload.";
+            return false;
+        }
+
+        int? parsedProcessId = JsonNullableInt(helper, "cdbProcessId");
+        string? parsedStartedAtUtc = helper.TryGetProperty("cdbStartedAtUtc", out JsonElement started) &&
+            started.ValueKind == JsonValueKind.String ? started.GetString() : null;
+        string? parsedExecutablePath = helper.TryGetProperty("cdbExecutablePath", out JsonElement executable) &&
+            executable.ValueKind == JsonValueKind.String ? executable.GetString() : null;
+        string? helperLogPath = helper.TryGetProperty("logPath", out JsonElement helperLog) &&
+            helperLog.ValueKind == JsonValueKind.String ? helperLog.GetString() : null;
+        string? attachLogPath = attachResult.Value.TryGetProperty("logPath", out JsonElement attachLog) &&
+            attachLog.ValueKind == JsonValueKind.String ? attachLog.GetString() : null;
+        if (!parsedProcessId.HasValue || parsedProcessId.Value <= 0 ||
+            string.IsNullOrWhiteSpace(parsedStartedAtUtc) ||
+            string.IsNullOrWhiteSpace(parsedExecutablePath) ||
+            string.IsNullOrWhiteSpace(helperLogPath) ||
+            string.IsNullOrWhiteSpace(attachLogPath))
+        {
+            failure = "CDB attach result did not contain complete process and log identity.";
+            return false;
+        }
+        if (!string.Equals(
+                Path.GetFullPath(helperLogPath),
+                Path.GetFullPath(attachLogPath),
+                StringComparison.OrdinalIgnoreCase))
+        {
+            failure = "CDB helper and attach log paths differ.";
+            return false;
+        }
+
+        cdbProcessId = parsedProcessId.Value;
+        cdbStartedAtUtc = parsedStartedAtUtc;
+        cdbExecutablePath = Path.GetFullPath(parsedExecutablePath);
+        logPath = Path.GetFullPath(attachLogPath);
+        return true;
+    }
+    catch (Exception ex)
+    {
+        failure = ex.GetType().Name + ": " + ex.Message;
+        return false;
+    }
+}
+
+static bool CdbCanaryArgumentsMatch(
+    JsonElement? attachResult,
+    int expectedTargetProcessId,
+    string expectedLogPath,
+    string expectedCommandFile)
+{
+    if (!attachResult.HasValue || attachResult.Value.ValueKind != JsonValueKind.Object ||
+        !attachResult.Value.TryGetProperty("helperPayload", out JsonElement helper) ||
+        helper.ValueKind != JsonValueKind.Object ||
+        !JsonIntEquals(helper, "targetProcessId", expectedTargetProcessId) ||
+        !helper.TryGetProperty("remoteServerEnabled", out JsonElement remote) ||
+        remote.ValueKind != JsonValueKind.False ||
+        !helper.TryGetProperty("effectiveArguments", out JsonElement arguments) ||
+        arguments.ValueKind != JsonValueKind.Array || arguments.GetArrayLength() != 11)
+        return false;
+
+    string[] expected =
+    {
+        "-pd",
+        "-noshell",
+        "-ee",
+        "masm",
+        "-logo",
+        Path.GetFullPath(expectedLogPath),
+        "-p",
+        expectedTargetProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        "-noio",
+        "-cf",
+        Path.GetFullPath(expectedCommandFile),
+    };
+    for (int index = 0; index < expected.Length; index++)
+    {
+        JsonElement argument = arguments[index];
+        if (argument.ValueKind != JsonValueKind.String)
+            return false;
+        string actual = argument.GetString() ?? string.Empty;
+        bool matches = index is 5 or 10
+            ? string.Equals(Path.GetFullPath(actual), expected[index], StringComparison.OrdinalIgnoreCase)
+            : string.Equals(actual, expected[index], StringComparison.Ordinal);
+        if (!matches)
+            return false;
+    }
+    return true;
+}
+
+static JsonElement ValidateExactCdbObserverForManagedStop(
     JsonElement? attachResult,
     string powershellExe,
     string runtimeIdentityModule,
@@ -1754,16 +1941,12 @@ static JsonElement CleanupExactCdbObserver(
     string commandFile,
     string expectedCommandSha256,
     string templatePath,
-    string expectedTemplateSha256)
+    string expectedTemplateSha256,
+    string expectedLogPath,
+    string requiredLogMarker,
+    out Process? boundCdbProcess)
 {
-    if (!attachResult.HasValue ||
-        !attachResult.Value.TryGetProperty("helperPayload", out JsonElement helper) ||
-        helper.ValueKind != JsonValueKind.Object)
-        return JsonPayload(new { status = "not-started", receiptBound = false, exited = true });
-
-    int? cdbProcessId = JsonNullableInt(helper, "cdbProcessId");
-    string? startedAtUtc = helper.TryGetProperty("cdbStartedAtUtc", out JsonElement started) ? started.GetString() : null;
-    string? executablePath = helper.TryGetProperty("cdbExecutablePath", out JsonElement executable) ? executable.GetString() : null;
+    boundCdbProcess = null;
     bool receiptBound = ValidateCanaryBinding(
         powershellExe,
         runtimeIdentityModule,
@@ -1775,43 +1958,201 @@ static JsonElement CleanupExactCdbObserver(
         expectedTemplateSha256,
         true,
         out string receiptFailure);
-    if (!cdbProcessId.HasValue || string.IsNullOrWhiteSpace(startedAtUtc) || string.IsNullOrWhiteSpace(executablePath))
-        return JsonPayload(new { status = "identity-missing", receiptBound, exited = false, receiptFailure });
+    if (!TryReadCdbObserverIdentity(
+            attachResult,
+            out int cdbProcessId,
+            out string startedAtUtc,
+            out string executablePath,
+            out string logPath,
+            out string identityFailure))
+        return JsonPayload(new { status = "identity-missing", receiptBound, processBound = false, receiptFailure, identityFailure });
+    int expectedTargetProcessId = attachResult.HasValue
+        ? JsonInt(attachResult.Value, "targetProcessId")
+        : 0;
+    if (!string.Equals(logPath, Path.GetFullPath(expectedLogPath), StringComparison.OrdinalIgnoreCase) ||
+        expectedTargetProcessId <= 0 ||
+        !CdbCanaryArgumentsMatch(attachResult, expectedTargetProcessId, logPath, commandFile) ||
+        !CdbObserverReady(attachResult, expectedReceiptSha256, expectedCommandSha256, logPath, requiredLogMarker))
+        return JsonPayload(new { status = "observer-not-ready", receiptBound, processBound = false, receiptFailure, cdbProcessId });
+    Process? process = null;
     try
     {
-        using Process process = Process.GetProcessById(cdbProcessId.Value);
+        process = Process.GetProcessById(cdbProcessId);
         process.Refresh();
+        if (process.HasExited)
+            return JsonPayload(new { status = "already-exited", receiptBound, processBound = false, receiptFailure, cdbProcessId });
+        _ = process.SafeHandle;
         DateTime expectedStart = DateTime.ParseExact(
             startedAtUtc,
             "o",
             System.Globalization.CultureInfo.InvariantCulture,
             System.Globalization.DateTimeStyles.RoundtripKind).ToUniversalTime();
         string actualPath = Path.GetFullPath(process.MainModule?.FileName ?? string.Empty);
-        bool identityMatches = process.StartTime.ToUniversalTime().Ticks == expectedStart.Ticks &&
+        bool processBound = process.StartTime.ToUniversalTime().Ticks == expectedStart.Ticks &&
             string.Equals(actualPath, Path.GetFullPath(executablePath), StringComparison.OrdinalIgnoreCase);
-        if (!identityMatches)
-            return JsonPayload(new { status = "identity-mismatch", receiptBound, exited = false, receiptFailure });
-        process.Kill(entireProcessTree: true);
-        bool exited = process.WaitForExit(3000);
+        if (!processBound)
+            return JsonPayload(new { status = "identity-mismatch", receiptBound, processBound, receiptFailure, cdbProcessId });
+        boundCdbProcess = process;
+        process = null;
+        if (!receiptBound)
+            return JsonPayload(new { status = "receipt-unbound", receiptBound, processBound, receiptFailure, cdbProcessId });
         return JsonPayload(new
         {
-            status = exited && receiptBound ? "detached-exited" : exited ? "detached-unbound" : "still-running",
+            status = "ready-for-managed-stop",
             receiptBound,
-            exited,
+            processBound,
             receiptFailure,
             cdbProcessId,
             cdbStartedAtUtc = startedAtUtc,
             cdbExecutablePath = executablePath,
+            logPath,
         });
     }
     catch (ArgumentException)
     {
-        return JsonPayload(new { status = receiptBound ? "already-exited" : "already-exited-unbound", receiptBound, exited = true, receiptFailure });
+        return JsonPayload(new { status = "already-exited", receiptBound, processBound = false, receiptFailure, cdbProcessId });
     }
     catch (Exception ex)
     {
-        return JsonPayload(new { status = "failed", receiptBound, exited = false, receiptFailure, error = ex.GetType().Name + ": " + ex.Message });
+        return JsonPayload(new { status = "failed", receiptBound, processBound = false, receiptFailure, cdbProcessId, error = ex.GetType().Name + ": " + ex.Message });
     }
+    finally
+    {
+        process?.Dispose();
+    }
+}
+
+static JsonElement FinalizeExactCdbObserverAfterManagedStop(
+    JsonElement? attachResult,
+    JsonElement preStopResult,
+    Process? boundCdbProcess,
+    bool stopReceiptBound,
+    GameProfileStopResult? stopResult,
+    string expectedLogPath)
+{
+    if (!TryReadCdbObserverIdentity(
+            attachResult,
+            out int cdbProcessId,
+            out string startedAtUtc,
+            out string executablePath,
+            out string logPath,
+            out string identityFailure))
+        return JsonPayload(new { status = "identity-missing", receiptBound = false, exited = false, gracefulQuitObserved = false, identityFailure });
+
+    bool preStopBound = JsonStringIn(preStopResult, "status", "ready-for-managed-stop") &&
+        JsonBool(preStopResult, "receiptBound") &&
+        JsonBool(preStopResult, "processBound") &&
+        JsonIntEquals(preStopResult, "cdbProcessId", cdbProcessId) &&
+        preStopResult.TryGetProperty("cdbStartedAtUtc", out JsonElement preStopStarted) &&
+        preStopStarted.ValueKind == JsonValueKind.String &&
+        string.Equals(preStopStarted.GetString(), startedAtUtc, StringComparison.Ordinal) &&
+        preStopResult.TryGetProperty("cdbExecutablePath", out JsonElement preStopExecutable) &&
+        preStopExecutable.ValueKind == JsonValueKind.String &&
+        string.Equals(
+            Path.GetFullPath(preStopExecutable.GetString() ?? string.Empty),
+            Path.GetFullPath(executablePath),
+            StringComparison.OrdinalIgnoreCase) &&
+        preStopResult.TryGetProperty("logPath", out JsonElement preStopLog) &&
+        preStopLog.ValueKind == JsonValueKind.String &&
+        string.Equals(Path.GetFullPath(preStopLog.GetString() ?? string.Empty), logPath, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(logPath, Path.GetFullPath(expectedLogPath), StringComparison.OrdinalIgnoreCase);
+    bool managedProcessStopped = stopReceiptBound && stopResult?.Success == true &&
+        stopResult.LiveBeforeStop && stopResult.StopRequested && stopResult.ExitObserved &&
+        !stopResult.AlreadyGone && stopResult.ExitTime.HasValue;
+    bool exited = false;
+    bool forced = false;
+    bool processWasRetained = boundCdbProcess is not null;
+    bool processIdentityRevalidated = false;
+    DateTime? observedCdbExitTimeUtc = null;
+    Process? process = boundCdbProcess;
+    try
+    {
+        if (process is null)
+            process = Process.GetProcessById(cdbProcessId);
+        process.Refresh();
+        if (!process.HasExited)
+        {
+            _ = process.SafeHandle;
+            DateTime expectedStart = DateTime.ParseExact(
+                startedAtUtc,
+                "o",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.RoundtripKind).ToUniversalTime();
+            string actualPath = Path.GetFullPath(process.MainModule?.FileName ?? string.Empty);
+            bool identityMatches = process.StartTime.ToUniversalTime().Ticks == expectedStart.Ticks &&
+                string.Equals(actualPath, Path.GetFullPath(executablePath), StringComparison.OrdinalIgnoreCase);
+            if (!identityMatches)
+                return JsonPayload(new { status = "identity-mismatch", receiptBound = preStopBound && stopReceiptBound, exited = false, gracefulQuitObserved = false, cdbProcessId });
+            processIdentityRevalidated = true;
+
+            exited = process.WaitForExit(10000);
+            if (!exited)
+            {
+                forced = true;
+                process.Kill(entireProcessTree: false);
+                exited = process.WaitForExit(3000);
+            }
+        }
+        else
+        {
+            exited = true;
+            processIdentityRevalidated = processWasRetained;
+        }
+        if (exited)
+        {
+            process.Refresh();
+            observedCdbExitTimeUtc = process.ExitTime.ToUniversalTime();
+        }
+    }
+    catch (ArgumentException)
+    {
+        return JsonPayload(new { status = "exited-without-retained-handle", receiptBound = false, exited = true, gracefulQuitObserved = false, forced, cdbProcessId });
+    }
+    catch (Exception ex)
+    {
+        return JsonPayload(new { status = "failed", receiptBound = preStopBound && stopReceiptBound, exited, gracefulQuitObserved = false, cdbProcessId, error = ex.GetType().Name + ": " + ex.Message });
+    }
+    finally
+    {
+        process?.Dispose();
+    }
+
+    DateTime managedExitTimeUtc = stopResult?.ExitTime?.UtcDateTime ?? DateTime.MinValue;
+    DateTime cdbExitTimeUtc = observedCdbExitTimeUtc ?? DateTime.MinValue;
+    bool targetExitedBeforeCdb = managedProcessStopped && observedCdbExitTimeUtc.HasValue &&
+        cdbExitTimeUtc >= managedExitTimeUtc;
+    bool cleanupMarkerObserved = false;
+    bool gracefulQuitObserved = false;
+    bool finalizedLogAccepted = !forced && exited &&
+        TryReadFinalizedCdbMarkers(logPath, out cleanupMarkerObserved, out gracefulQuitObserved);
+    bool graceful = preStopBound && processWasRetained && processIdentityRevalidated &&
+        managedProcessStopped && targetExitedBeforeCdb && finalizedLogAccepted &&
+        cleanupMarkerObserved && gracefulQuitObserved;
+    string status = graceful ? "exited-after-managed-stop" :
+        forced && exited ? "forced-stopped-after-timeout" :
+        forced ? "forced-stop-failed" :
+        !preStopBound ? "exited-without-pre-stop-binding" :
+        !managedProcessStopped ? "exited-after-unbound-managed-stop" :
+        !targetExitedBeforeCdb ? "exited-before-managed-target" :
+        "exited-without-queued-quit";
+    return JsonPayload(new
+    {
+        status,
+        receiptBound = preStopBound && stopReceiptBound,
+        exited,
+        gracefulQuitObserved,
+        cleanupMarkerObserved,
+        targetExitedBeforeCdb,
+        processWasRetained,
+        processIdentityRevalidated,
+        forced,
+        cdbProcessId,
+        cdbStartedAtUtc = startedAtUtc,
+        cdbExecutablePath = executablePath,
+        managedExitTimeUtc = stopResult?.ExitTime,
+        cdbExitTimeUtc = observedCdbExitTimeUtc,
+        logPath,
+    });
 }
 
 static GameProfileStopResult? StopReceiptBoundManagedProcess(
@@ -1852,38 +2193,28 @@ static GameProfileStopResult? StopReceiptBoundManagedProcess(
         expectedTemplateSha256,
         requireWindow,
         out failure);
-    return receiptBound
-        ? GameProfileRuntimeService.StopCopiedProfile(managed, profilesRoot, gracefulTimeout: TimeSpan.FromSeconds(3))
-        : null;
+    GameProfileStopResult result = GameProfileRuntimeService.StopCopiedProfile(
+        managed,
+        profilesRoot,
+        gracefulTimeout: TimeSpan.FromSeconds(3));
+    bool exactTerminalStop = result.Success && result.ProcessId == managed.ProcessId &&
+        result.LiveBeforeStop && result.StopRequested && result.ExitObserved &&
+        !result.AlreadyGone && result.ExitTime.HasValue;
+    if (result.Success && !exactTerminalStop)
+    {
+        failure = "Managed stop reported success without exact live-before-stop, request, exit, and exit-time evidence.";
+        return result with { Success = false, Message = failure };
+    }
+    return result;
 }
 
-static bool ExactProcessStillRunning(int processId, string startedAtUtc, string executablePath)
-{
-    try
-    {
-        using Process process = Process.GetProcessById(processId);
-        process.Refresh();
-        DateTime expectedStart = DateTime.ParseExact(
-            startedAtUtc,
-            "o",
-            System.Globalization.CultureInfo.InvariantCulture,
-            System.Globalization.DateTimeStyles.RoundtripKind).ToUniversalTime();
-        string actualPath = Path.GetFullPath(process.MainModule?.FileName ?? string.Empty);
-        return !process.HasExited && process.StartTime.ToUniversalTime().Ticks == expectedStart.Ticks &&
-            string.Equals(actualPath, Path.GetFullPath(executablePath), StringComparison.OrdinalIgnoreCase);
-    }
-    catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception)
-    {
-        return false;
-    }
-}
-
-static int CountOwnedProcesses(
+static JsonElement InspectOwnedProcessCensus(
     string runtimeReceiptPath,
     string? managedExecutablePath,
     JsonElement? cdbAttachResult)
 {
     var ownedProcessIds = new HashSet<int>();
+    int inspectionFailures = 0;
     string? executablePath = string.IsNullOrWhiteSpace(managedExecutablePath)
         ? null
         : Path.GetFullPath(managedExecutablePath);
@@ -1900,7 +2231,7 @@ static int CountOwnedProcesses(
         }
         catch
         {
-            // Keep the managed executable fallback so receipt corruption cannot suppress census.
+            inspectionFailures++;
         }
     }
     if (!string.IsNullOrWhiteSpace(executablePath))
@@ -1920,19 +2251,69 @@ static int CountOwnedProcesses(
                 }
                 catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
                 {
+                    try
+                    {
+                        process.Refresh();
+                        if (!process.HasExited)
+                            inspectionFailures++;
+                    }
+                    catch
+                    {
+                        inspectionFailures++;
+                    }
                 }
             }
         }
     }
-    if (cdbAttachResult.HasValue &&
-        cdbAttachResult.Value.TryGetProperty("helperPayload", out JsonElement helper) &&
-        helper.ValueKind == JsonValueKind.Object &&
-        JsonNullableInt(helper, "cdbProcessId") is int cdbProcessId &&
-        helper.TryGetProperty("cdbStartedAtUtc", out JsonElement cdbStarted) &&
-        helper.TryGetProperty("cdbExecutablePath", out JsonElement cdbExecutable) &&
-        ExactProcessStillRunning(cdbProcessId, cdbStarted.GetString()!, cdbExecutable.GetString()!))
-        ownedProcessIds.Add(cdbProcessId);
-    return ownedProcessIds.Count;
+    if (cdbAttachResult.HasValue)
+    {
+        if (!TryReadCdbObserverIdentity(
+                cdbAttachResult,
+                out int cdbProcessId,
+                out string cdbStartedAtUtc,
+                out string cdbExecutablePath,
+                out _,
+                out _))
+        {
+            inspectionFailures++;
+        }
+        else
+        {
+            try
+            {
+                using Process process = Process.GetProcessById(cdbProcessId);
+                process.Refresh();
+                if (!process.HasExited)
+                {
+                    DateTime expectedStart = DateTime.ParseExact(
+                        cdbStartedAtUtc,
+                        "o",
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.RoundtripKind).ToUniversalTime();
+                    string actualPath = Path.GetFullPath(process.MainModule?.FileName ?? string.Empty);
+                    if (process.StartTime.ToUniversalTime().Ticks == expectedStart.Ticks &&
+                        string.Equals(actualPath, Path.GetFullPath(cdbExecutablePath), StringComparison.OrdinalIgnoreCase))
+                        ownedProcessIds.Add(cdbProcessId);
+                }
+            }
+            catch (ArgumentException)
+            {
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+            {
+                inspectionFailures++;
+            }
+        }
+    }
+    int ownedProcessCount = ownedProcessIds.Count;
+    string status = inspectionFailures == 0 && ownedProcessCount == 0 ? "clear" :
+        inspectionFailures > 0 ? "inspection-failed" : "not-clear";
+    return JsonPayload(new
+    {
+        status,
+        ownedProcessCount,
+        inspectionFailureCount = inspectionFailures,
+    });
 }
 
 static string AppendCleanupFailure(string failure, string phase, Exception ex) =>
@@ -2003,7 +2384,10 @@ static int RunMorphCanary()
     GameProfileManagedProcess? managed = null;
     GameProfileStopResult? stopResult = null;
     JsonElement? cdbAttachResult = null;
+    Process? boundCdbProcess = null;
+    JsonElement cdbPreStopResult = JsonPayload(new { status = "not-started", receiptBound = false, processBound = false });
     JsonElement cdbCleanupResult = JsonPayload(new { status = "not-started", receiptBound = false, exited = true });
+    JsonElement censusResult = JsonPayload(new { status = "not-run", ownedProcessCount = -1, inspectionFailureCount = 0 });
     List<JsonElement> inputResults = new();
     string receiptSha256 = string.Empty;
     string copiedExecutableHashBefore = string.Empty;
@@ -2206,6 +2590,10 @@ __CANARY_CLEANUP_PHASE_BLOCK__
                     schemaVersion = "winui-original-binary-battleengine-morph-identity-canary-private-failure.v1",
                     role,
                     failure,
+                    cdbPreStop = cdbPreStopResult,
+                    managedStop = stopResult,
+                    cdbCleanup = cdbCleanupResult,
+                    processCensus = censusResult,
                 }, new JsonSerializerOptions { WriteIndented = true }));
         }
         catch (Exception diagnosticError)
@@ -2261,9 +2649,14 @@ __CANARY_CLEANUP_PHASE_BLOCK__
         : inputResults.Count == expectedInputSequences.Length && inputResults.All(result =>
             result.TryGetProperty("unconfirmedReleaseKeys", out JsonElement keys) &&
             keys.ValueKind == JsonValueKind.Array && keys.GetArrayLength() == 0);
-    bool cdbDetached = JsonStringIn(cdbCleanupResult, "status", "detached-exited", "already-exited") &&
-        JsonBool(cdbCleanupResult, "receiptBound");
-    bool managedProcessStopped = stopReceiptBound && stopResult?.Success == true;
+    bool cdbDetached = JsonStringIn(cdbCleanupResult, "status", "exited-after-managed-stop") &&
+        JsonBool(cdbCleanupResult, "receiptBound") &&
+        JsonBool(cdbCleanupResult, "gracefulQuitObserved");
+    bool managedProcessStopped = stopReceiptBound && stopResult?.Success == true &&
+        stopResult.LiveBeforeStop && stopResult.StopRequested && stopResult.ExitObserved &&
+        !stopResult.AlreadyGone && stopResult.ExitTime.HasValue;
+    bool censusClear = JsonStringIn(censusResult, "status", "clear") &&
+        JsonIntEquals(censusResult, "inspectionFailureCount", 0);
 __CANARY_CLEANUP_OBJECT__
     var privateArtifact = new
     {
@@ -2286,7 +2679,7 @@ __CANARY_CLEANUP_OBJECT__
         JsonSerializer.Serialize(privateArtifact, new JsonSerializerOptions { WriteIndented = true }));
     bool succeeded = string.IsNullOrWhiteSpace(failure) && canaryCdbReady && canaryFocusedInputSucceeded &&
         canarySourceUnchanged && canaryCopyUnchanged && keysReleased && cdbDetached &&
-        managedProcessStopped && ownedProcessCount == 0;
+        managedProcessStopped && censusClear && ownedProcessCount == 0;
     Console.WriteLine(artifactJson);
     return succeeded ? 0 : 2;
 }

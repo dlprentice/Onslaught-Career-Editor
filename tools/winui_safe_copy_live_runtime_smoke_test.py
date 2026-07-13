@@ -69,6 +69,20 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertEqual(60, plan.input_step_delay_ms)
         self.assertEqual(10000, plan.cdb_log_ready_timeout_ms)
 
+    def test_morph_canary_authority_requires_target_first_graceful_debugger_completion(self) -> None:
+        module = self.live_smoke_module()
+
+        self.assertEqual(
+            "onslaught-battleengine-morph-identity-canary-authority.v2",
+            module.morph_authority.AUTHORITY_SCHEMA,
+        )
+        self.assertEqual(
+            "release held keys; retain exact receipt-bound CDB handle and effective arguments; "
+            "stop exact receipt-bound managed BEA root; require target-before-CDB exit ordering "
+            "and queued debugger quit or fail closed; verify zero receipt-owned BEA/CDB root processes",
+            module.morph_authority.REQUIRED_CLEANUP,
+        )
+
     def test_morph_canary_live_boundary_requires_hash_bound_authority_controls(self) -> None:
         module, missing_args = self.parse(
             "--runtime-protocol battleengine-morph-identity-canary-v1",
@@ -254,6 +268,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
             "send_input": lambda *values: calls.append(("send_input", *values)) or {"unconfirmedReleaseKeys": []},
             "capture": lambda: calls.append(("capture",)),
             "release_keys": lambda: calls.append(("release_keys",)) or {"status": "failed", "bestEffort": True},
+            "validate_cdb": lambda *values: calls.append(("validate_cdb", *values)),
             "cleanup_cdb": lambda *values: calls.append(("cleanup_cdb", *values)),
             "stop_managed": lambda *values: calls.append(("stop_managed", *values)),
             "census": lambda: calls.append(("census",)) or 0,
@@ -269,11 +284,12 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
 
         self.assertEqual(("attach_cdb", receipt, command, marker), calls[0])
         self.assertEqual(("send_input", "tap:Q", receipt, command, marker), calls[1])
-        self.assertEqual(("cleanup_cdb", receipt, command, marker), calls[3])
+        self.assertEqual(("validate_cdb", receipt, command, marker), calls[3])
         self.assertEqual(("stop_managed", receipt, command, marker), calls[4])
+        self.assertEqual(("cleanup_cdb", receipt, command, marker), calls[5])
         self.assertNotIn(("capture",), calls)
         self.assertEqual(
-            ["release_keys", "cleanup_cdb", "stop_managed", "census"],
+            ["release_keys", "validate_cdb", "stop_managed", "cleanup_cdb", "census"],
             result["cleanup_order"],
         )
         self.assertEqual({}, result["cleanup_failures"])
@@ -306,6 +322,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
             "send_input": lambda *_: calls.append("send_input"),
             "capture": lambda: calls.append("capture"),
             "release_keys": lambda: calls.append("release_keys"),
+            "validate_cdb": lambda *_: calls.append("validate_cdb"),
             "cleanup_cdb": lambda *_: calls.append("cleanup_cdb"),
             "stop_managed": lambda *_: calls.append("stop_managed"),
             "census": lambda: calls.append("census") or 0,
@@ -322,7 +339,14 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertNotIn("send_input", calls)
         self.assertIn("observer", result["active_failure"].lower())
         self.assertEqual(
-            ["attach_cdb", "release_keys", "cleanup_cdb", "stop_managed", "census"],
+            [
+                "attach_cdb",
+                "release_keys",
+                "validate_cdb",
+                "stop_managed",
+                "cleanup_cdb",
+                "census",
+            ],
             calls,
         )
 
@@ -364,6 +388,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
                     "send_input": lambda *_: None,
                     "capture": lambda: None,
                     "release_keys": phase("release_keys"),
+                    "validate_cdb": phase("validate_cdb"),
                     "cleanup_cdb": phase("cleanup_cdb"),
                     "stop_managed": phase("stop_managed"),
                     "census": phase("census", 0),
@@ -426,6 +451,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
             "send_input": lambda *_: calls.append("send_input"),
             "capture": lambda: calls.append("capture"),
             "release_keys": lambda: calls.append("release_keys"),
+            "validate_cdb": lambda *_: calls.append("validate_cdb"),
             "cleanup_cdb": lambda *_: calls.append("cleanup_cdb"),
             "stop_managed": lambda *_: calls.append("stop_managed"),
             "census": lambda: calls.append("census") or 0,
@@ -439,7 +465,92 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
             required_marker="",
         )
 
-        self.assertEqual(["capture", "release_keys", "cleanup_cdb", "stop_managed", "census"], calls)
+        self.assertEqual(
+            ["capture", "release_keys", "validate_cdb", "stop_managed", "cleanup_cdb", "census"],
+            calls,
+        )
+
+    def test_generated_canary_cleanup_stops_target_before_graceful_cdb_completion(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory(prefix="morph-cdb-lifecycle-test-") as temp:
+            project = module.write_runner(Path(temp) / "runner")
+            generated = project.with_name("Program.cs").read_text(encoding="utf-8")
+
+        phase_order = re.findall(r"CANARY_CLEANUP_PHASE: ([a-z_]+)", generated)
+        self.assertEqual(
+            ["release_keys", "validate_cdb", "stop_managed", "cleanup_cdb", "census"],
+            phase_order,
+        )
+        helper = re.search(
+            r"static JsonElement FinalizeExactCdbObserverAfterManagedStop\b"
+            r"(?P<body>.*?)(?=\nstatic\s)",
+            generated,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(helper)
+        body = helper.group("body")
+        self.assertIn("Process? boundCdbProcess", generated)
+        self.assertIn("CdbCanaryArgumentsMatch", generated)
+        self.assertIn("effectiveArguments", generated)
+        self.assertIn("TryReadFinalizedCdbMarkers", body)
+        self.assertEqual(generated.count("TryReadFinalizedCdbMarkers(logPath"), 1)
+        finalized_reader = re.search(
+            r"static bool TryReadFinalizedCdbMarkers\b(?P<body>.*?)(?=\nstatic\s)",
+            generated,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(finalized_reader)
+        self.assertIn("FileShare.Read);", finalized_reader.group("body"))
+        self.assertNotIn("FileShare.ReadWrite", finalized_reader.group("body"))
+        self.assertIn("cdbExitTimeUtc >= managedExitTimeUtc", body)
+        self.assertIn('status = graceful ? "exited-after-managed-stop"', body)
+        self.assertIn('"forced-stopped-after-timeout"', body)
+        self.assertLess(body.index("WaitForExit"), body.index("Kill(entireProcessTree: false)"))
+        self.assertNotIn("detached-exited", body)
+        self.assertNotIn("catch (ArgumentException)\n    {\n        exited = true;", body)
+
+        acceptance_start = generated.index("bool cdbDetached")
+        acceptance_end = generated.index("bool managedProcessStopped", acceptance_start)
+        acceptance = generated[acceptance_start:acceptance_end]
+        self.assertIn('"exited-after-managed-stop"', acceptance)
+        self.assertIn('JsonBool(cdbCleanupResult, "gracefulQuitObserved")', acceptance)
+        self.assertNotIn("forced-stopped-after-timeout", acceptance)
+
+    def test_generated_canary_stop_and_census_are_exact_and_fail_closed(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory(prefix="morph-exact-stop-test-") as temp:
+            project = module.write_runner(Path(temp) / "runner")
+            generated = project.with_name("Program.cs").read_text(encoding="utf-8")
+
+        stop_helper = re.search(
+            r"static GameProfileStopResult\? StopReceiptBoundManagedProcess\b"
+            r"(?P<body>.*?)(?=\nstatic\s)",
+            generated,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(stop_helper)
+        stop_body = stop_helper.group("body")
+        self.assertIn("LiveBeforeStop", stop_body)
+        self.assertIn("StopRequested", stop_body)
+        self.assertIn("ExitObserved", stop_body)
+        self.assertIn("AlreadyGone", stop_body)
+        self.assertIn("ExitTime", stop_body)
+        self.assertIn("!result.AlreadyGone", stop_body)
+        self.assertIn("if (result.Success && !exactTerminalStop)", stop_body)
+        self.assertIn("return result with { Success = false, Message = failure };", stop_body)
+
+        self.assertIn("InspectOwnedProcessCensus", generated)
+        self.assertIn('status = inspectionFailures == 0 && ownedProcessCount == 0 ? "clear"', generated)
+        self.assertIn('JsonStringIn(censusResult, "status", "clear")', generated)
+        self.assertIn("inspectionFailureCount", generated)
+
+        appcore = (ROOT / "OnslaughtCareerEditor.AppCore" / "GameProfileRuntimeService.cs").read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn("s_processStartTolerance", appcore)
+        self.assertIn("runningStartedAt.ToUniversalTime().Ticks != expected.StartedAt.ToUniversalTime().Ticks", appcore)
+        self.assertIn("Kill(entireProcessTree: false)", appcore)
+        self.assertNotIn('GameProfileStopResult(true, process.ProcessId, "Managed playable copied game folder process was already gone.")', appcore)
 
     def test_canary_default_artifact_root_is_outside_repo_and_untrackable(self) -> None:
         module, args = self.parse(

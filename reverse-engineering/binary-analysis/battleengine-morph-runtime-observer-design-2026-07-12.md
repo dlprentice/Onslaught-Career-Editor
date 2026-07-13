@@ -180,10 +180,18 @@ semantic claims outside the schema.
 
 ### 6. Cleanup Owner
 
-A `finally` path releases every held key, detaches CDB, requests managed stop
-only for the exact owned process identity, closes any owned process container,
-and verifies that no owned BEA or CDB process remains. Unknown processes are
-never terminated.
+A `finally` path releases every held key, binds and retains the exact
+receipt-bound CDB root-process handle plus its effective local `-pd` arguments,
+and requests managed stop only for the exact owned game root with an exact
+start-time and executable-path match. AppCore may forget an already-gone
+managed process during ordinary Toolkit cleanup, but the canary does not accept
+that result as exact-stop evidence. The command file queues a unique cleanup marker and `q` after the
+active `g`; acceptance requires the retained CDB handle to exit no earlier than
+the game, followed by exactly one cleanup marker and one `quit:` marker from a
+finalized, non-writable log. A timeout may force-stop only that exact CDB root
+after the game-stop attempt, but the fallback fails the role. Census inspection
+errors also fail closed. Unknown processes and unbound descendants are never
+terminated.
 
 The private runner rehashes the ambient resource-root executable, effective
 executable override, relevant source options/savegame inputs, and copied
