@@ -244,6 +244,7 @@ def build_harness_command(
 ) -> tuple[str, ...]:
     if role not in RUN_ROLES:
         raise CanaryError(f"invalid canary role: {role}")
+    profiles_root = role_root / "app-config" / "OnslaughtCareerEditor" / "GameProfiles"
     command = (
         "py",
         "-3",
@@ -259,7 +260,7 @@ def build_harness_command(
         "--artifact-root",
         str(role_root),
         "--profiles-root",
-        str(role_root / "app-config" / "OnslaughtCareerEditor" / "GameProfiles"),
+        str(profiles_root),
         "--canary-authority-file",
         str(controls.authority_path),
         "--expected-canary-authority-sha256",
@@ -274,6 +275,7 @@ def build_harness_command(
         harness.ARM_PHRASE,
     )
     try:
+        harness.validate_morph_canary_profile_path_budget(profiles_root, role)
         parsed = harness.parse_args(list(command[3:]))
         protocol = harness.validate_runtime_protocol(parsed)
     except (SystemExit, ValueError) as exc:

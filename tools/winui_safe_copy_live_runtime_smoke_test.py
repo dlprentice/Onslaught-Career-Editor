@@ -472,6 +472,72 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
                     artifact_root / "GameProfiles",
                 )
 
+    def test_morph_canary_profile_path_budget_covers_all_roles_and_max_path(self) -> None:
+        module = self.live_smoke_module()
+        proof_root = Path("C:\\" + ("p" * 114))
+        run_roots = {
+            "noInputControl": "no-input-control",
+            "positiveTransform": "positive-transform",
+            "positiveRepeat": "positive-repeat",
+        }
+        expected_lengths = {
+            "noInputControl": 249,
+            "positiveTransform": 251,
+            "positiveRepeat": 248,
+        }
+
+        for role, run_root_name in run_roots.items():
+            profiles_root = (
+                proof_root
+                / run_root_name
+                / "app-config"
+                / "OnslaughtCareerEditor"
+                / "GameProfiles"
+            )
+            with self.subTest(role=role):
+                self.assertEqual(
+                    expected_lengths[role],
+                    module.validate_morph_canary_profile_path_budget(profiles_root, role),
+                )
+
+        profile_name = module.MORPH_CANARY_PROFILE_NAMES["positiveTransform"]
+        sentinel_name = module.MORPH_CANARY_MUTATION_SENTINEL_SAMPLE
+        fixed_length = len(str(Path("C:\\") / "x" / profile_name / sentinel_name))
+
+        def profiles_root_for(candidate_length: int) -> Path:
+            component_length = candidate_length - fixed_length + 1
+            return Path("C:\\") / ("p" * component_length)
+
+        self.assertEqual(
+            259,
+            module.validate_morph_canary_profile_path_budget(
+                profiles_root_for(259),
+                "positiveTransform",
+            ),
+        )
+        with self.assertRaisesRegex(ValueError, "legacy Win32 path budget"):
+            module.validate_morph_canary_profile_path_budget(
+                profiles_root_for(260),
+                "positiveTransform",
+            )
+
+        non_bmp = chr(0x1F680)
+        component_length = 259 - fixed_length + 1
+        unicode_profiles_root = Path("C:\\") / (
+            ("p" * (component_length - 2)) + (non_bmp * 2)
+        )
+        unicode_sentinel = unicode_profiles_root / profile_name / sentinel_name
+        self.assertEqual(259, len(str(unicode_sentinel)))
+        self.assertEqual(
+            261,
+            len(str(unicode_sentinel).encode("utf-16-le", errors="surrogatepass")) // 2,
+        )
+        with self.assertRaisesRegex(ValueError, "legacy Win32 path budget"):
+            module.validate_morph_canary_profile_path_budget(
+                unicode_profiles_root,
+                "positiveTransform",
+            )
+
     def test_generated_morph_runner_separates_ambient_and_effective_executables(self) -> None:
         text = self.script_text()
 
@@ -488,6 +554,15 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
             "!string.Equals(copiedExecutableHashBefore, installedHashBefore, StringComparison.OrdinalIgnoreCase)",
             text,
         )
+
+    def test_generated_morph_runner_uses_compact_role_local_profile_names(self) -> None:
+        text = self.script_text()
+
+        self.assertIn('"noInputControl" => "mc-c"', text)
+        self.assertIn('"positiveTransform" => "mc-p"', text)
+        self.assertIn('"positiveRepeat" => "mc-r"', text)
+        self.assertIn("ProfileName: roleProfileName", text)
+        self.assertNotIn('ProfileName: $"morph-canary-{role}-', text)
 
     def stable_extra_patch_keys(self) -> set[str]:
         tree = ast.parse(self.script_text(), filename=str(SCRIPT))

@@ -39,6 +39,15 @@ CDB_OBSERVER_ARM_PHRASE = "ATTACH CDB TO SAFE COPY BEA"
 DEFAULT_RUNTIME_PROTOCOL = "default"
 MORPH_CANARY_RUNTIME_PROTOCOL = "battleengine-morph-identity-canary-v1"
 MORPH_CANARY_ROLES = ("noInputControl", "positiveTransform", "positiveRepeat")
+MORPH_CANARY_PROFILE_NAMES = {
+    "noInputControl": "mc-c",
+    "positiveTransform": "mc-p",
+    "positiveRepeat": "mc-r",
+}
+MORPH_CANARY_MUTATION_SENTINEL_SAMPLE = (
+    ".onslaught-directory-guard-" + ("0" * 32) + ".tmp"
+)
+LEGACY_WIN32_MAX_PATH = 260
 MORPH_CANARY_READY_MARKER = "MORPH_CANARY_READY"
 RUNNER_MARKER = ".winui-safe-copy-live-runtime-runner"
 REPARSE_POINT_FLAG = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
@@ -663,6 +672,27 @@ def resolve_morph_canary_app_config_root(artifact_root: Path, profiles_root: Pat
     ):
         raise ValueError("Morph canary AppConfig root must not be reparse or symlink routed.")
     return app_config_root
+
+
+def validate_morph_canary_profile_path_budget(profiles_root: Path, role: str) -> int:
+    try:
+        profile_name = MORPH_CANARY_PROFILE_NAMES[role]
+    except KeyError as exc:
+        raise ValueError(f"Unsupported morph canary role: {role}") from exc
+    sentinel_path = (
+        profiles_root.absolute().resolve(strict=False)
+        / profile_name
+        / MORPH_CANARY_MUTATION_SENTINEL_SAMPLE
+    )
+    path_length = len(
+        str(sentinel_path).encode("utf-16-le", errors="surrogatepass")
+    ) // 2
+    if path_length >= LEGACY_WIN32_MAX_PATH:
+        raise ValueError(
+            "Morph canary profile mutation sentinel exceeds the legacy Win32 path budget "
+            f"({path_length} UTF-16 code units; must be below {LEGACY_WIN32_MAX_PATH})."
+        )
+    return path_length
 
 
 def build_canary_private_artifact_payload(
@@ -1888,6 +1918,13 @@ static int RunMorphCanary()
         "positiveRepeat" => new[] { "tap:Q" },
         _ => throw new InvalidOperationException("Unsupported morph canary role."),
     };
+    string roleProfileName = role switch
+    {
+        "noInputControl" => "mc-c",
+        "positiveTransform" => "mc-p",
+        "positiveRepeat" => "mc-r",
+        _ => throw new InvalidOperationException("Unsupported morph canary role."),
+    };
     if (!launchArguments.SequenceEqual(expectedLaunchArguments, StringComparer.Ordinal) ||
         !inputSequences.SequenceEqual(expectedInputSequences, StringComparer.Ordinal) ||
         !string.Equals(requiredLogMarker, "MORPH_CANARY_READY", StringComparison.Ordinal))
@@ -1922,7 +1959,7 @@ static int RunMorphCanary()
             new GameProfilePrepareOptions(
                 SourceGameRoot: sourceRoot,
                 OutputRoot: profilesRoot,
-                ProfileName: $"morph-canary-{role}-{DateTime.UtcNow:yyyyMMdd-HHmmss}",
+                ProfileName: roleProfileName,
                 ExecutableOverridePath: exeOverride,
                 ApplyWindowedCompatibilityPatch: !morphCanaryMode,
                 AllowByteLayoutOnlyTarget: false,
@@ -3095,6 +3132,7 @@ def main() -> int:
                 artifact_root,
                 profiles_root,
             )
+            validate_morph_canary_profile_path_budget(profiles_root, protocol.canary_role)
             validate_morph_canary_control_inputs(args, artifact_root)
             artifact_root = create_fresh_canary_artifact_root(artifact_root_raw)
             profiles_root = profiles_root_raw.resolve()

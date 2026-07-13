@@ -58,9 +58,10 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   `reverse-engineering/binary-analysis/battleengine-morph-runtime-observer-design-2026-07-12.md`
   starts with an unpatched safe-copy Level 850 control/positive/repeat matrix,
   defers field semantics and timing, and uses Level 100 only as later
-  corroboration. The user pre-authorized the recommended continuation. Runtime
-  execution remains pending the structured local baton, resource leases, and
-  final corrected preflight validation.
+  corroboration. The user pre-authorized the recommended continuation. The
+  first structured dry run passed; its live control role then failed closed
+  before receipt creation, and a fresh controlled retry is pending the bounded
+  path-length correction described below.
 - The Stage A implementation is decomposed in
   `roadmap/battleengine-morph-identity-canary-implementation-plan-2026-07-12.md`.
   It reuses AppCore and the existing live harness, adds no product API or
@@ -114,7 +115,19 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   AppCore/UI preflight gates pass, and the generated runner builds with zero
   warnings. Normal review converged to approve after the matrix-wide baseline
   fix; adversarial review approved with no Critical/Important blocker after one
-  stale plan sentence was corrected. No live run has started.
+  stale plan sentence was corrected. The first live matrix stopped in the
+  no-input control before receipt creation because the generated private
+  profile name produced a 288-unit AppCore mutation-sentinel path. No
+  positive role or public materialization ran; owned-process cleanup completed,
+  source hashes were unchanged, and the private failed-run evidence is
+  preserved. The bounded correction maps the fixed roles to compact private
+  profile names, reducing the failed control path to 249 UTF-16 code units and
+  the longest matrix path to 251. Both dry run and live harness now reject any
+  projected sentinel path at or above the 260-unit legacy Win32 boundary,
+  including non-BMP names, before profile creation. The exact six-suite set
+  passes 122 tests, the generated C# runner builds with zero warnings, and
+  normal/adversarial Codex re-review approved after the UTF-16 correction. A
+  fresh authority/lease set and proof root will be used for the retry.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future

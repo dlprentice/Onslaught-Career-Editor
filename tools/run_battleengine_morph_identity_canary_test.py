@@ -303,6 +303,26 @@ class MatrixExecutorTests(unittest.TestCase):
                 Path(row.command[profiles_index + 1]),
             )
 
+    def test_dry_run_rejects_role_profile_paths_at_legacy_max_path(self) -> None:
+        long_proof_root = self.private_parent / (
+            "battleengine-morph-identity-canary-" + ("p" * 180)
+        )
+        self.write_controls(authority_payload=authority(long_proof_root))
+        harness = FakeHarness()
+        executor, _ = self.executor(harness)
+
+        with self.assertRaisesRegex(runner.CanaryError, "legacy Win32 path budget"):
+            executor.dry_run(
+                long_proof_root,
+                self.authority_path,
+                self.leases_path,
+                self.source_root,
+                self.exe_override,
+            )
+
+        self.assertEqual([], harness.calls)
+        self.assertFalse(long_proof_root.exists())
+
     def test_dry_run_requires_both_runtime_inputs_and_private_control_files(self) -> None:
         executor, _ = self.executor(FakeHarness())
         with self.assertRaises(runner.CanaryError):
