@@ -138,7 +138,7 @@
     "test:runtime-cdb-helper-safety": "py -3 tools\\start_cdb_server_test.py",
     "test:runtime-input-helper-safety": "py -3 tools\\send_game_window_input_test.py",
     "test:winui-safe-copy-live-runtime-smoke-helper": "py -3 tools\\winui_safe_copy_live_runtime_smoke_test.py",
-    "test:runtime-tooling-safety": "npm run test:runtime-profile-helper-safety && npm run test:runtime-cdb-helper-safety && npm run test:runtime-input-helper-safety && npm run test:winui-safe-copy-live-runtime-smoke-helper",
+    "test:runtime-tooling-safety": "npm run test:runtime-profile-helper-safety && npm run test:runtime-cdb-helper-safety && npm run test:runtime-input-helper-safety && npm run test:winui-safe-copy-live-runtime-smoke-helper && py -3 tools\\cdb_exit_event_cleanup_test.py",
     "test:winui-patch-engine-safety": "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~BinaryPatchCatalogContractTests|FullyQualifiedName~SafeCopyProfileCatalogContractTests\" && dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~BinaryPatchRegressionTests\" && py -3 tools\\legacy_patch_script_safety_test.py && npm run test:winui-patch-catalog-accounting",
     "test:cli-smoke": "dotnet run --project .\\OnslaughtCareerEditor.Cli\\OnslaughtCareerEditor.Cli.csproj -- --help",
     "typecheck": "dotnet build .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj --nologo",
