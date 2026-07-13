@@ -69,7 +69,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertEqual(60, plan.input_step_delay_ms)
         self.assertEqual(10000, plan.cdb_log_ready_timeout_ms)
 
-    def test_morph_canary_authority_requires_target_first_graceful_debugger_completion(self) -> None:
+    def test_morph_canary_authority_requires_target_exit_event_before_graceful_debugger_quit(self) -> None:
         module = self.live_smoke_module()
 
         self.assertEqual(
@@ -78,8 +78,9 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         )
         self.assertEqual(
             "release held keys; retain exact receipt-bound CDB handle and effective arguments; "
-            "stop exact receipt-bound managed BEA root; require target-before-CDB exit ordering "
-            "and queued debugger quit or fail closed; verify zero receipt-owned BEA/CDB root processes",
+            "stop exact receipt-bound managed BEA root; require exact receipt-owned target exit-process "
+            "event before queued graceful debugger quit or fail closed; verify zero receipt-owned "
+            "BEA/CDB root processes",
             module.morph_authority.REQUIRED_CLEANUP,
         )
 
@@ -470,7 +471,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
             calls,
         )
 
-    def test_generated_canary_cleanup_stops_target_before_graceful_cdb_completion(self) -> None:
+    def test_generated_canary_cleanup_binds_target_exit_event_before_graceful_cdb_completion(self) -> None:
         module = self.live_smoke_module()
         with tempfile.TemporaryDirectory(prefix="morph-cdb-lifecycle-test-") as temp:
             project = module.write_runner(Path(temp) / "runner")
@@ -492,29 +493,68 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn("Process? boundCdbProcess", generated)
         self.assertIn("CdbCanaryArgumentsMatch", generated)
         self.assertIn("effectiveArguments", generated)
-        self.assertIn("TryReadFinalizedCdbMarkers", body)
-        self.assertEqual(generated.count("TryReadFinalizedCdbMarkers(logPath"), 1)
+        self.assertIn("TryReadFinalizedCdbExitEvidence", body)
+        self.assertEqual(generated.count("TryReadFinalizedCdbExitEvidence(logPath, stopResult.ProcessId"), 1)
         finalized_reader = re.search(
-            r"static bool TryReadFinalizedCdbMarkers\b(?P<body>.*?)(?=\nstatic\s)",
+            r"static bool TryReadFinalizedCdbExitEvidence\b(?P<body>.*?)(?=\nstatic\s)",
             generated,
             flags=re.DOTALL,
         )
         self.assertIsNotNone(finalized_reader)
-        self.assertIn("FileShare.Read);", finalized_reader.group("body"))
-        self.assertNotIn("FileShare.ReadWrite", finalized_reader.group("body"))
-        self.assertIn("cdbExitTimeUtc >= managedExitTimeUtc", body)
+        reader_body = finalized_reader.group("body")
+        self.assertIn("FileShare.Read);", reader_body)
+        self.assertNotIn("FileShare.ReadWrite", reader_body)
+        self.assertIn("MORPH_CANARY_LASTEVENT_BEGIN", reader_body)
+        self.assertIn("MORPH_CANARY_LASTEVENT_END", reader_body)
+        self.assertIn("Exit process 0:", reader_body)
+        self.assertIn("expectedTargetProcessId", reader_body)
+        self.assertNotIn("cdbExitTimeUtc >= managedExitTimeUtc", body)
+        self.assertNotIn("cdbExitTimeUtc <= managedExitTimeUtc", body)
+        self.assertNotRegex(body, r"cdbExitTimeUtc\s*[<>]=?\s*managedExitTimeUtc")
+        self.assertIn("targetExitEventObserved", body)
         self.assertIn('status = graceful ? "exited-after-managed-stop"', body)
         self.assertIn('"forced-stopped-after-timeout"', body)
         self.assertLess(body.index("WaitForExit"), body.index("Kill(entireProcessTree: false)"))
         self.assertNotIn("detached-exited", body)
         self.assertNotIn("catch (ArgumentException)\n    {\n        exited = true;", body)
+        self.assertIn("managedExitTimeUtc = stopResult?.ExitTime", body)
+        self.assertIn("cdbExitTimeUtc = observedCdbExitTimeUtc", body)
 
         acceptance_start = generated.index("bool cdbDetached")
         acceptance_end = generated.index("bool managedProcessStopped", acceptance_start)
         acceptance = generated[acceptance_start:acceptance_end]
         self.assertIn('"exited-after-managed-stop"', acceptance)
         self.assertIn('JsonBool(cdbCleanupResult, "gracefulQuitObserved")', acceptance)
+        self.assertIn('JsonBool(cdbCleanupResult, "targetExitEventObserved")', acceptance)
         self.assertNotIn("forced-stopped-after-timeout", acceptance)
+
+    def test_generated_canary_cleanup_records_private_monotonic_lifecycle_milestones(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory(prefix="morph-lifecycle-milestone-test-") as temp:
+            project = module.write_runner(Path(temp) / "runner")
+            generated = project.with_name("Program.cs").read_text(encoding="utf-8")
+
+        self.assertIn("Stopwatch.GetTimestamp()", generated)
+        self.assertIn("stopInvocationBeginTimestamp", generated)
+        self.assertIn("targetWaitReturnedTimestamp", generated)
+        self.assertIn("cdbFinalizationValidationBeginTimestamp", generated)
+        self.assertIn("runnerCompletionAcceptanceTimestamp", generated)
+        self.assertIn("stopResult?.ForceRequested", generated)
+        self.assertIn("AppCore does not expose the exact force-request timestamp", generated)
+        self.assertRegex(
+            generated,
+            r"stopInvocationBeginTimestamp\s*<\s*targetWaitReturnedTimestamp[\s\S]*?"
+            r"targetWaitReturnedTimestamp\s*<\s*cdbFinalizationValidationBeginTimestamp[\s\S]*?"
+            r"cdbFinalizationValidationBeginTimestamp\s*<\s*runnerCompletionAcceptanceTimestamp",
+        )
+        private_artifact = re.search(
+            r"var privateArtifact = new\b(?P<body>.*?)(?=\n\s*WriteNewCanaryText)",
+            generated,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(private_artifact)
+        self.assertNotIn("managedExitTimeUtc", private_artifact.group("body"))
+        self.assertNotIn("cdbExitTimeUtc", private_artifact.group("body"))
 
     def test_generated_canary_stop_and_census_are_exact_and_fail_closed(self) -> None:
         module = self.live_smoke_module()
