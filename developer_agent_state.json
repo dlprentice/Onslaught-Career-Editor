@@ -17,11 +17,11 @@
       "newReleaseAuthorized": false
     },
     "repository": {
-      "registeredWorktrees": 4,
-      "worktreeOwnership": "main coordinator checkout; player-value task; isolated runtime proof worker; Cursor submodule/local-presentation implementation worktree",
+      "registeredWorktrees": 7,
+      "worktreeOwnership": "main coordinator; Player Value & UX; Rebuild Asset Pipeline; Lore & Provenance; RE Behavior Contracts; Contributor Experience; temporary superseded CMSH design checkout pending asset-spec absorption",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "0997419c4c5159e22722f690520ec6d98d39e0e4 (campaign completion criteria); exact receipt-owned CDB target-exit-event parsing is integrated locally through f74ac902 pending this state closeout push",
+      "lastPushedBeforeCurrentSlice": "a3b3af7c (CMSH profile-versus-identity goal/state correction); main and origin/main divergence 0 0",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
