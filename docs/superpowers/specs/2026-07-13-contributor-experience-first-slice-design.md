@@ -157,7 +157,8 @@ inventory rather than maintain another handwritten list.
 
 Align the three GitHub templates with the current lane taxonomy and the public
 handoff contract. This removes a live mismatch, has a small write set, does not
-compete with integration-owned root docs, and has a one-commit rollback.
+compete with integration-owned root docs, and gives the template implementation
+a one-commit rollback.
 
 ### B. Rewrite Shared Front Doors First
 
@@ -176,8 +177,9 @@ the cost of evidence and reproducibility.
 
 The pull-request template will:
 
-- present the current lane choices: WinUI, AppCore/CLI, RE-informed rebuild,
-  patch/mod safety, runtime tooling, docs, RE/Lore, and public/release boundary;
+- present the current lane choices: WinUI app, AppCore / CLI, RE-informed
+  rebuild, Patch / mod safety, Runtime tooling, Docs, RE / Lore docs, and
+  Public/release boundary;
 - ask for exact validation commands and results;
 - ask separately for relevant validation intentionally skipped;
 - preserve the existing payload, copied-target, evidence-class, and no-hosted-
@@ -202,8 +204,10 @@ npm run test:md-links:public-core
 ```
 
 A focused PowerShell assertion will also confirm that all three templates
-contain the intended lane and boundary terms. Whole-tree hygiene, public
-allowlist, product builds, native WinUI/Godot, game, debugger, Ghidra, and
+contain those exact eight lane strings and their required validation, payload,
+mutation, sensitive-reporting, and private/public boundary terms. Whole-tree
+hygiene, public allowlist, product builds, native WinUI/Godot, game, debugger,
+Ghidra, and
 release gates are intentionally skipped because the slice changes only public
 Markdown workflow templates and this design document.
 
@@ -213,12 +217,14 @@ read-only and do not own acceptance.
 
 ## Preservation And Rollback
 
-No historical or generated file is removed. The preimage is the current
-`82bbc2c0` version of the three templates. Rollback is a revert of the bounded
-template commit and removal or archival of this design artifact if the
-information-architecture decision is rejected. No state migration, generated
-index regeneration, package mutation, game/runtime action, or release action
-is involved.
+No historical or generated file is removed. The preimage is the `82bbc2c0`
+version of the three templates. Roll back the implementation by reverting its
+single bounded template commit; after acceptance, retain this audit/design as
+the record of the investigated alternatives and rejected change. If the
+audit/design itself is separately rejected, revert its dedicated `d0e420d8`
+commit as a second, explicit decision. No state migration, generated index
+regeneration, package mutation, game/runtime action, or release action is
+involved.
 
 ## Follow-Up Order
 
