@@ -1,5 +1,9 @@
 # Original Binary Online Multiplayer Feasibility
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** `0x0042e4d0` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Deployment shape: near-term public UX should use a companion/launcher model. WinUI prepares an app-owned safe copied game folder, applies selected byte/config/resource changes to that copy, writes a manifest, launches the copied executable, and owns repair/restore/update flow. First-generation online multiplayer should assume WinUI or a packaged helper remains active during sessions for session discovery, invitation handling, identity pins, authentication, relay/host authority, input delivery, process cleanup, and rollback. A later mega patch or in-game menu can make proven features feel more native, but a static one-time byte patch is not the realistic first deployment target for matchmaking/netplay.
 
 Companion target model: the user-facing aspiration is that the host runs a safe copied BEA session while a second player joins from a separate safe copy instead of seeing the host's split-screen view. Current WinUI copy presents that as `Future design sketch; Host/Join unavailable`; it is not an enabled Host/Join flow and it is blocked until distinct endpoint command-source proof and source-bound copied-runtime causality are accepted.

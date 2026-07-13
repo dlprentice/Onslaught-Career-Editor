@@ -1,5 +1,9 @@
 # BattleEngineJetPart.cpp Function Mappings
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** 6 confirmed-apply records referenced in this document. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 > Functions from `references/Onslaught/BattleEngineJetPart.cpp` mapped to `BEA.exe`.
 
 > **Queue status (2026-06-01):** Ghidra export-contract closure **6246/6246** (Wave1056: every current function object commented with clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.

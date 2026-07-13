@@ -1,4 +1,9 @@
 # Platform.cpp Functions
+
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** `0x004d2580` comment correction; `0x00512630` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 > **Queue status (2026-05-26):** Ghidra export-contract closure **6113/6113** (Wave900: every function commented; clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
 
 Platform abstraction layer for cross-platform functionality. In the PC port, most platform-specific code is in `PCPlatform.cpp`, while `Platform.cpp` contains generic platform abstraction code.

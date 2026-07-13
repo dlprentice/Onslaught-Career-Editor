@@ -1,5 +1,9 @@
 # Local Multiplayer Static/Runtime Contract
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** `0x0042e4d0` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Current deployment boundary: offline copied-game mods can be prepared and launched as a safe copied folder, but first-generation online multiplayer remains a companion/launcher/helper flow. The helper side is expected to own session identity, invitation/auth, relay/host authority, input delivery, process cleanup, and rollback until a later native-feeling mega patch or in-game surface is proven.
 
 Second-host runtime-host-kind gate: future live command-source proof must carry redacted runtime-host-kind evidence in host/client identity. VM-labeled proof requires client `vm-guest`; physical second-host proof rejects client `vm-guest`; WSL, container, and unknown runtime kinds are rejected. This is no-BEA/no-CDB proof-gate hardening only.

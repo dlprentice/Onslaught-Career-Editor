@@ -74,9 +74,9 @@ ALLOW_EXACT = {
 }
 
 ALLOW_EXACT_SHA256 = {
-    "lore-book/reverse-engineering/binary-analysis/function_mutation_attempt_log.jsonl": "facd370cb4ea5f283781f9f30280c1fadcf86cf01f74a61832ed14742a00778a",
+    "lore-book/reverse-engineering/binary-analysis/function_mutation_attempt_log.jsonl": "33de0b10ef96271fc895c066d2aa764a0ca28e87f99b3be29fada5e1b4c67b3d",
     "references/AYAResourceExtractor/BoxWithTextures.fbx": "37526ffde1d48016fa8a2a05c5dfeb3cd0a30a8ab402ccce60a7f44addf8eed2",
-    "reverse-engineering/binary-analysis/function_mutation_attempt_log.jsonl": "facd370cb4ea5f283781f9f30280c1fadcf86cf01f74a61832ed14742a00778a",
+    "reverse-engineering/binary-analysis/function_mutation_attempt_log.jsonl": "33de0b10ef96271fc895c066d2aa764a0ca28e87f99b3be29fada5e1b4c67b3d",
     "tests_shared/fixtures/gold_career_save.bin": "0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb",
 }
 

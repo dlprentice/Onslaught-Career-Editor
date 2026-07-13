@@ -1,7 +1,15 @@
 # GhydraMCP Runbook (BEA.exe)
 
 > Practical operating guide for this repo's Ghidra workflow, with historical MCP notes.
-> Last updated: 2026-07-12
+> Last updated: 2026-07-13
+
+Current campaign closeout: the
+[2026-07-13 full re-audit recovery and revalidation](ghidra-full-reaudit-closeout-2026-07-13.md)
+verified both trusted endpoints and all ten full-sized intermediates through a
+recursive copy/hash/read-only-open gate. A later exclusive lease independently
+re-reviewed all `92` proposed correction addresses, applied `91` confirmed
+rows, rejected one manifest error, performed exact readback, and verified new
+complete pre/post mutation backups.
 
 ## Active Environment (Authoritative)
 
@@ -29,6 +37,78 @@ The active non-interactive lane is Ghidra headless CLI through the repo wrappers
 1. Set `GHIDRA_HOME` when the default does not match the workstation.
 2. Run `tools/run_ghidra_headless_postscript.sh` or `tools/run_ghidra_batch_rename_headless.sh`.
 3. Keep the target Ghidra project closed in the GUI before headless runs.
+
+## Verified Project Backups
+
+A verified backup is the complete `<project>.gpr` marker plus the recursive
+`<project>.rep` store. A directory name, top-level copy, byte total, or
+zero-length `.gpr` by itself is not a backup proof. Keep the source project
+closed while copying.
+
+Use the tracked standard-library tool against explicit local/ignored roots:
+
+```powershell
+py -3 tools\ghidra_project_backup.py copy <closed-project-root> <new-backup-root> --project-name BEA
+py -3 tools\ghidra_project_backup.py verify <new-backup-root> `
+  --scratch-root <ignored-scratch-root> `
+  --receipt <ignored-receipt.json> `
+  --project-name BEA `
+  --program BEA.exe `
+  --program-md5 <expected-import-md5> `
+  --analyze-headless <analyzeHeadless.bat>
+```
+
+`copy` refuses an existing destination, rejects symlink/reparse traversal,
+hashes the source before and after copying, recursively copies only the project
+pair through a same-parent partial directory, and requires zero missing, extra,
+size-different, or SHA-256-different project files before publication.
+Structural inspection also requires a non-empty `idata/~index.dat` and a
+non-empty recursive `idata/*.db/` payload; arbitrary nonzero files do not turn
+a shell into a project backup.
+`verify` makes another hash-matched scratch copy, opens only that copy with
+`-readOnly -noanalysis`, requires the expected-program sentinel from
+`GhidraProjectOpenProbe.java`; its required `--program-md5` binds the open to
+Ghidra's imported-executable MD5 rather than the program name alone. It
+then re-hashes the copy and source, writes the detailed receipt to a new
+ignored-evidence path without overwriting an earlier receipt, and removes only
+its exact tool-created scratch copy after success or failure unless
+`--keep-probe-copy` was explicit. Embedded backup manifests omit source,
+destination, and staging roots.
+
+Source, destination, scratch, inspection-output, and verification-receipt paths
+are checked before resolution for symlink/reparse ancestry and must be mutually
+safe: copy and scratch roots are disjoint from the source, and receipts cannot
+be written inside the source or scratch tree. The default Ghidra open probe
+fails closed after `300` seconds rather than waiting without a bound.
+
+For mutation rollback, stop at the first mismatch and preserve the failed pair
+and receipt. The exclusive mutation baton must name a verified pre-mutation
+endpoint. Restore only while holding that lease and with all project users
+closed, preserve the failed pair first, then re-run complete-store hashes,
+disposable read-only open, and restart read-back before resuming. Duplicate
+correction addresses are an apply-preflight failure unless a manifest explicitly
+marks a superseding record.
+
+Do not treat a rendered signature string as blanket prototype authority.
+Rendering-only corrections use scoped name or parameter-label operations. A
+structured prototype correction requires an explicitly leased dry run with an
+expected calling convention/type/storage/purge key and exact prototype-key
+read-back before the batch may continue.
+
+Do not probe an incomplete shell directly. Ghidra may materialize owner-only
+project scaffolding such as `project.prp` even when `-readOnly` is set and no
+program can be opened. Structural validation must pass before Ghidra starts,
+and retained backups are verified through a disposable copy rather than opened
+in place.
+
+Focused offline tests:
+
+```powershell
+py -3 tools\ghidra_project_backup_test.py
+py -3 tools\ghidra_full_reaudit_compare_test.py
+py -3 tools\ghidra_full_reaudit_review_ledger_test.py
+py -3 tools\ghidra_full_reaudit_conflict_review_test.py
+```
 
 ## Historical MCP Access Modes
 
@@ -120,7 +200,13 @@ For each edit (rename/signature/comment/type):
 2. Read back via `/functions/<addr>` or `/data?addr=<addr>&limit=1`.
 3. If read-back is good, enforce a 5-second inter-command delay (`sleep 5`) before the next mutation command.
 4. For owner-correction batches (`<Class>__Unk_*`), filter out non-owner/system caller labels even if singular (`entry`, CRT/stdio wrappers, `_longjmp`, `FatalError`, empty owner, parser artefacts). Promote only class/subsystem owners backed by evidence.
-5. Log every touched address in `function_mutation_ledger.jsonl` and `function_mutation_attempt_log.jsonl` (success/failure + transport + operation details).
+5. For MCP/manual edits, log every touched address in
+   `function_mutation_ledger.jsonl` and `function_mutation_attempt_log.jsonl`
+   (success/failure + transport + operation details). A dedicated reviewed
+   headless batch may instead use its own tracked decision/plan schema plus
+   ignored exact execution/read-back logs and verified backup receipts, but
+   that replacement contract must be named before mutation and summarized in a
+   compact tracked closeout.
 6. If the active mutation baton supplies a tracking-state artifact, update it in
    the same work window. Do not invent an ad-hoc tracked state path.
 7. Mirror status in `MCP-MUTATION-BACKLOG.md` pending/completed sections.
@@ -135,13 +221,26 @@ Wave sizing rule (this workstation):
 5. Save/checkpoint opportunistically (for example after risky operations or long runs), then confirm `saved`.
 6. If timeout/deadlock/mismatch occurs, verify survival read-back first, then continue on the healthiest path (HTTP if available) or recover/restart and resume from the first unverified address.
 
-Tracked mutation records (mandatory):
+Tracked mutation records for MCP/manual batches (mandatory for those paths):
 
 1. `function_mutation_ledger.jsonl`: canonical per-address task ledger (pending/completed mutation intent).
 2. `function_mutation_attempt_log.jsonl`: per-attempt execution log (transport + operation + read-back result).
 
 An additional tracking-state file is campaign-local/conditional and exists only
 when the active mutation baton defines its schema and owner.
+
+The 2026-07-13 reviewed-correction headless batch used the dedicated tracked
+`ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and
+`ghidra-reviewed-correction-plan-2026-07-13.json` records. The exact TSV apply
+plan was bound to SHA-256
+`a2a5f4210f060d1ce1ecc8f7d11ef041954b7c6951860b3026a32dd857bf2148`;
+raw dry-run/apply/read-back logs and backup receipts remain in the ignored
+local evidence overlay. Its compact public-safe outcome is in
+`ghidra-full-reaudit-closeout-2026-07-13.md`. Those dedicated artifacts replace
+per-field legacy MCP-ledger rows as the batch authority. Compact truthful
+supersession and batch-apply entries are also appended to both legacy ledgers so
+address/history consumers see the current closure; do not fabricate additional
+retroactive rows beyond the preserved evidence.
 
 Recommended verification snippets:
 

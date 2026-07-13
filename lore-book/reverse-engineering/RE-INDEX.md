@@ -1,5 +1,15 @@
-Current RE front door (2026-07-12):
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** 15 confirmed-apply records referenced in this document; 1 rejected-manifest-error record referenced in this document. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
 
+Current RE front door (2026-07-13):
+
+- [Ghidra full re-audit recovery and revalidation closeout](binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md)
+  verifies the two trusted `6,411`-address snapshots, independently reviews
+  Cursor's `459` metadata changes, then independently re-reviews all `92`
+  unique proposed correction addresses against live bodies. It applies `91`,
+  rejects the false `0x004dac90` ABI claim, verifies exact readback and complete
+  pre/post backups, and preserves the static/runtime boundary.
 - [Pinned reference-submodule audit](source-code/reference-submodule-audit-2026-07-12.md)
   separates Stuart source and AYA exporter provenance, buildability, format
   support, tests, and licensing gaps.

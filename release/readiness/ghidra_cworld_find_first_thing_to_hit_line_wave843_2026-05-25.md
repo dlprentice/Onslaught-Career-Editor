@@ -1,5 +1,9 @@
 # Ghidra CWorld FindFirstThingToHitLine Wave843 Readiness Note
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** Historical record; `0x004081c0` → `CBattleEngine__Move` (was `CMonitor__Process`); `0x00507ab0` comment correction; `0x0050b9c0` signature/comment correction. The original text below remains provenance rather than current semantic authority. It is superseded only where confirmed. Use the [closeout](../../reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Status: complete static read-back evidence
 Date: 2026-05-25
 Scope: `cworld-find-first-thing-to-hit-line-wave843`

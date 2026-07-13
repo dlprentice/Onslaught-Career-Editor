@@ -307,11 +307,15 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   follow-ups: stale BattleEngine probes/mutators can reapply withdrawn
   `CMonitor` ownership, and AYA export preflight omits `Fbx.dll` plus the FBX
   template.
-- A separate user-owned Codex task owns the Ghidra full-reaudit absorption,
-  recovery, retention, correction review, and targeted revalidation in its own
-  registered worktree. Its findings remain lane-owned and provisional until a
-  reviewed handoff is integrated here. This coordinator does not mutate the
-  live Ghidra project or duplicate that closeout.
+- The dedicated Ghidra full-reaudit closeout is integrated. It independently
+  recovered and reviewed the deleted Cursor campaign boundary, verified the
+  stable 6,411-function inventory and 459-address endpoint delta, reviewed 92
+  unique proposed corrections, applied and exactly read back 91 confirmed rows,
+  and rejected the erroneous `0x004dac90` manifest row rather than forcing it.
+  The live project and complete pre/post stores are verified; the incomplete
+  historical ledger remains explicitly incomplete. Static metadata quality does
+  not prove runtime behavior or rebuild parity. `0x004dac90` remains bounded
+  metadata debt for a separate review and mutation lease.
 - Normal and adversarial review found and closed stale active-index, deep-link
   historical-label, include-parser/count, and current-roadmap contradictions.
   The corrected include inventory is 254 unique quoted targets with 202 absent.
@@ -348,11 +352,11 @@ from retail are inspectable.
   its 721-selected/726-materialized plain candidate passed the standalone test
   suite, payload/inventory, 463-file/138-link Markdown, 74-package notices, and
   718-file hygiene/line-ending gates.
-- Git reports three registered worktrees: this `main` checkout, the dedicated
-  user-owned Codex Ghidra full-reaudit closeout task, and the completed Cursor
-  submodule/local-retail-presentation branch awaiting reviewed integration. Completed Task 2,
-  validation, and agent-guidance worktrees were removed after integration and
-  preservation checks.
+- After the Ghidra closeout worktree is retired, Git has four active worktrees:
+  this `main` checkout, the player-value task, the bounded runtime-harness
+  correction worker, and the Cursor submodule/local-presentation branch under
+  final hardening. Completed Task 2, validation, agent-guidance, and Ghidra
+  worktrees were removed after integration and preservation checks.
   Seven earlier empty Codex Desktop worktree shells were removed on 2026-07-11.
 - Sixty-one historical `campaign/*` and `codex/*` branch tips were preserved
   in a verified local Git bundle before branch cleanup. Twenty-four otherwise
@@ -509,8 +513,8 @@ claim against an already malicious process running as the same Windows user.
 2. Review, harden, and integrate the completed Cursor submodule/local-retail-
    presentation branch without weakening local-payload or synthetic-smoke
    boundaries.
-3. Integrate the reviewed Ghidra closeout commits, reconcile current truth, and
-   retire its task/worktree only after ignored evidence absorption is accepted.
+3. Perform the separate bounded review needed to correct the remaining
+   `0x004dac90` live metadata debt without reviving the rejected manifest row.
 4. Retire or fail-close active BattleEngine tools that can reapply withdrawn
    ownership, then harden AYA export dependency/template preflight.
 5. Run the deep Lore editorial/provenance pass and generated contributor

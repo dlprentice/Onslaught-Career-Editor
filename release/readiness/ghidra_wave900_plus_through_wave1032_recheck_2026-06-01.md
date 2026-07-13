@@ -1,5 +1,9 @@
 # Ghidra Wave900+ Through Wave1032 Recheck
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** Historical record; `0x004530a0` → `CTweak__dtor_base_thunk_004530a0` (was `CTweak__dtor_unlink_from_static_list_004530a0`). The original text below remains provenance rather than current semantic authority. It is superseded only where confirmed. Use the [closeout](../../reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Status: validation passed; later static closeout supersession verified by Wave1220
 Date: 2026-06-01
 Scope: `wave900-plus-through-wave1032-recheck`

@@ -1,7 +1,7 @@
 # Local Lab Overlay
 
 Status: active
-Last updated: 2026-06-30
+Last updated: 2026-07-13
 
 This public repository is the primary day-to-day working checkout. The repo is
 allowed to contain raw project history and working material such as RE notes,
@@ -133,6 +133,17 @@ original `BEA.exe`, latest verified/golden/final backups, and any proof bundle
 that is current evidence for a tracked claim. If classification is ambiguous,
 leave the material in place and report a retention recommendation instead of
 deleting it.
+
+For a Ghidra project, the backup unit is the `.gpr` marker plus the complete
+recursive `.rep` store. Use `tools/ghidra_project_backup.py` to copy and verify
+the pair through per-file hashes and a disposable read-only program open. A
+zero-byte `.gpr` by itself, top-level directory copy, or plausible byte total
+without the complete recursive `.rep` store is not a recoverable backup. Keep
+verification receipts and exact local paths in an
+ignored overlay. The 2026-07-13 full re-audit retention closeout verified both
+trusted endpoints and all ten full-sized intermediate backups with this model;
+see
+[the public-safe closeout](reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md).
 
 For coordinated automation, storage sentinel, Ghidra/headless, consult, and
 proof-retention posture, see

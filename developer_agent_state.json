@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-13",
   "routingPolicy": "Follow the global Codex multi-agent lane contract. Under current direct user policy, every new or resumed Codex-owned worker uses gpt-5.6-sol at medium effort by default; harder work may raise Sol effort, and Terra/Luna fallback or lower effort requires a newer direct user instruction.",
-  "currentFocus": "Resolve Retry 11's exact CDB/target exit-status contract, integrate the hardened local-retail presentation branch, then absorb the completed Ghidra closeout.",
+  "currentFocus": "Resolve Retry 11's exact CDB/target exit-status contract and integrate the hardened local-presentation branch; the Ghidra closeout is absorbed.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -17,8 +17,8 @@
       "newReleaseAuthorized": false
     },
     "repository": {
-      "registeredWorktrees": 5,
-      "worktreeOwnership": "main coordinator checkout; dedicated Ghidra closeout and player-value tasks; isolated runtime proof and Cursor submodule/local-retail-presentation implementation worktrees",
+      "registeredWorktrees": 4,
+      "worktreeOwnership": "main coordinator checkout; player-value task; isolated runtime proof worker; Cursor submodule/local-presentation implementation worktree",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
       "lastPushedBeforeCurrentSlice": "0997419c4c5159e22722f690520ec6d98d39e0e4 (campaign completion criteria); exact receipt-owned CDB target-exit-event parsing is integrated locally through f74ac902 pending this state closeout push",
@@ -114,9 +114,9 @@
       "acceptance": "Inventory/profile, 73 runtime-helper, 274 active documented-command, 62 current-link, release-profile, curated-manifest, JSON, and diff checks pass; generated accounting is R0=6291, R2=0, R3=3, R4=13184."
     },
     "liveGhidraSemanticLane": {
-      "ownership": "The dedicated Codex Ghidra closeout task retains the exclusive live-Ghidra mutation and evidence lease until its final reviewed commits are integrated; coordinator lanes do not mutate the project or private backups.",
-      "reportedProgress": "The lane reports full 6,411-function coverage absorption, verified baseline/final stores, review of all 92 proposed post-Cursor corrections, 91 applied with exact readback, and rejection of the erroneous 0x004dac90 row. Its base closeout commit is c33f2f1e; the final correction/readback follow-up remains lane-owned until pushed and reviewed integration completes.",
-      "evidenceBoundary": "The recovered Cursor ledger remains incomplete and no missing verdict is invented. Integrate only the task's verified backups, exact mutation/readback evidence, reviewed tracked corrections, and final commits; static metadata quality does not prove runtime behavior or rebuild parity."
+      "ownership": "The dedicated Ghidra closeout commits c33f2f1e and a96a1a5f are integrated; its exclusive mutation lease is released and the task/worktree may be retired after push verification.",
+      "reportedProgress": "The integrated closeout verifies a stable 6,411-function inventory and 459-address endpoint delta, independently reviews 92 unique proposed corrections, applies and exactly reads back 91 confirmed rows, rejects the erroneous 0x004dac90 manifest row, applies the separately leased 0x0050b9c0 structured prototype correction, and verifies complete pre/post project backups.",
+      "evidenceBoundary": "The recovered Cursor ledger remains incomplete and no missing verdict is invented. Static metadata quality does not prove runtime behavior or rebuild parity. The stale 0x004dac90 live metadata requires a separate bounded review and mutation lease rather than reuse of the rejected manifest row."
     },
     "boundaries": [
       "No installed-game or original BEA.exe mutation.",
@@ -131,9 +131,9 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Integrate and review the exact receipt-owned target exit-event correction, then create fresh ignored Retry-11 authority/lease controls and proof storage; publish only if the complete fixed-role matrix validates.",
+    "Integrate and review the exact Retry-11 CDB/target exit-status relationship, then create wholly fresh Retry-12 controls and publish only if the complete fixed-role matrix validates.",
     "Independently harden and integrate the completed Cursor submodule/local-retail-presentation branch while preserving ignored payloads, synthetic smoke, bounded paths, and non-parity wording.",
-    "Integrate the Ghidra closeout only after its final correction/readback commits and evidence handoff are complete, then retire its task and worktree.",
+    "Retire the integrated Ghidra closeout task/worktree, preserving its ignored recovery overlay and transcript evidence until explicit retention acceptance.",
     "Retire stale BattleEngine ownership probes/mutators and add Fbx.dll plus FBX-template fail-fast preflight before the next Ghidra/export mutation slice.",
     "After runtime evidence is accepted, freeze one measured movement/morph/camera contract and implement it in deterministic Core plus the Godot adapter for the authentic BYO-asset vertical slice."
   ]
