@@ -16,11 +16,10 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Use the accepted fail-closed CMSH static-preview implementation, including its
-bounded REFR-only multipart extension, to assemble and render the six strongest
-BattleEngine-name candidates, then let a human identify the Aquila before any
-asset identity or Godot role claim. Do not install or revive the legacy x86
-extractor toolchain.
+Use the accepted six-candidate anonymous contact sheet to obtain a human Aquila
+selection, then verify only that ignored local role through the guarded Godot
+presentation bridge before any stronger asset identity claim. Do not install or
+revive the legacy x86 extractor toolchain.
 
 1. run the integrated REFR-only profile against the six ignored local
    `be_trans`, `be1`, and `be2` leads and emit one fresh guarded OBJ session;
@@ -47,9 +46,11 @@ extractor toolchain.
   post-expansion caps. Its focused acceptance passes 28 Python tests; the
   original v0 golden remains unchanged. A guarded ignored session already
   produced 162 simple-profile OBJ candidates and 18 contact sheets. Metadata
-  then narrowed the next pass to six multipart BattleEngine-name records, but
-  none has been rendered or identified as Aquila and no selected-role Godot
-  preview has run.
+  then narrowed the next pass to six multipart BattleEngine-name records. The
+  exact-empty REFR wrapper correction is integrated at `b2aca609`; one ignored
+  run assembled all six into validated OBJs (40,530 vertices and 35,386 faces)
+  and produced an accepted 1536x768 anonymous three-view contact sheet. Human
+  Aquila selection and the selected-role Godot preview remain pending.
 - Reference inventory is drafted in
   `reverse-engineering/source-code/reference-submodule-audit-2026-07-12.md`:
   pinned fork/upstream provenance, current tracked counts, source completeness,
