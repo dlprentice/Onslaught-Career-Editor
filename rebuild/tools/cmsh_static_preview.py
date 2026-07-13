@@ -291,7 +291,7 @@ def _validate_reference_source_pm_vb(payload: memoryview, origin: int) -> None:
     if cmvb.payload[264] != 0:
         raise CmshProfileError("unsupported bones/reference graph", cmvb.offset, "REFR populated source PMVB")
     stride, fvf, topology = struct.unpack_from("<III", cmvb.payload, 276)
-    if stride != 36 or fvf != 0x152 or topology != 4:
+    if (stride, fvf, topology) not in {(36, 0x152, 4), (0, 0, 0)}:
         raise CmshProfileError("unsupported profile", cmvb.offset, "REFR source stride/FVF/topology")
     reader.require_end()
 
