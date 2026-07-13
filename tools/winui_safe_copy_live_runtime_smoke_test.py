@@ -544,13 +544,23 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn("cdbExitCode == -1", predicate_body)
         self.assertIn("targetExitCode == uint.MaxValue", predicate_body)
         self.assertIn("managedForceRequested && managedExitObserved", predicate_body)
-        self.assertIn("CdbExitCodeMatchesCleanupEvidence", body)
-        self.assertIn("cdbExitCodeAccepted && finalizedLogAccepted", body)
+        self.assertIn("terminalRegionDiagnosticClean", predicate_body)
+        evaluator = re.search(
+            r"static \(bool Graceful, string Status, bool CdbExitCodeAccepted, bool CdbExitCodeMatchedForcedTargetTermination\) EvaluateFinalizedCdbCleanupEvidence\b(?P<body>.*?)(?=\nstatic\s)",
+            generated,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(evaluator)
+        evaluator_body = evaluator.group("body")
+        self.assertIn("CdbExitCodeMatchesCleanupEvidence", evaluator_body)
+        self.assertIn("cdbExitCodeAccepted && finalizedLogAccepted", evaluator_body)
+        self.assertIn("EvaluateFinalizedCdbCleanupEvidence", body)
         self.assertIn("cdbExitCode = observedCdbExitCode", body)
         self.assertIn("targetExitCode", body)
-        self.assertIn('status = graceful ? "exited-after-managed-stop"', body)
-        self.assertIn('"cdb-exit-code-unbound"', body)
-        self.assertIn('"forced-stopped-after-timeout"', body)
+        self.assertIn("terminalRegionDiagnosticClean", body)
+        self.assertIn('status = graceful ? "exited-after-managed-stop"', evaluator_body)
+        self.assertIn('"cdb-exit-code-unbound"', evaluator_body)
+        self.assertIn('"forced-stopped-after-timeout"', evaluator_body)
         self.assertLess(body.index("WaitForExit"), body.index("Kill(entireProcessTree: false)"))
         self.assertNotIn("detached-exited", body)
         self.assertNotIn("catch (ArgumentException)\n    {\n        exited = true;", body)

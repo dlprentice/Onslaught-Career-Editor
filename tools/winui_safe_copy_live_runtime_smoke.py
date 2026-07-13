@@ -1303,12 +1303,14 @@ static bool TryReadFinalizedCdbExitEvidence(
     out bool cleanupMarkerObserved,
     out bool gracefulQuitObserved,
     out bool targetExitEventObserved,
-    out uint targetExitCode)
+    out uint targetExitCode,
+    out bool terminalRegionDiagnosticClean)
 {
     cleanupMarkerObserved = false;
     gracefulQuitObserved = false;
     targetExitEventObserved = false;
     targetExitCode = 0;
+    terminalRegionDiagnosticClean = false;
     if (expectedTargetProcessId <= 0 || logLengthAtReadiness < 0 ||
         !retainedLogStream.CanRead || !retainedLogStream.CanSeek)
         return false;
@@ -1357,14 +1359,25 @@ static bool TryReadFinalizedCdbExitEvidence(
     int lineIndex = 0;
     bool insideSection = false;
     bool malformedProofLine = false;
+    bool terminalRegionStarted = false;
+    bool terminalRegionEnded = false;
     var sectionLines = new List<string>();
+    var terminalRegionLines = new List<string>();
     foreach (string line in transcript.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None))
     {
         string trimmed = line.Trim();
         bool lastEventLine = trimmed.StartsWith("Last event:", StringComparison.Ordinal);
+        bool beginMarkerLine = string.Equals(trimmed, beginMarker, StringComparison.Ordinal);
+        bool quitMarkerLine = string.Equals(trimmed, quitMarker, StringComparison.Ordinal);
+        if (beginMarkerLine && !terminalRegionStarted)
+            terminalRegionStarted = true;
+        if (terminalRegionStarted && !terminalRegionEnded && trimmed.Length > 0)
+            terminalRegionLines.Add(trimmed);
+        if (quitMarkerLine && terminalRegionStarted)
+            terminalRegionEnded = true;
         if (lastEventLine)
             globalLastEventCount++;
-        if (string.Equals(trimmed, beginMarker, StringComparison.Ordinal))
+        if (beginMarkerLine)
         {
             beginCount++;
             beginIndex = lineIndex;
@@ -1407,10 +1420,25 @@ static bool TryReadFinalizedCdbExitEvidence(
     bool exactOrder = beginIndex < endIndex && endIndex < cleanupIndex && cleanupIndex < quitIndex;
     cleanupMarkerObserved = cleanupCount == 1;
     gracefulQuitObserved = quitCount == 1;
+    bool debuggerTimeMatches = sectionLines.Count == 2 &&
+        System.Text.RegularExpressions.Regex.IsMatch(
+            sectionLines[1],
+            @"\Adebugger time: (?:Mon|Tue|Wed|Thu|Fri|Sat|Sun) (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) {1,2}(?:[1-9]|[12][0-9]|3[01]) (?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]\.[0-9]{3} [0-9]{4} \(UTC [+-] (?:[0-9]|1[0-4]):[0-5][0-9]\)\z",
+            System.Text.RegularExpressions.RegexOptions.CultureInvariant |
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
     if (!exactCardinality || !exactOrder || insideSection || malformedProofLine ||
         globalLastEventCount != 1 || sectionLines.Count != 2 ||
-        !sectionLines[1].StartsWith("debugger time: ", StringComparison.OrdinalIgnoreCase))
+        !debuggerTimeMatches)
         return false;
+
+    terminalRegionDiagnosticClean = terminalRegionStarted && terminalRegionEnded &&
+        terminalRegionLines.Count == 6 &&
+        string.Equals(terminalRegionLines[0], beginMarker, StringComparison.Ordinal) &&
+        string.Equals(terminalRegionLines[1], sectionLines[0], StringComparison.Ordinal) &&
+        string.Equals(terminalRegionLines[2], sectionLines[1], StringComparison.Ordinal) &&
+        string.Equals(terminalRegionLines[3], endMarker, StringComparison.Ordinal) &&
+        string.Equals(terminalRegionLines[4], cleanupMarker, StringComparison.Ordinal) &&
+        string.Equals(terminalRegionLines[5], quitMarker, StringComparison.Ordinal);
 
     var match = System.Text.RegularExpressions.Regex.Match(
         sectionLines[0],
@@ -1449,11 +1477,52 @@ static bool CdbExitCodeMatchesCleanupEvidence(
     int cdbExitCode,
     uint targetExitCode,
     bool managedForceRequested,
-    bool managedExitObserved)
+    bool managedExitObserved,
+    bool terminalRegionDiagnosticClean)
 {
     return cdbExitCode == 0 ||
         (cdbExitCode == -1 && targetExitCode == uint.MaxValue &&
-         managedForceRequested && managedExitObserved);
+         managedForceRequested && managedExitObserved && terminalRegionDiagnosticClean);
+}
+
+static (bool Graceful, string Status, bool CdbExitCodeAccepted, bool CdbExitCodeMatchedForcedTargetTermination) EvaluateFinalizedCdbCleanupEvidence(
+    bool cdbExited,
+    bool cdbForced,
+    bool preStopBound,
+    bool processWasRetained,
+    bool processIdentityRevalidated,
+    bool managedProcessStopped,
+    bool finalizedLogAccepted,
+    bool targetExitEventObserved,
+    bool cleanupMarkerObserved,
+    bool gracefulQuitObserved,
+    int? cdbExitCode,
+    uint targetExitCode,
+    bool managedForceRequested,
+    bool managedExitObserved,
+    bool terminalRegionDiagnosticClean)
+{
+    bool cdbExitedNormally = cdbExited && cdbExitCode == 0;
+    bool cdbExitCodeAccepted = cdbExited && cdbExitCode.HasValue &&
+        CdbExitCodeMatchesCleanupEvidence(
+            cdbExitCode.Value,
+            targetExitCode,
+            managedForceRequested,
+            managedExitObserved,
+            terminalRegionDiagnosticClean);
+    bool cdbExitCodeMatchedForcedTargetTermination = cdbExitCodeAccepted && !cdbExitedNormally;
+    bool graceful = preStopBound && processWasRetained && processIdentityRevalidated &&
+        managedProcessStopped && !cdbForced && cdbExitCodeAccepted && finalizedLogAccepted &&
+        targetExitEventObserved && cleanupMarkerObserved && gracefulQuitObserved;
+    string status = graceful ? "exited-after-managed-stop" :
+        cdbForced && cdbExited ? "forced-stopped-after-timeout" :
+        cdbForced ? "forced-stop-failed" :
+        !preStopBound ? "exited-without-pre-stop-binding" :
+        !managedProcessStopped ? "exited-after-unbound-managed-stop" :
+        !cdbExitCodeAccepted ? "cdb-exit-code-unbound" :
+        !targetExitEventObserved ? "exited-without-target-exit-event" :
+        "exited-without-queued-quit";
+    return (graceful, status, cdbExitCodeAccepted, cdbExitCodeMatchedForcedTargetTermination);
 }
 
 static JsonElement? TryParseLastJsonPayload(string stdout)
@@ -2293,28 +2362,21 @@ static JsonElement FinalizeExactCdbObserverAfterManagedStop(
     bool gracefulQuitObserved = false;
     bool targetExitEventObserved = false;
     uint targetExitCode = 0;
+    bool terminalRegionDiagnosticClean = false;
     bool cdbExitedNormally = exited && observedCdbExitCode == 0;
     bool finalizedLogAccepted = !forced && exited && managedProcessStopped && stopResult is not null &&
         boundCdbLogStream is not null &&
-        TryReadFinalizedCdbExitEvidence(boundCdbLogStream, cdbLogLengthAtReadiness, stopResult.ProcessId, out cleanupMarkerObserved, out gracefulQuitObserved, out targetExitEventObserved, out targetExitCode);
-    bool cdbExitCodeAccepted = exited && observedCdbExitCode.HasValue && stopResult is not null &&
-        CdbExitCodeMatchesCleanupEvidence(
-            observedCdbExitCode.Value,
-            targetExitCode,
-            stopResult.ForceRequested,
-            stopResult.ExitObserved);
-    bool cdbExitCodeMatchedForcedTargetTermination = cdbExitCodeAccepted && !cdbExitedNormally;
-    bool graceful = preStopBound && processWasRetained && processIdentityRevalidated &&
-        managedProcessStopped && cdbExitCodeAccepted && finalizedLogAccepted && targetExitEventObserved &&
-        cleanupMarkerObserved && gracefulQuitObserved;
-    string status = graceful ? "exited-after-managed-stop" :
-        forced && exited ? "forced-stopped-after-timeout" :
-        forced ? "forced-stop-failed" :
-        !preStopBound ? "exited-without-pre-stop-binding" :
-        !managedProcessStopped ? "exited-after-unbound-managed-stop" :
-        !cdbExitCodeAccepted ? "cdb-exit-code-unbound" :
-        !targetExitEventObserved ? "exited-without-target-exit-event" :
-        "exited-without-queued-quit";
+        TryReadFinalizedCdbExitEvidence(boundCdbLogStream, cdbLogLengthAtReadiness, stopResult.ProcessId, out cleanupMarkerObserved, out gracefulQuitObserved, out targetExitEventObserved, out targetExitCode, out terminalRegionDiagnosticClean);
+    var cleanupDecision = EvaluateFinalizedCdbCleanupEvidence(
+        exited, forced, preStopBound, processWasRetained, processIdentityRevalidated,
+        managedProcessStopped, finalizedLogAccepted, targetExitEventObserved,
+        cleanupMarkerObserved, gracefulQuitObserved, observedCdbExitCode, targetExitCode,
+        stopResult?.ForceRequested == true, stopResult?.ExitObserved == true,
+        terminalRegionDiagnosticClean);
+    bool graceful = cleanupDecision.Graceful;
+    string status = cleanupDecision.Status;
+    bool cdbExitCodeAccepted = cleanupDecision.CdbExitCodeAccepted;
+    bool cdbExitCodeMatchedForcedTargetTermination = cleanupDecision.CdbExitCodeMatchedForcedTargetTermination;
     return JsonPayload(new
     {
         status,
@@ -2324,6 +2386,7 @@ static JsonElement FinalizeExactCdbObserverAfterManagedStop(
         cleanupMarkerObserved,
         targetExitEventObserved,
         targetExitCode,
+        terminalRegionDiagnosticClean,
         cdbExitedNormally,
         cdbExitCodeMatchedForcedTargetTermination,
         cdbExitCodeAccepted,

@@ -36,6 +36,7 @@ class CdbExitEventCleanupTests(unittest.TestCase):
         opener_start = generated.find("static FileStream OpenRetainedCdbLogStream")
         start = generated.find("static bool TryReadFinalizedCdbExitEvidence")
         predicate_start = generated.find("static bool CdbExitCodeMatchesCleanupEvidence")
+        evaluator_start = generated.find("static (bool Graceful, string Status, bool CdbExitCodeAccepted, bool CdbExitCodeMatchedForcedTargetTermination) EvaluateFinalizedCdbCleanupEvidence")
         if opener_start < 0 or start < 0 or predicate_start < 0:
             cls.project = None
             return
@@ -47,6 +48,24 @@ class CdbExitEventCleanupTests(unittest.TestCase):
         opener = generated[opener_start:opener_end]
         method = generated[start:end]
         predicate = generated[predicate_start:predicate_end]
+        evaluator = ""
+        finalize_harness = ""
+        cls.has_finalizer_evaluator = evaluator_start >= 0
+        if cls.has_finalizer_evaluator:
+            evaluator_end = generated.find("\nstatic ", evaluator_start + 1)
+            if evaluator_end < 0:
+                raise AssertionError("could not isolate generated CDB finalizer evaluator")
+            evaluator = generated[evaluator_start:evaluator_end]
+            finalize_harness = (
+                'if (mode.StartsWith("finalize-", StringComparison.Ordinal)) {\n'
+                '  bool forceRequested = mode.Contains("-force", StringComparison.Ordinal);\n'
+                '  bool exitObserved = mode.Contains("-exit", StringComparison.Ordinal);\n'
+                '  bool parsed = TryReadFinalizedCdbExitEvidence(retained, retained.Length, 0x73b4, out bool finalCleanup, out bool finalQuit, out bool finalExitEvent, out uint finalTargetExitCode, out bool finalTerminalRegionClean);\n'
+                '  var decision = EvaluateFinalizedCdbCleanupEvidence(true, false, true, true, true, true, parsed, finalExitEvent, finalCleanup, finalQuit, int.Parse(args[2], CultureInfo.InvariantCulture), finalTargetExitCode, forceRequested, exitObserved, finalTerminalRegionClean);\n'
+                '  Console.WriteLine($"{decision.Graceful}|{decision.Status}|{decision.CdbExitCodeAccepted}|{decision.CdbExitCodeMatchedForcedTargetTermination}|{finalTerminalRegionClean}");\n'
+                '  return decision.Graceful ? 0 : 1;\n'
+                '}\n'
+            )
         harness = cls.root / "parser-harness"
         harness.mkdir()
         (harness / "parser-harness.csproj").write_text(
@@ -63,14 +82,17 @@ class CdbExitEventCleanupTests(unittest.TestCase):
             + method
             + "\n\n"
             + predicate
+            + "\n\n"
+            + evaluator
             + "\n\nif (args.Length != 4) return 2;\n"
             + "string mode = args[0]; string logPath = args[1];\n"
             + "using FileStream retained = OpenRetainedCdbLogStream(logPath);\n"
             + "long readinessLength = long.Parse(args[3], CultureInfo.InvariantCulture);\n"
+            + finalize_harness
             + "if (mode.StartsWith(\"exit-code-\", StringComparison.Ordinal)) {\n"
             + "  bool forceRequested = mode.Contains(\"-force\", StringComparison.Ordinal);\n"
             + "  bool exitObserved = mode.Contains(\"-exit\", StringComparison.Ordinal);\n"
-            + "  bool matched = CdbExitCodeMatchesCleanupEvidence(int.Parse(args[2], CultureInfo.InvariantCulture), checked((uint)readinessLength), forceRequested, exitObserved);\n"
+            + "  bool matched = CdbExitCodeMatchesCleanupEvidence(int.Parse(args[2], CultureInfo.InvariantCulture), checked((uint)readinessLength), forceRequested, exitObserved, true);\n"
             + "  Console.WriteLine(matched); return matched ? 0 : 1;\n"
             + "}\n"
             + "if (readinessLength < 0) readinessLength = retained.Length;\n"
@@ -81,8 +103,8 @@ class CdbExitEventCleanupTests(unittest.TestCase):
             + "  try { File.Move(replacement, logPath, true); replacementBlocked = false; } catch (IOException) { } catch (UnauthorizedAccessException) { }\n"
             + "}\n"
             + "bool accepted = TryReadFinalizedCdbExitEvidence(retained, readinessLength, int.Parse(args[2], CultureInfo.InvariantCulture), "
-            + "out bool cleanup, out bool quit, out bool exitEvent, out uint targetExitCode);\n"
-            + 'Console.WriteLine($"{accepted}|{cleanup}|{quit}|{exitEvent}|{targetExitCode}|{deleteBlocked}|{replacementBlocked}");\n'
+            + "out bool cleanup, out bool quit, out bool exitEvent, out uint targetExitCode, out bool terminalRegionDiagnosticClean);\n"
+            + 'Console.WriteLine($"{accepted}|{cleanup}|{quit}|{exitEvent}|{targetExitCode}|{terminalRegionDiagnosticClean}|{deleteBlocked}|{replacementBlocked}");\n'
             + "return accepted && deleteBlocked && replacementBlocked ? 0 : 1;\n",
             encoding="utf-8",
         )
@@ -150,6 +172,18 @@ class CdbExitEventCleanupTests(unittest.TestCase):
         )
         return result.returncode, result.stdout.strip()
 
+    def finalize(self, text: str, *, cdb_exit_code: int, mode: str) -> tuple[int, str]:
+        self.assertTrue(
+            self.has_finalizer_evaluator,
+            "generated runner is missing executable finalized-cleanup evaluator",
+        )
+        return self.validate(
+            text,
+            mode=mode,
+            pid=cdb_exit_code,
+            readiness_length=-1,
+        )
+
     @staticmethod
     def valid_log() -> str:
         return (
@@ -163,7 +197,7 @@ class CdbExitEventCleanupTests(unittest.TestCase):
 
     def test_accepts_actual_disposable_exit_process_shape(self) -> None:
         self.assertEqual(
-            (0, "True|True|True|True|4294967295|True|True"),
+            (0, "True|True|True|True|4294967295|True|True|True"),
             self.validate(self.valid_log()),
         )
 
@@ -180,7 +214,7 @@ class CdbExitEventCleanupTests(unittest.TestCase):
     def test_retained_stream_blocks_path_delete_and_replacement(self) -> None:
         code, output = self.validate(self.valid_log(), mode="lock")
         self.assertEqual(0, code)
-        self.assertEqual("True|True|True|True|4294967295|True|True", output)
+        self.assertEqual("True|True|True|True|4294967295|True|True|True", output)
 
     def test_rejects_exit_status_wider_than_target_process_status(self) -> None:
         malformed = self.valid_log().replace("code ffffffff", "code 00000000ffffffff")
@@ -205,6 +239,57 @@ class CdbExitEventCleanupTests(unittest.TestCase):
                 mode="exit-code-normal",
                 pid=0,
                 readiness_length=0,
+            ),
+        )
+
+    def test_complete_finalizer_accepts_exact_retry11_terminal_region(self) -> None:
+        self.assertEqual(
+            (0, "True|exited-after-managed-stop|True|True|True"),
+            self.finalize(
+                self.valid_log(),
+                cdb_exit_code=-1,
+                mode="finalize-force-exit",
+            ),
+        )
+
+    def test_complete_finalizer_rejects_retry11_shape_with_unrelated_cdb_error(self) -> None:
+        transcript = self.valid_log().replace(
+            "MORPH_CANARY_CLEANUP_Q",
+            "Unable to continue, system error 5\nMORPH_CANARY_CLEANUP_Q",
+        )
+        self.assertEqual(
+            (1, "False|cdb-exit-code-unbound|False|False|False"),
+            self.finalize(
+                transcript,
+                cdb_exit_code=-1,
+                mode="finalize-force-exit",
+            ),
+        )
+
+    def test_complete_finalizer_rejects_malformed_terminal_region(self) -> None:
+        transcript = self.valid_log().replace(
+            "MORPH_CANARY_LASTEVENT_END",
+            "ambiguous terminal output\nMORPH_CANARY_LASTEVENT_END",
+        )
+        code, output = self.finalize(
+            transcript,
+            cdb_exit_code=-1,
+            mode="finalize-force-exit",
+        )
+        self.assertEqual(1, code)
+        self.assertTrue(output.startswith("False|"), output)
+
+    def test_complete_finalizer_preserves_zero_exit_with_unrelated_terminal_diagnostic(self) -> None:
+        transcript = self.valid_log().replace(
+            "MORPH_CANARY_CLEANUP_Q",
+            "Unable to continue, system error 5\nMORPH_CANARY_CLEANUP_Q",
+        )
+        self.assertEqual(
+            (0, "True|exited-after-managed-stop|True|False|False"),
+            self.finalize(
+                transcript,
+                cdb_exit_code=0,
+                mode="finalize-exit",
             ),
         )
 
@@ -315,6 +400,13 @@ class CdbExitEventCleanupTests(unittest.TestCase):
 
     def test_rejects_malformed_section_payload(self) -> None:
         malformed = self.valid_log().replace("  debugger time:", "unexpected detail:")
+        self.assertEqual(1, self.validate(malformed)[0])
+
+    def test_rejects_debugger_time_with_trailing_diagnostic(self) -> None:
+        malformed = self.valid_log().replace(
+            "2026 (UTC - 4:00)",
+            "2026 (UTC - 4:00) Unable to continue, system error 5",
+        )
         self.assertEqual(1, self.validate(malformed)[0])
 
     def test_rejects_proof_like_marker_line_outside_section(self) -> None:
