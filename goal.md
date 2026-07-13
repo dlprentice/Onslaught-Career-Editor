@@ -323,6 +323,17 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   inferred. Post-merge rebuild, docs, and 19,523-file payload gates pass. One
   initial smoke-runner helper missed its PID record; an immediate isolated
   rerun passed all six cases and supersedes that transient attempt.
+- Windowed & Mods now represents the compatibility base truthfully. The exact
+  `resolution_gate` and `force_windowed` rows remain visible in Lab with stable
+  automation/details IDs, but are checked, disabled, and labeled required and
+  automatically included. Every selection/reset/preset path reasserts them;
+  Clear removes optional mods only; both Create entry points share one pure
+  readiness projection and synchronous busy latch; and click handling rejects
+  invalid selection before confirmation. AppCore injection, catalog rows,
+  bytes, receipts, backups, and installed-game boundaries are unchanged. The
+  final source/build suite passes 1,319 AppCore and 155 UI tests with two
+  expected private-corpus skips; focused preflight and native hands-off proof
+  also pass without creating a copy or launching BEA.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future
