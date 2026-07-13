@@ -125,9 +125,9 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
     private static string DescribePresentation(LocalPresentationLoadStatus status) => status switch
     {
-        { PlayerLoaded: true, TerrainLoaded: true } => "Local retail-derived player + terrain | non-parity",
-        { PlayerLoaded: true } => "Local retail-derived player | synthetic terrain | non-parity",
-        { TerrainLoaded: true } => "Synthetic player | local retail-derived terrain | non-parity",
+        { PlayerLoaded: true, TerrainLoaded: true } => "User-supplied local meshes: player + terrain | non-parity",
+        { PlayerLoaded: true } => "User-supplied local mesh: player | synthetic terrain | non-parity",
+        { TerrainLoaded: true } => "Synthetic player | user-supplied local mesh: terrain | non-parity",
         _ => "Synthetic arena | RE-informed prototype",
     };
 

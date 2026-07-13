@@ -42,6 +42,11 @@ public sealed class LocalPresentationConfig
             LocalAssetManifest? manifest;
             using (var stream = new FileStream(manifestPath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
+                if (stream.Length is <= 0 or > MaxManifestBytes || stream.Length != info.Length)
+                {
+                    error = "manifest.json leased size changed or exceeds its bound.";
+                    return null;
+                }
                 byte[] json = new byte[checked((int)stream.Length)];
                 stream.ReadExactly(json);
                 ReadOnlyMemory<byte> jsonPayload = json.AsMemory();
@@ -53,7 +58,7 @@ public sealed class LocalPresentationConfig
 
             if (manifest is null ||
                 !string.Equals(manifest.SchemaVersion, LocalAssetManifest.CurrentSchema, StringComparison.Ordinal) ||
-                !string.Equals(manifest.PresentationMode, "local-retail-preview", StringComparison.Ordinal) ||
+                !string.Equals(manifest.PresentationMode, "local-user-mesh-preview", StringComparison.Ordinal) ||
                 !manifest.NonParityClaim ||
                 (manifest.Player is null && manifest.Terrain is null)) { error = "manifest.json schema, mode, non-parity marker, or roles are invalid."; return null; }
 
@@ -61,7 +66,8 @@ public sealed class LocalPresentationConfig
             if (!ValidateRole(config, manifest.Player) || !ValidateRole(config, manifest.Terrain)) { error = "A local presentation role has an unsafe path, transform, format, or mesh payload."; return null; }
             return config;
         }
-        catch (Exception exception) when (exception is IOException or InvalidDataException or UnauthorizedAccessException or ArgumentException or JsonException or NotSupportedException)
+        catch (Exception exception) when (exception is IOException or InvalidDataException or UnauthorizedAccessException or ArgumentException or
+            JsonException or NotSupportedException or InvalidOperationException or KeyNotFoundException or FormatException or OverflowException)
         {
             error = exception.Message;
             return null;
@@ -127,9 +133,9 @@ public sealed class LocalPresentationConfig
         RequireObjectWithOnly(root, "schemaVersion", "presentationMode", "nonParityClaim", "player", "terrain");
         return new LocalAssetManifest
         {
-            SchemaVersion = root.GetProperty("schemaVersion").GetString() ?? string.Empty,
-            PresentationMode = root.GetProperty("presentationMode").GetString(),
-            NonParityClaim = root.GetProperty("nonParityClaim").GetBoolean(),
+            SchemaVersion = GetRequiredString(root, "schemaVersion"),
+            PresentationMode = GetRequiredString(root, "presentationMode"),
+            NonParityClaim = GetRequiredBoolean(root, "nonParityClaim"),
             Player = root.TryGetProperty("player", out JsonElement player) ? ParseRole(player) : null,
             Terrain = root.TryGetProperty("terrain", out JsonElement terrain) ? ParseRole(terrain) : null,
         };
@@ -140,11 +146,33 @@ public sealed class LocalPresentationConfig
         RequireObjectWithOnly(role, "mesh", "scale", "yawDegrees", "yOffsetMeters");
         return new LocalMeshRef
         {
-            Mesh = role.GetProperty("mesh").GetString() ?? string.Empty,
-            Scale = role.TryGetProperty("scale", out JsonElement scale) ? scale.GetSingle() : 1f,
-            YawDegrees = role.TryGetProperty("yawDegrees", out JsonElement yaw) ? yaw.GetSingle() : 0f,
-            YOffsetMeters = role.TryGetProperty("yOffsetMeters", out JsonElement offset) ? offset.GetSingle() : 0f,
+            Mesh = GetRequiredString(role, "mesh"),
+            Scale = GetOptionalSingle(role, "scale", 1f),
+            YawDegrees = GetOptionalSingle(role, "yawDegrees", 0f),
+            YOffsetMeters = GetOptionalSingle(role, "yOffsetMeters", 0f),
         };
+    }
+
+    private static string GetRequiredString(JsonElement element, string name)
+    {
+        if (!element.TryGetProperty(name, out JsonElement value) || value.ValueKind != JsonValueKind.String)
+            throw new JsonException($"Manifest property '{name}' must be a string.");
+        return value.GetString() ?? throw new JsonException($"Manifest property '{name}' cannot be null.");
+    }
+
+    private static bool GetRequiredBoolean(JsonElement element, string name)
+    {
+        if (!element.TryGetProperty(name, out JsonElement value) || value.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+            throw new JsonException($"Manifest property '{name}' must be a boolean.");
+        return value.GetBoolean();
+    }
+
+    private static float GetOptionalSingle(JsonElement element, string name, float defaultValue)
+    {
+        if (!element.TryGetProperty(name, out JsonElement value)) return defaultValue;
+        if (value.ValueKind != JsonValueKind.Number || !value.TryGetSingle(out float parsed))
+            throw new JsonException($"Manifest property '{name}' must be a finite representable number.");
+        return parsed;
     }
 
     private static void RequireObjectWithOnly(JsonElement element, params string[] allowed)

@@ -218,11 +218,15 @@ For WinUI patch/mod UX, the preferred user shape is a safe-copy launcher/mod-man
 - Keep simulation truth in the deterministic Core. Render clients consume
   inputs and snapshots; they do not own gameplay state.
 - Use synthetic command tapes and original procedural content for tracked
-  source and ordinary acceptance. Optional user-extracted retail-derived meshes
-  may load only from ignored `local-lab/rebuild-godot/` through the dedicated
-  exact-root local command. They are never committed, redistributed, simulation
-  truth, or parity evidence. Do not import retail binaries, decompiler output,
-  or mechanically translated reference-source code.
+  source and ordinary acceptance. Optional user-supplied local meshes, including
+  user-extracted retail assets, may load only from ignored
+  `local-lab/rebuild-godot/` through the dedicated exact-root local command.
+  Bootstrap accepts converted GLB/OBJ only from `staging/from-export`, requires
+  explicit or unambiguous player and terrain roles, and never activates FBX.
+  Runtime wording stays origin-neutral unless an exporter receipt/hash is bound.
+  These files are never committed, redistributed, simulation truth, or parity
+  evidence. Do not import retail binaries, decompiler output, or mechanically
+  translated reference-source code.
 - Treat the current implementation as RE-informed original code. A strict
   clean-room claim requires separately staffed specification, implementation,
   and acceptance teams with documented information barriers.

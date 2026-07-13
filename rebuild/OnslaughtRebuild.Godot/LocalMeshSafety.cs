@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using System.Globalization;
+using System.Buffers.Binary;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using Microsoft.Win32.SafeHandles;
@@ -16,6 +17,11 @@ public static class LocalMeshSafety
     public const int MaxObjFaces = 200_000;
     public const int MaxObjTriangles = 400_000;
     public const int MaxObjLineChars = 16_384;
+    public const int MaxGlbNodes = 10_000;
+    public const int MaxGlbMeshes = 5_000;
+    public const int MaxGlbAccessors = 50_000;
+    public const int MaxGlbPrimitives = 50_000;
+    public const int MaxGlbImages = 10_000;
     private const float MaxCoordinateMagnitude = 1_000_000f;
 
     public static LocalMeshValidation ValidateFile(string path)
@@ -43,9 +49,23 @@ public static class LocalMeshSafety
     {
         var info = new FileInfo(path);
         if (!info.Exists || info.Length is <= 0 or > MaxObjBytes) return LocalMeshValidation.Invalid("OBJ size is outside the supported bound");
-        int vertices = 0, attributes = 0, faces = 0, triangles = 0;
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        if (stream.Length is <= 0 or > MaxObjBytes) return LocalMeshValidation.Invalid("OBJ leased size is outside the supported bound");
         using var reader = new StreamReader(stream);
+        return ValidateObjReader(reader);
+    }
+
+    public static LocalMeshValidation ValidateObjBytes(byte[] bytes)
+    {
+        if (bytes.LongLength is <= 0 or > MaxObjBytes) return LocalMeshValidation.Invalid("OBJ size is outside the supported bound");
+        using var stream = new MemoryStream(bytes, writable: false);
+        using var reader = new StreamReader(stream);
+        return ValidateObjReader(reader);
+    }
+
+    private static LocalMeshValidation ValidateObjReader(TextReader reader)
+    {
+        int vertices = 0, attributes = 0, faces = 0, triangles = 0;
         string? line;
         while ((line = reader.ReadLine()) is not null)
         {
@@ -56,11 +76,17 @@ public static class LocalMeshSafety
             switch (parts[0])
             {
                 case "v":
-                    if (parts.Length < 4 || !Finite(parts[1]) || !Finite(parts[2]) || !Finite(parts[3]) || ++vertices > MaxObjVertices)
+                    if (parts.Length != 4 || !Finite(parts[1]) || !Finite(parts[2]) || !Finite(parts[3]) || ++vertices > MaxObjVertices)
                         return LocalMeshValidation.Invalid("OBJ vertex is invalid or exceeds the limit");
                     break;
                 case "vn":
+                    if (parts.Length != 4 || !Finite(parts[1]) || !Finite(parts[2]) || !Finite(parts[3]))
+                        return LocalMeshValidation.Invalid("OBJ normal is invalid");
+                    if (++attributes > MaxObjAttributes) return LocalMeshValidation.Invalid("OBJ attributes exceed the limit");
+                    break;
                 case "vt":
+                    if (parts.Length != 3 || !Finite(parts[1]) || !Finite(parts[2]))
+                        return LocalMeshValidation.Invalid("OBJ texture coordinate is invalid");
                     if (++attributes > MaxObjAttributes) return LocalMeshValidation.Invalid("OBJ attributes exceed the limit");
                     break;
                 case "f":
@@ -80,22 +106,94 @@ public static class LocalMeshSafety
     private static LocalMeshValidation ValidateGlb(string path, long size)
     {
         if (size is < 20 or > MaxGlbBytes) return LocalMeshValidation.Invalid("GLB size is outside the supported bound");
-        Span<byte> header = stackalloc byte[20];
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-        if (stream.Read(header) != header.Length || header[0] != (byte)'g' || header[1] != (byte)'l' || header[2] != (byte)'T' || header[3] != (byte)'F')
-            return LocalMeshValidation.Invalid("GLB header is invalid");
-        uint version = BitConverter.ToUInt32(header[4..8]);
-        uint declaredLength = BitConverter.ToUInt32(header[8..12]);
-        uint jsonLength = BitConverter.ToUInt32(header[12..16]);
-        uint jsonType = BitConverter.ToUInt32(header[16..20]);
-        if (version != 2 || declaredLength != size || jsonType != 0x4E4F534A || jsonLength == 0 || jsonLength > size - 20)
-            return LocalMeshValidation.Invalid("GLB version, length, or JSON chunk is invalid");
-        byte[] json = new byte[checked((int)jsonLength)];
-        stream.ReadExactly(json);
-        using JsonDocument document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 32 });
-        return ContainsExternalUri(document.RootElement)
-            ? LocalMeshValidation.Invalid("GLB must be self-contained and cannot reference external URI dependencies")
-            : LocalMeshValidation.Valid();
+        if (stream.Length is < 20 or > MaxGlbBytes || stream.Length != size) return LocalMeshValidation.Invalid("GLB leased size changed or is outside the supported bound");
+        byte[] bytes = new byte[checked((int)stream.Length)];
+        stream.ReadExactly(bytes);
+        return ValidateGlbBytes(bytes);
+    }
+
+    public static LocalMeshValidation ValidateGlbBytes(ReadOnlySpan<byte> bytes)
+    {
+        try
+        {
+            if (bytes.Length is < 20 || bytes.Length > MaxGlbBytes) return LocalMeshValidation.Invalid("GLB size is outside the supported bound");
+            if (!bytes[..4].SequenceEqual("glTF"u8) || BinaryPrimitives.ReadUInt32LittleEndian(bytes[4..8]) != 2 ||
+                BinaryPrimitives.ReadUInt32LittleEndian(bytes[8..12]) != bytes.Length)
+                return LocalMeshValidation.Invalid("GLB header is invalid");
+
+            int offset = 12;
+            int chunkCount = 0;
+            ReadOnlySpan<byte> json = default;
+            while (offset < bytes.Length)
+            {
+                if (bytes.Length - offset < 8) return LocalMeshValidation.Invalid("GLB chunk header is truncated");
+                uint chunkLength = BinaryPrimitives.ReadUInt32LittleEndian(bytes.Slice(offset, 4));
+                uint chunkType = BinaryPrimitives.ReadUInt32LittleEndian(bytes.Slice(offset + 4, 4));
+                offset += 8;
+                if (chunkLength == 0 || chunkLength > int.MaxValue || chunkLength > bytes.Length - offset || (chunkLength & 3) != 0)
+                    return LocalMeshValidation.Invalid("GLB chunk length is invalid");
+                if (chunkCount == 0)
+                {
+                    if (chunkType != 0x4E4F534A) return LocalMeshValidation.Invalid("GLB first chunk must be JSON");
+                    json = bytes.Slice(offset, (int)chunkLength);
+                }
+                else if (chunkCount > 1 || chunkType != 0x004E4942)
+                {
+                    return LocalMeshValidation.Invalid("GLB supports only one optional embedded BIN chunk");
+                }
+                offset += (int)chunkLength;
+                chunkCount++;
+            }
+            if (offset != bytes.Length || chunkCount == 0) return LocalMeshValidation.Invalid("GLB chunks do not cover the declared file");
+
+            using JsonDocument document = JsonDocument.Parse(json.ToArray(), new JsonDocumentOptions { MaxDepth = 32 });
+            JsonElement root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object) return LocalMeshValidation.Invalid("GLB JSON root must be an object");
+            if (ContainsExternalUri(root)) return LocalMeshValidation.Invalid("GLB must be self-contained and cannot reference external URI dependencies");
+            return ValidateGlbSemantics(root);
+        }
+        catch (Exception exception) when (exception is JsonException or InvalidDataException or ArgumentException or OverflowException)
+        {
+            return LocalMeshValidation.Invalid(exception.Message);
+        }
+    }
+
+    private static LocalMeshValidation ValidateGlbSemantics(JsonElement root)
+    {
+        if (!TryGetBoundedArray(root, "nodes", MaxGlbNodes, required: false, out _) ||
+            !TryGetBoundedArray(root, "meshes", MaxGlbMeshes, required: true, out JsonElement meshes) ||
+            !TryGetBoundedArray(root, "accessors", MaxGlbAccessors, required: true, out JsonElement accessors) ||
+            !TryGetBoundedArray(root, "images", MaxGlbImages, required: false, out _))
+            return LocalMeshValidation.Invalid("GLB semantic array is missing, malformed, or exceeds its limit");
+
+        int primitiveCount = 0;
+        bool hasRenderablePrimitive = false;
+        foreach (JsonElement mesh in meshes.EnumerateArray())
+        {
+            if (mesh.ValueKind != JsonValueKind.Object || !mesh.TryGetProperty("primitives", out JsonElement primitives) || primitives.ValueKind != JsonValueKind.Array)
+                return LocalMeshValidation.Invalid("GLB mesh primitives are malformed");
+            primitiveCount = checked(primitiveCount + primitives.GetArrayLength());
+            if (primitiveCount > MaxGlbPrimitives) return LocalMeshValidation.Invalid("GLB primitives exceed the supported limit");
+            foreach (JsonElement primitive in primitives.EnumerateArray())
+            {
+                if (primitive.ValueKind != JsonValueKind.Object || !primitive.TryGetProperty("attributes", out JsonElement attributes) ||
+                    attributes.ValueKind != JsonValueKind.Object || !attributes.TryGetProperty("POSITION", out JsonElement position) ||
+                    !position.TryGetInt32(out int accessorIndex) || accessorIndex < 0 || accessorIndex >= accessors.GetArrayLength()) continue;
+                JsonElement accessor = accessors[accessorIndex];
+                if (accessor.ValueKind == JsonValueKind.Object && accessor.TryGetProperty("count", out JsonElement count) &&
+                    count.TryGetInt32(out int vertexCount) && vertexCount > 0) hasRenderablePrimitive = true;
+            }
+        }
+        return hasRenderablePrimitive
+            ? LocalMeshValidation.Valid()
+            : LocalMeshValidation.Invalid("GLB contains no mesh primitive with a nonempty POSITION accessor");
+    }
+
+    private static bool TryGetBoundedArray(JsonElement root, string name, int maximum, bool required, out JsonElement array)
+    {
+        if (!root.TryGetProperty(name, out array)) return !required;
+        return array.ValueKind == JsonValueKind.Array && array.GetArrayLength() <= maximum;
     }
 
     private static bool ContainsExternalUri(JsonElement element)

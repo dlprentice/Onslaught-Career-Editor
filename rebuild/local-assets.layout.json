@@ -12,7 +12,7 @@
   ],
   "manifestExample": {
     "schemaVersion": "onslaught-rebuild-local-godot-assets-manifest.v1",
-    "presentationMode": "local-retail-preview",
+    "presentationMode": "local-user-mesh-preview",
     "nonParityClaim": true,
     "player": {
       "mesh": "player/aquila/aquila.glb",

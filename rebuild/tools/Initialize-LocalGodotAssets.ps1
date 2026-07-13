@@ -2,7 +2,6 @@
 
 [CmdletBinding()]
 param(
-    [string]$RepoRoot = '',
     [string]$AssetRoot = '',
     [switch]$WriteExampleManifest
 )
@@ -11,7 +10,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 Import-Module (Join-Path $PSScriptRoot 'LocalAssetWorkspace.psm1') -Force
 
-$RepoRoot = if ([string]::IsNullOrWhiteSpace($RepoRoot)) { [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..')) } else { [IO.Path]::GetFullPath($RepoRoot) }
+$RepoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 $layoutPath = Join-Path $RepoRoot 'rebuild\local-assets.layout.json'
 Assert-RegularSingleLinkFile -Path $layoutPath -Label 'tracked layout contract' | Out-Null
 $layoutInfo = Get-Item -LiteralPath $layoutPath
@@ -33,7 +32,7 @@ try {
     $readme = @'
 # Local Godot rebuild assets (ignored)
 
-This workspace is an optional local presentation input. Keep retail-derived files ignored and never treat them as simulation truth, redistribution material, or parity evidence.
+This workspace is an optional user-supplied local presentation input. Keep any retail-derived files ignored and never treat them as simulation truth, redistribution material, or parity evidence.
 
 - `export/` - trusted-local AYA export output
 - `player/aquila/` - explicitly selected converted `.glb` or bounded `.obj`

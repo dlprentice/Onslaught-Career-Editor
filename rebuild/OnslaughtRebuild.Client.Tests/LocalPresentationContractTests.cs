@@ -86,10 +86,34 @@ public sealed class LocalPresentationContractTests : IDisposable
         Directory.CreateDirectory(Path.Combine(_root, "player"));
         WriteMinimalGlb();
         File.WriteAllText(Path.Combine(_root, "manifest.json"), """
-        {"schemaVersion":"onslaught-rebuild-local-godot-assets-manifest.v1","presentationMode":"local-retail-preview","nonParityClaim":true,
+        {"schemaVersion":"onslaught-rebuild-local-godot-assets-manifest.v1","presentationMode":"local-user-mesh-preview","nonParityClaim":true,
          "player":{"mesh":"player/aquila.glb"},"player":{"mesh":"player/aquila.glb"}}
         """);
         Assert.Null(LocalPresentationConfig.TryResolve(_root, smokeMode: false));
+    }
+
+    [Theory]
+    [InlineData("[]")]
+    [InlineData("{}")]
+    [InlineData("{\"schemaVersion\":1}")]
+    [InlineData("{\"schemaVersion\":\"onslaught-rebuild-local-godot-assets-manifest.v1\",\"presentationMode\":\"local-user-mesh-preview\",\"nonParityClaim\":\"true\",\"player\":{\"mesh\":\"player/aquila.glb\"}}")]
+    [InlineData("{\"schemaVersion\":\"onslaught-rebuild-local-godot-assets-manifest.v1\",\"presentationMode\":\"local-user-mesh-preview\",\"nonParityClaim\":true,\"player\":\"player/aquila.glb\"}")]
+    [InlineData("{\"schemaVersion\":\"onslaught-rebuild-local-godot-assets-manifest.v1\",\"presentationMode\":\"local-user-mesh-preview\",\"nonParityClaim\":true,\"player\":{\"mesh\":7}}")]
+    [InlineData("{\"schemaVersion\":\"onslaught-rebuild-local-godot-assets-manifest.v1\",\"presentationMode\":\"local-user-mesh-preview\",\"nonParityClaim\":true,\"player\":{\"mesh\":\"player/aquila.glb\",\"scale\":1e999}}")]
+    [InlineData("{\"schemaVersion\":\"onslaught-rebuild-local-godot-assets-manifest.v1\",\"presentationMode\":\"local-user-mesh-preview\",\"nonParityClaim\":true,\"unknown\":true,\"player\":{\"mesh\":\"player/aquila.glb\"}}")]
+    public void TryResolve_MalformedBoundedJsonNeverThrows(string json)
+    {
+        Directory.CreateDirectory(Path.Combine(_root, "player"));
+        WriteMinimalGlb();
+        File.WriteAllText(Path.Combine(_root, "manifest.json"), json);
+
+        LocalPresentationConfig? result = null;
+        string? error = null;
+        Exception? exception = Record.Exception(() => result = LocalPresentationConfig.TryResolve(_root, smokeMode: false, out error));
+
+        Assert.Null(exception);
+        Assert.Null(result);
+        Assert.False(string.IsNullOrWhiteSpace(error));
     }
 
     [Fact]
@@ -100,6 +124,26 @@ public sealed class LocalPresentationContractTests : IDisposable
         Assert.True(LocalMeshSafety.ValidateObj(path).IsValid);
 
         File.WriteAllText(path, string.Join('\n', Enumerable.Repeat("v 0 0 0", LocalMeshSafety.MaxObjVertices + 1)));
+        Assert.False(LocalMeshSafety.ValidateObj(path).IsValid);
+    }
+
+    [Theory]
+    [InlineData("v 0 0 0 1")]
+    [InlineData("v NaN 0 0")]
+    [InlineData("v 0 Infinity 0")]
+    [InlineData("v 1000001 0 0")]
+    [InlineData("vn 0 1")]
+    [InlineData("vn 0 1 0 1")]
+    [InlineData("vn 0 NaN 0")]
+    [InlineData("vn 0 1000001 0")]
+    [InlineData("vt 0")]
+    [InlineData("vt 0 1 2")]
+    [InlineData("vt -Infinity 0")]
+    [InlineData("vt 0 1000001")]
+    public void ValidateObj_RejectsWrongArityOrUnsafeNumericComponents(string malformedLine)
+    {
+        string path = Path.Combine(_root, "mesh.obj");
+        File.WriteAllText(path, $"{malformedLine}\nv 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n");
         Assert.False(LocalMeshSafety.ValidateObj(path).IsValid);
     }
 
@@ -128,6 +172,48 @@ public sealed class LocalPresentationContractTests : IDisposable
         Assert.False(LocalMeshSafety.ValidateFile(path).IsValid);
     }
 
+    [Fact]
+    public void ValidateFile_RejectsGlbWithoutMeshPrimitive()
+    {
+        string path = Path.Combine(_root, "empty.glb");
+        File.WriteAllBytes(path, BuildGlb("{\"asset\":{\"version\":\"2.0\"}}"));
+        Assert.False(LocalMeshSafety.ValidateFile(path).IsValid);
+    }
+
+    [Fact]
+    public void ValidateFile_RejectsGlbPrimitiveWithEmptyPositionAccessor()
+    {
+        string path = Path.Combine(_root, "empty-accessor.glb");
+        File.WriteAllBytes(path, BuildGlb("{\"asset\":{\"version\":\"2.0\"},\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0}}]}],\"accessors\":[{\"count\":0}]}"));
+        Assert.False(LocalMeshSafety.ValidateFile(path).IsValid);
+    }
+
+    [Fact]
+    public void ValidateFile_RejectsGlbObjectGraphBeyondSemanticCaps()
+    {
+        string path = Path.Combine(_root, "many-nodes.glb");
+        string nodes = string.Join(',', Enumerable.Repeat("{}", 10_001));
+        File.WriteAllBytes(path, BuildGlb($"{{\"asset\":{{\"version\":\"2.0\"}},\"nodes\":[{nodes}],\"meshes\":[{{\"primitives\":[{{\"attributes\":{{\"POSITION\":0}}}}]}}],\"accessors\":[{{\"count\":3}}]}}"));
+        Assert.False(LocalMeshSafety.ValidateFile(path).IsValid);
+    }
+
+    [Fact]
+    public void GodotLoader_ConsumesHeldGlbBytesAndRequiresRenderableMesh()
+    {
+        string source = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-source", "LocalAssetMeshLoader.cs"));
+        Assert.Contains("AppendFromBuffer", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("AppendFromFile", source, StringComparison.Ordinal);
+        Assert.Contains("ContainsRenderableMesh", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Hud_DescribesUnreceiptedMeshesNeutrally()
+    {
+        string source = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "godot-source", "FirstFlightHud.cs"));
+        Assert.Contains("user-supplied local mesh", source, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("retail-derived", source, StringComparison.OrdinalIgnoreCase);
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true);
@@ -139,7 +225,7 @@ public sealed class LocalPresentationContractTests : IDisposable
         string json = $$"""
         {
           "schemaVersion": "onslaught-rebuild-local-godot-assets-manifest.v1",
-          "presentationMode": "local-retail-preview",
+          "presentationMode": "local-user-mesh-preview",
           "nonParityClaim": true,
           "player": { "mesh": "{{mesh}}", "scale": {{scale}}, "yawDegrees": {{yaw}}, "yOffsetMeters": {{offset}} }
         }
@@ -149,21 +235,33 @@ public sealed class LocalPresentationContractTests : IDisposable
 
     private void WriteMinimalGlb()
     {
-        File.WriteAllBytes(Path.Combine(_root, "player", "aquila.glb"), BuildGlb("{\"asset\":{\"version\":\"2.0\"}}"));
+        const string json = "{\"asset\":{\"version\":\"2.0\"},\"scene\":0,\"scenes\":[{\"nodes\":[0]}],\"nodes\":[{\"mesh\":0}],\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0}}]}],\"accessors\":[{\"bufferView\":0,\"componentType\":5126,\"count\":3,\"type\":\"VEC3\",\"max\":[1,1,0],\"min\":[0,0,0]}],\"bufferViews\":[{\"buffer\":0,\"byteOffset\":0,\"byteLength\":36}],\"buffers\":[{\"byteLength\":36}]}";
+        byte[] triangle = new byte[36];
+        new float[] { 0, 0, 0, 1, 0, 0, 0, 1, 0 }.CopyTo(MemoryMarshal.Cast<byte, float>(triangle));
+        File.WriteAllBytes(Path.Combine(_root, "player", "aquila.glb"), BuildGlb(json, triangle));
     }
 
-    private static byte[] BuildGlb(string json)
+    private static byte[] BuildGlb(string json, byte[]? binary = null)
     {
         byte[] jsonBytes = Encoding.UTF8.GetBytes(json);
-        int padded = (jsonBytes.Length + 3) & ~3;
-        byte[] bytes = new byte[20 + padded];
+        int jsonPadded = (jsonBytes.Length + 3) & ~3;
+        int binaryPadded = binary is null ? 0 : (binary.Length + 3) & ~3;
+        int binaryChunkBytes = binary is null ? 0 : 8 + binaryPadded;
+        byte[] bytes = new byte[20 + jsonPadded + binaryChunkBytes];
         Encoding.ASCII.GetBytes("glTF").CopyTo(bytes, 0);
         BitConverter.GetBytes(2u).CopyTo(bytes, 4);
         BitConverter.GetBytes((uint)bytes.Length).CopyTo(bytes, 8);
-        BitConverter.GetBytes((uint)padded).CopyTo(bytes, 12);
+        BitConverter.GetBytes((uint)jsonPadded).CopyTo(bytes, 12);
         BitConverter.GetBytes(0x4E4F534Au).CopyTo(bytes, 16);
         jsonBytes.CopyTo(bytes, 20);
-        Array.Fill(bytes, (byte)0x20, 20 + jsonBytes.Length, padded - jsonBytes.Length);
+        Array.Fill(bytes, (byte)0x20, 20 + jsonBytes.Length, jsonPadded - jsonBytes.Length);
+        if (binary is not null)
+        {
+            int chunkOffset = 20 + jsonPadded;
+            BitConverter.GetBytes((uint)binaryPadded).CopyTo(bytes, chunkOffset);
+            BitConverter.GetBytes(0x004E4942u).CopyTo(bytes, chunkOffset + 4);
+            binary.CopyTo(bytes, chunkOffset + 8);
+        }
         return bytes;
     }
 

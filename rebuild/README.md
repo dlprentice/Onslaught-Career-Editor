@@ -54,7 +54,7 @@ First Flight starts in a resizable 1280x720 window with a supported minimum of
 Destroy the three procedural sentries. The HUD reports mode, objective, energy,
 shield, and hull.
 
-## Optional local retail-derived presentation
+## Optional user-supplied local mesh presentation
 
 Ignored, user-extracted BYO assets can replace the synthetic Aquila stand-in
 and ground plane without changing Core or Client simulation. This is a
@@ -64,20 +64,32 @@ service, redistribution path, or parity/provenance proof.
 ```powershell
 npm run init:rebuild-godot-assets
 npm run export:local-bea-assets
-# convert exported FBX to self-contained GLB or bounded OBJ, then select
-# exactly one player mesh and one terrain mesh:
-npm run bootstrap:rebuild-godot-assets
+# Convert selected exported FBX files to self-contained GLB or bounded OBJ.
+# Put only the converted files in local-lab/rebuild-godot/staging/from-export,
+# then select exactly one player mesh and one terrain mesh:
+npm run bootstrap:rebuild-godot-assets -- -PlayerMesh aquila-player.glb -TerrainMesh ground-terrain.glb
 npm run run:rebuild-godot:local
 ```
 
 All generated/staged files stay under the ignored
 `local-lab/rebuild-godot/` workspace (see `LOCAL_LAB_OVERLAY.md` and
 `rebuild/local-assets.layout.json`). FBX may be staged but is never activated;
-runtime support is limited to self-contained GLB and bounded OBJ. Ordinary run
-and smoke commands stay synthetic; the dedicated local command supplies the
-exact `--local-assets` root. Failed roles keep procedural geometry, and the HUD
-describes only roles that loaded. Local assets are never simulation truth,
-redistribution material, or parity evidence.
+bootstrap reads converted files only from `staging/from-export` and fails on
+missing or ambiguous roles. Runtime support is limited to self-contained GLB
+with a nonempty mesh primitive and bounded OBJ. Ordinary run and smoke commands
+stay synthetic; the dedicated local command supplies the exact `--local-assets`
+root. Failed or empty roles keep procedural geometry, and the HUD describes a
+neutral user-supplied local mesh only after a nonempty renderable surface loads.
+No retail-origin claim is made without a separately bound exporter receipt and
+hash. Local assets are never simulation truth, redistribution material, or
+parity evidence.
+
+The export wrapper consumes the exact template
+`references/AYAResourceExtractor/BoxWithTextures.fbx`. It preflights and holds
+that file plus `AYAResourceExtractor.dll`, `DDSTextureUncompress.dll`, and
+`Fbx.dll` before creating output. These are mutable trusted-local dependencies,
+not cryptographically pinned provenance. The workflow is bounded to trusted
+canonical retail input and process failure; it is not hostile-input sandboxing.
 
 ## Verify
 

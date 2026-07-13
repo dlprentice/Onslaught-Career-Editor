@@ -32,6 +32,12 @@
     <Content Include="..\OnslaughtRebuild.Client\OnslaughtRebuild.Client.csproj"
              Link="client-project\OnslaughtRebuild.Client.csproj"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\LocalAssetMeshLoader.cs"
+             Link="godot-source\LocalAssetMeshLoader.cs"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\FirstFlightHud.cs"
+             Link="godot-source\FirstFlightHud.cs"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

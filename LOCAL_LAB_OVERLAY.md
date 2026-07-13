@@ -26,7 +26,7 @@ Use these names when possible:
 | `save-attempts/` or `local-saves/` | Local saves and options payloads used for testing. |
 | `local-ghidra/`, `ghidra-local/`, or `Ghidra/` | Full local Ghidra projects, databases, local-only exports, and backups. |
 | `local-proofs/` | Bulky runtime proof bundles, screenshots, traces, CDB logs, and frame captures. |
-| `local-lab/` | Miscellaneous local-only lab material that is too large or payload-like for git. `local-lab/rebuild-godot/` is the only allowed init/bootstrap/export output workspace for optional First Flight retail-derived presentation. |
+| `local-lab/` | Miscellaneous local-only lab material that is too large or payload-like for git. `local-lab/rebuild-godot/` is the only allowed init/bootstrap/export output workspace for optional First Flight user-supplied local mesh presentation. |
 | `mcps/` | Local MCP/tooling sandboxes and generated local integration payloads. |
 | `GameProfiles/` / `PatchBench/` | Copied game profiles and patch-bench runtime output. |
 
@@ -37,7 +37,13 @@ mirror but never writes to it. Init, export, conversion staging, role activation
 and manifests stay under `local-lab/rebuild-godot/` or a validated child.
 Outputs must not overlap game/source/`BEA.exe` roots, tracked source, junctions,
 symlinks, or hardlink aliases. FBX is staging input only; manifests activate
-explicit self-contained GLB or bounded OBJ roles.
+explicit self-contained GLB or bounded OBJ roles. Export uses and holds the
+exact `references/AYAResourceExtractor/BoxWithTextures.fbx` template plus the
+three mutable trusted-local extractor DLLs before output. After manual FBX
+conversion, place only the selected GLB/OBJ candidates under
+`local-lab/rebuild-godot/staging/from-export/`; bootstrap never activates FBX or
+searches export output directly. A path or manifest does not prove retail
+origin, redistribution rights, or parity.
 
 ## Tracked Public Material
 

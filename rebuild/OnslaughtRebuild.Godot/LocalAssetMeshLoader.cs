@@ -25,14 +25,35 @@ internal static class LocalAssetMeshLoader
         {
             using var lease = new FileStream(absolutePath, FileMode.Open, System.IO.FileAccess.Read, FileShare.Read);
             string extension = Path.GetExtension(absolutePath).ToLowerInvariant();
+            long maximumBytes = extension == ".glb" ? LocalMeshSafety.MaxGlbBytes : LocalMeshSafety.MaxObjBytes;
+            if (lease.Length is <= 0 || lease.Length > maximumBytes) return null;
+            byte[] bytes = new byte[checked((int)lease.Length)];
+            lease.ReadExactly(bytes);
+            LocalMeshValidation heldValidation = extension switch
+            {
+                ".glb" => LocalMeshSafety.ValidateGlbBytes(bytes),
+                ".obj" => LocalMeshSafety.ValidateObjBytes(bytes),
+                _ => LocalMeshValidation.Invalid("unsupported mesh extension"),
+            };
+            if (!heldValidation.IsValid)
+            {
+                GD.PushWarning($"First Flight rejected leased local mesh: {heldValidation.Error}");
+                return null;
+            }
+
             Node3D? loaded = extension switch
             {
-                ".glb" => TryLoadGltf(absolutePath),
-                ".obj" => TryLoadObj(lease, absolutePath),
+                ".glb" => TryLoadGltf(bytes, absolutePath),
+                ".obj" => TryLoadObj(new MemoryStream(bytes, writable: false), absolutePath),
                 _ => null,
             };
 
-            if (loaded is null) return null;
+            if (loaded is null || !ContainsRenderableMesh(loaded))
+            {
+                loaded?.Free();
+                GD.PushWarning($"First Flight local mesh produced no nonempty renderable surface: {absolutePath}");
+                return null;
+            }
 
             var wrapper = new Node3D { Name = nodeName };
             wrapper.Scale = new Vector3(settings.Scale, settings.Scale, settings.Scale);
@@ -48,11 +69,11 @@ internal static class LocalAssetMeshLoader
         }
     }
 
-    private static Node3D? TryLoadGltf(string absolutePath)
+    private static Node3D? TryLoadGltf(byte[] bytes, string absolutePath)
     {
         var document = new GltfDocument();
         var state = new GltfState();
-        Error error = document.AppendFromFile(absolutePath, state);
+        Error error = document.AppendFromBuffer(bytes, string.Empty, state);
         if (error != Error.Ok)
         {
             GD.PushWarning($"First Flight local GLTF load failed ({error}): {absolutePath}");
@@ -61,6 +82,24 @@ internal static class LocalAssetMeshLoader
 
         Node? generated = document.GenerateScene(state);
         return generated as Node3D ?? WrapOrNull(generated);
+    }
+
+    private static bool ContainsRenderableMesh(Node node)
+    {
+        if (node is MeshInstance3D { Mesh: not null } instance)
+        {
+            for (int surface = 0; surface < instance.Mesh.GetSurfaceCount(); surface++)
+            {
+                Godot.Collections.Array arrays = instance.Mesh.SurfaceGetArrays(surface);
+                if (arrays.Count > (int)Mesh.ArrayType.Vertex && arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array().Length > 0) return true;
+            }
+        }
+
+        foreach (Node child in node.GetChildren())
+        {
+            if (ContainsRenderableMesh(child)) return true;
+        }
+        return false;
     }
 
     private static Node3D? WrapOrNull(Node? node)
@@ -135,6 +174,11 @@ internal static class LocalAssetMeshLoader
 
         surfaceTool.GenerateNormals();
         ArrayMesh mesh = surfaceTool.Commit();
+        if (mesh.GetSurfaceCount() == 0 || mesh.SurfaceGetArrayLen(0) == 0)
+        {
+            mesh.Dispose();
+            return null;
+        }
         return new MeshInstance3D
         {
             Name = "ObjMesh",
