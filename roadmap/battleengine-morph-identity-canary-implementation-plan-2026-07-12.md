@@ -589,6 +589,8 @@ git commit -m "feat(re): orchestrate morph identity canary matrix"
 - Local only: `local-proofs/battleengine-morph-identity-canary-control-*/authority.json`
 - Local only: `local-proofs/battleengine-morph-identity-canary-control-*/leases.json`
 - Local only fresh output: `local-proofs/battleengine-morph-identity-canary-matrix-*`
+- Local only on caught runner failure: role-local `canary-failure.json`; this is
+  private diagnostic evidence, not part of the v1 private/public matrix schema.
 - Conditional create after PASS:
   `reverse-engineering/binary-analysis/battleengine-morph-identity-canary-runtime-summary-2026-07-12.json`
 - Conditional create after PASS:

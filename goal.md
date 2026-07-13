@@ -154,8 +154,28 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   `!BEA+RVA` module symbols, and canary-only `-ee masm`. The six focused suites
   pass 128 tests; a disposable native x86 CDB proof accepted all 32 corrected
   byte comparisons, rejected a deliberate mismatch, and cleaned up exactly.
-  Normal and adversarial Codex re-review approved. Retry 4 requires a new
-  authority/lease set and absent proof root after this correction is pushed.
+  Normal and adversarial Codex re-review approved, and the correction was
+  pushed at `c39f91de`. Retry 4 then reached exact marker-ready no-input control
+  evidence with zero events and complete cleanup, but its outer rejection text
+  was lost by an operator wrapper that retained only stream hashes. Offline
+  collection/materialization, controls, digests, and ambient revalidation all
+  passed; no positive role ran. Retry 5 therefore used fresh controls and
+  durably preserved both outer streams. It reproduced the exact child exit 2;
+  the control again reached `MORPH_CANARY_READY`, emitted zero events,
+  preserved source/copy integrity, and cleaned up before the outer matrix
+  stopped without sending positive input. An initial capture-count diagnosis
+  was wrong: normal and adversarial control-flow review showed that
+  `RunMorphCanary()` returns before the generic capture predicate, so that
+  proposed behavior change and its false-positive test were removed. The
+  dedicated canary predicate also requires its caught `failure` string to be
+  empty, but the v1 private artifact does not preserve that string. The current
+  TDD instrumentation therefore writes a create-new private
+  `canary-failure.json` only when a caught failure exists; it does not change
+  the success predicate, public schema, input, or process behavior. Its 36
+  focused tests and a fresh generated-runner build pass with zero
+  warnings/errors. Retry 4 and 5 have ignored failed-run closeouts and lease
+  releases; neither published a matrix. A fresh diagnostic retry requires
+  review, commit/push, new controls, and an absent proof root.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future

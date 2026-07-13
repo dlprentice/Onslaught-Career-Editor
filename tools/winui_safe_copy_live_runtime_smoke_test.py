@@ -630,6 +630,58 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertLess(attach_index, guard_index)
         self.assertLess(guard_index, input_index)
 
+    def test_generated_morph_runner_preserves_private_failure_diagnostic(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory(prefix="morph-failure-diagnostic-test-") as temp:
+            project = module.write_runner(Path(temp) / "runner")
+            generated = project.with_name("Program.cs").read_text(encoding="utf-8")
+
+        diagnostic_line = (
+            'string failureArtifact = Path.Combine(artifactRoot, "canary-failure.json");'
+        )
+        self.assertIn(diagnostic_line, generated)
+        diagnostic_index = generated.index(diagnostic_line)
+        receipt_guard_index = generated.index(
+            "if (prepared is null || string.IsNullOrWhiteSpace(receiptSha256))"
+        )
+        self.assertIn(
+            'schemaVersion = "winui-original-binary-battleengine-morph-identity-canary-private-failure.v1"',
+            generated,
+        )
+        conditional_index = generated.index(
+            "if (!string.IsNullOrWhiteSpace(failure))",
+            generated.index("static int RunMorphCanary()"),
+        )
+        try_index = generated.index("try\n        {", conditional_index)
+        catch_index = generated.index(
+            "catch (Exception diagnosticError)", diagnostic_index
+        )
+        diagnostic_block = generated[conditional_index:receipt_guard_index]
+        self.assertIn("try\n        {", diagnostic_block)
+        self.assertIn(
+            "WriteNewCanaryText(\n                failureArtifact,\n                artifactRoot,",
+            diagnostic_block,
+        )
+        self.assertIn(
+            "role,\n                    failure,",
+            diagnostic_block,
+        )
+        self.assertIn(
+            'Console.Error.WriteLine("MORPH_CANARY_ORIGINAL_FAILURE: " + failure);',
+            diagnostic_block,
+        )
+        self.assertIn(
+            '"MORPH_CANARY_DIAGNOSTIC_WRITE_FAILURE: " +\n'
+            '                    diagnosticError.GetType().Name + ": " + diagnosticError.Message',
+            diagnostic_block,
+        )
+        self.assertIn("catch\n            {\n            }", diagnostic_block)
+        self.assertLess(conditional_index, diagnostic_index)
+        self.assertLess(conditional_index, try_index)
+        self.assertLess(try_index, diagnostic_index)
+        self.assertLess(diagnostic_index, catch_index)
+        self.assertLess(catch_index, receipt_guard_index)
+
     def stable_extra_patch_keys(self) -> set[str]:
         tree = ast.parse(self.script_text(), filename=str(SCRIPT))
         for node in tree.body:

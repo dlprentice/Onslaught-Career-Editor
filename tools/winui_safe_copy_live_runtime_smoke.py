@@ -2172,6 +2172,36 @@ static int RunMorphCanary()
 __CANARY_CLEANUP_PHASE_BLOCK__
     }
 
+    if (!string.IsNullOrWhiteSpace(failure))
+    {
+        try
+        {
+            string failureArtifact = Path.Combine(artifactRoot, "canary-failure.json");
+            WriteNewCanaryText(
+                failureArtifact,
+                artifactRoot,
+                JsonSerializer.Serialize(new
+                {
+                    schemaVersion = "winui-original-binary-battleengine-morph-identity-canary-private-failure.v1",
+                    role,
+                    failure,
+                }, new JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch (Exception diagnosticError)
+        {
+            try
+            {
+                Console.Error.WriteLine("MORPH_CANARY_ORIGINAL_FAILURE: " + failure);
+                Console.Error.WriteLine(
+                    "MORPH_CANARY_DIAGNOSTIC_WRITE_FAILURE: " +
+                    diagnosticError.GetType().Name + ": " + diagnosticError.Message);
+            }
+            catch
+            {
+            }
+        }
+    }
+
     if (prepared is null || string.IsNullOrWhiteSpace(receiptSha256))
         throw new InvalidOperationException("Morph canary did not reach receipt materialization. " + failure);
     string installedHashAfter = Sha256File(installedExe);
