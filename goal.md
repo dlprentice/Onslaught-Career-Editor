@@ -300,6 +300,19 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   requires CDB exit code zero before parsing the retained evidence. This is now
   a bounded harness-contract investigation. Arbitrary nonzero CDB exits are not
   accepted, Retry 11 remains failed, and no positive-role causality claim exists.
+- The Retry 11 exit-status correction is integrated through `647bbaa4`. Normal
+  CDB exit zero remains unchanged. Exceptional CDB exit `-1` is accepted only
+  when the exact receipt-owned target event reports `0xFFFFFFFF`, managed stop
+  proves both force requested and exit observed, and the retained post-readiness
+  transcript is semantically clean through EOF: exact generated prelude, exact
+  six-line event/time/cleanup/quit region, real invariant debugger timestamp,
+  and only explicitly allowed shutdown boilerplate. Any unrelated diagnostic,
+  impossible date/offset, duplication, omission, or reordering fails closed.
+  All existing process/module/log, no-runner-force, hash, stop, and census gates
+  remain mandatory. The four focused suites pass 132 tests, the generated
+  runner builds with zero warnings/errors, and Codex plus sanitized Grok
+  normal/adversarial review accept. A wholly fresh Retry 12 is authorized;
+  Retry 11 remains failed and cannot be reinterpreted.
 - The optional local presentation lane is integrated on `main`. It pins the
   Stuart Onslaught reference at `5352a81` and the AYA reference plus narrow
   rectangular-DDS correction at `53b10b0`; adds an ignored exporter/bootstrap
