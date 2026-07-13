@@ -390,6 +390,11 @@ revive the legacy x86 extractor toolchain.
   `0x00411aa0` CMonitor pairs while preserving unrelated mutator operations.
   The RE lane's accidental unleased full-suite/native output is invalid and was
   not used; exact process cleanup was verified.
+- The non-native scalar walker-forward sampler and public-safe two-attempt
+  schema are integrated through `aee7916b`. Eighteen synthetic tests cover
+  coherent reads, receipt/input/cleanup failure, timing and drift rejection,
+  exact two-run stability, and private-data exclusion. No copied-runtime
+  attempt, public behavior contract, direction claim, or Core change exists yet.
 - The optional local presentation lane is integrated on `main`. It pins the
   Stuart Onslaught reference at `5352a81` and the AYA reference plus narrow
   rectangular-DDS correction at `53b10b0`; adds an ignored exporter/bootstrap
