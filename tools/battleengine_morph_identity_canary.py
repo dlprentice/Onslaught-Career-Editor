@@ -34,7 +34,7 @@ PUBLIC_SCHEMA = "winui-original-binary-battleengine-morph-identity-canary.v1"
 PRIVATE_RUN_SCHEMA = "winui-original-binary-battleengine-morph-identity-canary-private-run.v1"
 TOOL_VERSION = "1"
 FINGERPRINT_SIZE = 8
-TEMPLATE_SHA256 = "eb71674385a1973d60c495b6ccbcfeedcc2f7727750dc7b1c33bba8c4d7be447"
+TEMPLATE_SHA256 = "9683da8b7f2540e5f172c43131c197f837e387931d6a0d2568925cda7b38d58a"
 
 DEFAULT_TEMPLATE = (
     Path(__file__).resolve().parent

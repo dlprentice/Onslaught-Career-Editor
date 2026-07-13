@@ -274,8 +274,32 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   which event released `g`. The accepted correction direction requires exact
   receipt-owned target exit-event evidence from CDB (for example a strictly
   parsed `.lastevent` section), preserves every identity/marker/census guard,
-  and forbids timestamp tolerance or marker-only acceptance. A fresh Retry 11
-  is allowed only after that reviewed correction lands.
+  and forbids timestamp tolerance or marker-only acceptance. That correction
+  is integrated through `f74ac902`: the exact CDB log stream is retained from
+  readiness through final parsing without delete sharing, one bounded global
+  `.lastevent` section must identify the exact receipt-owned target PID and a
+  nonzero thread, CDB must exit cleanly without a forced stop, and the existing
+  exact process/module/receipt, hash, marker, managed-stop, and clear-census
+  requirements remain mandatory. Root verification passes the 124-test runtime
+  tooling profile, 26 focused event-parser cases, 23 orchestration tests, 17
+  process-identity tests, and 13 renderer/materializer tests. Codex normal and
+  adversarial review accepted the correction; sanitized serial Cursor/Grok
+  normal review accepted it, and the adversarial summary's claimed missing
+  start-CDB/census gates was rejected against the exact authority and package
+  gate definitions. A fresh Retry 11 is now allowed. Retry 10 remains failed
+  and cannot be promoted or reinterpreted.
+- Retry 11 used new ignored authority/lease controls, a new absent proof root,
+  fresh copied targets, and the integrated exit-event parser. Dry run passed.
+  The live no-input role again stopped before either positive role and
+  published no matrix. Its retained log contains one exact target exit event
+  for the receipt-owned PID, the ordered `.lastevent` delimiters, cleanup
+  marker, and `quit:` marker. The exact managed stop succeeded, source/copy
+  hashes remained unchanged, and the final owned-process census was clear.
+  The role still failed closed because CDB returned `-1` while reporting the
+  intentionally stopped target's exit code as `0xFFFFFFFF`; the current runner
+  requires CDB exit code zero before parsing the retained evidence. This is now
+  a bounded harness-contract investigation. Arbitrary nonzero CDB exits are not
+  accepted, Retry 11 remains failed, and no positive-role causality claim exists.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future
@@ -478,9 +502,10 @@ claim against an already malicious process running as the same Windows user.
 
 ## Next Slices
 
-1. Land the target-exit-event CDB cleanup proof, then run a fresh authorized
-   Level 850 Retry 11 and publish only a fully validated sanitized identity/
-   causality result.
+1. Resolve the exact CDB-versus-managed-target exit-status relationship exposed
+   by Retry 11 with a failing disposable test and narrow identity-bound rule,
+   then run a wholly fresh Retry 12 and publish only a complete validated
+   sanitized identity/causality result.
 2. Review, harden, and integrate the completed Cursor submodule/local-retail-
    presentation branch without weakening local-payload or synthetic-smoke
    boundaries.

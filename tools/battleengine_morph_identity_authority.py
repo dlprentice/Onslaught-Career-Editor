@@ -55,6 +55,7 @@ REQUIRED_VALIDATION_GATES = (
     r"py -3 tools\start_cdb_server_test.py",
     r"py -3 tools\send_game_window_input_test.py",
     r"py -3 tools\winui_safe_copy_live_runtime_smoke_test.py",
+    r"py -3 tools\cdb_exit_event_cleanup_test.py",
     "npm run test:hard-payload-safety",
     "npm run test:doc-commands",
     "npm run test:md-links",
@@ -63,8 +64,9 @@ REQUIRED_VALIDATION_GATES = (
 )
 REQUIRED_CLEANUP = (
     "release held keys; retain exact receipt-bound CDB handle and effective arguments; "
-    "stop exact receipt-bound managed BEA root; require target-before-CDB exit ordering "
-    "and queued debugger quit or fail closed; verify zero receipt-owned BEA/CDB root processes"
+    "stop exact receipt-bound managed BEA root; require exact receipt-owned target exit-process "
+    "event before queued graceful debugger quit or fail closed; verify zero receipt-owned "
+    "BEA/CDB root processes"
 )
 REQUIRED_ROLLBACK = (
     "preserve failed private diagnostics; perform owned cleanup; discard the "

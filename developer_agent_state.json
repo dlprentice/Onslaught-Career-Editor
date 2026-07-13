@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-13",
   "routingPolicy": "Follow the global Codex multi-agent lane contract. Under current direct user policy, every new or resumed Codex-owned worker uses gpt-5.6-sol at medium effort by default; harder work may raise Sol effort, and Terra/Luna fallback or lower effort requires a newer direct user instruction.",
-  "currentFocus": "Land exact receipt-owned target exit-event proof for a fresh Retry 11, harden and integrate the optional local-retail presentation branch, then absorb the completed Ghidra closeout.",
+  "currentFocus": "Resolve Retry 11's exact CDB/target exit-status contract, integrate the hardened local-retail presentation branch, then absorb the completed Ghidra closeout.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -17,11 +17,11 @@
       "newReleaseAuthorized": false
     },
     "repository": {
-      "registeredWorktrees": 3,
-      "worktreeOwnership": "main coordinator checkout, the dedicated user-owned Codex Ghidra full-reaudit closeout task, and a completed Cursor submodule/local-retail-presentation worktree awaiting reviewed integration",
+      "registeredWorktrees": 5,
+      "worktreeOwnership": "main coordinator checkout; dedicated Ghidra closeout and player-value tasks; isolated runtime proof and Cursor submodule/local-retail-presentation implementation worktrees",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "72d171837ac40e1b7e406f21e854cb91df410ba1 (current Sol worker-policy reconciliation); exact managed-process-handle retention landed immediately before it at e5a6b275aaaf4e0068666071121c1d56b109863c",
+      "lastPushedBeforeCurrentSlice": "0997419c4c5159e22722f690520ec6d98d39e0e4 (campaign completion criteria); exact receipt-owned CDB target-exit-event parsing is integrated locally through f74ac902 pending this state closeout push",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
@@ -37,7 +37,7 @@
     "patchContractCloseout": {
       "accounting": "29 rows: 20 visible options (9 stable, 11 experimental), 9 hidden companions, 17 dependency edges, 118 conflict edges",
       "safety": "Exact pinned-catalog mutation membership, canonical specimen or verified-clean-backup identity, complete known transition attestation, case-consistent dependency/conflict/profile semantics, sidecar link/stale-state rejection, and atomic damaged-copy recovery",
-      "ux": "Windowed & Mods separates stable/experimental evidence, injects required windowed rows and hidden companions, and exposes bounded proof/non-claim details without raw offsets in the normal path",
+      "ux": "Windowed & Mods now separates exact compatibility/recovery from two initially unselected bounded Player Mods (PATCHED identity marker and non-save-awarding Goodies wall preview); retained legacy/research recipes, visual/executable experiments, and launch/control diagnostics live in a structured collapsed Lab with existing automation IDs preserved",
       "validation": "Focused closeout passed 9 AppCore catalog/profile tests, 34 C# patch regressions, Python helper safety/self-tests, and 30 accounting tests. Final npm test passed a zero-warning WinUI build, 1316 AppCore tests, 138 WinUI tests plus 2 expected private-catalog skips, and all rebuild suites; the isolated native Patch Bench interaction smoke, 3662-file/6264-link Markdown, 19457-file payload, 19641-file submodule payload, migration inventory, 18600-file hygiene/line endings, and 74-package notices gates passed.",
       "review": "Codex and bounded Cursor/Grok normal/adversarial review converged after catalog-binding, transition-attestation, case, sidecar, and interrupted-write recovery blockers were fixed; hostile same-user process isolation remains explicitly out of scope"
     },
@@ -100,8 +100,8 @@
       "task2Implementation": "Integrated through 078efaf7 and 6fe26639: strict exact-type process receipts, PEB-derived launch identity, module/window/manifest/digest binding, local-only marker-ready CDB attach with held command identity and bounded log reads, and foreground input with reverse-order finally cleanup. Independent re-review approved; the integrated Task 2 suites pass without real BEA/CDB.",
       "task3Implementation": "Integrated through 8dc733f4, 526df1c2, and 123ca8ac: one locked unpatched Level 850/configuration 2 protocol, one Q tap per positive role, canonical command/receipt/specimen equality, external fresh/create-new private artifacts, exact marker/input success, and shared-plan ordered cleanup through census.",
       "task4Implementation": "Accepted and pushed at 3d23c176: exact authority/lease schemas and hash binding, canonical no-process dry run, fixed serialized roles, immediate cross-role identity rejection, bounded immutable-byte strict materialization, interruption invalidation after child cleanup, and manifest-before-summary publication. The accepted focused non-live suite passed 111 tests and normal/adversarial Codex review approved; no game/debugger process was launched.",
-      "task5Preflight": "Preflight corrected ambient-versus-effective executable identity and private AppConfig routing. Retries 1-8 exposed and bounded path-budget, CDB identity/null, MASM/module syntax, private-diagnostic, active-log sharing, native INPUT-layout, exact-input, and target/debugger teardown defects. Retry 9 then exposed post-exit process-handle loss; the reviewed correction at e5a6b275 retains the exact target SafeHandle through cleanup and exact ExitTime readback. Retry 10 used fresh controls, passed dry run, launched the exact clean copied retail target, and completed target/debugger cleanup with finalized markers, unchanged source/copy hashes, clear census, and exact managed ExitTime readback. It failed closed and published no matrix because CDB's final ExitTime preceded the target's by about 160 ms. Independent review established that cross-process ExitTime ordering is not a valid Windows debugger invariant and that Retry 10 lacks explicit evidence identifying the event that released g. The accepted correction requires strictly parsed receipt-owned target process-exit evidence from CDB while preserving every identity, marker, hash, finalized-log, no-force-debugger, and census guard; timestamp tolerance and marker-only acceptance are forbidden.",
-      "status": "Tasks 1-4 are accepted. Task 5 has ten preserved failed executions and no published identity claim. Retry 10 proves the corrected exact-handle cleanup path but not Q causality or Transform/Morph/Move/JetPart identity. A fresh Retry 11 is permitted only after the exact target exit-event correction and focused disposable-CDB tests are accepted."
+      "task5Preflight": "Preflight corrected ambient-versus-effective executable identity and private AppConfig routing. Retries 1-10 exposed and bounded path-budget, CDB identity/null, MASM/module syntax, private-diagnostic, active-log sharing, native INPUT-layout, exact-input, target/debugger teardown, process-handle, and invalid cross-process timestamp-order defects. The correction integrated through f74ac902 retains the exact no-delete CDB log stream, strictly parses one bounded global `.lastevent` target process-exit event for the exact receipt-owned PID and nonzero thread, and preserves every process/module/receipt, marker, hash, managed-stop, finalized-log, and census guard. Retry 11 used fresh controls/copies/processes/proof root and its dry run passed. Its no-input log contains the exact receipt-owned target exit event plus ordered cleanup/quit markers, exact managed stop succeeded, hashes were unchanged, and census was clear, but it failed closed before positive roles because CDB returned -1 while reporting the intentionally stopped target exit code 0xFFFFFFFF. The runner currently requires CDB exit code zero before parsing. A bounded TDD investigation is deriving an exact identity-bound relationship; arbitrary nonzero CDB exits remain forbidden.",
+      "status": "Tasks 1-4 are accepted. Task 5 has eleven preserved failed executions and no published identity claim. Retry 11 proves that exact target-exit evidence is retained but does not prove Q causality or Transform/Morph/Move/JetPart identity. Retry 12 is not authorized until the CDB/target exit-status relationship is understood, tested, reviewed, and integrated."
     },
     "agentGuidanceAudit": {
       "integrated": "56738f9b",

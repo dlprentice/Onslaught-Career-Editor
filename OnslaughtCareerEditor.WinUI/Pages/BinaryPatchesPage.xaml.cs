@@ -356,6 +356,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchProfileCatalogStatus.Text = BuildSafeCopyProfileCatalogStatus();
             PatchBenchSelectedProfileDetails.Text = PatchBenchSelectedProfileText.BuildDetails(
                 selectedProfileTextState);
+            PatchBenchPlayerModsSelectionStatus.Text = PatchBenchSelectedProfileText.BuildPlayerModsStatus(
+                visibleSelectedKeys.Contains("version_overlay_use_patched_format_pointer", StringComparer.OrdinalIgnoreCase),
+                visibleSelectedKeys.Contains("goodies_gallery_display_unlock", StringComparer.OrdinalIgnoreCase));
+            AutomationProperties.SetName(PatchBenchPlayerModsSelectionStatus, PatchBenchPlayerModsSelectionStatus.Text);
             UpdateChoiceVisualState(visibleSelectedKeys);
             UpdateLaunchPresetVisualState();
 
@@ -393,11 +397,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 new[]
                 {
                     PatchBenchChoiceVisualState.Bind(PatchBenchWindowedPresetButton, "Select Compatibility Copy profile", "Selected: Compatibility Copy profile", string.Equals(profileId, BinaryPatchPlanBuilder.CompatibilityProfileId, StringComparison.OrdinalIgnoreCase)),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchStableDefaultsButton, "Select Windowed and Graphics Defaults profile", "Selected: Windowed and Graphics Defaults profile", string.Equals(profileId, BinaryPatchPlanBuilder.RecommendedProfileId, StringComparison.OrdinalIgnoreCase)),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchEnhancedPreviewProfileButton, "Select Enhanced Profile Preview profile", "Selected: Enhanced Profile Preview profile", string.Equals(profileId, BinaryPatchPlanBuilder.EnhancedPreviewProfileId, StringComparison.OrdinalIgnoreCase)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchStableDefaultsButton, "Select legacy graphics-default Lab recipe; visible improvement is unproven", "Selected: legacy graphics-default Lab recipe; visible improvement is unproven", string.Equals(profileId, BinaryPatchPlanBuilder.RecommendedProfileId, StringComparison.OrdinalIgnoreCase)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchEnhancedPreviewProfileButton, "Select retained legacy Enhanced Profile Preview Lab recipe", "Selected: retained legacy Enhanced Profile Preview Lab recipe", string.Equals(profileId, BinaryPatchPlanBuilder.EnhancedPreviewProfileId, StringComparison.OrdinalIgnoreCase)),
                     PatchBenchChoiceVisualState.Bind(PatchBenchClearSelectionButton, "Clear optional mod rows; safe copies still include required compatibility", "Selected: no optional mod rows", selectedKeys.Count == 0),
                     PatchBenchChoiceVisualState.Bind(PatchBenchModernGraphicsPresetButton, "Select extra graphics flag rows only", "Selected: graphics flag rows only", SetEquals(selectedKeys, s_modernGraphicsKeys)),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchDebugCameraPreviewProfileButton, "Select Debug Camera Preview profile", "Selected: Debug Camera Preview profile", string.Equals(profileId, BinaryPatchPlanBuilder.DebugCameraPreviewProfileId, StringComparison.OrdinalIgnoreCase)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchDebugCameraPreviewProfileButton, "Select experimental Debug Camera Preview Lab research recipe", "Selected: experimental Debug Camera Preview Lab research recipe", string.Equals(profileId, BinaryPatchPlanBuilder.DebugCameraPreviewProfileId, StringComparison.OrdinalIgnoreCase)),
                     PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorRedButton, "Select red frontend margins", "Selected: red frontend margins", string.Equals(selectedMenuColorKey, "frontend_clear_screen_dark_red", StringComparison.OrdinalIgnoreCase)),
                     PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorGreenButton, "Select green frontend margins", "Selected: green frontend margins", string.Equals(selectedMenuColorKey, "frontend_clear_screen_dark_green", StringComparison.OrdinalIgnoreCase)),
                     PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorBlackButton, "Select black frontend margins", "Selected: black frontend margins", string.Equals(selectedMenuColorKey, "frontend_clear_screen_black", StringComparison.OrdinalIgnoreCase)),
