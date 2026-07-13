@@ -16,18 +16,18 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Use the accepted fail-closed `CMSH static-preview profile v0` implementation to
-produce anonymous ignored local geometry previews, then let a human identify
-the Aquila before any asset identity or Godot role claim. Do not install or
-revive the legacy x86 extractor toolchain.
+Use the accepted fail-closed CMSH static-preview implementation, including its
+bounded REFR-only multipart extension, to assemble and render the six strongest
+BattleEngine-name candidates, then let a human identify the Aquila before any
+asset identity or Godot role claim. Do not install or revive the legacy x86
+extractor toolchain.
 
-1. enumerate only profile-matching ignored bodies into a fresh ignored local
-   session using the integrated guarded parser/emitter;
-2. preserve anonymous labels and a path-free aggregate summary; do not track or
-   externalize retail names, paths, hashes, bytes, screenshots, or identity;
-3. add only the bounded thumbnail/contact-sheet adapter needed for a human to
-   inspect the emitted OBJ candidates, under a separately serialized native
-   lease if rendering is required;
+1. run the integrated REFR-only profile against the six ignored local
+   `be_trans`, `be1`, and `be2` leads and emit one fresh guarded OBJ session;
+2. preserve anonymous human-facing labels and path-free aggregate evidence; do
+   not track or externalize retail paths, hashes, bytes, or generated payloads;
+3. render a bounded local contact sheet for those six assembled candidates and
+   obtain an explicit human selection rather than inferring identity from names;
 4. record the human-selected Aquila role only in an ignored local manifest and
    verify it through the existing guarded Godot presentation bridge; and
 5. close with focused parser/presentation tests, process cleanup, payload
@@ -38,13 +38,18 @@ revive the legacy x86 extractor toolchain.
 ## Current Slice Progress - 2026-07-13
 
 - The fixture-backed CMSH static-preview parser and deterministic geometry-only
-  OBJ emitter are integrated at `4c815373`. The accepted implementation covers
+  OBJ emitter are integrated through `8533796f`. The accepted implementation covers
   the observed stride-36/FVF-0x152/topology-4 subset, exact VBUF reuse and body
   boundaries, bounded malformed input, guarded ignored-local publication,
   held-source revalidation, fatal rollback, and broken-reparse rejection. Its
-  focused acceptance passed 23 Python tests and one pure C# OBJ safety test.
-  It establishes format support only; no local body has been identified as
-  Aquila and no native Godot preview was run for this implementation slice.
+  REFR-only direct geometry reuse, deterministic owner/instance ordering,
+  reference-profile hierarchy validation without transform composition, and
+  post-expansion caps. Its focused acceptance passes 28 Python tests; the
+  original v0 golden remains unchanged. A guarded ignored session already
+  produced 162 simple-profile OBJ candidates and 18 contact sheets. Metadata
+  then narrowed the next pass to six multipart BattleEngine-name records, but
+  none has been rendered or identified as Aquila and no selected-role Godot
+  preview has run.
 - Reference inventory is drafted in
   `reverse-engineering/source-code/reference-submodule-audit-2026-07-12.md`:
   pinned fork/upstream provenance, current tracked counts, source completeness,

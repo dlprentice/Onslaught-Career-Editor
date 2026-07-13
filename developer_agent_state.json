@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-13",
   "routingPolicy": "Follow the global Codex multi-agent lane contract. Under current direct user policy, every new or resumed Codex-owned worker uses gpt-5.6-sol at medium effort by default; harder work may raise Sol effort, and Terra/Luna fallback or lower effort requires a newer direct user instruction.",
-  "currentFocus": "Render local contact sheets for the 162 accepted anonymous CMSH profile-v0 OBJ candidates, obtain a human Aquila selection, and then verify that selected role through the guarded Godot presentation bridge. Keep textures, retail terrain, and the morph canary off this critical path.",
+  "currentFocus": "Use the integrated REFR-only CMSH extension to assemble and render the six strongest BattleEngine-name candidates, obtain a human Aquila selection, and then verify that selected ignored role through the guarded Godot presentation bridge. In parallel, close the guided WinUI first-save visual acceptance gate.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -17,11 +17,11 @@
       "newReleaseAuthorized": false
     },
     "repository": {
-      "registeredWorktrees": 5,
-      "worktreeOwnership": "main owner/integration; read-only Task-Lane Coordinator; Player Value & UX; Rebuild Asset Pipeline; read-only Campaign Steward",
+      "registeredWorktrees": 8,
+      "worktreeOwnership": "main owner/integration; read-only Task-Lane Coordinator and Campaign Steward; Player Value & UX; Rebuild Asset Pipeline; read-only Runtime Fidelity, Lore Editorial, and Ghidra Semantic Debt lanes",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "a3b3af7c (CMSH profile-versus-identity goal/state correction); main and origin/main divergence 0 0",
+      "lastPushedBeforeCurrentSlice": "2e0717e8 (task-lane coordinator state); REFR integration is 8533796f pending this state closeout push",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
@@ -86,7 +86,7 @@
       "acceptance": "Source npm test passed a zero-warning WinUI build, 1307 AppCore, 136 WinUI plus 2 expected private-catalog skips, 38 Core, 21 Client, 12 toolchain, 6 evidence-validator, and 6 owned-process tests. Cache-only native smoke passed at 1280x720 and 1200x675 with tick 120, state hash 87b9d09a3afec0bebd97f06793b83baabe3ff330b2378ff149194d6d6a4f779d, heuristic semantic anchors, synthetic notification-handler clear/rearm, and kernel-owned Job Object cleanup. The exact launcher was manually played with Q/W/Space/R/Esc and exited without an orphan. Full docs, 19453-file payload, 19637-file submodule payload, 18600-file hygiene, 74-package notices, and curated gates passed.",
       "package": "The 721-selected/726-materialized exact source candidate passed payload/inventory, 463-file/138-link Markdown, standalone zero-warning npm test with 1307 AppCore, 123 WinUI plus 15 expected fixture/catalog skips, all 83 rebuild tests, 74-package notices, and 718-file hygiene. First Flight remains source-only and is not in the published v1.0.9 WinUI ZIP.",
       "review": "Codex and bounded Cursor/Grok normal/adversarial reviews accepted the slice after input, toolchain, smoke-evidence, package, and process-ownership challenges were fixed. The final Codex adversarial follow-up accepted the suspended-root kill-on-close Job Object and explicitly heuristic visual-evidence boundary.",
-      "localPresentation": "Integrated on main with Onslaught 5352a81 and AYA 53b10b0. Optional ignored user-supplied meshes are presentation-only: self-contained GLB and custom-parsed OBJ are size/complexity/range bounded, held bytes are revalidated, content-addressed role files publish before an atomic manifest, and ordinary smoke remains synthetic. Core is unchanged; no retail origin, visual fidelity, handling, or parity is claimed. A redacted local inventory parsed all 213 loose AYA archives and disproved the first strict CMSH profile. The common static subset uses stride 36/FVF 0x152/topology field 4, strip semantics, first-VBUF reuse, declared body lengths, and optional/frame/hierarchy records. No tracked evidence identifies the Aquila body, so the revised fixture-backed parser will emit anonymous ignored previews and a human will select identity locally. Visual Studio, Blender, FBX, DDS/textures, GLB generation, and LNDS terrain are separate later contracts."
+      "localPresentation": "Integrated on main with Onslaught 5352a81 and AYA 53b10b0. Optional ignored user-supplied meshes remain presentation-only and Core is unchanged. The guarded CMSH parser produced 162 anonymous simple-profile OBJs and 18 contact sheets from the local retail corpus without changing source archives. Metadata excluded the first shortlist and identified six stronger BattleEngine-name multipart leads. The REFR-only extension integrated at 8533796f reuses direct earlier geometry under each instance transform, validates but does not compose hierarchy, preserves the original v0 golden, and caps expanded output. The six leads still require an ignored local assembly/render pass and explicit human selection. No retail identity, transform fidelity, handling, or parity is claimed; textures, DDS, GLB, LNDS terrain, bones, and animation remain later contracts."
     },
     "movementCrosswalk": {
       "sourceAudit": "Pinned Onslaught 5352a81 and AYAResourceExtractor 53b10b0 are inventoried with fork/upstream provenance, tracked-file counts, build/test posture, supported lanes, completeness gaps, and license boundaries. AYA is Stuart master plus one narrow rectangular-DDS copy-bound correction; neither source corpus is Steam behavior or format-completeness authority.",
@@ -129,13 +129,13 @@
   },
   "activeBlockers": [
     "A fresh AYAResourceExtractor solution build fails with MSB4278 because the Visual C++ targets/VCTargetsPath are unavailable; existing ignored runtime binaries are not a reproducible build.",
-    "No anonymous ignored OBJ session or human Aquila selection has been produced yet. The accepted no-install CMSH profile-v0 parser is integrated, but identity and native Godot presentation remain pending and must stay local-only.",
+    "The anonymous OBJ/contact-sheet session is complete, but none of the six stronger REFR multipart BattleEngine leads has been rendered or selected as Aquila. Identity and selected-role Godot presentation remain pending and local-only.",
     "No accepted copied-runtime morph/movement timeline exists yet, so retail constants and transition behavior cannot be frozen into the rebuild.",
     "AYA lacks a tracked public end-to-end synthetic importer/DDS/FBX fixture, and bundled-component redistribution posture remains unresolved."
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Run the integrated CMSH profile-v0 parser against the approved ignored corpus to generate anonymous local OBJ previews, obtain a human Aquila selection, and only then bootstrap that ignored role on procedural terrain.",
+    "Run the integrated REFR-only CMSH profile against the six approved ignored BattleEngine leads, render a compact local contact sheet, obtain a human Aquila selection, and only then bootstrap that ignored role on procedural terrain.",
     "Retain the integrated strict repeated-NatVis shutdown grammar as runtime infrastructure, but do not run Retry 13 unless a later measured behavior contract directly requires it.",
     "Preserve the integrated Ghidra recovery overlay and transcript evidence until explicit retention acceptance; the task worktree is already retired.",
     "Keep the accepted camera/movement/morph candidate runtime-required; use its cheaper ordered observations before any rebuild-mechanics change. The two confirmed stale BattleEngine mutator pairs are now fail-closed; add Fbx.dll plus FBX-template fail-fast preflight separately.",
