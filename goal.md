@@ -313,6 +313,18 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   runner builds with zero warnings/errors, and Codex plus sanitized Grok
   normal/adversarial review accept. A wholly fresh Retry 12 is authorized;
   Retry 11 remains failed and cannot be reinterpreted.
+- Retry 12 used wholly fresh ignored authority/lease controls, a new absent
+  proof root, fresh copied target, and a passing dry run. The live matrix again
+  stopped in `noInputControl` and published no sanitized result. Exact process,
+  module, receipt, code-fingerprint, managed-stop, target-exit, hash, and final
+  zero-process checks passed. CDB produced the expected forced target exit and
+  ordered terminal markers, but this WinDbg build emitted eleven legitimate
+  `NatVis script unloaded` lines after `quit:` while the parser admitted only
+  one. The run therefore failed closed on terminal diagnostics before either
+  positive role. This is a bounded shutdown-grammar defect, not an identity
+  result. Retry 12 remains failed and cannot be reinterpreted; another live run
+  requires an integrated, adversarially tested correction and wholly fresh
+  controls.
 - The optional local presentation lane is integrated on `main`. It pins the
   Stuart Onslaught reference at `5352a81` and the AYA reference plus narrow
   rectangular-DDS correction at `53b10b0`; adds an ignored exporter/bootstrap
@@ -547,10 +559,10 @@ claim against an already malicious process running as the same Windows user.
 
 ## Next Slices
 
-1. Resolve the exact CDB-versus-managed-target exit-status relationship exposed
-   by Retry 11 with a failing disposable test and narrow identity-bound rule,
-   then run a wholly fresh Retry 12 and publish only a complete validated
-   sanitized identity/causality result.
+1. Correct Retry 12's repeated post-quit NatVis shutdown grammar with strict
+   path-bound tests that continue rejecting unknown diagnostics, then run a
+   wholly fresh identity matrix and publish only a complete validated sanitized
+   identity/causality result.
 2. Use the integrated ignored local-asset path for the next evidence-backed
    presentation slice while keeping synthetic smoke and non-parity boundaries.
 3. Perform the separate bounded review needed to correct the remaining
