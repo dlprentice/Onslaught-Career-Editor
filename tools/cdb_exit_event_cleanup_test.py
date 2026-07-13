@@ -13,6 +13,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SMOKE = ROOT / "tools" / "winui_safe_copy_live_runtime_smoke.py"
 TARGET_PID = 0x73B4
+CDB_EXECUTABLE = Path(
+    r"C:\Program Files\WindowsApps\Microsoft.WinDbg_1.0.0.0_x86__8wekyb3d8bbwe\x86\cdb.exe"
+)
+CDB_VISUALIZERS = CDB_EXECUTABLE.parent / "Visualizers"
 
 
 def load_smoke_module():
@@ -60,7 +64,7 @@ class CdbExitEventCleanupTests(unittest.TestCase):
                 'if (mode.StartsWith("finalize-", StringComparison.Ordinal)) {\n'
                 '  bool forceRequested = mode.Contains("-force", StringComparison.Ordinal);\n'
                 '  bool exitObserved = mode.Contains("-exit", StringComparison.Ordinal);\n'
-                '  bool parsed = TryReadFinalizedCdbExitEvidence(retained, readinessLength, 0x73b4, out bool finalCleanup, out bool finalQuit, out bool finalExitEvent, out uint finalTargetExitCode, out bool finalTerminalRegionClean);\n'
+                '  bool parsed = TryReadFinalizedCdbExitEvidence(retained, readinessLength, 0x73b4, args[4], out bool finalCleanup, out bool finalQuit, out bool finalExitEvent, out uint finalTargetExitCode, out bool finalTerminalRegionClean);\n'
                 '  var decision = EvaluateFinalizedCdbCleanupEvidence(true, false, true, true, true, true, parsed, finalExitEvent, finalCleanup, finalQuit, int.Parse(args[2], CultureInfo.InvariantCulture), finalTargetExitCode, forceRequested, exitObserved, finalTerminalRegionClean);\n'
                 '  Console.WriteLine($"{decision.Graceful}|{decision.Status}|{decision.CdbExitCodeAccepted}|{decision.CdbExitCodeMatchedForcedTargetTermination}|{finalTerminalRegionClean}");\n'
                 '  return decision.Graceful ? 0 : 1;\n'
@@ -84,7 +88,7 @@ class CdbExitEventCleanupTests(unittest.TestCase):
             + predicate
             + "\n\n"
             + evaluator
-            + "\n\nif (args.Length != 4) return 2;\n"
+            + "\n\nif (args.Length != 5) return 2;\n"
             + "string mode = args[0]; string logPath = args[1];\n"
             + "using FileStream retained = OpenRetainedCdbLogStream(logPath);\n"
             + "long readinessLength = long.Parse(args[3], CultureInfo.InvariantCulture);\n"
@@ -102,7 +106,7 @@ class CdbExitEventCleanupTests(unittest.TestCase):
             + "  try { File.Delete(logPath); deleteBlocked = false; } catch (IOException) { } catch (UnauthorizedAccessException) { }\n"
             + "  try { File.Move(replacement, logPath, true); replacementBlocked = false; } catch (IOException) { } catch (UnauthorizedAccessException) { }\n"
             + "}\n"
-            + "bool accepted = TryReadFinalizedCdbExitEvidence(retained, readinessLength, int.Parse(args[2], CultureInfo.InvariantCulture), "
+            + "bool accepted = TryReadFinalizedCdbExitEvidence(retained, readinessLength, int.Parse(args[2], CultureInfo.InvariantCulture), args[4], "
             + "out bool cleanup, out bool quit, out bool exitEvent, out uint targetExitCode, out bool terminalRegionDiagnosticClean);\n"
             + 'Console.WriteLine($"{accepted}|{cleanup}|{quit}|{exitEvent}|{targetExitCode}|{terminalRegionDiagnosticClean}|{deleteBlocked}|{replacementBlocked}");\n'
             + "return accepted && deleteBlocked && replacementBlocked ? 0 : 1;\n",
@@ -164,6 +168,7 @@ class CdbExitEventCleanupTests(unittest.TestCase):
                 str(log),
                 str(pid),
                 str(readiness_length),
+                str(CDB_EXECUTABLE),
             ],
             cwd=ROOT,
             text=True,
@@ -202,6 +207,14 @@ class CdbExitEventCleanupTests(unittest.TestCase):
             "quit:\n"
         )
 
+    @staticmethod
+    def natvis_unload_line(
+        filename: str,
+        *,
+        directory: Path = CDB_VISUALIZERS,
+    ) -> str:
+        return f"NatVis script unloaded from '{directory / filename}'\n"
+
     def test_accepts_actual_disposable_exit_process_shape(self) -> None:
         self.assertEqual(
             (0, "True|True|True|True|4294967295|True|True|True"),
@@ -215,7 +228,7 @@ class CdbExitEventCleanupTests(unittest.TestCase):
             + "0:004> .echo MORPH_CANARY_LASTEVENT_BEGIN; .lastevent; "
             ".echo MORPH_CANARY_LASTEVENT_END; .echo MORPH_CANARY_CLEANUP_Q; q\n"
             + self.valid_log()
-            + "NatVis script unloaded from 'windows.natvis'\n"
+            + self.natvis_unload_line("windows.natvis")
         )
         self.assertEqual(
             0,
@@ -352,8 +365,8 @@ class CdbExitEventCleanupTests(unittest.TestCase):
             ),
         )
 
-    def test_complete_finalizer_allows_known_post_quit_shutdown_boilerplate(self) -> None:
-        transcript = self.valid_log() + "NatVis script unloaded from 'windows.natvis'\n"
+    def test_complete_finalizer_allows_single_bound_natvis_unload(self) -> None:
+        transcript = self.valid_log() + self.natvis_unload_line("windows.natvis")
         self.assertEqual(
             (0, "True|exited-after-managed-stop|True|True|True"),
             self.finalize(
@@ -362,6 +375,91 @@ class CdbExitEventCleanupTests(unittest.TestCase):
                 mode="finalize-force-exit",
             ),
         )
+
+    def test_complete_finalizer_allows_repeated_bound_natvis_unloads(self) -> None:
+        transcript = self.valid_log() + "".join(
+            self.natvis_unload_line(filename)
+            for filename in (
+                "atlmfc.natvis",
+                "concurrency.natvis",
+                "windows.natvis",
+                "winrt.natvis",
+            )
+        )
+        self.assertEqual(
+            (0, "True|exited-after-managed-stop|True|True|True"),
+            self.finalize(
+                transcript,
+                cdb_exit_code=-1,
+                mode="finalize-force-exit",
+            ),
+        )
+
+    def test_complete_finalizer_rejects_unbound_or_malformed_natvis_lines(self) -> None:
+        alternate_root = Path(r"C:\OtherDebugger\x86\Visualizers")
+        alternate_directory = CDB_EXECUTABLE.parent / "OtherVisualizers"
+        valid = self.natvis_unload_line("windows.natvis")
+        malformed_lines = {
+            "mixed-valid-unknown": valid + "unexpected shutdown diagnostic\n",
+            "relative": "NatVis script unloaded from 'windows.natvis'\n",
+            "alternate-root": self.natvis_unload_line(
+                "windows.natvis", directory=alternate_root
+            ),
+            "alternate-directory": self.natvis_unload_line(
+                "windows.natvis", directory=alternate_directory
+            ),
+            "traversal": (
+                "NatVis script unloaded from '"
+                f"{CDB_VISUALIZERS}\\..\\Visualizers\\windows.natvis'\n"
+            ),
+            "non-natvis": self.natvis_unload_line("windows.txt"),
+            "prefix-injection": "prefix " + valid,
+            "suffix-injection": valid.rstrip("\n") + " trailing\n",
+            "control-character": self.natvis_unload_line("bad\tname.natvis"),
+            "missing-quote": valid.replace("'\n", "\n"),
+            "extra-quote": valid.replace("'\n", "''\n"),
+        }
+        for case, post_quit in malformed_lines.items():
+            with self.subTest(case=case):
+                self.assertEqual(
+                    (1, "False|cdb-exit-code-unbound|False|False|False"),
+                    self.finalize(
+                        self.valid_log() + post_quit,
+                        cdb_exit_code=-1,
+                        mode="finalize-force-exit",
+                    ),
+                )
+
+    def test_complete_finalizer_rejects_natvis_unload_before_quit(self) -> None:
+        transcript = self.valid_log().replace(
+            "quit:\n",
+            self.natvis_unload_line("windows.natvis") + "quit:\n",
+        )
+        self.assertEqual(
+            (1, "False|cdb-exit-code-unbound|False|False|False"),
+            self.finalize(
+                transcript,
+                cdb_exit_code=-1,
+                mode="finalize-force-exit",
+            ),
+        )
+
+    def test_complete_finalizer_rejects_nonempty_whitespace_post_quit_lines(self) -> None:
+        for case, post_quit in {
+            "space": " \n",
+            "tab": "\t\n",
+            "vertical-tab": "\v\n",
+            "nonbreaking-space": "\u00a0\n",
+        }.items():
+            with self.subTest(case=case):
+                self.assertEqual(
+                    (1, "False|cdb-exit-code-unbound|False|False|False"),
+                    self.finalize(
+                        self.valid_log() + post_quit,
+                        cdb_exit_code=-1,
+                        mode="finalize-force-exit",
+                    ),
+                )
 
     def test_complete_finalizer_preserves_zero_exit_with_post_quit_diagnostic(self) -> None:
         transcript = self.valid_log() + "Unable to unload debugger extension\n"
