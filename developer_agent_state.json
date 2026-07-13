@@ -21,7 +21,7 @@
       "worktreeOwnership": "main owner/integration; read-only Task-Lane Coordinator and Campaign Steward; Player Value & UX; Rebuild Asset Pipeline; read-only Runtime Fidelity, Lore Editorial, and Ghidra Semantic Debt lanes",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "2e0717e8 (task-lane coordinator state); REFR integration is 8533796f pending this state closeout push",
+      "lastPushedBeforeCurrentSlice": "f65f2dcf (Lore/history README front door); REFR integration and its state reconciliation are pushed on main",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
