@@ -492,6 +492,7 @@
                                                                           AutomationProperties.HelpText="{Binding AccessibilityHelpText}"
                                                                           Unchecked="PatchCheckBox_Changed"
                                                                           IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                                          IsEnabled="{Binding CanChangeSelection}"
                                                                           HorizontalAlignment="Stretch"
                                                                           HorizontalContentAlignment="Stretch"
                                                                           Padding="2,2,0,2"
@@ -640,6 +641,13 @@
                                 <ComboBoxItem Content="BEA_02 over BEA_04" />
                             </ComboBox>
                             <TextBlock Text="Optional: swap one shipped copied music track while creating the safe copy. This writes a restore manifest in the safe copy; in-game audio playback is still experimental."
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                            <TextBlock x:Name="PatchBenchSafeCopySelectionReadiness"
+                                       AutomationProperties.AutomationId="PatchBenchSafeCopySelectionReadiness"
+                                       AutomationProperties.Name="Safe copy selection readiness"
+                                       AutomationProperties.LiveSetting="Polite"
+                                       Text="Selection is valid. Choose a read-only BEA.exe source to create a safe game copy."
+                                       TextWrapping="WrapWholeWords"
                                        Style="{StaticResource SectionBodyTextStyle}" />
                             <Button x:Name="PatchBenchPrepareCopiedProfileButton"
                                     AutomationProperties.AutomationId="PatchBenchPrepareCopiedProfileButton"
