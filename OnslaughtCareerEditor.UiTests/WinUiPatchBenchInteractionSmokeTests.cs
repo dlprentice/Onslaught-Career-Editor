@@ -32,6 +32,7 @@ public class WinUiPatchBenchInteractionSmokeTests
         {
             Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
         }
+        AssertWinUiBuildIsFresh(exePath);
 
         string evidenceDir = Path.Combine(Path.GetTempPath(), "onslaught-patch-choice-state-20260625");
         if (Directory.Exists(evidenceDir))
@@ -83,9 +84,39 @@ public class WinUiPatchBenchInteractionSmokeTests
             InvokeByAutomationId(window, "PatchBenchClearGoodiesPreviewButton");
             AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "Player mods selected: none");
 
+            foreach (string normalId in new[]
+                     {
+                         "PatchBenchSafeCopySelectionReadiness",
+                         "PatchBenchPrepareCopiedProfileButton",
+                         "PatchBenchCopiedProfileReceiptExpander",
+                         "PatchBenchLaunchCopiedProfileButton",
+                         "PatchBenchStopCopiedProfileButton",
+                         "PatchBenchLocalMultiplayerProbeButton",
+                     })
+            {
+                AssertElementAvailable(window, normalId);
+            }
+
             AssertExpandCollapseState(window, "PatchBenchLabExpander", ExpandCollapseState.Collapsed);
+            AssertElementUnavailable(window, "PatchBenchStableDefaultsButton");
+            AssertElementUnavailable(window, "PatchBenchCreateMusicSwapPresetComboBox");
+            AssertElementUnavailable(window, "PatchBenchAdvancedTechnicalExpander");
+            CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-lab-collapsed-normal.png", "PatchBenchLabSelectionStatus", 1000, 720);
             ExpandByAutomationId(window, "PatchBenchLabExpander");
             AssertExpandCollapseState(window, "PatchBenchLabExpander", ExpandCollapseState.Expanded);
+            foreach (string groupId in new[]
+                     {
+                         "PatchBenchLabPatchExperimentsExpander",
+                         "PatchBenchLabLaunchControlExpander",
+                         "PatchBenchLabOnlineResearchExpander",
+                         "PatchBenchLabMusicExperimentsExpander",
+                         "PatchBenchLabBeaDiagnosticsExpander",
+                     })
+            {
+                AssertExpandCollapseState(window, groupId, ExpandCollapseState.Collapsed);
+            }
+
+            ExpandByAutomationId(window, "PatchBenchLabPatchExperimentsExpander");
             AssertLockedRequiredPatch(window, "PatchBenchPatchCheckBox_resolution_gate");
             AssertLockedRequiredPatch(window, "PatchBenchPatchCheckBox_force_windowed");
             ExpandByAutomationId(window, "PatchBenchPatchDetails_resolution_gate");
@@ -96,7 +127,14 @@ public class WinUiPatchBenchInteractionSmokeTests
             InvokeByAutomationId(window, "PatchBenchStableDefaultsButton");
             AssertAutomationNameContains(window, "PatchBenchStableDefaultsButton", "Selected: legacy graphics-default Lab recipe");
             AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Windowed + Graphics Defaults");
+            CollapseByAutomationId(window, "PatchBenchLabExpander");
+            AssertExpandCollapseState(window, "PatchBenchLabExpander", ExpandCollapseState.Collapsed);
+            AssertAutomationNameContains(window, "PatchBenchLabSelectionStatus", "2 patch choices");
+            CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-lab-selection-collapsed-narrow.png", "PatchBenchLabSelectionStatus", 760, 640);
+            ExpandByAutomationId(window, "PatchBenchLabExpander");
+            AssertExpandCollapseState(window, "PatchBenchLabPatchExperimentsExpander", ExpandCollapseState.Expanded);
 
+            ExpandByAutomationId(window, "PatchBenchLabMusicExperimentsExpander");
             SelectComboBoxItem(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
             AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
             InvokeByAutomationId(window, "PatchBenchEnhancedPreviewProfileButton");
@@ -145,6 +183,7 @@ public class WinUiPatchBenchInteractionSmokeTests
                 "PatchBenchSafeCopyBrowseSourceButton",
                 "Browse BEA.exe source");
 
+            ExpandByAutomationId(window, "PatchBenchLabBeaDiagnosticsExpander");
             ExpandByAutomationId(window, "PatchBenchAdvancedTechnicalExpander");
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-advanced-source-actions-narrow.png", "PatchBenchBrowseSourceButton", 760, 640);
             AssertSourceActionLayout(
@@ -154,6 +193,9 @@ public class WinUiPatchBenchInteractionSmokeTests
                 "PatchBenchUseGameFolderButton",
                 "Use configured source game folder");
 
+            ExpandByAutomationId(window, "PatchBenchLabOnlineResearchExpander");
+            AssertElementAvailable(window, "PatchBenchOnlineReadinessStatusPanel");
+            ExpandByAutomationId(window, "PatchBenchLabLaunchControlExpander");
             ExpandByAutomationId(window, "PatchBenchAdvancedLaunchOptionsExpander");
             SelectComboBoxItem(window, "PatchBenchAdminLevelPresetComboBox", "Campaign training world 100");
             AssertTextBoxText(window, "PatchBenchLevelLaunchOption", "100");
@@ -216,6 +258,10 @@ public class WinUiPatchBenchInteractionSmokeTests
                 .Except(initialBeaProcessIds)
                 .ToArray();
             Assert.That(newBeaProcessIds, Is.Empty, "UIA selection smoke must not launch BEA.exe.");
+            Assert.That(
+                Directory.Exists(Path.Combine(appDataDir, "OnslaughtCareerEditor", "GameProfiles")),
+                Is.False,
+                "UIA selection smoke must not create a safe game copy.");
         }
         finally
         {
@@ -442,6 +488,15 @@ public class WinUiPatchBenchInteractionSmokeTests
         Thread.Sleep(250);
     }
 
+    private static void CollapseByAutomationId(Window window, string automationId)
+    {
+        AutomationElement element = FindByAutomationId(window, automationId);
+        ScrollIntoView(element);
+        Assert.That(element.Patterns.ExpandCollapse.IsSupported, Is.True, $"{automationId} should expose ExpandCollapsePattern.");
+        element.Patterns.ExpandCollapse.Pattern.Collapse();
+        Thread.Sleep(250);
+    }
+
     private static void AssertExpandCollapseState(Window window, string automationId, ExpandCollapseState expected)
     {
         AutomationElement element = FindByAutomationId(window, automationId);
@@ -465,6 +520,20 @@ public class WinUiPatchBenchInteractionSmokeTests
     {
         AutomationElement element = FindByAutomationId(window, automationId);
         Assert.That(element.IsEnabled, Is.EqualTo(expected), $"Unexpected enabled state for {automationId}.");
+    }
+
+    private static void AssertElementAvailable(Window window, string automationId)
+    {
+        Assert.That(FindByAutomationId(window, automationId), Is.Not.Null);
+    }
+
+    private static void AssertElementUnavailable(Window window, string automationId)
+    {
+        Thread.Sleep(150);
+        Assert.That(
+            window.FindFirstDescendant(cf => cf.ByAutomationId(automationId)),
+            Is.Null,
+            $"{automationId} should stay outside the UIA tree while Lab is collapsed.");
     }
 
     private static void SetTextBoxText(Window window, string automationId, string text)
@@ -727,6 +796,31 @@ public class WinUiPatchBenchInteractionSmokeTests
             "net10.0-windows10.0.19041.0",
             "win-x64",
             "OnslaughtCareerEditor.WinUI.exe");
+    }
+
+    private static void AssertWinUiBuildIsFresh(string exePath)
+    {
+        string projectRoot = Path.Combine(ResolveRepoRoot(), "OnslaughtCareerEditor.WinUI");
+        string outputAssemblyPath = Path.Combine(
+            Path.GetDirectoryName(exePath) ?? string.Empty,
+            "OnslaughtCareerEditor.WinUI.dll");
+        Assert.That(File.Exists(outputAssemblyPath), Is.True, $"WinUI build assembly not found at: {outputAssemblyPath}");
+
+        string binSegment = Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar;
+        string objSegment = Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar;
+        DateTime latestSourceWriteUtc = Directory.EnumerateFiles(projectRoot, "*", SearchOption.AllDirectories)
+            .Where(path =>
+                (path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) ||
+                 path.EndsWith(".xaml", StringComparison.OrdinalIgnoreCase)) &&
+                !path.Contains(binSegment, StringComparison.OrdinalIgnoreCase) &&
+                !path.Contains(objSegment, StringComparison.OrdinalIgnoreCase))
+            .Select(path => File.GetLastWriteTimeUtc(path))
+            .Max();
+
+        Assert.That(
+            File.GetLastWriteTimeUtc(outputAssemblyPath),
+            Is.GreaterThanOrEqualTo(latestSourceWriteUtc),
+            $"WinUI build output is older than current source. Rebuild the default output before native UIA: {outputAssemblyPath}");
     }
 
     private static string ResolveRepoRoot()

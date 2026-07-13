@@ -142,8 +142,13 @@
                     <ColumnDefinition Width="2*" />
                     <ColumnDefinition Width="360" />
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
                 <Border x:Name="PatchSetBorder"
+                        Grid.Row="0"
                         Grid.Column="0"
                         Style="{StaticResource SectionCardStyle}"
                         Margin="0">
@@ -238,365 +243,63 @@
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
-                                        <Button Content="Add PATCHED marker"
-                                                AutomationProperties.AutomationId="PatchBenchAddVersionMarkerButton"
+                                        <Button AutomationProperties.AutomationId="PatchBenchAddVersionMarkerButton"
                                                 AutomationProperties.Name="Add PATCHED title marker row"
                                                 Grid.Row="0"
                                                 Grid.Column="0"
                                                 HorizontalAlignment="Stretch"
-                                                Click="AddVersionMarkerButton_Click" />
-                                        <Button Content="Clear PATCHED marker"
-                                                AutomationProperties.AutomationId="PatchBenchClearVersionMarkerButton"
+                                                MinHeight="56"
+                                                Click="AddVersionMarkerButton_Click">
+                                            <TextBlock Text="Add PATCHED marker"
+                                                       TextWrapping="WrapWholeWords"
+                                                       TextAlignment="Center"
+                                                       HorizontalAlignment="Center" />
+                                        </Button>
+                                        <Button AutomationProperties.AutomationId="PatchBenchClearVersionMarkerButton"
                                                 AutomationProperties.Name="Clear PATCHED title marker row"
                                                 Grid.Row="0"
                                                 Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
-                                                Click="ClearVersionMarkerButton_Click" />
-                                        <Button Content="Add Goodies wall preview"
-                                                AutomationProperties.AutomationId="PatchBenchAddGoodiesPreviewButton"
+                                                MinHeight="56"
+                                                Click="ClearVersionMarkerButton_Click">
+                                            <TextBlock Text="Clear PATCHED marker"
+                                                       TextWrapping="WrapWholeWords"
+                                                       TextAlignment="Center"
+                                                       HorizontalAlignment="Center" />
+                                        </Button>
+                                        <Button AutomationProperties.AutomationId="PatchBenchAddGoodiesPreviewButton"
                                                 AutomationProperties.Name="Add bounded Goodies wall display preview; does not edit saves, award Goodies, prove every entry, or prove model and FMV playback"
                                                 Grid.Row="1"
                                                 Grid.Column="0"
                                                 HorizontalAlignment="Stretch"
-                                                Click="AddGoodiesPreviewButton_Click" />
-                                        <Button Content="Clear Goodies wall preview"
-                                                AutomationProperties.AutomationId="PatchBenchClearGoodiesPreviewButton"
+                                                MinHeight="56"
+                                                Click="AddGoodiesPreviewButton_Click">
+                                            <TextBlock Text="Add Goodies wall preview"
+                                                       TextWrapping="WrapWholeWords"
+                                                       TextAlignment="Center"
+                                                       HorizontalAlignment="Center" />
+                                        </Button>
+                                        <Button AutomationProperties.AutomationId="PatchBenchClearGoodiesPreviewButton"
                                                 AutomationProperties.Name="Clear Goodies wall display preview row"
                                                 Grid.Row="1"
                                                 Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
-                                                Click="ClearGoodiesPreviewButton_Click" />
+                                                MinHeight="56"
+                                                Click="ClearGoodiesPreviewButton_Click">
+                                            <TextBlock Text="Clear Goodies wall preview"
+                                                       TextWrapping="WrapWholeWords"
+                                                       TextAlignment="Center"
+                                                       HorizontalAlignment="Center" />
+                                        </Button>
                                     </Grid>
                                 </StackPanel>
                             </Border>
 
-                            <Expander x:Name="PatchBenchLabExpander"
-                                      AutomationProperties.AutomationId="PatchBenchLabExpander"
-                                      AutomationProperties.Name="Open Lab recipes, experiments, and diagnostics"
-                                      Header="Lab: legacy recipes and experiments"
-                                      IsExpanded="False">
-                                <StackPanel Spacing="16"
-                                            Margin="0,12,0,0">
-                                    <TextBlock Text="Lab keeps specialist tools discoverable without presenting them as normal player recommendations. Each group has a different purpose and proof boundary."
-                                               Style="{StaticResource SectionBodyTextStyle}" />
-                                    <Border Background="{ThemeResource ShellSurfaceBrush}"
-                                            BorderBrush="{ThemeResource ShellBorderBrush}"
-                                            BorderThickness="1"
-                                            CornerRadius="8"
-                                            Padding="10,8">
-                                        <TextBlock x:Name="PatchBenchProfileCatalogStatus"
-                                                   AutomationProperties.AutomationId="PatchBenchProfileCatalogStatus"
-                                                   AutomationProperties.Name="Profile catalog and preset source"
-                                                   Text="Profile catalog and preset source: tracked catalog status loads here."
-                                                   TextWrapping="WrapWholeWords" />
-                                    </Border>
-                                    <Expander x:Name="PatchBenchSelectedProfileDetailsExpander"
-                                              AutomationProperties.AutomationId="PatchBenchSelectedProfileDetailsExpander"
-                                              AutomationProperties.Name="Preset details and limits"
-                                              Header="Preset details and limits">
-                                        <TextBlock x:Name="PatchBenchSelectedProfileDetails"
-                                                   AutomationProperties.AutomationId="PatchBenchSelectedProfileDetails"
-                                                   AutomationProperties.Name="Selected safe-copy preset details"
-                                                   Text="Selected safe-copy preset details: included changes, restore path, and limits update with the selected profile."
-                                                   TextWrapping="WrapWholeWords" />
-                                    </Expander>
-                                    <TextBlock Text="Legacy and research recipes"
-                                               AutomationProperties.HeadingLevel="Level2"
-                                               FontSize="14"
-                                               FontWeight="SemiBold" />
-                            <Border BorderBrush="{ThemeResource ShellBorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="8"
-                                    Padding="12"
-                                    Background="{ThemeResource ShellMutedSurfaceBrush}">
-                                <StackPanel Spacing="10">
-                                    <TextBlock Text="Retained Lab recipes"
-                                               FontSize="14"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock Text="These legacy and research presets remain available for receipts, regression work, and earlier instructions. They are not recommendations for normal play. The app still verifies every selected row before creating or launching the safe copy."
-                                               Style="{StaticResource SectionBodyTextStyle}" />
-                                    <TextBlock Text="Enhanced Profile Preview is a retained legacy recipe combining graphics flags, marker, margins, Goodies preview, and copied-options control starting values; it is not a general enhancement claim."
-                                               Style="{StaticResource SectionBodyTextStyle}" />
-                                    <TextBlock Text="Debug Camera Preview is an experimental research recipe selecting the camera toggle plus one Q-forward movement test."
-                                               Style="{StaticResource SectionBodyTextStyle}" />
-                                    <Border Background="{ThemeResource ShellSurfaceBrush}"
-                                            BorderBrush="{ThemeResource ShellBorderBrush}"
-                                            BorderThickness="1"
-                                            CornerRadius="8"
-                                            Padding="10,8">
-                                        <StackPanel Spacing="4">
-                                            <TextBlock x:Name="PatchBenchDebugCameraProofMatrixStatus"
-                                                       AutomationProperties.AutomationId="PatchBenchDebugCameraProofMatrixStatus"
-                                                       AutomationProperties.Name="Debug camera preview limits status"
-                                                       Text="Debug Camera Preview keeps the other camera-key experiments manual so you can opt into them one at a time."
-                                                       TextWrapping="WrapWholeWords" />
-                                            <TextBlock Text="Use this preview as a small camera-control trial, not a full camera overhaul."
-                                                       TextWrapping="WrapWholeWords" />
-                                            <TextBlock Text="Some camera-key combinations still need broader menu and pause testing before they become presets."
-                                                       TextWrapping="WrapWholeWords" />
-                                            <TextBlock Text="Experimental camera controls may be unstable. Open Details and limits on each row when you need exact test coverage."
-                                                       Style="{StaticResource SectionBodyTextStyle}" />
-                                        </StackPanel>
-                                    </Border>
-                                    <TextBlock Text="Fullscreen fallback, netcode, and in-game toggle menus are not part of any preset yet."
-                                               Style="{StaticResource SectionBodyTextStyle}" />
-                                    <TextBlock Text="Create safe copy records the selected rows in the safe-copy receipt and profile manifest. Control-options details are recorded only when an options manifest is written. Your installed game stays unchanged."
-                                               Style="{StaticResource SectionBodyTextStyle}" />
-                                    <Grid ColumnSpacing="8"
-                                          RowSpacing="8">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                        </Grid.RowDefinitions>
-                                        <Button x:Name="PatchBenchStableDefaultsButton"
-                                                Content="Legacy graphics-default recipe"
-                                                AutomationProperties.AutomationId="PatchBenchStableDefaultsButton"
-                                                AutomationProperties.Name="Select legacy graphics-default Lab recipe; visible improvement is unproven"
-                                                Grid.Row="0"
-                                                Grid.Column="0"
-                                                HorizontalAlignment="Stretch"
-                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                                Click="StableDefaultsButton_Click" />
-                                        <Button x:Name="PatchBenchEnhancedPreviewProfileButton"
-                                                Content="Enhanced Profile Preview"
-                                                AutomationProperties.AutomationId="PatchBenchEnhancedPreviewProfileButton"
-                                                AutomationProperties.Name="Select retained legacy Enhanced Profile Preview Lab recipe"
-                                                ToolTipService.ToolTip="Preview profile: compatibility, graphics defaults, PATCHED title marker, red frontend margins, Goodies preview, and copied-options control tweaks. Open row details for what was checked and current limits."
-                                                Grid.Row="0"
-                                                Grid.Column="1"
-                                                HorizontalAlignment="Stretch"
-                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                                Click="EnhancedPreviewPresetButton_Click" />
-                                        <Button x:Name="PatchBenchModernGraphicsPresetButton"
-                                                Content="Graphics flag rows only"
-                                                AutomationProperties.AutomationId="PatchBenchModernGraphicsPresetButton"
-                                                AutomationProperties.Name="Select extra graphics flag rows only"
-                                                Grid.Row="1"
-                                                Grid.Column="0"
-                                                HorizontalAlignment="Stretch"
-                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                                Click="ModernGraphicsPresetButton_Click" />
-                                        <Button x:Name="PatchBenchDebugCameraPreviewProfileButton"
-                                                Content="Debug Camera Preview"
-                                                AutomationProperties.AutomationId="PatchBenchDebugCameraPreviewProfileButton"
-                                                AutomationProperties.Name="Select experimental Debug Camera Preview Lab research recipe"
-                                                AutomationProperties.HelpText="Experimental profile: Q-forward only; not full camera controls, joystick or analog camera coverage, pause/menu safety, or gameplay safety."
-                                                ToolTipService.ToolTip="Experimental profile: compatibility plus free-camera toggle and one Q-forward movement path. It does not prove full camera controls or gameplay safety."
-                                                Grid.Row="1"
-                                                Grid.Column="1"
-                                                HorizontalAlignment="Stretch"
-                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                                Click="DebugCameraPreviewPresetButton_Click" />
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
-
-                            <TextBlock Text="Visual and executable experiments"
-                                       AutomationProperties.HeadingLevel="Level2"
-                                       FontSize="14"
-                                       FontWeight="SemiBold" />
-                            <TextBlock Text="These detailed rows include legacy graphics flags, frontend colors, fullscreen fallback, pause tests, and camera experiments. Read each row's limits before selecting it."
-                                       Style="{StaticResource SectionBodyTextStyle}" />
-                            <Border BorderBrush="{ThemeResource ShellBorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="8"
-                                    Padding="12"
-                                    Background="{ThemeResource ShellMutedSurfaceBrush}">
-                                <StackPanel Spacing="10">
-                                    <TextBlock Text="Frontend margin color"
-                                               FontSize="14"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock Text="Choose one clear-screen color for the safe copy. Accepted checks cover title-screen margins and one navigated Goodies-menu run; they do not cover every menu background or replace textures, fonts, or HUD colors."
-                                               Style="{StaticResource SectionBodyTextStyle}" />
-                                    <Grid ColumnSpacing="8"
-                                          RowSpacing="8">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                        </Grid.RowDefinitions>
-                                        <Button x:Name="PatchBenchMenuColorRedButton"
-                                                Content="Red margins"
-                                                AutomationProperties.AutomationId="PatchBenchMenuColorRedButton"
-                                                AutomationProperties.Name="Select red frontend margins"
-                                                Grid.Row="0"
-                                                Grid.Column="0"
-                                                HorizontalAlignment="Stretch"
-                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                                Click="MenuColorRedButton_Click" />
-                                        <Button x:Name="PatchBenchMenuColorGreenButton"
-                                                Content="Green margins"
-                                                AutomationProperties.AutomationId="PatchBenchMenuColorGreenButton"
-                                                AutomationProperties.Name="Select green frontend margins"
-                                                Grid.Row="0"
-                                                Grid.Column="1"
-                                                HorizontalAlignment="Stretch"
-                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                                Click="MenuColorGreenButton_Click" />
-                                        <Button x:Name="PatchBenchMenuColorBlackButton"
-                                                Content="Black margins"
-                                                AutomationProperties.AutomationId="PatchBenchMenuColorBlackButton"
-                                                AutomationProperties.Name="Select black frontend margins"
-                                                Grid.Row="1"
-                                                Grid.Column="0"
-                                                HorizontalAlignment="Stretch"
-                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                                Click="MenuColorBlackButton_Click" />
-                                        <Button x:Name="PatchBenchMenuColorClearButton"
-                                                Content="Clear margin color"
-                                                AutomationProperties.AutomationId="PatchBenchMenuColorClearButton"
-                                                AutomationProperties.Name="Clear frontend margin color selection"
-                                                Grid.Row="1"
-                                                Grid.Column="1"
-                                                HorizontalAlignment="Stretch"
-                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                                Click="MenuColorClearButton_Click" />
-                                    </Grid>
-                                    <TextBlock x:Name="PatchBenchMenuColorSelectionStatus"
-                                               AutomationProperties.AutomationId="PatchBenchMenuColorSelectionStatus"
-                                               AutomationProperties.Name="Selected frontend margin color status"
-                                               Text="Selected frontend margins: none."
-                                               Style="{StaticResource SectionBodyTextStyle}" />
-                                </StackPanel>
-                            </Border>
-
-                            <StackPanel x:Name="PatchBenchPatchRows"
-                                        AutomationProperties.AutomationId="PatchBenchPatchRows">
-                            <ItemsControl x:Name="PatchGroupsItemsControl">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="models:BinaryPatchGroupModel">
-                                        <Border BorderBrush="{ThemeResource ShellBorderBrush}"
-                                                BorderThickness="1"
-                                                CornerRadius="12"
-                                                Padding="12"
-                                                Margin="0,0,0,12">
-                                            <StackPanel Spacing="12">
-                                                <StackPanel>
-                                                    <TextBlock Text="{Binding Title}"
-                                                               FontSize="14"
-                                                               FontWeight="SemiBold" />
-                                                    <TextBlock Text="{Binding Description}"
-                                                               Margin="0,6,0,0"
-                                                               Style="{StaticResource SectionBodyTextStyle}" />
-                                                    <TextBlock Text="{Binding ScanSummary}"
-                                                               Margin="0,6,0,0"
-                                                               Style="{StaticResource SectionBodyTextStyle}" />
-                                                </StackPanel>
-
-                                                <ItemsControl ItemsSource="{Binding Items}">
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate x:DataType="models:BinaryPatchItemModel">
-                                                            <StackPanel Spacing="4"
-                                                                        AutomationProperties.AutomationId="{Binding RowAutomationId}"
-                                                                        Margin="0,0,0,10">
-                                                                <CheckBox Checked="PatchCheckBox_Changed"
-                                                                          AutomationProperties.AutomationId="{Binding CheckBoxAutomationId}"
-                                                                          AutomationProperties.Name="{Binding DisplayName}"
-                                                                          AutomationProperties.HelpText="{Binding AccessibilityHelpText}"
-                                                                          Unchecked="PatchCheckBox_Changed"
-                                                                          IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                                                          IsEnabled="{Binding CanChangeSelection}"
-                                                                          HorizontalAlignment="Stretch"
-                                                                          HorizontalContentAlignment="Stretch"
-                                                                          Padding="2,2,0,2"
-                                                                          Margin="0">
-                                                                    <StackPanel Spacing="4"
-                                                                                Margin="10,0,0,0">
-                                                                        <TextBlock Text="{Binding DisplayName}"
-                                                                                   FontWeight="SemiBold"
-                                                                                   TextWrapping="WrapWholeWords" />
-                                                                        <TextBlock Text="{Binding Summary}"
-                                                                                   Style="{StaticResource SectionBodyTextStyle}" />
-                                                                        <TextBlock Text="{Binding UserFacingStatus}"
-                                                                                   FontSize="12"
-                                                                                   TextWrapping="WrapWholeWords"
-                                                                                   Foreground="{StaticResource ShellMutedTextBrush}" />
-                                                                        <TextBlock Text="{Binding TrackLabel}"
-                                                                                   FontSize="11"
-                                                                                   FontWeight="SemiBold"
-                                                                                   Foreground="{Binding TrackBrush}"
-                                                                                   CharacterSpacing="60"
-                                                                                   Opacity="0.95" />
-                                                                    </StackPanel>
-                                                                </CheckBox>
-                                                                <Expander Header="{Binding DetailsHeader}"
-                                                                          AutomationProperties.AutomationId="{Binding DetailsAutomationId}"
-                                                                          AutomationProperties.Name="{Binding DetailsHeader}"
-                                                                          Margin="36,0,0,0">
-                                                                    <StackPanel Spacing="8">
-                                                                            <StackPanel Spacing="2">
-                                                                                <TextBlock Text="What should change"
-                                                                                           FontSize="12"
-                                                                                           FontWeight="SemiBold" />
-                                                                                <TextBlock Text="{Binding ExpectedVisibleResult}"
-                                                                                           FontSize="12"
-                                                                                           TextWrapping="WrapWholeWords"
-                                                                                           Foreground="{StaticResource ShellMutedTextBrush}" />
-                                                                            </StackPanel>
-                                                                            <StackPanel Spacing="2">
-                                                                                <TextBlock Text="What was checked"
-                                                                                           FontSize="12"
-                                                                                           FontWeight="SemiBold" />
-                                                                                <TextBlock Text="{Binding VerifiedProof}"
-                                                                                           FontSize="12"
-                                                                                           TextWrapping="WrapWholeWords"
-                                                                                           Foreground="{StaticResource ShellMutedTextBrush}" />
-                                                                            </StackPanel>
-                                                                            <StackPanel Spacing="2">
-                                                                                <TextBlock Text="Not proven yet"
-                                                                                           FontSize="12"
-                                                                                           FontWeight="SemiBold" />
-                                                                                <TextBlock Text="{Binding StillUnproven}"
-                                                                                           FontSize="12"
-                                                                                           TextWrapping="WrapWholeWords"
-                                                                                           Foreground="{StaticResource ShellMutedTextBrush}" />
-                                                                            </StackPanel>
-                                                                            <StackPanel Spacing="2">
-                                                                                <TextBlock Text="Proof note"
-                                                                                           FontSize="12"
-                                                                                           FontWeight="SemiBold" />
-                                                                                <TextBlock Text="{Binding ProofReference}"
-                                                                                           FontSize="12"
-                                                                                           TextWrapping="WrapWholeWords"
-                                                                                           Foreground="{StaticResource ShellMutedTextBrush}" />
-                                                                            </StackPanel>
-                                                                             <TextBlock Text="{Binding OffsetText}"
-                                                                                        FontSize="12"
-                                                                                        Foreground="{StaticResource ShellMutedTextBrush}" />
-                                                                            <TextBlock Text="{Binding Spec.Key}"
-                                                                                       FontSize="12"
-                                                                                       Foreground="{StaticResource ShellMutedTextBrush}" />
-                                                                    </StackPanel>
-                                                                </Expander>
-                                                            </StackPanel>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                            </StackPanel>
-                            <TextBlock Text="Launch and control diagnostics"
-                                       AutomationProperties.HeadingLevel="Level2"
-                                       FontSize="14"
-                                       FontWeight="SemiBold" />
-                            <TextBlock Text="Launch flags, copied-options control tests, music staging, and technical network research remain separately collapsed in the Safe game copy and research sections. They are diagnostics, not player recommendations."
-                                       Style="{StaticResource SectionBodyTextStyle}" />
-                                </StackPanel>
-                            </Expander>
-                    </StackPanel>
+                        </StackPanel>
                 </Border>
 
                 <StackPanel Grid.Column="1"
+                            Grid.Row="0"
                             Spacing="16">
                     <Border Style="{StaticResource SectionCardStyle}"
                             Margin="0">
@@ -640,24 +343,21 @@
                                       Unchecked="LaunchOptionCheckBox_Changed" />
                             <TextBlock Text="Leave this off for clean patch tests. Turn it on when you want the safe copy to see your copied save folder. The source savegames folder is still read-only."
                                        Style="{StaticResource SectionBodyTextStyle}" />
-                            <ComboBox x:Name="PatchBenchCreateMusicSwapPresetComboBox"
-                                      AutomationProperties.AutomationId="PatchBenchCreateMusicSwapPresetComboBox"
-                                      AutomationProperties.Name="Music swap preset staged while creating safe copy"
-                                      Header="Music swap staged during safe-copy creation"
-                                      SelectionChanged="LaunchOptionComboBox_SelectionChanged">
-                                <ComboBoxItem Content="No music swap" />
-                                <ComboBoxItem Content="BEA_02 over BEA_01" />
-                                <ComboBoxItem Content="BEA_01 over BEA_02" />
-                                <ComboBoxItem Content="BEA_02 over BEA_04" />
-                            </ComboBox>
-                            <TextBlock Text="Optional: swap one shipped copied music track while creating the safe copy. This writes a restore manifest in the safe copy; in-game audio playback is still experimental."
-                                       Style="{StaticResource SectionBodyTextStyle}" />
                             <TextBlock x:Name="PatchBenchSafeCopySelectionReadiness"
                                        AutomationProperties.AutomationId="PatchBenchSafeCopySelectionReadiness"
                                        AutomationProperties.Name="Safe copy selection readiness"
                                        AutomationProperties.LiveSetting="Polite"
                                        Text="Selection is valid. Choose a read-only BEA.exe source to create a safe game copy."
                                        TextWrapping="WrapWholeWords"
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                            <TextBlock x:Name="PatchBenchLabSelectionStatus"
+                                       AutomationProperties.AutomationId="PatchBenchLabSelectionStatus"
+                                       AutomationProperties.Name="Extra settings affecting the next copied profile"
+                                       AutomationProperties.LiveSetting="Polite"
+                                       Text="Extra settings for next copy: none active."
+                                       TextWrapping="WrapWholeWords"
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                            <TextBlock Text="Online research files, post-create music staging or restore, and BEA.exe-only operations are reported separately; they do not affect Create."
                                        Style="{StaticResource SectionBodyTextStyle}" />
                             <Button x:Name="PatchBenchPrepareCopiedProfileButton"
                                     AutomationProperties.AutomationId="PatchBenchPrepareCopiedProfileButton"
@@ -723,131 +423,638 @@
                                     BorderThickness="1"
                                     CornerRadius="8"
                                     Padding="12,10">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Local split-screen"
+                                               FontSize="14"
+                                               FontWeight="SemiBold" />
+                                    <Button x:Name="PatchBenchLocalMultiplayerProbeButton"
+                                            AutomationProperties.AutomationId="PatchBenchLocalMultiplayerProbeButton"
+                                            AutomationProperties.Name="Set local split-screen test level for safe copy"
+                                            Content="Local split-screen test"
+                                            Click="LocalMultiplayerProbeButton_Click" />
+                                    <TextBlock Text="Sets -level 850 for the safe copy. This targets the known local split-screen level range; it is not online multiplayer."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                </StackPanel>
+                            </Border>
+                            <Border Background="{ThemeResource ShellMutedSurfaceBrush}"
+                                    BorderBrush="{ThemeResource ShellBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12,10">
                                 <TextBlock x:Name="PatchBenchCopiedProfileLaunchStatus"
                                            AutomationProperties.AutomationId="PatchBenchCopiedProfileLaunchStatus"
                                            AutomationProperties.Name="Safe game copy launch status"
                                            Text="No safe copy launch attempted. This does not confirm it reached the menu, stayed windowed, rendered correctly, or played replacement music."
                                            TextWrapping="WrapWholeWords" />
                             </Border>
-                            <Expander Header="Launch plan preview"
-                                      AutomationProperties.AutomationId="PatchBenchCopiedProfileLaunchPlanExpander"
-                                      AutomationProperties.Name="Safe copy launch plan preview">
-                                <TextBox x:Name="PatchBenchCopiedProfileLaunchPlan"
-                                         AutomationProperties.AutomationId="PatchBenchCopiedProfileLaunchPlan"
-                                         AutomationProperties.Name="Safe copy launch plan"
-                                         IsReadOnly="True"
-                                         MinHeight="80"
-                                         MaxHeight="160"
-                                         ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                         TextWrapping="Wrap"
-                                         PlaceholderText="Safe copy launch plan appears here after preparation." />
-                            </Expander>
-                            <Expander Header="Advanced launch and control options"
-                                      AutomationProperties.AutomationId="PatchBenchAdvancedLaunchOptionsExpander"
-                                      AutomationProperties.Name="Advanced launch and control options"
-                                      IsExpanded="False">
-                                <StackPanel Spacing="10">
-                                 <TextBlock Text="Advanced launch options"
-                                            FontSize="16"
-                                            FontWeight="SemiBold" />
-                                 <TextBlock Text="These options are passed only to the safe copy. They do not edit either executable."
-                                            Style="{StaticResource SectionBodyTextStyle}" />
-                                 <TextBlock Text="Launch presets"
-                                            Style="{StaticResource SectionBodyTextStyle}" />
-                                 <StackPanel Orientation="Horizontal" Spacing="10">
-                                     <Button x:Name="PatchBenchQuietCaptureLaunchPresetButton"
-                                             AutomationProperties.AutomationId="PatchBenchQuietCaptureLaunchPresetButton"
-                                             AutomationProperties.Name="Set quiet capture launch options for safe copy"
-                                             Content="Quiet capture"
-                                             Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                             Click="QuietCaptureLaunchPresetButton_Click" />
-                                 </StackPanel>
-                                 <StackPanel Orientation="Horizontal" Spacing="10">
-                                     <Button x:Name="PatchBenchHighDetailLaunchPresetButton"
-                                             AutomationProperties.AutomationId="PatchBenchHighDetailLaunchPresetButton"
-                                             AutomationProperties.Name="Set high detail launch options for safe copy"
-                                             Content="High detail test"
-                                             Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                             Click="HighDetailLaunchPresetButton_Click" />
-                                     <Button x:Name="PatchBenchClearLaunchOptionsButton"
-                                             AutomationProperties.AutomationId="PatchBenchClearLaunchOptionsButton"
-                                             AutomationProperties.Name="Clear launch options for safe copy"
-                                             Content="Clear launch options"
-                                             Click="ClearLaunchOptionsButton_Click" />
-                                 </StackPanel>
-                                 <TextBlock Text="Presets only fill the options below; Play still uses the guarded safe-copy launch plan."
-                                            Style="{StaticResource SectionBodyTextStyle}" />
-                                 <CheckBox x:Name="PatchBenchSkipFmvLaunchOption"
-                                           AutomationProperties.AutomationId="PatchBenchSkipFmvLaunchOption"
-                                           AutomationProperties.Name="Skip intro movies for safe copy"
-                                           Content="Skip intro movies"
-                                          Checked="LaunchOptionCheckBox_Changed"
-                                          Unchecked="LaunchOptionCheckBox_Changed" />
-                                <CheckBox x:Name="PatchBenchNoMusicLaunchOption"
-                                          AutomationProperties.AutomationId="PatchBenchNoMusicLaunchOption"
-                                          AutomationProperties.Name="Mute music for safe copy; disables replacement-audio testing"
-                                          Content="Mute music (-nomusic; disables replacement-audio testing)"
-                                          Checked="LaunchOptionCheckBox_Changed"
-                                          Unchecked="LaunchOptionCheckBox_Changed" />
-                                <CheckBox x:Name="PatchBenchNoSoundLaunchOption"
-                                          AutomationProperties.AutomationId="PatchBenchNoSoundLaunchOption"
-                                          AutomationProperties.Name="Mute all sound for safe copy"
-                                          Content="Mute all sound"
-                                          Checked="LaunchOptionCheckBox_Changed"
-                                          Unchecked="LaunchOptionCheckBox_Changed" />
-                                <CheckBox x:Name="PatchBenchHighDetailLaunchOption"
-                                          AutomationProperties.AutomationId="PatchBenchHighDetailLaunchOption"
-                                          AutomationProperties.Name="Request high detail for safe copy"
-                                          Content="Request high detail"
-                                          Checked="LaunchOptionCheckBox_Changed"
-                                          Unchecked="LaunchOptionCheckBox_Changed" />
-                                <CheckBox x:Name="PatchBenchNoStaticShadowsLaunchOption"
-                                          AutomationProperties.AutomationId="PatchBenchNoStaticShadowsLaunchOption"
-                                          AutomationProperties.Name="Disable static shadows for safe copy"
-                                          Content="Disable static shadows (-nostaticshadows)"
-                                          Checked="LaunchOptionCheckBox_Changed"
-                                          Unchecked="LaunchOptionCheckBox_Changed" />
-                                <CheckBox x:Name="PatchBenchNoRumbleLaunchOption"
-                                          AutomationProperties.AutomationId="PatchBenchNoRumbleLaunchOption"
-                                          AutomationProperties.Name="Disable controller vibration for safe copy"
-                                          Content="Disable controller vibration (-norumble)"
-                                          Checked="LaunchOptionCheckBox_Changed"
-                                          Unchecked="LaunchOptionCheckBox_Changed" />
-                                <TextBlock Text="Developer diagnostics"
+                        </StackPanel>
+                    </Border>
+
+
+                </StackPanel>
+
+                <Expander x:Name="PatchBenchLabExpander"
+                          Grid.Row="1"
+                          Grid.ColumnSpan="2"
+                          Margin="0,16,0,0"
+                          AutomationProperties.AutomationId="PatchBenchLabExpander"
+                          AutomationProperties.Name="Open Lab recipes, experiments, and diagnostics"
+                          Header="Lab: specialist recipes, experiments, and diagnostics"
+                          IsExpanded="False">
+                    <StackPanel Spacing="16"
+                                Margin="0,12,0,0">
+                        <TextBlock Text="Lab keeps specialist tools discoverable without presenting them as normal player recommendations. Each group has a different purpose and proof boundary."
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <Border Background="{ThemeResource ShellSurfaceBrush}"
+                                BorderBrush="{ThemeResource ShellBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10,8">
+                            <TextBlock x:Name="PatchBenchProfileCatalogStatus"
+                                       AutomationProperties.AutomationId="PatchBenchProfileCatalogStatus"
+                                       AutomationProperties.Name="Profile catalog and preset source"
+                                       Text="Profile catalog and preset source: tracked catalog status loads here."
+                                       TextWrapping="WrapWholeWords" />
+                        </Border>
+                        <Expander x:Name="PatchBenchSelectedProfileDetailsExpander"
+                                  AutomationProperties.AutomationId="PatchBenchSelectedProfileDetailsExpander"
+                                  AutomationProperties.Name="Preset details and limits"
+                                  Header="Preset details and limits">
+                            <TextBlock x:Name="PatchBenchSelectedProfileDetails"
+                                       AutomationProperties.AutomationId="PatchBenchSelectedProfileDetails"
+                                       AutomationProperties.Name="Selected safe-copy preset details"
+                                       Text="Selected safe-copy preset details: included changes, restore path, and limits update with the selected profile."
+                                       TextWrapping="WrapWholeWords" />
+                        </Expander>
+                        <Expander x:Name="PatchBenchLabPatchExperimentsExpander"
+                                  AutomationProperties.AutomationId="PatchBenchLabPatchExperimentsExpander"
+                                  AutomationProperties.Name="Open Lab patch recipes and executable experiments"
+                                  Header="Patch recipes and executable experiments"
+                                  IsExpanded="False">
+                            <StackPanel Spacing="16"
+                                        Margin="0,12,0,0">
+                                <TextBlock Text="Retained recipes and detailed patch rows are specialist choices, not normal player recommendations. Required compatibility rows remain automatically included."
                                            Style="{StaticResource SectionBodyTextStyle}" />
-                                <CheckBox x:Name="PatchBenchShowDebugTraceLaunchOption"
-                                          AutomationProperties.AutomationId="PatchBenchShowDebugTraceLaunchOption"
-                                          AutomationProperties.Name="Show debug trace for safe copy"
-                                          Content="Show debug trace (-showdebugtrace)"
-                                          Checked="LaunchOptionCheckBox_Changed"
-                                          Unchecked="LaunchOptionCheckBox_Changed" />
-                                <TextBlock Text="This copied-profile diagnostic may not show visible output. It does not enable dev mode, build resources, record demos, add online features, or prove gameplay behavior."
+                                        <TextBlock Text="Legacy and research recipes"
+                                                   AutomationProperties.HeadingLevel="Level2"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold" />
+                                <Border BorderBrush="{ThemeResource ShellBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="12"
+                                        Background="{ThemeResource ShellMutedSurfaceBrush}">
+                                    <StackPanel Spacing="10">
+                                        <TextBlock Text="Retained Lab recipes"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock Text="These legacy and research presets remain available for receipts, regression work, and earlier instructions. They are not recommendations for normal play. The app still verifies every selected row before creating or launching the safe copy."
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                        <TextBlock Text="Enhanced Profile Preview is a retained legacy recipe combining graphics flags, marker, margins, Goodies preview, and copied-options control starting values; it is not a general enhancement claim."
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                        <TextBlock Text="Debug Camera Preview is an experimental research recipe selecting the camera toggle plus one Q-forward movement test."
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                        <Border Background="{ThemeResource ShellSurfaceBrush}"
+                                                BorderBrush="{ThemeResource ShellBorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Padding="10,8">
+                                            <StackPanel Spacing="4">
+                                                <TextBlock x:Name="PatchBenchDebugCameraProofMatrixStatus"
+                                                           AutomationProperties.AutomationId="PatchBenchDebugCameraProofMatrixStatus"
+                                                           AutomationProperties.Name="Debug camera preview limits status"
+                                                           Text="Debug Camera Preview keeps the other camera-key experiments manual so you can opt into them one at a time."
+                                                           TextWrapping="WrapWholeWords" />
+                                                <TextBlock Text="Use this preview as a small camera-control trial, not a full camera overhaul."
+                                                           TextWrapping="WrapWholeWords" />
+                                                <TextBlock Text="Some camera-key combinations still need broader menu and pause testing before they become presets."
+                                                           TextWrapping="WrapWholeWords" />
+                                                <TextBlock Text="Experimental camera controls may be unstable. Open Details and limits on each row when you need exact test coverage."
+                                                           Style="{StaticResource SectionBodyTextStyle}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <TextBlock Text="Fullscreen fallback, netcode, and in-game toggle menus are not part of any preset yet."
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                        <TextBlock Text="Create safe copy records the selected rows in the safe-copy receipt and profile manifest. Control-options details are recorded only when an options manifest is written. Your installed game stays unchanged."
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                        <Grid ColumnSpacing="8"
+                                              RowSpacing="8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <Button x:Name="PatchBenchStableDefaultsButton"
+                                                    AutomationProperties.AutomationId="PatchBenchStableDefaultsButton"
+                                                    AutomationProperties.Name="Select legacy graphics-default Lab recipe; visible improvement is unproven"
+                                                    Grid.Row="0"
+                                                    Grid.Column="0"
+                                                    HorizontalAlignment="Stretch"
+                                                    MinHeight="56"
+                                                    Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                    Click="StableDefaultsButton_Click">
+                                                <TextBlock Text="Legacy graphics-default recipe"
+                                                           TextWrapping="WrapWholeWords"
+                                                           TextAlignment="Center"
+                                                           HorizontalAlignment="Center" />
+                                            </Button>
+                                            <Button x:Name="PatchBenchEnhancedPreviewProfileButton"
+                                                    AutomationProperties.AutomationId="PatchBenchEnhancedPreviewProfileButton"
+                                                    AutomationProperties.Name="Select retained legacy Enhanced Profile Preview Lab recipe"
+                                                    ToolTipService.ToolTip="Preview profile: compatibility, graphics defaults, PATCHED title marker, red frontend margins, Goodies preview, and copied-options control tweaks. Open row details for what was checked and current limits."
+                                                    Grid.Row="0"
+                                                    Grid.Column="1"
+                                                    HorizontalAlignment="Stretch"
+                                                    MinHeight="56"
+                                                    Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                    Click="EnhancedPreviewPresetButton_Click">
+                                                <TextBlock Text="Enhanced Profile Preview"
+                                                           TextWrapping="WrapWholeWords"
+                                                           TextAlignment="Center"
+                                                           HorizontalAlignment="Center" />
+                                            </Button>
+                                            <Button x:Name="PatchBenchModernGraphicsPresetButton"
+                                                    AutomationProperties.AutomationId="PatchBenchModernGraphicsPresetButton"
+                                                    AutomationProperties.Name="Select extra graphics flag rows only"
+                                                    Grid.Row="1"
+                                                    Grid.Column="0"
+                                                    HorizontalAlignment="Stretch"
+                                                    MinHeight="56"
+                                                    Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                    Click="ModernGraphicsPresetButton_Click">
+                                                <TextBlock Text="Graphics flag rows only"
+                                                           TextWrapping="WrapWholeWords"
+                                                           TextAlignment="Center"
+                                                           HorizontalAlignment="Center" />
+                                            </Button>
+                                            <Button x:Name="PatchBenchDebugCameraPreviewProfileButton"
+                                                    AutomationProperties.AutomationId="PatchBenchDebugCameraPreviewProfileButton"
+                                                    AutomationProperties.Name="Select experimental Debug Camera Preview Lab research recipe"
+                                                    AutomationProperties.HelpText="Experimental profile: Q-forward only; not full camera controls, joystick or analog camera coverage, pause/menu safety, or gameplay safety."
+                                                    ToolTipService.ToolTip="Experimental profile: compatibility plus free-camera toggle and one Q-forward movement path. It does not prove full camera controls or gameplay safety."
+                                                    Grid.Row="1"
+                                                    Grid.Column="1"
+                                                    HorizontalAlignment="Stretch"
+                                                    MinHeight="56"
+                                                    Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                    Click="DebugCameraPreviewPresetButton_Click">
+                                                <TextBlock Text="Debug Camera Preview"
+                                                           TextWrapping="WrapWholeWords"
+                                                           TextAlignment="Center"
+                                                           HorizontalAlignment="Center" />
+                                            </Button>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <TextBlock Text="Visual and executable experiments"
+                                           AutomationProperties.HeadingLevel="Level2"
+                                           FontSize="14"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="These detailed rows include legacy graphics flags, frontend colors, fullscreen fallback, pause tests, and camera experiments. Read each row's limits before selecting it."
                                            Style="{StaticResource SectionBodyTextStyle}" />
-                                <TextBlock Text="Optional mission id"
+                                <Border BorderBrush="{ThemeResource ShellBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="12"
+                                        Background="{ThemeResource ShellMutedSurfaceBrush}">
+                                    <StackPanel Spacing="10">
+                                        <TextBlock Text="Frontend margin color"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock Text="Choose one clear-screen color for the safe copy. Accepted checks cover title-screen margins and one navigated Goodies-menu run; they do not cover every menu background or replace textures, fonts, or HUD colors."
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                        <Grid ColumnSpacing="8"
+                                              RowSpacing="8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <Button x:Name="PatchBenchMenuColorRedButton"
+                                                    Content="Red margins"
+                                                    AutomationProperties.AutomationId="PatchBenchMenuColorRedButton"
+                                                    AutomationProperties.Name="Select red frontend margins"
+                                                    Grid.Row="0"
+                                                    Grid.Column="0"
+                                                    HorizontalAlignment="Stretch"
+                                                    Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                    Click="MenuColorRedButton_Click" />
+                                            <Button x:Name="PatchBenchMenuColorGreenButton"
+                                                    Content="Green margins"
+                                                    AutomationProperties.AutomationId="PatchBenchMenuColorGreenButton"
+                                                    AutomationProperties.Name="Select green frontend margins"
+                                                    Grid.Row="0"
+                                                    Grid.Column="1"
+                                                    HorizontalAlignment="Stretch"
+                                                    Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                    Click="MenuColorGreenButton_Click" />
+                                            <Button x:Name="PatchBenchMenuColorBlackButton"
+                                                    Content="Black margins"
+                                                    AutomationProperties.AutomationId="PatchBenchMenuColorBlackButton"
+                                                    AutomationProperties.Name="Select black frontend margins"
+                                                    Grid.Row="1"
+                                                    Grid.Column="0"
+                                                    HorizontalAlignment="Stretch"
+                                                    Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                    Click="MenuColorBlackButton_Click" />
+                                            <Button x:Name="PatchBenchMenuColorClearButton"
+                                                    Content="Clear margin color"
+                                                    AutomationProperties.AutomationId="PatchBenchMenuColorClearButton"
+                                                    AutomationProperties.Name="Clear frontend margin color selection"
+                                                    Grid.Row="1"
+                                                    Grid.Column="1"
+                                                    HorizontalAlignment="Stretch"
+                                                    Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                    Click="MenuColorClearButton_Click" />
+                                        </Grid>
+                                        <TextBlock x:Name="PatchBenchMenuColorSelectionStatus"
+                                                   AutomationProperties.AutomationId="PatchBenchMenuColorSelectionStatus"
+                                                   AutomationProperties.Name="Selected frontend margin color status"
+                                                   Text="Selected frontend margins: none."
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <StackPanel x:Name="PatchBenchPatchRows"
+                                            AutomationProperties.AutomationId="PatchBenchPatchRows">
+                                <ItemsControl x:Name="PatchGroupsItemsControl">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="models:BinaryPatchGroupModel">
+                                            <Border BorderBrush="{ThemeResource ShellBorderBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="12"
+                                                    Padding="12"
+                                                    Margin="0,0,0,12">
+                                                <StackPanel Spacing="12">
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Title}"
+                                                                   FontSize="14"
+                                                                   FontWeight="SemiBold" />
+                                                        <TextBlock Text="{Binding Description}"
+                                                                   Margin="0,6,0,0"
+                                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                                        <TextBlock Text="{Binding ScanSummary}"
+                                                                   Margin="0,6,0,0"
+                                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                                    </StackPanel>
+
+                                                    <ItemsControl ItemsSource="{Binding Items}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="models:BinaryPatchItemModel">
+                                                                <StackPanel Spacing="4"
+                                                                            AutomationProperties.AutomationId="{Binding RowAutomationId}"
+                                                                            Margin="0,0,0,10">
+                                                                    <CheckBox Checked="PatchCheckBox_Changed"
+                                                                              AutomationProperties.AutomationId="{Binding CheckBoxAutomationId}"
+                                                                              AutomationProperties.Name="{Binding DisplayName}"
+                                                                              AutomationProperties.HelpText="{Binding AccessibilityHelpText}"
+                                                                              Unchecked="PatchCheckBox_Changed"
+                                                                              IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                                              IsEnabled="{Binding CanChangeSelection}"
+                                                                              HorizontalAlignment="Stretch"
+                                                                              HorizontalContentAlignment="Stretch"
+                                                                              Padding="2,2,0,2"
+                                                                              Margin="0">
+                                                                        <StackPanel Spacing="4"
+                                                                                    Margin="10,0,0,0">
+                                                                            <TextBlock Text="{Binding DisplayName}"
+                                                                                       FontWeight="SemiBold"
+                                                                                       TextWrapping="WrapWholeWords" />
+                                                                            <TextBlock Text="{Binding Summary}"
+                                                                                       Style="{StaticResource SectionBodyTextStyle}" />
+                                                                            <TextBlock Text="{Binding UserFacingStatus}"
+                                                                                       FontSize="12"
+                                                                                       TextWrapping="WrapWholeWords"
+                                                                                       Foreground="{StaticResource ShellMutedTextBrush}" />
+                                                                            <TextBlock Text="{Binding TrackLabel}"
+                                                                                       FontSize="11"
+                                                                                       FontWeight="SemiBold"
+                                                                                       Foreground="{Binding TrackBrush}"
+                                                                                       CharacterSpacing="60"
+                                                                                       Opacity="0.95" />
+                                                                        </StackPanel>
+                                                                    </CheckBox>
+                                                                    <Expander Header="{Binding DetailsHeader}"
+                                                                              AutomationProperties.AutomationId="{Binding DetailsAutomationId}"
+                                                                              AutomationProperties.Name="{Binding DetailsHeader}"
+                                                                              Margin="36,0,0,0">
+                                                                        <StackPanel Spacing="8">
+                                                                                <StackPanel Spacing="2">
+                                                                                    <TextBlock Text="What should change"
+                                                                                               FontSize="12"
+                                                                                               FontWeight="SemiBold" />
+                                                                                    <TextBlock Text="{Binding ExpectedVisibleResult}"
+                                                                                               FontSize="12"
+                                                                                               TextWrapping="WrapWholeWords"
+                                                                                               Foreground="{StaticResource ShellMutedTextBrush}" />
+                                                                                </StackPanel>
+                                                                                <StackPanel Spacing="2">
+                                                                                    <TextBlock Text="What was checked"
+                                                                                               FontSize="12"
+                                                                                               FontWeight="SemiBold" />
+                                                                                    <TextBlock Text="{Binding VerifiedProof}"
+                                                                                               FontSize="12"
+                                                                                               TextWrapping="WrapWholeWords"
+                                                                                               Foreground="{StaticResource ShellMutedTextBrush}" />
+                                                                                </StackPanel>
+                                                                                <StackPanel Spacing="2">
+                                                                                    <TextBlock Text="Not proven yet"
+                                                                                               FontSize="12"
+                                                                                               FontWeight="SemiBold" />
+                                                                                    <TextBlock Text="{Binding StillUnproven}"
+                                                                                               FontSize="12"
+                                                                                               TextWrapping="WrapWholeWords"
+                                                                                               Foreground="{StaticResource ShellMutedTextBrush}" />
+                                                                                </StackPanel>
+                                                                                <StackPanel Spacing="2">
+                                                                                    <TextBlock Text="Proof note"
+                                                                                               FontSize="12"
+                                                                                               FontWeight="SemiBold" />
+                                                                                    <TextBlock Text="{Binding ProofReference}"
+                                                                                               FontSize="12"
+                                                                                               TextWrapping="WrapWholeWords"
+                                                                                               Foreground="{StaticResource ShellMutedTextBrush}" />
+                                                                                </StackPanel>
+                                                                                 <TextBlock Text="{Binding OffsetText}"
+                                                                                            FontSize="12"
+                                                                                            Foreground="{StaticResource ShellMutedTextBrush}" />
+                                                                                <TextBlock Text="{Binding Spec.Key}"
+                                                                                           FontSize="12"
+                                                                                           Foreground="{StaticResource ShellMutedTextBrush}" />
+                                                                        </StackPanel>
+                                                                    </Expander>
+                                                                </StackPanel>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                </StackPanel>
+                            </StackPanel>
+                        </Expander>
+                        <Expander x:Name="PatchBenchLabLaunchControlExpander"
+                                  AutomationProperties.AutomationId="PatchBenchLabLaunchControlExpander"
+                                  AutomationProperties.Name="Open Lab launch and control diagnostics"
+                                  Header="Launch and control diagnostics"
+                                  IsExpanded="False">
+                            <StackPanel Spacing="16"
+                                        Margin="0,12,0,0">
+                                <TextBlock Text="These settings affect only the next safe copy or its launch plan. Local split-screen remains available in the normal journey; exact flags and control A/B choices live here."
                                            Style="{StaticResource SectionBodyTextStyle}" />
-                                 <TextBox x:Name="PatchBenchLevelLaunchOption"
-                                          AutomationProperties.AutomationId="PatchBenchLevelLaunchOption"
-                                          AutomationProperties.Name="Optional mission id for safe copy"
-                                          TextChanged="LaunchOptionTextBox_TextChanged"
-                                          PlaceholderText="Leave blank, or enter a numeric -level id" />
-                                <ComboBox x:Name="PatchBenchAdminLevelPresetComboBox"
-                                          AutomationProperties.AutomationId="PatchBenchAdminLevelPresetComboBox"
-                                          AutomationProperties.Name="Admin level preset for safe copy"
-                                          SelectionChanged="AdminLevelPresetComboBox_SelectionChanged">
-                                    <ComboBoxItem Content="Choose admin level preset" />
-                                    <ComboBoxItem Content="Campaign training world 100" />
-                                    <ComboBoxItem Content="Final campaign world 800" />
-                                    <ComboBoxItem Content="Local split-screen test world 850" />
-                                    <ComboBoxItem Content="Local split-screen variant world 851" />
-                                </ComboBox>
-                                <TextBlock Text="Presets only fill the validated -level argument. They do not unlock saves, add online multiplayer, or prove that the selected level reaches gameplay."
-                                           Style="{StaticResource SectionBodyTextStyle}" />
-                                <Button x:Name="PatchBenchLocalMultiplayerProbeButton"
-                                        AutomationProperties.AutomationId="PatchBenchLocalMultiplayerProbeButton"
-                                        AutomationProperties.Name="Set local split-screen test level for safe copy"
-                                        Content="Local split-screen test"
-                                        Click="LocalMultiplayerProbeButton_Click" />
-                                <TextBlock Text="Sets -level 850 for the safe copy. This targets the known local split-screen level range; it is not online multiplayer."
+                                <Expander Header="Launch plan preview"
+                                          AutomationProperties.AutomationId="PatchBenchCopiedProfileLaunchPlanExpander"
+                                          AutomationProperties.Name="Safe copy launch plan preview">
+                                    <TextBox x:Name="PatchBenchCopiedProfileLaunchPlan"
+                                             AutomationProperties.AutomationId="PatchBenchCopiedProfileLaunchPlan"
+                                             AutomationProperties.Name="Safe copy launch plan"
+                                             IsReadOnly="True"
+                                             MinHeight="80"
+                                             MaxHeight="160"
+                                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                             TextWrapping="Wrap"
+                                             PlaceholderText="Safe copy launch plan appears here after preparation." />
+                                </Expander>
+                                <Expander x:Name="PatchBenchAdvancedLaunchOptionsExpander" Header="Advanced launch and control options"
+                                          AutomationProperties.AutomationId="PatchBenchAdvancedLaunchOptionsExpander"
+                                          AutomationProperties.Name="Advanced launch and control options"
+                                          IsExpanded="False">
+                                    <StackPanel Spacing="10">
+                                     <TextBlock Text="Advanced launch options"
+                                                FontSize="16"
+                                                FontWeight="SemiBold" />
+                                     <TextBlock Text="These options are passed only to the safe copy. They do not edit either executable."
+                                                Style="{StaticResource SectionBodyTextStyle}" />
+                                     <TextBlock Text="Launch presets"
+                                                Style="{StaticResource SectionBodyTextStyle}" />
+                                     <StackPanel Orientation="Horizontal" Spacing="10">
+                                         <Button x:Name="PatchBenchQuietCaptureLaunchPresetButton"
+                                                 AutomationProperties.AutomationId="PatchBenchQuietCaptureLaunchPresetButton"
+                                                 AutomationProperties.Name="Set quiet capture launch options for safe copy"
+                                                 Content="Quiet capture"
+                                                 Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                 Click="QuietCaptureLaunchPresetButton_Click" />
+                                     </StackPanel>
+                                     <StackPanel Orientation="Horizontal" Spacing="10">
+                                         <Button x:Name="PatchBenchHighDetailLaunchPresetButton"
+                                                 AutomationProperties.AutomationId="PatchBenchHighDetailLaunchPresetButton"
+                                                 AutomationProperties.Name="Set high detail launch options for safe copy"
+                                                 Content="High detail test"
+                                                 Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                 Click="HighDetailLaunchPresetButton_Click" />
+                                         <Button x:Name="PatchBenchClearLaunchOptionsButton"
+                                                 AutomationProperties.AutomationId="PatchBenchClearLaunchOptionsButton"
+                                                 AutomationProperties.Name="Clear launch options for safe copy"
+                                                 Content="Clear launch options"
+                                                 Click="ClearLaunchOptionsButton_Click" />
+                                     </StackPanel>
+                                     <TextBlock Text="Presets only fill the options below; Play still uses the guarded safe-copy launch plan."
+                                                Style="{StaticResource SectionBodyTextStyle}" />
+                                     <CheckBox x:Name="PatchBenchSkipFmvLaunchOption"
+                                               AutomationProperties.AutomationId="PatchBenchSkipFmvLaunchOption"
+                                               AutomationProperties.Name="Skip intro movies for safe copy"
+                                               Content="Skip intro movies"
+                                              Checked="LaunchOptionCheckBox_Changed"
+                                              Unchecked="LaunchOptionCheckBox_Changed" />
+                                    <CheckBox x:Name="PatchBenchNoMusicLaunchOption"
+                                              AutomationProperties.AutomationId="PatchBenchNoMusicLaunchOption"
+                                              AutomationProperties.Name="Mute music for safe copy; disables replacement-audio testing"
+                                              Content="Mute music (-nomusic; disables replacement-audio testing)"
+                                              Checked="LaunchOptionCheckBox_Changed"
+                                              Unchecked="LaunchOptionCheckBox_Changed" />
+                                    <CheckBox x:Name="PatchBenchNoSoundLaunchOption"
+                                              AutomationProperties.AutomationId="PatchBenchNoSoundLaunchOption"
+                                              AutomationProperties.Name="Mute all sound for safe copy"
+                                              Content="Mute all sound"
+                                              Checked="LaunchOptionCheckBox_Changed"
+                                              Unchecked="LaunchOptionCheckBox_Changed" />
+                                    <CheckBox x:Name="PatchBenchHighDetailLaunchOption"
+                                              AutomationProperties.AutomationId="PatchBenchHighDetailLaunchOption"
+                                              AutomationProperties.Name="Request high detail for safe copy"
+                                              Content="Request high detail"
+                                              Checked="LaunchOptionCheckBox_Changed"
+                                              Unchecked="LaunchOptionCheckBox_Changed" />
+                                    <CheckBox x:Name="PatchBenchNoStaticShadowsLaunchOption"
+                                              AutomationProperties.AutomationId="PatchBenchNoStaticShadowsLaunchOption"
+                                              AutomationProperties.Name="Disable static shadows for safe copy"
+                                              Content="Disable static shadows (-nostaticshadows)"
+                                              Checked="LaunchOptionCheckBox_Changed"
+                                              Unchecked="LaunchOptionCheckBox_Changed" />
+                                    <CheckBox x:Name="PatchBenchNoRumbleLaunchOption"
+                                              AutomationProperties.AutomationId="PatchBenchNoRumbleLaunchOption"
+                                              AutomationProperties.Name="Disable controller vibration for safe copy"
+                                              Content="Disable controller vibration (-norumble)"
+                                              Checked="LaunchOptionCheckBox_Changed"
+                                              Unchecked="LaunchOptionCheckBox_Changed" />
+                                    <TextBlock Text="Developer diagnostics"
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <CheckBox x:Name="PatchBenchShowDebugTraceLaunchOption"
+                                              AutomationProperties.AutomationId="PatchBenchShowDebugTraceLaunchOption"
+                                              AutomationProperties.Name="Show debug trace for safe copy"
+                                              Content="Show debug trace (-showdebugtrace)"
+                                              Checked="LaunchOptionCheckBox_Changed"
+                                              Unchecked="LaunchOptionCheckBox_Changed" />
+                                    <TextBlock Text="This copied-profile diagnostic may not show visible output. It does not enable dev mode, build resources, record demos, add online features, or prove gameplay behavior."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <TextBlock Text="Optional mission id"
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                     <TextBox x:Name="PatchBenchLevelLaunchOption"
+                                              AutomationProperties.AutomationId="PatchBenchLevelLaunchOption"
+                                              AutomationProperties.Name="Optional mission id for safe copy"
+                                              TextChanged="LaunchOptionTextBox_TextChanged"
+                                              PlaceholderText="Leave blank, or enter a numeric -level id" />
+                                    <ComboBox x:Name="PatchBenchAdminLevelPresetComboBox"
+                                              AutomationProperties.AutomationId="PatchBenchAdminLevelPresetComboBox"
+                                              AutomationProperties.Name="Admin level preset for safe copy"
+                                              SelectionChanged="AdminLevelPresetComboBox_SelectionChanged">
+                                        <ComboBoxItem Content="Choose admin level preset" />
+                                        <ComboBoxItem Content="Campaign training world 100" />
+                                        <ComboBoxItem Content="Final campaign world 800" />
+                                        <ComboBoxItem Content="Local split-screen test world 850" />
+                                        <ComboBoxItem Content="Local split-screen variant world 851" />
+                                    </ComboBox>
+                                    <TextBlock Text="Presets only fill the validated -level argument. They do not unlock saves, add online multiplayer, or prove that the selected level reaches gameplay."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <TextBlock Text="Controller configuration preset"
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <ComboBox x:Name="PatchBenchConfigurationLaunchPresetComboBox"
+                                              AutomationProperties.AutomationId="PatchBenchConfigurationLaunchPresetComboBox"
+                                              AutomationProperties.Name="Controller configuration preset for safe copy"
+                                              SelectionChanged="LaunchOptionComboBox_SelectionChanged">
+                                        <ComboBoxItem Content="No override" />
+                                        <ComboBoxItem Content="Config 1: Default" />
+                                        <ComboBoxItem Content="Config 2: Swapped sticks" />
+                                        <ComboBoxItem Content="Config 3: Alternate morph/jets" />
+                                        <ComboBoxItem Content="Config 4: Swapped sticks + alternate morph/jets" />
+                                    </ComboBox>
+                                    <CheckBox x:Name="PatchBenchPersistControllerConfigOption"
+                                              AutomationProperties.AutomationId="PatchBenchPersistControllerConfigOption"
+                                              AutomationProperties.Name="Write selected controller config into safe copy default options"
+                                              Content="Persist selected config in safe copy options"
+                                              Checked="LaunchOptionCheckBox_Changed"
+                                              Unchecked="LaunchOptionCheckBox_Changed" />
+                                    <TextBlock Text="Persisting writes the selected config to the safe copy's defaultoptions.bea for both players. It does not change the installed game and does not prove runtime feel."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <CheckBox x:Name="PatchBenchSharpenMouseLookOption"
+                                              AutomationProperties.AutomationId="PatchBenchSharpenMouseLookOption"
+                                              AutomationProperties.Name="Use copied mouse-look sensitivity preset in safe copy default options"
+                                              Content="Use copied mouse-look sensitivity preset"
+                                              Checked="LaunchOptionCheckBox_Changed"
+                                              Unchecked="LaunchOptionCheckBox_Changed" />
+                                    <ComboBox x:Name="PatchBenchMouseSensitivityPresetComboBox"
+                                              AutomationProperties.AutomationId="PatchBenchMouseSensitivityPresetComboBox"
+                                              AutomationProperties.Name="Mouse-look sensitivity preset for safe copy"
+                                              SelectionChanged="LaunchOptionComboBox_SelectionChanged">
+                                        <ComboBoxItem Content="Balanced: 1.50" />
+                                        <ComboBoxItem Content="Sharper: 2.25" />
+                                        <ComboBoxItem Content="Fast: 3.00" />
+                                    </ComboBox>
+                                    <TextBlock Text="The sensitivity preset patches only the safe copy's defaultoptions.bea and creates a local backup. It does not prove runtime feel until Play is tested."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <CheckBox x:Name="PatchBenchInvertWalkerYOption"
+                                              AutomationProperties.AutomationId="PatchBenchInvertWalkerYOption"
+                                              AutomationProperties.Name="Invert walker look Y in safe copy default options"
+                                              Content="Invert walker look Y in safe copy options"
+                                              Checked="LaunchOptionCheckBox_Changed"
+                                              Unchecked="LaunchOptionCheckBox_Changed" />
+                                    <CheckBox x:Name="PatchBenchInvertFlightYOption"
+                                              AutomationProperties.AutomationId="PatchBenchInvertFlightYOption"
+                                              AutomationProperties.Name="Invert flight look Y in safe copy default options"
+                                              Content="Invert flight look Y in safe copy options"
+                                              Checked="LaunchOptionCheckBox_Changed"
+                                              Unchecked="LaunchOptionCheckBox_Changed" />
+                                    <TextBlock Text="Invert options write P1/P2 look flags in the copied defaultoptions.bea only. They are not executable patches and do not prove improved runtime feel."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <TextBlock Text="Control diagnostics"
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <Grid ColumnSpacing="8"
+                                          RowSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <Button x:Name="PatchBenchControlBaselinePresetButton"
+                                                AutomationProperties.AutomationId="PatchBenchControlBaselinePresetButton"
+                                                AutomationProperties.Name="Set control diagnostics baseline config 1"
+                                                Content="Baseline config 1"
+                                                Grid.Row="0"
+                                                Grid.Column="0"
+                                                HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                Click="ControlBaselinePresetButton_Click" />
+                                        <Button x:Name="PatchBenchControlSharpenedPresetButton"
+                                                AutomationProperties.AutomationId="PatchBenchControlSharpenedPresetButton"
+                                                AutomationProperties.Name="Set control diagnostics sensitivity test config 1"
+                                                Content="Sensitivity test config 1"
+                                                Grid.Row="0"
+                                                Grid.Column="1"
+                                                HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                Click="ControlSharpenedPresetButton_Click" />
+                                        <Button x:Name="PatchBenchControlConfig2PresetButton"
+                                                AutomationProperties.AutomationId="PatchBenchControlConfig2PresetButton"
+                                                AutomationProperties.Name="Set control diagnostics swapped sticks config 2"
+                                                Content="Swapped config 2"
+                                                Grid.Row="1"
+                                                Grid.Column="0"
+                                                HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                Click="ControlConfig2PresetButton_Click" />
+                                        <Button x:Name="PatchBenchControlConfig3PresetButton"
+                                                AutomationProperties.AutomationId="PatchBenchControlConfig3PresetButton"
+                                                AutomationProperties.Name="Set control diagnostics alternate morph jets config 3"
+                                                Content="Alt morph/jets config 3"
+                                                Grid.Row="1"
+                                                Grid.Column="1"
+                                                HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                Click="ControlConfig3PresetButton_Click" />
+                                        <Button x:Name="PatchBenchControlConfig4PresetButton"
+                                                AutomationProperties.AutomationId="PatchBenchControlConfig4PresetButton"
+                                                AutomationProperties.Name="Set control diagnostics swapped alternate config 4"
+                                                Content="Swapped alt config 4"
+                                                Grid.Row="2"
+                                                Grid.Column="0"
+                                                Grid.ColumnSpan="2"
+                                                HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                Click="ControlConfig4PresetButton_Click" />
+                                    </Grid>
+                                    <TextBlock Text="These are A/B test presets for safe-copy control diagnostics. They do not add deadzone, look-curve, camera, movement, or online patches."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <TextBlock Text="Optional texture RAM limit"
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <TextBox x:Name="PatchBenchTextureRamLimitLaunchOption"
+                                             AutomationProperties.AutomationId="PatchBenchTextureRamLimitLaunchOption"
+                                              AutomationProperties.Name="Optional texture RAM limit in megabytes for safe copy"
+                                             TextChanged="LaunchOptionTextBox_TextChanged"
+                                             PlaceholderText="Leave blank, or enter MB from 8 to 512" />
+                                    </StackPanel>
+                                </Expander>
+                            </StackPanel>
+                        </Expander>
+                        <Expander x:Name="PatchBenchLabOnlineResearchExpander"
+                                  AutomationProperties.AutomationId="PatchBenchLabOnlineResearchExpander"
+                                  AutomationProperties.Name="Open Lab online research"
+                                  Header="Online research"
+                                  IsExpanded="False">
+                            <StackPanel Spacing="16"
+                                        Margin="0,12,0,0">
+                                <TextBlock Text="Research status and summary loaders do not enable Host or Join, launch online play, or count as settings for Create."
                                            Style="{StaticResource SectionBodyTextStyle}" />
                                 <StackPanel x:Name="PatchBenchOnlineReadinessStatusPanel"
                                             AutomationProperties.AutomationId="PatchBenchOnlineReadinessStatusPanel"
@@ -1046,367 +1253,279 @@
                                         </StackPanel>
                                     </Expander>
                                 </StackPanel>
-                                <TextBlock Text="Controller configuration preset"
+                            </StackPanel>
+                        </Expander>
+                        <Expander x:Name="PatchBenchLabMusicExperimentsExpander"
+                                  AutomationProperties.AutomationId="PatchBenchLabMusicExperimentsExpander"
+                                  AutomationProperties.Name="Open Lab music experiments"
+                                  Header="Music experiments"
+                                  IsExpanded="False">
+                            <StackPanel Spacing="16"
+                                        Margin="0,12,0,0">
+                                <TextBlock Text="The create-time preset can affect the next safe copy. Post-create stage and restore actions are separate operations reported by their own status."
                                            Style="{StaticResource SectionBodyTextStyle}" />
-                                <ComboBox x:Name="PatchBenchConfigurationLaunchPresetComboBox"
-                                          AutomationProperties.AutomationId="PatchBenchConfigurationLaunchPresetComboBox"
-                                          AutomationProperties.Name="Controller configuration preset for safe copy"
+                                <ComboBox x:Name="PatchBenchCreateMusicSwapPresetComboBox"
+                                          AutomationProperties.AutomationId="PatchBenchCreateMusicSwapPresetComboBox"
+                                          AutomationProperties.Name="Music swap preset staged while creating safe copy"
+                                          Header="Music swap staged during safe-copy creation"
                                           SelectionChanged="LaunchOptionComboBox_SelectionChanged">
-                                    <ComboBoxItem Content="No override" />
-                                    <ComboBoxItem Content="Config 1: Default" />
-                                    <ComboBoxItem Content="Config 2: Swapped sticks" />
-                                    <ComboBoxItem Content="Config 3: Alternate morph/jets" />
-                                    <ComboBoxItem Content="Config 4: Swapped sticks + alternate morph/jets" />
+                                    <ComboBoxItem Content="No music swap" />
+                                    <ComboBoxItem Content="BEA_02 over BEA_01" />
+                                    <ComboBoxItem Content="BEA_01 over BEA_02" />
+                                    <ComboBoxItem Content="BEA_02 over BEA_04" />
                                 </ComboBox>
-                                <CheckBox x:Name="PatchBenchPersistControllerConfigOption"
-                                          AutomationProperties.AutomationId="PatchBenchPersistControllerConfigOption"
-                                          AutomationProperties.Name="Write selected controller config into safe copy default options"
-                                          Content="Persist selected config in safe copy options"
-                                          Checked="LaunchOptionCheckBox_Changed"
-                                          Unchecked="LaunchOptionCheckBox_Changed" />
-                                <TextBlock Text="Persisting writes the selected config to the safe copy's defaultoptions.bea for both players. It does not change the installed game and does not prove runtime feel."
-                                           Style="{StaticResource SectionBodyTextStyle}" />
-                                <CheckBox x:Name="PatchBenchSharpenMouseLookOption"
-                                          AutomationProperties.AutomationId="PatchBenchSharpenMouseLookOption"
-                                          AutomationProperties.Name="Use copied mouse-look sensitivity preset in safe copy default options"
-                                          Content="Use copied mouse-look sensitivity preset"
-                                          Checked="LaunchOptionCheckBox_Changed"
-                                          Unchecked="LaunchOptionCheckBox_Changed" />
-                                <ComboBox x:Name="PatchBenchMouseSensitivityPresetComboBox"
-                                          AutomationProperties.AutomationId="PatchBenchMouseSensitivityPresetComboBox"
-                                          AutomationProperties.Name="Mouse-look sensitivity preset for safe copy"
-                                          SelectionChanged="LaunchOptionComboBox_SelectionChanged">
-                                    <ComboBoxItem Content="Balanced: 1.50" />
-                                    <ComboBoxItem Content="Sharper: 2.25" />
-                                    <ComboBoxItem Content="Fast: 3.00" />
-                                </ComboBox>
-                                <TextBlock Text="The sensitivity preset patches only the safe copy's defaultoptions.bea and creates a local backup. It does not prove runtime feel until Play is tested."
-                                           Style="{StaticResource SectionBodyTextStyle}" />
-                                <CheckBox x:Name="PatchBenchInvertWalkerYOption"
-                                          AutomationProperties.AutomationId="PatchBenchInvertWalkerYOption"
-                                          AutomationProperties.Name="Invert walker look Y in safe copy default options"
-                                          Content="Invert walker look Y in safe copy options"
-                                          Checked="LaunchOptionCheckBox_Changed"
-                                          Unchecked="LaunchOptionCheckBox_Changed" />
-                                <CheckBox x:Name="PatchBenchInvertFlightYOption"
-                                          AutomationProperties.AutomationId="PatchBenchInvertFlightYOption"
-                                          AutomationProperties.Name="Invert flight look Y in safe copy default options"
-                                          Content="Invert flight look Y in safe copy options"
-                                          Checked="LaunchOptionCheckBox_Changed"
-                                          Unchecked="LaunchOptionCheckBox_Changed" />
-                                <TextBlock Text="Invert options write P1/P2 look flags in the copied defaultoptions.bea only. They are not executable patches and do not prove improved runtime feel."
-                                           Style="{StaticResource SectionBodyTextStyle}" />
-                                <TextBlock Text="Control diagnostics"
-                                           Style="{StaticResource SectionBodyTextStyle}" />
-                                <Grid ColumnSpacing="8"
-                                      RowSpacing="8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-                                    <Button x:Name="PatchBenchControlBaselinePresetButton"
-                                            AutomationProperties.AutomationId="PatchBenchControlBaselinePresetButton"
-                                            AutomationProperties.Name="Set control diagnostics baseline config 1"
-                                            Content="Baseline config 1"
-                                            Grid.Row="0"
-                                            Grid.Column="0"
-                                            HorizontalAlignment="Stretch"
-                                            Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                            Click="ControlBaselinePresetButton_Click" />
-                                    <Button x:Name="PatchBenchControlSharpenedPresetButton"
-                                            AutomationProperties.AutomationId="PatchBenchControlSharpenedPresetButton"
-                                            AutomationProperties.Name="Set control diagnostics sensitivity test config 1"
-                                            Content="Sensitivity test config 1"
-                                            Grid.Row="0"
-                                            Grid.Column="1"
-                                            HorizontalAlignment="Stretch"
-                                            Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                            Click="ControlSharpenedPresetButton_Click" />
-                                    <Button x:Name="PatchBenchControlConfig2PresetButton"
-                                            AutomationProperties.AutomationId="PatchBenchControlConfig2PresetButton"
-                                            AutomationProperties.Name="Set control diagnostics swapped sticks config 2"
-                                            Content="Swapped config 2"
-                                            Grid.Row="1"
-                                            Grid.Column="0"
-                                            HorizontalAlignment="Stretch"
-                                            Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                            Click="ControlConfig2PresetButton_Click" />
-                                    <Button x:Name="PatchBenchControlConfig3PresetButton"
-                                            AutomationProperties.AutomationId="PatchBenchControlConfig3PresetButton"
-                                            AutomationProperties.Name="Set control diagnostics alternate morph jets config 3"
-                                            Content="Alt morph/jets config 3"
-                                            Grid.Row="1"
-                                            Grid.Column="1"
-                                            HorizontalAlignment="Stretch"
-                                            Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                            Click="ControlConfig3PresetButton_Click" />
-                                    <Button x:Name="PatchBenchControlConfig4PresetButton"
-                                            AutomationProperties.AutomationId="PatchBenchControlConfig4PresetButton"
-                                            AutomationProperties.Name="Set control diagnostics swapped alternate config 4"
-                                            Content="Swapped alt config 4"
-                                            Grid.Row="2"
-                                            Grid.Column="0"
-                                            Grid.ColumnSpan="2"
-                                            HorizontalAlignment="Stretch"
-                                            Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                            Click="ControlConfig4PresetButton_Click" />
-                                </Grid>
-                                <TextBlock Text="These are A/B test presets for safe-copy control diagnostics. They do not add deadzone, look-curve, camera, movement, or online patches."
-                                           Style="{StaticResource SectionBodyTextStyle}" />
-                                <TextBlock Text="Optional texture RAM limit"
-                                           Style="{StaticResource SectionBodyTextStyle}" />
-                                <TextBox x:Name="PatchBenchTextureRamLimitLaunchOption"
-                                         AutomationProperties.AutomationId="PatchBenchTextureRamLimitLaunchOption"
-                                          AutomationProperties.Name="Optional texture RAM limit in megabytes for safe copy"
-                                         TextChanged="LaunchOptionTextBox_TextChanged"
-                                         PlaceholderText="Leave blank, or enter MB from 8 to 512" />
-                                </StackPanel>
-                            </Expander>
-                            <StackPanel Spacing="10">
-                                <TextBlock Text="Swap music in safe copy"
-                                           FontSize="16"
-                                           FontWeight="SemiBold" />
-                                <TextBlock Text="Swap one copied music track with another, or stage an external replacement OGG inside the safe copy. The original install is unchanged."
-                                           Style="{StaticResource SectionBodyTextStyle}" />
-                                <TextBlock Text="Quick copied-track swap"
-                                           Style="{StaticResource SectionBodyTextStyle}" />
-                                <TextBlock Text="Named presets use shipped copied tracks only and write a restore manifest in the safe copy."
-                                           Style="{StaticResource SectionBodyTextStyle}" />
-                                <Border Background="{ThemeResource ShellSurfaceBrush}"
-                                        BorderBrush="{ThemeResource ShellBorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="8"
-                                        Padding="10,8">
-                                    <StackPanel Spacing="4">
-                                        <TextBlock x:Name="PatchBenchMusicAudibleProofContractStatus"
-                                                   AutomationProperties.AutomationId="PatchBenchMusicAudibleProofContractStatus"
-                                                   AutomationProperties.Name="Music swap status"
-                                                   Text="A music swap modifies safe-copy files only. Audible proof still requires a bounded audio-output capture. Staging and CDB decode are not audible playback proof."
-                                                   Style="{StaticResource SectionBodyTextStyle}"
-                                                   FontWeight="SemiBold" />
-                                        <TextBlock Text="Use Restore if you want to undo the staged track swap before testing."
-                                                   Style="{StaticResource SectionBodyTextStyle}" />
-                                    </StackPanel>
-                                </Border>
-                                <Grid ColumnSpacing="8"
-                                      RowSpacing="8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-                                    <Button x:Name="PatchBenchMusicSwapBea02ForBea01PresetButton"
-                                            AutomationProperties.AutomationId="PatchBenchMusicSwapBea02ForBea01PresetButton"
-                                            AutomationProperties.Name="Stage BEA_02 over BEA_01 in safe copy"
-                                            Content="BEA_02 over BEA_01"
-                                            Grid.Row="0"
-                                            Grid.Column="0"
-                                            HorizontalAlignment="Stretch"
-                                            Click="MusicSwapBea02ForBea01PresetButton_Click" />
-                                    <Button x:Name="PatchBenchMusicSwapBea01ForBea02PresetButton"
-                                            AutomationProperties.AutomationId="PatchBenchMusicSwapBea01ForBea02PresetButton"
-                                            AutomationProperties.Name="Stage BEA_01 over BEA_02 in safe copy"
-                                            Content="BEA_01 over BEA_02"
-                                            Grid.Row="0"
-                                            Grid.Column="1"
-                                            HorizontalAlignment="Stretch"
-                                            Click="MusicSwapBea01ForBea02PresetButton_Click" />
-                                    <Button x:Name="PatchBenchMusicSwapBea02ForBea04PresetButton"
-                                            AutomationProperties.AutomationId="PatchBenchMusicSwapBea02ForBea04PresetButton"
-                                            AutomationProperties.Name="Stage BEA_02 over BEA_04 in safe copy"
-                                            Content="BEA_02 over BEA_04"
-                                            Grid.Row="1"
-                                            Grid.Column="0"
-                                            HorizontalAlignment="Stretch"
-                                            Click="MusicSwapBea02ForBea04PresetButton_Click" />
-                                </Grid>
-                                <ComboBox x:Name="PatchBenchMusicTargetTrackComboBox"
-                                          AutomationProperties.AutomationId="PatchBenchMusicTargetTrackComboBox"
-                                          AutomationProperties.Name="Safe-copy target music track"
-                                          Header="Replace this copied track"
-                                          HorizontalAlignment="Stretch"
-                                          SelectionChanged="MusicTrackComboBox_SelectionChanged" />
-                                <ComboBox x:Name="PatchBenchMusicReplacementTrackComboBox"
-                                          AutomationProperties.AutomationId="PatchBenchMusicReplacementTrackComboBox"
-                                          AutomationProperties.Name="Safe-copy replacement music track"
-                                          Header="With this copied track"
-                                          HorizontalAlignment="Stretch"
-                                          SelectionChanged="MusicTrackComboBox_SelectionChanged" />
-                                <Button x:Name="PatchBenchStageCopiedTrackSwapButton"
-                                        AutomationProperties.AutomationId="PatchBenchStageCopiedTrackSwapButton"
-                                        AutomationProperties.Name="Swap safe-copy music tracks"
-                                        Content="Swap safe-copy tracks"
-                                        Style="{StaticResource AccentButtonStyle}"
-                                        Click="StageCopiedTrackSwapButton_Click" />
-                                <TextBlock Text="Advanced replacement target"
-                                           Style="{StaticResource SectionBodyTextStyle}" />
-                                <TextBox x:Name="PatchBenchMusicTargetFileName"
-                                         AutomationProperties.AutomationId="PatchBenchMusicTargetFileName"
-                                         AutomationProperties.Name="Target track in safe copy"
-                                         TextChanged="MusicReplacementInput_TextChanged"
-                                         PlaceholderText="Existing copied data\Music file, for example BEA_01(Master).ogg" />
-                                <TextBlock Text="Replacement track (.ogg)"
-                                           Style="{StaticResource SectionBodyTextStyle}" />
-                                <TextBox x:Name="PatchBenchMusicReplacementPath"
-                                         AutomationProperties.AutomationId="PatchBenchMusicReplacementPath"
-                                         AutomationProperties.Name="Replacement track OGG path"
-                                         TextChanged="MusicReplacementInput_TextChanged"
-                                         PlaceholderText="Path to replacement .ogg" />
-                                <TextBlock Text="Target must be an existing file in the safe copy's data\Music folder. Stop the safe copy before staging or restoring."
+                                <TextBlock Text="Optional: swap one shipped copied music track while creating the safe copy. This writes a restore manifest in the safe copy; in-game audio playback is still experimental."
                                            Style="{StaticResource SectionBodyTextStyle}" />
                                 <StackPanel Spacing="10">
-                                    <Button x:Name="PatchBenchStageMusicReplacementButton"
-                                            AutomationProperties.AutomationId="PatchBenchStageMusicReplacementButton"
-                                            AutomationProperties.Name="Stage music replacement in safe copy"
-                                            Content="Stage track in safe copy"
+                                    <TextBlock Text="Swap music in safe copy"
+                                               FontSize="16"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="Swap one copied music track with another, or stage an external replacement OGG inside the safe copy. The original install is unchanged."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <TextBlock Text="Quick copied-track swap"
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <TextBlock Text="Named presets use shipped copied tracks only and write a restore manifest in the safe copy."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <Border Background="{ThemeResource ShellSurfaceBrush}"
+                                            BorderBrush="{ThemeResource ShellBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="10,8">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock x:Name="PatchBenchMusicAudibleProofContractStatus"
+                                                       AutomationProperties.AutomationId="PatchBenchMusicAudibleProofContractStatus"
+                                                       AutomationProperties.Name="Music swap status"
+                                                       Text="A music swap modifies safe-copy files only. Audible proof still requires a bounded audio-output capture. Staging and CDB decode are not audible playback proof."
+                                                       Style="{StaticResource SectionBodyTextStyle}"
+                                                       FontWeight="SemiBold" />
+                                            <TextBlock Text="Use Restore if you want to undo the staged track swap before testing."
+                                                       Style="{StaticResource SectionBodyTextStyle}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Grid ColumnSpacing="8"
+                                          RowSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <Button x:Name="PatchBenchMusicSwapBea02ForBea01PresetButton"
+                                                AutomationProperties.AutomationId="PatchBenchMusicSwapBea02ForBea01PresetButton"
+                                                AutomationProperties.Name="Stage BEA_02 over BEA_01 in safe copy"
+                                                Content="BEA_02 over BEA_01"
+                                                Grid.Row="0"
+                                                Grid.Column="0"
+                                                HorizontalAlignment="Stretch"
+                                                Click="MusicSwapBea02ForBea01PresetButton_Click" />
+                                        <Button x:Name="PatchBenchMusicSwapBea01ForBea02PresetButton"
+                                                AutomationProperties.AutomationId="PatchBenchMusicSwapBea01ForBea02PresetButton"
+                                                AutomationProperties.Name="Stage BEA_01 over BEA_02 in safe copy"
+                                                Content="BEA_01 over BEA_02"
+                                                Grid.Row="0"
+                                                Grid.Column="1"
+                                                HorizontalAlignment="Stretch"
+                                                Click="MusicSwapBea01ForBea02PresetButton_Click" />
+                                        <Button x:Name="PatchBenchMusicSwapBea02ForBea04PresetButton"
+                                                AutomationProperties.AutomationId="PatchBenchMusicSwapBea02ForBea04PresetButton"
+                                                AutomationProperties.Name="Stage BEA_02 over BEA_04 in safe copy"
+                                                Content="BEA_02 over BEA_04"
+                                                Grid.Row="1"
+                                                Grid.Column="0"
+                                                HorizontalAlignment="Stretch"
+                                                Click="MusicSwapBea02ForBea04PresetButton_Click" />
+                                    </Grid>
+                                    <ComboBox x:Name="PatchBenchMusicTargetTrackComboBox"
+                                              AutomationProperties.AutomationId="PatchBenchMusicTargetTrackComboBox"
+                                              AutomationProperties.Name="Safe-copy target music track"
+                                              Header="Replace this copied track"
+                                              HorizontalAlignment="Stretch"
+                                              SelectionChanged="MusicTrackComboBox_SelectionChanged" />
+                                    <ComboBox x:Name="PatchBenchMusicReplacementTrackComboBox"
+                                              AutomationProperties.AutomationId="PatchBenchMusicReplacementTrackComboBox"
+                                              AutomationProperties.Name="Safe-copy replacement music track"
+                                              Header="With this copied track"
+                                              HorizontalAlignment="Stretch"
+                                              SelectionChanged="MusicTrackComboBox_SelectionChanged" />
+                                    <Button x:Name="PatchBenchStageCopiedTrackSwapButton"
+                                            AutomationProperties.AutomationId="PatchBenchStageCopiedTrackSwapButton"
+                                            AutomationProperties.Name="Swap safe-copy music tracks"
+                                            Content="Swap safe-copy tracks"
                                             Style="{StaticResource AccentButtonStyle}"
-                                            Click="StageMusicReplacementButton_Click" />
-                                    <Button x:Name="PatchBenchRestoreMusicReplacementButton"
-                                            AutomationProperties.AutomationId="PatchBenchRestoreMusicReplacementButton"
-                                            AutomationProperties.Name="Restore safe-copy music backup"
-                                            Content="Restore safe-copy track backup"
-                                            Click="RestoreMusicReplacementButton_Click" />
+                                            Click="StageCopiedTrackSwapButton_Click" />
+                                    <TextBlock Text="Advanced replacement target"
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <TextBox x:Name="PatchBenchMusicTargetFileName"
+                                             AutomationProperties.AutomationId="PatchBenchMusicTargetFileName"
+                                             AutomationProperties.Name="Target track in safe copy"
+                                             TextChanged="MusicReplacementInput_TextChanged"
+                                             PlaceholderText="Existing copied data\Music file, for example BEA_01(Master).ogg" />
+                                    <TextBlock Text="Replacement track (.ogg)"
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <TextBox x:Name="PatchBenchMusicReplacementPath"
+                                             AutomationProperties.AutomationId="PatchBenchMusicReplacementPath"
+                                             AutomationProperties.Name="Replacement track OGG path"
+                                             TextChanged="MusicReplacementInput_TextChanged"
+                                             PlaceholderText="Path to replacement .ogg" />
+                                    <TextBlock Text="Target must be an existing file in the safe copy's data\Music folder. Stop the safe copy before staging or restoring."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <StackPanel Spacing="10">
+                                        <Button x:Name="PatchBenchStageMusicReplacementButton"
+                                                AutomationProperties.AutomationId="PatchBenchStageMusicReplacementButton"
+                                                AutomationProperties.Name="Stage music replacement in safe copy"
+                                                Content="Stage track in safe copy"
+                                                Style="{StaticResource AccentButtonStyle}"
+                                                Click="StageMusicReplacementButton_Click" />
+                                        <Button x:Name="PatchBenchRestoreMusicReplacementButton"
+                                                AutomationProperties.AutomationId="PatchBenchRestoreMusicReplacementButton"
+                                                AutomationProperties.Name="Restore safe-copy music backup"
+                                                Content="Restore safe-copy track backup"
+                                                Click="RestoreMusicReplacementButton_Click" />
+                                    </StackPanel>
+                                    <Border Background="{ThemeResource ShellMutedSurfaceBrush}"
+                                            BorderBrush="{ThemeResource ShellBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="12,10">
+                                                <TextBlock x:Name="PatchBenchMusicReplacementStatus"
+                                                   AutomationProperties.AutomationId="PatchBenchMusicReplacementStatus"
+                                                   AutomationProperties.Name="Safe-copy music replacement status"
+                                                    Text="No music swap staged. Staging only; in-game playback is still experimental and unproven."
+                                                   TextWrapping="WrapWholeWords" />
+                                    </Border>
                                 </StackPanel>
-                                <Border Background="{ThemeResource ShellMutedSurfaceBrush}"
-                                        BorderBrush="{ThemeResource ShellBorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="8"
-                                        Padding="12,10">
-                                            <TextBlock x:Name="PatchBenchMusicReplacementStatus"
-                                               AutomationProperties.AutomationId="PatchBenchMusicReplacementStatus"
-                                               AutomationProperties.Name="Safe-copy music replacement status"
-                                                Text="No music swap staged. Staging only; in-game playback is still experimental and unproven."
-                                               TextWrapping="WrapWholeWords" />
-                                </Border>
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <Expander Header="Advanced technical check, not needed to play"
-                              AutomationProperties.AutomationId="PatchBenchAdvancedTechnicalExpander"
-                              AutomationProperties.Name="Advanced technical check, not needed to play">
-                        <StackPanel Spacing="16">
-                            <TextBlock Text="This patches one copied executable for inspection only. Use Create safe copy to play."
-                                       Style="{StaticResource SectionBodyTextStyle}" />
-                            <Border Style="{StaticResource SectionCardStyle}"
-                                    Margin="0">
-                                <StackPanel Spacing="14">
-                                    <TextBlock Text="Advanced: patch one BEA.exe copy"
-                                               FontSize="16"
-                                               FontWeight="SemiBold" />
-                                    <StackPanel Spacing="6">
-                                        <TextBlock Text="Advanced copy source"
-                                                   FontWeight="SemiBold" />
-                                        <Border Background="{ThemeResource ShellMutedSurfaceBrush}"
-                                                BorderBrush="{ThemeResource ShellBorderBrush}"
-                                                BorderThickness="1"
-                                                CornerRadius="8"
-                                                Padding="12,10">
-                                            <TextBlock x:Name="SourceExeSummaryTextBlock"
-                                                       Text="Select BEA.exe or BEA.exe.original.backup as read-only source"
-                                                       TextWrapping="WrapWholeWords" />
+                        </Expander>
+                        <Expander x:Name="PatchBenchLabBeaDiagnosticsExpander"
+                                  AutomationProperties.AutomationId="PatchBenchLabBeaDiagnosticsExpander"
+                                  AutomationProperties.Name="Open Lab BEA.exe-only diagnostics"
+                                  Header="BEA.exe-only diagnostics"
+                                  IsExpanded="False">
+                            <StackPanel Spacing="16"
+                                        Margin="0,12,0,0">
+                                <TextBlock Text="This app-owned executable-copy workflow is separate from Safe Game Copy and never counts as a creation input."
+                                           Style="{StaticResource SectionBodyTextStyle}" />
+                                <Expander x:Name="PatchBenchAdvancedTechnicalExpander" Header="Advanced technical check, not needed to play"
+                                          AutomationProperties.AutomationId="PatchBenchAdvancedTechnicalExpander"
+                                          AutomationProperties.Name="Advanced technical check, not needed to play">
+                                    <StackPanel Spacing="16">
+                                        <TextBlock Text="This patches one copied executable for inspection only. Use Create safe copy to play."
+                                                   Style="{StaticResource SectionBodyTextStyle}" />
+                                        <Border Style="{StaticResource SectionCardStyle}"
+                                                Margin="0">
+                                            <StackPanel Spacing="14">
+                                                <TextBlock Text="Advanced: patch one BEA.exe copy"
+                                                           FontSize="16"
+                                                           FontWeight="SemiBold" />
+                                                <StackPanel Spacing="6">
+                                                    <TextBlock Text="Advanced copy source"
+                                                               FontWeight="SemiBold" />
+                                                    <Border Background="{ThemeResource ShellMutedSurfaceBrush}"
+                                                            BorderBrush="{ThemeResource ShellBorderBrush}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="8"
+                                                            Padding="12,10">
+                                                        <TextBlock x:Name="SourceExeSummaryTextBlock"
+                                                                   Text="Select BEA.exe or BEA.exe.original.backup as read-only source"
+                                                                   TextWrapping="WrapWholeWords" />
+                                                    </Border>
+                                                    <Expander Header="Source path details">
+                                                        <TextBox x:Name="SourceExePathTextBox"
+                                                                 AutomationProperties.AutomationId="PatchBenchSourceExePath"
+                                                                 AutomationProperties.Name="Source executable path"
+                                                                 TextChanged="SourceExePathTextBox_TextChanged"
+                                                                 PlaceholderText="Select BEA.exe or BEA.exe.original.backup as read-only source" />
+                                                    </Expander>
+                                                </StackPanel>
+                                                <StackPanel Spacing="8">
+                                                    <Button AutomationProperties.AutomationId="PatchBenchBrowseSourceButton"
+                                                            AutomationProperties.Name="Browse read-only BEA.exe source"
+                                                            HorizontalAlignment="Stretch"
+                                                            HorizontalContentAlignment="Stretch"
+                                                            MinHeight="40"
+                                                            Click="BrowseButton_Click">
+                                                        <TextBlock Text="Browse read-only BEA.exe source"
+                                                                   TextAlignment="Center"
+                                                                   TextWrapping="WrapWholeWords" />
+                                                    </Button>
+                                                    <Button AutomationProperties.AutomationId="PatchBenchUseGameFolderButton"
+                                                            AutomationProperties.Name="Use configured source game folder"
+                                                            HorizontalAlignment="Stretch"
+                                                            HorizontalContentAlignment="Stretch"
+                                                            MinHeight="40"
+                                                            Click="UseGameDirButton_Click">
+                                                        <TextBlock Text="Use configured source game folder"
+                                                                   TextAlignment="Center"
+                                                                   TextWrapping="WrapWholeWords" />
+                                                    </Button>
+                                                </StackPanel>
+                                                <Button x:Name="CreateWorkingCopyButton"
+                                                        AutomationProperties.AutomationId="PatchBenchCreateWorkingCopyButton"
+                                                        Content="Create BEA.exe-only copy"
+                                                        Style="{StaticResource AccentButtonStyle}"
+                                                        Click="CreateWorkingCopyButton_Click" />
+                                                <StackPanel Spacing="6">
+                                                    <TextBlock Text="BEA.exe-only copy"
+                                                               FontWeight="SemiBold" />
+                                                    <Border Background="{ThemeResource ShellMutedSurfaceBrush}"
+                                                            BorderBrush="{ThemeResource ShellBorderBrush}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="8"
+                                                            Padding="12,10">
+                                                        <TextBlock x:Name="WorkingCopySummaryTextBlock"
+                                                                   Text="Create a copy before verifying or applying patches"
+                                                                   TextWrapping="WrapWholeWords" />
+                                                    </Border>
+                                                    <Expander Header="BEA.exe-only copy details">
+                                                        <TextBox x:Name="ExePathTextBox"
+                                                                 AutomationProperties.AutomationId="PatchBenchWorkingCopyPath"
+                                                                 AutomationProperties.Name="BEA.exe-only copy executable path"
+                                                                 IsReadOnly="True"
+                                                                 TextChanged="ExePathTextBox_TextChanged"
+                                                                 PlaceholderText="Create a copy before verifying or applying patches" />
+                                                    </Expander>
+                                                </StackPanel>
+                                                <TextBlock x:Name="SelectionSummaryTextBlock"
+                                                           Text="No patches selected."
+                                                           Style="{StaticResource SectionBodyTextStyle}" />
+                                                <TextBlock Text="Advanced BEA.exe-only copies are for byte inspection and apply/restore checks. Restore or create a fresh copy before changing patch sets; this is not the normal launch path."
+                                                           Style="{StaticResource SectionBodyTextStyle}" />
+                                            </StackPanel>
                                         </Border>
-                                        <Expander Header="Source path details">
-                                            <TextBox x:Name="SourceExePathTextBox"
-                                                     AutomationProperties.AutomationId="PatchBenchSourceExePath"
-                                                     AutomationProperties.Name="Source executable path"
-                                                     TextChanged="SourceExePathTextBox_TextChanged"
-                                                     PlaceholderText="Select BEA.exe or BEA.exe.original.backup as read-only source" />
-                                        </Expander>
-                                    </StackPanel>
-                                    <StackPanel Spacing="8">
-                                        <Button AutomationProperties.AutomationId="PatchBenchBrowseSourceButton"
-                                                AutomationProperties.Name="Browse read-only BEA.exe source"
-                                                HorizontalAlignment="Stretch"
-                                                HorizontalContentAlignment="Stretch"
-                                                MinHeight="40"
-                                                Click="BrowseButton_Click">
-                                            <TextBlock Text="Browse read-only BEA.exe source"
-                                                       TextAlignment="Center"
-                                                       TextWrapping="WrapWholeWords" />
-                                        </Button>
-                                        <Button AutomationProperties.AutomationId="PatchBenchUseGameFolderButton"
-                                                AutomationProperties.Name="Use configured source game folder"
-                                                HorizontalAlignment="Stretch"
-                                                HorizontalContentAlignment="Stretch"
-                                                MinHeight="40"
-                                                Click="UseGameDirButton_Click">
-                                            <TextBlock Text="Use configured source game folder"
-                                                       TextAlignment="Center"
-                                                       TextWrapping="WrapWholeWords" />
-                                        </Button>
-                                    </StackPanel>
-                                    <Button x:Name="CreateWorkingCopyButton"
-                                            AutomationProperties.AutomationId="PatchBenchCreateWorkingCopyButton"
-                                            Content="Create BEA.exe-only copy"
-                                            Style="{StaticResource AccentButtonStyle}"
-                                            Click="CreateWorkingCopyButton_Click" />
-                                    <StackPanel Spacing="6">
-                                        <TextBlock Text="BEA.exe-only copy"
-                                                   FontWeight="SemiBold" />
-                                        <Border Background="{ThemeResource ShellMutedSurfaceBrush}"
-                                                BorderBrush="{ThemeResource ShellBorderBrush}"
-                                                BorderThickness="1"
-                                                CornerRadius="8"
-                                                Padding="12,10">
-                                            <TextBlock x:Name="WorkingCopySummaryTextBlock"
-                                                       Text="Create a copy before verifying or applying patches"
-                                                       TextWrapping="WrapWholeWords" />
+
+                                        <Border Style="{StaticResource SectionCardStyle}"
+                                                Margin="0">
+                                            <StackPanel Spacing="12">
+                                                <TextBlock Text="Advanced copy actions"
+                                                           FontSize="16"
+                                                           FontWeight="SemiBold" />
+                                                <Button x:Name="VerifyButton"
+                                                        AutomationProperties.AutomationId="PatchBenchVerifyButton"
+                                                        Content="Verify BEA.exe-only copy"
+                                                        Style="{StaticResource AccentButtonStyle}"
+                                                        Click="VerifyButton_Click" />
+                                                <Button x:Name="ApplyButton"
+                                                        AutomationProperties.AutomationId="PatchBenchApplyButton"
+                                                        Content="Apply to BEA.exe-only copy"
+                                                        Click="ApplyButton_Click" />
+                                                <Button x:Name="RestoreButton"
+                                                        AutomationProperties.AutomationId="PatchBenchRestoreButton"
+                                                        Content="Restore copied BEA.exe backup"
+                                                        Click="RestoreButton_Click" />
+                                                <TextBlock x:Name="WorkflowHintTextBlock"
+                                                           AutomationProperties.AutomationId="PatchBenchWorkflowHint"
+                                                           Text="Create a BEA.exe-only copy before verification or patching."
+                                                           Style="{StaticResource SectionBodyTextStyle}" />
+                                            </StackPanel>
                                         </Border>
-                                        <Expander Header="BEA.exe-only copy details">
-                                            <TextBox x:Name="ExePathTextBox"
-                                                     AutomationProperties.AutomationId="PatchBenchWorkingCopyPath"
-                                                     AutomationProperties.Name="BEA.exe-only copy executable path"
-                                                     IsReadOnly="True"
-                                                     TextChanged="ExePathTextBox_TextChanged"
-                                                     PlaceholderText="Create a copy before verifying or applying patches" />
-                                        </Expander>
                                     </StackPanel>
-                                    <TextBlock x:Name="SelectionSummaryTextBlock"
-                                               Text="No patches selected."
-                                               Style="{StaticResource SectionBodyTextStyle}" />
-                                    <TextBlock Text="Advanced BEA.exe-only copies are for byte inspection and apply/restore checks. Restore or create a fresh copy before changing patch sets; this is not the normal launch path."
-                                               Style="{StaticResource SectionBodyTextStyle}" />
-                                </StackPanel>
-                            </Border>
-
-                            <Border Style="{StaticResource SectionCardStyle}"
-                                    Margin="0">
-                                <StackPanel Spacing="12">
-                                    <TextBlock Text="Advanced copy actions"
-                                               FontSize="16"
-                                               FontWeight="SemiBold" />
-                                    <Button x:Name="VerifyButton"
-                                            AutomationProperties.AutomationId="PatchBenchVerifyButton"
-                                            Content="Verify BEA.exe-only copy"
-                                            Style="{StaticResource AccentButtonStyle}"
-                                            Click="VerifyButton_Click" />
-                                    <Button x:Name="ApplyButton"
-                                            AutomationProperties.AutomationId="PatchBenchApplyButton"
-                                            Content="Apply to BEA.exe-only copy"
-                                            Click="ApplyButton_Click" />
-                                    <Button x:Name="RestoreButton"
-                                            AutomationProperties.AutomationId="PatchBenchRestoreButton"
-                                            Content="Restore copied BEA.exe backup"
-                                            Click="RestoreButton_Click" />
-                                    <TextBlock x:Name="WorkflowHintTextBlock"
-                                               AutomationProperties.AutomationId="PatchBenchWorkflowHint"
-                                               Text="Create a BEA.exe-only copy before verification or patching."
-                                               Style="{StaticResource SectionBodyTextStyle}" />
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
-                    </Expander>
-
-                </StackPanel>
+                                </Expander>
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+                </Expander>
             </Grid>
 
             <Border Style="{StaticResource SectionCardStyle}"

@@ -516,7 +516,7 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("Every safe game copy includes two required compatibility changes"));
         Assert.That(pageXaml, Does.Contain("Both player mods start off and change only the copied executable"));
         Assert.That(pageXaml, Does.Contain("PatchBenchLabExpander"));
-        Assert.That(pageXaml, Does.Contain("Lab: legacy recipes and experiments"));
+        Assert.That(pageXaml, Does.Contain("Lab: specialist recipes, experiments, and diagnostics"));
         Assert.That(pageXaml, Does.Contain("Legacy and research recipes"));
         Assert.That(pageXaml, Does.Contain("Visual and executable experiments"));
         Assert.That(pageXaml, Does.Contain("Launch and control diagnostics"));
@@ -772,7 +772,10 @@ public class WinUiProductLaneTests
         Assert.That(pageXaml, Does.Contain("AutomationProperties.AutomationId=\"{Binding RowAutomationId}\""));
         Assert.That(pageXaml, Does.Contain("AutomationProperties.AutomationId=\"{Binding CheckBoxAutomationId}\""));
         Assert.That(pageXaml, Does.Contain("AutomationProperties.AutomationId=\"{Binding DetailsAutomationId}\""));
-        string[] patchRowCheckBoxBlocks = Regex.Matches(pageXaml, "<CheckBox\\b[\\s\\S]*?</CheckBox>")
+        int patchRowsStart = pageXaml.IndexOf("PatchBenchPatchRows", StringComparison.Ordinal);
+        int patchRowsEnd = pageXaml.IndexOf("PatchBenchLabLaunchControlExpander", patchRowsStart, StringComparison.Ordinal);
+        string patchRowsXaml = pageXaml[patchRowsStart..patchRowsEnd];
+        string[] patchRowCheckBoxBlocks = Regex.Matches(patchRowsXaml, "<CheckBox\\b[\\s\\S]*?</CheckBox>")
             .Select(match => match.Value)
             .Where(block => block.Contains("Details and limits", StringComparison.Ordinal))
             .ToArray();
@@ -1345,6 +1348,7 @@ public class WinUiProductLaneTests
         string[] expectedHelperFiles =
         {
             "PatchBenchChoiceVisualState.cs",
+            "PatchBenchLabCreationInputText.cs",
             "PatchBenchLaunchPresetText.cs",
             "PatchBenchLaunchText.cs",
             "PatchBenchMenuColorSelectionText.cs",

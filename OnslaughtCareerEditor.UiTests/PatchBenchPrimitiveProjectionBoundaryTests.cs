@@ -13,6 +13,7 @@ public class PatchBenchPrimitiveProjectionBoundaryTests
     private static readonly BoundaryFileEntry[] PatchBenchBoundaryFiles =
     [
         new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchChoiceVisualState.cs", BoundaryProfile.ChoiceVisualBinding),
+        new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchLabCreationInputText.cs", BoundaryProfile.ChoiceVisualBinding),
         new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchLaunchPresetText.cs", BoundaryProfile.LaunchReadiness),
         new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchLaunchText.cs", BoundaryProfile.LaunchReadiness),
         new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchMenuColorSelectionText.cs", BoundaryProfile.MenuColorSelection),
@@ -23,6 +24,7 @@ public class PatchBenchPrimitiveProjectionBoundaryTests
         new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSafeCopySelectionReadiness.cs", BoundaryProfile.ChoiceVisualBinding),
         new("OnslaughtCareerEditor.WinUI/Helpers/PatchBenchSelectedProfileText.cs", BoundaryProfile.SelectedProfile),
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchLaunchReadinessTextResult.cs", BoundaryProfile.LaunchReadiness),
+        new("OnslaughtCareerEditor.WinUI/Models/PatchBenchLabCreationInputState.cs", BoundaryProfile.ChoiceVisualBinding),
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchLaunchReadinessTextState.cs", BoundaryProfile.LaunchReadiness),
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchMenuColorSelectionKind.cs", BoundaryProfile.MenuColorSelection),
         new("OnslaughtCareerEditor.WinUI/Models/PatchBenchOnlineCompanionSessionTextState.cs", BoundaryProfile.OnlineReadiness),

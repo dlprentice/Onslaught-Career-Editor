@@ -382,6 +382,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 visibleSelectedKeys.Contains("version_overlay_use_patched_format_pointer", StringComparer.OrdinalIgnoreCase),
                 visibleSelectedKeys.Contains("goodies_gallery_display_unlock", StringComparer.OrdinalIgnoreCase));
             AutomationProperties.SetName(PatchBenchPlayerModsSelectionStatus, PatchBenchPlayerModsSelectionStatus.Text);
+            PatchBenchLabSelectionStatus.Text = PatchBenchLabCreationInputText.BuildStatus(
+                BuildLabCreationInputState());
+            AutomationProperties.SetName(PatchBenchLabSelectionStatus, PatchBenchLabSelectionStatus.Text);
             UpdateChoiceVisualState(visibleSelectedKeys);
             UpdateLaunchPresetVisualState();
 
@@ -1648,6 +1651,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 bool includeSavegames = PatchBenchIncludeSavegamesOption.IsChecked == true;
                 string[] selectedPatchKeys = GetVisibleSelectedKeys().ToArray();
                 string? createMusicSwapPresetId = GetSelectedCreateMusicSwapPresetId();
+                uint? persistedControllerConfig = PatchBenchPersistControllerConfigOption.IsChecked == true
+                    ? GetSelectedControllerConfigurationPreset()
+                    : null;
+                float? mouseLookSensitivity = GetSelectedMouseLookSensitivityPreset();
+                bool invertWalkerY = PatchBenchInvertWalkerYOption.IsChecked == true;
+                bool invertFlightY = PatchBenchInvertFlightYOption.IsChecked == true;
+                PatchBenchLabCreationInputState creationInputState = BuildLabCreationInputState();
                 GameProfilePrepareOptions options = new(
                     SourceGameRoot: sourceGameRoot,
                     OutputRoot: GetCopiedProfileWorkspaceRoot(),
@@ -1663,7 +1673,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
                 if (!await ConfirmAsync(
                         "Create safe copy?",
-                        $"The app will copy the selected game folder into its own safe workspace, then patch only that copied BEA.exe.\n\nSource folder:\n{sourceGameRoot}\n\nDestination root:\n{options.OutputRoot}\n\nThis can take a few minutes and may require several GB of free disk space. The Steam/game install stays unchanged."))
+                        $"The app will copy the selected game folder into its own safe workspace, then patch only that copied BEA.exe.\n\nSource folder:\n{sourceGameRoot}\n\nDestination root:\n{options.OutputRoot}\n\n{PatchBenchLabCreationInputText.BuildConfirmationSection(creationInputState)}\n\nThis can take a few minutes and may require several GB of free disk space. The Steam/game install stays unchanged."))
                 {
                     PatchBenchCopiedProfileSummary.Text = PatchBenchSafeCopyOutcomeText.BuildCanceledSummary();
                     OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.BuildCanceledOperationLog();
@@ -1682,12 +1692,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 GameProfilePrepareResult result = await Task.Run(() =>
                     GameProfilePreflightService.PrepareWindowedCompatibilityProfile(options));
                 GameProfileControlOptionsResult? controlOptionsResult = null;
-                uint? persistedControllerConfig = PatchBenchPersistControllerConfigOption.IsChecked == true
-                    ? GetSelectedControllerConfigurationPreset()
-                    : null;
-                float? mouseLookSensitivity = GetSelectedMouseLookSensitivityPreset();
-                bool invertWalkerY = PatchBenchInvertWalkerYOption.IsChecked == true;
-                bool invertFlightY = PatchBenchInvertFlightYOption.IsChecked == true;
                 if (mouseLookSensitivity.HasValue ||
                     persistedControllerConfig.HasValue ||
                     invertWalkerY ||
@@ -2574,6 +2578,39 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchMusicReplacementTrackComboBox.ItemsSource = null;
             PatchBenchMusicTargetTrackComboBox.SelectedItem = null;
             PatchBenchMusicReplacementTrackComboBox.SelectedItem = null;
+        }
+
+        private PatchBenchLabCreationInputState BuildLabCreationInputState()
+        {
+            int optionalPatchCount = GetVisibleSelectedKeys()
+                .Count(key => !_requiredCompatibilityKeys.Contains(key));
+            int copiedOptionsCount =
+                (PatchBenchPersistControllerConfigOption.IsChecked == true ? 1 : 0) +
+                (PatchBenchSharpenMouseLookOption.IsChecked == true ? 1 : 0) +
+                (PatchBenchInvertWalkerYOption.IsChecked == true ? 1 : 0) +
+                (PatchBenchInvertFlightYOption.IsChecked == true ? 1 : 0);
+
+            return new PatchBenchLabCreationInputState(
+                optionalPatchCount,
+                CountSelectedLaunchModifiers(),
+                copiedOptionsCount,
+                GetSelectedCreateMusicSwapPresetId() is not null);
+        }
+
+        private int CountSelectedLaunchModifiers()
+        {
+            int count = 0;
+            count += PatchBenchSkipFmvLaunchOption.IsChecked == true ? 1 : 0;
+            count += PatchBenchNoMusicLaunchOption.IsChecked == true ? 1 : 0;
+            count += PatchBenchNoSoundLaunchOption.IsChecked == true ? 1 : 0;
+            count += PatchBenchHighDetailLaunchOption.IsChecked == true ? 1 : 0;
+            count += PatchBenchNoStaticShadowsLaunchOption.IsChecked == true ? 1 : 0;
+            count += PatchBenchNoRumbleLaunchOption.IsChecked == true ? 1 : 0;
+            count += PatchBenchShowDebugTraceLaunchOption.IsChecked == true ? 1 : 0;
+            count += string.IsNullOrWhiteSpace(PatchBenchLevelLaunchOption.Text) ? 0 : 1;
+            count += GetSelectedControllerConfigurationPreset().HasValue ? 1 : 0;
+            count += string.IsNullOrWhiteSpace(PatchBenchTextureRamLimitLaunchOption.Text) ? 0 : 1;
+            return count;
         }
 
         private IReadOnlyList<string> BuildSelectedLaunchArguments()
