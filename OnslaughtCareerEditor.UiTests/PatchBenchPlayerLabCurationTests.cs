@@ -83,7 +83,18 @@ public sealed class PatchBenchPlayerLabCurationTests
         {
             Assert.That(labText, Does.Contain("Legacy and research recipes"));
             Assert.That(labText, Does.Contain("Visual and executable experiments"));
-            Assert.That(labText, Does.Contain("Launch and control diagnostics"));
+            Assert.That(
+                (string?)FindNamedElement(lab, "PatchBenchLabLaunchControlExpander").Attribute("Header"),
+                Is.EqualTo("Launch and control diagnostics"));
+            Assert.That(
+                (string?)FindNamedElement(lab, "PatchBenchLabOnlineResearchExpander").Attribute("Header"),
+                Is.EqualTo("Online research"));
+            Assert.That(
+                (string?)FindNamedElement(lab, "PatchBenchLabMusicExperimentsExpander").Attribute("Header"),
+                Is.EqualTo("Music experiments"));
+            Assert.That(
+                (string?)FindNamedElement(lab, "PatchBenchLabBeaDiagnosticsExpander").Attribute("Header"),
+                Is.EqualTo("BEA.exe-only diagnostics"));
             Assert.That(FindNamedElement(lab, "PatchBenchStableDefaultsButton"), Is.Not.Null);
             Assert.That(FindNamedElement(lab, "PatchBenchEnhancedPreviewProfileButton"), Is.Not.Null);
             Assert.That(FindNamedElement(lab, "PatchBenchDebugCameraPreviewProfileButton"), Is.Not.Null);
@@ -99,7 +110,6 @@ public sealed class PatchBenchPlayerLabCurationTests
                      {
                          "Legacy and research recipes",
                          "Visual and executable experiments",
-                         "Launch and control diagnostics",
                      })
             {
                 XElement headingElement = lab.Descendants().Single(element => (string?)element.Attribute("Text") == heading);
