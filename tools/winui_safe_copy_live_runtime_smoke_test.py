@@ -41,6 +41,121 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         module = self.live_smoke_module()
         return module, module.parse_args(shlex.split(" ".join(arguments), posix=False))
 
+    def test_walker_protocol_is_locked_unpatched_capture_free_and_attempt_bound(self) -> None:
+        module, args = self.parse(
+            "--runtime-protocol battleengine-walker-trajectory-v1",
+            "--walker-attempt 1",
+        )
+        plan = module.validate_runtime_protocol(args)
+        self.assertEqual(["-skipfmv", "-level", "850", "-configuration", "2"], plan.launch_arguments)
+        self.assertEqual([], plan.patch_keys)
+        self.assertFalse(plan.apply_windowed_compatibility_patch)
+        self.assertEqual(0, plan.capture_count)
+        self.assertEqual([], plan.input_sequences)
+        self.assertFalse(plan.cdb_observer_enabled)
+        self.assertFalse(plan.allow_background_window_messages)
+        self.assertEqual(1, args.walker_attempt)
+
+        _, missing = self.parse("--runtime-protocol battleengine-walker-trajectory-v1")
+        with self.assertRaisesRegex(ValueError, "walker-attempt"):
+            module.validate_runtime_protocol(missing)
+        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            module.parse_args([
+                "--runtime-protocol", "battleengine-walker-trajectory-v1",
+                "--walker-attempt", "3",
+            ])
+
+    def test_walker_protocol_rejects_all_mutating_capture_input_and_debug_levers(self) -> None:
+        rejected = (
+            "--capture-count 1", "--input-sequence tap:Q", "--enable-cdb-observer",
+            "--include-modern-graphics", "--extra-patch-key force_windowed",
+            "--persist-controller-config-in-options", "--bind-forward-qe-for-input-isolation",
+            "--stage-music-replacement", "--launch-nomusic", "--level-id 850",
+        )
+        for option in rejected:
+            with self.subTest(option=option):
+                module, args = self.parse(
+                    "--runtime-protocol battleengine-walker-trajectory-v1",
+                    "--walker-attempt 1", option,
+                )
+                with self.assertRaises(ValueError):
+                    module.validate_runtime_protocol(args)
+
+    def test_synthetic_walker_lifecycle_is_cleanup_first_and_fail_closed(self) -> None:
+        module = self.live_smoke_module()
+        calls = []
+        callbacks = {
+            "focus": lambda: calls.append("focus") or True,
+            "start_adapter": lambda: calls.append("start_adapter") or {
+                "pid": 7001, "startedAtUtc": "2026-07-13T12:00:00Z",
+                "command": ["py", "observer"], "stdoutPath": "stdout.log",
+                "stderrPath": "stderr.log", "exitCode": 0,
+            },
+            "release_q": lambda: calls.append("release_q") or True,
+            "wait_adapter": lambda: calls.append("wait_adapter") or True,
+            "stop_managed": lambda: calls.append("stop_managed") or True,
+            "census": lambda: calls.append("census") or 0,
+        }
+        result = module.run_synthetic_walker_runtime_orchestration(callbacks)
+        self.assertEqual(
+            ["focus", "start_adapter", "release_q", "wait_adapter", "stop_managed", "census"],
+            calls,
+        )
+        self.assertTrue(result["succeeded"])
+        self.assertEqual(7001, result["adapter"]["pid"])
+
+        for failure_phase in ("focus", "start_adapter", "release_q", "wait_adapter", "stop_managed", "census"):
+            with self.subTest(failure_phase=failure_phase):
+                calls = []
+                def action(name, value):
+                    def invoke():
+                        calls.append(name)
+                        if name == failure_phase:
+                            raise RuntimeError(name)
+                        return value
+                    return invoke
+                failed = module.run_synthetic_walker_runtime_orchestration({
+                    "focus": action("focus", True),
+                    "start_adapter": action("start_adapter", {"exitCode": 0}),
+                    "release_q": action("release_q", True),
+                    "wait_adapter": action("wait_adapter", True),
+                    "stop_managed": action("stop_managed", True),
+                    "census": action("census", 0),
+                })
+                self.assertEqual(
+                    ["release_q", "wait_adapter", "stop_managed", "census"],
+                    [name for name in calls if name in {"release_q", "wait_adapter", "stop_managed", "census"}],
+                )
+                self.assertFalse(failed["succeeded"])
+
+    def test_generated_walker_runner_binds_adapter_and_records_lifecycle(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = module.write_runner(Path(tmp) / "runner")
+            generated = project.with_name("Program.cs").read_text(encoding="utf-8")
+        self.assertIn("static int RunWalkerTrajectoryAttempt()", generated)
+        self.assertIn("GameProfileRuntimeService.LaunchCopiedProfile", generated)
+        self.assertIn("ValidateRuntimeReceipt", generated)
+        self.assertIn("ONSLAUGHT_LIVE_WALKER_ADAPTER_PATH", generated)
+        self.assertIn("ProcessStartInfo", generated)
+        self.assertIn("RedirectStandardOutput = true", generated)
+        self.assertIn("RedirectStandardError = true", generated)
+        self.assertIn("adapter.StartTime.ToUniversalTime()", generated)
+        self.assertIn("adapter.MainModule", generated)
+        self.assertIn("adapterScriptUnchanged", generated)
+        self.assertIn("adapter.Id", generated)
+        self.assertIn("adapter.ExitCode", generated)
+        self.assertIn("observer-status.json", generated)
+        self.assertIn("walker-trajectory-raw.json", generated)
+        self.assertIn("WALKER_CLEANUP_PHASE: release_q", generated)
+        self.assertIn("WALKER_CLEANUP_PHASE: close_adapter", generated)
+        self.assertIn("WALKER_CLEANUP_PHASE: stop_managed", generated)
+        self.assertIn("WALKER_CLEANUP_PHASE: census", generated)
+        self.assertIn("walker-trajectory-attempt-closeout.json", generated)
+        self.assertIn("publicProjectionWritten = false", generated)
+        self.assertNotIn("PROCESS_VM_WRITE", generated)
+        self.assertNotIn("DebugActiveProcess", generated)
+
     def test_morph_canary_protocol_is_unpatched_fixed_and_capture_free(self) -> None:
         module, args = self.parse(
             "--runtime-protocol battleengine-morph-identity-canary-v1",

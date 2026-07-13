@@ -38,6 +38,7 @@ APPROVED_EXTERNAL_ARTIFACT_BASE_PARENTS: tuple[Path, ...] = ()
 CDB_OBSERVER_ARM_PHRASE = "ATTACH CDB TO SAFE COPY BEA"
 DEFAULT_RUNTIME_PROTOCOL = "default"
 MORPH_CANARY_RUNTIME_PROTOCOL = "battleengine-morph-identity-canary-v1"
+WALKER_TRAJECTORY_RUNTIME_PROTOCOL = "battleengine-walker-trajectory-v1"
 MORPH_CANARY_ROLES = ("noInputControl", "positiveTransform", "positiveRepeat")
 MORPH_CANARY_PROFILE_NAMES = {
     "noInputControl": "mc-c",
@@ -321,9 +322,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--runtime-protocol",
         default=DEFAULT_RUNTIME_PROTOCOL,
-        choices=(DEFAULT_RUNTIME_PROTOCOL, MORPH_CANARY_RUNTIME_PROTOCOL),
+        choices=(DEFAULT_RUNTIME_PROTOCOL, MORPH_CANARY_RUNTIME_PROTOCOL, WALKER_TRAJECTORY_RUNTIME_PROTOCOL),
     )
     parser.add_argument("--canary-role", default="", choices=("", *MORPH_CANARY_ROLES))
+    parser.add_argument("--walker-attempt", type=int, default=0, choices=(0, 1, 2))
+    parser.add_argument("--walker-deadline-seconds", type=int, default=45, choices=(45,))
     parser.add_argument("--canary-authority-file", default="")
     parser.add_argument("--expected-canary-authority-sha256", default="")
     parser.add_argument("--canary-leases-file", default="")
@@ -420,6 +423,54 @@ def validate_runtime_protocol(args: argparse.Namespace) -> RuntimeProtocolPlan:
             required_cdb_log_marker="",
             input_step_delay_ms=args.input_step_delay_ms,
             cdb_log_ready_timeout_ms=args.cdb_log_ready_timeout_ms,
+        )
+
+    if args.runtime_protocol == WALKER_TRAJECTORY_RUNTIME_PROTOCOL:
+        if args.walker_attempt not in (1, 2):
+            raise ValueError("--walker-attempt 1 or 2 is required for the walker trajectory protocol.")
+        forbidden_options = {
+            "--canary-role", "--canary-authority-file", "--expected-canary-authority-sha256",
+            "--canary-leases-file", "--expected-canary-leases-sha256", "--capture-count",
+            "--pre-input-capture-count", "--focus-before-pre-input-capture",
+            "--capture-after-each-input-sequence", "--after-input-capture-delay-ms",
+            "--capture-interval-seconds", "--post-window-delay-seconds", "--input-sequence",
+            "--input-step-delay-ms", "--allow-background-window-messages",
+            "--arm-background-window-messages", "--enable-cdb-observer", "--arm-cdb-observer",
+            "--cdb-command-file", "--cdb-log-ready-timeout-ms", "--cdb-post-attach-wait-seconds",
+            "--cdb-attach-phase", "--level-id", "--controller-configuration",
+            "--persist-controller-config-in-options", "--bind-forward-qe-for-input-isolation",
+            "--bind-fire-qe-for-weapon-handoff", "--bind-look-down-qe-for-config2-forward-discovery",
+            "--bind-config2-census-row-qe", "--sharpen-mouse-look", "--include-modern-graphics",
+            "--extra-patch-key", "--arm-experimental-patch-key", "--profile-preset-id",
+            "--stage-music-replacement", "--music-swap-preset-id", "--music-target",
+            "--music-replacement", "--launch-nomusic", "--launch-nosound",
+        }
+        mixed = sorted(explicit_options & forbidden_options)
+        if mixed:
+            raise ValueError(
+                "Walker trajectory protocol derives all proof levers; refusing: "
+                + ", ".join(mixed)
+            )
+        return RuntimeProtocolPlan(
+            runtime_protocol=WALKER_TRAJECTORY_RUNTIME_PROTOCOL,
+            canary_role="",
+            launch_arguments=["-skipfmv", "-level", "850", "-configuration", "2"],
+            patch_keys=[],
+            apply_windowed_compatibility_patch=False,
+            transform_entry_id=None,
+            transform_keyboard_device_code=None,
+            transform_player1_token="",
+            transform_player2_token="",
+            capture_count=0,
+            input_sequences=[],
+            include_modern_graphics=False,
+            stage_music_replacement=False,
+            allow_background_window_messages=False,
+            cdb_observer_enabled=False,
+            cdb_attach_phase="after-window",
+            required_cdb_log_marker="",
+            input_step_delay_ms=0,
+            cdb_log_ready_timeout_ms=10000,
         )
 
     if not args.canary_role:
@@ -608,6 +659,37 @@ def run_synthetic_runtime_orchestration(
     }
 
 
+def run_synthetic_walker_runtime_orchestration(
+    callbacks: Mapping[str, Callable[..., Any]],
+) -> dict[str, Any]:
+    """Exercise the cleanup-first walker lifecycle without native actions."""
+    failure = ""
+    adapter: dict[str, Any] = {}
+    focus_ok = False
+    try:
+        focus_ok = callbacks["focus"]() is True
+        if not focus_ok:
+            raise RuntimeError("foreground focus was not confirmed")
+        adapter = dict(callbacks["start_adapter"]())
+    except Exception as exc:
+        failure = f"{type(exc).__name__}: {exc}"
+    cleanup: dict[str, Any] = {}
+    for name in ("release_q", "wait_adapter", "stop_managed", "census"):
+        try:
+            cleanup[name] = callbacks[name]()
+        except Exception as exc:
+            cleanup[name] = None
+            failure = failure or f"{type(exc).__name__}: {exc}"
+    succeeded = (
+        not failure and focus_ok and adapter.get("exitCode") == 0
+        and cleanup.get("release_q") is True
+        and cleanup.get("wait_adapter") is True
+        and cleanup.get("stop_managed") is True
+        and cleanup.get("census") == 0
+    )
+    return {"succeeded": succeeded, "failure": failure, "adapter": adapter, "cleanup": cleanup}
+
+
 def load_morph_canary_module():
     module_path = ROOT / "tools" / "battleengine_morph_identity_canary.py"
     module_name = "_winui_live_smoke_morph_canary"
@@ -756,6 +838,19 @@ def validate_morph_canary_profile_path_budget(profiles_root: Path, role: str) ->
             f"({path_length} UTF-16 code units; must be below {LEGACY_WIN32_MAX_PATH})."
         )
     return path_length
+
+
+def resolve_walker_app_config_root(artifact_root: Path, profiles_root: Path) -> Path:
+    artifact = artifact_root.absolute().resolve(strict=False)
+    profiles = profiles_root.absolute().resolve(strict=False)
+    if profiles.name != "GameProfiles" or profiles.parent.name != "OnslaughtCareerEditor":
+        raise ValueError("Walker profiles root must end in OnslaughtCareerEditor/GameProfiles.")
+    app_config_root = profiles.parent.parent
+    if paths_overlap(app_config_root, artifact):
+        raise ValueError("Walker profile and evidence roots must be distinct and non-overlapping.")
+    if has_reparse_or_symlink_ancestor(app_config_root) or has_reparse_or_symlink_ancestor(artifact):
+        raise ValueError("Walker profile/evidence roots must not be reparse or symlink routed.")
+    return app_config_root
 
 
 def build_canary_private_artifact_payload(
@@ -2702,6 +2797,336 @@ static string AppendCleanupFailure(string failure, string phase, Exception ex) =
         ? $"Cleanup {phase} failed: {ex.GetType().Name}: {ex.Message}"
         : failure + $" | Cleanup {phase} failed: {ex.GetType().Name}: {ex.Message}";
 
+static int RunWalkerTrajectoryAttempt()
+{
+    string sourceRoot = RequiredEnv("ONSLAUGHT_LIVE_SOURCE_ROOT");
+    string profilesRoot = RequiredEnv("ONSLAUGHT_LIVE_PROFILES_ROOT");
+    string artifactRoot = RequiredEnv("ONSLAUGHT_LIVE_WALKER_AUTHORIZED_ROOT");
+    string exeOverride = RequiredEnv("ONSLAUGHT_LIVE_EXE_OVERRIDE");
+    string inputScript = RequiredEnv("ONSLAUGHT_LIVE_INPUT_SCRIPT");
+    string powershellExe = RequiredEnv("ONSLAUGHT_LIVE_POWERSHELL");
+    string runtimeReceiptPath = RequiredEnv("ONSLAUGHT_LIVE_RUNTIME_RECEIPT_PATH");
+    string runtimeIdentityModule = RequiredEnv("ONSLAUGHT_LIVE_RUNTIME_IDENTITY_MODULE");
+    string adapterPath = RequiredEnv("ONSLAUGHT_LIVE_WALKER_ADAPTER_PATH");
+    string expectedAdapterSha256 = RequiredEnv("ONSLAUGHT_LIVE_WALKER_ADAPTER_SHA256");
+    string pythonExe = RequiredEnv("ONSLAUGHT_LIVE_PYTHON_EXE");
+    int attempt = BoundedIntEnv("ONSLAUGHT_LIVE_WALKER_ATTEMPT", 0, 1, 2);
+    int lifecycleDeadlineSeconds = BoundedIntEnv("ONSLAUGHT_LIVE_WALKER_DEADLINE_SECONDS", 45, 45, 45);
+    string[] launchArguments = JsonSerializer.Deserialize<string[]>(RequiredEnv("ONSLAUGHT_LIVE_LAUNCH_ARGUMENTS_JSON")) ?? Array.Empty<string>();
+    string[] expectedArguments = { "-skipfmv", "-level", "850", "-configuration", "2" };
+    if (!launchArguments.SequenceEqual(expectedArguments, StringComparer.Ordinal))
+        throw new InvalidOperationException("Walker trajectory launch arguments drifted from the locked protocol.");
+    if (!string.Equals(Sha256File(adapterPath), expectedAdapterSha256, StringComparison.OrdinalIgnoreCase))
+        throw new InvalidOperationException("Walker adapter path/hash binding failed.");
+
+    string installedExe = Path.Combine(sourceRoot, "BEA.exe");
+    string installedHashBefore = Sha256File(installedExe);
+    string overrideHashBefore = Sha256File(exeOverride);
+    SortedDictionary<string, string> sourceHashesBefore = SnapshotRelativeHashes(sourceRoot, "defaultoptions.bea", "savegames");
+    if (SnapshotBeaProcesses().Length != 0)
+        throw new InvalidOperationException("Refusing walker attempt while any BEA.exe process is already running.");
+
+    GameProfilePrepareResult? prepared = null;
+    GameProfileManagedProcess? managed = null;
+    GameProfileStopResult? stopResult = null;
+    Process? adapter = null;
+    Task<string>? stdoutTask = null;
+    Task<string>? stderrTask = null;
+    string receiptSha256 = string.Empty;
+    string copiedHashBefore = string.Empty;
+    string hwndHex = "0x0";
+    string failure = string.Empty;
+    string adapterStartedAtUtc = string.Empty;
+    string adapterExecutablePath = string.Empty;
+    string adapterScriptHashAfter = string.Empty;
+    string[] adapterCommand = Array.Empty<string>();
+    int? adapterPid = null;
+    int? adapterExitCode = null;
+    bool adapterDeadlineExpired = false;
+    bool adapterExited = false;
+    bool adapterKilledAfterCleanup = false;
+    bool receiptValidatedAfterAdapter = false;
+    bool observerUpBeforeCleanup = false;
+    JsonElement focusResult = JsonPayload(new { status = "not-run" });
+    JsonElement qReleaseResult = JsonPayload(new { status = "not-run" });
+    JsonElement censusResult = JsonPayload(new { status = "not-run", ownedProcessCount = -1, inspectionFailureCount = 0 });
+    Stopwatch lifecycle = Stopwatch.StartNew();
+    string rawPath = Path.Combine(artifactRoot, "walker-trajectory-raw.json");
+    string metricsPath = Path.Combine(artifactRoot, "walker-trajectory-metrics.json");
+    string observerStatusPath = Path.Combine(artifactRoot, "observer-status.json");
+    string adapterStdoutPath = Path.Combine(artifactRoot, "adapter-stdout.log");
+    string adapterStderrPath = Path.Combine(artifactRoot, "adapter-stderr.log");
+    string closeoutPath = Path.Combine(artifactRoot, "walker-trajectory-attempt-closeout.json");
+    try
+    {
+        prepared = GameProfilePreflightService.PrepareWindowedCompatibilityProfile(
+            new GameProfilePrepareOptions(
+                SourceGameRoot: sourceRoot,
+                OutputRoot: profilesRoot,
+                ProfileName: $"wt-{attempt}",
+                ExecutableOverridePath: exeOverride,
+                ApplyWindowedCompatibilityPatch: false,
+                AllowByteLayoutOnlyTarget: false,
+                IncludeSavegames: false,
+                PatchKeys: Array.Empty<string>(),
+                LaunchArguments: launchArguments,
+                ProfilePresetId: null));
+        copiedHashBefore = Sha256File(prepared.ExecutablePath);
+        if (!string.Equals(copiedHashBefore, overrideHashBefore, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Unpatched copied executable differs from the supplied source executable.");
+        managed = GameProfileRuntimeService.LaunchCopiedProfile(
+            new GameProfileLaunchOptions(
+                ProfileRoot: prepared.TargetGameRoot,
+                AppOwnedProfilesRoot: profilesRoot,
+                LaunchArguments: launchArguments));
+        DateTime windowDeadline = DateTime.UtcNow.AddSeconds(12);
+        while (DateTime.UtcNow < windowDeadline)
+        {
+            using Process running = Process.GetProcessById(managed.ProcessId);
+            running.Refresh();
+            if (running.HasExited)
+                break;
+            if (running.MainWindowHandle != IntPtr.Zero)
+            {
+                hwndHex = HwndHex(running.MainWindowHandle);
+                break;
+            }
+            Thread.Sleep(100);
+        }
+        if (string.Equals(hwndHex, "0x0", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Managed copied BEA did not expose the exact top-level window.");
+        receiptSha256 = WriteRuntimeProcessReceipt(
+            runtimeReceiptPath, artifactRoot, managed, prepared.ManifestPath, hwndHex,
+            launchArguments, overrideHashBefore, copiedHashBefore,
+            expectedAdapterSha256, expectedAdapterSha256);
+        if (!ValidateRuntimeReceipt(
+                powershellExe, runtimeIdentityModule, runtimeReceiptPath, receiptSha256,
+                expectedAdapterSha256, expectedAdapterSha256, true, out string receiptFailure))
+            throw new InvalidOperationException("Walker receipt validation failed: " + receiptFailure);
+        focusResult = SendInputSequence(
+            powershellExe, inputScript, managed.ProcessId, hwndHex,
+            managed.ExecutablePath, managed.WorkingDirectory, "wait:0", 0,
+            false, string.Empty, Path.Combine(artifactRoot, "focus-window.json"),
+            runtimeReceiptPath, receiptSha256, true);
+        if (!JsonStringIn(focusResult, "status", "sent") || !JsonBool(focusResult, "focused"))
+            throw new InvalidOperationException("Receipt-bound foreground acquisition failed.");
+        if (!ValidateRuntimeReceipt(
+                powershellExe, runtimeIdentityModule, runtimeReceiptPath, receiptSha256,
+                expectedAdapterSha256, expectedAdapterSha256, true, out receiptFailure))
+            throw new InvalidOperationException("Walker receipt changed before adapter start: " + receiptFailure);
+
+        var adapterStart = new ProcessStartInfo
+        {
+            FileName = pythonExe,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            WorkingDirectory = Path.GetDirectoryName(adapterPath)!,
+        };
+        adapterCommand = new[] {
+            adapterPath, "observe-one", "--attempt", attempt.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            "--receipt", runtimeReceiptPath, "--expected-receipt-sha256", receiptSha256,
+            "--raw-output", rawPath, "--metrics-output", metricsPath,
+            "--status-output", observerStatusPath,
+            "--authorized-private-root", artifactRoot,
+        };
+        foreach (string argument in adapterCommand)
+            adapterStart.ArgumentList.Add(argument);
+        adapter = Process.Start(adapterStart) ?? throw new InvalidOperationException("Could not start the walker adapter.");
+        adapterPid = adapter.Id;
+        adapterStartedAtUtc = adapter.StartTime.ToUniversalTime().ToString("o");
+        adapterExecutablePath = Path.GetFullPath(
+            adapter.MainModule?.FileName ?? throw new InvalidOperationException("Could not resolve the live walker adapter host image."));
+        if (!string.Equals(adapterExecutablePath, Path.GetFullPath(pythonExe), StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Live walker adapter host image changed from the bound Python executable.");
+        stdoutTask = adapter.StandardOutput.ReadToEndAsync();
+        stderrTask = adapter.StandardError.ReadToEndAsync();
+        int remainingMilliseconds = Math.Max(
+            1, (int)(TimeSpan.FromSeconds(lifecycleDeadlineSeconds) - lifecycle.Elapsed).TotalMilliseconds);
+        adapterExited = adapter.WaitForExit(remainingMilliseconds);
+        if (adapterExited)
+        {
+            adapterExitCode = adapter.ExitCode;
+            if (adapterExitCode != 0)
+                failure = $"Walker adapter exited with code {adapterExitCode}.";
+        }
+        else
+        {
+            adapterDeadlineExpired = true;
+            failure = "Walker adapter exceeded the AppCore-owned lifecycle deadline.";
+        }
+    }
+    catch (Exception ex)
+    {
+        failure = string.IsNullOrWhiteSpace(failure)
+            ? ex.GetType().Name + ": " + ex.Message
+            : failure + " | " + ex.GetType().Name + ": " + ex.Message;
+    }
+    finally
+    {
+        // WALKER_CLEANUP_PHASE: release_q
+        try
+        {
+            if (adapter is not null && adapter.HasExited && File.Exists(observerStatusPath))
+            {
+                using JsonDocument preCleanupStatus = JsonDocument.Parse(File.ReadAllText(observerStatusPath));
+                observerUpBeforeCleanup = JsonBool(preCleanupStatus.RootElement, "qUpConfirmed") &&
+                    JsonBool(preCleanupStatus.RootElement, "observerHandleClosed");
+            }
+            if (observerUpBeforeCleanup)
+            {
+                qReleaseResult = JsonPayload(new {
+                    status = "observer-confirmed-up",
+                    focused = true,
+                    sendInputEventsSent = 0,
+                });
+            }
+            else if (managed is not null && !string.Equals(hwndHex, "0x0", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(receiptSha256))
+            {
+                qReleaseResult = SendInputSequence(
+                    powershellExe, inputScript, managed.ProcessId, hwndHex,
+                    managed.ExecutablePath, managed.WorkingDirectory, "up:Q", 0,
+                    false, string.Empty, Path.Combine(artifactRoot, "cleanup-q-up.json"),
+                    runtimeReceiptPath, receiptSha256, true);
+            }
+        }
+        catch (Exception ex) { failure = AppendCleanupFailure(failure, "release_q", ex); }
+
+        // WALKER_CLEANUP_PHASE: close_adapter
+        try
+        {
+            if (adapter is not null && !adapter.HasExited)
+            {
+                if (!adapter.WaitForExit(2000))
+                {
+                    adapter.Kill(entireProcessTree: false);
+                    adapter.WaitForExit();
+                    adapterKilledAfterCleanup = true;
+                }
+            }
+            if (adapter is not null && adapter.HasExited)
+            {
+                adapterExited = true;
+                adapterExitCode ??= adapter.ExitCode;
+            }
+            string stdout = stdoutTask is null ? string.Empty : stdoutTask.GetAwaiter().GetResult();
+            string stderr = stderrTask is null ? string.Empty : stderrTask.GetAwaiter().GetResult();
+            WriteNewCanaryText(adapterStdoutPath, artifactRoot, stdout);
+            WriteNewCanaryText(adapterStderrPath, artifactRoot, stderr);
+            if (managed is not null && !string.IsNullOrWhiteSpace(receiptSha256))
+            {
+                receiptValidatedAfterAdapter = ValidateRuntimeReceipt(
+                    powershellExe, runtimeIdentityModule, runtimeReceiptPath, receiptSha256,
+                    expectedAdapterSha256, expectedAdapterSha256, true, out string postAdapterFailure);
+                if (!receiptValidatedAfterAdapter)
+                    throw new InvalidOperationException("Walker receipt changed after adapter: " + postAdapterFailure);
+            }
+        }
+        catch (Exception ex) { failure = AppendCleanupFailure(failure, "close_adapter", ex); }
+
+        // WALKER_CLEANUP_PHASE: stop_managed
+        try
+        {
+            if (managed is not null)
+            {
+                if (!string.IsNullOrWhiteSpace(receiptSha256) && !ValidateRuntimeReceipt(
+                        powershellExe, runtimeIdentityModule, runtimeReceiptPath, receiptSha256,
+                        expectedAdapterSha256, expectedAdapterSha256, true, out string stopBindingFailure))
+                    throw new InvalidOperationException("Walker stop receipt validation failed: " + stopBindingFailure);
+                stopResult = GameProfileRuntimeService.StopCopiedProfile(
+                    managed, profilesRoot, gracefulTimeout: TimeSpan.FromSeconds(3));
+            }
+        }
+        catch (Exception ex) { failure = AppendCleanupFailure(failure, "stop_managed", ex); }
+
+        // WALKER_CLEANUP_PHASE: census
+        try
+        {
+            censusResult = InspectOwnedProcessCensus(runtimeReceiptPath, managed?.ExecutablePath, null);
+            if (!JsonStringIn(censusResult, "status", "clear") || JsonInt(censusResult, "ownedProcessCount") != 0)
+                throw new InvalidOperationException("Walker owned-process census was not clear.");
+        }
+        catch (Exception ex) { failure = AppendCleanupFailure(failure, "census", ex); }
+    }
+
+    string installedHashAfter = Sha256File(installedExe);
+    string overrideHashAfter = Sha256File(exeOverride);
+    SortedDictionary<string, string> sourceHashesAfter = SnapshotRelativeHashes(sourceRoot, "defaultoptions.bea", "savegames");
+    string copiedHashAfter = prepared is null ? string.Empty : Sha256File(prepared.ExecutablePath);
+    adapterScriptHashAfter = Sha256File(adapterPath);
+    bool adapterScriptUnchanged = string.Equals(
+        adapterScriptHashAfter, expectedAdapterSha256, StringComparison.OrdinalIgnoreCase);
+    bool sourceUnchanged = string.Equals(installedHashBefore, installedHashAfter, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(overrideHashBefore, overrideHashAfter, StringComparison.OrdinalIgnoreCase) &&
+        HashMapsEqual(sourceHashesBefore, sourceHashesAfter);
+    bool copyUnchanged = !string.IsNullOrWhiteSpace(copiedHashBefore) &&
+        string.Equals(copiedHashBefore, copiedHashAfter, StringComparison.OrdinalIgnoreCase);
+    bool observerQUp = false;
+    bool observerHandleClosed = false;
+    bool observerSucceeded = false;
+    bool samplerAccepted = false;
+    if (File.Exists(observerStatusPath))
+    {
+        using JsonDocument status = JsonDocument.Parse(File.ReadAllText(observerStatusPath));
+        observerQUp = JsonBool(status.RootElement, "qUpConfirmed");
+        observerHandleClosed = JsonBool(status.RootElement, "observerHandleClosed");
+        samplerAccepted = JsonBool(status.RootElement, "samplerAccepted");
+        observerSucceeded = JsonStringIn(status.RootElement, "failure", string.Empty);
+    }
+    bool backupQUp = JsonStringIn(qReleaseResult, "status", "sent") &&
+        JsonIntEquals(qReleaseResult, "sendInputEventsSent", 1);
+    bool managedStopped = stopResult?.Success == true && stopResult.ProcessId == managed?.ProcessId &&
+        stopResult.LiveBeforeStop && stopResult.StopRequested && stopResult.ExitObserved &&
+        !stopResult.AlreadyGone && stopResult.ExitTime.HasValue;
+    int ownedProcessCount = JsonInt(censusResult, "ownedProcessCount");
+    bool accepted = string.IsNullOrWhiteSpace(failure) && !adapterDeadlineExpired &&
+        !adapterKilledAfterCleanup && adapterExitCode == 0 && observerSucceeded && observerQUp &&
+        observerHandleClosed && samplerAccepted && managedStopped && ownedProcessCount == 0 &&
+        receiptValidatedAfterAdapter && sourceUnchanged && copyUnchanged &&
+        adapterScriptUnchanged && File.Exists(rawPath) && File.Exists(metricsPath);
+    var closeout = new
+    {
+        schemaVersion = "battleengine-walker-trajectory-private-attempt-closeout.v1",
+        attempt,
+        accepted,
+        receiptPath = runtimeReceiptPath,
+        receiptSha256,
+        sourceUnchanged,
+        copyUnchanged,
+        qUpConfirmed = observerQUp || backupQUp,
+        observerHandleClosed,
+        managedProcessStopped = managedStopped,
+        ownedProcessCount,
+        publicProjectionWritten = false,
+        failure,
+        adapter = new
+        {
+            path = adapterPath,
+            sha256 = expectedAdapterSha256,
+            pid = adapterPid,
+            startedAtUtc = adapterStartedAtUtc,
+            executablePath = adapterExecutablePath,
+            command = adapterCommand,
+            stdoutPath = adapterStdoutPath,
+            stderrPath = adapterStderrPath,
+            exitCode = adapterExitCode,
+            exited = adapterExited,
+            deadlineExpired = adapterDeadlineExpired,
+            killedAfterQRelease = adapterKilledAfterCleanup,
+            scriptHashAfter = adapterScriptHashAfter,
+            scriptUnchanged = adapterScriptUnchanged,
+        },
+        cleanup = new { observerQUp, backupQUp, observerHandleClosed, managedStopped, census = censusResult },
+        interferenceNonclaim = "Foreground and receipt identity drift are detected; arbitrary human or controller input is not detected.",
+    };
+    WriteNewCanaryText(
+        closeoutPath, artifactRoot,
+        JsonSerializer.Serialize(closeout, new JsonSerializerOptions { WriteIndented = true }));
+    Console.WriteLine(closeoutPath);
+    return accepted ? 0 : 2;
+}
+
 static int RunMorphCanary()
 {
     string sourceRoot = RequiredEnv("ONSLAUGHT_LIVE_SOURCE_ROOT");
@@ -3097,6 +3522,13 @@ __CANARY_CLEANUP_OBJECT__
     Console.WriteLine(artifactJson);
     return succeeded ? 0 : 2;
 }
+
+bool walkerTrajectoryMode = string.Equals(
+    Environment.GetEnvironmentVariable("ONSLAUGHT_LIVE_RUNTIME_PROTOCOL"),
+    "battleengine-walker-trajectory-v1",
+    StringComparison.Ordinal);
+if (walkerTrajectoryMode)
+    return RunWalkerTrajectoryAttempt();
 
 bool morphCanaryMode = string.Equals(
     Environment.GetEnvironmentVariable("ONSLAUGHT_LIVE_RUNTIME_PROTOCOL"),
@@ -3877,6 +4309,8 @@ def main() -> int:
         print(str(exc), file=sys.stderr)
         return 2
     morph_canary_mode = protocol.runtime_protocol == MORPH_CANARY_RUNTIME_PROTOCOL
+    walker_trajectory_mode = protocol.runtime_protocol == WALKER_TRAJECTORY_RUNTIME_PROTOCOL
+    private_runtime_mode = morph_canary_mode or walker_trajectory_mode
 
     source_root = Path(args.source_root).resolve()
     exe_override = Path(args.exe_override).resolve() if args.exe_override else source_root / "BEA.exe.original.backup"
@@ -3889,8 +4323,8 @@ def main() -> int:
     if args.timeout_seconds < 1 or args.timeout_seconds > 120:
         print("--timeout-seconds must be between 1 and 120.", file=sys.stderr)
         return 2
-    if protocol.capture_count < 0 or protocol.capture_count > 10 or (not morph_canary_mode and protocol.capture_count < 1):
-        print("--capture-count must be 0 for the morph canary or between 1 and 10 for default mode.", file=sys.stderr)
+    if protocol.capture_count < 0 or protocol.capture_count > 10 or (not private_runtime_mode and protocol.capture_count < 1):
+        print("--capture-count must be 0 for private measurement protocols or between 1 and 10 for default mode.", file=sys.stderr)
         return 2
     if args.pre_input_capture_count < 0 or args.pre_input_capture_count > 3:
         print("--pre-input-capture-count must be between 0 and 3.", file=sys.stderr)
@@ -3991,7 +4425,7 @@ def main() -> int:
     music_target = args.music_target
     music_replacement = Path(args.music_replacement)
     stage_music_replacement = args.stage_music_replacement or bool(music_swap_preset_id)
-    if morph_canary_mode:
+    if private_runtime_mode:
         stage_music_replacement = protocol.stage_music_replacement
     if music_swap_preset_id:
         music_target, preset_replacement = MUSIC_SWAP_PRESETS[music_swap_preset_id]
@@ -4037,13 +4471,19 @@ def main() -> int:
         print("Refusing artifact/profile roots that overlap the source game root.", file=sys.stderr)
         return 2
     canary_app_config_root = None
-    if morph_canary_mode:
+    if private_runtime_mode:
         try:
-            canary_app_config_root = resolve_morph_canary_app_config_root(
-                artifact_root,
-                profiles_root,
-            )
-            validate_morph_canary_profile_path_budget(profiles_root, protocol.canary_role)
+            if morph_canary_mode:
+                canary_app_config_root = resolve_morph_canary_app_config_root(
+                    artifact_root,
+                    profiles_root,
+                )
+                validate_morph_canary_profile_path_budget(profiles_root, protocol.canary_role)
+            else:
+                canary_app_config_root = resolve_walker_app_config_root(
+                    artifact_root,
+                    profiles_root,
+                )
             validate_morph_canary_control_inputs(args, artifact_root)
             artifact_root = create_fresh_canary_artifact_root(artifact_root_raw)
             profiles_root = profiles_root_raw.resolve()
@@ -4072,6 +4512,8 @@ def main() -> int:
     artifact_json = artifact_root / (
         "battleengine-morph-identity-canary-private-run.json"
         if morph_canary_mode
+        else "walker-trajectory-attempt-closeout.json"
+        if walker_trajectory_mode
         else "live-safe-copy-runtime-smoke.json"
     )
     capture_dir = artifact_root / "capture"
@@ -4110,7 +4552,7 @@ def main() -> int:
             return 2
 
     if runner_root.exists():
-        if morph_canary_mode:
+        if private_runtime_mode:
             print(f"Refusing pre-existing canary runner directory: {runner_root}", file=sys.stderr)
             return 2
         if has_reparse_or_symlink_ancestor(runner_root_raw) or has_reparse_or_symlink_ancestor(runner_root):
@@ -4121,7 +4563,7 @@ def main() -> int:
             print(f"Refusing to remove existing non-tool-owned runner directory: {runner_root}", file=sys.stderr)
             return 2
         shutil.rmtree(runner_root)
-    project = write_runner(runner_root, create_new=morph_canary_mode)
+    project = write_runner(runner_root, create_new=private_runtime_mode)
 
     env = os.environ.copy()
     env["ONSLAUGHT_LIVE_SOURCE_ROOT"] = str(source_root)
@@ -4174,6 +4616,14 @@ def main() -> int:
     env["ONSLAUGHT_LIVE_RUNTIME_RECEIPT_PATH"] = str(artifact_root / "runtime-process-receipt.json")
     env["ONSLAUGHT_LIVE_RUNTIME_IDENTITY_MODULE"] = str(ROOT / "tools" / "runtime_process_identity.psm1")
     env["ONSLAUGHT_LIVE_CDB_REQUIRED_MARKER"] = protocol.required_cdb_log_marker
+    if walker_trajectory_mode:
+        walker_adapter = (ROOT / "tools" / "run_battleengine_walker_trajectory_measurement.py").resolve()
+        env["ONSLAUGHT_LIVE_WALKER_AUTHORIZED_ROOT"] = str(artifact_root)
+        env["ONSLAUGHT_LIVE_WALKER_ADAPTER_PATH"] = str(walker_adapter)
+        env["ONSLAUGHT_LIVE_WALKER_ADAPTER_SHA256"] = file_sha256(walker_adapter)
+        env["ONSLAUGHT_LIVE_WALKER_ATTEMPT"] = str(args.walker_attempt)
+        env["ONSLAUGHT_LIVE_WALKER_DEADLINE_SECONDS"] = str(args.walker_deadline_seconds)
+        env["ONSLAUGHT_LIVE_PYTHON_EXE"] = sys.executable
     if rendered_canary_command is not None:
         morph_canary = load_morph_canary_module()
         env["ONSLAUGHT_LIVE_CDB_COMMAND_SHA256"] = rendered_canary_command.sha256
@@ -4194,7 +4644,7 @@ def main() -> int:
 
     command = ["dotnet", "run", "--project", str(project), "--nologo"]
     result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, check=False, env=env)
-    if morph_canary_mode:
+    if private_runtime_mode:
         write_new_private_text(artifact_root / "dotnet-stdout.log", result.stdout, artifact_root)
         write_new_private_text(artifact_root / "dotnet-stderr.log", result.stderr, artifact_root)
     else:
