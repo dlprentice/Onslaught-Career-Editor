@@ -311,7 +311,13 @@ class MaterializerTests(unittest.TestCase):
         artifact = private_artifact(self.rendered, self.exe, self.root / "live.json")
         log = event_log(self.root / "cdb.log")
         result = canary.materialize_run(artifact, log, "positiveTransform")
+        byte_result = canary.materialize_run_bytes(
+            artifact.read_bytes(),
+            log.read_bytes(),
+            "positiveTransform",
+        )
 
+        self.assertEqual(result, byte_result)
         self.assertEqual("positiveTransform", result["role"])
         self.assertEqual(list(canary.EXPECTED_EVENTS), [event["event"] for event in result["events"]])
         self.assertEqual("0x00000001", result["events"][0]["rawStateU32"])
@@ -366,6 +372,17 @@ class MaterializerTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "before.*READY"):
             canary.materialize_run(artifact, pre_ready, "noInputControl")
+
+    def test_materializer_rejects_duplicate_private_json_keys(self) -> None:
+        artifact = private_artifact(self.rendered, self.exe, self.root / "duplicate.json")
+        raw = artifact.read_bytes().replace(
+            b'"schema":',
+            b'"schema":"duplicate", "schema":',
+            1,
+        )
+        log = event_log(self.root / "duplicate.log")
+        with self.assertRaisesRegex(ValueError, "duplicate key 'schema'"):
+            canary.materialize_run_bytes(raw, log.read_bytes(), "positiveTransform")
 
     def test_rejects_inconsistent_gate_markers(self) -> None:
         artifact = private_artifact(self.rendered, self.exe, self.root / "gate-live.json")
@@ -462,10 +479,35 @@ class MaterializerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "fingerprint"):
             canary.validate_public_matrix(inconsistent_fingerprint)
 
-        replayed_capture = copy.deepcopy(matrix)
-        replayed_capture["runs"][2]["rawCaptureSha256"] = replayed_capture["runs"][1]["rawCaptureSha256"]
-        with self.assertRaisesRegex(ValueError, "capture"):
-            canary.validate_public_matrix(replayed_capture)
+    def test_public_matrix_allows_identical_positive_raw_capture_digests(self) -> None:
+        runs = []
+        for index, role in enumerate(canary.RUN_ROLES):
+            artifact = private_artifact(
+                self.rendered, self.exe, self.root / f"same-capture-live-{index}.json"
+            )
+            payload = json.loads(artifact.read_text(encoding="utf-8"))
+            payload["receiptSha256"] = str(index + 1) * 64
+            artifact.write_text(json.dumps(payload), encoding="utf-8")
+            log = event_log(
+                self.root / f"same-capture-cdb-{index}.log",
+                include_events=role != "noInputControl",
+                state_seed=10,
+            )
+            runs.append(canary.materialize_run(artifact, log, role))
+
+        matrix = {
+            "schema": canary.PUBLIC_SCHEMA,
+            "toolVersion": canary.TOOL_VERSION,
+            "specimen": {
+                "size": canary.CANONICAL_SIZE,
+                "sha256": canary.CANONICAL_SHA256,
+            },
+            "runs": runs,
+        }
+        self.assertNotEqual(runs[1]["receiptSha256"], runs[2]["receiptSha256"])
+        self.assertEqual(runs[1]["rawCaptureSha256"], runs[2]["rawCaptureSha256"])
+
+        canary.validate_public_matrix(matrix)
 
     def test_public_validator_rejects_nested_raw_bytes_and_pointer_comparisons(self) -> None:
         runs = []

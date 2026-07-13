@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import ast
 from contextlib import redirect_stderr
+import datetime as dt
 import hashlib
 import importlib.util
 import io
@@ -66,6 +67,87 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertEqual("MORPH_CANARY_READY", plan.required_cdb_log_marker)
         self.assertEqual(60, plan.input_step_delay_ms)
         self.assertEqual(10000, plan.cdb_log_ready_timeout_ms)
+
+    def test_morph_canary_live_boundary_requires_hash_bound_authority_controls(self) -> None:
+        module, missing_args = self.parse(
+            "--runtime-protocol battleengine-morph-identity-canary-v1",
+            "--canary-role noInputControl",
+        )
+        with tempfile.TemporaryDirectory(prefix="morph-authority-test-") as temp:
+            private_parent = Path(temp) / "local-proofs"
+            private_parent.mkdir()
+            proof_root = private_parent / "battleengine-morph-identity-canary-matrix"
+            proof_root.mkdir()
+            role_root = proof_root / "no-input-control"
+            with self.assertRaisesRegex(ValueError, "authority controls"):
+                module.validate_morph_canary_control_inputs(
+                    missing_args,
+                    role_root,
+                    private_parent=private_parent,
+                    now=dt.datetime(2026, 7, 12, 20, 0, tzinfo=dt.timezone.utc),
+                )
+
+            control_root = private_parent / "battleengine-morph-identity-canary-control-test"
+            control_root.mkdir()
+            authority_path = control_root / "authority.json"
+            leases_path = control_root / "leases.json"
+            authority_payload = {
+                "schemaVersion": module.morph_authority.AUTHORITY_SCHEMA,
+                "actionFamily": module.morph_authority.ACTION_FAMILY,
+                "issuedAtUtc": "2026-07-12T20:00:00Z",
+                "expiresAtUtc": "2026-07-12T21:00:00Z",
+                "proofRoot": str(proof_root),
+                "allowedActions": list(module.morph_authority.REQUIRED_ALLOWED_ACTIONS),
+                "forbiddenActions": list(module.morph_authority.REQUIRED_FORBIDDEN_ACTIONS),
+                "maxSpendUsd": 0,
+                "validationGates": list(module.morph_authority.REQUIRED_VALIDATION_GATES),
+                "cleanup": module.morph_authority.REQUIRED_CLEANUP,
+                "rollback": module.morph_authority.REQUIRED_ROLLBACK,
+            }
+            lease_payload = {
+                "schemaVersion": module.morph_authority.LEASE_SCHEMA,
+                "actionFamily": module.morph_authority.ACTION_FAMILY,
+                "issuedAtUtc": "2026-07-12T20:00:00Z",
+                "expiresAtUtc": "2026-07-12T21:00:00Z",
+                "owner": "harness-test",
+                "leases": [
+                    {
+                        "resource": resource,
+                        "owner": "harness-test",
+                        "exclusive": True,
+                        "acquiredAtUtc": "2026-07-12T20:00:00Z",
+                        "expiresAtUtc": "2026-07-12T21:00:00Z",
+                    }
+                    for resource in module.morph_authority.REQUIRED_RESOURCES
+                ],
+            }
+            authority_path.write_text(json.dumps(authority_payload), encoding="utf-8")
+            leases_path.write_text(json.dumps(lease_payload), encoding="utf-8")
+            authority_digest = hashlib.sha256(authority_path.read_bytes()).hexdigest()
+            leases_digest = hashlib.sha256(leases_path.read_bytes()).hexdigest()
+            args = module.parse_args([
+                "--runtime-protocol", module.MORPH_CANARY_RUNTIME_PROTOCOL,
+                "--canary-role", "noInputControl",
+                "--canary-authority-file", str(authority_path),
+                "--expected-canary-authority-sha256", authority_digest,
+                "--canary-leases-file", str(leases_path),
+                "--expected-canary-leases-sha256", leases_digest,
+            ])
+            controls = module.validate_morph_canary_control_inputs(
+                args,
+                role_root,
+                private_parent=private_parent,
+                now=dt.datetime(2026, 7, 12, 20, 0, tzinfo=dt.timezone.utc),
+            )
+            self.assertEqual(authority_digest, controls.authority_sha256)
+            args.expected_canary_leases_sha256 = "0" * 64
+            with self.assertRaisesRegex(ValueError, "SHA-256"):
+                module.validate_morph_canary_control_inputs(
+                    args,
+                    role_root,
+                    private_parent=private_parent,
+                    now=dt.datetime(2026, 7, 12, 20, 0, tzinfo=dt.timezone.utc),
+                )
 
     def test_parser_rejects_abbreviated_protocol_and_canary_timing_options(self) -> None:
         module = self.live_smoke_module()

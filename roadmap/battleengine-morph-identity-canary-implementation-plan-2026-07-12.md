@@ -67,6 +67,8 @@ Create:
   dry-run plan, and serialized control/positive/repeat execution.
 - `tools/run_battleengine_morph_identity_canary_test.py`: fake-harness execution
   and cleanup tests.
+- `tools/battleengine_morph_identity_authority.py`: shared exact private control
+  schemas and path/hash/expiration validation used by both executor and harness.
 
 Modify:
 
@@ -94,7 +96,8 @@ contributor-facing command cleanup belongs to the separate validation campaign.
 **Interfaces:**
 - Produces: `render_private_command(executable, template) -> RenderedCommand`.
 - Produces: `validate_private_command(path, executable, template) -> RenderedCommand`.
-- Produces: `materialize_run(live_artifact, cdb_log, role) -> dict`.
+- Produces: `materialize_run_bytes(live_artifact_bytes, cdb_log_bytes, role) -> dict`
+  plus the path-based `materialize_run(...)` convenience wrapper.
 - Produces: `materialize_matrix(runs) -> dict` and
   `validate_public_matrix(payload) -> None`.
 - Consumes no AppCore or runtime process; all tests use synthetic files.
@@ -442,8 +445,13 @@ git commit -m "feat(runtime): add locked morph identity canary mode"
 ### Task 4: Authority-Gated Three-Run Executor
 
 **Files:**
+- Create: `tools/battleengine_morph_identity_authority.py`
 - Create: `tools/run_battleengine_morph_identity_canary.py`
 - Create: `tools/run_battleengine_morph_identity_canary_test.py`
+- Modify: `tools/winui_safe_copy_live_runtime_smoke.py`
+- Modify: `tools/winui_safe_copy_live_runtime_smoke_test.py`
+- Modify: `tools/battleengine_morph_identity_canary.py`
+- Modify: `tools/battleengine_morph_identity_canary_test.py`
 
 **Interfaces:**
 - Consumes: one ignored authority JSON and one ignored lease JSON.
@@ -457,8 +465,21 @@ git commit -m "feat(runtime): add locked morph identity canary mode"
 def test_matrix_order_is_fixed_and_live_requires_authority(tmp_path):
     executor = MatrixExecutor(fake_harness)
     with self.assertRaisesRegex(CanaryError, "authority"):
-        executor.run_live(tmp_path, authority=None, leases=None)
-    plan = executor.dry_run(tmp_path)
+        executor.run_live(
+            proof_root,
+            missing_authority_path,
+            leases_path,
+            LIVE_ARM_PHRASE,
+            source_root,
+            exe_override,
+        )
+    plan = executor.dry_run(
+        proof_root,
+        authority_path,
+        leases_path,
+        source_root,
+        exe_override,
+    )
     assert [row.role for row in plan.runs] == [
         "noInputControl", "positiveTransform", "positiveRepeat"
     ]
@@ -488,10 +509,14 @@ REQUIRED_RESOURCES = {
 LIVE_ARM_PHRASE = "RUN BATTLEENGINE MORPH IDENTITY CANARY"
 ```
 
-Require the allowed and forbidden action sets from the approved design, an
-ignored `local-proofs` root, cleanup/rollback, validation gates, expiration,
-and `maxSpendUsd: 0`. A dry run validates everything except process launch and
-does not require the live arm phrase.
+Require the allowed and forbidden action sets from the approved design, the
+exact repo-root ignored `local-proofs/` boundary, cleanup/rollback, validation
+gates, expiration, and `maxSpendUsd: 0`. Authority and lease files are distinct
+siblings under a separate ignored control directory; they are never placed
+inside the fresh matrix root. The executor and lower-level harness re-read and
+hash-bind both controls before each live role. A dry run validates canonical
+source/override identity and renders the private command, but does not launch a
+process or require the live arm phrase.
 
 - [ ] **Step 4: Implement serialized role execution**
 
@@ -500,23 +525,32 @@ For each role, create a fresh child root and generated command, then invoke:
 ```text
 py -3 tools/winui_safe_copy_live_runtime_smoke.py
   --runtime-protocol battleengine-morph-identity-canary-v1
+  --canary-role <fixed role>
   --artifact-root <private role root>
-  --cdb-command-file <private rendered command>
-  --enable-cdb-observer
-  --arm-cdb-observer "ATTACH CDB TO SAFE COPY BEA"
+  --canary-authority-file <private authority JSON>
+  --expected-canary-authority-sha256 <digest>
+  --canary-leases-file <private lease JSON>
+  --expected-canary-leases-sha256 <digest>
   --arm-live-bea "LAUNCH SAFE COPY BEA"
 ```
 
-The control sends no input. Each positive sends one `tap:Q`. The executor waits
-for terminal cleanup before starting the next role and stops the matrix at the
-first failed run.
+The locked runtime protocol internally derives the generated CDB command,
+observer attach, launch tuple, and role input; callers cannot supply those as
+independent proof levers. The control sends no input. Each positive sends one
+`tap:Q`. The executor waits for terminal cleanup and semantically materializes
+each run in memory before starting the next role. It stops the matrix at the
+first harness, identity, cleanup, or semantic failure.
 
-- [ ] **Step 5: Materialize only after all three roles pass**
+- [ ] **Step 5: Publish the matrix only after all three roles pass**
 
-Hash-bind each private artifact and raw CDB log, pass them to Task 1's strict
-materializer, require distinct receipts/artifacts, and write the sanitized
-summary under the ignored root. Do not write into `reverse-engineering/` from
-the executor.
+Hash-bind each private artifact and raw CDB log, pass bounded immutable bytes to Task 1's
+strict materializer, require distinct receipts/run IDs/processes/copied-profile
+paths, and write the private manifest before publishing the sanitized summary
+under the ignored root. Independent fresh runs may legitimately have identical
+raw-log content; freshness is not inferred from differing capture digests. Do
+not write into `reverse-engineering/` from the executor. An ordinary parent
+console interrupt waits for the child harness to finish receipt-owned cleanup
+and then invalidates the run; interrupted work never becomes accepted evidence.
 
 - [ ] **Step 6: Run all focused non-live tests**
 
@@ -535,7 +569,7 @@ Expected: PASS.
 - [ ] **Step 7: Commit the executor unit**
 
 ```powershell
-git add tools\run_battleengine_morph_identity_canary.py tools\run_battleengine_morph_identity_canary_test.py
+git add roadmap\battleengine-morph-identity-canary-implementation-plan-2026-07-12.md tools\battleengine_morph_identity_authority.py tools\run_battleengine_morph_identity_canary.py tools\run_battleengine_morph_identity_canary_test.py tools\battleengine_morph_identity_canary.py tools\battleengine_morph_identity_canary_test.py tools\winui_safe_copy_live_runtime_smoke.py tools\winui_safe_copy_live_runtime_smoke_test.py
 git commit -m "feat(re): orchestrate morph identity canary matrix"
 ```
 
@@ -544,8 +578,9 @@ git commit -m "feat(re): orchestrate morph identity canary matrix"
 ### Task 5: Execute Stage A And Close The Evidence Slice
 
 **Files:**
-- Local only: `local-proofs/battleengine-morph-identity-canary-*/authority.json`
-- Local only: `local-proofs/battleengine-morph-identity-canary-*/leases.json`
+- Local only: `local-proofs/battleengine-morph-identity-canary-control-*/authority.json`
+- Local only: `local-proofs/battleengine-morph-identity-canary-control-*/leases.json`
+- Local only fresh output: `local-proofs/battleengine-morph-identity-canary-matrix-*`
 - Conditional create after PASS:
   `reverse-engineering/binary-analysis/battleengine-morph-identity-canary-runtime-summary-2026-07-12.json`
 - Conditional create after PASS:
@@ -569,7 +604,7 @@ BEA/CDB process exists. Keep both files ignored.
 - [ ] **Step 2: Run the no-side-effect dry run**
 
 ```powershell
-py -3 tools\run_battleengine_morph_identity_canary.py --proof-root local-proofs\battleengine-morph-identity-canary-20260712 --authority local-proofs\battleengine-morph-identity-canary-20260712\authority.json --leases local-proofs\battleengine-morph-identity-canary-20260712\leases.json --dry-run
+py -3 tools\run_battleengine_morph_identity_canary.py --proof-root local-proofs\battleengine-morph-identity-canary-matrix-20260712 --authority local-proofs\battleengine-morph-identity-canary-control-20260712\authority.json --leases local-proofs\battleengine-morph-identity-canary-control-20260712\leases.json --exe-override <canonical-private-BEA.exe> --dry-run
 ```
 
 Expected: three fixed roles, canonical hash/size, empty patch set, exact launch
@@ -578,7 +613,7 @@ arguments, private generated-command paths, and no process launch.
 - [ ] **Step 3: Announce the native window and run the matrix hands-off**
 
 ```powershell
-py -3 tools\run_battleengine_morph_identity_canary.py --proof-root local-proofs\battleengine-morph-identity-canary-20260712 --authority local-proofs\battleengine-morph-identity-canary-20260712\authority.json --leases local-proofs\battleengine-morph-identity-canary-20260712\leases.json --arm-live "RUN BATTLEENGINE MORPH IDENTITY CANARY"
+py -3 tools\run_battleengine_morph_identity_canary.py --proof-root local-proofs\battleengine-morph-identity-canary-matrix-20260712 --authority local-proofs\battleengine-morph-identity-canary-control-20260712\authority.json --leases local-proofs\battleengine-morph-identity-canary-control-20260712\leases.json --exe-override <canonical-private-BEA.exe> --arm-live "RUN BATTLEENGINE MORPH IDENTITY CANARY"
 ```
 
 If user input or an unrelated process interferes, discard the affected run and
@@ -587,7 +622,7 @@ repeat it from a fresh copy. Do not relax an identity or event condition.
 - [ ] **Step 4: Validate terminal cleanup and the sanitized summary**
 
 ```powershell
-py -3 tools\battleengine_morph_identity_canary.py check --matrix local-proofs\battleengine-morph-identity-canary-20260712\sanitized-matrix.json
+py -3 tools\battleengine_morph_identity_canary.py check --matrix local-proofs\battleengine-morph-identity-canary-matrix-20260712\battleengine-morph-identity-canary-sanitized-matrix.json
 ```
 
 Expected: control has zero Transform/Morph hits; both positives have exact event

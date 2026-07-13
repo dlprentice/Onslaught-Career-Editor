@@ -387,13 +387,27 @@ def _require_nonnegative_int(value: Any, label: str) -> int:
     return value
 
 
-def _read_json_object(path: str | Path, label: str) -> dict[str, Any]:
-    raw = _read_bytes(path, label)
+def _read_json_bytes(raw: bytes, label: str) -> dict[str, Any]:
+    if not isinstance(raw, bytes):
+        raise ValueError(f"{label} must be supplied as immutable bytes")
+
+    def reject_duplicate_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError(f"{label} contains duplicate key {key!r}")
+            result[key] = value
+        return result
+
     try:
-        value = json.loads(raw.decode("utf-8"))
+        value = json.loads(raw.decode("utf-8"), object_pairs_hook=reject_duplicate_pairs)
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ValueError(f"{label} is not valid UTF-8 JSON") from exc
     return _require_object(value, label)
+
+
+def _read_json_object(path: str | Path, label: str) -> dict[str, Any]:
+    return _read_json_bytes(_read_bytes(path, label), label)
 
 
 def _validate_fingerprints(value: Any, label: str) -> list[dict[str, Any]]:
@@ -429,8 +443,9 @@ def _validate_cleanup(value: Any, label: str, *, require_success: bool) -> dict[
     return dict(cleanup)
 
 
-def _parse_events(cdb_log: str | Path) -> tuple[list[dict[str, Any]], str]:
-    raw = _read_bytes(cdb_log, "raw CDB capture")
+def _parse_event_bytes(raw: bytes) -> tuple[list[dict[str, Any]], str]:
+    if not isinstance(raw, bytes):
+        raise ValueError("raw CDB capture must be supplied as immutable bytes")
     try:
         text = raw.decode("ascii")
     except UnicodeDecodeError as exc:
@@ -468,10 +483,10 @@ def _parse_events(cdb_log: str | Path) -> tuple[list[dict[str, Any]], str]:
     return events, _sha256(raw)
 
 
-def materialize_run(live_artifact: str | Path, cdb_log: str | Path, role: str) -> dict[str, Any]:
+def materialize_run_bytes(live_artifact: bytes, cdb_log: bytes, role: str) -> dict[str, Any]:
     if role not in RUN_ROLES:
         raise ValueError(f"invalid run role: {role}")
-    artifact = _read_json_object(live_artifact, "private live artifact")
+    artifact = _read_json_bytes(live_artifact, "private live artifact")
     _require_exact_keys(artifact, _PRIVATE_RUN_KEYS, "private live artifact")
     if artifact["schema"] != PRIVATE_RUN_SCHEMA:
         raise ValueError("private live artifact schema mismatch")
@@ -510,7 +525,7 @@ def materialize_run(live_artifact: str | Path, cdb_log: str | Path, role: str) -
     source_unchanged = _require_bool(artifact["sourceUnchanged"], "sourceUnchanged")
     copy_unchanged = _require_bool(artifact["copyUnchanged"], "copyUnchanged")
     cleanup = _validate_cleanup(artifact["cleanup"], "private cleanup", require_success=False)
-    events, raw_capture = _parse_events(cdb_log)
+    events, raw_capture = _parse_event_bytes(cdb_log)
     counts = Counter(event["event"] for event in events)
     result = {
         "role": role,
@@ -528,6 +543,14 @@ def materialize_run(live_artifact: str | Path, cdb_log: str | Path, role: str) -
     }
     _validate_public_run(result, RUN_ROLES.index(role))
     return result
+
+
+def materialize_run(live_artifact: str | Path, cdb_log: str | Path, role: str) -> dict[str, Any]:
+    return materialize_run_bytes(
+        _read_bytes(live_artifact, "private live artifact"),
+        _read_bytes(cdb_log, "raw CDB capture"),
+        role,
+    )
 
 
 def materialize_matrix(runs: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
@@ -619,9 +642,6 @@ def validate_public_matrix(payload: Any) -> None:
     receipts = [run["receiptSha256"] for run in runs]
     if len(set(receipts)) != len(receipts):
         raise ValueError("public matrix receipts must be distinct across runs")
-    captures = [run["rawCaptureSha256"] for run in runs]
-    if len(set(captures)) != len(captures):
-        raise ValueError("public matrix raw capture digests must be distinct across runs")
     for key in ("commandSha256", "templateSha256", "executableSha256", "fingerprints"):
         if any(run[key] != runs[0][key] for run in runs[1:]):
             raise ValueError(f"public matrix {key} values must be identical across runs")

@@ -1,7 +1,7 @@
 # Active Goal
 
 Status: ACTIVE
-Last updated: 2026-07-12
+Last updated: 2026-07-13
 Policy: `goal.policy.md`
 
 ## Objective
@@ -16,22 +16,22 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Implement Stage A Task 4: add an authority-gated three-run executor for the
-locked BattleEngine morph-identity harness, using fake harnesses only.
+Execute Stage A Task 5: run the accepted authority-gated Level 850
+BattleEngine morph-identity matrix and close the bounded evidence slice.
 
-1. define exact ignored authority and resource-lease schemas for the copied
-   runtime canary, including expiration, zero spend, cleanup/rollback, allowed
-   and forbidden actions, validation gates, and four exclusive resources;
-2. fix the serialized role order to no-input control, positive transform, and
-   fresh positive repeat, with distinct private roots/receipts and one `Q` tap
-   for each positive role;
-3. call the existing Task 3 harness exactly once per role, stop on the first
-   failure, and materialize a sanitized matrix only after all three pass; and
-4. prove dry-run, authority, lease, path, identity, cleanup, materialization,
-   and public-field boundaries with focused fake-harness tests. Do not launch
-   Battle Engine Aquila or CDB in this task.
+1. create ignored, hash-bound authority and resource-lease records with exact
+   zero-spend, expiration, cleanup, validation, and exclusive-resource terms;
+2. run the no-side-effect dry run against the canonical read-only source and
+   explicit executable override, then announce the hands-off native window;
+3. execute the fixed no-input control, positive transform, and fresh positive
+   repeat roles without weakening any identity, event, or cleanup condition;
+4. publish only a validated sanitized identity/causality summary if all three
+   roles pass, otherwise record a bounded blocker and stop before Stage B; and
+5. close with the one integrated runtime-slice validation and review envelope,
+   then commit and push. Do not claim timing, field semantics, handling,
+   gameplay, or rebuild parity, and do not create a release or tag.
 
-## Current Slice Progress - 2026-07-12
+## Current Slice Progress - 2026-07-13
 
 - Reference inventory is drafted in
   `reverse-engineering/source-code/reference-submodule-audit-2026-07-12.md`:
@@ -95,6 +95,12 @@ locked BattleEngine morph-identity harness, using fake harnesses only.
   failure-injection tests. Main passes 27 harness tests, 10 Task 1 materializer
   tests, and a zero-warning generated-runner build; independent normal and
   adversarial Codex re-review approve with no Critical or Important findings.
+- Stage A Task 4 is accepted in the current worktree. Exact ignored authority
+  and lease schemas, canonical dry-run preflight, fixed serialized role order,
+  per-role early identity rejection, bounded immutable-byte materialization,
+  parent-interrupt invalidation, and manifest-before-summary publication are
+  covered by 111 focused non-live tests. Normal and adversarial Codex review
+  approve the final diff; no game or debugger process was launched.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future
@@ -102,13 +108,11 @@ locked BattleEngine morph-identity harness, using fake harnesses only.
   follow-ups: stale BattleEngine probes/mutators can reapply withdrawn
   `CMonitor` ownership, and AYA export preflight omits `Fbx.dll` plus the FBX
   template.
-- A user-owned Cursor lane has the long-running exclusive live-Ghidra mutation
-  lease for a deep semantic pass. The user reports 15 backed-up mutations so
-  far: semantic corrections at `0x00407310` and `0x00408120`, plus 13 cosmetic
-  name/comment cleanups. Deep mode is `6/4324`; earlier rushed heuristic
-  batches do not count. Treat these as pending external-lane evidence until its
-  reviewed branch and read-back ledger are integrated, and do not publish its
-  machine-local backup path.
+- A separate user-owned Codex task owns the Ghidra full-reaudit absorption,
+  recovery, retention, correction review, and targeted revalidation in its own
+  registered worktree. Its findings remain lane-owned and provisional until a
+  reviewed handoff is integrated here. This coordinator does not mutate the
+  live Ghidra project or duplicate that closeout.
 - Normal and adversarial review found and closed stale active-index, deep-link
   historical-label, include-parser/count, and current-roadmap contradictions.
   The corrected include inventory is 254 unique quoted targets with 202 absent.
@@ -145,9 +149,10 @@ from retail are inspectable.
   its 721-selected/726-materialized plain candidate passed the standalone test
   suite, payload/inventory, 463-file/138-link Markdown, 74-package notices, and
   718-file hygiene/line-ending gates.
-- Git reports two registered worktrees: this `main` checkout and the user-owned
-  long-running Cursor semantic-audit lane. Completed Task 2, validation, and
-  agent-guidance worktrees were removed after integration/preservation checks.
+- Git reports two registered worktrees: this `main` checkout and the dedicated
+  user-owned Codex Ghidra full-reaudit closeout task. Completed Task 2,
+  validation, and agent-guidance worktrees were removed after integration and
+  preservation checks.
   Seven earlier empty Codex Desktop worktree shells were removed on 2026-07-11.
 - Sixty-one historical `campaign/*` and `codex/*` branch tips were preserved
   in a verified local Git bundle before branch cleanup. Twenty-four otherwise
@@ -192,9 +197,9 @@ work plus verified commits and pushes for this campaign.
   databases, secrets, build output, or generated package output.
 - Release publication, signing, installer/MSIX/Store work, live Ghidra
   mutation, and destructive private-payload cleanup are separate decisions.
-- While the Cursor semantic lane holds the live-Ghidra mutation lease, this
-  coordinator and its workers must not mutate that project or its backups.
-  Consume reviewed branch/read-back artifacts when they become available.
+- While the dedicated Ghidra closeout task owns the live-project boundary,
+  this coordinator and its workers must not mutate that project or its
+  backups. Consume its reviewed handoff only after that lane releases scope.
 - Static accounting is not runtime proof. Source naming is not retail behavior
   proof. A clean-room plan is not a runnable rebuild.
 - Because the current maintainers and agents have read GPL-licensed source and
@@ -233,20 +238,22 @@ claim against an already malicious process running as the same Windows user.
 
 ## Current Slice Acceptance
 
-- Dry-run fixes the three role order and validates the complete authority/lease
-  envelope without requiring the live arm phrase or launching any process.
-- Live mode requires the exact action family, four exclusive resources, zero
-  spend, unexpired authority, explicit live arm, cleanup/rollback, and validation
-  gates; missing, conflicting, reused, or reparse-routed inputs fail closed.
-- Each role gets a fresh private root and exactly one Task 3 harness invocation;
-  the executor stops after the first failed role and cannot reuse receipt,
-  artifact, or process identity across roles.
-- Strict Task 1 materialization occurs only after all three roles pass, writes
-  only under the ignored proof root, and rejects control hits, missing positive
-  events, identity mismatches, failed cleanup, and private-field leakage.
-- Focused fake-harness tests and independent review pass without launching the
-  game/debugger or adding payloads, product APIs, or broad scripts.
-- Goal/state are reconciled and the green slice is pushed before Task 5 begins.
+- Dry-run validates canonical source/override identity, the complete ignored
+  authority/lease envelope, fixed role order, and private command rendering
+  without requiring the live arm or launching a process.
+- The live matrix uses exact unexpired zero-spend authority, four exclusive
+  resources, and the fixed no-input/positive/repeat sequence. Each role gets a
+  fresh safe copy and one locked harness invocation; any identity, event,
+  cleanup, control-hash, or materialization failure stops the matrix.
+- Each private run is semantically materialized from bounded immutable bytes
+  before the next role. The aggregate private manifest is published before the
+  sanitized summary and only after all three roles pass.
+- The sanitized result proves only the accepted specimen/module/RVA/P0 input
+  and Morph/Move/JetPart execution identity boundary. Raw logs, receipts,
+  pointers, paths, and game payloads remain ignored and untracked.
+- Source and override hashes remain unchanged, keys and receipt-owned
+  processes are clean, the integrated closeout and independent review pass,
+  state is reconciled, and `main` is pushed with divergence `0 0`.
 
 ## Next Slices
 

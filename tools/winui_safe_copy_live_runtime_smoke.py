@@ -19,6 +19,8 @@ import textwrap
 from pathlib import Path
 from typing import Any, Callable, Mapping, NamedTuple
 
+import battleengine_morph_identity_authority as morph_authority
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_GAME_ROOT = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Battle Engine Aquila")
@@ -256,6 +258,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         choices=(DEFAULT_RUNTIME_PROTOCOL, MORPH_CANARY_RUNTIME_PROTOCOL),
     )
     parser.add_argument("--canary-role", default="", choices=("", *MORPH_CANARY_ROLES))
+    parser.add_argument("--canary-authority-file", default="")
+    parser.add_argument("--expected-canary-authority-sha256", default="")
+    parser.add_argument("--canary-leases-file", default="")
+    parser.add_argument("--expected-canary-leases-sha256", default="")
     parser.add_argument("--source-root", default=str(DEFAULT_GAME_ROOT))
     parser.add_argument("--exe-override", default="")
     parser.add_argument("--profiles-root", default="")
@@ -424,6 +430,43 @@ def validate_runtime_protocol(args: argparse.Namespace) -> RuntimeProtocolPlan:
         input_step_delay_ms=60,
         cdb_log_ready_timeout_ms=10000,
     )
+
+
+def validate_morph_canary_control_inputs(
+    args: argparse.Namespace,
+    artifact_root: Path,
+    *,
+    private_parent: Path = morph_authority.PRIVATE_PROOF_PARENT,
+    now: dt.datetime | None = None,
+) -> morph_authority.ControlRecords | None:
+    fields = {
+        "--canary-authority-file": args.canary_authority_file,
+        "--expected-canary-authority-sha256": args.expected_canary_authority_sha256,
+        "--canary-leases-file": args.canary_leases_file,
+        "--expected-canary-leases-sha256": args.expected_canary_leases_sha256,
+    }
+    if args.runtime_protocol != MORPH_CANARY_RUNTIME_PROTOCOL:
+        supplied = sorted(name for name, value in fields.items() if value)
+        if supplied:
+            raise ValueError("Canary authority controls require the morph identity protocol: " + ", ".join(supplied))
+        return None
+    missing = sorted(name for name, value in fields.items() if not value)
+    if missing:
+        raise ValueError("Morph identity canary requires executor authority controls: " + ", ".join(missing))
+    try:
+        return morph_authority.load_control_records(
+            args.canary_authority_file,
+            args.canary_leases_file,
+            artifact_root.parent,
+            now or dt.datetime.now(dt.timezone.utc),
+            private_parent=private_parent,
+            expected_authority_sha256=args.expected_canary_authority_sha256,
+            expected_leases_sha256=args.expected_canary_leases_sha256,
+            proof_root_exists=True,
+            minimum_remaining_seconds=morph_authority.MINIMUM_ROLE_AUTHORITY_SECONDS,
+        )
+    except morph_authority.AuthorityError as exc:
+        raise ValueError(f"Morph identity canary authority validation failed: {exc}") from exc
 
 
 def run_synthetic_runtime_orchestration(
@@ -3037,6 +3080,7 @@ def main() -> int:
         return 2
     if morph_canary_mode:
         try:
+            validate_morph_canary_control_inputs(args, artifact_root)
             artifact_root = create_fresh_canary_artifact_root(artifact_root_raw)
             profiles_root = profiles_root_raw.resolve()
         except (OSError, ValueError) as exc:
