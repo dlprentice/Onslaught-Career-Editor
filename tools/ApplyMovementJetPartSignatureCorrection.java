@@ -111,16 +111,6 @@ public class ApplyMovementJetPartSignatureCorrection extends GhidraScript {
         int skipped = 0;
 
         applySignature(
-            "0x00411630",
-            "CMonitor__IntegrateMovementAgainstTerrain",
-            "__thiscall",
-            voidType,
-            "Signature hardening: monitor movement helper integrates terrain/static-shadow constraints, pushes near-ground velocity response into the attached movement object, and adjusts orientation accumulators through Vec3 cross/normalize helpers. Caller evidence is CMonitor__UpdateMovementTransitionAndEffects; exact source identity, concrete layout, local names, runtime behavior, and rebuild parity remain unproven.",
-            dryRun,
-            param("this", voidPtr));
-        if (dryRun) { skipped++; } else { updated++; }
-
-        applySignature(
             "0x00411a60",
             "Vec3__Cross",
             "__thiscall",
@@ -130,16 +120,6 @@ public class ApplyMovementJetPartSignatureCorrection extends GhidraScript {
             param("this", voidPtr),
             param("outCross", voidPtr),
             param("rhs", voidPtr));
-        if (dryRun) { skipped++; } else { updated++; }
-
-        applySignature(
-            "0x00411aa0",
-            "CMonitor__ComputeTerrainVelocityScalar",
-            "__thiscall",
-            floatType,
-            "Signature hardening: monitor scalar helper samples terrain/static-shadow height, compares against movement-object height, and gates by vcall velocity magnitude before returning a terrain/velocity factor. Caller evidence is CMonitor__UpdateMovementTransitionAndEffects; exact source identity, concrete layout, runtime behavior, and rebuild parity remain unproven.",
-            dryRun,
-            param("this", voidPtr));
         if (dryRun) { skipped++; } else { updated++; }
 
         applySignature(

@@ -51,20 +51,6 @@ public class ApplyCMonitorMovementAudioAnimationRenderCurrentRiskWave1187 extend
             withCommon("sound-event-playback", "active-reader-audio", "process-callee")
         ),
         new Target(
-            "0x00411630",
-            "CMonitor__IntegrateMovementAgainstTerrain",
-            "void __thiscall CMonitor__IntegrateMovementAgainstTerrain(void * this)",
-            "Wave1187 static read-back: CMonitor movement/terrain helper called by CMonitor__UpdateMovementTransitionAndEffects at 0x00410e08. The body samples static-shadow/terrain height through CStaticShadows__SampleShadowHeightBilinear, computes near-ground response against the movement object at this+0x18, pushes velocity response through movement-object vfunc +0x74, and adjusts orientation accumulators through Vec3 cross/normalize and heightfield-normal sampling. Static retail Ghidra metadata/xref/decompile/instruction evidence only; exact monitor/movement-object layouts, exact source-body identity, runtime movement/terrain behavior, BEA patching, rebuild parity, and no-noticeable-difference parity remain separate proof.",
-            withCommon("terrain-movement-integration", "static-shadow-terrain", "movement-transition-callee")
-        ),
-        new Target(
-            "0x00411aa0",
-            "CMonitor__ComputeTerrainVelocityScalar",
-            "float __thiscall CMonitor__ComputeTerrainVelocityScalar(void * this)",
-            "Wave1187 static read-back: CMonitor terrain/velocity scalar helper called by CMonitor__UpdateMovementTransitionAndEffects at 0x00411068. The body samples static-shadow/terrain height at movement-object position this+0x18+0x1c, clamps against DAT_006fbdfc, compares the height delta against constants at 0x005d8568/0x005d8cc0, queries movement-object vfunc +0x6c for velocity, and returns one of the terrain/velocity scalar constants. Static retail Ghidra metadata/xref/decompile/instruction evidence only; exact scalar meaning, concrete monitor/movement-object layouts, exact source-body identity, runtime movement behavior, BEA patching, rebuild parity, and no-noticeable-difference parity remain separate proof.",
-            withCommon("terrain-velocity-scalar", "static-shadow-terrain", "movement-transition-callee")
-        ),
-        new Target(
             "0x0044e2c0",
             "CMonitor__CheckSVFAnimationAndAdvanceState",
             "int __fastcall CMonitor__CheckSVFAnimationAndAdvanceState(void * monitor)",
