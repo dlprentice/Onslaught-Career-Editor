@@ -1,6 +1,6 @@
 # BattleEngine Morph Runtime Observer Design - 2026-07-12
 
-Status: user-approved design; implementation and copied-runtime execution pending
+Status: user-approved design; Stage A Tasks 1-4 implemented; copied-runtime execution pending
 
 ## Decision
 
@@ -38,7 +38,8 @@ strict clean-room or parity-complete implementation.
 
 The design covers:
 
-- a fresh, app-owned, unpatched safe copy of the canonical Steam executable;
+- a fresh, app-owned, unpatched safe copy materialized from the canonical Steam
+  executable selected through the supported read-only in-root override;
 - exact process, module, window, specimen, and launch-receipt identity;
 - one exact player-one (runtime slot P0) Transform action routed to the copied
   process;
@@ -78,12 +79,26 @@ silently promote field names or enum labels beyond the accepted evidence.
 ### 1. Safe-Copy Materializer
 
 Reuse `GameProfilePreflightService` with
-`ApplyWindowedCompatibilityPatch=false` and an empty patch set. The source and
-copied executable must both match the canonical 2,506,752-byte specimen with
-SHA-256
-`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+`ApplyWindowedCompatibilityPatch=false` and an empty patch set. The read-only
+resource root's ambient `BEA.exe` is hash-bound and must remain unchanged, but
+it is not assumed to be the canonical specimen. The effective executable
+source must be either `BEA.exe` or the service-supported
+`BEA.exe.original.backup` inside that same resource root. It must be a normal,
+non-hardlinked, non-reparse file matching the canonical 2,506,752-byte specimen
+with SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+The copied executable must match that effective source and canonical identity
 before launch. The copy must be app-owned, newly materialized, and neither a
 hardlink nor a reparse-point escape.
+
+Each role receives a fresh private `ONSLAUGHT_APP_CONFIG_ROOT`; its profiles
+root is exactly `<role-root>/app-config/OnslaughtCareerEditor/GameProfiles`.
+This preserves AppCore's canonical app-owned-root authorization instead of
+inventing a parallel profile boundary.
+
+The executor holds the ambient executable digest as a matrix-wide baseline and
+revalidates it before every role and immediately before private/public output
+publication. A change between roles invalidates the matrix.
 
 The copied profile binds player one `Actions/Transform` (`0x21`) to Q through
 the existing control-options service. No installed-game file or original
@@ -154,7 +169,9 @@ sanitized public-safe record containing:
 - pointer-equality booleans without pointer values;
 - raw state dwords without semantic enum names;
 - control/positive/repeat outcomes;
-- before/after source and copy hashes; and
+- aggregate `sourceUnchanged` and `copyUnchanged` integrity booleans; the former
+  covers the ambient executable, effective override, and relevant source data;
+  and
 - cleanup results plus a digest binding the private raw capture.
 
 The checker rejects missing stages, reordered events, identity mismatches,
@@ -168,9 +185,11 @@ only for the exact owned process identity, closes any owned process container,
 and verifies that no owned BEA or CDB process remains. Unknown processes are
 never terminated.
 
-The installed source and copied executable are rehashed after the run. Any
-source change is a hard failure. A copy change is also a hard failure because
-this canary authorizes no executable or memory mutation.
+The private runner rehashes the ambient resource-root executable, effective
+executable override, relevant source options/savegame inputs, and copied
+executable after each run, then emits only aggregate source/copy integrity
+booleans. Any source change is a hard failure. A copy change is also a hard
+failure because this canary authorizes no executable or memory mutation.
 
 ## Stage Progression
 

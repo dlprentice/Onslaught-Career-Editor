@@ -21,7 +21,7 @@
       "worktreeOwnership": "main coordinator checkout and a dedicated user-owned Codex Ghidra full-reaudit closeout task; the completed morph-canary, validation-simplification, and agent-guidance worktrees were removed after integration and preservation checks",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "61d830ca19df1c3cc93af2f0e7fbd6392f17557f (Stage A Task 3 closeout)",
+      "lastPushedBeforeCurrentSlice": "3d23c1760ee02a0ae125b0e2dde9309e077a32c7 (Stage A Task 4 executor)",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
@@ -95,12 +95,13 @@
     "runtimeObserverDesign": {
       "decision": "Identity canary in controlled Level 850, then controlled raw-state observation, then Level 100 corroboration.",
       "stageABoundary": "The first control/positive/repeat matrix proves exact specimen, module/RVA, player-one/runtime-P0 input, BattleEngine, Morph, Move, and JetPart causality only; it makes no timing, field-semantic, handling, or parity claim.",
-      "safety": "Fresh unpatched AppCore safe copy, exact launch receipt and window identity, module-relative one-shot probes, private raw evidence, sanitized hash-bound materialization, before/after hashes, owned-process cleanup, and no installed-game or process-memory writes.",
+      "safety": "Fresh unpatched AppCore safe copy from a canonical effective in-root executable override; unchanged hash-bound ambient resource executable; private AppConfig-derived profiles root; exact launch receipt and window identity; module-relative one-shot probes; private raw evidence; sanitized hash-bound materialization; before/after hashes; owned-process cleanup; and no installed-game or process-memory writes.",
       "task1Implementation": "Pushed through b1458c0d: PE32/RVA/relocation-safe canonical fingerprinting, four hardware-only execution probes, strict private artifact revalidation, exact public matrix schemas, contradictory-log rejection, and 10 passing focused synthetic tests. No BEA/CDB process was launched.",
       "task2Implementation": "Integrated through 078efaf7 and 6fe26639: strict exact-type process receipts, PEB-derived launch identity, module/window/manifest/digest binding, local-only marker-ready CDB attach with held command identity and bounded log reads, and foreground input with reverse-order finally cleanup. Independent re-review approved; the integrated Task 2 suites pass without real BEA/CDB.",
       "task3Implementation": "Integrated through 8dc733f4, 526df1c2, and 123ca8ac: one locked unpatched Level 850/configuration 2 protocol, one Q tap per positive role, canonical command/receipt/specimen equality, external fresh/create-new private artifacts, exact marker/input success, and shared-plan ordered cleanup through census.",
-      "task4Implementation": "Accepted in the current worktree: exact authority/lease schemas and hash binding, canonical no-process dry run, fixed serialized roles, immediate cross-role identity rejection, bounded immutable-byte strict materialization, interruption invalidation after child cleanup, and manifest-before-summary publication. The final focused non-live suite passes 111 tests and normal/adversarial Codex review approves; no game/debugger process was launched.",
-      "status": "Tasks 1-4 are accepted. Task 5 live Level 850 control/positive/repeat execution and sanitized evidence closeout are active; no live result exists yet."
+      "task4Implementation": "Accepted and pushed at 3d23c176: exact authority/lease schemas and hash binding, canonical no-process dry run, fixed serialized roles, immediate cross-role identity rejection, bounded immutable-byte strict materialization, interruption invalidation after child cleanup, and manifest-before-summary publication. The accepted focused non-live suite passed 111 tests and normal/adversarial Codex review approved; no game/debugger process was launched.",
+      "task5Preflight": "Before any live run, local preflight found a noncanonical ambient resource-root BEA.exe with a supported canonical in-root BEA.exe.original.backup, plus a generated profiles root that did not match AppCore's canonical AppConfig boundary. The correction hash-binds the ambient executable across the matrix, requires the effective override and copy to be canonical, rejects stale/out-of-root/unsupported/reparse/hardlinked overrides, and uses a fresh per-role private AppConfig-derived GameProfiles root. Ambient drift now stops before the next role and immediately before publication. The six focused suites pass 119 tests (22 executor and 30 harness), the packaged runtime-safety and AppCore/UI preflight routes pass, and the generated runner builds with zero warnings. Normal review converged to approve and adversarial review approved with no Critical/Important blocker.",
+      "status": "Tasks 1-4 are accepted. Task 5 corrected preflight validation is active; no authority record, live game/debugger process, or runtime result exists yet."
     },
     "agentGuidanceAudit": {
       "integrated": "56738f9b",
@@ -130,8 +131,8 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Commit and push the accepted Stage A Task 4 executor after final focused validation and state reconciliation.",
-    "Run Level 850 control/positive/repeat under exact ignored local authority, publish only a validated sanitized identity result, and stop before Stage B on failure.",
+    "Finish validation/review and push the non-live Task 5 executable-identity/AppConfig correction.",
+    "Run the no-side-effect dry run and then Level 850 control/positive/repeat under exact ignored local authority; publish only a validated sanitized identity result and stop before Stage B on failure.",
     "Retire stale BattleEngine ownership probes/mutators and add Fbx.dll plus FBX-template fail-fast preflight before the next Ghidra/export mutation slice.",
     "Design a public synthetic AYA/DDS/FBX export-contract fixture before promoting legacy extractor completeness.",
     "After runtime evidence is accepted, freeze measured constants/tolerances and implement the authentic behavior in deterministic Core plus the Godot adapter."

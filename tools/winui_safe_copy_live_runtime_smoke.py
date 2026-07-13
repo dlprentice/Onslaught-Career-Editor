@@ -650,6 +650,21 @@ def validate_canary_digest_set(canonical: str, **digests: str) -> None:
         raise ValueError("Canary executable digest mismatch: " + ", ".join(drifted))
 
 
+def resolve_morph_canary_app_config_root(artifact_root: Path, profiles_root: Path) -> Path:
+    artifact = artifact_root.absolute().resolve(strict=False)
+    app_config_root = artifact / "app-config"
+    expected_profiles_root = app_config_root / "OnslaughtCareerEditor" / "GameProfiles"
+    actual_profiles_root = profiles_root.absolute().resolve(strict=False)
+    if actual_profiles_root != expected_profiles_root.resolve(strict=False):
+        raise ValueError("Morph canary profiles root must equal the private AppConfig GameProfiles root.")
+    if (
+        has_reparse_or_symlink_ancestor(app_config_root)
+        or has_reparse_or_symlink_ancestor(actual_profiles_root)
+    ):
+        raise ValueError("Morph canary AppConfig root must not be reparse or symlink routed.")
+    return app_config_root
+
+
 def build_canary_private_artifact_payload(
     *,
     executable_path: Path,
@@ -1881,10 +1896,8 @@ static int RunMorphCanary()
     string installedExe = Path.Combine(sourceRoot, "BEA.exe");
     string installedHashBefore = Sha256File(installedExe);
     string overrideHashBefore = Sha256File(exeOverride);
-    if (!string.Equals(installedHashBefore, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) ||
-        !string.Equals(overrideHashBefore, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) ||
-        !string.Equals(installedHashBefore, overrideHashBefore, StringComparison.OrdinalIgnoreCase))
-        throw new InvalidOperationException("Installed and override executables do not match the canonical renderer digest.");
+    if (!string.Equals(overrideHashBefore, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase))
+        throw new InvalidOperationException("Effective executable override does not match the canonical renderer digest.");
     SortedDictionary<string, string> sourceHashesBefore = SnapshotRelativeHashes(sourceRoot, "defaultoptions.bea", "savegames");
     if (SnapshotBeaProcesses().Length != 0)
         throw new InvalidOperationException("Refusing morph canary while any BEA.exe process is already running.");
@@ -1919,7 +1932,6 @@ static int RunMorphCanary()
                 ProfilePresetId: null));
         copiedExecutableHashBefore = Sha256File(prepared.ExecutablePath);
         if (!string.Equals(copiedExecutableHashBefore, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) ||
-            !string.Equals(copiedExecutableHashBefore, installedHashBefore, StringComparison.OrdinalIgnoreCase) ||
             !string.Equals(copiedExecutableHashBefore, overrideHashBefore, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Copied executable does not match the canonical renderer digest.");
         _ = GameProfileControlOptionsService.ApplyToSafeCopy(
@@ -2082,12 +2094,10 @@ __CANARY_CLEANUP_PHASE_BLOCK__
     string overrideHashAfter = Sha256File(exeOverride);
     SortedDictionary<string, string> sourceHashesAfter = SnapshotRelativeHashes(sourceRoot, "defaultoptions.bea", "savegames");
     string copiedExecutableHashAfter = Sha256File(prepared.ExecutablePath);
-    bool canarySourceUnchanged = string.Equals(installedHashBefore, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) &&
+    bool canarySourceUnchanged = string.Equals(installedHashAfter, installedHashBefore, StringComparison.OrdinalIgnoreCase) &&
         string.Equals(overrideHashBefore, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) &&
-        string.Equals(installedHashAfter, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) &&
         string.Equals(overrideHashAfter, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) &&
-        string.Equals(installedHashBefore, overrideHashBefore, StringComparison.OrdinalIgnoreCase) &&
-        string.Equals(installedHashAfter, overrideHashAfter, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(overrideHashAfter, overrideHashBefore, StringComparison.OrdinalIgnoreCase) &&
         HashMapsEqual(sourceHashesBefore, sourceHashesAfter);
     bool canaryCopyUnchanged = string.Equals(copiedExecutableHashBefore, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) &&
         string.Equals(copiedExecutableHashAfter, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) &&
@@ -3078,8 +3088,13 @@ def main() -> int:
     if paths_overlap(artifact_root, source_root) or paths_overlap(profiles_root, source_root):
         print("Refusing artifact/profile roots that overlap the source game root.", file=sys.stderr)
         return 2
+    canary_app_config_root = None
     if morph_canary_mode:
         try:
+            canary_app_config_root = resolve_morph_canary_app_config_root(
+                artifact_root,
+                profiles_root,
+            )
             validate_morph_canary_control_inputs(args, artifact_root)
             artifact_root = create_fresh_canary_artifact_root(artifact_root_raw)
             profiles_root = profiles_root_raw.resolve()
@@ -3128,7 +3143,6 @@ def main() -> int:
             )
             validate_canary_digest_set(
                 rendered_canary_command.executable_sha256,
-                installed_before=file_sha256(source_root / "BEA.exe"),
                 override_before=file_sha256(exe_override),
             )
             write_new_private_bytes(
@@ -3164,6 +3178,8 @@ def main() -> int:
     env["ONSLAUGHT_LIVE_SOURCE_ROOT"] = str(source_root)
     env["ONSLAUGHT_LIVE_EXE_OVERRIDE"] = str(exe_override)
     env["ONSLAUGHT_LIVE_PROFILES_ROOT"] = str(profiles_root)
+    if canary_app_config_root is not None:
+        env["ONSLAUGHT_APP_CONFIG_ROOT"] = str(canary_app_config_root)
     env["ONSLAUGHT_LIVE_ARTIFACT_JSON"] = str(artifact_json)
     env["ONSLAUGHT_LIVE_CAPTURE_SCRIPT"] = str(ROOT / "tools" / "capture_game_window.ps1")
     env["ONSLAUGHT_LIVE_INPUT_SCRIPT"] = str(ROOT / "tools" / "send_game_window_input.ps1")

@@ -414,7 +414,8 @@ debugger cleanup, and managed stop.
 
 Canary mode allows `capture-count=0` and has no screenshot success dependency.
 It requires the CDB ready marker, exact focused input for positive roles, copied
-executable before/after equality, installed and override source equality, CDB
+executable before/after canonical equality, ambient resource-root executable
+before/after equality, effective override before/after canonical equality, CDB
 identity-bound detach/exit, managed stop, and zero owned processes.
 
 Cleanup order on every path is: release keys, end the exact owned CDB session
@@ -514,9 +515,12 @@ exact repo-root ignored `local-proofs/` boundary, cleanup/rollback, validation
 gates, expiration, and `maxSpendUsd: 0`. Authority and lease files are distinct
 siblings under a separate ignored control directory; they are never placed
 inside the fresh matrix root. The executor and lower-level harness re-read and
-hash-bind both controls before each live role. A dry run validates canonical
-source/override identity and renders the private command, but does not launch a
-process or require the live arm phrase.
+hash-bind both controls before each live role. A dry run hash-binds the ambient
+resource-root executable, validates the canonical effective in-root override,
+and renders the private command, but does not launch a process or require the
+live arm phrase. Live execution retains the ambient digest as a matrix-wide
+baseline and revalidates it before every role and immediately before output
+publication.
 
 - [ ] **Step 4: Implement serialized role execution**
 
@@ -526,7 +530,10 @@ For each role, create a fresh child root and generated command, then invoke:
 py -3 tools/winui_safe_copy_live_runtime_smoke.py
   --runtime-protocol battleengine-morph-identity-canary-v1
   --canary-role <fixed role>
+  --source-root <read-only resource root>
+  --exe-override <canonical in-root BEA.exe or BEA.exe.original.backup>
   --artifact-root <private role root>
+  --profiles-root <private role root>/app-config/OnslaughtCareerEditor/GameProfiles
   --canary-authority-file <private authority JSON>
   --expected-canary-authority-sha256 <digest>
   --canary-leases-file <private lease JSON>
@@ -604,16 +611,17 @@ BEA/CDB process exists. Keep both files ignored.
 - [ ] **Step 2: Run the no-side-effect dry run**
 
 ```powershell
-py -3 tools\run_battleengine_morph_identity_canary.py --proof-root local-proofs\battleengine-morph-identity-canary-matrix-20260712 --authority local-proofs\battleengine-morph-identity-canary-control-20260712\authority.json --leases local-proofs\battleengine-morph-identity-canary-control-20260712\leases.json --exe-override <canonical-private-BEA.exe> --dry-run
+py -3 tools\run_battleengine_morph_identity_canary.py --proof-root local-proofs\battleengine-morph-identity-canary-matrix-20260712 --authority local-proofs\battleengine-morph-identity-canary-control-20260712\authority.json --leases local-proofs\battleengine-morph-identity-canary-control-20260712\leases.json --source-root <read-only-resource-root> --exe-override <read-only-resource-root>\BEA.exe.original.backup --dry-run
 ```
 
-Expected: three fixed roles, canonical hash/size, empty patch set, exact launch
-arguments, private generated-command paths, and no process launch.
+Expected: three fixed roles, a hash-bound ambient executable baseline, a
+canonical effective override/copy identity, empty patch set, exact launch
+arguments, private generated-command/AppConfig paths, and no process launch.
 
 - [ ] **Step 3: Announce the native window and run the matrix hands-off**
 
 ```powershell
-py -3 tools\run_battleengine_morph_identity_canary.py --proof-root local-proofs\battleengine-morph-identity-canary-matrix-20260712 --authority local-proofs\battleengine-morph-identity-canary-control-20260712\authority.json --leases local-proofs\battleengine-morph-identity-canary-control-20260712\leases.json --exe-override <canonical-private-BEA.exe> --arm-live "RUN BATTLEENGINE MORPH IDENTITY CANARY"
+py -3 tools\run_battleengine_morph_identity_canary.py --proof-root local-proofs\battleengine-morph-identity-canary-matrix-20260712 --authority local-proofs\battleengine-morph-identity-canary-control-20260712\authority.json --leases local-proofs\battleengine-morph-identity-canary-control-20260712\leases.json --source-root <read-only-resource-root> --exe-override <read-only-resource-root>\BEA.exe.original.backup --arm-live "RUN BATTLEENGINE MORPH IDENTITY CANARY"
 ```
 
 If user input or an unrelated process interferes, discard the affected run and
@@ -626,8 +634,9 @@ py -3 tools\battleengine_morph_identity_canary.py check --matrix local-proofs\ba
 ```
 
 Expected: control has zero Transform/Morph hits; both positives have exact event
-order and all intra-run equality booleans true; source/copy hashes are unchanged;
-keys, CDB, and managed game process are clean.
+order and all intra-run equality booleans true; aggregate `sourceUnchanged` and
+`copyUnchanged` are true after the private comparisons; the matrix-wide ambient
+baseline still matches; and keys, CDB, and managed game process are clean.
 
 - [ ] **Step 5: Apply the evidence decision**
 

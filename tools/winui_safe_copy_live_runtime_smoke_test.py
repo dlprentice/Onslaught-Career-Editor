@@ -455,6 +455,40 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
             with self.subTest(label=label), self.assertRaises(ValueError):
                 module.validate_canary_digest_set(canonical, **drifted)
 
+    def test_morph_canary_profiles_root_is_canonical_for_private_app_config(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory(prefix="morph-app-config-test-") as tmp:
+            artifact_root = Path(tmp) / "role"
+            app_config_root = artifact_root / "app-config"
+            profiles_root = app_config_root / "OnslaughtCareerEditor" / "GameProfiles"
+
+            self.assertEqual(
+                app_config_root,
+                module.resolve_morph_canary_app_config_root(artifact_root, profiles_root),
+            )
+            with self.assertRaisesRegex(ValueError, "AppConfig"):
+                module.resolve_morph_canary_app_config_root(
+                    artifact_root,
+                    artifact_root / "GameProfiles",
+                )
+
+    def test_generated_morph_runner_separates_ambient_and_effective_executables(self) -> None:
+        text = self.script_text()
+
+        self.assertIn('env["ONSLAUGHT_APP_CONFIG_ROOT"] = str(canary_app_config_root)', text)
+        self.assertIn(
+            "string.Equals(installedHashAfter, installedHashBefore, StringComparison.OrdinalIgnoreCase)",
+            text,
+        )
+        self.assertNotIn(
+            "!string.Equals(installedHashBefore, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase)",
+            text,
+        )
+        self.assertNotIn(
+            "!string.Equals(copiedExecutableHashBefore, installedHashBefore, StringComparison.OrdinalIgnoreCase)",
+            text,
+        )
+
     def stable_extra_patch_keys(self) -> set[str]:
         tree = ast.parse(self.script_text(), filename=str(SCRIPT))
         for node in tree.body:

@@ -72,6 +72,7 @@ class RunPlan:
 class RuntimePreflight:
     source_root: Path
     exe_override: Path
+    ambient_executable_sha256: str
     executable_sha256: str
     command_sha256: str
     template_sha256: str
@@ -257,6 +258,8 @@ def build_harness_command(
         str(exe_override),
         "--artifact-root",
         str(role_root),
+        "--profiles-root",
+        str(role_root / "app-config" / "OnslaughtCareerEditor" / "GameProfiles"),
         "--canary-authority-file",
         str(controls.authority_path),
         "--expected-canary-authority-sha256",
@@ -295,20 +298,17 @@ def _file_sha256(path: Path) -> str:
 
 def _default_runtime_preflight(source_root: Path, exe_override: Path) -> RuntimePreflight:
     source_executable = source_root / "BEA.exe"
-    if source_executable.stat().st_size != canary.CANONICAL_SIZE:
-        raise CanaryError("source BEA.exe size is not canonical")
-    source_sha256 = _file_sha256(source_executable)
-    if source_sha256 != canary.CANONICAL_SHA256:
-        raise CanaryError("source BEA.exe SHA-256 is not canonical")
+    ambient_sha256 = _file_sha256(source_executable)
     try:
         rendered = canary.render_private_command(exe_override, canary.DEFAULT_TEMPLATE)
     except (OSError, ValueError) as exc:
         raise CanaryError(f"private command preflight failed: {exc}") from exc
-    if rendered.executable_sha256 != source_sha256:
-        raise CanaryError("source and executable override identity differ")
+    if rendered.executable_sha256 != canary.CANONICAL_SHA256:
+        raise CanaryError("effective executable override is not canonical")
     return RuntimePreflight(
         source_root=source_root,
         exe_override=exe_override,
+        ambient_executable_sha256=ambient_sha256,
         executable_sha256=rendered.executable_sha256,
         command_sha256=rendered.sha256,
         template_sha256=rendered.template_sha256,
@@ -703,9 +703,27 @@ def _validate_runtime_inputs(
         raise CanaryError("exe override must be an existing file")
     if has_reparse_or_symlink_ancestor(source) or has_reparse_or_symlink_ancestor(override):
         raise CanaryError("source or executable override is reparse or symlink routed")
+    if not _is_same_or_under(override, source):
+        raise CanaryError("exe override must stay inside the source root")
+    if override.name.lower() not in {"bea.exe", "bea.exe.original.backup"}:
+        raise CanaryError("exe override must be named BEA.exe or BEA.exe.original.backup")
+    if override.stat().st_nlink != 1:
+        raise CanaryError("exe override must not be hardlinked")
     if _paths_overlap(proof_root, source) or _paths_overlap(proof_root, override):
         raise CanaryError("proof root must not overlap source or executable override")
     return source.resolve(), override.resolve()
+
+
+def _require_ambient_executable_unchanged(preflight: RuntimePreflight) -> None:
+    ambient = preflight.source_root / "BEA.exe"
+    if not ambient.is_file() or has_reparse_or_symlink_ancestor(ambient):
+        raise CanaryError("ambient executable identity drifted from the matrix preflight")
+    try:
+        current_sha256 = _file_sha256(ambient)
+    except OSError as exc:
+        raise CanaryError("ambient executable identity could not be revalidated") from exc
+    if current_sha256 != preflight.ambient_executable_sha256:
+        raise CanaryError("ambient executable identity drifted from the matrix preflight")
 
 
 class MatrixExecutor:
@@ -814,6 +832,8 @@ class MatrixExecutor:
         if (
             preflight.source_root.resolve() != source.resolve()
             or preflight.exe_override.resolve() != override.resolve()
+            or not _DIGEST.fullmatch(preflight.ambient_executable_sha256)
+            or preflight.ambient_executable_sha256 != _file_sha256(source / "BEA.exe")
             or preflight.executable_sha256 != canary.CANONICAL_SHA256
             or preflight.template_sha256 != canary.TEMPLATE_SHA256
             or not _DIGEST.fullmatch(preflight.command_sha256)
@@ -866,6 +886,7 @@ class MatrixExecutor:
         records: list[_PrivateRun] = []
         public_runs: list[dict[str, Any]] = []
         for run in plan.runs:
+            _require_ambient_executable_unchanged(preflight)
             self._load_controls(
                 controls.authority_path,
                 controls.leases_path,
@@ -895,6 +916,7 @@ class MatrixExecutor:
             expected=controls,
             proof_root_exists=True,
         )
+        _require_ambient_executable_unchanged(preflight)
         for record in records:
             _require_unchanged_private_run(record)
 
@@ -942,6 +964,7 @@ class MatrixExecutor:
         manifest_raw = _canonical_json_bytes(private_manifest)
         for record in records:
             _require_unchanged_private_run(record)
+        _require_ambient_executable_unchanged(preflight)
         _publish_outputs(manifest_path, manifest_raw, summary_path, summary_raw)
         return MatrixResult(manifest_path, summary_path)
 

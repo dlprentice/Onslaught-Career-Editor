@@ -21,8 +21,9 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
 
 1. create ignored, hash-bound authority and resource-lease records with exact
    zero-spend, expiration, cleanup, validation, and exclusive-resource terms;
-2. run the no-side-effect dry run against the canonical read-only source and
-   explicit executable override, then announce the hands-off native window;
+2. run the no-side-effect dry run against the read-only resource root and its
+   canonical effective in-root executable override, then announce the
+   hands-off native window;
 3. execute the fixed no-input control, positive transform, and fresh positive
    repeat roles without weakening any identity, event, or cleanup condition;
 4. publish only a validated sanitized identity/causality summary if all three
@@ -58,8 +59,8 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   starts with an unpatched safe-copy Level 850 control/positive/repeat matrix,
   defers field semantics and timing, and uses Level 100 only as later
   corroboration. The user pre-authorized the recommended continuation. Runtime
-  execution remains pending the structured local baton, resource leases,
-  implementation, and validation.
+  execution remains pending the structured local baton, resource leases, and
+  final corrected preflight validation.
 - The Stage A implementation is decomposed in
   `roadmap/battleengine-morph-identity-canary-implementation-plan-2026-07-12.md`.
   It reuses AppCore and the existing live harness, adds no product API or
@@ -87,20 +88,33 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   generated release accounting is current at R0=6,291, R2=0, R3=3,
   R4=13,184, and the 726-file curated manifest remains valid.
 - Stage A Task 3 is integrated through `8dc733f4`, `526df1c2`, and `123ca8ac`.
-  One protocol choice now derives the unpatched Level 850/configuration 2
-  launch, Player 1 `Q`, no patches, no screenshots, canonical command/receipt
-  binding, exact marker/input checks, private fresh/create-new artifacts, and
-  ordered cleanup through census. The generated C# runner reasserts canonical
-  installed/override/copy equality and shares its cleanup phase plan with
-  failure-injection tests. Main passes 27 harness tests, 10 Task 1 materializer
-  tests, and a zero-warning generated-runner build; independent normal and
-  adversarial Codex re-review approve with no Critical or Important findings.
-- Stage A Task 4 is accepted in the current worktree. Exact ignored authority
-  and lease schemas, canonical dry-run preflight, fixed serialized role order,
+  One protocol choice derives the unpatched Level 850/configuration 2 launch,
+  Player 1 `Q`, no patches, no screenshots, canonical command/receipt binding,
+  exact marker/input checks, private fresh/create-new artifacts, and ordered
+  cleanup through census. Its cleanup phase plan is shared with
+  failure-injection tests; independent normal and adversarial Codex re-review
+  approved with no Critical or Important findings.
+- Stage A Task 4 is accepted and pushed at `3d23c176`. Exact ignored authority
+  and lease schemas, canonical no-process dry-run, fixed serialized role order,
   per-role early identity rejection, bounded immutable-byte materialization,
   parent-interrupt invalidation, and manifest-before-summary publication are
   covered by 111 focused non-live tests. Normal and adversarial Codex review
-  approve the final diff; no game or debugger process was launched.
+  approved the committed unit; no game or debugger process was launched.
+- Task 5 preflight found two non-live contract defects before execution: the
+  ambient resource-root `BEA.exe` can differ from the canonical executable that
+  AppCore validly selects through the in-root `BEA.exe.original.backup`, and the
+  generated profiles root did not match AppCore's canonical AppConfig root.
+  The correction hash-binds the ambient executable without treating it as the
+  specimen, requires the effective override and copied executable to remain
+  canonical, rejects out-of-root/unsupported/reparse/hardlinked overrides, and
+  gives every role a fresh private AppConfig-derived `GameProfiles` root. A
+  matrix-wide ambient digest now fails closed before each role and again before
+  publication. The changed executor and harness suites pass 22 and 30 tests.
+  The full six-suite canary/helper set passes 119 tests, the packaged runtime-safety route and
+  AppCore/UI preflight gates pass, and the generated runner builds with zero
+  warnings. Normal review converged to approve after the matrix-wide baseline
+  fix; adversarial review approved with no Critical/Important blocker after one
+  stale plan sentence was corrected. No live run has started.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future
@@ -238,9 +252,10 @@ claim against an already malicious process running as the same Windows user.
 
 ## Current Slice Acceptance
 
-- Dry-run validates canonical source/override identity, the complete ignored
-  authority/lease envelope, fixed role order, and private command rendering
-  without requiring the live arm or launching a process.
+- Dry-run hash-binds the ambient read-only resource-root executable, validates
+  the canonical effective in-root override, the complete ignored
+  authority/lease envelope, fixed role order, and private command/AppConfig
+  routing without requiring the live arm or launching a process.
 - The live matrix uses exact unexpired zero-spend authority, four exclusive
   resources, and the fixed no-input/positive/repeat sequence. Each role gets a
   fresh safe copy and one locked harness invocation; any identity, event,
@@ -251,14 +266,16 @@ claim against an already malicious process running as the same Windows user.
 - The sanitized result proves only the accepted specimen/module/RVA/P0 input
   and Morph/Move/JetPart execution identity boundary. Raw logs, receipts,
   pointers, paths, and game payloads remain ignored and untracked.
-- Source and override hashes remain unchanged, keys and receipt-owned
-  processes are clean, the integrated closeout and independent review pass,
-  state is reconciled, and `main` is pushed with divergence `0 0`.
+- Aggregate source/copy integrity booleans are true after the private
+  ambient/effective/source-data/copy comparisons, the matrix-wide ambient
+  baseline still matches, keys and receipt-owned processes are clean, the
+  integrated closeout and independent review pass, state is reconciled, and
+  `main` is pushed with divergence `0 0`.
 
 ## Next Slices
 
-1. Complete Stage A Tasks 4-5, run the authorized Level 850 identity matrix,
-   and publish only its sanitized identity/causality result.
+1. Complete Stage A Task 5, run the authorized Level 850 identity matrix, and
+   publish only its sanitized identity/causality result.
 2. Retire or fail-close active BattleEngine tools that can reapply withdrawn
    ownership, then harden AYA export dependency/template preflight.
 3. Run the deep Lore editorial/provenance pass and generated contributor

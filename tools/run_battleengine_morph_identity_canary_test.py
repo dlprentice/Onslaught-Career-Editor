@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -222,6 +223,9 @@ class MatrixExecutorTests(unittest.TestCase):
         return runner.RuntimePreflight(
             source_root=source_root.resolve(),
             exe_override=exe_override.resolve(),
+            ambient_executable_sha256=hashlib.sha256(
+                (source_root / "BEA.exe").read_bytes()
+            ).hexdigest(),
             executable_sha256=runner.canary.CANONICAL_SHA256,
             command_sha256=COMMAND_SHA256,
             template_sha256=runner.canary.TEMPLATE_SHA256,
@@ -293,6 +297,11 @@ class MatrixExecutorTests(unittest.TestCase):
             self.assertIn("--expected-canary-authority-sha256", row.command)
             self.assertIn("--canary-leases-file", row.command)
             self.assertIn("--expected-canary-leases-sha256", row.command)
+            profiles_index = row.command.index("--profiles-root")
+            self.assertEqual(
+                row.root / "app-config" / "OnslaughtCareerEditor" / "GameProfiles",
+                Path(row.command[profiles_index + 1]),
+            )
 
     def test_dry_run_requires_both_runtime_inputs_and_private_control_files(self) -> None:
         executor, _ = self.executor(FakeHarness())
@@ -343,6 +352,84 @@ class MatrixExecutorTests(unittest.TestCase):
                 self.proof_root,
                 self.authority_path,
                 self.leases_path,
+                self.source_root,
+                self.exe_override,
+            )
+
+    def test_real_preflight_distinguishes_ambient_and_effective_executables(self) -> None:
+        ambient = b"ambient-container-executable"
+        effective = b"canonical-effective-executable"
+        (self.source_root / "BEA.exe").write_bytes(ambient)
+        self.exe_override.write_bytes(effective)
+        effective_sha256 = hashlib.sha256(effective).hexdigest()
+        rendered = mock.Mock(
+            executable_sha256=effective_sha256,
+            sha256="d" * 64,
+            template_sha256="e" * 64,
+        )
+
+        with (
+            mock.patch.object(runner.canary, "CANONICAL_SIZE", len(effective)),
+            mock.patch.object(runner.canary, "CANONICAL_SHA256", effective_sha256),
+            mock.patch.object(runner.canary, "render_private_command", return_value=rendered),
+        ):
+            preflight = runner._default_runtime_preflight(self.source_root, self.exe_override)
+
+        self.assertEqual(hashlib.sha256(ambient).hexdigest(), preflight.ambient_executable_sha256)
+        self.assertEqual(effective_sha256, preflight.executable_sha256)
+        self.assertNotEqual(preflight.ambient_executable_sha256, preflight.executable_sha256)
+
+    def test_stale_ambient_executable_preflight_is_rejected(self) -> None:
+        def drifting_preflight(source_root: Path, exe_override: Path) -> runner.RuntimePreflight:
+            result = self.preflight(source_root, exe_override)
+            (source_root / "BEA.exe").write_bytes(b"ambient-drift-after-preflight")
+            return result
+
+        executor = runner.MatrixExecutor(
+            harness=FakeHarness(),
+            materialize_run=lambda *_: {},
+            materialize_matrix=lambda _: {},
+            validate_public=lambda _: None,
+            runtime_preflight=drifting_preflight,
+            private_parent=self.private_parent,
+            now=lambda: runner.parse_utc(NOW, "test now"),
+        )
+        with self.assertRaisesRegex(runner.CanaryError, "runtime preflight"):
+            executor.dry_run(
+                self.proof_root,
+                self.authority_path,
+                self.leases_path,
+                self.source_root,
+                self.exe_override,
+            )
+
+    def test_runtime_inputs_require_in_root_supported_override(self) -> None:
+        outside = self.root / "BEA.exe.original.backup"
+        outside.write_bytes(b"outside")
+        with self.assertRaisesRegex(runner.CanaryError, "source root"):
+            runner._validate_runtime_inputs(self.proof_root, self.source_root, outside)
+
+        wrong_name = self.source_root / "canonical.exe"
+        wrong_name.write_bytes(b"wrong-name")
+        with self.assertRaisesRegex(runner.CanaryError, "BEA.exe"):
+            runner._validate_runtime_inputs(self.proof_root, self.source_root, wrong_name)
+
+        _, same_file = runner._validate_runtime_inputs(
+            self.proof_root,
+            self.source_root,
+            self.source_root / "BEA.exe",
+        )
+        self.assertEqual((self.source_root / "BEA.exe").resolve(), same_file)
+
+    def test_runtime_inputs_reject_hardlinked_override(self) -> None:
+        self.exe_override.unlink()
+        try:
+            os.link(self.source_root / "BEA.exe", self.exe_override)
+        except OSError as exc:
+            self.skipTest(f"hardlinks are unavailable: {exc}")
+        with self.assertRaisesRegex(runner.CanaryError, "hardlinked"):
+            runner._validate_runtime_inputs(
+                self.proof_root,
                 self.source_root,
                 self.exe_override,
             )
@@ -443,6 +530,31 @@ class MatrixExecutorTests(unittest.TestCase):
         with self.assertRaises(runner.CanaryError):
             self.run_live(executor)
         self.assertEqual(["noInputControl"], [call[0] for call in harness.calls])
+
+    def test_ambient_executable_drift_between_roles_stops_before_next_role(self) -> None:
+        def drift_after_control(role: str, call_count: int) -> None:
+            if call_count == 1:
+                (self.source_root / "BEA.exe").write_bytes(b"ambient-between-role-drift")
+
+        harness = FakeHarness(after_call=drift_after_control)
+        executor, _ = self.executor(harness)
+        with self.assertRaisesRegex(runner.CanaryError, "ambient executable"):
+            self.run_live(executor)
+        self.assertEqual(["noInputControl"], [call[0] for call in harness.calls])
+        self.assertFalse((self.proof_root / runner.SANITIZED_SUMMARY_NAME).exists())
+
+    def test_ambient_executable_drift_after_final_role_blocks_publication(self) -> None:
+        def drift_after_repeat(role: str, call_count: int) -> None:
+            if call_count == len(runner.RUN_ROLES):
+                (self.source_root / "BEA.exe").write_bytes(b"ambient-final-drift")
+
+        harness = FakeHarness(after_call=drift_after_repeat)
+        executor, _ = self.executor(harness)
+        with self.assertRaisesRegex(runner.CanaryError, "ambient executable"):
+            self.run_live(executor)
+        self.assertEqual(len(runner.RUN_ROLES), len(harness.calls))
+        self.assertFalse((self.proof_root / runner.PRIVATE_MANIFEST_NAME).exists())
+        self.assertFalse((self.proof_root / runner.SANITIZED_SUMMARY_NAME).exists())
 
     def test_reused_receipt_process_run_or_copy_identity_is_rejected(self) -> None:
         variants = (
