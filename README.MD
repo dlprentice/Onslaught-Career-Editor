@@ -15,13 +15,20 @@ files, full Ghidra project stores/backups, secrets, build output, and bulky
 generated runtime captures. See [LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md).
 
 Detailed static RE status is intentionally not duplicated in this README. Use
-[reverse-engineering/RE-INDEX.md](reverse-engineering/RE-INDEX.md),
-[CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md), and the static measurement
+[CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) and the static measurement
 registers under `reverse-engineering/binary-analysis/`, especially
 [static-reaudit-measurement-register.md](reverse-engineering/binary-analysis/static-reaudit-measurement-register.md),
 for current accounting.
 
 For the current feature surface, navigation order, Save Lab workflows, static-RE posture, and lane gates, see **[CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md)**.
+
+For Battle Engine Aquila story, characters, and studio history, use the
+[Lore Index](lore/_index.md) for lore/history navigation, the
+[Onslaught Lore Book](lore-book/BOOK.md) for the curated reading map, and the
+[RE Index](reverse-engineering/RE-INDEX.md) for technical research. Offline-pack
+inclusion and document counts do not establish canon, editorial review,
+provenance review, rights review, freshness, completeness, or public-safety
+clearance.
 
 ## Download
 
@@ -222,15 +229,12 @@ Common Steam path:
 - [CONTRIBUTING.md](CONTRIBUTING.md)
 - [COLLABORATION.md](COLLABORATION.md)
 - [SECURITY.md](SECURITY.md)
-- [reverse-engineering/RE-INDEX.md](reverse-engineering/RE-INDEX.md)
 - [roadmap/ROADMAP-INDEX.md](roadmap/ROADMAP-INDEX.md)
 - [roadmap/public-roadmap.md](roadmap/public-roadmap.md)
 - [roadmap/three-lane-product-strategy.md](roadmap/three-lane-product-strategy.md)
 - [roadmap/winui-ui-ux-redesign-radar.md](roadmap/winui-ui-ux-redesign-radar.md)
 - [roadmap/repo-structure-and-archive-map.md](roadmap/repo-structure-and-archive-map.md)
 - [RELEASE_SCOPE_AND_TEST_COMMANDS.md](RELEASE_SCOPE_AND_TEST_COMMANDS.md)
-- [lore/LORE-INDEX.md](lore/LORE-INDEX.md)
-- [lore-book/BOOK.md](lore-book/BOOK.md)
 
 ## License
 
