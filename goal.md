@@ -16,24 +16,24 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Deliver the first local static Aquila geometry preview on procedural terrain
-without installing or reviving the legacy x86 extractor toolchain. Add one
-public-safe, fail-closed `CMSH profile v0` parser and geometry-only OBJ emitter
-outside deterministic Core, then load one ignored local Aquila role through the
-existing guarded Godot bridge.
+Deliver a fail-closed `CMSH static-preview profile v0` parser and anonymous
+local geometry-selection path without installing or reviving the legacy x86
+extractor toolchain. Keep format support separate from asset identity: no local
+body is called Aquila until a human selects it from ignored previews, after
+which the selected role may load through the existing guarded Godot bridge.
 
-1. freeze one exact fixture-backed CMSH tag/order, vertex layout/stride,
-   finite-value/count/length contract, 16-bit strip topology, handedness/axis
-   transform, and strip-to-triangle policy; reject every unknown profile;
-2. keep the layers explicit: existing bounded AYA inflate/carve, CMSH v0 parse,
-   exact loader-subset OBJ emission, existing content-addressed role bootstrap,
-   and existing Godot load;
+1. freeze the observed common static subset: stride 36, FVF `0x152`, topology
+   field 4, strip-count semantics, one owned VBUF plus exact zero-payload reuse,
+   empty PMVB support, finite transforms, and bounded recognized optional/frame/
+   hierarchy records; reject bones, references, and every unknown profile;
+2. derive the CMSH body boundary from declared header, texture, and MESP lengths
+   rather than consuming validated BBOX/CEMT/CAMD/PMS2 sibling chunks;
 3. prove the parser/emitter with a generated public-safe packed AYA/CMSH fixture,
    exact golden OBJ digest, objective geometry oracles, and malformed-input
    rejection before using any ignored local payload;
-4. run one ignored local player-role preview on existing procedural terrain and
-   treat human silhouette recognition as secondary confirmation, not format or
-   fidelity authority; and
+4. enumerate only matching ignored bodies into anonymous local OBJ/thumbnail/
+   contact-sheet outputs; let a human identify the Aquila visually and keep the
+   resulting selector/manifest ignored and local; and
 5. close with focused parser/rebuild tests, native visual/process cleanup,
    payload safety, normal/adversarial review, state reconciliation, commit, and
    push. Keep textures/GLB, DDS decoding, LNDS terrain, animation/bones,
@@ -347,6 +347,16 @@ existing guarded Godot bridge.
   missing durable link is a CMSH vertex/index parser. Codex and sanitized Grok
   review converged on one narrow `CMSH profile v0` geometry-only OBJ milestone;
   Visual Studio, Blender, FBX, DDS/textures, and LNDS terrain are deferred.
+- A redacted structural inventory then parsed all 213 ignored loose AYA
+  archives and disproved the initial strict profile: zero bodies matched its
+  topology/counter/record assumptions. The observed common subset uses topology
+  field 4, strip semantics, declared body lengths, frame/optional records, and
+  explicit first-VBUF reuse. No tracked evidence identifies a player Aquila
+  body, so profile support and local visual identity selection are now separate.
+- The independent architecture challenge is integrated at `b010589d`. It keeps
+  WinUI/AppCore and deterministic Core/Godot, but changes the campaign scoreboard
+  to player outcomes and accepted behavior contracts while freezing recursive
+  proof growth and framework-rewrite churn.
 - The optional local presentation lane is integrated on `main`. It pins the
   Stuart Onslaught reference at `5352a81` and the AYA reference plus narrow
   rectangular-DDS correction at `53b10b0`; adds an ignored exporter/bootstrap
@@ -589,7 +599,8 @@ claim against an already malicious process running as the same Windows user.
 
 ## Next Slices
 
-1. After the CMSH v0 geometry preview, inspect one selected local DDS profile,
+1. After a human selects an Aquila from the anonymous CMSH v0 previews, inspect
+   one selected local DDS profile,
    implement only its independently specified BC decoder, and emit one guarded
    self-contained textured GLB without broad format claims.
 2. Freeze and implement one measured movement/morph/camera behavior contract in
