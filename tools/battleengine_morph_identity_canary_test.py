@@ -222,9 +222,13 @@ class Pe32AndRenderingTests(unittest.TestCase):
         self.assertIn("poi(@ecx+0x18)==@$t3", rendered.text)
         self.assertRegex(rendered.text, r"by\(!BEA\+0x000081c0\)==0x[0-9a-f]{2}")
         self.assertIn(
-            ".echo MORPH_CANARY_READY; g; .echo MORPH_CANARY_CLEANUP_Q; q",
+            ".echo MORPH_CANARY_READY; g; .echo MORPH_CANARY_LASTEVENT_BEGIN; "
+            ".lastevent; .echo MORPH_CANARY_LASTEVENT_END; "
+            ".echo MORPH_CANARY_CLEANUP_Q; q",
             rendered.text,
         )
+        self.assertEqual(1, rendered.text.count("MORPH_CANARY_LASTEVENT_BEGIN"))
+        self.assertEqual(1, rendered.text.count("MORPH_CANARY_LASTEVENT_END"))
         self.assertIn(".echo MORPH_CANARY_CODE_MISMATCH; qd", rendered.text)
         self.assertEqual(
             hashlib.sha256(TEMPLATE.read_bytes()).hexdigest(), canary.TEMPLATE_SHA256
