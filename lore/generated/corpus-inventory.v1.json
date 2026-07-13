@@ -135,15 +135,15 @@
     },
     {
       "canonicalPath": "lore/community-preservation.md",
-      "canonicalSha256": "c98ac7d820a4694dbb02cd840a490184e22467131431a6a48b2d71e6824f9664",
+      "canonicalSha256": "c8bcaedcc3d0ea03ddd2d61ebc706429c6602c6d14b66d395ab9d74c53d28c42",
       "editorialRole": "reader-facing narrative and preservation context",
       "extension": ".md",
       "family": "narrative-lore",
-      "lastCommitDate": "2026-03-12",
+      "lastCommitDate": "2026-07-13",
       "lastUpdatedMarker": null,
       "path": "lore-book/lore/community-preservation.md",
       "projectionState": "different",
-      "sourceSha256": "2455bc3c951cd242628019b6a2254ec039f434b1e79ec572a6211d1454666876",
+      "sourceSha256": "f7b073819676dad6d02e607346b7beec4bbfd93daf353bfd9b341ceca9042b2d",
       "statusMarkerPresent": false,
       "triageSignals": {
         "externalDomains": [

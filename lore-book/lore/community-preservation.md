@@ -27,6 +27,6 @@
 
 **Modding limitations**: Main config file is encrypted. Limited traditional modding potential.
 
-### Legal Note
+### Rights Boundary
 
-Lost Toys Ltd dissolved on 2 October 2003. Publicly documented IP ownership remains unclear, and this repo does not claim a definitive legal determination or licensing authority. Public preservation notes here rely on historical sources, public archives, retail binaries, and publicly available reference material.
+This repository makes no claim about current ownership of Battle Engine Aquila intellectual property. Repository code licenses apply only to the material they cover, and licenses on incorporated or public source material apply only within their own stated scope. Those licenses and repository statements do not establish rights to proprietary retail game binaries, media, manuals, trademarks, or extracted assets.

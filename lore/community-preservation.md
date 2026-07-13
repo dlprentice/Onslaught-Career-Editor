@@ -1,13 +1,15 @@
 # Community & Preservation
 
-### Active Community Contacts
+<a id="active-community-contacts"></a>
 
-| Person | Contact | Notes |
-|--------|---------|-------|
-| **Stuart Gillam** | Discord: desimbr/desiado | Lead programmer, provides source code incrementally |
-| **Glenn Corpes** | BEA Discord | Co-director, terrain systems |
-| **Alex Trowers** | LinkedIn | Lead designer, responsive |
-| **vandal_117** | Discord | Provided gold save file |
+### Community Contributors
+
+| Person | Role | Preservation context |
+|--------|------|----------------------|
+| **Stuart Gillam** | Lead programmer | Public source repositories and historical context |
+| **Glenn Corpes** | Technical director | Terrain and rendering context |
+| **Alex Trowers** | Lead designer | Design and worldbuilding context |
+| **vandal_117** | Community contributor | Provided the reference save used for validation |
 
 ### Community Resources
 
@@ -27,6 +29,6 @@
 
 **Modding limitations**: Main config file is encrypted. Limited traditional modding potential.
 
-### Legal Note
+### Rights Boundary
 
-Lost Toys Ltd dissolved on 2 October 2003. Publicly documented IP ownership remains unclear; some commentary suggests UK Crown `bona vacantia` may apply after dissolution, but this repo does not claim a definitive legal determination. Stuart Gillam has backing from original team members to share code and information for preservation purposes.
+This repository makes no claim about current ownership of Battle Engine Aquila intellectual property. Repository code licenses apply only to the material they cover, and licenses on incorporated or public source material apply only within their own stated scope. Those licenses and repository statements do not establish rights to proprietary retail game binaries, media, manuals, trademarks, or extracted assets.
