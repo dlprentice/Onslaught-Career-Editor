@@ -8,8 +8,16 @@ assignees: ""
 
 ## Area
 
-Choose one: WinUI, AppCore / CLI, patch / mod safety, docs / release safety,
-payload/secret-safe reverse-engineering docs.
+Choose one:
+
+- [ ] WinUI app
+- [ ] AppCore / CLI
+- [ ] RE-informed rebuild
+- [ ] Patch / mod safety
+- [ ] Runtime tooling
+- [ ] Docs
+- [ ] RE / Lore docs
+- [ ] Public/release boundary
 
 ## Expected Behavior
 
@@ -24,12 +32,18 @@ What happened instead?
 List payload/secret-safe steps and commands. Redact local user paths, machine
 identifiers, and any proprietary payload details.
 
+If available, include the exact local validation command and its result.
+
+Do not include or attach game binaries, extracted assets, saves, screenshots,
+frame captures, copied executables, raw runtime proof bundles, secrets, or
+unredacted private paths.
+
 ## Safety Check
 
 - [ ] No game binaries, extracted assets, saves, screenshots, frame captures,
-      copied executables, proof bundles, secrets, or unredacted private paths
-      are included.
-- [ ] Installed game files and the original `BEA.exe` were not mutated.
+      copied executables, raw runtime proof bundles, secrets, or unredacted
+      private paths are included.
+- [ ] The installed game folder and original `BEA.exe` were not mutated.
 
 For private-data, proprietary-content, security, or online-session concerns,
 follow `SECURITY.md` instead of posting sensitive details.
