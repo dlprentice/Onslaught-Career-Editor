@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "onslaught-rebuild-local-godot-assets.v1",
+  "description": "Tracked layout contract for ignored local-lab/rebuild-godot retail preview assets. Payloads must never be committed.",
+  "defaultRootRelativeToRepo": "local-lab/rebuild-godot",
+  "envVar": "ONSLAUGHT_REBUILD_GODOT_ASSETS",
+  "cliFlag": "--local-assets=",
+  "manifestFileName": "manifest.json",
+  "directories": [
+    "player/aquila",
+    "terrain/subset",
+    "staging/from-export",
+    "import"
+  ],
+  "manifestExample": {
+    "schemaVersion": "onslaught-rebuild-local-godot-assets-manifest.v1",
+    "presentationMode": "local-retail-preview",
+    "nonParityClaim": true,
+    "player": {
+      "mesh": "player/aquila/aquila.glb",
+      "scale": 1.0,
+      "yawDegrees": 0.0,
+      "yOffsetMeters": 0.0
+    },
+    "terrain": {
+      "mesh": "terrain/subset/ground.glb",
+      "scale": 1.0,
+      "yawDegrees": 0.0,
+      "yOffsetMeters": 0.0
+    }
+  },
+  "acceptedMeshExtensions": [".glb", ".gltf", ".obj"],
+  "notes": [
+    "Smoke mode always keeps procedural synthetics so goldens and color anchors stay valid.",
+    "FBX from AYA export should be converted to GLB/GLTF or OBJ before runtime load.",
+    "Core movement remains the deterministic InteractiveSession adapter; presentation follows snapshots only."
+  ]
+}

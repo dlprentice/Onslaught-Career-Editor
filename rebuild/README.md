@@ -11,12 +11,14 @@ original code. It is deliberately separate from the WinUI toolkit:
   steps without owning simulation truth;
 - `OnslaughtRebuild.Headless` replays a checked-in command tape and verifies a
   stable rolling trace hash plus final-state hash; and
-- `OnslaughtRebuild.Godot` is the playable First Flight visual/input adapter,
-  using only original procedural geometry and UI.
+- `OnslaughtRebuild.Godot` is the playable First Flight visual/input adapter.
+  Default visuals are original procedural geometry and UI. Optional local-only
+  retail mesh preview can load ignored assets from `local-lab/rebuild-godot/`
+  (never committed; non-parity).
 
 No Battle Engine Aquila installation, executable, save, media, or extracted
-asset is required. First Flight is a small playable prototype, not a replacement
-for the retail game.
+asset is required for the default synthetic path. First Flight is a small
+playable prototype, not a replacement for the retail game.
 
 The repository pins the .NET 10 SDK for the WinUI toolkit, while this rebuild
 targets `net8.0` for Godot .NET compatibility. Install the .NET 8 SDK/runtime as
@@ -51,6 +53,24 @@ First Flight starts in a resizable 1280x720 window with a supported minimum of
 
 Destroy the three procedural sentries. The HUD reports mode, objective, energy,
 shield, and hull.
+
+## Optional local retail mesh preview
+
+Ignored BYO assets can replace the synthetic Aquila stand-in and ground plane
+without changing Core simulation:
+
+```powershell
+npm run init:rebuild-godot-assets
+npm run export:local-bea-assets
+npm run bootstrap:rebuild-godot-assets
+# convert staged .fbx to .glb/.obj if needed, then:
+npm run run:rebuild-godot:local
+```
+
+Assets stay under `local-lab/` (see `LOCAL_LAB_OVERLAY.md` and
+`rebuild/local-assets.layout.json`). Smoke mode always keeps procedural
+synthetics so deterministic acceptance stays unchanged. Local preview is
+explicitly non-parity.
 
 ## Verify
 

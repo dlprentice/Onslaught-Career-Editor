@@ -26,7 +26,7 @@ Use these names when possible:
 | `save-attempts/` or `local-saves/` | Local saves and options payloads used for testing. |
 | `local-ghidra/`, `ghidra-local/`, or `Ghidra/` | Full local Ghidra projects, databases, local-only exports, and backups. |
 | `local-proofs/` | Bulky runtime proof bundles, screenshots, traces, CDB logs, and frame captures. |
-| `local-lab/` | Miscellaneous local-only lab material that is too large or payload-like for git. |
+| `local-lab/` | Miscellaneous local-only lab material that is too large or payload-like for git. Includes `local-lab/rebuild-godot/` (optional First Flight retail mesh preview) and `local-lab/bea-assets/` (BYO extraction output). |
 | `mcps/` | Local MCP/tooling sandboxes and generated local integration payloads. |
 | `GameProfiles/` / `PatchBench/` | Copied game profiles and patch-bench runtime output. |
 

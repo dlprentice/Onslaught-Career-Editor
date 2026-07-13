@@ -31,7 +31,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         IsInstanceValid(_energyBar) &&
         IsInstanceValid(_controlsPanel);
 
-    public void Initialize()
+    public void Initialize(bool localRetailPreview = false)
     {
         var root = new Control
         {
@@ -42,7 +42,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         };
         AddChild(root);
 
-        BuildIdentityPanel(root);
+        BuildIdentityPanel(root, localRetailPreview);
         BuildObjectivePanel(root);
         BuildModePanel(root);
         BuildControlsPanel(root);
@@ -100,7 +100,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         _controlsPanel.Modulate = color;
     }
 
-    private void BuildIdentityPanel(Control root)
+    private void BuildIdentityPanel(Control root, bool localRetailPreview)
     {
         var panel = CreatePanel("IdentityPanel");
         panel.OffsetLeft = 24f;
@@ -113,7 +113,12 @@ public sealed partial class FirstFlightHud : CanvasLayer
         stack.AddThemeConstantOverride("separation", 5);
         panel.AddChild(stack);
         stack.AddChild(CreateLabel("FIRST FLIGHT", 22, TextPrimary));
-        stack.AddChild(CreateLabel("Synthetic arena | RE-informed prototype", 13, TextMuted));
+        stack.AddChild(CreateLabel(
+            localRetailPreview
+                ? "Local retail mesh preview | non-parity"
+                : "Synthetic arena | RE-informed prototype",
+            13,
+            TextMuted));
 
         _energyBar = AddResourceRow(stack, "ENERGY", Energy);
         _shieldBar = AddResourceRow(stack, "SHIELD", Shield);

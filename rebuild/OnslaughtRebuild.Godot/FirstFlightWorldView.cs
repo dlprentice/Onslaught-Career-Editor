@@ -20,16 +20,18 @@ public sealed partial class FirstFlightWorldView : Node3D
     private readonly Dictionary<int, MeshInstance3D> _projectiles = [];
     private Node3D _playerRoot = null!;
     private Node3D _playerBodyPivot = null!;
-    private MeshInstance3D _leftLeg = null!;
-    private MeshInstance3D _rightLeg = null!;
-    private MeshInstance3D _leftWing = null!;
-    private MeshInstance3D _rightWing = null!;
-    private MeshInstance3D _leftEngine = null!;
-    private MeshInstance3D _rightEngine = null!;
-    private StandardMaterial3D _playerAccentMaterial = null!;
+    private MeshInstance3D? _leftLeg;
+    private MeshInstance3D? _rightLeg;
+    private MeshInstance3D? _leftWing;
+    private MeshInstance3D? _rightWing;
+    private MeshInstance3D? _leftEngine;
+    private MeshInstance3D? _rightEngine;
+    private StandardMaterial3D? _playerAccentMaterial;
     private Camera3D _camera = null!;
     private bool _cameraInitialized;
     private float _modeBlend;
+    private bool _localPlayerVisual;
+    private LocalPresentationConfig? _localPresentation;
 
     public int TargetVisualCount => _targets.Count;
 
@@ -37,9 +39,12 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public bool PlayerVisualPresent => IsInstanceValid(_playerRoot);
 
-    public void Initialize(WorldSnapshot snapshot)
+    public bool UsingLocalPresentation => _localPresentation is not null;
+
+    public void Initialize(WorldSnapshot snapshot, LocalPresentationConfig? localPresentation = null)
     {
         Name = "WorldView";
+        _localPresentation = localPresentation;
         BuildEnvironment();
         BuildArena();
         BuildPlayer();
@@ -115,6 +120,27 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void BuildArena()
     {
+        if (_localPresentation?.HasTerrainMesh == true &&
+            _localPresentation.Terrain is not null &&
+            _localPresentation.TerrainMeshPath is not null)
+        {
+            Node3D? terrain = LocalAssetMeshLoader.TryLoadMeshNode(
+                _localPresentation.TerrainMeshPath,
+                _localPresentation.Terrain,
+                "LocalTerrain");
+            if (terrain is not null)
+            {
+                AddChild(terrain);
+                BuildArenaBoundariesOnly();
+                return;
+            }
+        }
+
+        BuildArenaSynthetic();
+    }
+
+    private void BuildArenaSynthetic()
+    {
         var groundMaterial = VisualPrimitives.CreateMaterial(new Color(0.075f, 0.105f, 0.095f), 0.05f, 0.92f);
         AddChild(new MeshInstance3D
         {
@@ -138,6 +164,17 @@ public sealed partial class FirstFlightWorldView : Node3D
                 gridMaterial));
         }
 
+        BuildArenaBoundariesOnly();
+
+        var structureMaterial = VisualPrimitives.CreateMaterial(SteelDark, 0.25f, 0.78f);
+        AddChild(VisualPrimitives.CreateBox("WestRelay", new Vector3(3.5f, 5f, 3.5f), new Vector3(-26f, 2.5f, 20f), structureMaterial));
+        AddChild(VisualPrimitives.CreateBox("EastRelay", new Vector3(4f, 7f, 3f), new Vector3(25f, 3.5f, 16f), structureMaterial));
+        AddChild(VisualPrimitives.CreateBox("SouthBlock", new Vector3(8f, 2.8f, 3f), new Vector3(19f, 1.4f, -25f), structureMaterial));
+        AddChild(VisualPrimitives.CreateBox("NorthBlock", new Vector3(6f, 2.2f, 4f), new Vector3(-17f, 1.1f, 26f), structureMaterial));
+    }
+
+    private void BuildArenaBoundariesOnly()
+    {
         var boundaryMaterial = VisualPrimitives.CreateMaterial(
             new Color(0.78f, 0.30f, 0.08f),
             0.15f,
@@ -147,24 +184,38 @@ public sealed partial class FirstFlightWorldView : Node3D
         AddChild(VisualPrimitives.CreateBox("SouthBoundary", new Vector3(62f, 0.16f, 0.18f), new Vector3(0f, 0.08f, -30.6f), boundaryMaterial));
         AddChild(VisualPrimitives.CreateBox("EastBoundary", new Vector3(0.18f, 0.16f, 62f), new Vector3(30.6f, 0.08f, 0f), boundaryMaterial));
         AddChild(VisualPrimitives.CreateBox("WestBoundary", new Vector3(0.18f, 0.16f, 62f), new Vector3(-30.6f, 0.08f, 0f), boundaryMaterial));
-
-        var structureMaterial = VisualPrimitives.CreateMaterial(SteelDark, 0.25f, 0.78f);
-        AddChild(VisualPrimitives.CreateBox("WestRelay", new Vector3(3.5f, 5f, 3.5f), new Vector3(-26f, 2.5f, 20f), structureMaterial));
-        AddChild(VisualPrimitives.CreateBox("EastRelay", new Vector3(4f, 7f, 3f), new Vector3(25f, 3.5f, 16f), structureMaterial));
-        AddChild(VisualPrimitives.CreateBox("SouthBlock", new Vector3(8f, 2.8f, 3f), new Vector3(19f, 1.4f, -25f), structureMaterial));
-        AddChild(VisualPrimitives.CreateBox("NorthBlock", new Vector3(6f, 2.2f, 4f), new Vector3(-17f, 1.1f, 26f), structureMaterial));
     }
 
     private void BuildPlayer()
     {
-        var bodyMaterial = VisualPrimitives.CreateMaterial(Steel, 0.55f, 0.36f);
-        var darkMaterial = VisualPrimitives.CreateMaterial(SteelDark, 0.35f, 0.55f);
-        _playerAccentMaterial = VisualPrimitives.CreateMaterial(Cyan, 0.35f, 0.32f, Cyan);
-
         _playerRoot = new Node3D { Name = "PlayerVisual" };
         AddChild(_playerRoot);
         _playerBodyPivot = new Node3D { Name = "BodyPivot" };
         _playerRoot.AddChild(_playerBodyPivot);
+
+        if (_localPresentation?.HasPlayerMesh == true &&
+            _localPresentation.Player is not null)
+        {
+            Node3D? localPlayer = LocalAssetMeshLoader.TryLoadMeshNode(
+                _localPresentation.PlayerMeshPath,
+                _localPresentation.Player,
+                "LocalAquila");
+            if (localPlayer is not null)
+            {
+                _playerBodyPivot.AddChild(localPlayer);
+                _localPlayerVisual = true;
+                return;
+            }
+        }
+
+        BuildPlayerSynthetic();
+    }
+
+    private void BuildPlayerSynthetic()
+    {
+        var bodyMaterial = VisualPrimitives.CreateMaterial(Steel, 0.55f, 0.36f);
+        var darkMaterial = VisualPrimitives.CreateMaterial(SteelDark, 0.35f, 0.55f);
+        _playerAccentMaterial = VisualPrimitives.CreateMaterial(Cyan, 0.35f, 0.32f, Cyan);
 
         _playerBodyPivot.AddChild(VisualPrimitives.CreateBox("MainHull", new Vector3(2.3f, 0.85f, 3.1f), new Vector3(0f, 1.55f, 0f), bodyMaterial));
         _playerBodyPivot.AddChild(VisualPrimitives.CreateBox("Nose", new Vector3(1.35f, 0.5f, 1.2f), new Vector3(0f, 1.62f, 1.85f), _playerAccentMaterial));
@@ -231,6 +282,18 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void UpdatePlayerShape(WorldSnapshot snapshot, float frameDelta)
     {
+        if (_localPlayerVisual ||
+            _leftLeg is null ||
+            _rightLeg is null ||
+            _leftWing is null ||
+            _rightWing is null ||
+            _leftEngine is null ||
+            _rightEngine is null ||
+            _playerAccentMaterial is null)
+        {
+            return;
+        }
+
         _leftLeg.Position = new Vector3(-0.72f - (_modeBlend * 0.35f), 0.45f + (_modeBlend * 0.72f), -0.25f - (_modeBlend * 0.78f));
         _rightLeg.Position = new Vector3(0.72f + (_modeBlend * 0.35f), 0.45f + (_modeBlend * 0.72f), -0.25f - (_modeBlend * 0.78f));
         _leftLeg.RotationDegrees = new Vector3(_modeBlend * 72f, 0f, _modeBlend * -18f);
