@@ -366,6 +366,16 @@ which the selected role may load through the existing guarded Godot bridge.
   supersedes `3f6c41c4`. Implementation is leased only for the GPL parser,
   generated fixture/tests, pure client safety oracle, and focused package route;
   native Godot/bootstrap and retail identity remain later serialized steps.
+- The Lore editorial inventory is integrated through `d7492d3b`: 955 tracked
+  packable documents are classified into 11 families, nine canonical/projection
+  divergences remain preserved, and generated metadata is explicitly triage
+  evidence rather than rights, safety, freshness, or historical approval.
+- The RE behavior-contract slice is integrated through `76528902`. It orders
+  camera, walker, jet, and morph observations under a runtime-required candidate
+  and surgically fail-closes only the confirmed stale `0x00411630` and
+  `0x00411aa0` CMonitor pairs while preserving unrelated mutator operations.
+  The RE lane's accidental unleased full-suite/native output is invalid and was
+  not used; exact process cleanup was verified.
 - The optional local presentation lane is integrated on `main`. It pins the
   Stuart Onslaught reference at `5352a81` and the AYA reference plus narrow
   rectangular-DDS correction at `53b10b0`; adds an ignored exporter/bootstrap
