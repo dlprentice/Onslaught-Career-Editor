@@ -31,7 +31,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         IsInstanceValid(_energyBar) &&
         IsInstanceValid(_controlsPanel);
 
-    public void Initialize()
+    public void Initialize(LocalPresentationLoadStatus localPresentation = default)
     {
         var root = new Control
         {
@@ -42,7 +42,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         };
         AddChild(root);
 
-        BuildIdentityPanel(root);
+        BuildIdentityPanel(root, localPresentation);
         BuildObjectivePanel(root);
         BuildModePanel(root);
         BuildControlsPanel(root);
@@ -100,7 +100,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         _controlsPanel.Modulate = color;
     }
 
-    private void BuildIdentityPanel(Control root)
+    private void BuildIdentityPanel(Control root, LocalPresentationLoadStatus localPresentation)
     {
         var panel = CreatePanel("IdentityPanel");
         panel.OffsetLeft = 24f;
@@ -113,12 +113,23 @@ public sealed partial class FirstFlightHud : CanvasLayer
         stack.AddThemeConstantOverride("separation", 5);
         panel.AddChild(stack);
         stack.AddChild(CreateLabel("FIRST FLIGHT", 22, TextPrimary));
-        stack.AddChild(CreateLabel("Synthetic arena | RE-informed prototype", 13, TextMuted));
+        stack.AddChild(CreateLabel(
+            DescribePresentation(localPresentation),
+            13,
+            TextMuted));
 
         _energyBar = AddResourceRow(stack, "ENERGY", Energy);
         _shieldBar = AddResourceRow(stack, "SHIELD", Shield);
         _hullBar = AddResourceRow(stack, "HULL", Hull);
     }
+
+    private static string DescribePresentation(LocalPresentationLoadStatus status) => status switch
+    {
+        { PlayerLoaded: true, TerrainLoaded: true } => "User-supplied local meshes: player + terrain | non-parity",
+        { PlayerLoaded: true } => "User-supplied local mesh: player | synthetic terrain | non-parity",
+        { TerrainLoaded: true } => "Synthetic player | user-supplied local mesh: terrain | non-parity",
+        _ => "Synthetic arena | RE-informed prototype",
+    };
 
     private void BuildObjectivePanel(Control root)
     {

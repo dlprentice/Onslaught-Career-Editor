@@ -22,6 +22,13 @@ does not relicense this subtree or the `references/Onslaught` submodule.
 - synthetic command tapes and procedurally authored test/visual content; and
 - independently measured runtime behavior when its proof boundary is recorded.
 
+User-supplied local meshes, including user-extracted retail meshes, may be
+loaded only as optional ignored local presentation inputs through the explicit
+`--local-assets` path. Runtime/config wording remains origin-neutral unless a
+separate exporter receipt and content hash are bound. These meshes are not
+inputs to Core/Client implementation, repository content, redistribution
+material, simulation truth, or evidence of visual/gameplay parity.
+
 ## Forbidden Imports
 
 - copied or mechanically translated reference-source functions, headers,
@@ -45,7 +52,8 @@ values are presented as measured retail constants.
 | Seeded target positions and `first-flight` command tape | Synthetic regression content | Determinism input only; not a retail mission or asset |
 | Binary state serializer, final-state hash, and rolling replay trace hash | Original test/acceptance format | Canonical continuation-state and replay-history stability only |
 | Real-time input adapter, edge/pulse latching, and catch-up policy | Original client scheduling design | Deterministic adapter behavior only; no retail input/timing claim |
-| First Flight arena, craft, sentries, projectiles, HUD, camera, colors, and layout | Original procedural Godot presentation | A playable renderer/input proof only; no retail asset, mission, visual, or gameplay parity claim |
+| Default First Flight arena, craft, sentries, projectiles, HUD, camera, colors, and layout | Original procedural Godot presentation | A playable renderer/input proof only; no retail asset, mission, visual, or gameplay parity claim |
+| Explicit local player/terrain mesh roles | Optional user-supplied ignored local presentation input; a retail source is possible but not inferred from path/config | Nonempty renderable local load success only; never committed, redistributed, or used as origin/simulation/parity evidence |
 
 The Core test project copies the Core sources and project file into test output,
 rejects filesystem/process/clock/network API tokens, linked source/build inputs,

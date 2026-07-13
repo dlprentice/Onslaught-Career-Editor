@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "onslaught-rebuild-local-godot-assets.v1",
+  "description": "Tracked layout contract for ignored user-supplied local assets under local-lab/rebuild-godot. Payloads must never be committed.",
+  "defaultRootRelativeToRepo": "local-lab/rebuild-godot",
+  "cliFlag": "--local-assets=",
+  "manifestFileName": "manifest.json",
+  "directories": [
+    "versions",
+    "staging/from-export",
+    "import"
+  ],
+  "manifestExample": {
+    "schemaVersion": "onslaught-rebuild-local-godot-assets-manifest.v1",
+    "presentationMode": "local-user-mesh-preview",
+    "nonParityClaim": true,
+    "player": {
+      "mesh": "versions/example-content-id/player.glb",
+      "scale": 1.0,
+      "yawDegrees": 0.0,
+      "yOffsetMeters": 0.0
+    },
+    "terrain": {
+      "mesh": "versions/example-content-id/terrain.glb",
+      "scale": 1.0,
+      "yawDegrees": 0.0,
+      "yOffsetMeters": 0.0
+    }
+  },
+  "acceptedMeshExtensions": [".glb", ".obj"],
+  "notes": [
+    "Smoke mode always keeps procedural synthetics so goldens and color anchors stay valid.",
+    "FBX from AYA export must be converted to self-contained GLB or bounded OBJ before manifest activation.",
+    "Bootstrap stores both verified roles under one content-addressed version and publishes manifest.json last.",
+    "Core movement remains the deterministic InteractiveSession adapter; presentation follows snapshots only."
+  ]
+}
