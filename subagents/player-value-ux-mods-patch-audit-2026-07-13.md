@@ -405,3 +405,30 @@ state with: player-value audit complete; strongest opportunity is normal/Lab
 curation; Enhanced/Debug should be demoted without deleting IDs; controller
 guidance is the strongest low-risk observed-demand follow-up; baseline `npm
 test` remains blocked by primary-owned morph-observer docsync drift.
+
+## First implementation slice disposition
+
+Primary selected option 2 on 2026-07-13. The first bounded slice now implements
+that decision without changing the profile catalog, patch keys, or executable
+bytes:
+
+- Normal Windowed & Mods states the exact two-row compatibility base, recovery
+  by recreating the safe copy, and two initially unselected player mods.
+- PATCHED identity marker and Goodies wall preview remain opt-in and expose an
+  exact live selected-state summary. Goodies copy retains the save, persistence,
+  every-entry, and model/FMV nonclaims.
+- A collapsed Lab separates retained legacy/research recipes, visual and
+  executable experiments, and launch/control diagnostics. Existing recipe IDs
+  and automation IDs remain discoverable.
+- Normal/adversarial review findings were absorbed: semantic Lab headings,
+  truthful assistive labels, complete two-by-two recipe/action grids, native
+  collapsed/expanded state proof, and evidence-bounded “required lowest-change
+  base” wording.
+
+Fresh acceptance evidence: the full WinUI primary lane passed (1,319 AppCore
+tests; 142 UI tests passed and two private-input visual tests skipped), the
+focused native UIA smoke passed, and the copied-profile preflight passed. The
+patch-engine safety command passed its .NET and legacy-script stages but its
+accounting stage cannot run in this worktree because the intentionally
+uninitialized `references/Onslaught` submodule omits `DXFrontend.cpp`; no
+catalog or submodule change belongs to this slice.
