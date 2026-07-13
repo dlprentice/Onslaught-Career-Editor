@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-12",
   "routingPolicy": "Follow the global Codex multi-agent lane contract; Codex-owned subagents inherit the parent effort or use an explicit task-specific supported effort override.",
-  "currentFocus": "Implement Stage A Task 2 receipt-bound CDB and exact-window input safety with synthetic fixtures only; do not launch the game or debugger in this task.",
+  "currentFocus": "Implement Stage A Task 3 as one locked morph-identity protocol in the existing copied-runtime harness, using synthetic fixtures only; do not launch the game or debugger in this task.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -17,11 +17,11 @@
       "newReleaseAuthorized": false
     },
     "repository": {
-      "registeredWorktrees": 3,
-      "worktreeOwnership": "main coordinator checkout, validation-simplification user task, and a user-owned long-running Cursor live-Ghidra semantic lane; the completed morph-canary worker and agent-guidance audit worktrees were removed after patch-equivalence verification",
+      "registeredWorktrees": 2,
+      "worktreeOwnership": "main coordinator checkout and a user-owned long-running Cursor live-Ghidra semantic lane; the completed morph-canary, validation-simplification, and agent-guidance worktrees were removed after integration and preservation checks",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "b1458c0df536b7c3129aa820ec73564e823c996b (Stage A Task 1); guidance integration 56738f9b is included in the current state-closeout batch",
+      "lastPushedBeforeCurrentSlice": "ee90cfb43a954af9ee62eed6925f4f3be52825d4 (live-Ghidra semantic lease); the Task 2 and validation integration is the current closeout batch",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
@@ -97,12 +97,18 @@
       "stageABoundary": "The first control/positive/repeat matrix proves exact specimen, module/RVA, player-one/runtime-P0 input, BattleEngine, Morph, Move, and JetPart causality only; it makes no timing, field-semantic, handling, or parity claim.",
       "safety": "Fresh unpatched AppCore safe copy, exact launch receipt and window identity, module-relative one-shot probes, private raw evidence, sanitized hash-bound materialization, before/after hashes, owned-process cleanup, and no installed-game or process-memory writes.",
       "task1Implementation": "Pushed through b1458c0d: PE32/RVA/relocation-safe canonical fingerprinting, four hardware-only execution probes, strict private artifact revalidation, exact public matrix schemas, contradictory-log rejection, and 10 passing focused synthetic tests. No BEA/CDB process was launched.",
-      "status": "Task 1 is accepted. Task 2 receipt-bound CDB/input safety is active; harness integration, authority-gated executor, and live control/positive/repeat runs remain pending."
+      "task2Implementation": "Integrated through 078efaf7 and 6fe26639: strict exact-type process receipts, PEB-derived launch identity, module/window/manifest/digest binding, local-only marker-ready CDB attach with held command identity and bounded log reads, and foreground input with reverse-order finally cleanup. Independent re-review approved; the integrated 60-test runtime-safety profile passes without real BEA/CDB.",
+      "status": "Tasks 1-2 are accepted. Task 3 locked harness protocol is active; authority-gated executor and live control/positive/repeat runs remain pending."
     },
     "agentGuidanceAudit": {
       "integrated": "56738f9b",
       "result": "Progressive task routing, risk-based validation, exact runtime identity, Steam/source/rebuild evidence hierarchy, Ghidra runbook truth, and semantic-closure wording are corrected.",
       "implementationFollowups": "Retire/fail-close stale CMonitor BattleEngine probes and mutators before Ghidra mutation; add fail-fast Fbx.dll and FBX-template preflight plus tests to the AYA export orchestrator."
+    },
+    "validationSimplification": {
+      "integrated": "7771e404 and f75f5007",
+      "result": "A machine-readable validation inventory and measured change-class matrix route the quick profile, runtime-helper safety, historical proof, repository-boundary, and release gates proportionately without deleting retained safety checkers.",
+      "acceptance": "Inventory/profile, 60 runtime-helper, 274 active documented-command, 62 current-link, release-profile, curated-manifest, JSON, and diff checks pass; generated accounting is R0=6291, R2=0, R3=3, R4=13184."
     },
     "liveGhidraSemanticLane": {
       "ownership": "User-owned Cursor lane holds the exclusive live-Ghidra mutation lease; coordinator lanes must not mutate the project or private backups.",
@@ -122,8 +128,8 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Implement and review Stage A Task 2 exact receipt-bound CDB/input safety with focused synthetic tests only.",
-    "Integrate the locked canary mode and authority-gated three-run executor, then run Level 850 control/positive/repeat without promoting timing or field semantics.",
+    "Implement and review Stage A Task 3 as one locked unpatched Level 850/configuration 2 morph-identity protocol in the existing live harness, using synthetic tests only.",
+    "Implement the authority-gated three-run executor, then run Level 850 control/positive/repeat without promoting timing or field semantics.",
     "Retire stale BattleEngine ownership probes/mutators and add Fbx.dll plus FBX-template fail-fast preflight before the next Ghidra/export mutation slice.",
     "Design a public synthetic AYA/DDS/FBX export-contract fixture before promoting legacy extractor completeness.",
     "After runtime evidence is accepted, freeze measured constants/tolerances and implement the authentic behavior in deterministic Core plus the Godot adapter."

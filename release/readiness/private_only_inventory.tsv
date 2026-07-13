@@ -12930,6 +12930,7 @@ tools/run_ghidra_batch_rename_headless.sh	R4_DENY	tools/run_ghidra_batch_rename_
 tools/run_ghidra_headless_postscript.sh	R4_DENY	tools/run_ghidra_headless_postscript.sh	exclude_from_portable_or_legacy_export
 tools/run_winui_safe_copy_music_audible_output_live_bundle.py	R4_DENY	tools/run_winui_safe_copy_music_audible_output_live_bundle.py	exclude_from_portable_or_legacy_export
 tools/run_winui_safe_copy_music_audible_output_live_bundle_test.py	R4_DENY	tools/run_winui_safe_copy_music_audible_output_live_bundle_test.py	exclude_from_portable_or_legacy_export
+tools/runtime-probes/battleengine-morph-identity-canary.cdb.tmpl	R4_DENY	tools/*runtime*	exclude_from_portable_or_legacy_export
 tools/runtime-probes/cloak-latch-observer.cdb.txt	R4_DENY	tools/*runtime*	exclude_from_portable_or_legacy_export
 tools/runtime-probes/controller-mapping-table-observer.cdb.txt	R4_DENY	tools/*runtime*	exclude_from_portable_or_legacy_export
 tools/runtime-probes/defaultoptions-wave1.cdb.txt	R4_DENY	tools/*runtime*	exclude_from_portable_or_legacy_export
@@ -12951,6 +12952,8 @@ tools/runtime-probes/pause-o-scan-initializer-observer.cdb.txt	R4_DENY	tools/*ru
 tools/runtime-probes/pause-persist-wave1.cdb.txt	R4_DENY	tools/*runtime*	exclude_from_portable_or_legacy_export
 tools/runtime-probes/safe-copy-music-cgame-caller-diagnostic-observer.cdb.txt	R4_DENY	tools/*runtime*	exclude_from_portable_or_legacy_export
 tools/runtime-probes/safe-copy-music-selection-decode-observer.cdb.txt	R4_DENY	tools/*runtime*	exclude_from_portable_or_legacy_export
+tools/runtime_process_identity.psm1	R4_DENY	tools/*runtime*	exclude_from_portable_or_legacy_export
+tools/runtime_process_identity_test.py	R4_DENY	tools/*runtime*	exclude_from_portable_or_legacy_export
 tools/save_options_byte_preservation_runtime_proof_readiness_gate_probe.py	R4_DENY	tools/*runtime*	exclude_from_portable_or_legacy_export
 tools/semantic_audit_online.py	R4_DENY	tools/semantic_audit_online.py	exclude_from_portable_or_legacy_export
 tools/texture_mesh_material_sidecar_command_arm_boundary.py	R4_DENY	tools/texture_mesh_material_sidecar_command_arm*	exclude_from_portable_or_legacy_export

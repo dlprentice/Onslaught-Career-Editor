@@ -119,9 +119,9 @@ No live-game, Ghidra, native Godot, installer, ZIP, signing, publication, or
 release action was run.
 
 A focused integration follow-up added the previously omitted window-input helper
-self-test to both runtime safety profiles. The corrected
-`test:runtime-tooling-safety` profile runs 8 profile-prep, 11 exact CDB identity,
-9 input-helper, and 14 safe-copy smoke-helper tests.
+self-test to both runtime safety profiles. After the Stage A receipt-hardening
+integration, `test:runtime-tooling-safety` runs 8 profile-prep, 22 exact CDB
+identity, 16 input-helper, and 14 safe-copy smoke-helper tests (60 total).
 
 ## Residual Risks
 

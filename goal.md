@@ -16,18 +16,19 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Implement Stage A Task 2: receipt-bound CDB and exact-window input safety for
-the BattleEngine identity canary, using synthetic process/receipt fixtures only.
+Implement Stage A Task 3: add one locked BattleEngine morph-identity protocol
+to the existing copied-runtime harness, using synthetic fixtures only.
 
-1. extend the existing CDB launcher with exact PID/start-time/path/hash binding,
-   local-only `-pd`/`-noshell` posture, a ready marker, and a digest-bound
-   receipt without broadening its command grammar;
-2. extend exact-window input binding to the same receipt and guarantee key-up
-   cleanup through `finally`, including failure and cancellation paths;
-3. share process-identity checks where that removes real duplication without
-   adding a new product API or package-script chain; and
-4. prove the changed contracts with focused synthetic tests and review. Do not
-   launch Battle Engine Aquila or CDB in this task.
+1. derive the unpatched Level 850/configuration 2 launch, Player 1 `Q` transform
+   override, zero captures, and empty patch set from one protocol choice rather
+   than exposing independent proof levers;
+2. render the private command from the canonical source and tracked template,
+   then bind it to the exact Task 2 process receipt and digests;
+3. make marker, input, executable-integrity, receipt-bound cleanup, and zero
+   owned-process requirements protocol-specific without creating screenshots or
+   deciding the three-run matrix; and
+4. prove the locked mode with focused synthetic tests and independent review.
+   Do not launch Battle Engine Aquila or CDB in this task.
 
 ## Current Slice Progress - 2026-07-12
 
@@ -69,6 +70,21 @@ the BattleEngine identity canary, using synthetic process/receipt fixtures only.
   probes, and materializes an exact-schema public control/positive/repeat
   matrix without paths, pointers, code bytes, PIDs, windows, or raw logs. Ten
   focused synthetic tests pass; no game or debugger process was launched.
+- Stage A Task 2 is integrated through `078efaf7` and `6fe26639`. A shared
+  strict receipt validator binds PID/start time, executable/module/manifest
+  identities, PEB-derived launch arguments and working directory, window, and
+  command digests. CDB canary attach is local-only with an exact fresh marker,
+  held command identity, bounded logs, and exact cleanup; foreground input
+  tracks and releases held keys with visible failure on unconfirmed release.
+  Independent re-review approved the correction. The integrated runtime-safety
+  profile passes 8 profile, 22 CDB, 16 input, and 14 smoke-helper tests without
+  launching the game or real debugger.
+- Validation simplification is integrated through `7771e404` and `f75f5007`.
+  `npm test` is now the proportionate quick profile; runtime-helper safety,
+  historical proof, repository-boundary, and release gates remain explicit.
+  The executable inventory reports 1,512 scripts and 125 npm dependency edges;
+  generated release accounting is current at R0=6,291, R2=0, R3=3,
+  R4=13,184, and the 726-file curated manifest remains valid.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future
@@ -119,9 +135,10 @@ from retail are inspectable.
   its 721-selected/726-materialized plain candidate passed the standalone test
   suite, payload/inventory, 463-file/138-link Markdown, 74-package notices, and
   718-file hygiene/line-ending gates.
-- Git reports one registered worktree. Seven Codex Desktop worktree entries
-  were empty zero-byte shells with no Git metadata or linked conversations and
-  were removed on 2026-07-11.
+- Git reports two registered worktrees: this `main` checkout and the user-owned
+  long-running Cursor semantic-audit lane. Completed Task 2, validation, and
+  agent-guidance worktrees were removed after integration/preservation checks.
+  Seven earlier empty Codex Desktop worktree shells were removed on 2026-07-11.
 - Sixty-one historical `campaign/*` and `codex/*` branch tips were preserved
   in a verified local Git bundle before branch cleanup. Twenty-four otherwise
   unreachable commits and all three stashes were also preserved. Both bundles
@@ -206,19 +223,20 @@ claim against an already malicious process running as the same Windows user.
 
 ## Current Slice Acceptance
 
-- CDB and input actions reject stale, mismatched, or incompletely identified
-  receipts before attachment or input.
-- CDB remains local-only, uses the locked canary command, reports readiness,
-  and has receipt-bound detach/cleanup behavior.
-- Every input path releases held keys even when foregrounding, sending,
-  waiting, or receipt revalidation fails.
+- One protocol choice derives the exact unpatched Level 850/configuration 2,
+  Player 1 `Q`, zero-capture, no-background-input, empty-patch behavior.
+- The existing harness consumes Task 1 command rendering and Task 2 receipt
+  validation without accepting arbitrary commands or mixed proof levers.
+- Protocol success requires the exact marker, focused positive-role input,
+  executable/source integrity, receipt-bound CDB/game cleanup, and zero owned
+  processes; screenshots are neither produced nor treated as success evidence.
 - Focused synthetic tests and independent review pass without launching the
   game/debugger or adding payloads, raw proof, product APIs, or broad scripts.
-- Goal/state are reconciled and the green slice is pushed before Task 3 begins.
+- Goal/state are reconciled and the green slice is pushed before Task 4 begins.
 
 ## Next Slices
 
-1. Complete Stage A Tasks 2-5, run the authorized Level 850 identity matrix,
+1. Complete Stage A Tasks 3-5, run the authorized Level 850 identity matrix,
    and publish only its sanitized identity/causality result.
 2. Retire or fail-close active BattleEngine tools that can reapply withdrawn
    ownership, then harden AYA export dependency/template preflight.
