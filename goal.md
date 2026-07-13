@@ -379,6 +379,11 @@ revive the legacy x86 extractor toolchain.
   packable documents are classified into 11 families, nine canonical/projection
   divergences remain preserved, and generated metadata is explicitly triage
   evidence rather than rights, safety, freshness, or historical approval.
+- The community-preservation rights boundary is integrated through `51b79571`:
+  personal contact coordinates and unsupported ownership, dissolution, backing,
+  and permission conclusions are removed; repository and incorporated-source
+  licenses are explicitly limited to the material they cover. The inventory
+  remains 955 documents with nine preserved divergences.
 - The RE behavior-contract slice is integrated through `76528902`. It orders
   camera, walker, jet, and morph observations under a runtime-required candidate
   and surgically fail-closes only the confirmed stale `0x00411630` and
