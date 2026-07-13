@@ -1,0 +1,138 @@
+{
+  "schema": "lore-corpus-taxonomy.v1",
+  "inventorySchema": "lore-corpus-inventory.v1",
+  "sourceRoot": "lore-book",
+  "packableExtensions": [
+    ".md",
+    ".txt"
+  ],
+  "triageBoundary": {
+    "statement": "Quotation, source-risk, freshness, domain, and projection-divergence fields are deterministic editorial triage signals only.",
+    "notConclusions": [
+      "historical truth",
+      "legal status",
+      "release safety",
+      "rights status"
+    ],
+    "excludedContent": [
+      "document excerpts",
+      "long copyrighted quotations",
+      "private paths",
+      "raw Discord or private-dump text"
+    ]
+  },
+  "families": [
+    {
+      "id": "narrative-lore",
+      "prefix": "lore-book/lore/",
+      "editorialRole": "reader-facing narrative and preservation context"
+    },
+    {
+      "id": "roadmap",
+      "prefix": "lore-book/roadmap/",
+      "editorialRole": "current or historical plan and status material"
+    },
+    {
+      "id": "binary-analysis",
+      "prefix": "lore-book/reverse-engineering/binary-analysis/",
+      "editorialRole": "technical reverse-engineering archive and proof history"
+    },
+    {
+      "id": "game-assets",
+      "prefix": "lore-book/reverse-engineering/game-assets/",
+      "editorialRole": "asset-format, extraction, and proof material"
+    },
+    {
+      "id": "source-code",
+      "prefix": "lore-book/reverse-engineering/source-code/",
+      "editorialRole": "reference-source architecture and provenance material"
+    },
+    {
+      "id": "quick-reference",
+      "prefix": "lore-book/reverse-engineering/quick-reference/",
+      "editorialRole": "condensed technical lookup material"
+    },
+    {
+      "id": "save-file",
+      "prefix": "lore-book/reverse-engineering/save-file/",
+      "editorialRole": "save-format and career-system documentation"
+    },
+    {
+      "id": "project-meta",
+      "prefix": "lore-book/reverse-engineering/project-meta/",
+      "editorialRole": "attribution, community, and repository context"
+    },
+    {
+      "id": "game-mechanics",
+      "prefix": "lore-book/reverse-engineering/game-mechanics/",
+      "editorialRole": "released-game mechanic notes"
+    },
+    {
+      "id": "front-door",
+      "prefix": "lore-book/BOOK.md",
+      "editorialRole": "curated reader entry point"
+    },
+    {
+      "id": "front-door",
+      "prefix": "lore-book/Start-Here.md",
+      "editorialRole": "curated reader entry point"
+    },
+    {
+      "id": "front-door",
+      "prefix": "lore-book/CURRENT_CAPABILITIES.md",
+      "editorialRole": "current capability entry point"
+    },
+    {
+      "id": "top-level-re",
+      "prefix": "lore-book/reverse-engineering/",
+      "editorialRole": "top-level reverse-engineering index or public contract"
+    }
+  ],
+  "canonicalMappings": [
+    {
+      "projectionPrefix": "lore-book/lore/",
+      "canonicalPrefix": "lore/"
+    },
+    {
+      "projectionPrefix": "lore-book/roadmap/",
+      "canonicalPrefix": "roadmap/"
+    },
+    {
+      "projectionPrefix": "lore-book/reverse-engineering/",
+      "canonicalPrefix": "reverse-engineering/"
+    },
+    {
+      "projectionPrefix": "lore-book/CURRENT_CAPABILITIES.md",
+      "canonicalPrefix": "CURRENT_CAPABILITIES.md"
+    }
+  ],
+  "allowedSourceRiskLabels": [
+    "community-testimony",
+    "private-boundary",
+    "public-primary-or-archive",
+    "publication-or-interview",
+    "secondary-source"
+  ],
+  "sourceRiskSignals": [
+    {
+      "label": "community-testimony",
+      "pattern": "\\bdiscord\\b|community (?:discussion|post|recollection)"
+    },
+    {
+      "label": "publication-or-interview",
+      "pattern": "\\binterview\\b|game developer magazine|\\bretro gamer\\b|\\bedge magazine\\b"
+    },
+    {
+      "label": "secondary-source",
+      "pattern": "wikipedia|mobygames|metacritic|linkedin"
+    },
+    {
+      "label": "private-boundary",
+      "pattern": "maintainer-local|local-only|\\bprivate\\b|raw dump"
+    },
+    {
+      "label": "public-primary-or-archive",
+      "pattern": "store\\.steampowered\\.com|gog\\.com|store\\.playstation\\.com|losttoys\\.com|archive\\.org"
+    }
+  ]
+}

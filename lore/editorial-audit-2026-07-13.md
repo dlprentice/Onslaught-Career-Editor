@@ -68,21 +68,25 @@ privacy, historical truth, or release safety.
 2. Seven of the 15 canonical `lore/*.md` documents differ from their
    `lore-book/lore/` projections, but `tools/docsync_policy.json` does not
    currently validate this projection family.
-3. Some projection differences replace named Discord/private-source framing
+3. The generated cross-corpus comparison also finds two divergent roadmap
+   projections, `analyzer-enhancements.md` and `tech-slots.md`, for nine
+   divergent canonical/projection pairs in total. No canonical counterpart is
+   missing and every tracked document matches a taxonomy family.
+4. Some projection differences replace named Discord/private-source framing
    with safer public wording. Canonical precedence and public-safe wording are
    consequently inconsistent. Automatic synchronization would be unsafe.
-4. `lore/discord-archive-extract-2026-03.md` cites line locations in retired raw
+5. `lore/discord-archive-extract-2026-03.md` cites line locations in retired raw
    dumps. It is a provenance-preserving project extract, but its citations are
    not independently resolvable from the public repository.
-5. Several narrative documents contain extensive block quotations from
+6. Several narrative documents contain extensive block quotations from
    magazines or interviews. `lore/development-history.md` has 51 block-quoted
    lines and needs human quotation/redistribution review before it can be called
    editorially cleared.
-6. The Steam review count recorded in `lore/reference-materials.md` is clearly
+7. The Steam review count recorded in `lore/reference-materials.md` is clearly
    labeled as a 2024 snapshot. On 2026-07-13, the official Steam page showed
    91% positive from 134 Steam-purchaser reviews, illustrating why unstable
    counts need dates rather than silent replacement.
-7. The official PlayStation Store and PlayStation Blog confirm the PS4/PS5
+8. The official PlayStation Store and PlayStation Blog confirm the PS4/PS5
    release on 2025-05-20. GOG continues to list the Windows release.
 
 Primary public checks:
@@ -101,7 +105,8 @@ authority. The first generator produces a repository-relative inventory with:
 - a stable taxonomy family derived from the tracked path;
 - the declared or structurally implied canonical source, where one exists;
 - canonical/projection content hashes and a parity result;
-- explicit status and last-updated markers found near the document header;
+- status-marker presence only, and an ISO last-updated marker found near the
+  document header;
 - the last Git commit date for freshness triage;
 - bounded counts and labels for quotation, source-risk, and external-domain
   signals; and
@@ -110,6 +115,27 @@ authority. The first generator produces a repository-relative inventory with:
 `lore/corpus-taxonomy.v1.json` is the human-reviewed policy input.
 `lore/generated/corpus-inventory.v1.json` is a deterministic projection. Check
 mode compares the expected JSON bytes with the tracked file and fails on drift.
+An explicit document marker and the latest Git commit date are independent
+freshness signals; neither establishes narrative chronology or overrides the
+other. `lastCommitDate` describes the tracked path's most recent commit only;
+it does not attest that `sourceSha256` names a committed blob. Consumers must
+not bind the two fields into a provenance claim.
+
+Source and canonical hashes cover exact working-tree bytes. Repository
+`.gitattributes` pins Markdown and TXT files to LF, so the hashed input is stable
+across supported checkouts while still reflecting intentional uncommitted
+editorial changes. Check mode compares bytes rather than newline-normalized
+text, so CRLF, BOM, encoding, or content drift fails without rewriting output.
+Only regular tracked files are accepted. Git symlink modes and filesystem
+symlink/reparse paths fail before source or canonical content is read, and
+case-fold-colliding tracked paths fail before filesystem reads.
+
+Determinism here means identical policy, Git path/date metadata, and exact
+working-tree input bytes produce identical JSON bytes. It deliberately does not
+mean that every checkout of the same commit produces the same inventory while
+its working bytes differ. Build mode snapshots the current editorial worktree;
+check mode is the release-facing guard that rejects any tracked projection not
+matching that exact snapshot, including CRLF or BOM drift.
 
 Claim-level provenance is a later curated layer for the small reader-facing
 surface. It should not be inferred for all 955 documents from keywords.
@@ -151,6 +177,33 @@ Test-driven sequence:
    hard-payload safety, and `git diff --check`.
 5. Obtain normal and adversarial Codex review plus bounded sanitized external
    normal and adversarial consults before acceptance.
+
+## Validation And Review Record
+
+Focused acceptance on 2026-07-13 produced this evidence:
+
+- 14 focused inventory tests passed, including exact-byte drift, private-value
+  exclusion, public-host filtering, Git-mode, symlink/reparse, and case-fold
+  collision cases;
+- build and check modes both reported 955 documents and nine preserved
+  divergences;
+- structural assertions found zero unclassified documents and zero missing
+  canonical counterparts;
+- docsync, current-document command checks, public-core Markdown links, and
+  `git diff --check` passed;
+- the supported payload checker passed against exactly the five changed files,
+  and generated-inventory leakage assertions passed; and
+- the whole-repository hard-payload scan timed out and is unverified. It was
+  not rerun for this metadata-only slice; the integration owner explicitly
+  accepted the changed-file/path-scoped replacement evidence.
+
+Independent normal and adversarial Codex reviews and sanitized external normal
+and adversarial consults all accepted the final slice. Review-driven changes
+removed status text and hashes, tightened prefix and label policy, made checks
+byte-exact, hardened public-host parsing, rejected non-regular and indirect
+filesystem inputs, rejected case-fold collisions, and clarified the working
+tree/Git-date provenance boundary. External consults received reconstructed
+schema and test facts only, never document bodies or private artifacts.
 
 ## Acceptance And Non-Claims
 
