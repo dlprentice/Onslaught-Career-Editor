@@ -78,6 +78,20 @@ def _pmvb(*, populated: bool) -> bytes:
     return _chunk(b"PMVB", _cmvb(2) + _group((0, 1, 2, 2, 3), owns_vertices=True) + _group((0, 2, 3), owns_vertices=False))
 
 
+def _empty_reference_pmvb(
+    *,
+    stride: int,
+    fvf: int,
+    topology: int,
+    group_count: int = 0,
+    residue: bytes = b"",
+) -> bytes:
+    payload = bytearray(296)
+    payload[264] = group_count
+    struct.pack_into("<III", payload, 276, stride, fvf, topology)
+    return _chunk(b"PMVB", _chunk(b"CMVB", bytes(payload)) + residue)
+
+
 def _reference_group(indices: tuple[int, ...], *, owns_vertices: bool) -> bytes:
     rows = ((1.0, 2.0, 3.0), (4.0, 5.0, 6.0), (7.0, 8.0, 9.0))
     vertex_payload = (
@@ -315,6 +329,78 @@ class CmshStaticPreviewTests(unittest.TestCase):
         self.assertEqual(EXPECTED_REFERENCE_SHA256, hashlib.sha256(result).hexdigest())
         self.assertEqual(9, sum(line.startswith(b"v ") for line in result.splitlines()))
         self.assertEqual(6, sum(line.startswith(b"f ") for line in result.splitlines()))
+
+    def test_reference_zero_sentinel_source_metadata_emits_identical_golden(self) -> None:
+        parts = reference_fixture_parts()
+        sentinel = _empty_reference_pmvb(stride=0, fvf=0, topology=0)
+        parts[2] = _multipart_part(
+            2,
+            parent=0,
+            base_position=(40.0, 50.0, 60.0),
+            geometry=sentinel,
+            reference_payload=struct.pack("<I", 1),
+        )
+        parts[3] = _multipart_part(
+            3,
+            parent=0,
+            children=(4,),
+            base_position=(-10.0, -20.0, -30.0),
+            rotated=True,
+            geometry=sentinel,
+            reference_payload=struct.pack("<I", 1),
+        )
+
+        result = preview.emit_obj(preview.parse_cmsh_stream(build_reference_fixture_stream(parts)))
+
+        self.assertEqual(EXPECTED_REFERENCE_OBJ, result)
+        self.assertEqual(EXPECTED_REFERENCE_SHA256, hashlib.sha256(result).hexdigest())
+
+    def test_reference_zero_sentinel_source_metadata_rejects_every_near_miss(self) -> None:
+        malformed_cmvb = _chunk(b"PMVB", _chunk(b"CMVB", bytes(295)))
+        populated_sentinel = _empty_reference_pmvb(stride=0, fvf=0, topology=0, group_count=1)
+        cases = [
+            ("populated", populated_sentinel, "unsupported bones/reference graph"),
+            ("stride48", _empty_reference_pmvb(stride=48, fvf=0, topology=0), "unsupported bones/reference graph"),
+            ("fvf_only", _empty_reference_pmvb(stride=0, fvf=0x152, topology=0), "unsupported bones/reference graph"),
+            ("topology_only", _empty_reference_pmvb(stride=0, fvf=0, topology=4), "unsupported bones/reference graph"),
+            ("stride_only", _empty_reference_pmvb(stride=36, fvf=0, topology=0), "unsupported bones/reference graph"),
+            ("fvf_topology", _empty_reference_pmvb(stride=0, fvf=0x152, topology=4), "unsupported bones/reference graph"),
+            ("stride_topology", _empty_reference_pmvb(stride=36, fvf=0, topology=4), "unsupported bones/reference graph"),
+            ("stride_fvf", _empty_reference_pmvb(stride=36, fvf=0x152, topology=0), "unsupported bones/reference graph"),
+            ("arbitrary", _empty_reference_pmvb(stride=1, fvf=2, topology=3), "unsupported bones/reference graph"),
+            ("residue", _empty_reference_pmvb(stride=0, fvf=0, topology=0, residue=b"x"), "unsupported bones/reference graph"),
+            (
+                "child",
+                _empty_reference_pmvb(stride=0, fvf=0, topology=0, residue=_chunk(b"MMPT", b"")),
+                "unsupported bones/reference graph",
+            ),
+            ("malformed_cmvb_length", malformed_cmvb, "unsupported bones/reference graph"),
+        ]
+        for case, geometry, category in cases:
+            parts = reference_fixture_parts()
+            parts[2] = _multipart_part(
+                2,
+                parent=0,
+                geometry=geometry,
+                reference_payload=struct.pack("<I", 1),
+            )
+            with self.subTest(case=case):
+                with self.assertRaisesRegex(preview.CmshProfileError, category):
+                    preview.parse_cmsh_stream(build_reference_fixture_stream(parts))
+
+        unsupported_target = bytearray(_reference_geometry())
+        cmvb = unsupported_target.find(b"CMVB")
+        struct.pack_into("<I", unsupported_target, cmvb + 8 + 276, 48)
+        parts = reference_fixture_parts()
+        parts[1] = _multipart_part(1, parent=0, geometry=bytes(unsupported_target))
+        parts[2] = _multipart_part(
+            2,
+            parent=0,
+            geometry=_empty_reference_pmvb(stride=0, fvf=0, topology=0),
+            reference_payload=struct.pack("<I", 1),
+        )
+        with self.assertRaisesRegex(preview.CmshProfileError, "unsupported profile"):
+            preview.parse_cmsh_stream(build_reference_fixture_stream(parts))
 
     def test_reference_length_target_and_geometry_source_fail_closed(self) -> None:
         for length in (0, 3, 8):
