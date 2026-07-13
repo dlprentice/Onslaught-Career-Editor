@@ -10,15 +10,16 @@ program and neither is allowed to override Steam binary or runtime evidence.
 
 ## Pinned Revisions
 
-| Corpus | Tracked remote | Pinned commit | Upstream baseline in fork history |
+| Corpus | Tracked remote | Pinned commit | Upstream baseline / fork delta |
 | --- | --- | --- | --- |
-| Onslaught source | `https://github.com/dlprentice/Onslaught.git` | `792545b996365f383781c666d145ea6cbda83f3a` | Stuart repository commit `5352a81cdb838b145a57f7febc5d9fc4b0129ebb` |
-| AYAResourceExtractor | `https://github.com/dlprentice/AYAResourceExtractor.git` | `6f3df296201ecc62bc09c39f7a93d8a4fb2f1638` | Stuart repository commit `4e04952a200e29040a68fc8648e835f9a7d608d1` |
+| Onslaught source | `https://github.com/dlprentice/Onslaught.git` | `5352a81cdb838b145a57f7febc5d9fc4b0129ebb` | Identical to `stuart73/Onslaught` `main` (`5352a81`) |
+| AYAResourceExtractor | `https://github.com/dlprentice/AYAResourceExtractor.git` | `53b10b083b59cfd7e72849c15bec8b608eaf8a23` | `stuart73/AYAResourceExtractor` `master` (`4e04952`) plus one DDS wrapper copy-bounds fix |
 
-The Onslaught fork differs from that upstream baseline only in tracked Git
-attributes/ignore files. The AYA fork also contains the local DDS wrapper copy-
-bounds correction. These facts were checked from commit ancestry and diffs, not
-inferred from repository names.
+The Onslaught fork matches Stuart with zero ahead/behind. The AYA fork is ahead
+by exactly one intentional commit: correct `width*height` copy bounds and null/
+size guards in `DDSTextureUncompress.cpp` (upstream used `height*height`). These
+facts were checked from commit ancestry and diffs, not inferred from repository
+names.
 
 ## Onslaught Source
 

@@ -11,7 +11,7 @@ This pass re-reviewed the BattleEngine movement/morph call chain against:
 - read-only Ghidra 12.0.3 exports from a verified project backup;
 - RTTI, vtable slots, callers, constructors, object offsets, and adjacent bodies;
 - pinned Stuart source at
-  `792545b996365f383781c666d145ea6cbda83f3a`; and
+  `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`; and
 - the current synthetic rebuild implementation.
 
 The Ghidra project was opened read-only. No saved name, signature, comment,
