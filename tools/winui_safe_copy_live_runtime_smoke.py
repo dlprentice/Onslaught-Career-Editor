@@ -494,7 +494,13 @@ def run_synthetic_runtime_orchestration(
     best_effort_release: Any = None
     try:
         if plan.runtime_protocol == MORPH_CANARY_RUNTIME_PROTOCOL:
-            callbacks["attach_cdb"](receipt_sha256, command_sha256, required_marker)
+            observer_ready = callbacks["attach_cdb"](
+                receipt_sha256,
+                command_sha256,
+                required_marker,
+            )
+            if observer_ready is not True:
+                raise RuntimeError("CDB observer did not reach receipt-bound marker readiness.")
             for sequence in plan.input_sequences:
                 input_results.append(
                     callbacks["send_input"](
@@ -896,6 +902,9 @@ static bool HashMapsEqual(IReadOnlyDictionary<string, string> left, IReadOnlyDic
 
 static int JsonInt(JsonElement element, string propertyName)
 {
+    if (element.ValueKind != JsonValueKind.Object)
+        return 0;
+
     return element.TryGetProperty(propertyName, out JsonElement property) && property.ValueKind == JsonValueKind.Number && property.TryGetInt32(out int value)
         ? value
         : 0;
@@ -903,6 +912,9 @@ static int JsonInt(JsonElement element, string propertyName)
 
 static bool JsonBool(JsonElement element, string propertyName)
 {
+    if (element.ValueKind != JsonValueKind.Object)
+        return false;
+
     return element.TryGetProperty(propertyName, out JsonElement property) &&
         property.ValueKind is JsonValueKind.True or JsonValueKind.False &&
         property.GetBoolean();
@@ -910,11 +922,35 @@ static bool JsonBool(JsonElement element, string propertyName)
 
 static bool JsonStringIn(JsonElement element, string propertyName, params string[] expected)
 {
+    if (element.ValueKind != JsonValueKind.Object)
+        return false;
+
     if (!element.TryGetProperty(propertyName, out JsonElement property) || property.ValueKind != JsonValueKind.String)
         return false;
 
     string? value = property.GetString();
     return expected.Any(candidate => string.Equals(candidate, value, StringComparison.OrdinalIgnoreCase));
+}
+
+static bool CdbObserverReady(
+    JsonElement? attachResult,
+    string receiptSha256,
+    string commandSha256,
+    string logPath,
+    string requiredMarker)
+{
+    if (!attachResult.HasValue || attachResult.Value.ValueKind != JsonValueKind.Object)
+        return false;
+
+    JsonElement attach = attachResult.Value;
+    return JsonStringIn(attach, "status", "attached") &&
+        attach.TryGetProperty("helperPayload", out JsonElement helper) &&
+        helper.ValueKind == JsonValueKind.Object &&
+        JsonStringIn(helper, "status", "marker-ready") &&
+        JsonBool(helper, "requiredLogMarkerFound") &&
+        JsonStringIn(helper, "targetReceiptSha256", receiptSha256) &&
+        JsonStringIn(helper, "commandSha256", commandSha256) &&
+        HasExactlyOneLogMarker(logPath, requiredMarker);
 }
 
 static JsonElement CaptureSkipped(string reason, string outputPath)
@@ -1177,6 +1213,9 @@ static JsonElement? TryParseLastJsonPayload(string stdout)
 
 static int? JsonNullableInt(JsonElement element, string propertyName)
 {
+    if (element.ValueKind != JsonValueKind.Object)
+        return null;
+
     return element.TryGetProperty(propertyName, out JsonElement property) &&
         property.ValueKind == JsonValueKind.Number &&
         property.TryGetInt32(out int value)
@@ -2056,6 +2095,14 @@ static int RunMorphCanary()
             expectedCommandSha256,
             requiredLogMarker,
             true);
+        if (!CdbObserverReady(
+                cdbAttachResult,
+                receiptSha256,
+                expectedCommandSha256,
+                cdbLogPath,
+                requiredLogMarker))
+            throw new InvalidOperationException(
+                "CDB observer did not reach receipt-bound marker readiness; refusing input.");
         for (int i = 0; i < inputSequences.Length; i++)
         {
             if (!ValidateCanaryBinding(
@@ -2139,13 +2186,12 @@ __CANARY_CLEANUP_PHASE_BLOCK__
     bool canaryCopyUnchanged = string.Equals(copiedExecutableHashBefore, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) &&
         string.Equals(copiedExecutableHashAfter, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) &&
         string.Equals(copiedExecutableHashBefore, copiedExecutableHashAfter, StringComparison.OrdinalIgnoreCase);
-    bool canaryCdbReady = cdbAttachResult.HasValue &&
-        cdbAttachResult.Value.TryGetProperty("helperPayload", out JsonElement cdbHelper) &&
-        JsonStringIn(cdbHelper, "status", "marker-ready") &&
-        JsonBool(cdbHelper, "requiredLogMarkerFound") &&
-        JsonStringIn(cdbHelper, "targetReceiptSha256", receiptSha256) &&
-        JsonStringIn(cdbHelper, "commandSha256", expectedCommandSha256) &&
-        HasExactlyOneLogMarker(cdbLogPath, requiredLogMarker);
+    bool canaryCdbReady = CdbObserverReady(
+        cdbAttachResult,
+        receiptSha256,
+        expectedCommandSha256,
+        cdbLogPath,
+        requiredLogMarker);
     bool canaryFocusedInputSucceeded = role == "noInputControl"
         ? inputResults.Count == 0
         : inputResults.Count == expectedInputSequences.Length && inputResults.All(result =>

@@ -126,8 +126,23 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   projected sentinel path at or above the 260-unit legacy Win32 boundary,
   including non-BMP names, before profile creation. The exact six-suite set
   passes 122 tests, the generated C# runner builds with zero warnings, and
-  normal/adversarial Codex re-review approved after the UTF-16 correction. A
-  fresh authority/lease set and proof root will be used for the retry.
+  normal/adversarial Codex re-review approved after the UTF-16 correction. The
+  correction was pushed at `07a0e398`. A second fresh dry run passed, and its
+  live no-input control reached copied-profile launch, receipt creation, and
+  CDB startup. The x86 CDB process-object path then resolved as `ntdll.dll`
+  rather than `cdb.exe`; the helper failed closed with a null payload, and the
+  generated runner mishandled that null while evaluating postconditions. No
+  positive role or matrix materialization ran. Ignored receipt/observer/error
+  evidence and an explicit failed-run closeout are preserved, the original
+  authority/leases remain hash-identical, released-resource census is zero,
+  and source/copy integrity held. The focused correction uses the existing
+  CIM-first PID resolver before process-module fallbacks, makes generated JSON
+  predicates reject non-object values, requires complete marker-ready observer
+  binding before any input, and retains the original launched Process object
+  through revalidation, kill, and wait. The six focused suites pass 127 tests,
+  the generated runner builds with zero warnings, and normal/adversarial Codex
+  review approved. Push precedes any fresh third authority/lease set and proof
+  root.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future

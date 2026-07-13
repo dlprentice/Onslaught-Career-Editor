@@ -249,7 +249,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         command = "2" * 64
         marker = "MORPH_CANARY_READY"
         callbacks = {
-            "attach_cdb": lambda *values: calls.append(("attach_cdb", *values)),
+            "attach_cdb": lambda *values: calls.append(("attach_cdb", *values)) or True,
             "send_input": lambda *values: calls.append(("send_input", *values)) or {"unconfirmedReleaseKeys": []},
             "capture": lambda: calls.append(("capture",)),
             "release_keys": lambda: calls.append(("release_keys",)) or {"status": "failed", "bestEffort": True},
@@ -293,6 +293,38 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         )
         self.assertFalse(held_result["keys_released"])
 
+    def test_synthetic_observer_failure_stops_before_positive_input(self) -> None:
+        module, args = self.parse(
+            "--runtime-protocol battleengine-morph-identity-canary-v1",
+            "--canary-role positiveTransform",
+        )
+        plan = module.validate_runtime_protocol(args)
+        calls: list[str] = []
+        callbacks = {
+            "attach_cdb": lambda *_: calls.append("attach_cdb") or False,
+            "send_input": lambda *_: calls.append("send_input"),
+            "capture": lambda: calls.append("capture"),
+            "release_keys": lambda: calls.append("release_keys"),
+            "cleanup_cdb": lambda *_: calls.append("cleanup_cdb"),
+            "stop_managed": lambda *_: calls.append("stop_managed"),
+            "census": lambda: calls.append("census") or 0,
+        }
+
+        result = module.run_synthetic_runtime_orchestration(
+            plan,
+            callbacks,
+            receipt_sha256="1" * 64,
+            command_sha256="2" * 64,
+            required_marker="MORPH_CANARY_READY",
+        )
+
+        self.assertNotIn("send_input", calls)
+        self.assertIn("observer", result["active_failure"].lower())
+        self.assertEqual(
+            ["attach_cdb", "release_keys", "cleanup_cdb", "stop_managed", "census"],
+            calls,
+        )
+
     def test_synthetic_cleanup_continues_after_each_phase_failure(self) -> None:
         module, args = self.parse(
             "--runtime-protocol battleengine-morph-identity-canary-v1",
@@ -327,7 +359,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
             result = module.run_synthetic_runtime_orchestration(
                 plan,
                 {
-                    "attach_cdb": lambda *_: None,
+                    "attach_cdb": lambda *_: True,
                     "send_input": lambda *_: None,
                     "capture": lambda: None,
                     "release_keys": phase("release_keys"),
@@ -563,6 +595,40 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn('"positiveRepeat" => "mc-r"', text)
         self.assertIn("ProfileName: roleProfileName", text)
         self.assertNotIn('ProfileName: $"morph-canary-{role}-', text)
+
+    def test_generated_runner_json_predicates_reject_non_object_values(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory(prefix="morph-json-guard-test-") as temp:
+            project = module.write_runner(Path(temp) / "runner")
+            generated = project.with_name("Program.cs").read_text(encoding="utf-8")
+
+        for helper_name in ("JsonNullableInt", "JsonInt", "JsonBool", "JsonStringIn"):
+            match = re.search(
+                rf"static [^\n]+ {helper_name}\b(?P<body>.*?)(?=\nstatic\s)",
+                generated,
+                flags=re.DOTALL,
+            )
+            self.assertIsNotNone(match, helper_name)
+            self.assertIn(
+                "element.ValueKind != JsonValueKind.Object",
+                match.group("body"),
+                helper_name,
+            )
+
+    def test_generated_morph_runner_requires_observer_before_input(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory(prefix="morph-observer-order-test-") as temp:
+            project = module.write_runner(Path(temp) / "runner")
+            generated = project.with_name("Program.cs").read_text(encoding="utf-8")
+
+        attach_index = generated.index("cdbAttachResult = StartCdbObserver(")
+        guard_index = generated.index("if (!CdbObserverReady(", attach_index)
+        input_index = generated.index(
+            "for (int i = 0; i < inputSequences.Length; i++)",
+            attach_index,
+        )
+        self.assertLess(attach_index, guard_index)
+        self.assertLess(guard_index, input_index)
 
     def stable_extra_patch_keys(self) -> set[str]:
         tree = ast.parse(self.script_text(), filename=str(SCRIPT))

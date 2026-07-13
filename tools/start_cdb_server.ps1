@@ -376,12 +376,16 @@ function Read-BoundedLogText([string]$Path, [int64]$MaximumBytes) {
 
 function Get-ProcessExecutablePath([System.Diagnostics.Process]$Process, [string]$Label) {
     $Process.Refresh()
+    $pidResolvedPath = Get-TargetProcessExecutablePath $Process.Id
+    if ($pidResolvedPath) {
+        return [System.IO.Path]::GetFullPath($pidResolvedPath)
+    }
     try {
         if ($Process.Path) {
             return [System.IO.Path]::GetFullPath($Process.Path)
         }
     } catch {
-        # MainModule is required for Windows PowerShell 5.1 process objects.
+        # Fall through to MainModule when PID and Process.Path queries are unavailable.
     }
     try {
         return [System.IO.Path]::GetFullPath($Process.MainModule.FileName)
@@ -392,25 +396,28 @@ function Get-ProcessExecutablePath([System.Diagnostics.Process]$Process, [string
 }
 
 function Stop-ExactStartedProcess(
-    [int]$StartedProcessId,
+    [System.Diagnostics.Process]$StartedProcess,
     [DateTime]$StartedAtUtc,
     [string]$ExecutablePath
 ) {
-    $candidate = Get-Process -Id $StartedProcessId -ErrorAction SilentlyContinue
-    if ($null -eq $candidate) {
+    $StartedProcess.Refresh()
+    if ($StartedProcess.HasExited) {
         return
     }
-    $candidate.Refresh()
-    $candidateStartedAtUtc = $candidate.StartTime.ToUniversalTime()
-    $candidatePath = Get-ProcessExecutablePath $candidate "cleanup candidate"
+    $candidatePath = Get-ProcessExecutablePath $StartedProcess "cleanup candidate"
+    $StartedProcess.Refresh()
+    if ($StartedProcess.HasExited) {
+        return
+    }
+    $candidateStartedAtUtc = $StartedProcess.StartTime.ToUniversalTime()
     if ($candidateStartedAtUtc.Ticks -ne $StartedAtUtc.Ticks -or
         -not [string]::Equals($candidatePath, $ExecutablePath, [System.StringComparison]::OrdinalIgnoreCase)) {
         throw ("CDB cleanup identity mismatch for process id {0}; refusing to stop a reused or replaced process." -f
-            $StartedProcessId)
+            $StartedProcess.Id)
     }
-    Stop-Process -Id $StartedProcessId -Force -ErrorAction Stop
-    if (-not $candidate.WaitForExit(5000)) {
-        throw ("CDB cleanup timed out waiting for process id {0} to exit." -f $StartedProcessId)
+    $StartedProcess.Kill()
+    if (-not $StartedProcess.WaitForExit(5000)) {
+        throw ("CDB cleanup timed out waiting for process id {0} to exit." -f $StartedProcess.Id)
     }
 }
 
@@ -697,7 +704,7 @@ try {
     if ($cdbStartedAtUtcValue -eq [DateTime]::MinValue) {
         throw "Started CDB start time was not captured, so exact cleanup identity cannot be proven."
     }
-    Stop-ExactStartedProcess $started.Id $cdbStartedAtUtcValue $resolvedCdbPath
+    Stop-ExactStartedProcess $started $cdbStartedAtUtcValue $resolvedCdbPath
 } catch {
     $failureMessage = "{0} Cleanup failure: {1}" -f $failureMessage, $_.Exception.Message
 } finally {

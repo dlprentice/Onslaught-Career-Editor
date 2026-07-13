@@ -245,6 +245,49 @@ class StartCdbServerTests(unittest.TestCase):
         self.assertTrue(json_lines, result.stdout)
         return json.loads(json_lines[-1])
 
+    def test_started_debugger_identity_prefers_pid_query_over_module_fallback(self) -> None:
+        source = SCRIPT.read_text(encoding="utf-8")
+        match = re.search(
+            r"function Get-ProcessExecutablePath\b(?P<body>.*?)(?=\nfunction\s)",
+            source,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(match)
+        expected_path = ROOT / "synthetic-cdb-identity" / "cdb.exe"
+        command = "\n".join(
+            (
+                "function Get-TargetProcessExecutablePath([int]$TargetProcessId) {",
+                f"    return {self.ps_quote(expected_path)}",
+                "}",
+                match.group(0),
+                "$candidate = Get-Process -Id $PID -ErrorAction Stop",
+                "$actual = Get-ProcessExecutablePath $candidate 'test debugger'",
+                f"$expected = [System.IO.Path]::GetFullPath({self.ps_quote(expected_path)})",
+                "if ($actual -cne $expected) { throw \"PID resolver was not preferred: $actual\" }",
+            )
+        )
+
+        result = self.run_powershell(command)
+
+        self.assertEqual(result.returncode, 0, self.normalized_stderr(result))
+
+    def test_failed_debugger_cleanup_keeps_the_started_process_object_bound(self) -> None:
+        source = SCRIPT.read_text(encoding="utf-8")
+        match = re.search(
+            r"function Stop-ExactStartedProcess\b(?P<body>.*?)(?=\nfunction\s)",
+            source,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(match)
+        function_text = match.group(0)
+        self.assertIn("[System.Diagnostics.Process]$StartedProcess", function_text)
+        self.assertIn("$StartedProcess.Kill()", function_text)
+        self.assertNotIn("Stop-Process -Id", function_text)
+        self.assertIn(
+            "Stop-ExactStartedProcess $started $cdbStartedAtUtcValue $resolvedCdbPath",
+            source,
+        )
+
     def build_safe_attach_command(
         self,
         *,
