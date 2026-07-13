@@ -139,9 +139,11 @@ proof, storage, release, runtime, account, spend, disputed, broad, or
 high-collision work is substantive.
 
 Each substantive objective or related release batch gets one review envelope
-under the global Codex multi-agent lane contract. Codex-owned normal/adversarial
-subagents inherit the parent effort by default or use an explicit task-specific
-supported effort override. The envelope also includes bounded external
+under the global Codex multi-agent lane contract. Under the current direct user
+policy, new or resumed Codex-owned normal/adversarial subagents use
+`gpt-5.6-sol` at medium effort by default; harder work may raise the supported
+Sol effort. Terra/Luna fallback or lower effort requires a newer direct user
+instruction. The envelope also includes bounded external
 normal/adversarial consults when the required read-only
 sandbox and authentication are available. Routine implementation, validation,
 formatting, and state follow-through inside that envelope do not recursively

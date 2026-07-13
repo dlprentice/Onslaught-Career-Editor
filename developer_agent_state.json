@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-13",
-  "routingPolicy": "Follow the global Codex multi-agent lane contract; Codex-owned subagents inherit the parent effort or use an explicit task-specific supported effort override.",
-  "currentFocus": "Execute Stage A Task 5: run the accepted authority-gated Level 850 morph-identity control/positive/repeat matrix, publish only a validated sanitized identity result, and stop before Stage B on failure.",
+  "routingPolicy": "Follow the global Codex multi-agent lane contract. Under current direct user policy, every new or resumed Codex-owned worker uses gpt-5.6-sol at medium effort by default; harder work may raise Sol effort, and Terra/Luna fallback or lower effort requires a newer direct user instruction.",
+  "currentFocus": "Land exact receipt-owned target exit-event proof for a fresh Retry 11, harden and integrate the optional local-retail presentation branch, then absorb the completed Ghidra closeout.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -17,11 +17,11 @@
       "newReleaseAuthorized": false
     },
     "repository": {
-      "registeredWorktrees": 2,
-      "worktreeOwnership": "main coordinator checkout and a dedicated user-owned Codex Ghidra full-reaudit closeout task; the completed morph-canary, validation-simplification, and agent-guidance worktrees were removed after integration and preservation checks",
+      "registeredWorktrees": 3,
+      "worktreeOwnership": "main coordinator checkout, the dedicated user-owned Codex Ghidra full-reaudit closeout task, and a completed Cursor submodule/local-retail-presentation worktree awaiting reviewed integration",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "2983fef84eddd338505519fe2213a98f5d60667d (Task 5 exact SendInput ABI and delivery)",
+      "lastPushedBeforeCurrentSlice": "72d171837ac40e1b7e406f21e854cb91df410ba1 (current Sol worker-policy reconciliation); exact managed-process-handle retention landed immediately before it at e5a6b275aaaf4e0068666071121c1d56b109863c",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
@@ -100,8 +100,8 @@
       "task2Implementation": "Integrated through 078efaf7 and 6fe26639: strict exact-type process receipts, PEB-derived launch identity, module/window/manifest/digest binding, local-only marker-ready CDB attach with held command identity and bounded log reads, and foreground input with reverse-order finally cleanup. Independent re-review approved; the integrated Task 2 suites pass without real BEA/CDB.",
       "task3Implementation": "Integrated through 8dc733f4, 526df1c2, and 123ca8ac: one locked unpatched Level 850/configuration 2 protocol, one Q tap per positive role, canonical command/receipt/specimen equality, external fresh/create-new private artifacts, exact marker/input success, and shared-plan ordered cleanup through census.",
       "task4Implementation": "Accepted and pushed at 3d23c176: exact authority/lease schemas and hash binding, canonical no-process dry run, fixed serialized roles, immediate cross-role identity rejection, bounded immutable-byte strict materialization, interruption invalidation after child cleanup, and manifest-before-summary publication. The accepted focused non-live suite passed 111 tests and normal/adversarial Codex review approved; no game/debugger process was launched.",
-      "task5Preflight": "Preflight corrected ambient-versus-effective executable identity and private AppConfig routing. Retries 1-7 exposed and bounded path-budget, CDB identity/null, MASM/module syntax, private-diagnostic, active-log sharing, and native INPUT-layout defects; reviewed corrections are pushed through 2983fef8. Retry 8 passed no-input control and confirmed an exact focused Q down/up through two SendInput events with a valid 40-byte layout, no fallback, and confirmed release. It emitted zero exact canary events and the copied target was absent before receipt-bound managed stop, so positiveRepeat and public materialization did not run; integrity and zero-process cleanup held, but the exit cause remains open. Disposable x86 CDB evidence disproved a generic CDB-kill-causes-target-exit claim and proved target-first stop followed by queued q and a terminal quit marker. The authority-v2/TDD correction requires exact managed-process start ticks, preserves ordinary AppCore already-gone cleanup while rejecting it as canary exact-stop evidence, stops only exact roots, binds CDB's effective local -pd arguments, retains its exact handle, compares target/CDB exit times, requires unique cleanup and quit markers from one finalized log read, and fails on census inspection uncertainty. Fresh final gates pass 1,317 AppCore tests, the 95-test runtime-helper profile, 23 orchestration tests, 17 process-identity tests, 13 renderer/materializer tests, and a zero-warning generated build. Initial adversarial blockers drove these corrections; unavailable post-fix reviewers were not substituted. Root acceptance reconciled retained-handle identity, exact target start ticks, target-before-CDB exit ordering, finalized marker evidence, effective argv binding, fail-closed census, and root-only stop behavior against the final diff.",
-      "status": "Tasks 1-4 are accepted. Task 5 has eight preserved failed executions and no published identity claim. Retry 8 proves exact marker-ready control behavior and exact Q input delivery, not Q causality or Transform/Morph/Move/JetPart identity. Review/push of the target-first graceful-CDB cleanup correction and a fresh Retry 9 remain before Stage B."
+      "task5Preflight": "Preflight corrected ambient-versus-effective executable identity and private AppConfig routing. Retries 1-8 exposed and bounded path-budget, CDB identity/null, MASM/module syntax, private-diagnostic, active-log sharing, native INPUT-layout, exact-input, and target/debugger teardown defects. Retry 9 then exposed post-exit process-handle loss; the reviewed correction at e5a6b275 retains the exact target SafeHandle through cleanup and exact ExitTime readback. Retry 10 used fresh controls, passed dry run, launched the exact clean copied retail target, and completed target/debugger cleanup with finalized markers, unchanged source/copy hashes, clear census, and exact managed ExitTime readback. It failed closed and published no matrix because CDB's final ExitTime preceded the target's by about 160 ms. Independent review established that cross-process ExitTime ordering is not a valid Windows debugger invariant and that Retry 10 lacks explicit evidence identifying the event that released g. The accepted correction requires strictly parsed receipt-owned target process-exit evidence from CDB while preserving every identity, marker, hash, finalized-log, no-force-debugger, and census guard; timestamp tolerance and marker-only acceptance are forbidden.",
+      "status": "Tasks 1-4 are accepted. Task 5 has ten preserved failed executions and no published identity claim. Retry 10 proves the corrected exact-handle cleanup path but not Q causality or Transform/Morph/Move/JetPart identity. A fresh Retry 11 is permitted only after the exact target exit-event correction and focused disposable-CDB tests are accepted."
     },
     "agentGuidanceAudit": {
       "integrated": "56738f9b",
@@ -114,9 +114,9 @@
       "acceptance": "Inventory/profile, 73 runtime-helper, 274 active documented-command, 62 current-link, release-profile, curated-manifest, JSON, and diff checks pass; generated accounting is R0=6291, R2=0, R3=3, R4=13184."
     },
     "liveGhidraSemanticLane": {
-      "ownership": "User-owned Cursor lane holds the exclusive live-Ghidra mutation lease; coordinator lanes must not mutate the project or private backups.",
-      "reportedProgress": "Pending external-lane integration: 15 backed-up mutations, including semantic corrections at 0x00407310 and 0x00408120 plus 13 cosmetic cleanups; deep mode is 6/4324 and rushed heuristic batches are excluded.",
-      "evidenceBoundary": "The chat checkpoint is not canonical read-back evidence. Integrate only the reviewed branch and mutation/read-back ledger; PASS_STATIC_OK_REBUILD_THIN does not prove rebuild parity."
+      "ownership": "The dedicated Codex Ghidra closeout task retains the exclusive live-Ghidra mutation and evidence lease until its final reviewed commits are integrated; coordinator lanes do not mutate the project or private backups.",
+      "reportedProgress": "The lane reports full 6,411-function coverage absorption, verified baseline/final stores, review of all 92 proposed post-Cursor corrections, 91 applied with exact readback, and rejection of the erroneous 0x004dac90 row. Its base closeout commit is c33f2f1e; the final correction/readback follow-up remains lane-owned until pushed and reviewed integration completes.",
+      "evidenceBoundary": "The recovered Cursor ledger remains incomplete and no missing verdict is invented. Integrate only the task's verified backups, exact mutation/readback evidence, reviewed tracked corrections, and final commits; static metadata quality does not prove runtime behavior or rebuild parity."
     },
     "boundaries": [
       "No installed-game or original BEA.exe mutation.",
@@ -131,10 +131,10 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Commit and push the root-accepted Task 5 exact-handle target-first CDB cleanup correction and verify local, origin, and live main convergence.",
-    "Create fresh ignored Retry-9 authority-v2/lease controls and an absent proof root, rerun the no-side-effect dry run, then execute the exact Level 850 matrix; publish only if all roles validate, and otherwise preserve private failure evidence and stop before Stage B.",
+    "Integrate and review the exact receipt-owned target exit-event correction, then create fresh ignored Retry-11 authority/lease controls and proof storage; publish only if the complete fixed-role matrix validates.",
+    "Independently harden and integrate the completed Cursor submodule/local-retail-presentation branch while preserving ignored payloads, synthetic smoke, bounded paths, and non-parity wording.",
+    "Integrate the Ghidra closeout only after its final correction/readback commits and evidence handoff are complete, then retire its task and worktree.",
     "Retire stale BattleEngine ownership probes/mutators and add Fbx.dll plus FBX-template fail-fast preflight before the next Ghidra/export mutation slice.",
-    "Design a public synthetic AYA/DDS/FBX export-contract fixture before promoting legacy extractor completeness.",
-    "After runtime evidence is accepted, freeze measured constants/tolerances and implement the authentic behavior in deterministic Core plus the Godot adapter."
+    "After runtime evidence is accepted, freeze one measured movement/morph/camera contract and implement it in deterministic Core plus the Godot adapter for the authentic BYO-asset vertical slice."
   ]
 }

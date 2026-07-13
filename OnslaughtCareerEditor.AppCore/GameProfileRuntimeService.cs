@@ -227,71 +227,104 @@ namespace Onslaught___Career_Editor
 
         public GameProfileStopResult Stop(GameProfileManagedProcess process, TimeSpan gracefulTimeout)
         {
+            double totalTimeoutMilliseconds = gracefulTimeout.TotalMilliseconds;
+            if (!double.IsFinite(totalTimeoutMilliseconds) ||
+                totalTimeoutMilliseconds < 0 ||
+                totalTimeoutMilliseconds > int.MaxValue)
+            {
+                return new GameProfileStopResult(false, process.ProcessId, "Could not stop managed playable copied game folder process: stop timeout must be a finite nonnegative millisecond value no greater than Int32.MaxValue.");
+            }
+
+            int stopTimeoutMilliseconds = (int)totalTimeoutMilliseconds;
+            Process running;
             try
             {
-                using Process running = Process.GetProcessById(process.ProcessId);
-                if (!MatchesManagedProcess(running, process))
-                {
-                    return new GameProfileStopResult(false, process.ProcessId, "Refused to stop a process that no longer matches the managed playable copied game folder record.");
-                }
-
-                if (running.HasExited)
-                    return new GameProfileStopResult(
-                        true,
-                        process.ProcessId,
-                        "Managed playable copied game folder process exited before the exact stop request.",
-                        AlreadyGone: true);
-
-                bool liveBeforeStop = true;
-                bool closeSent = false;
-                try
-                {
-                    closeSent = running.CloseMainWindow();
-                }
-                catch (InvalidOperationException)
-                {
-                    closeSent = false;
-                }
-
-                if (closeSent && running.WaitForExit((int)gracefulTimeout.TotalMilliseconds))
-                {
-                    if (!TryGetExactExitTime(running, out DateTimeOffset exitTime))
-                        return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process exited but its exact exit time could not be read.", liveBeforeStop, true, true, false, true);
-
-                    return new GameProfileStopResult(true, process.ProcessId, "Managed playable copied game folder process closed normally.", liveBeforeStop, true, true, false, true, false, exitTime);
-                }
-
-                bool forceRequested = false;
-                if (!running.HasExited)
-                {
-                    forceRequested = true;
-                    running.Kill(entireProcessTree: false);
-                    if (!running.WaitForExit((int)gracefulTimeout.TotalMilliseconds))
-                    {
-                        return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process did not exit after stop request.", liveBeforeStop, true, closeSent, forceRequested);
-                    }
-                }
-
-                bool stopRequested = closeSent || forceRequested;
-
-                running.Refresh();
-                if (!running.HasExited)
-                {
-                    return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process is still running after stop request.", liveBeforeStop, stopRequested, closeSent, forceRequested);
-                }
-
-                if (!TryGetExactExitTime(running, out DateTimeOffset stoppedAt))
-                    return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process stopped but its exact exit time could not be read.", liveBeforeStop, stopRequested, closeSent, forceRequested, true);
-
-                return new GameProfileStopResult(stopRequested, process.ProcessId, stopRequested ? "Managed playable copied game folder process was stopped." : "Managed playable copied game folder process exited before a stop request was sent.", liveBeforeStop, stopRequested, closeSent, forceRequested, true, !stopRequested, stoppedAt);
+                running = Process.GetProcessById(process.ProcessId);
             }
             catch (ArgumentException)
             {
                 return new GameProfileStopResult(true, process.ProcessId, "Managed playable copied game folder process was already gone before an exact stop handle could be acquired.", AlreadyGone: true);
             }
-            catch (InvalidOperationException ex)
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
             {
                 return new GameProfileStopResult(false, process.ProcessId, $"Could not stop managed playable copied game folder process: {ex.Message}");
+            }
+
+            using (running)
+            {
+                try
+                {
+                    bool exactProcessHandlePinned = false;
+                    var exactProcessHandle = running.SafeHandle;
+                    try
+                    {
+                        exactProcessHandle.DangerousAddRef(ref exactProcessHandlePinned);
+
+                        if (!MatchesManagedProcess(running, process))
+                        {
+                            return new GameProfileStopResult(false, process.ProcessId, "Refused to stop a process that no longer matches the managed playable copied game folder record.");
+                        }
+
+                        if (running.HasExited)
+                            return new GameProfileStopResult(
+                                true,
+                                process.ProcessId,
+                                "Managed playable copied game folder process exited before the exact stop request.",
+                                AlreadyGone: true);
+
+                        bool liveBeforeStop = true;
+                        bool closeSent = false;
+                        try
+                        {
+                            closeSent = running.CloseMainWindow();
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            closeSent = false;
+                        }
+
+                        if (closeSent && running.WaitForExit(stopTimeoutMilliseconds))
+                        {
+                            if (!TryGetExactExitTime(running, out DateTimeOffset exitTime))
+                                return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process exited but its exact exit time could not be read.", liveBeforeStop, true, true, false, true);
+
+                            return new GameProfileStopResult(true, process.ProcessId, "Managed playable copied game folder process closed normally.", liveBeforeStop, true, true, false, true, false, exitTime);
+                        }
+
+                        bool forceRequested = false;
+                        if (!running.HasExited)
+                        {
+                            forceRequested = true;
+                            running.Kill(entireProcessTree: false);
+                            if (!running.WaitForExit(stopTimeoutMilliseconds))
+                            {
+                                return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process did not exit after stop request.", liveBeforeStop, true, closeSent, forceRequested);
+                            }
+                        }
+
+                        bool stopRequested = closeSent || forceRequested;
+
+                        running.Refresh();
+                        if (!running.HasExited)
+                        {
+                            return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process is still running after stop request.", liveBeforeStop, stopRequested, closeSent, forceRequested);
+                        }
+
+                        if (!TryGetExactExitTime(running, out DateTimeOffset stoppedAt))
+                            return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process stopped but its exact exit time could not be read.", liveBeforeStop, stopRequested, closeSent, forceRequested, true);
+
+                        return new GameProfileStopResult(stopRequested, process.ProcessId, stopRequested ? "Managed playable copied game folder process was stopped." : "Managed playable copied game folder process exited before a stop request was sent.", liveBeforeStop, stopRequested, closeSent, forceRequested, true, !stopRequested, stoppedAt);
+                    }
+                    finally
+                    {
+                        if (exactProcessHandlePinned)
+                            exactProcessHandle.DangerousRelease();
+                    }
+                }
+                catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception)
+                {
+                    return new GameProfileStopResult(false, process.ProcessId, $"Could not stop managed playable copied game folder process: {ex.Message}");
+                }
             }
         }
 

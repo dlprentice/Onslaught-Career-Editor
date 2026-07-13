@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -819,6 +820,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.False(InvokeDefaultRunnerIdentityMatch(startedAt.AddSeconds(1), exePath, expected));
             Assert.False(InvokeDefaultRunnerIdentityMatch(startedAt.AddSeconds(5), exePath, expected));
             Assert.False(InvokeDefaultRunnerIdentityMatch(startedAt.AddSeconds(-5), exePath, expected));
+            Assert.False(InvokeDefaultRunnerIdentityMatch(startedAt, Path.Combine(Path.GetTempPath(), "other", "BEA.exe"), expected));
+            Assert.False(InvokeDefaultRunnerIdentityMatch(startedAt, null, expected));
             Assert.False(InvokeDefaultRunnerIdentityMatch(startedAt.AddSeconds(1), Path.Combine(Path.GetTempPath(), "other", "BEA.exe"), expected));
             Assert.False(InvokeDefaultRunnerIdentityMatch(startedAt.AddSeconds(1), null, expected));
         }
@@ -841,6 +844,95 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.True(result.AlreadyGone);
             Assert.False(result.StopRequested);
             Assert.False(result.ExitObserved);
+        }
+
+        [Fact]
+        public void DefaultRunnerStopRetainsExactHandleAfterReacquiringDisposedProcess()
+        {
+            string executablePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "PING.EXE");
+            GameProfileManagedProcess? expected = null;
+            TimeSpan stopTimeout = TimeSpan.FromSeconds(5);
+
+            try
+            {
+                using (Process started = Process.Start(new ProcessStartInfo
+                {
+                    FileName = executablePath,
+                    Arguments = "-n 60 127.0.0.1",
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                }) ?? throw new InvalidOperationException("Test ping process did not start."))
+                {
+                    Assert.False(started.HasExited);
+                    string startedExecutablePath = WaitForExactTestProcessPath(started, TimeSpan.FromSeconds(5));
+                    expected = new GameProfileManagedProcess(
+                        ProcessId: started.Id,
+                        ExecutablePath: startedExecutablePath,
+                        WorkingDirectory: Path.GetDirectoryName(startedExecutablePath)!,
+                        Arguments: Array.Empty<string>(),
+                        StartedAt: new DateTimeOffset(started.StartTime),
+                        ManifestPath: Path.Combine(Path.GetDirectoryName(startedExecutablePath)!, "onslaught-profile-manifest.json"));
+                }
+
+                GameProfileStopResult result = InvokeDefaultRunnerStop(expected, stopTimeout);
+
+                Assert.True(result.Success, result.Message);
+                Assert.Equal(expected.ProcessId, result.ProcessId);
+                Assert.True(result.LiveBeforeStop);
+                Assert.True(result.StopRequested);
+                Assert.True(result.ExitObserved);
+                Assert.False(result.AlreadyGone);
+                Assert.NotNull(result.ExitTime);
+                Assert.Throws<ArgumentException>(() => Process.GetProcessById(expected.ProcessId));
+            }
+            finally
+            {
+                if (expected is not null)
+                    StopExactTestProcess(expected, stopTimeout);
+            }
+        }
+
+        [Fact]
+        public void DefaultRunnerStopRejectsInvalidTimeoutBeforeTouchingExactProcess()
+        {
+            string executablePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "PING.EXE");
+            GameProfileManagedProcess? expected = null;
+            TimeSpan cleanupTimeout = TimeSpan.FromSeconds(5);
+
+            try
+            {
+                using (Process started = Process.Start(new ProcessStartInfo
+                {
+                    FileName = executablePath,
+                    Arguments = "-n 60 127.0.0.1",
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                }) ?? throw new InvalidOperationException("Test ping process did not start."))
+                {
+                    Assert.False(started.HasExited);
+                    string startedExecutablePath = WaitForExactTestProcessPath(started, TimeSpan.FromSeconds(5));
+                    expected = new GameProfileManagedProcess(
+                        ProcessId: started.Id,
+                        ExecutablePath: startedExecutablePath,
+                        WorkingDirectory: Path.GetDirectoryName(startedExecutablePath)!,
+                        Arguments: Array.Empty<string>(),
+                        StartedAt: new DateTimeOffset(started.StartTime),
+                        ManifestPath: Path.Combine(Path.GetDirectoryName(startedExecutablePath)!, "onslaught-profile-manifest.json"));
+                }
+
+                GameProfileStopResult result = InvokeDefaultRunnerStop(expected, TimeSpan.FromMilliseconds(-2));
+
+                Assert.True(IsExactTestProcessLive(expected));
+                Assert.False(result.Success);
+                Assert.False(result.AlreadyGone);
+                Assert.False(result.StopRequested);
+                Assert.False(result.ExitObserved);
+            }
+            finally
+            {
+                if (expected is not null)
+                    StopExactTestProcess(expected, cleanupTimeout);
+            }
         }
 
         private static string PrepareSourceGameRoot(string sourceRoot)
@@ -914,7 +1006,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             return (bool)method.Invoke(null, new object?[] { runningStartedAt, modulePath, expected })!;
         }
 
-        private static GameProfileStopResult InvokeDefaultRunnerStop(GameProfileManagedProcess expected)
+        private static GameProfileStopResult InvokeDefaultRunnerStop(GameProfileManagedProcess expected, TimeSpan? timeout = null)
         {
             Type runnerType = typeof(GameProfileRuntimeService).Assembly.GetType("Onslaught___Career_Editor.DefaultGameProfileProcessRunner")
                 ?? throw new InvalidOperationException("Default runner type was not found.");
@@ -922,7 +1014,92 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 ?? throw new InvalidOperationException("Default runner instance was not found.");
             MethodInfo method = runnerType.GetMethod("Stop", BindingFlags.Public | BindingFlags.Instance)
                 ?? throw new InvalidOperationException("Default runner stop method was not found.");
-            return (GameProfileStopResult)method.Invoke(instance, new object[] { expected, TimeSpan.FromMilliseconds(50) })!;
+            return (GameProfileStopResult)method.Invoke(instance, new object[] { expected, timeout ?? TimeSpan.FromMilliseconds(50) })!;
+        }
+
+        private static void StopExactTestProcess(GameProfileManagedProcess expected, TimeSpan timeout)
+        {
+            try
+            {
+                bool exactProcessHandlePinned = false;
+                using Process remaining = Process.GetProcessById(expected.ProcessId);
+                var exactProcessHandle = remaining.SafeHandle;
+                try
+                {
+                    exactProcessHandle.DangerousAddRef(ref exactProcessHandlePinned);
+                    DateTimeOffset startedAt = new(remaining.StartTime);
+                    string? executablePath = remaining.MainModule?.FileName;
+                    if (!InvokeDefaultRunnerIdentityMatch(startedAt, executablePath, expected) || remaining.HasExited)
+                        return;
+
+                    remaining.Kill(entireProcessTree: false);
+                    remaining.WaitForExit((int)timeout.TotalMilliseconds);
+                }
+                finally
+                {
+                    if (exactProcessHandlePinned)
+                        exactProcessHandle.DangerousRelease();
+                }
+            }
+            catch (Exception ex) when (ex is ArgumentException or System.ComponentModel.Win32Exception or InvalidOperationException)
+            {
+            }
+        }
+
+        private static bool IsExactTestProcessLive(GameProfileManagedProcess expected)
+        {
+            try
+            {
+                bool exactProcessHandlePinned = false;
+                using Process remaining = Process.GetProcessById(expected.ProcessId);
+                var exactProcessHandle = remaining.SafeHandle;
+                try
+                {
+                    exactProcessHandle.DangerousAddRef(ref exactProcessHandlePinned);
+                    DateTimeOffset startedAt = new(remaining.StartTime);
+                    string? executablePath = remaining.MainModule?.FileName;
+                    return InvokeDefaultRunnerIdentityMatch(startedAt, executablePath, expected) && !remaining.HasExited;
+                }
+                finally
+                {
+                    if (exactProcessHandlePinned)
+                        exactProcessHandle.DangerousRelease();
+                }
+            }
+            catch (Exception ex) when (ex is ArgumentException or System.ComponentModel.Win32Exception or InvalidOperationException)
+            {
+                return false;
+            }
+        }
+
+        private static string WaitForExactTestProcessPath(Process process, TimeSpan timeout)
+        {
+            bool exactProcessHandlePinned = false;
+            var exactProcessHandle = process.SafeHandle;
+            try
+            {
+                exactProcessHandle.DangerousAddRef(ref exactProcessHandlePinned);
+                Stopwatch wait = Stopwatch.StartNew();
+                while (wait.Elapsed < timeout)
+                {
+                    process.Refresh();
+                    if (process.HasExited)
+                        throw new InvalidOperationException("Test ping process exited before its exact path was available.");
+
+                    string? executablePath = process.MainModule?.FileName;
+                    if (!string.IsNullOrWhiteSpace(executablePath))
+                        return executablePath;
+
+                    process.WaitForExit(10);
+                }
+
+                throw new InvalidOperationException("Test ping process path was unavailable before the readiness timeout.");
+            }
+            finally
+            {
+                if (exactProcessHandlePinned)
+                    exactProcessHandle.DangerousRelease();
+            }
         }
     }
 }

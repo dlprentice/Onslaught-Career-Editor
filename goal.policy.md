@@ -48,8 +48,11 @@ proof summaries, and reproducible checkers instead of shipping the payloads.
   pushes, publication, and acceptance.
 - Each substantive objective or related release batch requires one bounded
   normal/adversarial review envelope under the global Codex multi-agent lane
-  contract before terminal acceptance. Codex-owned subagents inherit the parent
-  effort by default or use an explicit task-specific supported effort override.
+  contract before terminal acceptance. Under the current direct user policy,
+  every new or resumed Codex-owned worker uses `gpt-5.6-sol` at medium effort by
+  default; harder work may raise the supported Sol effort. Do not fall back to
+  Terra or Luna, and do not lower or change this route without a newer direct
+  user instruction.
   Bounded external normal/adversarial consults use the canonical read-only
   posture when the required sandbox and authentication are available. Trivial lookups, formatting, and
   routine follow-through inside an accepted envelope do not create recursive

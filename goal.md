@@ -240,6 +240,42 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   exact roots are stopped. Fresh final gates pass 1,317 AppCore tests, the
   95-test runtime-helper profile, 23 orchestration tests, 17 process-identity
   tests, 13 renderer/materializer tests, and a zero-warning generated build.
+- Retry 9 used fresh ignored controls and an absent proof root. Its dry run
+  passed, and the live no-input control launched the exact clean copied retail
+  executable, bound CDB before stop, observed the target and debugger physically
+  exit, emitted the expected cleanup and `quit:` markers, and ended with a clear
+  owned-process census. It still failed closed because AppCore reacquired the
+  target by PID without retaining its native process handle; after target exit,
+  `Process.ExitTime` could no longer reopen the process, so the canary could not
+  prove the exact target exit timestamp. No positive role or public matrix ran.
+  A disposable five-run A/B proof reproduced unreadable exit time in 5/5
+  unpinned processes and preserved it in 5/5 pinned processes. The TDD
+  correction validates the bounded timeout before process acquisition, pins the
+  exact process handle before start-time/module identity validation, keeps it
+  pinned through close/kill/wait and exact exit-time readback, narrows
+  already-gone handling to acquisition failure, and releases the handle in a
+  balanced `finally`. The final AppCore suite passes 1,319 tests; the 95 focused
+  runtime-helper tests and `git diff --check` pass. Codex normal/adversarial
+  review accepted the corrected identity and cleanup boundary. Sanitized serial
+  Cursor/Grok normal/adversarial consultation used
+  `cursor-grok-4.5-high-fast`; its only material PID-reuse concern was withdrawn
+  after reconciliation with the retained Windows process-handle lifetime.
+- The exact-handle correction was pushed at `e5a6b275`. Retry 10 then used
+  fresh ignored controls, passed dry run, launched the exact clean copied
+  retail target, and completed the no-input target/debugger cleanup with exact
+  managed target exit-time readback, finalized cleanup/quit markers, unchanged
+  source/copy hashes, and a clear process census. It still failed closed and
+  published no matrix because the retained CDB process's final `ExitTime` was
+  about 160 ms earlier than the managed target's final `ExitTime`. Independent
+  normal/adversarial review concluded that cross-process timestamp inequality
+  is not a valid Windows debugger lifecycle invariant: CDB can receive the
+  target exit debug event and detach/quit before the target's kernel shutdown
+  completes. Retry 10 remains failed because its log does not explicitly prove
+  which event released `g`. The accepted correction direction requires exact
+  receipt-owned target exit-event evidence from CDB (for example a strictly
+  parsed `.lastevent` section), preserves every identity/marker/census guard,
+  and forbids timestamp tolerance or marker-only acceptance. A fresh Retry 11
+  is allowed only after that reviewed correction lands.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future
@@ -288,8 +324,9 @@ from retail are inspectable.
   its 721-selected/726-materialized plain candidate passed the standalone test
   suite, payload/inventory, 463-file/138-link Markdown, 74-package notices, and
   718-file hygiene/line-ending gates.
-- Git reports two registered worktrees: this `main` checkout and the dedicated
-  user-owned Codex Ghidra full-reaudit closeout task. Completed Task 2,
+- Git reports three registered worktrees: this `main` checkout, the dedicated
+  user-owned Codex Ghidra full-reaudit closeout task, and the completed Cursor
+  submodule/local-retail-presentation branch awaiting reviewed integration. Completed Task 2,
   validation, and agent-guidance worktrees were removed after integration and
   preservation checks.
   Seven earlier empty Codex Desktop worktree shells were removed on 2026-07-11.
@@ -324,6 +361,46 @@ The exhaustive hygiene and payload gates each scan roughly the entire tracked
 tree and took about two to four minutes locally. They remain valuable signoff
 gates, but they are not an ergonomic default for every small contribution.
 
+## Campaign Completion Criteria
+
+This campaign is complete only when all of the following are true at the same
+time. Passing one bounded slice does not satisfy the overall goal.
+
+- **Repository and collaboration:** current docs/state agree; contributor and
+  PR workflow is usable; validation is proportionate; finished tasks/worktrees
+  are retired after evidence absorption; and clean `main`, `origin/main`, and
+  the live remote ref match with divergence `0 0`.
+- **WinUI Toolkit:** every visible control has a verified action/reaction map;
+  first-run setup, accessibility, copy/layout, Lore, Media, save/options,
+  safe-copy, and patch workflows pass their focused native checks without
+  unexplained or misleading controls.
+- **Patches and mods:** every shipped option is exact-specimen/byte bound,
+  dependency/conflict accounted, copied-target-only, truthfully labeled, and
+  covered by focused tests; no known stale active helper can reapply withdrawn
+  ownership or bypass the copied-target boundary.
+- **Reverse engineering:** the Ghidra closeout is integrated; accepted
+  corrections are reflected in current RE/Lore truth; stale mutators are
+  retired; and the selected movement/morph slice has accepted Steam static plus
+  copied-runtime identity/behavior evidence. Inventory counts alone do not
+  satisfy this criterion.
+- **Lore and documentation:** canonical/mirror synchronization, stale-current-
+  truth checks, editorial/provenance inventory, and contributor front doors are
+  accepted. Historical uncertainty remains labeled rather than rewritten as
+  fact.
+- **Authentic rebuild vertical slice:** a user can reproducibly launch a
+  BYO-asset Aquila/terrain experience that is recognizably BEA-like, with at
+  least one measured movement/morph/camera behavior contract implemented in
+  deterministic Core and consumed by the Godot adapter. Remaining visual,
+  handling, mission, audio, and gameplay gaps are explicit.
+- **Safety and closeout:** installed game/original `BEA.exe` are untouched; no
+  proprietary payload or private proof is published; reviews converge; state is
+  reconciled; commits are pushed; and no release/tag/upload occurs without its
+  separate current authorization.
+
+These criteria require one authentic, evidence-backed playable vertical slice,
+not full-game or perfect parity. A complete retail-equivalent rebuild remains a
+longer program after this campaign.
+
 ## Authority And Boundaries
 
 The user authorized source, documentation, test, tooling, and local cleanup
@@ -349,9 +426,11 @@ work plus verified commits and pushes for this campaign.
 
 ## Review Envelope
 
-This campaign follows the global Codex multi-agent lane contract. Codex-owned
-normal/adversarial lanes inherit the parent effort by default or use
-an explicit task-specific supported effort override. The current broad audit covers repository DX, branch
+This campaign follows the global Codex multi-agent lane contract. Under the
+current direct user policy, every new or resumed Codex-owned worker uses
+`gpt-5.6-sol` at medium effort by default; harder work may raise the supported
+Sol effort. Terra/Luna fallback and lower effort require a newer direct user
+instruction. The current broad audit covers repository DX, branch
 archaeology, WinUI UX, patch/mod safety, binary RE quality, Lore quality,
 rebuild provenance/architecture, and holistic normal/adversarial review.
 
@@ -399,14 +478,19 @@ claim against an already malicious process running as the same Windows user.
 
 ## Next Slices
 
-1. Complete review and push of the target-first graceful-CDB cleanup
-   correction, then run a fresh authorized Level 850 retry 9 and publish only a fully validated
-   sanitized identity/causality result.
-2. Retire or fail-close active BattleEngine tools that can reapply withdrawn
+1. Land the target-exit-event CDB cleanup proof, then run a fresh authorized
+   Level 850 Retry 11 and publish only a fully validated sanitized identity/
+   causality result.
+2. Review, harden, and integrate the completed Cursor submodule/local-retail-
+   presentation branch without weakening local-payload or synthetic-smoke
+   boundaries.
+3. Integrate the reviewed Ghidra closeout commits, reconcile current truth, and
+   retire its task/worktree only after ignored evidence absorption is accepted.
+4. Retire or fail-close active BattleEngine tools that can reapply withdrawn
    ownership, then harden AYA export dependency/template preflight.
-3. Run the deep Lore editorial/provenance pass and generated contributor
+5. Run the deep Lore editorial/provenance pass and generated contributor
    front-door indexing in parallel where it does not compete for RE evidence.
-4. Continue subsystem-by-subsystem binary re-review and rebuild fidelity work
+6. Continue subsystem-by-subsystem binary re-review and rebuild fidelity work
    while preserving the separate sealed-spec clean-room option.
 
 ## Stop Conditions
