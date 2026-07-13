@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-13",
   "routingPolicy": "Follow the global Codex multi-agent lane contract. Under current direct user policy, every new or resumed Codex-owned worker uses gpt-5.6-sol at medium effort by default; harder work may raise Sol effort, and Terra/Luna fallback or lower effort requires a newer direct user instruction.",
-  "currentFocus": "Use the integrated fixture-backed CMSH static-preview profile v0 parser to generate anonymous ignored local OBJ previews, obtain a human Aquila selection, and then verify that selected role through the guarded Godot presentation bridge. Keep textures, retail terrain, and the morph canary off this critical path.",
+  "currentFocus": "Render local contact sheets for the 162 accepted anonymous CMSH profile-v0 OBJ candidates, obtain a human Aquila selection, and then verify that selected role through the guarded Godot presentation bridge. Keep textures, retail terrain, and the morph canary off this critical path.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -17,8 +17,8 @@
       "newReleaseAuthorized": false
     },
     "repository": {
-      "registeredWorktrees": 4,
-      "worktreeOwnership": "main coordinator; Player Value & UX; Rebuild Asset Pipeline; read-only Campaign Steward",
+      "registeredWorktrees": 5,
+      "worktreeOwnership": "main owner/integration; read-only Task-Lane Coordinator; Player Value & UX; Rebuild Asset Pipeline; read-only Campaign Steward",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
       "lastPushedBeforeCurrentSlice": "a3b3af7c (CMSH profile-versus-identity goal/state correction); main and origin/main divergence 0 0",
