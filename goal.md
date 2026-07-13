@@ -16,19 +16,20 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Implement Stage A Task 3: add one locked BattleEngine morph-identity protocol
-to the existing copied-runtime harness, using synthetic fixtures only.
+Implement Stage A Task 4: add an authority-gated three-run executor for the
+locked BattleEngine morph-identity harness, using fake harnesses only.
 
-1. derive the unpatched Level 850/configuration 2 launch, Player 1 `Q` transform
-   override, zero captures, and empty patch set from one protocol choice rather
-   than exposing independent proof levers;
-2. render the private command from the canonical source and tracked template,
-   then bind it to the exact Task 2 process receipt and digests;
-3. make marker, input, executable-integrity, receipt-bound cleanup, and zero
-   owned-process requirements protocol-specific without creating screenshots or
-   deciding the three-run matrix; and
-4. prove the locked mode with focused synthetic tests and independent review.
-   Do not launch Battle Engine Aquila or CDB in this task.
+1. define exact ignored authority and resource-lease schemas for the copied
+   runtime canary, including expiration, zero spend, cleanup/rollback, allowed
+   and forbidden actions, validation gates, and four exclusive resources;
+2. fix the serialized role order to no-input control, positive transform, and
+   fresh positive repeat, with distinct private roots/receipts and one `Q` tap
+   for each positive role;
+3. call the existing Task 3 harness exactly once per role, stop on the first
+   failure, and materialize a sanitized matrix only after all three pass; and
+4. prove dry-run, authority, lease, path, identity, cleanup, materialization,
+   and public-field boundaries with focused fake-harness tests. Do not launch
+   Battle Engine Aquila or CDB in this task.
 
 ## Current Slice Progress - 2026-07-12
 
@@ -85,6 +86,15 @@ to the existing copied-runtime harness, using synthetic fixtures only.
   The executable inventory reports 1,512 scripts and 125 npm dependency edges;
   generated release accounting is current at R0=6,291, R2=0, R3=3,
   R4=13,184, and the 726-file curated manifest remains valid.
+- Stage A Task 3 is integrated through `8dc733f4`, `526df1c2`, and `123ca8ac`.
+  One protocol choice now derives the unpatched Level 850/configuration 2
+  launch, Player 1 `Q`, no patches, no screenshots, canonical command/receipt
+  binding, exact marker/input checks, private fresh/create-new artifacts, and
+  ordered cleanup through census. The generated C# runner reasserts canonical
+  installed/override/copy equality and shares its cleanup phase plan with
+  failure-injection tests. Main passes 27 harness tests, 10 Task 1 materializer
+  tests, and a zero-warning generated-runner build; independent normal and
+  adversarial Codex re-review approve with no Critical or Important findings.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future
@@ -223,20 +233,24 @@ claim against an already malicious process running as the same Windows user.
 
 ## Current Slice Acceptance
 
-- One protocol choice derives the exact unpatched Level 850/configuration 2,
-  Player 1 `Q`, zero-capture, no-background-input, empty-patch behavior.
-- The existing harness consumes Task 1 command rendering and Task 2 receipt
-  validation without accepting arbitrary commands or mixed proof levers.
-- Protocol success requires the exact marker, focused positive-role input,
-  executable/source integrity, receipt-bound CDB/game cleanup, and zero owned
-  processes; screenshots are neither produced nor treated as success evidence.
-- Focused synthetic tests and independent review pass without launching the
-  game/debugger or adding payloads, raw proof, product APIs, or broad scripts.
-- Goal/state are reconciled and the green slice is pushed before Task 4 begins.
+- Dry-run fixes the three role order and validates the complete authority/lease
+  envelope without requiring the live arm phrase or launching any process.
+- Live mode requires the exact action family, four exclusive resources, zero
+  spend, unexpired authority, explicit live arm, cleanup/rollback, and validation
+  gates; missing, conflicting, reused, or reparse-routed inputs fail closed.
+- Each role gets a fresh private root and exactly one Task 3 harness invocation;
+  the executor stops after the first failed role and cannot reuse receipt,
+  artifact, or process identity across roles.
+- Strict Task 1 materialization occurs only after all three roles pass, writes
+  only under the ignored proof root, and rejects control hits, missing positive
+  events, identity mismatches, failed cleanup, and private-field leakage.
+- Focused fake-harness tests and independent review pass without launching the
+  game/debugger or adding payloads, product APIs, or broad scripts.
+- Goal/state are reconciled and the green slice is pushed before Task 5 begins.
 
 ## Next Slices
 
-1. Complete Stage A Tasks 3-5, run the authorized Level 850 identity matrix,
+1. Complete Stage A Tasks 4-5, run the authorized Level 850 identity matrix,
    and publish only its sanitized identity/causality result.
 2. Retire or fail-close active BattleEngine tools that can reapply withdrawn
    ownership, then harden AYA export dependency/template preflight.

@@ -121,7 +121,7 @@ release action was run.
 A focused integration follow-up added the previously omitted window-input helper
 self-test to both runtime safety profiles. After the Stage A receipt-hardening
 integration, `test:runtime-tooling-safety` runs 8 profile-prep, 22 exact CDB
-identity, 16 input-helper, and 14 safe-copy smoke-helper tests (60 total).
+identity, 16 input-helper, and 27 safe-copy smoke-helper tests (73 total).
 
 ## Residual Risks
 

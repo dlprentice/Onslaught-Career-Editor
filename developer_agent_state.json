@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-12",
   "routingPolicy": "Follow the global Codex multi-agent lane contract; Codex-owned subagents inherit the parent effort or use an explicit task-specific supported effort override.",
-  "currentFocus": "Implement Stage A Task 3 as one locked morph-identity protocol in the existing copied-runtime harness, using synthetic fixtures only; do not launch the game or debugger in this task.",
+  "currentFocus": "Implement Stage A Task 4 as an authority-gated three-run executor over the locked morph-identity harness, using fake harnesses only; do not launch the game or debugger in this task.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -97,8 +97,9 @@
       "stageABoundary": "The first control/positive/repeat matrix proves exact specimen, module/RVA, player-one/runtime-P0 input, BattleEngine, Morph, Move, and JetPart causality only; it makes no timing, field-semantic, handling, or parity claim.",
       "safety": "Fresh unpatched AppCore safe copy, exact launch receipt and window identity, module-relative one-shot probes, private raw evidence, sanitized hash-bound materialization, before/after hashes, owned-process cleanup, and no installed-game or process-memory writes.",
       "task1Implementation": "Pushed through b1458c0d: PE32/RVA/relocation-safe canonical fingerprinting, four hardware-only execution probes, strict private artifact revalidation, exact public matrix schemas, contradictory-log rejection, and 10 passing focused synthetic tests. No BEA/CDB process was launched.",
-      "task2Implementation": "Integrated through 078efaf7 and 6fe26639: strict exact-type process receipts, PEB-derived launch identity, module/window/manifest/digest binding, local-only marker-ready CDB attach with held command identity and bounded log reads, and foreground input with reverse-order finally cleanup. Independent re-review approved; the integrated 60-test runtime-safety profile passes without real BEA/CDB.",
-      "status": "Tasks 1-2 are accepted. Task 3 locked harness protocol is active; authority-gated executor and live control/positive/repeat runs remain pending."
+      "task2Implementation": "Integrated through 078efaf7 and 6fe26639: strict exact-type process receipts, PEB-derived launch identity, module/window/manifest/digest binding, local-only marker-ready CDB attach with held command identity and bounded log reads, and foreground input with reverse-order finally cleanup. Independent re-review approved; the integrated Task 2 suites pass without real BEA/CDB.",
+      "task3Implementation": "Integrated through 8dc733f4, 526df1c2, and 123ca8ac: one locked unpatched Level 850/configuration 2 protocol, one Q tap per positive role, canonical command/receipt/specimen equality, external fresh/create-new private artifacts, exact marker/input success, and shared-plan ordered cleanup through census. Main passes 27 harness tests, 10 Task 1 compatibility tests, and a zero-warning generated-runner build; normal/adversarial Codex re-review approve.",
+      "status": "Tasks 1-3 are accepted. Task 4 authority-gated three-run executor is active; live control/positive/repeat execution remains pending."
     },
     "agentGuidanceAudit": {
       "integrated": "56738f9b",
@@ -108,7 +109,7 @@
     "validationSimplification": {
       "integrated": "7771e404 and f75f5007",
       "result": "A machine-readable validation inventory and measured change-class matrix route the quick profile, runtime-helper safety, historical proof, repository-boundary, and release gates proportionately without deleting retained safety checkers.",
-      "acceptance": "Inventory/profile, 60 runtime-helper, 274 active documented-command, 62 current-link, release-profile, curated-manifest, JSON, and diff checks pass; generated accounting is R0=6291, R2=0, R3=3, R4=13184."
+      "acceptance": "Inventory/profile, 73 runtime-helper, 274 active documented-command, 62 current-link, release-profile, curated-manifest, JSON, and diff checks pass; generated accounting is R0=6291, R2=0, R3=3, R4=13184."
     },
     "liveGhidraSemanticLane": {
       "ownership": "User-owned Cursor lane holds the exclusive live-Ghidra mutation lease; coordinator lanes must not mutate the project or private backups.",
@@ -128,8 +129,8 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Implement and review Stage A Task 3 as one locked unpatched Level 850/configuration 2 morph-identity protocol in the existing live harness, using synthetic tests only.",
-    "Implement the authority-gated three-run executor, then run Level 850 control/positive/repeat without promoting timing or field semantics.",
+    "Implement and review Stage A Task 4 as an exact authority/lease-gated serialized three-run executor over the locked harness, using fake harnesses only.",
+    "After the executor is accepted, run Level 850 control/positive/repeat under the approved local authority without promoting timing or field semantics.",
     "Retire stale BattleEngine ownership probes/mutators and add Fbx.dll plus FBX-template fail-fast preflight before the next Ghidra/export mutation slice.",
     "Design a public synthetic AYA/DDS/FBX export-contract fixture before promoting legacy extractor completeness.",
     "After runtime evidence is accepted, freeze measured constants/tolerances and implement the authentic behavior in deterministic Core plus the Godot adapter."
