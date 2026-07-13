@@ -178,6 +178,7 @@ CANARY_CLEANUP_PHASE_PLAN = (
                 expectedTemplateSha256,
                 cdbLogPath,
                 requiredLogMarker,
+                boundCdbLogStream,
                 out boundCdbProcess);
             if (!JsonStringIn(cdbPreStopResult, "status", "ready-for-managed-stop"))
                 failure = string.IsNullOrWhiteSpace(failure)
@@ -206,8 +207,8 @@ CANARY_CLEANUP_PHASE_PLAN = (
                 expectedTemplateSha256,
                 out stopReceiptBound,
                 out string stopFailure,
-                out stopInvocationBeginTimestamp,
-                out targetWaitReturnedTimestamp);
+                out runnerStopCallBeginTimestamp,
+                out runnerStopCallReturnedTimestamp);
             if (managed is not null && !stopReceiptBound)
                 failure = string.IsNullOrWhiteSpace(failure)
                     ? "Managed stop was not receipt-bound: " + stopFailure
@@ -226,14 +227,24 @@ CANARY_CLEANUP_PHASE_PLAN = (
         callback_uses_binding=True,
         failure_label="cdb-completion",
         csharp_action=r"""
-            cdbFinalizationValidationBeginTimestamp = Stopwatch.GetTimestamp();
-            cdbCleanupResult = FinalizeExactCdbObserverAfterManagedStop(
-                cdbAttachResult,
-                cdbPreStopResult,
-                boundCdbProcess,
-                stopReceiptBound,
-                stopResult,
-                cdbLogPath);
+            runnerCdbFinalizationValidationBeginTimestamp = Stopwatch.GetTimestamp();
+            try
+            {
+                cdbCleanupResult = FinalizeExactCdbObserverAfterManagedStop(
+                    cdbAttachResult,
+                    cdbPreStopResult,
+                    boundCdbProcess,
+                    boundCdbLogStream,
+                    cdbLogLengthAtReadiness,
+                    stopReceiptBound,
+                    stopResult,
+                    cdbLogPath);
+            }
+            finally
+            {
+                boundCdbLogStream?.Dispose();
+                boundCdbLogStream = null;
+            }
             boundCdbProcess = null;
             if (!JsonStringIn(cdbCleanupResult, "status", "exited-after-managed-stop"))
                 failure = string.IsNullOrWhiteSpace(failure)
@@ -243,6 +254,8 @@ CANARY_CLEANUP_PHASE_PLAN = (
         csharp_failure=r"""
             try { boundCdbProcess?.Dispose(); } catch { }
             boundCdbProcess = null;
+            try { boundCdbLogStream?.Dispose(); } catch { }
+            boundCdbLogStream = null;
             cdbCleanupResult = JsonPayload(new { status = "failed", receiptBound = false, exited = false, gracefulQuitObserved = false, targetExitEventObserved = false, error = ex.GetType().Name + ": " + ex.Message });
         """,
     ),
@@ -992,7 +1005,8 @@ static bool CdbObserverReady(
     string receiptSha256,
     string commandSha256,
     string logPath,
-    string requiredMarker)
+    string requiredMarker,
+    FileStream? retainedLogStream = null)
 {
     if (!attachResult.HasValue || attachResult.Value.ValueKind != JsonValueKind.Object)
         return false;
@@ -1005,7 +1019,9 @@ static bool CdbObserverReady(
         JsonBool(helper, "requiredLogMarkerFound") &&
         JsonStringIn(helper, "targetReceiptSha256", receiptSha256) &&
         JsonStringIn(helper, "commandSha256", commandSha256) &&
-        HasExactlyOneLogMarker(logPath, requiredMarker);
+        (retainedLogStream is null
+            ? HasExactlyOneLogMarkerAtPath(logPath, requiredMarker)
+            : HasExactlyOneLogMarker(retainedLogStream, requiredMarker));
 }
 
 static JsonElement CaptureSkipped(string reason, string outputPath)
@@ -1229,34 +1245,60 @@ static long? CdbLogLength(string logPath)
     }
 }
 
-static bool HasExactlyOneLogMarker(string logPath, string marker)
+static FileStream OpenRetainedCdbLogStream(string logPath)
 {
-    if (!File.Exists(logPath))
-        return false;
-    int count = 0;
-    using FileStream stream = new(
+    return new FileStream(
         logPath,
         FileMode.Open,
         FileAccess.Read,
-        FileShare.ReadWrite);
-    using StreamReader reader = new(
-        stream,
-        Encoding.UTF8,
-        detectEncodingFromByteOrderMarks: true);
-    string? line;
-    while ((line = reader.ReadLine()) is not null)
+        FileShare.ReadWrite,
+        bufferSize: 4096,
+        FileOptions.SequentialScan);
+}
+
+static bool HasExactlyOneLogMarker(FileStream retainedLogStream, string marker)
+{
+    if (!retainedLogStream.CanRead || !retainedLogStream.CanSeek)
+        return false;
+    int count = 0;
+    try
     {
-        if (!string.Equals(line.Trim(), marker, StringComparison.Ordinal))
-            continue;
-        count++;
-        if (count > 1)
-            return false;
+        retainedLogStream.Flush();
+        retainedLogStream.Seek(0, SeekOrigin.Begin);
+        using var reader = new StreamReader(
+            retainedLogStream,
+            Encoding.UTF8,
+            detectEncodingFromByteOrderMarks: true,
+            bufferSize: 4096,
+            leaveOpen: true);
+        string? line;
+        while ((line = reader.ReadLine()) is not null)
+        {
+            if (!string.Equals(line.Trim(), marker, StringComparison.Ordinal))
+                continue;
+            count++;
+            if (count > 1)
+                return false;
+        }
+        return count == 1;
     }
-    return count == 1;
+    finally
+    {
+        retainedLogStream.Seek(0, SeekOrigin.Begin);
+    }
+}
+
+static bool HasExactlyOneLogMarkerAtPath(string logPath, string marker)
+{
+    if (!File.Exists(logPath))
+        return false;
+    using FileStream stream = OpenRetainedCdbLogStream(logPath);
+    return HasExactlyOneLogMarker(stream, marker);
 }
 
 static bool TryReadFinalizedCdbExitEvidence(
-    string logPath,
+    FileStream retainedLogStream,
+    long logLengthAtReadiness,
     int expectedTargetProcessId,
     out bool cleanupMarkerObserved,
     out bool gracefulQuitObserved,
@@ -1265,8 +1307,38 @@ static bool TryReadFinalizedCdbExitEvidence(
     cleanupMarkerObserved = false;
     gracefulQuitObserved = false;
     targetExitEventObserved = false;
-    if (expectedTargetProcessId <= 0 || !File.Exists(logPath))
+    if (expectedTargetProcessId <= 0 || logLengthAtReadiness < 0 ||
+        !retainedLogStream.CanRead || !retainedLogStream.CanSeek)
         return false;
+    const long maximumLogBytes = 16L * 1024L * 1024L;
+    string transcript;
+    try
+    {
+        retainedLogStream.Flush();
+        long finalizedLength = retainedLogStream.Length;
+        if (finalizedLength < logLengthAtReadiness || finalizedLength > maximumLogBytes)
+            return false;
+        retainedLogStream.Seek(0, SeekOrigin.Begin);
+        byte[] raw = new byte[checked((int)finalizedLength)];
+        int totalRead = 0;
+        while (totalRead < raw.Length)
+        {
+            int read = retainedLogStream.Read(raw, totalRead, raw.Length - totalRead);
+            if (read == 0)
+                return false;
+            totalRead += read;
+        }
+        if (retainedLogStream.ReadByte() != -1 || retainedLogStream.Length != finalizedLength)
+            return false;
+        retainedLogStream.Seek(0, SeekOrigin.Begin);
+        transcript = new UTF8Encoding(false, true).GetString(raw);
+        if (transcript.Length > 0 && transcript[0] == '\uFEFF')
+            transcript = transcript[1..];
+    }
+    catch (Exception ex) when (ex is IOException or NotSupportedException or ObjectDisposedException or DecoderFallbackException or OverflowException)
+    {
+        return false;
+    }
     const string beginMarker = "MORPH_CANARY_LASTEVENT_BEGIN";
     const string endMarker = "MORPH_CANARY_LASTEVENT_END";
     const string cleanupMarker = "MORPH_CANARY_CLEANUP_Q";
@@ -1279,24 +1351,17 @@ static bool TryReadFinalizedCdbExitEvidence(
     int endIndex = -1;
     int cleanupIndex = -1;
     int quitIndex = -1;
+    int globalLastEventCount = 0;
     int lineIndex = 0;
     bool insideSection = false;
+    bool malformedProofLine = false;
     var sectionLines = new List<string>();
-    using FileStream stream = new(
-        logPath,
-        FileMode.Open,
-        FileAccess.Read,
-        FileShare.Read);
-    if (stream.Length > 16L * 1024L * 1024L)
-        return false;
-    using StreamReader reader = new(
-        stream,
-        Encoding.UTF8,
-        detectEncodingFromByteOrderMarks: true);
-    string? line;
-    while ((line = reader.ReadLine()) is not null)
+    foreach (string line in transcript.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None))
     {
         string trimmed = line.Trim();
+        bool lastEventLine = trimmed.StartsWith("Last event:", StringComparison.Ordinal);
+        if (lastEventLine)
+            globalLastEventCount++;
         if (string.Equals(trimmed, beginMarker, StringComparison.Ordinal))
         {
             beginCount++;
@@ -1323,6 +1388,15 @@ static bool TryReadFinalizedCdbExitEvidence(
         {
             sectionLines.Add(trimmed);
         }
+        else if (
+            lastEventLine ||
+            trimmed.StartsWith("debugger time:", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("MORPH_CANARY_LASTEVENT_", StringComparison.Ordinal) ||
+            trimmed.StartsWith(cleanupMarker, StringComparison.Ordinal) ||
+            trimmed.StartsWith(quitMarker, StringComparison.Ordinal))
+        {
+            malformedProofLine = true;
+        }
         lineIndex++;
         if (beginCount > 1 || endCount > 1 || cleanupCount > 1 || quitCount > 1)
             return false;
@@ -1331,7 +1405,8 @@ static bool TryReadFinalizedCdbExitEvidence(
     bool exactOrder = beginIndex < endIndex && endIndex < cleanupIndex && cleanupIndex < quitIndex;
     cleanupMarkerObserved = cleanupCount == 1;
     gracefulQuitObserved = quitCount == 1;
-    if (!exactCardinality || !exactOrder || insideSection || sectionLines.Count != 2 ||
+    if (!exactCardinality || !exactOrder || insideSection || malformedProofLine ||
+        globalLastEventCount != 1 || sectionLines.Count != 2 ||
         !sectionLines[1].StartsWith("debugger time: ", StringComparison.OrdinalIgnoreCase))
         return false;
 
@@ -1349,7 +1424,13 @@ static bool TryReadFinalizedCdbExitEvidence(
             match.Groups["exitPid"].Value,
             System.Globalization.NumberStyles.AllowHexSpecifier,
             System.Globalization.CultureInfo.InvariantCulture,
-            out int exitProcessId))
+            out int exitProcessId) ||
+        !int.TryParse(
+            match.Groups["threadId"].Value,
+            System.Globalization.NumberStyles.AllowHexSpecifier,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out int threadId) ||
+        threadId <= 0)
         return false;
 
     targetExitEventObserved = eventProcessId == expectedTargetProcessId &&
@@ -2011,6 +2092,7 @@ static JsonElement ValidateExactCdbObserverForManagedStop(
     string expectedTemplateSha256,
     string expectedLogPath,
     string requiredLogMarker,
+    FileStream? retainedLogStream,
     out Process? boundCdbProcess)
 {
     boundCdbProcess = null;
@@ -2039,7 +2121,8 @@ static JsonElement ValidateExactCdbObserverForManagedStop(
     if (!string.Equals(logPath, Path.GetFullPath(expectedLogPath), StringComparison.OrdinalIgnoreCase) ||
         expectedTargetProcessId <= 0 ||
         !CdbCanaryArgumentsMatch(attachResult, expectedTargetProcessId, logPath, commandFile) ||
-        !CdbObserverReady(attachResult, expectedReceiptSha256, expectedCommandSha256, logPath, requiredLogMarker))
+        retainedLogStream is null ||
+        !CdbObserverReady(attachResult, expectedReceiptSha256, expectedCommandSha256, logPath, requiredLogMarker, retainedLogStream))
         return JsonPayload(new { status = "observer-not-ready", receiptBound, processBound = false, receiptFailure, cdbProcessId });
     Process? process = null;
     try
@@ -2093,6 +2176,8 @@ static JsonElement FinalizeExactCdbObserverAfterManagedStop(
     JsonElement? attachResult,
     JsonElement preStopResult,
     Process? boundCdbProcess,
+    FileStream? boundCdbLogStream,
+    long cdbLogLengthAtReadiness,
     bool stopReceiptBound,
     GameProfileStopResult? stopResult,
     string expectedLogPath)
@@ -2131,6 +2216,7 @@ static JsonElement FinalizeExactCdbObserverAfterManagedStop(
     bool processWasRetained = boundCdbProcess is not null;
     bool processIdentityRevalidated = false;
     DateTime? observedCdbExitTimeUtc = null;
+    int? observedCdbExitCode = null;
     Process? process = boundCdbProcess;
     try
     {
@@ -2168,6 +2254,7 @@ static JsonElement FinalizeExactCdbObserverAfterManagedStop(
         if (exited)
         {
             process.Refresh();
+            observedCdbExitCode = process.ExitCode;
             observedCdbExitTimeUtc = process.ExitTime.ToUniversalTime();
         }
     }
@@ -2187,16 +2274,19 @@ static JsonElement FinalizeExactCdbObserverAfterManagedStop(
     bool cleanupMarkerObserved = false;
     bool gracefulQuitObserved = false;
     bool targetExitEventObserved = false;
-    bool finalizedLogAccepted = !forced && exited && managedProcessStopped && stopResult is not null &&
-        TryReadFinalizedCdbExitEvidence(logPath, stopResult.ProcessId, out cleanupMarkerObserved, out gracefulQuitObserved, out targetExitEventObserved);
+    bool cdbExitedNormally = exited && observedCdbExitCode == 0;
+    bool finalizedLogAccepted = !forced && cdbExitedNormally && managedProcessStopped && stopResult is not null &&
+        boundCdbLogStream is not null &&
+        TryReadFinalizedCdbExitEvidence(boundCdbLogStream, cdbLogLengthAtReadiness, stopResult.ProcessId, out cleanupMarkerObserved, out gracefulQuitObserved, out targetExitEventObserved);
     bool graceful = preStopBound && processWasRetained && processIdentityRevalidated &&
-        managedProcessStopped && finalizedLogAccepted && targetExitEventObserved &&
+        managedProcessStopped && cdbExitedNormally && finalizedLogAccepted && targetExitEventObserved &&
         cleanupMarkerObserved && gracefulQuitObserved;
     string status = graceful ? "exited-after-managed-stop" :
         forced && exited ? "forced-stopped-after-timeout" :
         forced ? "forced-stop-failed" :
         !preStopBound ? "exited-without-pre-stop-binding" :
         !managedProcessStopped ? "exited-after-unbound-managed-stop" :
+        !cdbExitedNormally ? "cdb-exited-nonzero" :
         !targetExitEventObserved ? "exited-without-target-exit-event" :
         "exited-without-queued-quit";
     return JsonPayload(new
@@ -2207,6 +2297,7 @@ static JsonElement FinalizeExactCdbObserverAfterManagedStop(
         gracefulQuitObserved,
         cleanupMarkerObserved,
         targetExitEventObserved,
+        cdbExitedNormally,
         processWasRetained,
         processIdentityRevalidated,
         forced,
@@ -2215,6 +2306,7 @@ static JsonElement FinalizeExactCdbObserverAfterManagedStop(
         cdbExecutablePath = executablePath,
         managedExitTimeUtc = stopResult?.ExitTime,
         cdbExitTimeUtc = observedCdbExitTimeUtc,
+        cdbExitCode = observedCdbExitCode,
         logPath,
     });
 }
@@ -2232,13 +2324,13 @@ static GameProfileStopResult? StopReceiptBoundManagedProcess(
     string expectedTemplateSha256,
     out bool receiptBound,
     out string failure,
-    out long stopInvocationBeginTimestamp,
-    out long targetWaitReturnedTimestamp)
+    out long runnerStopCallBeginTimestamp,
+    out long runnerStopCallReturnedTimestamp)
 {
     receiptBound = false;
     failure = string.Empty;
-    stopInvocationBeginTimestamp = 0;
-    targetWaitReturnedTimestamp = 0;
+    runnerStopCallBeginTimestamp = 0;
+    runnerStopCallReturnedTimestamp = 0;
     if (managed is null)
         return null;
     bool requireWindow = true;
@@ -2261,7 +2353,7 @@ static GameProfileStopResult? StopReceiptBoundManagedProcess(
         expectedTemplateSha256,
         requireWindow,
         out failure);
-    stopInvocationBeginTimestamp = Stopwatch.GetTimestamp();
+    runnerStopCallBeginTimestamp = Stopwatch.GetTimestamp();
     GameProfileStopResult result;
     try
     {
@@ -2272,7 +2364,7 @@ static GameProfileStopResult? StopReceiptBoundManagedProcess(
     }
     finally
     {
-        targetWaitReturnedTimestamp = Stopwatch.GetTimestamp();
+        runnerStopCallReturnedTimestamp = Stopwatch.GetTimestamp();
     }
     bool exactTerminalStop = result.Success && result.ProcessId == managed.ProcessId &&
         result.LiveBeforeStop && result.StopRequested && result.ExitObserved &&
@@ -2462,6 +2554,8 @@ static int RunMorphCanary()
     GameProfileStopResult? stopResult = null;
     JsonElement? cdbAttachResult = null;
     Process? boundCdbProcess = null;
+    FileStream? boundCdbLogStream = null;
+    long cdbLogLengthAtReadiness = -1;
     JsonElement cdbPreStopResult = JsonPayload(new { status = "not-started", receiptBound = false, processBound = false });
     JsonElement cdbCleanupResult = JsonPayload(new { status = "not-started", receiptBound = false, exited = true });
     JsonElement censusResult = JsonPayload(new { status = "not-run", ownedProcessCount = -1, inspectionFailureCount = 0 });
@@ -2473,10 +2567,10 @@ static int RunMorphCanary()
     bool stopReceiptBound = false;
     bool inputDeliveryAttempted = false;
     int ownedProcessCount = -1;
-    long stopInvocationBeginTimestamp = 0;
-    long targetWaitReturnedTimestamp = 0;
-    long cdbFinalizationValidationBeginTimestamp = 0;
-    long runnerCompletionAcceptanceTimestamp = 0;
+    long runnerStopCallBeginTimestamp = 0;
+    long runnerStopCallReturnedTimestamp = 0;
+    long runnerCdbFinalizationValidationBeginTimestamp = 0;
+    long runnerCompletionDecisionTimestamp = 0;
     try
     {
         bool morphCanaryMode = true;
@@ -2589,6 +2683,11 @@ static int RunMorphCanary()
                 requiredLogMarker))
             throw new InvalidOperationException(
                 "CDB observer did not reach receipt-bound marker readiness; refusing input.");
+        boundCdbLogStream = OpenRetainedCdbLogStream(cdbLogPath);
+        cdbLogLengthAtReadiness = boundCdbLogStream.Length;
+        if (!HasExactlyOneLogMarker(boundCdbLogStream, requiredLogMarker))
+            throw new InvalidOperationException(
+                "Retained CDB log identity did not contain the exact readiness marker.");
         for (int i = 0; i < inputSequences.Length; i++)
         {
             if (!ValidateCanaryBinding(
@@ -2706,12 +2805,9 @@ __CANARY_CLEANUP_PHASE_BLOCK__
     bool canaryCopyUnchanged = string.Equals(copiedExecutableHashBefore, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) &&
         string.Equals(copiedExecutableHashAfter, canonicalExecutableSha256, StringComparison.OrdinalIgnoreCase) &&
         string.Equals(copiedExecutableHashBefore, copiedExecutableHashAfter, StringComparison.OrdinalIgnoreCase);
-    bool canaryCdbReady = CdbObserverReady(
-        cdbAttachResult,
-        receiptSha256,
-        expectedCommandSha256,
-        cdbLogPath,
-        requiredLogMarker);
+    bool canaryCdbReady = JsonStringIn(cdbPreStopResult, "status", "ready-for-managed-stop") &&
+        JsonBool(cdbPreStopResult, "receiptBound") &&
+        JsonBool(cdbPreStopResult, "processBound");
     bool canaryFocusedInputSucceeded = role == "noInputControl"
         ? inputResults.Count == 0
         : inputResults.Count == expectedInputSequences.Length && inputResults.All(result =>
@@ -2733,7 +2829,8 @@ __CANARY_CLEANUP_PHASE_BLOCK__
     bool cdbDetached = JsonStringIn(cdbCleanupResult, "status", "exited-after-managed-stop") &&
         JsonBool(cdbCleanupResult, "receiptBound") &&
         JsonBool(cdbCleanupResult, "gracefulQuitObserved") &&
-        JsonBool(cdbCleanupResult, "targetExitEventObserved");
+        JsonBool(cdbCleanupResult, "targetExitEventObserved") &&
+        JsonBool(cdbCleanupResult, "cdbExitedNormally");
     bool managedProcessStopped = stopReceiptBound && stopResult?.Success == true &&
         stopResult.LiveBeforeStop && stopResult.StopRequested && stopResult.ExitObserved &&
         !stopResult.AlreadyGone && stopResult.ExitTime.HasValue;
@@ -2759,22 +2856,22 @@ __CANARY_CLEANUP_OBJECT__
         artifactJson,
         artifactRoot,
         JsonSerializer.Serialize(privateArtifact, new JsonSerializerOptions { WriteIndented = true }));
-    runnerCompletionAcceptanceTimestamp = Stopwatch.GetTimestamp();
-    bool lifecycleMilestonesValid = stopInvocationBeginTimestamp > 0 &&
-        stopInvocationBeginTimestamp < targetWaitReturnedTimestamp &&
-        targetWaitReturnedTimestamp < cdbFinalizationValidationBeginTimestamp &&
-        cdbFinalizationValidationBeginTimestamp < runnerCompletionAcceptanceTimestamp;
+    runnerCompletionDecisionTimestamp = Stopwatch.GetTimestamp();
+    bool runnerLifecycleOrderValid = runnerStopCallBeginTimestamp > 0 &&
+        runnerStopCallBeginTimestamp < runnerStopCallReturnedTimestamp &&
+        runnerStopCallReturnedTimestamp < runnerCdbFinalizationValidationBeginTimestamp &&
+        runnerCdbFinalizationValidationBeginTimestamp < runnerCompletionDecisionTimestamp;
     var lifecycleDiagnostics = new
     {
         schemaVersion = "winui-original-binary-battleengine-morph-identity-canary-private-cleanup-lifecycle.v1",
-        stopInvocationBeginTimestamp,
-        targetWaitReturnedTimestamp,
-        cdbFinalizationValidationBeginTimestamp,
-        runnerCompletionAcceptanceTimestamp,
-        lifecycleMilestonesValid,
+        runnerStopCallBeginTimestamp,
+        runnerStopCallReturnedTimestamp,
+        runnerCdbFinalizationValidationBeginTimestamp,
+        runnerCompletionDecisionTimestamp,
+        runnerLifecycleOrderValid,
         managedForceRequested = stopResult?.ForceRequested,
         exactForceRequestTimestampAvailable = false,
-        limitation = "AppCore does not expose the exact force-request timestamp; the returned ForceRequested fact is retained with before/after stop milestones.",
+        limitation = "These monotonic values prove runner call and validation order only, not target-versus-CDB kernel exit order. AppCore does not expose the exact force-request timestamp; the returned ForceRequested fact is retained with before/after runner stop-call milestones.",
         managedStop = stopResult,
         cdbCleanup = cdbCleanupResult,
     };
@@ -2784,7 +2881,7 @@ __CANARY_CLEANUP_OBJECT__
         JsonSerializer.Serialize(lifecycleDiagnostics, new JsonSerializerOptions { WriteIndented = true }));
     bool succeeded = string.IsNullOrWhiteSpace(failure) && canaryCdbReady && canaryFocusedInputSucceeded &&
         canarySourceUnchanged && canaryCopyUnchanged && keysReleased && cdbDetached &&
-        managedProcessStopped && lifecycleMilestonesValid && censusClear && ownedProcessCount == 0;
+        managedProcessStopped && runnerLifecycleOrderValid && censusClear && ownedProcessCount == 0;
     Console.WriteLine(artifactJson);
     return succeeded ? 0 : 2;
 }

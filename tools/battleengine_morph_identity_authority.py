@@ -55,6 +55,7 @@ REQUIRED_VALIDATION_GATES = (
     r"py -3 tools\start_cdb_server_test.py",
     r"py -3 tools\send_game_window_input_test.py",
     r"py -3 tools\winui_safe_copy_live_runtime_smoke_test.py",
+    r"py -3 tools\cdb_exit_event_cleanup_test.py",
     "npm run test:hard-payload-safety",
     "npm run test:doc-commands",
     "npm run test:md-links",

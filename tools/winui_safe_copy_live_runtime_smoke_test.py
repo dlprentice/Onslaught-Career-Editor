@@ -83,6 +83,19 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
             "BEA/CDB root processes",
             module.morph_authority.REQUIRED_CLEANUP,
         )
+        self.assertIn(
+            r"py -3 tools\cdb_exit_event_cleanup_test.py",
+            module.morph_authority.REQUIRED_VALIDATION_GATES,
+        )
+
+    def test_runtime_tooling_safety_includes_focused_cdb_exit_event_parser_once(self) -> None:
+        scripts = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))["scripts"]
+        aggregate = scripts["test:runtime-tooling-safety"]
+        self.assertEqual(1, aggregate.count(r"py -3 tools\cdb_exit_event_cleanup_test.py"))
+        self.assertIn("npm run test:runtime-profile-helper-safety", aggregate)
+        self.assertIn("npm run test:runtime-cdb-helper-safety", aggregate)
+        self.assertIn("npm run test:runtime-input-helper-safety", aggregate)
+        self.assertIn("npm run test:winui-safe-copy-live-runtime-smoke-helper", aggregate)
 
     def test_morph_canary_live_boundary_requires_hash_bound_authority_controls(self) -> None:
         module, missing_args = self.parse(
@@ -494,7 +507,12 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn("CdbCanaryArgumentsMatch", generated)
         self.assertIn("effectiveArguments", generated)
         self.assertIn("TryReadFinalizedCdbExitEvidence", body)
-        self.assertEqual(generated.count("TryReadFinalizedCdbExitEvidence(logPath, stopResult.ProcessId"), 1)
+        self.assertEqual(
+            generated.count(
+                "TryReadFinalizedCdbExitEvidence(boundCdbLogStream, cdbLogLengthAtReadiness, stopResult.ProcessId"
+            ),
+            1,
+        )
         finalized_reader = re.search(
             r"static bool TryReadFinalizedCdbExitEvidence\b(?P<body>.*?)(?=\nstatic\s)",
             generated,
@@ -502,8 +520,9 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         )
         self.assertIsNotNone(finalized_reader)
         reader_body = finalized_reader.group("body")
-        self.assertIn("FileShare.Read);", reader_body)
-        self.assertNotIn("FileShare.ReadWrite", reader_body)
+        self.assertIn("FileStream retainedLogStream", reader_body)
+        self.assertNotIn("File.Open", reader_body)
+        self.assertNotIn("FileStream stream = new", reader_body)
         self.assertIn("MORPH_CANARY_LASTEVENT_BEGIN", reader_body)
         self.assertIn("MORPH_CANARY_LASTEVENT_END", reader_body)
         self.assertIn("Exit process 0:", reader_body)
@@ -512,7 +531,12 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertNotIn("cdbExitTimeUtc <= managedExitTimeUtc", body)
         self.assertNotRegex(body, r"cdbExitTimeUtc\s*[<>]=?\s*managedExitTimeUtc")
         self.assertIn("targetExitEventObserved", body)
+        self.assertIn("observedCdbExitCode = process.ExitCode", body)
+        self.assertIn("bool cdbExitedNormally = exited && observedCdbExitCode == 0", body)
+        self.assertIn("cdbExitedNormally && finalizedLogAccepted", body)
+        self.assertIn("cdbExitCode = observedCdbExitCode", body)
         self.assertIn('status = graceful ? "exited-after-managed-stop"', body)
+        self.assertIn('"cdb-exited-nonzero"', body)
         self.assertIn('"forced-stopped-after-timeout"', body)
         self.assertLess(body.index("WaitForExit"), body.index("Kill(entireProcessTree: false)"))
         self.assertNotIn("detached-exited", body)
@@ -526,26 +550,53 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn('"exited-after-managed-stop"', acceptance)
         self.assertIn('JsonBool(cdbCleanupResult, "gracefulQuitObserved")', acceptance)
         self.assertIn('JsonBool(cdbCleanupResult, "targetExitEventObserved")', acceptance)
+        self.assertIn('JsonBool(cdbCleanupResult, "cdbExitedNormally")', acceptance)
         self.assertNotIn("forced-stopped-after-timeout", acceptance)
 
-    def test_generated_canary_cleanup_records_private_monotonic_lifecycle_milestones(self) -> None:
+    def test_generated_canary_retains_exact_log_stream_without_delete_sharing(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory(prefix="morph-retained-cdb-log-test-") as temp:
+            project = module.write_runner(Path(temp) / "runner")
+            generated = project.with_name("Program.cs").read_text(encoding="utf-8")
+
+        opener = re.search(
+            r"static FileStream OpenRetainedCdbLogStream\b(?P<body>.*?)(?=\nstatic\s)",
+            generated,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(opener)
+        self.assertIn("FileShare.ReadWrite", opener.group("body"))
+        self.assertNotIn("FileShare.Delete", opener.group("body"))
+        readiness = generated.index("CDB observer did not reach receipt-bound marker readiness")
+        retained = generated.index("boundCdbLogStream = OpenRetainedCdbLogStream", readiness)
+        first_input = generated.index("for (int i = 0; i < inputSequences.Length; i++)", retained)
+        self.assertLess(readiness, retained)
+        self.assertLess(retained, first_input)
+        self.assertIn("FileStream? boundCdbLogStream", generated)
+        self.assertIn("boundCdbLogStream?.Dispose()", generated)
+
+    def test_generated_canary_cleanup_records_private_runner_order_milestones(self) -> None:
         module = self.live_smoke_module()
         with tempfile.TemporaryDirectory(prefix="morph-lifecycle-milestone-test-") as temp:
             project = module.write_runner(Path(temp) / "runner")
             generated = project.with_name("Program.cs").read_text(encoding="utf-8")
 
         self.assertIn("Stopwatch.GetTimestamp()", generated)
-        self.assertIn("stopInvocationBeginTimestamp", generated)
-        self.assertIn("targetWaitReturnedTimestamp", generated)
-        self.assertIn("cdbFinalizationValidationBeginTimestamp", generated)
-        self.assertIn("runnerCompletionAcceptanceTimestamp", generated)
+        self.assertIn("runnerStopCallBeginTimestamp", generated)
+        self.assertIn("runnerStopCallReturnedTimestamp", generated)
+        self.assertIn("runnerCdbFinalizationValidationBeginTimestamp", generated)
+        self.assertIn("runnerCompletionDecisionTimestamp", generated)
+        self.assertNotIn("targetWaitReturnedTimestamp", generated)
+        self.assertNotIn("runnerCompletionAcceptanceTimestamp", generated)
         self.assertIn("stopResult?.ForceRequested", generated)
         self.assertIn("AppCore does not expose the exact force-request timestamp", generated)
+        self.assertIn("runner call and validation order only", generated)
+        self.assertNotIn("target wait returns", generated.lower())
         self.assertRegex(
             generated,
-            r"stopInvocationBeginTimestamp\s*<\s*targetWaitReturnedTimestamp[\s\S]*?"
-            r"targetWaitReturnedTimestamp\s*<\s*cdbFinalizationValidationBeginTimestamp[\s\S]*?"
-            r"cdbFinalizationValidationBeginTimestamp\s*<\s*runnerCompletionAcceptanceTimestamp",
+            r"runnerStopCallBeginTimestamp\s*<\s*runnerStopCallReturnedTimestamp[\s\S]*?"
+            r"runnerStopCallReturnedTimestamp\s*<\s*runnerCdbFinalizationValidationBeginTimestamp[\s\S]*?"
+            r"runnerCdbFinalizationValidationBeginTimestamp\s*<\s*runnerCompletionDecisionTimestamp",
         )
         private_artifact = re.search(
             r"var privateArtifact = new\b(?P<body>.*?)(?=\n\s*WriteNewCanaryText)",
@@ -890,14 +941,15 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         )
         self.assertIsNotNone(match)
         body = match.group("body")
-        self.assertIn("FileMode.Open", body)
-        self.assertIn("FileAccess.Read", body)
-        self.assertIn("FileShare.ReadWrite", body)
+        self.assertIn("FileStream retainedLogStream", body)
+        self.assertIn("retainedLogStream.Seek(0, SeekOrigin.Begin)", body)
+        self.assertIn("leaveOpen: true", body)
         self.assertIn("detectEncodingFromByteOrderMarks: true", body)
         self.assertIn("string.Equals(line.Trim(), marker, StringComparison.Ordinal)", body)
         self.assertIn("if (count > 1)", body)
         self.assertIn("return count == 1;", body)
         self.assertNotIn("File.ReadLines", body)
+        self.assertNotIn("FileMode.Open", body)
 
     def test_generated_morph_runner_preserves_private_failure_diagnostic(self) -> None:
         module = self.live_smoke_module()
