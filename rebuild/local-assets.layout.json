@@ -2,7 +2,6 @@
   "schemaVersion": "onslaught-rebuild-local-godot-assets.v1",
   "description": "Tracked layout contract for ignored local-lab/rebuild-godot retail preview assets. Payloads must never be committed.",
   "defaultRootRelativeToRepo": "local-lab/rebuild-godot",
-  "envVar": "ONSLAUGHT_REBUILD_GODOT_ASSETS",
   "cliFlag": "--local-assets=",
   "manifestFileName": "manifest.json",
   "directories": [
@@ -28,10 +27,10 @@
       "yOffsetMeters": 0.0
     }
   },
-  "acceptedMeshExtensions": [".glb", ".gltf", ".obj"],
+  "acceptedMeshExtensions": [".glb", ".obj"],
   "notes": [
     "Smoke mode always keeps procedural synthetics so goldens and color anchors stay valid.",
-    "FBX from AYA export should be converted to GLB/GLTF or OBJ before runtime load.",
+    "FBX from AYA export must be converted to self-contained GLB or bounded OBJ before manifest activation.",
     "Core movement remains the deterministic InteractiveSession adapter; presentation follows snapshots only."
   ]
 }

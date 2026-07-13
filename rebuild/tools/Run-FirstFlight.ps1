@@ -3,7 +3,6 @@
 [CmdletBinding()]
 param(
     [switch]$Offline,
-    [switch]$LocalAssets,
     [string]$LocalAssetsRoot = ''
 )
 
@@ -20,14 +19,11 @@ $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\OnslaughtRebu
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 
 $userArgs = @()
-if ($LocalAssets) {
-    if ([string]::IsNullOrWhiteSpace($LocalAssetsRoot)) {
-        $LocalAssetsRoot = Join-Path $repoRoot 'local-lab\rebuild-godot'
-    }
+if (-not [string]::IsNullOrWhiteSpace($LocalAssetsRoot)) {
+    Import-Module (Join-Path $PSScriptRoot 'LocalAssetWorkspace.psm1') -Force
     $LocalAssetsRoot = [IO.Path]::GetFullPath($LocalAssetsRoot)
-    if (-not (Test-Path -LiteralPath $LocalAssetsRoot)) {
-        throw "Local assets root not found: $LocalAssetsRoot. Run Initialize-LocalGodotAssets.ps1 / Bootstrap-LocalGodotAssets.ps1 first."
-    }
+    Assert-LocalAssetOutputRoot -RepoRoot $repoRoot -OutputRoot $LocalAssetsRoot | Out-Null
+    if (-not (Test-Path -LiteralPath (Join-Path $LocalAssetsRoot 'manifest.json') -PathType Leaf)) { throw "Local asset manifest not found under exact opt-in root: $LocalAssetsRoot" }
     $userArgs += "--local-assets=$LocalAssetsRoot"
 }
 

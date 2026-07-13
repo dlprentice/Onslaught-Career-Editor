@@ -26,11 +26,18 @@ Use these names when possible:
 | `save-attempts/` or `local-saves/` | Local saves and options payloads used for testing. |
 | `local-ghidra/`, `ghidra-local/`, or `Ghidra/` | Full local Ghidra projects, databases, local-only exports, and backups. |
 | `local-proofs/` | Bulky runtime proof bundles, screenshots, traces, CDB logs, and frame captures. |
-| `local-lab/` | Miscellaneous local-only lab material that is too large or payload-like for git. Includes `local-lab/rebuild-godot/` (optional First Flight retail mesh preview) and `local-lab/bea-assets/` (BYO extraction output). |
+| `local-lab/` | Miscellaneous local-only lab material that is too large or payload-like for git. `local-lab/rebuild-godot/` is the only allowed init/bootstrap/export output workspace for optional First Flight retail-derived presentation. |
 | `mcps/` | Local MCP/tooling sandboxes and generated local integration payloads. |
 | `GameProfiles/` / `PatchBench/` | Copied game profiles and patch-bench runtime output. |
 
 These paths are intentionally ignored by `.gitignore`.
+
+The local rebuild asset workflow reads a user-supplied trusted canonical retail
+mirror but never writes to it. Init, export, conversion staging, role activation,
+and manifests stay under `local-lab/rebuild-godot/` or a validated child.
+Outputs must not overlap game/source/`BEA.exe` roots, tracked source, junctions,
+symlinks, or hardlink aliases. FBX is staging input only; manifests activate
+explicit self-contained GLB or bounded OBJ roles.
 
 ## Tracked Public Material
 

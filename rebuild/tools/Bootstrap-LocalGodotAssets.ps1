@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Stages candidate Aquila/terrain meshes from a local BEA asset export into
-# local-lab/rebuild-godot and refreshes manifest.json. Does not commit payloads.
 
 [CmdletBinding()]
 param(
     [string]$RepoRoot = '',
+    [string]$AssetRoot = '',
     [string]$ExportRoot = '',
+    [string]$PlayerMesh = '',
+    [string]$TerrainMesh = '',
     [string]$PlayerSearch = 'aquila',
     [string]$TerrainSearch = 'ground',
     [switch]$Initialize
@@ -13,128 +14,59 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-
-if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
-    $RepoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
-} else {
-    $RepoRoot = [IO.Path]::GetFullPath($RepoRoot)
-}
-
-if ($Initialize) {
-    & (Join-Path $PSScriptRoot 'Initialize-LocalGodotAssets.ps1') -RepoRoot $RepoRoot | Out-Null
-}
-
-$assetRoot = Join-Path $RepoRoot 'local-lab\rebuild-godot'
-if (-not (Test-Path -LiteralPath $assetRoot)) {
-    & (Join-Path $PSScriptRoot 'Initialize-LocalGodotAssets.ps1') -RepoRoot $RepoRoot | Out-Null
-}
-
-if ([string]::IsNullOrWhiteSpace($ExportRoot)) {
-    $ExportRoot = Join-Path $RepoRoot 'local-lab\bea-assets\export'
-}
+Import-Module (Join-Path $PSScriptRoot 'LocalAssetWorkspace.psm1') -Force
+$RepoRoot = if ([string]::IsNullOrWhiteSpace($RepoRoot)) { [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..')) } else { [IO.Path]::GetFullPath($RepoRoot) }
+if ([string]::IsNullOrWhiteSpace($AssetRoot)) { $AssetRoot = Join-Path $RepoRoot 'local-lab\rebuild-godot' }
+$AssetRoot = [IO.Path]::GetFullPath($AssetRoot)
+if ($Initialize) { & (Join-Path $PSScriptRoot 'Initialize-LocalGodotAssets.ps1') -RepoRoot $RepoRoot -AssetRoot $AssetRoot | Out-Null }
+if (-not (Test-Path -LiteralPath $AssetRoot -PathType Container)) { throw "Initialize the exact local asset root first: $AssetRoot" }
+if ([string]::IsNullOrWhiteSpace($ExportRoot)) { $ExportRoot = Join-Path $AssetRoot 'export' }
 $ExportRoot = [IO.Path]::GetFullPath($ExportRoot)
+Assert-NoReparseTraversal -Path $ExportRoot | Out-Null
+if (-not (Test-Path -LiteralPath $ExportRoot -PathType Container)) { throw "Export root not found: $ExportRoot" }
 
-$meshRoots = @(
-    (Join-Path $ExportRoot 'asset_export\loose_meshes'),
-    (Join-Path $ExportRoot 'asset_export\embedded_meshes'),
-    (Join-Path $ExportRoot 'material-package\rebuild-mesh\models')
-) | Where-Object { Test-Path -LiteralPath $_ }
-
-function Find-PreferredMesh {
-    param(
-        [string[]]$Roots,
-        [string]$Needle,
-        [string[]]$Extensions
-    )
-
-    foreach ($root in $Roots) {
-        foreach ($ext in $Extensions) {
-            $hit = Get-ChildItem -LiteralPath $root -Recurse -File -Filter "*$ext" -ErrorAction SilentlyContinue |
-                Where-Object { $_.BaseName -match $Needle } |
-                Select-Object -First 1
-            if ($hit) {
-                return $hit
-            }
-        }
+$meshRoots = @('asset_export\loose_meshes', 'asset_export\embedded_meshes', 'material-package\rebuild-mesh\models') | ForEach-Object { Join-Path $ExportRoot $_ } | Where-Object { Test-Path -LiteralPath $_ -PathType Container }
+function Resolve-RoleMesh([string]$ExplicitPath, [string]$Needle, [string]$Role) {
+    if (-not [string]::IsNullOrWhiteSpace($ExplicitPath)) {
+        $candidate = if ([IO.Path]::IsPathFullyQualified($ExplicitPath)) { [IO.Path]::GetFullPath($ExplicitPath) } else { [IO.Path]::GetFullPath((Join-Path $ExportRoot $ExplicitPath)) }
+        if (-not $candidate.StartsWith($ExportRoot.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) { throw "$Role mesh escapes the export root: $candidate" }
+        return Get-Item -LiteralPath $candidate
     }
+    $matches = @($meshRoots | ForEach-Object { Get-ChildItem -LiteralPath $_ -Recurse -File -ErrorAction Stop } | Where-Object { $_.Extension -in @('.glb', '.obj') -and $_.BaseName -match $Needle })
+    if ($matches.Count -eq 0) { throw "No converted GLB/OBJ candidate matched role '$Role'. Convert/stage FBX, then pass -${Role}Mesh explicitly." }
+    if ($matches.Count -ne 1) { throw "Ambiguous $Role role: $($matches.Count) converted candidates matched. Pass -${Role}Mesh explicitly." }
+    return $matches[0]
+}
 
-    foreach ($root in $Roots) {
-        foreach ($ext in $Extensions) {
-            $hit = Get-ChildItem -LiteralPath $root -Recurse -File -Filter "*$ext" -ErrorAction SilentlyContinue |
-                Select-Object -First 1
-            if ($hit) {
-                return $hit
-            }
-        }
+$player = Resolve-RoleMesh -ExplicitPath $PlayerMesh -Needle $PlayerSearch -Role 'Player'
+$terrain = Resolve-RoleMesh -ExplicitPath $TerrainMesh -Needle $TerrainSearch -Role 'Terrain'
+if ([string]::Equals($player.FullName, $terrain.FullName, [StringComparison]::OrdinalIgnoreCase)) { throw 'Player and terrain roles must resolve to distinct mesh files.' }
+foreach ($mesh in @($player, $terrain)) {
+    Assert-RegularSingleLinkFile -Path $mesh.FullName -Label 'converted role mesh' | Out-Null
+    if ($mesh.Extension.ToLowerInvariant() -notin @('.glb', '.obj')) { throw "Manifest activation supports only converted GLB/OBJ: $($mesh.FullName)" }
+}
+
+$playerName = 'aquila' + $player.Extension.ToLowerInvariant()
+$terrainName = 'ground' + $terrain.Extension.ToLowerInvariant()
+$playerDest = Join-Path $AssetRoot "player\aquila\$playerName"
+$terrainDest = Join-Path $AssetRoot "terrain\subset\$terrainName"
+$manifestPath = Join-Path $AssetRoot 'manifest.json'
+$destinations = @($playerDest, $terrainDest, $manifestPath)
+Assert-LocalAssetWritePlan -RepoRoot $RepoRoot -OutputRoot $AssetRoot -ForbiddenRoots @((Join-Path $RepoRoot 'rebuild'), (Join-Path $RepoRoot 'references')) -DestinationPaths $destinations | Out-Null
+$lease = $null
+try {
+    $lease = [Onslaught.DirectoryLeaseSet]::Open($RepoRoot, [string[]]@((Split-Path -Parent $playerDest), (Split-Path -Parent $terrainDest)))
+    Copy-GuardedFile -RepoRoot $RepoRoot -OutputRoot $AssetRoot -Source $player.FullName -Destination $playerDest
+    Copy-GuardedFile -RepoRoot $RepoRoot -OutputRoot $AssetRoot -Source $terrain.FullName -Destination $terrainDest
+    $manifest = [ordered]@{
+        schemaVersion = 'onslaught-rebuild-local-godot-assets-manifest.v1'; presentationMode = 'local-retail-preview'; nonParityClaim = $true
+        player = [ordered]@{ mesh = "player/aquila/$playerName"; scale = 1.0; yawDegrees = 0.0; yOffsetMeters = 0.0 }
+        terrain = [ordered]@{ mesh = "terrain/subset/$terrainName"; scale = 1.0; yawDegrees = 0.0; yOffsetMeters = 0.0 }
     }
-
-    return $null
+    Write-GuardedTextFile -RepoRoot $RepoRoot -OutputRoot $AssetRoot -Destination $manifestPath -Content ($manifest | ConvertTo-Json -Depth 6)
 }
-
-$preferredExt = @('.glb', '.gltf', '.obj', '.fbx')
-$playerHit = Find-PreferredMesh -Roots $meshRoots -Needle $PlayerSearch -Extensions $preferredExt
-$terrainHit = Find-PreferredMesh -Roots $meshRoots -Needle $TerrainSearch -Extensions $preferredExt
-
-$playerDestDir = Join-Path $assetRoot 'player\aquila'
-$terrainDestDir = Join-Path $assetRoot 'terrain\subset'
-$stagingDir = Join-Path $assetRoot 'staging\from-export'
-New-Item -ItemType Directory -Force -Path $playerDestDir, $terrainDestDir, $stagingDir | Out-Null
-
-$playerRelative = $null
-$terrainRelative = $null
-
-if ($playerHit) {
-    $destName = 'aquila' + $playerHit.Extension.ToLowerInvariant()
-    $dest = Join-Path $playerDestDir $destName
-    Copy-Item -LiteralPath $playerHit.FullName -Destination $dest -Force
-    Copy-Item -LiteralPath $playerHit.FullName -Destination (Join-Path $stagingDir $playerHit.Name) -Force
-    $playerRelative = "player/aquila/$destName"
-    Write-Host "Staged player mesh: $($playerHit.FullName) -> $dest"
+finally {
+    if ($null -ne $lease) { $lease.Dispose() }
 }
-
-if ($terrainHit) {
-    $destName = 'ground' + $terrainHit.Extension.ToLowerInvariant()
-    $dest = Join-Path $terrainDestDir $destName
-    Copy-Item -LiteralPath $terrainHit.FullName -Destination $dest -Force
-    Copy-Item -LiteralPath $terrainHit.FullName -Destination (Join-Path $stagingDir $terrainHit.Name) -Force
-    $terrainRelative = "terrain/subset/$destName"
-    Write-Host "Staged terrain mesh: $($terrainHit.FullName) -> $dest"
-}
-
-if (-not $playerRelative -and -not $terrainRelative) {
-    Write-Warning "No export meshes found under $ExportRoot. Workspace initialized; place .glb/.gltf/.obj manually."
-}
-
-$manifest = [ordered]@{
-    schemaVersion = 'onslaught-rebuild-local-godot-assets-manifest.v1'
-    presentationMode = 'local-retail-preview'
-    nonParityClaim = $true
-}
-
-if ($playerRelative) {
-    $manifest.player = [ordered]@{
-        mesh = $playerRelative
-        scale = 1.0
-        yawDegrees = 0.0
-        yOffsetMeters = 0.0
-    }
-}
-
-if ($terrainRelative) {
-    $manifest.terrain = [ordered]@{
-        mesh = $terrainRelative
-        scale = 1.0
-        yawDegrees = 0.0
-        yOffsetMeters = 0.0
-    }
-}
-
-$manifestPath = Join-Path $assetRoot 'manifest.json'
-($manifest | ConvertTo-Json -Depth 6) | Set-Content -LiteralPath $manifestPath -Encoding utf8
-Write-Host "Wrote $manifestPath"
-
-if (($playerRelative -and $playerRelative.EndsWith('.fbx')) -or ($terrainRelative -and $terrainRelative.EndsWith('.fbx'))) {
-    Write-Warning "FBX staged. First Flight runtime loads .glb/.gltf/.obj only; convert FBX before run:rebuild-godot:local."
-}
-
-Write-Output $assetRoot
+Write-Host "Activated explicit local player and terrain roles in $manifestPath"
+Write-Output $AssetRoot

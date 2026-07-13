@@ -6,39 +6,46 @@ using Godot;
 namespace OnslaughtRebuild.GodotClient;
 
 /// <summary>
-/// Loads local-only preview meshes for First Flight. Supports GLB/GLTF via
-/// Godot's GLTFDocument and a minimal triangle OBJ path for AppCore rebuild-mesh
+/// Loads local-only preview meshes for First Flight. Supports self-contained GLB via
+/// Godot's GLTFDocument and a bounded triangle OBJ path for AppCore rebuild-mesh
 /// outputs. Never mutates Core state.
 /// </summary>
 internal static class LocalAssetMeshLoader
 {
     public static Node3D? TryLoadMeshNode(string absolutePath, LocalMeshRef settings, string nodeName)
     {
-        if (string.IsNullOrWhiteSpace(absolutePath) || !File.Exists(absolutePath))
+        LocalMeshValidation validation = LocalMeshSafety.ValidateFile(absolutePath);
+        if (!validation.IsValid)
         {
+            GD.PushWarning($"First Flight rejected local mesh: {validation.Error}");
             return null;
         }
 
-        string extension = Path.GetExtension(absolutePath).ToLowerInvariant();
-        Node3D? loaded = extension switch
+        try
         {
-            ".glb" or ".gltf" => TryLoadGltf(absolutePath),
-            ".obj" => TryLoadObj(absolutePath),
-            _ => null,
-        };
+            using var lease = new FileStream(absolutePath, FileMode.Open, System.IO.FileAccess.Read, FileShare.Read);
+            string extension = Path.GetExtension(absolutePath).ToLowerInvariant();
+            Node3D? loaded = extension switch
+            {
+                ".glb" => TryLoadGltf(absolutePath),
+                ".obj" => TryLoadObj(lease, absolutePath),
+                _ => null,
+            };
 
-        if (loaded is null)
+            if (loaded is null) return null;
+
+            var wrapper = new Node3D { Name = nodeName };
+            wrapper.Scale = new Vector3(settings.Scale, settings.Scale, settings.Scale);
+            wrapper.RotationDegrees = new Vector3(0f, settings.YawDegrees, 0f);
+            wrapper.Position = new Vector3(0f, settings.YOffsetMeters, 0f);
+            wrapper.AddChild(loaded);
+            return wrapper;
+        }
+        catch (Exception exception) when (exception is IOException or InvalidDataException or FormatException or OverflowException or ArgumentException)
         {
+            GD.PushWarning($"First Flight local mesh load failed: {exception.Message}");
             return null;
         }
-
-        var wrapper = new Node3D { Name = nodeName };
-        float scale = settings.Scale <= 0f ? 1f : settings.Scale;
-        wrapper.Scale = new Vector3(scale, scale, scale);
-        wrapper.RotationDegrees = new Vector3(0f, settings.YawDegrees, 0f);
-        wrapper.Position = new Vector3(0f, settings.YOffsetMeters, 0f);
-        wrapper.AddChild(loaded);
-        return wrapper;
     }
 
     private static Node3D? TryLoadGltf(string absolutePath)
@@ -73,7 +80,7 @@ internal static class LocalAssetMeshLoader
         return wrapper;
     }
 
-    private static Node3D? TryLoadObj(string absolutePath)
+    private static Node3D? TryLoadObj(Stream stream, string absolutePath)
     {
         var positions = new List<Vector3>();
         var normals = new List<Vector3>();
@@ -82,7 +89,9 @@ internal static class LocalAssetMeshLoader
         surfaceTool.Begin(Mesh.PrimitiveType.Triangles);
 
         bool hasFaces = false;
-        foreach (string rawLine in File.ReadLines(absolutePath))
+        using var reader = new StreamReader(stream, leaveOpen: true);
+        string? rawLine;
+        while ((rawLine = reader.ReadLine()) is not null)
         {
             string line = rawLine.Trim();
             if (line.Length == 0 || line.StartsWith('#') || line.StartsWith("mtllib", StringComparison.OrdinalIgnoreCase) ||

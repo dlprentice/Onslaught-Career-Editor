@@ -54,23 +54,30 @@ First Flight starts in a resizable 1280x720 window with a supported minimum of
 Destroy the three procedural sentries. The HUD reports mode, objective, energy,
 shield, and hull.
 
-## Optional local retail mesh preview
+## Optional local retail-derived presentation
 
-Ignored BYO assets can replace the synthetic Aquila stand-in and ground plane
-without changing Core simulation:
+Ignored, user-extracted BYO assets can replace the synthetic Aquila stand-in
+and ground plane without changing Core or Client simulation. This is a
+trusted-local workflow for canonical retail inputs, not an untrusted-file
+service, redistribution path, or parity/provenance proof.
 
 ```powershell
 npm run init:rebuild-godot-assets
 npm run export:local-bea-assets
+# convert exported FBX to self-contained GLB or bounded OBJ, then select
+# exactly one player mesh and one terrain mesh:
 npm run bootstrap:rebuild-godot-assets
-# convert staged .fbx to .glb/.obj if needed, then:
 npm run run:rebuild-godot:local
 ```
 
-Assets stay under `local-lab/` (see `LOCAL_LAB_OVERLAY.md` and
-`rebuild/local-assets.layout.json`). Smoke mode always keeps procedural
-synthetics so deterministic acceptance stays unchanged. Local preview is
-explicitly non-parity.
+All generated/staged files stay under the ignored
+`local-lab/rebuild-godot/` workspace (see `LOCAL_LAB_OVERLAY.md` and
+`rebuild/local-assets.layout.json`). FBX may be staged but is never activated;
+runtime support is limited to self-contained GLB and bounded OBJ. Ordinary run
+and smoke commands stay synthetic; the dedicated local command supplies the
+exact `--local-assets` root. Failed roles keep procedural geometry, and the HUD
+describes only roles that loaded. Local assets are never simulation truth,
+redistribution material, or parity evidence.
 
 ## Verify
 
@@ -91,7 +98,8 @@ explicit `--no-verify` hash-generation run.
 
 `npm run test:rebuild` is the ordinary deterministic contract gate. It runs
 Core tests, interactive-adapter tests, hostile toolchain-manifest/extraction
-and process-lifecycle tests, and smoke-evidence validator tests. It does not
+and process-lifecycle tests, smoke-evidence validator tests, and focused local
+asset manifest/mesh/workspace safety tests. It does not
 invoke the Godot downloader or open a native window; normal .NET restore may
 still use configured package sources when dependencies are not cached.
 `npm run test:rebuild-godot-smoke` is the separate native acceptance smoke. It

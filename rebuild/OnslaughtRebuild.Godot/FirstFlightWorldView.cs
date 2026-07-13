@@ -31,6 +31,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     private bool _cameraInitialized;
     private float _modeBlend;
     private bool _localPlayerVisual;
+    private bool _localTerrainVisual;
     private LocalPresentationConfig? _localPresentation;
 
     public int TargetVisualCount => _targets.Count;
@@ -39,7 +40,7 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public bool PlayerVisualPresent => IsInstanceValid(_playerRoot);
 
-    public bool UsingLocalPresentation => _localPresentation is not null;
+    public LocalPresentationLoadStatus LocalPresentationStatus => new(_localPlayerVisual, _localTerrainVisual);
 
     public void Initialize(WorldSnapshot snapshot, LocalPresentationConfig? localPresentation = null)
     {
@@ -131,6 +132,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             if (terrain is not null)
             {
                 AddChild(terrain);
+                _localTerrainVisual = true;
                 BuildArenaBoundariesOnly();
                 return;
             }
@@ -416,4 +418,9 @@ public sealed partial class FirstFlightWorldView : Node3D
         MeshInstance3D Beacon,
         MeshInstance3D Marker,
         StandardMaterial3D Material);
+}
+
+public readonly record struct LocalPresentationLoadStatus(bool PlayerLoaded, bool TerrainLoaded)
+{
+    public bool AnyLoaded => PlayerLoaded || TerrainLoaded;
 }

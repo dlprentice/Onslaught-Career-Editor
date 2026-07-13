@@ -34,4 +34,9 @@
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\OnslaughtRebuild.Godot\LocalPresentationConfig.cs" Link="GodotContract\LocalPresentationConfig.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\LocalMeshSafety.cs" Link="GodotContract\LocalMeshSafety.cs" />
+  </ItemGroup>
+
 </Project>

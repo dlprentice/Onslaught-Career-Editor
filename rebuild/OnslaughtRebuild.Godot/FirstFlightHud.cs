@@ -31,7 +31,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         IsInstanceValid(_energyBar) &&
         IsInstanceValid(_controlsPanel);
 
-    public void Initialize(bool localRetailPreview = false)
+    public void Initialize(LocalPresentationLoadStatus localPresentation = default)
     {
         var root = new Control
         {
@@ -42,7 +42,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         };
         AddChild(root);
 
-        BuildIdentityPanel(root, localRetailPreview);
+        BuildIdentityPanel(root, localPresentation);
         BuildObjectivePanel(root);
         BuildModePanel(root);
         BuildControlsPanel(root);
@@ -100,7 +100,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         _controlsPanel.Modulate = color;
     }
 
-    private void BuildIdentityPanel(Control root, bool localRetailPreview)
+    private void BuildIdentityPanel(Control root, LocalPresentationLoadStatus localPresentation)
     {
         var panel = CreatePanel("IdentityPanel");
         panel.OffsetLeft = 24f;
@@ -114,9 +114,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         panel.AddChild(stack);
         stack.AddChild(CreateLabel("FIRST FLIGHT", 22, TextPrimary));
         stack.AddChild(CreateLabel(
-            localRetailPreview
-                ? "Local retail mesh preview | non-parity"
-                : "Synthetic arena | RE-informed prototype",
+            DescribePresentation(localPresentation),
             13,
             TextMuted));
 
@@ -124,6 +122,14 @@ public sealed partial class FirstFlightHud : CanvasLayer
         _shieldBar = AddResourceRow(stack, "SHIELD", Shield);
         _hullBar = AddResourceRow(stack, "HULL", Hull);
     }
+
+    private static string DescribePresentation(LocalPresentationLoadStatus status) => status switch
+    {
+        { PlayerLoaded: true, TerrainLoaded: true } => "Local retail-derived player + terrain | non-parity",
+        { PlayerLoaded: true } => "Local retail-derived player | synthetic terrain | non-parity",
+        { TerrainLoaded: true } => "Synthetic player | local retail-derived terrain | non-parity",
+        _ => "Synthetic arena | RE-informed prototype",
+    };
 
     private void BuildObjectivePanel(Control root)
     {

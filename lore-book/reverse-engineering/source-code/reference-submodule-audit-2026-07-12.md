@@ -16,8 +16,10 @@ program and neither is allowed to override Steam binary or runtime evidence.
 | AYAResourceExtractor | `https://github.com/dlprentice/AYAResourceExtractor.git` | `53b10b083b59cfd7e72849c15bec8b608eaf8a23` | `stuart73/AYAResourceExtractor` `master` (`4e04952`) plus one DDS wrapper copy-bounds fix |
 
 The Onslaught fork matches Stuart with zero ahead/behind. The AYA fork is ahead
-by exactly one intentional commit: correct `width*height` copy bounds and null/
-size guards in `DDSTextureUncompress.cpp` (upstream used `height*height`). These
+by exactly one intentional commit: correct `width*height` rectangular-output
+copy bounds and add narrow null/size guards in `DDSTextureUncompress.cpp`
+(upstream used `height*height`). This is not complete malformed/untrusted DDS
+bounds safety. These
 facts were checked from commit ancestry and diffs, not inferred from repository
 names.
 
@@ -25,7 +27,7 @@ names.
 
 | Area | Current finding |
 | --- | --- |
-| Inventory | 110 Git-tracked files: 52 `.cpp`, 54 `.h`, and 4 repository/support files. The older 111-file manifest counted the submodule worktree's `.git` control file as source inventory. |
+| Inventory | 108 Git tree entries at `5352a81`: 52 `.cpp`, 54 `.h`, and 2 repository/support files, from exact `git ls-tree -r HEAD --name-only` output. |
 | Build posture | No solution, project, make, or build-system file is present. Across tracked C/C++ files, 254 distinct quoted include targets are referenced and 202 are absent from the supplied tree using case-insensitive path/basename matching. This is an incomplete architecture corpus, not a buildable game checkout. |
 | Behavioral use | Class ownership, subsystem relationships, candidate method names, and source-order logic are useful hypotheses. Steam `BEA.exe` static evidence and copied-runtime observation decide released behavior. |
 | License posture | A root GPLv3 text is present. Four Direct3D-derived files also carry Microsoft copyright notices. The root license must not be treated as erasing file-level notices. |
@@ -35,11 +37,11 @@ names.
 
 | Area | Current finding |
 | --- | --- |
-| Inventory | 74 Git-tracked files, including 24 C# files, 30 C/C++ files, four `.csproj`, three `.vcxproj`, one solution, and the tracked `BoxWithTextures.fbx` template. The older 75-file manifest likewise counted the submodule `.git` control file. |
+| Inventory | 73 Git tree entries at `53b10b0`, including 24 C# files, 30 C/C++ files, four `.csproj`, three `.vcxproj`, one solution, and the tracked `BoxWithTextures.fbx` template, from exact `git ls-tree -r HEAD --name-only` output. |
 | Build posture | Windows/Visual Studio 2022, v143 C++/CLI, Windows SDK, .NET 6 Windows, and Win32/x86 are required. The repo harness is .NET 10/x86 but reflection-loads the legacy `AYAResourceExtractor.dll`, `DDSTextureUncompress.dll`, and `Fbx.dll`. A fresh solution build on this workstation fails with `MSB4278` because `Microsoft.Cpp.Default.props` / `VCTargetsPath` is unavailable; the C# FBX project builds, but this is not a reproducible native extractor build. |
 | Supported lane | PC model `.aya` decompression, static mesh parsing, texture lookup/decompression, PNG output, and ASCII/binary FBX output. |
 | Known format gaps | The upstream README disclaims full model coverage, flags some wrong normals, no single-primitive multitexture blending, static single-object output, and no animation or bone export. Current corpus counts prove breadth only; they do not prove semantic fidelity or format completeness. |
-| Reproducibility gap | `export_game_assets.py` preflights the AYA and DDS assemblies, while the harness also requires `Fbx.dll` and the FBX template. No tracked public fixture currently drives a synthetic AYA/model/texture payload through the complete legacy importer, DDS decoder, and FBX writer contract. |
+| Reproducibility gap | The local rebuild wrapper preflights regular single-link copies of the AYA, DDS, and Fbx assemblies plus the resolved FBX template before output creation. These are mutable trusted-local dependencies, not cryptographically pinned provenance. No tracked public fixture currently drives a synthetic AYA/model/texture payload through the complete legacy importer, DDS decoder, and FBX writer contract. |
 | License posture | The root MIT text still contains `[year] [fullname]`. Bundled code has separate zlib notices and DDSReader GPL3/FreeImage-derived notices; the FBX code/template provenance is described in README but lacks a complete component notice in this pin. This is an unresolved redistribution review item, not a finding that local use is blocked. |
 
 ## Evidence Hierarchy
@@ -49,6 +51,11 @@ names.
 3. Copied-runtime observation establishes actual released behavior and measured values.
 4. Synthetic and authorized local exporter fixtures establish concrete format support.
 5. The rebuild consumes an accepted contract; its own output cannot prove retail truth.
+
+The local exporter is bounded to trusted canonical retail input and process
+failure. Private-corpus success and the rectangular DDS fix do not prove
+malformed-input safety, format completeness, native build reproducibility, or
+cryptographic provenance of mutable local DLLs.
 
 ## Reproduction
 

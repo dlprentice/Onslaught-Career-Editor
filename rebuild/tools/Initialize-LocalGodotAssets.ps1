@@ -1,83 +1,57 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Creates the ignored local-lab/rebuild-godot workspace for optional retail mesh preview.
-# Does not extract game assets and never writes proprietary payloads into Git.
 
 [CmdletBinding()]
 param(
     [string]$RepoRoot = '',
+    [string]$AssetRoot = '',
     [switch]$WriteExampleManifest
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+Import-Module (Join-Path $PSScriptRoot 'LocalAssetWorkspace.psm1') -Force
 
-if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
-    $RepoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
-} else {
-    $RepoRoot = [IO.Path]::GetFullPath($RepoRoot)
-}
-
+$RepoRoot = if ([string]::IsNullOrWhiteSpace($RepoRoot)) { [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..')) } else { [IO.Path]::GetFullPath($RepoRoot) }
 $layoutPath = Join-Path $RepoRoot 'rebuild\local-assets.layout.json'
-if (-not (Test-Path -LiteralPath $layoutPath)) {
-    throw "Missing tracked layout contract: $layoutPath"
-}
+Assert-RegularSingleLinkFile -Path $layoutPath -Label 'tracked layout contract' | Out-Null
+$layoutInfo = Get-Item -LiteralPath $layoutPath
+if ($layoutInfo.Length -gt 65536) { throw "Tracked layout contract is oversized: $layoutPath" }
+$layout = Get-Content -LiteralPath $layoutPath -Raw | ConvertFrom-Json -Depth 8
 
-$layout = Get-Content -LiteralPath $layoutPath -Raw | ConvertFrom-Json
-$root = Join-Path $RepoRoot $layout.defaultRootRelativeToRepo
-$directories = @($layout.directories)
+if ([string]::IsNullOrWhiteSpace($AssetRoot)) { $AssetRoot = Join-Path $RepoRoot $layout.defaultRootRelativeToRepo }
+$AssetRoot = [IO.Path]::GetFullPath($AssetRoot)
+$readmePath = Join-Path $AssetRoot 'README.local.md'
+$examplePath = Join-Path $AssetRoot 'manifest.example.json'
+$destinations = @($readmePath)
+if ($WriteExampleManifest) { $destinations += $examplePath }
+Assert-LocalAssetWritePlan -RepoRoot $RepoRoot -OutputRoot $AssetRoot -ForbiddenRoots @((Join-Path $RepoRoot 'rebuild'), (Join-Path $RepoRoot 'references')) -DestinationPaths $destinations | Out-Null
 
-foreach ($relative in $directories) {
-    $path = Join-Path $root $relative
-    New-Item -ItemType Directory -Force -Path $path | Out-Null
-}
-
-$readmePath = Join-Path $root 'README.local.md'
-$readme = @"
+$directories = @($AssetRoot) + @($layout.directories | ForEach-Object { Join-Path $AssetRoot ([string]$_) })
+$lease = $null
+try {
+    $lease = [Onslaught.DirectoryLeaseSet]::Open($RepoRoot, [string[]]$directories)
+    $readme = @'
 # Local Godot rebuild assets (ignored)
 
-This folder is under ``local-lab/`` and must stay out of Git.
+This workspace is an optional local presentation input. Keep retail-derived files ignored and never treat them as simulation truth, redistribution material, or parity evidence.
 
-## Layout
+- `export/` - trusted-local AYA export output
+- `player/aquila/` - explicitly selected converted `.glb` or bounded `.obj`
+- `terrain/subset/` - explicitly selected converted `.glb` or bounded `.obj`
+- `staging/from-export/` - local staging only; FBX is never activated directly
+- `manifest.json` - created only after unambiguous player and terrain roles are selected
 
-- ``player/aquila/`` - Aquila mesh (``.glb`` / ``.gltf`` / ``.obj``) plus textures if needed
-- ``terrain/subset/`` - one environment/terrain subset mesh
-- ``staging/from-export/`` - optional copies from ``export_game_assets.py`` output
-- ``import/`` - optional Godot editor import scratch
-- ``manifest.json`` - tells First Flight which meshes to load
-
-## Bootstrap
-
-1. Mirror a BYO game install under ``game/`` or ``local-game/``.
-2. Build or place AYA extractor DLLs under ``references/AYAResourceExtractor/.../bin/Debug/net6.0-windows/``.
-3. Run ``npm run export:local-bea-assets`` (or the PowerShell wrapper) into ``local-lab/bea-assets/export``.
-4. Run ``npm run bootstrap:rebuild-godot-assets`` to stage candidate meshes and write ``manifest.json``.
-5. Convert staged ``.fbx`` to ``.glb``/``.obj`` if needed, then ``npm run run:rebuild-godot:local``.
-
-Smoke mode always keeps procedural synthetics. Local meshes are a non-parity preview only.
-"@
-Set-Content -LiteralPath $readmePath -Value $readme -Encoding utf8
-
-$manifestPath = Join-Path $root 'manifest.json'
-if ($WriteExampleManifest -or -not (Test-Path -LiteralPath $manifestPath)) {
-    $example = @{
-        schemaVersion = 'onslaught-rebuild-local-godot-assets-manifest.v1'
-        presentationMode = 'local-retail-preview'
-        nonParityClaim = $true
-        player = @{
-            mesh = 'player/aquila/aquila.glb'
-            scale = 1.0
-            yawDegrees = 0.0
-            yOffsetMeters = 0.0
-        }
-        terrain = @{
-            mesh = 'terrain/subset/ground.glb'
-            scale = 1.0
-            yawDegrees = 0.0
-            yOffsetMeters = 0.0
-        }
+Run `npm run run:rebuild-godot:local -- --LocalAssetsRoot <exact-root>` to opt in. Ordinary run and smoke commands stay synthetic.
+'@
+    Write-GuardedTextFile -RepoRoot $RepoRoot -OutputRoot $AssetRoot -Destination $readmePath -Content $readme
+    if ($WriteExampleManifest) {
+        $example = $layout.manifestExample | ConvertTo-Json -Depth 6
+        Write-GuardedTextFile -RepoRoot $RepoRoot -OutputRoot $AssetRoot -Destination $examplePath -Content $example
     }
-    $example | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPath -Encoding utf8
+}
+finally {
+    if ($null -ne $lease) { $lease.Dispose() }
 }
 
-Write-Host "Initialized local Godot asset workspace: $root"
-Write-Output $root
+Write-Host "Initialized ignored local Godot asset workspace: $AssetRoot"
+Write-Output $AssetRoot
