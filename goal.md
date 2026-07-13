@@ -16,32 +16,35 @@ clean-room path as a future option rather than a current claim.
 
 ## Current Slice
 
-Deliver a fail-closed `CMSH static-preview profile v0` parser and anonymous
-local geometry-selection path without installing or reviving the legacy x86
-extractor toolchain. Keep format support separate from asset identity: no local
-body is called Aquila until a human selects it from ignored previews, after
-which the selected role may load through the existing guarded Godot bridge.
+Use the accepted fail-closed `CMSH static-preview profile v0` implementation to
+produce anonymous ignored local geometry previews, then let a human identify
+the Aquila before any asset identity or Godot role claim. Do not install or
+revive the legacy x86 extractor toolchain.
 
-1. freeze the observed common static subset: stride 36, FVF `0x152`, topology
-   field 4, strip-count semantics, one owned VBUF plus exact zero-payload reuse,
-   empty PMVB support, finite transforms, and bounded recognized optional/frame/
-   hierarchy records; reject bones, references, and every unknown profile;
-2. derive the CMSH body boundary from declared header, texture, and MESP lengths
-   rather than consuming validated BBOX/CEMT/CAMD/PMS2 sibling chunks;
-3. prove the parser/emitter with a generated public-safe packed AYA/CMSH fixture,
-   exact golden OBJ digest, objective geometry oracles, and malformed-input
-   rejection before using any ignored local payload;
-4. enumerate only matching ignored bodies into anonymous local OBJ/thumbnail/
-   contact-sheet outputs; let a human identify the Aquila visually and keep the
-   resulting selector/manifest ignored and local; and
-5. close with focused parser/rebuild tests, native visual/process cleanup,
-   payload safety, normal/adversarial review, state reconciliation, commit, and
-   push. Keep textures/GLB, DDS decoding, LNDS terrain, animation/bones,
-   movement/camera fidelity, and parity as separate later contracts. Do not
-   create a release or tag.
+1. enumerate only profile-matching ignored bodies into a fresh ignored local
+   session using the integrated guarded parser/emitter;
+2. preserve anonymous labels and a path-free aggregate summary; do not track or
+   externalize retail names, paths, hashes, bytes, screenshots, or identity;
+3. add only the bounded thumbnail/contact-sheet adapter needed for a human to
+   inspect the emitted OBJ candidates, under a separately serialized native
+   lease if rendering is required;
+4. record the human-selected Aquila role only in an ignored local manifest and
+   verify it through the existing guarded Godot presentation bridge; and
+5. close with focused parser/presentation tests, process cleanup, payload
+   safety, review, state reconciliation, commit, and push. Keep textures/GLB,
+   DDS decoding, LNDS terrain, animation/bones, movement/camera fidelity, and
+   parity as later contracts. Do not create a release or tag.
 
 ## Current Slice Progress - 2026-07-13
 
+- The fixture-backed CMSH static-preview parser and deterministic geometry-only
+  OBJ emitter are integrated at `4c815373`. The accepted implementation covers
+  the observed stride-36/FVF-0x152/topology-4 subset, exact VBUF reuse and body
+  boundaries, bounded malformed input, guarded ignored-local publication,
+  held-source revalidation, fatal rollback, and broken-reparse rejection. Its
+  focused acceptance passed 23 Python tests and one pure C# OBJ safety test.
+  It establishes format support only; no local body has been identified as
+  Aquila and no native Godot preview was run for this implementation slice.
 - Reference inventory is drafted in
   `reverse-engineering/source-code/reference-submodule-audit-2026-07-12.md`:
   pinned fork/upstream provenance, current tracked counts, source completeness,
@@ -596,25 +599,20 @@ claim against an already malicious process running as the same Windows user.
 
 ## Current Slice Acceptance
 
-- Dry-run hash-binds the ambient read-only resource-root executable, validates
-  the canonical effective in-root override, the complete ignored
-  authority/lease envelope, fixed role order, and private command/AppConfig
-  routing without requiring the live arm or launching a process.
-- The live matrix uses exact unexpired zero-spend authority, four exclusive
-  resources, and the fixed no-input/positive/repeat sequence. Each role gets a
-  fresh safe copy and one locked harness invocation; any identity, event,
-  cleanup, control-hash, or materialization failure stops the matrix.
-- Each private run is semantically materialized from bounded immutable bytes
-  before the next role. The aggregate private manifest is published before the
-  sanitized summary and only after all three roles pass.
-- The sanitized result proves only the accepted specimen/module/RVA/P0 input
-  and Morph/Move/JetPart execution identity boundary. Raw logs, receipts,
-  pointers, paths, and game payloads remain ignored and untracked.
-- Aggregate source/copy integrity booleans are true after the private
-  ambient/effective/source-data/copy comparisons, the matrix-wide ambient
-  baseline still matches, keys and receipt-owned processes are clean, the
-  integrated closeout and independent review pass, state is reconciled, and
-  `main` is pushed with divergence `0 0`.
+- Anonymous ignored OBJ candidates are produced only by the accepted profile-v0
+  parser from the approved local corpus into a fresh guarded session.
+- Tracked and external outputs contain no retail filenames, paths, hashes,
+  payload bytes, screenshots, or inferred Aquila identity.
+- A human selection, not a structural heuristic, chooses the Aquila candidate;
+  the selector and role manifest remain ignored and local.
+- Any native preview uses a serialized lease, a fresh build, bounded local
+  inputs, and an exact zero-process cleanup census.
+- The selected role loads through the existing presentation-only Godot bridge
+  while deterministic Core remains unchanged and synthetic terrain remains the
+  default. No texture, handling, gameplay, visual-fidelity, or parity claim is
+  made.
+- Focused parser/presentation, payload-boundary, and review gates pass; state is
+  reconciled; and `main` is pushed with divergence `0 0`.
 
 ## Next Slices
 
