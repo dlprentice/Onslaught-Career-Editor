@@ -240,6 +240,26 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   exact roots are stopped. Fresh final gates pass 1,317 AppCore tests, the
   95-test runtime-helper profile, 23 orchestration tests, 17 process-identity
   tests, 13 renderer/materializer tests, and a zero-warning generated build.
+- Retry 9 used fresh ignored controls and an absent proof root. Its dry run
+  passed, and the live no-input control launched the exact clean copied retail
+  executable, bound CDB before stop, observed the target and debugger physically
+  exit, emitted the expected cleanup and `quit:` markers, and ended with a clear
+  owned-process census. It still failed closed because AppCore reacquired the
+  target by PID without retaining its native process handle; after target exit,
+  `Process.ExitTime` could no longer reopen the process, so the canary could not
+  prove the exact target exit timestamp. No positive role or public matrix ran.
+  A disposable five-run A/B proof reproduced unreadable exit time in 5/5
+  unpinned processes and preserved it in 5/5 pinned processes. The TDD
+  correction validates the bounded timeout before process acquisition, pins the
+  exact process handle before start-time/module identity validation, keeps it
+  pinned through close/kill/wait and exact exit-time readback, narrows
+  already-gone handling to acquisition failure, and releases the handle in a
+  balanced `finally`. The final AppCore suite passes 1,319 tests; the 95 focused
+  runtime-helper tests and `git diff --check` pass. Codex normal/adversarial
+  review accepted the corrected identity and cleanup boundary. Sanitized serial
+  Cursor/Grok normal/adversarial consultation used
+  `cursor-grok-4.5-high-fast`; its only material PID-reuse concern was withdrawn
+  after reconciliation with the retained Windows process-handle lifetime.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future
