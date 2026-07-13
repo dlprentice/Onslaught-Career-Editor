@@ -1,7 +1,7 @@
 # CBattleEngine__HandleLocks
 
 <!-- ghidra-full-reaudit-20260713:start -->
-> **2026-07-13 semantic revalidation:** `0x00406560` → `CBattleEngine__HandleLocks` (was `CBattleEngine__UpdateAutoTargetSetAndFireProjectiles`). Older conflicting text below is superseded for these rows. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+> **2026-07-13 live correction closeout:** `0x00406560` → `CBattleEngine__HandleLocks` (was `CBattleEngine__UpdateAutoTargetSetAndFireProjectiles`). Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
 
 > Address: `0x00406560` | Source family: `references/Onslaught/BattleEngine.cpp`
@@ -9,7 +9,8 @@
 
 ## Status
 
-- Current live-Ghidra name: stale (`CBattleEngine__UpdateAutoTargetSetAndFireProjectiles`)
+- Current live-Ghidra name: `CBattleEngine__HandleLocks` (applied and exactly
+  read back on 2026-07-13)
 - Revalidated static identity: `CBattleEngine__HandleLocks`
 - Evidence: fresh final-snapshot metadata, xrefs, instructions, decompile, and
   direct source-shape comparison
@@ -36,7 +37,8 @@ this context. The direct caller position and full body align with
 ## Boundaries
 
 - Static identity and ABI evidence only.
-- The live Ghidra project has not been renamed under this read-only lane.
+- The confirmed live Ghidra name/comment correction was applied under the
+  bounded 2026-07-13 mutation lease.
 - Dependent helper names and concrete layouts remain subject to bounded review.
 - No runtime target acquisition, firing, gameplay, patch behavior, or rebuild
   parity is claimed.

@@ -1,5 +1,9 @@
 # Binary Analysis Documentation
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** `0x004dac90` proposed correction rejected; known-stale live metadata retained for separate correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 > Executable analysis, Ghidra findings, and disassembly notes
 
 ## Overview
@@ -9,10 +13,11 @@ This folder contains documentation from analyzing the `BEA.exe` executable using
 Current semantic authority: the
 [2026-07-13 Ghidra full re-audit closeout](ghidra-full-reaudit-closeout-2026-07-13.md)
 verifies the stable `6,411`-address endpoint inventory, independently reviews
-all `459` Cursor metadata changes, and records `71` Cursor-delta plus `22`
-targeted records with one explicit overlap (`92` unique correction addresses).
-It documents the pending
-exclusive-lease requirement before live Ghidra correction.
+all `459` Cursor metadata changes, and records the later live re-review of all
+`92` unique proposed correction addresses. `91` confirmed rows were applied and
+read back exactly; the false `0x004dac90` ABI proposal was rejected and left
+unchanged. Complete pre/post project backups passed hash and read-only-open
+verification.
 
 ## Verified Binary
 

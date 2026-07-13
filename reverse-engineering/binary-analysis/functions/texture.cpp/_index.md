@@ -1,7 +1,7 @@
 # texture.cpp Function Mappings
 
 <!-- ghidra-full-reaudit-20260713:start -->
-> **2026-07-13 semantic revalidation:** 6 correction records referenced in this document. Older conflicting text below is superseded for these rows. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+> **2026-07-13 live correction closeout:** 6 confirmed-apply records referenced in this document. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
 
 Wave1216 (`wave1216-render-resource-texture-hud-tail-current-risk-review`) corrected stale texture node labels: `CTexture__NodeType11_Ctor_WithDescriptorCopy`, `CTexture__NodeType11_Dtor_DeleteOnFlag_Body`, `CTexture__NodeType11_Dtor_DeleteOnFlag`, and `CTexture__NodeType12_Ctor_WithStackScalars`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-101007_post_wave1216_render_resource_texture_hud_tail_current_risk_review_verified`. Runtime texture behavior, exact layouts, exact source identity, BEA patching behavior, rebuild parity, and no-noticeable-difference parity remain separate proof.

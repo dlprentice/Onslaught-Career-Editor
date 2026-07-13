@@ -1,7 +1,7 @@
 # Wave1156 SharedUnitVFunc Current-Risk Review
 
 <!-- ghidra-full-reaudit-20260713:start -->
-> **2026-07-13 semantic revalidation:** `0x00401910` comment correction. Older conflicting text below is superseded for these rows. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+> **2026-07-13 live correction closeout:** `0x00401910` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
 
 Wave1156 (`wave1156-sharedunitvfunc-current-risk-review`) accounts for `29 SharedUnitVFunc current-risk rows` from the Wave1108 current focused denominator. It is a fresh Ghidra read-only review with no mutation.

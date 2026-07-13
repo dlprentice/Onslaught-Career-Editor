@@ -1,7 +1,7 @@
 # BattleEngine.cpp Function Mappings
 
 <!-- ghidra-full-reaudit-20260713:start -->
-> **2026-07-13 semantic revalidation:** 6 correction records referenced in this document. Older conflicting text below is superseded for these rows. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+> **2026-07-13 live correction closeout:** 6 confirmed-apply records referenced in this document. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
 
 > Functions from BattleEngine.cpp mapped to BEA.exe binary
@@ -12,11 +12,11 @@
 
 > **Queue status (2026-06-01):** Ghidra export-contract closure **6246/6246** (Wave1056: every current function object commented with clean-signature proxy; not evidence-grade semantics). Lines below that reference a "next raw commentless" row are **archival wave progress**, not open work.
 
-> **Current semantic corrections (2026-07-13):** read-only evidence identifies
+> **Current semantic corrections (2026-07-13):** fresh evidence identifies
 > `0x00406560` as `CBattleEngine__HandleLocks`, not a projectile helper, and
 > `0x004081c0` as `CBattleEngine__Move`, not `CMonitor__Process`. See the
 > [full re-audit closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md).
-> The live Ghidra project has not yet been mutated.
+> Both confirmed corrections were applied and exactly read back in live Ghidra.
 
 - **Curated direct CBattleEngine rows below:** 10 (non-exhaustive)
 - **Status:** NAMED in Ghidra
@@ -143,7 +143,7 @@ These entry-selection helpers are used by combat/runtime selection paths that re
 | Address | Name | Notes |
 |---------|------|-------|
 | 0x00406460 | [CBattleEngine__SwapPrimarySecondaryPartReadersForState](CBattleEngine__SwapPrimarySecondaryPartReadersForState.md) | State-gated morph helper that swaps active reader/object pointers and reparents active part links between walker/jet paths. |
-| 0x00406560 | [CBattleEngine__HandleLocks](CBattleEngine__UpdateAutoTargetSetAndFireProjectiles.md) | Source-aligned lock maintenance/acquisition; the legacy filename is retained for link stability and the live Ghidra name remains stale pending an exclusive mutation lease. |
+| 0x00406560 | [CBattleEngine__HandleLocks](CBattleEngine__UpdateAutoTargetSetAndFireProjectiles.md) | Source-aligned lock maintenance/acquisition; the legacy filename is retained for link stability, while the corrected live Ghidra name was applied and read back on 2026-07-13. |
 | 0x00406da0 | [CBattleEngine__SelectNearestForwardTargetFromGlobalSet](CBattleEngine__SelectNearestForwardTargetFromGlobalSet.md) | Selects nearest forward-facing in-range target from global candidate set, excluding entries already in current tracking set; Wave 309 hardened the profile/vector/range-scale signature. |
 
 ## CWeapon Distance-Profile Helpers Reached From BattleEngine Firing Paths (Wave539, 2026-05-18)

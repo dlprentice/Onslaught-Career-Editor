@@ -10,9 +10,11 @@ Maintainer state and reference-source files are deliberately excluded.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -34,7 +36,16 @@ CURSOR_CORRECTIONS_PATH = Path(
 TARGETED_CORRECTIONS_PATH = Path(
     "reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json"
 )
+REVIEWED_DECISIONS_PATH = Path(
+    "reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl"
+)
+REVIEWED_PLAN_PATH = Path(
+    "reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json"
+)
 EXCLUDED_PREFIXES = (".codex/state/", "references/")
+EXCLUDED_PATHS = {
+    "roadmap/battleengine-morph-identity-canary-implementation-plan-2026-07-12.md",
+}
 DISCOVERY_ROOTS = (
     Path("reverse-engineering"),
     Path("release/readiness"),
@@ -42,6 +53,17 @@ DISCOVERY_ROOTS = (
 )
 DISCOVERY_FILES = (Path("CURRENT_CAPABILITIES.md"),)
 MAX_NOTICE_LABELS = 5
+REVIEWED_PLAN_SCHEMA = "onslaught-ghidra-reviewed-correction-plan.v1"
+SOURCE_MANIFEST_ROLES = {
+    "onslaught-ghidra-full-reaudit-corrections.v1": "cursor",
+    "onslaught-ghidra-targeted-revalidation-corrections.v2": "targeted",
+}
+ALLOWED_CLASSIFICATIONS = {
+    "confirmed-apply",
+    "already-correct/no-op",
+    "disputed-needs-research",
+    "rejected-manifest-error",
+}
 
 
 @dataclass(frozen=True)
@@ -63,7 +85,11 @@ def _normalize_relative(value: str) -> str:
 
 
 def _is_excluded(relative: str) -> bool:
-    return relative.startswith(EXCLUDED_PREFIXES) or not relative.lower().endswith(".md")
+    return (
+        relative in EXCLUDED_PATHS
+        or relative.startswith(EXCLUDED_PREFIXES)
+        or not relative.lower().endswith(".md")
+    )
 
 
 def _resolve_repo_document(repo_root: Path, relative: str) -> Path:
@@ -89,6 +115,16 @@ def _resolve_repo_document(repo_root: Path, relative: str) -> Path:
 
 def _record_label(record: dict) -> str:
     address = str(record["address"])
+    classification = record.get("classification", "confirmed-apply")
+    if classification == "rejected-manifest-error":
+        return (
+            f"`{address}` proposed correction rejected; known-stale live metadata "
+            "retained for separate correction"
+        )
+    if classification == "disputed-needs-research":
+        return f"`{address}` disputed and not applied"
+    if classification == "already-correct/no-op":
+        return f"`{address}` already correct; no write"
     current_name = record.get("currentName") or record.get("savedName")
     corrected_name = record.get("correctedName")
     corrected_fields = set(record.get("correctedFields") or ())
@@ -122,28 +158,36 @@ def _closeout_target(document: Path, repo_root: Path) -> Path:
 
 def _render_notice(document: Path, repo_root: Path, records: Iterable[dict], newline: str) -> str:
     ordered = sorted(records, key=lambda item: str(item["address"]))
+    counts: dict[str, int] = {}
+    for record in ordered:
+        classification = str(record.get("classification", "confirmed-apply"))
+        counts[classification] = counts.get(classification, 0) + 1
     labels = (
         "; ".join(_record_label(record) for record in ordered)
         if len(ordered) <= MAX_NOTICE_LABELS
-        else f"{len(ordered)} correction records referenced in this document"
+        else "; ".join(
+            f"{count} {classification} record{'s' if count != 1 else ''} referenced in this document"
+            for classification, count in sorted(counts.items())
+        )
     )
     closeout = _relative_link(document, repo_root, _closeout_target(document, repo_root))
     relative = document.relative_to(repo_root).as_posix()
     links = (
-        f"[closeout]({closeout}); exact records are in "
-        f"`{CURSOR_CORRECTIONS_PATH.as_posix()}` and "
-        f"`{TARGETED_CORRECTIONS_PATH.as_posix()}`"
+        f"[closeout]({closeout}); final per-address decisions and exact before/after metadata are in "
+        f"`{REVIEWED_DECISIONS_PATH.as_posix()}` and "
+        f"`{REVIEWED_PLAN_PATH.as_posix()}`"
     )
     if relative.startswith("release/readiness/"):
         body = (
-            f"> **2026-07-13 semantic revalidation:** Historical record; {labels}. "
+            f"> **2026-07-13 live correction closeout:** Historical record; {labels}. "
             f"The original text below remains provenance rather than current semantic authority. "
-            f"Use the {links}."
+            f"It is superseded only where confirmed. Use the {links}."
         )
     else:
         body = (
-            f"> **2026-07-13 semantic revalidation:** {labels}. "
-            f"Older conflicting text below is superseded for these rows. Use the {links}."
+            f"> **2026-07-13 live correction closeout:** {labels}. "
+            f"Current live Ghidra reflects confirmed rows only; older conflicting text below is "
+            f"superseded only where confirmed. Use the {links}."
         )
     return newline.join((NOTICE_START, body, NOTICE_END))
 
@@ -197,7 +241,10 @@ def _collect_documents(
 
 
 def _discover_address_documents(
-    repo_root: Path, records: Iterable[dict], routed: dict[Path, list[dict]]
+    repo_root: Path,
+    records: Iterable[dict],
+    routed: dict[Path, list[dict]],
+    excluded: set[str],
 ) -> None:
     by_address = {str(record["address"]).lower(): record for record in records}
     rename_patterns: list[tuple[dict, re.Pattern[str]]] = []
@@ -237,6 +284,10 @@ def _discover_address_documents(
         path = path.resolve()
         if path in excluded_authority:
             continue
+        relative = path.relative_to(repo_root).as_posix()
+        if _is_excluded(relative):
+            excluded.add(relative)
+            continue
         text = path.read_text(encoding="utf-8")
         lowered = text.lower()
         matches_by_address = {
@@ -251,7 +302,6 @@ def _discover_address_documents(
         if not matches:
             continue
         routed.setdefault(path, []).extend(matches)
-        relative = path.relative_to(repo_root).as_posix()
         mirror = _mirror_path(repo_root, relative)
         if mirror:
             routed.setdefault(mirror, []).extend(matches)
@@ -264,7 +314,7 @@ def reconcile_docs(repo_root: Path, records: Iterable[dict], *, write: bool) -> 
     repo_root = repo_root.resolve()
     records = tuple(records)
     routed, excluded, missing = _collect_documents(repo_root, records)
-    _discover_address_documents(repo_root, records, routed)
+    _discover_address_documents(repo_root, records, routed, excluded)
     changed: list[str] = []
     for path in sorted(routed):
         original = path.read_bytes().decode("utf-8")
@@ -324,14 +374,130 @@ def load_records(manifests: Iterable[Path]) -> list[dict]:
     return [by_address[address] for address in sorted(by_address)]
 
 
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def source_manifest_hashes(manifests: Iterable[Path]) -> dict[str, str]:
+    result: dict[str, str] = {}
+    for manifest in manifests:
+        payload = json.loads(manifest.read_text(encoding="utf-8"))
+        role = SOURCE_MANIFEST_ROLES.get(payload.get("schemaVersion"))
+        if role is None:
+            raise ValueError(f"unsupported source manifest schema: {manifest}")
+        if payload.get("prototypeOrBoundaryMutationAuthorized") is not False:
+            raise ValueError(f"source manifest must deny prototype/boundary mutation: {manifest}")
+        if role in result:
+            raise ValueError(f"duplicate {role} source manifest: {manifest}")
+        result[role] = _sha256_file(manifest)
+    if set(result) != {"cursor", "targeted"}:
+        raise ValueError(
+            "source manifests must contain exactly cursor and targeted schemas: "
+            f"actual={sorted(result)}"
+        )
+    return result
+
+
+def _is_sha256(value: object) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
+
+
+def apply_reviewed_plan(
+    records: Iterable[dict],
+    plan: dict,
+    *,
+    source_manifest_sha256: dict[str, str] | None = None,
+) -> list[dict]:
+    if plan.get("schemaVersion") != REVIEWED_PLAN_SCHEMA:
+        raise ValueError("unsupported reviewed correction plan schema")
+    plan_records = plan.get("records")
+    if not isinstance(plan_records, list) or not plan_records:
+        raise ValueError("reviewed correction plan must contain records")
+    source_by_address: dict[str, dict] = {}
+    for record in records:
+        address = str(record.get("address", "")).lower()
+        if not address or address in source_by_address:
+            raise ValueError(f"duplicate or missing source record address: {address!r}")
+        source_by_address[address] = record
+    reviewed_by_address: dict[str, dict] = {}
+    counts: Counter[str] = Counter()
+    for record in plan_records:
+        if not isinstance(record, dict):
+            raise ValueError("reviewed correction plan contains a non-object record")
+        address = str(record.get("address", "")).lower()
+        if not address or address in reviewed_by_address:
+            raise ValueError(f"duplicate or missing reviewed record address: {address!r}")
+        classification = record.get("classification")
+        if classification not in ALLOWED_CLASSIFICATIONS:
+            raise ValueError(f"invalid reviewed classification at {address}: {classification!r}")
+        counts[classification] += 1
+        reviewed_by_address[address] = record
+    if set(source_by_address) != set(reviewed_by_address):
+        raise ValueError(
+            "reviewed plan address set mismatch: "
+            f"missing={sorted(set(source_by_address) - set(reviewed_by_address))} "
+            f"extra={sorted(set(reviewed_by_address) - set(source_by_address))}"
+        )
+    if plan.get("reviewedAddressCount") != len(plan_records):
+        raise ValueError("reviewedAddressCount does not match reviewed records")
+    expected_counts = {
+        classification: counts[classification]
+        for classification in (
+            "confirmed-apply",
+            "already-correct/no-op",
+            "disputed-needs-research",
+            "rejected-manifest-error",
+        )
+        if counts[classification]
+    }
+    if plan.get("classificationCounts") != expected_counts:
+        raise ValueError("classificationCounts do not match reviewed records")
+    if plan.get("applyRecordCount") != counts["confirmed-apply"]:
+        raise ValueError("applyRecordCount does not match confirmed records")
+    if not _is_sha256(plan.get("applyPlanSha256")):
+        raise ValueError("invalid applyPlanSha256")
+    if not _is_sha256(plan.get("liveSnapshotSha256")):
+        raise ValueError("invalid liveSnapshotSha256")
+    plan_source_hashes = plan.get("sourceManifestSha256")
+    if (
+        not isinstance(plan_source_hashes, dict)
+        or set(plan_source_hashes) != {"cursor", "targeted"}
+        or not all(_is_sha256(value) for value in plan_source_hashes.values())
+    ):
+        raise ValueError("invalid sourceManifestSha256")
+    if source_manifest_sha256 is not None and plan_source_hashes != source_manifest_sha256:
+        raise ValueError("reviewed plan source hashes do not match source manifests")
+    result: list[dict] = []
+    for address in sorted(source_by_address):
+        reviewed = reviewed_by_address[address]
+        classification = reviewed.get("classification")
+        merged = dict(source_by_address[address])
+        merged["classification"] = classification
+        merged["reviewRationale"] = reviewed.get("reviewRationale")
+        result.append(merged)
+    return result
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", type=Path, default=Path.cwd())
     parser.add_argument("--manifest", type=Path, action="append", required=True)
+    parser.add_argument("--reviewed-plan", type=Path, required=True)
     parser.add_argument("--write", action="store_true")
     args = parser.parse_args()
     try:
+        source_hashes = source_manifest_hashes(args.manifest)
         records = load_records(args.manifest)
+        reviewed_plan = json.loads(args.reviewed_plan.read_text(encoding="utf-8"))
+        records = apply_reviewed_plan(
+            records,
+            reviewed_plan,
+            source_manifest_sha256=source_hashes,
+        )
         result = reconcile_docs(args.repo_root, records, write=args.write)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"Ghidra doc reconciliation: FAIL: {exc}")

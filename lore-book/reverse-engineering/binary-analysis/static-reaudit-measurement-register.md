@@ -1,7 +1,7 @@
 # Static Re-Audit Measurement Register
 
 <!-- ghidra-full-reaudit-20260713:start -->
-> **2026-07-13 semantic revalidation:** `0x0044e640` → `CFenrirMainGunAI__ScanListsAndSelectSupportTarget` (was `CSquadNormalReader__ScanListsAndSelectSupportTarget_0044e640`); `0x004530a0` → `CTweak__dtor_base_thunk_004530a0` (was `CTweak__dtor_unlink_from_static_list_004530a0`). Older conflicting text below is superseded for these rows. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+> **2026-07-13 live correction closeout:** `0x0044e640` → `CFenrirMainGunAI__ScanListsAndSelectSupportTarget` (was `CSquadNormalReader__ScanListsAndSelectSupportTarget_0044e640`); `0x004530a0` → `CTweak__dtor_base_thunk_004530a0` (was `CTweak__dtor_unlink_from_static_list_004530a0`); `0x004dac90` proposed correction rejected; known-stale live metadata retained for separate correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
 
 > **Semantic-confidence correction (2026-07-12):** this register remains the
@@ -47,8 +47,9 @@ Semantic-quality overlay: the
 [2026-07-13 full re-audit closeout](ghidra-full-reaudit-closeout-2026-07-13.md)
 confirms the `6,411`-address inventory while showing that the historical closure
 counters did not prove universal semantic correctness. Its `71` Cursor-delta
-corrections and separate `22` targeted corrections are current authority;
-applying them to live Ghidra remains pending an exclusive mutation lease.
+corrections and separate `22` targeted corrections resolve to `92` unique
+addresses: independent review confirmed and applied `91`, while the false
+`0x004dac90` ABI row was rejected and left unchanged.
 
 This is the path register for the static RE percentages and maps. Use it to decide which file owns each number, how the number is derived, which command validates it, and which files must move together after a wave. The register is the human front door; the generated ledger is the machine authority for current-risk unique-address accounting.
 

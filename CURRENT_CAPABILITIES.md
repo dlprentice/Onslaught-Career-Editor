@@ -1,7 +1,7 @@
 # Current Capabilities
 
 <!-- ghidra-full-reaudit-20260713:start -->
-> **2026-07-13 semantic revalidation:** `0x00406560` → `CBattleEngine__HandleLocks` (was `CBattleEngine__UpdateAutoTargetSetAndFireProjectiles`); `0x004081c0` → `CBattleEngine__Move` (was `CMonitor__Process`); `0x00410c50` → `CBattleEngineJetPart__Move` (was `CMonitor__UpdateMovementTransitionAndEffects`). Older conflicting text below is superseded for these rows. Use the [closeout](reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); exact records are in `reverse-engineering/binary-analysis/ghidra-full-reaudit-corrections-2026-07-13.json` and `reverse-engineering/binary-analysis/ghidra-targeted-revalidation-corrections-2026-07-13.json`.
+> **2026-07-13 live correction closeout:** `0x00406560` → `CBattleEngine__HandleLocks` (was `CBattleEngine__UpdateAutoTargetSetAndFireProjectiles`); `0x004081c0` → `CBattleEngine__Move` (was `CMonitor__Process`); `0x00410c50` → `CBattleEngineJetPart__Move` (was `CMonitor__UpdateMovementTransitionAndEffects`); `0x004dac90` proposed correction rejected; known-stale live metadata retained for separate correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
 
 Deployment shape: offline safe-copy patches should feel like "choose a preset, prepare a copied game folder, launch the copied executable." Any future first-generation online experiment is expected to require WinUI or a bundled companion helper during the session for identity/auth, invitations, relay/host authority, input delivery, cleanup, and rollback. A later native-feeling mega patch or in-game menu remains a promotion target for proven features, not the first netplay deployment shape.
@@ -10,12 +10,12 @@ Static RE quality status: the
 [2026-07-13 Ghidra full re-audit closeout](reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md)
 verifies a stable `6,411`-address inventory across the trusted snapshots and
 independently reviews all `459` Cursor metadata changes. It accepts `388` and
-records `71` correction-required Cursor-delta rows plus `22` targeted records,
-including one explicit superseding overlap, for `92` unique correction
-addresses. The targeted records cover recovered conflicts, research, inherited
-metadata, and rebuild/runtime-critical review. The live project still awaits an
-exclusive mutation lease for those
-corrections. Static quality is not runtime proof, rebuild parity, or strict
+identifies `71` correction-required Cursor-delta rows plus `22` targeted
+proposal records, including one explicit superseding overlap, for `92` unique
+addresses. A fresh live review confirmed and applied `91`; it rejected
+`0x004dac90` because the proposed `RET 0x8` claim conflicts with the raw
+`RET 0x4` epilogue. Exact readback and complete pre/post backup verification
+passed. Static quality is not runtime proof, rebuild parity, or strict
 clean-room proof.
 
 Last public downloadable app release shape: the public `v1.0.9` release is an

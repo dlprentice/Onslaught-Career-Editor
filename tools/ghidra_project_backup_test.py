@@ -15,6 +15,8 @@ import ghidra_project_backup as backup
 
 
 class GhidraProjectBackupTests(unittest.TestCase):
+    EXPECTED_MD5 = "3b456964020070efe696d2cc09464a55"
+
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory(prefix="ghidra-backup-test-")
         self.root = Path(self.temp_dir.name)
@@ -193,8 +195,18 @@ class GhidraProjectBackupTests(unittest.TestCase):
         self.assertEqual(command[command.index("-postScript") + 1], "GhidraProjectOpenProbe.java")
         self.assertEqual(command[-2:], ["BEA.exe", "3b456964020070efe696d2cc09464a55"])
 
-    def test_open_probe_binds_optional_imported_executable_md5(self) -> None:
-        expected_md5 = "3b456964020070efe696d2cc09464a55"
+    def test_low_level_open_probe_requires_program_name_and_md5(self) -> None:
+        source = (Path(__file__).resolve().parent / "GhidraProjectOpenProbe.java").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("args.length != 2", source)
+        self.assertIn("required 32-hex executable MD5", source)
+        self.assertIn("[0-9a-fA-F]{32}", source)
+        self.assertNotIn("optional executable MD5", source)
+
+    def test_open_probe_requires_imported_executable_md5(self) -> None:
+        expected_md5 = self.EXPECTED_MD5
 
         def successful_runner(command: list[str]) -> subprocess.CompletedProcess[str]:
             return subprocess.CompletedProcess(
@@ -232,7 +244,7 @@ class GhidraProjectBackupTests(unittest.TestCase):
             return subprocess.CompletedProcess(
                 command,
                 0,
-                stdout="GHIDRA_PROJECT_OPEN_PROBE_OK program=BEA.exe\n",
+                stdout=f"GHIDRA_PROJECT_OPEN_PROBE_OK program=BEA.exe md5={self.EXPECTED_MD5}\n",
                 stderr="",
             )
 
@@ -242,6 +254,7 @@ class GhidraProjectBackupTests(unittest.TestCase):
             "BEA.exe",
             Path("analyzeHeadless.bat"),
             Path("repo-tools"),
+            program_md5=self.EXPECTED_MD5,
             runner=successful_runner,
         )
 
@@ -259,6 +272,7 @@ class GhidraProjectBackupTests(unittest.TestCase):
                 "BEA.exe",
                 Path("analyzeHeadless.bat"),
                 Path("repo-tools"),
+                program_md5=self.EXPECTED_MD5,
                 runner=missing_sentinel,
             )
 
@@ -272,6 +286,7 @@ class GhidraProjectBackupTests(unittest.TestCase):
                 "BEA.exe",
                 Path("analyzeHeadless.bat"),
                 Path("repo-tools"),
+                program_md5=self.EXPECTED_MD5,
                 runner=failing_runner,
             )
 
@@ -280,7 +295,7 @@ class GhidraProjectBackupTests(unittest.TestCase):
             return subprocess.CompletedProcess(
                 command,
                 0,
-                stdout="GHIDRA_PROJECT_OPEN_PROBE_OK program=BEA.exe\n",
+                stdout=f"GHIDRA_PROJECT_OPEN_PROBE_OK program=BEA.exe md5={self.EXPECTED_MD5}\n",
                 stderr="",
             )
 
@@ -291,6 +306,7 @@ class GhidraProjectBackupTests(unittest.TestCase):
                 "BEA.exe",
                 Path("analyzeHeadless.bat"),
                 Path("repo-tools"),
+                program_md5=self.EXPECTED_MD5,
                 runner=mutating_runner,
             )
 
@@ -308,6 +324,7 @@ class GhidraProjectBackupTests(unittest.TestCase):
                 "BEA.exe",
                 Path("analyzeHeadless.bat"),
                 Path("repo-tools"),
+                program_md5=self.EXPECTED_MD5,
                 runner=failing_runner,
             )
 
@@ -324,6 +341,7 @@ class GhidraProjectBackupTests(unittest.TestCase):
                 "BEA.exe",
                 Path("analyzeHeadless.bat"),
                 Path("repo-tools"),
+                program_md5=self.EXPECTED_MD5,
             )
 
         self.assertFalse(scratch.exists())
@@ -362,7 +380,7 @@ class GhidraProjectBackupTests(unittest.TestCase):
             return subprocess.CompletedProcess(
                 command,
                 0,
-                stdout="GHIDRA_PROJECT_OPEN_PROBE_OK program=BEA.exe\n",
+                stdout=f"GHIDRA_PROJECT_OPEN_PROBE_OK program=BEA.exe md5={self.EXPECTED_MD5}\n",
                 stderr="",
             )
 
@@ -373,6 +391,7 @@ class GhidraProjectBackupTests(unittest.TestCase):
             "BEA.exe",
             Path("analyzeHeadless.bat"),
             Path("repo-tools"),
+            program_md5=self.EXPECTED_MD5,
             runner=successful_runner,
         )
         receipt = self.root / "existing-receipt.json"
@@ -391,7 +410,7 @@ class GhidraProjectBackupTests(unittest.TestCase):
             return subprocess.CompletedProcess(
                 command,
                 0,
-                stdout="GHIDRA_PROJECT_OPEN_PROBE_OK program=BEA.exe\n",
+                stdout=f"GHIDRA_PROJECT_OPEN_PROBE_OK program=BEA.exe md5={self.EXPECTED_MD5}\n",
                 stderr="",
             )
 
@@ -402,6 +421,7 @@ class GhidraProjectBackupTests(unittest.TestCase):
             "BEA.exe",
             Path("analyzeHeadless.bat"),
             Path("repo-tools"),
+            program_md5=self.EXPECTED_MD5,
             runner=successful_runner,
         )
         receipt = self.source / "BEA.rep" / "unsafe-receipt.json"
@@ -421,7 +441,7 @@ class GhidraProjectBackupTests(unittest.TestCase):
             return subprocess.CompletedProcess(
                 command,
                 0,
-                stdout="GHIDRA_PROJECT_OPEN_PROBE_OK program=BEA.exe\n",
+                stdout=f"GHIDRA_PROJECT_OPEN_PROBE_OK program=BEA.exe md5={self.EXPECTED_MD5}\n",
                 stderr="",
             )
 
@@ -432,6 +452,7 @@ class GhidraProjectBackupTests(unittest.TestCase):
             "BEA.exe",
             Path("analyzeHeadless.bat"),
             Path("repo-tools"),
+            program_md5=self.EXPECTED_MD5,
             runner=successful_runner,
         )
         receipt = scratch / "unsafe-receipt.json"
@@ -453,6 +474,22 @@ class GhidraProjectBackupTests(unittest.TestCase):
             )
 
         self.assertFalse(output.exists())
+
+    def test_verify_cli_requires_imported_program_md5_binding(self) -> None:
+        argv = [
+            "ghidra_project_backup.py",
+            "verify",
+            str(self.source),
+            "--scratch-root",
+            str(self.root / "scratch"),
+            "--receipt",
+            str(self.root / "receipt.json"),
+            "--analyze-headless",
+            str(self.root / "analyzeHeadless.bat"),
+        ]
+        with mock.patch("sys.argv", argv), self.assertRaises(SystemExit) as raised:
+            backup.main()
+        self.assertEqual(2, raised.exception.code)
 
 
 if __name__ == "__main__":

@@ -313,8 +313,10 @@ def build_open_command(
     project_name: str,
     program_name: str,
     script_path: Path,
-    program_md5: str | None = None,
+    program_md5: str,
 ) -> list[str]:
+    if not re.fullmatch(r"[0-9a-fA-F]{32}", program_md5):
+        raise BackupError("expected program MD5 must be exactly 32 hexadecimal characters")
     command = [
         str(analyze_headless),
         str(project_root.resolve()),
@@ -329,8 +331,7 @@ def build_open_command(
         "GhidraProjectOpenProbe.java",
         program_name,
     ]
-    if program_md5:
-        command.append(program_md5.lower())
+    command.append(program_md5.lower())
     return command
 
 
@@ -357,12 +358,12 @@ def verify_readonly_open(
     analyze_headless: Path,
     script_path: Path,
     *,
-    program_md5: str | None = None,
+    program_md5: str,
     runner: Runner = default_runner,
 ) -> OpenResult:
-    if program_md5 and not re.fullmatch(r"[0-9a-fA-F]{32}", program_md5):
+    if not re.fullmatch(r"[0-9a-fA-F]{32}", program_md5):
         raise BackupError("expected program MD5 must be exactly 32 hexadecimal characters")
-    normalized_md5 = program_md5.lower() if program_md5 else None
+    normalized_md5 = program_md5.lower()
     before = build_manifest(project_root, project_name)
     command = build_open_command(
         analyze_headless,
@@ -396,10 +397,12 @@ def verify_on_copy(
     analyze_headless: Path,
     script_path: Path,
     *,
-    program_md5: str | None = None,
+    program_md5: str,
     runner: Runner = default_runner,
     keep_failed_probe_copy: bool = False,
 ) -> VerificationResult:
+    if not re.fullmatch(r"[0-9a-fA-F]{32}", program_md5):
+        raise BackupError("expected program MD5 must be exactly 32 hexadecimal characters")
     source_root = resolve_plain_path(source_root, "source project root", strict=True)
     scratch_root = resolve_plain_path(scratch_root, "scratch root", strict=False)
     require_disjoint_paths(source_root, scratch_root, "source and scratch roots")
@@ -507,7 +510,7 @@ def main() -> int:
     verify_parser.add_argument("--receipt", required=True, type=Path)
     verify_parser.add_argument("--project-name", default="BEA")
     verify_parser.add_argument("--program", default="BEA.exe")
-    verify_parser.add_argument("--program-md5")
+    verify_parser.add_argument("--program-md5", required=True)
     verify_parser.add_argument("--analyze-headless", required=True, type=Path)
     verify_parser.add_argument("--script-path", default=Path(__file__).resolve().parent, type=Path)
     verify_parser.add_argument("--keep-probe-copy", action="store_true")

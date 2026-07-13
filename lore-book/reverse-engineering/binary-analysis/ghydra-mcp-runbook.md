@@ -6,8 +6,10 @@
 Current campaign closeout: the
 [2026-07-13 full re-audit recovery and revalidation](ghidra-full-reaudit-closeout-2026-07-13.md)
 verified both trusted endpoints and all ten full-sized intermediates through a
-recursive copy/hash/read-only-open gate. Its proposed semantic corrections are
-not yet live; applying them requires a separate exclusive mutation lease.
+recursive copy/hash/read-only-open gate. A later exclusive lease independently
+re-reviewed all `92` proposed correction addresses, applied `91` confirmed
+rows, rejected one manifest error, performed exact readback, and verified new
+complete pre/post mutation backups.
 
 ## Active Environment (Authoritative)
 
@@ -65,8 +67,8 @@ non-empty recursive `idata/*.db/` payload; arbitrary nonzero files do not turn
 a shell into a project backup.
 `verify` makes another hash-matched scratch copy, opens only that copy with
 `-readOnly -noanalysis`, requires the expected-program sentinel from
-`GhidraProjectOpenProbe.java`, and, when `--program-md5` is supplied, binds the
-open to Ghidra's imported-executable MD5 rather than the program name alone. It
+`GhidraProjectOpenProbe.java`; its required `--program-md5` binds the open to
+Ghidra's imported-executable MD5 rather than the program name alone. It
 then re-hashes the copy and source, writes the detailed receipt to a new
 ignored-evidence path without overwriting an earlier receipt, and removes only
 its exact tool-created scratch copy after success or failure unless
@@ -198,7 +200,13 @@ For each edit (rename/signature/comment/type):
 2. Read back via `/functions/<addr>` or `/data?addr=<addr>&limit=1`.
 3. If read-back is good, enforce a 5-second inter-command delay (`sleep 5`) before the next mutation command.
 4. For owner-correction batches (`<Class>__Unk_*`), filter out non-owner/system caller labels even if singular (`entry`, CRT/stdio wrappers, `_longjmp`, `FatalError`, empty owner, parser artefacts). Promote only class/subsystem owners backed by evidence.
-5. Log every touched address in `function_mutation_ledger.jsonl` and `function_mutation_attempt_log.jsonl` (success/failure + transport + operation details).
+5. For MCP/manual edits, log every touched address in
+   `function_mutation_ledger.jsonl` and `function_mutation_attempt_log.jsonl`
+   (success/failure + transport + operation details). A dedicated reviewed
+   headless batch may instead use its own tracked decision/plan schema plus
+   ignored exact execution/read-back logs and verified backup receipts, but
+   that replacement contract must be named before mutation and summarized in a
+   compact tracked closeout.
 6. If the active mutation baton supplies a tracking-state artifact, update it in
    the same work window. Do not invent an ad-hoc tracked state path.
 7. Mirror status in `MCP-MUTATION-BACKLOG.md` pending/completed sections.
@@ -213,13 +221,26 @@ Wave sizing rule (this workstation):
 5. Save/checkpoint opportunistically (for example after risky operations or long runs), then confirm `saved`.
 6. If timeout/deadlock/mismatch occurs, verify survival read-back first, then continue on the healthiest path (HTTP if available) or recover/restart and resume from the first unverified address.
 
-Tracked mutation records (mandatory):
+Tracked mutation records for MCP/manual batches (mandatory for those paths):
 
 1. `function_mutation_ledger.jsonl`: canonical per-address task ledger (pending/completed mutation intent).
 2. `function_mutation_attempt_log.jsonl`: per-attempt execution log (transport + operation + read-back result).
 
 An additional tracking-state file is campaign-local/conditional and exists only
 when the active mutation baton defines its schema and owner.
+
+The 2026-07-13 reviewed-correction headless batch used the dedicated tracked
+`ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and
+`ghidra-reviewed-correction-plan-2026-07-13.json` records. The exact TSV apply
+plan was bound to SHA-256
+`a2a5f4210f060d1ce1ecc8f7d11ef041954b7c6951860b3026a32dd857bf2148`;
+raw dry-run/apply/read-back logs and backup receipts remain in the ignored
+local evidence overlay. Its compact public-safe outcome is in
+`ghidra-full-reaudit-closeout-2026-07-13.md`. Those dedicated artifacts replace
+per-field legacy MCP-ledger rows as the batch authority. Compact truthful
+supersession and batch-apply entries are also appended to both legacy ledgers so
+address/history consumers see the current closure; do not fabricate additional
+retroactive rows beyond the preserved evidence.
 
 Recommended verification snippets:
 

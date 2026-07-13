@@ -9,7 +9,7 @@
   "coveredByCursorDeltaSource": {
     "bytes": 166137,
     "file": "ghidra-full-reaudit-corrections-2026-07-13.json",
-    "sha256": "1cd67f546d0620c50509af3ada9537cec5d267fc342cf4775137c334e1fd2df1"
+    "sha256": "1f34d9fc1e0a109b10360ecf6a8a3fbd972932e995bd0f3d70ce4ca3a50f9706"
   },
   "prototypeOrBoundaryMutationAuthorized": false,
   "recordCount": 22,

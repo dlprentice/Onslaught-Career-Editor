@@ -49,7 +49,7 @@ class GhidraFullReauditDocsTests(unittest.TestCase):
             self.assertIn(docs.NOTICE_START, text)
             self.assertIn("0x00401000", text)
             self.assertIn("`New` (was `Old`)", text)
-            self.assertIn("exact records are in", text)
+            self.assertIn("final per-address decisions and exact before/after metadata", text)
             self.assertIn("Existing truth.", text)
         self.assertEqual(canonical.read_bytes(), mirror.read_bytes())
 
@@ -118,6 +118,73 @@ class GhidraFullReauditDocsTests(unittest.TestCase):
         self.assertIn("provenance rather than current semantic authority", text)
         self.assertIn("Original result.", text)
 
+    def test_rejected_manifest_row_is_not_described_as_live_correction(self) -> None:
+        target = self.write(
+            "reverse-engineering/binary-analysis/functions/Rejected.md",
+            "# Rejected\n\nHistorical 0x004dac90 proposal.\n",
+        )
+        record = self.record(
+            "0x004dac90",
+            target.relative_to(self.root).as_posix(),
+            "CRound__Old",
+            "CRound__Proposed",
+        )
+        record["classification"] = "rejected-manifest-error"
+
+        docs.reconcile_docs(self.root, [record], write=True)
+
+        text = target.read_text(encoding="utf-8")
+        self.assertIn("proposed correction rejected", text)
+        self.assertIn("known-stale live metadata retained for separate correction", text)
+        self.assertIn("superseded only where confirmed", text)
+
+    def test_reviewed_plan_overlay_requires_exact_address_set(self) -> None:
+        records = [
+            self.record("0x00401000", "reverse-engineering/A.md"),
+            self.record("0x00401010", "reverse-engineering/B.md"),
+        ]
+        plan = {
+            "schemaVersion": "onslaught-ghidra-reviewed-correction-plan.v1",
+            "records": [
+                {"address": "0x00401000", "classification": "confirmed-apply"},
+            ],
+        }
+
+        with self.assertRaisesRegex(ValueError, "address set mismatch"):
+            docs.apply_reviewed_plan(records, plan)
+
+    def test_reviewed_plan_rejects_count_and_source_hash_drift(self) -> None:
+        records = [self.record("0x00401000", "reverse-engineering/A.md")]
+        digest_a = "a" * 64
+        digest_b = "b" * 64
+        plan = {
+            "schemaVersion": "onslaught-ghidra-reviewed-correction-plan.v1",
+            "sourceManifestSha256": {"cursor": digest_a, "targeted": digest_b},
+            "liveSnapshotSha256": "c" * 64,
+            "reviewedAddressCount": 1,
+            "classificationCounts": {"confirmed-apply": 1},
+            "applyRecordCount": 1,
+            "applyPlanSha256": "d" * 64,
+            "records": [
+                {
+                    "address": "0x00401000",
+                    "classification": "confirmed-apply",
+                    "reviewRationale": "Reviewed.",
+                }
+            ],
+        }
+
+        wrong_count = dict(plan, applyRecordCount=0)
+        with self.assertRaisesRegex(ValueError, "applyRecordCount"):
+            docs.apply_reviewed_plan(records, wrong_count)
+
+        with self.assertRaisesRegex(ValueError, "source hashes"):
+            docs.apply_reviewed_plan(
+                records,
+                plan,
+                source_manifest_sha256={"cursor": "e" * 64, "targeted": digest_b},
+            )
+
     def test_reconciliation_is_idempotent_and_updates_existing_notice(self) -> None:
         target = self.write(
             "reverse-engineering/binary-analysis/functions/Test.md",
@@ -156,7 +223,7 @@ class GhidraFullReauditDocsTests(unittest.TestCase):
         docs.reconcile_docs(self.root, records, write=True)
 
         text = target.read_text(encoding="utf-8")
-        self.assertIn("6 correction records referenced in this document", text)
+        self.assertIn("6 confirmed-apply records referenced in this document", text)
         self.assertNotIn("`New5` (was `Old5`)", text)
 
     def test_late_heading_does_not_push_notice_below_preamble(self) -> None:
@@ -187,17 +254,39 @@ class GhidraFullReauditDocsTests(unittest.TestCase):
     def test_primary_state_and_reference_source_paths_are_excluded(self) -> None:
         state = self.write(".codex/state/progress.md", "# State\n")
         source = self.write("references/Onslaught/engine.cpp", "// source\n")
+        canary = self.write(
+            "roadmap/battleengine-morph-identity-canary-implementation-plan-2026-07-12.md",
+            "# Primary-owned canary\n",
+        )
         records = [
             self.record("0x00404000", state.relative_to(self.root).as_posix()),
             self.record("0x00404010", source.relative_to(self.root).as_posix()),
+            self.record("0x00404020", canary.relative_to(self.root).as_posix()),
         ]
 
         result = docs.reconcile_docs(self.root, records, write=True)
 
         self.assertEqual(result.changed_count, 0)
-        self.assertEqual(result.excluded_count, 2)
+        self.assertEqual(result.excluded_count, 3)
         self.assertEqual(state.read_text(encoding="utf-8"), "# State\n")
         self.assertEqual(source.read_text(encoding="utf-8"), "// source\n")
+        self.assertEqual(canary.read_text(encoding="utf-8"), "# Primary-owned canary\n")
+
+    def test_primary_canary_is_excluded_from_address_discovery(self) -> None:
+        routed = self.write("reverse-engineering/Routed.md", "# Routed\n")
+        canary = self.write(
+            "roadmap/battleengine-morph-identity-canary-implementation-plan-2026-07-12.md",
+            "# Primary-owned canary\n\nHistorical 0x00404030 text.\n",
+        )
+        record = self.record("0x00404030", routed.relative_to(self.root).as_posix())
+
+        result = docs.reconcile_docs(self.root, [record], write=True)
+
+        self.assertIn(
+            "roadmap/battleengine-morph-identity-canary-implementation-plan-2026-07-12.md",
+            result.excluded_paths,
+        )
+        self.assertNotIn(docs.NOTICE_START, canary.read_text(encoding="utf-8"))
 
     def test_parent_traversal_doc_path_is_rejected_without_outside_write(self) -> None:
         outside = self.root.parent / f"{self.root.name}-outside.md"
