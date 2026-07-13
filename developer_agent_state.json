@@ -17,8 +17,8 @@
       "newReleaseAuthorized": false
     },
     "repository": {
-      "registeredWorktrees": 5,
-      "worktreeOwnership": "main coordinator; Player Value & UX; Rebuild Asset Pipeline; Lore & Provenance; RE Behavior Contracts",
+      "registeredWorktrees": 4,
+      "worktreeOwnership": "main coordinator; Player Value & UX; Rebuild Asset Pipeline; read-only Campaign Steward",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
       "lastPushedBeforeCurrentSlice": "a3b3af7c (CMSH profile-versus-identity goal/state correction); main and origin/main divergence 0 0",
