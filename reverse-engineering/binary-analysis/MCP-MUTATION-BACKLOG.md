@@ -1,13 +1,21 @@
 # MCP Mutation Backlog
 
-> **Semantic supersession (2026-07-12):** this ledger preserves historical
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** 88 confirmed-apply records referenced in this document; 1 rejected-manifest-error record referenced in this document. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
+> **Semantic supersession (updated 2026-07-13):** this ledger preserves historical
 > Ghidra mutations and read-back facts; a completed mutation is not permanent
-> semantic proof. Current read-only evidence supersedes the saved owner/name
-> interpretations for `0x004081c0`, `0x00410c50`, `0x00411630`, `0x00411aa0`,
-> `0x00411b70`, and `0x00412900`; `0x00412ad0` remains unresolved. Use the
+> semantic proof. Current reviewed evidence supersedes the saved owner/name
+> interpretations for `0x00406560`, `0x004081c0`, `0x00410c50`, `0x00411630`,
+> `0x00411aa0`, `0x00411b70`, `0x00412900`, and `0x00412ad0`. Use the
 > [movement static crosswalk](battleengine-movement-static-crosswalk-2026-07-12.md)
-> for current identity and evidence-grade truth. The live Ghidra project has
-> not yet been mutated to match the crosswalk.
+> and the final reviewed correction plan for current identity and
+> evidence-grade truth. The confirmed corrections were applied and exactly
+> read back on 2026-07-13. The historical Wave844 one-argument
+> `CWorld__LoadWorld` signature is superseded by the applied three-stack-argument
+> ABI. The proposed `0x004dac90` comment correction was rejected because raw
+> instructions show `RET 0x4`, not `RET 0x8`; its live metadata was retained.
 
 Wave1207 measured anchor: unique-address accounting governs active current-risk progress. Wave1207 (`wave1207-d3d-render-resource-lifecycle-current-risk-review`) accounts for `6 D3D/render-resource lifecycle current-risk rows` from the `wave1108-current-risk-rank` continuity denominator with fresh Ghidra export evidence. This read-only review made no mutation, no rename, no signature change, no comment change, no tag change, no function-boundary change, and no executable-byte change. Codex read-only consults used; no Cursor/Composer. Static closure remains `6411/6411 = 100.00%` with `0 / 0 / 0`; active current-risk progress is `1089/1179 = 92.37%`; remaining active focused work: 90; legacy additive counter is deprecated (`1120/1179`) because it includes a 26 duplicate-address overcount and Wave1145 arithmetic overcount: 5. Wave911 is historical-retired/non-reconstructable at `812/1408 = 57.67%`; current risk candidates: 6166; current focused candidates: 1141; live regenerated current focused candidates: 1141; current-risk denominator; continuity denominator; focused threshold `15`; not Wave911 reconstruction. Fresh exports verified `36 xref rows`, `260 instruction rows`, and `6 decompile rows`. Anchors: `CVertexShader__scalar_deleting_dtor`, `CVertexShader__VFunc_02_00501a10`, `DeviceObject__dtor_body`, `DeviceObject__scalar_deleting_dtor`, `CDXMeshVB__scalar_deleting_dtor`, and `CDXMeshVB__dtor_base`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-033229_post_wave1207_d3d_render_resource_lifecycle_current_risk_review_verified`. Active measurement files: `static-reaudit-current-risk-ledger.json`, `reverse-engineering/binary-analysis/static-reaudit-progress.json`, `reverse-engineering/binary-analysis/static-reaudit-accounting-guard.md`, `reverse-engineering/binary-analysis/static-reaudit-measurement-register.md`, and `reverse-engineering/binary-analysis/wave1108-current-risk-rank.md`. Active completion target: `1179/1179 current-risk focused rows reviewed or superseded with bounded static evidence`. Static target remains rebuild-grade static contracts and a rebuild-grade specification aiming at no noticeable difference. Runtime Direct3D behavior, runtime shader behavior, runtime render-resource behavior, exact layouts, exact source identity, BEA patching behavior, rebuild parity, and no-noticeable-difference parity remain separate proof.
 

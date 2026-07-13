@@ -217,8 +217,16 @@ For WinUI patch/mod UX, the preferred user shape is a safe-copy launcher/mod-man
   [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) first.
 - Keep simulation truth in the deterministic Core. Render clients consume
   inputs and snapshots; they do not own gameplay state.
-- Use synthetic command tapes and original procedural content. Do not import
-  retail binaries, extracted assets, decompiler output, or mechanically
+- Use synthetic command tapes and original procedural content for tracked
+  source and ordinary acceptance. Optional user-supplied local meshes, including
+  user-extracted retail assets, may load only from ignored
+  `local-lab/rebuild-godot/` through the dedicated exact-root local command.
+  Bootstrap accepts converted GLB/OBJ only from `staging/from-export`, requires
+  explicit or unambiguous player and terrain roles, verifies one immutable
+  content-addressed generation, publishes its manifest last, and never activates FBX.
+  Runtime wording stays origin-neutral unless an exporter receipt/hash is bound.
+  These files are never committed, redistributed, simulation truth, or parity
+  evidence. Do not import retail binaries, decompiler output, or mechanically
   translated reference-source code.
 - Treat the current implementation as RE-informed original code. A strict
   clean-room claim requires separately staffed specification, implementation,
@@ -228,6 +236,8 @@ For WinUI patch/mod UX, the preferred user shape is a safe-copy launcher/mod-man
   restore may use configured package sources. Intentional state or replay-
   contract changes must update and review the independent final-state and
   rolling-trace goldens.
+- Run `npm run test:rebuild-local-assets` for focused manifest, mesh-bound, and
+  local-lab write-safety checks. It uses synthetic files only.
 - Run `npm run test:rebuild-godot-smoke` when Godot launch, rendering, input,
   toolchain, or native smoke behavior changes. This separate gate may download
   the pinned engine on first use and must leave no process running.

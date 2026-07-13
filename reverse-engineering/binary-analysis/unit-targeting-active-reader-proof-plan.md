@@ -1,5 +1,9 @@
 # Unit Targeting / Active-Reader Proof Plan
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** `0x0044e640` → `CFenrirMainGunAI__ScanListsAndSelectSupportTarget` (was `CSquadNormalReader__ScanListsAndSelectSupportTarget_0044e640`). Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Status: active public-safe proof plan, not runtime proof
 Last updated: 2026-06-08
 Scope: Unit/BattleEngine targeting and active-reader planning from the saved static contract

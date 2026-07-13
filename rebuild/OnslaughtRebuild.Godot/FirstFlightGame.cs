@@ -32,6 +32,7 @@ public sealed partial class FirstFlightGame : Node3D
     private bool _focusLossHandlerNeutralRearmed;
     private string? _smokeReportPath;
     private string? _smokeScreenshotPath;
+    private string? _localAssetsRoot;
 
     public override void _Ready()
     {
@@ -42,13 +43,20 @@ public sealed partial class FirstFlightGame : Node3D
         window.Title = "Onslaught Rebuild - First Flight";
         window.MinSize = new Vector2I(1200, 675);
 
+        LocalPresentationConfig? localPresentation =
+            LocalPresentationConfig.TryResolve(_localAssetsRoot, _smokeMode, out string? localPresentationError);
+        if (!_smokeMode && _localAssetsRoot is not null && localPresentation is null)
+        {
+            GD.PushWarning($"First Flight local presentation rejected: {localPresentationError}");
+        }
+
         _world = new FirstFlightWorldView();
         AddChild(_world);
-        _world.Initialize(_session.CurrentSnapshot);
+        _world.Initialize(_session.CurrentSnapshot, localPresentation);
 
         _hud = new FirstFlightHud();
         AddChild(_hud);
-        _hud.Initialize();
+        _hud.Initialize(_world.LocalPresentationStatus);
         _hud.UpdateFromSnapshot(_session.CurrentSnapshot);
     }
 
@@ -303,6 +311,10 @@ public sealed partial class FirstFlightGame : Node3D
             else if (argument.StartsWith("--screenshot=", StringComparison.Ordinal))
             {
                 _smokeScreenshotPath = argument["--screenshot=".Length..];
+            }
+            else if (argument.StartsWith("--local-assets=", StringComparison.Ordinal))
+            {
+                _localAssetsRoot = argument["--local-assets=".Length..];
             }
             else
             {

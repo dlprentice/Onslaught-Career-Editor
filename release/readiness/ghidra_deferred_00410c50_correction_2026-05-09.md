@@ -1,5 +1,9 @@
 # Ghidra Deferred 0x00410c50 Correction - 2026-05-09
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** Historical record; `0x004081c0` → `CBattleEngine__Move` (was `CMonitor__Process`); `0x00410c50` → `CBattleEngineJetPart__Move` (was `CMonitor__UpdateMovementTransitionAndEffects`); `0x00411630` → `CBattleEngineJetPart__HandleGroundEffect` (was `CMonitor__IntegrateMovementAgainstTerrain`); `0x00411aa0` → `CBattleEngineJetPart__GetFriction` (was `CMonitor__ComputeTerrainVelocityScalar`). The original text below remains provenance rather than current semantic authority. It is superseded only where confirmed. Use the [closeout](../../reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Status: historical saved Ghidra evidence; owner/name superseded 2026-07-12
 
 > **Supersession:** read-only caller, constructor, object-layout, body-order,

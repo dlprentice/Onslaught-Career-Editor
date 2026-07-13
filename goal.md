@@ -288,6 +288,52 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   start-CDB/census gates was rejected against the exact authority and package
   gate definitions. A fresh Retry 11 is now allowed. Retry 10 remains failed
   and cannot be promoted or reinterpreted.
+- Retry 11 used new ignored authority/lease controls, a new absent proof root,
+  fresh copied targets, and the integrated exit-event parser. Dry run passed.
+  The live no-input role again stopped before either positive role and
+  published no matrix. Its retained log contains one exact target exit event
+  for the receipt-owned PID, the ordered `.lastevent` delimiters, cleanup
+  marker, and `quit:` marker. The exact managed stop succeeded, source/copy
+  hashes remained unchanged, and the final owned-process census was clear.
+  The role still failed closed because CDB returned `-1` while reporting the
+  intentionally stopped target's exit code as `0xFFFFFFFF`; the current runner
+  requires CDB exit code zero before parsing the retained evidence. This is now
+  a bounded harness-contract investigation. Arbitrary nonzero CDB exits are not
+  accepted, Retry 11 remains failed, and no positive-role causality claim exists.
+- The Retry 11 exit-status correction is integrated through `647bbaa4`. Normal
+  CDB exit zero remains unchanged. Exceptional CDB exit `-1` is accepted only
+  when the exact receipt-owned target event reports `0xFFFFFFFF`, managed stop
+  proves both force requested and exit observed, and the retained post-readiness
+  transcript is semantically clean through EOF: exact generated prelude, exact
+  six-line event/time/cleanup/quit region, real invariant debugger timestamp,
+  and only explicitly allowed shutdown boilerplate. Any unrelated diagnostic,
+  impossible date/offset, duplication, omission, or reordering fails closed.
+  All existing process/module/log, no-runner-force, hash, stop, and census gates
+  remain mandatory. The four focused suites pass 132 tests, the generated
+  runner builds with zero warnings/errors, and Codex plus sanitized Grok
+  normal/adversarial review accept. A wholly fresh Retry 12 is authorized;
+  Retry 11 remains failed and cannot be reinterpreted.
+- The optional local presentation lane is integrated on `main`. It pins the
+  Stuart Onslaught reference at `5352a81` and the AYA reference plus narrow
+  rectangular-DDS correction at `53b10b0`; adds an ignored exporter/bootstrap
+  workspace; and lets the Godot adapter load only bounded, self-contained GLB
+  or bounded custom-parsed OBJ presentation meshes. Core remains unchanged,
+  ordinary smoke remains synthetic, publication is content-addressed and
+  manifest-last, and no asset origin, visual fidelity, handling, or parity is
+  inferred. Post-merge rebuild, docs, and 19,523-file payload gates pass. One
+  initial smoke-runner helper missed its PID record; an immediate isolated
+  rerun passed all six cases and supersedes that transient attempt.
+- Windowed & Mods now represents the compatibility base truthfully. The exact
+  `resolution_gate` and `force_windowed` rows remain visible in Lab with stable
+  automation/details IDs, but are checked, disabled, and labeled required and
+  automatically included. Every selection/reset/preset path reasserts them;
+  Clear removes optional mods only; both Create entry points share one pure
+  readiness projection and synchronous busy latch; and click handling rejects
+  invalid selection before confirmation. AppCore injection, catalog rows,
+  bytes, receipts, backups, and installed-game boundaries are unchanged. The
+  final source/build suite passes 1,319 AppCore and 155 UI tests with two
+  expected private-corpus skips; focused preflight and native hands-off proof
+  also pass without creating a copy or launching BEA.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future
@@ -295,11 +341,15 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   follow-ups: stale BattleEngine probes/mutators can reapply withdrawn
   `CMonitor` ownership, and AYA export preflight omits `Fbx.dll` plus the FBX
   template.
-- A separate user-owned Codex task owns the Ghidra full-reaudit absorption,
-  recovery, retention, correction review, and targeted revalidation in its own
-  registered worktree. Its findings remain lane-owned and provisional until a
-  reviewed handoff is integrated here. This coordinator does not mutate the
-  live Ghidra project or duplicate that closeout.
+- The dedicated Ghidra full-reaudit closeout is integrated. It independently
+  recovered and reviewed the deleted Cursor campaign boundary, verified the
+  stable 6,411-function inventory and 459-address endpoint delta, reviewed 92
+  unique proposed corrections, applied and exactly read back 91 confirmed rows,
+  and rejected the erroneous `0x004dac90` manifest row rather than forcing it.
+  The live project and complete pre/post stores are verified; the incomplete
+  historical ledger remains explicitly incomplete. Static metadata quality does
+  not prove runtime behavior or rebuild parity. `0x004dac90` remains bounded
+  metadata debt for a separate review and mutation lease.
 - Normal and adversarial review found and closed stale active-index, deep-link
   historical-label, include-parser/count, and current-roadmap contradictions.
   The corrected include inventory is 254 unique quoted targets with 202 absent.
@@ -324,6 +374,13 @@ from retail are inspectable.
   publishes backup/checksum/apply/restore files atomically, and restores
   damaged or truncated copies only from an integrity- and provenance-verified
   full-file backup. The Python patch helper remains a lab surface.
+- Windowed & Mods now separates the required compatibility/recovery path and
+  two bounded optional Player Mods from a collapsed structured Lab of legacy,
+  research, visual, executable, and launch/control diagnostics; no patch bytes
+  changed. Save Lab Game Options also presents the official modern-controller
+  Steam Input setup path, in-game binding/sensitivity steps, and explicit
+  limits: Toolkit edits copied options only and does not configure Steam Input,
+  detect a controller, or prove improved control feel.
 - The Sol Ultra baseline was committed and pushed at
   `5a7bacecac5e813804355d68a8e51973100e0331`; local `main`, `origin/main`, and
   live remote `refs/heads/main` matched with divergence `0 0`.
@@ -336,11 +393,11 @@ from retail are inspectable.
   its 721-selected/726-materialized plain candidate passed the standalone test
   suite, payload/inventory, 463-file/138-link Markdown, 74-package notices, and
   718-file hygiene/line-ending gates.
-- Git reports three registered worktrees: this `main` checkout, the dedicated
-  user-owned Codex Ghidra full-reaudit closeout task, and the completed Cursor
-  submodule/local-retail-presentation branch awaiting reviewed integration. Completed Task 2,
-  validation, and agent-guidance worktrees were removed after integration and
-  preservation checks.
+- After the Ghidra closeout worktree is retired, Git has four active worktrees:
+  this `main` checkout, the player-value task, the bounded runtime-harness
+  correction worker, and the Cursor submodule/local-presentation branch under
+  final hardening. Completed Task 2, validation, agent-guidance, and Ghidra
+  worktrees were removed after integration and preservation checks.
   Seven earlier empty Codex Desktop worktree shells were removed on 2026-07-11.
 - Sixty-one historical `campaign/*` and `codex/*` branch tips were preserved
   in a verified local Git bundle before branch cleanup. Twenty-four otherwise
@@ -490,14 +547,14 @@ claim against an already malicious process running as the same Windows user.
 
 ## Next Slices
 
-1. Run a fresh authorized Level 850 Retry 11 using new ignored controls, copies,
-   processes, and proof root; publish only a complete fully validated sanitized
-   identity/causality result.
-2. Review, harden, and integrate the completed Cursor submodule/local-retail-
-   presentation branch without weakening local-payload or synthetic-smoke
-   boundaries.
-3. Integrate the reviewed Ghidra closeout commits, reconcile current truth, and
-   retire its task/worktree only after ignored evidence absorption is accepted.
+1. Resolve the exact CDB-versus-managed-target exit-status relationship exposed
+   by Retry 11 with a failing disposable test and narrow identity-bound rule,
+   then run a wholly fresh Retry 12 and publish only a complete validated
+   sanitized identity/causality result.
+2. Use the integrated ignored local-asset path for the next evidence-backed
+   presentation slice while keeping synthetic smoke and non-parity boundaries.
+3. Perform the separate bounded review needed to correct the remaining
+   `0x004dac90` live metadata debt without reviving the rejected manifest row.
 4. Retire or fail-close active BattleEngine tools that can reapply withdrawn
    ownership, then harden AYA export dependency/template preflight.
 5. Run the deep Lore editorial/provenance pass and generated contributor

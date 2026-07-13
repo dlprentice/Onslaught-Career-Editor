@@ -1,5 +1,9 @@
 # Mesh / Resource / Render Static Contract
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** `0x005441b0` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Wave1220 static closeout acceptance: active current-risk focused accounting is `1179/1179 = 100.00%`; remaining active focused work: 0. This is static Ghidra/read-back/system-map acceptance for the current-risk lane, not runtime render/resource behavior, exact layout proof, exact source-body identity, BEA patching proof, visual output proof, rebuild parity, or no-noticeable-difference parity.
 
 Historical Wave1217 and earlier anchors below are at-wave snapshots; their older active current-risk counters are preserved as evidence provenance, not current status.

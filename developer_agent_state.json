@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-13",
   "routingPolicy": "Follow the global Codex multi-agent lane contract. Under current direct user policy, every new or resumed Codex-owned worker uses gpt-5.6-sol at medium effort by default; harder work may raise Sol effort, and Terra/Luna fallback or lower effort requires a newer direct user instruction.",
-  "currentFocus": "Run a fresh Retry 11 with the integrated exact target-exit-event proof, harden and integrate the optional local-retail presentation branch, then absorb the completed Ghidra closeout.",
+  "currentFocus": "Resolve Retry 11's exact CDB/target exit-status contract, run a wholly fresh Retry 12, and use the integrated bounded local-presentation path for the next authentic rebuild slice.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -17,8 +17,8 @@
       "newReleaseAuthorized": false
     },
     "repository": {
-      "registeredWorktrees": 5,
-      "worktreeOwnership": "main coordinator checkout; dedicated Ghidra closeout and player-value tasks; isolated runtime proof and Cursor submodule/local-retail-presentation implementation worktrees",
+      "registeredWorktrees": 4,
+      "worktreeOwnership": "main coordinator checkout; player-value task; isolated runtime proof worker; Cursor submodule/local-presentation implementation worktree",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
       "lastPushedBeforeCurrentSlice": "0997419c4c5159e22722f690520ec6d98d39e0e4 (campaign completion criteria); exact receipt-owned CDB target-exit-event parsing is integrated locally through f74ac902 pending this state closeout push",
@@ -37,7 +37,7 @@
     "patchContractCloseout": {
       "accounting": "29 rows: 20 visible options (9 stable, 11 experimental), 9 hidden companions, 17 dependency edges, 118 conflict edges",
       "safety": "Exact pinned-catalog mutation membership, canonical specimen or verified-clean-backup identity, complete known transition attestation, case-consistent dependency/conflict/profile semantics, sidecar link/stale-state rejection, and atomic damaged-copy recovery",
-      "ux": "Windowed & Mods separates stable/experimental evidence, injects required windowed rows and hidden companions, and exposes bounded proof/non-claim details without raw offsets in the normal path",
+      "ux": "Windowed & Mods now separates exact compatibility/recovery from two initially unselected bounded Player Mods (PATCHED identity marker and non-save-awarding Goodies wall preview); retained legacy/research recipes, visual/executable experiments, and launch/control diagnostics live in a structured collapsed Lab. The required resolution_gate and force_windowed rows remain visible with stable IDs/details but are checked, disabled, and explicitly automatic. All preset/reset paths reassert them, Clear removes only optional mods, both Create paths share readiness and a synchronous busy latch, and invalid selection is rejected before confirmation.",
       "validation": "Focused closeout passed 9 AppCore catalog/profile tests, 34 C# patch regressions, Python helper safety/self-tests, and 30 accounting tests. Final npm test passed a zero-warning WinUI build, 1316 AppCore tests, 138 WinUI tests plus 2 expected private-catalog skips, and all rebuild suites; the isolated native Patch Bench interaction smoke, 3662-file/6264-link Markdown, 19457-file payload, 19641-file submodule payload, migration inventory, 18600-file hygiene/line endings, and 74-package notices gates passed.",
       "review": "Codex and bounded Cursor/Grok normal/adversarial review converged after catalog-binding, transition-attestation, case, sidecar, and interrupted-write recovery blockers were fixed; hostile same-user process isolation remains explicitly out of scope"
     },
@@ -50,7 +50,8 @@
         "Launch preset selection is derived from effective controls; debug trace, normalized text, Admin Level, manual level edits, and the local split-screen helper stay synchronized.",
         "Both copied-executable source action groups stack and wrap at compact width.",
         "Audio-first and restored-Video page construction defer native VLC; current-session Video demand and real local playback remain functional.",
-        "Visual fixture catalogs use schema 2 and capture evidence rejects incompletely rendered headers."
+        "Visual fixture catalogs use schema 2 and capture evidence rejects incompletely rendered headers.",
+        "Save Lab Game Options exposes the official modern-controller Steam Input setup path, in-game button/left-stick and sensitivity steps, browser-labeled Ziggurat guide action, copied-options-only boundary, and raw numeric controller-config caveat without claiming controller detection or improved feel."
       ],
       "acceptance": [
         "zero-warning solution build",
@@ -61,7 +62,8 @@
         "real read-only audio/video playback passed",
         "11-screen primary visual smoke passed",
         "Markdown links, notices, public allowlist/hard-payload, and repo hygiene passed",
-        "independent Cursor/Grok normal and adversarial closeout reviews accepted the slice with no commit blockers"
+        "independent Cursor/Grok normal and adversarial closeout reviews accepted the slice with no commit blockers",
+        "controller-guidance source contract and clean hands-off native UIA passed with zero post-run WinUI/test processes"
       ]
     },
     "filesystemSafety": {
@@ -83,10 +85,11 @@
       "toolchain": "fixed tracked manifest and SHA-256, exact official archive/runtime identity, 82-file tree, fixed per-user cache, reparse rejection, held read-only file lease, setup lock through consumers, locked archive-local Godot restore, and explicit same-user non-sandbox boundary",
       "acceptance": "Source npm test passed a zero-warning WinUI build, 1307 AppCore, 136 WinUI plus 2 expected private-catalog skips, 38 Core, 21 Client, 12 toolchain, 6 evidence-validator, and 6 owned-process tests. Cache-only native smoke passed at 1280x720 and 1200x675 with tick 120, state hash 87b9d09a3afec0bebd97f06793b83baabe3ff330b2378ff149194d6d6a4f779d, heuristic semantic anchors, synthetic notification-handler clear/rearm, and kernel-owned Job Object cleanup. The exact launcher was manually played with Q/W/Space/R/Esc and exited without an orphan. Full docs, 19453-file payload, 19637-file submodule payload, 18600-file hygiene, 74-package notices, and curated gates passed.",
       "package": "The 721-selected/726-materialized exact source candidate passed payload/inventory, 463-file/138-link Markdown, standalone zero-warning npm test with 1307 AppCore, 123 WinUI plus 15 expected fixture/catalog skips, all 83 rebuild tests, 74-package notices, and 718-file hygiene. First Flight remains source-only and is not in the published v1.0.9 WinUI ZIP.",
-      "review": "Codex and bounded Cursor/Grok normal/adversarial reviews accepted the slice after input, toolchain, smoke-evidence, package, and process-ownership challenges were fixed. The final Codex adversarial follow-up accepted the suspended-root kill-on-close Job Object and explicitly heuristic visual-evidence boundary."
+      "review": "Codex and bounded Cursor/Grok normal/adversarial reviews accepted the slice after input, toolchain, smoke-evidence, package, and process-ownership challenges were fixed. The final Codex adversarial follow-up accepted the suspended-root kill-on-close Job Object and explicitly heuristic visual-evidence boundary.",
+      "localPresentation": "Integrated on main with Onslaught 5352a81 and AYA 53b10b0. Optional ignored user-supplied meshes are presentation-only: self-contained GLB and custom-parsed OBJ are size/complexity/range bounded, held bytes are revalidated, content-addressed role files publish before an atomic manifest, and ordinary smoke remains synthetic. Core is unchanged; no retail origin, visual fidelity, handling, or parity is claimed. Post-merge Core 38, Client 71, toolchain 12, smoke 12, local-asset fail-closed, docsync, 279-command, and 19,523-file payload gates pass; one transient helper PID-record miss passed on an immediate isolated six-case rerun."
     },
     "movementCrosswalk": {
-      "sourceAudit": "Pinned Onslaught 792545b and AYAResourceExtractor 6f3df296 are inventoried with fork/upstream provenance, tracked-file counts, build/test posture, supported lanes, completeness gaps, and license boundaries. Older 111/75 manifests counted submodule .git control files; current tracked counts are 110/74.",
+      "sourceAudit": "Pinned Onslaught 5352a81 and AYAResourceExtractor 53b10b0 are inventoried with fork/upstream provenance, tracked-file counts, build/test posture, supported lanes, completeness gaps, and license boundaries. AYA is Stuart master plus one narrow rectangular-DDS copy-bound correction; neither source corpus is Steam behavior or format-completeness authority.",
       "staticCorrection": "Read-only Steam Ghidra evidence identifies 0x004081c0 as CBattleEngine__Move, 0x00410c50 as CBattleEngineJetPart__Move, and 0x00411630/0x00411aa0/0x00411b70/0x00412900 as selected JetPart helpers. The May jet-stall interpretation at 0x004081c0 is withdrawn. Live Ghidra names remain unchanged.",
       "qualityBoundary": "The 6411/6411 metric is comment/signature export-contract closure, not semantic completeness. Owner/prototype/static-semantics/source-provenance/runtime confidence are now scored separately.",
       "rebuildBoundary": "First Flight transform, energy, shield, movement, arena, and presentation choices remain synthetic. No authentic behavior change is allowed before an accepted copied-runtime contract.",
@@ -100,8 +103,8 @@
       "task2Implementation": "Integrated through 078efaf7 and 6fe26639: strict exact-type process receipts, PEB-derived launch identity, module/window/manifest/digest binding, local-only marker-ready CDB attach with held command identity and bounded log reads, and foreground input with reverse-order finally cleanup. Independent re-review approved; the integrated Task 2 suites pass without real BEA/CDB.",
       "task3Implementation": "Integrated through 8dc733f4, 526df1c2, and 123ca8ac: one locked unpatched Level 850/configuration 2 protocol, one Q tap per positive role, canonical command/receipt/specimen equality, external fresh/create-new private artifacts, exact marker/input success, and shared-plan ordered cleanup through census.",
       "task4Implementation": "Accepted and pushed at 3d23c176: exact authority/lease schemas and hash binding, canonical no-process dry run, fixed serialized roles, immediate cross-role identity rejection, bounded immutable-byte strict materialization, interruption invalidation after child cleanup, and manifest-before-summary publication. The accepted focused non-live suite passed 111 tests and normal/adversarial Codex review approved; no game/debugger process was launched.",
-      "task5Preflight": "Preflight corrected ambient-versus-effective executable identity and private AppConfig routing. Retries 1-8 exposed and bounded path-budget, CDB identity/null, MASM/module syntax, private-diagnostic, active-log sharing, native INPUT-layout, exact-input, and target/debugger teardown defects. Retry 9 then exposed post-exit process-handle loss; the reviewed correction at e5a6b275 retains the exact target SafeHandle through cleanup and exact ExitTime readback. Retry 10 used fresh controls, passed dry run, launched the exact clean copied retail target, and completed target/debugger cleanup with finalized markers, unchanged source/copy hashes, clear census, and exact managed ExitTime readback. It failed closed and published no matrix because CDB's final ExitTime preceded the target's by about 160 ms. Cross-process ExitTime ordering is not a valid debugger invariant, and Retry 10 lacked explicit evidence identifying the event that released g. The reviewed correction integrated through f74ac902 retains the exact no-delete CDB log stream, strictly parses one bounded global `.lastevent` target process-exit event for the exact receipt-owned PID and nonzero thread, requires clean unforced CDB exit, and preserves every process/module/receipt, marker, hash, managed-stop, finalized-log, and census guard. Root focused verification passes 124 runtime-tooling, 26 parser, 23 orchestration, 17 process-identity, and 13 renderer/materializer tests.",
-      "status": "Tasks 1-4 are accepted. Task 5 has ten preserved failed executions and no published identity claim. Retry 10 proves the corrected exact-handle cleanup path but not Q causality or Transform/Morph/Move/JetPart identity. The target-exit-event correction is accepted and integrated; a fresh Retry 11 may now run from new controls, copies, processes, and proof root."
+      "task5Preflight": "Preflight corrected ambient-versus-effective executable identity and private AppConfig routing. Retries 1-10 exposed and bounded path-budget, CDB identity/null, MASM/module syntax, private-diagnostic, active-log sharing, native INPUT-layout, exact-input, target/debugger teardown, process-handle, and invalid cross-process timestamp-order defects. The correction integrated through f74ac902 retains the exact no-delete CDB log stream, strictly parses one bounded global `.lastevent` target process-exit event for the exact receipt-owned PID and nonzero thread, and preserves every process/module/receipt, marker, hash, managed-stop, finalized-log, and census guard. Retry 11 used fresh controls/copies/processes/proof root and failed closed before positives because CDB returned -1 while reporting the intentionally stopped target status 0xFFFFFFFF. The accepted correction through 647bbaa4 preserves normal exit zero and accepts exceptional -1 only with the exact status, ForceRequested plus ExitObserved, and a semantically valid retained transcript from readiness through EOF. Unexpected diagnostics, impossible timestamps, order/cardinality drift, or unknown shutdown output fail closed. The four focused suites pass 132 tests and the generated runner builds with zero warnings/errors.",
+      "status": "Tasks 1-4 are accepted. Task 5 has eleven preserved failed executions and no published identity claim. Retry 11 proves retained exact target-exit evidence but not Q causality or Transform/Morph/Move/JetPart identity. Codex and sanitized Grok normal/adversarial review accept the bounded exit-status correction; a wholly fresh Retry 12 is now authorized."
     },
     "agentGuidanceAudit": {
       "integrated": "56738f9b",
@@ -114,9 +117,9 @@
       "acceptance": "Inventory/profile, 73 runtime-helper, 274 active documented-command, 62 current-link, release-profile, curated-manifest, JSON, and diff checks pass; generated accounting is R0=6291, R2=0, R3=3, R4=13184."
     },
     "liveGhidraSemanticLane": {
-      "ownership": "The dedicated Codex Ghidra closeout task retains the exclusive live-Ghidra mutation and evidence lease until its final reviewed commits are integrated; coordinator lanes do not mutate the project or private backups.",
-      "reportedProgress": "The lane reports full 6,411-function coverage absorption, verified baseline/final stores, review of all 92 proposed post-Cursor corrections, 91 applied with exact readback, and rejection of the erroneous 0x004dac90 row. Its base closeout commit is c33f2f1e; the final correction/readback follow-up remains lane-owned until pushed and reviewed integration completes.",
-      "evidenceBoundary": "The recovered Cursor ledger remains incomplete and no missing verdict is invented. Integrate only the task's verified backups, exact mutation/readback evidence, reviewed tracked corrections, and final commits; static metadata quality does not prove runtime behavior or rebuild parity."
+      "ownership": "The dedicated Ghidra closeout commits c33f2f1e and a96a1a5f are integrated; its exclusive mutation lease is released and the task/worktree may be retired after push verification.",
+      "reportedProgress": "The integrated closeout verifies a stable 6,411-function inventory and 459-address endpoint delta, independently reviews 92 unique proposed corrections, applies and exactly reads back 91 confirmed rows, rejects the erroneous 0x004dac90 manifest row, applies the separately leased 0x0050b9c0 structured prototype correction, and verifies complete pre/post project backups.",
+      "evidenceBoundary": "The recovered Cursor ledger remains incomplete and no missing verdict is invented. Static metadata quality does not prove runtime behavior or rebuild parity. The stale 0x004dac90 live metadata requires a separate bounded review and mutation lease rather than reuse of the rejected manifest row."
     },
     "boundaries": [
       "No installed-game or original BEA.exe mutation.",
@@ -131,9 +134,9 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Integrate and review the exact receipt-owned target exit-event correction, then create fresh ignored Retry-11 authority/lease controls and proof storage; publish only if the complete fixed-role matrix validates.",
-    "Independently harden and integrate the completed Cursor submodule/local-retail-presentation branch while preserving ignored payloads, synthetic smoke, bounded paths, and non-parity wording.",
-    "Integrate the Ghidra closeout only after its final correction/readback commits and evidence handoff are complete, then retire its task and worktree.",
+    "Integrate and review the exact Retry-11 CDB/target exit-status relationship, then create wholly fresh Retry-12 controls and publish only if the complete fixed-role matrix validates.",
+    "Use the integrated ignored local-asset exporter/bootstrap and Godot adapter in the next evidence-backed presentation slice while preserving synthetic smoke and non-parity wording.",
+    "Preserve the integrated Ghidra recovery overlay and transcript evidence until explicit retention acceptance; the task worktree is already retired.",
     "Retire stale BattleEngine ownership probes/mutators and add Fbx.dll plus FBX-template fail-fast preflight before the next Ghidra/export mutation slice.",
     "After runtime evidence is accepted, freeze one measured movement/morph/camera contract and implement it in deterministic Core plus the Godot adapter for the authentic BYO-asset vertical slice."
   ]

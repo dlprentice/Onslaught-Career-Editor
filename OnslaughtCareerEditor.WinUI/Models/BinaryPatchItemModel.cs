@@ -9,6 +9,7 @@ namespace OnslaughtCareerEditor.WinUI.Models
 {
     public sealed class BinaryPatchItemModel : INotifyPropertyChanged
     {
+        private const string RequiredCompatibilityCopy = "Required and automatically included in every safe game copy";
         private bool _isSelected;
 
         public BinaryPatchItemModel(BinaryPatchSpec spec)
@@ -64,8 +65,8 @@ namespace OnslaughtCareerEditor.WinUI.Models
             };
             UserFacingStatus = spec.Key switch
             {
-                "resolution_gate" => "Safe-copy compatibility fix. Open Details and limits for what was checked.",
-                "force_windowed" => "Safe-copy compatibility fix. Open Details and limits for what was checked.",
+                "resolution_gate" => $"{RequiredCompatibilityCopy}. Safe-copy compatibility fix. Open Details and limits for what was checked.",
+                "force_windowed" => $"{RequiredCompatibilityCopy}. Safe-copy compatibility fix. Open Details and limits for what was checked.",
                 "extra_graphics_default_on" => "Safe-copy graphics option. Needs visual comparison on your machine.",
                 "ignore_cardid_tweak_overrides" => "Safe-copy graphics option. Needs visual comparison on your machine.",
                 "version_overlay_use_patched_format_pointer" => "Safe-copy title-screen marker. Open Details and limits for what was checked.",
@@ -185,6 +186,11 @@ namespace OnslaughtCareerEditor.WinUI.Models
         }
 
         public BinaryPatchSpec Spec { get; }
+
+        public bool IsRequiredCompatibilityBase =>
+            Spec.Key is "resolution_gate" or "force_windowed";
+
+        public bool CanChangeSelection => !IsRequiredCompatibilityBase;
 
         public bool IsSelected
         {

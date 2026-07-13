@@ -209,7 +209,14 @@ This helps avoid a common pitfall: the retail `.bes` “shift-16” look is prim
 ## Known Bugs in Extractor
 
 1. **Memory leak**: Native zlib wrapper allocates 2MB per call, never freed
-2. **Non-square texture bug**: `height x height x 4` instead of `width x height x 4` in DDSTextureUncompress.cpp
+2. **Non-square texture bug** (Stuart upstream): `height x height x 4` instead of
+   `width x height x 4` in `DDSTextureUncompress.cpp`. The pinned
+   `dlprentice/AYAResourceExtractor` commit `53b10b0` corrects that narrow
+   rectangular-output copy loop and adds limited null/size guards. It does not
+   establish complete bounds safety for malformed or untrusted DDS input.
+   Local export is limited to trusted canonical retail inputs and bounded
+   process failure. Rebuilding from Stuart `master` reintroduces the rectangular
+   output bug.
 
 ---
 

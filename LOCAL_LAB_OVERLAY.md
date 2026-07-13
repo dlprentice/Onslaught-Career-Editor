@@ -1,7 +1,7 @@
 # Local Lab Overlay
 
 Status: active
-Last updated: 2026-06-30
+Last updated: 2026-07-13
 
 This public repository is the primary day-to-day working checkout. The repo is
 allowed to contain raw project history and working material such as RE notes,
@@ -26,11 +26,26 @@ Use these names when possible:
 | `save-attempts/` or `local-saves/` | Local saves and options payloads used for testing. |
 | `local-ghidra/`, `ghidra-local/`, or `Ghidra/` | Full local Ghidra projects, databases, local-only exports, and backups. |
 | `local-proofs/` | Bulky runtime proof bundles, screenshots, traces, CDB logs, and frame captures. |
-| `local-lab/` | Miscellaneous local-only lab material that is too large or payload-like for git. |
+| `local-lab/` | Miscellaneous local-only lab material that is too large or payload-like for git. `local-lab/rebuild-godot/` is the only allowed init/bootstrap/export output workspace for optional First Flight user-supplied local mesh presentation. |
 | `mcps/` | Local MCP/tooling sandboxes and generated local integration payloads. |
 | `GameProfiles/` / `PatchBench/` | Copied game profiles and patch-bench runtime output. |
 
 These paths are intentionally ignored by `.gitignore`.
+
+The local rebuild asset workflow reads a user-supplied trusted canonical retail
+mirror but never writes to it. Init, export, conversion staging, role activation,
+and manifests stay under `local-lab/rebuild-godot/` or a validated child.
+Outputs must not overlap game/source/`BEA.exe` roots, tracked source, junctions,
+symlinks, or hardlink aliases. FBX is staging input only; manifests activate
+explicit self-contained GLB or bounded OBJ roles. Export uses and holds the
+exact `references/AYAResourceExtractor/BoxWithTextures.fbx` template plus the
+three mutable trusted-local extractor DLLs before output. After manual FBX
+conversion, place only the selected GLB/OBJ candidates under
+`local-lab/rebuild-godot/staging/from-export/`; bootstrap never activates FBX or
+searches export output directly. Bootstrap verifies both role files under one
+content-addressed `versions/` generation before publishing `manifest.json` last,
+so a failed generation cannot mix with the active manifest. A path or manifest
+does not prove retail origin, redistribution rights, or parity.
 
 ## Tracked Public Material
 
@@ -133,6 +148,17 @@ original `BEA.exe`, latest verified/golden/final backups, and any proof bundle
 that is current evidence for a tracked claim. If classification is ambiguous,
 leave the material in place and report a retention recommendation instead of
 deleting it.
+
+For a Ghidra project, the backup unit is the `.gpr` marker plus the complete
+recursive `.rep` store. Use `tools/ghidra_project_backup.py` to copy and verify
+the pair through per-file hashes and a disposable read-only program open. A
+zero-byte `.gpr` by itself, top-level directory copy, or plausible byte total
+without the complete recursive `.rep` store is not a recoverable backup. Keep
+verification receipts and exact local paths in an
+ignored overlay. The 2026-07-13 full re-audit retention closeout verified both
+trusted endpoints and all ten full-sized intermediate backups with this model;
+see
+[the public-safe closeout](reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md).
 
 For coordinated automation, storage sentinel, Ghidra/headless, consult, and
 proof-retention posture, see

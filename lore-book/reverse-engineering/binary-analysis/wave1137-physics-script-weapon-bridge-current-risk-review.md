@@ -1,5 +1,9 @@
 # Wave1137 PhysicsScript Weapon Bridge Current-Risk Review
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** `0x0042f5f0` → `WeaponDefinition__CreateAndRegisterByName` (was `CWeapon__CreateAndRegisterByName`); `0x00437fe0` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Status: complete static read-only evidence
 Date: 2026-06-05
 Tag: `wave1137-physics-script-weapon-bridge-current-risk-review`

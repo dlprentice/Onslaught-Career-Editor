@@ -95,6 +95,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string StatusMessage);
 
         private readonly List<BinaryPatchItemModel> _allPatchItems;
+        private readonly HashSet<string> _requiredCompatibilityKeys;
         private readonly List<BinaryPatchGroupModel> _patchGroups;
         private string? _verifiedSignature;
         private string? _lastCopiedProfileRoot;
@@ -106,6 +107,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private OnlineDualSafeCopyTopologyArtifactSummary? _dualSafeCopyTopologyArtifactSummary;
         private GameProfileManagedProcess? _managedCopiedProfileProcess;
         private bool _isLoadingSourcePath;
+        private bool _isAwaitingCopiedProfileConfirmation;
         private bool _isPreparingCopiedProfile;
         private bool _isLaunchingCopiedProfile;
         private bool _isStoppingCopiedProfile;
@@ -117,6 +119,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         public BinaryPatchesPage()
         {
             IReadOnlyList<string> defaultProfileKeys = BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.CompatibilityProfileId);
+            _requiredCompatibilityKeys = defaultProfileKeys.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             _allPatchItems = BinaryPatchPlanBuilder.GetVisibleSpecs()
                 .Select(spec => new BinaryPatchItemModel(spec)
@@ -124,6 +127,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     IsSelected = defaultProfileKeys.Contains(spec.Key, StringComparer.OrdinalIgnoreCase)
                 })
                 .ToList();
+            EnsureRequiredCompatibilitySelected();
             _patchGroups = PatchBenchPatchGroups.Build(_allPatchItems);
 
             InitializeComponent();
@@ -226,6 +230,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void SelectOnlyKeys(IEnumerable<string> keys)
         {
             var selected = keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            selected.UnionWith(_requiredCompatibilityKeys);
             foreach (BinaryPatchItemModel item in _allPatchItems)
             {
                 item.IsSelected = selected.Contains(item.Spec.Key);
@@ -233,6 +238,17 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             InvalidateVerification();
             UpdateControlState();
+        }
+
+        private void EnsureRequiredCompatibilitySelected()
+        {
+            foreach (BinaryPatchItemModel item in _allPatchItems)
+            {
+                if (_requiredCompatibilityKeys.Contains(item.Spec.Key))
+                {
+                    item.IsSelected = true;
+                }
+            }
         }
 
         private bool LoadSourcePathFromConfig()
@@ -260,6 +276,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void UpdateControlState()
         {
+            EnsureRequiredCompatibilitySelected();
             string exePath = (ExePathTextBox.Text ?? string.Empty).Trim();
             string sourcePath = (SourceExePathTextBox.Text ?? string.Empty).Trim();
             bool hasSourceExe = IsBattleEngineExecutableSourcePath(sourcePath) && File.Exists(sourcePath);
@@ -312,10 +329,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 PatchBenchMusicTargetTrackComboBox.SelectedItem is string targetTrack &&
                 PatchBenchMusicReplacementTrackComboBox.SelectedItem is string replacementTrack &&
                 !string.Equals(targetTrack, replacementTrack, StringComparison.OrdinalIgnoreCase);
+            PatchBenchSafeCopySelectionReadinessState readiness = BuildSafeCopySelectionReadiness();
 
-            PatchBenchPrepareCopiedProfileButton.IsEnabled = hasSourceExe && !_isPreparingCopiedProfile && !_isLaunchingCopiedProfile && !_isStoppingCopiedProfile && _managedCopiedProfileProcess is null;
+            PatchBenchPrepareCopiedProfileButton.IsEnabled = readiness.CanCreate;
             PatchBenchIncludeSavegamesOption.IsEnabled = PatchBenchPrepareCopiedProfileButton.IsEnabled;
-            PatchBenchTopCreateSafeCopyButton.IsEnabled = PatchBenchPrepareCopiedProfileButton.IsEnabled;
+            PatchBenchTopCreateSafeCopyButton.IsEnabled = readiness.CanCreate;
+            PatchBenchSafeCopySelectionReadiness.Text = readiness.Status;
+            AutomationProperties.SetName(PatchBenchSafeCopySelectionReadiness, readiness.Status);
             uint? selectedControllerConfig = GetSelectedControllerConfigurationPreset();
             if (!selectedControllerConfig.HasValue && PatchBenchPersistControllerConfigOption.IsChecked == true)
             {
@@ -342,7 +362,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchSafeCopySourceStatus.Text = BuildSafeCopySourceStatus(sourcePath);
             WorkingCopySummaryTextBlock.Text = BuildWorkingCopySummary(exePath);
             string? selectedProfileId = MatchSelectableSafeCopyProfileId(visibleSelectedKeys);
-            bool isModernGraphicsOnly = SetEquals(visibleSelectedKeys, s_modernGraphicsKeys);
+            bool isModernGraphicsOnly = SetEquals(
+                visibleSelectedKeys,
+                _requiredCompatibilityKeys.Concat(s_modernGraphicsKeys).ToArray());
             SafeCopyProfilePreset? selectedProfilePreset = string.IsNullOrWhiteSpace(selectedProfileId)
                 ? null
                 : BinaryPatchPlanBuilder.GetSafeCopyProfilePreset(selectedProfileId);
@@ -356,6 +378,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchProfileCatalogStatus.Text = BuildSafeCopyProfileCatalogStatus();
             PatchBenchSelectedProfileDetails.Text = PatchBenchSelectedProfileText.BuildDetails(
                 selectedProfileTextState);
+            PatchBenchPlayerModsSelectionStatus.Text = PatchBenchSelectedProfileText.BuildPlayerModsStatus(
+                visibleSelectedKeys.Contains("version_overlay_use_patched_format_pointer", StringComparer.OrdinalIgnoreCase),
+                visibleSelectedKeys.Contains("goodies_gallery_display_unlock", StringComparer.OrdinalIgnoreCase));
+            AutomationProperties.SetName(PatchBenchPlayerModsSelectionStatus, PatchBenchPlayerModsSelectionStatus.Text);
             UpdateChoiceVisualState(visibleSelectedKeys);
             UpdateLaunchPresetVisualState();
 
@@ -383,6 +409,30 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 copiedProfileLaunchError);
         }
 
+        private PatchBenchSafeCopySelectionReadinessState BuildSafeCopySelectionReadiness()
+        {
+            EnsureRequiredCompatibilitySelected();
+            string[] visibleSelectedKeys = GetVisibleSelectedKeys().ToArray();
+            string sourcePath = (SourceExePathTextBox.Text ?? string.Empty).Trim();
+            bool hasSourceExecutable = IsBattleEngineExecutableSourcePath(sourcePath) && File.Exists(sourcePath);
+            bool isBusy =
+                _managedCopiedProfileProcess is not null ||
+                _isPreparingCopiedProfile ||
+                _isLaunchingCopiedProfile ||
+                _isStoppingCopiedProfile ||
+                _isStagingMusicReplacement ||
+                _isRestoringMusicReplacement;
+            string? validationError = BinaryPatchPlanBuilder.ValidateVisibleSelection(visibleSelectedKeys);
+            int optionalPatchCount = visibleSelectedKeys.Count(key =>
+                !_requiredCompatibilityKeys.Contains(key));
+
+            return OnslaughtCareerEditor.WinUI.Helpers.PatchBenchSafeCopySelectionReadiness.Build(
+                hasSourceExecutable,
+                isBusy,
+                validationError,
+                optionalPatchCount);
+        }
+
         private void UpdateChoiceVisualState(IReadOnlyCollection<string> selectedKeys)
         {
             string? profileId = MatchSelectableSafeCopyProfileId(selectedKeys);
@@ -393,11 +443,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 new[]
                 {
                     PatchBenchChoiceVisualState.Bind(PatchBenchWindowedPresetButton, "Select Compatibility Copy profile", "Selected: Compatibility Copy profile", string.Equals(profileId, BinaryPatchPlanBuilder.CompatibilityProfileId, StringComparison.OrdinalIgnoreCase)),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchStableDefaultsButton, "Select Windowed and Graphics Defaults profile", "Selected: Windowed and Graphics Defaults profile", string.Equals(profileId, BinaryPatchPlanBuilder.RecommendedProfileId, StringComparison.OrdinalIgnoreCase)),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchEnhancedPreviewProfileButton, "Select Enhanced Profile Preview profile", "Selected: Enhanced Profile Preview profile", string.Equals(profileId, BinaryPatchPlanBuilder.EnhancedPreviewProfileId, StringComparison.OrdinalIgnoreCase)),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchClearSelectionButton, "Clear optional mod rows; safe copies still include required compatibility", "Selected: no optional mod rows", selectedKeys.Count == 0),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchModernGraphicsPresetButton, "Select extra graphics flag rows only", "Selected: graphics flag rows only", SetEquals(selectedKeys, s_modernGraphicsKeys)),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchDebugCameraPreviewProfileButton, "Select Debug Camera Preview profile", "Selected: Debug Camera Preview profile", string.Equals(profileId, BinaryPatchPlanBuilder.DebugCameraPreviewProfileId, StringComparison.OrdinalIgnoreCase)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchStableDefaultsButton, "Select legacy graphics-default Lab recipe; visible improvement is unproven", "Selected: legacy graphics-default Lab recipe; visible improvement is unproven", string.Equals(profileId, BinaryPatchPlanBuilder.RecommendedProfileId, StringComparison.OrdinalIgnoreCase)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchEnhancedPreviewProfileButton, "Select retained legacy Enhanced Profile Preview Lab recipe", "Selected: retained legacy Enhanced Profile Preview Lab recipe", string.Equals(profileId, BinaryPatchPlanBuilder.EnhancedPreviewProfileId, StringComparison.OrdinalIgnoreCase)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchClearSelectionButton, "Clear optional mod rows; safe copies still include required compatibility", "Selected: no optional mod rows", SetEquals(selectedKeys, _requiredCompatibilityKeys)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchModernGraphicsPresetButton, "Select extra graphics flag rows only", "Selected: graphics flag rows only", SetEquals(selectedKeys, _requiredCompatibilityKeys.Concat(s_modernGraphicsKeys).ToArray())),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchDebugCameraPreviewProfileButton, "Select experimental Debug Camera Preview Lab research recipe", "Selected: experimental Debug Camera Preview Lab research recipe", string.Equals(profileId, BinaryPatchPlanBuilder.DebugCameraPreviewProfileId, StringComparison.OrdinalIgnoreCase)),
                     PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorRedButton, "Select red frontend margins", "Selected: red frontend margins", string.Equals(selectedMenuColorKey, "frontend_clear_screen_dark_red", StringComparison.OrdinalIgnoreCase)),
                     PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorGreenButton, "Select green frontend margins", "Selected: green frontend margins", string.Equals(selectedMenuColorKey, "frontend_clear_screen_dark_green", StringComparison.OrdinalIgnoreCase)),
                     PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorBlackButton, "Select black frontend margins", "Selected: black frontend margins", string.Equals(selectedMenuColorKey, "frontend_clear_screen_black", StringComparison.OrdinalIgnoreCase)),
@@ -673,6 +723,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 }
             }
 
+            EnsureRequiredCompatibilitySelected();
             InvalidateVerification();
             UpdateControlState();
         }
@@ -718,7 +769,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void ClearSelectionButton_Click(object sender, RoutedEventArgs e)
         {
-            SelectOnlyKeys(BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.CustomProfileId));
+            SelectOnlyKeys(Array.Empty<string>());
             AppStatusService.SetStatus("Windowed & Mods: optional mod rows cleared");
         }
 
@@ -844,7 +895,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void UpdateSafeCopyBusyState()
         {
             string? status = null;
-            if (_isPreparingCopiedProfile)
+            if (_isAwaitingCopiedProfileConfirmation)
+            {
+                status = "Waiting for safe copy confirmation.";
+            }
+            else if (_isPreparingCopiedProfile)
             {
                 status = "Creating safe copy. This can take a few minutes for a full game folder.";
             }
@@ -1550,6 +1605,18 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private async void PrepareCopiedProfileButton_Click(object sender, RoutedEventArgs e)
         {
+            EnsureRequiredCompatibilitySelected();
+            PatchBenchSafeCopySelectionReadinessState readiness = BuildSafeCopySelectionReadiness();
+            if (!readiness.CanCreate)
+            {
+                PatchBenchSafeCopySelectionReadiness.Text = readiness.Status;
+                AutomationProperties.SetName(PatchBenchSafeCopySelectionReadiness, readiness.Status);
+                OperationLogTextBox.Text = readiness.Status;
+                AppStatusService.SetStatus("Windowed & Mods: safe copy selection needs review");
+                UpdateControlState();
+                return;
+            }
+
             if (_isPreparingCopiedProfile)
             {
                 OperationLogTextBox.Text = "Safe game copy preparation is already running.";
@@ -1557,55 +1624,54 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 return;
             }
 
-            string sourcePath = (SourceExePathTextBox.Text ?? string.Empty).Trim();
-            if (!IsBattleEngineExecutableSourcePath(sourcePath) || !File.Exists(sourcePath))
-            {
-                OperationLogTextBox.Text = "Select a valid source BEA.exe or BEA.exe.original.backup before preparing a safe game copy.";
-                AppStatusService.SetStatus("Windowed & Mods: missing safe copy source");
-                UpdateControlState();
-                return;
-            }
-
-            string? sourceGameRoot = Path.GetDirectoryName(Path.GetFullPath(sourcePath));
-            if (string.IsNullOrWhiteSpace(sourceGameRoot) || !Directory.Exists(sourceGameRoot))
-            {
-                OperationLogTextBox.Text = "The selected BEA.exe does not have a usable source game folder.";
-                AppStatusService.SetStatus("Windowed & Mods: safe copy source folder missing");
-                UpdateControlState();
-                return;
-            }
-
-            bool includeSavegames = PatchBenchIncludeSavegamesOption.IsChecked == true;
-            string[] selectedPatchKeys = GetVisibleSelectedKeys().ToArray();
-            string? createMusicSwapPresetId = GetSelectedCreateMusicSwapPresetId();
-            GameProfilePrepareOptions options = new(
-                SourceGameRoot: sourceGameRoot,
-                OutputRoot: GetCopiedProfileWorkspaceRoot(),
-                ProfileName: BuildCopiedProfileName(),
-                ExecutableOverridePath: sourcePath,
-                ApplyWindowedCompatibilityPatch: true,
-                AllowByteLayoutOnlyTarget: false,
-                IncludeSavegames: includeSavegames,
-                PatchKeys: selectedPatchKeys,
-                LaunchArguments: BuildSelectedLaunchArguments(),
-                ProfilePresetId: MatchSelectableSafeCopyProfileId(selectedPatchKeys),
-                MusicSwapPresetId: createMusicSwapPresetId);
-
-            if (!await ConfirmAsync(
-                    "Create safe copy?",
-                    $"The app will copy the selected game folder into its own safe workspace, then patch only that copied BEA.exe.\n\nSource folder:\n{sourceGameRoot}\n\nDestination root:\n{options.OutputRoot}\n\nThis can take a few minutes and may require several GB of free disk space. The Steam/game install stays unchanged."))
-            {
-                PatchBenchCopiedProfileSummary.Text = PatchBenchSafeCopyOutcomeText.BuildCanceledSummary();
-                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.BuildCanceledOperationLog();
-                AppStatusService.SetStatus("Windowed & Mods: safe copy creation canceled");
-                return;
-            }
-
+            _isPreparingCopiedProfile = true;
+            _isAwaitingCopiedProfileConfirmation = true;
             try
             {
-                _isPreparingCopiedProfile = true;
-                PatchBenchPrepareCopiedProfileButton.IsEnabled = false;
-                PatchBenchLaunchCopiedProfileButton.IsEnabled = false;
+                UpdateControlState();
+                string sourcePath = (SourceExePathTextBox.Text ?? string.Empty).Trim();
+                if (!IsBattleEngineExecutableSourcePath(sourcePath) || !File.Exists(sourcePath))
+                {
+                    OperationLogTextBox.Text = "Select a valid source BEA.exe or BEA.exe.original.backup before preparing a safe game copy.";
+                    AppStatusService.SetStatus("Windowed & Mods: missing safe copy source");
+                    return;
+                }
+
+                string? sourceGameRoot = Path.GetDirectoryName(Path.GetFullPath(sourcePath));
+                if (string.IsNullOrWhiteSpace(sourceGameRoot) || !Directory.Exists(sourceGameRoot))
+                {
+                    OperationLogTextBox.Text = "The selected BEA.exe does not have a usable source game folder.";
+                    AppStatusService.SetStatus("Windowed & Mods: safe copy source folder missing");
+                    return;
+                }
+
+                bool includeSavegames = PatchBenchIncludeSavegamesOption.IsChecked == true;
+                string[] selectedPatchKeys = GetVisibleSelectedKeys().ToArray();
+                string? createMusicSwapPresetId = GetSelectedCreateMusicSwapPresetId();
+                GameProfilePrepareOptions options = new(
+                    SourceGameRoot: sourceGameRoot,
+                    OutputRoot: GetCopiedProfileWorkspaceRoot(),
+                    ProfileName: BuildCopiedProfileName(),
+                    ExecutableOverridePath: sourcePath,
+                    ApplyWindowedCompatibilityPatch: true,
+                    AllowByteLayoutOnlyTarget: false,
+                    IncludeSavegames: includeSavegames,
+                    PatchKeys: selectedPatchKeys,
+                    LaunchArguments: BuildSelectedLaunchArguments(),
+                    ProfilePresetId: MatchSelectableSafeCopyProfileId(selectedPatchKeys),
+                    MusicSwapPresetId: createMusicSwapPresetId);
+
+                if (!await ConfirmAsync(
+                        "Create safe copy?",
+                        $"The app will copy the selected game folder into its own safe workspace, then patch only that copied BEA.exe.\n\nSource folder:\n{sourceGameRoot}\n\nDestination root:\n{options.OutputRoot}\n\nThis can take a few minutes and may require several GB of free disk space. The Steam/game install stays unchanged."))
+                {
+                    PatchBenchCopiedProfileSummary.Text = PatchBenchSafeCopyOutcomeText.BuildCanceledSummary();
+                    OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.BuildCanceledOperationLog();
+                    AppStatusService.SetStatus("Windowed & Mods: safe copy creation canceled");
+                    return;
+                }
+
+                _isAwaitingCopiedProfileConfirmation = false;
                 UpdateControlState();
                 PatchBenchCopiedProfileSummary.Text = "Creating safe game copy. This can take a few minutes for a full game folder...";
                 PatchBenchCopiedProfileLaunchPlan.Text = string.Empty;
@@ -1697,6 +1763,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             finally
             {
+                _isAwaitingCopiedProfileConfirmation = false;
                 _isPreparingCopiedProfile = false;
                 UpdateControlState();
             }

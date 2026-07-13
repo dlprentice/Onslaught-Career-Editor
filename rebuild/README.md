@@ -11,12 +11,14 @@ original code. It is deliberately separate from the WinUI toolkit:
   steps without owning simulation truth;
 - `OnslaughtRebuild.Headless` replays a checked-in command tape and verifies a
   stable rolling trace hash plus final-state hash; and
-- `OnslaughtRebuild.Godot` is the playable First Flight visual/input adapter,
-  using only original procedural geometry and UI.
+- `OnslaughtRebuild.Godot` is the playable First Flight visual/input adapter.
+  Default visuals are original procedural geometry and UI. Optional local-only
+  local mesh preview can load ignored user-supplied assets from `local-lab/rebuild-godot/`
+  (never committed; non-parity).
 
 No Battle Engine Aquila installation, executable, save, media, or extracted
-asset is required. First Flight is a small playable prototype, not a replacement
-for the retail game.
+asset is required for the default synthetic path. First Flight is a small
+playable prototype, not a replacement for the retail game.
 
 The repository pins the .NET 10 SDK for the WinUI toolkit, while this rebuild
 targets `net8.0` for Godot .NET compatibility. Install the .NET 8 SDK/runtime as
@@ -52,6 +54,46 @@ First Flight starts in a resizable 1280x720 window with a supported minimum of
 Destroy the three procedural sentries. The HUD reports mode, objective, energy,
 shield, and hull.
 
+## Optional user-supplied local mesh presentation
+
+Ignored, user-extracted BYO assets can replace the synthetic Aquila stand-in
+and ground plane without changing Core or Client simulation. This is a
+trusted-local workflow for canonical retail inputs, not an untrusted-file
+service, redistribution path, or parity/provenance proof.
+
+```powershell
+npm run init:rebuild-godot-assets
+npm run export:local-bea-assets
+# Convert selected exported FBX files to self-contained GLB or bounded OBJ.
+# Put only the converted files in local-lab/rebuild-godot/staging/from-export,
+# then select exactly one player mesh and one terrain mesh:
+npm run bootstrap:rebuild-godot-assets -- -PlayerMesh aquila-player.glb -TerrainMesh ground-terrain.glb
+npm run run:rebuild-godot:local
+```
+
+All generated/staged files stay under the ignored
+`local-lab/rebuild-godot/` workspace (see `LOCAL_LAB_OVERLAY.md` and
+`rebuild/local-assets.layout.json`). FBX may be staged but is never activated;
+bootstrap reads converted files only from `staging/from-export` and fails on
+missing or ambiguous roles. Runtime support is limited to self-contained GLB
+with bounded core-glTF arrays/accessors/BIN ranges and a nonempty mesh primitive,
+or bounded OBJ. Bootstrap writes both verified roles into one immutable
+`versions/<content-id>/` generation and atomically publishes `manifest.json`
+last; an interrupted generation remains unreferenced. Ordinary run and smoke
+commands stay synthetic; the dedicated local command supplies the exact
+`--local-assets` root. Failed or empty roles keep procedural geometry, and the
+HUD describes a neutral user-supplied local mesh only after a nonempty renderable surface loads.
+No retail-origin claim is made without a separately bound exporter receipt and
+hash. Local assets are never simulation truth, redistribution material, or
+parity evidence.
+
+The export wrapper consumes the exact template
+`references/AYAResourceExtractor/BoxWithTextures.fbx`. It preflights and holds
+that file plus `AYAResourceExtractor.dll`, `DDSTextureUncompress.dll`, and
+`Fbx.dll` before creating output. These are mutable trusted-local dependencies,
+not cryptographically pinned provenance. The workflow is bounded to trusted
+canonical retail input and process failure; it is not hostile-input sandboxing.
+
 ## Verify
 
 From the repository root:
@@ -71,7 +113,8 @@ explicit `--no-verify` hash-generation run.
 
 `npm run test:rebuild` is the ordinary deterministic contract gate. It runs
 Core tests, interactive-adapter tests, hostile toolchain-manifest/extraction
-and process-lifecycle tests, and smoke-evidence validator tests. It does not
+and process-lifecycle tests, smoke-evidence validator tests, and focused local
+asset manifest/mesh/workspace safety tests. It does not
 invoke the Godot downloader or open a native window; normal .NET restore may
 still use configured package sources when dependencies are not cached.
 `npm run test:rebuild-godot-smoke` is the separate native acceptance smoke. It

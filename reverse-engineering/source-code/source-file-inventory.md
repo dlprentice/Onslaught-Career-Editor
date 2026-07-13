@@ -4,11 +4,10 @@
 > Generated: December 2025
 > Refresh note: 2026-02-11 inventory refresh added below
 
-## 2026-07-12 Current Correction
+## 2026-07-13 Current Correction
 
-The current pinned Onslaught submodule has 110 Git-tracked files, including 52
-`.cpp` and 54 `.h` files. The older 111-file filesystem manifest included the
-submodule worktree's `.git` control file. More importantly, 202 of 254 unique
+The current pinned Onslaught submodule has 108 exact Git tree entries, including
+52 `.cpp` and 54 `.h` files. More importantly, 202 of 254 unique
 quoted include targets are absent from the supplied tree and no build-system
 project is present, so this is not a complete buildable source checkout.
 

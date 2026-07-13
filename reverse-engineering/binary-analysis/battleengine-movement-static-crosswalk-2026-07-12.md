@@ -1,6 +1,10 @@
 # BattleEngine Movement Static Crosswalk - 2026-07-12
 
-Status: high-confidence static owner/source mapping; runtime behavior and live Ghidra mutation remain pending
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** 7 confirmed-apply records referenced in this document. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
+Status: high-confidence static owner/source mapping; targeted revalidation completed 2026-07-13; runtime behavior and live Ghidra mutation remain pending
 
 ## Scope
 
@@ -11,7 +15,7 @@ This pass re-reviewed the BattleEngine movement/morph call chain against:
 - read-only Ghidra 12.0.3 exports from a verified project backup;
 - RTTI, vtable slots, callers, constructors, object offsets, and adjacent bodies;
 - pinned Stuart source at
-  `792545b996365f383781c666d145ea6cbda83f3a`; and
+  `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`; and
 - the current synthetic rebuild implementation.
 
 The Ghidra project was opened read-only. No saved name, signature, comment,
@@ -46,7 +50,7 @@ These are dimension scores, not a whole-binary completion percentage.
 | `0x004081c0 CBattleEngine__Move` | 4 | 2 | 3 | 4 | 0 |
 | `0x00410c50 CBattleEngineJetPart__Move` | 4 | 2 | 3 | 4 | 0 |
 | `0x00411630` / `0x00411aa0` / `0x00411b70` / `0x00412900` helpers | 4 | 2 | 3 | 4 | 0 |
-| `0x00412ad0` unresolved helper | 1 | 1 | 1 | 1 | 0 |
+| `0x00412ad0 CBattleEngineWalkerPart__UpdateWalkCycle` | 4 | 2 | 3 | 4 | 0 |
 
 ## Corrected Static Map
 
@@ -58,7 +62,7 @@ These are dimension scores, not a whole-binary completion percentage.
 | `0x00411aa0` | `CMonitor__ComputeTerrainVelocityScalar` | `CBattleEngineJetPart__GetFriction` | Called from JetPart Move and returns the source-compatible terrain/velocity-gated friction scalar. | High static; runtime pending |
 | `0x00411b70` | `CBattleEngineJetPart__IsStateMachineActive` | `CBattleEngineJetPart__GetIsDoingSpecialAirMove` | Returns true when the JetPart loop field or barrel-count field is active, exactly matching the source predicate. | High static; runtime pending |
 | `0x00412900` | `CMonitor__CanUseTrackingUpdate` | `CBattleEngineJetPart__AutoLevel` | Uses the JetPart main-part pointer, on-ground and velocity virtuals, main-part energy, and local barrel-count field in the same decision sequence as source. | High static; caller name/prototype cleanup and runtime pending |
-| `0x00412ad0` | `CMonitor__UpdateSurfaceAlignmentAngle` | unresolved helper before WalkerPart construction | The body is reached from WalkerPart movement context, but this pass did not establish an exact source method or owner strongly enough to rename it. | Provisional; keep unresolved |
+| `0x00412ad0` | `CMonitor__UpdateSurfaceAlignmentAngle` | `CBattleEngineWalkerPart__UpdateWalkCycle` | Its sole caller is `CBattleEngineWalkerPart__Move`; the receiver uses `+0x20` as the main-part pointer and `+0x24/+0x28` as current/old walk-cycle fields. The body copies the old cycle, transposes the main-part orientation, projects velocity into local space, advances by the larger-magnitude X/Y component, and wraps through plus/minus pi exactly like the source method. The old comment's smaller-component claim was false. | High static; runtime pending |
 
 `0x00411a60 Vec3__Cross` remains a shared math helper and is not reassigned to
 JetPart ownership.
@@ -83,6 +87,8 @@ Camera, FOV, animation frames, audio, and presentation remain separate lanes.
 - The Monitor owner/name at `0x004081c0` is wrong.
 - The Monitor owner/name at `0x00410c50` and its selected child helpers is
   wrong.
+- The Monitor owner/name and smaller-component description at `0x00412ad0`
+  are wrong; the body is `CBattleEngineWalkerPart__UpdateWalkCycle`.
 - The May 7 jet energy/stall report used the broad BattleEngine Move body at
   `0x004081c0` as if it were the JetPart movement method. Its specific
   `+0x280` subtraction and counter interpretation is withdrawn. The actual

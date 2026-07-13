@@ -149,16 +149,16 @@
                         Margin="0">
                         <StackPanel Spacing="16">
                             <StackPanel>
-                                <TextBlock Text="Choose game changes"
+                                <TextBlock Text="Choose player mods"
                                            FontSize="16"
                                            FontWeight="SemiBold" />
-                                  <TextBlock Text="Pick what the safe copy should include. Required compatibility fixes stay selected; optional changes can be added or cleared before you create the copy."
+                                  <TextBlock Text="Every safe game copy includes two required compatibility changes: allow non-4:3 display-mode candidates and prefer windowed startup."
                                            Margin="0,6,0,0"
                                            Style="{StaticResource SectionBodyTextStyle}" />
-                                <TextBlock Text="Available changes include windowed startup, wider display-mode support, graphics defaults, frontend margin colors, music swaps, Goodies preview, title marker, launch options, control-option presets, and experimental camera/control rows."
+                                <TextBlock Text="This does not prove widescreen field-of-view parity or guarantee windowed behavior on every PC. The installed game stays unchanged, and you can recover by creating a fresh safe copy."
                                             Margin="0,6,0,0"
                                             Style="{StaticResource SectionBodyTextStyle}" />
-                                <TextBlock Text="Open Details and limits on a row when you want the technical checks and remaining limits."
+                                <TextBlock Text="Add only the player mods you want below. Open Lab only for legacy recipes, experiments, and diagnostics."
                                            Margin="0,6,0,0"
                                            Style="{StaticResource SectionBodyTextStyle}" />
                             </StackPanel>
@@ -169,14 +169,145 @@
                                     Padding="12"
                                     Background="{ThemeResource ShellMutedSurfaceBrush}">
                                 <StackPanel Spacing="10">
-                                    <TextBlock Text="Safe copy profiles"
+                                    <TextBlock Text="Safe compatibility and recovery"
                                                FontSize="14"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Text="Profiles are presets for normal play and testing. The app still verifies every selected row before creating or launching the safe copy."
+                                    <TextBlock Text="Compatibility Copy is the exact required base: allow non-4:3 display-mode candidates and prefer windowed startup. Optional mods are not part of this base."
                                                Style="{StaticResource SectionBodyTextStyle}" />
-                                    <TextBlock Text="Enhanced Profile Preview combines the windowed setup, graphics defaults, PATCHED title marker, red frontend margins, Goodies preview, and copied-options control starting values."
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button x:Name="PatchBenchWindowedPresetButton"
+                                                Content="Reset to Compatibility Copy"
+                                                AutomationProperties.AutomationId="PatchBenchWindowedPresetButton"
+                                                AutomationProperties.Name="Select Compatibility Copy profile"
+                                                Grid.Column="0"
+                                                HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                Click="WindowedPresetButton_Click" />
+                                        <Button x:Name="PatchBenchClearSelectionButton"
+                                                Content="Clear optional mods"
+                                                AutomationProperties.AutomationId="PatchBenchClearSelectionButton"
+                                                AutomationProperties.Name="Clear optional mod rows; safe copies still include required compatibility"
+                                                Grid.Column="1"
+                                                HorizontalAlignment="Stretch"
+                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
+                                                Click="ClearSelectionButton_Click" />
+                                    </Grid>
+                                    <Border Background="{ThemeResource ShellSurfaceBrush}"
+                                            BorderBrush="{ThemeResource ShellBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="10,8">
+                                        <TextBlock x:Name="PatchBenchSelectedProfileStatus"
+                                                   AutomationProperties.AutomationId="PatchBenchSelectedProfileStatus"
+                                                   AutomationProperties.Name="Selected safe-copy profile status"
+                                                   Text="Selected profile: Compatibility Copy. Required lowest-change base."
+                                                   TextWrapping="WrapWholeWords" />
+                                    </Border>
+                                    <TextBlock Text="Optional player mods"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Margin="0,4,0,0" />
+                                    <TextBlock Text="Both player mods start off and change only the copied executable. The PATCHED marker identifies the proven title/menu path. Goodies wall preview changes a bounded display-state path; it does not edit your save, award Goodies, or make an unlock persistent, and it does not prove every Goodies entry or model/FMV playback."
                                                Style="{StaticResource SectionBodyTextStyle}" />
-                                    <TextBlock Text="Debug Camera Preview selects the camera toggle plus one Q-forward movement test."
+                                    <TextBlock x:Name="PatchBenchPlayerModsSelectionStatus"
+                                               AutomationProperties.AutomationId="PatchBenchPlayerModsSelectionStatus"
+                                               AutomationProperties.Name="Player mods selected: none."
+                                               Text="Player mods selected: none."
+                                               TextWrapping="WrapWholeWords" />
+                                    <Grid ColumnSpacing="8"
+                                          RowSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <Button Content="Add PATCHED marker"
+                                                AutomationProperties.AutomationId="PatchBenchAddVersionMarkerButton"
+                                                AutomationProperties.Name="Add PATCHED title marker row"
+                                                Grid.Row="0"
+                                                Grid.Column="0"
+                                                HorizontalAlignment="Stretch"
+                                                Click="AddVersionMarkerButton_Click" />
+                                        <Button Content="Clear PATCHED marker"
+                                                AutomationProperties.AutomationId="PatchBenchClearVersionMarkerButton"
+                                                AutomationProperties.Name="Clear PATCHED title marker row"
+                                                Grid.Row="0"
+                                                Grid.Column="1"
+                                                HorizontalAlignment="Stretch"
+                                                Click="ClearVersionMarkerButton_Click" />
+                                        <Button Content="Add Goodies wall preview"
+                                                AutomationProperties.AutomationId="PatchBenchAddGoodiesPreviewButton"
+                                                AutomationProperties.Name="Add bounded Goodies wall display preview; does not edit saves, award Goodies, prove every entry, or prove model and FMV playback"
+                                                Grid.Row="1"
+                                                Grid.Column="0"
+                                                HorizontalAlignment="Stretch"
+                                                Click="AddGoodiesPreviewButton_Click" />
+                                        <Button Content="Clear Goodies wall preview"
+                                                AutomationProperties.AutomationId="PatchBenchClearGoodiesPreviewButton"
+                                                AutomationProperties.Name="Clear Goodies wall display preview row"
+                                                Grid.Row="1"
+                                                Grid.Column="1"
+                                                HorizontalAlignment="Stretch"
+                                                Click="ClearGoodiesPreviewButton_Click" />
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <Expander x:Name="PatchBenchLabExpander"
+                                      AutomationProperties.AutomationId="PatchBenchLabExpander"
+                                      AutomationProperties.Name="Open Lab recipes, experiments, and diagnostics"
+                                      Header="Lab: legacy recipes and experiments"
+                                      IsExpanded="False">
+                                <StackPanel Spacing="16"
+                                            Margin="0,12,0,0">
+                                    <TextBlock Text="Lab keeps specialist tools discoverable without presenting them as normal player recommendations. Each group has a different purpose and proof boundary."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <Border Background="{ThemeResource ShellSurfaceBrush}"
+                                            BorderBrush="{ThemeResource ShellBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="10,8">
+                                        <TextBlock x:Name="PatchBenchProfileCatalogStatus"
+                                                   AutomationProperties.AutomationId="PatchBenchProfileCatalogStatus"
+                                                   AutomationProperties.Name="Profile catalog and preset source"
+                                                   Text="Profile catalog and preset source: tracked catalog status loads here."
+                                                   TextWrapping="WrapWholeWords" />
+                                    </Border>
+                                    <Expander x:Name="PatchBenchSelectedProfileDetailsExpander"
+                                              AutomationProperties.AutomationId="PatchBenchSelectedProfileDetailsExpander"
+                                              AutomationProperties.Name="Preset details and limits"
+                                              Header="Preset details and limits">
+                                        <TextBlock x:Name="PatchBenchSelectedProfileDetails"
+                                                   AutomationProperties.AutomationId="PatchBenchSelectedProfileDetails"
+                                                   AutomationProperties.Name="Selected safe-copy preset details"
+                                                   Text="Selected safe-copy preset details: included changes, restore path, and limits update with the selected profile."
+                                                   TextWrapping="WrapWholeWords" />
+                                    </Expander>
+                                    <TextBlock Text="Legacy and research recipes"
+                                               AutomationProperties.HeadingLevel="Level2"
+                                               FontSize="14"
+                                               FontWeight="SemiBold" />
+                            <Border BorderBrush="{ThemeResource ShellBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12"
+                                    Background="{ThemeResource ShellMutedSurfaceBrush}">
+                                <StackPanel Spacing="10">
+                                    <TextBlock Text="Retained Lab recipes"
+                                               FontSize="14"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="These legacy and research presets remain available for receipts, regression work, and earlier instructions. They are not recommendations for normal play. The app still verifies every selected row before creating or launching the safe copy."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <TextBlock Text="Enhanced Profile Preview is a retained legacy recipe combining graphics flags, marker, margins, Goodies preview, and copied-options control starting values; it is not a general enhancement claim."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <TextBlock Text="Debug Camera Preview is an experimental research recipe selecting the camera toggle plus one Q-forward movement test."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <Border Background="{ThemeResource ShellSurfaceBrush}"
                                             BorderBrush="{ThemeResource ShellBorderBrush}"
@@ -201,38 +332,6 @@
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <TextBlock Text="Create safe copy records the selected rows in the safe-copy receipt and profile manifest. Control-options details are recorded only when an options manifest is written. Your installed game stays unchanged."
                                                Style="{StaticResource SectionBodyTextStyle}" />
-                                    <Border Background="{ThemeResource ShellSurfaceBrush}"
-                                            BorderBrush="{ThemeResource ShellBorderBrush}"
-                                            BorderThickness="1"
-                                            CornerRadius="8"
-                                            Padding="10,8">
-                                        <TextBlock x:Name="PatchBenchSelectedProfileStatus"
-                                                   AutomationProperties.AutomationId="PatchBenchSelectedProfileStatus"
-                                                   AutomationProperties.Name="Selected safe-copy profile status"
-                                                   Text="Selected profile: Compatibility Copy. This is the safest default."
-                                                   TextWrapping="WrapWholeWords" />
-                                    </Border>
-                                    <Border Background="{ThemeResource ShellSurfaceBrush}"
-                                            BorderBrush="{ThemeResource ShellBorderBrush}"
-                                            BorderThickness="1"
-                                            CornerRadius="8"
-                                            Padding="10,8">
-                                        <TextBlock x:Name="PatchBenchProfileCatalogStatus"
-                                                   AutomationProperties.AutomationId="PatchBenchProfileCatalogStatus"
-                                                   AutomationProperties.Name="Profile catalog and preset source"
-                                                   Text="Profile catalog and preset source: tracked catalog status loads here."
-                                                   TextWrapping="WrapWholeWords" />
-                                    </Border>
-                                    <Expander x:Name="PatchBenchSelectedProfileDetailsExpander"
-                                              AutomationProperties.AutomationId="PatchBenchSelectedProfileDetailsExpander"
-                                              AutomationProperties.Name="Preset details and limits"
-                                              Header="Preset details and limits">
-                                        <TextBlock x:Name="PatchBenchSelectedProfileDetails"
-                                                   AutomationProperties.AutomationId="PatchBenchSelectedProfileDetails"
-                                                   AutomationProperties.Name="Selected safe-copy preset details"
-                                                   Text="Selected safe-copy preset details: included changes, restore path, and limits update with the selected profile."
-                                                   TextWrapping="WrapWholeWords" />
-                                    </Expander>
                                     <Grid ColumnSpacing="8"
                                           RowSpacing="8">
                                         <Grid.ColumnDefinitions>
@@ -242,50 +341,31 @@
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
-                                        <Button x:Name="PatchBenchWindowedPresetButton"
-                                                Content="Compatibility Copy"
-                                                AutomationProperties.AutomationId="PatchBenchWindowedPresetButton"
-                                                AutomationProperties.Name="Select Compatibility Copy profile"
+                                        <Button x:Name="PatchBenchStableDefaultsButton"
+                                                Content="Legacy graphics-default recipe"
+                                                AutomationProperties.AutomationId="PatchBenchStableDefaultsButton"
+                                                AutomationProperties.Name="Select legacy graphics-default Lab recipe; visible improvement is unproven"
                                                 Grid.Row="0"
                                                 Grid.Column="0"
-                                                HorizontalAlignment="Stretch"
-                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                                Click="WindowedPresetButton_Click" />
-                                        <Button x:Name="PatchBenchStableDefaultsButton"
-                                                Content="Windowed + Graphics Defaults"
-                                                AutomationProperties.AutomationId="PatchBenchStableDefaultsButton"
-                                                AutomationProperties.Name="Select Windowed and Graphics Defaults profile"
-                                                Grid.Row="0"
-                                                Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
                                                 Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                 Click="StableDefaultsButton_Click" />
                                         <Button x:Name="PatchBenchEnhancedPreviewProfileButton"
                                                 Content="Enhanced Profile Preview"
                                                 AutomationProperties.AutomationId="PatchBenchEnhancedPreviewProfileButton"
-                                                AutomationProperties.Name="Select Enhanced Profile Preview profile"
+                                                AutomationProperties.Name="Select retained legacy Enhanced Profile Preview Lab recipe"
                                                 ToolTipService.ToolTip="Preview profile: compatibility, graphics defaults, PATCHED title marker, red frontend margins, Goodies preview, and copied-options control tweaks. Open row details for what was checked and current limits."
-                                                Grid.Row="1"
-                                                Grid.Column="0"
-                                                HorizontalAlignment="Stretch"
-                                                Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                                Click="EnhancedPreviewPresetButton_Click" />
-                                        <Button x:Name="PatchBenchClearSelectionButton"
-                                                Content="Clear optional mods"
-                                                AutomationProperties.AutomationId="PatchBenchClearSelectionButton"
-                                                AutomationProperties.Name="Clear optional mod rows; safe copies still include required compatibility"
-                                                Grid.Row="1"
+                                                Grid.Row="0"
                                                 Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
                                                 Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                                Click="ClearSelectionButton_Click" />
+                                                Click="EnhancedPreviewPresetButton_Click" />
                                         <Button x:Name="PatchBenchModernGraphicsPresetButton"
                                                 Content="Graphics flag rows only"
                                                 AutomationProperties.AutomationId="PatchBenchModernGraphicsPresetButton"
                                                 AutomationProperties.Name="Select extra graphics flag rows only"
-                                                Grid.Row="2"
+                                                Grid.Row="1"
                                                 Grid.Column="0"
                                                 HorizontalAlignment="Stretch"
                                                 Style="{StaticResource PatchBenchChoiceButtonStyle}"
@@ -293,10 +373,10 @@
                                         <Button x:Name="PatchBenchDebugCameraPreviewProfileButton"
                                                 Content="Debug Camera Preview"
                                                 AutomationProperties.AutomationId="PatchBenchDebugCameraPreviewProfileButton"
-                                                AutomationProperties.Name="Select Debug Camera Preview profile"
+                                                AutomationProperties.Name="Select experimental Debug Camera Preview Lab research recipe"
                                                 AutomationProperties.HelpText="Experimental profile: Q-forward only; not full camera controls, joystick or analog camera coverage, pause/menu safety, or gameplay safety."
                                                 ToolTipService.ToolTip="Experimental profile: compatibility plus free-camera toggle and one Q-forward movement path. It does not prove full camera controls or gameplay safety."
-                                                Grid.Row="2"
+                                                Grid.Row="1"
                                                 Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
                                                 Style="{StaticResource PatchBenchChoiceButtonStyle}"
@@ -305,6 +385,12 @@
                                 </StackPanel>
                             </Border>
 
+                            <TextBlock Text="Visual and executable experiments"
+                                       AutomationProperties.HeadingLevel="Level2"
+                                       FontSize="14"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="These detailed rows include legacy graphics flags, frontend colors, fullscreen fallback, pause tests, and camera experiments. Read each row's limits before selecting it."
+                                       Style="{StaticResource SectionBodyTextStyle}" />
                             <Border BorderBrush="{ThemeResource ShellBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="8"
@@ -371,59 +457,8 @@
                                 </StackPanel>
                             </Border>
 
-                            <Border BorderBrush="{ThemeResource ShellBorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="8"
-                                    Padding="12"
-                                    Background="{ThemeResource ShellMutedSurfaceBrush}">
-                                <StackPanel Spacing="10">
-                                    <TextBlock Text="Title marker and Goodies preview"
-                                               FontSize="14"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock Text="PATCHED marker shows the word PATCHED on the title screen so you can tell a modded copy apart. Goodies preview changes gallery display state for the bounded entries checked so far in the safe copy; it does not change your save or permanently award Goodies."
-                                               Style="{StaticResource SectionBodyTextStyle}" />
-                                    <Grid ColumnSpacing="8"
-                                          RowSpacing="8">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                        </Grid.RowDefinitions>
-                                        <Button Content="Add PATCHED marker"
-                                                AutomationProperties.AutomationId="PatchBenchAddVersionMarkerButton"
-                                                AutomationProperties.Name="Add PATCHED title marker row"
-                                                Grid.Row="0"
-                                                Grid.Column="0"
-                                                HorizontalAlignment="Stretch"
-                                                Click="AddVersionMarkerButton_Click" />
-                                        <Button Content="Clear PATCHED marker"
-                                                AutomationProperties.AutomationId="PatchBenchClearVersionMarkerButton"
-                                                AutomationProperties.Name="Clear PATCHED title marker row"
-                                                Grid.Row="0"
-                                                Grid.Column="1"
-                                                HorizontalAlignment="Stretch"
-                                                Click="ClearVersionMarkerButton_Click" />
-                                        <Button Content="Add Goodies preview"
-                                                AutomationProperties.AutomationId="PatchBenchAddGoodiesPreviewButton"
-                                                AutomationProperties.Name="Add Goodies display preview row"
-                                                Grid.Row="1"
-                                                Grid.Column="0"
-                                                HorizontalAlignment="Stretch"
-                                                Click="AddGoodiesPreviewButton_Click" />
-                                        <Button Content="Clear Goodies preview"
-                                                AutomationProperties.AutomationId="PatchBenchClearGoodiesPreviewButton"
-                                                AutomationProperties.Name="Clear Goodies display preview row"
-                                                Grid.Row="1"
-                                                Grid.Column="1"
-                                                HorizontalAlignment="Stretch"
-                                                Click="ClearGoodiesPreviewButton_Click" />
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
-
+                            <StackPanel x:Name="PatchBenchPatchRows"
+                                        AutomationProperties.AutomationId="PatchBenchPatchRows">
                             <ItemsControl x:Name="PatchGroupsItemsControl">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="models:BinaryPatchGroupModel">
@@ -457,6 +492,7 @@
                                                                           AutomationProperties.HelpText="{Binding AccessibilityHelpText}"
                                                                           Unchecked="PatchCheckBox_Changed"
                                                                           IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                                          IsEnabled="{Binding CanChangeSelection}"
                                                                           HorizontalAlignment="Stretch"
                                                                           HorizontalContentAlignment="Stretch"
                                                                           Padding="2,2,0,2"
@@ -538,6 +574,15 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+                            </StackPanel>
+                            <TextBlock Text="Launch and control diagnostics"
+                                       AutomationProperties.HeadingLevel="Level2"
+                                       FontSize="14"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="Launch flags, copied-options control tests, music staging, and technical network research remain separately collapsed in the Safe game copy and research sections. They are diagnostics, not player recommendations."
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                                </StackPanel>
+                            </Expander>
                     </StackPanel>
                 </Border>
 
@@ -596,6 +641,13 @@
                                 <ComboBoxItem Content="BEA_02 over BEA_04" />
                             </ComboBox>
                             <TextBlock Text="Optional: swap one shipped copied music track while creating the safe copy. This writes a restore manifest in the safe copy; in-game audio playback is still experimental."
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                            <TextBlock x:Name="PatchBenchSafeCopySelectionReadiness"
+                                       AutomationProperties.AutomationId="PatchBenchSafeCopySelectionReadiness"
+                                       AutomationProperties.Name="Safe copy selection readiness"
+                                       AutomationProperties.LiveSetting="Polite"
+                                       Text="Selection is valid. Choose a read-only BEA.exe source to create a safe game copy."
+                                       TextWrapping="WrapWholeWords"
                                        Style="{StaticResource SectionBodyTextStyle}" />
                             <Button x:Name="PatchBenchPrepareCopiedProfileButton"
                                     AutomationProperties.AutomationId="PatchBenchPrepareCopiedProfileButton"

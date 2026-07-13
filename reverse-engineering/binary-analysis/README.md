@@ -1,10 +1,23 @@
 # Binary Analysis Documentation
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** `0x004dac90` proposed correction rejected; known-stale live metadata retained for separate correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 > Executable analysis, Ghidra findings, and disassembly notes
 
 ## Overview
 
 This folder contains documentation from analyzing the `BEA.exe` executable using Ghidra and other RE tools. Focus is on understanding runtime behavior that can't be determined from source code alone.
+
+Current semantic authority: the
+[2026-07-13 Ghidra full re-audit closeout](ghidra-full-reaudit-closeout-2026-07-13.md)
+verifies the stable `6,411`-address endpoint inventory, independently reviews
+all `459` Cursor metadata changes, and records the later live re-review of all
+`92` unique proposed correction addresses. `91` confirmed rows were applied and
+read back exactly; the false `0x004dac90` ABI proposal was rejected and left
+unchanged. Complete pre/post project backups passed hash and read-only-open
+verification.
 
 ## Verified Binary
 
@@ -32,6 +45,7 @@ If your BEA.exe has a different hash, it may be modified or from a different rel
 
 | Document | Description |
 |----------|-------------|
+| [ghidra-full-reaudit-closeout-2026-07-13.md](ghidra-full-reaudit-closeout-2026-07-13.md) | Current trusted-snapshot comparison, semantic revalidation, backup retention, and claim boundary |
 | [executable-analysis.md](executable-analysis.md) | PE metadata, DLL dependencies, source file paths |
 | [GHIDRA-REFERENCE.md](GHIDRA-REFERENCE.md) | Ghidra workspace reference, project notes |
 | [string-locations-index.md](functions/string-locations-index.md) | Historical Phase-1 string dump snapshot (legacy 196-address list) |

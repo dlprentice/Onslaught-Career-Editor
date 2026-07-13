@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Controls;
 using OnslaughtCareerEditor.WinUI.Helpers;
 using Onslaught___Career_Editor;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.System;
 
 namespace OnslaughtCareerEditor.WinUI.Pages
 {
@@ -15,6 +16,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private const int SaveAnalyzerTabIndex = 0;
         private const int SaveEditorTabIndex = 1;
         private const int ConfigurationEditorTabIndex = 2;
+        private static readonly Uri ZigguratControllerGuideUri = new("https://steamcommunity.com/app/1346400/discussions/0/2942494909163878759/");
 
         private IReadOnlyList<SaveAnalyzerFileItem> _detectedFiles = Array.Empty<SaveAnalyzerFileItem>();
         private IReadOnlyList<SaveAnalyzerFileItem> _editorDetectedFiles = Array.Empty<SaveAnalyzerFileItem>();
@@ -46,6 +48,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void SaveEditorTabButton_Click(object sender, RoutedEventArgs e) => SelectSavesTab(SaveEditorTabIndex);
 
         private void ConfigurationEditorTabButton_Click(object sender, RoutedEventArgs e) => SelectSavesTab(ConfigurationEditorTabIndex);
+
+        private async void OpenZigguratControllerGuideButton_Click(object sender, RoutedEventArgs e)
+        {
+            await Launcher.LaunchUriAsync(ZigguratControllerGuideUri);
+        }
 
         public void NavigateToSubTab(int tabIndex) => SelectSavesTab(tabIndex);
 

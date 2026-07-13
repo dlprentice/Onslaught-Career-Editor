@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading;
 using FlaUI.Core;
 using FlaUI.Core.AutomationElements;
+using FlaUI.Core.Definitions;
 using FlaUI.Core.Tools;
 using FlaUI.UIA3;
 using NUnit.Framework;
@@ -41,7 +42,10 @@ public class WinUiPatchBenchInteractionSmokeTests
         Directory.CreateDirectory(evidenceDir);
         string fakeGameDir = Path.Combine(evidenceDir, "fake-game");
         Directory.CreateDirectory(fakeGameDir);
-        File.WriteAllBytes(Path.Combine(fakeGameDir, "BEA.exe"), new byte[] { 0 });
+        string fakeExePath = Path.Combine(fakeGameDir, "BEA.exe");
+        File.WriteAllBytes(fakeExePath, new byte[] { 0 });
+        byte[] fakeExeHashBefore = SHA256.HashData(File.ReadAllBytes(fakeExePath));
+        int[] initialBeaProcessIds = Process.GetProcessesByName("BEA").Select(process => process.Id).ToArray();
         string appDataDir = PrepareIsolatedAppData(evidenceDir, fakeGameDir);
         Application? app = null;
         try
@@ -61,27 +65,49 @@ public class WinUiPatchBenchInteractionSmokeTests
             WaitForText(window, "Safe game copy", TimeSpan.FromSeconds(20));
             AssertAutomationNameContains(window, "PatchBenchWindowedPresetButton", "Selected: Compatibility Copy profile");
             AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Compatibility Copy");
+            CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-player-mods-normal.png", "PatchBenchAddVersionMarkerButton", 1000, 720);
+            InvokeByAutomationId(window, "PatchBenchAddVersionMarkerButton");
+            AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "PATCHED identity marker");
+            InvokeByAutomationId(window, "PatchBenchClearVersionMarkerButton");
+            AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "Player mods selected: none");
+            InvokeByAutomationId(window, "PatchBenchAddGoodiesPreviewButton");
+            AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "Goodies wall preview");
+            InvokeByAutomationId(window, "PatchBenchClearGoodiesPreviewButton");
+            AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "Player mods selected: none");
+
+            AssertExpandCollapseState(window, "PatchBenchLabExpander", ExpandCollapseState.Collapsed);
+            ExpandByAutomationId(window, "PatchBenchLabExpander");
+            AssertExpandCollapseState(window, "PatchBenchLabExpander", ExpandCollapseState.Expanded);
+            AssertLockedRequiredPatch(window, "PatchBenchPatchCheckBox_resolution_gate");
+            AssertLockedRequiredPatch(window, "PatchBenchPatchCheckBox_force_windowed");
+            ExpandByAutomationId(window, "PatchBenchPatchDetails_resolution_gate");
+            AssertExpandCollapseState(window, "PatchBenchPatchDetails_resolution_gate", ExpandCollapseState.Expanded);
+            CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-lab-expanded-header.png", "PatchBenchLabExpander", 1000, 720);
+            CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-lab-visual-experiments.png", "PatchBenchMenuColorRedButton", 1000, 720);
 
             InvokeByAutomationId(window, "PatchBenchStableDefaultsButton");
-            AssertAutomationNameContains(window, "PatchBenchStableDefaultsButton", "Selected: Windowed and Graphics Defaults profile");
+            AssertAutomationNameContains(window, "PatchBenchStableDefaultsButton", "Selected: legacy graphics-default Lab recipe");
             AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Windowed + Graphics Defaults");
 
             SelectComboBoxItem(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
             AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
             InvokeByAutomationId(window, "PatchBenchEnhancedPreviewProfileButton");
-            AssertAutomationNameContains(window, "PatchBenchEnhancedPreviewProfileButton", "Selected: Enhanced Profile Preview profile");
+            AssertAutomationNameContains(window, "PatchBenchEnhancedPreviewProfileButton", "Selected: retained legacy Enhanced Profile Preview Lab recipe");
             AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Enhanced Profile Preview");
             AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
 
             InvokeByAutomationId(window, "PatchBenchDebugCameraPreviewProfileButton");
-            AssertAutomationNameContains(window, "PatchBenchDebugCameraPreviewProfileButton", "Selected: Debug Camera Preview profile");
+            AssertAutomationNameContains(window, "PatchBenchDebugCameraPreviewProfileButton", "Selected: experimental Debug Camera Preview Lab research recipe");
             AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Debug Camera Preview");
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-profile-selected-normal.png", "PatchBenchDebugCameraPreviewProfileButton", 1000, 640);
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-profile-selected-narrow.png", "PatchBenchDebugCameraPreviewProfileButton", 760, 640);
 
             InvokeByAutomationId(window, "PatchBenchClearSelectionButton");
             AssertAutomationNameContains(window, "PatchBenchClearSelectionButton", "Selected: no optional mod rows");
-            AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "compatibility-only safe copy");
+            AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Compatibility Copy");
+            AssertAutomationNameContains(window, "PatchBenchSafeCopySelectionReadiness", "Required compatibility base ready. No optional mods selected.");
+            AssertElementEnabled(window, "PatchBenchPrepareCopiedProfileButton", expected: true);
+            AssertElementEnabled(window, "PatchBenchTopCreateSafeCopyButton", expected: true);
 
             InvokeByAutomationId(window, "PatchBenchMenuColorRedButton");
             AssertAutomationNameContains(window, "PatchBenchMenuColorRedButton", "Selected: red frontend margins");
@@ -176,6 +202,12 @@ public class WinUiPatchBenchInteractionSmokeTests
             AssertTextBoxText(window, "PatchBenchLevelLaunchOption", "850");
             AssertComboBoxSelectedText(window, "PatchBenchAdminLevelPresetComboBox", "Local split-screen test world 850");
             AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
+            Assert.That(SHA256.HashData(File.ReadAllBytes(fakeExePath)), Is.EqualTo(fakeExeHashBefore), "UIA selection smoke must not mutate the source BEA.exe fixture.");
+            int[] newBeaProcessIds = Process.GetProcessesByName("BEA")
+                .Select(process => process.Id)
+                .Except(initialBeaProcessIds)
+                .ToArray();
+            Assert.That(newBeaProcessIds, Is.Empty, "UIA selection smoke must not launch BEA.exe.");
         }
         finally
         {
@@ -400,6 +432,31 @@ public class WinUiPatchBenchInteractionSmokeTests
         }
 
         Thread.Sleep(250);
+    }
+
+    private static void AssertExpandCollapseState(Window window, string automationId, ExpandCollapseState expected)
+    {
+        AutomationElement element = FindByAutomationId(window, automationId);
+        Assert.That(element.Patterns.ExpandCollapse.IsSupported, Is.True, $"{automationId} should expose ExpandCollapsePattern.");
+        Assert.That(element.Patterns.ExpandCollapse.Pattern.ExpandCollapseState.Value, Is.EqualTo(expected));
+    }
+
+    private static void AssertLockedRequiredPatch(Window window, string automationId)
+    {
+        AutomationElement element = FindByAutomationId(window, automationId);
+        Assert.Multiple(() =>
+        {
+            Assert.That(element.IsEnabled, Is.False, $"{automationId} should be visibly locked.");
+            Assert.That(element.Patterns.Toggle.IsSupported, Is.True, $"{automationId} should expose TogglePattern.");
+            Assert.That(element.Patterns.Toggle.Pattern.ToggleState.Value, Is.EqualTo(ToggleState.On));
+            Assert.That(element.Properties.HelpText.Value, Does.Contain("Required and automatically included in every safe game copy"));
+        });
+    }
+
+    private static void AssertElementEnabled(Window window, string automationId, bool expected)
+    {
+        AutomationElement element = FindByAutomationId(window, automationId);
+        Assert.That(element.IsEnabled, Is.EqualTo(expected), $"Unexpected enabled state for {automationId}.");
     }
 
     private static void SetTextBoxText(Window window, string automationId, string text)

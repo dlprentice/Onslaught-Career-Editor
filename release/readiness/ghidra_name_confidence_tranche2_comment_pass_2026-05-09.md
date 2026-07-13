@@ -1,8 +1,13 @@
 # Ghidra Name-Confidence Tranche 2 Comment Pass - 2026-05-09
 
-> **Identity status update (2026-07-12):** `0x00412ad0` remains unresolved.
-> Its historical Monitor surface-alignment label is not current owner or
-> method proof. See the [current movement crosswalk](../../reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md).
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** Historical record; `0x00412ad0` → `CBattleEngineWalkerPart__UpdateWalkCycle` (was `CMonitor__UpdateSurfaceAlignmentAngle`). The original text below remains provenance rather than current semantic authority. It is superseded only where confirmed. Use the [closeout](../../reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
+> **Identity status update (2026-07-13):** targeted read-only review identifies
+> `0x00412ad0` as `CBattleEngineWalkerPart__UpdateWalkCycle` at high static
+> confidence. Its historical Monitor surface-alignment label is superseded. See
+> the [current closeout](../../reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md).
 
 Status: public-safe saved-Ghidra comment evidence, not final name/signature/runtime proof
 

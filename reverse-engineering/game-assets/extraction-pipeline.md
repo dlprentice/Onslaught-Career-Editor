@@ -40,6 +40,15 @@ The recommended public shape is a **bring-your-own-game-files** extractor.
 
 Use [export_game_assets.py](/tools/export_game_assets.py).
 
+The rebuild-local wrapper `npm run export:local-bea-assets` pins the current
+checkout, preflights and holds the three required local DLLs and the exact
+`ExtractorRoot\BoxWithTextures.fbx` consumed by the harness, and confines output
+to `local-lab/rebuild-godot/`. Those mutable dependencies form a trusted-local
+boundary, not cryptographic provenance. For First Flight presentation, manually
+convert a selected exported FBX to self-contained GLB or bounded OBJ, place it
+under `local-lab/rebuild-godot/staging/from-export/`, and assign player/terrain
+roles explicitly or unambiguously. FBX is never activated in the manifest.
+
 Example:
 
 ```powershell

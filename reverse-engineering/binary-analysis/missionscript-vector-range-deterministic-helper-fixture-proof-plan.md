@@ -1,5 +1,9 @@
 # MissionScript Vector/Range Command-Effect Deterministic Helper Fixture Proof Plan
 
+<!-- ghidra-full-reaudit-20260713:start -->
+> **2026-07-13 live correction closeout:** `0x005345d0` comment correction; `0x00534b80` comment correction; `0x00534c10` comment correction; `0x00534ca0` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+<!-- ghidra-full-reaudit-20260713:end -->
+
 Status: complete pure helper fixture proof plan, not runtime proof
 Last updated: 2026-06-09
 Scope: `missionscript-vector-range-deterministic-helper-fixture`
