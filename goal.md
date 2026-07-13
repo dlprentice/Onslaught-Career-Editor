@@ -274,8 +274,20 @@ BattleEngine morph-identity matrix and close the bounded evidence slice.
   which event released `g`. The accepted correction direction requires exact
   receipt-owned target exit-event evidence from CDB (for example a strictly
   parsed `.lastevent` section), preserves every identity/marker/census guard,
-  and forbids timestamp tolerance or marker-only acceptance. A fresh Retry 11
-  is allowed only after that reviewed correction lands.
+  and forbids timestamp tolerance or marker-only acceptance. That correction
+  is integrated through `f74ac902`: the exact CDB log stream is retained from
+  readiness through final parsing without delete sharing, one bounded global
+  `.lastevent` section must identify the exact receipt-owned target PID and a
+  nonzero thread, CDB must exit cleanly without a forced stop, and the existing
+  exact process/module/receipt, hash, marker, managed-stop, and clear-census
+  requirements remain mandatory. Root verification passes the 124-test runtime
+  tooling profile, 26 focused event-parser cases, 23 orchestration tests, 17
+  process-identity tests, and 13 renderer/materializer tests. Codex normal and
+  adversarial review accepted the correction; sanitized serial Cursor/Grok
+  normal review accepted it, and the adversarial summary's claimed missing
+  start-CDB/census gates was rejected against the exact authority and package
+  gate definitions. A fresh Retry 11 is now allowed. Retry 10 remains failed
+  and cannot be promoted or reinterpreted.
 - The agent-guidance audit is integrated at `56738f9b`. Repo startup now uses
   progressive task routing and targeted validation, makes Steam/runtime
   evidence outrank source hypotheses, and keeps RE-informed versus future
@@ -478,9 +490,9 @@ claim against an already malicious process running as the same Windows user.
 
 ## Next Slices
 
-1. Land the target-exit-event CDB cleanup proof, then run a fresh authorized
-   Level 850 Retry 11 and publish only a fully validated sanitized identity/
-   causality result.
+1. Run a fresh authorized Level 850 Retry 11 using new ignored controls, copies,
+   processes, and proof root; publish only a complete fully validated sanitized
+   identity/causality result.
 2. Review, harden, and integrate the completed Cursor submodule/local-retail-
    presentation branch without weakening local-payload or synthetic-smoke
    boundaries.
