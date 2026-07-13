@@ -1,11 +1,13 @@
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading;
 using FlaUI.Core;
 using FlaUI.Core.AutomationElements;
+using FlaUI.Core.Definitions;
 using FlaUI.Core.Tools;
 using FlaUI.UIA3;
 using NUnit.Framework;
@@ -98,37 +100,37 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
 
     [Test]
     [Category("WinUIRuntime")]
-    [Explicit("Requires a private real save path in ONSLAUGHT_WINUI_REAL_SAVE_PATH and writes only copied outputs under subagents/.")]
+    [Explicit("Uses an OS-temp copy of the tracked gold save and writes only to an isolated app-owned output. Does not invoke File Explorer.")]
     [Apartment(ApartmentState.STA)]
-    public void SaveEditor_PatchesCopiedRealSaveThroughUiWhenProvided()
+    public void SaveEditor_GuidesAndWritesCopiedGoldSaveThroughUi()
     {
-        string? savePath = Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_REAL_SAVE_PATH");
-        if (string.IsNullOrWhiteSpace(savePath) || !File.Exists(savePath))
-        {
-            Assert.Ignore("Set ONSLAUGHT_WINUI_REAL_SAVE_PATH to a private .bes file to run this copied-save editor smoke.");
-        }
-
         string exePath = ResolveWinUiAppPath();
         if (!File.Exists(exePath))
         {
             Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-save-editor-interaction", "2026-05-06");
+        string repoRoot = ResolveRepoRoot();
+        string fixturePath = Path.Combine(repoRoot, "tests_shared", "fixtures", "gold_career_save.bin");
+        Assert.That(File.Exists(fixturePath), Is.True, "Tracked gold career-save fixture is required.");
+
+        string evidenceDir = Path.Combine(repoRoot, "subagents", "winui-save-editor-interaction", "2026-07-13");
         Directory.CreateDirectory(evidenceDir);
-        string inputCopyPath = Path.Combine(evidenceDir, "input-copy.bes");
-        string outputPath = Path.Combine(evidenceDir, "patched-output.bes");
-        File.Copy(savePath, inputCopyPath, overwrite: true);
-        if (File.Exists(outputPath))
-        {
-            File.Delete(outputPath);
-        }
+        string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-guided-first-save-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempRoot);
+        string inputCopyPath = Path.Combine(tempRoot, "first-save-input.bes");
+        File.Copy(fixturePath, inputCopyPath, overwrite: false);
 
         byte[] inputHashBefore = SHA256.HashData(File.ReadAllBytes(inputCopyPath));
-        string appDataDir = PrepareIsolatedAppData(evidenceDir);
+        string appDataDir = PrepareIsolatedAppData(tempRoot);
+        string outputPath = Path.Combine(
+            appDataDir,
+            "OnslaughtCareerEditor",
+            "patched-output",
+            "first-save-input_patched.bes");
         var startInfo = new ProcessStartInfo(exePath)
         {
-            WorkingDirectory = Path.GetDirectoryName(exePath) ?? ResolveRepoRoot()
+            WorkingDirectory = Path.GetDirectoryName(exePath) ?? repoRoot
         };
         startInfo.Environment["APPDATA"] = appDataDir;
         startInfo.Environment["ONSLAUGHT_APP_CONFIG_ROOT"] = appDataDir;
@@ -141,12 +143,53 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
             app = Application.Launch(startInfo);
             using var automation = new UIA3Automation();
             Window window = WaitForMainWindow(app, automation);
+            var captureOperations = new FlaUiReceiptBoundVisualCaptureOperations(app, window, exePath);
+            ReceiptBoundAppIdentity captureIdentity = captureOperations.ReadIdentity();
 
-            WaitForText(window, "File selection", TimeSpan.FromSeconds(20));
+            WaitForText(window, "Your first copied save", TimeSpan.FromSeconds(20));
             SetTextBox(window, "SaveEditorInputFile", inputCopyPath);
-            SetTextBox(window, "SaveEditorOutputFile", outputPath);
 
             AutomationElement patchButton = FindByAutomationId(window, "SaveEditorPatchButton");
+            bool outputSuggested = Retry.WhileFalse(
+                () => string.Equals(
+                    TryGetTextBoxText(FindByAutomationId(window, "SaveEditorOutputFile")),
+                    outputPath,
+                    StringComparison.OrdinalIgnoreCase),
+                TimeSpan.FromSeconds(10)).Success;
+            Assert.That(outputSuggested, Is.True, "Expected the app-owned separate output to follow the selected input.");
+            AssertComboBoxSelectedText(window, "SaveEditorPatchPresetComboBox", "Start empty — choose sections");
+            AssertCheckBoxState(window, "SaveEditorPatchNodesCheckBox", isChecked: false);
+            AssertCheckBoxState(window, "SaveEditorPatchLinksCheckBox", isChecked: false);
+            AssertCheckBoxState(window, "SaveEditorPatchGoodiesCheckBox", isChecked: false);
+            AssertCheckBoxState(window, "SaveEditorPatchKillsCheckBox", isChecked: false);
+            Assert.That(patchButton.IsEnabled, Is.False, "Start empty must keep Write disabled until a section is selected.");
+            Assert.That(TryGetName(FindByAutomationId(window, "SaveEditorFirstSaveStatus")), Does.Contain("Choose at least one change"));
+            Assert.That(TryGetName(FindByAutomationId(window, "SaveEditorAdvancedOverridesStatus")), Is.EqualTo("No advanced overrides active"));
+            AutomationElement advancedExpander = FindByAutomationId(window, "SaveEditorAdvancedOverridesExpander");
+            AutomationElement editorScroll = FindByAutomationId(window, "SaveEditorScrollViewer");
+            ScrollIntoView(advancedExpander);
+            Assert.That(advancedExpander.Patterns.ExpandCollapse.IsSupported, Is.True);
+            Assert.That(advancedExpander.Patterns.ExpandCollapse.Pattern.ExpandCollapseState.Value.ToString(), Is.EqualTo("Collapsed"));
+            advancedExpander.Patterns.ExpandCollapse.Pattern.Expand();
+            Assert.That(
+                Retry.WhileFalse(
+                    () => advancedExpander.Patterns.ExpandCollapse.Pattern.ExpandCollapseState.Value.ToString() == "Expanded",
+                    TimeSpan.FromSeconds(5)).Success,
+                Is.True,
+                "Advanced overrides should be reachable on demand.");
+            _ = ScrollUntilAutomationIdIsRealized(window, editorScroll, "SaveEditorMissionOverridesHeading");
+            _ = ScrollUntilAutomationIdIsRealized(window, editorScroll, "SaveEditorSetAllRanksDefaultButton");
+            _ = ScrollUntilAutomationIdIsRealized(window, editorScroll, "SaveEditorCategoryKillOverridesHeading");
+            _ = ScrollUntilAccessibleCheckBoxIsRealized(advancedExpander, editorScroll, "Aircraft");
+            advancedExpander.Patterns.ExpandCollapse.Pattern.Collapse();
+            Assert.That(
+                Retry.WhileFalse(
+                    () => advancedExpander.Patterns.ExpandCollapse.Pattern.ExpandCollapseState.Value.ToString() == "Collapsed",
+                    TimeSpan.FromSeconds(5)).Success,
+                Is.True,
+                "Advanced overrides should return to the compact first-save journey.");
+
+            SetCheckBox(window, "SaveEditorPatchGoodiesCheckBox", isChecked: true);
             bool patchReady = Retry.WhileFalse(() => patchButton.IsEnabled, TimeSpan.FromSeconds(10)).Success;
             string? inputText = TryGetTextBoxText(FindByAutomationId(window, "SaveEditorInputFile"));
             string? outputText = TryGetTextBoxText(FindByAutomationId(window, "SaveEditorOutputFile"));
@@ -155,8 +198,8 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
             Assert.That(
                 patchReady,
                 Is.True,
-                $"Expected Write patched save copy to become enabled for copied input and distinct output paths. Input='{inputText}' Output='{outputText}' Pending='{pendingText}' Safety='{safetyText}'");
-            Assert.That(pendingText, Does.Contain("Pending:"));
+                $"Expected Write patched save copy after explicitly selecting Goodies. Input='{inputText}' Output='{outputText}' Pending='{pendingText}' Safety='{safetyText}'");
+            Assert.That(pendingText, Does.Contain("goodies"));
             Assert.That(safetyText, Does.Contain("Save patching is ready"));
 
             ScrollIntoView(patchButton);
@@ -174,14 +217,33 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
             Assert.That(outputLogText, Does.Not.Contain(outputPath), "Primary Save Editor output should not expose the copied output path.");
             Assert.That(new FileInfo(outputPath).Length, Is.EqualTo(BesFilePatcher.EXPECTED_FILE_SIZE));
             Assert.That(SHA256.HashData(File.ReadAllBytes(inputCopyPath)), Is.EqualTo(inputHashBefore), "Input copy should remain unchanged.");
+            AutomationElement showWritten = FindByAutomationId(window, "SaveEditorShowWrittenSaveButton");
+            bool completionReady = Retry.WhileFalse(
+                () => showWritten.IsEnabled
+                    && (TryGetName(FindByAutomationId(window, "SaveEditorFirstSaveStatus")) ?? string.Empty)
+                        .Contains("Written copy ready", StringComparison.Ordinal),
+                TimeSpan.FromSeconds(10)).Success;
+            Assert.That(completionReady, Is.True, "Successful unchanged app-owned output should enable reveal and report completion.");
 
             string screenshotPath = Path.Combine(evidenceDir, "01-save-editor-patched.png");
-            ScrollIntoView(outputLog);
-            window.Focus();
-            Thread.Sleep(1_000);
-            window.CaptureToFile(screenshotPath);
-            Assert.That(File.Exists(screenshotPath), Is.True, $"Expected screenshot: {screenshotPath}");
-            Assert.That(new FileInfo(screenshotPath).Length, Is.GreaterThan(10_000), "Save editor patch screenshot should not be empty.");
+            Rectangle normalBounds = captureOperations.ReadWindowState().Bounds;
+            ReceiptBoundVisualCapture.Capture(
+                captureOperations,
+                BuildGuidedSaveCaptureRequest(
+                    captureIdentity,
+                    normalBounds,
+                    screenshotPath,
+                    () => RealizeGuidedSaveCompletionRegion(window, editorScroll, outputLog, showWritten)));
+
+            string compactScreenshotPath = Path.Combine(evidenceDir, "02-save-editor-patched-760.png");
+            Rectangle compactBounds = new(16, 16, 760, 820);
+            ReceiptBoundVisualCapture.Capture(
+                captureOperations,
+                BuildGuidedSaveCaptureRequest(
+                    captureIdentity,
+                    compactBounds,
+                    compactScreenshotPath,
+                    () => RealizeGuidedSaveCompletionRegion(window, editorScroll, outputLog, showWritten)));
         }
         finally
         {
@@ -197,6 +259,18 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
             if (app != null && !app.HasExited)
             {
                 app.Kill();
+            }
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch
+            {
+                // The lease owner performs the authoritative post-run process/file cleanup check.
             }
         }
     }
@@ -393,6 +467,42 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
         Assert.That(valueApplied, Is.True, $"Expected {automationId} to accept the requested text value.");
     }
 
+    private static void SetCheckBox(Window window, string automationId, bool isChecked)
+    {
+        AutomationElement element = FindByAutomationId(window, automationId);
+        Assert.That(element.Patterns.Toggle.IsSupported, Is.True, $"Expected toggle support: {automationId}");
+        bool IsOn() => string.Equals(
+            element.Patterns.Toggle.Pattern.ToggleState.Value.ToString(),
+            "On",
+            StringComparison.Ordinal);
+        if (IsOn() != isChecked)
+        {
+            element.Patterns.Toggle.Pattern.Toggle();
+        }
+
+        bool applied = Retry.WhileFalse(() => IsOn() == isChecked, TimeSpan.FromSeconds(5)).Success;
+        Assert.That(applied, Is.True, $"Expected {automationId} checked state to become {isChecked}.");
+    }
+
+    private static void AssertCheckBoxState(Window window, string automationId, bool isChecked)
+    {
+        AutomationElement element = FindByAutomationId(window, automationId);
+        Assert.That(element.Patterns.Toggle.IsSupported, Is.True, $"Expected toggle support: {automationId}");
+        string expected = isChecked ? "On" : "Off";
+        Assert.That(element.Patterns.Toggle.Pattern.ToggleState.Value.ToString(), Is.EqualTo(expected));
+    }
+
+    private static void AssertComboBoxSelectedText(Window window, string automationId, string expectedText)
+    {
+        bool selected = Retry.WhileFalse(
+            () => string.Equals(
+                FindByAutomationId(window, automationId).AsComboBox().SelectedItem?.Text,
+                expectedText,
+                StringComparison.Ordinal),
+            TimeSpan.FromSeconds(10)).Success;
+        Assert.That(selected, Is.True, $"Expected {automationId} selected item: {expectedText}");
+    }
+
     private static void WaitForText(Window window, string text, TimeSpan timeout)
     {
         bool visible = Retry.WhileFalse(
@@ -438,6 +548,163 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
         {
             // Best-effort visual positioning only; InvokePattern still drives the control.
         }
+    }
+
+    private static AutomationElement ScrollUntilAutomationIdIsRealized(
+        Window window,
+        AutomationElement scrollHost,
+        string automationId)
+    {
+        Assert.That(scrollHost.Patterns.Scroll.IsSupported, Is.True, "Save Editor scroll host must expose ScrollPattern.");
+        AutomationElement? realizedElement = null;
+        bool realized = Retry.WhileFalse(
+            () =>
+            {
+                realizedElement = window.FindFirstDescendant(cf => cf.ByAutomationId(automationId));
+                if (realizedElement is not null)
+                {
+                    return true;
+                }
+
+                try
+                {
+                    scrollHost.Patterns.Scroll.Pattern.Scroll(ScrollAmount.NoAmount, ScrollAmount.LargeIncrement);
+                }
+                catch
+                {
+                    // Retry owns the bounded wait; the final assertion reports an unrealized exact ID.
+                }
+
+                return false;
+            },
+            TimeSpan.FromSeconds(10)).Success;
+        Assert.That(realized, Is.True, $"Expected exact automation element after bounded Save Editor scrolling: {automationId}");
+        return realizedElement!;
+    }
+
+    private static AutomationElement ScrollUntilAccessibleCheckBoxIsRealized(
+        AutomationElement scope,
+        AutomationElement scrollHost,
+        string accessibleName)
+    {
+        Assert.That(scrollHost.Patterns.Scroll.IsSupported, Is.True, "Save Editor scroll host must expose ScrollPattern.");
+        AutomationElement? realizedElement = null;
+        bool realized = Retry.WhileFalse(
+            () =>
+            {
+                realizedElement = scope.FindFirstDescendant(cf =>
+                    cf.ByName(accessibleName).And(cf.ByControlType(ControlType.CheckBox)));
+                if (realizedElement is not null)
+                {
+                    return true;
+                }
+
+                try
+                {
+                    scrollHost.Patterns.Scroll.Pattern.Scroll(ScrollAmount.NoAmount, ScrollAmount.LargeIncrement);
+                }
+                catch
+                {
+                    // Retry owns the bounded wait; the final assertion reports the missing exact accessible target.
+                }
+
+                return false;
+            },
+            TimeSpan.FromSeconds(10)).Success;
+        Assert.That(realized, Is.True, $"Expected exact accessible category checkbox after bounded Save Editor scrolling: {accessibleName}");
+        return realizedElement!;
+    }
+
+    private static ReceiptBoundVisualCaptureRequest BuildGuidedSaveCaptureRequest(
+        ReceiptBoundAppIdentity identity,
+        Rectangle targetBounds,
+        string outputPath,
+        Action postResizeRealization)
+    {
+        return new ReceiptBoundVisualCaptureRequest(
+            identity,
+            targetBounds,
+            outputPath,
+            new[] { "SaveEditorOutputLog", "SaveEditorShowWrittenSaveButton" },
+            TimeSpan.FromSeconds(3),
+            postResizeRealization);
+    }
+
+    private static void RealizeGuidedSaveCompletionRegion(
+        Window window,
+        AutomationElement saveEditorScrollViewer,
+        AutomationElement outputLog,
+        AutomationElement showWritten)
+    {
+        Assert.That(
+            saveEditorScrollViewer.AutomationId,
+            Is.EqualTo("SaveEditorScrollViewer"),
+            "Compact completion realization must use the exact Save Editor scroll host.");
+        Assert.That(
+            saveEditorScrollViewer.Patterns.Scroll.IsSupported,
+            Is.True,
+            "The exact Save Editor scroll host must expose ScrollPattern.");
+
+        Rectangle? previousOutputBounds = null;
+        Rectangle? previousRevealBounds = null;
+        int stableSamples = 0;
+        bool realizedAndStable = Retry.WhileFalse(
+            () =>
+            {
+                Rectangle windowBounds = window.BoundingRectangle;
+                Rectangle outputBounds = outputLog.BoundingRectangle;
+                Rectangle revealBounds = showWritten.BoundingRectangle;
+                bool bothInside = ContainsRectangle(windowBounds, outputBounds) &&
+                                  ContainsRectangle(windowBounds, revealBounds);
+                if (!bothInside)
+                {
+                    stableSamples = 0;
+                    previousOutputBounds = null;
+                    previousRevealBounds = null;
+                    try
+                    {
+                        saveEditorScrollViewer.Patterns.Scroll.Pattern.Scroll(
+                            ScrollAmount.NoAmount,
+                            ScrollAmount.LargeIncrement);
+                    }
+                    catch
+                    {
+                        // The bounded retry reports failure against the exact named scroll host.
+                    }
+
+                    return false;
+                }
+
+                if (previousOutputBounds == outputBounds && previousRevealBounds == revealBounds)
+                {
+                    stableSamples++;
+                }
+                else
+                {
+                    stableSamples = 1;
+                    previousOutputBounds = outputBounds;
+                    previousRevealBounds = revealBounds;
+                }
+
+                return stableSamples >= 3;
+            },
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromMilliseconds(100)).Success;
+
+        Assert.That(
+            realizedAndStable,
+            Is.True,
+            "SaveEditorOutputLog and SaveEditorShowWrittenSaveButton must be simultaneously visible and layout-stable after resizing the exact Save Editor viewport.");
+    }
+
+    private static bool ContainsRectangle(Rectangle container, Rectangle child)
+    {
+        return child.Width > 0 &&
+               child.Height > 0 &&
+               child.Left >= container.Left &&
+               child.Top >= container.Top &&
+               child.Right <= container.Right &&
+               child.Bottom <= container.Bottom;
     }
 
     private static AutomationElement FindByAutomationId(Window window, string automationId)
@@ -527,4 +794,5 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
         return Path.GetFullPath(
             Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
     }
+
 }
