@@ -2940,7 +2940,9 @@ static void WaitWalkerOwnedPhase(
     WalkerOwnedPhaseProcess phase, TimeSpan bound, string cooperativeStopFile)
 {
     Stopwatch elapsed = Stopwatch.StartNew();
-    while (!phase.Process.WaitForExit(100))
+    // Use the CreateProcess-owned handle. Process.GetProcessById().ExitCode throws
+    // InvalidOperationException on .NET 10 ("Process was not started by this object").
+    while (!phase.WaitForExit(100))
     {
         if (File.Exists(cooperativeStopFile) || elapsed.Elapsed >= bound)
         {
@@ -2948,8 +2950,9 @@ static void WaitWalkerOwnedPhase(
             throw new TimeoutException($"Walker {phase.Name} phase exceeded its cooperative safety bound.");
         }
     }
-    if (phase.Process.ExitCode != 0)
-        throw new InvalidOperationException($"Walker {phase.Name} phase exited with code {phase.Process.ExitCode}.");
+    int exitCode = phase.ExitCode;
+    if (exitCode != 0)
+        throw new InvalidOperationException($"Walker {phase.Name} phase exited with code {exitCode}.");
 }
 
 static int RunWalkerTrajectoryAttempt()
@@ -4477,19 +4480,46 @@ sealed class WalkerOwnedPhaseProcess : IDisposable
 {
     const uint CREATE_SUSPENDED = 0x00000004;
     const uint JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000;
+    const uint WAIT_OBJECT_0 = 0;
+    const uint WAIT_TIMEOUT = 0x00000102;
+    const uint STILL_ACTIVE = 259;
     readonly IntPtr jobHandle;
+    readonly IntPtr processHandle;
     bool closed;
 
-    WalkerOwnedPhaseProcess(string name, Process process, IntPtr jobHandle)
+    WalkerOwnedPhaseProcess(string name, Process process, IntPtr jobHandle, IntPtr processHandle)
     {
         Name = name;
         Process = process;
         this.jobHandle = jobHandle;
+        this.processHandle = processHandle;
     }
 
     public string Name { get; }
     public Process Process { get; }
     public uint ActiveProcesses => QueryAccounting().ActiveProcesses;
+
+    public bool WaitForExit(int milliseconds)
+    {
+        uint result = WaitForSingleObject(processHandle, (uint)Math.Max(0, milliseconds));
+        if (result == WAIT_OBJECT_0)
+            return true;
+        if (result == WAIT_TIMEOUT)
+            return false;
+        throw new InvalidOperationException($"Walker {Name} phase wait failed (status {result}).");
+    }
+
+    public int ExitCode
+    {
+        get
+        {
+            if (!GetExitCodeProcess(processHandle, out uint code))
+                throw new InvalidOperationException($"Walker {Name} phase exit code is unavailable.");
+            if (code == STILL_ACTIVE)
+                throw new InvalidOperationException($"Walker {Name} phase is still active.");
+            return unchecked((int)code);
+        }
+    }
 
     public static WalkerOwnedPhaseProcess Start(
         string name, string receiptPath, IReadOnlyDictionary<string, string>? extraEnvironment)
@@ -4536,7 +4566,10 @@ sealed class WalkerOwnedPhaseProcess : IDisposable
             Process process = Process.GetProcessById((int)info.dwProcessId);
             if (ResumeThread(info.hThread) == uint.MaxValue)
                 throw new InvalidOperationException("Could not resume receipt-owned walker phase.");
-            return new WalkerOwnedPhaseProcess(name, process, job);
+            // Transfer ownership of the CreateProcess handle; do not close it in finally.
+            IntPtr ownedProcess = info.hProcess;
+            info.hProcess = IntPtr.Zero;
+            return new WalkerOwnedPhaseProcess(name, process, job, ownedProcess);
         }
         catch
         {
@@ -4568,6 +4601,8 @@ sealed class WalkerOwnedPhaseProcess : IDisposable
             throw new InvalidOperationException(
                 $"Walker {Name} phase left {active} receipt-owned processes.");
         }
+        if (!CloseHandle(processHandle))
+            throw new InvalidOperationException("Walker phase process handle did not close.");
         if (!CloseHandle(jobHandle))
             throw new InvalidOperationException("Walker phase job handle did not close.");
         closed = true;
@@ -4590,6 +4625,8 @@ sealed class WalkerOwnedPhaseProcess : IDisposable
         }
         finally
         {
+            if (!CloseHandle(processHandle))
+                failure ??= new InvalidOperationException("Walker phase process handle did not close.");
             if (!CloseHandle(jobHandle))
                 failure ??= new InvalidOperationException("Walker phase job handle did not close.");
             closed = true;
@@ -4680,6 +4717,10 @@ sealed class WalkerOwnedPhaseProcess : IDisposable
     static extern bool QueryInformationJobObject(
         IntPtr job, int infoClass, ref JOBOBJECT_BASIC_ACCOUNTING_INFORMATION info,
         uint length, IntPtr returnLength);
+    [DllImport("kernel32", SetLastError = true)]
+    static extern uint WaitForSingleObject(IntPtr handle, uint milliseconds);
+    [DllImport("kernel32", SetLastError = true)]
+    static extern bool GetExitCodeProcess(IntPtr process, out uint exitCode);
     [DllImport("kernel32", SetLastError = true)]
     static extern bool CloseHandle(IntPtr handle);
 }

@@ -250,6 +250,13 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn('WalkerOwnedPhaseProcess.Start(\n            "launch"', walker_parent)
         self.assertIn("WaitWalkerOwnedPhase(profilePhase, TimeSpan.FromSeconds(120)", walker_parent)
         self.assertIn("WaitWalkerOwnedPhase(launchPhase, TimeSpan.FromSeconds(30)", walker_parent)
+        # .NET 10: Process.GetProcessById().ExitCode throws; use CreateProcess handle APIs.
+        self.assertIn("phase.WaitForExit(100)", generated)
+        self.assertIn("phase.ExitCode", generated)
+        self.assertIn("WaitForSingleObject(processHandle", generated)
+        self.assertIn("GetExitCodeProcess(processHandle", generated)
+        self.assertNotIn("phase.Process.ExitCode", generated)
+        self.assertNotIn("phase.Process.WaitForExit", generated)
         self.assertNotIn("GameProfilePreflightService.PrepareWindowedCompatibilityProfile", walker_parent)
         self.assertNotIn("GameProfileRuntimeService.LaunchCopiedProfile", walker_parent)
         self.assertIn("phase.TerminateExactJobAndClose()", generated)
@@ -258,6 +265,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
             generated.index("public void RequireZeroAndClose()"):
             generated.index("public void TerminateExactJobAndClose()")
         ]
+        self.assertIn("if (!CloseHandle(processHandle))", normal_close)
         self.assertIn("if (!CloseHandle(jobHandle))", normal_close)
         self.assertIn('throw new InvalidOperationException("Walker phase job handle did not close.")', normal_close)
         self.assertLess(normal_close.index("if (!CloseHandle(jobHandle))"), normal_close.index("closed = true"))
