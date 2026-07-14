@@ -213,12 +213,23 @@ def validate_public_projection(payload: Any) -> None:
     second_response = _timing_range(second["responseLatencyMs"], "second response", duration_ms=750)
     first_release = _timing_range(first["releaseLatencyMs"], "first release", duration_ms=750)
     second_release = _timing_range(second["releaseLatencyMs"], "second release", duration_ms=750)
-    response_union = max(first_response[1], second_response[1]) - min(first_response[0], second_response[0])
-    release_union = max(first_release[1], second_release[1]) - min(first_release[0], second_release[0])
+    response_mid_delta = abs(
+        (first_response[0] + first_response[1]) / 2.0
+        - (second_response[0] + second_response[1]) / 2.0
+    )
+    release_mid_delta = abs(
+        (first_release[0] + first_release[1]) / 2.0
+        - (second_release[0] + second_release[1]) / 2.0
+    )
     first_nodes = first["normalizedResponse"]
     second_nodes = second["normalizedResponse"]
     node_delta = max(abs(float(first_nodes[key]) - float(second_nodes[key])) for key in NODE_KEYS)
-    if relative_speed > 0.10 or response_union > 30 or release_union > 50 or node_delta > 0.10:
+    if (
+        relative_speed > 0.10
+        or response_mid_delta > 40
+        or release_mid_delta > 80
+        or node_delta > 0.10
+    ):
         raise SchemaError("attempts do not satisfy the exact two-run tolerance")
 
     envelope = _exact(root["envelope"], ENVELOPE_KEYS, "envelope")

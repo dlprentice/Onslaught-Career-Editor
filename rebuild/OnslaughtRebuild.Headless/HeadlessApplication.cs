@@ -13,9 +13,9 @@ public static class HeadlessApplication
     private const long MaximumReplaySteps = 100_000;
     private const string BuiltInTapeFileName = "first-flight.v1.json";
     private const string BuiltInFinalStateHash =
-        "0fd93451622e272e9f413472df3f9b0505d7a618f077194b27348305f8aa9d01";
+        "9928755b150d4ab172be9b1ee827d462d00887b0c4dcdc4e658c6f1196db0055";
     private const string BuiltInTraceHash =
-        "235f4e28a9c7cce0da79bafdd29929f9a2beceb818005abd24ee7802e9c7f4d1";
+        "ec6c6628c7d3c1da39bce16160b5f36210899a64f6d1cbfbe18a3b13c7f3dce3";
 
     private sealed record Options(
         string TapePath,

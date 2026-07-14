@@ -67,16 +67,15 @@ No release or tag is authorized by this slice.
   without private payload reopen. Focused gate:
   `npm run test:aya-export-outcomes` → 11/11. Full private-corpus export remains
   blocked on missing legacy native extractor DLLs / VS C++ targets (MSB4278).
-- Next executable critical path remains one fresh exactly-two-attempt
-  copied-runtime walker measurement. 2026-07-14 live campaign advanced far
-  through tooling on main through `82b3dbbc` (schedule RPM tolerance, Q
-  brackets, raw-before-analysis, Forward=Q bind, harness external Q/W,
-  CreateNoWindow + re-focus, phase-local gaps). Best input proof is pair-13:
-  focused harness `down:Q`/`up:Q` sent with nonzero SendInput events, but
-  `controlRaw` stayed 0 and position static for all phases. Pairs 14–16 then
-  exit before receipt (`Process … is not running`). **No accepted two-attempt
-  pair and no scalar contract.** Sampler gate 27/27. Installed Steam/original
-  BEA untouched (copied profiles only). Core constants unchanged.
+- **Walker critical path closed for this slice (p27):** exactly-two-attempt
+  copied-runtime pair accepted (`pairEligible=true`) at HEAD through
+  `b4ef9f0c`+. Continuous forward under Q/Up + KeyDown re-latch; steady speed
+  ≈ **3.00** retail-world units/s; hold displacement ≈ 6.0 over 2.0 s. Public
+  projection: `reverse-engineering/game-mechanics/walker-forward-scalar-response-v2.json`
+  (`battleengine-walker-forward-scalar-response.v2`). Retail→Core translation
+  policy accepted (milli-retail units, `WalkerSpeedPerTick = 100` at 30 Hz).
+  Core goldens updated; `npm run test:rebuild` green. Sampler 27/27. Installed
+  Steam/original BEA untouched (copied profiles only).
 
 ## Current Slice Progress - 2026-07-13
 

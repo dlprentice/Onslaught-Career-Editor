@@ -81,12 +81,14 @@ public sealed class SimulationTests
     public void RepeatedFire_DestroysTheForwardTargetDeterministically()
     {
         var simulation = new Simulation(0xA917BEEFu);
-        for (int tick = 0; tick < 20; tick++)
+        // Close to the forward target at z=14000 under WalkerSpeedPerTick=100
+        // (retail-informed milli-unit mapping; formerly 20 ticks at 350).
+        for (int tick = 0; tick < 70; tick++)
         {
             simulation.Step(new SimInput(0, 1));
         }
 
-        for (int tick = 0; tick < 25; tick++)
+        for (int tick = 0; tick < 40; tick++)
         {
             simulation.Step(new SimInput(0, 0, SimActions.Fire));
         }

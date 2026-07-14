@@ -6,8 +6,8 @@ namespace OnslaughtRebuild.Core.Tests;
 
 public sealed class ReplayTests
 {
-    private const string GoldenFinalStateHash = "0fd93451622e272e9f413472df3f9b0505d7a618f077194b27348305f8aa9d01";
-    private const string GoldenTraceHash = "235f4e28a9c7cce0da79bafdd29929f9a2beceb818005abd24ee7802e9c7f4d1";
+    private const string GoldenFinalStateHash = "9928755b150d4ab172be9b1ee827d462d00887b0c4dcdc4e658c6f1196db0055";
+    private const string GoldenTraceHash = "ec6c6628c7d3c1da39bce16160b5f36210899a64f6d1cbfbe18a3b13c7f3dce3";
 
     [Fact]
     public void FirstFlightReplay_IsDeterministicAndMatchesGoldenHash()

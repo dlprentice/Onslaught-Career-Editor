@@ -6,7 +6,11 @@ public static class SimulationConstants
 {
     public const int TicksPerSecond = 30;
     public const int ArenaHalfExtent = 30_000;
-    public const int WalkerSpeedPerTick = 350;
+    // Milli-retail units/tick at 30 Hz ≈ 3.0 retail units/s (pair p27 envelope
+    // [2.85, 3.15]). Policy:
+    // reverse-engineering/game-mechanics/walker-forward-retail-to-core-translation-policy.md
+    // Schema: battleengine-walker-forward-scalar-response.v2
+    public const int WalkerSpeedPerTick = 100;
     public const int JetSpeedPerTick = 650;
     public const int MaximumEnergy = 1_000;
     public const int MaximumShield = 1_000;

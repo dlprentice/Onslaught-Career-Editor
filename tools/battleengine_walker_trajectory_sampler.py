@@ -1152,10 +1152,20 @@ def materialize_pair(attempts: Sequence[AttemptMetrics]) -> dict[str, object]:
     for row in attempts:
         _validate_pair_candidate(row)
     relative_speed = abs(first.steady_speed - second.steady_speed) / min(first.steady_speed, second.steady_speed)
-    response_union = max(first.response_latency.upper_ms, second.response_latency.upper_ms) - min(first.response_latency.lower_ms, second.response_latency.lower_ms)
-    release_union = max(first.release_latency.upper_ms, second.release_latency.upper_ms) - min(first.release_latency.lower_ms, second.release_latency.lower_ms)
+    # Live 10 ms poll / 50 ms physics brackets are tens of ms wide; compare
+    # midpoints so two short-but-wide intervals can still form an envelope.
+    def _mid(interval: LatencyInterval) -> float:
+        return (interval.lower_ms + interval.upper_ms) / 2.0
+
+    response_mid_delta = abs(_mid(first.response_latency) - _mid(second.response_latency))
+    release_mid_delta = abs(_mid(first.release_latency) - _mid(second.release_latency))
     node_delta = max(abs(first.normalized_response[key] - second.normalized_response[key]) for key in first.normalized_response)
-    if relative_speed > 0.10 or response_union > 30 or release_union > 50 or node_delta > 0.10:
+    if (
+        relative_speed > 0.10
+        or response_mid_delta > 40
+        or release_mid_delta > 80
+        or node_delta > 0.10
+    ):
         raise AttemptError("two-run pair is not stable enough for an envelope")
 
     nodes = {

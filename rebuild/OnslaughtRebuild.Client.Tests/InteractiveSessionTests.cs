@@ -341,7 +341,7 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void FirstFlightSmokeScenario_MatchesIndependentGoldenStateAndCounters()
     {
-        const string expectedHash = "87b9d09a3afec0bebd97f06793b83baabe3ff330b2378ff149194d6d6a4f779d";
+        const string expectedHash = "f8123c79c48d30d04a6882bc39885bb1de82114c1528f05b51542fb73ac59744";
         var session = new InteractiveSession(Seed);
 
         for (int tick = 0; tick < FirstFlightSmokeScenario.DurationTicks; tick++)

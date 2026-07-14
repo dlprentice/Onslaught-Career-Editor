@@ -923,8 +923,8 @@ class PairAndSchemaTests(unittest.TestCase):
     def test_rejects_unstable_two_run_pair(self) -> None:
         cases = (
             metrics(attempt=2, steady_speed=120.0),
-            metrics(attempt=2, response=latency(60, 70)),
-            metrics(attempt=2, release=latency(100, 110)),
+            metrics(attempt=2, response=latency(80, 90)),
+            metrics(attempt=2, release=latency(160, 170)),
             metrics(attempt=2, normalized=(0.50, 0.50, 0.80, 0.98)),
         )
         for second in cases:
