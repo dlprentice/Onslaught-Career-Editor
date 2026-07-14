@@ -463,9 +463,9 @@ def validate_runtime_protocol(args: argparse.Namespace) -> RuntimeProtocolPlan:
         return RuntimeProtocolPlan(
             runtime_protocol=WALKER_TRAJECTORY_RUNTIME_PROTOCOL,
             canary_role="",
-            # Configuration 1 favors keyboard Movement bindings for Q-forward.
-            # Configuration 2 was controller-oriented and left Forward unbound to Q.
-            launch_arguments=["-skipfmv", "-level", "850", "-configuration", "1"],
+            # Keep configuration 2 (stable morph/walker launch path). Forward is
+            # force-bound to Q on the copied defaultoptions for keyboard Q/W hold.
+            launch_arguments=["-skipfmv", "-level", "850", "-configuration", "2"],
             patch_keys=[],
             apply_windowed_compatibility_patch=False,
             transform_entry_id=None,
@@ -3057,7 +3057,7 @@ static int RunWalkerTrajectoryAttempt()
             throw new TimeoutException($"Walker refused {phase}; its declared budget plus cleanup reserve is unavailable.");
     }
     string[] launchArguments = JsonSerializer.Deserialize<string[]>(RequiredEnv("ONSLAUGHT_LIVE_LAUNCH_ARGUMENTS_JSON")) ?? Array.Empty<string>();
-    string[] expectedArguments = { "-skipfmv", "-level", "850", "-configuration", "1" };
+    string[] expectedArguments = { "-skipfmv", "-level", "850", "-configuration", "2" };
     if (!launchArguments.SequenceEqual(expectedArguments, StringComparer.Ordinal))
         throw new InvalidOperationException("Walker trajectory launch arguments drifted from the locked protocol.");
     if (!string.Equals(Sha256File(adapterPath), expectedAdapterSha256, StringComparison.OrdinalIgnoreCase))

@@ -267,7 +267,7 @@ class ReceiptIdentity:
             window_handle=0x1234,
             window_process_id=4242,
             manifest_sha256="c" * 64,
-            launch_arguments=("-skipfmv", "-level", "850", "-configuration", "1"),
+            launch_arguments=("-skipfmv", "-level", "850", "-configuration", "2"),
             artifact_root="C:/synthetic/role",
             artifact_path="C:/synthetic/role/private/trace.json",
         )
