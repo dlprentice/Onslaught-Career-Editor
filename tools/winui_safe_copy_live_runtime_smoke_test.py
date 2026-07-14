@@ -8,6 +8,7 @@ from contextlib import redirect_stderr
 import datetime as dt
 import hashlib
 import importlib.util
+import inspect
 import io
 import json
 import os
@@ -128,6 +129,65 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
                 )
                 self.assertFalse(failed["succeeded"])
 
+    def test_synthetic_walker_deadline_refusal_in_every_phase_still_closes_out(self) -> None:
+        module = self.live_smoke_module()
+        phases = ("profile", "launch", "receipt", "focus", "adapter")
+        for refused in phases:
+            with self.subTest(refused=refused):
+                calls = []
+                def require_budget(phase, required):
+                    calls.append(("budget", phase, required))
+                    if phase == refused:
+                        raise TimeoutError(phase)
+                callbacks = {"require_budget": require_budget}
+                callbacks.update({phase: (lambda name=phase: calls.append(("phase", name)))
+                                  for phase in phases})
+                callbacks.update({name: (lambda name=name: calls.append(("cleanup", name)) or True)
+                                  for name in ("release_q", "close_adapter", "stop_managed",
+                                               "census", "closeout")})
+                result = module.run_synthetic_walker_phase_orchestration(callbacks)
+                self.assertFalse(result["succeeded"])
+                self.assertEqual(
+                    ["release_q", "close_adapter", "stop_managed", "census", "closeout"],
+                    [row[1] for row in calls if row[0] == "cleanup"],
+                )
+                self.assertNotIn(("phase", refused), calls)
+
+    def test_in_progress_profile_launch_and_attempt_crossings_signal_and_fully_close(self) -> None:
+        module = self.live_smoke_module()
+        for phase, limit in (("profile", 120.0), ("launch", 30.0), ("attempt", 215.0)):
+            with self.subTest(phase=phase):
+                now = [0.0]
+                calls = []
+                def blocked_work(poll):
+                    now[0] = limit - 0.01
+                    self.assertFalse(poll())
+                    now[0] = limit
+                    self.assertTrue(poll())
+                callbacks = {
+                    "signal_stop": lambda name: calls.append(("stop", name)),
+                    "blocked_work": blocked_work,
+                    "release_q": lambda: calls.append(("cleanup", "release_q")) or True,
+                    "close_adapter": lambda: calls.append(("cleanup", "close_adapter")) or True,
+                    "stop_managed": lambda: calls.append(("cleanup", "stop_managed")) or True,
+                    "census": lambda: calls.append(("cleanup", "census")) or 0,
+                    "closeout": lambda: calls.append(("cleanup", "closeout")) or True,
+                }
+                result = module.run_synthetic_walker_blocked_phase(
+                    phase, limit, callbacks, lambda: now[0],
+                )
+                self.assertEqual([("stop", phase)], [row for row in calls if row[0] == "stop"])
+                self.assertEqual(
+                    ["release_q", "close_adapter", "stop_managed", "census", "closeout"],
+                    [row[1] for row in calls if row[0] == "cleanup"],
+                )
+                self.assertTrue(result["cleanup"]["release_q"])
+                self.assertTrue(result["cleanup"]["close_adapter"])
+                self.assertTrue(result["cleanup"]["stop_managed"])
+                self.assertEqual(0, result["cleanup"]["census"])
+                self.assertTrue(result["cleanup"]["closeout"])
+                self.assertFalse(result["accepted"])
+
     def test_generated_walker_runner_binds_adapter_and_records_lifecycle(self) -> None:
         module = self.live_smoke_module()
         with tempfile.TemporaryDirectory() as tmp:
@@ -155,6 +215,300 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn("publicProjectionWritten = false", generated)
         self.assertNotIn("PROCESS_VM_WRITE", generated)
         self.assertNotIn("DebugActiveProcess", generated)
+
+    def test_walker_runner_has_phase_timestamps_and_observer_only_deadline(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = module.write_runner(Path(tmp) / "runner")
+            generated = project.with_name("Program.cs").read_text(encoding="utf-8")
+        for marker in (
+            "profilePreparationStartedTimestamp", "profilePreparationCompletedTimestamp",
+            "launchStartedTimestamp", "receiptValidatedTimestamp", "focusAcquiredTimestamp",
+            "adapterStartedTimestamp", "cleanupStartedTimestamp", "closeoutWrittenTimestamp",
+        ):
+            self.assertIn(marker, generated)
+        self.assertLess(generated.index("Stopwatch observerLifecycle = Stopwatch.StartNew()"),
+                        generated.index("Process.Start(adapterStart)"))
+        self.assertGreater(generated.index("Stopwatch observerLifecycle = Stopwatch.StartNew()"),
+                           generated.index("focusAcquiredTimestamp"))
+        for boundary in (
+            'RequireDecisionBudget("profile preparation", 215)',
+            'RequireDecisionBudget("launch/window/receipt/focus", 95)',
+            'RequireDecisionBudget("receipt validation", 65)',
+            'RequireDecisionBudget("foreground acquisition", 65)',
+            'RequireDecisionBudget("adapter observer", 65)',
+            "TimeSpan.FromSeconds(120)", "TimeSpan.FromSeconds(30)",
+            "TimeSpan.FromSeconds(20)",
+        ):
+            self.assertIn(boundary, generated)
+        self.assertIn("CooperativeStopRequested()", generated)
+        walker_parent = generated[
+            generated.index("static int RunWalkerTrajectoryAttempt()"):
+            generated.index("bool morphCanaryMode")
+        ]
+        self.assertIn('WalkerOwnedPhaseProcess.Start("profile"', walker_parent)
+        self.assertIn('WalkerOwnedPhaseProcess.Start(\n            "launch"', walker_parent)
+        self.assertIn("WaitWalkerOwnedPhase(profilePhase, TimeSpan.FromSeconds(120)", walker_parent)
+        self.assertIn("WaitWalkerOwnedPhase(launchPhase, TimeSpan.FromSeconds(30)", walker_parent)
+        self.assertNotIn("GameProfilePreflightService.PrepareWindowedCompatibilityProfile", walker_parent)
+        self.assertNotIn("GameProfileRuntimeService.LaunchCopiedProfile", walker_parent)
+        self.assertIn("phase.TerminateExactJobAndClose()", generated)
+        self.assertIn("WALKER_CLEANUP_PHASE: close_phase_jobs", generated)
+
+    def test_prebuild_contract_is_one_build_then_hash_bound_dll_execution(self) -> None:
+        module = self.live_smoke_module()
+        source = inspect.getsource(module.prebuild_walker_runner) + inspect.getsource(
+            module.execute_prebuilt_walker_runner
+        )
+        self.assertIn("def prebuild_walker_runner", source)
+        self.assertIn("def execute_prebuilt_walker_runner", source)
+        self.assertIn('"dotnet", "build"', source)
+        self.assertIn('"--no-restore"', source)
+        self.assertIn('["dotnet", str(runner_dll)', source)
+        self.assertNotIn('["dotnet", "run"', source)
+        self.assertNotIn('["dotnet", "restore"', source)
+        self.assertIn("compilerOwnedProcessCount", source)
+        self.assertIn("buildInvocationCount", source)
+
+        with tempfile.TemporaryDirectory() as tmp, self.assertRaisesRegex(
+            ValueError, "compiler census/cleanup"
+        ):
+            module.prebuild_walker_runner(Path(tmp) / "pair")
+
+    def test_synthetic_prebuild_is_one_build_and_same_dll_executes_twice(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            pair = Path(tmp) / "pair"
+            pair.mkdir()
+            builds = []
+            def build(command, **_kwargs):
+                builds.append(command)
+                output = pair / "runner" / "bin" / "Release" / "net10.0"
+                output.mkdir(parents=True)
+                for name in ("LiveSafeCopySmoke.dll", "LiveSafeCopySmoke.runtimeconfig.json",
+                             "LiveSafeCopySmoke.deps.json"):
+                    (output / name).write_text(name, encoding="utf-8")
+                return subprocess.CompletedProcess(command, 0, "ok", ""), 7001, {
+                    "ownershipMode": "windows-job-object-before-resume",
+                    "jobHandle": 99, "jobAssignedBeforeResume": True,
+                    "capturedProcesses": {7001: {
+                        "processId": 7001, "parentProcessId": 1, "startedAtUtc": "s1",
+                        "executablePath": "C:/dotnet.exe", "role": "buildRoot",
+                    }},
+                }
+            with patch.object(module, "_dotnet_sdk_identity", return_value={
+                "hostPath": str(SCRIPT), "hostSha256": hashlib.sha256(SCRIPT.read_bytes()).hexdigest(),
+                "version": "10.0.0"
+            }):
+                receipt = module.prebuild_walker_runner(
+                    pair, process_runner=build,
+                    compiler_cleanup=lambda ownership: {
+                        "ownedProcessCount": 0,
+                        "capturedDescendants": list(ownership["capturedProcesses"].values()),
+                        "residue": [], "cleanupConfirmed": True,
+                        "ownershipMode": "windows-job-object-before-resume",
+                        "jobAssignedBeforeResume": True, "jobClosed": True,
+                        "jobAccountingBeforeCleanup": {"totalProcesses": 1, "activeProcesses": 0},
+                        "jobAccountingAfterCleanup": {"totalProcesses": 1, "activeProcesses": 0},
+                    },
+                )
+            executions = []
+            def execute(command, **_kwargs):
+                executions.append(command)
+                return subprocess.CompletedProcess(command, 0, "", "")
+            for _ in range(2):
+                module.execute_prebuilt_walker_runner(
+                    Path(receipt["dllPath"]), receipt["dllSha256"], {}, process_runner=execute
+                )
+        self.assertEqual(1, len(builds))
+        self.assertEqual(2, len(executions))
+        self.assertEqual(executions[0], executions[1])
+        self.assertEqual("dotnet", executions[0][0])
+        self.assertNotIn("run", [part.casefold() for part in executions[0]])
+
+    def test_synthetic_prebuild_timeout_is_fail_closed_before_attempt_root(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            pair = Path(tmp) / "pair"
+            pair.mkdir()
+            with patch.object(module, "_dotnet_sdk_identity", return_value={
+                "hostPath": str(SCRIPT), "hostSha256": hashlib.sha256(SCRIPT.read_bytes()).hexdigest(),
+                "version": "10.0.0"
+            }):
+                receipt = module.prebuild_walker_runner(
+                    pair,
+                    process_runner=lambda command, **_kwargs: (
+                        subprocess.CompletedProcess(command, 124, "", "deadline"), 7002, {
+                            "ownershipMode": "windows-job-object-before-resume",
+                            "jobHandle": 100, "jobAssignedBeforeResume": True,
+                            "capturedProcesses": {7002: {
+                                "processId": 7002, "parentProcessId": 1, "startedAtUtc": "s2",
+                                "executablePath": "C:/dotnet.exe", "role": "buildRoot",
+                            }},
+                        }
+                    ),
+                    compiler_cleanup=lambda ownership: {
+                        "ownedProcessCount": 0,
+                        "capturedDescendants": list(ownership["capturedProcesses"].values()),
+                        "residue": [], "cleanupConfirmed": True,
+                        "ownershipMode": "windows-job-object-before-resume",
+                        "jobAssignedBeforeResume": True, "jobClosed": True,
+                        "jobAccountingBeforeCleanup": {"totalProcesses": 1, "activeProcesses": 0},
+                        "jobAccountingAfterCleanup": {"totalProcesses": 1, "activeProcesses": 0},
+                    },
+                )
+        self.assertFalse(receipt["passed"])
+        self.assertTrue(receipt["timedOut"])
+        self.assertFalse((pair / "attempt-01").exists())
+
+    def test_job_membership_discovers_reparented_descendant_without_parent_sampling(self) -> None:
+        module = self.live_smoke_module()
+        captured = {11: {
+            "processId": 11, "parentProcessId": 10, "startedAtUtc": "s1",
+            "executablePath": "C:/dotnet.exe", "role": "buildRoot",
+        }}
+        with patch.object(module, "_job_process_ids", return_value=[11, 12]), \
+             patch.object(module, "_process_identity", return_value={
+                 "processId": 12, "startedAtUtc": "s2",
+                 "executablePath": "C:/sdk/VBCSCompiler.exe",
+             }):
+            module._capture_job_owned_processes(99, captured)
+        self.assertIn(12, captured)
+        self.assertEqual(-1, captured[12]["parentProcessId"])
+        self.assertEqual("buildDescendant", captured[12]["role"])
+
+    def test_job_cleanup_uses_kernel_accounting_and_reaches_zero(self) -> None:
+        module = self.live_smoke_module()
+        captured = {11: {
+            "processId": 11, "parentProcessId": 10, "startedAtUtc": "s1",
+            "executablePath": "C:/dotnet.exe", "role": "buildRoot",
+        }}
+        ownership = {
+            "ownershipMode": "windows-job-object-before-resume", "jobHandle": 99,
+            "jobAssignedBeforeResume": True, "capturedProcesses": captured,
+        }
+        kernel = SimpleNamespace(
+            TerminateJobObject=lambda *_: True,
+            CloseHandle=lambda *_: True,
+        )
+        with patch.object(module, "_capture_job_owned_processes"), \
+             patch.object(module, "_job_accounting", side_effect=[
+                 {"totalProcesses": 1, "activeProcesses": 1, "totalTerminatedProcesses": 0},
+                 {"totalProcesses": 1, "activeProcesses": 0, "totalTerminatedProcesses": 1},
+             ]), patch.object(module, "_kernel32_process_api", return_value=kernel):
+            result = module.receipt_owned_compiler_cleanup(ownership)
+        self.assertEqual(0, result["ownedProcessCount"])
+        self.assertTrue(result["cleanupConfirmed"])
+        self.assertTrue(result["jobClosed"])
+        self.assertEqual(0, result["jobAccountingAfterCleanup"]["activeProcesses"])
+
+    def test_compiler_cleanup_receipt_rejects_residue_missing_root_and_identity_gaps(self) -> None:
+        module = self.live_smoke_module()
+        root = {
+            "processId": 7001, "parentProcessId": 1, "startedAtUtc": "s1",
+            "executablePath": "C:/dotnet.exe", "role": "buildRoot",
+        }
+        child = {
+            "processId": 7002, "parentProcessId": 7001, "startedAtUtc": "s2",
+            "executablePath": "C:/sdk/VBCSCompiler.exe", "role": "buildDescendant",
+        }
+        valid = {
+            "ownedProcessCount": 0, "cleanupConfirmed": True,
+            "capturedDescendants": [root, child], "residue": [],
+            "ownershipMode": "windows-job-object-before-resume",
+            "jobAssignedBeforeResume": True, "jobClosed": True,
+            "jobAccountingBeforeCleanup": {"totalProcesses": 2, "activeProcesses": 1},
+            "jobAccountingAfterCleanup": {"totalProcesses": 2, "activeProcesses": 0},
+        }
+        self.assertTrue(module._compiler_cleanup_receipt_complete(
+            valid, build_process_id=7001, build_invocation_count=1,
+        ))
+        negatives = []
+        for mutation in (
+            lambda row: row.update(residue=[child]),
+            lambda row: row.update(capturedDescendants=[child]),
+            lambda row: row["capturedDescendants"][1].pop("startedAtUtc"),
+            lambda row: row.update(capturedDescendants=[root, dict(root)]),
+            lambda row: row.update(jobAccountingBeforeCleanup={
+                "totalProcesses": 3, "activeProcesses": 0,
+            }),
+        ):
+            candidate = json.loads(json.dumps(valid))
+            mutation(candidate)
+            negatives.append(candidate)
+        for candidate in negatives:
+            with self.subTest(candidate=candidate):
+                self.assertFalse(module._compiler_cleanup_receipt_complete(
+                    candidate, build_process_id=7001, build_invocation_count=1,
+                ))
+
+    def test_fast_exit_job_accounting_without_identity_notification_fails_closed(self) -> None:
+        module = self.live_smoke_module()
+        cleanup = {
+            "ownedProcessCount": 0, "cleanupConfirmed": True, "residue": [],
+            "ownershipMode": "windows-job-object-before-resume",
+            "jobAssignedBeforeResume": True, "jobClosed": True,
+            "capturedDescendants": [{
+                "processId": 7001, "parentProcessId": 1, "startedAtUtc": "s1",
+                "executablePath": "C:/dotnet.exe", "role": "buildRoot",
+            }],
+            "jobAccountingBeforeCleanup": {"totalProcesses": 2, "activeProcesses": 0},
+            "jobAccountingAfterCleanup": {"totalProcesses": 2, "activeProcesses": 0},
+        }
+        self.assertFalse(module._compiler_cleanup_receipt_complete(
+            cleanup, build_process_id=7001, build_invocation_count=1,
+        ))
+
+    def test_prebuild_job_is_terminated_and_closed_on_resume_capture_and_accounting_errors(self) -> None:
+        module = self.live_smoke_module()
+        class FakeProcess:
+            pid = 7001
+            _handle = 77
+            returncode = 0
+            def __init__(self):
+                self.killed = False
+            def kill(self):
+                self.killed = True
+            def communicate(self, timeout=None):
+                return "", ""
+        for failure in ("resume", "capture", "accounting"):
+            with self.subTest(failure=failure):
+                process = FakeProcess()
+                calls = []
+                kernel = SimpleNamespace(
+                    AssignProcessToJobObject=lambda *_: True,
+                    TerminateJobObject=lambda *_: calls.append("terminate") or True,
+                    CloseHandle=lambda *_: calls.append("close") or True,
+                )
+                patches = [
+                    patch.object(module, "_create_receipt_owned_build_job", return_value=99),
+                    patch.object(module, "_kernel32_process_api", return_value=kernel),
+                    patch.object(module.subprocess, "Popen", return_value=process),
+                    patch.object(module, "_process_identity", return_value={
+                        "processId": 7001, "startedAtUtc": "s1",
+                        "executablePath": "C:/dotnet.exe",
+                    }),
+                    patch.object(
+                        module, "_resume_suspended_process",
+                        side_effect=RuntimeError("resume") if failure == "resume" else None,
+                    ),
+                    patch.object(
+                        module, "_capture_job_owned_processes",
+                        side_effect=RuntimeError("capture") if failure == "capture" else None,
+                    ),
+                    patch.object(
+                        module, "_job_accounting",
+                        side_effect=RuntimeError("accounting") if failure == "accounting"
+                        else {"totalProcesses": 1, "activeProcesses": 0,
+                              "totalTerminatedProcesses": 1},
+                    ),
+                ]
+                with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5], patches[6]:
+                    with self.assertRaisesRegex(RuntimeError, failure):
+                        module._run_walker_prebuild_process(
+                            ["dotnet", "build"], cwd=ROOT, env={}, timeout_seconds=150,
+                        )
+                self.assertEqual(["terminate", "close"], calls)
 
     def test_morph_canary_protocol_is_unpatched_fixed_and_capture_free(self) -> None:
         module, args = self.parse(

@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import ctypes
+from ctypes import wintypes
 import datetime as dt
 import hashlib
 import importlib.util
@@ -16,6 +18,7 @@ import subprocess
 import sys
 import tempfile
 import textwrap
+import time
 from pathlib import Path
 from typing import Any, Callable, Mapping, NamedTuple
 
@@ -327,6 +330,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--canary-role", default="", choices=("", *MORPH_CANARY_ROLES))
     parser.add_argument("--walker-attempt", type=int, default=0, choices=(0, 1, 2))
     parser.add_argument("--walker-deadline-seconds", type=int, default=45, choices=(45,))
+    parser.add_argument("--walker-prebuilt-runner-dll", default="")
+    parser.add_argument("--expected-walker-prebuilt-runner-sha256", default="")
+    parser.add_argument("--walker-prebuild-receipt", default="")
+    parser.add_argument("--expected-walker-prebuild-receipt-sha256", default="")
+    parser.add_argument("--walker-cooperative-stop-file", default="")
+    parser.add_argument("--walker-attempt-budget-seconds", type=int, default=215, choices=(215,))
     parser.add_argument("--canary-authority-file", default="")
     parser.add_argument("--expected-canary-authority-sha256", default="")
     parser.add_argument("--canary-leases-file", default="")
@@ -690,6 +699,70 @@ def run_synthetic_walker_runtime_orchestration(
     return {"succeeded": succeeded, "failure": failure, "adapter": adapter, "cleanup": cleanup}
 
 
+def run_synthetic_walker_phase_orchestration(
+    callbacks: Mapping[str, Callable[..., Any]],
+) -> dict[str, Any]:
+    """Mirror the generated runner's phase refusal and unconditional cleanup order."""
+    failure = ""
+    completed: list[str] = []
+    try:
+        for phase, required in (
+            ("profile", 215), ("launch", 95), ("receipt", 65),
+            ("focus", 65), ("adapter", 65),
+        ):
+            callbacks["require_budget"](phase, required)
+            callbacks[phase]()
+            completed.append(phase)
+    except Exception as exc:
+        failure = f"{type(exc).__name__}: {exc}"
+    cleanup: dict[str, Any] = {}
+    for name in ("release_q", "close_adapter", "stop_managed", "census", "closeout"):
+        try:
+            cleanup[name] = callbacks[name]()
+        except Exception as exc:
+            cleanup[name] = None
+            failure = failure or f"{type(exc).__name__}: {exc}"
+    return {"completed": completed, "cleanup": cleanup, "failure": failure,
+            "succeeded": not failure and len(completed) == 5}
+
+
+def run_synthetic_walker_blocked_phase(
+    phase: str, limit_seconds: float, callbacks: Mapping[str, Callable[..., Any]],
+    monotonic: Callable[[], float],
+) -> dict[str, Any]:
+    """Drive an in-progress phase across its bound and mirror cleanup-first STOP."""
+    started = monotonic()
+    stop_signaled = False
+
+    def poll() -> bool:
+        nonlocal stop_signaled
+        if not stop_signaled and monotonic() - started >= limit_seconds:
+            callbacks["signal_stop"](phase)
+            stop_signaled = True
+        return stop_signaled
+
+    failure = ""
+    try:
+        callbacks["blocked_work"](poll)
+        poll()
+        if stop_signaled:
+            raise TimeoutError(f"{phase} cooperative deadline expired")
+    except Exception as exc:
+        failure = f"{type(exc).__name__}: {exc}"
+    cleanup: dict[str, Any] = {}
+    for name in ("release_q", "close_adapter", "stop_managed", "census", "closeout"):
+        try:
+            cleanup[name] = callbacks[name]()
+        except Exception as exc:
+            cleanup[name] = None
+            failure = failure or f"{type(exc).__name__}: {exc}"
+    accepted = not failure and not stop_signaled
+    return {
+        "phase": phase, "stopSignaled": stop_signaled, "cleanup": cleanup,
+        "failure": failure, "accepted": accepted,
+    }
+
+
 def load_morph_canary_module():
     module_path = ROOT / "tools" / "battleengine_morph_identity_canary.py"
     module_name = "_winui_live_smoke_morph_canary"
@@ -919,6 +992,7 @@ def write_runner(runner_root: Path, *, create_new: bool = False) -> Path:
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <RestoreProjectStyle>None</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include=\"{appcore}\" />
@@ -934,6 +1008,7 @@ def write_runner(runner_root: Path, *, create_new: bool = False) -> Path:
     program_text = r"""
 using System.Diagnostics;
 using System.Security.Cryptography;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using Onslaught___Career_Editor;
@@ -2797,6 +2872,83 @@ static string AppendCleanupFailure(string failure, string phase, Exception ex) =
         ? $"Cleanup {phase} failed: {ex.GetType().Name}: {ex.Message}"
         : failure + $" | Cleanup {phase} failed: {ex.GetType().Name}: {ex.Message}";
 
+static int RunWalkerProfilePreparationPhase()
+{
+    string sourceRoot = RequiredEnv("ONSLAUGHT_LIVE_SOURCE_ROOT");
+    string profilesRoot = RequiredEnv("ONSLAUGHT_LIVE_PROFILES_ROOT");
+    string exeOverride = RequiredEnv("ONSLAUGHT_LIVE_EXE_OVERRIDE");
+    string artifactRoot = RequiredEnv("ONSLAUGHT_LIVE_WALKER_AUTHORIZED_ROOT");
+    string receiptPath = RequiredEnv("ONSLAUGHT_LIVE_WALKER_PHASE_RECEIPT");
+    string[] launchArguments = JsonSerializer.Deserialize<string[]>(
+        RequiredEnv("ONSLAUGHT_LIVE_LAUNCH_ARGUMENTS_JSON")) ?? Array.Empty<string>();
+    try
+    {
+        GameProfilePrepareResult prepared = GameProfilePreflightService.PrepareWindowedCompatibilityProfile(
+            new GameProfilePrepareOptions(
+                SourceGameRoot: sourceRoot, OutputRoot: profilesRoot,
+                ProfileName: "walker-measurement", ExecutableOverridePath: exeOverride,
+                ApplyWindowedCompatibilityPatch: false, AllowByteLayoutOnlyTarget: false,
+                IncludeSavegames: false, PatchKeys: Array.Empty<string>(),
+                LaunchArguments: launchArguments, ProfilePresetId: null));
+        WriteNewCanaryText(receiptPath, artifactRoot, JsonSerializer.Serialize(new {
+            passed = true, prepared.TargetGameRoot, prepared.ExecutablePath, prepared.ManifestPath,
+        }, new JsonSerializerOptions { WriteIndented = true }));
+        return 0;
+    }
+    catch (Exception ex)
+    {
+        WriteNewCanaryText(receiptPath, artifactRoot, JsonSerializer.Serialize(new {
+            passed = false, failure = ex.GetType().Name + ": " + ex.Message,
+        }, new JsonSerializerOptions { WriteIndented = true }));
+        return 2;
+    }
+}
+
+static int RunWalkerLaunchPhase()
+{
+    string profilesRoot = RequiredEnv("ONSLAUGHT_LIVE_PROFILES_ROOT");
+    string profileRoot = RequiredEnv("ONSLAUGHT_LIVE_WALKER_PREPARED_PROFILE_ROOT");
+    string artifactRoot = RequiredEnv("ONSLAUGHT_LIVE_WALKER_AUTHORIZED_ROOT");
+    string receiptPath = RequiredEnv("ONSLAUGHT_LIVE_WALKER_PHASE_RECEIPT");
+    string[] launchArguments = JsonSerializer.Deserialize<string[]>(
+        RequiredEnv("ONSLAUGHT_LIVE_LAUNCH_ARGUMENTS_JSON")) ?? Array.Empty<string>();
+    try
+    {
+        GameProfileManagedProcess managed = GameProfileRuntimeService.LaunchCopiedProfile(
+            new GameProfileLaunchOptions(
+                ProfileRoot: profileRoot, AppOwnedProfilesRoot: profilesRoot,
+                LaunchArguments: launchArguments));
+        WriteNewCanaryText(receiptPath, artifactRoot, JsonSerializer.Serialize(new {
+            passed = true, managed.ProcessId, managed.ExecutablePath, managed.WorkingDirectory,
+            Arguments = managed.Arguments, managed.StartedAt, managed.ManifestPath,
+        }, new JsonSerializerOptions { WriteIndented = true }));
+        return 0;
+    }
+    catch (Exception ex)
+    {
+        WriteNewCanaryText(receiptPath, artifactRoot, JsonSerializer.Serialize(new {
+            passed = false, failure = ex.GetType().Name + ": " + ex.Message,
+        }, new JsonSerializerOptions { WriteIndented = true }));
+        return 2;
+    }
+}
+
+static void WaitWalkerOwnedPhase(
+    WalkerOwnedPhaseProcess phase, TimeSpan bound, string cooperativeStopFile)
+{
+    Stopwatch elapsed = Stopwatch.StartNew();
+    while (!phase.Process.WaitForExit(100))
+    {
+        if (File.Exists(cooperativeStopFile) || elapsed.Elapsed >= bound)
+        {
+            phase.TerminateExactJobAndClose();
+            throw new TimeoutException($"Walker {phase.Name} phase exceeded its cooperative safety bound.");
+        }
+    }
+    if (phase.Process.ExitCode != 0)
+        throw new InvalidOperationException($"Walker {phase.Name} phase exited with code {phase.Process.ExitCode}.");
+}
+
 static int RunWalkerTrajectoryAttempt()
 {
     string sourceRoot = RequiredEnv("ONSLAUGHT_LIVE_SOURCE_ROOT");
@@ -2812,6 +2964,21 @@ static int RunWalkerTrajectoryAttempt()
     string pythonExe = RequiredEnv("ONSLAUGHT_LIVE_PYTHON_EXE");
     int attempt = BoundedIntEnv("ONSLAUGHT_LIVE_WALKER_ATTEMPT", 0, 1, 2);
     int lifecycleDeadlineSeconds = BoundedIntEnv("ONSLAUGHT_LIVE_WALKER_DEADLINE_SECONDS", 45, 45, 45);
+    int attemptBudgetSeconds = BoundedIntEnv("ONSLAUGHT_LIVE_WALKER_ATTEMPT_BUDGET_SECONDS", 215, 215, 215);
+    string cooperativeStopFile = RequiredEnv("ONSLAUGHT_LIVE_WALKER_COOPERATIVE_STOP_FILE");
+    Stopwatch attemptDecisionClock = new Stopwatch();
+    bool CooperativeStopRequested() => File.Exists(cooperativeStopFile);
+    void MarkWalkerPhase(string phase) => WriteNewCanaryText(
+        Path.Combine(artifactRoot, $"walker-phase-{phase}.marker"), artifactRoot,
+        Stopwatch.GetTimestamp().ToString(System.Globalization.CultureInfo.InvariantCulture));
+    void RequireDecisionBudget(string phase, int requiredSeconds)
+    {
+        if (CooperativeStopRequested())
+            throw new TimeoutException($"Walker cooperative deadline expired before {phase}.");
+        double remaining = attemptBudgetSeconds - attemptDecisionClock.Elapsed.TotalSeconds;
+        if (remaining < requiredSeconds)
+            throw new TimeoutException($"Walker refused {phase}; its declared budget plus cleanup reserve is unavailable.");
+    }
     string[] launchArguments = JsonSerializer.Deserialize<string[]>(RequiredEnv("ONSLAUGHT_LIVE_LAUNCH_ARGUMENTS_JSON")) ?? Array.Empty<string>();
     string[] expectedArguments = { "-skipfmv", "-level", "850", "-configuration", "2" };
     if (!launchArguments.SequenceEqual(expectedArguments, StringComparer.Ordinal))
@@ -2826,7 +2993,11 @@ static int RunWalkerTrajectoryAttempt()
     if (SnapshotBeaProcesses().Length != 0)
         throw new InvalidOperationException("Refusing walker attempt while any BEA.exe process is already running.");
 
-    GameProfilePrepareResult? prepared = null;
+    string preparedTargetGameRoot = string.Empty;
+    string preparedExecutablePath = string.Empty;
+    string preparedManifestPath = string.Empty;
+    WalkerOwnedPhaseProcess? profilePhase = null;
+    WalkerOwnedPhaseProcess? launchPhase = null;
     GameProfileManagedProcess? managed = null;
     GameProfileStopResult? stopResult = null;
     Process? adapter = null;
@@ -2847,10 +3018,18 @@ static int RunWalkerTrajectoryAttempt()
     bool adapterKilledAfterCleanup = false;
     bool receiptValidatedAfterAdapter = false;
     bool observerUpBeforeCleanup = false;
+    bool phaseJobsClosed = false;
     JsonElement focusResult = JsonPayload(new { status = "not-run" });
     JsonElement qReleaseResult = JsonPayload(new { status = "not-run" });
     JsonElement censusResult = JsonPayload(new { status = "not-run", ownedProcessCount = -1, inspectionFailureCount = 0 });
-    Stopwatch lifecycle = Stopwatch.StartNew();
+    long profilePreparationStartedTimestamp = 0;
+    long profilePreparationCompletedTimestamp = 0;
+    long launchStartedTimestamp = 0;
+    long receiptValidatedTimestamp = 0;
+    long focusAcquiredTimestamp = 0;
+    long adapterStartedTimestamp = 0;
+    long cleanupStartedTimestamp = 0;
+    long closeoutWrittenTimestamp = 0;
     string rawPath = Path.Combine(artifactRoot, "walker-trajectory-raw.json");
     string metricsPath = Path.Combine(artifactRoot, "walker-trajectory-metrics.json");
     string observerStatusPath = Path.Combine(artifactRoot, "observer-status.json");
@@ -2859,26 +3038,53 @@ static int RunWalkerTrajectoryAttempt()
     string closeoutPath = Path.Combine(artifactRoot, "walker-trajectory-attempt-closeout.json");
     try
     {
-        prepared = GameProfilePreflightService.PrepareWindowedCompatibilityProfile(
-            new GameProfilePrepareOptions(
-                SourceGameRoot: sourceRoot,
-                OutputRoot: profilesRoot,
-                ProfileName: $"wt-{attempt}",
-                ExecutableOverridePath: exeOverride,
-                ApplyWindowedCompatibilityPatch: false,
-                AllowByteLayoutOnlyTarget: false,
-                IncludeSavegames: false,
-                PatchKeys: Array.Empty<string>(),
-                LaunchArguments: launchArguments,
-                ProfilePresetId: null));
-        copiedHashBefore = Sha256File(prepared.ExecutablePath);
+        RequireDecisionBudget("profile preparation", 215);
+        attemptDecisionClock.Start();
+        profilePreparationStartedTimestamp = Stopwatch.GetTimestamp();
+        MarkWalkerPhase("profile-started");
+        string profilePhaseReceipt = Path.Combine(artifactRoot, "walker-profile-phase.json");
+        profilePhase = WalkerOwnedPhaseProcess.Start("profile", profilePhaseReceipt, null);
+        WaitWalkerOwnedPhase(profilePhase, TimeSpan.FromSeconds(120), cooperativeStopFile);
+        using (JsonDocument phaseReceipt = JsonDocument.Parse(File.ReadAllText(profilePhaseReceipt)))
+        {
+            JsonElement row = phaseReceipt.RootElement;
+            if (!JsonBool(row, "passed"))
+                throw new InvalidOperationException("Walker profile preparation phase did not pass.");
+            preparedTargetGameRoot = row.GetProperty("TargetGameRoot").GetString() ?? string.Empty;
+            preparedExecutablePath = row.GetProperty("ExecutablePath").GetString() ?? string.Empty;
+            preparedManifestPath = row.GetProperty("ManifestPath").GetString() ?? string.Empty;
+        }
+        profilePhase.RequireZeroAndClose();
+        profilePhase = null;
+        profilePreparationCompletedTimestamp = Stopwatch.GetTimestamp();
+        MarkWalkerPhase("profile-completed");
+        copiedHashBefore = Sha256File(preparedExecutablePath);
         if (!string.Equals(copiedHashBefore, overrideHashBefore, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Unpatched copied executable differs from the supplied source executable.");
-        managed = GameProfileRuntimeService.LaunchCopiedProfile(
-            new GameProfileLaunchOptions(
-                ProfileRoot: prepared.TargetGameRoot,
-                AppOwnedProfilesRoot: profilesRoot,
-                LaunchArguments: launchArguments));
+        RequireDecisionBudget("launch/window/receipt/focus", 95);
+        launchStartedTimestamp = Stopwatch.GetTimestamp();
+        MarkWalkerPhase("launch-started");
+        string launchPhaseReceipt = Path.Combine(artifactRoot, "walker-launch-phase.json");
+        launchPhase = WalkerOwnedPhaseProcess.Start(
+            "launch", launchPhaseReceipt,
+            new Dictionary<string, string> {
+                ["ONSLAUGHT_LIVE_WALKER_PREPARED_PROFILE_ROOT"] = preparedTargetGameRoot,
+            });
+        WaitWalkerOwnedPhase(launchPhase, TimeSpan.FromSeconds(30), cooperativeStopFile);
+        using (JsonDocument phaseReceipt = JsonDocument.Parse(File.ReadAllText(launchPhaseReceipt)))
+        {
+            JsonElement row = phaseReceipt.RootElement;
+            if (!JsonBool(row, "passed"))
+                throw new InvalidOperationException("Walker launch phase did not pass.");
+            managed = new GameProfileManagedProcess(
+                ProcessId: row.GetProperty("ProcessId").GetInt32(),
+                ExecutablePath: row.GetProperty("ExecutablePath").GetString() ?? string.Empty,
+                WorkingDirectory: row.GetProperty("WorkingDirectory").GetString() ?? string.Empty,
+                Arguments: row.GetProperty("Arguments").EnumerateArray()
+                    .Select(value => value.GetString() ?? string.Empty).ToArray(),
+                StartedAt: row.GetProperty("StartedAt").GetDateTimeOffset(),
+                ManifestPath: row.GetProperty("ManifestPath").GetString() ?? string.Empty);
+        }
         DateTime windowDeadline = DateTime.UtcNow.AddSeconds(12);
         while (DateTime.UtcNow < windowDeadline)
         {
@@ -2895,14 +3101,17 @@ static int RunWalkerTrajectoryAttempt()
         }
         if (string.Equals(hwndHex, "0x0", StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Managed copied BEA did not expose the exact top-level window.");
+        RequireDecisionBudget("receipt validation", 65);
         receiptSha256 = WriteRuntimeProcessReceipt(
-            runtimeReceiptPath, artifactRoot, managed, prepared.ManifestPath, hwndHex,
+            runtimeReceiptPath, artifactRoot, managed, preparedManifestPath, hwndHex,
             launchArguments, overrideHashBefore, copiedHashBefore,
             expectedAdapterSha256, expectedAdapterSha256);
         if (!ValidateRuntimeReceipt(
                 powershellExe, runtimeIdentityModule, runtimeReceiptPath, receiptSha256,
                 expectedAdapterSha256, expectedAdapterSha256, true, out string receiptFailure))
             throw new InvalidOperationException("Walker receipt validation failed: " + receiptFailure);
+        receiptValidatedTimestamp = Stopwatch.GetTimestamp();
+        RequireDecisionBudget("foreground acquisition", 65);
         focusResult = SendInputSequence(
             powershellExe, inputScript, managed.ProcessId, hwndHex,
             managed.ExecutablePath, managed.WorkingDirectory, "wait:0", 0,
@@ -2910,10 +3119,14 @@ static int RunWalkerTrajectoryAttempt()
             runtimeReceiptPath, receiptSha256, true);
         if (!JsonStringIn(focusResult, "status", "sent") || !JsonBool(focusResult, "focused"))
             throw new InvalidOperationException("Receipt-bound foreground acquisition failed.");
+        focusAcquiredTimestamp = Stopwatch.GetTimestamp();
+        MarkWalkerPhase("launch-completed");
+        RequireDecisionBudget("launch/window/receipt/focus completion", 65);
         if (!ValidateRuntimeReceipt(
                 powershellExe, runtimeIdentityModule, runtimeReceiptPath, receiptSha256,
                 expectedAdapterSha256, expectedAdapterSha256, true, out receiptFailure))
             throw new InvalidOperationException("Walker receipt changed before adapter start: " + receiptFailure);
+        RequireDecisionBudget("adapter observer", 65);
 
         var adapterStart = new ProcessStartInfo
         {
@@ -2932,7 +3145,9 @@ static int RunWalkerTrajectoryAttempt()
         };
         foreach (string argument in adapterCommand)
             adapterStart.ArgumentList.Add(argument);
+        Stopwatch observerLifecycle = Stopwatch.StartNew();
         adapter = Process.Start(adapterStart) ?? throw new InvalidOperationException("Could not start the walker adapter.");
+        adapterStartedTimestamp = Stopwatch.GetTimestamp();
         adapterPid = adapter.Id;
         adapterStartedAtUtc = adapter.StartTime.ToUniversalTime().ToString("o");
         adapterExecutablePath = Path.GetFullPath(
@@ -2942,8 +3157,19 @@ static int RunWalkerTrajectoryAttempt()
         stdoutTask = adapter.StandardOutput.ReadToEndAsync();
         stderrTask = adapter.StandardError.ReadToEndAsync();
         int remainingMilliseconds = Math.Max(
-            1, (int)(TimeSpan.FromSeconds(lifecycleDeadlineSeconds) - lifecycle.Elapsed).TotalMilliseconds);
-        adapterExited = adapter.WaitForExit(remainingMilliseconds);
+            1, (int)(TimeSpan.FromSeconds(lifecycleDeadlineSeconds) - observerLifecycle.Elapsed).TotalMilliseconds);
+        Stopwatch adapterWait = Stopwatch.StartNew();
+        while (!adapter.HasExited && adapterWait.ElapsedMilliseconds < remainingMilliseconds)
+        {
+            if (CooperativeStopRequested())
+            {
+                adapterDeadlineExpired = true;
+                failure = "Walker cooperative aggregate deadline expired during observer; entering cleanup.";
+                break;
+            }
+            adapter.WaitForExit(Math.Min(100, Math.Max(1, remainingMilliseconds - (int)adapterWait.ElapsedMilliseconds)));
+        }
+        adapterExited = adapter.HasExited;
         if (adapterExited)
         {
             adapterExitCode = adapter.ExitCode;
@@ -2952,8 +3178,11 @@ static int RunWalkerTrajectoryAttempt()
         }
         else
         {
-            adapterDeadlineExpired = true;
-            failure = "Walker adapter exceeded the AppCore-owned lifecycle deadline.";
+            if (!adapterDeadlineExpired)
+            {
+                adapterDeadlineExpired = true;
+                failure = "Walker adapter exceeded the AppCore-owned lifecycle deadline.";
+            }
         }
     }
     catch (Exception ex)
@@ -2964,6 +3193,8 @@ static int RunWalkerTrajectoryAttempt()
     }
     finally
     {
+        cleanupStartedTimestamp = Stopwatch.GetTimestamp();
+        Stopwatch cleanupLifecycle = Stopwatch.StartNew();
         // WALKER_CLEANUP_PHASE: release_q
         try
         {
@@ -3040,6 +3271,22 @@ static int RunWalkerTrajectoryAttempt()
         }
         catch (Exception ex) { failure = AppendCleanupFailure(failure, "stop_managed", ex); }
 
+        // WALKER_CLEANUP_PHASE: close_phase_jobs
+        try
+        {
+            if (profilePhase is not null)
+                profilePhase.TerminateExactJobAndClose();
+            if (launchPhase is not null)
+            {
+                if (launchPhase.ActiveProcesses == 0)
+                    launchPhase.RequireZeroAndClose();
+                else
+                    launchPhase.TerminateExactJobAndClose();
+            }
+            phaseJobsClosed = true;
+        }
+        catch (Exception ex) { failure = AppendCleanupFailure(failure, "close_phase_jobs", ex); }
+
         // WALKER_CLEANUP_PHASE: census
         try
         {
@@ -3048,12 +3295,21 @@ static int RunWalkerTrajectoryAttempt()
                 throw new InvalidOperationException("Walker owned-process census was not clear.");
         }
         catch (Exception ex) { failure = AppendCleanupFailure(failure, "census", ex); }
+        if (cleanupLifecycle.Elapsed > TimeSpan.FromSeconds(20))
+            failure = string.IsNullOrWhiteSpace(failure)
+                ? "Walker cleanup exceeded its preserved 20-second safety reserve."
+                : failure + " | Walker cleanup exceeded its preserved 20-second safety reserve.";
+        if (CooperativeStopRequested())
+            failure = string.IsNullOrWhiteSpace(failure)
+                ? "Walker cooperative aggregate deadline expired; cleanup closeout completed."
+                : failure + " | Walker cooperative aggregate deadline expired; cleanup closeout completed.";
     }
 
     string installedHashAfter = Sha256File(installedExe);
     string overrideHashAfter = Sha256File(exeOverride);
     SortedDictionary<string, string> sourceHashesAfter = SnapshotRelativeHashes(sourceRoot, "defaultoptions.bea", "savegames");
-    string copiedHashAfter = prepared is null ? string.Empty : Sha256File(prepared.ExecutablePath);
+    string copiedHashAfter = string.IsNullOrWhiteSpace(preparedExecutablePath)
+        ? string.Empty : Sha256File(preparedExecutablePath);
     adapterScriptHashAfter = Sha256File(adapterPath);
     bool adapterScriptUnchanged = string.Equals(
         adapterScriptHashAfter, expectedAdapterSha256, StringComparison.OrdinalIgnoreCase);
@@ -3083,8 +3339,9 @@ static int RunWalkerTrajectoryAttempt()
     bool accepted = string.IsNullOrWhiteSpace(failure) && !adapterDeadlineExpired &&
         !adapterKilledAfterCleanup && adapterExitCode == 0 && observerSucceeded && observerQUp &&
         observerHandleClosed && samplerAccepted && managedStopped && ownedProcessCount == 0 &&
-        receiptValidatedAfterAdapter && sourceUnchanged && copyUnchanged &&
+        phaseJobsClosed && receiptValidatedAfterAdapter && sourceUnchanged && copyUnchanged &&
         adapterScriptUnchanged && File.Exists(rawPath) && File.Exists(metricsPath);
+    closeoutWrittenTimestamp = Stopwatch.GetTimestamp();
     var closeout = new
     {
         schemaVersion = "battleengine-walker-trajectory-private-attempt-closeout.v1",
@@ -3099,6 +3356,11 @@ static int RunWalkerTrajectoryAttempt()
         managedProcessStopped = managedStopped,
         ownedProcessCount,
         publicProjectionWritten = false,
+        phaseTimestamps = new {
+            profilePreparationStartedTimestamp, profilePreparationCompletedTimestamp,
+            launchStartedTimestamp, receiptValidatedTimestamp, focusAcquiredTimestamp,
+            adapterStartedTimestamp, cleanupStartedTimestamp, closeoutWrittenTimestamp,
+        },
         failure,
         adapter = new
         {
@@ -3117,7 +3379,10 @@ static int RunWalkerTrajectoryAttempt()
             scriptHashAfter = adapterScriptHashAfter,
             scriptUnchanged = adapterScriptUnchanged,
         },
-        cleanup = new { observerQUp, backupQUp, observerHandleClosed, managedStopped, census = censusResult },
+        cleanup = new {
+            observerQUp, backupQUp, observerHandleClosed, managedStopped, phaseJobsClosed,
+            census = censusResult,
+        },
         interferenceNonclaim = "Foreground and receipt identity drift are detected; arbitrary human or controller input is not detected.",
     };
     WriteNewCanaryText(
@@ -3522,6 +3787,13 @@ __CANARY_CLEANUP_OBJECT__
     Console.WriteLine(artifactJson);
     return succeeded ? 0 : 2;
 }
+
+string walkerChildPhase = Environment.GetEnvironmentVariable(
+    "ONSLAUGHT_LIVE_WALKER_CHILD_PHASE") ?? string.Empty;
+if (string.Equals(walkerChildPhase, "profile", StringComparison.Ordinal))
+    return RunWalkerProfilePreparationPhase();
+if (string.Equals(walkerChildPhase, "launch", StringComparison.Ordinal))
+    return RunWalkerLaunchPhase();
 
 bool walkerTrajectoryMode = string.Equals(
     Environment.GetEnvironmentVariable("ONSLAUGHT_LIVE_RUNTIME_PROTOCOL"),
@@ -4197,6 +4469,216 @@ catch
 
     throw;
 }
+
+sealed class WalkerOwnedPhaseProcess : IDisposable
+{
+    const uint CREATE_SUSPENDED = 0x00000004;
+    const uint JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000;
+    readonly IntPtr jobHandle;
+    bool closed;
+
+    WalkerOwnedPhaseProcess(string name, Process process, IntPtr jobHandle)
+    {
+        Name = name;
+        Process = process;
+        this.jobHandle = jobHandle;
+    }
+
+    public string Name { get; }
+    public Process Process { get; }
+    public uint ActiveProcesses => QueryAccounting().ActiveProcesses;
+
+    public static WalkerOwnedPhaseProcess Start(
+        string name, string receiptPath, IReadOnlyDictionary<string, string>? extraEnvironment)
+    {
+        IntPtr job = CreateJobObjectW(IntPtr.Zero, null);
+        if (job == IntPtr.Zero)
+            throw new InvalidOperationException("Could not create walker phase ownership job.");
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits = new();
+        limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        if (!SetInformationJobObject(
+                job, 9, ref limits, (uint)Marshal.SizeOf<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>()))
+        {
+            CloseHandle(job);
+            throw new InvalidOperationException("Could not bind walker phase job cleanup policy.");
+        }
+
+        string phaseName = "ONSLAUGHT_LIVE_WALKER_CHILD_PHASE";
+        string receiptName = "ONSLAUGHT_LIVE_WALKER_PHASE_RECEIPT";
+        Dictionary<string, string?> prior = new();
+        void SetTemporary(string key, string value)
+        {
+            prior[key] = Environment.GetEnvironmentVariable(key);
+            Environment.SetEnvironmentVariable(key, value);
+        }
+        PROCESS_INFORMATION info = new();
+        try
+        {
+            SetTemporary(phaseName, name);
+            SetTemporary(receiptName, receiptPath);
+            if (extraEnvironment is not null)
+                foreach ((string key, string value) in extraEnvironment)
+                    SetTemporary(key, value);
+            string host = Environment.ProcessPath ?? throw new InvalidOperationException(
+                "Walker phase could not resolve the dotnet host.");
+            string assembly = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            StringBuilder command = new($"\"{host}\" \"{assembly}\"");
+            STARTUPINFO startup = new() { cb = (uint)Marshal.SizeOf<STARTUPINFO>() };
+            if (!CreateProcessW(
+                    null, command, IntPtr.Zero, IntPtr.Zero, false, CREATE_SUSPENDED,
+                    IntPtr.Zero, Environment.CurrentDirectory, ref startup, out info))
+                throw new InvalidOperationException("Could not create suspended walker phase process.");
+            if (!AssignProcessToJobObject(job, info.hProcess))
+                throw new InvalidOperationException("Could not assign walker phase before resume.");
+            Process process = Process.GetProcessById((int)info.dwProcessId);
+            if (ResumeThread(info.hThread) == uint.MaxValue)
+                throw new InvalidOperationException("Could not resume receipt-owned walker phase.");
+            return new WalkerOwnedPhaseProcess(name, process, job);
+        }
+        catch
+        {
+            if (info.hProcess != IntPtr.Zero)
+                _ = TerminateProcess(info.hProcess, 2);
+            _ = TerminateJobObject(job, 2);
+            CloseHandle(job);
+            throw;
+        }
+        finally
+        {
+            if (info.hThread != IntPtr.Zero)
+                CloseHandle(info.hThread);
+            if (info.hProcess != IntPtr.Zero)
+                CloseHandle(info.hProcess);
+            foreach ((string key, string? value) in prior)
+                Environment.SetEnvironmentVariable(key, value);
+        }
+    }
+
+    public void RequireZeroAndClose()
+    {
+        if (closed)
+            return;
+        uint active = ActiveProcesses;
+        if (active != 0)
+        {
+            TerminateExactJobAndClose();
+            throw new InvalidOperationException(
+                $"Walker {Name} phase left {active} receipt-owned processes.");
+        }
+        CloseHandle(jobHandle);
+        closed = true;
+    }
+
+    public void TerminateExactJobAndClose()
+    {
+        if (closed)
+            return;
+        Exception? failure = null;
+        try
+        {
+            if (ActiveProcesses > 0 && !TerminateJobObject(jobHandle, 2))
+                failure = new InvalidOperationException("Could not terminate exact walker phase job.");
+            Stopwatch wait = Stopwatch.StartNew();
+            while (ActiveProcesses > 0 && wait.Elapsed < TimeSpan.FromSeconds(5))
+                Thread.Sleep(50);
+            if (ActiveProcesses > 0)
+                failure ??= new InvalidOperationException("Walker phase job did not reach zero.");
+        }
+        finally
+        {
+            if (!CloseHandle(jobHandle))
+                failure ??= new InvalidOperationException("Walker phase job handle did not close.");
+            closed = true;
+        }
+        if (failure is not null)
+            throw failure;
+    }
+
+    JOBOBJECT_BASIC_ACCOUNTING_INFORMATION QueryAccounting()
+    {
+        JOBOBJECT_BASIC_ACCOUNTING_INFORMATION row = new();
+        if (!QueryInformationJobObject(
+                jobHandle, 1, ref row,
+                (uint)Marshal.SizeOf<JOBOBJECT_BASIC_ACCOUNTING_INFORMATION>(), IntPtr.Zero))
+            throw new InvalidOperationException("Could not query walker phase job accounting.");
+        return row;
+    }
+
+    public void Dispose() => TerminateExactJobAndClose();
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct STARTUPINFO
+    {
+        public uint cb; public string? lpReserved; public string? lpDesktop; public string? lpTitle;
+        public uint dwX; public uint dwY; public uint dwXSize; public uint dwYSize;
+        public uint dwXCountChars; public uint dwYCountChars; public uint dwFillAttribute;
+        public uint dwFlags; public ushort wShowWindow; public ushort cbReserved2;
+        public IntPtr lpReserved2; public IntPtr hStdInput; public IntPtr hStdOutput; public IntPtr hStdError;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct PROCESS_INFORMATION
+    {
+        public IntPtr hProcess; public IntPtr hThread; public uint dwProcessId; public uint dwThreadId;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct JOBOBJECT_BASIC_LIMIT_INFORMATION
+    {
+        public long PerProcessUserTimeLimit; public long PerJobUserTimeLimit; public uint LimitFlags;
+        public UIntPtr MinimumWorkingSetSize; public UIntPtr MaximumWorkingSetSize;
+        public uint ActiveProcessLimit; public UIntPtr Affinity; public uint PriorityClass;
+        public uint SchedulingClass;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct IO_COUNTERS
+    {
+        public ulong ReadOperationCount; public ulong WriteOperationCount; public ulong OtherOperationCount;
+        public ulong ReadTransferCount; public ulong WriteTransferCount; public ulong OtherTransferCount;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct JOBOBJECT_EXTENDED_LIMIT_INFORMATION
+    {
+        public JOBOBJECT_BASIC_LIMIT_INFORMATION BasicLimitInformation; public IO_COUNTERS IoInfo;
+        public UIntPtr ProcessMemoryLimit; public UIntPtr JobMemoryLimit;
+        public UIntPtr PeakProcessMemoryUsed; public UIntPtr PeakJobMemoryUsed;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct JOBOBJECT_BASIC_ACCOUNTING_INFORMATION
+    {
+        public long TotalUserTime; public long TotalKernelTime; public long ThisPeriodTotalUserTime;
+        public long ThisPeriodTotalKernelTime; public uint TotalPageFaultCount; public uint TotalProcesses;
+        public uint ActiveProcesses; public uint TotalTerminatedProcesses;
+    }
+
+    [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern IntPtr CreateJobObjectW(IntPtr securityAttributes, string? name);
+    [DllImport("kernel32", SetLastError = true)]
+    static extern bool SetInformationJobObject(
+        IntPtr job, int infoClass, ref JOBOBJECT_EXTENDED_LIMIT_INFORMATION info, uint length);
+    [DllImport("kernel32", SetLastError = true)]
+    static extern bool AssignProcessToJobObject(IntPtr job, IntPtr process);
+    [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern bool CreateProcessW(
+        string? applicationName, StringBuilder commandLine, IntPtr processAttributes,
+        IntPtr threadAttributes, bool inheritHandles, uint creationFlags, IntPtr environment,
+        string currentDirectory, ref STARTUPINFO startup, out PROCESS_INFORMATION processInfo);
+    [DllImport("kernel32", SetLastError = true)]
+    static extern uint ResumeThread(IntPtr thread);
+    [DllImport("kernel32", SetLastError = true)]
+    static extern bool TerminateProcess(IntPtr process, uint exitCode);
+    [DllImport("kernel32", SetLastError = true)]
+    static extern bool TerminateJobObject(IntPtr job, uint exitCode);
+    [DllImport("kernel32", SetLastError = true)]
+    static extern bool QueryInformationJobObject(
+        IntPtr job, int infoClass, ref JOBOBJECT_BASIC_ACCOUNTING_INFORMATION info,
+        uint length, IntPtr returnLength);
+    [DllImport("kernel32", SetLastError = true)]
+    static extern bool CloseHandle(IntPtr handle);
+}
 """
     program_text = program_text.replace(
         "__CANARY_CLEANUP_PHASE_BLOCK__",
@@ -4211,6 +4693,549 @@ catch
     else:
         program.write_text(program_text, encoding="utf-8")
     return project
+
+
+def _run_walker_prebuild_process(
+    command: list[str], *, cwd: Path, env: Mapping[str, str], timeout_seconds: float,
+) -> tuple[subprocess.CompletedProcess[str], int, dict[str, Any]]:
+    job_handle = _create_receipt_owned_build_job()
+    kernel32 = _kernel32_process_api()
+    process: subprocess.Popen[str] | None = None
+    assigned_to_job = False
+    ownership_handed_to_cleanup = False
+    try:
+        process = subprocess.Popen(
+            command, cwd=cwd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            env=dict(env), creationflags=getattr(subprocess, "CREATE_SUSPENDED", 0x00000004),
+        )
+        deadline = dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=timeout_seconds)
+        root_identity = _process_identity(process.pid)
+        if root_identity is None:
+            raise RuntimeError("dotnet build root identity could not be captured")
+        root_identity.update({
+            "parentProcessId": os.getpid(),
+            "imageName": Path(str(root_identity["executablePath"])).name,
+            "role": "buildRoot",
+        })
+        captured: dict[int, dict[str, Any]] = {process.pid: root_identity}
+        if not kernel32.AssignProcessToJobObject(
+            job_handle, wintypes.HANDLE(int(process._handle)),
+        ):
+            raise OSError("could not assign suspended runner build to its receipt-owned job")
+        assigned_to_job = True
+        _resume_suspended_process(process)
+        ownership: dict[str, Any] = {
+            "ownershipMode": "windows-job-object-before-resume",
+            "jobHandle": int(job_handle),
+            "jobAssignedBeforeResume": True,
+            "capturedProcesses": captured,
+        }
+        while True:
+            _capture_job_owned_processes(int(job_handle), captured)
+            remaining = (deadline - dt.datetime.now(dt.timezone.utc)).total_seconds()
+            try:
+                stdout, stderr = process.communicate(timeout=max(0.01, min(0.10, remaining)))
+                _capture_job_owned_processes(int(job_handle), captured)
+                ownership["accountingAtBuildExit"] = _job_accounting(int(job_handle))
+                ownership_handed_to_cleanup = True
+                return (
+                    subprocess.CompletedProcess(command, process.returncode, stdout, stderr),
+                    process.pid, ownership,
+                )
+            except subprocess.TimeoutExpired:
+                if remaining > 0:
+                    continue
+                if not kernel32.TerminateJobObject(job_handle, 124):
+                    raise OSError("could not stop the exact receipt-owned runner-build job")
+                stdout, stderr = process.communicate()
+                _capture_job_owned_processes(int(job_handle), captured)
+                ownership["accountingAtBuildExit"] = _job_accounting(int(job_handle))
+                ownership["terminatedForPrebuildTimeout"] = True
+                ownership_handed_to_cleanup = True
+                return subprocess.CompletedProcess(command, 124, stdout, stderr), process.pid, ownership
+    finally:
+        if not ownership_handed_to_cleanup:
+            try:
+                if assigned_to_job:
+                    kernel32.TerminateJobObject(job_handle, 2)
+                elif process is not None:
+                    process.kill()
+            finally:
+                if process is not None:
+                    try:
+                        process.communicate(timeout=5)
+                    except BaseException:
+                        pass
+                kernel32.CloseHandle(job_handle)
+
+
+class _JOBOBJECT_BASIC_LIMIT_INFORMATION(ctypes.Structure):
+    _fields_ = [
+        ("PerProcessUserTimeLimit", ctypes.c_longlong),
+        ("PerJobUserTimeLimit", ctypes.c_longlong),
+        ("LimitFlags", wintypes.DWORD),
+        ("MinimumWorkingSetSize", ctypes.c_size_t),
+        ("MaximumWorkingSetSize", ctypes.c_size_t),
+        ("ActiveProcessLimit", wintypes.DWORD),
+        ("Affinity", ctypes.c_size_t),
+        ("PriorityClass", wintypes.DWORD),
+        ("SchedulingClass", wintypes.DWORD),
+    ]
+
+
+class _IO_COUNTERS(ctypes.Structure):
+    _fields_ = [(name, ctypes.c_ulonglong) for name in (
+        "ReadOperationCount", "WriteOperationCount", "OtherOperationCount",
+        "ReadTransferCount", "WriteTransferCount", "OtherTransferCount",
+    )]
+
+
+class _JOBOBJECT_EXTENDED_LIMIT_INFORMATION(ctypes.Structure):
+    _fields_ = [
+        ("BasicLimitInformation", _JOBOBJECT_BASIC_LIMIT_INFORMATION),
+        ("IoInfo", _IO_COUNTERS),
+        ("ProcessMemoryLimit", ctypes.c_size_t),
+        ("JobMemoryLimit", ctypes.c_size_t),
+        ("PeakProcessMemoryUsed", ctypes.c_size_t),
+        ("PeakJobMemoryUsed", ctypes.c_size_t),
+    ]
+
+
+class _JOBOBJECT_BASIC_ACCOUNTING_INFORMATION(ctypes.Structure):
+    _fields_ = [
+        ("TotalUserTime", ctypes.c_longlong), ("TotalKernelTime", ctypes.c_longlong),
+        ("ThisPeriodTotalUserTime", ctypes.c_longlong),
+        ("ThisPeriodTotalKernelTime", ctypes.c_longlong),
+        ("TotalPageFaultCount", wintypes.DWORD), ("TotalProcesses", wintypes.DWORD),
+        ("ActiveProcesses", wintypes.DWORD), ("TotalTerminatedProcesses", wintypes.DWORD),
+    ]
+
+
+def _kernel32_process_api():
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    kernel32.OpenProcess.restype = wintypes.HANDLE
+    kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel32.CloseHandle.restype = wintypes.BOOL
+    kernel32.QueryFullProcessImageNameW.argtypes = [
+        wintypes.HANDLE, wintypes.DWORD, wintypes.LPWSTR, ctypes.POINTER(wintypes.DWORD)
+    ]
+    kernel32.QueryFullProcessImageNameW.restype = wintypes.BOOL
+    kernel32.GetProcessTimes.argtypes = [
+        wintypes.HANDLE, ctypes.POINTER(wintypes.FILETIME), ctypes.POINTER(wintypes.FILETIME),
+        ctypes.POINTER(wintypes.FILETIME), ctypes.POINTER(wintypes.FILETIME),
+    ]
+    kernel32.GetProcessTimes.restype = wintypes.BOOL
+    kernel32.TerminateProcess.argtypes = [wintypes.HANDLE, wintypes.UINT]
+    kernel32.TerminateProcess.restype = wintypes.BOOL
+    kernel32.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
+    kernel32.CreateJobObjectW.restype = wintypes.HANDLE
+    kernel32.SetInformationJobObject.argtypes = [
+        wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD,
+    ]
+    kernel32.SetInformationJobObject.restype = wintypes.BOOL
+    kernel32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
+    kernel32.AssignProcessToJobObject.restype = wintypes.BOOL
+    kernel32.QueryInformationJobObject.argtypes = [
+        wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD,
+        ctypes.POINTER(wintypes.DWORD),
+    ]
+    kernel32.QueryInformationJobObject.restype = wintypes.BOOL
+    kernel32.TerminateJobObject.argtypes = [wintypes.HANDLE, wintypes.UINT]
+    kernel32.TerminateJobObject.restype = wintypes.BOOL
+    return kernel32
+
+
+def _create_receipt_owned_build_job() -> int:
+    kernel32 = _kernel32_process_api()
+    handle = kernel32.CreateJobObjectW(None, None)
+    if not handle:
+        raise OSError("could not create receipt-owned runner-build job")
+    limits = _JOBOBJECT_EXTENDED_LIMIT_INFORMATION()
+    limits.BasicLimitInformation.LimitFlags = 0x00002000  # KILL_ON_JOB_CLOSE
+    if not kernel32.SetInformationJobObject(
+        handle, 9, ctypes.byref(limits), ctypes.sizeof(limits),
+    ):
+        kernel32.CloseHandle(handle)
+        raise OSError("could not bind runner-build job cleanup policy")
+    return int(handle)
+
+
+def _resume_suspended_process(process: subprocess.Popen[str]) -> None:
+    ntdll = ctypes.WinDLL("ntdll", use_last_error=True)
+    ntdll.NtResumeProcess.argtypes = [wintypes.HANDLE]
+    ntdll.NtResumeProcess.restype = ctypes.c_long
+    status = ntdll.NtResumeProcess(wintypes.HANDLE(int(process._handle)))
+    if status != 0:
+        raise OSError(f"could not resume receipt-owned runner build: NTSTATUS {status:#x}")
+
+
+def _job_accounting(job_handle: int) -> dict[str, int]:
+    kernel32 = _kernel32_process_api()
+    row = _JOBOBJECT_BASIC_ACCOUNTING_INFORMATION()
+    returned = wintypes.DWORD()
+    if not kernel32.QueryInformationJobObject(
+        wintypes.HANDLE(job_handle), 1, ctypes.byref(row), ctypes.sizeof(row),
+        ctypes.byref(returned),
+    ):
+        raise OSError("could not query receipt-owned runner-build job accounting")
+    return {
+        "totalProcesses": int(row.TotalProcesses),
+        "activeProcesses": int(row.ActiveProcesses),
+        "totalTerminatedProcesses": int(row.TotalTerminatedProcesses),
+    }
+
+
+def _job_process_ids(job_handle: int) -> list[int]:
+    kernel32 = _kernel32_process_api()
+    capacity = 16
+    while True:
+        size = 8 + capacity * ctypes.sizeof(ctypes.c_size_t)
+        buffer = ctypes.create_string_buffer(size)
+        returned = wintypes.DWORD()
+        if kernel32.QueryInformationJobObject(
+            wintypes.HANDLE(job_handle), 3, buffer, size, ctypes.byref(returned),
+        ):
+            count = wintypes.DWORD.from_buffer(buffer, 4).value
+            array_type = ctypes.c_size_t * count
+            return [int(pid) for pid in array_type.from_buffer(buffer, 8)]
+        required = wintypes.DWORD.from_buffer(buffer, 0).value
+        if required <= capacity:
+            raise OSError("could not query receipt-owned runner-build job members")
+        capacity = int(required)
+
+
+def _capture_job_owned_processes(
+    job_handle: int, captured: dict[int, dict[str, Any]],
+) -> None:
+    for pid in _job_process_ids(job_handle):
+        if pid in captured:
+            continue
+        identity = _process_identity(pid)
+        if identity is None:
+            raise RuntimeError("job-owned runner-build process identity could not be captured")
+        identity.update({
+            "parentProcessId": -1,
+            "imageName": Path(str(identity["executablePath"])).name,
+            "role": "buildDescendant",
+        })
+        captured[pid] = identity
+
+
+def _process_identity(pid: int) -> dict[str, Any] | None:
+    if os.name != "nt":
+        return None
+    kernel32 = _kernel32_process_api()
+    handle = kernel32.OpenProcess(0x1000, False, pid)
+    if not handle:
+        return None
+    try:
+        size = wintypes.DWORD(32768)
+        buffer = ctypes.create_unicode_buffer(size.value)
+        if not kernel32.QueryFullProcessImageNameW(handle, 0, buffer, ctypes.byref(size)):
+            return None
+        creation = wintypes.FILETIME()
+        exit_time = wintypes.FILETIME()
+        kernel = wintypes.FILETIME()
+        user = wintypes.FILETIME()
+        if not kernel32.GetProcessTimes(
+            handle, ctypes.byref(creation), ctypes.byref(exit_time),
+            ctypes.byref(kernel), ctypes.byref(user),
+        ):
+            return None
+        ticks = (creation.dwHighDateTime << 32) | creation.dwLowDateTime
+        started = dt.datetime(1601, 1, 1, tzinfo=dt.timezone.utc) + dt.timedelta(microseconds=ticks // 10)
+        return {"processId": pid, "startedAtUtc": started.isoformat(), "executablePath": buffer.value}
+    finally:
+        kernel32.CloseHandle(handle)
+
+
+def receipt_owned_compiler_cleanup(ownership: Mapping[str, Any]) -> Mapping[str, Any]:
+    """Terminate the kernel-owned build job; sampling is diagnostic, not completeness proof."""
+    failures: list[str] = []
+    job_handle = int(ownership.get("jobHandle", 0))
+    captured_map = ownership.get("capturedProcesses")
+    captured = list(captured_map.values()) if isinstance(captured_map, dict) else []
+    before: dict[str, int] = {}
+    after: dict[str, int] = {}
+    residue: list[dict[str, Any]] = []
+    job_closed = False
+    try:
+        if (ownership.get("ownershipMode") != "windows-job-object-before-resume"
+                or ownership.get("jobAssignedBeforeResume") is not True or job_handle <= 0):
+            raise RuntimeError("runner-build job ownership receipt is incomplete")
+        _capture_job_owned_processes(job_handle, captured_map)
+        captured = list(captured_map.values())
+        before = _job_accounting(job_handle)
+        if before.get("totalProcesses") != len(captured):
+            failures.append(
+                "runner-build job accounting does not match the captured identity ledger"
+            )
+        kernel32 = _kernel32_process_api()
+        if before["activeProcesses"] > 0 and not kernel32.TerminateJobObject(
+            wintypes.HANDLE(job_handle), 2,
+        ):
+            raise OSError("could not terminate exact receipt-owned runner-build job")
+        for _ in range(100):
+            after = _job_accounting(job_handle)
+            if after["activeProcesses"] == 0:
+                break
+            time.sleep(0.05)
+        if not after or after["activeProcesses"] != 0:
+            for pid in _job_process_ids(job_handle):
+                identity = _process_identity(pid)
+                if identity is not None:
+                    residue.append(identity)
+            failures.append("receipt-owned runner-build job did not reach zero")
+    except Exception as exc:
+        failures.append(f"{type(exc).__name__}: {exc}")
+    finally:
+        if job_handle > 0:
+            job_closed = bool(_kernel32_process_api().CloseHandle(wintypes.HANDLE(job_handle)))
+            if not job_closed:
+                failures.append("receipt-owned runner-build job handle did not close")
+    return {
+        "ownedProcessCount": len(residue), "capturedDescendants": captured,
+        "residue": residue, "cleanupConfirmed": not failures and not residue,
+        "failures": failures,
+        "ownershipMode": ownership.get("ownershipMode"),
+        "jobAssignedBeforeResume": ownership.get("jobAssignedBeforeResume"),
+        "jobAccountingBeforeCleanup": before,
+        "jobAccountingAfterCleanup": after,
+        "jobClosed": job_closed,
+    }
+
+
+def _compiler_cleanup_receipt_complete(
+    cleanup: Mapping[str, Any], *, build_process_id: int, build_invocation_count: int,
+) -> bool:
+    captured = cleanup.get("capturedDescendants")
+    residue = cleanup.get("residue")
+    if (cleanup.get("ownedProcessCount") != 0 or cleanup.get("cleanupConfirmed") is not True
+            or not isinstance(captured, list) or not isinstance(residue, list) or residue):
+        return False
+    before = cleanup.get("jobAccountingBeforeCleanup")
+    after = cleanup.get("jobAccountingAfterCleanup")
+    if (cleanup.get("ownershipMode") != "windows-job-object-before-resume"
+            or cleanup.get("jobAssignedBeforeResume") is not True
+            or cleanup.get("jobClosed") is not True
+            or not isinstance(before, dict) or not isinstance(after, dict)
+            or not isinstance(before.get("totalProcesses"), int)
+            or before["totalProcesses"] < 1
+            or before["totalProcesses"] != len(captured)
+            or after.get("activeProcesses") != 0):
+        return False
+    if build_invocation_count == 0:
+        return build_process_id == 0 and not captured
+    if build_invocation_count != 1 or build_process_id <= 0 or not captured:
+        return False
+    process_ids: set[int] = set()
+    for identity in captured:
+        if not isinstance(identity, dict):
+            return False
+        process_id = identity.get("processId")
+        if (not isinstance(process_id, int) or process_id <= 0 or process_id in process_ids
+                or not isinstance(identity.get("parentProcessId"), int)
+                or not str(identity.get("startedAtUtc", "")).strip()
+                or not str(identity.get("executablePath", "")).strip()
+                or identity.get("role") not in {"buildRoot", "buildDescendant"}):
+            return False
+        process_ids.add(process_id)
+    return build_process_id in process_ids
+
+
+def _dotnet_sdk_identity() -> Mapping[str, str]:
+    dotnet = shutil.which("dotnet")
+    if not dotnet:
+        raise RuntimeError("dotnet SDK host was not found")
+    result = subprocess.run(
+        [dotnet, "--version"], text=True, capture_output=True, check=False, timeout=10,
+    )
+    if result.returncode != 0 or not result.stdout.strip():
+        raise RuntimeError("dotnet SDK identity query failed")
+    host = Path(dotnet).resolve()
+    return {
+        "hostPath": str(host), "hostSha256": file_sha256(host),
+        "version": result.stdout.strip(),
+    }
+
+
+def prebuild_walker_runner(
+    pair_root: Path,
+    *,
+    timeout_seconds: int = 150,
+    process_runner: Callable[..., tuple[subprocess.CompletedProcess[str], int, dict[str, Any]]] | None = None,
+    compiler_cleanup: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Generate and build the generic AppCore runner once before any attempt root."""
+    if timeout_seconds != 150:
+        raise ValueError("walker runner prebuild safety bound is fixed at 150 seconds")
+    if compiler_cleanup is None:
+        raise ValueError("receipt-owned compiler census/cleanup implementation is required")
+    if any((pair_root / f"attempt-{attempt:02d}").exists() for attempt in (1, 2)):
+        raise ValueError("walker attempt roots must be absent before runner prebuild")
+    generation_started = dt.datetime.now(dt.timezone.utc)
+    sdk_identity = dict(_dotnet_sdk_identity())
+    runner_root = pair_root / "runner"
+    project = write_runner(runner_root, create_new=True)
+    generation_completed = dt.datetime.now(dt.timezone.utc)
+    program = runner_root / "Program.cs"
+    appcore_project = ROOT / "OnslaughtCareerEditor.AppCore" / "OnslaughtCareerEditor.AppCore.csproj"
+    dependency_paths = [appcore_project, *sorted(
+        path for path in appcore_project.parent.rglob("*.cs")
+        if "bin" not in path.parts and "obj" not in path.parts
+    )]
+    command = [
+        "dotnet", "build", str(project), "--configuration", "Release", "--nologo",
+        "--no-restore", "-p:UseSharedCompilation=false", "-nodeReuse:false",
+    ]
+    env = os.environ.copy()
+    env["MSBUILDDISABLENODEREUSE"] = "1"
+    env["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0"
+    build_started = dt.datetime.now(dt.timezone.utc)
+    generation_elapsed = (build_started - generation_started).total_seconds()
+    build_invocation_count = 0
+    if generation_elapsed >= timeout_seconds:
+        completed = subprocess.CompletedProcess(command, 124, "", "generation exhausted prebuild bound")
+        build_process_id = 0
+        build_ownership: dict[str, Any] = {
+            "ownershipMode": "not-started", "jobHandle": 0,
+            "jobAssignedBeforeResume": False, "capturedProcesses": {},
+        }
+    else:
+        runner = process_runner or _run_walker_prebuild_process
+        completed, build_process_id, build_ownership = runner(
+            command, cwd=ROOT, env=env,
+            timeout_seconds=max(0.01, timeout_seconds - generation_elapsed),
+        )
+        build_invocation_count = 1
+    timed_out = completed.returncode == 124
+    build_completed = dt.datetime.now(dt.timezone.utc)
+    cleanup = dict(compiler_cleanup(build_ownership))
+    cleanup_completed = dt.datetime.now(dt.timezone.utc)
+    completed_at = dt.datetime.now(dt.timezone.utc)
+    total_elapsed_seconds = (completed_at - generation_started).total_seconds()
+    output_root = runner_root / "bin" / "Release" / "net10.0"
+    outputs = {
+        "dllPath": output_root / "LiveSafeCopySmoke.dll",
+        "runtimeConfigPath": output_root / "LiveSafeCopySmoke.runtimeconfig.json",
+        "depsPath": output_root / "LiveSafeCopySmoke.deps.json",
+    }
+    passed = (
+        not timed_out and total_elapsed_seconds <= 150 and completed.returncode == 0
+        and _compiler_cleanup_receipt_complete(
+            cleanup, build_process_id=build_process_id,
+            build_invocation_count=build_invocation_count,
+        )
+        and all(path.is_file() for path in outputs.values())
+    )
+    receipt: dict[str, Any] = {
+        "schemaVersion": "battleengine-walker-runner-private-build-receipt.v1",
+        "passed": passed,
+        "safetyBoundSeconds": 150,
+        "safetyBoundBasis": "conservative relative to observed combined 88.29-second generation/build/profile interval; compile duration was not separately measured",
+        "startedAtUtc": generation_started.isoformat(), "completedAtUtc": completed_at.isoformat(),
+        "totalElapsedSeconds": total_elapsed_seconds,
+        "phaseTimestampsUtc": {
+            "generationStarted": generation_started.isoformat(),
+            "generationCompleted": generation_completed.isoformat(),
+            "buildStarted": build_started.isoformat(),
+            "buildCompleted": build_completed.isoformat(),
+            "compilerCleanupCompleted": cleanup_completed.isoformat(),
+        },
+        "command": command, "exitCode": completed.returncode,
+        "buildProcessId": build_process_id,
+        "buildInvocationCount": build_invocation_count, "timedOut": timed_out,
+        "sdkIdentity": sdk_identity,
+        "sourcePath": str(program), "sourceSha256": file_sha256(program),
+        "projectPath": str(project), "projectSha256": file_sha256(project),
+        "dependencyInputs": [
+            {"path": str(path), "sha256": file_sha256(path)} for path in dependency_paths
+        ],
+        "compilerOwnedProcessCount": cleanup.get("ownedProcessCount", -1),
+        "compilerCleanup": cleanup,
+        "stdout": completed.stdout, "stderr": completed.stderr,
+        "runnerOutputFiles": [
+            {
+                "relativePath": path.relative_to(output_root).as_posix(),
+                "sha256": file_sha256(path),
+            }
+            for path in sorted(output_root.rglob("*")) if path.is_file()
+        ] if output_root.is_dir() else [],
+    }
+    for key, path in outputs.items():
+        receipt[key] = str(path)
+        receipt[key.replace("Path", "Sha256")] = file_sha256(path) if path.is_file() else ""
+    receipt_path = pair_root / "runner-build-receipt.json"
+    receipt["receiptPath"] = str(receipt_path)
+    write_new_private_text(receipt_path, json.dumps(receipt, indent=2) + "\n", pair_root)
+    receipt["receiptSha256"] = file_sha256(receipt_path)
+    return receipt
+
+
+def execute_prebuilt_walker_runner(
+    runner_dll: Path,
+    expected_sha256: str,
+    env: Mapping[str, str],
+    *,
+    process_runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+) -> subprocess.CompletedProcess[str]:
+    if not runner_dll.is_file() or file_sha256(runner_dll) != expected_sha256:
+        raise ValueError("prebuilt walker runner DLL hash binding failed")
+    command = ["dotnet", str(runner_dll)]
+    return process_runner(command, cwd=ROOT, text=True, capture_output=True, check=False, env=dict(env))
+
+
+def validate_prebuilt_walker_build_row(
+    row: Mapping[str, Any], receipt_path: Path, receipt_sha256: str,
+) -> None:
+    if row.get("passed") is not True or row.get("buildInvocationCount") != 1:
+        raise ValueError("walker build receipt is not a single passing prebuild")
+    cleanup = row.get("compilerCleanup")
+    if (row.get("compilerOwnedProcessCount") != 0 or not isinstance(cleanup, dict)
+            or not _compiler_cleanup_receipt_complete(
+                cleanup,
+                build_process_id=int(row.get("buildProcessId", 0)),
+                build_invocation_count=int(row.get("buildInvocationCount", 0)),
+            )):
+        raise ValueError("walker build descendant cleanup receipt is not zero")
+    if row.get("receiptPath") != str(receipt_path) or file_sha256(receipt_path) != receipt_sha256:
+        raise ValueError("walker build receipt self-location/hash binding failed")
+    for path_key, hash_key in (
+        ("sourcePath", "sourceSha256"), ("projectPath", "projectSha256"),
+        ("dllPath", "dllSha256"), ("runtimeConfigPath", "runtimeConfigSha256"),
+        ("depsPath", "depsSha256"),
+    ):
+        path = Path(str(row.get(path_key, "")))
+        if (not path.is_file() or has_reparse_or_symlink_ancestor(path)
+                or file_sha256(path) != row.get(hash_key)):
+            raise ValueError(f"walker build receipt {path_key} drifted")
+    sdk = row.get("sdkIdentity")
+    if not isinstance(sdk, dict):
+        raise ValueError("walker build SDK identity is absent")
+    sdk_host = Path(str(sdk.get("hostPath", "")))
+    if not sdk_host.is_file() or file_sha256(sdk_host) != sdk.get("hostSha256"):
+        raise ValueError("walker build SDK host identity drifted")
+    dependencies = row.get("dependencyInputs")
+    if not isinstance(dependencies, list) or not dependencies:
+        raise ValueError("walker build dependency receipt is absent")
+    for dependency in dependencies:
+        if not isinstance(dependency, dict):
+            raise ValueError("walker build dependency receipt is malformed")
+        path = Path(str(dependency.get("path", "")))
+        if not path.is_file() or file_sha256(path) != dependency.get("sha256"):
+            raise ValueError("walker build dependency input drifted")
+    output_root = Path(str(row["dllPath"])).parent
+    expected = {
+        str(output["relativePath"]): str(output["sha256"])
+        for output in row.get("runnerOutputFiles", []) if isinstance(output, dict)
+    }
+    actual = {
+        path.relative_to(output_root).as_posix(): file_sha256(path)
+        for path in output_root.rglob("*") if path.is_file()
+    }
+    if not expected or expected != actual:
+        raise ValueError("walker build output set drifted")
 
 
 def is_same_or_under(path: Path, root: Path) -> bool:
@@ -4551,7 +5576,49 @@ def main() -> int:
             print(f"Could not materialize locked morph canary CDB command: {exc}", file=sys.stderr)
             return 2
 
-    if runner_root.exists():
+    prebuilt_runner_dll = Path(args.walker_prebuilt_runner_dll) if args.walker_prebuilt_runner_dll else None
+    if walker_trajectory_mode and prebuilt_runner_dll is None:
+        print("Walker trajectory attempts require the pair-prebuilt runner DLL.", file=sys.stderr)
+        return 2
+    if prebuilt_runner_dll is not None:
+        if not prebuilt_runner_dll.is_absolute() or has_reparse_or_symlink_ancestor(prebuilt_runner_dll):
+            print("Refusing a relative or reparse-routed prebuilt runner DLL.", file=sys.stderr)
+            return 2
+        prebuilt_runner_dll = prebuilt_runner_dll.resolve()
+        if (not prebuilt_runner_dll.is_file() or
+                file_sha256(prebuilt_runner_dll) != args.expected_walker_prebuilt_runner_sha256):
+            print("Prebuilt walker runner DLL hash binding failed.", file=sys.stderr)
+            return 2
+        build_receipt = Path(args.walker_prebuild_receipt)
+        if (not build_receipt.is_absolute() or has_reparse_or_symlink_ancestor(build_receipt)
+                or not build_receipt.is_file()
+                or file_sha256(build_receipt) != args.expected_walker_prebuild_receipt_sha256):
+            print("Prebuilt walker runner build-receipt binding failed.", file=sys.stderr)
+            return 2
+        try:
+            build_row = json.loads(build_receipt.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            print("Prebuilt walker runner build receipt is unreadable.", file=sys.stderr)
+            return 2
+        try:
+            validate_prebuilt_walker_build_row(
+                build_row, build_receipt, args.expected_walker_prebuild_receipt_sha256
+            )
+        except ValueError as exc:
+            print(f"Prebuilt walker runner build receipt failed revalidation: {exc}", file=sys.stderr)
+            return 2
+        if (build_row.get("dllPath") != str(prebuilt_runner_dll)
+                or build_row.get("dllSha256") != args.expected_walker_prebuilt_runner_sha256):
+            print("Prebuilt walker runner build receipt does not bind the requested DLL.", file=sys.stderr)
+            return 2
+        cooperative_stop_file = Path(args.walker_cooperative_stop_file)
+        if (not cooperative_stop_file.is_absolute()
+                or has_reparse_or_symlink_ancestor(cooperative_stop_file)
+                or cooperative_stop_file.exists()
+                or cooperative_stop_file.parent.resolve() != build_receipt.parent.resolve()):
+            print("Walker cooperative stop file is not a fresh pair-root target.", file=sys.stderr)
+            return 2
+    if prebuilt_runner_dll is None and runner_root.exists():
         if private_runtime_mode:
             print(f"Refusing pre-existing canary runner directory: {runner_root}", file=sys.stderr)
             return 2
@@ -4563,7 +5630,9 @@ def main() -> int:
             print(f"Refusing to remove existing non-tool-owned runner directory: {runner_root}", file=sys.stderr)
             return 2
         shutil.rmtree(runner_root)
-    project = write_runner(runner_root, create_new=private_runtime_mode)
+    project = None if prebuilt_runner_dll is not None else write_runner(
+        runner_root, create_new=private_runtime_mode
+    )
 
     env = os.environ.copy()
     env["ONSLAUGHT_LIVE_SOURCE_ROOT"] = str(source_root)
@@ -4623,6 +5692,8 @@ def main() -> int:
         env["ONSLAUGHT_LIVE_WALKER_ADAPTER_SHA256"] = file_sha256(walker_adapter)
         env["ONSLAUGHT_LIVE_WALKER_ATTEMPT"] = str(args.walker_attempt)
         env["ONSLAUGHT_LIVE_WALKER_DEADLINE_SECONDS"] = str(args.walker_deadline_seconds)
+        env["ONSLAUGHT_LIVE_WALKER_ATTEMPT_BUDGET_SECONDS"] = str(args.walker_attempt_budget_seconds)
+        env["ONSLAUGHT_LIVE_WALKER_COOPERATIVE_STOP_FILE"] = args.walker_cooperative_stop_file
         env["ONSLAUGHT_LIVE_PYTHON_EXE"] = sys.executable
     if rendered_canary_command is not None:
         morph_canary = load_morph_canary_module()
@@ -4642,8 +5713,13 @@ def main() -> int:
             ]
         )
 
-    command = ["dotnet", "run", "--project", str(project), "--nologo"]
-    result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, check=False, env=env)
+    if prebuilt_runner_dll is not None:
+        result = execute_prebuilt_walker_runner(
+            prebuilt_runner_dll, args.expected_walker_prebuilt_runner_sha256, env
+        )
+    else:
+        command = ["dotnet", "run", "--project", str(project), "--nologo"]
+        result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, check=False, env=env)
     if private_runtime_mode:
         write_new_private_text(artifact_root / "dotnet-stdout.log", result.stdout, artifact_root)
         write_new_private_text(artifact_root / "dotnet-stderr.log", result.stderr, artifact_root)

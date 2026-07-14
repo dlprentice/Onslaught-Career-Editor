@@ -17,6 +17,7 @@ from ctypes import wintypes
 from dataclasses import asdict, replace
 import datetime as dt
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -41,8 +42,17 @@ TH32CS_SNAPMODULE = 0x00000008
 TH32CS_SNAPMODULE32 = 0x00000010
 INVALID_HANDLE_VALUE = ctypes.c_void_p(-1).value
 BATCH_SIZE = 5
-OBSERVER_DEADLINE_SECONDS = 15
-PAIR_DEADLINE_SECONDS = 120
+READINESS_DEADLINE_SECONDS = 15
+READINESS_POLL_SECONDS = 0.050
+READINESS_STABLE_POLLS = 3
+OBSERVER_DEADLINE_SECONDS = 45
+AGGREGATE_DEADLINE_SECONDS = 600
+PREBUILD_SAFETY_BOUND_SECONDS = 150
+PROFILE_PREPARATION_BOUND_SECONDS = 120
+LAUNCH_RECEIPT_FOCUS_BOUND_SECONDS = 30
+CLEANUP_RESERVE_SECONDS = 20
+COMPLETE_ATTEMPT_BUDGET_SECONDS = 215
+DECLARED_MAXIMUM_SECONDS = 580
 WALKER_PROTOCOL = "battleengine-walker-trajectory-v1"
 INTERFERENCE_NONCLAIM = (
     "The guard detects receipt, process, module, HWND, and foreground drift; "
@@ -375,6 +385,67 @@ def execute_deadlined_q_batches(
     deadline_check()
     return result
 
+
+def wait_for_runtime_readiness(
+    probe: Callable[[], sampler.ReadinessProbe],
+    guard: object,
+    *,
+    deadline_check: Callable[[], None],
+    sleep: Callable[[float], None] = time.sleep,
+    max_polls: int | None = None,
+) -> dict[str, object]:
+    """Require three coherent identity-bound ready polls before baseline or Q."""
+    consecutive = 0
+    polls = 0
+    last_not_ready: dict[str, str | None] = {}
+    def check_deadline() -> None:
+        try:
+            deadline_check()
+        except AttemptDeadlineExceeded as exc:
+            detail = ""
+            if last_not_ready:
+                key, value = next(iter(last_not_ready.items()))
+                detail = f"; last {key}={value}"
+            raise AttemptDeadlineExceeded(f"{exc}{detail}") from None
+    while True:
+        check_deadline()
+        if max_polls is not None and polls >= max_polls:
+            detail = ""
+            if last_not_ready:
+                key, value = next(iter(last_not_ready.items()))
+                detail = f"; last {key}={value}"
+            raise AttemptDeadlineExceeded(
+                "readiness deadline expired one poll short of stability" + detail
+            )
+        if not guard.revalidate_receipt() or not guard.foreground_matches():
+            raise sampler.AttemptError("receipt or foreground changed around readiness probe")
+        polls += 1
+        try:
+            value = probe()
+        except sampler.RuntimeNotReady as exc:
+            not_ready = exc
+        else:
+            not_ready = None
+        if not guard.revalidate_receipt() or not guard.foreground_matches():
+            raise sampler.AttemptError("receipt or foreground changed around readiness probe")
+        if not_ready is not None:
+            consecutive = 0
+            last_not_ready = ({"nullHop": not_ready.hop} if not_ready.hop is not None
+                              else {"notReadyField": not_ready.field})
+        else:
+            consecutive += 1
+            if consecutive == READINESS_STABLE_POLLS:
+                return {
+                    "status": "ready", "pollCount": polls,
+                    "consecutiveValidPolls": consecutive,
+                    "level": value.level, "playerCount": value.player_count,
+                    "horizontalSplit": value.horizontal_split,
+                    "stateRaw": value.state_raw, "controlRaw": value.control_raw,
+                    "lastNotReady": last_not_ready,
+                }
+        check_deadline()
+        sleep(READINESS_POLL_SECONDS)
+
 def _is_under(path: Path, root: Path) -> bool:
     try:
         path.resolve().relative_to(root.resolve())
@@ -388,16 +459,38 @@ def _validate_closeout(row: dict[str, object], attempt: int, evidence_root: Path
         raise RuntimeError("attempt closeout identity mismatch")
     if row.get("publicProjectionWritten") is not False:
         raise RuntimeError("public projection output is forbidden")
+    if row.get("accepted") is True and row.get("harnessExitCode", 0) != 0:
+        raise RuntimeError("attempt acceptance contradicts the AppCore harness exit")
+    if row.get("accepted") is True and row.get("cooperativeStopRequested") is True:
+        raise RuntimeError("attempt acceptance contradicts the aggregate stop request")
     receipt_path = Path(str(row.get("receiptPath", "")))
     digest = str(row.get("receiptSha256", ""))
     if not _is_under(receipt_path, evidence_root) or not receipt_path.is_file():
         raise RuntimeError("attempt receipt escaped its fresh evidence root")
     if _sha256(receipt_path) != digest:
         raise RuntimeError("attempt receipt byte integrity failed")
+    phase = row.get("phaseTimestamps")
+    phase_names = (
+        "profilePreparationStartedTimestamp", "profilePreparationCompletedTimestamp",
+        "launchStartedTimestamp", "receiptValidatedTimestamp", "focusAcquiredTimestamp",
+        "adapterStartedTimestamp", "cleanupStartedTimestamp", "closeoutWrittenTimestamp",
+    )
+    if not isinstance(phase, dict) or any(
+        not isinstance(phase.get(name), int) or phase[name] <= 0 for name in phase_names
+    ):
+        raise RuntimeError("attempt phase timestamp receipt is incomplete")
+    if any(phase[left] >= phase[right] for left, right in zip(phase_names, phase_names[1:])):
+        raise RuntimeError("attempt phase timestamps are not strictly ordered")
+    cleanup = row.get("cleanup")
+    if not isinstance(cleanup, dict) or cleanup.get("observerQUp") is not True:
+        raise RuntimeError("attempt cleanup gate failed: observer Q-up was not independently confirmed")
+    if cleanup.get("backupQUp") not in (True, False):
+        raise RuntimeError("backup Q-up truth is absent")
     cleanup_ok = (
         row.get("qUpConfirmed") is True
         and row.get("observerHandleClosed") is True
         and row.get("managedProcessStopped") is True
+        and cleanup.get("phaseJobsClosed") is True
         and row.get("ownedProcessCount") == 0
         and row.get("sourceUnchanged") is True
         and row.get("copyUnchanged") is True
@@ -408,9 +501,11 @@ def _validate_closeout(row: dict[str, object], attempt: int, evidence_root: Path
 
 def run_two_attempts(
     private_root: Path,
-    invoke: Callable[[int, Path, Path], dict[str, object]],
+    invoke: Callable[..., dict[str, object]],
     *,
     authorized_private_root: Path,
+    prebuild: Callable[[Path], dict[str, object]],
+    monotonic: Callable[[], float] = time.monotonic,
 ) -> dict[str, object]:
     """Run at most two attempts and never materialize a public projection."""
     private_root = _authorize_private_path(
@@ -419,21 +514,33 @@ def run_two_attempts(
     if private_root.exists() or private_root.is_symlink():
         raise ValueError("private two-attempt root already exists")
     private_root.mkdir(parents=True)
-    deadline = time.monotonic() + PAIR_DEADLINE_SECONDS
+    aggregate_started = monotonic()
+    aggregate_deadline = aggregate_started + AGGREGATE_DEADLINE_SECONDS
+    runner_receipt = prebuild(private_root)
+    if any((private_root / f"attempt-{attempt:02d}").exists() for attempt in (1, 2)):
+        raise RuntimeError("runner prebuild created an attempt root before passing")
+    _validate_prebuild_receipt(runner_receipt, private_root)
+    if monotonic() - aggregate_started > PREBUILD_SAFETY_BOUND_SECONDS:
+        raise AttemptDeadlineExceeded("runner prebuild exceeded its 150-second safety bound")
     rows: list[dict[str, object]] = []
     receipt_paths: set[str] = set()
     receipt_digests: set[str] = set()
     for attempt in (1, 2):
-        if time.monotonic() >= deadline:
-            raise AttemptDeadlineExceeded("two-attempt deadline expired")
+        remaining = aggregate_deadline - monotonic()
+        require_full_attempt_budget(remaining, attempt=attempt)
         attempt_root = private_root / f"attempt-{attempt:02d}"
         profile_root = (
             attempt_root / "profile-app-config" / "OnslaughtCareerEditor" / "GameProfiles"
         )
         evidence_root = attempt_root / "evidence"
         require_absent_outputs((attempt_root, profile_root, evidence_root))
-        row = invoke(attempt, profile_root, evidence_root)
+        _revalidate_prebuild_receipt(runner_receipt, private_root)
+        row = invoke(attempt, profile_root, evidence_root, runner_receipt, remaining)
         _validate_closeout(row, attempt, evidence_root)
+        if monotonic() > aggregate_deadline:
+            raise AttemptDeadlineExceeded(
+                "aggregate cooperative decision deadline expired after cleanup closeout"
+            )
         receipt_path = str(Path(str(row["receiptPath"])).resolve())
         receipt_digest = str(row["receiptSha256"])
         if receipt_path in receipt_paths or receipt_digest in receipt_digests:
@@ -441,6 +548,8 @@ def run_two_attempts(
         receipt_paths.add(receipt_path)
         receipt_digests.add(receipt_digest)
         rows.append(row)
+        if attempt == 1 and row.get("accepted") is not True:
+            break
     pair_eligible = len(rows) == 2 and all(row.get("accepted") is True for row in rows)
     return {
         "schemaVersion": "battleengine-walker-trajectory-private-pair-closeout.v1",
@@ -448,7 +557,145 @@ def run_two_attempts(
         "pairEligible": pair_eligible,
         "publicProjectionWritten": False,
         "interferenceNonclaim": INTERFERENCE_NONCLAIM,
+        "aggregateDeadlineSeconds": AGGREGATE_DEADLINE_SECONDS,
+        "declaredMaximumSeconds": DECLARED_MAXIMUM_SECONDS,
+        "aggregateMarginSeconds": AGGREGATE_DEADLINE_SECONDS - DECLARED_MAXIMUM_SECONDS,
+        "completeAttemptBudgetSeconds": COMPLETE_ATTEMPT_BUDGET_SECONDS,
+        "prebuild": runner_receipt,
     }
+
+
+def require_full_attempt_budget(remaining_seconds: float, *, attempt: int) -> None:
+    if remaining_seconds < COMPLETE_ATTEMPT_BUDGET_SECONDS:
+        raise AttemptDeadlineExceeded(
+            f"attempt {attempt} refused because the full 215-second attempt budget is unavailable"
+        )
+
+
+def _validate_prebuild_receipt(row: dict[str, object], private_root: Path) -> None:
+    if row.get("passed") is not True:
+        raise RuntimeError("runner prebuild did not pass")
+    if row.get("buildInvocationCount") != 1:
+        raise RuntimeError("runner prebuild did not execute exactly one build")
+    if row.get("compilerOwnedProcessCount") != 0:
+        raise RuntimeError("runner prebuild compiler census is not zero")
+    cleanup_receipt = row.get("compilerCleanup")
+    if (not isinstance(cleanup_receipt, dict)
+            or cleanup_receipt.get("cleanupConfirmed") is not True
+            or cleanup_receipt.get("ownedProcessCount") != 0
+            or cleanup_receipt.get("residue") != []
+            or not isinstance(cleanup_receipt.get("capturedDescendants"), list)):
+        raise RuntimeError("runner prebuild descendant cleanup receipt is incomplete")
+    before_cleanup = cleanup_receipt.get("jobAccountingBeforeCleanup")
+    after_cleanup = cleanup_receipt.get("jobAccountingAfterCleanup")
+    if (cleanup_receipt.get("ownershipMode") != "windows-job-object-before-resume"
+            or cleanup_receipt.get("jobAssignedBeforeResume") is not True
+            or cleanup_receipt.get("jobClosed") is not True
+            or not isinstance(before_cleanup, dict)
+            or not isinstance(before_cleanup.get("totalProcesses"), int)
+            or before_cleanup["totalProcesses"] < 1
+            or before_cleanup["totalProcesses"] != len(cleanup_receipt["capturedDescendants"])
+            or not isinstance(after_cleanup, dict)
+            or after_cleanup.get("activeProcesses") != 0):
+        raise RuntimeError("runner prebuild kernel job ownership/zero receipt is incomplete")
+    captured_processes = cleanup_receipt["capturedDescendants"]
+    build_process_id = row.get("buildProcessId")
+    captured_ids: set[int] = set()
+    for identity in captured_processes:
+        if not isinstance(identity, dict):
+            raise RuntimeError("runner prebuild captured process identity is malformed")
+        process_id = identity.get("processId")
+        if (not isinstance(process_id, int) or process_id <= 0 or process_id in captured_ids
+                or not isinstance(identity.get("parentProcessId"), int)
+                or not str(identity.get("startedAtUtc", "")).strip()
+                or not str(identity.get("executablePath", "")).strip()
+                or identity.get("role") not in {"buildRoot", "buildDescendant"}):
+            raise RuntimeError("runner prebuild captured process identity is incomplete")
+        captured_ids.add(process_id)
+    if not isinstance(build_process_id, int) or build_process_id not in captured_ids:
+        raise RuntimeError("runner prebuild root process is absent from the cleanup receipt")
+    if row.get("exitCode") != 0 or row.get("timedOut") is not False:
+        raise RuntimeError("runner prebuild exit/deadline receipt is not successful")
+    elapsed = row.get("totalElapsedSeconds")
+    if not isinstance(elapsed, (int, float)) or elapsed < 0 or elapsed > PREBUILD_SAFETY_BOUND_SECONDS:
+        raise RuntimeError("runner prebuild total generation/build/cleanup safety bound failed")
+    phases = row.get("phaseTimestampsUtc")
+    phase_names = (
+        "generationStarted", "generationCompleted", "buildStarted",
+        "buildCompleted", "compilerCleanupCompleted",
+    )
+    if not isinstance(phases, dict) or any(not str(phases.get(name, "")) for name in phase_names):
+        raise RuntimeError("runner prebuild phase timestamps are incomplete")
+    try:
+        parsed_phases = [dt.datetime.fromisoformat(str(phases[name]).replace("Z", "+00:00"))
+                         for name in phase_names]
+    except ValueError as exc:
+        raise RuntimeError("runner prebuild phase timestamp is invalid") from exc
+    if any(left > right for left, right in zip(parsed_phases, parsed_phases[1:])):
+        raise RuntimeError("runner prebuild phase timestamps are not ordered")
+    sdk = row.get("sdkIdentity")
+    if (not isinstance(sdk, dict) or not str(sdk.get("hostPath", "")).strip()
+            or not str(sdk.get("version", "")).strip()
+            or not str(sdk.get("hostSha256", "")).strip()):
+        raise RuntimeError("runner prebuild SDK identity is absent")
+    sdk_host = Path(str(sdk["hostPath"]))
+    if not sdk_host.is_file() or _sha256(sdk_host) != sdk["hostSha256"]:
+        raise RuntimeError("runner prebuild SDK host identity drifted")
+    command = [str(value).casefold() for value in row.get("command", [])]
+    if len(command) < 2 or command[:2] != ["dotnet", "build"]:
+        raise RuntimeError("runner prebuild command is not the single allowed build")
+    if "--no-restore" not in command:
+        raise RuntimeError("runner prebuild did not disable restore")
+    if any(value in {"run", "restore"} for value in command):
+        raise RuntimeError("runner prebuild used a forbidden run or restore command")
+    required_files = (
+        ("sourcePath", "sourceSha256", True),
+        ("projectPath", "projectSha256", True),
+        ("dllPath", "dllSha256", True),
+        ("runtimeConfigPath", "runtimeConfigSha256", True),
+        ("depsPath", "depsSha256", True),
+        ("receiptPath", "receiptSha256", True),
+    )
+    for path_key, hash_key, must_be_private in required_files:
+        path = Path(str(row.get(path_key, ""))).resolve()
+        if (must_be_private and not _is_under(path, private_root.resolve())) or not path.is_file():
+            raise RuntimeError(f"runner prebuild {path_key} is absent or outside the pair root")
+        if _sha256(path) != row.get(hash_key):
+            raise RuntimeError(f"runner prebuild {path_key} hash receipt mismatch")
+    dependencies = row.get("dependencyInputs")
+    if not isinstance(dependencies, list) or not dependencies:
+        raise RuntimeError("runner prebuild dependency input receipt is absent")
+    for dependency in dependencies:
+        if not isinstance(dependency, dict):
+            raise RuntimeError("runner prebuild dependency input receipt is malformed")
+        path = Path(str(dependency.get("path", "")))
+        if not path.is_file() or _sha256(path) != dependency.get("sha256"):
+            raise RuntimeError("runner prebuild dependency input hash mismatch")
+    output_root = Path(str(row["dllPath"])).resolve().parent
+    outputs = row.get("runnerOutputFiles")
+    if not isinstance(outputs, list) or not outputs:
+        raise RuntimeError("runner prebuild output-set receipt is absent")
+    expected_outputs: dict[str, str] = {}
+    for output in outputs:
+        if not isinstance(output, dict):
+            raise RuntimeError("runner prebuild output-set receipt is malformed")
+        relative = str(output.get("relativePath", ""))
+        path = (output_root / relative).resolve()
+        if not _is_under(path, output_root) or not path.is_file():
+            raise RuntimeError("runner prebuild output-set path escaped or disappeared")
+        if _sha256(path) != output.get("sha256"):
+            raise RuntimeError("runner prebuild output-set hash mismatch")
+        expected_outputs[relative] = str(output["sha256"])
+    actual_outputs = {
+        path.relative_to(output_root).as_posix(): _sha256(path)
+        for path in output_root.rglob("*") if path.is_file()
+    }
+    if actual_outputs != expected_outputs:
+        raise RuntimeError("runner prebuild output set drifted")
+
+
+def _revalidate_prebuild_receipt(row: dict[str, object], private_root: Path) -> None:
+    _validate_prebuild_receipt(row, private_root)
 
 
 class _MODULEENTRY32W(ctypes.Structure):
@@ -720,7 +967,7 @@ def _sample_batches(reader: ReceiptPinnedReader, guard: ReceiptRuntimeGuard,
 
 def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: Path,
                   reader: ReceiptPinnedReader, native: NativeApi, clock: QpcClock,
-                  deadline: Deadline, authorized_private_root: Path) -> sampler.AttemptTrace:
+                  deadline: Deadline, authorized_private_root: Path) -> tuple[sampler.AttemptTrace, dict[str, object]]:
     if reader.handle is None:
         raise RuntimeError("observer handle is not open")
     guard = ReceiptRuntimeGuard(
@@ -728,6 +975,15 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
         authorized_private_root,
     )
     q_input = ScanCodeQInput(native)
+    readiness_deadline = Deadline(READINESS_DEADLINE_SECONDS)
+    readiness = wait_for_runtime_readiness(
+        lambda: sampler.read_readiness_probe(reader, receipt.module_base),
+        guard,
+        deadline_check=lambda: (
+            deadline.check("observer readiness"),
+            readiness_deadline.check("readiness"),
+        ),
+    )
     origin = clock.now()
     deadline.check("baseline")
     baseline = _sample_batches(
@@ -762,7 +1018,7 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
     run_digest = hashlib.sha256(
         (receipt.receipt_sha256 + str(attempt) + str(origin)).encode("ascii")
     ).hexdigest()
-    return sampler.AttemptTrace(
+    trace = sampler.AttemptTrace(
         attempt=attempt,
         receipt_sha256=receipt.receipt_sha256,
         run_digest=run_digest,
@@ -772,6 +1028,7 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
         up_bracket=window.up_bracket,
         integrity=sampler.AttemptIntegrity(cleanup_confirmed=False),
     )
+    return trace, readiness
 
 
 def _trace_payload(trace: sampler.AttemptTrace, q_input_nonclaim: str) -> dict[str, object]:
@@ -810,6 +1067,12 @@ def _metrics_payload(metrics: sampler.AttemptMetrics) -> dict[str, object]:
         "attempt": metrics.attempt,
         "acceptedBySamplerBeforeAppCoreCleanup": metrics.accepted,
         "metrics": asdict(metrics),
+        "calibrationTarget": {
+            "sourceNamedPath": "CWalker::Forward -> CWalker::Move scalar response",
+            "steamLinkedObservation": "receipt-bound player-0 BattleEngine walker forward response",
+            "scope": "latency, acceleration shape, steady scalar speed, and release only",
+            "nonclaim": "does not establish directional handling or broader First Flight parity",
+        },
         "publicProjectionWritten": False,
     }
 
@@ -848,13 +1111,14 @@ def run_observer(args: argparse.Namespace) -> int:
     failure = ""
     trace = None
     metrics = None
+    readiness: dict[str, object] = {"status": "not-ready"}
     q_up_confirmed = False
     deadline = Deadline(OBSERVER_DEADLINE_SECONDS)
     try:
         deadline.check()
         reader.open()
         deadline.check()
-        trace = collect_trace(
+        trace, readiness = collect_trace(
             args.attempt, receipt, receipt_path, reader, native, QpcClock(), deadline,
             authorized_root,
         )
@@ -882,6 +1146,7 @@ def run_observer(args: argparse.Namespace) -> int:
         "observerHandleClosed": reader.closed,
         "samplerAccepted": metrics is not None and metrics.accepted,
         "failure": failure,
+        "readiness": readiness,
         "publicProjectionWritten": False,
         "interferenceNonclaim": INTERFERENCE_NONCLAIM,
     })
@@ -908,12 +1173,79 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _load_smoke_module():
+    path = ROOT / "tools" / "winui_safe_copy_live_runtime_smoke.py"
+    spec = importlib.util.spec_from_file_location("walker_live_smoke", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("could not load the hash-bound AppCore runner generator")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _prebuild_smoke(private_root: Path) -> dict[str, object]:
+    smoke = _load_smoke_module()
+    return smoke.prebuild_walker_runner(
+        private_root, compiler_cleanup=smoke.receipt_owned_compiler_cleanup
+    )
+
+
+def _write_cooperative_stop_request(path: Path, reason: str) -> None:
+    with path.open("x", encoding="ascii", newline="\n") as stream:
+        stream.write(reason + "\n")
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def _communicate_with_phase_deadlines(
+    process: subprocess.Popen[str], evidence_root: Path, stop_request: Path,
+    *, aggregate_remaining_seconds: float, monotonic: Callable[[], float] = time.monotonic,
+) -> tuple[str, str, str | None]:
+    """Signal the lifecycle owner while a bounded synchronous phase is still blocked."""
+    attempt_started = monotonic()
+    attempt_limit = min(float(aggregate_remaining_seconds), COMPLETE_ATTEMPT_BUDGET_SECONDS)
+    phase_limits = {
+        "profile": PROFILE_PREPARATION_BOUND_SECONDS,
+        "launch": LAUNCH_RECEIPT_FOCUS_BOUND_SECONDS,
+    }
+    phase_started: dict[str, float] = {}
+    stop_reason: str | None = None
+    while True:
+        now = monotonic()
+        for phase in phase_limits:
+            started_marker = evidence_root / f"walker-phase-{phase}-started.marker"
+            completed_marker = evidence_root / f"walker-phase-{phase}-completed.marker"
+            if phase not in phase_started and started_marker.is_file():
+                phase_started[phase] = now
+            if (stop_reason is None and phase in phase_started and not completed_marker.is_file()
+                    and now - phase_started[phase] >= phase_limits[phase]):
+                stop_reason = f"walker {phase} phase exceeded its {phase_limits[phase]}-second safety bound"
+        if stop_reason is None and now - attempt_started >= attempt_limit:
+            stop_reason = "walker attempt exceeded its fixed 215-second cooperative decision deadline"
+        if stop_reason is not None and not stop_request.exists():
+            _write_cooperative_stop_request(stop_request, stop_reason)
+        try:
+            stdout, stderr = process.communicate(timeout=0.10)
+            return stdout, stderr, stop_reason
+        except subprocess.TimeoutExpired:
+            continue
+
+
 def _invoke_smoke(args: argparse.Namespace, attempt: int, profile_root: Path,
-                  evidence_root: Path) -> dict[str, object]:
+                  evidence_root: Path, runner: dict[str, object],
+                  remaining_seconds: float) -> dict[str, object]:
+    stop_request = Path(str(runner["receiptPath"])).parent / f"attempt-{attempt:02d}-cooperative-stop.request"
+    require_absent_outputs((stop_request,))
     command = [
         sys.executable, str(ROOT / "tools" / "winui_safe_copy_live_runtime_smoke.py"),
         "--runtime-protocol", WALKER_PROTOCOL,
         "--walker-attempt", str(attempt),
+        "--walker-prebuilt-runner-dll", str(runner["dllPath"]),
+        "--expected-walker-prebuilt-runner-sha256", str(runner["dllSha256"]),
+        "--walker-prebuild-receipt", str(runner["receiptPath"]),
+        "--expected-walker-prebuild-receipt-sha256", str(runner["receiptSha256"]),
+        "--walker-cooperative-stop-file", str(stop_request),
+        "--walker-attempt-budget-seconds", str(COMPLETE_ATTEMPT_BUDGET_SECONDS),
         "--source-root", str(Path(args.source_root).resolve()),
         "--exe-override", str(Path(args.exe_override).resolve()),
         "--profiles-root", str(profile_root),
@@ -924,19 +1256,26 @@ def _invoke_smoke(args: argparse.Namespace, attempt: int, profile_root: Path,
         "--timeout-seconds", "12",
     ]
     started = time.monotonic()
-    completed = subprocess.run(
-        command, cwd=ROOT, text=True, capture_output=True, check=False,
+    process = subprocess.Popen(
+        command, cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     )
-    if completed.returncode != 0:
-        raise RuntimeError(
-            f"attempt {attempt} AppCore harness failed with exit {completed.returncode}: "
-            f"{completed.stderr.strip()}"
-        )
+    stdout, stderr, stop_reason = _communicate_with_phase_deadlines(
+        process, evidence_root, stop_request,
+        aggregate_remaining_seconds=remaining_seconds,
+    )
+    stop_requested = stop_reason is not None
+    completed = subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
     closeout_path = evidence_root / "walker-trajectory-attempt-closeout.json"
     if not closeout_path.is_file():
-        raise RuntimeError("AppCore harness did not write the private attempt closeout")
+        raise RuntimeError(
+            f"attempt {attempt} AppCore harness exit {completed.returncode} did not write "
+            f"the cleanup closeout: {completed.stderr.strip()}"
+        )
     row = json.loads(closeout_path.read_text(encoding="utf-8"))
     row["outerElapsedSeconds"] = time.monotonic() - started
+    row["cooperativeStopRequested"] = stop_requested
+    row["cooperativeStopReason"] = stop_reason
+    row["harnessExitCode"] = completed.returncode
     return row
 
 
@@ -946,8 +1285,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         return run_observer(args)
     result = run_two_attempts(
         Path(os.path.abspath(args.private_root)),
-        lambda attempt, profile, evidence: _invoke_smoke(args, attempt, profile, evidence),
+        lambda attempt, profile, evidence, runner, remaining: _invoke_smoke(
+            args, attempt, profile, evidence, runner, remaining
+        ),
         authorized_private_root=Path(os.path.abspath(args.authorized_private_root)),
+        prebuild=_prebuild_smoke,
     )
     closeout = _authorize_private_path(
         Path(args.private_root) / "two-attempt-closeout.json",

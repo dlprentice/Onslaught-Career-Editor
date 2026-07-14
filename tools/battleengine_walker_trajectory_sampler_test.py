@@ -19,9 +19,14 @@ class FakeMemory:
         self.short: tuple[int, int] | None = None
         self.read_overrides: list[dict[tuple[int, int], bytes]] = []
         self.read_count = 0
+        self.key_sequences: dict[tuple[int, int], list[bytes]] = {}
+        self.key_read_counts: dict[tuple[int, int], int] = {}
 
     def put_u32(self, address: int, value: int) -> None:
         self.values[(address, 4)] = struct.pack("<I", value)
+
+    def put_u8(self, address: int, value: int) -> None:
+        self.values[(address, 1)] = struct.pack("<B", value)
 
     def put_f32x3(self, address: int, values: tuple[float, float, float]) -> None:
         self.values[(address, 12)] = struct.pack("<3f", *values)
@@ -32,6 +37,11 @@ class FakeMemory:
     def read(self, address: int, size: int) -> bytes:
         self.read_count += 1
         key = (address, size)
+        if key in self.key_sequences:
+            index = self.key_read_counts.get(key, 0)
+            self.key_read_counts[key] = index + 1
+            values = self.key_sequences[key]
+            return values[min(index, len(values) - 1)]
         if self.short == key:
             return self.values[key][:-1]
         if self.read_overrides:
@@ -54,6 +64,10 @@ def coherent_memory(*, module_base: int = 0x10000000) -> tuple[FakeMemory, int]:
     memory.put_f32x3(battle_engine + sampler.BATTLE_ENGINE_POSITION_OFFSET, (1.0, 2.0, 3.0))
     memory.put_f32x3(battle_engine + sampler.BATTLE_ENGINE_VELOCITY_OFFSET, (0.0, 0.0, 0.0))
     memory.put_f32(walker + sampler.WALKER_CONTROL_OFFSET, 0.0)
+    memory.put_u32(module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_LEVEL_OFFSET, 850)
+    memory.put_u32(module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_PLAYER_COUNT_OFFSET, 2)
+    memory.put_u8(module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_HORIZONTAL_SPLIT_OFFSET, 1)
+    memory.put_u32(module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_P1_OFFSET, 0x21000000)
     return memory, module_base
 
 
@@ -100,6 +114,249 @@ def metrics(
 
 
 class CoherentReadTests(unittest.TestCase):
+    def test_cgame_readiness_layout_has_exact_tracked_bounded_provenance(self) -> None:
+        self.assertEqual(
+            (
+                (
+                    "inlineCGameReceiver",
+                    ((
+                        "release/readiness/ghidra_cgame_draw_game_stuff_wave405_2026-05-14.md",
+                        "CGame__DrawGameStuff(&DAT_008a9a98)",
+                    ),),
+                ),
+                (
+                    "currentLevelOffset2A0",
+                    ((
+                        "release/readiness/ghidra_cgame_is_multiplayer_wave406_2026-05-14.md",
+                        "CGame+0x2a0",
+                    ),),
+                ),
+                (
+                    "playerCountOffset29C",
+                    (
+                        (
+                            "tools/runtime-probes/local-multiplayer-level850-input-state-delta-observer.cdb.txt",
+                            "poi(@ecx+0x29c)",
+                        ),
+                        (
+                            "release/readiness/local_multiplayer_static_runtime_contract_2026-06-17.md",
+                            "players=2",
+                        ),
+                    ),
+                ),
+                (
+                    "playerZeroOffset2A4",
+                    (
+                        (
+                            "tools/runtime-probes/local-multiplayer-level850-input-state-delta-observer.cdb.txt",
+                            "poi(@ecx+0x2a4)",
+                        ),
+                        (
+                            "release/readiness/local_multiplayer_static_runtime_contract_2026-06-17.md",
+                            "distinct nonzero `p0=",
+                        ),
+                    ),
+                ),
+                (
+                    "horizontalSplitOffset38",
+                    (
+                        (
+                            "tools/runtime-probes/local-multiplayer-level850-input-state-delta-observer.cdb.txt",
+                            "by(@ecx+0x38)",
+                        ),
+                        (
+                            "release/readiness/local_multiplayer_static_runtime_contract_2026-06-17.md",
+                            "horizSplit=1",
+                        ),
+                    ),
+                ),
+                (
+                    "playerOneOffset2A8",
+                    (
+                        (
+                            "tools/runtime-probes/local-multiplayer-level850-input-state-delta-observer.cdb.txt",
+                            "poi(@ecx+0x2a8)",
+                        ),
+                        (
+                            "release/readiness/local_multiplayer_static_runtime_contract_2026-06-17.md",
+                            "and `p1=",
+                        ),
+                    ),
+                ),
+            ),
+            sampler.C_GAME_READINESS_PROVENANCE,
+        )
+        provenance_text = repr(sampler.C_GAME_READINESS_PROVENANCE)
+        self.assertNotIn("complete CGame layout", provenance_text)
+        self.assertNotIn("runtime multiplayer behavior", provenance_text)
+        root = Path(__file__).resolve().parents[1]
+        for claim, sources in sampler.C_GAME_READINESS_PROVENANCE:
+            with self.subTest(claim=claim):
+                for relative_path, exact_token in sources:
+                    tracked_text = (root / relative_path).read_text(encoding="utf-8")
+                    self.assertIn(exact_token, tracked_text)
+
+    def test_cgame_readiness_layout_is_inline_and_p0_member_closes_identity(self) -> None:
+        self.assertEqual(
+            sampler.P0_GLOBAL_RVA,
+            sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_P0_OFFSET,
+        )
+
+    def test_readiness_classifies_exact_null_hop_without_paths_or_addresses(self) -> None:
+        for hop in ("p0", "p1", "battleEngine", "walker", "backpointer"):
+            with self.subTest(hop=hop):
+                memory, module_base = coherent_memory()
+                p0 = struct.unpack("<I", memory.values[(module_base + sampler.P0_GLOBAL_RVA, 4)])[0]
+                battle_engine = struct.unpack("<I", memory.values[(p0 + sampler.PLAYER_BATTLE_ENGINE_OFFSET, 4)])[0]
+                walker = struct.unpack("<I", memory.values[(battle_engine + sampler.BATTLE_ENGINE_WALKER_OFFSET, 4)])[0]
+                address = {
+                    "p0": module_base + sampler.P0_GLOBAL_RVA,
+                    "p1": module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_P1_OFFSET,
+                    "battleEngine": p0 + sampler.PLAYER_BATTLE_ENGINE_OFFSET,
+                    "walker": battle_engine + sampler.BATTLE_ENGINE_WALKER_OFFSET,
+                    "backpointer": walker + sampler.WALKER_MAIN_PART_OFFSET,
+                }[hop]
+                memory.put_u32(address, 0)
+                with self.assertRaises(sampler.RuntimeNotReady) as caught:
+                    sampler.read_readiness_probe(memory, module_base)
+                self.assertEqual(hop, caught.exception.hop)
+                diagnostic = str(caught.exception)
+                self.assertNotIn("0x", diagnostic)
+                self.assertNotIn("\\", diagnostic)
+
+    def test_readiness_accepts_only_locked_level_player_state_and_control(self) -> None:
+        memory, module_base = coherent_memory()
+        ready = sampler.read_readiness_probe(memory, module_base)
+        self.assertEqual((850, 2, 1, sampler.WALKER_STATE_RAW, sampler.NEUTRAL_CONTROL_RAW), (
+            ready.level, ready.player_count, ready.horizontal_split,
+            ready.state_raw, ready.control_raw,
+        ))
+        for field, address, value in (
+            ("level", module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_LEVEL_OFFSET, 849),
+            ("playerCount", module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_PLAYER_COUNT_OFFSET, 1),
+            ("horizontalSplit", module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_HORIZONTAL_SPLIT_OFFSET, 0),
+            ("state", 0x30000000 + sampler.BATTLE_ENGINE_STATE_OFFSET, 3),
+            ("control", 0x40000000 + sampler.WALKER_CONTROL_OFFSET, sampler.FORWARD_CONTROL_RAW),
+        ):
+            with self.subTest(field=field):
+                candidate, candidate_base = coherent_memory(module_base=module_base)
+                if field == "horizontalSplit":
+                    candidate.put_u8(address, value)
+                else:
+                    candidate.put_u32(address, value)
+                with self.assertRaises(sampler.RuntimeNotReady) as caught:
+                    sampler.read_readiness_probe(candidate, candidate_base)
+                self.assertEqual(field, caught.exception.field)
+
+    def test_readiness_rejects_misaligned_equal_and_drifting_player_identities(self) -> None:
+        for slot_offset in (sampler.C_GAME_P0_OFFSET, sampler.C_GAME_P1_OFFSET):
+            with self.subTest(misaligned=slot_offset):
+                memory, module_base = coherent_memory()
+                address = module_base + sampler.C_GAME_OBJECT_RVA + slot_offset
+                memory.put_u32(address, 0x21000002)
+                with self.assertRaisesRegex(sampler.SampleError, "aligned") as caught:
+                    sampler.read_readiness_probe(memory, module_base)
+                self.assertNotIn("0x", str(caught.exception))
+
+        memory, module_base = coherent_memory()
+        memory.put_u32(
+            module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_P1_OFFSET,
+            0x20000000,
+        )
+        with self.assertRaisesRegex(sampler.SampleError, "distinct") as caught:
+            sampler.read_readiness_probe(memory, module_base)
+        self.assertNotIn("0x", str(caught.exception))
+
+        for slot_offset, values in (
+            (sampler.C_GAME_P0_OFFSET, [0x20000000] * 5 + [0x22000000]),
+            (sampler.C_GAME_P1_OFFSET, [0x21000000, 0x22000000]),
+        ):
+            with self.subTest(drift=slot_offset):
+                memory, module_base = coherent_memory()
+                key = (module_base + sampler.C_GAME_OBJECT_RVA + slot_offset, 4)
+                memory.key_sequences[key] = [struct.pack("<I", value) for value in values]
+                with self.assertRaisesRegex(sampler.SampleError, "changed") as caught:
+                    sampler.read_readiness_probe(memory, module_base)
+                self.assertNotIn("0x", str(caught.exception))
+
+        memory, module_base = coherent_memory()
+        split_key = (
+            module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_HORIZONTAL_SPLIT_OFFSET,
+            1,
+        )
+        memory.key_sequences[split_key] = [struct.pack("<B", 1), struct.pack("<B", 0)]
+        with self.assertRaisesRegex(sampler.SampleError, "changed") as caught:
+            sampler.read_readiness_probe(memory, module_base)
+        self.assertNotIn("0x", str(caught.exception))
+
+    def test_established_runtime_chain_nulls_are_fatal_not_retryable(self) -> None:
+        for hop in ("p0", "battleEngine", "walker", "backpointer"):
+            with self.subTest(hop=hop):
+                memory, module_base = coherent_memory()
+                p0 = struct.unpack("<I", memory.values[(module_base + sampler.P0_GLOBAL_RVA, 4)])[0]
+                battle_engine = struct.unpack(
+                    "<I", memory.values[(p0 + sampler.PLAYER_BATTLE_ENGINE_OFFSET, 4)]
+                )[0]
+                walker = struct.unpack(
+                    "<I", memory.values[(battle_engine + sampler.BATTLE_ENGINE_WALKER_OFFSET, 4)]
+                )[0]
+                address, established = {
+                    "p0": (module_base + sampler.P0_GLOBAL_RVA, p0),
+                    "battleEngine": (p0 + sampler.PLAYER_BATTLE_ENGINE_OFFSET, battle_engine),
+                    "walker": (battle_engine + sampler.BATTLE_ENGINE_WALKER_OFFSET, walker),
+                    "backpointer": (walker + sampler.WALKER_MAIN_PART_OFFSET, battle_engine),
+                }[hop]
+                memory.key_sequences[(address, 4)] = [
+                    struct.pack("<I", established),
+                    struct.pack("<I", established),
+                    struct.pack("<I", 0),
+                ]
+                with self.assertRaises(sampler.SampleError) as caught:
+                    sampler.read_coherent_sample(
+                        memory, module_base, tick=0, phase="readiness", slot=0
+                    )
+                self.assertNotIsInstance(caught.exception, sampler.RuntimeNotReady)
+                self.assertIn("null", str(caught.exception))
+
+        memory, module_base = coherent_memory()
+        p1_address = module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_P1_OFFSET
+        memory.key_sequences[(p1_address, 4)] = [
+            struct.pack("<I", 0x21000000),
+            struct.pack("<I", 0),
+        ]
+        with self.assertRaises(sampler.SampleError) as caught:
+            sampler.read_readiness_probe(memory, module_base)
+        self.assertNotIsInstance(caught.exception, sampler.RuntimeNotReady)
+        self.assertIn("null", str(caught.exception))
+
+    def test_identity_drift_wins_over_stable_state_not_ready(self) -> None:
+        for field in ("horizontalSplit", "p1"):
+            with self.subTest(field=field):
+                memory, module_base = coherent_memory()
+                memory.put_u32(
+                    0x30000000 + sampler.BATTLE_ENGINE_STATE_OFFSET,
+                    sampler.WALKER_STATE_RAW + 1,
+                )
+                if field == "horizontalSplit":
+                    address = (
+                        module_base
+                        + sampler.C_GAME_OBJECT_RVA
+                        + sampler.C_GAME_HORIZONTAL_SPLIT_OFFSET
+                    )
+                    memory.key_sequences[(address, 1)] = [
+                        struct.pack("<B", 1),
+                        struct.pack("<B", 0),
+                    ]
+                else:
+                    address = module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_P1_OFFSET
+                    memory.key_sequences[(address, 4)] = [
+                        struct.pack("<I", 0x21000000),
+                        struct.pack("<I", 0x22000000),
+                    ]
+                with self.assertRaisesRegex(sampler.SampleError, "changed") as caught:
+                    sampler.read_readiness_probe(memory, module_base)
+                self.assertNotIsInstance(caught.exception, sampler.RuntimeNotReady)
+
     def test_reads_exact_aligned_chain_and_scalar_payload(self) -> None:
         memory, module_base = coherent_memory()
 

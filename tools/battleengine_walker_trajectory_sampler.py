@@ -14,6 +14,91 @@ import battleengine_walker_trajectory_schema as public_schema
 
 
 P0_GLOBAL_RVA = 0x004A9D3C
+# These are narrow, compositional evidence anchors rather than a claim that the
+# complete CGame layout is known.  Wave405's retail caller passes
+# &DAT_008a9a98 as the CGame receiver, proving inline object storage rather than
+# a pointer-global interpretation.  Wave406 identifies current-level at the
+# receiver's +0x2a0.  The accepted Level-850 CGame__Render observer reads
+# split mode and P0/P1 from that same receiver at +0x38/+0x29c/+0x2a4/+0x2a8,
+# and its checker-backed contract accepted players=2, level=850, split=1, and
+# distinct nonzero player identities.  Keeping
+# the tracked identifiers here makes those exact, bounded premises auditable.
+C_GAME_READINESS_PROVENANCE = (
+    (
+        "inlineCGameReceiver",
+        ((
+            "release/readiness/ghidra_cgame_draw_game_stuff_wave405_2026-05-14.md",
+            "CGame__DrawGameStuff(&DAT_008a9a98)",
+        ),),
+    ),
+    (
+        "currentLevelOffset2A0",
+        ((
+            "release/readiness/ghidra_cgame_is_multiplayer_wave406_2026-05-14.md",
+            "CGame+0x2a0",
+        ),),
+    ),
+    (
+        "playerCountOffset29C",
+        (
+            (
+                "tools/runtime-probes/local-multiplayer-level850-input-state-delta-observer.cdb.txt",
+                "poi(@ecx+0x29c)",
+            ),
+            (
+                "release/readiness/local_multiplayer_static_runtime_contract_2026-06-17.md",
+                "players=2",
+            ),
+        ),
+    ),
+    (
+        "playerZeroOffset2A4",
+        (
+            (
+                "tools/runtime-probes/local-multiplayer-level850-input-state-delta-observer.cdb.txt",
+                "poi(@ecx+0x2a4)",
+            ),
+            (
+                "release/readiness/local_multiplayer_static_runtime_contract_2026-06-17.md",
+                "distinct nonzero `p0=",
+            ),
+        ),
+    ),
+    (
+        "horizontalSplitOffset38",
+        (
+            (
+                "tools/runtime-probes/local-multiplayer-level850-input-state-delta-observer.cdb.txt",
+                "by(@ecx+0x38)",
+            ),
+            (
+                "release/readiness/local_multiplayer_static_runtime_contract_2026-06-17.md",
+                "horizSplit=1",
+            ),
+        ),
+    ),
+    (
+        "playerOneOffset2A8",
+        (
+            (
+                "tools/runtime-probes/local-multiplayer-level850-input-state-delta-observer.cdb.txt",
+                "poi(@ecx+0x2a8)",
+            ),
+            (
+                "release/readiness/local_multiplayer_static_runtime_contract_2026-06-17.md",
+                "and `p1=",
+            ),
+        ),
+    ),
+)
+C_GAME_OBJECT_RVA = 0x004A9A98
+C_GAME_HORIZONTAL_SPLIT_OFFSET = 0x38
+C_GAME_PLAYER_COUNT_OFFSET = 0x29C
+C_GAME_LEVEL_OFFSET = 0x2A0
+C_GAME_P0_OFFSET = 0x2A4
+C_GAME_P1_OFFSET = 0x2A8
+if C_GAME_OBJECT_RVA + C_GAME_P0_OFFSET != P0_GLOBAL_RVA:
+    raise RuntimeError("accepted inline CGame/P0 layout identity drifted")
 PLAYER_BATTLE_ENGINE_OFFSET = 0x1C
 BATTLE_ENGINE_WALKER_OFFSET = 0x578
 WALKER_MAIN_PART_OFFSET = 0x20
@@ -34,6 +119,20 @@ NODE_TIMES_MS = (100, 200, 350, 500)
 
 class SampleError(ValueError):
     pass
+
+
+class RuntimeNotReady(SampleError):
+    """An exact path-free runtime state that may be retried before baseline."""
+
+    def __init__(self, *, hop: str | None = None, field: str | None = None) -> None:
+        if (hop is None) == (field is None):
+            raise ValueError("exactly one readiness hop or field is required")
+        self.hop = hop
+        self.field = field
+        super().__init__(
+            f"null runtime {hop} hop is not ready" if hop is not None
+            else f"runtime not ready at {field} field"
+        )
 
 
 class AttemptError(ValueError):
@@ -62,6 +161,15 @@ class RawSample:
     slot: int
     position: tuple[float, float, float]
     velocity: tuple[float, float, float]
+    state_raw: int
+    control_raw: int
+
+
+@dataclass(frozen=True)
+class ReadinessProbe:
+    level: int
+    player_count: int
+    horizontal_split: int
     state_raw: int
     control_raw: int
 
@@ -218,21 +326,36 @@ def _read_exact(reader: MemoryReader, address: int, size: int) -> bytes:
     return value
 
 
-def _read_u32(reader: MemoryReader, base: int, offset: int) -> int:
+def _read_u32(reader: MemoryReader, base: int, offset: int, *, hop: str | None = None) -> int:
     address = _checked_address(base, offset, 4)
     value = struct.unpack("<I", _read_exact(reader, address, 4))[0]
     if value == 0:
+        if hop is not None:
+            raise RuntimeNotReady(hop=hop)
         raise SampleError("null pointer in runtime chain")
     if value & 3:
         raise SampleError("runtime pointer must be 4-byte aligned")
     return value
 
 
-def _acquire(reader: MemoryReader, module_base: int) -> tuple[tuple[int, int, int], bytes]:
-    p0 = _read_u32(reader, module_base, P0_GLOBAL_RVA)
-    battle_engine = _read_u32(reader, p0, PLAYER_BATTLE_ENGINE_OFFSET)
-    walker = _read_u32(reader, battle_engine, BATTLE_ENGINE_WALKER_OFFSET)
-    backpointer = _read_u32(reader, walker, WALKER_MAIN_PART_OFFSET)
+def _acquire(
+    reader: MemoryReader,
+    module_base: int,
+    *,
+    retryable_hops: frozenset[str],
+) -> tuple[tuple[int, int, int], bytes]:
+    def first_pointer(base: int, offset: int, hop: str) -> int:
+        return _read_u32(
+            reader,
+            base,
+            offset,
+            hop=hop if hop in retryable_hops else None,
+        )
+
+    p0 = first_pointer(module_base, P0_GLOBAL_RVA, "p0")
+    battle_engine = first_pointer(p0, PLAYER_BATTLE_ENGINE_OFFSET, "battleEngine")
+    walker = first_pointer(battle_engine, BATTLE_ENGINE_WALKER_OFFSET, "walker")
+    backpointer = first_pointer(walker, WALKER_MAIN_PART_OFFSET, "backpointer")
     if backpointer != battle_engine:
         raise SampleError("WalkerPart backpointer does not match BattleEngine")
     state = _read_exact(reader, _checked_address(battle_engine, BATTLE_ENGINE_STATE_OFFSET, 4), 4)
@@ -257,15 +380,29 @@ def read_coherent_sample(
     tick: int,
     phase: str,
     slot: int,
+    retryable_hops: frozenset[str] = frozenset(
+        {"p0", "battleEngine", "walker", "backpointer"}
+    ),
+    require_walker_state: bool = True,
 ) -> RawSample:
     _checked_address(module_base, P0_GLOBAL_RVA, 4)
+    first_retryable_hops = retryable_hops
     for _ in range(MAX_COHERENCE_PAIRS):
-        first_chain, first = _acquire(reader, module_base)
-        second_chain, second = _acquire(reader, module_base)
+        first_chain, first = _acquire(
+            reader,
+            module_base,
+            retryable_hops=first_retryable_hops,
+        )
+        first_retryable_hops = frozenset()
+        second_chain, second = _acquire(
+            reader,
+            module_base,
+            retryable_hops=frozenset(),
+        )
         if first_chain != second_chain or first != second:
             continue
         state_raw = struct.unpack_from("<I", first, 0)[0]
-        if state_raw != WALKER_STATE_RAW:
+        if require_walker_state and state_raw != WALKER_STATE_RAW:
             raise SampleError("raw walker state gate mismatch")
         position = struct.unpack_from("<3f", first, 4)
         velocity = struct.unpack_from("<3f", first, 16)
@@ -277,6 +414,79 @@ def read_coherent_sample(
             raise SampleError("control value must be finite")
         return RawSample(tick, phase, slot, position, velocity, state_raw, control_raw)
     raise SampleError("torn runtime sample after three coherence pairs")
+
+
+def read_readiness_probe(reader: MemoryReader, module_base: int) -> ReadinessProbe:
+    """Read the exact retryable Level-850 walker readiness fields coherently."""
+    game = _checked_address(module_base, C_GAME_OBJECT_RVA, 4)
+    first_level = struct.unpack(
+        "<I", _read_exact(reader, _checked_address(game, C_GAME_LEVEL_OFFSET, 4), 4)
+    )[0]
+    first_players = struct.unpack(
+        "<I", _read_exact(reader, _checked_address(game, C_GAME_PLAYER_COUNT_OFFSET, 4), 4)
+    )[0]
+    first_split = struct.unpack(
+        "<B", _read_exact(reader, _checked_address(game, C_GAME_HORIZONTAL_SPLIT_OFFSET, 1), 1)
+    )[0]
+    if first_level != 850 or first_players != 2 or first_split != 1:
+        second_level = struct.unpack(
+            "<I", _read_exact(reader, _checked_address(game, C_GAME_LEVEL_OFFSET, 4), 4)
+        )[0]
+        second_players = struct.unpack(
+            "<I", _read_exact(reader, _checked_address(game, C_GAME_PLAYER_COUNT_OFFSET, 4), 4)
+        )[0]
+        second_split = struct.unpack(
+            "<B", _read_exact(reader, _checked_address(game, C_GAME_HORIZONTAL_SPLIT_OFFSET, 1), 1)
+        )[0]
+        if (first_level, first_players, first_split) != (
+            second_level, second_players, second_split,
+        ):
+            raise SampleError("runtime readiness fields changed during acquisition")
+        if first_level != 850:
+            raise RuntimeNotReady(field="level")
+        if first_players != 2:
+            raise RuntimeNotReady(field="playerCount")
+        raise RuntimeNotReady(field="horizontalSplit")
+    first_p0 = _read_u32(reader, game, C_GAME_P0_OFFSET, hop="p0")
+    first_p1 = _read_u32(reader, game, C_GAME_P1_OFFSET, hop="p1")
+    if first_p0 == first_p1:
+        raise SampleError("runtime player identities must be distinct")
+    try:
+        sample = read_coherent_sample(
+            reader,
+            module_base,
+            tick=0,
+            phase="readiness",
+            slot=0,
+            retryable_hops=frozenset({"battleEngine", "walker", "backpointer"}),
+            require_walker_state=False,
+        )
+    except SampleError:
+        raise
+    second_level = struct.unpack(
+        "<I", _read_exact(reader, _checked_address(game, C_GAME_LEVEL_OFFSET, 4), 4)
+    )[0]
+    second_players = struct.unpack(
+        "<I", _read_exact(reader, _checked_address(game, C_GAME_PLAYER_COUNT_OFFSET, 4), 4)
+    )[0]
+    second_split = struct.unpack(
+        "<B", _read_exact(reader, _checked_address(game, C_GAME_HORIZONTAL_SPLIT_OFFSET, 1), 1)
+    )[0]
+    second_p0 = _read_u32(reader, game, C_GAME_P0_OFFSET)
+    second_p1 = _read_u32(reader, game, C_GAME_P1_OFFSET)
+    if (first_level, first_players, first_split, first_p0, first_p1) != (
+        second_level, second_players, second_split, second_p0, second_p1,
+    ):
+        raise SampleError("runtime readiness fields changed during acquisition")
+    if second_p0 == second_p1:
+        raise SampleError("runtime player identities must be distinct")
+    if sample.state_raw != WALKER_STATE_RAW:
+        raise RuntimeNotReady(field="state")
+    if sample.control_raw != NEUTRAL_CONTROL_RAW:
+        raise RuntimeNotReady(field="control")
+    return ReadinessProbe(
+        first_level, first_players, first_split, sample.state_raw, sample.control_raw,
+    )
 
 
 def synthetic_schedule_ticks(*, frequency: int = FREQUENCY_FIXTURE) -> dict[str, list[int]]:
