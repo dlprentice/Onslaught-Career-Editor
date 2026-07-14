@@ -68,14 +68,15 @@ No release or tag is authorized by this slice.
   `npm run test:aya-export-outcomes` → 11/11. Full private-corpus export remains
   blocked on missing legacy native extractor DLLs / VS C++ targets (MSB4278).
 - Next executable critical path remains one fresh exactly-two-attempt
-  copied-runtime walker measurement using the tick-aware sampler. Live retries
-  today: pair-01 prebuild NETSDK1004 (fixed by generation restore `38e16316`);
-  pair-02 prebuild green then profile-phase `.ExitCode` throw on .NET 10
-  (fixed by CreateProcess-handle wait/exit `297afde2`); pair-03 profile/launch/
-  receipt/focus succeeded then failed resolving the Python adapter host image
-  via null `MainModule` (fixed by `QueryFullProcessImageNameW` + retry); orphan
-  copied BEA from the crashed session was stopped. Prior 2026-07-13 pair failed
-  attempt 1 on null runtime-chain / lifecycle deadline. No accepted contract yet.
+  copied-runtime walker measurement. 2026-07-14 live campaign advanced far
+  through tooling on main through `82b3dbbc` (schedule RPM tolerance, Q
+  brackets, raw-before-analysis, Forward=Q bind, harness external Q/W,
+  CreateNoWindow + re-focus, phase-local gaps). Best input proof is pair-13:
+  focused harness `down:Q`/`up:Q` sent with nonzero SendInput events, but
+  `controlRaw` stayed 0 and position static for all phases. Pairs 14–16 then
+  exit before receipt (`Process … is not running`). **No accepted two-attempt
+  pair and no scalar contract.** Sampler gate 27/27. Installed Steam/original
+  BEA untouched (copied profiles only). Core constants unchanged.
 
 ## Current Slice Progress - 2026-07-13
 
