@@ -692,7 +692,12 @@ class MeasurementTests(unittest.TestCase):
                     self.run_pair(root, invoke)
                 self.assertEqual([1], calls)
 
-    def test_observer_false_backup_true_is_truthful_but_invalid(self):
+    def test_observer_false_backup_true_allows_clean_failed_closeout(self):
+        """Backup Q-up is enough cleanup when the observer failed mid-window.
+
+        Attempt two still does not run after a failed attempt one (pair needs two
+        accepts), but closeout must not raise so the private evidence pair ends cleanly.
+        """
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "pair"
             calls = []
@@ -700,11 +705,12 @@ class MeasurementTests(unittest.TestCase):
                 calls.append(attempt)
                 row = self.closeout(root, attempt, accepted=False, q_up=False)
                 row["qUpConfirmed"] = True
-                row["cleanup"] = {"observerQUp": False, "backupQUp": True}
+                row["cleanup"] = {"observerQUp": False, "backupQUp": True,
+                                  "phaseJobsClosed": True}
                 return row
-            with self.assertRaisesRegex(RuntimeError, "observer Q-up"):
-                self.run_pair(root, invoke)
+            result = self.run_pair(root, invoke)
         self.assertEqual([1], calls)
+        self.assertFalse(result["pairEligible"])
 
     def test_remaining_budget_refuses_attempt_two_after_clean_attempt_one(self):
         with tempfile.TemporaryDirectory() as tmp:

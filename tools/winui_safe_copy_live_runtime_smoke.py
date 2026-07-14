@@ -1042,6 +1042,49 @@ static string HwndHex(IntPtr handle)
 static extern bool QueryFullProcessImageNameW(
     IntPtr hProcess, uint dwFlags, char[] lpExeName, ref uint lpdwSize);
 
+[DllImport("kernel32", SetLastError = true)]
+static extern bool WriteProcessMemory(
+    IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int nSize, out IntPtr lpNumberOfBytesWritten);
+
+[DllImport("kernel32", SetLastError = true)]
+static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, int dwProcessId);
+
+[DllImport("kernel32", SetLastError = true)]
+static extern bool CloseHandle(IntPtr hObject);
+
+// Steam static: PlatformInput__GetKeyOn returns DAT_00888c94[key]
+// (preferred base 0x400000 → RVA 0x488C94). BEA KeyOn polls this table;
+// MsgProc normally fills it from WM_KEYDOWN. Harness poke re-latches Q while
+// held so residual FlushInputBuffers or dropped WM cannot clear the hold.
+const int WalkerKeyDownTableRva = 0x488C94;
+const byte WalkerForwardVirtualKey = 0x51; // VK_Q
+const uint ProcessVmOperation = 0x0008;
+const uint ProcessVmWrite = 0x0020;
+
+static void PokeWalkerKeyDown(int processId, long moduleBase, byte virtualKey, byte value)
+{
+    if (processId <= 0)
+        throw new InvalidOperationException("Cannot poke KeyDown without a process id.");
+    if (moduleBase <= 0)
+        throw new InvalidOperationException("Module base is required for KeyDown poke.");
+    IntPtr handle = OpenProcess(ProcessVmOperation | ProcessVmWrite, false, processId);
+    if (handle == IntPtr.Zero)
+        throw new InvalidOperationException(
+            $"OpenProcess for KeyDown poke failed (Win32 {Marshal.GetLastWin32Error()}).");
+    try
+    {
+        long address = moduleBase + WalkerKeyDownTableRva + virtualKey;
+        byte[] buffer = new[] { value };
+        if (!WriteProcessMemory(handle, (IntPtr)address, buffer, 1, out _))
+            throw new InvalidOperationException(
+                $"WriteProcessMemory KeyDown[0x{virtualKey:X2}]={value} failed (Win32 {Marshal.GetLastWin32Error()}).");
+    }
+    finally
+    {
+        _ = CloseHandle(handle);
+    }
+}
+
 /// <summary>
 /// Resolve an image path for a Process we own. MainModule is often null or throws
 /// immediately after Process.Start on .NET 10 / restricted hosts; prefer the
@@ -3290,11 +3333,29 @@ static int RunWalkerTrajectoryAttempt()
                 failure = "Walker cooperative aggregate deadline expired during observer; entering cleanup.";
                 break;
             }
+            long moduleBase = 0;
+            if (!string.IsNullOrWhiteSpace(receiptSha256) && File.Exists(runtimeReceiptPath))
+            {
+                try
+                {
+                    using JsonDocument receiptDoc = JsonDocument.Parse(File.ReadAllText(runtimeReceiptPath));
+                    if (receiptDoc.RootElement.TryGetProperty("module", out JsonElement moduleEl)
+                        && moduleEl.TryGetProperty("baseAddressHex", out JsonElement baseEl)
+                        && baseEl.GetString() is string baseHex
+                        && baseHex.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                    {
+                        moduleBase = Convert.ToInt64(baseHex[2..], 16);
+                    }
+                }
+                catch
+                {
+                    moduleBase = 0;
+                }
+            }
             if (!harnessQHeld && File.Exists(qDownRequest) && !File.Exists(qDownAck))
             {
-                // Bound Forward is Q only (default retail Forward is Up-arrow, not W).
-                // Input helper dual-path: VK SendInput + PostMessage WM_KEYDOWN for
-                // BEA KeyDown[vk] (ltshell MsgProc), which is what KeyOn polls.
+                // Bound Forward is Q. Dual-path OS input plus direct KeyDown table poke
+                // (PlatformInput__GetKeyOn / DAT_00888c94) so KeyOn stays true while held.
                 JsonElement qDownResult = SendInputSequence(
                     powershellExe, inputScript, managed.ProcessId, hwndHex,
                     managed.ExecutablePath, managed.WorkingDirectory, "down:Q", 0,
@@ -3302,6 +3363,8 @@ static int RunWalkerTrajectoryAttempt()
                     runtimeReceiptPath, receiptSha256, true);
                 if (!JsonStringIn(qDownResult, "status", "sent") || JsonInt(qDownResult, "sendInputEventsSent") < 1)
                     throw new InvalidOperationException("Harness Q-down delivery failed.");
+                if (moduleBase > 0)
+                    PokeWalkerKeyDown(managed.ProcessId, moduleBase, WalkerForwardVirtualKey, 1);
                 WriteNewCanaryText(qDownAck, artifactRoot, "1");
                 harnessQHeld = true;
                 lastQRefreshMs = adapterWait.ElapsedMilliseconds;
@@ -3321,6 +3384,8 @@ static int RunWalkerTrajectoryAttempt()
                     runtimeReceiptPath, receiptSha256, true);
                 if (JsonStringIn(qRefresh, "status", "sent"))
                 {
+                    if (moduleBase > 0)
+                        PokeWalkerKeyDown(managed.ProcessId, moduleBase, WalkerForwardVirtualKey, 1);
                     lastQRefreshMs = adapterWait.ElapsedMilliseconds;
                     qRefreshCount++;
                 }
@@ -3334,6 +3399,8 @@ static int RunWalkerTrajectoryAttempt()
                     runtimeReceiptPath, receiptSha256, true);
                 if (!JsonStringIn(qUpResult, "status", "sent") || JsonInt(qUpResult, "sendInputEventsSent") < 1)
                     throw new InvalidOperationException("Harness Q-up delivery failed.");
+                if (moduleBase > 0)
+                    PokeWalkerKeyDown(managed.ProcessId, moduleBase, WalkerForwardVirtualKey, 0);
                 WriteNewCanaryText(qUpAck, artifactRoot, "1");
                 harnessQHeld = false;
             }
