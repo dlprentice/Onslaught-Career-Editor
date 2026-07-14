@@ -17,8 +17,8 @@
       "newReleaseAuthorized": false
     },
     "repository": {
-      "registeredWorktrees": 4,
-      "worktreeOwnership": "Main is Owner/integration. Coordinator and Steward are retained control/review tasks. All completed worker registrations were removed. One isolated walkerref worktree remains as rejected WIP requiring five material corrections before integration; no worker task owns it.",
+      "registeredWorktrees": 3,
+      "worktreeOwnership": "Main is Owner/integration. Coordinator and Steward are the only retained task worktrees. All completed worker registrations were removed. The rejected walker reference draft is preserved byte-identically under ignored local-lab/handoffs/walkerref-20260713 for a future bounded repair; no worker task owns it.",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
       "lastPushedBeforeCurrentSlice": "b6bb93b5 before this closeout; local main now contains Runtime e04cce2e plus b982a006, Home 8bbc384d, AYA export outcomes f368287d, and CMSH attributes e8bf0426 pending the final baton commit/push.",

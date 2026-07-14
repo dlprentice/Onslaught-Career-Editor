@@ -33,7 +33,7 @@ unaccepted.
 3. extend the accepted inventory/export producer contracts into complete local
    corpus coverage for every observed archive/tag/extension and deterministic
    output family, keeping proprietary payloads ignored/local;
-4. repair the isolated `walkerref` draft before integration: keep it outside
+4. repair the ignored `local-lab/handoffs/walkerref-20260713` draft before integration: keep it outside
    `rebuild/`, reuse the hardened crosswalk validator, model both water checks
    independently, partition scalar-measurable from future-probe fields, and name
    exact Core targets; and
