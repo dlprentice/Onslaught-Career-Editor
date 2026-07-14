@@ -986,13 +986,16 @@ def write_runner(runner_root: Path, *, create_new: bool = False) -> Path:
         marker_path.write_text("tool-owned runner scratch\n", encoding="utf-8")
     appcore = ROOT / "OnslaughtCareerEditor.AppCore" / "OnslaughtCareerEditor.AppCore.csproj"
     project = runner_root / "LiveSafeCopySmoke.csproj"
+    # AppCore carries NuGet PackageReferences. Generation-phase restore must be
+    # allowed so the locked one-build/--no-restore step can compile offline from
+    # project.assets.json. Do not set RestoreProjectStyle=None: SDK 10 still needs
+    # a real restore graph for ProjectReference packages.
     project_text = f"""<Project Sdk=\"Microsoft.NET.Sdk\">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RestoreProjectStyle>None</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include=\"{appcore}\" />
@@ -5079,38 +5082,88 @@ def prebuild_walker_runner(
     sdk_identity = dict(_dotnet_sdk_identity())
     runner_root = pair_root / "runner"
     project = write_runner(runner_root, create_new=True)
-    generation_completed = dt.datetime.now(dt.timezone.utc)
     program = runner_root / "Program.cs"
     appcore_project = ROOT / "OnslaughtCareerEditor.AppCore" / "OnslaughtCareerEditor.AppCore.csproj"
     dependency_paths = [appcore_project, *sorted(
         path for path in appcore_project.parent.rglob("*.cs")
         if "bin" not in path.parts and "obj" not in path.parts
     )]
+    env = os.environ.copy()
+    env["MSBUILDDISABLENODEREUSE"] = "1"
+    env["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0"
+    runner = process_runner or _run_walker_prebuild_process
+
+    # Generation-phase restore produces project.assets.json so the single locked
+    # build may keep --no-restore. Restore is not a second build invocation.
+    restore_command = [
+        "dotnet", "restore", str(project), "--nologo",
+        "-p:UseSharedCompilation=false", "-nodeReuse:false",
+    ]
+    restore_started = dt.datetime.now(dt.timezone.utc)
+    generation_elapsed = (restore_started - generation_started).total_seconds()
+    restore_stdout = ""
+    restore_stderr = ""
+    restore_exit_code = 0
+    restore_timed_out = False
+    if generation_elapsed >= timeout_seconds:
+        restore_exit_code = 124
+        restore_stderr = "generation exhausted prebuild bound before restore"
+        restore_timed_out = True
+        restore_ownership: dict[str, Any] = {
+            "ownershipMode": "not-started", "jobHandle": 0,
+            "jobAssignedBeforeResume": False, "capturedProcesses": {},
+        }
+        restore_process_id = 0
+    else:
+        restore_completed_proc, restore_process_id, restore_ownership = runner(
+            restore_command, cwd=ROOT, env=env,
+            timeout_seconds=max(0.01, timeout_seconds - generation_elapsed),
+        )
+        restore_exit_code = restore_completed_proc.returncode
+        restore_stdout = restore_completed_proc.stdout
+        restore_stderr = restore_completed_proc.stderr
+        restore_timed_out = restore_exit_code == 124
+    restore_completed = dt.datetime.now(dt.timezone.utc)
+    restore_cleanup = dict(compiler_cleanup(restore_ownership))
+    assets_path = runner_root / "obj" / "project.assets.json"
+    restore_ok = (
+        not restore_timed_out
+        and restore_exit_code == 0
+        and assets_path.is_file()
+        and _compiler_cleanup_receipt_complete(
+            restore_cleanup,
+            build_process_id=restore_process_id,
+            build_invocation_count=1 if restore_process_id else 0,
+        )
+    )
+    generation_completed = dt.datetime.now(dt.timezone.utc)
+
     command = [
         "dotnet", "build", str(project), "--configuration", "Release", "--nologo",
         "--no-restore", "-p:UseSharedCompilation=false", "-nodeReuse:false",
     ]
-    env = os.environ.copy()
-    env["MSBUILDDISABLENODEREUSE"] = "1"
-    env["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0"
     build_started = dt.datetime.now(dt.timezone.utc)
-    generation_elapsed = (build_started - generation_started).total_seconds()
     build_invocation_count = 0
-    if generation_elapsed >= timeout_seconds:
-        completed = subprocess.CompletedProcess(command, 124, "", "generation exhausted prebuild bound")
+    elapsed_before_build = (build_started - generation_started).total_seconds()
+    if not restore_ok or elapsed_before_build >= timeout_seconds:
+        completed = subprocess.CompletedProcess(
+            command,
+            124 if restore_timed_out or elapsed_before_build >= timeout_seconds else 1,
+            restore_stdout,
+            restore_stderr or "generation-phase restore failed; refusing --no-restore build",
+        )
         build_process_id = 0
-        build_ownership: dict[str, Any] = {
+        build_ownership = {
             "ownershipMode": "not-started", "jobHandle": 0,
             "jobAssignedBeforeResume": False, "capturedProcesses": {},
         }
     else:
-        runner = process_runner or _run_walker_prebuild_process
         completed, build_process_id, build_ownership = runner(
             command, cwd=ROOT, env=env,
-            timeout_seconds=max(0.01, timeout_seconds - generation_elapsed),
+            timeout_seconds=max(0.01, timeout_seconds - elapsed_before_build),
         )
         build_invocation_count = 1
-    timed_out = completed.returncode == 124
+    timed_out = completed.returncode == 124 or restore_timed_out
     build_completed = dt.datetime.now(dt.timezone.utc)
     cleanup = dict(compiler_cleanup(build_ownership))
     cleanup_completed = dt.datetime.now(dt.timezone.utc)
@@ -5123,7 +5176,11 @@ def prebuild_walker_runner(
         "depsPath": output_root / "LiveSafeCopySmoke.deps.json",
     }
     passed = (
-        not timed_out and total_elapsed_seconds <= 150 and completed.returncode == 0
+        restore_ok
+        and not timed_out
+        and total_elapsed_seconds <= 150
+        and completed.returncode == 0
+        and build_invocation_count == 1
         and _compiler_cleanup_receipt_complete(
             cleanup, build_process_id=build_process_id,
             build_invocation_count=build_invocation_count,
@@ -5143,6 +5200,18 @@ def prebuild_walker_runner(
             "buildStarted": build_started.isoformat(),
             "buildCompleted": build_completed.isoformat(),
             "compilerCleanupCompleted": cleanup_completed.isoformat(),
+        },
+        "generationRestore": {
+            "command": restore_command,
+            "exitCode": restore_exit_code,
+            "timedOut": restore_timed_out,
+            "processId": restore_process_id,
+            "startedAtUtc": restore_started.isoformat(),
+            "completedAtUtc": restore_completed.isoformat(),
+            "assetsPathPresent": assets_path.is_file(),
+            "compilerCleanup": restore_cleanup,
+            "stdout": restore_stdout,
+            "stderr": restore_stderr,
         },
         "command": command, "exitCode": completed.returncode,
         "buildProcessId": build_process_id,

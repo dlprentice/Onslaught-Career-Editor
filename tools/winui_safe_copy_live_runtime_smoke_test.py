@@ -271,9 +271,10 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn("def execute_prebuilt_walker_runner", source)
         self.assertIn('"dotnet", "build"', source)
         self.assertIn('"--no-restore"', source)
+        self.assertIn('"dotnet", "restore"', source)
+        self.assertIn("generationRestore", source)
         self.assertIn('["dotnet", str(runner_dll)', source)
         self.assertNotIn('["dotnet", "run"', source)
-        self.assertNotIn('["dotnet", "restore"', source)
         self.assertIn("compilerOwnedProcessCount", source)
         self.assertIn("buildInvocationCount", source)
 
@@ -287,9 +288,21 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             pair = Path(tmp) / "pair"
             pair.mkdir()
-            builds = []
-            def build(command, **_kwargs):
-                builds.append(command)
+            process_commands = []
+            def process_runner(command, **_kwargs):
+                process_commands.append(list(command))
+                if len(command) >= 2 and command[1] == "restore":
+                    assets = pair / "runner" / "obj" / "project.assets.json"
+                    assets.parent.mkdir(parents=True, exist_ok=True)
+                    assets.write_text("{}", encoding="utf-8")
+                    return subprocess.CompletedProcess(command, 0, "restored", ""), 7000, {
+                        "ownershipMode": "windows-job-object-before-resume",
+                        "jobHandle": 98, "jobAssignedBeforeResume": True,
+                        "capturedProcesses": {7000: {
+                            "processId": 7000, "parentProcessId": 1, "startedAtUtc": "s0",
+                            "executablePath": "C:/dotnet.exe", "role": "buildRoot",
+                        }},
+                    }
                 output = pair / "runner" / "bin" / "Release" / "net10.0"
                 output.mkdir(parents=True)
                 for name in ("LiveSafeCopySmoke.dll", "LiveSafeCopySmoke.runtimeconfig.json",
@@ -308,15 +321,21 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
                 "version": "10.0.0"
             }):
                 receipt = module.prebuild_walker_runner(
-                    pair, process_runner=build,
+                    pair, process_runner=process_runner,
                     compiler_cleanup=lambda ownership: {
                         "ownedProcessCount": 0,
                         "capturedDescendants": list(ownership["capturedProcesses"].values()),
                         "residue": [], "cleanupConfirmed": True,
                         "ownershipMode": "windows-job-object-before-resume",
                         "jobAssignedBeforeResume": True, "jobClosed": True,
-                        "jobAccountingBeforeCleanup": {"totalProcesses": 1, "activeProcesses": 0},
-                        "jobAccountingAfterCleanup": {"totalProcesses": 1, "activeProcesses": 0},
+                        "jobAccountingBeforeCleanup": {
+                            "totalProcesses": len(ownership["capturedProcesses"]),
+                            "activeProcesses": 0,
+                        },
+                        "jobAccountingAfterCleanup": {
+                            "totalProcesses": len(ownership["capturedProcesses"]),
+                            "activeProcesses": 0,
+                        },
                     },
                 )
             executions = []
@@ -327,7 +346,14 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
                 module.execute_prebuilt_walker_runner(
                     Path(receipt["dllPath"]), receipt["dllSha256"], {}, process_runner=execute
                 )
-        self.assertEqual(1, len(builds))
+        self.assertTrue(receipt["passed"])
+        self.assertEqual(1, receipt["buildInvocationCount"])
+        self.assertEqual(2, len(process_commands))
+        self.assertEqual("restore", process_commands[0][1])
+        self.assertEqual(["dotnet", "build"], process_commands[1][:2])
+        self.assertIn("--no-restore", process_commands[1])
+        self.assertEqual(receipt["command"], process_commands[1])
+        self.assertTrue(receipt["generationRestore"]["assetsPathPresent"])
         self.assertEqual(2, len(executions))
         self.assertEqual(executions[0], executions[1])
         self.assertEqual("dotnet", executions[0][0])
