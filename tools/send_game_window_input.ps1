@@ -476,12 +476,24 @@ public static class GameWindowInputNative {
         get { return IntPtr.Size == 8 ? 40 : 28; }
     }
 
+    [DllImport("user32.dll")]
+    public static extern uint MapVirtualKey(uint uCode, uint uMapType);
+
     public static bool SendScanKey(ushort scanCode, bool keyUp, bool extended) {
+        // BEA keyboard state is the LT KeyDown[vk] table filled by WM_KEYDOWN/UP
+        // (see references/Onslaught/ltshell.cpp). Scan-only SendInput with wVk=0
+        // is flaky for that path; set both VK and scan so the focused window
+        // receives a normal WM_KEYDOWN with the expected wParam.
         INPUT[] inputs = new INPUT[1];
         inputs[0].type = 1;
-        inputs[0].U.ki.wVk = 0;
+        uint mappedVk = MapVirtualKey(scanCode, 1 /* MAPVK_VSC_TO_VK */);
+        inputs[0].U.ki.wVk = (ushort)(mappedVk & 0xFFFFu);
         inputs[0].U.ki.wScan = scanCode;
-        inputs[0].U.ki.dwFlags = 0x0008 | (keyUp ? 0x0002u : 0u) | (extended ? 0x0001u : 0u);
+        uint flags = keyUp ? 0x0002u : 0u;
+        if (extended) {
+            flags |= 0x0001u;
+        }
+        inputs[0].U.ki.dwFlags = flags;
         inputs[0].U.ki.time = 0;
         inputs[0].U.ki.dwExtraInfo = UIntPtr.Zero;
         uint sent = SendInput(1, inputs, InputStructSize);
@@ -948,6 +960,11 @@ foreach ($action in $actions) {
                 $sent++
                 $scanKeybdEventsSent++
             }
+            # Dual-path: also post WM_KEYDOWN so BEA's KeyDown[vk] table is set
+            # even when system SendInput does not deliver a usable WM to MsgProc.
+            if ([GameWindowInputNative]::PostMessage($selected.handle, $WM_KEYDOWN, [UIntPtr]::new([uint32]$vk), [UIntPtr]::Zero)) {
+                $windowMessageEventsSent++
+            }
             $heldKeys.Add([PSCustomObject]@{
                 key = [string]$action.key
                 scanCode = $scanCode
@@ -987,6 +1004,9 @@ foreach ($action in $actions) {
                 Invoke-KeybdEventFallback $action $true
                 $sent++
                 $scanKeybdEventsSent++
+            }
+            if ([GameWindowInputNative]::PostMessage($selected.handle, $WM_KEYUP, [UIntPtr]::new([uint32]$vk), [UIntPtr]::Zero)) {
+                $windowMessageEventsSent++
             }
             if ($confirmedKeyUp) {
                 for ($heldIndex = $heldKeys.Count - 1; $heldIndex -ge 0; $heldIndex--) {

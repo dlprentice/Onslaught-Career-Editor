@@ -139,7 +139,7 @@ def validate_public_projection(payload: Any) -> None:
         "clock": "query-performance-counter",
         "cadenceMs": 10,
         "baselineMs": 500,
-        "holdMs": 750,
+        "holdMs": 2000,
         "releaseMs": 750,
         "timingPrecisionMs": 10,
     }
@@ -162,7 +162,7 @@ def validate_public_projection(payload: Any) -> None:
         runs.add(attempt["runDigest"])
         counts = _exact(attempt["sampleCounts"], COUNT_KEYS, "sampleCounts")
         for phase, minimum, maximum in (
-            ("baseline", 48, 50), ("hold", 72, 75), ("release", 72, 75)
+            ("baseline", 48, 50), ("hold", 192, 200), ("release", 72, 75)
         ):
             count = _integer(counts[phase], f"sampleCounts.{phase}", minimum=minimum)
             if count > maximum:

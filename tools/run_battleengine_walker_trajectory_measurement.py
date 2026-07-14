@@ -1126,6 +1126,29 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
             deadline.check("hold")
             if not hold_origin_box:
                 # First batch runs only after Q-down inside execute_owned_q_window.
+                # Wait until the control store proves Forward before the hold
+                # origin so residual settle and late KeyDown delivery do not
+                # collapse the steady window to friction decay of a one-shot.
+                control_wait_deadline = time.time() + 8.0
+                proved = False
+                while time.time() < control_wait_deadline:
+                    deadline.check("hold")
+                    if not guard.revalidate_receipt() or not guard.foreground_matches():
+                        raise sampler.AttemptError(
+                            "receipt or foreground changed while waiting for Q walker-forward control"
+                        )
+                    probe_tick = clock.now()
+                    probe = sampler.read_coherent_sample(
+                        reader, receipt.module_base, tick=probe_tick, phase="hold", slot=0
+                    )
+                    if probe.control_raw == sampler.FORWARD_CONTROL_RAW:
+                        proved = True
+                        break
+                    time.sleep(0.02)
+                if not proved:
+                    raise sampler.AttemptError(
+                        "control field did not enter walker-forward state after Q-down"
+                    )
                 hold_origin_box.append(clock.now())
             hold_origin = hold_origin_box[0]
             rows = []
@@ -1255,11 +1278,14 @@ def run_observer(args: argparse.Namespace) -> int:
             authorized_root,
         )
         deadline.check()
+        # collect_trace only returns after execute_owned_q_window confirms key-up.
+        # Analysis acceptance is independent; cleanup must still see observer Q-up
+        # so a failed attempt can free the pair for attempt two.
+        q_up_confirmed = True
         # Persist raw samples before analysis so failed control/schedule gates
         # still leave private evidence for the next tooling fix.
         _write_new_json(raw_path, _trace_payload(trace, INTERFERENCE_NONCLAIM))
         metrics = analyze_provisional_trace(trace)
-        q_up_confirmed = True
         _write_new_json(metrics_path, _metrics_payload(metrics))
     except BaseException as exc:
         failure = f"{type(exc).__name__}: {exc}"

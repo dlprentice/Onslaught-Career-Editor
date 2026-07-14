@@ -91,7 +91,7 @@ def metrics(
         accepted=True,
         receipt_sha256=f"{attempt}" * 64,
         run_digest=f"{attempt + 2}" * 64,
-        sample_counts={"baseline": 50, "hold": 75, "release": 75},
+        sample_counts={"baseline": 50, "hold": 200, "release": 75},
         steady_speed=steady_speed,
         baseline_b95_speed=baseline_b95,
         baseline_endpoint_displacement=baseline_endpoint,
@@ -503,9 +503,9 @@ class ReceiptAndScheduleTests(unittest.TestCase):
 
         # Partial traces still use the absolute cadence grid / gap rules.
         partial = copy.deepcopy(ticks)
-        partial["hold"] = partial["hold"][:72]
+        partial["hold"] = partial["hold"][:192]
         partial["hold"][4] += 150_000
-        with self.assertRaisesRegex(sampler.AttemptError, "jitter|gap|window|slot"):
+        with self.assertRaisesRegex(sampler.AttemptError, "jitter|gap|window|slot|undersampled"):
             sampler.validate_schedule(partial, frequency=10_000_000)
 
         gap = copy.deepcopy(ticks)
@@ -545,7 +545,7 @@ class AttemptAnalysisTests(unittest.TestCase):
         result = sampler.analyze_attempt(trace)
 
         self.assertTrue(result.accepted)
-        self.assertEqual({"baseline": 50, "hold": 75, "release": 75}, result.sample_counts)
+        self.assertEqual({"baseline": 50, "hold": 200, "release": 75}, result.sample_counts)
         self.assertEqual(0, result.response_latency.upper_ms % 10)
         self.assertLessEqual(result.response_latency.lower_ms, result.response_latency.upper_ms)
         self.assertLessEqual(result.release_latency.lower_ms, result.release_latency.upper_ms)
@@ -582,7 +582,7 @@ class AttemptAnalysisTests(unittest.TestCase):
                     speed = 0.0
                     control = sampler.NEUTRAL_CONTROL_RAW
                 elif phase == "hold":
-                    speed = 0.0 if slot < 2 else (min(100.0, (slot - 1) * (100.0 / 48.0)) if slot < 50 else 100.0)
+                    speed = 0.0 if slot < 2 else (min(100.0, (slot - 1) * (100.0 / 98.0)) if slot < 100 else 100.0)
                     control = sampler.FORWARD_CONTROL_RAW
                 else:
                     speed = max(0.0, 100.0 - slot * (100.0 / 48.0))
@@ -649,7 +649,7 @@ class AttemptAnalysisTests(unittest.TestCase):
 
         wrong_slot = sampler.synthetic_attempt_trace(attempt=1)
         wrong_slot.samples["hold"][10] = sampler.replace_sample(
-            wrong_slot.samples["hold"][10], slot=99
+            wrong_slot.samples["hold"][10], slot=250
         )
         mutations.append(("slot", wrong_slot))
 
@@ -988,7 +988,7 @@ class PairAndSchemaTests(unittest.TestCase):
         mutations.append(("duration", too_long))
 
         too_many = copy.deepcopy(projection)
-        too_many["attempts"][0]["sampleCounts"]["hold"] = 76
+        too_many["attempts"][0]["sampleCounts"]["hold"] = 201
         mutations.append(("count", too_many))
 
         forged_envelope = copy.deepcopy(projection)

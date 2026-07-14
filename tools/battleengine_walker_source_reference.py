@@ -376,7 +376,7 @@ def evidence_manifest() -> dict[str, list[dict[str, Any]]]:
                     "sampling": {
                         "cadenceMs": 10,
                         "baselineMs": 500,
-                        "holdMs": 750,
+                        "holdMs": 2000,
                         "releaseMs": 750,
                     },
                     "maximumPairDeltas": {

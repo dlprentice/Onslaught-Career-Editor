@@ -118,8 +118,10 @@ PHYSICS_TICK_MS = 50
 PHYSICS_TICK_SECONDS = PHYSICS_TICK_MS / 1000.0
 POSITION_EDGE_EPSILON = 1e-6
 FREQUENCY_FIXTURE = 10_000_000
-PHASE_TARGETS = {"baseline": 50, "hold": 75, "release": 75}
-PHASE_MINIMUMS = {"baseline": 48, "hold": 72, "release": 72}
+# Hold is 2.0 s so continuous Forward can overcome walk friction and leave a
+# true steady window after accel (p21: 0.75 s only captured residual decay).
+PHASE_TARGETS = {"baseline": 50, "hold": 200, "release": 75}
+PHASE_MINIMUMS = {"baseline": 48, "hold": 192, "release": 72}
 NODE_TIMES_MS = (100, 200, 350, 500)
 
 
@@ -1165,7 +1167,7 @@ def materialize_pair(attempts: Sequence[AttemptMetrics]) -> dict[str, object]:
             "clock": "query-performance-counter",
             "cadenceMs": 10,
             "baselineMs": 500,
-            "holdMs": 750,
+            "holdMs": 2000,
             "releaseMs": 750,
             "timingPrecisionMs": 10,
         },
@@ -1219,10 +1221,10 @@ def synthetic_attempt_trace(
                     wall_speed = 0.0
                 elif slot < 2:
                     wall_speed = 0.0
-                elif slot < 50:
-                    wall_speed = min(100.0, (slot - 1) * (100.0 / 48.0))
+                elif slot < 100:
+                    wall_speed = min(100.0, (slot - 1) * (100.0 / 98.0))
                 else:
-                    wall_speed = 100.0 + ((slot - 50) * 2.0 if unstable_steady else 0.0)
+                    wall_speed = 100.0 + ((slot - 100) * 2.0 if unstable_steady else 0.0)
                 control = NEUTRAL_CONTROL_RAW if missing_control else FORWARD_CONTROL_RAW
             else:
                 # Decay across multiple physics ticks so release edges exist and

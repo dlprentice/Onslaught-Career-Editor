@@ -3292,28 +3292,30 @@ static int RunWalkerTrajectoryAttempt()
             }
             if (!harnessQHeld && File.Exists(qDownRequest) && !File.Exists(qDownAck))
             {
-                // Hold both Q (bound Forward) and W (common default Forward) so
-                // either keyboard map can drive walker-forward response.
+                // Bound Forward is Q only (default retail Forward is Up-arrow, not W).
+                // Input helper dual-path: VK SendInput + PostMessage WM_KEYDOWN for
+                // BEA KeyDown[vk] (ltshell MsgProc), which is what KeyOn polls.
                 JsonElement qDownResult = SendInputSequence(
                     powershellExe, inputScript, managed.ProcessId, hwndHex,
-                    managed.ExecutablePath, managed.WorkingDirectory, "down:Q,down:W", 0,
+                    managed.ExecutablePath, managed.WorkingDirectory, "down:Q", 0,
                     false, string.Empty, Path.Combine(artifactRoot, "harness-q-down.json"),
                     runtimeReceiptPath, receiptSha256, true);
                 if (!JsonStringIn(qDownResult, "status", "sent") || JsonInt(qDownResult, "sendInputEventsSent") < 1)
-                    throw new InvalidOperationException("Harness Q/W-down delivery failed.");
+                    throw new InvalidOperationException("Harness Q-down delivery failed.");
                 WriteNewCanaryText(qDownAck, artifactRoot, "1");
                 harnessQHeld = true;
                 lastQRefreshMs = adapterWait.ElapsedMilliseconds;
                 qRefreshCount = 1;
             }
-            // DirectInput can drop a single key-down; re-assert hold while sampling.
+            // Re-assert hold while sampling so KeyDown[Q] stays latched if anything
+            // flushes the LT key table mid-window.
             if (harnessQHeld && !File.Exists(qUpRequest)
-                && adapterWait.ElapsedMilliseconds - lastQRefreshMs >= 200
-                && qRefreshCount < 40)
+                && adapterWait.ElapsedMilliseconds - lastQRefreshMs >= 100
+                && qRefreshCount < 80)
             {
                 JsonElement qRefresh = SendInputSequence(
                     powershellExe, inputScript, managed.ProcessId, hwndHex,
-                    managed.ExecutablePath, managed.WorkingDirectory, "down:Q,down:W", 0,
+                    managed.ExecutablePath, managed.WorkingDirectory, "down:Q", 0,
                     false, string.Empty,
                     Path.Combine(artifactRoot, $"harness-q-refresh-{qRefreshCount:00}.json"),
                     runtimeReceiptPath, receiptSha256, true);
@@ -3327,11 +3329,11 @@ static int RunWalkerTrajectoryAttempt()
             {
                 JsonElement qUpResult = SendInputSequence(
                     powershellExe, inputScript, managed.ProcessId, hwndHex,
-                    managed.ExecutablePath, managed.WorkingDirectory, "up:Q,up:W", 0,
+                    managed.ExecutablePath, managed.WorkingDirectory, "up:Q", 0,
                     false, string.Empty, Path.Combine(artifactRoot, "harness-q-up.json"),
                     runtimeReceiptPath, receiptSha256, true);
                 if (!JsonStringIn(qUpResult, "status", "sent") || JsonInt(qUpResult, "sendInputEventsSent") < 1)
-                    throw new InvalidOperationException("Harness Q/W-up delivery failed.");
+                    throw new InvalidOperationException("Harness Q-up delivery failed.");
                 WriteNewCanaryText(qUpAck, artifactRoot, "1");
                 harnessQHeld = false;
             }
