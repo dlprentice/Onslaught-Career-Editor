@@ -441,11 +441,17 @@ class ProductionFixtureTests(unittest.TestCase):
             source_root=self.source_root,
         )
 
-    def test_default_uninitialized_source_root_fails_closed(self) -> None:
-        with self.assertRaisesRegex(
-            crosswalk.CrosswalkValidationError, "source revision is unavailable"
-        ):
-            crosswalk.validate_document(self.value, self.root)
+    def test_explicit_uninitialized_source_root_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            source_root = Path(temporary_directory) / "references" / "Onslaught"
+            with self.assertRaisesRegex(
+                crosswalk.CrosswalkValidationError, "source revision is unavailable"
+            ):
+                crosswalk.validate_document(
+                    self.value,
+                    self.root,
+                    source_root=source_root,
+                )
 
     def test_production_fixture_has_exact_rows_and_bounded_readiness(self) -> None:
         report = self.validate()
