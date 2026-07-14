@@ -218,7 +218,7 @@ def load_receipt(path: Path, expected_sha256: str, *,
     executable, executable_digest, _ = _file_identity(process["executable"], "receipt executable")
     _, manifest_digest, _ = _file_identity(root["profileManifest"], "profile manifest")
     arguments = process["launchArguments"]
-    expected_arguments = ["-skipfmv", "-level", "850", "-configuration", "2"]
+    expected_arguments = ["-skipfmv", "-level", "850", "-configuration", "1"]
     if arguments != expected_arguments:
         raise ValueError("receipt launch arguments do not match the locked walker protocol")
     pid = process["id"]

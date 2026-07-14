@@ -98,7 +98,7 @@ class MeasurementTests(unittest.TestCase):
                     "size": exe.stat().st_size,
                 },
                 "workingDirectory": str(exe.parent.resolve()),
-                "launchArguments": ["-skipfmv", "-level", "850", "-configuration", "2"],
+                "launchArguments": ["-skipfmv", "-level", "850", "-configuration", "1"],
             },
             "profileManifest": {
                 "path": str(manifest.resolve()),
@@ -126,7 +126,7 @@ class MeasurementTests(unittest.TestCase):
             path, digest = self.receipt(Path(tmp))
             value = self.m.load_receipt(path, digest)
         self.assertEqual(0x10000000, value.module_base)
-        self.assertEqual(("-skipfmv", "-level", "850", "-configuration", "2"), value.launch_arguments)
+        self.assertEqual(("-skipfmv", "-level", "850", "-configuration", "1"), value.launch_arguments)
         self.assertEqual(value.process_id, value.window_process_id)
 
     def test_frozen_deadline_algebra_and_full_attempt_refusal(self):

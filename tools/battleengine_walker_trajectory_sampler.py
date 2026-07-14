@@ -267,7 +267,7 @@ class ReceiptIdentity:
             window_handle=0x1234,
             window_process_id=4242,
             manifest_sha256="c" * 64,
-            launch_arguments=("-skipfmv", "-level", "850", "-configuration", "2"),
+            launch_arguments=("-skipfmv", "-level", "850", "-configuration", "1"),
             artifact_root="C:/synthetic/role",
             artifact_path="C:/synthetic/role/private/trace.json",
         )
@@ -510,8 +510,12 @@ def schedule_jitter_tolerance_qpc(frequency: int) -> int:
 
 
 def schedule_max_gap_qpc(frequency: int) -> int:
-    """Max allowed inter-sample gap on the live declared-slot path (~50 ms)."""
-    return max(cadence_step_qpc(frequency) * 5, round(frequency * 0.050))
+    """Max allowed inter-sample gap on the live declared-slot path (~250 ms).
+
+    Foreground re-attach and receipt revalidation can exceed 50 ms between
+    samples without invalidating the scalar motion envelope.
+    """
+    return max(cadence_step_qpc(frequency) * 25, round(frequency * 0.250))
 
 
 def synthetic_schedule_ticks(*, frequency: int = FREQUENCY_FIXTURE) -> dict[str, list[int]]:

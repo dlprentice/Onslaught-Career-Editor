@@ -48,7 +48,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
             "--walker-attempt 1",
         )
         plan = module.validate_runtime_protocol(args)
-        self.assertEqual(["-skipfmv", "-level", "850", "-configuration", "2"], plan.launch_arguments)
+        self.assertEqual(["-skipfmv", "-level", "850", "-configuration", "1"], plan.launch_arguments)
         self.assertEqual([], plan.patch_keys)
         self.assertFalse(plan.apply_windowed_compatibility_patch)
         self.assertEqual(0, plan.capture_count)
@@ -203,6 +203,7 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn("adapter.StartTime.ToUniversalTime()", generated)
         self.assertIn("ResolveOwnedProcessImagePath(adapter)", generated)
         self.assertIn("QueryFullProcessImageNameW", generated)
+        self.assertIn("CreateNoWindow = true", generated)
         # Copied defaultoptions must bind Movement/Forward to Q for the adapter.
         self.assertIn('ActionLabel = "Forward"', generated)
         self.assertIn('Player1Token = "Q"', generated)

@@ -463,7 +463,9 @@ def validate_runtime_protocol(args: argparse.Namespace) -> RuntimeProtocolPlan:
         return RuntimeProtocolPlan(
             runtime_protocol=WALKER_TRAJECTORY_RUNTIME_PROTOCOL,
             canary_role="",
-            launch_arguments=["-skipfmv", "-level", "850", "-configuration", "2"],
+            # Configuration 1 favors keyboard Movement bindings for Q-forward.
+            # Configuration 2 was controller-oriented and left Forward unbound to Q.
+            launch_arguments=["-skipfmv", "-level", "850", "-configuration", "1"],
             patch_keys=[],
             apply_windowed_compatibility_patch=False,
             transform_entry_id=None,
@@ -3055,7 +3057,7 @@ static int RunWalkerTrajectoryAttempt()
             throw new TimeoutException($"Walker refused {phase}; its declared budget plus cleanup reserve is unavailable.");
     }
     string[] launchArguments = JsonSerializer.Deserialize<string[]>(RequiredEnv("ONSLAUGHT_LIVE_LAUNCH_ARGUMENTS_JSON")) ?? Array.Empty<string>();
-    string[] expectedArguments = { "-skipfmv", "-level", "850", "-configuration", "2" };
+    string[] expectedArguments = { "-skipfmv", "-level", "850", "-configuration", "1" };
     if (!launchArguments.SequenceEqual(expectedArguments, StringComparer.Ordinal))
         throw new InvalidOperationException("Walker trajectory launch arguments drifted from the locked protocol.");
     if (!string.Equals(Sha256File(adapterPath), expectedAdapterSha256, StringComparison.OrdinalIgnoreCase))
@@ -3209,6 +3211,8 @@ static int RunWalkerTrajectoryAttempt()
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            CreateNoWindow = true,
+            WindowStyle = ProcessWindowStyle.Hidden,
             WorkingDirectory = Path.GetDirectoryName(adapterPath)!,
         };
         adapterCommand = new[] {
@@ -3230,6 +3234,15 @@ static int RunWalkerTrajectoryAttempt()
         adapterExecutablePath = ResolveOwnedProcessImagePath(adapter);
         if (!string.Equals(adapterExecutablePath, Path.GetFullPath(pythonExe), StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Live walker adapter host image changed from the bound Python executable.");
+        // Re-assert BEA foreground after the adapter process starts (even with
+        // CreateNoWindow) so scan-code Q lands on the receipt-bound game window.
+        focusResult = SendInputSequence(
+            powershellExe, inputScript, managed.ProcessId, hwndHex,
+            managed.ExecutablePath, managed.WorkingDirectory, "wait:0", 0,
+            false, string.Empty, Path.Combine(artifactRoot, "focus-window-post-adapter.json"),
+            runtimeReceiptPath, receiptSha256, true);
+        if (!JsonStringIn(focusResult, "status", "sent") || !JsonBool(focusResult, "focused"))
+            throw new InvalidOperationException("Receipt-bound foreground re-acquisition after adapter start failed.");
         stdoutTask = adapter.StandardOutput.ReadToEndAsync();
         stderrTask = adapter.StandardError.ReadToEndAsync();
         int remainingMilliseconds = Math.Max(

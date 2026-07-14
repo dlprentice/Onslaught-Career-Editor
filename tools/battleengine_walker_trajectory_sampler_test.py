@@ -493,12 +493,12 @@ class ReceiptAndScheduleTests(unittest.TestCase):
         late_but_full["release"] = [tick + 250_000 for tick in late_but_full["release"]]
         sampler.validate_schedule(late_but_full, frequency=10_000_000)
 
-        # Gap over 50 ms still fails on the live declared-slot path.
+        # Gap over 250 ms still fails on the live declared-slot path.
         huge_gap = copy.deepcopy(ticks)
         for index in range(5, len(huge_gap["hold"])):
-            huge_gap["hold"][index] += 600_000  # +60 ms
-        huge_gap["release"] = [tick + 600_000 for tick in huge_gap["release"]]
-        with self.assertRaisesRegex(sampler.AttemptError, "gap|50"):
+            huge_gap["hold"][index] += 3_000_000  # +300 ms
+        huge_gap["release"] = [tick + 3_000_000 for tick in huge_gap["release"]]
+        with self.assertRaisesRegex(sampler.AttemptError, "gap|250"):
             sampler.validate_schedule(huge_gap, frequency=10_000_000)
 
         # Partial traces still use the absolute cadence grid / gap rules.
@@ -678,8 +678,8 @@ class AttemptAnalysisTests(unittest.TestCase):
         overwide_bracket = sampler.synthetic_attempt_trace(attempt=1)
         phase_start = overwide_bracket.samples["hold"][0].tick
         step = sampler.cadence_step_qpc(overwide_bracket.frequency)
-        # Wider than schedule_max_gap_qpc (~50 ms / 5 cadences).
-        overwide_bracket.down_bracket = (phase_start - 8 * step, phase_start - 7 * step)
+        # Wider than schedule_max_gap_qpc (~250 ms / 25 cadences).
+        overwide_bracket.down_bracket = (phase_start - 30 * step, phase_start - 29 * step)
         mutations.append(("boundary", overwide_bracket))
 
         contradictory_velocity = sampler.synthetic_attempt_trace(attempt=1, contradictory_velocity=True)
