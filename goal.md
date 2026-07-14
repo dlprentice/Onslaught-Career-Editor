@@ -5,7 +5,7 @@ Last updated: 2026-07-14
 Policy: [`goal.policy.md`](goal.policy.md)  
 Campaign map: [`goal.campaign.md`](goal.campaign.md)  
 Slash prompt: [`roadmap/goals/full-rebuild-campaign-slash-goal.md`](roadmap/goals/full-rebuild-campaign-slash-goal.md)  
-Integration baseline: `890a92c8` (turn/yaw harness + contract regression on main)
+Integration baseline: `1590d438` (turn/yaw harness + contract regression + baton tip on main)
 
 ## How this baton works
 
