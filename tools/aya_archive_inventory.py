@@ -1122,6 +1122,8 @@ def render_observation_records(report: dict[str, object]) -> bytes:
                 raise ValueError("invalid rejected record")
         else:
             raise ValueError("unknown observation status")
+    if records != _canonicalize_archive_records(records):
+        raise ValueError("observation records are not canonical")
     if report.get("sourceUniverseId") != _source_universe_id(records):
         raise ValueError("observation universe mismatch")
     return (
