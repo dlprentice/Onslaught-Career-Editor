@@ -28,6 +28,7 @@ import time
 from typing import Callable, Protocol, Sequence
 
 import battleengine_walker_trajectory_sampler as sampler
+import runtime_proof_lab_hygiene as proof_hygiene
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -374,6 +375,23 @@ class ScanCodeQInput:
         return confirmed
 
 
+def _marker_handshake(evidence_root: Path, name: str, *, timeout_seconds: float) -> bool:
+    request = evidence_root / f"request-{name}.marker"
+    ack = evidence_root / f"ack-{name}.marker"
+    if ack.exists():
+        ack.unlink()
+    with request.open("x", encoding="ascii", newline="\n") as stream:
+        stream.write("1\n")
+        stream.flush()
+        os.fsync(stream.fileno())
+    deadline = time.time() + timeout_seconds
+    while time.time() < deadline:
+        if ack.is_file():
+            return True
+        time.sleep(0.01)
+    return False
+
+
 class ExternalHarnessQInput:
     """Ask the C# AppCore harness to deliver Q via proven SendInputSequence.
 
@@ -390,21 +408,10 @@ class ExternalHarnessQInput:
         self.up_confirmed = False
 
     def _handshake(self, *, down: bool) -> bool:
-        name = "down" if down else "up"
-        request = self.evidence_root / f"request-q-{name}.marker"
-        ack = self.evidence_root / f"ack-q-{name}.marker"
-        if ack.exists():
-            ack.unlink()
-        with request.open("x", encoding="ascii", newline="\n") as stream:
-            stream.write("1\n")
-            stream.flush()
-            os.fsync(stream.fileno())
-        deadline = time.time() + self.timeout_seconds
-        while time.time() < deadline:
-            if ack.is_file():
-                return True
-            time.sleep(0.01)
-        return False
+        name = "q-down" if down else "q-up"
+        return _marker_handshake(
+            self.evidence_root, name, timeout_seconds=self.timeout_seconds
+        )
 
     def key_down(self) -> bool:
         if self.events:
@@ -608,6 +615,13 @@ def run_two_attempts(
         _revalidate_prebuild_receipt(runner_receipt, private_root)
         row = invoke(attempt, profile_root, evidence_root, runner_receipt, remaining)
         _validate_closeout(row, attempt, evidence_root)
+        # After compact evidence and closeout are durable, drop multi-GB game
+        # trees and runner build junk under this authorized private root only.
+        hygiene_attempt = proof_hygiene.strip_bulky_attempt_tree(
+            attempt_root, authorized_private_root=authorized_private_root
+        )
+        row = dict(row)
+        row["labHygiene"] = hygiene_attempt
         if monotonic() > aggregate_deadline:
             raise AttemptDeadlineExceeded(
                 "aggregate cooperative decision deadline expired after cleanup closeout"
@@ -621,6 +635,9 @@ def run_two_attempts(
         rows.append(row)
         if attempt == 1 and row.get("accepted") is not True:
             break
+    hygiene_pair = proof_hygiene.strip_runner_build_junk(
+        private_root, authorized_private_root=authorized_private_root
+    )
     pair_eligible = len(rows) == 2 and all(row.get("accepted") is True for row in rows)
     return {
         "schemaVersion": "battleengine-walker-trajectory-private-pair-closeout.v1",
@@ -633,6 +650,7 @@ def run_two_attempts(
         "aggregateMarginSeconds": AGGREGATE_DEADLINE_SECONDS - DECLARED_MAXIMUM_SECONDS,
         "completeAttemptBudgetSeconds": COMPLETE_ATTEMPT_BUDGET_SECONDS,
         "prebuild": runner_receipt,
+        "labHygiene": hygiene_pair,
     }
 
 
@@ -1067,7 +1085,8 @@ class Win32NativeApi:
 
 def _sample_batches(reader: ReceiptPinnedReader, guard: ReceiptRuntimeGuard,
                     clock: QpcClock, module_base: int, phase: str, origin: int,
-                    phase_offset: int, deadline: Deadline) -> list[sampler.RawSample]:
+                    phase_offset: int, deadline: Deadline,
+                    *, vehicle: str = sampler.VEHICLE_WALKER) -> list[sampler.RawSample]:
     rows: list[sampler.RawSample] = []
     step = sampler.cadence_step_qpc(clock.frequency)
     count = sampler.PHASE_TARGETS[phase]
@@ -1082,7 +1101,7 @@ def _sample_batches(reader: ReceiptPinnedReader, guard: ReceiptRuntimeGuard,
             tick = clock.wait_until(target)
             deadline.check(phase)
             rows.append(sampler.read_coherent_sample(
-                reader, module_base, tick=tick, phase=phase, slot=slot
+                reader, module_base, tick=tick, phase=phase, slot=slot, vehicle=vehicle
             ))
         if not guard.revalidate_receipt() or not guard.foreground_matches():
             raise sampler.AttemptError("receipt or foreground changed around sampling batch")
@@ -1092,7 +1111,8 @@ def _sample_batches(reader: ReceiptPinnedReader, guard: ReceiptRuntimeGuard,
 
 def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: Path,
                   reader: ReceiptPinnedReader, native: NativeApi, clock: QpcClock,
-                  deadline: Deadline, authorized_private_root: Path) -> tuple[sampler.AttemptTrace, dict[str, object]]:
+                  deadline: Deadline, authorized_private_root: Path,
+                  *, vehicle: str = sampler.VEHICLE_WALKER) -> tuple[sampler.AttemptTrace, dict[str, object]]:
     if reader.handle is None:
         raise RuntimeError("observer handle is not open")
     guard = ReceiptRuntimeGuard(
@@ -1113,6 +1133,43 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
             readiness_deadline.check("readiness"),
         ),
     )
+    if vehicle == sampler.VEHICLE_JET:
+        # Level 850 boots walker; Transform (bound to T) morphs into jet.
+        if not _marker_handshake(authorized_private_root, "morph", timeout_seconds=8.0):
+            raise sampler.AttemptError("morph Transform handshake was not confirmed")
+        morph_deadline = time.time() + 25.0
+        seen_states: set[int] = set()
+        consecutive_jet = 0
+        while time.time() < morph_deadline:
+            deadline.check("jet morph")
+            if not guard.revalidate_receipt() or not guard.foreground_matches():
+                raise sampler.AttemptError("receipt or foreground changed during jet morph")
+            try:
+                # Poll state via walker chain without requiring state==WALKER so
+                # morphing (1) and jet (3) remain readable mid-transition.
+                probe = sampler.read_coherent_sample(
+                    reader, receipt.module_base, tick=clock.now(), phase="baseline",
+                    slot=0, vehicle=sampler.VEHICLE_WALKER, require_walker_state=False,
+                )
+                seen_states.add(int(probe.state_raw))
+                if probe.state_raw == sampler.JET_STATE_RAW:
+                    consecutive_jet += 1
+                else:
+                    consecutive_jet = 0
+                if consecutive_jet >= 5:
+                    readiness = dict(readiness)
+                    readiness["vehicle"] = "jet"
+                    readiness["stateRaw"] = probe.state_raw
+                    readiness["morphStatesSeen"] = sorted(seen_states)
+                    break
+            except sampler.SampleError:
+                consecutive_jet = 0
+            time.sleep(0.05)
+        else:
+            raise sampler.AttemptError(
+                "battle engine did not enter jet state after morph; "
+                f"states_seen={sorted(seen_states)}"
+            )
     if not native.force_foreground(receipt.window_handle):
         raise sampler.AttemptError("could not foreground BEA before Q sampling")
     # Each phase uses a fresh origin. External Q handshakes take seconds; if hold
@@ -1121,7 +1178,8 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
     baseline_origin = clock.now()
     deadline.check("baseline")
     baseline = _sample_batches(
-        reader, guard, clock, receipt.module_base, "baseline", baseline_origin, 0, deadline
+        reader, guard, clock, receipt.module_base, "baseline", baseline_origin, 0, deadline,
+        vehicle=vehicle,
     )
     hold_callbacks = []
     hold_rows: list[sampler.RawSample] = []
@@ -1144,11 +1202,12 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
                     deadline.check("hold")
                     if not guard.revalidate_receipt() or not guard.foreground_matches():
                         raise sampler.AttemptError(
-                            "receipt or foreground changed while waiting for Q walker-forward control"
+                            "receipt or foreground changed while waiting for Q forward control"
                         )
                     probe_tick = clock.now()
                     probe = sampler.read_coherent_sample(
-                        reader, receipt.module_base, tick=probe_tick, phase="hold", slot=0
+                        reader, receipt.module_base, tick=probe_tick, phase="hold", slot=0,
+                        vehicle=vehicle,
                     )
                     if probe.control_raw == sampler.FORWARD_CONTROL_RAW:
                         proved = True
@@ -1157,7 +1216,7 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
                     time.sleep(0.02)
                 if not proved:
                     raise sampler.AttemptError(
-                        "control field did not enter walker-forward state after Q-down"
+                        "control field did not enter forward/thrust state after Q-down"
                     )
                 hold_origin_box.append(clock.now())
             hold_origin = hold_origin_box[0]
@@ -1167,7 +1226,8 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
                 tick = clock.wait_until(target)
                 deadline.check("hold")
                 rows.append(sampler.read_coherent_sample(
-                    reader, receipt.module_base, tick=tick, phase="hold", slot=slot
+                    reader, receipt.module_base, tick=tick, phase="hold", slot=slot,
+                    vehicle=vehicle,
                 ))
             hold_rows.extend(rows)
             deadline.check("hold")
@@ -1178,7 +1238,8 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
     )
     release_origin = clock.now()
     release = _sample_batches(
-        reader, guard, clock, receipt.module_base, "release", release_origin, 0, deadline
+        reader, guard, clock, receipt.module_base, "release", release_origin, 0, deadline,
+        vehicle=vehicle,
     )
     run_digest = hashlib.sha256(
         (receipt.receipt_sha256 + str(attempt) + str(baseline_origin)).encode("ascii")
@@ -1293,9 +1354,12 @@ def run_observer(args: argparse.Namespace) -> int:
         deadline.check()
         reader.open()
         deadline.check()
+        vehicle = getattr(args, "vehicle", sampler.VEHICLE_WALKER) or sampler.VEHICLE_WALKER
+        if vehicle not in (sampler.VEHICLE_WALKER, sampler.VEHICLE_JET):
+            raise ValueError("vehicle must be walker or jet")
         trace, readiness = collect_trace(
             args.attempt, receipt, receipt_path, reader, native, QpcClock(), deadline,
-            authorized_root,
+            authorized_root, vehicle=vehicle,
         )
         deadline.check()
         # collect_trace only returns after execute_owned_q_window confirms key-up.
@@ -1344,12 +1408,24 @@ def build_parser() -> argparse.ArgumentParser:
     observer.add_argument("--metrics-output", required=True)
     observer.add_argument("--status-output", required=True)
     observer.add_argument("--authorized-private-root", required=True)
+    observer.add_argument(
+        "--vehicle",
+        choices=(sampler.VEHICLE_WALKER, sampler.VEHICLE_JET),
+        default=sampler.VEHICLE_WALKER,
+        help="Vehicle mode for sample state/control chain (default walker).",
+    )
     pair = sub.add_parser("run-two", allow_abbrev=False)
     pair.add_argument("--source-root", required=True)
     pair.add_argument("--exe-override", required=True)
     pair.add_argument("--private-root", required=True)
     pair.add_argument("--authorized-private-root", required=True)
     pair.add_argument("--arm-live-bea", required=True)
+    pair.add_argument(
+        "--vehicle",
+        choices=(sampler.VEHICLE_WALKER, sampler.VEHICLE_JET),
+        default=sampler.VEHICLE_WALKER,
+        help="Vehicle mode: walker (default) or jet (morph + thrust scalar).",
+    )
     return parser
 
 
@@ -1436,9 +1512,13 @@ def _invoke_smoke(args: argparse.Namespace, attempt: int, profile_root: Path,
         "--arm-live-bea", args.arm_live_bea,
         "--timeout-seconds", "20",
     ]
+    env = os.environ.copy()
+    vehicle = getattr(args, "vehicle", sampler.VEHICLE_WALKER) or sampler.VEHICLE_WALKER
+    env["ONSLAUGHT_LIVE_WALKER_VEHICLE"] = vehicle
     started = time.monotonic()
     process = subprocess.Popen(
         command, cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        env=env,
     )
     stdout, stderr, stop_reason = _communicate_with_phase_deadlines(
         process, evidence_root, stop_request,

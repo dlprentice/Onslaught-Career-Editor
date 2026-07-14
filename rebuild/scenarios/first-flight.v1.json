@@ -3,8 +3,8 @@
   "name": "first-flight",
   "seed": 2836905711,
   "durationTicks": 150,
-  "expectedFinalStateHash": "9928755b150d4ab172be9b1ee827d462d00887b0c4dcdc4e658c6f1196db0055",
-  "expectedTraceHash": "ec6c6628c7d3c1da39bce16160b5f36210899a64f6d1cbfbe18a3b13c7f3dce3",
+  "expectedFinalStateHash": "6af37ac096ac8842907b7658bc42de08e4e9146431df05b55518cb85e3a72eba",
+  "expectedTraceHash": "5153dd6feadfe23aa9b309d87e6184b20cbdd93a687e5d0f4d8051bce56c3534",
   "spans": [
     {
       "startTick": 0,

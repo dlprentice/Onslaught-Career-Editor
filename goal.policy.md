@@ -1,10 +1,17 @@
 # Goal Policy
 
 Status: active public-primary charter
-Last updated: 2026-07-11
+Last updated: 2026-07-14
 
 This file is the durable charter for repo `/goal` loops. It should change
-rarely. The mutable current slice lives in `goal.md`.
+rarely.
+
+| File | Role |
+|------|------|
+| **This file** (`goal.policy.md`) | Rarely changing charter, boundaries, loop contract |
+| [`goal.campaign.md`](goal.campaign.md) | Durable multi-lane milestone map; update on milestone land/block |
+| [`goal.md`](goal.md) | Mutable baton: current slice, progress, closed ledger |
+| [`roadmap/goals/full-rebuild-campaign-slash-goal.md`](roadmap/goals/full-rebuild-campaign-slash-goal.md) | Canonical long-running `/goal` text |
 
 ## Long-Horizon Charter
 
@@ -19,6 +26,25 @@ The public repository is now the primary collaboration and day-to-day working
 repo. The goal is not a sparse export. Track source, tools, tests, docs, RE
 notes, wave notes, state batons, agent reports, readiness notes, and compact
 proof summaries when they help contributors understand or continue the project.
+
+### Multi-slice campaign mode
+
+When the active `/goal` points at the full reconstruction campaign (see
+`roadmap/goals/full-rebuild-campaign-slash-goal.md`), agents **must not** treat
+a single slice as the entire goal. They:
+
+1. Execute one bounded Current Slice from `goal.md`.
+2. Close with `ADVANCEMENT` or well-formed `BLOCKED_*`.
+3. **Select the next slice themselves** using `goal.campaign.md` priority order.
+4. Rewrite `goal.md` Current Slice for resume.
+5. Continue until campaign exit criteria, a human pause, or a blocker that truly
+   needs operator authority (runtime lease, release, paid spend, Steam-adjacent
+   risk, or exhausted retries).
+
+Agents may choose work across **RE**, **rebuild**, **WinUI 3**, **lore**, and
+**test harnesses**. Prefer measurement-before-Core for retail-derived behavior.
+Build or extend durable harnesses with each land. Keep lab storage bounded
+(safe-copy while running; strip bulky trees after closeout).
 
 ## Hard Payload Boundary
 
@@ -96,25 +122,33 @@ proof summaries, and reproducible checkers instead of shipping the payloads.
 
 ## Loop Contract
 
+Read order for every `/goal` cycle: **policy → campaign → baton → path AGENTS**.
+
 Use `goal.md` as the current mutable baton:
 
-1. Pick one bounded slice that advances the charter.
+1. Pick one bounded slice that advances the campaign (self-select via
+   `goal.campaign.md` when the durable campaign goal is active).
 2. Read current repo evidence before acting.
 3. Prefer read-only inspection and generated/exported evidence before mutation.
-4. Make focused changes.
+4. Make focused changes; add/extend a regression harness when behavior lands.
 5. Validate with targeted and broad-enough local gates.
-6. Update docs/state/evidence/accounting.
-7. Rewrite `goal.md` to the next safe executable slice after a green closeout.
-8. Commit/push the green wave when authorized.
+6. Update docs/state/evidence/accounting; update campaign milestone status when
+   a milestone lands or blocks.
+7. Rewrite `goal.md` Current Slice to the **next** safe executable unit after a
+   green closeout (do not leave an empty “suggested candidates only” baton).
+8. Commit/push the green wave when the active `/goal` text and this policy
+   authorize it (no hard payloads; no force-push; no release/tag unless the
+   goal explicitly names that family).
 
 Every automation, worker, or `/goal` cycle must close with exactly one primary
 deliverable:
 
 - `ADVANCEMENT`: an accepted bounded source, docs, checker, proof-plan, policy,
-  state, RE map, Ghidra/static-analysis, integration, or push artifact under a
-  named evidence class. Acceptance must come from a different lane, integration
-  owner, acceptance owner, or human gate; the producing lane cannot self-accept
-  terminal success.
+  state, RE map, Ghidra/static-analysis, integration, harness, or push artifact
+  under a named evidence class. For campaign mode, dual-accept measurement,
+  landed Core+goldens, or product gate green counts as cycle advancement;
+  **campaign-complete** still requires exit criteria in `goal.campaign.md` plus
+  human or integration acceptance.
 - `BLOCKED_<root-cause-slug>_<yyyymmdd-hhmm>`: a well-formed blocker record
   with `code`, `evidence`, `prior_attempt`, `owner`, `next_action`,
   `retry_after` no later than 24 hours, and `duplicate_check`. Repeating the
@@ -126,6 +160,6 @@ blocker and records the next real advancement slice it unblocked. If no concrete
 advancement is available, record a well-formed blocker instead of widening
 scope or repeating status work.
 
-Do not mark a broad goal complete unless the actual charter requirements are
-proven complete. If the current work is only a slice, close the slice and
-continue.
+Do not mark the **campaign** complete unless `goal.campaign.md` exit criteria
+are met. If the current work is only a slice, close the slice, advance the
+baton, and continue.

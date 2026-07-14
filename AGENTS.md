@@ -97,8 +97,10 @@ gates in the handoff.
 - Docs: use `git diff --check` and only the affected mirror, JSON, command, or
   link checks. Release or repo-boundary work instead follows `README.RELEASE.md`
   and `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`.
-- Explicit `/goal`: read `goal.policy.md` before `goal.md`. Coordinated workers
-  leave canonical goal/state reconciliation to integration.
+- Explicit `/goal`: read `goal.policy.md`, then `goal.campaign.md`, then
+  `goal.md`. For the durable full-reconstruction campaign use the slash text in
+  `roadmap/goals/full-rebuild-campaign-slash-goal.md`. Coordinated workers leave
+  canonical goal/state reconciliation to integration.
 
 ## Setup
 

@@ -552,6 +552,44 @@ class AttemptAnalysisTests(unittest.TestCase):
         self.assertLessEqual(abs(result.steady_slope), 0.10 * result.steady_speed)
         self.assertGreater(result.steady_speed, 50.0)
 
+    def test_accepts_jet_mid_hold_cruise_despite_late_hold_collapse(self) -> None:
+        """Live jet-p03 shape: mid-hold thrust cruise, late collapse, coasting release."""
+
+        trace = sampler.synthetic_attempt_trace(
+            attempt=1,
+            vehicle=sampler.VEHICLE_JET,
+            jet_late_hold_collapse=True,
+        )
+        result = sampler.analyze_attempt(trace)
+        self.assertTrue(result.accepted)
+        self.assertGreater(result.steady_speed, 10.0)
+        self.assertLess(result.steady_speed, 13.0)
+        self.assertGreater(result.velocity_hold_to_baseline_ratio, 1.15)
+
+    def test_rejects_jet_when_thrust_does_not_dominate_baseline_cruise(self) -> None:
+        trace = sampler.synthetic_attempt_trace(attempt=1, vehicle=sampler.VEHICLE_JET)
+        # Force entire hold to idle-scale wall speed while keeping jet state.
+        samples_per_tick = max(1, sampler.PHYSICS_TICK_MS // sampler.CADENCE_MS)
+        position = trace.samples["baseline"][-1].position[0]
+        velocity_step = 0.0
+        global_slot = sampler.PHASE_TARGETS["baseline"]
+        rebuilt: list[sampler.RawSample] = []
+        for row in trace.samples["hold"]:
+            if global_slot % samples_per_tick == 0:
+                velocity_step = 5.0 * sampler.PHYSICS_TICK_SECONDS
+                position += velocity_step
+            rebuilt.append(
+                sampler.replace_sample(
+                    row,
+                    position=(position, 0.0, 0.0),
+                    velocity=(velocity_step, 0.0, 0.0),
+                )
+            )
+            global_slot += 1
+        trace.samples["hold"] = rebuilt
+        with self.assertRaisesRegex(sampler.AttemptError, "jet thrust|baseline cruise|dominate"):
+            sampler.analyze_attempt(trace)
+
     def test_accepts_source_shaped_20hz_staircase_despite_100hz_polling(self) -> None:
         """Regression: per-update velocity at ~20 Hz must not look like zero steady speed."""
 
@@ -639,7 +677,7 @@ class AttemptAnalysisTests(unittest.TestCase):
         wrong_state.samples["hold"][10] = sampler.replace_sample(
             wrong_state.samples["hold"][10], state_raw=3
         )
-        mutations.append(("walker state", wrong_state))
+        mutations.append(("vehicle state", wrong_state))
 
         wrong_phase = sampler.synthetic_attempt_trace(attempt=1)
         wrong_phase.samples["hold"][10] = sampler.replace_sample(

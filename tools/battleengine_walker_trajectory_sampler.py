@@ -101,14 +101,20 @@ if C_GAME_OBJECT_RVA + C_GAME_P0_OFFSET != P0_GLOBAL_RVA:
     raise RuntimeError("accepted inline CGame/P0 layout identity drifted")
 PLAYER_BATTLE_ENGINE_OFFSET = 0x1C
 BATTLE_ENGINE_WALKER_OFFSET = 0x578
+BATTLE_ENGINE_JET_OFFSET = 0x57C
 WALKER_MAIN_PART_OFFSET = 0x20
 BATTLE_ENGINE_STATE_OFFSET = 0x260
 BATTLE_ENGINE_POSITION_OFFSET = 0x1C
 BATTLE_ENGINE_VELOCITY_OFFSET = 0x7C
 WALKER_CONTROL_OFFSET = 0x40
+# JetPart mLastMoveYVal (Steam CDB thrust store path; source Thrust sets it last).
+JET_LAST_MOVE_Y_OFFSET = 0x24
 WALKER_STATE_RAW = 0x00000002
+JET_STATE_RAW = 0x00000003
 NEUTRAL_CONTROL_RAW = 0x00000000
 FORWARD_CONTROL_RAW = 0xBF800000
+VEHICLE_WALKER = "walker"
+VEHICLE_JET = "jet"
 MAX_COHERENCE_PAIRS = 3
 CADENCE_MS = 10
 # Source/Steam-static hypothesis for actor integration (CLOCK_TICK / GAME_FR).
@@ -351,7 +357,11 @@ def _acquire(
     module_base: int,
     *,
     retryable_hops: frozenset[str],
+    vehicle: str = VEHICLE_WALKER,
 ) -> tuple[tuple[int, int, int], bytes]:
+    if vehicle not in (VEHICLE_WALKER, VEHICLE_JET):
+        raise SampleError("vehicle mode must be walker or jet")
+
     def first_pointer(base: int, offset: int, hop: str) -> int:
         return _read_u32(
             reader,
@@ -362,23 +372,33 @@ def _acquire(
 
     p0 = first_pointer(module_base, P0_GLOBAL_RVA, "p0")
     battle_engine = first_pointer(p0, PLAYER_BATTLE_ENGINE_OFFSET, "battleEngine")
-    walker = first_pointer(battle_engine, BATTLE_ENGINE_WALKER_OFFSET, "walker")
-    backpointer = first_pointer(walker, WALKER_MAIN_PART_OFFSET, "backpointer")
-    if backpointer != battle_engine:
-        raise SampleError("WalkerPart backpointer does not match BattleEngine")
+    if vehicle == VEHICLE_WALKER:
+        part = first_pointer(battle_engine, BATTLE_ENGINE_WALKER_OFFSET, "walker")
+        backpointer = first_pointer(part, WALKER_MAIN_PART_OFFSET, "backpointer")
+        if backpointer != battle_engine:
+            raise SampleError("WalkerPart backpointer does not match BattleEngine")
+        control_offset = WALKER_CONTROL_OFFSET
+    else:
+        part = first_pointer(battle_engine, BATTLE_ENGINE_JET_OFFSET, "jet")
+        if part == 0:
+            raise SampleError("JetPart pointer is null")
+        control_offset = JET_LAST_MOVE_Y_OFFSET
     state = _read_exact(reader, _checked_address(battle_engine, BATTLE_ENGINE_STATE_OFFSET, 4), 4)
     position = _read_exact(reader, _checked_address(battle_engine, BATTLE_ENGINE_POSITION_OFFSET, 12), 12)
     velocity = _read_exact(reader, _checked_address(battle_engine, BATTLE_ENGINE_VELOCITY_OFFSET, 12), 12)
-    control = _read_exact(reader, _checked_address(walker, WALKER_CONTROL_OFFSET, 4), 4)
+    control = _read_exact(reader, _checked_address(part, control_offset, 4), 4)
     p0_after = _read_u32(reader, module_base, P0_GLOBAL_RVA)
     battle_engine_after = _read_u32(reader, p0_after, PLAYER_BATTLE_ENGINE_OFFSET)
-    walker_after = _read_u32(reader, battle_engine_after, BATTLE_ENGINE_WALKER_OFFSET)
-    backpointer_after = _read_u32(reader, walker_after, WALKER_MAIN_PART_OFFSET)
-    if (p0, battle_engine, walker) != (p0_after, battle_engine_after, walker_after):
+    if vehicle == VEHICLE_WALKER:
+        part_after = _read_u32(reader, battle_engine_after, BATTLE_ENGINE_WALKER_OFFSET)
+        backpointer_after = _read_u32(reader, part_after, WALKER_MAIN_PART_OFFSET)
+        if backpointer_after != battle_engine:
+            raise SampleError("WalkerPart backpointer changed during acquisition")
+    else:
+        part_after = _read_u32(reader, battle_engine_after, BATTLE_ENGINE_JET_OFFSET)
+    if (p0, battle_engine, part) != (p0_after, battle_engine_after, part_after):
         raise SampleError("runtime pointer chain changed during acquisition")
-    if backpointer_after != battle_engine:
-        raise SampleError("WalkerPart backpointer changed during acquisition")
-    return (p0, battle_engine, walker), state + position + velocity + control
+    return (p0, battle_engine, part), state + position + velocity + control
 
 
 def read_coherent_sample(
@@ -388,11 +408,20 @@ def read_coherent_sample(
     tick: int,
     phase: str,
     slot: int,
-    retryable_hops: frozenset[str] = frozenset(
-        {"p0", "battleEngine", "walker", "backpointer"}
-    ),
+    retryable_hops: frozenset[str] | None = None,
     require_walker_state: bool = True,
+    vehicle: str = VEHICLE_WALKER,
+    required_state_raw: int | None = None,
 ) -> RawSample:
+    if retryable_hops is None:
+        retryable_hops = frozenset(
+            {"p0", "battleEngine", "walker", "backpointer", "jet"}
+        )
+    expected_state = (
+        required_state_raw
+        if required_state_raw is not None
+        else (JET_STATE_RAW if vehicle == VEHICLE_JET else WALKER_STATE_RAW)
+    )
     _checked_address(module_base, P0_GLOBAL_RVA, 4)
     first_retryable_hops = retryable_hops
     for _ in range(MAX_COHERENCE_PAIRS):
@@ -400,18 +429,22 @@ def read_coherent_sample(
             reader,
             module_base,
             retryable_hops=first_retryable_hops,
+            vehicle=vehicle,
         )
         first_retryable_hops = frozenset()
         second_chain, second = _acquire(
             reader,
             module_base,
             retryable_hops=frozenset(),
+            vehicle=vehicle,
         )
         if first_chain != second_chain or first != second:
             continue
         state_raw = struct.unpack_from("<I", first, 0)[0]
-        if require_walker_state and state_raw != WALKER_STATE_RAW:
-            raise SampleError("raw walker state gate mismatch")
+        if require_walker_state and state_raw != expected_state:
+            raise SampleError(
+                f"raw {vehicle} state gate mismatch (got {state_raw}, want {expected_state})"
+            )
         position = struct.unpack_from("<3f", first, 4)
         velocity = struct.unpack_from("<3f", first, 16)
         control_raw = struct.unpack_from("<I", first, 28)[0]
@@ -889,6 +922,7 @@ def execute_owned_q_window(
 
 def _validate_trace_rows(trace: AttemptTrace) -> None:
     max_gap = schedule_max_gap_qpc(trace.frequency)
+    expected_state: int | None = None
     for phase in ("baseline", "hold", "release"):
         previous_tick: int | None = None
         previous_slot: int | None = None
@@ -903,8 +937,12 @@ def _validate_trace_rows(trace: AttemptTrace) -> None:
                 raise AttemptError("sample slot does not match its monotonic timestamp")
             if previous_tick is not None and (row.tick - previous_tick) > max_gap:
                 raise AttemptError("sample slot does not match its monotonic timestamp")
-            if row.state_raw != WALKER_STATE_RAW:
-                raise AttemptError("sample walker state gate mismatch")
+            if row.state_raw not in (WALKER_STATE_RAW, JET_STATE_RAW):
+                raise AttemptError("sample vehicle state gate mismatch")
+            if expected_state is None:
+                expected_state = row.state_raw
+            elif row.state_raw != expected_state:
+                raise AttemptError("sample vehicle state changed across the attempt")
             if not all(math.isfinite(value) for value in (*row.position, *row.velocity)):
                 raise AttemptError("sample position and velocity must be finite")
             previous_tick = row.tick
@@ -973,7 +1011,19 @@ def analyze_attempt(trace: AttemptTrace) -> AttemptMetrics:
     release_speeds = _phase_speeds(release, trace.frequency)
     if len(hold_speeds) < 24:
         raise AttemptError("steady window undersampled")
-    steady_rows = hold_speeds[-25:] if len(hold_speeds) >= 25 else hold_speeds
+    # Jet mode idles at thruster≈0.5 with residual airspeed; walker baseline is
+    # near-static. Jet thrust peaks mid-hold then may decay (energy/terrain).
+    is_jet = all(
+        row.state_raw == JET_STATE_RAW
+        for phase in ("baseline", "hold", "release")
+        for row in trace.samples[phase]
+    )
+    if is_jet:
+        n = len(hold_speeds)
+        lo, hi = int(n * 0.30), max(int(n * 0.30) + 24, int(n * 0.75))
+        steady_rows = hold_speeds[lo:hi]
+    else:
+        steady_rows = hold_speeds[-25:] if len(hold_speeds) >= 25 else hold_speeds
     if len(steady_rows) < 24:
         raise AttemptError("steady window undersampled")
     steady_speed = statistics.median(speed for _, speed in steady_rows)
@@ -982,49 +1032,102 @@ def analyze_attempt(trace: AttemptTrace) -> AttemptMetrics:
     baseline_values = [speed for _, speed in baseline_speeds]
     b95 = _percentile(baseline_values, 0.95) if baseline_values else 0.0
     endpoint = _distance(baseline[0].position, baseline[-1].position)
-    if b95 > 0.05 * steady_speed or endpoint > 0.05 * steady_speed * 0.500:
-        raise AttemptError("baseline drift exceeded the predeclared bound")
-    hold_displacement = _distance(hold[0].position, hold[-1].position)
-    if hold_displacement <= 20 * endpoint:
-        raise AttemptError("response displacement did not dominate baseline drift")
-    threshold = max(5 * b95, 0.10 * steady_speed)
+    if is_jet:
+        # Idle thruster still moves; require thrust cruise to dominate idle.
+        if steady_speed <= 1.20 * max(b95, 1e-6):
+            raise AttemptError("jet thrust steady speed did not dominate baseline cruise")
+        hold_displacement = _distance(hold[0].position, hold[-1].position)
+        if hold_displacement <= 1.5 * max(endpoint, 1e-6):
+            raise AttemptError("response displacement did not dominate baseline drift")
+        threshold = max(1.10 * b95, 0.10 * steady_speed)
+        velocity_ratio_min = 1.15
+    else:
+        if b95 > 0.05 * steady_speed or endpoint > 0.05 * steady_speed * 0.500:
+            raise AttemptError("baseline drift exceeded the predeclared bound")
+        hold_displacement = _distance(hold[0].position, hold[-1].position)
+        if hold_displacement <= 20 * endpoint:
+            raise AttemptError("response displacement did not dominate baseline drift")
+        threshold = max(5 * b95, 0.10 * steady_speed)
+        velocity_ratio_min = 5.0
     response_latency = _first_three(hold_speeds, lambda speed: speed >= threshold, trace.down_bracket, trace.frequency)
     try:
-        release_latency = _first_three(release_speeds, lambda speed: speed < threshold, trace.up_bracket, trace.frequency)
+        if is_jet:
+            # Jet coasts after thrust; require measurable decay below active cruise,
+            # not a return to idle thruster speed (often still fast).
+            coast = 0.97 * steady_speed
+            release_latency = _first_three(
+                release_speeds, lambda speed: speed <= coast, trace.up_bracket, trace.frequency
+            )
+        else:
+            release_latency = _first_three(
+                release_speeds, lambda speed: speed < threshold, trace.up_bracket, trace.frequency
+            )
     except AttemptError as exc:
         raise AttemptError("release response did not settle within 750 ms") from exc
     slope = _slope(steady_rows, trace.frequency)
     if abs(slope) > 0.10 * steady_speed:
         raise AttemptError("steady slope exceeded the predeclared bound")
     baseline_velocity = statistics.median(_vector_magnitude(row.velocity) for row in baseline)
-    hold_velocity = statistics.median(_vector_magnitude(row.velocity) for row in hold)
+    # Jet thrust often collapses late in hold (energy/terrain); ratio the same
+    # mid-hold cruise window used for steady_speed, not the full phase.
+    if is_jet:
+        hold_velocity = statistics.median(
+            _vector_magnitude(row.velocity) for row, _speed in steady_rows
+        )
+    else:
+        hold_velocity = statistics.median(_vector_magnitude(row.velocity) for row in hold)
     ratio = hold_velocity / max(baseline_velocity, 1e-9)
-    if ratio <= 5.0:
+    if ratio <= velocity_ratio_min:
         raise AttemptError("velocity hold-to-baseline ratio did not exceed five")
     hold_edges = _position_update_edges(hold, trace.frequency)
     if not hold_edges:
         raise AttemptError("velocity does not corroborate position-derived response")
     update_period = _median_inter_edge_seconds(hold_edges, trace.frequency)
+    # Walker: full hold edges + late-tail windowed speeds (p26 lag on ramp).
+    # Jet: mid-hold cruise only — late hold can collapse while release still
+    # coasts, so full-phase edges and hold tail would falsely reject thrust.
+    if is_jet:
+        cruise_lo = steady_rows[0][0].tick
+        cruise_hi = steady_rows[-1][0].tick
+        corroboration_hold = [row for row in hold if cruise_lo <= row.tick <= cruise_hi]
+        steady_hold_speeds = list(steady_rows)
+        corroboration_edges = _position_update_edges(corroboration_hold, trace.frequency)
+        if not corroboration_edges:
+            raise AttemptError("velocity does not corroborate position-derived response")
+    else:
+        corroboration_hold = hold
+        steady_hold_speeds = hold_speeds[-25:] if len(hold_speeds) >= 25 else hold_speeds
+        corroboration_edges = hold_edges
     _corroborate_velocity_with_updates(
-        hold, trace.frequency, steady_speed=steady_speed, update_period_seconds=update_period
+        corroboration_hold,
+        trace.frequency,
+        steady_speed=steady_speed,
+        update_period_seconds=update_period,
     )
     _corroborate_velocity_with_updates(
         release, trace.frequency, steady_speed=steady_speed, update_period_seconds=update_period
     )
     # Windowed wall-speed uses a lag that spikes during the response ramp
-    # (p26: early hold ~6 u/s vs steady velocity 3 u/s). Corroborate the
-    # steady tail only; edge-based checks already cover the full hold.
-    steady_hold_speeds = hold_speeds[-25:] if len(hold_speeds) >= 25 else hold_speeds
-    _corroborate_velocity_with_windowed_speeds(
-        steady_hold_speeds, steady_speed=steady_speed, update_period_seconds=update_period
-    )
-    _corroborate_velocity_with_windowed_speeds(
-        release_speeds, steady_speed=steady_speed, update_period_seconds=update_period
-    )
+    # (p26: early hold ~6 u/s vs steady velocity 3 u/s). Walker corroborates
+    # the steady tail. Jet uses edge-based per-update checks only: multi-sample
+    # wall-speed spikes (jet-p04 release ~19 u/s, jet-p05 mid-hold ~22 u/s)
+    # against coherent ~11 u/s velocity while edges still match displacement.
+    if not is_jet:
+        _corroborate_velocity_with_windowed_speeds(
+            steady_hold_speeds,
+            steady_speed=steady_speed,
+            update_period_seconds=update_period,
+        )
+        _corroborate_velocity_with_windowed_speeds(
+            release_speeds,
+            steady_speed=steady_speed,
+            update_period_seconds=update_period,
+        )
     # Quiet release tails may have no final edges after settling; require that any
     # observed edges still match, and that the steady hold edges match wall speed.
     steady_velocity_step = statistics.median(
-        _vector_magnitude(row.velocity) for row, _displacement, _elapsed in hold_edges[-5:]
+        _vector_magnitude(row.velocity)
+        for row, _displacement, _elapsed in corroboration_edges[-5:]
     )
     steady_velocity = steady_velocity_step / update_period
     if abs(steady_velocity - steady_speed) > 0.10 * steady_speed:
@@ -1215,6 +1318,8 @@ def synthetic_attempt_trace(
     missing_release: bool = False,
     weak_velocity: bool = False,
     contradictory_velocity: bool = False,
+    vehicle: str = VEHICLE_WALKER,
+    jet_late_hold_collapse: bool = False,
 ) -> AttemptTrace:
     """Build a source-shaped ~20 Hz integrated trajectory polled at CADENCE_MS.
 
@@ -1222,6 +1327,9 @@ def synthetic_attempt_trace(
     not units/second. Wall-clock speed is recovered by the tick-aware analyzer.
     """
 
+    if vehicle not in (VEHICLE_WALKER, VEHICLE_JET):
+        raise ValueError(f"unsupported vehicle {vehicle!r}")
+    state_raw = JET_STATE_RAW if vehicle == VEHICLE_JET else WALKER_STATE_RAW
     ticks = synthetic_schedule_ticks()
     position = 0.0
     samples: dict[str, list[RawSample]] = {phase: [] for phase in PHASE_TARGETS}
@@ -1231,11 +1339,23 @@ def synthetic_attempt_trace(
     for phase in ("baseline", "hold", "release"):
         for slot, tick in enumerate(ticks[phase]):
             if phase == "baseline":
-                wall_speed = 10.0 if baseline_drift else 0.0
+                if vehicle == VEHICLE_JET:
+                    # Idle thruster residual airspeed (jet-p03-shaped).
+                    wall_speed = 5.0
+                else:
+                    wall_speed = 10.0 if baseline_drift else 0.0
                 control = NEUTRAL_CONTROL_RAW
             elif phase == "hold":
                 if missing_response:
                     wall_speed = 0.0
+                elif vehicle == VEHICLE_JET:
+                    # Mid-hold cruise ~11.5 u/s; optional late collapse like live jet-p03.
+                    if slot < 20:
+                        wall_speed = 8.0 + slot * 0.15
+                    elif jet_late_hold_collapse and slot >= 170:
+                        wall_speed = 1.0
+                    else:
+                        wall_speed = 11.5 + ((slot - 100) * 0.05 if unstable_steady else 0.0)
                 elif slot < 2:
                     wall_speed = 0.0
                 elif slot < 100:
@@ -1244,9 +1364,13 @@ def synthetic_attempt_trace(
                     wall_speed = 100.0 + ((slot - 100) * 2.0 if unstable_steady else 0.0)
                 control = NEUTRAL_CONTROL_RAW if missing_control else FORWARD_CONTROL_RAW
             else:
-                # Decay across multiple physics ticks so release edges exist and
-                # settled-velocity forgeries remain detectable.
-                wall_speed = 100.0 if missing_release else max(0.0, 100.0 - slot * (100.0 / 48.0))
+                if vehicle == VEHICLE_JET:
+                    # Coast below active cruise but still fast vs idle.
+                    wall_speed = 11.5 if missing_release else max(9.0, 10.5 - slot * 0.02)
+                else:
+                    # Decay across multiple physics ticks so release edges exist and
+                    # settled-velocity forgeries remain detectable.
+                    wall_speed = 100.0 if missing_release else max(0.0, 100.0 - slot * (100.0 / 48.0))
                 control = NEUTRAL_CONTROL_RAW
             # Integrate only on physics-tick boundaries (source-shaped staircase).
             if global_slot % samples_per_tick == 0:
@@ -1260,7 +1384,7 @@ def synthetic_attempt_trace(
                     slot=slot,
                     position=(position, 0.0, 0.0),
                     velocity=(stored_velocity, 0.0, 0.0),
-                    state_raw=WALKER_STATE_RAW,
+                    state_raw=state_raw,
                     control_raw=control,
                 )
             )

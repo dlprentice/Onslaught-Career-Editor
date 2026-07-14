@@ -1,11 +1,13 @@
 {
   "lastUpdated": "2026-07-14",
   "routingPolicy": "Follow the global Codex multi-agent lane contract. Under current direct user policy, every new or resumed Codex-owned worker uses gpt-5.6-sol at medium effort by default; harder work may raise Sol effort, and Terra/Luna fallback or lower effort requires a newer direct user instruction.",
-  "currentFocus": "Path A: run one fresh exactly-two-attempt copied-runtime walker measurement with the tick-aware sampler (58d8b5e5) and integrated lifecycle. Publish nothing unless both attempts pass. Then bounded v2 scalar-response contract in retail world units, then separate retail-to-Core translation policy before Core constant changes. Asset lane: corpus-reconciliation producer landed; full export still blocked on missing native AYA extractor DLLs / VS C++ targets.",
+  "currentFocus": "Full reconstruction campaign: mutate goal.md each cycle; pick next slice from goal.campaign.md; RE + rebuild + WinUI + lore + harnesses. Walker/jet scalars landed; next default M1.3 turn/yaw or documented fallback. Jet-p06 / hygiene may still need commit.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
+    "goalCampaign": "goal.campaign.md",
     "activeGoal": "goal.md",
+    "slashGoal": "roadmap/goals/full-rebuild-campaign-slash-goal.md",
     "capabilities": "CURRENT_CAPABILITIES.md",
     "reState": "re_orchestrator_state.json"
   },

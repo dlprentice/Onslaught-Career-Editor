@@ -3015,10 +3015,24 @@ static int RunWalkerProfilePreparationPhase()
                         Player1Token = "Q",
                         Player2Token = "E",
                     },
+                    // Transform (morph walker↔jet) for jet-mode scalar measurement.
+                    // Entry id 0x21 is "Others: Transform" in options catalog.
+                    new ConfigurationKeybindRow
+                    {
+                        GroupLabel = "Others",
+                        ActionLabel = "Transform",
+                        EntryId = 0x21,
+                        KeyboardDeviceCode = 8u,
+                        CurrentPlayer1Token = "",
+                        CurrentPlayer2Token = "",
+                        Player1Token = "T",
+                        Player2Token = "Y",
+                    },
                 }));
         WriteNewCanaryText(receiptPath, artifactRoot, JsonSerializer.Serialize(new {
             passed = true, prepared.TargetGameRoot, prepared.ExecutablePath, prepared.ManifestPath,
             forwardBoundToQ = true,
+            transformBoundToT = true,
         }, new JsonSerializerOptions { WriteIndented = true }));
         return 0;
     }
@@ -3293,12 +3307,14 @@ static int RunWalkerTrajectoryAttempt()
             WindowStyle = ProcessWindowStyle.Hidden,
             WorkingDirectory = Path.GetDirectoryName(adapterPath)!,
         };
+        string vehicleMode = Environment.GetEnvironmentVariable("ONSLAUGHT_LIVE_WALKER_VEHICLE") ?? "walker";
         adapterCommand = new[] {
             adapterPath, "observe-one", "--attempt", attempt.ToString(System.Globalization.CultureInfo.InvariantCulture),
             "--receipt", runtimeReceiptPath, "--expected-receipt-sha256", receiptSha256,
             "--raw-output", rawPath, "--metrics-output", metricsPath,
             "--status-output", observerStatusPath,
             "--authorized-private-root", artifactRoot,
+            "--vehicle", vehicleMode,
         };
         foreach (string argument in adapterCommand)
             adapterStart.ArgumentList.Add(argument);
@@ -3328,11 +3344,14 @@ static int RunWalkerTrajectoryAttempt()
         Stopwatch adapterWait = Stopwatch.StartNew();
         // External Q ownership: adapter writes request-q-down/up.marker; this
         // harness delivers focused down:Q / up:Q via the proven input helper.
+        string morphRequest = Path.Combine(artifactRoot, "request-morph.marker");
+        string morphAck = Path.Combine(artifactRoot, "ack-morph.marker");
         string qDownRequest = Path.Combine(artifactRoot, "request-q-down.marker");
         string qDownAck = Path.Combine(artifactRoot, "ack-q-down.marker");
         string qUpRequest = Path.Combine(artifactRoot, "request-q-up.marker");
         string qUpAck = Path.Combine(artifactRoot, "ack-q-up.marker");
         bool harnessQHeld = false;
+        bool morphDone = false;
         long lastQRefreshMs = -10_000;
         int qRefreshCount = 0;
         while (!adapter.HasExited && adapterWait.ElapsedMilliseconds < remainingMilliseconds)
@@ -3361,6 +3380,25 @@ static int RunWalkerTrajectoryAttempt()
                 {
                     moduleBase = 0;
                 }
+            }
+            if (!morphDone && File.Exists(morphRequest) && !File.Exists(morphAck))
+            {
+                // Transform bound to T in profile prep (walker↔jet morph).
+                // Hold briefly so KEY_ONCE bindings latch; poke KeyDown[T] as well.
+                JsonElement morphResult = SendInputSequence(
+                    powershellExe, inputScript, managed.ProcessId, hwndHex,
+                    managed.ExecutablePath, managed.WorkingDirectory, "down:T,wait:250,up:T", 0,
+                    false, string.Empty, Path.Combine(artifactRoot, "harness-morph-t.json"),
+                    runtimeReceiptPath, receiptSha256, true);
+                if (!JsonStringIn(morphResult, "status", "sent") || JsonInt(morphResult, "sendInputEventsSent") < 1)
+                    throw new InvalidOperationException("Harness Transform (T) morph delivery failed.");
+                if (moduleBase > 0)
+                    PokeWalkerKeyDown(managed.ProcessId, moduleBase, 0x54 /* VK_T */, 1);
+                WriteNewCanaryText(morphAck, artifactRoot, "1");
+                morphDone = true;
+                Thread.Sleep(400);
+                if (moduleBase > 0)
+                    PokeWalkerKeyDown(managed.ProcessId, moduleBase, 0x54, 0);
             }
             if (!harnessQHeld && File.Exists(qDownRequest) && !File.Exists(qDownAck))
             {

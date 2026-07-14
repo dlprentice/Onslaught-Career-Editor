@@ -11,7 +11,11 @@ public static class SimulationConstants
     // reverse-engineering/game-mechanics/walker-forward-retail-to-core-translation-policy.md
     // Schema: battleengine-walker-forward-scalar-response.v2
     public const int WalkerSpeedPerTick = 100;
-    public const int JetSpeedPerTick = 650;
+    // Milli-retail units/tick at 30 Hz ≈ 11.43 retail units/s (pair jet-p06
+    // envelope [10.860, 12.003]). Policy:
+    // reverse-engineering/game-mechanics/jet-forward-retail-to-core-translation-policy.md
+    // Schema: battleengine-jet-forward-scalar-response.v1
+    public const int JetSpeedPerTick = 381;
     public const int MaximumEnergy = 1_000;
     public const int MaximumShield = 1_000;
     public const int MaximumHull = 1_000;

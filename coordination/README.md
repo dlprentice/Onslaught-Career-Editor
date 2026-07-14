@@ -48,8 +48,12 @@ Use these tracked files as the normal source map:
   overlay boundaries
 - [goal.policy.md](../goal.policy.md) for the long-horizon charter and
   authority boundaries
-- [goal.md](../goal.md) for the current active slice, owned by integration
+- [goal.campaign.md](../goal.campaign.md) for multi-lane milestones and
+  next-slice priority
+- [goal.md](../goal.md) for the mutable active-slice baton, owned by integration
   during coordinated campaigns
+- [roadmap/goals/full-rebuild-campaign-slash-goal.md](../roadmap/goals/full-rebuild-campaign-slash-goal.md)
+  for the durable full-reconstruction `/goal` text
 - `developer_agent_state.json` and `documentation_agent_state.json` for
   canonical implementation and documentation batons after integration
 

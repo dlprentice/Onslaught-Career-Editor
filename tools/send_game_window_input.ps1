@@ -89,6 +89,7 @@ $allowedKeys = @{
     "O" = 0x4F
     "E" = 0x45
     "R" = 0x52
+    "T" = 0x54
     "F" = 0x46
     "Z" = 0x5A
     "X" = 0x58
@@ -135,6 +136,7 @@ $scanCodes = @{
     "W" = @{ code = 0x11; extended = $false }
     "E" = @{ code = 0x12; extended = $false }
     "R" = @{ code = 0x13; extended = $false }
+    "T" = @{ code = 0x14; extended = $false }
     "A" = @{ code = 0x1E; extended = $false }
     "S" = @{ code = 0x1F; extended = $false }
     "D" = @{ code = 0x20; extended = $false }

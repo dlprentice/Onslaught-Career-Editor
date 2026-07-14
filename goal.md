@@ -1,85 +1,99 @@
-# Active Goal
+# Active Goal Baton
 
-Status: ACTIVE
-Last updated: 2026-07-14
-Policy: `goal.policy.md`
-Integration baseline: `5b5c7efb` (walker scalar v2 + Core `WalkerSpeedPerTick=100`)
+Status: **ACTIVE** (full reconstruction campaign)  
+Last updated: 2026-07-14  
+Policy: [`goal.policy.md`](goal.policy.md)  
+Campaign map: [`goal.campaign.md`](goal.campaign.md)  
+Slash prompt: [`roadmap/goals/full-rebuild-campaign-slash-goal.md`](roadmap/goals/full-rebuild-campaign-slash-goal.md)  
+Integration baseline (last closed dual-accept land on main tip may lag): dirty tree post jet-p06 / pending commit
 
-## Objective
+## How this baton works
 
-Aggressively reconstruct Battle Engine Aquila from the provided Onslaught C++
-source, the pinned legacy AYA extractor, the existing safe Python extraction
-pipeline, the repository's accumulated RE corpus, Steam static evidence, and
-controlled copied-runtime measurements. Complete deterministic local extraction
-coverage for every observed resource family and rebuild source-named game
-systems in deterministic Core. Keep proprietary payloads local, preserve the
-installed game and original executable, and label source hypotheses, Steam
-agreements, runtime measurements, rebuild contracts, and unresolved differences
-separately.
+This file is the **mutable** `/goal` working memory. Every cycle must:
 
-## Closed slice (do not re-open unless evidence is overturned)
+1. Read `goal.policy.md` then `goal.campaign.md` then this file.
+2. Execute **Current Slice** only (one bounded unit of work).
+3. On closeout: record `ADVANCEMENT` or `BLOCKED_*`, update ledgers, **rewrite
+   Current Slice** to the next campaign pick (agent decision — do not wait for
+   a human to invent the next slice unless blocked).
+4. Update `goal.campaign.md` milestone status when a milestone lands or blocks.
 
-Walker-forward **scalar speed** path is closed:
+The campaign **does not end** when one slice lands. Continue until
+`goal.campaign.md` exit criteria or a well-formed blocker requiring a human.
 
-- Accepted two-attempt copied-runtime pair (historical private id `p27`;
-  compact metrics retained under ignored `local-proofs/wt/p27-compact/`).
-- Public contract:
-  `reverse-engineering/game-mechanics/walker-forward-scalar-response-v2.json`
-  (`battleengine-walker-forward-scalar-response.v2`).
-- Translation policy accepted:
-  `reverse-engineering/game-mechanics/walker-forward-retail-to-core-translation-policy.md`.
-- Core: `WalkerSpeedPerTick = 100` (milli-retail @ 30 Hz); rebuild goldens updated;
-  `npm run test:rebuild` green at landing.
-- Lab hygiene: full game trees under `local-proofs/wt/p18`–`p27` and playback
-  roots pruned; keep compact evidence only. Prefer reusable lab copies for
-  future live runs; do not retain multi-GB profile trees after closeout.
+## North star (one line)
+
+Evidence-backed reverse engineering → accepted contracts → deterministic Core /
+rebuild clients → WinUI toolkit + lore usefulness, with harnesses and lab
+hygiene, without touching Steam/original `BEA.exe` or claiming false parity.
+
+## Closed ledger (do not re-open without overturning evidence)
+
+| Slice | Result | Artifacts |
+|-------|--------|-----------|
+| Walker forward scalar | landed | v2 contract; policy; `WalkerSpeedPerTick=100`; p27-compact |
+| Jet forward/thrust scalar | landed | v1 contract; policy; `JetSpeedPerTick=381`; jet-p06 compact |
+| Runtime proof lab hygiene | landed | `runtime_proof_lab_hygiene.py`; retention doc; runner strip |
 
 ## Current Slice
 
-Continue reconstruction with the next **bounded** rebuild-grade measurement and
-harden runtime proof storage so disk does not explode.
+**ID:** `M1.3-turn-yaw-or-next-actionable`  
+**Lane:** RE measurement → contract (rebuild-grade), with harness first  
+**Objective:** Pick and execute the highest-priority **actionable** open
+milestone from `goal.campaign.md` (default target: **M1.3 turn/yaw rate
+scalar**). If turn/yaw tooling is not yet feasible, auto-fallback in order:
+M1.5 transform timing, M2.1 fire/projectile retail contract scaffolding,
+M5.3 Home native-focus only if native authority exists, M8.3 harness for
+landed walker/jet contracts, then WinUI/lore polish that unblocks users.
 
-1. **Proof storage hygiene (tooling):** teach the walker / live-runtime pair
-   runner to (a) optionally reuse a durable authorized lab profile base and
-   (b) after attempt closeout, delete `profile-app-config` game trees and runner
-   build junk while retaining compact evidence (raw/metrics/status/receipt/
-   closeout). Document the keep/delete policy in a tracked RE or tools note.
-   Validate with unit tests; do not require a live BEA launch for the hygiene
-   unit gate.
-2. **Next scalar system — jet forward/thrust response (measurement first):**
-   obtain one fresh exactly-two-attempt **copied-runtime** measurement of
-   jet-mode forward/thrust scalar response (receipt-bound, Steam/original
-   untouched). If either attempt fails, fix tooling/analysis and retry; publish
-   **no** Core constant change without two accepts. Prefer compact evidence
-   retention after closeout.
-3. **Only if both jet attempts pass:** publish a bounded scalar contract in
-   retail units, accept a separate retail→Core translation policy, then update
-   deterministic Core (e.g. `JetSpeedPerTick`) + goldens + `npm run test:rebuild`.
-4. **Preserve boundaries:** walker source-reference stays outside `rebuild/`;
-   do not claim parity-complete reconstruct; Home native-focus remains unaccepted
-   until a separate native run; no release/tag from this slice.
-5. **AYA / full corpus export** remains desirable but is **not** the primary
-   executable item of this slice while legacy native extractor DLLs / VS C++
-   targets remain blocked (MSB4278). If that blocker clears, record
-   `ADVANCEMENT` and may supersede item 2 only with human direction.
+**Required this slice:**
 
-No release or tag is authorized by this slice.
+1. Write a one-paragraph decision in Progress log: which milestone and why
+   (cite campaign priority order).
+2. Prefer measurement-first if retail-derived; dual-accept before Core.
+3. Add/extend a durable test harness for whatever lands.
+4. Lab hygiene if live BEA is used (strip bulky trees; compact only).
+5. Close with `ADVANCEMENT` or well-formed `BLOCKED_*`; then set the **next**
+   Current Slice without human rewrite.
 
-## Validation hints
+**Constraints (always):**
 
-- Hygiene/tooling: focused Python tests for the runner/closeout strip; no live
-  game required for unit proof.
-- Jet measurement: smallest live gate that proves the contract; name skipped
-  gates in the handoff. Run .NET builds/tests serially.
-- After Core change: `npm run test:rebuild` (not whole-repo release suites).
-- Boundary: `npm run test:hard-payload-safety` before push if paths near
-  payload edges change.
-- Never mutate installed Steam / original `BEA.exe`.
+- Never mutate Steam / original `BEA.exe`
+- No release/tag from this baton alone
+- No reopen walker/jet scalars without new evidence
+- No thrash on AYA MSB4278 without new evidence
+- Commit/push green waves when the durable slash goal authorizes and gates pass
 
-## Current Slice Progress - 2026-07-14 (housekeeping)
+## Progress log
 
-- Freed ~8.6 GB under ignored `local-proofs/wt/` by deleting full-profile pair
-  trees `p18`–`p27` and playback roots; retained `p27-compact` (~0.3 MB) plus
-  local `RETENTION.md`.
-- Public walker contract and Core mapping remain on main at `5b5c7efb`.
-- Next worker should start at Current Slice items 1–2 above.
+### 2026-07-14 — Campaign structure stand-up
+
+- Introduced durable `goal.campaign.md` multi-lane milestone map.
+- Expanded `goal.policy.md` for multi-slice autonomous campaign loops.
+- Canonical slash text:
+  `roadmap/goals/full-rebuild-campaign-slash-goal.md`.
+- Prior dual-accept lands: walker p27, jet-p06; hygiene tooling.
+- **Next agent:** execute Current Slice (turn/yaw or documented fallback).
+
+### 2026-07-14 — Jet + hygiene ADVANCEMENT (pre-campaign file)
+
+- See closed ledger; working tree may still need commit/push of that wave.
+
+## Lane bias accounting
+
+| Last 3 slices | Lanes |
+|---------------|--------|
+| jet scalar | RE + rebuild |
+| lab hygiene | harness |
+| campaign stand-up | docs/operating system |
+
+Next picks should prefer **M1.x RE measurement** or **harness for landed
+contracts** before another pure docs slice.
+
+## Resume checklist (new session / after compact)
+
+- [ ] `git log -1 --oneline` / status
+- [ ] Read policy + campaign + this file
+- [ ] Confirm Steam not a write target
+- [ ] Execute Current Slice; do not re-litigate closed ledger
+- [ ] Mutate this file before ending the cycle

@@ -6,8 +6,9 @@ namespace OnslaughtRebuild.Core.Tests;
 
 public sealed class ReplayTests
 {
-    private const string GoldenFinalStateHash = "9928755b150d4ab172be9b1ee827d462d00887b0c4dcdc4e658c6f1196db0055";
-    private const string GoldenTraceHash = "ec6c6628c7d3c1da39bce16160b5f36210899a64f6d1cbfbe18a3b13c7f3dce3";
+    // jet-p06 / JetSpeedPerTick=381 (battleengine-jet-forward-scalar-response.v1)
+    private const string GoldenFinalStateHash = "6af37ac096ac8842907b7658bc42de08e4e9146431df05b55518cb85e3a72eba";
+    private const string GoldenTraceHash = "5153dd6feadfe23aa9b309d87e6184b20cbdd93a687e5d0f4d8051bce56c3534";
 
     [Fact]
     public void FirstFlightReplay_IsDeterministicAndMatchesGoldenHash()

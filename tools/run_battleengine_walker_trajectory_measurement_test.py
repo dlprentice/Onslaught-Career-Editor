@@ -666,10 +666,16 @@ class MeasurementTests(unittest.TestCase):
             calls = []
             def invoke(attempt, profile_root, evidence_root):
                 calls.append(attempt)
+                # Simulate live profile tree that must be stripped after closeout.
+                bulky = root / f"attempt-{attempt:02d}" / "profile-app-config" / "x"
+                bulky.mkdir(parents=True)
+                (bulky / "BEA.exe").write_bytes(b"game")
                 return self.closeout(root, attempt, accepted=False)
             result = self.run_pair(root, invoke)
         self.assertEqual([1], calls)
         self.assertFalse(result["pairEligible"])
+        self.assertFalse((root / "attempt-01" / "profile-app-config").exists())
+        self.assertIn("labHygiene", result)
 
     def test_cleanup_failure_prevents_attempt_two(self):
         for field in ("qUpConfirmed", "observerHandleClosed", "managedProcessStopped",

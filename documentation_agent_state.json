@@ -7,7 +7,10 @@
     "contributorGuide": "CONTRIBUTING.md",
     "collaborationGuide": "COLLABORATION.md",
     "securityGuide": "SECURITY.md",
+    "goalPolicy": "goal.policy.md",
+    "goalCampaign": "goal.campaign.md",
     "activeGoal": "goal.md",
+    "slashGoal": "roadmap/goals/full-rebuild-campaign-slash-goal.md",
     "capabilities": "CURRENT_CAPABILITIES.md",
     "reIndex": "reverse-engineering/RE-INDEX.md",
     "loreIndex": "lore/_index.md"
