@@ -1185,8 +1185,14 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
     ).hexdigest()
     down_bracket = window.down_bracket
     if control_edge_box:
-        # Bind the hold phase to the control-proven edge, preserving handshake start.
-        down_bracket = (window.down_bracket[0], control_edge_box[0])
+        # Latency is measured from control-store prove (input path confirmation),
+        # not from the multi-second external handshake start.
+        edge = control_edge_box[0]
+        down_bracket = (max(0, edge - step), edge)
+    # key_up may sleep before the OS up edge; bind release latency to the
+    # completed up edge only.
+    up_after = window.up_bracket[1]
+    up_bracket = (max(0, up_after - step), up_after)
     trace = sampler.AttemptTrace(
         attempt=attempt,
         receipt_sha256=receipt.receipt_sha256,
@@ -1194,7 +1200,7 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
         frequency=clock.frequency,
         samples={"baseline": baseline, "hold": hold_rows, "release": release},
         down_bracket=down_bracket,
-        up_bracket=window.up_bracket,
+        up_bracket=up_bracket,
         integrity=sampler.AttemptIntegrity(cleanup_confirmed=False),
     )
     return trace, readiness

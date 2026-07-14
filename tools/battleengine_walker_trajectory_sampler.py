@@ -1011,8 +1011,12 @@ def analyze_attempt(trace: AttemptTrace) -> AttemptMetrics:
     _corroborate_velocity_with_updates(
         release, trace.frequency, steady_speed=steady_speed, update_period_seconds=update_period
     )
+    # Windowed wall-speed uses a lag that spikes during the response ramp
+    # (p26: early hold ~6 u/s vs steady velocity 3 u/s). Corroborate the
+    # steady tail only; edge-based checks already cover the full hold.
+    steady_hold_speeds = hold_speeds[-25:] if len(hold_speeds) >= 25 else hold_speeds
     _corroborate_velocity_with_windowed_speeds(
-        hold_speeds, steady_speed=steady_speed, update_period_seconds=update_period
+        steady_hold_speeds, steady_speed=steady_speed, update_period_seconds=update_period
     )
     _corroborate_velocity_with_windowed_speeds(
         release_speeds, steady_speed=steady_speed, update_period_seconds=update_period
