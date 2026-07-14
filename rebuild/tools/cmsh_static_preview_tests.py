@@ -5,6 +5,8 @@ from __future__ import annotations
 import hashlib
 import itertools
 import json
+import math
+from dataclasses import replace
 from pathlib import Path
 import struct
 import tempfile
@@ -51,12 +53,12 @@ def _cmvb(group_count: int) -> bytes:
 
 def _vertices() -> bytes:
     rows = [
-        (1.0, 2.0, 3.0),
-        (4.0, 5.0, 6.0),
-        (7.0, 8.0, 9.0),
-        (2.0, 2.0, 3.0),
+        ((1.0, 2.0, 3.0), (0.0, 1.0, 0.0), (0.0, 0.0)),
+        ((4.0, 5.0, 6.0), (1.0, 0.0, 0.0), (0.25, 0.5)),
+        ((7.0, 8.0, 9.0), (0.0, 0.0, 1.0), (1.0, 0.5)),
+        ((2.0, 2.0, 3.0), (0.0, -1.0, 0.0), (0.75, 1.0)),
     ]
-    return b"".join(struct.pack("<6fI2f", *position, 0.0, 1.0, 0.0, 0xFFFFFFFF, 0.0, 0.0) for position in rows)
+    return b"".join(struct.pack("<6fI2f", *position, *normal, 0xFFFFFFFF, *uv) for position, normal, uv in rows)
 
 
 def _group(
@@ -108,9 +110,13 @@ def _empty_reference_pmvb(
 
 
 def _reference_group(indices: tuple[int, ...], *, owns_vertices: bool) -> bytes:
-    rows = ((1.0, 2.0, 3.0), (4.0, 5.0, 6.0), (7.0, 8.0, 9.0))
+    rows = (
+        ((1.0, 2.0, 3.0), (0.0, 1.0, 0.0), (0.0, 0.0)),
+        ((4.0, 5.0, 6.0), (1.0, 0.0, 0.0), (0.25, 0.5)),
+        ((7.0, 8.0, 9.0), (0.0, 0.0, 1.0), (1.0, 1.0)),
+    )
     vertex_payload = (
-        b"".join(struct.pack("<6fI2f", *position, 0.0, 1.0, 0.0, 0xFFFFFFFF, 0.0, 0.0) for position in rows)
+        b"".join(struct.pack("<6fI2f", *position, *normal, 0xFFFFFFFF, *uv) for position, normal, uv in rows)
         if owns_vertices
         else b""
     )
@@ -355,6 +361,22 @@ f 7 8 9
 """
 EXPECTED_REFERENCE_SHA256 = "ddf266ab5650cc4dc234e23595dac092f873a9b9222b91efff3f17dd6917b93e"
 
+EXPECTED_ATTRIBUTE_OBJ = b"""v 12.0 19.0 -33.0
+v 15.0 16.0 -36.0
+v 18.0 13.0 -39.0
+v 12.0 18.0 -33.0
+vt 0 0
+vt 0.25 0.5
+vt 1.0 0.5
+vt 0.75 1.0
+vn 1.0 0 0
+vn 0 -1.0 0
+vn 0 0 -1.0
+vn -1.0 0 0
+f 1/1/1 3/3/3 2/2/2
+f 1/1/1 4/4/4 3/3/3
+"""
+
 
 def _validate_obj_semantics(value: bytes) -> None:
     text = value.decode("utf-8")
@@ -380,6 +402,145 @@ class CmshStaticPreviewTests(unittest.TestCase):
         self.assertEqual(EXPECTED_REFERENCE_SHA256, hashlib.sha256(result).hexdigest())
         self.assertEqual(9, sum(line.startswith(b"v ") for line in result.splitlines()))
         self.assertEqual(6, sum(line.startswith(b"f ") for line in result.splitlines()))
+
+    def test_opt_in_obj_emits_retained_uvs_normals_and_multi_group_face_indices(self) -> None:
+        mesh = preview.parse_cmsh_stream(build_fixture_stream())
+
+        first = preview.emit_obj(mesh, include_vertex_attributes=True)
+
+        self.assertEqual(EXPECTED_ATTRIBUTE_OBJ, first)
+        self.assertEqual(first, preview.emit_obj(mesh, include_vertex_attributes=True))
+        self.assertEqual(EXPECTED_ATTRIBUTE_OBJ, preview.convert_aya_bytes(build_fixture_aya(), include_vertex_attributes=True))
+
+    def test_opt_in_reference_obj_keeps_direct_owner_instances_and_part_order(self) -> None:
+        mesh = preview.parse_cmsh_stream(build_reference_fixture_stream())
+
+        result = preview.emit_obj(mesh, include_vertex_attributes=True)
+        lines = result.splitlines()
+
+        self.assertEqual(9, sum(line.startswith(b"v ") for line in lines))
+        self.assertEqual(9, sum(line.startswith(b"vt ") for line in lines))
+        self.assertEqual(9, sum(line.startswith(b"vn ") for line in lines))
+        self.assertEqual(
+            [
+                b"vn 1.0 0 0",
+                b"vn 0 -1.0 0",
+                b"vn 0 0 -1.0",
+                b"vn 0 1.0 0",
+                b"vn 1.0 0 0",
+                b"vn 0 0 -1.0",
+                b"vn 1.0 0 0",
+                b"vn 0 -1.0 0",
+                b"vn 0 0 -1.0",
+            ],
+            [line for line in lines if line.startswith(b"vn ")],
+        )
+        self.assertEqual(
+            [
+                b"f 1/1/1 3/3/3 2/2/2",
+                b"f 1/1/1 2/2/2 3/3/3",
+                b"f 4/4/4 6/6/6 5/5/5",
+                b"f 4/4/4 5/5/5 6/6/6",
+                b"f 7/7/7 9/9/9 8/8/8",
+                b"f 7/7/7 8/8/8 9/9/9",
+            ],
+            [line for line in lines if line.startswith(b"f ")],
+        )
+        self.assertEqual(result, preview.emit_obj(mesh, include_vertex_attributes=True))
+
+    def test_opt_in_obj_omits_missing_optional_attributes_without_changing_geometry(self) -> None:
+        mesh = preview.parse_cmsh_stream(build_fixture_stream())
+        parts = tuple(
+            replace(part, vertices=tuple(replace(vertex, normal=None, uv=None) for vertex in part.vertices))
+            for part in mesh.parts
+        )
+        without_attributes = replace(mesh, parts=parts)
+
+        self.assertEqual(EXPECTED_OBJ, preview.emit_obj(without_attributes, include_vertex_attributes=True))
+
+    def test_opt_in_obj_rejects_malformed_or_nonfinite_optional_attributes(self) -> None:
+        mesh = preview.parse_cmsh_stream(build_fixture_stream())
+        populated = mesh.parts[1]
+        cases = (
+            ("normal_count", replace(populated.vertices[0], normal=(0.0, 1.0))),
+            ("uv_count", replace(populated.vertices[0], uv=(0.0,))),
+            ("normal_nonfinite", replace(populated.vertices[0], normal=(0.0, float("nan"), 0.0))),
+            ("uv_nonfinite", replace(populated.vertices[0], uv=(0.0, float("inf")))),
+        )
+        for case, vertex in cases:
+            malformed_part = replace(populated, vertices=(vertex, *populated.vertices[1:]))
+            malformed = replace(mesh, parts=(mesh.parts[0], malformed_part))
+            with self.subTest(case=case):
+                with self.assertRaises(preview.CmshProfileError):
+                    preview.emit_obj(malformed, include_vertex_attributes=True)
+
+        malformed_group = replace(populated.groups[0], indices=(0, 1, len(populated.vertices)))
+        malformed_part = replace(populated, groups=(malformed_group, *populated.groups[1:]))
+        with self.assertRaisesRegex(preview.CmshProfileError, "OBJ rejection"):
+            preview.emit_obj(replace(mesh, parts=(mesh.parts[0], malformed_part)), include_vertex_attributes=True)
+
+    def test_opt_in_normals_use_inverse_transpose_for_scale_and_shear(self) -> None:
+        mesh = preview.parse_cmsh_stream(build_fixture_stream())
+        populated = mesh.parts[1]
+        scale = preview._Transform(
+            rows=((2.0, 0.0, 0.0), (0.0, 4.0, 0.0), (0.0, 0.0, 8.0)),
+            position=populated.transform.position,
+        )
+        scaled_vertex = replace(populated.vertices[0], normal=(1.0, 1.0, 0.0))
+        scaled_part = replace(populated, transform=scale, vertices=(scaled_vertex, *populated.vertices[1:]))
+        scaled = preview.emit_obj(replace(mesh, parts=(mesh.parts[0], scaled_part)), include_vertex_attributes=True)
+        expected_scale = (0.5 / math.sqrt(0.3125), 0.25 / math.sqrt(0.3125), 0.0)
+        first_scaled = tuple(float(value) for value in next(
+            line for line in scaled.decode("ascii").splitlines() if line.startswith("vn ")
+        ).split()[1:])
+        self.assertEqual(expected_scale, first_scaled)
+
+        shear = preview._Transform(
+            rows=((1.0, 1.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
+            position=populated.transform.position,
+        )
+        sheared_vertex = replace(populated.vertices[0], normal=(0.0, 1.0, 0.0))
+        sheared_part = replace(populated, transform=shear, vertices=(sheared_vertex, *populated.vertices[1:]))
+        sheared = preview.emit_obj(replace(mesh, parts=(mesh.parts[0], sheared_part)), include_vertex_attributes=True)
+        first_sheared = tuple(float(value) for value in next(
+            line for line in sheared.decode("ascii").splitlines() if line.startswith("vn ")
+        ).split()[1:])
+        self.assertEqual((0.0, 1.0, 0.0), first_sheared)
+
+    def test_opt_in_normals_reject_degenerate_and_ill_conditioned_transforms(self) -> None:
+        mesh = preview.parse_cmsh_stream(build_fixture_stream())
+        populated = mesh.parts[1]
+        for role, rows in (
+            ("degenerate", ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 0.0))),
+            ("ill-conditioned", ((1e5, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1e-5))),
+        ):
+            with self.subTest(role=role):
+                transformed = replace(
+                    populated,
+                    transform=preview._Transform(rows=rows, position=populated.transform.position),
+                )
+                with self.assertRaisesRegex(preview.CmshProfileError, "normal transform"):
+                    preview.emit_obj(replace(mesh, parts=(mesh.parts[0], transformed)), include_vertex_attributes=True)
+
+    def test_default_obj_bytes_remain_identical_for_v0_and_reference_profiles(self) -> None:
+        fixture = preview.emit_obj(preview.parse_cmsh_stream(build_fixture_stream()))
+        reference = preview.emit_obj(preview.parse_cmsh_stream(build_reference_fixture_stream()))
+
+        self.assertEqual(EXPECTED_OBJ, fixture)
+        self.assertEqual(EXPECTED_SHA256, hashlib.sha256(fixture).hexdigest())
+        self.assertEqual(EXPECTED_REFERENCE_OBJ, reference)
+        self.assertEqual(EXPECTED_REFERENCE_SHA256, hashlib.sha256(reference).hexdigest())
+
+    def test_cli_vertex_attributes_flag_is_explicit_and_forwarded(self) -> None:
+        with mock.patch.object(preview, "publish_anonymous_previews", return_value=(2, 0)) as publish:
+            status = preview._main(
+                ["--checkout", "checkout", "--input", "input", "--output", "output", "--vertex-attributes"]
+            )
+
+        self.assertEqual(0, status)
+        publish.assert_called_once_with(
+            Path("checkout"), Path("input"), Path("output"), include_vertex_attributes=True
+        )
 
     def test_material_report_retains_vertex_attributes_duplicate_names_and_six_unknown_positions(self) -> None:
         mesh = preview.parse_cmsh_stream(build_material_fixture_stream())

@@ -30,6 +30,9 @@ MAX_OPAQUE = 16 * 1024 * 1024
 MAX_OBJ = 32 * 1024 * 1024
 MAX_AGGREGATE_SOURCE = 256 * 1024 * 1024
 MAX_COORDINATE = 1_000_000.0
+MIN_NORMAL_DETERMINANT = 1e-8
+MAX_NORMAL_CONDITION = 1e8
+MIN_NORMAL_LENGTH = 1e-12
 TEXR_SENTINEL_U32: frozenset[int] = frozenset()
 
 
@@ -110,8 +113,8 @@ class MeshTexture:
 @dataclass(frozen=True)
 class MeshVertex:
     position: tuple[float, float, float]
-    normal: tuple[float, float, float]
-    uv: tuple[float, float]
+    normal: tuple[float, float, float] | None
+    uv: tuple[float, float] | None
     raw_color_u32: int
 
 
@@ -529,7 +532,66 @@ def _number(value: float) -> str:
     return repr(value)
 
 
-def emit_obj(mesh: ParsedMesh) -> bytes:
+def _obj_attribute(
+    value: tuple[float, ...] | None,
+    count: int,
+    role: str,
+) -> tuple[float, ...] | None:
+    if value is None:
+        return None
+    if not isinstance(value, tuple) or len(value) != count:
+        raise CmshProfileError("invalid declared length/count", 0, role)
+    if not all(isinstance(component, (int, float)) and math.isfinite(component) for component in value):
+        raise CmshProfileError("non-finite numeric value", 0, role)
+    return value
+
+
+def _normal_matrix(
+    rows: tuple[tuple[float, float, float], tuple[float, float, float], tuple[float, float, float]],
+) -> tuple[tuple[float, float, float], tuple[float, float, float], tuple[float, float, float]]:
+    a, b, c = rows[0]
+    d, e, f = rows[1]
+    g, h, i = rows[2]
+    cofactors = (
+        (e * i - f * h, f * g - d * i, d * h - e * g),
+        (c * h - b * i, a * i - c * g, b * g - a * h),
+        (b * f - c * e, c * d - a * f, a * e - b * d),
+    )
+    determinant = a * cofactors[0][0] + b * cofactors[0][1] + c * cofactors[0][2]
+    if not math.isfinite(determinant) or abs(determinant) < MIN_NORMAL_DETERMINANT:
+        raise CmshProfileError("OBJ rejection", 0, "degenerate normal transform")
+    inverse_transpose = tuple(
+        tuple(component / determinant for component in row)
+        for row in cofactors
+    )
+    matrix_norm = max(sum(abs(component) for component in row) for row in rows)
+    inverse_norm = max(
+        sum(abs(inverse_transpose[column][row]) for column in range(3))
+        for row in range(3)
+    )
+    condition = matrix_norm * inverse_norm
+    if not math.isfinite(condition) or condition > MAX_NORMAL_CONDITION:
+        raise CmshProfileError("OBJ rejection", 0, "ill-conditioned normal transform")
+    return inverse_transpose
+
+
+def _transform_obj_normal(
+    matrix: tuple[tuple[float, float, float], tuple[float, float, float], tuple[float, float, float]],
+    normal: tuple[float, float, float],
+) -> tuple[float, float, float]:
+    x, y, z = normal
+    transformed = (
+        matrix[0][0] * x + matrix[0][1] * y + matrix[0][2] * z,
+        matrix[1][0] * x + matrix[1][1] * y + matrix[1][2] * z,
+        -(matrix[2][0] * x + matrix[2][1] * y + matrix[2][2] * z),
+    )
+    length = math.sqrt(sum(component * component for component in transformed))
+    if not math.isfinite(length) or length < MIN_NORMAL_LENGTH:
+        raise CmshProfileError("OBJ rejection", 0, "degenerate transformed normal")
+    return tuple(0.0 if abs(component / length) < 1e-15 else component / length for component in transformed)
+
+
+def emit_obj(mesh: ParsedMesh, *, include_vertex_attributes: bool = False) -> bytes:
     lines: list[str] = []
     encoded_bytes = 0
 
@@ -559,10 +621,66 @@ def emit_obj(mesh: ParsedMesh) -> bytes:
                 raise CmshProfileError("limit exceeded", 0, "transformed position")
             append_line("v " + " ".join(_number(value) for value in values))
             emitted_vertices = _checked_add(emitted_vertices, 1, MAX_VERTICES, "OBJ vertices")
+
+    uv_indices: list[tuple[int | None, ...] | None] = [None] * len(mesh.parts)
+    normal_indices: list[tuple[int | None, ...] | None] = [None] * len(mesh.parts)
+    if include_vertex_attributes:
+        emitted_uvs = 0
+        for part_index, part in enumerate(mesh.parts):
+            indices: list[int | None] = []
+            for vertex in part.vertices:
+                uv = _obj_attribute(vertex.uv, 2, "vertex UV")
+                if uv is None:
+                    indices.append(None)
+                    continue
+                emitted_uvs = _checked_add(emitted_uvs, 1, MAX_VERTICES, "OBJ texture coordinates")
+                indices.append(emitted_uvs)
+                append_line("vt " + " ".join(_number(value) for value in uv))
+            uv_indices[part_index] = tuple(indices)
+
+        emitted_normals = 0
+        for part_index, part in enumerate(mesh.parts):
+            indices = []
+            normal_matrix = _normal_matrix(part.transform.rows) if part.vertices else None
+            for vertex in part.vertices:
+                normal = _obj_attribute(vertex.normal, 3, "vertex normal")
+                if normal is None:
+                    indices.append(None)
+                    continue
+                if normal_matrix is None:
+                    raise CmshProfileError("OBJ rejection", 0, "missing normal transform")
+                values = _transform_obj_normal(normal_matrix, normal)
+                emitted_normals = _checked_add(emitted_normals, 1, MAX_VERTICES, "OBJ normals")
+                indices.append(emitted_normals)
+                append_line("vn " + " ".join(_number(value) for value in values))
+            normal_indices[part_index] = tuple(indices)
+
     faces = 0
-    for part, base in zip(mesh.parts, bases, strict=True):
+    for part_index, (part, base) in enumerate(zip(mesh.parts, bases, strict=True)):
         if base is None:
             continue
+        part_uvs = uv_indices[part_index]
+        part_normals = normal_indices[part_index]
+        if include_vertex_attributes and (
+            part_uvs is None
+            or part_normals is None
+            or len(part_uvs) != len(part.vertices)
+            or len(part_normals) != len(part.vertices)
+        ):
+            raise CmshProfileError("invalid declared length/count", 0, "OBJ vertex attributes")
+
+        def face_reference(index: int) -> str:
+            vertex_index = index + base
+            uv_index = part_uvs[index] if part_uvs is not None else None
+            normal_index = part_normals[index] if part_normals is not None else None
+            if uv_index is not None and normal_index is not None:
+                return f"{vertex_index}/{uv_index}/{normal_index}"
+            if uv_index is not None:
+                return f"{vertex_index}/{uv_index}"
+            if normal_index is not None:
+                return f"{vertex_index}//{normal_index}"
+            return str(vertex_index)
+
         for group in part.groups:
             indices = group.indices
             for ordinal in range(len(indices) - 2):
@@ -572,10 +690,15 @@ def emit_obj(mesh: ParsedMesh) -> bytes:
                     b, a, c = indices[ordinal : ordinal + 3]
                 if len({a, b, c}) < 3:
                     continue
+                if not all(0 <= index < len(part.vertices) for index in (a, b, c)):
+                    raise CmshProfileError("OBJ rejection", 0, "face index")
                 a, b, c = a + base, c + base, b + base
                 if not (1 <= a <= emitted_vertices and 1 <= b <= emitted_vertices and 1 <= c <= emitted_vertices):
                     raise CmshProfileError("OBJ rejection", 0, "face index")
-                append_line(f"f {a} {b} {c}")
+                local_a, local_b, local_c = a - base, b - base, c - base
+                append_line(
+                    f"f {face_reference(local_a)} {face_reference(local_b)} {face_reference(local_c)}"
+                )
                 faces = _checked_add(faces, 1, MAX_TRIANGLES, "OBJ faces")
     if emitted_vertices == 0 or faces == 0:
         raise CmshProfileError("OBJ rejection", 0, "empty geometry")
@@ -629,8 +752,8 @@ def emit_material_report(mesh: ParsedMesh) -> bytes:
     return result
 
 
-def convert_aya_bytes(source: bytes) -> bytes:
-    return emit_obj(parse_cmsh_stream(inflate_aya(source)))
+def convert_aya_bytes(source: bytes, *, include_vertex_attributes: bool = False) -> bytes:
+    return emit_obj(parse_cmsh_stream(inflate_aya(source)), include_vertex_attributes=include_vertex_attributes)
 
 
 def _has_reparse_point(path: Path) -> bool:
@@ -662,7 +785,13 @@ def _validate_no_reparse_descendant(path: Path, root: Path, trusted_checkout: Pa
         raise CmshProfileError("invalid framing", 0, "input directory")
 
 
-def publish_anonymous_previews(checkout: Path, input_directory: Path, output_directory: Path) -> tuple[int, int]:
+def publish_anonymous_previews(
+    checkout: Path,
+    input_directory: Path,
+    output_directory: Path,
+    *,
+    include_vertex_attributes: bool = False,
+) -> tuple[int, int]:
     trusted_checkout = Path(__file__).resolve().parents[2]
     checkout = _absolute_lexical(checkout)
     input_directory = _absolute_lexical(input_directory)
@@ -719,7 +848,7 @@ def publish_anonymous_previews(checkout: Path, input_directory: Path, output_dir
                     raise CmshProfileError("invalid framing", 0, "candidate changed during read")
                 anonymous = f"candidate-{ordinal:04d}"
                 try:
-                    obj = convert_aya_bytes(data)
+                    obj = convert_aya_bytes(data, include_vertex_attributes=include_vertex_attributes)
                 except CmshProfileError as error:
                     failures += 1
                     categories[error.category] += 1
@@ -756,9 +885,19 @@ def _main(argv: Iterable[str] | None = None) -> int:
     parser.add_argument("--checkout", type=Path, required=True)
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--vertex-attributes",
+        action="store_true",
+        help="include retained profile-v0 texture coordinates and normals in OBJ output",
+    )
     arguments = parser.parse_args(argv)
     try:
-        matches, failures = publish_anonymous_previews(arguments.checkout, arguments.input, arguments.output)
+        matches, failures = publish_anonymous_previews(
+            arguments.checkout,
+            arguments.input,
+            arguments.output,
+            include_vertex_attributes=arguments.vertex_attributes,
+        )
     except (CmshProfileError, OSError) as error:
         print(f"preview failed: {error}", file=sys.stderr)
         return 2
