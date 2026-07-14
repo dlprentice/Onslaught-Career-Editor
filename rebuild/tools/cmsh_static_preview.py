@@ -30,6 +30,7 @@ MAX_OPAQUE = 16 * 1024 * 1024
 MAX_OBJ = 32 * 1024 * 1024
 MAX_AGGREGATE_SOURCE = 256 * 1024 * 1024
 MAX_COORDINATE = 1_000_000.0
+TEXR_SENTINEL_U32: frozenset[int] = frozenset()
 
 
 class CmshProfileError(ValueError):
@@ -99,10 +100,32 @@ class _Transform:
 
 
 @dataclass(frozen=True)
+class MeshTexture:
+    name: str
+    raw_cmst_entry: bytes
+    raw_texb_metadata: bytes
+    raw_name_field: bytes
+
+
+@dataclass(frozen=True)
+class MeshVertex:
+    position: tuple[float, float, float]
+    normal: tuple[float, float, float]
+    uv: tuple[float, float]
+    raw_color_u32: int
+
+
+@dataclass(frozen=True)
+class MeshGroup:
+    indices: tuple[int, ...]
+    raw_texr_u32: tuple[int, int, int, int, int, int]
+
+
+@dataclass(frozen=True)
 class _Part:
     transform: _Transform
-    vertices: tuple[tuple[float, float, float], ...]
-    groups: tuple[tuple[int, ...], ...]
+    vertices: tuple[MeshVertex, ...]
+    groups: tuple[MeshGroup, ...]
     children: tuple[int, ...] = ()
     parent: int | None = None
     reference: int | None = None
@@ -111,6 +134,7 @@ class _Part:
 @dataclass(frozen=True)
 class ParsedMesh:
     parts: tuple[_Part, ...]
+    textures: tuple[MeshTexture, ...] = ()
 
 
 _PART_ORDERS = {
@@ -219,7 +243,7 @@ def inflate_aya(source: bytes) -> bytes:
     return bytes(output)
 
 
-def _parse_pm_vb(payload: memoryview, origin: int, budget: _Budget) -> tuple[tuple[tuple[float, float, float], ...], tuple[tuple[int, ...], ...]]:
+def _parse_pm_vb(payload: memoryview, origin: int, budget: _Budget) -> tuple[tuple[MeshVertex, ...], tuple[MeshGroup, ...]]:
     reader = _Reader(payload, origin=origin, limit_role="PMVB")
     cmvb = reader.expected(b"CMVB", "CMVB", length=296)
     group_count = cmvb.payload[264]
@@ -234,8 +258,8 @@ def _parse_pm_vb(payload: memoryview, origin: int, budget: _Budget) -> tuple[tup
     if topology != 4:
         raise CmshProfileError("unsupported topology", cmvb.offset, "topology field")
 
-    owned: tuple[tuple[float, float, float], ...] = ()
-    groups: list[tuple[int, ...]] = []
+    owned: tuple[MeshVertex, ...] = ()
+    groups: list[MeshGroup] = []
     declared_vertex_bytes = vertex_count = None
     for group_index in range(group_count):
         mmpt = reader.expected(b"MMPT", f"MMPT {group_index}", length=24)
@@ -262,16 +286,17 @@ def _parse_pm_vb(payload: memoryview, origin: int, budget: _Budget) -> tuple[tup
             budget.vertices += vcount
         ibuf = reader.expected(b"IBUF", f"IBUF {group_index}", length=ibytes)
         vbuf = reader.expected(b"VBUF", f"VBUF {group_index}")
-        reader.expected(b"TEXR", f"TEXR {group_index}", length=24)
+        texr = reader.expected(b"TEXR", f"TEXR {group_index}", length=24)
         if group_index == 0:
             if len(vbuf.payload) != vbytes:
                 raise CmshProfileError("invalid declared length/count", vbuf.offset, "owned VBUF")
-            rows: list[tuple[float, float, float]] = []
+            rows: list[MeshVertex] = []
             for vertex in range(vcount):
                 offset = vertex * 36
                 values = _finite_floats(vbuf.payload, offset, 6, "vertex position/normal", vbuf.offset + 8)
-                _finite_floats(vbuf.payload, offset + 28, 2, "vertex UV", vbuf.offset + 8)
-                rows.append((values[0], values[1], values[2]))
+                uv = _finite_floats(vbuf.payload, offset + 28, 2, "vertex UV", vbuf.offset + 8)
+                raw_color_u32 = struct.unpack_from("<I", vbuf.payload, offset + 24)[0]
+                rows.append(MeshVertex(values[:3], values[3:6], uv, raw_color_u32))
             owned = tuple(rows)
         elif len(vbuf.payload) != 0:
             raise CmshProfileError("invalid declared length/count", vbuf.offset, "secondary VBUF reuse")
@@ -280,7 +305,8 @@ def _parse_pm_vb(payload: memoryview, origin: int, budget: _Budget) -> tuple[tup
             raise CmshProfileError("index out of bounds", ibuf.offset, f"IBUF {group_index}")
         if not any(len({indices[k], indices[k + 1], indices[k + 2]}) == 3 for k in range(icount - 2)):
             raise CmshProfileError("invalid declared length/count", ibuf.offset, "strip has no surviving triangle")
-        groups.append(tuple(indices))
+        raw_texr_u32 = struct.unpack("<6I", texr.payload)
+        groups.append(MeshGroup(tuple(indices), raw_texr_u32))
     reader.require_end()
     return owned, tuple(groups)
 
@@ -314,8 +340,8 @@ def _parse_part(chunk: _Chunk, part_index: int, part_count: int, budget: _Budget
         raise CmshProfileError("limit exceeded", cmsp.offset, "CMSP frame/hierarchy counts")
 
     tags: list[str] = []
-    vertices: tuple[tuple[float, float, float], ...] = ()
-    groups: tuple[tuple[int, ...], ...] = ()
+    vertices: tuple[MeshVertex, ...] = ()
+    groups: tuple[MeshGroup, ...] = ()
     children: tuple[int, ...] = ()
     parent: int | None = None
     reference: int | None = None
@@ -442,7 +468,8 @@ def _resolve_references(parts: tuple[_Part, ...]) -> tuple[_Part, ...]:
     for part in resolved:
         expanded_vertices = _checked_add(expanded_vertices, len(part.vertices), MAX_VERTICES, "expanded vertex count")
         expanded_groups = _checked_add(expanded_groups, len(part.groups), MAX_GROUPS, "expanded group count")
-        for indices in part.groups:
+        for group in part.groups:
+            indices = group.indices
             expanded_indices = _checked_add(expanded_indices, len(indices), MAX_INDICES, "expanded index count")
             surviving = sum(len({indices[k], indices[k + 1], indices[k + 2]}) == 3 for k in range(len(indices) - 2))
             expanded_triangles = _checked_add(expanded_triangles, surviving, MAX_TRIANGLES, "expanded triangle count")
@@ -463,12 +490,24 @@ def parse_cmsh_stream(data: bytes) -> ParsedMesh:
     if texture_count > MAX_TEXTURES or not 1 <= part_count <= MAX_PARTS:
         raise CmshProfileError("limit exceeded", 0, "CMSH counts")
     reader = _Reader(memoryview(data)[380:], origin=380, limit_role="CMSH stream", absolute_limit=MAX_BODY)
-    reader.expected(b"CMST", "CMST", length=texture_count * 36)
+    cmst = reader.expected(b"CMST", "CMST", length=texture_count * 36)
+    textures: list[MeshTexture] = []
     for index in range(texture_count):
         msht = reader.expected(b"MSHT", f"MSHT {index}", length=156)
         nested = _Reader(msht.payload, origin=msht.offset + 8, limit_role="MSHT")
-        nested.expected(b"TEXB", f"TEXB {index}", length=148)
+        texb = nested.expected(b"TEXB", f"TEXB {index}", length=148)
         nested.require_end()
+        raw_name_field = bytes(texb.payload[20:148])
+        name_bytes = raw_name_field.split(b"\0", 1)[0]
+        name = name_bytes.decode("utf-8", errors="replace")
+        textures.append(
+            MeshTexture(
+                name=name,
+                raw_cmst_entry=bytes(cmst.payload[index * 36 : (index + 1) * 36]),
+                raw_texb_metadata=bytes(texb.payload[:20]),
+                raw_name_field=raw_name_field,
+            )
+        )
     part_chunks = [reader.expected(b"MESP", f"MESP {index}") for index in range(part_count)]
     budget = _Budget()
     parts = _resolve_references(tuple(_parse_part(chunk, index, part_count, budget) for index, chunk in enumerate(part_chunks)))
@@ -481,7 +520,7 @@ def parse_cmsh_stream(data: bytes) -> ParsedMesh:
         siblings.append(sibling.tag)
     if siblings and tuple(siblings) not in _SIBLING_ORDERS:
         raise CmshProfileError("unexpected tag/order", reader.origin, "post-body sibling order")
-    return ParsedMesh(parts)
+    return ParsedMesh(parts, tuple(textures))
 
 
 def _number(value: float) -> str:
@@ -508,7 +547,8 @@ def emit_obj(mesh: ParsedMesh) -> bytes:
         bases.append(emitted_vertices + 1)
         rows = part.transform.rows
         bx, by, bz = part.transform.position
-        for x, y, z in part.vertices:
+        for vertex in part.vertices:
+            x, y, z = vertex.position
             tx = (((rows[0][0] * x) + (rows[0][1] * y)) + (rows[0][2] * z)) + bx
             ty = (((rows[1][0] * x) + (rows[1][1] * y)) + (rows[1][2] * z)) + by
             tz = (((rows[2][0] * x) + (rows[2][1] * y)) + (rows[2][2] * z)) + bz
@@ -523,7 +563,8 @@ def emit_obj(mesh: ParsedMesh) -> bytes:
     for part, base in zip(mesh.parts, bases, strict=True):
         if base is None:
             continue
-        for indices in part.groups:
+        for group in part.groups:
+            indices = group.indices
             for ordinal in range(len(indices) - 2):
                 if ordinal % 2 == 0:
                     a, b, c = indices[ordinal : ordinal + 3]
@@ -541,6 +582,50 @@ def emit_obj(mesh: ParsedMesh) -> bytes:
     result = ("\n".join(lines) + "\n").encode("utf-8")
     if len(result) != encoded_bytes:
         raise CmshProfileError("OBJ rejection", 0, "OBJ byte accounting")
+    return result
+
+
+def emit_material_report(mesh: ParsedMesh) -> bytes:
+    texture_names = [texture.name for texture in mesh.textures]
+    parts: list[dict[str, object]] = []
+    for part_index, part in enumerate(mesh.parts):
+        groups: list[dict[str, object]] = []
+        for group in part.groups:
+            positions: list[dict[str, object]] = []
+            for position, raw_u32 in enumerate(group.raw_texr_u32):
+                row: dict[str, object] = {
+                    "position": position,
+                    "rawU32": raw_u32,
+                    "retailSemantic": "UNKNOWN",
+                    "status": "unresolved",
+                }
+                if raw_u32 < len(mesh.textures):
+                    row["status"] = "resolved"
+                    row["textureIndex"] = raw_u32
+                    row["textureName"] = mesh.textures[raw_u32].name
+                positions.append(row)
+            groups.append({"rawTexrU32": list(group.raw_texr_u32), "positions": positions})
+        parts.append(
+            {
+                "partIndex": part_index,
+                "geometrySourcePart": part.reference if part.reference is not None else part_index,
+                "groups": groups,
+            }
+        )
+    report = {
+        "schemaVersion": "onslaught-cmsh-material-report.v0",
+        "acceptedSentinelU32": sorted(TEXR_SENTINEL_U32),
+        "retailPositionSemantics": ["UNKNOWN"] * 6,
+        "legacyReferenceBehavior": {
+            "selectedPosition": 0,
+            "scope": "pinned legacy importer reference behavior only",
+        },
+        "textures": texture_names,
+        "parts": parts,
+    }
+    result = (json.dumps(report, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+    if len(result) > MAX_OBJ:
+        raise CmshProfileError("limit exceeded", 0, "material report bytes")
     return result
 
 

@@ -59,7 +59,12 @@ def _vertices() -> bytes:
     return b"".join(struct.pack("<6fI2f", *position, 0.0, 1.0, 0.0, 0xFFFFFFFF, 0.0, 0.0) for position in rows)
 
 
-def _group(indices: tuple[int, ...], *, owns_vertices: bool) -> bytes:
+def _group(
+    indices: tuple[int, ...],
+    *,
+    owns_vertices: bool,
+    texr: tuple[int, int, int, int, int, int] = (0, 0, 0, 0, 0, 0),
+) -> bytes:
     vertex_payload = _vertices() if owns_vertices else b""
     declared_vertex_bytes = 4 * 36
     index_payload = struct.pack(f"<{len(indices)}H", *indices)
@@ -68,14 +73,24 @@ def _group(indices: tuple[int, ...], *, owns_vertices: bool) -> bytes:
         _chunk(b"MMPT", mmpt)
         + _chunk(b"IBUF", index_payload)
         + _chunk(b"VBUF", vertex_payload)
-        + _chunk(b"TEXR", bytes(24))
+        + _chunk(b"TEXR", struct.pack("<6I", *texr))
     )
 
 
-def _pmvb(*, populated: bool) -> bytes:
+def _pmvb(
+    *,
+    populated: bool,
+    texrs: tuple[tuple[int, int, int, int, int, int], ...] | None = None,
+) -> bytes:
     if not populated:
         return _chunk(b"PMVB", _cmvb(0))
-    return _chunk(b"PMVB", _cmvb(2) + _group((0, 1, 2, 2, 3), owns_vertices=True) + _group((0, 2, 3), owns_vertices=False))
+    selected = texrs or ((0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0))
+    return _chunk(
+        b"PMVB",
+        _cmvb(2)
+        + _group((0, 1, 2, 2, 3), owns_vertices=True, texr=selected[0])
+        + _group((0, 2, 3), owns_vertices=False, texr=selected[1]),
+    )
 
 
 def _empty_reference_pmvb(
@@ -165,7 +180,11 @@ def build_reference_fixture_stream(parts: list[bytes] | None = None) -> bytes:
     return bytes(header) + _chunk(b"CMST", b"") + b"".join(selected)
 
 
-def _part(*, parent: bool) -> bytes:
+def _part(
+    *,
+    parent: bool,
+    texrs: tuple[tuple[int, int, int, int, int, int], ...] | None = None,
+) -> bytes:
     if parent:
         records = (
             _chunk(b"CHLD", struct.pack("<I", 1))
@@ -188,9 +207,16 @@ def _part(*, parent: bool) -> bytes:
         + _chunk(b"HPOS", bytes(16))
         + _chunk(b"CPOS", b"")
         + _chunk(b"CORI", b"")
-        + _pmvb(populated=True)
+        + _pmvb(populated=True, texrs=texrs)
     )
     return _chunk(b"MESP", _cmsp(part=1, children=0, base_position=(10.0, 20.0, 30.0), rotated=True) + records)
+
+
+def _texture(name: str, *, metadata: bytes = bytes(20)) -> bytes:
+    encoded = name.encode("utf-8")
+    if len(encoded) >= 128:
+        raise ValueError("generated texture name must fit the fixed field")
+    return _chunk(b"MSHT", _chunk(b"TEXB", metadata + encoded + b"\0" + bytes(127 - len(encoded))))
 
 
 def build_fixture_stream() -> bytes:
@@ -202,6 +228,31 @@ def build_fixture_stream() -> bytes:
     struct.pack_into("<I", header, 0x164, 2)
     texture = _chunk(b"CMST", bytes(36)) + _chunk(b"MSHT", _chunk(b"TEXB", bytes(148)))
     return bytes(header) + texture + _part(parent=True) + _part(parent=False) + _chunk(b"BBOX", b"post")
+
+
+def build_material_fixture_stream(
+    *,
+    texture_names: tuple[str, ...] = (
+        "meshtex\\alpha.tga",
+        "meshtex\\beta.tga",
+        "meshtex\\alpha.tga",
+        "meshtex\\delta.tga",
+    ),
+    texrs: tuple[tuple[int, int, int, int, int, int], ...] = (
+        (0, 1, 2, 3, 0, 1),
+        (3, 2, 1, 0, 3, 2),
+    ),
+) -> bytes:
+    header = bytearray(380)
+    header[0:4] = b"CMSH"
+    struct.pack_into("<I", header, 4, 372)
+    struct.pack_into("<I", header, 0x0C, len(texture_names))
+    struct.pack_into("<I", header, 0x164, 2)
+    raw_cmst = b"".join(bytes([(index + 0x41) & 0xFF]) * 36 for index in range(len(texture_names)))
+    texture_table = _chunk(b"CMST", raw_cmst) + b"".join(
+        _texture(name, metadata=bytes([(index + 1) & 0xFF]) * 20) for index, name in enumerate(texture_names)
+    )
+    return bytes(header) + texture_table + _part(parent=True) + _part(parent=False, texrs=texrs)
 
 
 def build_fixture_aya() -> bytes:
@@ -329,6 +380,130 @@ class CmshStaticPreviewTests(unittest.TestCase):
         self.assertEqual(EXPECTED_REFERENCE_SHA256, hashlib.sha256(result).hexdigest())
         self.assertEqual(9, sum(line.startswith(b"v ") for line in result.splitlines()))
         self.assertEqual(6, sum(line.startswith(b"f ") for line in result.splitlines()))
+
+    def test_material_report_retains_vertex_attributes_duplicate_names_and_six_unknown_positions(self) -> None:
+        mesh = preview.parse_cmsh_stream(build_material_fixture_stream())
+
+        self.assertEqual((0.0, 1.0, 0.0), mesh.parts[1].vertices[0].normal)
+        self.assertEqual((0.0, 0.0), mesh.parts[1].vertices[0].uv)
+        self.assertEqual(0xFFFFFFFF, mesh.parts[1].vertices[0].raw_color_u32)
+        self.assertEqual((0, 1, 2, 3, 0, 1), mesh.parts[1].groups[0].raw_texr_u32)
+        self.assertEqual((3, 2, 1, 0, 3, 2), mesh.parts[1].groups[1].raw_texr_u32)
+        self.assertEqual(
+            ("meshtex\\alpha.tga", "meshtex\\beta.tga", "meshtex\\alpha.tga", "meshtex\\delta.tga"),
+            tuple(texture.name for texture in mesh.textures),
+        )
+        self.assertEqual(bytes([0x41]) * 36, mesh.textures[0].raw_cmst_entry)
+        self.assertEqual(bytes([0x43]) * 36, mesh.textures[2].raw_cmst_entry)
+        self.assertEqual(bytes([1]) * 20, mesh.textures[0].raw_texb_metadata)
+        self.assertEqual(bytes([3]) * 20, mesh.textures[2].raw_texb_metadata)
+        expected_name = b"meshtex\\alpha.tga\0" + bytes(128 - len(b"meshtex\\alpha.tga") - 1)
+        self.assertEqual(expected_name, mesh.textures[0].raw_name_field)
+        self.assertEqual(expected_name, mesh.textures[2].raw_name_field)
+
+        first = preview.emit_material_report(mesh)
+        second = preview.emit_material_report(mesh)
+        self.assertEqual(first, second)
+        self.assertTrue(first.endswith(b"\n"))
+        report = json.loads(first)
+        self.assertEqual("onslaught-cmsh-material-report.v0", report["schemaVersion"])
+        self.assertEqual([], report["acceptedSentinelU32"])
+        self.assertEqual(["UNKNOWN"] * 6, report["retailPositionSemantics"])
+        self.assertEqual(
+            {"selectedPosition": 0, "scope": "pinned legacy importer reference behavior only"},
+            report["legacyReferenceBehavior"],
+        )
+        self.assertEqual(["meshtex\\alpha.tga", "meshtex\\beta.tga", "meshtex\\alpha.tga", "meshtex\\delta.tga"], report["textures"])
+        populated = report["parts"][1]
+        self.assertEqual(1, populated["partIndex"])
+        self.assertEqual(1, populated["geometrySourcePart"])
+        self.assertEqual([0, 1, 2, 3, 0, 1], populated["groups"][0]["rawTexrU32"])
+        self.assertEqual([3, 2, 1, 0, 3, 2], populated["groups"][1]["rawTexrU32"])
+        self.assertEqual(["UNKNOWN"] * 6, [row["retailSemantic"] for row in populated["groups"][0]["positions"]])
+        self.assertEqual(["resolved"] * 6, [row["status"] for row in populated["groups"][0]["positions"]])
+        self.assertNotIn(b"materialRole", first)
+        strings: list[str] = []
+
+        def collect_strings(value: object) -> None:
+            if isinstance(value, str):
+                strings.append(value)
+            elif isinstance(value, list):
+                for item in value:
+                    collect_strings(item)
+            elif isinstance(value, dict):
+                for key, item in value.items():
+                    collect_strings(key)
+                    collect_strings(item)
+
+        collect_strings(report)
+        self.assertTrue(all(str(Path.cwd()) not in value for value in strings))
+
+    def test_material_report_uses_portable_display_name_and_preserves_non_utf8_raw_name_bytes(self) -> None:
+        stream = bytearray(build_material_fixture_stream())
+        name_offset = stream.index(b"meshtex\\alpha.tga")
+        stream[name_offset] = 0x80
+
+        mesh = preview.parse_cmsh_stream(bytes(stream))
+
+        self.assertEqual(b"\x80eshtex\\alpha.tga", mesh.textures[0].raw_name_field.split(b"\0", 1)[0])
+        report = json.loads(preview.emit_material_report(mesh))
+        self.assertEqual("\ufffdeshtex\\alpha.tga", report["textures"][0])
+        self.assertTrue(all(not 0xD800 <= ord(character) <= 0xDFFF for character in report["textures"][0]))
+
+    def test_material_report_keeps_unsigned_max_raw_and_reports_every_out_of_range_value_unresolved(self) -> None:
+        self.assertEqual(frozenset(), preview.TEXR_SENTINEL_U32)
+        mesh = preview.parse_cmsh_stream(
+            build_material_fixture_stream(texrs=((3, 4, 0xFFFFFFFF, 2, 5, 1), (3, 2, 1, 0, 3, 2)))
+        )
+
+        report = json.loads(preview.emit_material_report(mesh))
+        rows = report["parts"][1]["groups"][0]["positions"]
+        self.assertEqual([3, 4, 0xFFFFFFFF, 2, 5, 1], [row["rawU32"] for row in rows])
+        self.assertEqual(
+            ["resolved", "unresolved", "unresolved", "resolved", "unresolved", "resolved"],
+            [row["status"] for row in rows],
+        )
+        self.assertEqual([3, 2, 1], [rows[index]["textureIndex"] for index in (0, 3, 5)])
+        self.assertTrue(all("textureName" not in rows[index] and "textureIndex" not in rows[index] for index in (1, 2, 4)))
+        self.assertTrue(all(row["retailSemantic"] == "UNKNOWN" for row in rows))
+
+    def test_material_report_retains_complete_declared_texture_table_through_limit(self) -> None:
+        names = tuple(f"meshtex\\generated-{index:03d}.tga" for index in range(preview.MAX_TEXTURES))
+        mesh = preview.parse_cmsh_stream(build_material_fixture_stream(texture_names=names))
+
+        self.assertEqual(names, tuple(texture.name for texture in mesh.textures))
+        self.assertEqual(list(names), json.loads(preview.emit_material_report(mesh))["textures"])
+
+    def test_material_report_reference_instances_preserve_geometry_owner_and_raw_texr(self) -> None:
+        mesh = preview.parse_cmsh_stream(build_reference_fixture_stream())
+
+        first = preview.emit_material_report(mesh)
+        self.assertEqual(first, preview.emit_material_report(mesh))
+        report = json.loads(first)
+        self.assertEqual([0, 1, 1, 1, 4], [part["geometrySourcePart"] for part in report["parts"]])
+        for part_index in (1, 2, 3):
+            self.assertEqual([0, 0, 0, 0, 0, 0], report["parts"][part_index]["groups"][0]["rawTexrU32"])
+            self.assertEqual(
+                ["unresolved"] * 6,
+                [row["status"] for row in report["parts"][part_index]["groups"][0]["positions"]],
+            )
+
+    def test_texr_truncation_and_nonfinite_retained_attributes_fail_closed(self) -> None:
+        stream = build_material_fixture_stream()
+        texr = stream.find(b"TEXR")
+        truncated = bytearray(stream)
+        struct.pack_into("<I", truncated, texr + 4, 23)
+        del truncated[texr + 8 + 23]
+        with self.assertRaisesRegex(preview.CmshProfileError, "truncation: .*MESP 1 payload"):
+            preview.parse_cmsh_stream(bytes(truncated))
+
+        for role, vertex_offset in (("normal", 12), ("uv", 28)):
+            malformed = bytearray(stream)
+            vbuf = malformed.find(b"VBUF")
+            struct.pack_into("<f", malformed, vbuf + 8 + vertex_offset, float("nan"))
+            with self.subTest(role=role):
+                with self.assertRaisesRegex(preview.CmshProfileError, "non-finite numeric value"):
+                    preview.parse_cmsh_stream(bytes(malformed))
 
     def test_reference_zero_sentinel_source_metadata_emits_identical_golden(self) -> None:
         parts = reference_fixture_parts()
