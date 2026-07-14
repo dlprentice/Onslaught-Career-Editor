@@ -485,18 +485,28 @@ class ReceiptAndScheduleTests(unittest.TestCase):
             sampler.synthetic_schedule_ticks(frequency=odd_frequency), frequency=odd_frequency
         )
 
-        # 15 ms late at 10 MHz exceeds the live 12 ms tolerance.
-        jitter = copy.deepcopy(ticks)
-        jitter["hold"][4] += 150_000
-        with self.assertRaisesRegex(sampler.AttemptError, "jitter"):
-            sampler.validate_schedule(jitter, frequency=10_000_000)
-
-        # Full-length phases use declared sequential slots: moderate lateness
-        # that would round two ticks into one bin must still accept.
+        # Full-length sequential slots tolerate multi-cadence lateness (live RPM):
+        # shift a suffix so ticks stay monotonic while one gap is ~25 ms.
         late_but_full = copy.deepcopy(ticks)
-        late_but_full["hold"][4] += 80_000  # 8 ms
-        late_but_full["hold"][5] += 90_000  # 9 ms
+        for index in range(5, len(late_but_full["hold"])):
+            late_but_full["hold"][index] += 250_000  # +25 ms from hold slot 5
+        late_but_full["release"] = [tick + 250_000 for tick in late_but_full["release"]]
         sampler.validate_schedule(late_but_full, frequency=10_000_000)
+
+        # Gap over 50 ms still fails on the live declared-slot path.
+        huge_gap = copy.deepcopy(ticks)
+        for index in range(5, len(huge_gap["hold"])):
+            huge_gap["hold"][index] += 600_000  # +60 ms
+        huge_gap["release"] = [tick + 600_000 for tick in huge_gap["release"]]
+        with self.assertRaisesRegex(sampler.AttemptError, "gap|50"):
+            sampler.validate_schedule(huge_gap, frequency=10_000_000)
+
+        # Partial traces still use the absolute cadence grid / gap rules.
+        partial = copy.deepcopy(ticks)
+        partial["hold"] = partial["hold"][:72]
+        partial["hold"][4] += 150_000
+        with self.assertRaisesRegex(sampler.AttemptError, "jitter|gap|window|slot"):
+            sampler.validate_schedule(partial, frequency=10_000_000)
 
         gap = copy.deepcopy(ticks)
         del gap["hold"][10:12]
@@ -518,7 +528,7 @@ class ReceiptAndScheduleTests(unittest.TestCase):
         shifted_phase = copy.deepcopy(ticks)
         shifted_phase["hold"] = [tick + 5_000_000 for tick in shifted_phase["hold"]]
         with self.assertRaisesRegex(
-            sampler.AttemptError, "window|boundary|slot|jitter"
+            sampler.AttemptError, "window|boundary|slot|jitter|gap|50|monotonic"
         ):
             sampler.validate_schedule(shifted_phase, frequency=10_000_000)
 

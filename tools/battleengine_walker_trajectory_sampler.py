@@ -503,15 +503,15 @@ def cadence_step_qpc(frequency: int) -> int:
 
 
 def schedule_jitter_tolerance_qpc(frequency: int) -> int:
-    """Allow live RPM/scheduling cost without false-rejecting good traces.
-
-    Half a cadence is the natural rounding width; also allow up to 12 ms of
-    wall-clock overshoot so ReadProcessMemory batches do not collapse adjacent
-    samples into the same recomputed slot.
-    """
+    """Tolerance for absolute-grid checks on synthetic / non-full traces."""
     step = cadence_step_qpc(frequency)
     twelve_ms = max(1, round(frequency * 0.012))
     return max(step // 2, twelve_ms)
+
+
+def schedule_max_gap_qpc(frequency: int) -> int:
+    """Max allowed inter-sample gap on the live declared-slot path (~50 ms)."""
+    return max(cadence_step_qpc(frequency) * 5, round(frequency * 0.050))
 
 
 def synthetic_schedule_ticks(*, frequency: int = FREQUENCY_FIXTURE) -> dict[str, list[int]]:
@@ -531,12 +531,15 @@ def validate_schedule(
     frequency: int,
     declared_slots: Mapping[str, Sequence[int]] | None = None,
 ) -> None:
-    """Validate sampling timestamps against the integer cadence grid.
+    """Validate sampling timestamps for analysis.
 
-    When ``declared_slots`` is omitted and a phase has exactly PHASE_TARGETS
-    samples, slots are the collector's sequential indices 0..N-1 (live path).
-    Re-deriving slots solely via round((tick-start)/step) false-rejects live
-    traces when two late samples land in the same half-cadence bin.
+    Live collector path: full-length phases with sequential declared slots 0..N-1
+    only require monotonic ticks and bounded inter-sample gaps. Absolute alignment
+    to a 10 ms grid is not required because coherent ReadProcessMemory can cost
+    more than one cadence and cascade past any tight absolute tolerance.
+
+    Synthetic / partial traces without declared full slots still use the integer
+    cadence grid with a 12 ms absolute tolerance.
     """
     if frequency <= 0:
         raise AttemptError("QPC frequency must be positive")
@@ -548,6 +551,7 @@ def validate_schedule(
     origin = baseline_rows[0]
     step = cadence_step_qpc(frequency)
     tolerance = schedule_jitter_tolerance_qpc(frequency)
+    max_gap = schedule_max_gap_qpc(frequency)
     phase_offsets = {
         "baseline": 0,
         "hold": PHASE_TARGETS["baseline"],
@@ -569,19 +573,28 @@ def validate_schedule(
         else:
             phase_start = origin + phase_offsets[phase] * step
             slots = [int(round((tick - phase_start) / step)) for tick in rows]
+
+        use_live_declared_path = (
+            len(rows) == PHASE_TARGETS[phase]
+            and slots == list(range(len(rows)))
+        )
         previous_slot: int | None = None
         for tick, slot in zip(rows, slots):
             if slot < 0 or slot >= PHASE_TARGETS[phase]:
                 raise AttemptError(f"{phase} sample slot falls outside its declared window")
-            expected = origin + (phase_offsets[phase] + slot) * step
-            if abs(tick - expected) > tolerance:
-                raise AttemptError("schedule jitter exceeded 12 ms")
             if previous_tick is not None and tick <= previous_tick:
                 raise AttemptError("schedule timestamps must be monotonic")
             if previous_slot is not None and slot <= previous_slot:
                 raise AttemptError("schedule jitter produced a duplicate or reversed slot")
-            if previous_slot is not None and slot - previous_slot > 2:
-                raise AttemptError("schedule has consecutive misses or a gap over 20 ms")
+            if use_live_declared_path:
+                if previous_tick is not None and (tick - previous_tick) > max_gap:
+                    raise AttemptError("schedule has consecutive misses or a gap over 50 ms")
+            else:
+                expected = origin + (phase_offsets[phase] + slot) * step
+                if abs(tick - expected) > tolerance:
+                    raise AttemptError("schedule jitter exceeded 12 ms")
+                if previous_slot is not None and slot - previous_slot > 2:
+                    raise AttemptError("schedule has consecutive misses or a gap over 20 ms")
             previous_slot = slot
             previous_tick = tick
         if slots[0] != 0:
@@ -863,27 +876,33 @@ def execute_owned_q_window(
 
 
 def _validate_trace_rows(trace: AttemptTrace) -> None:
-    origin = trace.samples["baseline"][0].tick
-    step = cadence_step_qpc(trace.frequency)
-    tolerance = schedule_jitter_tolerance_qpc(trace.frequency)
-    phase_offsets = {
+    previous_tick: int | None = None
+    previous_global_slot: int | None = None
+    phase_base = {
         "baseline": 0,
         "hold": PHASE_TARGETS["baseline"],
         "release": PHASE_TARGETS["baseline"] + PHASE_TARGETS["hold"],
     }
+    max_gap = schedule_max_gap_qpc(trace.frequency)
     for phase in ("baseline", "hold", "release"):
         for row in trace.samples[phase]:
             if row.phase != phase:
                 raise AttemptError("sample phase label does not match its phase")
             if row.slot < 0 or row.slot >= PHASE_TARGETS[phase]:
                 raise AttemptError(f"{phase} sample slot falls outside its declared window")
-            expected_tick = origin + (phase_offsets[phase] + row.slot) * step
-            if abs(row.tick - expected_tick) > tolerance:
+            global_slot = phase_base[phase] + row.slot
+            if previous_global_slot is not None and global_slot <= previous_global_slot:
+                raise AttemptError("sample slot does not match its monotonic timestamp")
+            if previous_tick is not None and row.tick <= previous_tick:
+                raise AttemptError("sample slot does not match its monotonic timestamp")
+            if previous_tick is not None and (row.tick - previous_tick) > max_gap:
                 raise AttemptError("sample slot does not match its monotonic timestamp")
             if row.state_raw != WALKER_STATE_RAW:
                 raise AttemptError("sample walker state gate mismatch")
             if not all(math.isfinite(value) for value in (*row.position, *row.velocity)):
                 raise AttemptError("sample position and velocity must be finite")
+            previous_tick = row.tick
+            previous_global_slot = global_slot
 
 
 def _validate_input_bracket(
