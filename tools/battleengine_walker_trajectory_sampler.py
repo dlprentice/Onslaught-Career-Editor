@@ -959,12 +959,9 @@ def analyze_attempt(trace: AttemptTrace) -> AttemptMetrics:
             "control field did not prove Q walker-forward state; "
             f"steady_forward_controls={seen}"
         )
-    release_tail = release[-25:] if len(release) >= 25 else release
-    if sum(1 for row in release_tail if row.control_raw == NEUTRAL_CONTROL_RAW) < 20:
-        seen = sorted({int(row.control_raw) for row in release_tail})
-        raise AttemptError(
-            f"release control field did not return to neutral; release_tail_controls={seen}"
-        )
+    # mLastMoveYVal is sticky until the next Forward(vy) call. Key-up does not
+    # necessarily write neutral into the store (p21: release stayed 0xBF800000
+    # after a successful hold motion). Release acceptance is via speed settle.
 
     baseline_speeds = _phase_speeds(baseline, trace.frequency)
     hold_speeds = _phase_speeds(hold, trace.frequency)
