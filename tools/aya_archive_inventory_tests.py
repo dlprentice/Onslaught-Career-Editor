@@ -450,6 +450,30 @@ class AyaArchiveInventoryObservationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self._render(changed_universe)
 
+    def test_renderer_rejects_reordered_unequal_records_with_recomputed_identity(self) -> None:
+        first_fixture = _archive(_chunk(b"AYAD", b"first"))
+        second_fixture = _archive(_chunk(b"TARG", b"second"))
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            first = root / "first.aya"
+            second = root / "second.aya"
+            first.write_bytes(first_fixture)
+            second.write_bytes(second_fixture)
+            canonical = self._observe([first, second])
+
+        canonical_bytes = self._render(canonical)
+        reordered = json.loads(json.dumps(canonical))
+        reordered["archiveRecords"].reverse()
+        for ordinal, record in enumerate(reordered["archiveRecords"], 1):
+            record["archiveOrdinal"] = f"archive-{ordinal:04d}"
+        reordered["sourceUniverseId"] = inventory._source_universe_id(
+            reordered["archiveRecords"]
+        )
+
+        with self.assertRaises(ValueError):
+            self._render(reordered)
+        self.assertEqual(canonical_bytes, self._render(canonical))
+
     def test_renderer_rejects_type_cap_arithmetic_tag_and_body_scope_mismatches(self) -> None:
         fixture = _archive(_chunk(b"MESH", _mesh_payload(b"body")))
         with tempfile.TemporaryDirectory() as temporary:
