@@ -49,7 +49,7 @@ public class WinUiProductLaneTests
         Assert.That(homeXaml, Does.Contain("HomeSetupInfoBar"));
         Assert.That(homeXaml, Does.Contain("HomeSetupActionButton"));
         Assert.That(homeXaml, Does.Contain("Choose game folder"));
-        Assert.That(homeXaml.IndexOf("HomeSetupInfoBar", StringComparison.Ordinal), Is.LessThan(homeXaml.IndexOf("SaveOptionsCardBorder", StringComparison.Ordinal)));
+        Assert.That(homeXaml.IndexOf("x:Name=\"HomeSetupInfoBar\"", StringComparison.Ordinal), Is.LessThan(homeXaml.IndexOf("x:Name=\"SaveOptionsCardBorder\"", StringComparison.Ordinal)));
         Assert.That(homeXaml, Does.Contain("configured game install is treated as source material"));
         Assert.That(homeXaml, Does.Contain("What stays unchanged"));
         Assert.That(homeXaml, Does.Contain("installed game and original BEA.exe stay unchanged"));
@@ -61,6 +61,118 @@ public class WinUiProductLaneTests
         Assert.That(homeCode, Does.Contain("Save Lab can still open files you choose manually"));
         Assert.That(homeCode, Does.Contain("public void RefreshForNavigation()"));
         Assert.That(homeXaml, Does.Not.Contain("Electron, WPF, and the old Python GUI/CLI"));
+    }
+
+    [Test]
+    public void HomePage_PrioritizesNewcomerWorkflows()
+    {
+        string homeXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "HomePage.xaml");
+        string shellCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "MainWindow.xaml.cs");
+        string homeRuntimeSmoke = ReadRepoFile("OnslaughtCareerEditor.UiTests", "WinUiHomeNavigationSmokeTests.cs");
+
+        string[] expectedSourceOrder =
+        [
+            "HomeSetupInfoBar",
+            "HomePatchModsTitle",
+            "HomeSaveOptionsTitle",
+            "HomeBrowseLearnTitle",
+            "HomeMediaTitle",
+            "HomeLoreTitle",
+            "HomeMoreToolsTitle",
+            "HomeAssetCatalogsTitle",
+            "HomeProjectNotesTitle",
+            "HomeSetupSafetyTitle",
+            "HomeSetupTitle",
+            "HomeSafetyPostureTitle",
+        ];
+
+        int previousIndex = -1;
+        foreach (string automationId in expectedSourceOrder)
+        {
+            int currentIndex = homeXaml.IndexOf(automationId, StringComparison.Ordinal);
+            Assert.That(currentIndex, Is.GreaterThan(previousIndex), $"{automationId} must follow the preceding Home workflow in source and keyboard order.");
+            previousIndex = currentIndex;
+        }
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(homeXaml, Does.Contain("Recommended first steps"));
+            Assert.That(homeXaml, Does.Contain("1. Create a playable safe game copy"));
+            Assert.That(homeXaml, Does.Contain("2. Edit a save or options copy"));
+            Assert.That(homeXaml, Does.Contain("Home opens the workflow you choose; it does not change files by itself."));
+            Assert.That(homeXaml, Does.Contain("required windowed compatibility base"));
+            Assert.That(homeXaml, Does.Contain("Optional player mods stay off until you choose them"));
+            Assert.That(homeXaml, Does.Contain("Research and experiments are in Lab"));
+            Assert.That(homeXaml, Does.Contain("Open Save Lab to inspect a .bes career save or defaultoptions.bea, then write a separate verified copy."));
+            Assert.That(homeXaml, Does.Contain("Browse and learn"));
+            Assert.That(homeXaml, Does.Contain("More tools"));
+            Assert.That(homeXaml, Does.Contain("Open a generated local catalog to review extracted texture previews, mesh exports, and Goodies links."));
+            Assert.That(homeXaml, Does.Not.Contain("choose windowed or graphics patches, set launch modifiers, and stage one music replacement"));
+            Assert.That(homeXaml, Does.Contain("x:Name=\"HomeWideLayout\""));
+            Assert.That(homeXaml, Does.Contain("<AdaptiveTrigger MinWindowWidth=\"900\" />"));
+            Assert.That(homeXaml, Does.Contain("HorizontalScrollMode=\"Disabled\""));
+            Assert.That(homeXaml, Does.Contain("HorizontalScrollBarVisibility=\"Disabled\""));
+            Assert.That(homeXaml, Does.Match("Target=\"PrimaryTasksGrid\\.RowSpacing\"\\s+Value=\"0\""));
+            Assert.That(homeXaml, Does.Match("Target=\"BrowseLearnGrid\\.RowSpacing\"\\s+Value=\"0\""));
+            Assert.That(homeXaml, Does.Match("Target=\"MoreToolsGrid\\.RowSpacing\"\\s+Value=\"0\""));
+            Assert.That(homeXaml, Does.Match("Target=\"SetupSafetyGrid\\.RowSpacing\"\\s+Value=\"0\""));
+            Assert.That(shellCode, Does.Contain("\"home\" => [\"HomeSetupActionButton\", \"HomeOpenPatchBenchButton\", \"HomeOpenSaveLabButton\"]"));
+            Assert.That(homeRuntimeSmoke, Does.Contain("FindByAutomationId(window, \"HomePatchModsTitle\")"));
+            Assert.That(homeRuntimeSmoke, Does.Contain("FindByAutomationId(window, \"HomeSaveOptionsTitle\")"));
+        });
+    }
+
+    [Test]
+    public void HomeNativeAcceptance_CoversFirstRunReadyAndCompactWithoutNavigation()
+    {
+        string smoke = ReadRepoFile("OnslaughtCareerEditor.UiTests", "WinUiHomeNavigationSmokeTests.cs");
+        string acceptance = ExtractCodeSlice(
+            smoke,
+            "public void Home_NewcomerHierarchy_CapturesFirstRunReadyAndCompactWithoutNavigation()",
+            "[Test]\n    [Category(\"WinUIRuntime\")]\n    [Explicit(\"Launches WinUI on Home and verifies Game Options deep-link navigation.\")]" );
+        string captureHelper = ExtractCodeSlice(
+            smoke,
+            "private static HomeCaptureEvidence CaptureReceiptBoundHomeWindow(",
+            "private static void WaitForHomeLayout(");
+        string manifestPublisher = ExtractCodeSlice(
+            smoke,
+            "private static void PublishHomeAcceptanceRun(",
+            "private static void TryDeleteDirectory(");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(Regex.Matches(acceptance, "LaunchHomeSession\\(").Count, Is.EqualTo(2));
+            Assert.That(acceptance, Does.Contain("LaunchHomeSession()"));
+            Assert.That(acceptance, Does.Contain("LaunchHomeSession(readyGameDirectory, \"ready\")"));
+            Assert.That(acceptance, Does.Contain("HomeSetupActionButton"));
+            Assert.That(acceptance, Does.Contain("HomeOpenPatchBenchButton"));
+            Assert.That(acceptance, Does.Contain("HomePatchModsTitle"));
+            Assert.That(acceptance, Does.Contain("HomeSaveOptionsTitle"));
+            Assert.That(acceptance, Does.Contain("HomeOpenConfigurationEditorButton"));
+            Assert.That(acceptance, Does.Contain("new Rectangle(16, 16, 760, 820)"));
+            Assert.That(acceptance, Does.Contain("CaptureReceiptBoundHomeWindow("));
+            Assert.That(Regex.Matches(acceptance, "CaptureReceiptBoundHomeWindow\\(").Count, Is.EqualTo(3));
+            Assert.That(acceptance, Does.Contain(".partial"));
+            Assert.That(acceptance, Does.Contain("PublishHomeAcceptanceRun("));
+            Assert.That(acceptance, Does.Contain("WaitForHomeLayout("));
+            Assert.That(acceptance, Does.Contain("AssertHomeElementsInsideWindow("));
+            Assert.That(acceptance, Does.Not.Contain("ActivateAndWait("));
+            Assert.That(acceptance, Does.Not.Contain(".Click("));
+            Assert.That(acceptance, Does.Not.Contain(".Invoke("));
+            Assert.That(smoke, Does.Contain("return renderedSamples >= 6;"));
+            Assert.That(
+                captureHelper.IndexOf("operations.RestoreWindowState(originalState);", StringComparison.Ordinal),
+                Is.LessThan(captureHelper.IndexOf("File.Move(temporaryPath, outputPath);", StringComparison.Ordinal)),
+                "The accepted PNG must not replace prior evidence until exact window restoration succeeds.");
+            Assert.That(captureHelper, Does.Contain("Assert.That(File.Exists(outputPath), Is.False"));
+            Assert.That(captureHelper, Does.Not.Contain("overwrite: true"));
+            Assert.That(smoke, Does.Contain("Directory.Move(stagingDirectory, acceptedDirectory);"));
+            Assert.That(smoke, Does.Contain("home-acceptance-manifest.json"));
+            Assert.That(
+                manifestPublisher.IndexOf("Directory.Move(stagingDirectory, acceptedDirectory);", StringComparison.Ordinal),
+                Is.LessThan(manifestPublisher.IndexOf("File.Move(acceptedTemporaryManifestPath, acceptedManifestPath);", StringComparison.Ordinal)),
+                "The final acceptance manifest must be published only after the run directory transition succeeds.");
+        });
     }
 
     [Test]

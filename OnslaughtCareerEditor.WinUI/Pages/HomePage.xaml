@@ -6,113 +6,187 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    <ScrollViewer AutomationProperties.AutomationId="HomePageScrollViewer"
-                  AutomationProperties.Name="Home page tasks">
-        <StackPanel Padding="20,18,20,24"
-                    Spacing="14">
-            <StackPanel Spacing="6">
-                <TextBlock Text="Start Here"
-                           AutomationProperties.AutomationId="HomePageTitle"
-                           AutomationProperties.HeadingLevel="Level1"
-                           Style="{StaticResource SectionTitleTextStyle}" />
-                <TextBlock Text="Choose the task you want to work on. File-changing workflows are copy-first, and the configured game install is treated as source material."
-                           AutomationProperties.AutomationId="HomePagePurpose"
-                           Style="{StaticResource SectionBodyTextStyle}" />
-            </StackPanel>
+    <Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="HomeLayoutStates">
+                <VisualState x:Name="HomeNarrowLayout">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+                <VisualState x:Name="HomeWideLayout">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="900" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="PrimaryTasksGrid.ColumnSpacing"
+                                Value="16" />
+                        <Setter Target="PrimaryTasksGrid.RowSpacing"
+                                Value="0" />
+                        <Setter Target="PrimaryTasksSecondColumn.Width"
+                                Value="*" />
+                        <Setter Target="SaveOptionsCardBorder.(Grid.Row)"
+                                Value="0" />
+                        <Setter Target="SaveOptionsCardBorder.(Grid.Column)"
+                                Value="1" />
+                        <Setter Target="BrowseLearnGrid.ColumnSpacing"
+                                Value="16" />
+                        <Setter Target="BrowseLearnGrid.RowSpacing"
+                                Value="0" />
+                        <Setter Target="BrowseLearnSecondColumn.Width"
+                                Value="*" />
+                        <Setter Target="LoreCardBorder.(Grid.Row)"
+                                Value="0" />
+                        <Setter Target="LoreCardBorder.(Grid.Column)"
+                                Value="1" />
+                        <Setter Target="MoreToolsGrid.ColumnSpacing"
+                                Value="16" />
+                        <Setter Target="MoreToolsGrid.RowSpacing"
+                                Value="0" />
+                        <Setter Target="MoreToolsSecondColumn.Width"
+                                Value="*" />
+                        <Setter Target="AboutCardBorder.(Grid.Row)"
+                                Value="0" />
+                        <Setter Target="AboutCardBorder.(Grid.Column)"
+                                Value="1" />
+                        <Setter Target="SetupSafetyGrid.ColumnSpacing"
+                                Value="16" />
+                        <Setter Target="SetupSafetyGrid.RowSpacing"
+                                Value="0" />
+                        <Setter Target="SetupSafetySecondColumn.Width"
+                                Value="*" />
+                        <Setter Target="SafetyCardBorder.(Grid.Row)"
+                                Value="0" />
+                        <Setter Target="SafetyCardBorder.(Grid.Column)"
+                                Value="1" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
 
-            <InfoBar x:Name="HomeSetupInfoBar"
-                     AutomationProperties.AutomationId="HomeSetupInfoBar"
-                     IsClosable="False"
-                     IsOpen="False"
-                     Severity="Informational"
-                     Title="Choose your game folder">
-                <InfoBar.ActionButton>
-                    <Button x:Name="HomeSetupActionButton"
-                            AutomationProperties.AutomationId="HomeSetupActionButton"
-                            AutomationProperties.Name="Choose game folder"
-                            Content="Choose game folder"
-                            Tag="settings"
-                            Style="{StaticResource PrimaryActionButtonStyle}"
-                            Click="NavigateButton_Click" />
-                </InfoBar.ActionButton>
-            </InfoBar>
+        <ScrollViewer AutomationProperties.AutomationId="HomePageScrollViewer"
+                      AutomationProperties.Name="Home page tasks"
+                      HorizontalScrollMode="Disabled"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel Padding="20,18,20,24"
+                        Spacing="14">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Start Here"
+                               AutomationProperties.AutomationId="HomePageTitle"
+                               AutomationProperties.HeadingLevel="Level1"
+                               Style="{StaticResource SectionTitleTextStyle}" />
+                    <TextBlock Text="Home opens the workflow you choose; it does not change files by itself. The configured game install is treated as source material. Start with a safe game copy or a separate save/options copy."
+                               AutomationProperties.AutomationId="HomePagePurpose"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               TextWrapping="WrapWholeWords" />
+                </StackPanel>
 
-            <Grid ColumnSpacing="16"
-                  RowSpacing="16">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1.25*" />
-                    <ColumnDefinition Width="1*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-
-                <Border x:Name="SaveOptionsCardBorder"
-                        Grid.Row="0"
-                        Grid.Column="0"
-                        Style="{StaticResource SectionCardStyle}"
-                        Margin="0">
-                    <StackPanel Spacing="12">
-                        <TextBlock Text="Edit saves and options"
-                                   AutomationProperties.AutomationId="HomeSaveOptionsTitle"
-                                   AutomationProperties.HeadingLevel="Level2"
-                                   FontSize="22"
-                                   FontWeight="SemiBold" />
-                        <TextBlock Text="Inspect existing .bes career saves and defaultoptions.bea snapshots, then write patched copies while preserving unknown regions."
-                                   Style="{StaticResource SectionBodyTextStyle}" />
-                        <StackPanel Orientation="Horizontal"
-                                    Spacing="10">
-                            <Button x:Name="HomeOpenSaveLabButton"
-                                    Content="Open Save Lab"
-                                    AutomationProperties.AutomationId="HomeOpenSaveLabButton"
-                                    AutomationProperties.Name="Open Save Lab"
-                                    Tag="saves"
-                                    Style="{StaticResource PrimaryActionButtonStyle}"
-                                    Click="NavigateButton_Click" />
-                            <Button Content="Game Options"
-                                    AutomationProperties.AutomationId="HomeOpenConfigurationEditorButton"
-                                    AutomationProperties.Name="Open Game Options"
-                                    Click="OpenConfigurationEditorButton_Click" />
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <Border x:Name="SetupCardBorder"
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        Style="{StaticResource SectionCardStyle}"
-                        Margin="0">
-                    <StackPanel Spacing="10">
-                        <TextBlock x:Name="SetupTitleTextBlock"
-                                   Text="Setup"
-                                   AutomationProperties.AutomationId="HomeSetupTitle"
-                                   AutomationProperties.HeadingLevel="Level2"
-                                   FontSize="18"
-                                   FontWeight="SemiBold" />
-                        <TextBlock x:Name="SetupStatusTextBlock"
-                                   AutomationProperties.AutomationId="HomeSetupStatus"
-                                   Style="{StaticResource SectionBodyTextStyle}" />
-                        <TextBlock x:Name="SetupGuidanceTextBlock"
-                                   Text="Windowed &amp; Mods creates a safe game copy, patches only that copy, and plays only that copy without changing the Steam/game install."
-                                   Style="{StaticResource SectionBodyTextStyle}" />
-                        <Button Content="Review Settings"
-                                AutomationProperties.AutomationId="HomeReviewSettingsButton"
-                                AutomationProperties.Name="Review Settings"
+                <InfoBar x:Name="HomeSetupInfoBar"
+                         AutomationProperties.AutomationId="HomeSetupInfoBar"
+                         IsClosable="False"
+                         IsOpen="False"
+                         Severity="Informational"
+                         Title="Choose your game folder">
+                    <InfoBar.ActionButton>
+                        <Button x:Name="HomeSetupActionButton"
+                                AutomationProperties.AutomationId="HomeSetupActionButton"
+                                AutomationProperties.Name="Choose game folder"
+                                Content="Choose game folder"
                                 Tag="settings"
-                                HorizontalAlignment="Left"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
                                 Click="NavigateButton_Click" />
-                    </StackPanel>
-                </Border>
+                    </InfoBar.ActionButton>
+                </InfoBar>
 
-                <Grid Grid.Row="1"
-                      Grid.ColumnSpan="2"
-                      ColumnSpacing="16"
+                <TextBlock Text="Recommended first steps"
+                           AutomationProperties.AutomationId="HomePrimaryTasksTitle"
+                           AutomationProperties.HeadingLevel="Level2"
+                           FontSize="20"
+                           FontWeight="SemiBold" />
+
+                <Grid x:Name="PrimaryTasksGrid"
                       RowSpacing="16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition x:Name="PrimaryTasksSecondColumn"
+                                          Width="0" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0"
+                            Grid.Column="0"
+                            Style="{StaticResource SectionCardStyle}"
+                            Margin="0">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="1. Create a playable safe game copy"
+                                       AutomationProperties.AutomationId="HomePatchModsTitle"
+                                       AutomationProperties.HeadingLevel="Level3"
+                                       FontSize="22"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="WrapWholeWords" />
+                            <TextBlock Text="Windowed &amp; Mods uses your installed game as read-only source and creates a separate playable copy with the required windowed compatibility base. Optional player mods stay off until you choose them. Research and experiments are in Lab."
+                                       Style="{StaticResource SectionBodyTextStyle}"
+                                       TextWrapping="WrapWholeWords" />
+                            <Button Content="Open Windowed &amp; Mods"
+                                    AutomationProperties.AutomationId="HomeOpenPatchBenchButton"
+                                    AutomationProperties.Name="Open Windowed and Mods"
+                                    Tag="binary"
+                                    HorizontalAlignment="Left"
+                                    Style="{StaticResource PrimaryActionButtonStyle}"
+                                    Click="NavigateButton_Click" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="SaveOptionsCardBorder"
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Style="{StaticResource SectionCardStyle}"
+                            Margin="0">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="2. Edit a save or options copy"
+                                       AutomationProperties.AutomationId="HomeSaveOptionsTitle"
+                                       AutomationProperties.HeadingLevel="Level3"
+                                       FontSize="22"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="WrapWholeWords" />
+                            <TextBlock Text="Open Save Lab to inspect a .bes career save or defaultoptions.bea, then write a separate verified copy."
+                                       Style="{StaticResource SectionBodyTextStyle}"
+                                       TextWrapping="WrapWholeWords" />
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="10">
+                                <Button x:Name="HomeOpenSaveLabButton"
+                                        Content="Open Save Lab"
+                                        AutomationProperties.AutomationId="HomeOpenSaveLabButton"
+                                        AutomationProperties.Name="Open Save Lab"
+                                        Tag="saves"
+                                        Style="{StaticResource PrimaryActionButtonStyle}"
+                                        Click="NavigateButton_Click" />
+                                <Button Content="Game Options"
+                                        AutomationProperties.AutomationId="HomeOpenConfigurationEditorButton"
+                                        AutomationProperties.Name="Open Game Options"
+                                        Click="OpenConfigurationEditorButton_Click" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <TextBlock Text="Browse and learn"
+                           AutomationProperties.AutomationId="HomeBrowseLearnTitle"
+                           AutomationProperties.HeadingLevel="Level2"
+                           FontSize="20"
+                           FontWeight="SemiBold"
+                           Margin="0,6,0,0" />
+
+                <Grid x:Name="BrowseLearnGrid"
+                      RowSpacing="16">
+                    <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition x:Name="BrowseLearnSecondColumn"
+                                          Width="0" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -126,7 +200,7 @@
                         <StackPanel Spacing="10">
                             <TextBlock Text="Browse media"
                                        AutomationProperties.AutomationId="HomeMediaTitle"
-                                       AutomationProperties.HeadingLevel="Level2"
+                                       AutomationProperties.HeadingLevel="Level3"
                                        FontSize="18"
                                        FontWeight="SemiBold" />
                             <TextBlock Text="Preview installed audio and video in the Windows app."
@@ -135,18 +209,20 @@
                                     AutomationProperties.AutomationId="HomeOpenMediaButton"
                                     AutomationProperties.Name="Open Media"
                                     Tag="media"
+                                    HorizontalAlignment="Left"
                                     Click="NavigateButton_Click" />
                         </StackPanel>
                     </Border>
 
-                    <Border Grid.Row="0"
-                            Grid.Column="1"
+                    <Border x:Name="LoreCardBorder"
+                            Grid.Row="1"
+                            Grid.Column="0"
                             Style="{StaticResource SectionCardStyle}"
                             Margin="0">
                         <StackPanel Spacing="10">
                             <TextBlock Text="Read lore"
                                        AutomationProperties.AutomationId="HomeLoreTitle"
-                                       AutomationProperties.HeadingLevel="Level2"
+                                       AutomationProperties.HeadingLevel="Level3"
                                        FontSize="18"
                                        FontWeight="SemiBold" />
                             <TextBlock Text="Open the curated preservation library and roadmap mirrors."
@@ -155,38 +231,39 @@
                                     AutomationProperties.AutomationId="HomeOpenLoreButton"
                                     AutomationProperties.Name="Open Lore"
                                     Tag="lore"
+                                    HorizontalAlignment="Left"
                                     Click="NavigateButton_Click" />
                         </StackPanel>
                     </Border>
+                </Grid>
+
+                <TextBlock Text="More tools"
+                           AutomationProperties.AutomationId="HomeMoreToolsTitle"
+                           AutomationProperties.HeadingLevel="Level2"
+                           FontSize="20"
+                           FontWeight="SemiBold"
+                           Margin="0,6,0,0" />
+
+                <Grid x:Name="MoreToolsGrid"
+                      RowSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition x:Name="MoreToolsSecondColumn"
+                                          Width="0" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
                     <Border Grid.Row="0"
-                            Grid.Column="2"
-                            Style="{StaticResource SectionCardStyle}"
-                            Margin="0">
-                        <StackPanel Spacing="10">
-                            <TextBlock Text="Try patches and mods"
-                                       AutomationProperties.AutomationId="HomePatchModsTitle"
-                                       AutomationProperties.HeadingLevel="Level2"
-                                       FontSize="18"
-                                       FontWeight="SemiBold" />
-                            <TextBlock Text="Create a playable copied game, choose windowed or graphics patches, set launch modifiers, and stage one music replacement inside that copied folder."
-                                       Style="{StaticResource SectionBodyTextStyle}" />
-                            <Button Content="Open Windowed &amp; Mods"
-                                    AutomationProperties.AutomationId="HomeOpenPatchBenchButton"
-                                    AutomationProperties.Name="Open Windowed and Mods"
-                                    Tag="binary"
-                                    Click="NavigateButton_Click" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Grid.Row="1"
                             Grid.Column="0"
                             Style="{StaticResource SectionCardStyle}"
                             Margin="0">
                         <StackPanel Spacing="10">
                             <TextBlock Text="Review asset catalogs"
                                        AutomationProperties.AutomationId="HomeAssetCatalogsTitle"
-                                       AutomationProperties.HeadingLevel="Level2"
+                                       AutomationProperties.HeadingLevel="Level3"
                                        FontSize="18"
                                        FontWeight="SemiBold" />
                             <TextBlock Text="Open a generated local catalog to review extracted texture previews, mesh exports, and Goodies links."
@@ -195,33 +272,20 @@
                                     AutomationProperties.AutomationId="HomeOpenAssetLibraryButton"
                                     AutomationProperties.Name="Open Asset Library"
                                     Tag="assets"
+                                    HorizontalAlignment="Left"
                                     Click="NavigateButton_Click" />
                         </StackPanel>
                     </Border>
 
-                    <Border Grid.Row="1"
-                            Grid.Column="1"
-                            Style="{StaticResource SectionCardStyle}"
-                            Margin="0">
-                        <StackPanel Spacing="10">
-                            <TextBlock Text="What stays unchanged"
-                                       AutomationProperties.AutomationId="HomeSafetyPostureTitle"
-                                       AutomationProperties.HeadingLevel="Level2"
-                                       FontSize="18"
-                                       FontWeight="SemiBold" />
-                            <TextBlock Text="The installed game and original BEA.exe stay unchanged. Use copied-game workflows for patching and local split-screen testing; online play is not available in this release."
-                                       Style="{StaticResource SectionBodyTextStyle}" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Grid.Row="1"
-                            Grid.Column="2"
+                    <Border x:Name="AboutCardBorder"
+                            Grid.Row="1"
+                            Grid.Column="0"
                             Style="{StaticResource SectionCardStyle}"
                             Margin="0">
                         <StackPanel Spacing="10">
                             <TextBlock Text="Project notes"
                                        AutomationProperties.AutomationId="HomeProjectNotesTitle"
-                                       AutomationProperties.HeadingLevel="Level2"
+                                       AutomationProperties.HeadingLevel="Level3"
                                        FontSize="18"
                                        FontWeight="SemiBold" />
                             <TextBlock Text="See the About page for capabilities, retail behavior notes, and contributor pointers."
@@ -230,11 +294,75 @@
                                     AutomationProperties.AutomationId="HomeOpenAboutButton"
                                     AutomationProperties.Name="Open About"
                                     Tag="about"
+                                    HorizontalAlignment="Left"
                                     Click="NavigateButton_Click" />
                         </StackPanel>
                     </Border>
                 </Grid>
-            </Grid>
-        </StackPanel>
-    </ScrollViewer>
+
+                <TextBlock Text="Setup and safety"
+                           AutomationProperties.AutomationId="HomeSetupSafetyTitle"
+                           AutomationProperties.HeadingLevel="Level2"
+                           FontSize="20"
+                           FontWeight="SemiBold"
+                           Margin="0,6,0,0" />
+
+                <Grid x:Name="SetupSafetyGrid"
+                      RowSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition x:Name="SetupSafetySecondColumn"
+                                          Width="0" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border x:Name="SetupCardBorder"
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Style="{StaticResource SectionCardStyle}"
+                            Margin="0">
+                        <StackPanel Spacing="10">
+                            <TextBlock x:Name="SetupTitleTextBlock"
+                                       Text="Setup"
+                                       AutomationProperties.AutomationId="HomeSetupTitle"
+                                       AutomationProperties.HeadingLevel="Level3"
+                                       FontSize="18"
+                                       FontWeight="SemiBold" />
+                            <TextBlock x:Name="SetupStatusTextBlock"
+                                       AutomationProperties.AutomationId="HomeSetupStatus"
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                            <TextBlock x:Name="SetupGuidanceTextBlock"
+                                       Text="Windowed &amp; Mods creates a safe game copy, patches only that copy, and plays only that copy without changing the Steam/game install."
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                            <Button Content="Review Settings"
+                                    AutomationProperties.AutomationId="HomeReviewSettingsButton"
+                                    AutomationProperties.Name="Review Settings"
+                                    Tag="settings"
+                                    HorizontalAlignment="Left"
+                                    Click="NavigateButton_Click" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="SafetyCardBorder"
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Style="{StaticResource SectionCardStyle}"
+                            Margin="0">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="What stays unchanged"
+                                       AutomationProperties.AutomationId="HomeSafetyPostureTitle"
+                                       AutomationProperties.HeadingLevel="Level3"
+                                       FontSize="18"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="The installed game and original BEA.exe stay unchanged. Use copied-game workflows for patching and local split-screen testing; online play is not available in this release."
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
 </Page>

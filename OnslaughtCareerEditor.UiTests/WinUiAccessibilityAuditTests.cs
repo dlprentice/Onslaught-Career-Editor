@@ -30,6 +30,10 @@ public class WinUiAccessibilityAuditTests
             [
                 "HomePageTitle",
                 "HomePagePurpose",
+                "HomePrimaryTasksTitle",
+                "HomeBrowseLearnTitle",
+                "HomeMoreToolsTitle",
+                "HomeSetupSafetyTitle",
                 "HomeOpenSaveLabButton",
                 "HomeOpenConfigurationEditorButton",
                 "HomeReviewSettingsButton",
@@ -306,14 +310,18 @@ public class WinUiAccessibilityAuditTests
             ["OnslaughtCareerEditor.WinUI/Pages/HomePage.xaml"] =
             [
                 ("HomePageTitle", "Level1"),
-                ("HomeSaveOptionsTitle", "Level2"),
-                ("HomeSetupTitle", "Level2"),
-                ("HomeMediaTitle", "Level2"),
-                ("HomeLoreTitle", "Level2"),
-                ("HomePatchModsTitle", "Level2"),
-                ("HomeAssetCatalogsTitle", "Level2"),
-                ("HomeSafetyPostureTitle", "Level2"),
-                ("HomeProjectNotesTitle", "Level2")
+                ("HomePrimaryTasksTitle", "Level2"),
+                ("HomePatchModsTitle", "Level3"),
+                ("HomeSaveOptionsTitle", "Level3"),
+                ("HomeBrowseLearnTitle", "Level2"),
+                ("HomeMediaTitle", "Level3"),
+                ("HomeLoreTitle", "Level3"),
+                ("HomeMoreToolsTitle", "Level2"),
+                ("HomeAssetCatalogsTitle", "Level3"),
+                ("HomeProjectNotesTitle", "Level3"),
+                ("HomeSetupSafetyTitle", "Level2"),
+                ("HomeSetupTitle", "Level3"),
+                ("HomeSafetyPostureTitle", "Level3")
             ],
             ["OnslaughtCareerEditor.WinUI/Pages/AboutPage.xaml"] =
             [

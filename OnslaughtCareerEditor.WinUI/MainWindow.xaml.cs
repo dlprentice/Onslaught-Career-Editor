@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
@@ -8,6 +11,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using OnslaughtCareerEditor.WinUI.Helpers;
 using OnslaughtCareerEditor.WinUI.Pages;
 using Onslaught___Career_Editor;
 using Windows.Graphics;
@@ -32,6 +36,9 @@ namespace OnslaughtCareerEditor.WinUI
         private bool _isSelectingNavigationItem;
         private bool _navigationInProgress;
         private int _navigationGeneration;
+        private int _homeArrivalInputEpoch;
+        private bool _isWindowActive;
+        private CancellationTokenSource? _homeArrivalFocusCancellation;
         private string _activeTag = "home";
 
         public MainWindow()
@@ -71,6 +78,7 @@ namespace OnslaughtCareerEditor.WinUI
             }
 
             Closed += MainWindow_Closed;
+            RegisterHomeArrivalFocusTracking();
             RefreshFooter();
             NavigateToTagCore(GetInitialTag(), saveSubTab: null, NavigationEntrySource.Programmatic);
         }
@@ -179,6 +187,7 @@ namespace OnslaughtCareerEditor.WinUI
                 return;
             }
 
+            CancelHomeArrivalFocus();
             int navigationGeneration = ++_navigationGeneration;
             _activeTag = tag;
             _navigationInProgress = true;
@@ -249,6 +258,13 @@ namespace OnslaughtCareerEditor.WinUI
                 return;
             }
 
+            if (entrySource == NavigationEntrySource.Programmatic &&
+                string.Equals(tag, "home", StringComparison.OrdinalIgnoreCase))
+            {
+                ScheduleHomeArrivalFocus(pageRoot, navItem, navigationGeneration);
+                return;
+            }
+
             void QueueFocus()
             {
                 DispatcherQueue.TryEnqueue(() =>
@@ -268,6 +284,285 @@ namespace OnslaughtCareerEditor.WinUI
                 QueueFocus();
             };
             pageRoot.Loaded += loadedHandler;
+        }
+
+        private void RegisterHomeArrivalFocusTracking()
+        {
+            Activated += MainWindow_Activated;
+            if (Content is UIElement homeArrivalInputRoot)
+            {
+                homeArrivalInputRoot.AddHandler(
+                    UIElement.PointerPressedEvent,
+                    new PointerEventHandler(ShellNavigationView_UserInput),
+                    handledEventsToo: true);
+                homeArrivalInputRoot.AddHandler(
+                    UIElement.KeyDownEvent,
+                    new KeyEventHandler(ShellNavigationView_UserInput),
+                    handledEventsToo: true);
+            }
+        }
+
+        private void MainWindow_Activated(object sender, WindowActivatedEventArgs args)
+        {
+            _isWindowActive = args.WindowActivationState != WindowActivationState.Deactivated;
+        }
+
+        private void ShellNavigationView_UserInput(object sender, RoutedEventArgs args)
+        {
+            _homeArrivalInputEpoch++;
+            CancelHomeArrivalFocus();
+        }
+
+        private void ScheduleHomeArrivalFocus(
+            FrameworkElement pageRoot,
+            NavigationViewItem navItem,
+            int navigationGeneration)
+        {
+            var cancellation = new CancellationTokenSource();
+            _homeArrivalFocusCancellation = cancellation;
+            int inputEpoch = _homeArrivalInputEpoch;
+            DependencyObject? initialFocusedElement = pageRoot.XamlRoot is null
+                ? null
+                : FocusManager.GetFocusedElement(pageRoot.XamlRoot) as DependencyObject;
+            bool enqueued = DispatcherQueue.TryEnqueue(() =>
+                MoveHomeArrivalFocusAsync(
+                    pageRoot,
+                    navItem,
+                    navigationGeneration,
+                    inputEpoch,
+                    initialFocusedElement,
+                    cancellation));
+            if (!enqueued)
+            {
+                if (ReferenceEquals(_homeArrivalFocusCancellation, cancellation))
+                {
+                    _homeArrivalFocusCancellation = null;
+                }
+
+                cancellation.Cancel();
+                cancellation.Dispose();
+            }
+        }
+
+        private async void MoveHomeArrivalFocusAsync(
+            FrameworkElement pageRoot,
+            NavigationViewItem navItem,
+            int navigationGeneration,
+            int inputEpoch,
+            DependencyObject? initialFocusedElement,
+            CancellationTokenSource cancellation)
+        {
+            var focusDiagnostics = new List<HomeArrivalFocusDiagnostic>();
+            try
+            {
+                HomeArrivalFocusPolicyOperations operations = new(
+                    () => ReadHomeArrivalFocusSnapshot(
+                        pageRoot,
+                        navigationGeneration,
+                        inputEpoch,
+                        initialFocusedElement),
+                    (target, token) =>
+                    {
+                        token.ThrowIfCancellationRequested();
+                        if (FindHomeArrivalFocusTarget(pageRoot, target) is not FrameworkElement element)
+                        {
+                            return Task.FromResult(false);
+                        }
+
+                        return Task.FromResult(element.Focus(FocusState.Programmatic));
+                    },
+                    target => IsHomeArrivalFocusVerified(pageRoot, target),
+                    token =>
+                    {
+                        token.ThrowIfCancellationRequested();
+                        return Task.FromResult(navItem.Focus(FocusState.Programmatic));
+                    },
+                    () => IsNavigationFallbackVerified(navItem),
+                    (delay, token) => Task.Delay(delay, token),
+                    diagnostic => focusDiagnostics.Add(diagnostic));
+
+                await HomeArrivalFocusPolicy.RunAsync(operations, cancellation.Token);
+            }
+            catch (Exception)
+            {
+                focusDiagnostics.Add(new HomeArrivalFocusDiagnostic(
+                    "integration-exception",
+                    0,
+                    null,
+                    HomeSetupApplicability.Pending,
+                    null,
+                    null,
+                    null,
+                    HomeArrivalFocusOutcome.ContextChanged));
+            }
+            finally
+            {
+                WriteHomeArrivalFocusDiagnostics(pageRoot, navigationGeneration, focusDiagnostics);
+                if (ReferenceEquals(_homeArrivalFocusCancellation, cancellation))
+                {
+                    _homeArrivalFocusCancellation = null;
+                }
+
+                cancellation.Dispose();
+            }
+        }
+
+        private HomeArrivalFocusSnapshot ReadHomeArrivalFocusSnapshot(
+            FrameworkElement pageRoot,
+            int navigationGeneration,
+            int inputEpoch,
+            DependencyObject? initialFocusedElement)
+        {
+            bool navigationCurrent = navigationGeneration == _navigationGeneration
+                && inputEpoch == _homeArrivalInputEpoch
+                && string.Equals(_activeTag, "home", StringComparison.OrdinalIgnoreCase)
+                && ReferenceEquals(ContentFrame.Content, pageRoot);
+            HomeSetupApplicability setupApplicability = ReadSetupApplicability(pageRoot);
+            return new HomeArrivalFocusSnapshot(
+                navigationCurrent,
+                pageRoot.IsLoaded,
+                _isWindowActive,
+                HasToolkitUserEstablishedFocus(pageRoot, initialFocusedElement),
+                setupApplicability,
+                ReadHomeTargetReadiness(pageRoot, HomeFocusTarget.Setup),
+                ReadHomeTargetReadiness(pageRoot, HomeFocusTarget.PatchBench),
+                ReadHomeTargetReadiness(pageRoot, HomeFocusTarget.SaveLab));
+        }
+
+        private static HomeSetupApplicability ReadSetupApplicability(FrameworkElement pageRoot)
+        {
+            if (pageRoot.FindName("HomeSetupInfoBar") is not InfoBar setupInfoBar || setupInfoBar.XamlRoot is null)
+            {
+                return HomeSetupApplicability.Pending;
+            }
+
+            return setupInfoBar.IsOpen
+                ? HomeSetupApplicability.Applicable
+                : HomeSetupApplicability.NotApplicable;
+        }
+
+        private static HomeFocusReadiness ReadHomeTargetReadiness(
+            FrameworkElement pageRoot,
+            HomeFocusTarget target)
+        {
+            if (FindHomeArrivalFocusTarget(pageRoot, target) is not FrameworkElement element ||
+                element.XamlRoot is null ||
+                element.ActualWidth <= 0 ||
+                element.ActualHeight <= 0)
+            {
+                return HomeFocusReadiness.Pending;
+            }
+
+            return element.Visibility != Visibility.Visible || element is Control { IsEnabled: false }
+                ? HomeFocusReadiness.Unavailable
+                : HomeFocusReadiness.Ready;
+        }
+
+        private static FrameworkElement? FindHomeArrivalFocusTarget(
+            FrameworkElement pageRoot,
+            HomeFocusTarget target)
+        {
+            string targetName = target switch
+            {
+                HomeFocusTarget.Setup => "HomeSetupActionButton",
+                HomeFocusTarget.PatchBench => "HomeOpenPatchBenchButton",
+                HomeFocusTarget.SaveLab => "HomeOpenSaveLabButton",
+                _ => string.Empty,
+            };
+            return pageRoot.FindName(targetName) as FrameworkElement;
+        }
+
+        private static bool IsHomeArrivalFocusVerified(FrameworkElement pageRoot, HomeFocusTarget target)
+        {
+            FrameworkElement? expected = FindHomeArrivalFocusTarget(pageRoot, target);
+            return expected?.XamlRoot is not null
+                && ReferenceEquals(FocusManager.GetFocusedElement(expected.XamlRoot), expected);
+        }
+
+        private static bool IsNavigationFallbackVerified(NavigationViewItem navItem)
+        {
+            return navItem.XamlRoot is not null
+                && ReferenceEquals(FocusManager.GetFocusedElement(navItem.XamlRoot), navItem);
+        }
+
+        private static bool HasToolkitUserEstablishedFocus(
+            FrameworkElement pageRoot,
+            DependencyObject? initialFocusedElement)
+        {
+            if (pageRoot.XamlRoot is null || FocusManager.GetFocusedElement(pageRoot.XamlRoot) is not DependencyObject focused)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(focused, initialFocusedElement) ||
+                ReferenceEquals(focused, pageRoot) ||
+                focused is NavigationViewItem or NavigationView or Frame)
+            {
+                return false;
+            }
+
+            return !Enum.GetValues<HomeFocusTarget>()
+                .Select(target => FindHomeArrivalFocusTarget(pageRoot, target))
+                .Any(target => ReferenceEquals(target, focused));
+        }
+
+        private static void WriteHomeArrivalFocusDiagnostics(
+            FrameworkElement pageRoot,
+            int navigationGeneration,
+            IReadOnlyList<HomeArrivalFocusDiagnostic> diagnostics)
+        {
+            if (!string.Equals(
+                    Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_TEST_FOCUS_DIAGNOSTICS"),
+                    "1",
+                    StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            try
+            {
+                string? finalFocusedAutomationId = pageRoot.XamlRoot is null
+                    ? null
+                    : FocusManager.GetFocusedElement(pageRoot.XamlRoot) is DependencyObject focused
+                        ? AutomationProperties.GetAutomationId(focused)
+                        : null;
+                IEnumerable<string> lines = diagnostics.Select(diagnostic => JsonSerializer.Serialize(new
+                    {
+                        ProcessId = Environment.ProcessId,
+                        RunId = Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_TEST_FOCUS_RUN_ID"),
+                        NavigationGeneration = navigationGeneration,
+                        diagnostic.Stage,
+                        diagnostic.Sample,
+                        Target = diagnostic.Target?.ToString(),
+                        SetupApplicability = diagnostic.SetupApplicability.ToString(),
+                        Readiness = diagnostic.Readiness?.ToString(),
+                        diagnostic.TryFocusSucceeded,
+                        diagnostic.FocusVerified,
+                        Outcome = diagnostic.Outcome?.ToString(),
+                        FinalXamlFocusedAutomationId = finalFocusedAutomationId,
+                    }));
+                File.AppendAllLines(
+                    Path.Combine(AppConfig.GetConfigDir(), "home-arrival-focus.jsonl"),
+                    lines);
+            }
+            catch
+            {
+                // Test-only diagnostics are best effort and must not affect focus behavior.
+            }
+        }
+
+        private void CancelHomeArrivalFocus()
+        {
+            CancellationTokenSource? cancellation = _homeArrivalFocusCancellation;
+            _homeArrivalFocusCancellation = null;
+            try
+            {
+                cancellation?.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // The completed focus operation owns disposal.
+            }
         }
 
         private async void MoveFocusAfterNavigationAsync(
@@ -335,7 +630,7 @@ namespace OnslaughtCareerEditor.WinUI
         {
             return tag.ToLowerInvariant() switch
             {
-                "home" => ["HomeSetupActionButton", "HomeOpenSaveLabButton"],
+                "home" => ["HomeSetupActionButton", "HomeOpenPatchBenchButton", "HomeOpenSaveLabButton"],
                 "saves" when saveSubTab == 2 => ["ConfigurationInputFileTextBox"],
                 "saves" when saveSubTab == 1 => ["EditorInputFileTextBox"],
                 "saves" => ["AnalyzeTaskButton"],
@@ -505,6 +800,7 @@ namespace OnslaughtCareerEditor.WinUI
 
         private void MainWindow_Closed(object sender, WindowEventArgs args)
         {
+            CancelHomeArrivalFocus();
             App.SafeGameCopyProcesses.StopAll();
 
             if (_appWindow is null)
