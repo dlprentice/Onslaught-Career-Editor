@@ -4565,7 +4565,8 @@ sealed class WalkerOwnedPhaseProcess : IDisposable
             throw new InvalidOperationException(
                 $"Walker {Name} phase left {active} receipt-owned processes.");
         }
-        CloseHandle(jobHandle);
+        if (!CloseHandle(jobHandle))
+            throw new InvalidOperationException("Walker phase job handle did not close.");
         closed = true;
     }
 

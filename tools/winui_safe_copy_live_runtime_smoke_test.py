@@ -254,6 +254,13 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertNotIn("GameProfileRuntimeService.LaunchCopiedProfile", walker_parent)
         self.assertIn("phase.TerminateExactJobAndClose()", generated)
         self.assertIn("WALKER_CLEANUP_PHASE: close_phase_jobs", generated)
+        normal_close = generated[
+            generated.index("public void RequireZeroAndClose()"):
+            generated.index("public void TerminateExactJobAndClose()")
+        ]
+        self.assertIn("if (!CloseHandle(jobHandle))", normal_close)
+        self.assertIn('throw new InvalidOperationException("Walker phase job handle did not close.")', normal_close)
+        self.assertLess(normal_close.index("if (!CloseHandle(jobHandle))"), normal_close.index("closed = true"))
 
     def test_prebuild_contract_is_one_build_then_hash_bound_dll_execution(self) -> None:
         module = self.live_smoke_module()
