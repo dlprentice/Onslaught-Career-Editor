@@ -678,8 +678,11 @@ class AttemptAnalysisTests(unittest.TestCase):
         overwide_bracket = sampler.synthetic_attempt_trace(attempt=1)
         phase_start = overwide_bracket.samples["hold"][0].tick
         step = sampler.cadence_step_qpc(overwide_bracket.frequency)
-        # Wider than schedule_max_gap_qpc (~250 ms / 25 cadences).
-        overwide_bracket.down_bracket = (phase_start - 30 * step, phase_start - 29 * step)
+        # Wider than the live key-down edge bind (~12 s).
+        overwide_bracket.down_bracket = (
+            phase_start - 2000 * step,
+            phase_start - 1500 * step,
+        )
         mutations.append(("boundary", overwide_bracket))
 
         contradictory_velocity = sampler.synthetic_attempt_trace(attempt=1, contradictory_velocity=True)

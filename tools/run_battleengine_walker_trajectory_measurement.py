@@ -410,10 +410,10 @@ class ExternalHarnessQInput:
         if self.events:
             raise RuntimeError("Q input permits exactly one key-down and one key-up")
         confirmed = self._handshake(down=True)
-        # p18: 0xBF800000/motion only during long post-hold waits. Hold Q long
-        # enough for Level 850 free-walk to accept keyboard Forward.
+        # Harness down:Q,wait:500 already holds Q focused; a short settle is enough
+        # before the observer's control-prove wait.
         if confirmed:
-            time.sleep(2.0)
+            time.sleep(0.25)
         self.events.append((Q_SCAN_CODE, False))
         self.down_confirmed = confirmed
         return confirmed
@@ -1127,6 +1127,9 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
     hold_rows: list[sampler.RawSample] = []
     step = sampler.cadence_step_qpc(clock.frequency)
     hold_origin_box: list[int] = []
+    # Effective key-down edge is when control proves, not when the external
+    # handshake finished (handshake + control wait can exceed 250 ms).
+    control_edge_box: list[int] = []
     for batch_start in range(0, sampler.PHASE_TARGETS["hold"], BATCH_SIZE):
         def batch(start=batch_start):
             deadline.check("hold")
@@ -1149,6 +1152,7 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
                     )
                     if probe.control_raw == sampler.FORWARD_CONTROL_RAW:
                         proved = True
+                        control_edge_box.append(probe_tick)
                         break
                     time.sleep(0.02)
                 if not proved:
@@ -1179,13 +1183,17 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
     run_digest = hashlib.sha256(
         (receipt.receipt_sha256 + str(attempt) + str(baseline_origin)).encode("ascii")
     ).hexdigest()
+    down_bracket = window.down_bracket
+    if control_edge_box:
+        # Bind the hold phase to the control-proven edge, preserving handshake start.
+        down_bracket = (window.down_bracket[0], control_edge_box[0])
     trace = sampler.AttemptTrace(
         attempt=attempt,
         receipt_sha256=receipt.receipt_sha256,
         run_digest=run_digest,
         frequency=clock.frequency,
         samples={"baseline": baseline, "hold": hold_rows, "release": release},
-        down_bracket=window.down_bracket,
+        down_bracket=down_bracket,
         up_bracket=window.up_bracket,
         integrity=sampler.AttemptIntegrity(cleanup_confirmed=False),
     )

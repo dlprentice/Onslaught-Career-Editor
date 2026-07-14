@@ -3354,11 +3354,12 @@ static int RunWalkerTrajectoryAttempt()
             }
             if (!harnessQHeld && File.Exists(qDownRequest) && !File.Exists(qDownAck))
             {
-                // Bound Forward is Q. Dual-path OS input plus direct KeyDown table poke
-                // (PlatformInput__GetKeyOn / DAT_00888c94) so KeyOn stays true while held.
+                // Bound Forward is Q. Use one focused down+wait block (same shape as the
+                // accepted multiplayer Q proofs) so KeyDown stays true across frames,
+                // then re-latch via KeyDown poke while the observer samples.
                 JsonElement qDownResult = SendInputSequence(
                     powershellExe, inputScript, managed.ProcessId, hwndHex,
-                    managed.ExecutablePath, managed.WorkingDirectory, "down:Q", 0,
+                    managed.ExecutablePath, managed.WorkingDirectory, "down:Q,wait:500", 0,
                     false, string.Empty, Path.Combine(artifactRoot, "harness-q-down.json"),
                     runtimeReceiptPath, receiptSha256, true);
                 if (!JsonStringIn(qDownResult, "status", "sent") || JsonInt(qDownResult, "sendInputEventsSent") < 1)
@@ -3370,25 +3371,29 @@ static int RunWalkerTrajectoryAttempt()
                 lastQRefreshMs = adapterWait.ElapsedMilliseconds;
                 qRefreshCount = 1;
             }
-            // Re-assert hold while sampling so KeyDown[Q] stays latched if anything
-            // flushes the LT key table mid-window.
+            // Prefer silent KeyDown re-latch at ~20 Hz. Full SendInput re-focus
+            // every 100 ms can interrupt the game; only re-send OS Q every 500 ms.
             if (harnessQHeld && !File.Exists(qUpRequest)
-                && adapterWait.ElapsedMilliseconds - lastQRefreshMs >= 100
-                && qRefreshCount < 80)
+                && adapterWait.ElapsedMilliseconds - lastQRefreshMs >= 50
+                && qRefreshCount < 200)
             {
-                JsonElement qRefresh = SendInputSequence(
-                    powershellExe, inputScript, managed.ProcessId, hwndHex,
-                    managed.ExecutablePath, managed.WorkingDirectory, "down:Q", 0,
-                    false, string.Empty,
-                    Path.Combine(artifactRoot, $"harness-q-refresh-{qRefreshCount:00}.json"),
-                    runtimeReceiptPath, receiptSha256, true);
-                if (JsonStringIn(qRefresh, "status", "sent"))
+                if (moduleBase > 0)
+                    PokeWalkerKeyDown(managed.ProcessId, moduleBase, WalkerForwardVirtualKey, 1);
+                if (adapterWait.ElapsedMilliseconds - lastQRefreshMs >= 500)
                 {
-                    if (moduleBase > 0)
-                        PokeWalkerKeyDown(managed.ProcessId, moduleBase, WalkerForwardVirtualKey, 1);
-                    lastQRefreshMs = adapterWait.ElapsedMilliseconds;
-                    qRefreshCount++;
+                    JsonElement qRefresh = SendInputSequence(
+                        powershellExe, inputScript, managed.ProcessId, hwndHex,
+                        managed.ExecutablePath, managed.WorkingDirectory, "down:Q", 0,
+                        false, string.Empty,
+                        Path.Combine(artifactRoot, $"harness-q-refresh-{qRefreshCount:00}.json"),
+                        runtimeReceiptPath, receiptSha256, true);
+                    if (!JsonStringIn(qRefresh, "status", "sent"))
+                    {
+                        // Keep KeyDown poke path even if a refresh send fails once.
+                    }
                 }
+                lastQRefreshMs = adapterWait.ElapsedMilliseconds;
+                qRefreshCount++;
             }
             if (harnessQHeld && File.Exists(qUpRequest) && !File.Exists(qUpAck))
             {

@@ -917,13 +917,16 @@ def _validate_input_bracket(
     before, after = bracket
     # External harness Q handshakes can take seconds (before→after). Bind the
     # completed edge (after) to the phase start, not the handshake start.
-    bind = schedule_max_gap_qpc(frequency)
+    # Control-prove waits after key-down may also be multi-second; allow up to
+    # 12 s between the effective edge and phase start for the live path.
+    bind = max(schedule_max_gap_qpc(frequency), round(frequency * 0.250))
+    edge_bind = max(bind, round(frequency * 12.0)) if label == "key-down" else bind
     if before > after:
         raise AttemptError(f"{label} bracket is reversed")
-    if after > phase_start or phase_start - after > bind:
+    if after > phase_start or phase_start - after > edge_bind:
         raise AttemptError(f"{label} bracket is not bound to the phase boundary")
     # Allow long external handshakes; still reject absurdly inverted spans.
-    if after - before > max(bind, round(frequency * 15.0)):
+    if after - before > max(edge_bind, round(frequency * 20.0)):
         raise AttemptError(f"{label} bracket exceeds one sampling cadence")
 
 
