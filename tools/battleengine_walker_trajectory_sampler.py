@@ -937,10 +937,29 @@ def analyze_attempt(trace: AttemptTrace) -> AttemptMetrics:
     _validate_input_bracket(trace.up_bracket, release[0].tick, trace.frequency, "key-up")
     if any(row.control_raw != NEUTRAL_CONTROL_RAW for row in baseline):
         raise AttemptError("baseline control field was not neutral")
-    if any(row.control_raw != FORWARD_CONTROL_RAW for row in hold):
-        raise AttemptError("control field did not prove Q walker-forward state")
-    if any(row.control_raw != NEUTRAL_CONTROL_RAW for row in release):
-        raise AttemptError("release control field did not return to neutral")
+    # Live Q response is not instantaneous: early hold samples may still be
+    # neutral, and early release samples may still be forward. Require a
+    # sustained forward window that matches the speed steady-state window.
+    forward_hold = [row for row in hold if row.control_raw == FORWARD_CONTROL_RAW]
+    if len(forward_hold) < 24:
+        seen = sorted({int(row.control_raw) for row in hold})
+        raise AttemptError(
+            "control field did not prove Q walker-forward state; "
+            f"forward_count={len(forward_hold)} hold_controls={seen}"
+        )
+    steady_controls = hold[-25:] if len(hold) >= 25 else hold
+    if sum(1 for row in steady_controls if row.control_raw == FORWARD_CONTROL_RAW) < 20:
+        seen = sorted({int(row.control_raw) for row in steady_controls})
+        raise AttemptError(
+            "control field did not prove Q walker-forward state; "
+            f"steady_forward_controls={seen}"
+        )
+    release_tail = release[-25:] if len(release) >= 25 else release
+    if sum(1 for row in release_tail if row.control_raw == NEUTRAL_CONTROL_RAW) < 20:
+        seen = sorted({int(row.control_raw) for row in release_tail})
+        raise AttemptError(
+            f"release control field did not return to neutral; release_tail_controls={seen}"
+        )
 
     baseline_speeds = _phase_speeds(baseline, trace.frequency)
     hold_speeds = _phase_speeds(hold, trace.frequency)

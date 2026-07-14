@@ -1126,9 +1126,11 @@ def run_observer(args: argparse.Namespace) -> int:
             authorized_root,
         )
         deadline.check()
+        # Persist raw samples before analysis so failed control/schedule gates
+        # still leave private evidence for the next tooling fix.
+        _write_new_json(raw_path, _trace_payload(trace, INTERFERENCE_NONCLAIM))
         metrics = analyze_provisional_trace(trace)
         q_up_confirmed = True
-        _write_new_json(raw_path, _trace_payload(trace, INTERFERENCE_NONCLAIM))
         _write_new_json(metrics_path, _metrics_payload(metrics))
     except BaseException as exc:
         failure = f"{type(exc).__name__}: {exc}"

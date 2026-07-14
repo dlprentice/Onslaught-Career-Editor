@@ -654,9 +654,11 @@ class AttemptAnalysisTests(unittest.TestCase):
         mutations.append(("slot", wrong_slot))
 
         contradictory_control = sampler.synthetic_attempt_trace(attempt=1)
-        contradictory_control.samples["hold"][20] = sampler.replace_sample(
-            contradictory_control.samples["hold"][20], control_raw=sampler.NEUTRAL_CONTROL_RAW
-        )
+        for index in range(len(contradictory_control.samples["hold"])):
+            contradictory_control.samples["hold"][index] = sampler.replace_sample(
+                contradictory_control.samples["hold"][index],
+                control_raw=sampler.NEUTRAL_CONTROL_RAW,
+            )
         mutations.append(("control", contradictory_control))
 
         nonfinite = sampler.synthetic_attempt_trace(attempt=1)
