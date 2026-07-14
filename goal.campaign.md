@@ -87,7 +87,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 |----|-----------|--------|-------|
 | M1.1 | Walker forward scalar | landed | v2 + `WalkerSpeedPerTick=100` |
 | M1.2 | Jet forward/thrust scalar | landed | v1 + `JetSpeedPerTick=381` |
-| M1.3 | Turn / yaw rate scalar | open | dual-accept before Core |
+| M1.3 | Turn / yaw rate scalar | in_progress | Offline harness + plan landed 2026-07-14; live dual-accept pending |
 | M1.4 | Strafe / lateral scalar | open | |
 | M1.5 | Transform morph timing + energy gate | open | harness + Core |
 | M1.6 | Friction / coast / release models beyond scalar speed | open | may share harnesses |
@@ -153,7 +153,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 |----|-----------|--------|
 | M8.1 | Runtime pair runners + unit tests (no live BEA for unit) | landed foundation |
 | M8.2 | Lab strip after closeout | landed |
-| M8.3 | Per-system regression checkers for each landed contract | in_progress |
+| M8.3 | Per-system regression checkers for each landed contract | landed | walker+jet JSON regression CLI + tests (2026-07-14) |
 | M8.4 | Expand `npm` scripts only when a gate is re-run often | open |
 
 ## Campaign exit criteria (when `/goal` may stop)
@@ -180,6 +180,7 @@ public release.
 |--------|----------|------|---------------|
 | Walker forward | `walker-forward-scalar-response-v2` | `WalkerSpeedPerTick=100` | p27 |
 | Jet thrust | `jet-forward-scalar-response-v1` | `JetSpeedPerTick=381` | jet-p06 |
+| Walker turn/yaw | scaffold v0 + plan only | — (no Core) | live dual-accept pending |
 
 ## How agents update this file
 

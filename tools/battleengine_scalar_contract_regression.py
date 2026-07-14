@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+"""Regression checker for landed public scalar motion contracts.
+
+Drives the real tracked JSON contracts (walker v2, jet v1) and fails if the
+files are missing, schema-broken, or envelope-incoherent. No live BEA.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import sys
+from pathlib import Path
+from typing import Any, Mapping, Sequence
+
+ROOT = Path(__file__).resolve().parents[1]
+CONTRACTS = (
+    ROOT
+    / "reverse-engineering"
+    / "game-mechanics"
+    / "walker-forward-scalar-response-v2.json",
+    ROOT
+    / "reverse-engineering"
+    / "game-mechanics"
+    / "jet-forward-scalar-response-v1.json",
+)
+
+
+class ContractRegressionError(ValueError):
+    pass
+
+
+def _require_mapping(value: Any, label: str) -> Mapping[str, Any]:
+    if not isinstance(value, dict):
+        raise ContractRegressionError(f"{label} must be an object")
+    return value
+
+
+def _require_finite(value: Any, label: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(float(value)):
+        raise ContractRegressionError(f"{label} must be a finite number")
+    return float(value)
+
+
+def _require_range(value: Any, label: str) -> tuple[float, float]:
+    row = _require_mapping(value, label)
+    if set(row) != {"lower", "upper"}:
+        raise ContractRegressionError(f"{label} must have lower/upper only")
+    lower = _require_finite(row["lower"], f"{label}.lower")
+    upper = _require_finite(row["upper"], f"{label}.upper")
+    if lower > upper:
+        raise ContractRegressionError(f"{label} lower exceeds upper")
+    return lower, upper
+
+
+def validate_landed_scalar_contract(path: Path) -> dict[str, object]:
+    """Validate one tracked public scalar contract file on the real path."""
+
+    if not path.is_file():
+        raise ContractRegressionError(f"missing contract: {path}")
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    root = _require_mapping(payload, str(path))
+    for key in ("schemaVersion", "status", "claim", "attempts", "envelope", "nonclaims"):
+        if key not in root:
+            raise ContractRegressionError(f"{path.name} missing {key}")
+    if root["status"] != "two-accepted-fresh-attempts":
+        raise ContractRegressionError(f"{path.name} status is not dual-accept")
+    attempts = root["attempts"]
+    if not isinstance(attempts, list) or len(attempts) != 2:
+        raise ContractRegressionError(f"{path.name} must have exactly two attempts")
+    speeds: list[float] = []
+    for index, attempt in enumerate(attempts, start=1):
+        row = _require_mapping(attempt, f"attempt[{index}]")
+        metrics = _require_mapping(row.get("metrics"), f"attempt[{index}].metrics")
+        speed = _require_finite(metrics.get("steadySpeed"), f"attempt[{index}].steadySpeed")
+        if speed <= 0:
+            raise ContractRegressionError(f"attempt[{index}] steadySpeed must be positive")
+        speeds.append(speed)
+        latency = _require_mapping(
+            metrics.get("responseLatencyMs"), f"attempt[{index}].responseLatencyMs"
+        )
+        _require_range(latency, f"attempt[{index}].responseLatencyMs")
+    envelope = _require_mapping(root["envelope"], "envelope")
+    lower, upper = _require_range(envelope.get("steadySpeed"), "envelope.steadySpeed")
+    for speed in speeds:
+        if speed < lower * 0.99 or speed > upper * 1.01:
+            raise ContractRegressionError(
+                f"{path.name} attempt steadySpeed {speed} outside envelope [{lower}, {upper}]"
+            )
+    relative = abs(speeds[0] - speeds[1]) / min(speeds)
+    if relative > 0.12:
+        raise ContractRegressionError(
+            f"{path.name} pair steadySpeed relative delta {relative:.4f} too large"
+        )
+    nonclaims = root["nonclaims"]
+    if not isinstance(nonclaims, list) or not nonclaims:
+        raise ContractRegressionError(f"{path.name} nonclaims must be a non-empty list")
+    return {
+        "path": str(path.relative_to(ROOT)).replace("\\", "/"),
+        "schemaVersion": root["schemaVersion"],
+        "steadySpeeds": speeds,
+        "envelopeSteadySpeed": {"lower": lower, "upper": upper},
+        "relativeDelta": relative,
+    }
+
+
+def validate_all_landed_contracts(
+    paths: Sequence[Path] | None = None,
+) -> list[dict[str, object]]:
+    selected = list(paths) if paths is not None else list(CONTRACTS)
+    return [validate_landed_scalar_contract(path) for path in selected]
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
+    parser.add_argument(
+        "--contract",
+        action="append",
+        type=Path,
+        default=None,
+        help="Optional explicit contract path (repeatable); default = landed walker+jet",
+    )
+    args = parser.parse_args(argv)
+    try:
+        reports = validate_all_landed_contracts(args.contract)
+    except ContractRegressionError as exc:
+        print(f"FAIL: {exc}", file=sys.stderr)
+        return 2
+    print(json.dumps({"passed": True, "contracts": reports}, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
