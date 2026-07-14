@@ -6,36 +6,40 @@ Policy: `goal.policy.md`
 
 ## Objective
 
-Turn Onslaught Toolkit into a high-quality preservation, modding, and rebuild
-project that is pleasant for contributors to understand and change. Improve
-repository structure, contributor workflow, WinUI usability, patch/mod
-correctness, reverse-engineering quality, Lore quality, and runnable
-RE-informed original-code rebuild capability without overstating evidence or
-publishing proprietary game payloads. Preserve a separately staffed sealed-spec
-clean-room path as a future option rather than a current claim.
+Aggressively reconstruct Battle Engine Aquila from the provided Onslaught C++
+source, the pinned legacy AYA extractor, the existing safe Python extraction
+pipeline, the repository's accumulated RE corpus, Steam static evidence, and
+controlled copied-runtime measurements. Complete deterministic local extraction
+coverage for every observed retail resource family and rebuild source-named
+game systems in deterministic Core. Keep proprietary payloads local, preserve
+the installed game and original executable, and label source hypotheses, Steam
+agreements, runtime measurements, rebuild contracts, and unresolved differences
+separately.
 
 ## Current Slice
 
-Use the integrated scalar walker tooling to obtain exactly two accepted fresh
-copied-runtime measurements, publish one bounded public-safe movement contract,
-and implement that contract in deterministic Core. In parallel, correct and
-re-accept the Home first-run keyboard-focus behavior without weakening its
-normal/760 visual contract. Do not install or revive the legacy x86 extractor
-toolchain.
+Continue from pushed integration main after the 2026-07-13 closeout. The source
+crosswalk, bounded AYA observation producer, export-outcome producer, retained
+CMSH attributes, opt-in inverse-transpose UV/normal OBJ output, and corrected
+two-attempt Runtime lifecycle are integrated. The Home hierarchy/focus policy
+is integrated as source/non-native behavior only; native first-run focus remains
+unaccepted.
 
-1. use the integrated four-path copied-runtime measurement lifecycle adapter
-   without changing its accepted receipt, cleanup, or two-attempt contract;
-2. execute exactly two fresh receipt-bound scalar walker-forward attempts only
-   after the adapter and cleanup gates are accepted; one invalid attempt stops
-   the pair without a third run;
-3. publish a path-free scalar response contract only when both attempts pass the
-   predeclared cadence, drift, latency, release, and cross-run stability rules;
-4. implement that accepted contract in deterministic Core and verify it through
-   the existing client/headless boundaries; and
-5. separately correct the proven Home first-run focus failure, then obtain the
-   already-defined no-click normal/760 native evidence. Keep textures/GLB, DDS
-   decoding, LNDS terrain, animation/bones, broader camera/morph fidelity, and
-   parity as later contracts. Do not create a release or tag.
+1. obtain a fresh separately authorized pair of exactly two accepted copied-
+   runtime walker-forward measurements using the integrated Runtime tooling;
+2. publish a bounded behavior contract only if both attempts pass, then
+   implement that source-named behavior in deterministic Core and verify it
+   through headless and Godot clients;
+3. extend the accepted inventory/export producer contracts into complete local
+   corpus coverage for every observed archive/tag/extension and deterministic
+   output family, keeping proprietary payloads ignored/local;
+4. repair the isolated `walkerref` draft before integration: keep it outside
+   `rebuild/`, reuse the hardened crosswalk validator, model both water checks
+   independently, partition scalar-measurable from future-probe fields, and name
+   exact Core targets; and
+5. retain the Home native-focus nonclaim until a fresh native acceptance run.
+
+No release or tag is authorized by this slice.
 
 ## Current Slice Progress - 2026-07-13
 
@@ -91,8 +95,13 @@ toolchain.
   evidence. First Flight's transform/resource/movement choices remain synthetic.
 - The cleanup-first copied-runtime walker measurement adapter is integrated at
   `9c22a5b6`. Its integrated focused gates pass 20 adapter tests and 49
-  safe-copy/lifecycle tests. It adds no live result: exactly two fresh accepted
-  attempts are still required before publishing a contract or changing Core.
+  safe-copy/lifecycle tests. One later two-attempt aggregate was consumed and
+  stopped correctly after attempt 1 failed before Q-down on an unclassified
+  null runtime-chain hop and an incorrectly early observer budget; attempt 2
+  was absent, cleanup reached zero, and no measurement or contract resulted.
+  The six-path one-prebuild/hop-readiness correction is in non-native TDD.
+  Exactly two new fresh accepted attempts are still required before publishing
+  a contract or changing Core.
 - Two dedicated user-owned lanes now aggressively mine the pinned Onslaught C++
   source and the legacy AYAResourceExtractor/current Python extractor. Their
   purpose is executable source-to-Steam reconstruction and extractor/GUI
@@ -660,25 +669,21 @@ claim against an already malicious process running as the same Windows user.
 
 ## Next Slices
 
-1. After a human selects an Aquila from the anonymous CMSH v0 previews, inspect
-   one selected local DDS profile,
-   implement only its independently specified BC decoder, and emit one guarded
-   self-contained textured GLB without broad format claims.
-2. Freeze and implement one measured movement/morph/camera behavior contract in
-   deterministic Core; use a simpler bounded retail observation when possible.
-3. Complete the coherent normal Toolkit journey while the Player Value lane
-   moves specialist launch/control/online/music/BEA diagnostics behind Lab.
-4. Integrate the bounded repeated-NatVis parser correction as runtime
-   infrastructure, but do not run Retry 13 unless a later behavior contract
-   directly requires it.
-5. Perform the separate bounded review needed to correct the remaining
-   `0x004dac90` live metadata debt without reviving the rejected manifest row.
-6. Retire or fail-close active BattleEngine tools that can reapply withdrawn
-   ownership, then harden AYA export dependency/template preflight.
-7. Run the deep Lore editorial/provenance pass and generated contributor
-   front-door indexing in parallel where it does not compete for RE evidence.
-8. Continue subsystem-by-subsystem binary re-review and rebuild fidelity work
-   while preserving the separate sealed-spec clean-room option.
+1. Resolve and export the selected BattleEngine texture/material dependencies,
+   then compose hierarchy and frame transforms without guessing retail slot or
+   articulation semantics.
+2. Expand deterministic extraction and private coverage to terrain, world,
+   entity, mission/script, camera, audio, animation, and skeletal families.
+3. Reconstruct walker, jet, morph, camera, weapons, player/controller, world,
+   mission, and AI systems subsystem by subsystem from source, Steam deltas,
+   and only the runtime measurements that remain necessary.
+4. Make First Flight consume accepted deterministic Core behavior and extracted
+   local assets; treat it as a client and integration verifier, never as retail
+   evidence by self-agreement.
+5. Let WinUI consume path-free extractor catalogs and safe local workflows after
+   the underlying extraction contracts exist.
+6. Retain the separately staffed sealed-spec clean-room option without
+   mislabeling the active RE-informed GPL implementation.
 
 ## Stop Conditions
 

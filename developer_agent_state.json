@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-13",
   "routingPolicy": "Follow the global Codex multi-agent lane contract. Under current direct user policy, every new or resumed Codex-owned worker uses gpt-5.6-sol at medium effort by default; harder work may raise Sol effort, and Terra/Luna fallback or lower effort requires a newer direct user instruction.",
-  "currentFocus": "Use the integrated copied-runtime walker measurement lifecycle to obtain exactly two accepted scalar-response attempts and turn the resulting bounded contract into deterministic Core behavior. In parallel, aggressively crosswalk the Onslaught C++/Steam/AYA resource systems, extend the existing Python extractor, and correct the proven Home first-run focus failure.",
+  "currentFocus": "Continue complete local retail extraction and source-led reconstruction from the integrated Runtime, AYA producer, and CMSH attribute foundations. The immediate critical path is one fresh accepted two-attempt walker measurement, a bounded public behavior contract, and deterministic Core implementation; complete corpus extraction coverage proceeds in parallel without treating schemas as outcomes.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -17,11 +17,11 @@
       "newReleaseAuthorized": false
     },
     "repository": {
-      "registeredWorktrees": 10,
-      "worktreeOwnership": "main owner/integration; read-only Task-Lane Coordinator and Campaign Steward; active Player Value & UX, Rebuild Asset Pipeline, Onslaught C++ Source Mining, and AYA Extractor/Python Tool lanes; completed Runtime Fidelity, Lore Editorial, and Ghidra Semantic Debt registrations pending archive/removal when handles allow",
+      "registeredWorktrees": 4,
+      "worktreeOwnership": "Main is Owner/integration. Coordinator and Steward are retained control/review tasks. All completed worker registrations were removed. One isolated walkerref worktree remains as rejected WIP requiring five material corrections before integration; no worker task owns it.",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "9c22a5b6 (bounded walker trajectory measurement adapter); selected-asset presentation state is pushed at 57f6a63e",
+      "lastPushedBeforeCurrentSlice": "b6bb93b5 before this closeout; local main now contains Runtime e04cce2e plus b982a006, Home 8bbc384d, AYA export outcomes f368287d, and CMSH attributes e8bf0426 pending the final baton commit/push.",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
@@ -107,9 +107,9 @@
       "status": "Tasks 1-4 are accepted. Task 5 has twelve preserved failed executions and no published identity claim. Retry 12 proves neither Q causality nor Transform/Morph/Move/JetPart identity; it exposed a repeated post-quit NatVis shutdown-grammar defect. Another live run requires an integrated strict path-bound correction and wholly fresh controls."
     },
     "walkerTrajectoryMeasurement": {
-      "tooling": "The platform-neutral scalar sampler/schema is integrated at aee7916b. The cleanup-first copied-runtime lifecycle adapter is integrated at 9c22a5b6 with 20 focused adapter tests and 49 safe-copy/lifecycle tests passing on main; it binds receipt/process/module/window identity, read-only process-memory access, exact Q down/up cleanup, fresh attempt roots, AppCore launch/stop/census, and no-third/no-public-output behavior.",
+      "tooling": "The corrected one-prebuild/two-attempt lifecycle is integrated at e04cce2e. Focused suites passed 25 sampler, 31 orchestrator, and 60 smoke tests; the full runtime-tooling-safety aggregate passed 8 profile, 24 CDB, 21 input, 60 smoke, and 55 cleanup tests. No live BEA launch or accepted measurement occurred.",
       "claimBoundary": "The future measurement is scalar motion response only. It does not establish actor- or camera-relative direction, grounded or terrain state, turning, morph, handling, timing below the 10 ms cadence, parity, or Core acceptance.",
-      "executionBoundary": "No copied-runtime attempt, input action, CDB/Ghidra action, public JSON/Markdown contract, or Core change has occurred. Exactly two fresh accepted attempts are required before a separate public-contract lease; one invalid attempt stops the pair without a third run."
+      "executionBoundary": "The prior live pair remains invalid and absent from Core. The corrected tooling is non-live accepted only. A future live action requires a fresh serialized exactly-two-attempt lease; either invalid attempt stops the pair and no third attempt or public contract follows."
     },
     "agentGuidanceAudit": {
       "integrated": "56738f9b",
@@ -133,18 +133,17 @@
     ]
   },
   "activeBlockers": [
-    "A fresh AYAResourceExtractor solution build fails with MSB4278 because the Visual C++ targets/VCTargetsPath are unavailable; existing ignored runtime binaries are not a reproducible build.",
-    "The Home newcomer hierarchy is source-green, but its single native acceptance failed because first-run arrival focus did not reach the visible HomeSetupActionButton within five seconds; diagnosis and a bounded correction require a new lease before another native run.",
-    "No accepted copied-runtime morph/movement timeline exists yet, so retail constants and transition behavior cannot be frozen into the rebuild.",
-    "AYA lacks a tracked public end-to-end synthetic importer/DDS/FBX fixture, and bundled-component redistribution posture remains unresolved."
+    "No accepted two-attempt copied-runtime walker measurement exists; therefore no measured walker contract or source-named deterministic Core behavior exists.",
+    "Complete private-corpus extraction/export coverage is not yet executed. The integrated AYA observation and export-outcome producers are prerequisites, not completeness.",
+    "The isolated walkerref draft is not integration-ready: it must move outside rebuild provenance, reuse the hardened crosswalk validator, model independent water checks and feasible wraps, partition measurable fields, and name exact Core targets.",
+    "Home source policy is integrated, but native first-run arrival focus and normal/760 visual acceptance remain unproven."
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Finish, review, commit, and integrate the exact four-path copied-runtime walker measurement lifecycle without live game action; then request the separately serialized exactly-two-attempt measurement lease.",
-    "Retain the integrated strict repeated-NatVis shutdown grammar as runtime infrastructure, but do not run Retry 13 unless a later measured behavior contract directly requires it.",
-    "Preserve the integrated Ghidra recovery overlay and transcript evidence until explicit retention acceptance; the task worktree is already retired.",
-    "Keep the accepted camera/movement/morph candidate runtime-required; use its cheaper ordered observations before any rebuild-mechanics change. The two confirmed stale BattleEngine mutator pairs are now fail-closed; add Fbx.dll plus FBX-template fail-fast preflight separately.",
-    "After both scalar walker attempts are accepted, freeze the bounded public-safe movement contract and implement it in deterministic Core plus the client/headless verification boundary.",
-    "Correct the proven Home first-run focus behavior without weakening setup visibility, semantic order, no-click behavior, or the atomic normal/760 visual evidence contract; then request one fresh native acceptance lease."
+    "Authorize and execute one fresh exactly-two-attempt copied-runtime walker measurement with the integrated e04cce2e tooling; publish nothing if either attempt fails.",
+    "If both attempts pass, derive one bounded behavior contract and implement the named Forward/Move/UpdateWalkCycle behavior in deterministic Core with headless and Godot verification.",
+    "Extend the accepted AYA inventory and export-outcome records into parser-free complete-corpus coverage, then run one ignored/local corpus census and deterministic export reconciliation.",
+    "Repair or replace the isolated walkerref draft under the five recorded provenance/branch/promotion/Core-target corrections before integration.",
+    "Run a fresh native Home acceptance only when it does not delay reconstruction work."
   ]
 }
