@@ -410,6 +410,11 @@ class ExternalHarnessQInput:
         if self.events:
             raise RuntimeError("Q input permits exactly one key-down and one key-up")
         confirmed = self._handshake(down=True)
+        # p18: hold samples finished with control==0; motion and 0xBF800000 only
+        # appeared during the multi-second key-up wait. Give the game time to
+        # process Forward before the hold sampling window starts.
+        if confirmed:
+            time.sleep(0.75)
         self.events.append((Q_SCAN_CODE, False))
         self.down_confirmed = confirmed
         return confirmed
@@ -417,6 +422,8 @@ class ExternalHarnessQInput:
     def key_up(self) -> bool:
         if self.events != [(Q_SCAN_CODE, False)]:
             raise RuntimeError("Q input permits exactly one key-down and one key-up")
+        # Keep Q held briefly after hold samples so velocity can integrate.
+        time.sleep(0.25)
         confirmed = self._handshake(down=False)
         self.events.append((Q_SCAN_CODE, True))
         self.up_confirmed = confirmed
