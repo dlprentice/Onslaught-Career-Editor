@@ -111,6 +111,12 @@ NEUTRAL_CONTROL_RAW = 0x00000000
 FORWARD_CONTROL_RAW = 0xBF800000
 MAX_COHERENCE_PAIRS = 3
 CADENCE_MS = 10
+# Source/Steam-static hypothesis for actor integration (CLOCK_TICK / GAME_FR).
+# Polling stays at CADENCE_MS; this window is only for position-derived speed and
+# per-update velocity corroboration. It is not a retail tick proof.
+PHYSICS_TICK_MS = 50
+PHYSICS_TICK_SECONDS = PHYSICS_TICK_MS / 1000.0
+POSITION_EDGE_EPSILON = 1e-6
 FREQUENCY_FIXTURE = 10_000_000
 PHASE_TARGETS = {"baseline": 50, "hold": 75, "release": 75}
 PHASE_MINIMUMS = {"baseline": 48, "hold": 72, "release": 72}
@@ -551,6 +557,10 @@ def _distance(a: Sequence[float], b: Sequence[float]) -> float:
     return math.sqrt(sum((x - y) ** 2 for x, y in zip(a, b)))
 
 
+def _vector_magnitude(values: Sequence[float]) -> float:
+    return math.sqrt(sum(value * value for value in values))
+
+
 def _percentile(values: Sequence[float], percentile: float) -> float:
     ordered = sorted(values)
     if not ordered:
@@ -559,14 +569,121 @@ def _percentile(values: Sequence[float], percentile: float) -> float:
     return ordered[index]
 
 
-def _phase_speeds(samples: Sequence[RawSample], frequency: int) -> list[tuple[RawSample, float]]:
+def _phase_speeds(
+    samples: Sequence[RawSample],
+    frequency: int,
+    *,
+    window_ms: int = PHYSICS_TICK_MS,
+) -> list[tuple[RawSample, float]]:
+    """Wall-clock speed from position change over a fixed poll lag.
+
+    Adjacent 10 ms samples of per-update integrated motion are mostly zero with
+    occasional spikes. A lag matching the source physics tick recovers
+    units/second without treating the poll rate as the simulation rate.
+    """
+
+    if window_ms <= 0:
+        raise AttemptError("speed window must be positive")
+    lag = max(1, window_ms // CADENCE_MS)
     result: list[tuple[RawSample, float]] = []
-    for previous, current in zip(samples, samples[1:]):
+    for index in range(lag, len(samples)):
+        previous = samples[index - lag]
+        current = samples[index]
         elapsed = (current.tick - previous.tick) / frequency
         if elapsed <= 0:
             raise AttemptError("sample time must be monotonic")
         result.append((current, _distance(current.position, previous.position) / elapsed))
     return result
+
+
+def _position_update_edges(
+    samples: Sequence[RawSample],
+    frequency: int,
+) -> list[tuple[RawSample, float, float]]:
+    """Return (sample, per-update displacement, wall elapsed) at position edges."""
+
+    edges: list[tuple[RawSample, float, float]] = []
+    for previous, current in zip(samples, samples[1:]):
+        elapsed = (current.tick - previous.tick) / frequency
+        if elapsed <= 0:
+            raise AttemptError("sample time must be monotonic")
+        displacement = _distance(current.position, previous.position)
+        if displacement <= POSITION_EDGE_EPSILON:
+            continue
+        edges.append((current, displacement, elapsed))
+    return edges
+
+
+def _median_inter_edge_seconds(
+    edges: Sequence[tuple[RawSample, float, float]],
+    frequency: int,
+) -> float:
+    """Infer update period from observed position edges; fall back to hypothesis."""
+
+    if len(edges) < 2:
+        return PHYSICS_TICK_SECONDS
+    periods = [
+        (current.tick - previous.tick) / frequency
+        for (previous, _d0, _e0), (current, _d1, _e1) in zip(edges, edges[1:])
+    ]
+    period = statistics.median(periods)
+    if period <= 0:
+        raise AttemptError("update edge period must be positive")
+    # Keep the hypothesis only as a sanity band; do not require exact 50 ms.
+    if period < 0.5 * PHYSICS_TICK_SECONDS or period > 2.0 * PHYSICS_TICK_SECONDS:
+        raise AttemptError("inferred update period is outside the accepted hypothesis band")
+    return period
+
+
+def _corroborate_velocity_with_updates(
+    samples: Sequence[RawSample],
+    frequency: int,
+    *,
+    steady_speed: float,
+    update_period_seconds: float,
+) -> None:
+    """Treat actor velocity as displacement per simulation update."""
+
+    edges = _position_update_edges(samples, frequency)
+    for row, displacement, _elapsed in edges:
+        velocity_step = _vector_magnitude(row.velocity)
+        tolerance = max(
+            0.05 * max(steady_speed * update_period_seconds, 1e-6),
+            0.10 * displacement,
+        )
+        if abs(velocity_step - displacement) > tolerance:
+            raise AttemptError("velocity does not corroborate position-derived response")
+
+
+def _corroborate_velocity_with_windowed_speeds(
+    phase_speeds: Sequence[tuple[RawSample, float]],
+    *,
+    steady_speed: float,
+    update_period_seconds: float,
+) -> None:
+    """Corroborate velocity against windowed wall speed without false edge transitions.
+
+    Compare only when both signals are active. Separately, a fully settled tail
+    must not keep advertising hold-scale per-update velocity.
+    """
+
+    if update_period_seconds <= 0:
+        raise AttemptError("update period must be positive")
+    active = 0.10 * steady_speed
+    for row, position_speed in phase_speeds:
+        velocity_as_speed = _vector_magnitude(row.velocity) / update_period_seconds
+        if position_speed >= active and velocity_as_speed >= active:
+            tolerance = max(0.05 * steady_speed, 0.15 * position_speed)
+            if abs(velocity_as_speed - position_speed) > tolerance:
+                raise AttemptError("velocity does not corroborate position-derived response")
+    if len(phase_speeds) < 9:
+        return
+    tail = phase_speeds[-(len(phase_speeds) // 3) :]
+    if not all(speed < active for _, speed in tail):
+        return
+    for row, _speed in tail:
+        if _vector_magnitude(row.velocity) / update_period_seconds > 0.50 * steady_speed:
+            raise AttemptError("velocity does not corroborate position-derived response")
 
 
 def _round_interval(
@@ -759,14 +876,16 @@ def analyze_attempt(trace: AttemptTrace) -> AttemptMetrics:
     baseline_speeds = _phase_speeds(baseline, trace.frequency)
     hold_speeds = _phase_speeds(hold, trace.frequency)
     release_speeds = _phase_speeds(release, trace.frequency)
-    steady_rows = hold_speeds[-25:]
+    if len(hold_speeds) < 24:
+        raise AttemptError("steady window undersampled")
+    steady_rows = hold_speeds[-25:] if len(hold_speeds) >= 25 else hold_speeds
     if len(steady_rows) < 24:
         raise AttemptError("steady window undersampled")
     steady_speed = statistics.median(speed for _, speed in steady_rows)
     if steady_speed <= 0:
         raise AttemptError("response steady speed is not positive")
     baseline_values = [speed for _, speed in baseline_speeds]
-    b95 = _percentile(baseline_values, 0.95)
+    b95 = _percentile(baseline_values, 0.95) if baseline_values else 0.0
     endpoint = _distance(baseline[0].position, baseline[-1].position)
     if b95 > 0.05 * steady_speed or endpoint > 0.05 * steady_speed * 0.500:
         raise AttemptError("baseline drift exceeded the predeclared bound")
@@ -782,20 +901,33 @@ def analyze_attempt(trace: AttemptTrace) -> AttemptMetrics:
     slope = _slope(steady_rows, trace.frequency)
     if abs(slope) > 0.10 * steady_speed:
         raise AttemptError("steady slope exceeded the predeclared bound")
-    baseline_velocity = statistics.median(math.sqrt(sum(value * value for value in row.velocity)) for row in baseline)
-    hold_velocity = statistics.median(math.sqrt(sum(value * value for value in row.velocity)) for row in hold)
+    baseline_velocity = statistics.median(_vector_magnitude(row.velocity) for row in baseline)
+    hold_velocity = statistics.median(_vector_magnitude(row.velocity) for row in hold)
     ratio = hold_velocity / max(baseline_velocity, 1e-9)
     if ratio <= 5.0:
         raise AttemptError("velocity hold-to-baseline ratio did not exceed five")
-    for phase_rows in (hold_speeds, release_speeds):
-        for row, position_speed in phase_rows:
-            velocity_speed = math.sqrt(sum(value * value for value in row.velocity))
-            tolerance = max(0.05 * steady_speed, 0.10 * position_speed)
-            if abs(velocity_speed - position_speed) > tolerance:
-                raise AttemptError("velocity does not corroborate position-derived response")
-    steady_velocity = statistics.median(
-        math.sqrt(sum(value * value for value in row.velocity)) for row, _ in steady_rows
+    hold_edges = _position_update_edges(hold, trace.frequency)
+    if not hold_edges:
+        raise AttemptError("velocity does not corroborate position-derived response")
+    update_period = _median_inter_edge_seconds(hold_edges, trace.frequency)
+    _corroborate_velocity_with_updates(
+        hold, trace.frequency, steady_speed=steady_speed, update_period_seconds=update_period
     )
+    _corroborate_velocity_with_updates(
+        release, trace.frequency, steady_speed=steady_speed, update_period_seconds=update_period
+    )
+    _corroborate_velocity_with_windowed_speeds(
+        hold_speeds, steady_speed=steady_speed, update_period_seconds=update_period
+    )
+    _corroborate_velocity_with_windowed_speeds(
+        release_speeds, steady_speed=steady_speed, update_period_seconds=update_period
+    )
+    # Quiet release tails may have no final edges after settling; require that any
+    # observed edges still match, and that the steady hold edges match wall speed.
+    steady_velocity_step = statistics.median(
+        _vector_magnitude(row.velocity) for row, _displacement, _elapsed in hold_edges[-5:]
+    )
+    steady_velocity = steady_velocity_step / update_period
     if abs(steady_velocity - steady_speed) > 0.10 * steady_speed:
         raise AttemptError("velocity does not corroborate position-derived steady speed")
 
@@ -938,6 +1070,7 @@ def materialize_pair(attempts: Sequence[AttemptMetrics]) -> dict[str, object]:
         "schemaVersion": public_schema.PUBLIC_SCHEMA,
         "status": public_schema.PUBLIC_STATUS,
         "claim": public_schema.PUBLIC_CLAIM,
+        "metricUnits": dict(public_schema.PUBLIC_METRIC_UNITS),
         "sampling": {
             "clock": "query-performance-counter",
             "cadenceMs": 10,
@@ -974,40 +1107,55 @@ def synthetic_attempt_trace(
     weak_velocity: bool = False,
     contradictory_velocity: bool = False,
 ) -> AttemptTrace:
+    """Build a source-shaped ~20 Hz integrated trajectory polled at CADENCE_MS.
+
+    Actor velocity is displacement per physics update (`position += velocity`),
+    not units/second. Wall-clock speed is recovered by the tick-aware analyzer.
+    """
+
     ticks = synthetic_schedule_ticks()
     position = 0.0
     samples: dict[str, list[RawSample]] = {phase: [] for phase in PHASE_TARGETS}
+    samples_per_tick = max(1, PHYSICS_TICK_MS // CADENCE_MS)
+    global_slot = 0
+    velocity_step = 0.0
     for phase in ("baseline", "hold", "release"):
         for slot, tick in enumerate(ticks[phase]):
             if phase == "baseline":
-                speed = 10.0 if baseline_drift else 0.0
+                wall_speed = 10.0 if baseline_drift else 0.0
                 control = NEUTRAL_CONTROL_RAW
             elif phase == "hold":
                 if missing_response:
-                    speed = 0.0
+                    wall_speed = 0.0
                 elif slot < 2:
-                    speed = 0.0
+                    wall_speed = 0.0
                 elif slot < 50:
-                    speed = min(100.0, (slot - 1) * (100.0 / 48.0))
+                    wall_speed = min(100.0, (slot - 1) * (100.0 / 48.0))
                 else:
-                    speed = 100.0 + ((slot - 50) * 2.0 if unstable_steady else 0.0)
+                    wall_speed = 100.0 + ((slot - 50) * 2.0 if unstable_steady else 0.0)
                 control = NEUTRAL_CONTROL_RAW if missing_control else FORWARD_CONTROL_RAW
             else:
-                speed = 100.0 if missing_release else max(0.0, 100.0 - slot * 20.0)
+                # Decay across multiple physics ticks so release edges exist and
+                # settled-velocity forgeries remain detectable.
+                wall_speed = 100.0 if missing_release else max(0.0, 100.0 - slot * (100.0 / 48.0))
                 control = NEUTRAL_CONTROL_RAW
-            position += speed * (CADENCE_MS / 1000.0)
-            velocity_value = 0.0 if weak_velocity else speed * (2.0 if contradictory_velocity else 1.0)
+            # Integrate only on physics-tick boundaries (source-shaped staircase).
+            if global_slot % samples_per_tick == 0:
+                velocity_step = wall_speed * PHYSICS_TICK_SECONDS
+                position += velocity_step
+            stored_velocity = 0.0 if weak_velocity else velocity_step * (2.0 if contradictory_velocity else 1.0)
             samples[phase].append(
                 RawSample(
                     tick=tick,
                     phase=phase,
                     slot=slot,
                     position=(position, 0.0, 0.0),
-                    velocity=(velocity_value, 0.0, 0.0),
+                    velocity=(stored_velocity, 0.0, 0.0),
                     state_raw=WALKER_STATE_RAW,
                     control_raw=control,
                 )
             )
+            global_slot += 1
     down = (ticks["hold"][0] - 1000, ticks["hold"][0])
     up = (ticks["release"][0] - 1000, ticks["release"][0])
     return AttemptTrace(
@@ -1018,4 +1166,12 @@ def synthetic_attempt_trace(
         samples=samples,
         down_bracket=down,
         up_bracket=up,
+        integrity=AttemptIntegrity(
+            receipt_revalidated=True,
+            foreground_maintained=True,
+            key_down_confirmed=True,
+            key_up_confirmed=True,
+            interference_detected=False,
+            cleanup_confirmed=True,
+        ),
     )

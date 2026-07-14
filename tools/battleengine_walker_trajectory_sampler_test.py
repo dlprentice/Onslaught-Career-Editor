@@ -528,6 +528,74 @@ class AttemptAnalysisTests(unittest.TestCase):
         self.assertLessEqual(result.response_latency.lower_ms, result.response_latency.upper_ms)
         self.assertLessEqual(result.release_latency.lower_ms, result.release_latency.upper_ms)
         self.assertLessEqual(abs(result.steady_slope), 0.10 * result.steady_speed)
+        self.assertGreater(result.steady_speed, 50.0)
+
+    def test_accepts_source_shaped_20hz_staircase_despite_100hz_polling(self) -> None:
+        """Regression: per-update velocity at ~20 Hz must not look like zero steady speed."""
+
+        trace = sampler.synthetic_attempt_trace(attempt=1)
+        hold = trace.samples["hold"]
+        adjacent_zeros = 0
+        for previous, current in zip(hold, hold[1:]):
+            elapsed = (current.tick - previous.tick) / trace.frequency
+            adjacent = sampler._distance(current.position, previous.position) / elapsed
+            if adjacent <= 1e-9:
+                adjacent_zeros += 1
+        self.assertGreaterEqual(adjacent_zeros, 40)
+
+        result = sampler.analyze_attempt(trace)
+        self.assertTrue(result.accepted)
+        self.assertAlmostEqual(100.0, result.steady_speed, delta=15.0)
+        self.assertGreater(result.velocity_hold_to_baseline_ratio, 5.0)
+
+    def test_rejects_continuous_100hz_units_per_second_velocity_model(self) -> None:
+        """Old continuous fixture (pos+=speed*dt, velocity=speed) must not pass."""
+
+        ticks = sampler.synthetic_schedule_ticks()
+        position = 0.0
+        samples: dict[str, list[sampler.RawSample]] = {phase: [] for phase in sampler.PHASE_TARGETS}
+        for phase in ("baseline", "hold", "release"):
+            for slot, tick in enumerate(ticks[phase]):
+                if phase == "baseline":
+                    speed = 0.0
+                    control = sampler.NEUTRAL_CONTROL_RAW
+                elif phase == "hold":
+                    speed = 0.0 if slot < 2 else (min(100.0, (slot - 1) * (100.0 / 48.0)) if slot < 50 else 100.0)
+                    control = sampler.FORWARD_CONTROL_RAW
+                else:
+                    speed = max(0.0, 100.0 - slot * (100.0 / 48.0))
+                    control = sampler.NEUTRAL_CONTROL_RAW
+                position += speed * (sampler.CADENCE_MS / 1000.0)
+                samples[phase].append(
+                    sampler.RawSample(
+                        tick=tick,
+                        phase=phase,
+                        slot=slot,
+                        position=(position, 0.0, 0.0),
+                        velocity=(speed, 0.0, 0.0),
+                        state_raw=sampler.WALKER_STATE_RAW,
+                        control_raw=control,
+                    )
+                )
+        trace = sampler.AttemptTrace(
+            attempt=1,
+            receipt_sha256="1" * 64,
+            run_digest="3" * 64,
+            frequency=sampler.FREQUENCY_FIXTURE,
+            samples=samples,
+            down_bracket=(ticks["hold"][0] - 1000, ticks["hold"][0]),
+            up_bracket=(ticks["release"][0] - 1000, ticks["release"][0]),
+            integrity=sampler.AttemptIntegrity(
+                receipt_revalidated=True,
+                foreground_maintained=True,
+                key_down_confirmed=True,
+                key_up_confirmed=True,
+                interference_detected=False,
+                cleanup_confirmed=True,
+            ),
+        )
+        with self.assertRaisesRegex(sampler.AttemptError, "velocity|update period"):
+            sampler.analyze_attempt(trace)
 
     def test_rejects_drift_missing_control_response_slope_and_release(self) -> None:
         cases = {
@@ -762,6 +830,25 @@ class PairAndSchemaTests(unittest.TestCase):
         projection = sampler.materialize_pair([first, second])
 
         schema.validate_public_projection(projection)
+        self.assertEqual("battleengine-walker-forward-scalar-response.v2", projection["schemaVersion"])
+        self.assertEqual(
+            {
+                "position": "retail-world-coordinate-unit",
+                "speed": "retail-world-coordinate-units-per-second",
+                "speedSlope": "retail-world-coordinate-units-per-second-squared",
+                "latency": "milliseconds",
+                "ratio": "unitless",
+            },
+            projection["metricUnits"],
+        )
+        self.assertIn(
+            "No scalar, including a unitless ratio, authorizes deterministic-Core behavior.",
+            projection["nonclaims"],
+        )
+        self.assertIn(
+            "No conversion from QPC seconds or milliseconds to deterministic-Core ticks is established.",
+            projection["nonclaims"],
+        )
         self.assertEqual(95.0, projection["envelope"]["steadySpeed"]["lower"])
         self.assertEqual(111.3, projection["envelope"]["steadySpeed"]["upper"])
         self.assertEqual({"lower": 20, "upper": 40}, projection["envelope"]["responseLatencyMs"])
@@ -857,6 +944,15 @@ class PairAndSchemaTests(unittest.TestCase):
     def test_public_schema_recomputes_timing_and_envelope_contract(self) -> None:
         projection = sampler.materialize_pair([metrics(attempt=1), metrics(attempt=2)])
         mutations = []
+
+        missing_units = copy.deepcopy(projection)
+        self.assertIn("metricUnits", missing_units)
+        del missing_units["metricUnits"]
+        mutations.append(("exact keys", missing_units))
+
+        forged_units = copy.deepcopy(projection)
+        forged_units["metricUnits"]["speed"] = "meters-per-second"
+        mutations.append(("metric units", forged_units))
 
         off_cadence = copy.deepcopy(projection)
         off_cadence["attempts"][0]["metrics"]["responseLatencyMs"] = {"lower": 7, "upper": 19}

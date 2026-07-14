@@ -8,13 +8,24 @@ import re
 from typing import Any, Mapping
 
 
-PUBLIC_SCHEMA = "battleengine-walker-forward-scalar-response.v1"
+PUBLIC_SCHEMA = "battleengine-walker-forward-scalar-response.v2"
 PUBLIC_STATUS = "two-accepted-fresh-attempts"
 PUBLIC_CLAIM = "scalar-walker-forward-motion-response"
+PUBLIC_METRIC_UNITS = {
+    "position": "retail-world-coordinate-unit",
+    "speed": "retail-world-coordinate-units-per-second",
+    "speedSlope": "retail-world-coordinate-units-per-second-squared",
+    "latency": "milliseconds",
+    "ratio": "unitless",
+}
 PUBLIC_NONCLAIMS = (
     "No actor-relative or camera-relative direction is measured.",
     "No grounded, terrain, turning, jet, morph, or parity behavior is claimed.",
     "Timing is bounded to the ten millisecond sampling cadence.",
+    "No physical-distance or deterministic-Core coordinate conversion is established.",
+    "No scalar, including a unitless ratio, authorizes deterministic-Core behavior.",
+    "No conversion from QPC seconds or milliseconds to deterministic-Core ticks is established.",
+    "Physics-update period and actor-velocity units are hypothesized from source and static evidence and inferred from position edges; they are not a proven retail tick identity.",
 )
 
 
@@ -22,7 +33,7 @@ class SchemaError(ValueError):
     pass
 
 
-ROOT_KEYS = {"schemaVersion", "status", "claim", "sampling", "attempts", "envelope", "nonclaims"}
+ROOT_KEYS = {"schemaVersion", "status", "claim", "metricUnits", "sampling", "attempts", "envelope", "nonclaims"}
 SAMPLING_KEYS = {"clock", "cadenceMs", "baselineMs", "holdMs", "releaseMs", "timingPrecisionMs"}
 ATTEMPT_KEYS = {"attempt", "receiptSha256", "runDigest", "sampleCounts", "metrics", "integrity"}
 COUNT_KEYS = {"baseline", "hold", "release"}
@@ -120,6 +131,8 @@ def validate_public_projection(payload: Any) -> None:
         raise SchemaError("projection status mismatch")
     if root["claim"] != PUBLIC_CLAIM:
         raise SchemaError("projection claim mismatch")
+    if root["metricUnits"] != PUBLIC_METRIC_UNITS:
+        raise SchemaError("metric units contract mismatch")
 
     sampling = _exact(root["sampling"], SAMPLING_KEYS, "sampling")
     expected_sampling = {
