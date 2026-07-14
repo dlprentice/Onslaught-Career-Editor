@@ -27,6 +27,8 @@ import argparse
 import contextlib
 import hashlib
 import json
+import os
+import stat
 import struct
 import sys
 import zlib
@@ -36,6 +38,59 @@ from pathlib import Path
 from typing import Iterable
 
 from safe_generated_output import SecuredOutputRoot
+
+
+MAX_COMPRESSED_BYTES = 64 * 1024 * 1024
+MAX_INFLATED_BYTES = 128 * 1024 * 1024
+MAX_MEMBERS = 4096
+MAX_MEMBER_COMPRESSED_BYTES = 32 * 1024 * 1024
+MAX_TOP_LEVEL_CHUNKS = 100_000
+MAX_CHUNK_BYTES = 64 * 1024 * 1024
+MAX_EMBEDDED_BODIES = 4096
+MAX_BODY_BYTES = 32 * 1024 * 1024
+MAX_AGGREGATE_BODY_BYTES = 128 * 1024 * 1024
+OBSERVATION_SCHEMA = "onslaught.aya-archive-observation.v1"
+OBSERVATION_PROFILE = "bounded-observation-v1"
+
+REJECTION_CATEGORIES = frozenset(
+    {
+        "aggregate_body_limit",
+        "body_count_limit",
+        "body_framing",
+        "body_length_limit",
+        "changed_held_input",
+        "chunk_count_limit",
+        "chunk_length_limit",
+        "chunk_overrun",
+        "compressed_limit",
+        "empty_archive",
+        "hardlink_input",
+        "incomplete_zlib_member",
+        "inflate_limit",
+        "internal_error",
+        "invalid_member_length",
+        "member_count_limit",
+        "member_length_limit",
+        "member_overrun",
+        "not_regular_input",
+        "reparse_input",
+        "trailing_zlib_data",
+        "truncated_chunk_header",
+        "truncated_member_header",
+        "unavailable_input",
+        "zlib_member",
+    }
+)
+
+
+class ArchiveObservationError(ValueError):
+    """Path-free terminal rejection from the bounded observation profile."""
+
+    def __init__(self, category: str) -> None:
+        if category not in REJECTION_CATEGORIES:
+            raise ValueError("unknown archive observation rejection category")
+        self.category = category
+        super().__init__(category)
 
 
 COMMON_TAG_SCAN = (
@@ -385,28 +440,215 @@ def _extract_embedded_mesh_bodies(payload: bytes, *, preview_bytes: int) -> list
     return bodies
 
 
-def inflate_aya(path: Path) -> bytes:
-    data = path.read_bytes()
+def _stat_identity(metadata: os.stat_result) -> tuple[int, int, int, int, int]:
+    return (
+        metadata.st_dev,
+        metadata.st_ino,
+        metadata.st_size,
+        metadata.st_mtime_ns,
+        metadata.st_nlink,
+    )
+
+
+def _metadata_is_reparse(metadata: os.stat_result) -> bool:
+    attributes = getattr(metadata, "st_file_attributes", 0) or 0
+    return stat.S_ISLNK(metadata.st_mode) or bool(
+        attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+    )
+
+
+def _path_has_reparse(path: Path) -> bool:
+    path = Path(os.path.abspath(path))
+    current = Path(path.anchor)
+    for component in path.parts[1:]:
+        current /= component
+        metadata = os.lstat(current)
+        if _metadata_is_reparse(metadata):
+            return True
+    return False
+
+
+def read_held_archive(path: Path) -> bytes:
+    """Read one regular single-link archive once and revalidate its identity."""
+
+    path = Path(os.path.abspath(path))
+    try:
+        if _path_has_reparse(path):
+            raise ArchiveObservationError("reparse_input")
+        before_path = os.lstat(path)
+        if not stat.S_ISREG(before_path.st_mode):
+            raise ArchiveObservationError("not_regular_input")
+        if before_path.st_nlink != 1:
+            raise ArchiveObservationError("hardlink_input")
+
+        with path.open("rb") as stream:
+            before_handle = os.fstat(stream.fileno())
+            if not stat.S_ISREG(before_handle.st_mode):
+                raise ArchiveObservationError("not_regular_input")
+            if before_handle.st_nlink != 1:
+                raise ArchiveObservationError("hardlink_input")
+            if _stat_identity(before_path) != _stat_identity(before_handle):
+                raise ArchiveObservationError("changed_held_input")
+            source = stream.read(MAX_COMPRESSED_BYTES + 1)
+            after_handle = os.fstat(stream.fileno())
+
+        if _path_has_reparse(path):
+            raise ArchiveObservationError("reparse_input")
+        after_path = os.lstat(path)
+        if len(source) > MAX_COMPRESSED_BYTES:
+            raise ArchiveObservationError("compressed_limit")
+        if (
+            _stat_identity(before_handle) != _stat_identity(after_handle)
+            or _stat_identity(after_handle) != _stat_identity(after_path)
+        ):
+            raise ArchiveObservationError("changed_held_input")
+        return source
+    except ArchiveObservationError:
+        raise
+    except OSError as error:
+        raise ArchiveObservationError("unavailable_input") from error
+
+
+def _inflate_aya_bytes_with_count(source: bytes) -> tuple[bytes, int]:
+    if len(source) > MAX_COMPRESSED_BYTES:
+        raise ArchiveObservationError("compressed_limit")
+    if not source:
+        raise ArchiveObservationError("empty_archive")
+
     out = bytearray()
     index = 0
+    member_count = 0
 
-    while index < len(data):
-        if index + 4 > len(data):
-            raise ValueError(f"{path}: truncated 4-byte compressed-part header at 0x{index:X}")
+    while index < len(source):
+        if member_count >= MAX_MEMBERS:
+            raise ArchiveObservationError("member_count_limit")
+        if index + 4 > len(source):
+            raise ArchiveObservationError("truncated_member_header")
 
-        size = _u32(data, index)
+        size = _u32(source, index)
         index += 4
+        if size == 0:
+            raise ArchiveObservationError("invalid_member_length")
+        if size > MAX_MEMBER_COMPRESSED_BYTES:
+            raise ArchiveObservationError("member_length_limit")
         end = index + size
 
-        if end > len(data):
-            raise ValueError(
-                f"{path}: compressed-part header overruns file (part size 0x{size:X}, index 0x{index:X}, len 0x{len(data):X})"
-            )
+        if end > len(source):
+            raise ArchiveObservationError("member_overrun")
 
-        out.extend(zlib.decompress(data[index:end]))
+        decoder = zlib.decompressobj()
+        remaining = MAX_INFLATED_BYTES - len(out)
+        try:
+            inflated = decoder.decompress(source[index:end], remaining + 1)
+        except zlib.error as error:
+            raise ArchiveObservationError("zlib_member") from error
+        if len(inflated) > remaining or decoder.unconsumed_tail:
+            raise ArchiveObservationError("inflate_limit")
+        if not decoder.eof:
+            raise ArchiveObservationError("incomplete_zlib_member")
+        if decoder.unused_data:
+            raise ArchiveObservationError("trailing_zlib_data")
+
+        out.extend(inflated)
+        index = end
+        member_count += 1
+
+    return bytes(out), member_count
+
+
+def inflate_aya_bytes(source: bytes) -> bytes:
+    return _inflate_aya_bytes_with_count(source)[0]
+
+
+def inflate_aya(path: Path) -> bytes:
+    """Compatibility wrapper for the legacy path-oriented caller."""
+
+    try:
+        return inflate_aya_bytes(read_held_archive(path))
+    except ArchiveObservationError as error:
+        raise ValueError(f"{path}: {error.category}") from error
+
+
+def parse_top_level_chunks_bounded(raw: bytes) -> list[ChunkEntry]:
+    chunks: list[ChunkEntry] = []
+    index = 0
+    chunk_index = 0
+
+    while index < len(raw):
+        if chunk_index >= MAX_TOP_LEVEL_CHUNKS:
+            raise ArchiveObservationError("chunk_count_limit")
+        if index + 8 > len(raw):
+            raise ArchiveObservationError("truncated_chunk_header")
+        size = _u32(raw, index + 4)
+        if size > MAX_CHUNK_BYTES:
+            raise ArchiveObservationError("chunk_length_limit")
+        end = index + 8 + size
+        if end > len(raw):
+            raise ArchiveObservationError("chunk_overrun")
+        chunks.append(
+            ChunkEntry(
+                index=chunk_index,
+                tag=_decode_tag(raw[index : index + 4]),
+                size=size,
+                offset=index,
+            )
+        )
+        chunk_index += 1
         index = end
 
-    return bytes(out)
+    return chunks
+
+
+def _next_pmsh_wrapper(payload: bytes, start: int) -> int:
+    cursor = start
+    while True:
+        offset = payload.find(b"PMSH", cursor)
+        if offset < 0:
+            return len(payload)
+        if payload[offset + 8 : offset + 12] == b"PMS2":
+            return offset
+        cursor = offset + 1
+
+
+def observe_embedded_bodies(payload: bytes) -> list[dict[str, object]]:
+    if len(payload) > MAX_CHUNK_BYTES:
+        raise ArchiveObservationError("chunk_length_limit")
+
+    offsets: list[int] = []
+    cursor = 0
+    while True:
+        offset = payload.find(b"CMSH", cursor)
+        if offset < 0:
+            break
+        if len(offsets) >= MAX_EMBEDDED_BODIES:
+            raise ArchiveObservationError("body_count_limit")
+        offsets.append(offset)
+        cursor = offset + 1
+
+    observations: list[dict[str, object]] = []
+    aggregate = 0
+    for ordinal, offset in enumerate(offsets, 1):
+        end = _next_pmsh_wrapper(payload, offset + 4)
+        if ordinal < len(offsets) and offsets[ordinal] < end:
+            raise ArchiveObservationError("body_framing")
+        body = payload[offset:end]
+        if len(body) > MAX_BODY_BYTES:
+            raise ArchiveObservationError("body_length_limit")
+        aggregate += len(body)
+        if aggregate > MAX_AGGREGATE_BODY_BYTES:
+            raise ArchiveObservationError("aggregate_body_limit")
+        observations.append(
+            {
+                "boundaryRule": "cmsh-to-next-pmsh-pms2-or-mesh-end",
+                "candidateOrdinal": f"body-candidate-{ordinal:04d}",
+                "evidenceKind": "candidate-only",
+                "length": len(body),
+                "sha256": _sha256_hex(body),
+                "tagAscii": "CMSH",
+                "tagHex": "434d5348",
+            }
+        )
+    return observations
 
 
 def parse_chunk_stream(raw: bytes, *, base_offset: int = 0) -> list[ChunkEntry]:
@@ -552,10 +794,12 @@ def _chunk_record(
     return record
 
 
-def summarize_archive(path: Path) -> tuple[ArchiveSummary, bytes, list[ChunkEntry]]:
-    compressed = path.read_bytes()
-    raw = inflate_aya(path)
-    chunks = parse_top_level_chunks(raw)
+def _summarize_archive_bytes(
+    path: Path,
+    compressed: bytes,
+) -> tuple[ArchiveSummary, bytes, list[ChunkEntry], int]:
+    raw, member_count = _inflate_aya_bytes_with_count(compressed)
+    chunks = parse_top_level_chunks_bounded(raw)
     counts = Counter(chunk.tag for chunk in chunks)
 
     summary = ArchiveSummary(
@@ -569,7 +813,320 @@ def summarize_archive(path: Path) -> tuple[ArchiveSummary, bytes, list[ChunkEntr
         tag_counts=dict(sorted(counts.items())),
         first_tags=[chunk.tag for chunk in chunks[:12]],
     )
+    return summary, raw, chunks, member_count
+
+
+def summarize_archive(path: Path) -> tuple[ArchiveSummary, bytes, list[ChunkEntry]]:
+    compressed = read_held_archive(path)
+    summary, raw, chunks, _ = _summarize_archive_bytes(path, compressed)
     return summary, raw, chunks
+
+
+def _normalized_extension(path: Path) -> str:
+    return ".aya" if path.suffix.casefold() == ".aya" else "other"
+
+
+def _chunk_observations(raw: bytes, chunks: list[ChunkEntry]) -> list[dict[str, object]]:
+    observations: list[dict[str, object]] = []
+    for ordinal, chunk in enumerate(chunks, 1):
+        tag_bytes = raw[chunk.offset : chunk.offset + 4]
+        payload = _payload_bytes(raw, chunk)
+        observations.append(
+            {
+                "bodyCandidateObservations": (
+                    observe_embedded_bodies(payload) if tag_bytes == b"MESH" else []
+                ),
+                "chunkOrdinal": f"chunk-{ordinal:04d}",
+                "declaredLength": chunk.size,
+                "payloadSha256": _sha256_hex(payload),
+                "tagAscii": _decode_tag(tag_bytes),
+                "tagHex": tag_bytes.hex(),
+            }
+        )
+    return observations
+
+
+def _observed_archive_record(
+    path: Path,
+    ordinal: int,
+    compressed: bytes,
+    raw: bytes,
+    chunks: list[ChunkEntry],
+    member_count: int,
+) -> dict[str, object]:
+    return {
+        "archiveOrdinal": f"archive-{ordinal:04d}",
+        "chunkObservations": _chunk_observations(raw, chunks),
+        "extension": _normalized_extension(path),
+        "inflatedLength": len(raw),
+        "memberCount": member_count,
+        "observationStatus": "observed",
+        "rejectionCategory": None,
+        "sourceIdentity": {
+            "length": len(compressed),
+            "sha256": _sha256_hex(compressed),
+        },
+    }
+
+
+def _rejected_archive_record(
+    path: Path,
+    ordinal: int,
+    category: str,
+    compressed: bytes | None,
+) -> dict[str, object]:
+    if category not in REJECTION_CATEGORIES:
+        raise ValueError("unknown archive observation rejection category")
+    return {
+        "archiveOrdinal": f"archive-{ordinal:04d}",
+        "chunkObservations": [],
+        "extension": _normalized_extension(path),
+        "inflatedLength": None,
+        "memberCount": None,
+        "observationStatus": "rejected",
+        "rejectionCategory": category,
+        "sourceIdentity": (
+            {"length": len(compressed), "sha256": _sha256_hex(compressed)}
+            if compressed is not None
+            else None
+        ),
+    }
+
+
+def _source_universe_id(records: list[dict[str, object]]) -> str:
+    universe_members = [
+        {
+            "archiveOrdinal": record["archiveOrdinal"],
+            "extension": record["extension"],
+            "observationStatus": record["observationStatus"],
+            "rejectionCategory": record["rejectionCategory"],
+            "sourceIdentity": record["sourceIdentity"],
+        }
+        for record in records
+    ]
+    universe_bytes = json.dumps(
+        universe_members,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+    ).encode("ascii")
+    return hashlib.sha256(universe_bytes).hexdigest()
+
+
+def _canonical_archive_record_identity(record: dict[str, object]) -> bytes:
+    public_identity = {key: value for key, value in record.items() if key != "archiveOrdinal"}
+    return json.dumps(
+        public_identity,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+    ).encode("ascii")
+
+
+def _canonicalize_archive_records(
+    records: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    ordered = sorted(
+        (dict(record) for record in records),
+        key=_canonical_archive_record_identity,
+    )
+    for ordinal, record in enumerate(ordered, 1):
+        record["archiveOrdinal"] = f"archive-{ordinal:04d}"
+    return ordered
+
+
+def _observation_report(records: list[dict[str, object]]) -> dict[str, object]:
+    ordered = _canonicalize_archive_records(records)
+    return {
+        "archiveRecords": ordered,
+        "producer": {
+            "name": "aya_archive_inventory",
+            "producerVersion": 1,
+            "profileVersion": OBSERVATION_PROFILE,
+        },
+        "schemaVersion": OBSERVATION_SCHEMA,
+        "sourceUniverseId": _source_universe_id(ordered),
+    }
+
+
+def observe_archives(paths: Iterable[Path]) -> dict[str, object]:
+    records: list[dict[str, object]] = []
+    for path in (Path(path) for path in paths):
+        compressed: bytes | None = None
+        try:
+            compressed = read_held_archive(path)
+            _, raw, chunks, member_count = _summarize_archive_bytes(path, compressed)
+            record = _observed_archive_record(path, 0, compressed, raw, chunks, member_count)
+        except ArchiveObservationError as error:
+            record = _rejected_archive_record(path, 0, error.category, compressed)
+        except Exception:
+            record = _rejected_archive_record(path, 0, "internal_error", compressed)
+        records.append(record)
+    return _observation_report(records)
+
+
+def _valid_digest(value: object) -> bool:
+    return isinstance(value, str) and len(value) == 64 and all(
+        character in "0123456789abcdef" for character in value
+    )
+
+
+def _plain_int(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def _validate_source_identity(value: object) -> None:
+    if value is None:
+        return
+    if not isinstance(value, dict) or set(value) != {"length", "sha256"}:
+        raise ValueError("invalid observation source identity")
+    if (
+        not _plain_int(value["length"])
+        or not 0 <= value["length"] <= MAX_COMPRESSED_BYTES
+        or not _valid_digest(value["sha256"])
+    ):
+        raise ValueError("invalid observation source identity")
+
+
+def _validate_body_candidate_observations(value: object) -> int:
+    if not isinstance(value, list):
+        raise ValueError("invalid body candidate observations")
+    if len(value) > MAX_EMBEDDED_BODIES:
+        raise ValueError("body candidate observation count exceeds profile")
+    aggregate = 0
+    for ordinal, body in enumerate(value, 1):
+        if not isinstance(body, dict) or set(body) != {
+            "boundaryRule",
+            "candidateOrdinal",
+            "evidenceKind",
+            "length",
+            "sha256",
+            "tagAscii",
+            "tagHex",
+        }:
+            raise ValueError("invalid body candidate observation")
+        if body["candidateOrdinal"] != f"body-candidate-{ordinal:04d}":
+            raise ValueError("invalid body candidate ordinal")
+        if body["evidenceKind"] != "candidate-only":
+            raise ValueError("invalid body candidate evidence kind")
+        if body["boundaryRule"] != "cmsh-to-next-pmsh-pms2-or-mesh-end":
+            raise ValueError("invalid body candidate boundary rule")
+        if body["tagAscii"] != "CMSH" or body["tagHex"] != "434d5348":
+            raise ValueError("invalid body candidate tag")
+        if not _plain_int(body["length"]) or not 4 <= body["length"] <= MAX_BODY_BYTES:
+            raise ValueError("invalid body candidate length")
+        aggregate += body["length"]
+        if aggregate > MAX_AGGREGATE_BODY_BYTES:
+            raise ValueError("body candidate aggregate exceeds profile")
+        if not _valid_digest(body["sha256"]):
+            raise ValueError("invalid body candidate digest")
+    return aggregate
+
+
+def _validate_chunk_observations(value: object) -> int:
+    if not isinstance(value, list):
+        raise ValueError("invalid chunk observations")
+    if len(value) > MAX_TOP_LEVEL_CHUNKS:
+        raise ValueError("chunk observation count exceeds profile")
+    inflated_length = 0
+    for ordinal, chunk in enumerate(value, 1):
+        if not isinstance(chunk, dict) or set(chunk) != {
+            "bodyCandidateObservations",
+            "chunkOrdinal",
+            "declaredLength",
+            "payloadSha256",
+            "tagAscii",
+            "tagHex",
+        }:
+            raise ValueError("invalid chunk observation")
+        if chunk["chunkOrdinal"] != f"chunk-{ordinal:04d}":
+            raise ValueError("invalid chunk ordinal")
+        if not _plain_int(chunk["declaredLength"]) or not 0 <= chunk["declaredLength"] <= MAX_CHUNK_BYTES:
+            raise ValueError("invalid chunk length")
+        if not _valid_digest(chunk["payloadSha256"]):
+            raise ValueError("invalid chunk digest")
+        if not isinstance(chunk["tagAscii"], str) or len(chunk["tagAscii"]) != 4:
+            raise ValueError("invalid chunk tag")
+        if not isinstance(chunk["tagHex"], str) or len(chunk["tagHex"]) != 8 or any(
+            character not in "0123456789abcdef" for character in chunk["tagHex"]
+        ):
+            raise ValueError("invalid chunk tag")
+        tag_bytes = bytes.fromhex(chunk["tagHex"])
+        if _decode_tag(tag_bytes) != chunk["tagAscii"]:
+            raise ValueError("chunk tag encodings disagree")
+        body_aggregate = _validate_body_candidate_observations(
+            chunk["bodyCandidateObservations"]
+        )
+        if chunk["bodyCandidateObservations"] and tag_bytes != b"MESH":
+            raise ValueError("body candidate observations outside MESH")
+        if body_aggregate > chunk["declaredLength"]:
+            raise ValueError("body candidate observations exceed MESH payload")
+        inflated_length += 8 + chunk["declaredLength"]
+        if inflated_length > MAX_INFLATED_BYTES:
+            raise ValueError("chunk observations exceed inflate profile")
+    return inflated_length
+
+
+def render_observation_records(report: dict[str, object]) -> bytes:
+    if set(report) != {"archiveRecords", "producer", "schemaVersion", "sourceUniverseId"}:
+        raise ValueError("invalid observation envelope")
+    if report.get("schemaVersion") != OBSERVATION_SCHEMA:
+        raise ValueError("unexpected observation schema")
+    if report.get("producer") != {
+        "name": "aya_archive_inventory",
+        "producerVersion": 1,
+        "profileVersion": OBSERVATION_PROFILE,
+    }:
+        raise ValueError("unexpected observation producer")
+    records = report.get("archiveRecords")
+    if not isinstance(records, list):
+        raise ValueError("invalid observation records")
+    for ordinal, record in enumerate(records, 1):
+        if not isinstance(record, dict) or set(record) != {
+            "archiveOrdinal",
+            "chunkObservations",
+            "extension",
+            "inflatedLength",
+            "memberCount",
+            "observationStatus",
+            "rejectionCategory",
+            "sourceIdentity",
+        }:
+            raise ValueError("invalid observation record")
+        if record["archiveOrdinal"] != f"archive-{ordinal:04d}":
+            raise ValueError("invalid archive ordinal")
+        extension = record["extension"]
+        if extension not in {".aya", "other"}:
+            raise ValueError("invalid observation extension")
+        _validate_source_identity(record["sourceIdentity"])
+        status = record.get("observationStatus")
+        category = record.get("rejectionCategory")
+        if status == "observed":
+            if category is not None or record["sourceIdentity"] is None:
+                raise ValueError("invalid observed record")
+            if (
+                not _plain_int(record["inflatedLength"])
+                or not 0 <= record["inflatedLength"] <= MAX_INFLATED_BYTES
+            ):
+                raise ValueError("invalid observed record")
+            if not _plain_int(record["memberCount"]) or not 1 <= record["memberCount"] <= MAX_MEMBERS:
+                raise ValueError("invalid observed record")
+            if record["sourceIdentity"]["length"] == 0:
+                raise ValueError("invalid observed record")
+            if _validate_chunk_observations(record["chunkObservations"]) != record["inflatedLength"]:
+                raise ValueError("inflated length does not match chunks")
+        elif status == "rejected":
+            if category not in REJECTION_CATEGORIES:
+                raise ValueError("rejected record has unknown category")
+            if record["inflatedLength"] is not None or record["memberCount"] is not None or record["chunkObservations"]:
+                raise ValueError("invalid rejected record")
+        else:
+            raise ValueError("unknown observation status")
+    if report.get("sourceUniverseId") != _source_universe_id(records):
+        raise ValueError("observation universe mismatch")
+    return (
+        json.dumps(report, sort_keys=True, separators=(",", ":"), ensure_ascii=True) + "\n"
+    ).encode("ascii")
 
 
 def iter_archive_paths(inputs: Iterable[Path], glob_pattern: str) -> list[Path]:
@@ -835,6 +1392,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         type=Path,
         help="Optional JSON output path for an aggregate packed-ref resolution manifest and GDIE family table",
     )
+    ap.add_argument(
+        "--observation-records-out",
+        type=Path,
+        help="Optional path-free bounded archive observation record output",
+    )
     return ap.parse_args(argv)
 
 
@@ -944,12 +1506,13 @@ def main(argv: list[str]) -> int:
     if args.limit > 0:
         paths = paths[: args.limit]
 
-    paths = [path.resolve(strict=True) for path in paths]
+    paths = [Path(os.path.abspath(path)) for path in paths]
     protected_sources = tuple(paths)
     output_stack = contextlib.ExitStack()
     dump_output = None
     json_output = None
     asset_manifest_output = None
+    observation_output = None
     if args.dump_dir is not None:
         args.dump_dir = args.dump_dir.resolve()
         dump_output = output_stack.enter_context(
@@ -965,14 +1528,22 @@ def main(argv: list[str]) -> int:
         asset_manifest_output = output_stack.enter_context(
             SecuredOutputRoot(args.asset_manifest_out.parent, protected_sources=protected_sources)
         )
+    if args.observation_records_out is not None:
+        args.observation_records_out = args.observation_records_out.resolve()
+        observation_output = output_stack.enter_context(
+            SecuredOutputRoot(args.observation_records_out.parent, protected_sources=protected_sources)
+        )
 
     manifest: list[dict[str, object]] = []
     archive_cache: list[tuple[Path, bytes, list[ChunkEntry]]] = []
+    observation_records: list[dict[str, object]] = []
     had_error = False
 
-    for path in paths:
+    for ordinal, path in enumerate(paths, 1):
+        compressed: bytes | None = None
         try:
-            summary, raw, chunks = summarize_archive(path)
+            compressed = read_held_archive(path)
+            summary, raw, chunks, member_count = _summarize_archive_bytes(path, compressed)
             print_summary(summary)
             if args.show_chunks > 0:
                 print_chunk_table(raw, chunks, args.show_chunks, preview_bytes=args.preview_bytes)
@@ -1013,8 +1584,25 @@ def main(argv: list[str]) -> int:
             print("")
             manifest.append(item)
             archive_cache.append((path, raw, chunks))
+            if args.observation_records_out is not None:
+                observation_records.append(
+                    _observed_archive_record(path, 0, compressed, raw, chunks, member_count)
+                )
+        except ArchiveObservationError as error:
+            had_error = True
+            if args.observation_records_out is not None:
+                observation_records.append(
+                    _rejected_archive_record(path, 0, error.category, compressed)
+                )
+            print(f"{path}")
+            print(f"  [ERR] {error.category}")
+            print("")
         except Exception as exc:
             had_error = True
+            if args.observation_records_out is not None:
+                observation_records.append(
+                    _rejected_archive_record(path, 0, "internal_error", compressed)
+                )
             print(f"{path}")
             print(f"  [ERR] {exc}")
             print("")
@@ -1029,6 +1617,14 @@ def main(argv: list[str]) -> int:
         asset_manifest = build_asset_manifest(archive_cache, resolver=resolver)
         asset_manifest_output.atomic_write_json(args.asset_manifest_out, asset_manifest)
         print(f"[OK] wrote asset manifest: {args.asset_manifest_out}")
+
+    if args.observation_records_out is not None:
+        assert observation_output is not None
+        observation_output.atomic_write_bytes(
+            args.observation_records_out,
+            render_observation_records(_observation_report(observation_records)),
+        )
+        print(f"[OK] wrote observation records: {args.observation_records_out}")
 
     output_stack.close()
     return 1 if had_error else 0
