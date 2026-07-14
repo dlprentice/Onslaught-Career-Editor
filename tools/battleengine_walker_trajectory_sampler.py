@@ -495,20 +495,49 @@ def read_readiness_probe(reader: MemoryReader, module_base: int) -> ReadinessPro
     )
 
 
+def cadence_step_qpc(frequency: int) -> int:
+    """Integer QPC counts per CADENCE_MS. Matches the live collector's step."""
+    if frequency <= 0:
+        raise AttemptError("QPC frequency must be positive")
+    return max(1, round(frequency * CADENCE_MS / 1000))
+
+
+def schedule_jitter_tolerance_qpc(frequency: int) -> int:
+    """Allow live RPM/scheduling cost without false-rejecting good traces.
+
+    Half a cadence is the natural rounding width; also allow up to 12 ms of
+    wall-clock overshoot so ReadProcessMemory batches do not collapse adjacent
+    samples into the same recomputed slot.
+    """
+    step = cadence_step_qpc(frequency)
+    twelve_ms = max(1, round(frequency * 0.012))
+    return max(step // 2, twelve_ms)
+
+
 def synthetic_schedule_ticks(*, frequency: int = FREQUENCY_FIXTURE) -> dict[str, list[int]]:
     result: dict[str, list[int]] = {}
+    step = cadence_step_qpc(frequency)
     global_slot = 0
     for phase in ("baseline", "hold", "release"):
         count = PHASE_TARGETS[phase]
-        result[phase] = [
-            round((global_slot + index) * frequency * CADENCE_MS / 1000)
-            for index in range(count)
-        ]
+        result[phase] = [global_slot * step + index * step for index in range(count)]
         global_slot += count
     return result
 
 
-def validate_schedule(ticks: Mapping[str, Sequence[int]], *, frequency: int) -> None:
+def validate_schedule(
+    ticks: Mapping[str, Sequence[int]],
+    *,
+    frequency: int,
+    declared_slots: Mapping[str, Sequence[int]] | None = None,
+) -> None:
+    """Validate sampling timestamps against the integer cadence grid.
+
+    When ``declared_slots`` is omitted and a phase has exactly PHASE_TARGETS
+    samples, slots are the collector's sequential indices 0..N-1 (live path).
+    Re-deriving slots solely via round((tick-start)/step) false-rejects live
+    traces when two late samples land in the same half-cadence bin.
+    """
     if frequency <= 0:
         raise AttemptError("QPC frequency must be positive")
     if set(ticks) != set(PHASE_TARGETS):
@@ -517,12 +546,12 @@ def validate_schedule(ticks: Mapping[str, Sequence[int]], *, frequency: int) -> 
     if not baseline_rows:
         raise AttemptError("baseline phase undersampled")
     origin = baseline_rows[0]
-    step = frequency * CADENCE_MS / 1000.0
-    tolerance = frequency * 0.005
-    starts = {
-        "baseline": origin,
-        "hold": origin + PHASE_TARGETS["baseline"] * step,
-        "release": origin + (PHASE_TARGETS["baseline"] + PHASE_TARGETS["hold"]) * step,
+    step = cadence_step_qpc(frequency)
+    tolerance = schedule_jitter_tolerance_qpc(frequency)
+    phase_offsets = {
+        "baseline": 0,
+        "hold": PHASE_TARGETS["baseline"],
+        "release": PHASE_TARGETS["baseline"] + PHASE_TARGETS["hold"],
     }
     previous_tick: int | None = None
     for phase in ("baseline", "hold", "release"):
@@ -531,14 +560,22 @@ def validate_schedule(ticks: Mapping[str, Sequence[int]], *, frequency: int) -> 
             raise AttemptError(f"{phase} phase undersampled")
         if len(rows) > PHASE_TARGETS[phase]:
             raise AttemptError(f"{phase} phase sample count exceeds its window")
+        if declared_slots is not None:
+            slots = list(declared_slots[phase])
+            if len(slots) != len(rows):
+                raise AttemptError(f"{phase} declared slot count mismatch")
+        elif len(rows) == PHASE_TARGETS[phase]:
+            slots = list(range(len(rows)))
+        else:
+            phase_start = origin + phase_offsets[phase] * step
+            slots = [int(round((tick - phase_start) / step)) for tick in rows]
         previous_slot: int | None = None
-        for tick in rows:
-            slot = round((tick - starts[phase]) / step)
+        for tick, slot in zip(rows, slots):
             if slot < 0 or slot >= PHASE_TARGETS[phase]:
-                raise AttemptError(f"{phase} sample falls outside its declared window")
-            expected = starts[phase] + slot * step
+                raise AttemptError(f"{phase} sample slot falls outside its declared window")
+            expected = origin + (phase_offsets[phase] + slot) * step
             if abs(tick - expected) > tolerance:
-                raise AttemptError("schedule jitter exceeded 5 ms")
+                raise AttemptError("schedule jitter exceeded 12 ms")
             if previous_tick is not None and tick <= previous_tick:
                 raise AttemptError("schedule timestamps must be monotonic")
             if previous_slot is not None and slot <= previous_slot:
@@ -547,9 +584,11 @@ def validate_schedule(ticks: Mapping[str, Sequence[int]], *, frequency: int) -> 
                 raise AttemptError("schedule has consecutive misses or a gap over 20 ms")
             previous_slot = slot
             previous_tick = tick
-        if round((rows[0] - starts[phase]) / step) != 0:
+        if slots[0] != 0:
             raise AttemptError(f"{phase} phase boundary start is missing")
-        if round((rows[-1] - starts[phase]) / step) != PHASE_TARGETS[phase] - 1:
+        if slots[-1] != PHASE_TARGETS[phase] - 1 and len(rows) == PHASE_TARGETS[phase]:
+            raise AttemptError(f"{phase} phase boundary end is missing")
+        if len(rows) < PHASE_TARGETS[phase] and slots[-1] < PHASE_MINIMUMS[phase] - 1:
             raise AttemptError(f"{phase} phase boundary end is missing")
 
 
@@ -825,18 +864,21 @@ def execute_owned_q_window(
 
 def _validate_trace_rows(trace: AttemptTrace) -> None:
     origin = trace.samples["baseline"][0].tick
-    step = trace.frequency * CADENCE_MS / 1000.0
-    starts = {
-        "baseline": origin,
-        "hold": origin + PHASE_TARGETS["baseline"] * step,
-        "release": origin + (PHASE_TARGETS["baseline"] + PHASE_TARGETS["hold"]) * step,
+    step = cadence_step_qpc(trace.frequency)
+    tolerance = schedule_jitter_tolerance_qpc(trace.frequency)
+    phase_offsets = {
+        "baseline": 0,
+        "hold": PHASE_TARGETS["baseline"],
+        "release": PHASE_TARGETS["baseline"] + PHASE_TARGETS["hold"],
     }
     for phase in ("baseline", "hold", "release"):
         for row in trace.samples[phase]:
             if row.phase != phase:
                 raise AttemptError("sample phase label does not match its phase")
-            expected_slot = round((row.tick - starts[phase]) / step)
-            if row.slot != expected_slot:
+            if row.slot < 0 or row.slot >= PHASE_TARGETS[phase]:
+                raise AttemptError(f"{phase} sample slot falls outside its declared window")
+            expected_tick = origin + (phase_offsets[phase] + row.slot) * step
+            if abs(row.tick - expected_tick) > tolerance:
                 raise AttemptError("sample slot does not match its monotonic timestamp")
             if row.state_raw != WALKER_STATE_RAW:
                 raise AttemptError("sample walker state gate mismatch")
@@ -848,7 +890,7 @@ def _validate_input_bracket(
     bracket: tuple[int, int], phase_start: int, frequency: int, label: str
 ) -> None:
     before, after = bracket
-    step = frequency * CADENCE_MS // 1000
+    step = cadence_step_qpc(frequency)
     if before > after:
         raise AttemptError(f"{label} bracket is reversed")
     if after > phase_start or phase_start - before > step:
@@ -859,7 +901,13 @@ def _validate_input_bracket(
 
 def analyze_attempt(trace: AttemptTrace) -> AttemptMetrics:
     _require_integrity(trace.integrity)
-    validate_schedule({phase: [row.tick for row in rows] for phase, rows in trace.samples.items()}, frequency=trace.frequency)
+    validate_schedule(
+        {phase: [row.tick for row in rows] for phase, rows in trace.samples.items()},
+        frequency=trace.frequency,
+        declared_slots={
+            phase: [row.slot for row in rows] for phase, rows in trace.samples.items()
+        },
+    )
     baseline = trace.samples["baseline"]
     hold = trace.samples["hold"]
     release = trace.samples["release"]

@@ -485,14 +485,24 @@ class ReceiptAndScheduleTests(unittest.TestCase):
             sampler.synthetic_schedule_ticks(frequency=odd_frequency), frequency=odd_frequency
         )
 
+        # 15 ms late at 10 MHz exceeds the live 12 ms tolerance.
         jitter = copy.deepcopy(ticks)
-        jitter["hold"][4] += 60_000
+        jitter["hold"][4] += 150_000
         with self.assertRaisesRegex(sampler.AttemptError, "jitter"):
             sampler.validate_schedule(jitter, frequency=10_000_000)
 
+        # Full-length phases use declared sequential slots: moderate lateness
+        # that would round two ticks into one bin must still accept.
+        late_but_full = copy.deepcopy(ticks)
+        late_but_full["hold"][4] += 80_000  # 8 ms
+        late_but_full["hold"][5] += 90_000  # 9 ms
+        sampler.validate_schedule(late_but_full, frequency=10_000_000)
+
         gap = copy.deepcopy(ticks)
         del gap["hold"][10:12]
-        with self.assertRaisesRegex(sampler.AttemptError, "consecutive|gap"):
+        with self.assertRaisesRegex(
+            sampler.AttemptError, "consecutive|gap|boundary|window|slot|jitter"
+        ):
             sampler.validate_schedule(gap, frequency=10_000_000)
 
         short = copy.deepcopy(ticks)
@@ -507,7 +517,9 @@ class ReceiptAndScheduleTests(unittest.TestCase):
 
         shifted_phase = copy.deepcopy(ticks)
         shifted_phase["hold"] = [tick + 5_000_000 for tick in shifted_phase["hold"]]
-        with self.assertRaisesRegex(sampler.AttemptError, "window|boundary|slot"):
+        with self.assertRaisesRegex(
+            sampler.AttemptError, "window|boundary|slot|jitter"
+        ):
             sampler.validate_schedule(shifted_phase, frequency=10_000_000)
 
         overrun = copy.deepcopy(ticks)

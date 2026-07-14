@@ -105,6 +105,8 @@ class QpcClock:
         return int(value.value)
 
     def wait_until(self, target: int) -> int:
+        # Sleep for coarse remaining time; busy-spin the last ~2 ms so live
+        # cadence does not yield past the slot and collapse into the next bin.
         while True:
             now = self.now()
             remaining = (target - now) / self.frequency
@@ -112,8 +114,7 @@ class QpcClock:
                 return now
             if remaining > 0.002:
                 time.sleep(max(0.0, remaining - 0.001))
-            else:
-                time.sleep(0)
+            # else busy-spin
 
 
 def _sha256(path: Path) -> str:
@@ -946,7 +947,7 @@ def _sample_batches(reader: ReceiptPinnedReader, guard: ReceiptRuntimeGuard,
                     clock: QpcClock, module_base: int, phase: str, origin: int,
                     phase_offset: int, deadline: Deadline) -> list[sampler.RawSample]:
     rows: list[sampler.RawSample] = []
-    step = round(clock.frequency * sampler.CADENCE_MS / 1000)
+    step = sampler.cadence_step_qpc(clock.frequency)
     count = sampler.PHASE_TARGETS[phase]
     for batch_start in range(0, count, BATCH_SIZE):
         deadline.check(phase)
@@ -954,10 +955,12 @@ def _sample_batches(reader: ReceiptPinnedReader, guard: ReceiptRuntimeGuard,
             raise sampler.AttemptError("receipt or foreground changed around sampling batch")
         for slot in range(batch_start, min(batch_start + BATCH_SIZE, count)):
             target = origin + (phase_offset + slot) * step
-            clock.wait_until(target)
+            # Stamp the schedule tick at wait completion, before RPM work that
+            # can burn most of a 10 ms cadence on a cold chain walk.
+            tick = clock.wait_until(target)
             deadline.check(phase)
             rows.append(sampler.read_coherent_sample(
-                reader, module_base, tick=clock.now(), phase=phase, slot=slot
+                reader, module_base, tick=tick, phase=phase, slot=slot
             ))
         if not guard.revalidate_receipt() or not guard.foreground_matches():
             raise sampler.AttemptError("receipt or foreground changed around sampling batch")
@@ -991,7 +994,7 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
     )
     hold_callbacks = []
     hold_rows: list[sampler.RawSample] = []
-    step = round(clock.frequency * sampler.CADENCE_MS / 1000)
+    step = sampler.cadence_step_qpc(clock.frequency)
     clock.wait_until(origin + sampler.PHASE_TARGETS["baseline"] * step)
     for batch_start in range(0, sampler.PHASE_TARGETS["hold"], BATCH_SIZE):
         def batch(start=batch_start):
@@ -999,10 +1002,10 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
             rows = []
             for slot in range(start, min(start + BATCH_SIZE, sampler.PHASE_TARGETS["hold"])):
                 target = origin + (sampler.PHASE_TARGETS["baseline"] + slot) * step
-                clock.wait_until(target)
+                tick = clock.wait_until(target)
                 deadline.check("hold")
                 rows.append(sampler.read_coherent_sample(
-                    reader, receipt.module_base, tick=clock.now(), phase="hold", slot=slot
+                    reader, receipt.module_base, tick=tick, phase="hold", slot=slot
                 ))
             hold_rows.extend(rows)
             deadline.check("hold")
