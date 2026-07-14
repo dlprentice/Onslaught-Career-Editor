@@ -1058,6 +1058,8 @@ static extern bool CloseHandle(IntPtr hObject);
 // held so residual FlushInputBuffers or dropped WM cannot clear the hold.
 const int WalkerKeyDownTableRva = 0x488C94;
 const byte WalkerForwardVirtualKey = 0x51; // VK_Q
+const byte WalkerForwardScanCode = 0x10;   // Q scan (options packed key low word)
+const byte WalkerForwardArrowVk = 0x26;    // VK_UP (retail default Forward)
 const uint ProcessVmOperation = 0x0008;
 const uint ProcessVmWrite = 0x0020;
 
@@ -1083,6 +1085,14 @@ static void PokeWalkerKeyDown(int processId, long moduleBase, byte virtualKey, b
     {
         _ = CloseHandle(handle);
     }
+}
+
+static void PokeWalkerForwardKeys(int processId, long moduleBase, byte value)
+{
+    // Options may index KeyOn by VK or by scan; also re-latch default Up-arrow.
+    PokeWalkerKeyDown(processId, moduleBase, WalkerForwardVirtualKey, value);
+    PokeWalkerKeyDown(processId, moduleBase, WalkerForwardScanCode, value);
+    PokeWalkerKeyDown(processId, moduleBase, WalkerForwardArrowVk, value);
 }
 
 /// <summary>
@@ -3359,13 +3369,13 @@ static int RunWalkerTrajectoryAttempt()
                 // then re-latch via KeyDown poke while the observer samples.
                 JsonElement qDownResult = SendInputSequence(
                     powershellExe, inputScript, managed.ProcessId, hwndHex,
-                    managed.ExecutablePath, managed.WorkingDirectory, "down:Q,wait:500", 0,
+                    managed.ExecutablePath, managed.WorkingDirectory, "down:Q,down:UP,wait:500", 0,
                     false, string.Empty, Path.Combine(artifactRoot, "harness-q-down.json"),
                     runtimeReceiptPath, receiptSha256, true);
                 if (!JsonStringIn(qDownResult, "status", "sent") || JsonInt(qDownResult, "sendInputEventsSent") < 1)
                     throw new InvalidOperationException("Harness Q-down delivery failed.");
                 if (moduleBase > 0)
-                    PokeWalkerKeyDown(managed.ProcessId, moduleBase, WalkerForwardVirtualKey, 1);
+                    PokeWalkerForwardKeys(managed.ProcessId, moduleBase, 1);
                 WriteNewCanaryText(qDownAck, artifactRoot, "1");
                 harnessQHeld = true;
                 lastQRefreshMs = adapterWait.ElapsedMilliseconds;
@@ -3378,12 +3388,12 @@ static int RunWalkerTrajectoryAttempt()
                 && qRefreshCount < 200)
             {
                 if (moduleBase > 0)
-                    PokeWalkerKeyDown(managed.ProcessId, moduleBase, WalkerForwardVirtualKey, 1);
+                    PokeWalkerForwardKeys(managed.ProcessId, moduleBase, 1);
                 if (adapterWait.ElapsedMilliseconds - lastQRefreshMs >= 500)
                 {
                     JsonElement qRefresh = SendInputSequence(
                         powershellExe, inputScript, managed.ProcessId, hwndHex,
-                        managed.ExecutablePath, managed.WorkingDirectory, "down:Q", 0,
+                        managed.ExecutablePath, managed.WorkingDirectory, "down:Q,down:UP", 0,
                         false, string.Empty,
                         Path.Combine(artifactRoot, $"harness-q-refresh-{qRefreshCount:00}.json"),
                         runtimeReceiptPath, receiptSha256, true);
@@ -3399,13 +3409,13 @@ static int RunWalkerTrajectoryAttempt()
             {
                 JsonElement qUpResult = SendInputSequence(
                     powershellExe, inputScript, managed.ProcessId, hwndHex,
-                    managed.ExecutablePath, managed.WorkingDirectory, "up:Q", 0,
+                    managed.ExecutablePath, managed.WorkingDirectory, "up:Q,up:UP", 0,
                     false, string.Empty, Path.Combine(artifactRoot, "harness-q-up.json"),
                     runtimeReceiptPath, receiptSha256, true);
                 if (!JsonStringIn(qUpResult, "status", "sent") || JsonInt(qUpResult, "sendInputEventsSent") < 1)
                     throw new InvalidOperationException("Harness Q-up delivery failed.");
                 if (moduleBase > 0)
-                    PokeWalkerKeyDown(managed.ProcessId, moduleBase, WalkerForwardVirtualKey, 0);
+                    PokeWalkerForwardKeys(managed.ProcessId, moduleBase, 0);
                 WriteNewCanaryText(qUpAck, artifactRoot, "1");
                 harnessQHeld = false;
             }
