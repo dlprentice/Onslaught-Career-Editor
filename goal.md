@@ -18,11 +18,12 @@ separately.
 
 ## Current Slice
 
-Continue from pushed integration main after the 2026-07-14 estimator and
-source-reference landings (`58d8b5e5`, `d4b9f83e`). The source crosswalk,
-bounded AYA observation/export/reconciliation producers, retained CMSH
-attributes, opt-in inverse-transpose UV/normal OBJ output, tick-aware walker
-trajectory estimator, walker source-reference fixture boundary, and corrected
+Continue from pushed integration main at `297afde2` (walker phase ExitCode
+native-handle fix) after estimator/source-reference/reconciliation/prebuild
+restore landings. The source crosswalk, bounded AYA observation/export/
+reconciliation producers, retained CMSH attributes, tick-aware walker
+trajectory estimator, walker source-reference fixture boundary, generation-
+phase runner restore, CreateProcess-handle phase exit codes, and corrected
 two-attempt Runtime lifecycle are integrated. The Home hierarchy/focus policy
 is integrated as source/non-native behavior only; native first-run focus remains
 unaccepted.
@@ -67,9 +68,14 @@ No release or tag is authorized by this slice.
   `npm run test:aya-export-outcomes` → 11/11. Full private-corpus export remains
   blocked on missing legacy native extractor DLLs / VS C++ targets (MSB4278).
 - Next executable critical path remains one fresh exactly-two-attempt
-  copied-runtime walker measurement using the tick-aware sampler. Prior live
-  pair (`local-proofs/walker-trajectory-live-20260713-pair-01`) failed attempt 1
-  with null runtime-chain / lifecycle deadline; attempt 2 absent; no contract.
+  copied-runtime walker measurement using the tick-aware sampler. Live retries
+  today: pair-01 prebuild NETSDK1004 (fixed by generation restore `38e16316`);
+  pair-02 prebuild green then profile-phase `.ExitCode` throw on .NET 10
+  (fixed by CreateProcess-handle wait/exit `297afde2`); pair-03 profile/launch/
+  receipt/focus succeeded then failed resolving the Python adapter host image
+  via null `MainModule` (fixed by `QueryFullProcessImageNameW` + retry); orphan
+  copied BEA from the crashed session was stopped. Prior 2026-07-13 pair failed
+  attempt 1 on null runtime-chain / lifecycle deadline. No accepted contract yet.
 
 ## Current Slice Progress - 2026-07-13
 

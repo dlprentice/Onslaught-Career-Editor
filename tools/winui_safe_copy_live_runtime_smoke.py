@@ -1036,6 +1036,53 @@ static string HwndHex(IntPtr handle)
     return value == 0 ? "0x0" : $"0x{value:x}";
 }
 
+[DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
+static extern bool QueryFullProcessImageNameW(
+    IntPtr hProcess, uint dwFlags, char[] lpExeName, ref uint lpdwSize);
+
+/// <summary>
+/// Resolve an image path for a Process we own. MainModule is often null or throws
+/// immediately after Process.Start on .NET 10 / restricted hosts; prefer the
+/// CreateProcess handle via QueryFullProcessImageNameW with a short retry.
+/// </summary>
+static string ResolveOwnedProcessImagePath(Process process)
+{
+    for (int attempt = 0; attempt < 20; attempt++)
+    {
+        try
+        {
+            if (!process.HasExited)
+            {
+                char[] buffer = new char[32768];
+                uint size = (uint)buffer.Length;
+                if (QueryFullProcessImageNameW(process.Handle, 0, buffer, ref size)
+                    && size > 0
+                    && size < buffer.Length)
+                {
+                    return Path.GetFullPath(new string(buffer, 0, (int)size));
+                }
+            }
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+        }
+
+        try
+        {
+            string? main = process.MainModule?.FileName;
+            if (!string.IsNullOrWhiteSpace(main))
+                return Path.GetFullPath(main);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+        }
+
+        Thread.Sleep(25);
+    }
+
+    throw new InvalidOperationException("Could not resolve the live walker adapter host image.");
+}
+
 static JsonElement JsonPayload(object value)
 {
     return JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(value));
@@ -3156,8 +3203,9 @@ static int RunWalkerTrajectoryAttempt()
         adapterStartedTimestamp = Stopwatch.GetTimestamp();
         adapterPid = adapter.Id;
         adapterStartedAtUtc = adapter.StartTime.ToUniversalTime().ToString("o");
-        adapterExecutablePath = Path.GetFullPath(
-            adapter.MainModule?.FileName ?? throw new InvalidOperationException("Could not resolve the live walker adapter host image."));
+        // Do not use bare MainModule: pair-03 failed immediately with null MainModule
+        // after a successful Process.Start of the bound Python host.
+        adapterExecutablePath = ResolveOwnedProcessImagePath(adapter);
         if (!string.Equals(adapterExecutablePath, Path.GetFullPath(pythonExe), StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Live walker adapter host image changed from the bound Python executable.");
         stdoutTask = adapter.StandardOutput.ReadToEndAsync();

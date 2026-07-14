@@ -201,7 +201,12 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn("RedirectStandardOutput = true", generated)
         self.assertIn("RedirectStandardError = true", generated)
         self.assertIn("adapter.StartTime.ToUniversalTime()", generated)
-        self.assertIn("adapter.MainModule", generated)
+        self.assertIn("ResolveOwnedProcessImagePath(adapter)", generated)
+        self.assertIn("QueryFullProcessImageNameW", generated)
+        self.assertNotIn(
+            "adapter.MainModule?.FileName ?? throw new InvalidOperationException(\"Could not resolve the live walker adapter host image.\")",
+            generated,
+        )
         self.assertIn("adapterScriptUnchanged", generated)
         self.assertIn("adapter.Id", generated)
         self.assertIn("adapter.ExitCode", generated)
