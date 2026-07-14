@@ -909,12 +909,14 @@ def _validate_input_bracket(
     bracket: tuple[int, int], phase_start: int, frequency: int, label: str
 ) -> None:
     before, after = bracket
-    step = cadence_step_qpc(frequency)
+    # Live path revalidates receipt/identity around Q edges; that plus SendInput
+    # can exceed one 10 ms cadence without invalidating the phase association.
+    bind = schedule_max_gap_qpc(frequency)
     if before > after:
         raise AttemptError(f"{label} bracket is reversed")
-    if after > phase_start or phase_start - before > step:
+    if after > phase_start or phase_start - before > bind:
         raise AttemptError(f"{label} bracket is not bound to the phase boundary")
-    if after - before > step:
+    if after - before > bind:
         raise AttemptError(f"{label} bracket exceeds one sampling cadence")
 
 

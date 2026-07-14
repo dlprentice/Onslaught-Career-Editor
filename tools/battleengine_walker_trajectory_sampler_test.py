@@ -675,8 +675,9 @@ class AttemptAnalysisTests(unittest.TestCase):
 
         overwide_bracket = sampler.synthetic_attempt_trace(attempt=1)
         phase_start = overwide_bracket.samples["hold"][0].tick
-        step = overwide_bracket.frequency * sampler.CADENCE_MS // 1000
-        overwide_bracket.down_bracket = (phase_start - 2 * step, phase_start - step)
+        step = sampler.cadence_step_qpc(overwide_bracket.frequency)
+        # Wider than schedule_max_gap_qpc (~50 ms / 5 cadences).
+        overwide_bracket.down_bracket = (phase_start - 8 * step, phase_start - 7 * step)
         mutations.append(("boundary", overwide_bracket))
 
         contradictory_velocity = sampler.synthetic_attempt_trace(attempt=1, contradictory_velocity=True)
