@@ -1,7 +1,7 @@
 # Active Goal
 
 Status: ACTIVE
-Last updated: 2026-07-13
+Last updated: 2026-07-14
 Policy: `goal.policy.md`
 
 ## Objective
@@ -18,28 +18,58 @@ separately.
 
 ## Current Slice
 
-Continue from pushed integration main after the 2026-07-13 closeout. The source
-crosswalk, bounded AYA observation producer, export-outcome producer, retained
-CMSH attributes, opt-in inverse-transpose UV/normal OBJ output, and corrected
+Continue from pushed integration main after the 2026-07-14 estimator and
+source-reference landings (`58d8b5e5`, `d4b9f83e`). The source crosswalk,
+bounded AYA observation/export/reconciliation producers, retained CMSH
+attributes, opt-in inverse-transpose UV/normal OBJ output, tick-aware walker
+trajectory estimator, walker source-reference fixture boundary, and corrected
 two-attempt Runtime lifecycle are integrated. The Home hierarchy/focus policy
 is integrated as source/non-native behavior only; native first-run focus remains
 unaccepted.
 
 1. obtain a fresh separately authorized pair of exactly two accepted copied-
    runtime walker-forward measurements using the integrated Runtime tooling;
-2. publish a bounded behavior contract only if both attempts pass, then
-   implement that source-named behavior in deterministic Core and verify it
-   through headless and Godot clients;
+2. publish a bounded scalar-response contract in declared retail coordinate
+   units only if both attempts pass, then separately accept the coordinate-
+   scale, tick-response, rounding, quantization-error, and overflow translation
+   policy before changing deterministic Core or verifying through headless and
+   Godot clients;
 3. extend the accepted inventory/export producer contracts into complete local
    corpus coverage for every observed archive/tag/extension and deterministic
    output family, keeping proprietary payloads ignored/local;
-4. repair the ignored `local-lab/handoffs/walkerref-20260713` draft before integration: keep it outside
-   `rebuild/`, reuse the hardened crosswalk validator, model both water checks
-   independently, partition scalar-measurable from future-probe fields, and name
-   exact Core targets; and
+4. preserve the accepted `tools/battleengine_walker_source_reference.py`
+   boundary: source-shaped symbolic control flow stays outside `rebuild/`, the
+   hardened crosswalk remains authoritative, runtime/Core acceptance remains
+   explicitly unsatisfied, and every trace-driving fixture control stays
+   serialized and fail-closed; and
 5. retain the Home native-focus nonclaim until a fresh native acceptance run.
 
 No release or tag is authorized by this slice.
+
+## Current Slice Progress - 2026-07-14
+
+- Tick-aware walker trajectory estimator is on main at `58d8b5e5`. Wall-clock
+  speed uses a fixed physics-tick lag window (50 ms hypothesis); actor velocity
+  is treated as per-update displacement with edge, active-window, and
+  settled-tail corroboration. Synthetic fixtures accept source-shaped ~20 Hz
+  staircases under 100 Hz polling and reject the old continuous units/sec model.
+  Focused gate: `npm run test:battleengine-walker-trajectory-sampler` → 27/27.
+  Physics-update period and velocity units remain hypothesized, not retail tick
+  identity proof.
+- Walker source-reference fixture boundary is on main at `d4b9f83e`
+  (`tools/battleengine_walker_source_reference.py`). Source-shaped symbolic
+  control flow stays outside `rebuild/`; Core translation remains blocked until
+  a measured scalar-response contract and separate retail-to-Core translation
+  policy are accepted. Focused gate: 20/20.
+- Bounded AYA corpus-reconciliation producer (`onslaught.aya-corpus-reconciliation.v1`)
+  is integrated in this slice: parser-free terminal-outcome surface coverage
+  without private payload reopen. Focused gate:
+  `npm run test:aya-export-outcomes` → 11/11. Full private-corpus export remains
+  blocked on missing legacy native extractor DLLs / VS C++ targets (MSB4278).
+- Next executable critical path remains one fresh exactly-two-attempt
+  copied-runtime walker measurement using the tick-aware sampler. Prior live
+  pair (`local-proofs/walker-trajectory-live-20260713-pair-01`) failed attempt 1
+  with null runtime-chain / lifecycle deadline; attempt 2 absent; no contract.
 
 ## Current Slice Progress - 2026-07-13
 
@@ -88,11 +118,47 @@ No release or tag is authorized by this slice.
 - The old `6411/6411` closure is now explicitly metadata accounting rather than
   whole-binary semantic correctness. This cluster separately scores owner,
   prototype/type, static semantics, source provenance, and runtime confidence.
-- Exporter improvement is still pending design. A fresh native extractor build
-  is blocked locally by missing Visual C++ targets (`MSB4278`), and no tracked
-  public end-to-end synthetic AYA/DDS/FBX fixture exists yet.
-- The behavior contract and rebuild implementation remain pending copied-runtime
-  evidence. First Flight's transform/resource/movement choices remain synthetic.
+- The active source slice now adds bounded parser-free terminal-outcome surface
+  reconciliation to the accepted inventory/export producer contracts. It
+  revalidates canonical observation/outcome identities, closed lane/output
+  compatibility, exact observed archive/extension/tag/lane sets, and one
+  exported verified representative per deterministic output family; binds the
+  exact canonical rendered reports; and fixes nonclaims for exhaustive target
+  matrices, successful full-corpus extraction, format completeness, and
+  runtime/render fidelity. Focused reconciliation 11/11, inventory 28/28, and
+  CMSH 44/44 tests pass. One ignored read-only census accepted all 301 copied
+  AYA archives with 23,884 chunks, 16 tag families, and 139 mesh-body
+  candidates, but no new full export/outcome reconciliation occurred. The
+  required legacy native extractor DLLs are absent, the available build fails
+  at `MSB4278` without Visual Studio C++ targets, and no tracked public
+  end-to-end synthetic AYA/DDS/FBX fixture exists yet. Normal/adversarial Codex
+  and sanitized normal/adversarial Cursor reviews are GO after closing digest,
+  renderer, lane/output, and rejected-source gaps.
+- The scalar-response contract remains pending copied-runtime evidence, and a
+  deterministic Core implementation additionally requires an accepted retail-
+  coordinate-to-Core translation policy. First Flight's transform/resource/
+  movement choices remain synthetic.
+- The rejected ignored walker-reference draft is repaired in the active
+  worktree as `tools/battleengine_walker_source_reference.py` with the focused
+  `test:battleengine-walker-source-reference` package gate. It reuses the
+  hardened source/Steam crosswalk validator; pins the ordered two-water,
+  slide/clear, friction/clamp, dash, and walk-cycle source shape; rejects
+  impossible or dead branch controls; preserves the dash multiplier and source
+  short-circuit order; separates scalar-measurable fields, future probes, and
+  fully serialized fixture controls; binds an explicitly unsatisfied and
+  publication-unauthorized exactly-two-attempt future gate; and names the
+  current Core/constants/replay/scenario/headless candidate target set without
+  changing Core. The public measurement schema is now v2 and declares retail
+  world-coordinate units for position, speed, acceleration, latency, and
+  ratios. Its Core target remains open and blocked until coordinate scale,
+  tick-response, rounding, quantization-error, and overflow rules are accepted;
+  direct translation into `WalkerSpeedPerTick` is forbidden. Publication now
+  revalidates the entire report against a freshly executed canonical fixture or
+  catalog, rejecting target, evidence-label, symbolic-value, and nested-fixture
+  mutation immediately before serialization. Focused sampler later 27/27 after
+  the tick-aware estimator, orchestrator 31/31, source-reference 20/20, and real
+  crosswalk 58/58 tests pass. No accepted live measurement or Core behavior
+  change has occurred.
 - The cleanup-first copied-runtime walker measurement adapter is integrated at
   `9c22a5b6`. Its integrated focused gates pass 20 adapter tests and 49
   safe-copy/lifecycle tests. One later two-attempt aggregate was consumed and

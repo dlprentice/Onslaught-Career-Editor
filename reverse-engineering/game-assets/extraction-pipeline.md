@@ -1,6 +1,6 @@
 ---
 status: active
-last_updated: 2026-05-07
+last_updated: 2026-07-13
 doc_version: 1.2
 ---
 
@@ -64,6 +64,33 @@ The orchestrator currently runs these phases in order:
 5. cross-surface asset catalog generation.
 
 The texture, loose-mesh, and embedded-mesh harness lanes intentionally run as separate serial processes. The legacy AYA extractor uses shared runtime/template files, and concurrent mesh export lanes can lock those files.
+
+## Parser-Free Evidence Contracts
+
+`aya_archive_inventory.py --observation-records-out` emits the canonical,
+path-free `onslaught.aya-archive-observation.v1` source universe.
+`export_game_assets.py` can validate identity-bound terminal lane manifests into
+`onslaught.aya-export-outcome.v1` and reconcile those outcomes into
+`onslaught.aya-corpus-reconciliation.v1` without reopening archive payloads.
+
+The reconciliation artifact is deliberately a bounded
+terminal-outcome-surface result. It revalidates canonical archive, chunk,
+dependency, lane, output-kind, status, and observation identities; requires
+every observed archive, extension, tag family, and closed export lane; and
+requires at least one exported, digest-verified representative for every
+deterministic output family. It binds the complete canonical observation and
+outcome reports by SHA-256. Its fixed nonclaims exclude an exhaustive target
+matrix, successful full-corpus extraction, format completeness, and
+runtime/render fidelity. Both report digests use the exact validated canonical
+renderer byte stream, including its single trailing newline.
+
+The 2026-07-13 ignored local inventory run accepted all `301` copied resource
+archives and recorded `23,884` chunks across `16` tag families plus `139` mesh
+body candidates. That is complete inventory breadth for this copied corpus,
+not export reconciliation. A new full export/outcome run was not produced:
+the required legacy native extractor binaries were absent, and the available
+build path stopped at `MSB4278` because the Visual Studio C++ targets were not
+installed. No installed-game mutation or BEA launch occurred.
 
 ## Prerequisites
 

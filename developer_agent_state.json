@@ -1,7 +1,7 @@
 {
-  "lastUpdated": "2026-07-13",
+  "lastUpdated": "2026-07-14",
   "routingPolicy": "Follow the global Codex multi-agent lane contract. Under current direct user policy, every new or resumed Codex-owned worker uses gpt-5.6-sol at medium effort by default; harder work may raise Sol effort, and Terra/Luna fallback or lower effort requires a newer direct user instruction.",
-  "currentFocus": "Continue complete local retail extraction and source-led reconstruction from the integrated Runtime, AYA producer, and CMSH attribute foundations. The immediate critical path is one fresh accepted two-attempt walker measurement, a bounded public behavior contract, and deterministic Core implementation; complete corpus extraction coverage proceeds in parallel without treating schemas as outcomes.",
+  "currentFocus": "Path A: run one fresh exactly-two-attempt copied-runtime walker measurement with the tick-aware sampler (58d8b5e5) and integrated lifecycle. Publish nothing unless both attempts pass. Then bounded v2 scalar-response contract in retail world units, then separate retail-to-Core translation policy before Core constant changes. Asset lane: corpus-reconciliation producer landed; full export still blocked on missing native AYA extractor DLLs / VS C++ targets.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -17,11 +17,11 @@
       "newReleaseAuthorized": false
     },
     "repository": {
-      "registeredWorktrees": 3,
-      "worktreeOwnership": "Main is Owner/integration. Coordinator and Steward are the only retained task worktrees. All completed worker registrations were removed. The rejected walker reference draft is preserved byte-identically under ignored local-lab/handoffs/walkerref-20260713 for a future bounded repair; no worker task owns it.",
+      "registeredWorktrees": 1,
+      "worktreeOwnership": "Main is the sole registered active Owner/integration worktree. The previously reported Coordinator 8fe5 and Steward 95e2 registrations are absent. No persistent worker lane was created for the walker source-reference repair.",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "b6bb93b5 before this closeout; local main now contains Runtime e04cce2e plus b982a006, Home 8bbc384d, AYA export outcomes f368287d, and CMSH attributes e8bf0426 pending the final baton commit/push.",
+      "lastPushedBeforeCurrentSlice": "d4b9f83e on main/origin-main after estimator 58d8b5e5 and source-reference landings; corpus-reconciliation + goal/state baton pending this commit.",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
@@ -95,6 +95,13 @@
       "rebuildBoundary": "First Flight transform, energy, shield, movement, arena, and presentation choices remain synthetic. No authentic behavior change is allowed before an accepted copied-runtime contract.",
       "validation": "Final source-truth closeout passes docsync, 4329 documented-command checks, 3663-file/6323-link Markdown validation, 18604-file hygiene/line endings, 19465-file hard-payload safety, 19649-file submodule-aware payload safety, migration inventory, JSON parsing, active stale-truth scanning, and git diff --check."
     },
+    "ayaCorpusReconciliation": {
+      "status": "Bounded terminal-outcome surface reconciliation is implemented in the active source slice; full extraction reconciliation is not complete.",
+      "contract": "The producer revalidates canonical observation/outcome identities, closed lane/output compatibility, exact observed archive/extension/tag/lane sets, and one exported verified digest-bound representative per deterministic output family. It binds exact canonical rendered observation/outcome bytes and fixes nonclaims for exhaustive target matrices, successful full-corpus extraction, format completeness, and runtime/render fidelity.",
+      "localEvidence": "One ignored read-only census accepted 301/301 copied AYA archives with 23,884 chunks, 16 tag families, and 139 mesh-body candidates; its canonical report revalidated byte-identically. No proprietary paths, names, hashes, or payloads are published.",
+      "blocker": "A fresh full export/outcome run is unavailable because the required legacy native extractor DLLs are absent and the local build fails at MSB4278 without Visual Studio C++ targets. No toolchain installation is authorized by this slice.",
+      "validation": "Focused reconciliation 11/11, inventory 28/28, CMSH 44/44, pycompile, doc-command, public-core link, diff, and 19,576-file hard-payload gates pass. Normal/adversarial Codex and sanitized normal/adversarial Cursor reviews are GO after digest-preimage, renderer-implication, and rejected-source output gaps were closed."
+    },
     "runtimeObserverDesign": {
       "decision": "Identity canary in controlled Level 850, then controlled raw-state observation, then Level 100 corroboration.",
       "stageABoundary": "The first control/positive/repeat matrix proves exact specimen, module/RVA, player-one/runtime-P0 input, BattleEngine, Morph, Move, and JetPart causality only; it makes no timing, field-semantic, handling, or parity claim.",
@@ -107,9 +114,10 @@
       "status": "Tasks 1-4 are accepted. Task 5 has twelve preserved failed executions and no published identity claim. Retry 12 proves neither Q causality nor Transform/Morph/Move/JetPart identity; it exposed a repeated post-quit NatVis shutdown-grammar defect. Another live run requires an integrated strict path-bound correction and wholly fresh controls."
     },
     "walkerTrajectoryMeasurement": {
-      "tooling": "The corrected one-prebuild/two-attempt lifecycle is integrated at e04cce2e. Focused suites passed 25 sampler, 31 orchestrator, and 60 smoke tests; the full runtime-tooling-safety aggregate passed 8 profile, 24 CDB, 21 input, 60 smoke, and 55 cleanup tests. No live BEA launch or accepted measurement occurred.",
-      "claimBoundary": "The future measurement is scalar motion response only. It does not establish actor- or camera-relative direction, grounded or terrain state, turning, morph, handling, timing below the 10 ms cadence, parity, or Core acceptance.",
-      "executionBoundary": "The prior live pair remains invalid and absent from Core. The corrected tooling is non-live accepted only. A future live action requires a fresh serialized exactly-two-attempt lease; either invalid attempt stops the pair and no third attempt or public contract follows."
+      "tooling": "Lifecycle e04cce2e plus tick-aware estimator 58d8b5e5 and source-reference d4b9f83e are on main. Focused suites: sampler 27/27, orchestrator 31/31, source-reference 20/20. No accepted live measurement exists.",
+      "claimBoundary": "The future measurement is scalar motion response in declared retail world-coordinate units only. It does not establish physical distance, a retail-coordinate-to-Core scale, actor- or camera-relative direction, grounded or terrain state, turning, morph, handling, timing below the 10 ms cadence, parity, or Core acceptance. Physics-update period and velocity units in the estimator remain hypothesized.",
+      "executionBoundary": "Prior live pair walker-trajectory-live-20260713-pair-01 failed attempt 1 (null runtime-chain / lifecycle deadline); attempt 2 absent; no contract. Fresh exactly-two-attempt run is authorized under campaign runtime policy with copied targets only.",
+      "sourceReference": "tools/battleengine_walker_source_reference.py on main at d4b9f83e. Core translation blocked until measured contract + translation policy."
     },
     "agentGuidanceAudit": {
       "integrated": "56738f9b",
@@ -133,17 +141,16 @@
     ]
   },
   "activeBlockers": [
-    "No accepted two-attempt copied-runtime walker measurement exists; therefore no measured walker contract or source-named deterministic Core behavior exists.",
-    "Complete private-corpus extraction/export coverage is not yet executed. The integrated AYA observation and export-outcome producers are prerequisites, not completeness.",
-    "The isolated walkerref draft is not integration-ready: it must move outside rebuild provenance, reuse the hardened crosswalk validator, model independent water checks and feasible wraps, partition measurable fields, and name exact Core targets.",
+    "No accepted two-attempt copied-runtime walker measurement exists; therefore no measured walker scalar-response contract exists. Even after two passing attempts, deterministic Core remains blocked until a retail-coordinate-to-Core scale, tick-response, rounding, quantization-error, and overflow policy is accepted.",
+    "Complete private-corpus extraction/export coverage is not yet executed. The 301-archive observation census and bounded surface-reconciliation producer are prerequisites only; the full export is blocked by absent legacy native extractor DLLs and missing Visual Studio C++ targets (MSB4278).",
     "Home source policy is integrated, but native first-run arrival focus and normal/760 visual acceptance remain unproven."
   ],
   "openQuestions": [],
   "nextSteps": [
     "Authorize and execute one fresh exactly-two-attempt copied-runtime walker measurement with the integrated e04cce2e tooling; publish nothing if either attempt fails.",
-    "If both attempts pass, derive one bounded behavior contract and implement the named Forward/Move/UpdateWalkCycle behavior in deterministic Core with headless and Godot verification.",
-    "Extend the accepted AYA inventory and export-outcome records into parser-free complete-corpus coverage, then run one ignored/local corpus census and deterministic export reconciliation.",
-    "Repair or replace the isolated walkerref draft under the five recorded provenance/branch/promotion/Core-target corrections before integration.",
+    "If both attempts pass, derive one bounded v2 scalar-response contract in declared retail coordinate units; do not infer physical distance or Core units.",
+    "Accept an explicit retail-coordinate-to-Core translation contract covering scale, tick response, rounding, maximum quantization error, and overflow bounds before implementing Forward/Move/UpdateWalkCycle behavior in deterministic Core with headless and Godot verification.",
+    "Restore the legacy native extractor runtime through an authorized supported toolchain path, then produce real six-lane terminal outcomes and run the bounded ignored/local reconciliation; do not promote surface accounting into exhaustive-target or successful-extraction claims.",
     "Run a fresh native Home acceptance only when it does not delay reconstruction work."
   ]
 }

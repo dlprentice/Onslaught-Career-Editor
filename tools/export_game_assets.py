@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import atexit
+import hashlib
 import json
 import os
 import shutil
@@ -32,6 +33,7 @@ from safe_generated_output import SecuredOutputRoot
 
 EXPORT_OUTCOME_SCHEMA = "onslaught.aya-export-outcome.v1"
 EXPORT_LANE_MANIFEST_SCHEMA = "onslaught.aya-export-lane-manifest.v1"
+CORPUS_RECONCILIATION_SCHEMA = "onslaught.aya-corpus-reconciliation.v1"
 EXPORT_LANES = (
     "looseTextures",
     "looseMeshes",
@@ -62,6 +64,20 @@ OUTPUT_KINDS = frozenset(
         "videoManifest",
         "assetCatalog",
     }
+)
+LANE_OUTPUT_KINDS = {
+    "looseTextures": frozenset({"none", "png"}),
+    "looseMeshes": frozenset({"none", "fbx"}),
+    "embeddedMeshes": frozenset({"none", "fbx", "obj", "materialReport"}),
+    "language": frozenset({"none", "languageCorpus"}),
+    "video": frozenset({"none", "videoManifest"}),
+    "catalog": frozenset({"none", "assetCatalog"}),
+}
+RECONCILIATION_NONCLAIMS = (
+    "not-exhaustive-target-matrix",
+    "not-format-completeness",
+    "not-runtime-or-render-fidelity",
+    "not-successful-full-corpus-extraction",
 )
 STATUS_REASONS = {
     "exported": frozenset({None}),
@@ -272,6 +288,12 @@ def _validate_terminal_record(
         raise ExportOutcomeError("failed digest status requires rejected export")
     if digest_status == "notApplicable" and status in {"exported", "rejected"}:
         raise ExportOutcomeError("terminal status disagrees with deterministic output status")
+    if source["observationStatus"] == "rejected" and (
+        status == "exported"
+        or output_kind != "none"
+        or digest_status in {"verified", "unverified"}
+    ):
+        raise ExportOutcomeError("rejected source cannot carry output")
     return (
         {
             **target,
@@ -309,6 +331,11 @@ def _observed_fields(
             for item in selected_chunks
         ],
     }
+
+
+def _validate_lane_output_kind(lane: str, record: Mapping[str, object]) -> None:
+    if record["outputKind"] not in LANE_OUTPUT_KINDS[lane]:
+        raise ExportOutcomeError("lane/output kind mismatch")
 
 
 def produce_export_outcomes(
@@ -352,6 +379,7 @@ def produce_export_outcomes(
         actual: dict[bytes, tuple[dict[str, object], dict[str, object], dict[str, object] | None]] = {}
         for raw_record in manifest["records"]:
             accepted = _validate_terminal_record(raw_record, sources)
+            _validate_lane_output_kind(lane, accepted[0])
             key = _target_key(accepted[0])
             if key in actual:
                 raise ExportOutcomeError("duplicate or ambiguous terminal export record")
@@ -398,6 +426,263 @@ def render_export_outcomes(report: Mapping[str, object]) -> bytes:
         raise ExportOutcomeError("invalid export outcome universe")
     if not isinstance(report["exportRecords"], list):
         raise ExportOutcomeError("invalid export outcome records")
+    return _canonical_bytes(report) + b"\n"
+
+
+def _validated_export_records(
+    outcome_report: Mapping[str, object],
+    universe_id: str,
+    sources: Mapping[str, dict[str, object]],
+) -> list[dict[str, object]]:
+    if not isinstance(outcome_report, dict) or set(outcome_report) != {
+        "exportRecords",
+        "producer",
+        "schemaVersion",
+        "sourceObservationSchemaVersion",
+        "sourceUniverseId",
+    }:
+        raise ExportOutcomeError("invalid export outcome envelope")
+    if outcome_report["schemaVersion"] != EXPORT_OUTCOME_SCHEMA or outcome_report[
+        "producer"
+    ] != {"name": "export_game_assets", "producerVersion": 1}:
+        raise ExportOutcomeError("unaccepted export outcome producer")
+    if outcome_report["sourceObservationSchemaVersion"] != aya_observation.OBSERVATION_SCHEMA:
+        raise ExportOutcomeError("unaccepted source observation version")
+    if outcome_report["sourceUniverseId"] != universe_id:
+        raise ExportOutcomeError("foreign export source universe")
+    raw_records = outcome_report["exportRecords"]
+    if not isinstance(raw_records, list):
+        raise ExportOutcomeError("invalid export outcome records")
+
+    terminal_keys = {
+        "sourceOrdinal",
+        "sourceIdentity",
+        "chunkIdentity",
+        "dependencies",
+        "deterministicOutputDigest",
+        "deterministicOutputStatus",
+        "exportStatus",
+        "outputKind",
+        "reason",
+    }
+    observed_keys = {"observedExtensions", "observedFeatureFlags", "observedTags"}
+    accepted_records: list[dict[str, object]] = []
+    global_keys: set[bytes] = set()
+    for raw_record in raw_records:
+        if not isinstance(raw_record, dict) or set(raw_record) != {
+            "lane",
+            *terminal_keys,
+            *observed_keys,
+        }:
+            raise ExportOutcomeError("invalid export outcome record")
+        lane = raw_record["lane"]
+        if not isinstance(lane, str) or lane not in EXPORT_LANES:
+            raise ExportOutcomeError("unknown export lane")
+        terminal, source, chunk = _validate_terminal_record(
+            {key: raw_record[key] for key in terminal_keys}, sources
+        )
+        _validate_lane_output_kind(lane, terminal)
+        observed = _observed_fields(source, chunk)
+        if {key: raw_record[key] for key in observed_keys} != observed:
+            raise ExportOutcomeError("export record observation fields disagree with source")
+        accepted = {"lane": lane, **terminal, **observed}
+        if raw_record != accepted:
+            raise ExportOutcomeError("noncanonical export outcome record")
+        global_key = _canonical_bytes([lane, json.loads(_target_key(terminal).decode("ascii"))])
+        if global_key in global_keys:
+            raise ExportOutcomeError("duplicate lane target in export outcomes")
+        global_keys.add(global_key)
+        accepted_records.append(accepted)
+
+    if accepted_records != sorted(accepted_records, key=_canonical_bytes):
+        raise ExportOutcomeError("export outcome records are not in canonical order")
+    return accepted_records
+
+
+def produce_corpus_reconciliation(
+    observation_report: Mapping[str, object],
+    outcome_report: Mapping[str, object],
+) -> dict[str, object]:
+    """Reconcile bounded observed surfaces without claiming exhaustive extraction."""
+
+    universe_id, sources = _observation_index(observation_report)
+    records = _validated_export_records(outcome_report, universe_id, sources)
+
+    expected_archives = set(sources)
+    if not expected_archives:
+        raise ExportOutcomeError("empty observation universe cannot be reconciled")
+    covered_archives = {record["sourceOrdinal"] for record in records}
+    if covered_archives != expected_archives:
+        raise ExportOutcomeError("incomplete observed archive coverage")
+
+    expected_extensions = {source["extension"] for source in sources.values()}
+    covered_extensions = {
+        extension for record in records for extension in record["observedExtensions"]
+    }
+    if covered_extensions != expected_extensions:
+        raise ExportOutcomeError("incomplete observed extension coverage")
+
+    expected_tags = {
+        _canonical_bytes({"tagAscii": chunk["tagAscii"], "tagHex": chunk["tagHex"]})
+        for source in sources.values()
+        for chunk in source["chunkObservations"]
+    }
+    if not expected_tags:
+        raise ExportOutcomeError("observation universe has no tag surfaces")
+    covered_tags = {
+        _canonical_bytes(tag) for record in records for tag in record["observedTags"]
+    }
+    if covered_tags != expected_tags:
+        raise ExportOutcomeError("incomplete observed tag coverage")
+
+    covered_lanes = {record["lane"] for record in records}
+    if covered_lanes != set(EXPORT_LANES):
+        raise ExportOutcomeError("incomplete export lane coverage")
+
+    expected_output_kinds = set(OUTPUT_KINDS) - {"none"}
+    verified_records = [
+        record
+        for record in records
+        if record["exportStatus"] == "exported"
+        and record["deterministicOutputStatus"] == "verified"
+        and _valid_digest(record["deterministicOutputDigest"])
+    ]
+    covered_output_kinds = {
+        record["outputKind"] for record in verified_records
+    } - {"none"}
+    if covered_output_kinds != expected_output_kinds:
+        raise ExportOutcomeError("incomplete verified output-family coverage")
+
+    status_counts = {
+        status: sum(record["exportStatus"] == status for record in records)
+        for status in EXPORT_STATUSES
+    }
+    return {
+        "evidenceScope": "terminal-outcome-surface-reconciliation",
+        "nonClaims": list(RECONCILIATION_NONCLAIMS),
+        "observedSurfaceCoverageStatus": "complete",
+        "coveredLanes": sorted(covered_lanes),
+        "coveredOutputKinds": sorted(covered_output_kinds),
+        "exportOutcomeSha256": hashlib.sha256(
+            render_export_outcomes(outcome_report)
+        ).hexdigest(),
+        "observedArchiveCount": len(expected_archives),
+        "observedExtensions": sorted(expected_extensions),
+        "observedTags": [json.loads(tag.decode("ascii")) for tag in sorted(expected_tags)],
+        "producer": {"name": "export_game_assets", "producerVersion": 1},
+        "schemaVersion": CORPUS_RECONCILIATION_SCHEMA,
+        "sourceObservationSha256": hashlib.sha256(
+            aya_observation.render_observation_records(observation_report)
+        ).hexdigest(),
+        "sourceUniverseId": universe_id,
+        "terminalOutcomeCount": len(records),
+        "terminalStatusCounts": {
+            status: count for status, count in status_counts.items() if count
+        },
+        "verifiedOutputCount": len(verified_records),
+    }
+
+
+def render_corpus_reconciliation(report: Mapping[str, object]) -> bytes:
+    """Render a validated reconciliation result as deterministic path-free ASCII JSON."""
+
+    if not isinstance(report, dict) or set(report) != {
+        "coveredLanes",
+        "coveredOutputKinds",
+        "evidenceScope",
+        "exportOutcomeSha256",
+        "nonClaims",
+        "observedArchiveCount",
+        "observedExtensions",
+        "observedSurfaceCoverageStatus",
+        "observedTags",
+        "producer",
+        "schemaVersion",
+        "sourceObservationSha256",
+        "sourceUniverseId",
+        "terminalOutcomeCount",
+        "terminalStatusCounts",
+        "verifiedOutputCount",
+    }:
+        raise ExportOutcomeError("invalid corpus reconciliation envelope")
+    if report["schemaVersion"] != CORPUS_RECONCILIATION_SCHEMA or report[
+        "producer"
+    ] != {"name": "export_game_assets", "producerVersion": 1}:
+        raise ExportOutcomeError("unaccepted corpus reconciliation producer")
+    if report["evidenceScope"] != "terminal-outcome-surface-reconciliation" or report[
+        "nonClaims"
+    ] != list(RECONCILIATION_NONCLAIMS):
+        raise ExportOutcomeError("invalid corpus reconciliation scope")
+    if report["observedSurfaceCoverageStatus"] != "complete":
+        raise ExportOutcomeError("incomplete corpus reconciliation")
+    if not _valid_digest(report["sourceUniverseId"]) or not _valid_digest(
+        report["exportOutcomeSha256"]
+    ) or not _valid_digest(
+        report["sourceObservationSha256"]
+    ):
+        raise ExportOutcomeError("invalid corpus reconciliation identity")
+    if not _valid_length(report["observedArchiveCount"]) or report[
+        "observedArchiveCount"
+    ] == 0:
+        raise ExportOutcomeError("invalid observed archive count")
+    if report["coveredLanes"] != sorted(EXPORT_LANES):
+        raise ExportOutcomeError("invalid reconciled export lanes")
+    if report["coveredOutputKinds"] != sorted(OUTPUT_KINDS - {"none"}):
+        raise ExportOutcomeError("invalid reconciled output kinds")
+    extensions = report["observedExtensions"]
+    if (
+        not isinstance(extensions, list)
+        or not extensions
+        or any(
+            not isinstance(extension, str) or extension not in {".aya", "other"}
+            for extension in extensions
+        )
+        or extensions != sorted(set(extensions))
+    ):
+        raise ExportOutcomeError("invalid reconciled extensions")
+    tags = report["observedTags"]
+    if (
+        not isinstance(tags, list)
+        or not tags
+        or any(
+            not isinstance(tag, dict)
+            or set(tag) != {"tagAscii", "tagHex"}
+            or not isinstance(tag["tagAscii"], str)
+            or len(tag["tagAscii"]) != 4
+            or not isinstance(tag["tagHex"], str)
+            or len(tag["tagHex"]) != 8
+            or any(character not in "0123456789abcdef" for character in tag["tagHex"])
+            or aya_observation._decode_tag(bytes.fromhex(tag["tagHex"]))
+            != tag["tagAscii"]
+            for tag in tags
+        )
+        or tags != sorted(tags, key=_canonical_bytes)
+        or len({_canonical_bytes(tag) for tag in tags}) != len(tags)
+    ):
+        raise ExportOutcomeError("invalid reconciled tags")
+    if (
+        not _valid_length(report["terminalOutcomeCount"])
+        or report["terminalOutcomeCount"] == 0
+        or report["observedArchiveCount"] > report["terminalOutcomeCount"]
+        or not _valid_length(report["verifiedOutputCount"])
+        or report["verifiedOutputCount"] < len(OUTPUT_KINDS - {"none"})
+        or report["verifiedOutputCount"] > report["terminalOutcomeCount"]
+    ):
+        raise ExportOutcomeError("invalid reconciliation outcome counts")
+    status_counts = report["terminalStatusCounts"]
+    if (
+        not isinstance(status_counts, dict)
+        or not status_counts
+        or any(
+            status not in EXPORT_STATUSES or not _valid_length(count) or count == 0
+            for status, count in status_counts.items()
+        )
+    ):
+        raise ExportOutcomeError("invalid terminal status counts")
+    if sum(status_counts.values()) != report["terminalOutcomeCount"]:
+        raise ExportOutcomeError("terminal status counts disagree with outcome count")
+    if report["verifiedOutputCount"] > status_counts.get("exported", 0):
+        raise ExportOutcomeError("verified outputs exceed exported outcomes")
     return _canonical_bytes(report) + b"\n"
 
 
