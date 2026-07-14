@@ -1110,21 +1110,28 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
     )
     if not native.force_foreground(receipt.window_handle):
         raise sampler.AttemptError("could not foreground BEA before Q sampling")
-    origin = clock.now()
+    # Each phase uses a fresh origin. External Q handshakes take seconds; if hold
+    # targets stay anchored to pre-Q origin every wait_until returns immediately
+    # and the hold window collapses to a few hundred ms with control still 0.
+    baseline_origin = clock.now()
     deadline.check("baseline")
     baseline = _sample_batches(
-        reader, guard, clock, receipt.module_base, "baseline", origin, 0, deadline
+        reader, guard, clock, receipt.module_base, "baseline", baseline_origin, 0, deadline
     )
     hold_callbacks = []
     hold_rows: list[sampler.RawSample] = []
     step = sampler.cadence_step_qpc(clock.frequency)
-    clock.wait_until(origin + sampler.PHASE_TARGETS["baseline"] * step)
+    hold_origin_box: list[int] = []
     for batch_start in range(0, sampler.PHASE_TARGETS["hold"], BATCH_SIZE):
         def batch(start=batch_start):
             deadline.check("hold")
+            if not hold_origin_box:
+                # First batch runs only after Q-down inside execute_owned_q_window.
+                hold_origin_box.append(clock.now())
+            hold_origin = hold_origin_box[0]
             rows = []
             for slot in range(start, min(start + BATCH_SIZE, sampler.PHASE_TARGETS["hold"])):
-                target = origin + (sampler.PHASE_TARGETS["baseline"] + slot) * step
+                target = hold_origin + slot * step
                 tick = clock.wait_until(target)
                 deadline.check("hold")
                 rows.append(sampler.read_coherent_sample(
@@ -1137,12 +1144,12 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
     window = execute_deadlined_q_batches(
         guard, q_input, clock.now, hold_callbacks, lambda: deadline.check("hold")
     )
-    release_offset = sampler.PHASE_TARGETS["baseline"] + sampler.PHASE_TARGETS["hold"]
+    release_origin = clock.now()
     release = _sample_batches(
-        reader, guard, clock, receipt.module_base, "release", origin, release_offset, deadline
+        reader, guard, clock, receipt.module_base, "release", release_origin, 0, deadline
     )
     run_digest = hashlib.sha256(
-        (receipt.receipt_sha256 + str(attempt) + str(origin)).encode("ascii")
+        (receipt.receipt_sha256 + str(attempt) + str(baseline_origin)).encode("ascii")
     ).hexdigest()
     trace = sampler.AttemptTrace(
         attempt=attempt,
