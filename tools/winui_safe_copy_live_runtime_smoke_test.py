@@ -203,6 +203,10 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn("adapter.StartTime.ToUniversalTime()", generated)
         self.assertIn("ResolveOwnedProcessImagePath(adapter)", generated)
         self.assertIn("QueryFullProcessImageNameW", generated)
+        # Copied defaultoptions must bind Movement/Forward to Q for the adapter.
+        self.assertIn('ActionLabel = "Forward"', generated)
+        self.assertIn('Player1Token = "Q"', generated)
+        self.assertIn("GameProfileControlOptionsService.ApplyToSafeCopy", generated)
         self.assertNotIn(
             "adapter.MainModule?.FileName ?? throw new InvalidOperationException(\"Could not resolve the live walker adapter host image.\")",
             generated,

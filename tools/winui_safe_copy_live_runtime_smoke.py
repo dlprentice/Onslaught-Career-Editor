@@ -2940,8 +2940,30 @@ static int RunWalkerProfilePreparationPhase()
                 ApplyWindowedCompatibilityPatch: false, AllowByteLayoutOnlyTarget: false,
                 IncludeSavegames: false, PatchKeys: Array.Empty<string>(),
                 LaunchArguments: launchArguments, ProfilePresetId: null));
+        // Adapter holds scan-code Q. Default config-2 keyboard maps do not bind
+        // Movement/Forward to Q (pair-09: control stayed 0, position static).
+        // Patch only the copied defaultoptions.bea so P1 Forward = Q.
+        GameProfileControlOptionsService.ApplyToSafeCopy(
+            new GameProfileControlOptionsRequest(
+                ProfileRoot: prepared.TargetGameRoot,
+                AppOwnedProfilesRoot: profilesRoot,
+                KeybindRows: new[]
+                {
+                    new ConfigurationKeybindRow
+                    {
+                        GroupLabel = "Movement",
+                        ActionLabel = "Forward",
+                        EntryId = 0x1f,
+                        KeyboardDeviceCode = 9u,
+                        CurrentPlayer1Token = "",
+                        CurrentPlayer2Token = "",
+                        Player1Token = "Q",
+                        Player2Token = "E",
+                    },
+                }));
         WriteNewCanaryText(receiptPath, artifactRoot, JsonSerializer.Serialize(new {
             passed = true, prepared.TargetGameRoot, prepared.ExecutablePath, prepared.ManifestPath,
+            forwardBoundToQ = true,
         }, new JsonSerializerOptions { WriteIndented = true }));
         return 0;
     }
