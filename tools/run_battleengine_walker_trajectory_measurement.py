@@ -345,6 +345,8 @@ class ReceiptRuntimeGuard:
 
 
 class ScanCodeQInput:
+    """Legacy direct SendInput path (unit tests / offline). Prefer ExternalHarnessQInput live."""
+
     def __init__(self, native: NativeApi, window_handle: int) -> None:
         self.native = native
         self.window_handle = window_handle
@@ -355,7 +357,6 @@ class ScanCodeQInput:
     def key_down(self) -> bool:
         if self.events:
             raise RuntimeError("Q input permits exactly one key-down and one key-up")
-        # Adapter process start can steal focus from the receipt-bound BEA window.
         if not self.native.force_foreground(self.window_handle):
             raise RuntimeError("could not foreground the receipt-bound BEA window for Q-down")
         confirmed = self.native.send_scan_code(Q_SCAN_CODE, False) >= 1
@@ -368,6 +369,55 @@ class ScanCodeQInput:
             raise RuntimeError("Q input permits exactly one key-down and one key-up")
         self.native.force_foreground(self.window_handle)
         confirmed = self.native.send_scan_code(Q_SCAN_CODE, True) >= 1
+        self.events.append((Q_SCAN_CODE, True))
+        self.up_confirmed = confirmed
+        return confirmed
+
+
+class ExternalHarnessQInput:
+    """Ask the C# AppCore harness to deliver Q via proven SendInputSequence.
+
+    pair-09..12 proved Python SendInput does not move the walker control field
+    even with Forward=Q bound and focus restored. The harness already delivers
+    focused tap/down/up:Q through tools/send_game_window_input.ps1.
+    """
+
+    def __init__(self, evidence_root: Path, *, timeout_seconds: float = 5.0) -> None:
+        self.evidence_root = evidence_root
+        self.timeout_seconds = timeout_seconds
+        self.events: list[tuple[int, bool]] = []
+        self.down_confirmed = False
+        self.up_confirmed = False
+
+    def _handshake(self, *, down: bool) -> bool:
+        name = "down" if down else "up"
+        request = self.evidence_root / f"request-q-{name}.marker"
+        ack = self.evidence_root / f"ack-q-{name}.marker"
+        if ack.exists():
+            ack.unlink()
+        with request.open("x", encoding="ascii", newline="\n") as stream:
+            stream.write("1\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        deadline = time.time() + self.timeout_seconds
+        while time.time() < deadline:
+            if ack.is_file():
+                return True
+            time.sleep(0.01)
+        return False
+
+    def key_down(self) -> bool:
+        if self.events:
+            raise RuntimeError("Q input permits exactly one key-down and one key-up")
+        confirmed = self._handshake(down=True)
+        self.events.append((Q_SCAN_CODE, False))
+        self.down_confirmed = confirmed
+        return confirmed
+
+    def key_up(self) -> bool:
+        if self.events != [(Q_SCAN_CODE, False)]:
+            raise RuntimeError("Q input permits exactly one key-down and one key-up")
+        confirmed = self._handshake(down=False)
         self.events.append((Q_SCAN_CODE, True))
         self.up_confirmed = confirmed
         return confirmed
@@ -1037,7 +1087,9 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
         receipt, receipt_path, receipt.receipt_sha256, native, reader.handle,
         authorized_private_root,
     )
-    q_input = ScanCodeQInput(native, receipt.window_handle)
+    # Live Q is owned by the C# harness (ExternalHarnessQInput). Direct Python
+    # SendInput left control==0 and static positions on pairs 09-12.
+    q_input = ExternalHarnessQInput(authorized_private_root)
     readiness_deadline = Deadline(READINESS_DEADLINE_SECONDS)
     if not native.force_foreground(receipt.window_handle):
         raise sampler.AttemptError("could not foreground BEA before readiness")

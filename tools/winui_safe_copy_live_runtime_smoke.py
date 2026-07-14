@@ -3248,6 +3248,13 @@ static int RunWalkerTrajectoryAttempt()
         int remainingMilliseconds = Math.Max(
             1, (int)(TimeSpan.FromSeconds(lifecycleDeadlineSeconds) - observerLifecycle.Elapsed).TotalMilliseconds);
         Stopwatch adapterWait = Stopwatch.StartNew();
+        // External Q ownership: adapter writes request-q-down/up.marker; this
+        // harness delivers focused down:Q / up:Q via the proven input helper.
+        string qDownRequest = Path.Combine(artifactRoot, "request-q-down.marker");
+        string qDownAck = Path.Combine(artifactRoot, "ack-q-down.marker");
+        string qUpRequest = Path.Combine(artifactRoot, "request-q-up.marker");
+        string qUpAck = Path.Combine(artifactRoot, "ack-q-up.marker");
+        bool harnessQHeld = false;
         while (!adapter.HasExited && adapterWait.ElapsedMilliseconds < remainingMilliseconds)
         {
             if (CooperativeStopRequested())
@@ -3256,7 +3263,45 @@ static int RunWalkerTrajectoryAttempt()
                 failure = "Walker cooperative aggregate deadline expired during observer; entering cleanup.";
                 break;
             }
-            adapter.WaitForExit(Math.Min(100, Math.Max(1, remainingMilliseconds - (int)adapterWait.ElapsedMilliseconds)));
+            if (!harnessQHeld && File.Exists(qDownRequest) && !File.Exists(qDownAck))
+            {
+                JsonElement qDownResult = SendInputSequence(
+                    powershellExe, inputScript, managed.ProcessId, hwndHex,
+                    managed.ExecutablePath, managed.WorkingDirectory, "down:Q", 0,
+                    false, string.Empty, Path.Combine(artifactRoot, "harness-q-down.json"),
+                    runtimeReceiptPath, receiptSha256, true);
+                if (!JsonStringIn(qDownResult, "status", "sent") || JsonInt(qDownResult, "sendInputEventsSent") < 1)
+                    throw new InvalidOperationException("Harness Q-down delivery failed.");
+                WriteNewCanaryText(qDownAck, artifactRoot, "1");
+                harnessQHeld = true;
+            }
+            if (harnessQHeld && File.Exists(qUpRequest) && !File.Exists(qUpAck))
+            {
+                JsonElement qUpResult = SendInputSequence(
+                    powershellExe, inputScript, managed.ProcessId, hwndHex,
+                    managed.ExecutablePath, managed.WorkingDirectory, "up:Q", 0,
+                    false, string.Empty, Path.Combine(artifactRoot, "harness-q-up.json"),
+                    runtimeReceiptPath, receiptSha256, true);
+                if (!JsonStringIn(qUpResult, "status", "sent") || JsonInt(qUpResult, "sendInputEventsSent") < 1)
+                    throw new InvalidOperationException("Harness Q-up delivery failed.");
+                WriteNewCanaryText(qUpAck, artifactRoot, "1");
+                harnessQHeld = false;
+            }
+            adapter.WaitForExit(Math.Min(50, Math.Max(1, remainingMilliseconds - (int)adapterWait.ElapsedMilliseconds)));
+        }
+        if (harnessQHeld)
+        {
+            try
+            {
+                _ = SendInputSequence(
+                    powershellExe, inputScript, managed.ProcessId, hwndHex,
+                    managed.ExecutablePath, managed.WorkingDirectory, "up:Q", 0,
+                    false, string.Empty, Path.Combine(artifactRoot, "harness-q-up-forced.json"),
+                    runtimeReceiptPath, receiptSha256, true);
+            }
+            catch
+            {
+            }
         }
         adapterExited = adapter.HasExited;
         if (adapterExited)
