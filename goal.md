@@ -5,7 +5,7 @@ Last updated: 2026-07-14
 Policy: [`goal.policy.md`](goal.policy.md)  
 Campaign map: [`goal.campaign.md`](goal.campaign.md)  
 Slash prompt: [`roadmap/goals/full-rebuild-campaign-slash-goal.md`](roadmap/goals/full-rebuild-campaign-slash-goal.md)  
-Integration baseline: `248a875d` (jet thrust + hygiene + campaign OS on main); this cycle ahead of tip until next push
+Integration baseline: `890a92c8` (turn/yaw harness + contract regression on main)
 
 ## How this baton works
 
@@ -99,8 +99,8 @@ real walker v2 + jet v1 JSON entry points.
 
 ## Resume checklist (new session / after compact)
 
-- [x] `git log -1 --oneline` / status (baseline `248a875d`+; push pending for this cycle)
+- [x] `git log -1 --oneline` / status (baseline `890a92c8`)
 - [x] Read policy + campaign + this file
 - [x] Confirm Steam not a write target
-- [ ] Execute Current Slice (live turn dual-accept)
-- [ ] Mutate this file before ending the cycle
+- [ ] Execute Current Slice (live turn dual-accept — next session)
+- [ ] Mutate this file before ending that cycle
