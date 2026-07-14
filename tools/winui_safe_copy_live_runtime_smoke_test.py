@@ -205,8 +205,8 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn("QueryFullProcessImageNameW", generated)
         self.assertIn("CreateNoWindow = true", generated)
         self.assertIn("request-q-down.marker", generated)
-        self.assertIn("down:Q", generated)
-        self.assertIn("up:Q", generated)
+        self.assertIn("down:Q,down:W", generated)
+        self.assertIn("up:Q,up:W", generated)
         # Copied defaultoptions must bind Movement/Forward to Q for the adapter.
         self.assertIn('ActionLabel = "Forward"', generated)
         self.assertIn('Player1Token = "Q"', generated)

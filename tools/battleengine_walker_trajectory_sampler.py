@@ -582,7 +582,10 @@ def validate_schedule(
             len(rows) == PHASE_TARGETS[phase]
             and slots == list(range(len(rows)))
         )
+        # Phase-local gap checks only. Live external Q handshakes insert multi-
+        # second gaps between baseline/hold/release without invalidating samples.
         previous_slot: int | None = None
+        previous_phase_tick: int | None = None
         for tick, slot in zip(rows, slots):
             if slot < 0 or slot >= PHASE_TARGETS[phase]:
                 raise AttemptError(f"{phase} sample slot falls outside its declared window")
@@ -591,8 +594,10 @@ def validate_schedule(
             if previous_slot is not None and slot <= previous_slot:
                 raise AttemptError("schedule jitter produced a duplicate or reversed slot")
             if use_live_declared_path:
-                if previous_tick is not None and (tick - previous_tick) > max_gap:
-                    raise AttemptError("schedule has consecutive misses or a gap over 50 ms")
+                if previous_phase_tick is not None and (tick - previous_phase_tick) > max_gap:
+                    raise AttemptError(
+                        f"schedule has consecutive misses or a gap over {int(max_gap * 1000 / frequency)} ms"
+                    )
             else:
                 expected = origin + (phase_offsets[phase] + slot) * step
                 if abs(tick - expected) > tolerance:
@@ -601,6 +606,7 @@ def validate_schedule(
                     raise AttemptError("schedule has consecutive misses or a gap over 20 ms")
             previous_slot = slot
             previous_tick = tick
+            previous_phase_tick = tick
         if slots[0] != 0:
             raise AttemptError(f"{phase} phase boundary start is missing")
         if slots[-1] != PHASE_TARGETS[phase] - 1 and len(rows) == PHASE_TARGETS[phase]:
@@ -880,22 +886,16 @@ def execute_owned_q_window(
 
 
 def _validate_trace_rows(trace: AttemptTrace) -> None:
-    previous_tick: int | None = None
-    previous_global_slot: int | None = None
-    phase_base = {
-        "baseline": 0,
-        "hold": PHASE_TARGETS["baseline"],
-        "release": PHASE_TARGETS["baseline"] + PHASE_TARGETS["hold"],
-    }
     max_gap = schedule_max_gap_qpc(trace.frequency)
     for phase in ("baseline", "hold", "release"):
+        previous_tick: int | None = None
+        previous_slot: int | None = None
         for row in trace.samples[phase]:
             if row.phase != phase:
                 raise AttemptError("sample phase label does not match its phase")
             if row.slot < 0 or row.slot >= PHASE_TARGETS[phase]:
                 raise AttemptError(f"{phase} sample slot falls outside its declared window")
-            global_slot = phase_base[phase] + row.slot
-            if previous_global_slot is not None and global_slot <= previous_global_slot:
+            if previous_slot is not None and row.slot <= previous_slot:
                 raise AttemptError("sample slot does not match its monotonic timestamp")
             if previous_tick is not None and row.tick <= previous_tick:
                 raise AttemptError("sample slot does not match its monotonic timestamp")
@@ -906,7 +906,7 @@ def _validate_trace_rows(trace: AttemptTrace) -> None:
             if not all(math.isfinite(value) for value in (*row.position, *row.velocity)):
                 raise AttemptError("sample position and velocity must be finite")
             previous_tick = row.tick
-            previous_global_slot = global_slot
+            previous_slot = row.slot
 
 
 def _validate_input_bracket(

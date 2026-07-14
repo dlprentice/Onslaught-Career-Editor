@@ -3265,13 +3265,15 @@ static int RunWalkerTrajectoryAttempt()
             }
             if (!harnessQHeld && File.Exists(qDownRequest) && !File.Exists(qDownAck))
             {
+                // Hold both Q (bound Forward) and W (common default Forward) so
+                // either keyboard map can drive walker-forward response.
                 JsonElement qDownResult = SendInputSequence(
                     powershellExe, inputScript, managed.ProcessId, hwndHex,
-                    managed.ExecutablePath, managed.WorkingDirectory, "down:Q", 0,
+                    managed.ExecutablePath, managed.WorkingDirectory, "down:Q,down:W", 0,
                     false, string.Empty, Path.Combine(artifactRoot, "harness-q-down.json"),
                     runtimeReceiptPath, receiptSha256, true);
                 if (!JsonStringIn(qDownResult, "status", "sent") || JsonInt(qDownResult, "sendInputEventsSent") < 1)
-                    throw new InvalidOperationException("Harness Q-down delivery failed.");
+                    throw new InvalidOperationException("Harness Q/W-down delivery failed.");
                 WriteNewCanaryText(qDownAck, artifactRoot, "1");
                 harnessQHeld = true;
             }
@@ -3279,11 +3281,11 @@ static int RunWalkerTrajectoryAttempt()
             {
                 JsonElement qUpResult = SendInputSequence(
                     powershellExe, inputScript, managed.ProcessId, hwndHex,
-                    managed.ExecutablePath, managed.WorkingDirectory, "up:Q", 0,
+                    managed.ExecutablePath, managed.WorkingDirectory, "up:Q,up:W", 0,
                     false, string.Empty, Path.Combine(artifactRoot, "harness-q-up.json"),
                     runtimeReceiptPath, receiptSha256, true);
                 if (!JsonStringIn(qUpResult, "status", "sent") || JsonInt(qUpResult, "sendInputEventsSent") < 1)
-                    throw new InvalidOperationException("Harness Q-up delivery failed.");
+                    throw new InvalidOperationException("Harness Q/W-up delivery failed.");
                 WriteNewCanaryText(qUpAck, artifactRoot, "1");
                 harnessQHeld = false;
             }
@@ -3295,7 +3297,7 @@ static int RunWalkerTrajectoryAttempt()
             {
                 _ = SendInputSequence(
                     powershellExe, inputScript, managed.ProcessId, hwndHex,
-                    managed.ExecutablePath, managed.WorkingDirectory, "up:Q", 0,
+                    managed.ExecutablePath, managed.WorkingDirectory, "up:Q,up:W", 0,
                     false, string.Empty, Path.Combine(artifactRoot, "harness-q-up-forced.json"),
                     runtimeReceiptPath, receiptSha256, true);
             }
