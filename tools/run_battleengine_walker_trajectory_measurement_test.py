@@ -52,6 +52,10 @@ class FakeNative:
     def foreground_window(self):
         return self.foreground
 
+    def force_foreground(self, hwnd):
+        self.foreground = hwnd
+        return True
+
     def send_scan_code(self, scan_code, key_up):
         return self.send_results.pop(0)
 
@@ -281,7 +285,7 @@ class MeasurementTests(unittest.TestCase):
             path, digest = self.receipt(Path(tmp))
             receipt = self.m.load_receipt(path, digest)
             native = FakeNative(receipt)
-            value = self.m.ScanCodeQInput(native)
+            value = self.m.ScanCodeQInput(native, receipt.window_handle)
             self.assertTrue(value.key_down())
             self.assertTrue(value.key_up())
             self.assertEqual([(0x10, False), (0x10, True)], value.events)
@@ -293,7 +297,7 @@ class MeasurementTests(unittest.TestCase):
             path, digest = self.receipt(Path(tmp))
             receipt = self.m.load_receipt(path, digest)
             native = FakeNative(receipt)
-            q_input = self.m.ScanCodeQInput(native)
+            q_input = self.m.ScanCodeQInput(native, receipt.window_handle)
             guard = self.m.ReceiptRuntimeGuard(receipt, path, digest, native, 99, Path(tmp))
             with self.assertRaisesRegex(RuntimeError, "sample failed"):
                 self.m.sampler.execute_owned_q_window(
@@ -308,7 +312,7 @@ class MeasurementTests(unittest.TestCase):
             path, digest = self.receipt(Path(tmp))
             receipt = self.m.load_receipt(path, digest)
             native = FakeNative(receipt)
-            q_input = self.m.ScanCodeQInput(native)
+            q_input = self.m.ScanCodeQInput(native, receipt.window_handle)
             guard = self.m.ReceiptRuntimeGuard(receipt, path, digest, native, 99, Path(tmp))
             checks = iter((None, None, self.m.AttemptDeadlineExceeded("hold deadline")))
             def deadline_check():
@@ -328,7 +332,7 @@ class MeasurementTests(unittest.TestCase):
             path, digest = self.receipt(Path(tmp))
             receipt = self.m.load_receipt(path, digest)
             native = FakeNative(receipt)
-            q_input = self.m.ScanCodeQInput(native)
+            q_input = self.m.ScanCodeQInput(native, receipt.window_handle)
             guard = self.m.ReceiptRuntimeGuard(receipt, path, digest, native, 99, Path(tmp))
             def contaminated_batch():
                 native.foreground = 0x9999

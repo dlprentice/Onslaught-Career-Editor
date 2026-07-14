@@ -36,8 +36,10 @@ PROCESS_VM_READ = 0x0010
 PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
 FORBIDDEN_PROCESS_RIGHTS = 0x0002 | 0x0008 | 0x0020 | 0x0400
 Q_SCAN_CODE = 0x10
+Q_VIRTUAL_KEY = 0x51  # VK_Q
 KEYEVENTF_KEYUP = 0x0002
 KEYEVENTF_SCANCODE = 0x0008
+KEYEVENTF_EXTENDEDKEY = 0x0001
 TH32CS_SNAPMODULE = 0x00000008
 TH32CS_SNAPMODULE32 = 0x00000010
 INVALID_HANDLE_VALUE = ctypes.c_void_p(-1).value
@@ -82,6 +84,7 @@ class NativeApi(Protocol):
         self, handle: int, expected: sampler.ReceiptIdentity
     ) -> sampler.ReceiptIdentity: ...
     def foreground_window(self) -> int: ...
+    def force_foreground(self, hwnd: int) -> bool: ...
     def send_scan_code(self, scan_code: int, key_up: bool) -> int: ...
 
 
@@ -342,8 +345,9 @@ class ReceiptRuntimeGuard:
 
 
 class ScanCodeQInput:
-    def __init__(self, native: NativeApi) -> None:
+    def __init__(self, native: NativeApi, window_handle: int) -> None:
         self.native = native
+        self.window_handle = window_handle
         self.events: list[tuple[int, bool]] = []
         self.down_confirmed = False
         self.up_confirmed = False
@@ -351,7 +355,10 @@ class ScanCodeQInput:
     def key_down(self) -> bool:
         if self.events:
             raise RuntimeError("Q input permits exactly one key-down and one key-up")
-        confirmed = self.native.send_scan_code(Q_SCAN_CODE, False) == 1
+        # Adapter process start can steal focus from the receipt-bound BEA window.
+        if not self.native.force_foreground(self.window_handle):
+            raise RuntimeError("could not foreground the receipt-bound BEA window for Q-down")
+        confirmed = self.native.send_scan_code(Q_SCAN_CODE, False) >= 1
         self.events.append((Q_SCAN_CODE, False))
         self.down_confirmed = confirmed
         return confirmed
@@ -359,7 +366,8 @@ class ScanCodeQInput:
     def key_up(self) -> bool:
         if self.events != [(Q_SCAN_CODE, False)]:
             raise RuntimeError("Q input permits exactly one key-down and one key-up")
-        confirmed = self.native.send_scan_code(Q_SCAN_CODE, True) == 1
+        self.native.force_foreground(self.window_handle)
+        confirmed = self.native.send_scan_code(Q_SCAN_CODE, True) >= 1
         self.events.append((Q_SCAN_CODE, True))
         self.up_confirmed = confirmed
         return confirmed
@@ -767,6 +775,18 @@ class Win32NativeApi:
         self.user32.GetWindowThreadProcessId.restype = wintypes.DWORD
         self.user32.GetForegroundWindow.argtypes = []
         self.user32.GetForegroundWindow.restype = wintypes.HWND
+        self.user32.SetForegroundWindow.argtypes = [wintypes.HWND]
+        self.user32.SetForegroundWindow.restype = wintypes.BOOL
+        self.user32.BringWindowToTop.argtypes = [wintypes.HWND]
+        self.user32.BringWindowToTop.restype = wintypes.BOOL
+        self.user32.SetFocus.argtypes = [wintypes.HWND]
+        self.user32.SetFocus.restype = wintypes.HWND
+        self.user32.AttachThreadInput.argtypes = [
+            wintypes.DWORD, wintypes.DWORD, wintypes.BOOL
+        ]
+        self.user32.AttachThreadInput.restype = wintypes.BOOL
+        self.kernel32.GetCurrentThreadId.argtypes = []
+        self.kernel32.GetCurrentThreadId.restype = wintypes.DWORD
         self.user32.SendInput.argtypes = [
             wintypes.UINT, ctypes.POINTER(_INPUT), ctypes.c_int
         ]
@@ -936,10 +956,50 @@ class Win32NativeApi:
     def foreground_window(self) -> int:
         return int(self.user32.GetForegroundWindow() or 0)
 
+    def force_foreground(self, hwnd: int) -> bool:
+        if hwnd <= 0 or not self.user32.IsWindow(wintypes.HWND(hwnd)):
+            return False
+        if int(self.user32.GetForegroundWindow() or 0) == hwnd:
+            return True
+        # AttachThreadInput dance: SetForegroundWindow is restricted after the
+        # adapter process starts and steals focus from the C# harness.
+        current = self.kernel32.GetCurrentThreadId()
+        target_tid = self.user32.GetWindowThreadProcessId(wintypes.HWND(hwnd), None)
+        attached = False
+        if target_tid and target_tid != current:
+            attached = bool(self.user32.AttachThreadInput(current, target_tid, True))
+        try:
+            self.user32.BringWindowToTop(wintypes.HWND(hwnd))
+            self.user32.SetForegroundWindow(wintypes.HWND(hwnd))
+            self.user32.SetFocus(wintypes.HWND(hwnd))
+        finally:
+            if attached:
+                self.user32.AttachThreadInput(current, target_tid, False)
+        return int(self.user32.GetForegroundWindow() or 0) == hwnd
+
     def send_scan_code(self, scan_code: int, key_up: bool) -> int:
-        flags = KEYEVENTF_SCANCODE | (KEYEVENTF_KEYUP if key_up else 0)
-        value = _INPUT(type=1, union=_INPUTUNION(ki=_KEYBDINPUT(0, scan_code, flags, 0, 0)))
-        sent = self.user32.SendInput(1, ctypes.byref(value), ctypes.sizeof(value))
+        # Emit both virtual-key and scan-code forms. Some DirectInput paths
+        # ignore pure KEYEVENTF_SCANCODE events from a foreign process.
+        flags_up = KEYEVENTF_KEYUP if key_up else 0
+        events = (
+            _INPUT(
+                type=1,
+                union=_INPUTUNION(
+                    ki=_KEYBDINPUT(Q_VIRTUAL_KEY, scan_code, flags_up, 0, 0)
+                ),
+            ),
+            _INPUT(
+                type=1,
+                union=_INPUTUNION(
+                    ki=_KEYBDINPUT(
+                        0, scan_code, KEYEVENTF_SCANCODE | flags_up, 0, 0
+                    )
+                ),
+            ),
+        )
+        array_type = _INPUT * len(events)
+        payload = array_type(*events)
+        sent = self.user32.SendInput(len(events), payload, ctypes.sizeof(_INPUT))
         return int(sent)
 
 
@@ -977,8 +1037,10 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
         receipt, receipt_path, receipt.receipt_sha256, native, reader.handle,
         authorized_private_root,
     )
-    q_input = ScanCodeQInput(native)
+    q_input = ScanCodeQInput(native, receipt.window_handle)
     readiness_deadline = Deadline(READINESS_DEADLINE_SECONDS)
+    if not native.force_foreground(receipt.window_handle):
+        raise sampler.AttemptError("could not foreground BEA before readiness")
     readiness = wait_for_runtime_readiness(
         lambda: sampler.read_readiness_probe(reader, receipt.module_base),
         guard,
@@ -987,6 +1049,8 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
             readiness_deadline.check("readiness"),
         ),
     )
+    if not native.force_foreground(receipt.window_handle):
+        raise sampler.AttemptError("could not foreground BEA before Q sampling")
     origin = clock.now()
     deadline.check("baseline")
     baseline = _sample_batches(
