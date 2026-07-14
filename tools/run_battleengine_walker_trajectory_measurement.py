@@ -47,7 +47,7 @@ BATCH_SIZE = 5
 READINESS_DEADLINE_SECONDS = 15
 READINESS_POLL_SECONDS = 0.050
 READINESS_STABLE_POLLS = 3
-OBSERVER_DEADLINE_SECONDS = 45
+OBSERVER_DEADLINE_SECONDS = 90
 AGGREGATE_DEADLINE_SECONDS = 600
 PREBUILD_SAFETY_BOUND_SECONDS = 150
 PROFILE_PREPARATION_BOUND_SECONDS = 120
@@ -1367,6 +1367,7 @@ def _invoke_smoke(args: argparse.Namespace, attempt: int, profile_root: Path,
         "--expected-walker-prebuild-receipt-sha256", str(runner["receiptSha256"]),
         "--walker-cooperative-stop-file", str(stop_request),
         "--walker-attempt-budget-seconds", str(COMPLETE_ATTEMPT_BUDGET_SECONDS),
+        "--walker-deadline-seconds", str(OBSERVER_DEADLINE_SECONDS),
         "--source-root", str(Path(args.source_root).resolve()),
         "--exe-override", str(Path(args.exe_override).resolve()),
         "--profiles-root", str(profile_root),
@@ -1374,7 +1375,7 @@ def _invoke_smoke(args: argparse.Namespace, attempt: int, profile_root: Path,
         "--arm-external-artifact-root", "ALLOW EXTERNAL LIVE SMOKE ARTIFACT ROOT",
         "--arm-external-profiles-root", "ALLOW EXTERNAL LIVE SMOKE PROFILES ROOT",
         "--arm-live-bea", args.arm_live_bea,
-        "--timeout-seconds", "12",
+        "--timeout-seconds", "20",
     ]
     started = time.monotonic()
     process = subprocess.Popen(

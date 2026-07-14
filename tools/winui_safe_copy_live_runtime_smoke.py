@@ -329,7 +329,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--canary-role", default="", choices=("", *MORPH_CANARY_ROLES))
     parser.add_argument("--walker-attempt", type=int, default=0, choices=(0, 1, 2))
-    parser.add_argument("--walker-deadline-seconds", type=int, default=45, choices=(45,))
+    parser.add_argument("--walker-deadline-seconds", type=int, default=90, choices=(45, 90))
     parser.add_argument("--walker-prebuilt-runner-dll", default="")
     parser.add_argument("--expected-walker-prebuilt-runner-sha256", default="")
     parser.add_argument("--walker-prebuild-receipt", default="")
@@ -3040,7 +3040,7 @@ static int RunWalkerTrajectoryAttempt()
     string expectedAdapterSha256 = RequiredEnv("ONSLAUGHT_LIVE_WALKER_ADAPTER_SHA256");
     string pythonExe = RequiredEnv("ONSLAUGHT_LIVE_PYTHON_EXE");
     int attempt = BoundedIntEnv("ONSLAUGHT_LIVE_WALKER_ATTEMPT", 0, 1, 2);
-    int lifecycleDeadlineSeconds = BoundedIntEnv("ONSLAUGHT_LIVE_WALKER_DEADLINE_SECONDS", 45, 45, 45);
+    int lifecycleDeadlineSeconds = BoundedIntEnv("ONSLAUGHT_LIVE_WALKER_DEADLINE_SECONDS", 90, 45, 90);
     int attemptBudgetSeconds = BoundedIntEnv("ONSLAUGHT_LIVE_WALKER_ATTEMPT_BUDGET_SECONDS", 215, 215, 215);
     string cooperativeStopFile = RequiredEnv("ONSLAUGHT_LIVE_WALKER_COOPERATIVE_STOP_FILE");
     Stopwatch attemptDecisionClock = new Stopwatch();
@@ -3162,22 +3162,47 @@ static int RunWalkerTrajectoryAttempt()
                 StartedAt: row.GetProperty("StartedAt").GetDateTimeOffset(),
                 ManifestPath: row.GetProperty("ManifestPath").GetString() ?? string.Empty);
         }
-        DateTime windowDeadline = DateTime.UtcNow.AddSeconds(12);
+        DateTime windowDeadline = DateTime.UtcNow.AddSeconds(20);
         while (DateTime.UtcNow < windowDeadline)
         {
-            using Process running = Process.GetProcessById(managed.ProcessId);
-            running.Refresh();
-            if (running.HasExited)
-                break;
-            if (running.MainWindowHandle != IntPtr.Zero)
+            try
             {
-                hwndHex = HwndHex(running.MainWindowHandle);
-                break;
+                using Process running = Process.GetProcessById(managed.ProcessId);
+                running.Refresh();
+                if (running.HasExited)
+                    throw new InvalidOperationException(
+                        $"Managed copied BEA PID {managed.ProcessId} exited before exposing a top-level window.");
+                if (running.MainWindowHandle != IntPtr.Zero)
+                {
+                    hwndHex = HwndHex(running.MainWindowHandle);
+                    break;
+                }
+            }
+            catch (ArgumentException)
+            {
+                throw new InvalidOperationException(
+                    $"Managed copied BEA PID {managed.ProcessId} is not running while waiting for its top-level window.");
             }
             Thread.Sleep(100);
         }
         if (string.Equals(hwndHex, "0x0", StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Managed copied BEA did not expose the exact top-level window.");
+        // Level 850 needs wall-clock settle after the first window appears before
+        // free-walk input is meaningful (pairs 09-13 sampled a static pose).
+        Thread.Sleep(3000);
+        try
+        {
+            using Process settled = Process.GetProcessById(managed.ProcessId);
+            settled.Refresh();
+            if (settled.HasExited)
+                throw new InvalidOperationException("Managed copied BEA exited during post-window settle.");
+            if (settled.MainWindowHandle != IntPtr.Zero)
+                hwndHex = HwndHex(settled.MainWindowHandle);
+        }
+        catch (ArgumentException)
+        {
+            throw new InvalidOperationException("Managed copied BEA exited during post-window settle.");
+        }
         RequireDecisionBudget("receipt validation", 65);
         receiptSha256 = WriteRuntimeProcessReceipt(
             runtimeReceiptPath, artifactRoot, managed, preparedManifestPath, hwndHex,
@@ -3255,6 +3280,8 @@ static int RunWalkerTrajectoryAttempt()
         string qUpRequest = Path.Combine(artifactRoot, "request-q-up.marker");
         string qUpAck = Path.Combine(artifactRoot, "ack-q-up.marker");
         bool harnessQHeld = false;
+        long lastQRefreshMs = -10_000;
+        int qRefreshCount = 0;
         while (!adapter.HasExited && adapterWait.ElapsedMilliseconds < remainingMilliseconds)
         {
             if (CooperativeStopRequested())
@@ -3276,6 +3303,25 @@ static int RunWalkerTrajectoryAttempt()
                     throw new InvalidOperationException("Harness Q/W-down delivery failed.");
                 WriteNewCanaryText(qDownAck, artifactRoot, "1");
                 harnessQHeld = true;
+                lastQRefreshMs = adapterWait.ElapsedMilliseconds;
+                qRefreshCount = 1;
+            }
+            // DirectInput can drop a single key-down; re-assert hold while sampling.
+            if (harnessQHeld && !File.Exists(qUpRequest)
+                && adapterWait.ElapsedMilliseconds - lastQRefreshMs >= 200
+                && qRefreshCount < 40)
+            {
+                JsonElement qRefresh = SendInputSequence(
+                    powershellExe, inputScript, managed.ProcessId, hwndHex,
+                    managed.ExecutablePath, managed.WorkingDirectory, "down:Q,down:W", 0,
+                    false, string.Empty,
+                    Path.Combine(artifactRoot, $"harness-q-refresh-{qRefreshCount:00}.json"),
+                    runtimeReceiptPath, receiptSha256, true);
+                if (JsonStringIn(qRefresh, "status", "sent"))
+                {
+                    lastQRefreshMs = adapterWait.ElapsedMilliseconds;
+                    qRefreshCount++;
+                }
             }
             if (harnessQHeld && File.Exists(qUpRequest) && !File.Exists(qUpAck))
             {
