@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-15",
   "routingPolicy": "Follow the global Codex multi-agent lane contract. Under current direct user policy, every new or resumed Codex-owned worker uses gpt-5.6-sol at medium effort by default; harder work may raise Sol effort, and Terra/Luna fallback or lower effort requires a newer direct user instruction.",
-  "currentFocus": "Full reconstruction campaign; M5.4 unattended Save Lab native workflow acceptance landed at 794461ff; current slice M5.5 Media/Asset Library catalog workflow harness; shield live pair remains authority-blocked.",
+  "currentFocus": "Full reconstruction campaign; M5.5 unattended Media/Asset native workflow acceptance landed at 034f01c1; current slice M2.3 target-acquisition static contract; shield live pair remains authority-blocked.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -23,7 +23,7 @@
       "worktreeOwnership": "Main is the sole registered active Owner/integration worktree. The previously reported Coordinator 8fe5 and Steward 95e2 registrations are absent. No persistent worker lane was created for the walker source-reference repair.",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "794461ff contains the accepted Save Lab native workflow harness; the current state baton advances to M5.5.",
+      "lastPushedBeforeCurrentSlice": "034f01c1 contains the accepted Media/Asset native workflow harness; the current state baton advances to M2.3 target-acquisition static contract.",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
@@ -77,6 +77,11 @@
       "status": "accepted at 794461ff",
       "scope": "The exact repository-built Debug/win-x64 WinUI app passed two isolated UIA-only Save Lab launches at 1100x900 and 760x820. The gate contains eight capture receipts and two workflow receipts, independently reparses exact 233 displayable Goodies as OLD and ControllerConfigP1=1 from retained bytes, preserves the input epoch, and requires zero relevant processes after receipt-bound cleanup.",
       "boundary": "Fixtures and evidence remain ignored/local. This is Toolkit evidence for the tested Save Lab states and retained-byte outcomes only; it is not retail save-format completeness, controller-feel, packaged Release, or game-behavior proof."
+    },
+    "mediaAssetNativeWorkflow": {
+      "status": "accepted at 034f01c1",
+      "scope": "The exact repository-built Debug/win-x64 WinUI app passed three distinct UIA-only Media and Asset Library launches at 1100x900 and 760x820 over a deterministic 13-file public fixture and exact 18-file application payload. The gate contains eight capture receipts and three workflow receipts, independently reconciles catalog rows plus retained FBX and PNG bytes, preserves the input epoch, and requires zero relevant processes after receipt-bound cleanup.",
+      "boundary": "Fixtures and evidence remain ignored/local. No external action or playback path is invoked. This is Toolkit evidence for the tested generated-catalog states only; it is not retail media/asset, extraction or format completeness, playback/render fidelity, packaged Release, or visual-parity proof."
     },
     "filesystemSafety": {
       "status": "accepted",
@@ -153,15 +158,16 @@
     ]
   },
   "activeBlockers": [
+    "The shield live dual-accept remains blocked by BLOCKED_SHIELD_LIVE_AUTHORITY_20260714-2317: no complete runtime lease is present, so no launch or repeat authority audit is allowed until the baton materially changes.",
     "No accepted two-attempt copied-runtime walker measurement exists; therefore no measured walker scalar-response contract exists. Even after two passing attempts, deterministic Core remains blocked until a retail-coordinate-to-Core scale, tick-response, rounding, quantization-error, and overflow policy is accepted.",
     "Complete private-corpus extraction/export coverage is not yet executed. The 301-archive observation census and bounded surface-reconciliation producer are prerequisites only; the full export is blocked by absent legacy native extractor DLLs and missing Visual Studio C++ targets (MSB4278)."
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Authorize and execute one fresh exactly-two-attempt copied-runtime walker measurement with the integrated e04cce2e tooling; publish nothing if either attempt fails.",
+    "Consolidate existing pinned-source and Steam-static player target-selection evidence into one public-safe machine-readable M2.3 contract and regression checker, preserving runtime non-claims.",
+    "Authorize and execute one fresh exactly-two-attempt copied-runtime walker measurement with the integrated e04cce2e tooling only when a complete current lease exists; publish nothing if either attempt fails.",
     "If both attempts pass, derive one bounded v2 scalar-response contract in declared retail coordinate units; do not infer physical distance or Core units.",
     "Accept an explicit retail-coordinate-to-Core translation contract covering scale, tick response, rounding, maximum quantization error, and overflow bounds before implementing Forward/Move/UpdateWalkCycle behavior in deterministic Core with headless and Godot verification.",
-    "Restore the legacy native extractor runtime through an authorized supported toolchain path, then produce real six-lane terminal outcomes and run the bounded ignored/local reconciliation; do not promote surface accounting into exhaustive-target or successful-extraction claims.",
-    "Build the M5.5 unattended Media/Asset Library catalog workflow harness from generated synthetic/public fixtures with exact build/process/input identity, normal/compact captures, fail-closed receipts, independent behavior readback, and zero-process cleanup."
+    "Restore the legacy native extractor runtime through an authorized supported toolchain path, then produce real six-lane terminal outcomes and run the bounded ignored/local reconciliation; do not promote surface accounting into exhaustive-target or successful-extraction claims."
   ]
 }

@@ -2,7 +2,7 @@
 
 Status: **ACTIVE** (full reconstruction campaign)  
 Last updated: 2026-07-15
-Integration tip: `794461ff`
+Integration tip: `034f01c1`
 
 ## Recent ledger
 
@@ -12,6 +12,7 @@ Integration tip: `794461ff`
 | **M2-shield-live-measurement-readiness** | **ADVANCEMENT** input-free neutral-control sampler, symmetric paired energy/shield analysis, failure-safe input-not-owned cleanup, exact pair identities, focused gate; no live attempt or retail value |
 | **M5.3-home-native-visual-focus-harness** | **ADVANCEMENT** fail-closed repo-build native gate; first-run Setup and ready Patch Bench owner-bound focus; 1100/760 captures; schema-3 receipts; exact 1/1 TRX; zero process census |
 | **M5.4-save-lab-native-workflow-harness** | **ADVANCEMENT** exact repo-build UIA-only gate; immutable save-copy and synthetic-options workflows; 8 normal/compact captures; independent retained-byte reparse; exact 1/1 TRX; receipt-bound cleanup; zero process census |
+| **M5.5-media-catalog-native-workflow-harness** | **ADVANCEMENT** exact repo-build UIA-only generated-fixture gate; 3 distinct launches; 8 normal/compact captures; independent catalog, FBX, and PNG reconciliation; exact 1/1 TRX; receipt-bound cleanup; zero process census |
 
 ## Active skipped blocker
 
@@ -38,43 +39,54 @@ Integration tip: `794461ff`
 
 ## Current Slice
 
-**ID:** `M5.5-media-catalog-native-workflow-harness`
+**ID:** `M2.3-target-acquisition-static-contract`
 
-**Objective:** Build a fail-closed unattended native WinUI Media and Asset
-Library workflow harness for representative generated-catalog states. First
-define the exact public/synthetic fixture and behavior contract, then bind the
-repository build, process/window/input state, normal/760 captures, independent
-readback, ignored/local receipts, and zero-process cleanup. Do not consume an
-installed game or proprietary media/assets, launch Explorer/browser/VLC/BEA,
-claim retail-format or playback fidelity, authorize release/Host/Join, or
-require subjective human acceptance. Campaign ACTIVE.
+**Objective:** Consolidate the existing pinned-source and Steam-static evidence
+for player auto-target candidate eligibility and selection ordering—especially
+`CBattleEngine__SelectNearestForwardTargetFromGlobalSet` and
+`CBattleEngine__UpdateAutoTargetSetAndFireProjectiles`—into one public-safe,
+machine-readable static behavior contract plus regression checker. Separate
+proven identity/structure from angle, distance, ordering, and causality
+hypotheses. Do not launch BEA, mutate Ghidra, implement Core behavior, or claim
+retail runtime semantics. If source/static alignment is insufficient, emit an
+exact blocker rather than inventing behavior. Campaign ACTIVE.
 
 ## Resume (Codex handoff)
 
-- **Tip SHA:** `794461ff`
-- **Closed:** M5.4 Save Lab native workflow ADVANCEMENT. The exact repository
-  Debug/win-x64 build passed two isolated UIA-only launches covering first-save
-  and Game Options paths at normal and compact sizes. The shield live pair
-  remains skipped on `BLOCKED_SHIELD_LIVE_AUTHORITY_20260714-2317`; no retail
-  shield value or Core behavior was invented.
-- **Validation:** `npm run test:winui-save-lab-native-workflow` PASS with exact
-  TRX 1/1, eight captures, two workflow receipts, independently reparsed exact
-  233 displayable Goodies all `OLD`, `ControllerConfigP1=1`, unchanged input
-  epoch, exact build/process/window identity, and final relevant-process zero;
-  shared native support 8/8, Home runner 10/10, Save Lab runner 26/26,
-  Python compile, and diff checks PASS. The primary WinUI lane also passed a
-  zero-warning build, AppCore 1319/1319, and WinUI 272/272 with two expected
-  skips.
-- **Paths:** shared native lifecycle/receipt helpers; Save Lab native evidence
-  contract, producer, orchestrator, UIA workflow, semantic output validator,
-  cleanup hardening, focused package command, validation/capability docs, and
-  design/implementation plan. Screenshots, TRX, app data, manifests, copied
-  fixture, and synthetic options outputs remain ignored/local.
-- **Review:** normal/adversarial Codex and sanitized normal/adversarial Cursor
-  review envelope complete; all Critical/Important findings resolved.
-- **Codex owns next:** `M5.5-media-catalog-native-workflow-harness`; define a
-  generated/public fixture boundary and automate representative Media/Asset
-  Library behavior and visuals without subjective acceptance.
+- **Tip SHA:** `034f01c1`
+- **Closed:** M5.5 Media/Asset native workflow ADVANCEMENT. The exact repository
+  Debug/win-x64 build passed three distinct UIA-only launches over a generated
+  13-file public fixture and an exact 18-file application payload closure. The
+  shield live pair remains skipped on
+  `BLOCKED_SHIELD_LIVE_AUTHORITY_20260714-2317`; no retail shield value or Core
+  behavior was invented.
+- **Validation:** `npm run test:winui-media-asset-native-workflow` PASS with
+  runner 22/22, exact native TRX 1/1, eight receipt-bound 1100x900/760x820
+  captures, three workflow receipts, three distinct `(PID,start)` identities,
+  retained manifest/capture digest rechecks, independent catalog/FBX/PNG
+  reconciliation, unchanged input epoch, and final relevant-process zero.
+  Shared native support 13/13, Home runner 10/10 and native 1/1, Save Lab runner
+  26/26 and native 1/1, Python compile, validation inventory, doc commands,
+  public-core links, repo hygiene, hard-payload safety, and diff checks PASS.
+  The primary WinUI lane passed after one isolated transient Windows rename-lock
+  rerun: build 0 warnings/errors, AppCore 1320/1320, WinUI 297 passed with two
+  expected private-corpus skips. `test:public-allowlist` remains unavailable
+  because the two reference submodules are intentionally uninitialized; no
+  release was authorized to initialize them for this slice.
+- **Paths:** Media/Asset native fixture, payload/evidence/session/capture and
+  owned-path guards; UIA workflow; outer producer/orchestrator and shared PNG
+  acceptance support; Media/Asset XAML and catalog handle correction; focused
+  package command; validation/contributor docs; design and implementation plan.
+  Screenshots, TRX, app data, manifests, and generated fixture/output files
+  remain ignored/local.
+- **Review:** normal/adversarial Codex re-review GO with no findings. Sanitized
+  normal/adversarial Cursor consults using `cursor-grok-4.5-high-fast` exited 0;
+  accepted findings on application-payload closure, bounded PNG parsing,
+  snapshot/digest binding, distinct process identity, and cleanup authority are
+  resolved.
+- **Codex owns next:** `M2.3-target-acquisition-static-contract`; consolidate
+  existing source/static target-selection evidence into a bounded contract and
+  checker before any runtime or Core claim.
 - **Confirm:** Relevant process census zero; no Explorer/browser/VLC/BEA
   launch, live RPM, debugger, game input, or retail measurement; installed
   game/original BEA untouched; no release/tag/Host/Join.

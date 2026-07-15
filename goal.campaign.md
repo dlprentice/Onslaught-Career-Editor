@@ -1,7 +1,7 @@
 # Full Reconstruction Campaign
 
 Status: **ACTIVE durable campaign**  
-Last updated: 2026-07-15 (Save Lab unattended native workflow acceptance landed; Media/catalog harness next)
+Last updated: 2026-07-15 (Media/Asset unattended native workflow acceptance landed; target-acquisition static contract next)
 
 Policy: [`goal.policy.md`](goal.policy.md)  
 Mutable baton: [`goal.md`](goal.md)  
@@ -128,7 +128,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 | M5.2 | Patch catalog honesty + Lab UX | landed foundation |
 | M5.3 | Home native-focus acceptance | landed | unattended exact-build first-run/ready focus plus normal/760 schema-3 visual receipts |
 | M5.4 | Save Lab / options workflows polish + tests | landed | exact repo-build UIA-only first-use/options gate; 8 normal/compact captures, 2 semantically reparsed workflows, receipt-bound cleanup, zero process census |
-| M5.5 | Media library + catalog workflows | open |
+| M5.5 | Media library + catalog workflows | landed | exact repo-build UIA-only generated-fixture gate; 3 distinct launches, 8 normal/compact captures, independent catalog/media readback, receipt-bound cleanup, zero process census |
 | M5.6 | Release hygiene (no auto-release from campaign) | open |
 
 ### M6 — Lore & knowledge
