@@ -15,6 +15,23 @@ After Ghidra function-quality closure (`6113/6113 = 100.00%`, Wave900), **Wave90
 | [god-mode.md](god-mode.md) | God mode investigation (source/internal B4K42 path, Steam/retail Maladim status, runtime toggle behavior) |
 | [cheat-codes.md](cheat-codes.md) | Known cheats, string search results, activation flow |
 
+## Rebuild-grade motion / combat measurement (active)
+
+| Document | Status |
+|----------|--------|
+| [walker-forward-scalar-response-v2.md](walker-forward-scalar-response-v2.md) | dual-accepted → Core |
+| [jet-forward-scalar-response-v1.md](jet-forward-scalar-response-v1.md) | dual-accepted → Core |
+| [walker-turn-yaw-scalar-response-v1.md](walker-turn-yaw-scalar-response-v1.md) | dual-accepted → Core LookX |
+| [walker-strafe-lateral-scalar-response-v1.md](walker-strafe-lateral-scalar-response-v1.md) | dual-accepted → Core |
+| [walker-transform-morph-timing-v1.md](walker-transform-morph-timing-v1.md) | dual-accepted → Core |
+| [camera-look-rate-measurement-plan.md](camera-look-rate-measurement-plan.md) | scaffold |
+| [energy-rate-scalar-measurement-plan.md](energy-rate-scalar-measurement-plan.md) | offset hyp BE+0xFC; live pending |
+| [shield-rate-scalar-measurement-plan.md](shield-rate-scalar-measurement-plan.md) | offset hyp BE+0x100; live pending |
+| [fire-cooldown-scalar-measurement-plan.md](fire-cooldown-scalar-measurement-plan.md) | scaffold + energy-drop edges |
+| [projectile-speed-scalar-measurement-plan.md](projectile-speed-scalar-measurement-plan.md) | scaffold |
+| [coast-friction-release-measurement-plan.md](coast-friction-release-measurement-plan.md) | scaffold M1.6 |
+| [runtime-proof-lab-retention.md](runtime-proof-lab-retention.md) | lab hygiene |
+
 Machine-checkable public-safe BattleEngine source-anchor coverage is recorded at `release/readiness/battleengine_logic_coverage_2026-05-06.md`. It is read-only source/docs evidence, not Steam retail binary identity proof.
 
 ## Key Discovery: Save-Name Cheat Gating (Build-Specific Codes)

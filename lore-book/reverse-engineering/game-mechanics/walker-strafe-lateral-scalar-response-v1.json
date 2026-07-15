@@ -1,0 +1,97 @@
+{
+  "attempts": [
+    {
+      "attempt": 1,
+      "integrity": {
+        "cleanupConfirmed": true,
+        "foregroundMaintained": true,
+        "keyUpConfirmed": true,
+        "receiptRevalidated": true
+      },
+      "metrics": {
+        "baselineB95Speed": 0.0,
+        "holdEndpointDisplacement": 6.000210397292289,
+        "releaseLatencyMs": {
+          "lower": 0,
+          "upper": 30
+        },
+        "responseLatencyMs": {
+          "lower": 10,
+          "upper": 110
+        },
+        "steadyLateralSpeed": 3.0152165594772766
+      },
+      "receiptSha256": "c83a12f57db1330dc7a9ca54f232607b8b702e11ca5c07ca88393ed76fce1f61",
+      "runDigest": "4b14457305b2d8462782a2bb4b367bf74136a57a4cec2fb39013f51d8eaa39af",
+      "sampleCounts": {
+        "baseline": 50,
+        "hold": 200,
+        "release": 75
+      }
+    },
+    {
+      "attempt": 2,
+      "integrity": {
+        "cleanupConfirmed": true,
+        "foregroundMaintained": true,
+        "keyUpConfirmed": true,
+        "receiptRevalidated": true
+      },
+      "metrics": {
+        "baselineB95Speed": 0.0,
+        "holdEndpointDisplacement": 6.000191588776415,
+        "releaseLatencyMs": {
+          "lower": 0,
+          "upper": 30
+        },
+        "responseLatencyMs": {
+          "lower": 10,
+          "upper": 130
+        },
+        "steadyLateralSpeed": 3.015178622411095
+      },
+      "receiptSha256": "b47759aa21c19b59798ed3d93fdfafd736ace3a91126612055293f6b2b7a44a3",
+      "runDigest": "ed0a314d5eb62aeda0b46d62dbdd6b2da4647a44f49ad1a956ca8d60a54a415c",
+      "sampleCounts": {
+        "baseline": 50,
+        "hold": 200,
+        "release": 75
+      }
+    }
+  ],
+  "claim": "scalar-walker-movement-left-path-speed-response",
+  "envelope": {
+    "releaseLatencyMs": {
+      "lower": 0,
+      "upper": 30
+    },
+    "responseLatencyMs": {
+      "lower": 10,
+      "upper": 130
+    },
+    "steadyLateralSpeed": {
+      "lower": 2.8644196912905397,
+      "upper": 3.1659773874511408
+    }
+  },
+  "metricUnits": {
+    "latency": "milliseconds",
+    "speed": "retail-world-coordinate-units-per-second"
+  },
+  "nonclaims": [
+    "Measured under Movement/Left bound to Q on copied defaultoptions; path speed may include body yaw components.",
+    "Not a pure lateral-axis decomposition against facing basis.",
+    "Not jet strafe; not Core authority without translation policy."
+  ],
+  "privateEvidenceLabel": "strafe-p02",
+  "sampling": {
+    "baselineMs": 500,
+    "cadenceMs": 10,
+    "clock": "query-performance-counter",
+    "holdMs": 2000,
+    "releaseMs": 750,
+    "timingPrecisionMs": 10
+  },
+  "schemaVersion": "battleengine-walker-strafe-lateral-scalar-response.v1",
+  "status": "two-accepted-fresh-attempts"
+}

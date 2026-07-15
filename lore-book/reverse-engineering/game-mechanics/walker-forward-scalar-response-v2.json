@@ -1,0 +1,143 @@
+{
+  "attempts": [
+    {
+      "attempt": 1,
+      "integrity": {
+        "cleanupConfirmed": true,
+        "foregroundMaintained": true,
+        "keyUpConfirmed": true,
+        "receiptRevalidated": true
+      },
+      "metrics": {
+        "baselineB95Speed": 0.0,
+        "baselineEndpointDisplacement": 0.0,
+        "normalizedResponse": {
+          "100ms": 1.0000000000159999,
+          "200ms": 0.9806343594177038,
+          "350ms": 1.0183314542167785,
+          "500ms": 1.0015950341319027
+        },
+        "releaseLatencyMs": {
+          "lower": 100,
+          "upper": 140
+        },
+        "responseLatencyMs": {
+          "lower": 0,
+          "upper": 70
+        },
+        "responseThreshold": 0.3000132925347099,
+        "steadySlope": -0.23569221354480357,
+        "steadySpeed": 3.0001329253470987,
+        "velocityHoldToBaselineRatio": 150000015.5820747
+      },
+      "receiptSha256": "1d08adef6f18ed5e91a60d2a76fca29d27e3ac9f681a0a3667b900a7924e5438",
+      "runDigest": "49a801f93299ac9171cc498f3f74a435940d2ce7c4bd32c35988624bea35fa35",
+      "sampleCounts": {
+        "baseline": 50,
+        "hold": 200,
+        "release": 75
+      }
+    },
+    {
+      "attempt": 2,
+      "integrity": {
+        "cleanupConfirmed": true,
+        "foregroundMaintained": true,
+        "keyUpConfirmed": true,
+        "receiptRevalidated": true
+      },
+      "metrics": {
+        "baselineB95Speed": 0.0,
+        "baselineEndpointDisplacement": 0.0,
+        "normalizedResponse": {
+          "100ms": 0.9644227147278631,
+          "200ms": 0.950576545166174,
+          "350ms": 1.0198412356379079,
+          "500ms": 1.0040525340673803
+        },
+        "releaseLatencyMs": {
+          "lower": 0,
+          "upper": 90
+        },
+        "responseLatencyMs": {
+          "lower": 0,
+          "upper": 80
+        },
+        "responseThreshold": 0.30001449259268026,
+        "steadySlope": -0.28493388799300534,
+        "steadySpeed": 3.0001449259268025,
+        "velocityHoldToBaselineRatio": 150000001.92224887
+      },
+      "receiptSha256": "b3cc918a031b59a49e3388676ade102294ee320ebd1cbee10d48aa4bdd485fec",
+      "runDigest": "b6d0c55718170a71eabd7fe1b922ea33e26963e77c691d81ac735f4796b32ed6",
+      "sampleCounts": {
+        "baseline": 50,
+        "hold": 200,
+        "release": 75
+      }
+    }
+  ],
+  "claim": "scalar-walker-forward-motion-response",
+  "envelope": {
+    "normalizedResponse": {
+      "100ms": {
+        "lower": 0.9144227147278631,
+        "upper": 1.050000000016
+      },
+      "200ms": {
+        "lower": 0.9005765451661739,
+        "upper": 1.0306343594177039
+      },
+      "350ms": {
+        "lower": 0.9683314542167785,
+        "upper": 1.069841235637908
+      },
+      "500ms": {
+        "lower": 0.9515950341319026,
+        "upper": 1.0540525340673803
+      }
+    },
+    "releaseLatencyMs": {
+      "lower": 0,
+      "upper": 140
+    },
+    "responseLatencyMs": {
+      "lower": 0,
+      "upper": 80
+    },
+    "steadySlope": {
+      "lower": -0.30493388799300536,
+      "upper": -0.21569221354480358
+    },
+    "steadySpeed": {
+      "lower": 2.85012627908,
+      "upper": 3.150152172223
+    }
+  },
+  "metricUnits": {
+    "latency": "milliseconds",
+    "position": "retail-world-coordinate-unit",
+    "ratio": "unitless",
+    "speed": "retail-world-coordinate-units-per-second",
+    "speedSlope": "retail-world-coordinate-units-per-second-squared"
+  },
+  "nonclaims": [
+    "No actor-relative or camera-relative direction is measured.",
+    "No grounded, terrain, turning, jet, morph, or parity behavior is claimed.",
+    "Timing is bounded to the ten millisecond sampling cadence.",
+    "No physical-distance or deterministic-Core coordinate conversion is established.",
+    "No scalar, including a unitless ratio, authorizes deterministic-Core behavior.",
+    "No conversion from QPC seconds or milliseconds to deterministic-Core ticks is established.",
+    "Physics-update period and actor-velocity units are hypothesized from source and static evidence and inferred from position edges; they are not a proven retail tick identity."
+  ],
+  "sampling": {
+    "baselineMs": 500,
+    "cadenceMs": 10,
+    "clock": "query-performance-counter",
+    "holdMs": 2000,
+    "releaseMs": 750,
+    "timingPrecisionMs": 10
+  },
+  "schemaVersion": "battleengine-walker-forward-scalar-response.v2",
+  "status": "two-accepted-fresh-attempts"
+}
