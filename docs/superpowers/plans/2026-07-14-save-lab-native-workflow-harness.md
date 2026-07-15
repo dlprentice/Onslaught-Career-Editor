@@ -92,7 +92,7 @@ public void ResolveRepoRoot_RejectsTreeWithoutRepositoryMarkers()
 Run:
 
 ```powershell
-dotnet test .\OnslaughtCareerEditor.UiTests\OnslaughtCareerEditor.UiTests.csproj --nologo --no-restore --configuration Debug --runtime win-x64 --filter "FullyQualifiedName~TestFixturePathsTests"
+dotnet test .\OnslaughtCareerEditor.UiTests\OnslaughtCareerEditor.UiTests.csproj --nologo --configuration Debug --runtime win-x64 --filter "FullyQualifiedName~TestFixturePathsTests"
 ```
 
 Expected: compile failure because `ResolveRepoRoot` does not exist. The already
@@ -129,7 +129,7 @@ Replace the private fixed-parent `ResolveRepoRoot` in
 Run the 39-test filter from the baseline:
 
 ```powershell
-dotnet test .\OnslaughtCareerEditor.UiTests\OnslaughtCareerEditor.UiTests.csproj --nologo --no-restore --configuration Debug --runtime win-x64 --filter "FullyQualifiedName~SaveEditorFirstSaveJourneyTests|FullyQualifiedName~ReceiptBoundVisualCaptureTests|FullyQualifiedName~TestFixturePathsTests"
+dotnet test .\OnslaughtCareerEditor.UiTests\OnslaughtCareerEditor.UiTests.csproj --nologo --configuration Debug --runtime win-x64 --filter "FullyQualifiedName~SaveEditorFirstSaveJourneyTests|FullyQualifiedName~ReceiptBoundVisualCaptureTests|FullyQualifiedName~TestFixturePathsTests"
 ```
 
 Expected: all tests pass, with no duplicated project segment in source paths.

@@ -529,6 +529,6 @@ public class ReceiptBoundVisualCaptureTests
 
     private static string ResolveRepoRoot()
     {
-        return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        return TestFixturePaths.RepoRoot;
     }
 }
