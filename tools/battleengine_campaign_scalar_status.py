@@ -37,7 +37,13 @@ def main() -> int:
                 data = json.loads(path.read_text(encoding="utf-8"))
                 row["schemaVersion"] = data.get("schemaVersion")
         out.append(row)
-    json.dump({"scalars": out}, sys.stdout, indent=2)
+    try:
+        import battleengine_measure_mode_catalog as modes
+
+        offline = modes.offline_harness_dicts()
+    except Exception:
+        offline = []
+    json.dump({"scalars": out, "offlineHarnesses": offline}, sys.stdout, indent=2)
     sys.stdout.write("\n")
     missing = [r for r in out if r.get("present") is False]
     return 1 if missing else 0
