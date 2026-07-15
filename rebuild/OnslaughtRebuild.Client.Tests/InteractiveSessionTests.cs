@@ -213,6 +213,7 @@ public sealed class InteractiveSessionTests
         const long oneCoreStepTicks =
             (TimeSpan.TicksPerSecond / SimulationConstants.TicksPerSecond) + 1;
         session.ObserveInput(new InteractiveInput(0, 0, false, false, false, LookX: 1));
+        Assert.True(session.HasHeldOrPendingInput);
         for (int i = 0; i < 262; i++)
         {
             session.AdvanceFrameTicks(oneCoreStepTicks);
