@@ -455,6 +455,17 @@ class MeasurementTests(unittest.TestCase):
             self.m.sampler.MEASURE_STRAFE, self.m.sampler.VEHICLE_WALKER
         )
 
+    def test_forward_and_transform_accept_current_vehicles(self):
+        self.m.validate_measure_vehicle(
+            self.m.sampler.MEASURE_FORWARD, self.m.sampler.VEHICLE_WALKER
+        )
+        self.m.validate_measure_vehicle(
+            self.m.sampler.MEASURE_FORWARD, self.m.sampler.VEHICLE_JET
+        )
+        self.m.validate_measure_vehicle(
+            self.m.sampler.MEASURE_TRANSFORM, self.m.sampler.VEHICLE_WALKER
+        )
+
     def test_source_has_no_outer_hard_timeout_for_lifecycle_owner(self):
         source = self.m.MODULE_PATH.read_text(encoding="utf-8")
         self.assertNotIn("timeout=ATTEMPT_DEADLINE_SECONDS", source)
