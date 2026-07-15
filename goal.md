@@ -3,7 +3,7 @@
 Status: **ACTIVE** (time-boxed marathon)  
 Last updated: 2026-07-14  
 **STOP wall clock:** 2026-07-15 10:00 local  
-Integration tip: `6c8edd6e`  
+Integration tip: `e885a1db`  
 30m durable re-entry: **armed** `019f633f58c2`
 
 ## Current Slice
@@ -16,7 +16,7 @@ product honesty until STOP.
 ## Gates (recent)
 
 - `test:winui-primary-lane` PASS
-- rebuild Core 48 / Client 73 PASS
+- rebuild Core 49 / Client 73 PASS
 - hard-payload PASS; m2-m3 scaffolds PASS
 
 ## Resume
