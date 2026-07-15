@@ -60,13 +60,26 @@ and acceptance in the active checkout.
 
 For a long-running campaign, the user or current campaign owner may instead
 designate one **sole sequential implementation worker** while the parent task
-only supervises, steers, interrupts, and reports. That explicit delegation
-transfers the named campaign execution scope and its standing authority to the
-worker for the life of the assignment. The supervising task does not edit,
-validate, commit, push, launch, mutate, publish, or separately accept campaign
-work while the worker is active. This topology is still single-writer work; it
-does not activate the coordination overlay, require a worktree, lease, worker
-report, or separate integration pass.
+only supervises, steers, interrupts, and reports. Active supervision is valid
+only when the worker is a directly spawned subordinate agent task exposed to
+the parent through native spawn/message/wait/interrupt controls, or when the
+current surface first verifies equivalent cross-task read, send, and stop
+controls. A separately created top-level task is independent by default; a
+shared checkout, task identifier, session log, or ignored mailbox is not a
+two-way supervision channel.
+
+Do not use `codex exec resume <task-id>` as a substitute for parent-to-worker
+messaging while the target task may be active. It can create overlapping turns
+and leave resume clients alive after their shell wrapper exits. A filesystem
+mailbox may carry a checkpoint handoff only; it cannot establish immediate
+interrupt or exclusive-turn ownership.
+
+Valid explicit delegation transfers the named campaign execution scope and its
+standing authority to the worker for the life of the assignment. The
+supervising task does not edit, validate, commit, push, launch, mutate, publish,
+or separately accept campaign work while the worker is active. This topology
+is still single-writer work; it does not activate the coordination overlay,
+require a worktree, lease, worker report, or separate integration pass.
 
 The active implementation owner works in the active repository checkout,
 preserves unrelated dirty work, serializes overlapping mutations, integrates

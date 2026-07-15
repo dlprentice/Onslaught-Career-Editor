@@ -101,8 +101,11 @@ gates in the handoff.
   `goal.md`. For the durable full-reconstruction campaign use the slash text in
   `roadmap/goals/full-rebuild-campaign-slash-goal.md`. One explicitly designated
   sole sequential worker may own implementation, integration, canonical state,
-  validation, and version control while its parent only supervises and reports;
-  this compact topology does not activate the coordination overlay.
+  validation, and version control while its parent only supervises and reports.
+  The parent must directly spawn that agent task and retain native
+  message/wait/interrupt controls (or first verify equivalent cross-task tools);
+  an independently created top-level task is not implicitly supervisable. This
+  compact topology does not activate the coordination overlay.
 
 ## Setup
 
@@ -189,7 +192,8 @@ For genuinely concurrent multi-writer campaigns, read
 worker changes. Unknown ownership is read-only. A supervising parent plus one
 sole sequential implementation worker remains single-writer work: the worker
 reconciles `goal.md`, canonical state batons, and shared front-door truth, while
-the parent does not make competing repository or campaign mutations.
+the parent does not make competing repository or campaign mutations. Do not
+use concurrent `codex exec resume` calls to simulate parent-to-worker steering.
 
 ## WinUI Rules
 

@@ -1,7 +1,7 @@
 # Product-Coupled Battle Engine Aquila Campaign
 
-Status: **ACTIVE durable campaign — sole implementation worker assigned**
-Last updated: 2026-07-15 (product-coupled portfolio active; M2.3 work adopted in place)
+Status: **ACTIVE durable campaign — execution paused; no worker assigned**
+Last updated: 2026-07-15 (shield observation blocked; WinUI Reconstruction queued)
 
 Policy: [`goal.policy.md`](goal.policy.md)
 Mutable baton: [`goal.md`](goal.md)
@@ -29,7 +29,10 @@ priority, milestone state, or an exit criterion materially changes.
   headless replay/hash verification, and a playable procedural Godot First
   Flight client. Motion scalars are partially retail-derived; resources,
   combat, targeting, world, missions, presentation, and retail content remain
-  incomplete or synthetic as documented by their contracts.
+  incomplete or synthetic as documented by their contracts. Both capped shield
+  observations produced zero active shield edges and failed the
+  minimum-active-edge gate, so no retail-derived shield value, accepted pair,
+  or consumer was accepted.
 - **Retail Enhancement:** copied-target safe patching and a 29-row catalog are
   established, but most shipped value is compatibility, presentation, or lab
   tooling. Original-game multiplayer is an explicit strategic epic, not a
@@ -43,9 +46,9 @@ priority, milestone state, or an exit criterion materially changes.
 
 ## Campaign operating rules
 
-1. One Current Slice is active. It names a primary outcome, user
-   outcome, evidence question, exact consumer, acceptance, non-claims, and
-   next link.
+1. At most one Current Slice is selected. While execution is active, it names a
+   primary outcome, user outcome, evidence question, exact consumer,
+   acceptance, non-claims, and next link.
 2. Retail-derived behavior reaches Core, Godot, WinUI, or a retail patch only
    through evidence proportionate to the claim. A behavior contract does not land
    a product milestone; its consumer must land too.
@@ -113,7 +116,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 | ID | Consumer-complete increment | Status | Current boundary |
 |---|---|---|---|
 | P1.1 | Procedural First Flight movement/transform vertical | landed | Playable Core/Godot foundation with bounded measured motion constants. |
-| P1.2 | Coherent energy + shield resource loop | in_progress | Energy drain is consumed; shield copied-runtime pair and Core/Godot consumer remain. |
+| P1.2 | Coherent energy + shield resource loop | blocked | Energy drain is consumed; both capped shield attempts failed the active-edge gate, so no retail shield contract or Core/Godot consumer is authorized. |
 | P1.3 | Firing, projectile, damage, and destruction loop | in_progress | Current behavior is synthetic/provisional; retail evidence and consumer goldens remain. |
 | P1.4 | Deterministic target selection and lock feedback | in_progress | M2.3 static contract now prevents the projectile-shaped misinterpretation; runtime target choice/lock timing and the Core/Godot consumer remain. |
 | P1.5 | Camera, world, mission, enemy, and progression verticals | open | Select the smallest playable loop after resources/combat/targeting. |
@@ -124,7 +127,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 | ID | Consumer-complete increment | Status | Current boundary |
 |---|---|---|---|
 | P2.1 | Preservation/saves/options/patch/media/Lore community front door | landed | Public `v1.0.9`; bounded native harnesses exist. |
-| P2.2 | WinUI Reconstruction surface | open | Discover, explain, configure, verify, and launch First Flight without claiming it is already bundled or retail-complete. |
+| P2.2 | WinUI Reconstruction surface | open | Queued next: discover, explain, configure, verify, and launch First Flight without claiming it is already bundled or retail-complete. |
 | P2.3 | WinUI local retail-content workflow | open | Guide user-owned extraction/import with provenance and local-only boundaries. |
 | P2.4 | Community release of a product-coupled increment | open | Exact artifact and claims must pass release gates; releases are not automatic. |
 
@@ -167,22 +170,17 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 
 ## Immediate product-coupled sequence
 
-1. **Finish M2.3 narrowly:** accept or block the preserved target-acquisition
-   static contract as a **dangerous-misinterpretation exception**. It does not
-   land targeting; it must queue the runtime question and Core consumer.
-2. **Complete the resource vertical:** run exactly two authorized copied-runtime
-   shield attempts. The accepted measurement lifecycle defines when an attempt
-   starts and counts; this strategy neither redefines nor expands that cap, and
-   no third runtime attempt is authorized. If both attempts accept, publish the bounded
-   contract, intentionally map the value into Core, expose the behavior in
-   Godot, and verify the playable resource loop. If either fails, publish no
-   behavior contract and advance another outcome.
-3. **Add WinUI Reconstruction:** give community users a truthful surface to
+1. **Respect the shield closeout:** exactly two separately closed copied-runtime
+   observations reached ready neutral state, produced zero active shield edges,
+   and failed the minimum-active-edge gate. They did not form an accepted
+   canonical pair. No contract, Core mapping, or acceptance waiver follows,
+   and no third runtime attempt is authorized by that exhausted slice.
+2. **Add WinUI Reconstruction:** give community users a truthful surface to
    discover, configure, verify, and launch the playable companion.
-4. **Exercise the multiplayer foundation:** run the bounded P1/P2 viewport and
+3. **Exercise the multiplayer foundation:** run the bounded P1/P2 viewport and
    command-ownership experiment, then choose the next causality consumer from
    evidence rather than assumption.
-5. **Continue consumer-complete combat/targeting or retail-mod increments**
+4. **Continue consumer-complete combat/targeting or retail-mod increments**
    using the picker, keeping asset/mission import attached to a playable or
    WinUI consumer.
 

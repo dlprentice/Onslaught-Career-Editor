@@ -1,12 +1,15 @@
 # Retail → Core translation policy (shield regen/drain)
 
-Status: **draft — blocked on dual-accept**  
-Depends on: shield rate dual-accept (not landed)
+Status: **closed blocked — capped dual-accept did not materialize**
+Depends on: shield rate dual-accept (no accepted pair or contract landed)
 
-## Measured retail input (pending)
+## Measured retail input
 
-Walker shield regen and optional damage drain from receipt-bound samples of
-`BattleEngine+0x100` (hypothesis paired with energy `+0xFC`).
+None accepted. Exactly two receipt-bound copied-runtime walker attempts ran on
+2026-07-15. Each reached the neutral input-free observation phase, but each
+produced zero active shield edges rather than the required five. These
+separately closed attempts did not form an accepted canonical pair and produced
+no publishable shield rate.
 
 ## Planned translation (not yet authorized)
 
@@ -17,5 +20,8 @@ Walker shield regen and optional damage drain from receipt-bound samples of
 
 ## Explicit non-claims
 
-- Draft only; no Core constant change authorized.
+- No Core constant change is authorized by this closed slice.
 - Source shield-efficiency and mirror-from-energy rules are not dual-accepted rates.
+- The failed observations say neither that shield regeneration is absent nor
+  what its scalar, timing, mission scope, damage response, or vehicle scope
+  might be.

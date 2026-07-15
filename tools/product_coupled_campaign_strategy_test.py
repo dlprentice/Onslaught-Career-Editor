@@ -133,31 +133,34 @@ class ProductCoupledCampaignStrategyTests(unittest.TestCase):
         self.assertIn("actionable evidence debt", campaign)
         self.assertIn("user-observable result", campaign)
         self.assertIn("behavior contract does not land", campaign.casefold())
-        self.assertIn("no third runtime attempt is authorized", campaign.casefold())
+        self.assertIn(
+            "no third runtime attempt is authorized", normalize(campaign).casefold()
+        )
         self.assertIn("operator-only proof UI", campaign)
         self.assertIn("Closed measurement ledger", campaign)
         self.assertNotIn("| **RE** |", campaign)
 
-    def test_active_baton_preserves_m23_and_names_consumers(self) -> None:
+    def test_paused_baton_preserves_m23_and_queues_winui_consumer(self) -> None:
         baton = read_text("goal.md")
         normalized_baton = normalize(baton).casefold()
         required = (
-            "Status: **ACTIVE**",
-            "sole sequential implementation worker",
+            "Status: **PAUSED**",
+            "no implementation worker assigned",
+            "directly spawned subordinate agent task",
             "M2.3-target-acquisition-static-contract",
             "M2-shield-live-dual-accept",
-            "Primary outcome: **Playable Reconstruction**",
-            "OnslaughtRebuild.Core",
+            "BLOCKED: exactly two counted copied-runtime observations",
+            "Primary outcome: **WinUI Community**",
+            "AppCore reconstruction discovery/readiness/launch planning",
             "not a completed playable-targeting milestone",
             "shield",
-            "Core/Godot",
             "WinUI Reconstruction",
             "No P1/P2 runtime retest occurred",
         )
         for phrase in required:
             with self.subTest(phrase=phrase):
                 self.assertIn(normalize(phrase).casefold(), normalized_baton)
-        self.assertNotIn("Status: **PAUSED**", baton)
+        self.assertNotIn("Status: **ACTIVE**", baton)
 
     def test_public_front_doors_connect_all_three_products(self) -> None:
         readme = read_text("README.MD")
@@ -187,11 +190,15 @@ class ProductCoupledCampaignStrategyTests(unittest.TestCase):
         for name, state in states.items():
             with self.subTest(state=name):
                 self.assertIn("product-coupled", state["currentFocus"].casefold())
-                self.assertIn("active", state["currentFocus"].casefold())
-                self.assertIn("m2.3", state["currentFocus"].casefold())
+                self.assertIn("paused", state["currentFocus"].casefold())
+                self.assertIn("winui reconstruction", state["currentFocus"].casefold())
                 next_steps = normalize(" ".join(state["nextSteps"])).casefold()
-                self.assertIn("shield", next_steps)
                 self.assertIn("winui reconstruction", next_steps)
+
+        self.assertIn("cap is exhausted", combined)
+        self.assertIn("zero active shield edges", combined)
+        self.assertIn("no accepted pair", combined)
+        self.assertIn("no shield behavior contract", combined)
 
         self.assertIn(CURRENT_ONSLAUGHT_PIN, combined)
         self.assertIn(CURRENT_AYA_PIN, combined)

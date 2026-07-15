@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-15",
-  "routingPolicy": "Single-writer default: one active implementation owner holds integration, validation, state, commits/pushes, consequential actions, and acceptance. It may be the root or one explicitly designated sole sequential worker whose parent only supervises and reports; coordination activates only for genuine concurrency.",
-  "currentFocus": "Product-coupled reconstruction campaign is active under one designated implementation worker; M2.3 static target-acquisition evidence is accepted, and the current slice is the copied-runtime shield-to-Core/Godot resource vertical.",
+  "routingPolicy": "Single-writer default: one active implementation owner holds integration, validation, state, commits/pushes, consequential actions, and acceptance. A parent may supervise a sole worker only through native controls over a directly spawned subordinate agent task or verified equivalent cross-task tools; an independently created top-level task is not implicitly supervised.",
+  "currentFocus": "Product-coupled reconstruction campaign execution is paused with no implementation worker assigned; the capped shield observations are closed without an accepted pair or behavior contract, and the WinUI Reconstruction companion workflow is queued next.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -165,13 +165,14 @@
     ]
   },
   "activeBlockers": [
-    "No accepted two-attempt copied-runtime shield measurement exists; therefore no shield regeneration behavior contract or retail-derived Core shield constant exists.",
+    "Exactly two receipt-bound copied-runtime shield observations each produced zero active shield edges and failed the minimum-active-edge gate; the cap is exhausted, so there is no accepted pair, no shield behavior contract, no retail-derived Core constant, and no third attempt authorized by that slice.",
     "Complete private-corpus extraction/export coverage is not yet executed. The 301-archive observation census and bounded surface-reconciliation producer are prerequisites only; the full export is blocked by absent legacy native extractor DLLs and missing Visual Studio C++ targets (MSB4278)."
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Run exactly two copied-runtime shield attempts; if either attempt fails, publish no behavior contract, while only a valid pair may reach the shield consumer in deterministic Core and Godot.",
+    "Resume execution only by directly spawning one sole worker agent task with native parent message/wait/interrupt controls; do not use concurrent codex exec resume calls for supervision.",
     "Deliver a WinUI Reconstruction community surface that truthfully discovers, configures, verifies, and launches the playable companion.",
-    "Run the bounded P1/P2 viewport and command-ownership experiment as the first original-game multiplayer epic gate, without enabling Host/Join."
+    "Run the bounded P1/P2 viewport and command-ownership experiment as the first original-game multiplayer epic gate, without enabling Host/Join.",
+    "Turn accepted copied-retail multiplayer evidence into the next meaningful tool, mod, or playable consumer rather than stopping at the harness."
   ]
 }

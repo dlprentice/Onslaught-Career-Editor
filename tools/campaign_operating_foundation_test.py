@@ -202,6 +202,25 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
             ),
         )
 
+    def test_supervised_worker_requires_a_real_two_way_control_channel(self) -> None:
+        policy = read_repo_text("goal.policy.md")
+        coordination = read_repo_text("coordination/README.md")
+        contributing = read_repo_text("CONTRIBUTING.md")
+        combined = normalized_words(
+            "\n".join((policy, coordination, contributing))
+        ).casefold()
+
+        for phrase in (
+            "directly spawned subordinate agent task",
+            "equivalent cross-task read, send, and stop controls",
+            "a separately created top-level task is independent by default",
+            "codex exec resume <task-id>",
+            "overlapping turns",
+            "mailbox may carry a checkpoint handoff only",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(normalized_words(phrase).casefold(), combined)
+
     def test_coordination_is_an_optional_concurrency_overlay(self) -> None:
         coordination = read_repo_text("coordination/README.md")
         workstreams = read_repo_text("coordination/WORKSTREAM_CONTRACT.md")
@@ -313,17 +332,20 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
         self.assertNotIn("STOP_LOCAL", slash_goal)
         self.assertNotIn("TIME-BOXED MARATHON", slash_goal)
 
-    def test_active_product_baton_keeps_shield_authorized_but_unmeasured(
+    def test_paused_product_baton_closes_shield_and_queues_consumer(
         self,
     ) -> None:
         baton = read_repo_text("goal.md")
         campaign = read_repo_text("goal.campaign.md")
 
         self.assertIn("M2.3-target-acquisition-static-contract", baton)
-        self.assertIn("Status: **ACTIVE**", baton)
-        self.assertIn("sole sequential implementation worker", baton)
+        self.assertIn("Status: **PAUSED**", baton)
+        self.assertIn("no implementation worker assigned", baton)
+        self.assertIn("directly spawned subordinate agent task", baton)
         self.assertIn("standing-authorized", baton)
-        self.assertIn("No accepted two-attempt shield measurement exists", baton)
+        self.assertIn("The shield attempt cap is exhausted", baton)
+        self.assertIn("zero active shield edges", baton)
+        self.assertIn("not an accepted canonical pair", baton)
         self.assertIn(
             "no shield retail behavior contract",
             normalized_words(baton).casefold(),
@@ -338,9 +360,11 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
         self.assertIn("single-writer", campaign.casefold())
         normalized_campaign = normalized_words(campaign).casefold()
         self.assertIn(
-            "exactly two authorized copied-runtime shield attempts",
+            "exactly two separately closed copied-runtime observations",
             normalized_campaign,
         )
+        self.assertIn("no third runtime attempt is authorized", normalized_campaign)
+        self.assertIn("winui reconstruction", normalized_campaign)
         self.assertIn(
             "one advancement is progress, not campaign completion",
             normalized_campaign,
@@ -379,9 +403,9 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
         self.assertTrue(developer["verifiedTruth"]["release"]["newReleaseAuthorized"])
         self.assertIn("single-writer default", documentation["routingPolicy"].casefold())
         self.assertIn("product-coupled", developer["currentFocus"].casefold())
-        self.assertIn("active", developer["currentFocus"].casefold())
+        self.assertIn("paused", developer["currentFocus"].casefold())
         self.assertIn("product-coupled", documentation["currentFocus"].casefold())
-        self.assertIn("active", documentation["currentFocus"].casefold())
+        self.assertIn("paused", documentation["currentFocus"].casefold())
         for label, state in (
             ("developer", developer),
             ("documentation", documentation),
@@ -389,8 +413,11 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
         ):
             with self.subTest(state=label):
                 self.assertEqual("2026-07-15", state["lastUpdated"])
-                self.assertIn("m2.3", state["currentFocus"].casefold())
-                self.assertIn("active", state["currentFocus"].casefold())
+                self.assertIn("winui reconstruction", state["currentFocus"].casefold())
+                self.assertIn("paused", state["currentFocus"].casefold())
+                self.assertIn(
+                    "no implementation worker", state["currentFocus"].casefold()
+                )
         self.assertIn(
             "standing-authorized",
             " ".join(orchestrator["currentTruth"]).casefold(),
@@ -424,16 +451,16 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
             ("documentation", documentation),
             ("orchestrator", orchestrator),
         ):
-            shield_steps = normalized_words(
-                " ".join(
-                    step for step in state["nextSteps"] if "shield" in step.casefold()
-                )
-            ).casefold()
-            with self.subTest(state=label, pending_live_path="shield"):
-                self.assertIn("shield", shield_steps)
-                self.assertIn("exactly two", shield_steps)
-                self.assertIn("if either attempt fails", shield_steps)
-                self.assertIn("publish no behavior contract", shield_steps)
+            blockers = normalized_words(" ".join(state["activeBlockers"])).casefold()
+            next_steps = normalized_words(" ".join(state["nextSteps"])).casefold()
+            with self.subTest(state=label, closed_live_path="shield"):
+                self.assertIn("shield", blockers)
+                self.assertIn("exactly two", blockers)
+                self.assertIn("cap is exhausted", blockers)
+                self.assertIn("zero active shield edges", blockers)
+                self.assertIn("no accepted pair", blockers)
+                self.assertIn("no shield behavior contract", blockers)
+                self.assertNotIn("run exactly two", next_steps)
 
     def test_active_foundation_has_no_mandatory_structured_runtime_baton(self) -> None:
         active_paths = (

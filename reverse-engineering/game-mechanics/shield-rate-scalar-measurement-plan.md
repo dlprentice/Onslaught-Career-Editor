@@ -1,6 +1,7 @@
 # Shield regen/drain scalar plan
 
-Status: **input-free live sampler wired**; live dual-accept pending
+Status: **closed blocked after two capped live observations**; no accepted
+pair, measured value, or behavior contract accepted
 Scaffold: `tools/battleengine_shield_scaffold.py`
 Live command: `--measure shield --vehicle walker`
 
@@ -26,10 +27,21 @@ receipt/run digests. The cleanup owner records input as not owned and never
 sends backup Q for shield, including on failure. This readiness is not runtime
 proof.
 
-## Next live steps
+## Capped live closeout
 
-1. Sample `energy` + `shields` under receipt-bound walker neutral-control idle
-   setup (no damage)
-   with `--measure shield --vehicle walker`.
-2. Optional damage-drain attempt only with explicit runtime authority.
-3. Dual-accept → contract → Core; do not promote source defaults alone.
+On 2026-07-15, exactly two separately closed, receipt-bound copied-runtime
+observations ran after the focused sampler, measurement-orchestrator, and
+shield-scaffold gates passed 30/30, 45/45, and 18/18. Both attempts reached
+`ready` in walker mode under the neutral, input-free protocol. Both then failed
+closed at the same acceptance gate: each produced zero active shield edges,
+below the required five. The canonical pair producer did not accept or
+materialize a pair, and no rate or public projection was accepted.
+
+Both copied targets and their source inputs retained their before-run hashes;
+the observer handles and managed processes closed, and the final owned-process
+census was zero. The installed game and original executable were not mutated.
+The two-attempt cap is exhausted: do not publish a shield behavior contract,
+infer a retail rate from the source mirror, map a value into Core, or run a
+third attempt under this authorization. A future measurement would require an
+explicitly reopened slice with a materially revised protocol and fresh
+authority.

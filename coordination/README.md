@@ -7,7 +7,11 @@ This directory is the optional concurrency overlay for Onslaught Toolkit work.
 The normal campaign model is one active implementation owner owning edits,
 integration, validation, state, version control, consequential actions, and
 acceptance in the main checkout. That owner may be the current root task or one
-explicitly designated sole sequential worker supervised by its parent task.
+explicitly designated sole sequential worker. A parent may call the worker
+supervised only when it directly spawned that subordinate agent task and has
+native message/wait/interrupt controls, or when equivalent cross-task controls
+were verified before delegation. An independently created top-level task is an
+independent owner by default.
 
 Single-writer work does not require a coordinator, worker lane, isolated
 worktree, lease record, worker report, separate integration owner, or separate
@@ -38,9 +42,11 @@ worktrees.
   integration, shared state, validation, commits/pushes, consequential actions,
   and final acceptance. It may be the root task or one explicitly designated
   sole sequential worker.
-- **Supervising task (optional compact topology):** steers, interrupts, and
-  reports while its sole worker executes. It does not become a concurrent
-  writer or acceptance lane.
+- **Supervising task (optional compact topology):** uses native parent/agent
+  controls to steer, interrupt, wait for, and receive reports from its directly
+  spawned sole worker. It does not become a concurrent writer or acceptance
+  lane. Never emulate this channel with concurrent `codex exec resume` calls;
+  an ignored mailbox is checkpoint-only and cannot interrupt a running task.
 - **Subagents/consults (default):** bounded read-only advisers. An additional
   write assignment creates concurrency and therefore activates this overlay.
 - **Coordinator (optional):** routes an explicitly activated multi-writer wave

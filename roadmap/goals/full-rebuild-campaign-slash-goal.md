@@ -28,9 +28,13 @@ Continuously reconstruct and enhance Battle Engine Aquila through an evidence-ba
   applicable `AGENTS.md` → slice-local evidence.
 - Exactly one task is the active implementation and integration owner. It may
   be the root or one explicitly designated sole sequential worker whose parent
-  only supervises, steers, interrupts, and reports. This compact topology does
-  not activate `coordination/`; that overlay is for genuine concurrency or a
-  shared-resource wave.
+  only supervises, steers, interrupts, and reports through native controls over
+  a directly spawned subordinate agent task. A separately created top-level
+  task is independent unless equivalent cross-task read/send/stop controls are
+  verified before delegation; never emulate supervision with concurrent
+  `codex exec resume` calls. This compact topology does not activate
+  `coordination/`; that overlay is for genuine concurrency or a shared-resource
+  wave.
 - A slice advancement is not campaign completion. After closeout, select and
   execute the next safe product-coupled slice.
 - A blocked slice is recorded and skipped while another authorized independent
