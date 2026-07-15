@@ -3,7 +3,7 @@
 Status: **ACTIVE** (time-boxed marathon)  
 Last updated: 2026-07-14  
 **STOP wall clock:** 2026-07-15 10:00 local  
-Integration tip: `4a826a14`+ (pending this push)  
+Integration tip: `5c36df62`  
 30m durable re-entry: **armed** `019f633f58c2`
 
 ## Current Slice
