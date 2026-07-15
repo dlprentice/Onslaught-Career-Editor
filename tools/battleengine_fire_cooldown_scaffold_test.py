@@ -49,6 +49,21 @@ class FireScaffoldTests(unittest.TestCase):
             envelope["schemaVersion"],
         )
 
+    def test_pair_envelope_rejects_unstable(self) -> None:
+        frequency = 10_000_000
+        m1 = fire.analyze_fire_cooldown(
+            attempt=1,
+            events=fire.synthetic_fire_events(count=5, cooldown_ms=100.0),
+            frequency=frequency,
+        )
+        m2 = fire.analyze_fire_cooldown(
+            attempt=2,
+            events=fire.synthetic_fire_events(count=5, cooldown_ms=300.0),
+            frequency=frequency,
+        )
+        with self.assertRaisesRegex(fire.FireScaffoldError, "not stable"):
+            fire.materialize_fire_pair_envelope(m1, m2)
+
     def test_rejects_too_few_events(self) -> None:
         events = fire.synthetic_fire_events(count=2)
         with self.assertRaisesRegex(fire.FireScaffoldError, "at least"):
