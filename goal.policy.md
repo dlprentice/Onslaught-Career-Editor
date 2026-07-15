@@ -1,165 +1,253 @@
 # Goal Policy
 
 Status: active public-primary charter
-Last updated: 2026-07-14
+Last updated: 2026-07-15
 
-This file is the durable charter for repo `/goal` loops. It should change
+This file is the durable charter for repository `/goal` loops. It should change
 rarely.
 
 | File | Role |
 |------|------|
-| **This file** (`goal.policy.md`) | Rarely changing charter, boundaries, loop contract |
-| [`goal.campaign.md`](goal.campaign.md) | Durable multi-lane milestone map; update on milestone land/block |
-| [`goal.md`](goal.md) | Mutable baton: current slice, progress, closed ledger |
+| **This file** (`goal.policy.md`) | Rarely changing charter, authority, boundaries, loop contract |
+| [`goal.campaign.md`](goal.campaign.md) | Durable milestone map and next-slice priority |
+| [`goal.md`](goal.md) | Mutable baton: current slice, progress, resolved/skipped blockers |
 | [`roadmap/goals/full-rebuild-campaign-slash-goal.md`](roadmap/goals/full-rebuild-campaign-slash-goal.md) | Canonical long-running `/goal` text |
 
 ## Long-Horizon Charter
 
-Preserve and reverse engineer Battle Engine Aquila / Onslaught, keep the WinUI 3
-product lane primary for current user-facing tooling, and turn static/runtime
-evidence into practical tooling, patches, mods, asset workflows, online-play
-research, and an executable RE-informed original-code rebuild. Preserve a
-separately staffed strict clean-room path as a future option rather than
-mislabeling exposed implementation work.
+Preserve and reverse engineer Battle Engine Aquila / Onslaught, keep the WinUI
+3 product lane primary for current user-facing tooling, and turn bounded static
+and copied-runtime evidence into practical tooling, patches, mods, asset
+workflows, online-play research, and an executable RE-informed original-code
+rebuild. Preserve a separately staffed strict clean-room path as a future
+option rather than mislabeling exposed implementation work.
 
-The public repository is now the primary collaboration and day-to-day working
-repo. The goal is not a sparse export. Track source, tools, tests, docs, RE
-notes, wave notes, state batons, agent reports, readiness notes, and compact
-proof summaries when they help contributors understand or continue the project.
+The public repository is the primary collaboration and day-to-day working
+tree. Track source, tests, tools, public-safe RE notes, state batons, readiness
+notes, and compact proof summaries when they help contributors understand or
+continue the project.
 
-### Multi-slice campaign mode
+## Single-Root Default
 
-When the active `/goal` points at the full reconstruction campaign (see
-`roadmap/goals/full-rebuild-campaign-slash-goal.md`), agents **must not** treat
-a single slice as the entire goal. They:
+The active Codex root task is the normal owner of implementation, integration,
+validation, state updates, version control, and final acceptance. It works in
+the active repository checkout, preserves unrelated dirty work, and serializes
+overlapping mutations.
 
-1. Execute one bounded Current Slice from `goal.md`.
-2. Close with `ADVANCEMENT` or well-formed `BLOCKED_*`.
-3. **Select the next slice themselves** using `goal.campaign.md` priority order.
-4. Rewrite `goal.md` Current Slice for resume.
-5. Continue until campaign exit criteria, a human pause, or a blocker that truly
-   needs operator authority (runtime lease, release, paid spend, Steam-adjacent
-   risk, or exhausted retries).
+Exactly one task is the current root. If two tasks could plausibly claim root
+ownership, neither performs a consequential mutation, push, publication, or
+external action until the repository baton and current user/task ownership
+identify one root; safe read-only work may continue.
 
-Agents may choose work across **RE**, **rebuild**, **WinUI 3**, **lore**, and
-**test harnesses**. Prefer measurement-before-Core for retail-derived behavior.
-Build or extend durable harnesses with each land. Keep lab storage bounded
-(safe-copy while running; strip bulky trees after closeout).
+Only the currently active root task exercises standing campaign authority for
+consequential runtime, Ghidra, version-control, release/publication, or external
+actions. A root-created writer receives only its explicit bounded write scope;
+it does not inherit ambient mutation, publication, account, or acceptance
+authority.
+
+Subagents and external consults are bounded advisers by default. Root uses them
+when independent judgment, adversarial review, or domain specialization adds
+material value. Root may explicitly assign a bounded non-overlapping write task
+to a subagent, but does not create persistent worker lanes merely to satisfy
+ceremony.
+
+Shared-machine ownership is an execution-safety mechanism, not a permission
+gate. Root serializes BEA, debugger, live Ghidra, native desktop, broad build,
+and publication actions; verifies the exact process, path, hash, start time,
+window/module, project, backup, artifact, or external target as applicable; and
+records bounded cleanup. Root never terminates an unknown process or overwrites
+unknown work. It can wait, disambiguate safely, or advance another independent
+slice.
+
+The contracts under [`coordination/`](coordination/README.md) are an optional
+coordination overlay. Root activates them only for deliberately concurrent
+writers, recurring automation, independent acceptance roles, or a shared-
+resource wave that needs durable handoffs. Ordinary single-root work does not
+require a coordinator, isolated worker worktree, resource lease, worker report,
+or separate integration owner.
+
+Resource claims do not expire merely because time passes. After a crash or task
+handoff, a successor root re-reads the repository baton and verifies that the
+prior root no longer owns a relevant process, project write, proof publication,
+or external action before reclaiming it. Unknown ownership remains read-only;
+the successor advances another slice rather than guessing or killing an
+unknown process. Before a successor pushes or publishes, it also reads back the
+exact remote branch, tag, release, artifact, and publication identity to reject
+an absent-owner-but-still-completing prior action.
+
+## Multi-Slice Campaign Mode
+
+The durable reconstruction campaign is not one slice. Root:
+
+1. Executes one bounded Current Slice from `goal.md`.
+2. Closes it with a verified advancement or an exact skipped blocker.
+3. Selects the next safe slice using `goal.campaign.md` priority.
+4. Rewrites `goal.md` into resume-ready state.
+5. Continues until campaign exit criteria, a human pause, or no meaningful
+   authorized work remains.
+
+A blocked slice does not block the whole campaign while another safe,
+authorized, material slice exists. Missing coordinator records, worker leases,
+redundant acceptance roles, or a separately enumerated runtime baton are not
+blockers for work covered by the standing campaign authority below.
+
+Prefer measurement before Core for retail-derived behavior: bounded static
+analysis and authorized copied-runtime observation produce an accepted public-
+safe behavior contract before retail-derived deterministic implementation.
+Build or extend the smallest durable behavioral, visual, capture/replay, or
+regression harness that can replace subjective verification.
 
 ## Hard Payload Boundary
 
-Keep these out of git and out of app release ZIPs unless a later explicit legal
-and technical decision changes the rule:
+The installed Steam game and original `BEA.exe` remain immutable. Use copied
+profiles, copied executables, app-owned artifact roots, and ignored local proof
+roots for runtime, debugger, patch, mutation, screenshot, cache, and test-save
+work.
 
-- actual Battle Engine Aquila executables, DLLs, archives, media, manuals,
-  extracted asset payloads, and local save/options payloads other than the
-  tracked `tests_shared/fixtures/gold_career_save.bin` regression fixture
-- copied game profiles, copied executable/runtime output, screenshots/frame
-  dumps, raw CDB logs, and bulky generated runtime proof captures
-- full Ghidra project databases/backups
-- secrets, `.env*`, credentials, tokens, local config, and machine-only runtime
-  caches
-- build/test/package outputs
+Proprietary evidence remains local. Do not track or publish actual game
+executables, DLLs, archives, media, manuals, extracted assets, copied profiles,
+arbitrary saves/options, screenshots/frame dumps, raw debugger logs, bulky
+runtime captures, full Ghidra databases/backups, secrets, credentials, local
+config, or build output. The tracked immutable regression fixture
+`tests_shared/fixtures/gold_career_save.bin` remains the narrow save exception.
 
-Represent those areas with source code, scripts, schemas, docs, hashes, compact
-proof summaries, and reproducible checkers instead of shipping the payloads.
+Represent private areas with original source, schemas, scripts, hashes, compact
+summaries, and reproducible checkers rather than shipping their payloads.
 
-## Authority Boundaries
+Classify local material before cleanup:
 
-- Keep the installed Steam game folder and original `BEA.exe` read-only.
-- Use copied profiles, copied executables, app-owned artifact roots, or local
-  proof roots for mutation, runtime proof, generated outputs, screenshots,
-  frames, caches, and test saves.
-- Codex root remains final owner of edits, validation, state updates, commits,
-  pushes, publication, and acceptance.
-- Each substantive objective or related release batch requires one bounded
-  normal/adversarial review envelope under the global Codex multi-agent lane
-  contract before terminal acceptance. Under the current direct user policy,
-  every new or resumed Codex-owned worker uses `gpt-5.6-sol` at medium effort by
-  default; harder work may raise the supported Sol effort. Do not fall back to
-  Terra or Luna, and do not lower or change this route without a newer direct
-  user instruction.
-  Bounded external normal/adversarial consults use the canonical read-only
-  posture when the required sandbox and authentication are available. Trivial lookups, formatting, and
-  routine follow-through inside an accepted envelope do not create recursive
-  consult loops. If an external prompt cannot be safely bounded, record
-  `CONSULT_BOUNDARY:<lane>:<reason>` and use focused Codex-owned review. If a
-  required lane is unavailable, record
-  `CONSULT_UNAVAILABLE:<lane>:<reason>` with the exact failure. Refresh the
-  envelope only when target, scope, mutation class, authority, trust boundary,
-  or acceptance evidence materially changes.
-- Runtime proof, live Ghidra mutation/read-back, destructive cleanup,
-  release/publication, account/provider action, and paid spend require explicit
-  baton authority naming the action family, allowed commands, forbidden
-  commands, resource leases, proof/storage root policy, validation gates,
-  cleanup/rollback, expiration, and maximum spend if applicable. Absence of any
-  field means no authority.
-- Coordinated multi-thread campaigns use the additional contract in
-  [coordination/README.md](coordination/README.md): the coordinator is a control
-  plane, workers own only leased scopes in isolated worktrees, reviewers and
-  acceptance are read-only, and the integration owner performs canonical
-  merge/state/docs reconciliation after leases release.
+- **immutable:** installed game/original executable and other protected inputs;
+- **retained/shared:** live Ghidra projects, verified backups, proof archives,
+  user data, reusable copied profiles, and any artifact with ambiguous
+  ownership;
+- **action-owned disposable:** an item created and owned by the current action
+  or separately verified as disposable before that action starts through an
+  action receipt/provenance identifier and exact allowed path class.
+
+Normal cleanup applies only to action-owned disposable material. It never
+deletes an unknown, pre-existing, retained, shared, or immutable item.
+Crash debris without a valid action receipt/provenance record is retained until
+classified; a successor root does not inherit the prior action's disposable set
+merely by taking over the baton.
+
+## Standing Campaign Authority
+
+The maintainer has supplied standing authority for these actions when they are
+in scope for the durable campaign and their exact target is known:
+
+- normal source, test, documentation, state, and harness changes;
+- commits and pushes to the configured project repository without force-push;
+- copied-runtime launches, controlled input, debugger attachment, read-process
+  memory, and process-memory mutation;
+- patching and mutation of copied executables and copied profiles;
+- live Ghidra inspection, mutation, save, and read-back with complete verified
+  backup and rollback discipline;
+- normal cleanup of processes, copied profiles, build/test output, and ignored
+  evidence roots created and owned by the current action or separately verified
+  as disposable before the action; and
+- tags, releases, publication, and project-scoped external actions when a
+  campaign slice calls for them, applicable gates pass, and evidence supports
+  the published claim.
+
+Before any copied-runtime, copied-executable, copied-profile, debugger, input,
+or process-memory mutation, root resolves path/hash/process-image identity and
+proves the target is the intended copy rather than the installed game or
+original executable. Identity ambiguity fails closed.
+
+Standing project-scoped external actions are limited to the configured source
+repository and its established project surfaces: non-force Git writes,
+issue/PR/project metadata actions, creation of unused tag/release/publication
+identities, additive publication of the exact verified project artifact, and
+project announcements to an already identified project channel/audience. A
+current slice must name the exact target and action; “project-scoped” is not an
+open alias for billing, spend, credential changes, account/provider
+administration, unrelated deployment, or a novel audience.
+
+Standing authority removes repeated approval requests. It does not remove
+receipt-bound identity, attempt caps, input ownership, arm gates, backup,
+validation, rollback, evidence, cleanup, or final process-census requirements.
+It does not make a release necessary, turn release authority into release
+readiness, or allow a claim beyond its evidence.
+
+The maintainer explicitly classified evidence-gated tags, releases,
+publication, and project-scoped external actions to the configured project
+surface as standing-authorized actions for this campaign. Creating them is not
+treated as a fresh destructive-authority request. Later deletion, replacement,
+history rewriting, or withdrawal can still be genuinely destructive and is
+evaluated separately. Standing creation requires an unused exact identity;
+moving an existing tag, overwriting/replacing an existing release artifact,
+retargeting published identity, or withdrawing published truth requires fresh
+destructive authority.
+
+Before an external action, root confirms the configured repository, account,
+channel, audience, artifact, commit, or host and the intended action. A novel or
+ambiguous external target is clarified before use; target verification is not a
+return to coordinator or lease ceremony.
+
+Live Ghidra mutation hard-stops before the first write when the complete backup
+or disposable read-only open cannot verify, and stops the batch at the first
+apply/read-back mismatch. Continuing without the verified rollback endpoint is
+not a standing-authorized shortcut.
+
+## Fresh Authorization Required
+
+Fresh maintainer authority is required for:
+
+- spending or any action that can incur a charge; and
+- genuinely destructive or irreversible operations beyond normal cleanup,
+  including force-push or history rewriting, deletion of ambiguous or
+  irreplaceable proof/backups, broad storage pruning, and destructive changes
+  outside an invocation-owned disposable root.
+
+Installed-game/original-executable mutation and proprietary-payload
+publication remain prohibited rather than approval-gated. Host/Join remains
+disabled until its distinct-endpoint and source-bound causality gates are
+accepted. Standing online or publication authority cannot substitute for those
+product-evidence gates.
 
 ## Technical Direction
 
-- Static Ghidra closure remains rebuild-grade contract input, not automatic
-  runtime proof.
-- Runtime, visual, patch, mod, online, and rebuild proofs must stay bounded to
-  their evidence.
-- WinUI 3 remains the current primary Windows product lane unless a later
-  explicit strategy change replaces it.
-- Electron, WPF, and old Python GUI/CLI lanes stay archived/reference-only.
-- Python remains active for RE/tooling/lab support.
-- `rebuild/OnslaughtRebuild.Core` is the active deterministic simulation lane.
-  Godot .NET is the promoted visual-client direction for the rebuild and must
-  remain an adapter over Core. Blazor Hybrid, Tauri, and other alternatives are
-  not parallel implementation lanes unless an evidence-backed decision changes
-  the architecture.
-- Historical proof plans are evidence, not implementation authority. Do not
-  create recursive readiness/checklist/proof-plan chains when executable code,
-  a focused test, or one plainly documented blocked dependency is the more
-  direct artifact.
+- Steam static evidence can establish bounded released-code identity and
+  structure; controlled copied-runtime evidence establishes observed causality,
+  behavior, and measured values.
+- WinUI 3 remains the primary Windows product lane. Electron, WPF, and the old
+  Python GUI/CLI remain archived/reference-only.
+- Python remains active for RE, validation, and local lab tooling.
+- `rebuild/OnslaughtRebuild.Core` owns deterministic simulation truth. Godot is
+  a presentation/input adapter over Core, not evidence of retail behavior.
+- The active rebuild is RE-informed original code, not parity-complete and not
+  a strict clean-room implementation.
+- Historical proof plans are evidence, not current authority. Prefer executable
+  code, focused tests, bounded contracts, or one exact blocker over recursive
+  readiness/checklist chains.
 
 ## Loop Contract
 
-Read order for every `/goal` cycle: **policy → campaign → baton → path AGENTS**.
+Read order for each campaign cycle: **policy → campaign → baton → applicable
+AGENTS → slice-local evidence**.
 
-Use `goal.md` as the current mutable baton:
+For each slice:
 
-1. Pick one bounded slice that advances the campaign (self-select via
-   `goal.campaign.md` when the durable campaign goal is active).
-2. Read current repo evidence before acting.
-3. Prefer read-only inspection and generated/exported evidence before mutation.
-4. Make focused changes; add/extend a regression harness when behavior lands.
-5. Validate with targeted and broad-enough local gates.
-6. Update docs/state/evidence/accounting; update campaign milestone status when
-   a milestone lands or blocks.
-7. Rewrite `goal.md` Current Slice to the **next** safe executable unit after a
-   green closeout (do not leave an empty “suggested candidates only” baton).
-8. Commit/push the green wave when the active `/goal` text and this policy
-   authorize it (no hard payloads; no force-push; no release/tag unless the
-   goal explicitly names that family).
+1. Check repository identity, current tip, dirty paths, and the active baton.
+2. Read the directly relevant source, policy, provenance, and proof boundary.
+3. Make focused changes without overwriting unrelated work.
+4. Add or extend a proportional automated harness when behavior or a durable
+   operating contract changes.
+5. Run the smallest gate set that proves the change and disclose skipped proof
+   classes.
+6. Update public-safe docs/state only to verified truth; keep raw evidence
+   ignored/local.
+7. Commit and push a green wave when useful. Never force-push.
+8. Leave `goal.md` with the next safe executable Current Slice and continue
+   unless the user asked to stop.
 
-Every automation, worker, or `/goal` cycle must close with exactly one primary
-deliverable:
+Record a blocker with a specific code, evidence, prior attempt, owner, and next
+action. A retry time is useful only when time or external state can change the
+result; it is not mandatory ceremony. Do not repeat a blocker without new
+evidence, and do not elevate one blocked slice to whole-goal `blocked` while an
+independent advancement remains.
 
-- `ADVANCEMENT`: an accepted bounded source, docs, checker, proof-plan, policy,
-  state, RE map, Ghidra/static-analysis, integration, harness, or push artifact
-  under a named evidence class. For campaign mode, dual-accept measurement,
-  landed Core+goldens, or product gate green counts as cycle advancement;
-  **campaign-complete** still requires exit criteria in `goal.campaign.md` plus
-  human or integration acceptance.
-- `BLOCKED_<root-cause-slug>_<yyyymmdd-hhmm>`: a well-formed blocker record
-  with `code`, `evidence`, `prior_attempt`, `owner`, `next_action`,
-  `retry_after` no later than 24 hours, and `duplicate_check`. Repeating the
-  same blocker without a new attempt or owner escalation is not progress.
-
-Hygiene-only activity such as status checks, re-reading files, mirror refresh,
-or validation gates does not count as advancement unless it removes a named
-blocker and records the next real advancement slice it unblocked. If no concrete
-advancement is available, record a well-formed blocker instead of widening
-scope or repeating status work.
-
-Do not mark the **campaign** complete unless `goal.campaign.md` exit criteria
-are met. If the current work is only a slice, close the slice, advance the
-baton, and continue.
+Do not mark the campaign complete merely because one or several slices landed.
+Completion requires the exit criteria in `goal.campaign.md`, verified green
+state, a resume-ready backlog/non-claim record, and human or root integration
+acceptance.

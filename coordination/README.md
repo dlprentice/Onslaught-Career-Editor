@@ -1,88 +1,90 @@
-# Coordination Contract
+# Coordination Overlay
 
-Status: active
-Last updated: 2026-06-26
+Status: active when explicitly invoked
+Last updated: 2026-07-15
 
-Use this directory for durable, public-safe policy for coordinated multi-thread
-campaigns. It is not a campaign log. Active thread IDs, session IDs, raw logs,
-temporary ownership locks, process IDs, local proof paths, and worker scratch
-material stay in an ignored outside-repo campaign root chosen by the
-coordinator.
+This directory is the optional concurrency overlay for Onslaught Toolkit work.
+The normal campaign model is one active Codex root task owning implementation,
+integration, validation, state, version control, and acceptance in the main
+checkout.
 
-## Role Model
+Single-root work does not require a coordinator, worker lane, isolated
+worktree, lease record, worker report, separate integration owner, or separate
+acceptance owner. Root uses ordinary repository safety, serializes shared
+resources, and preserves unrelated dirty work.
 
-- Coordinator thread: control plane only. It may inspect, assign, lease, steer,
-  monitor, route findings, and report. It does not edit product source, product
-  tests, canonical state batons, release front-door docs, reverse-engineering
-  material, or runtime proof artifacts.
-- Worker parent thread: the sole writer in its assigned branch, worktree, path
-  family, and resource scope. It owns implementation judgment, verification,
-  report writing, and its bounded commit.
-- Worker subagents: specialist or adversarial advisers by default. They are
-  read-only unless the worker explicitly isolates a non-overlapping subtask
-  with a safe write set.
-- Review threads: read-only. They produce findings with owner, evidence,
-  severity, correction, and acceptance criteria.
-- Integration thread: the only owner of canonical merge, conflict resolution,
-  `goal.md`, canonical state batons, shared readiness/front-door docs, and
-  cross-slice claim reconciliation after affected leases release.
-- Acceptance thread: fresh and read-only. It attacks the integrated result and
-  accepts, accepts with explicit blockers, or rejects with a finite correction
-  list.
+Root explicitly activates this overlay only when it deliberately creates:
 
-Unknown ownership means read-only. A thread that cannot prove its path or
-resource ownership must stop and ask the coordinator or integration owner.
+- two or more concurrent writers;
+- a recurring automation wave;
+- an independent acceptance role with a durable handoff; or
+- collision-prone shared-resource work whose ownership cannot remain implicit
+  in the active root operation.
+
+Activation should name the participating roles, write sets, shared resources,
+integration owner, stop conditions, and which contracts in this directory
+apply in one ignored/local activation record before a non-root writer edits.
+Do not infer activation from the existence of subagents, a long-running goal,
+a review request, or access to multiple worktrees.
+
+## Root And Optional Roles
+
+- **Root task (default):** owns the active slice, edits, integration, shared
+  state, validation, commits/pushes, consequential actions, and final
+  acceptance.
+- **Subagents/consults (default):** bounded read-only advisers. Root may assign
+  a non-overlapping write task explicitly; that assignment, not agent
+  existence, creates write ownership.
+- **Coordinator (optional):** routes an explicitly activated multi-writer wave
+  and does not compete with its writers.
+- **Write worker (optional):** sole writer for the assigned path/resource set.
+- **Integration preparer (optional):** proposes integration order, conflict
+  resolution, and canonical-state reconciliation after writers finish. The
+  current root writes and accepts the final commit.
+- **Acceptance reviewer (optional):** independently attacks an integrated
+  result when consequence or uncertainty warrants it; final acceptance remains
+  with the current root.
+
+Unknown write or process ownership remains read-only. No task terminates an
+unknown process, deletes unknown artifacts, or overwrites another writer's
+changes.
 
 ## Durable And Local State
 
-Durable repo policy lives in tracked docs such as this directory, `AGENTS.md`,
-`CONTRIBUTING.md`, `LOCAL_LAB_OVERLAY.md`, release readiness notes, roadmaps, and
-state batons.
+Durable public-safe policy and accepted truth stay in tracked source:
 
-Use these tracked files as the normal source map:
+- [`AGENTS.md`](../AGENTS.md) for repository routing and boundaries;
+- [`goal.policy.md`](../goal.policy.md) for the normal operating and authority
+  model;
+- [`goal.campaign.md`](../goal.campaign.md) for campaign priorities;
+- [`goal.md`](../goal.md) for the mutable current-slice baton;
+- [`CONTRIBUTING.md`](../CONTRIBUTING.md) for contributor gates;
+- [`LOCAL_LAB_OVERLAY.md`](../LOCAL_LAB_OVERLAY.md) for private payload and
+  evidence roots.
 
-- [AGENTS.md](../AGENTS.md) for agent routing, product lanes, and safety rules
-- [CONTRIBUTING.md](../CONTRIBUTING.md) for lane validation and state baton
-  expectations
-- [LOCAL_LAB_OVERLAY.md](../LOCAL_LAB_OVERLAY.md) for hard-payload and local
-  overlay boundaries
-- [goal.policy.md](../goal.policy.md) for the long-horizon charter and
-  authority boundaries
-- [goal.campaign.md](../goal.campaign.md) for multi-lane milestones and
-  next-slice priority
-- [goal.md](../goal.md) for the mutable active-slice baton, owned by integration
-  during coordinated campaigns
-- [roadmap/goals/full-rebuild-campaign-slash-goal.md](../roadmap/goals/full-rebuild-campaign-slash-goal.md)
-  for the durable full-reconstruction `/goal` text
-- `developer_agent_state.json` and `documentation_agent_state.json` for
-  canonical implementation and documentation batons after integration
+Volatile coordination state remains ignored/local when the overlay is active:
 
-Volatile campaign-control state stays local and ignored:
+- thread/session identifiers;
+- temporary write and resource claims;
+- process identities and private proof paths;
+- raw reports, prompts, logs, and tool transcripts;
+- disposable worktrees and scratch artifacts.
 
-- active thread/session IDs
-- worker prompts and raw logs
-- process IDs and temporary resource locks
-- local proof paths and raw runtime evidence
-- App Server traffic and tool transcripts
-- temporary worktrees and scratch reports that include local-only details
+Sanitize accepted findings into ordinary source, tests, contracts, docs, or
+state. Do not make local coordination records the only durable source of truth.
 
-Useful accepted findings should be sanitized and folded into ordinary repo docs,
-state batons, readiness notes, or tests by the integration owner. Do not keep
-durable truth only in local campaign reports.
+## Overlay Contracts
 
-## Required Contracts
-
-- [WORKSTREAM_CONTRACT.md](WORKSTREAM_CONTRACT.md) defines write ownership,
-  path families, integration boundaries, and stop conditions.
-- [RESOURCE_LEASES.md](RESOURCE_LEASES.md) defines exclusive machine-resource
-  leases and cleanup expectations.
-- [REPORT_CONTRACT.md](REPORT_CONTRACT.md) defines worker, reviewer,
-  integration, and acceptance report fields.
+- [WORKSTREAM_CONTRACT.md](WORKSTREAM_CONTRACT.md) defines concurrent write
+  ownership and integration boundaries.
+- [RESOURCE_LEASES.md](RESOURCE_LEASES.md) defines optional shared-resource
+  claims and collision safety. A claim never grants or withholds action
+  authority.
+- [REPORT_CONTRACT.md](REPORT_CONTRACT.md) defines reports for activated
+  multi-role waves; ordinary root slices use normal handoff/state updates.
 - [AUTOMATION_STORAGE_GHIDRA_POSTURE.md](AUTOMATION_STORAGE_GHIDRA_POSTURE.md)
-  defines the current automation shutdown override plus future reauthorization
-  policy for high-throughput automation, storage sentinels, Ghidra/headless
-  gates, proof-retention, consult, and advancement-vs-hygiene posture.
+  preserves bounded automation, storage, evidence, and Ghidra safety rules.
 
-For contributor setup, payload safety, and normal lane validation, continue to
-use [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURITY.md](../SECURITY.md), and
-[LOCAL_LAB_OVERLAY.md](../LOCAL_LAB_OVERLAY.md).
+Standing and fresh action authority comes only from
+[`goal.policy.md`](../goal.policy.md) plus a newer direct maintainer instruction,
+not from this overlay.

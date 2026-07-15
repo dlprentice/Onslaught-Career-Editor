@@ -1,304 +1,175 @@
 # Automation, Storage, Ghidra, And Proof Posture
 
-Status: active coordination posture
-Last updated: 2026-07-13
+Status: optional coordination posture
+Last updated: 2026-07-15
 
-Use this document before assigning, accepting, or integrating coordinated work
-that touches recurring automation, storage retention, Ghidra/headless work, or
-runtime/static proof evidence. It supplements the path/resource/report contracts
-in this directory and does not authorize product-source edits, hard-payload
-commits, release actions, installed-game mutation, original `BEA.exe` mutation,
-or live Ghidra mutation by itself.
+Use this document for recurring automation, storage retention, live Ghidra, or
+bulky proof work. It preserves safety and evidence rules; it does not replace
+the standing campaign authority or fresh-authorization boundaries in
+`goal.policy.md`.
 
-## Current Shutdown Override
+## Current Automation Posture
 
-As of the 2026-07-03 shutdown closeout, the high-throughput Onslaught
-automations are stopped by explicit user request. The standing-wave launcher,
-Ghidra/RE sentinel, storage/Ghidra sentinel, validation/drift sentinel, and
-chief heartbeat should not run again unless the user explicitly authorizes a
-new bounded automation plan.
+The historical high-throughput standing-wave launcher and Ghidra, storage,
+validation, and heartbeat sentinels remain stopped. The durable `/goal` is not
+one of those background automations: its normal operating model is one root-led
+slice at a time in the active task.
 
-The operational model after shutdown is one coordinator-led slice at a time:
-name the owner, write scope, acceptance owner, consult plan, validation gates,
-and stop conditions before editing. The sections below remain the policy for
-any future reauthorized automation or manual lane with the same action family;
-they are not current scheduling authority.
+Root may deliberately restart a bounded automation when it has a specific
+objective, owner, write/resource scope, validation, stop rule, and cleanup
+path. Merely resuming the reconstruction goal does not restart old schedulers,
+sentinels, or persistent worker lanes.
 
-## Active Storage Posture
+## Storage Posture
 
-- The current maintainer-local scratch/backup posture uses a configured
-  removable scratch/backup root for new backup-producing Ghidra work and bulky
-  temporary proof output when it is mounted, writable, and explicitly selected
-  by the responsible lane. Expected top-level families are backup, scratch,
-  proof, and cleanup-manifest roots under that configured root, with exact
-  subpaths recorded only in ignored maintainer-local manifests.
-- Exact drive letters, roots, volume identifiers, local cleanup manifests,
-  free-space dumps, raw proof roots, and per-run artifact paths stay in ignored
-  local policy/manifests or campaign reports, not tracked docs.
-- Historical backup/archive drive strings in old wave evidence are provenance
-  only. Do not treat a legacy drive root as the live backup target, a required
-  runtime dependency, or a fallback to hard-code in tools.
-- If the configured scratch/backup root is missing or unhealthy, stop and
-  record the blocker or choose another explicit local/app-owned ignored root
-  for that run. Do not silently fall back to legacy archive roots.
-- The scratch root is not the only durable copy of source, release assets,
-  active claim-bearing summaries, or current live-project backup decisions.
+- New bulky proof output and backup-producing Ghidra work uses an explicitly
+  selected ignored/app-owned local root or configured scratch/backup root.
+- Exact volumes, local paths, manifests, payload names, and deletion logs stay
+  ignored/local.
+- Historical drive strings are provenance only and are never implicit active
+  configuration.
+- A missing or unhealthy scratch root causes root to choose another exact safe
+  ignored root or skip that slice. Never fall back silently.
+- Scratch is not the only durable copy of source, active claim-bearing
+  summaries, release assets, or current backup decisions.
 
-## Storage Sentinel
+Normal cleanup may remove only invocation-owned disposable output. Deleting,
+moving, pruning, compressing, or overwriting ambiguous or irreplaceable proof,
+Ghidra projects/backups, user payloads, or broad storage families is genuinely
+destructive and needs fresh maintainer authority.
 
-When explicitly reauthorized, the storage/Ghidra sentinel is a recurring
-posture check with a two-hour active-campaign cadence. It is a safety and
-routing loop, not a deletion authority. It is stopped under the current
-shutdown override.
+## Optional Storage Sentinel
 
-The sentinel should:
+If root explicitly restarts a storage sentinel, it remains read-only unless a
+separate bounded cleanup action is both covered by normal cleanup and tied to
+invocation-owned output. A pass should verify a concrete posture item or report
+the exact absence of safe useful work; status churn is not advancement.
 
-- check that the configured scratch/backup posture is still mounted, writable,
-  and not drifting back to legacy archive roots;
-- perform at least one concrete read-only or conservative action, such as root
-  availability inspection, lease review, backup-summary freshness check,
-  storage-pressure classification, or tracked posture-drift scan;
-- classify storage pressure at a summary level and report only sanitized
-  conclusions in tracked state or docs;
-- confirm that backup/proof material needing retention has a current summary,
-  checker, ledger, recreation note, or retained replacement decision;
-- flag stale raw bundles, duplicate scratch, or cleanup candidates for a human
-  or integration-owner decision;
-- keep exact local roots, raw manifests, private payload names, proof paths,
-  and deletion command logs out of tracked docs.
-
-Every storage sentinel pass must produce exactly one primary deliverable:
-
-- `ADVANCEMENT`: a concrete storage-support result such as verified backup
-  freshness/read-back evidence, mounted/writable configured-root posture
-  confirmation, retained replacement or summary decision for a proof family,
-  cleanup blocker classification, or non-destructive scratch setup that unblocks
-  a named active RE/proof lane; or
-- `BLOCKED_NO_CONCRETE_WORK_AVAILABLE_<yyyymmdd-hhmm>`: a quiet blocker record
-  naming checked roots, relevant open slices or blockers, why no safe work was
-  available, the next eligible concrete action, and `retry_after` no later than
-  24 hours.
-
-The sentinel must not:
-
-- delete, prune, move, compress, or rewrite proof/Ghidra material without
-  explicit user authority, a candidate-specific local manifest, and a retained
-  replacement or public-safe summary decision;
-- mutate live Ghidra projects, copied executables, installed game folders, or
-  original `BEA.exe`;
-- promote runtime/static/rebuild claims from storage observations alone.
+Useful read-only checks include configured-root availability, backup-summary
+freshness, storage-pressure classification, retained-evidence coverage, and
+tracked policy drift. Do not expose exact private roots or raw manifests in
+tracked state.
 
 ## Proof Evidence Retention
 
-Prefer tracked, public-safe evidence that future contributors can audit without
-private payloads:
+Prefer tracked public-safe artifacts that future contributors can audit:
 
-- compact proof summaries and readiness notes;
+- compact proof summaries and accepted behavior contracts;
 - validators, checkers, scripts, and schemas;
-- JSON/JSONL/TSV ledgers that omit raw payloads and private roots;
-- reproduction steps and arm-gate descriptions;
-- hashes or backup IDs only when they do not reveal local private paths.
+- sanitized JSON/JSONL/TSV ledgers;
+- reproduction and arm-gate descriptions; and
+- non-sensitive hashes or proof labels.
 
-Raw runtime proof bundles, screenshots, frame dumps, CDB logs, copied-game
-output, full Ghidra project stores, and raw private manifests are temporary
-local evidence unless a separate reviewed policy says otherwise. They may be
-regenerated for a bounded future proof lane; they should not become permanent
-tracked evidence or assumed release inputs.
+Raw runtime bundles, screenshots, frame dumps, debugger logs, copied-game
+output, full Ghidra stores, and raw private manifests remain ignored/local.
+They do not become release inputs or durable public evidence merely because an
+automation produced them.
 
-## High-Throughput Automation
+## Optional High-Throughput Automation
 
-Restored standing-wave and Ghidra/RE automation may advance bounded work several
-times per day only when explicitly reauthorized and when authority, leases, and
-clean state are clear. High throughput means smaller, sharper slices with faster
-integration, not weaker gates. Under the current shutdown override, this is
-policy context only and not an active loop.
+An explicitly restarted automation advances small bounded slices; it does not
+weaken authority, identity, payload, evidence, validation, or cleanup rules.
+Each cycle names:
 
-Each automation or worker cycle must close with exactly one primary deliverable:
+- the question and primary artifact;
+- write/resource ownership;
+- evidence class and non-claims;
+- proportional independent review when consequence or uncertainty warrants;
+- validation and stop conditions; and
+- the root-owned integration/state action.
 
-- `ADVANCEMENT`: an accepted bounded artifact or state/policy/RE/proof/tooling
-  delta under a named evidence class; or
-- `BLOCKED_<root-cause-slug>_<yyyymmdd-hhmm>`: a blocker with `code`,
-  `evidence`, `prior_attempt`, `owner`, `next_action`, `retry_after` no later
-  than 24 hours, and `duplicate_check`.
+The cycle returns a verified advancement, an exact blocker, or no accepted
+change. Logs, rereads, status updates, and passing unrelated gates are not
+advancement. The current root remains the final acceptance and integration
+owner. Other roles may advise or prepare reconciliation but gain root authority
+only through explicit baton succession and the handoff checks in
+`goal.policy.md`.
 
-Activity, logs, re-reading, status updates, broad planning, and validation gates
-are secondary. They do not count as advancement unless they directly remove a
-named blocker and name the next real advancement slice. A producing lane cannot
-self-accept terminal success; acceptance must come from a distinct reviewer,
-integration owner, acceptance owner, or human gate.
-
-Each substantive automated slice or related batch should name:
-
-- the bounded question it answers;
-- the files and resources it owns;
-- the proof class it may claim and the proof classes it does not claim;
-- its normal/adversarial review envelope and any material refresh trigger, plus
-  `CONSULT_UNAVAILABLE` / `CONSULT_BOUNDARY` records for missing lanes;
-- exact validation commands or a bounded reason they could not run;
-- integration-owner state/doc updates if canonical batons are under lease.
-- closeout markers:
-  `ADVANCEMENT`, `PRIMARY_DELIVERABLE`, `ACCEPTED_BY`, `CONSULTS_USED`,
-  `SAFETY`, and `GOAL_DELTA`.
-
-Automation should stop rather than widen scope when branches, worktrees,
-resource leases, local roots, validation results, or authority boundaries are
-unclear.
-
-## Nontrivial Operation Trigger
-
-Treat an operation as nontrivial when it is more than a typo-only change or a
-pure read with no durable effect. Nontrivial work includes:
-
-- product, source, test, tooling, docs, state, or policy work beyond typo fixes;
-- RE maps, Ghidra, headless, proof, storage, release, runtime, account, or
-  spend work;
-- disputed, high-collision, broad, cross-slice, or claim-promoting work;
-- any work that could alter public posture, evidence accounting, authority,
-  cleanup, release readiness, user-facing claims, or future automation.
-
-Lane expectations:
-
-- Chief heartbeat: coordinate one owner, slice, current gate, next deliverable,
-  and handoff per material update. Status-only loops are not deliverables.
-- Standing-wave launcher: start or advance one bounded public-safe slice with a
-  named artifact, evidence class, acceptance criteria, and wall-time cap.
-- Ghidra/RE sentinel: ship a measurable static/RE delta such as function/xref
-  mapping, type/structure evidence, sidecar map, checker, or proof-plan update.
-  Renames, rescans, and empty comments are not sufficient by themselves.
-- Validation/drift sentinel: clear one blocker that is blocking another lane,
-  with the blocked lane, artifact, and failing gate named.
-- Storage/Ghidra sentinel: perform the two-hour storage-support result above,
-  read-only unless separate cleanup/mutation authority exists.
+Automation stops on repository/base drift, contested ownership, unknown
+processes, target ambiguity, validation failure, missing safe storage, or an
+operation that requires spending or genuinely destructive authority.
 
 ## Ghidra And Headless Gates
 
-Read-only Ghidra/headless work may inspect tracked exports, local Ghidra
-read-back, xrefs, instructions, decompile rows, and static ledgers when the
-assignment has a `live-ghidra-project` lease or is explicitly offline against
-tracked exports. Read-only static review can advance documentation only to the
-evidence class it actually checked.
+Read-only tracked-export analysis needs no local project claim. Live Ghidra
+inspection or mutation is serialized through the active root operation or an
+exclusive `live-ghidra-project` resource claim when concurrent work is active.
+Standing campaign authority covers live inspection, mutation, save, and read-
+back; the following execution gates still apply.
 
-Mutation is a separate gate. A Ghidra mutation lane requires:
+Before a mutation batch:
 
-- explicit mutation authority and an exclusive `live-ghidra-project` lease;
-- a current backup plan to the active ignored scratch/backup root or another
-  explicit local/app-owned ignored root, using the complete `.gpr` plus
-  recursive `.rep` store rather than a top-level or marker-only copy;
-- per-relative-file hash equality and a disposable read-only program-open
-  receipt before mutation; use `tools/ghidra_project_backup.py` and
-  `tools/GhidraProjectOpenProbe.java` for the supported focused gate;
-- dry-run or probe evidence before apply when a script can mutate the project;
-- serialized write/read-back per address or data item;
-- ledger and attempt-log updates for every attempted mutation;
-- explicit save/checkpoint discipline and read-back after restart when needed;
-- public docs updated only after read-back confirms the intended state.
+- identify the exact project/program and ensure no unknown user owns it;
+- select an ignored backup root;
+- back up the complete `.gpr` marker plus recursive `.rep` store with
+  `tools/ghidra_project_backup.py`;
+- verify per-relative-file hashes and a disposable read-only program open with
+  `tools/GhidraProjectOpenProbe.java`;
+- dry-run the intended script/rows and reject bad, missing, locked, ambiguous,
+  or mismatched targets; and
+- identify the exact rollback endpoint.
 
-After a mutation batch, create a new complete backup and repeat the same hash,
-read-only open, and zero-post-open-drift verification. A project shell, partial
-store, or unverified copy cannot satisfy either the pre-mutation or closeout
-gate.
+During mutation:
 
-Stop the batch at the first apply or read-back mismatch. Preserve the failed
-state and attempt receipt; do not continue to later addresses. The mutation
-baton must name the verified rollback endpoint before apply. Any restoration is
-a separate exclusive-lease action: close all project users, preserve the failed
-pair, restore the complete `.gpr` plus recursive `.rep` pair, then repeat hashes,
-the disposable read-only open, and restart read-back before resuming. When
-correction packs share an address, preflight must reject ambiguity unless one
-record explicitly declares supersession; for the 2026-07-13 closeout,
-`0x00481060` in the targeted pack supersedes the Cursor-delta record.
-Rendered signature strings are not blanket prototype authority. Rendering-only
-rows must use field-scoped rename/parameter-label operations. A structured
-prototype row requires its own leased mutation, an expected calling
-convention/type/storage/purge key from dry-run, and exact prototype-key
-read-back before continuing.
+- serialize write and read-back per address/data item;
+- record every attempted mutation in the applicable local/public-safe ledger;
+- stop at the first apply or read-back mismatch;
+- preserve the failed state and attempt receipt; and
+- never touch the installed game or original executable bytes.
 
-Headless apply mode must fail closed on bad rows, missing targets, lock
-contention, dry-run mismatches, absent backups, or unclear ownership. It must
-not touch installed game files or original executable bytes.
+After a successful batch:
 
-## Structured Authority Baton
+- save/checkpoint deliberately;
+- restart/read back when the claim requires persistence proof;
+- create and verify a new complete backup with the same hash and disposable-
+  open checks; and
+- update public docs only to the read-back evidence actually obtained.
 
-Runtime proof, live Ghidra mutation, destructive cleanup, release,
-external-account action, and spend require a structured authority baton before
-execution. The baton may live in `goal.md`, a local campaign record, or another
-explicit coordinator/integration-owner assignment, but it must be available
-before the action starts.
+Restoration is serialized recovery. Close project users, preserve the failed
+pair, restore the complete verified pair, repeat hashes/read-only open, and
+confirm restart read-back before resuming. If restoration would overwrite an
+ambiguous or irreplaceable state rather than an invocation-owned failed copy,
+it is genuinely destructive and needs fresh authority.
 
-The baton must name:
+Rendered signature strings are not blanket prototype authority. Structured
+prototype changes require exact calling-convention/type/storage/purge
+expectations and exact prototype-key read-back. Headless apply fails closed on
+bad rows, missing targets, lock contention, backup failure, drift, or unclear
+ownership.
 
-- action family;
-- allowed commands and forbidden commands;
-- required path and resource leases;
-- proof/storage root policy;
-- validation gates;
-- cleanup or rollback steps;
-- expiration or review deadline;
-- spend cap and payment-method handle when money is in scope.
+## Standing And Fresh Authority
 
-Without that baton, the only allowed work is read-only planning, blocker
-reporting, or consult preparation.
+The standing campaign authority in `goal.policy.md` covers copied-runtime
+observation/mutation, live Ghidra work, normal cleanup, version control,
+release/publication, and project-scoped external actions. It removes repeated
+human baton requests but not exact target identity, resource serialization,
+backups, gates, attempt caps, rollback, or cleanup.
 
-## Consult Posture
+Spending and genuinely destructive operations beyond normal cleanup require
+fresh maintainer authority. The installed Steam game and original `BEA.exe`
+remain immutable, and proprietary evidence remains local.
 
-Each substantive automation, storage, Ghidra, public-claim, release-posture, or
-collaboration-policy objective gets one bounded normal/adversarial review
-envelope under the global Codex multi-agent lane contract. Under the current
-direct user policy, new or resumed Codex-owned subagents use `gpt-5.6-sol` at
-medium effort by default; harder work may raise the supported Sol effort.
-Terra/Luna fallback or lower effort requires a newer direct user instruction.
-External normal/adversarial consults use the canonical command
-binding when the required read-only
-sandbox and authentication are available. Routine follow-through inside the
-envelope does not create recursive consult loops. If an external prompt cannot
-stay bounded and non-secret, record the boundary and use focused Codex-owned
-review. Consults are advisory; Codex root or the integration owner remains
-responsible for final scope, safety, state reconciliation, and acceptance.
-Unresolved adversarial blockers prevent terminal success unless the
-coordinator or integration owner records a specific override rationale.
+## Review Posture
 
-Each `CONSULT_UNAVAILABLE` record must include the exact tool, command, model,
-authentication, usage-limit, or safety-boundary reason and the Codex-root
-verification or coordinator/integration-owner override used to continue.
+Root selects independent review according to consequence, uncertainty, breadth,
+and claim risk. Normal/adversarial review and sanitized external consults are
+useful for broad policy, live mutation, destructive recovery, release claims,
+or disputed evidence, but fixed role counts and empty consult placeholders are
+not acceptance criteria.
 
-Prepared consult lanes for this posture class:
-
-| Lane | Normal brief focus | Adversarial brief focus |
-| --- | --- | --- |
-| Codex root and user-routed Sol Codex-owned subagents | Check whether the patch makes the storage/Ghidra/proof posture durable, concise, and consistent with repo contracts. | Attack for hidden authority expansion, state/write conflicts, hard-payload leakage, stale legacy-drive reliance, weak proof-class separation, and missing validation. |
-| Canonical external consult lane | Review practical contributor clarity, collision risk, policy reasoning, and evidence sufficiency from a bounded sanitized brief. | Attack for ambiguous ownership, unsafe deletion or mutation, overbroad cleanup language, proof-retention mistakes, and claims that exceed evidence. |
-
-Consult briefs must not include secrets, `.env` values, auth/session/cache/log
-material, raw local manifests, exact local proof roots, hard payloads, copied
-executables, screenshots/frame dumps, raw CDB logs, full Ghidra project paths,
-customer/private data, active thread IDs, or raw campaign reports.
-
-External consult packets should be whitelist-based: public goals, redacted
-status, allowed public files, forbidden context, non-secret task summary, claim
-boundary, requested output, and stop rule. Record lane outcome summaries and
-tool failures; do not paste raw external prompts or raw logs into tracked docs.
+Review is advisory. Root resolves material findings and owns final scope,
+safety, state, publication, and acceptance. External briefs contain no secrets,
+credentials, local private paths, hard payloads, raw evidence, active IDs, or
+action-bearing material.
 
 ## Advancement Versus Hygiene
 
-Real project advancement requires an accepted, bounded artifact or change that
-moves a specific capability, proof plan, static contract, checker, user
-workflow, or durable policy forward under a named evidence class and updates
-the relevant docs or state after validation.
+Real advancement changes a bounded capability, behavior contract, checker,
+workflow, static/runtime evidence map, rebuild truth, or durable operating
+policy and verifies that result. Hygiene-only checks are useful when they clear
+a named blocker or protect active evidence, but they are not automatically an
+advancement.
 
-Hygiene-only checks are still useful, but they are not enough to claim
-advancement by themselves. Examples include:
-
-- running repo hygiene, docs, link, or JSON parse gates without a resulting
-  accepted source/docs/proof change;
-- storage inventory without a retained summary, deletion decision, or restored
-  headroom result;
-- automation heartbeats that only observe status;
-- mirror refresh or baton wording that does not change the next executable
-  slice, claim boundary, or validation posture.
-
-Hygiene/status/re-read/gate-only work may be reported as `ADVANCEMENT` only
-when it removes a named blocker and names the next advancement slice.
-
-If a slice is hygiene-only, report it as hygiene-only. Do not promote static
-closure, clean validation, storage headroom, or automation cadence into runtime,
-visual, gameplay, release, rebuild, or no-noticeable-difference proof.
+Do not promote clean storage, passing validation, static closure, automation
+cadence, or review volume into runtime, visual, gameplay, release, rebuild, or
+parity proof.

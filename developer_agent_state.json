@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-15",
-  "routingPolicy": "Follow the global Codex multi-agent lane contract. Under current direct user policy, every new or resumed Codex-owned worker uses gpt-5.6-sol at medium effort by default; harder work may raise Sol effort, and Terra/Luna fallback or lower effort requires a newer direct user instruction.",
-  "currentFocus": "Full reconstruction campaign; M5.5 unattended Media/Asset native workflow acceptance landed at 034f01c1; current slice M2.3 target-acquisition static contract; shield live pair remains authority-blocked.",
+  "routingPolicy": "Single-root default: the current root owns integration, validation, state, commits/pushes, consequential actions, and final acceptance. Subagents/consults are bounded advisers unless root explicitly assigns a non-overlapping write set; coordination/worktrees/resource claims activate only for deliberate concurrency.",
+  "currentFocus": "Full reconstruction campaign; M0.6 single-root operating foundation accepted; current slice remains M2.3 target-acquisition static contract; shield live measurement is standing-authorized but still pending exactly two copied-target attempts.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -16,7 +16,7 @@
       "latest": "v1.0.9",
       "status": "published unsigned portable WinUI ZIP",
       "loreDocuments": 949,
-      "newReleaseAuthorized": false
+      "newReleaseAuthorized": true
     },
     "repository": {
       "registeredWorktrees": 1,
@@ -130,11 +130,12 @@
       "task5Preflight": "Preflight corrected ambient-versus-effective executable identity and private AppConfig routing. Retries 1-10 exposed and bounded path-budget, CDB identity/null, MASM/module syntax, private-diagnostic, active-log sharing, native INPUT-layout, exact-input, target/debugger teardown, process-handle, and invalid cross-process timestamp-order defects. The correction integrated through f74ac902 retains the exact no-delete CDB log stream, strictly parses one bounded global `.lastevent` target process-exit event for the exact receipt-owned PID and nonzero thread, and preserves every process/module/receipt, marker, hash, managed-stop, finalized-log, and census guard. Retry 11 exposed the exceptional CDB -1/forced-target 0xFFFFFFFF relationship; the accepted correction through 647bbaa4 preserves normal exit zero and requires the exact target status, ForceRequested plus ExitObserved, and a semantically valid retained transcript. Retry 12 used wholly fresh controls and again stopped in noInputControl with no published matrix. All identity, fingerprint, stop, hash, and zero-process checks passed, but its WinDbg build emitted eleven legitimate post-quit NatVis unload lines while the parser admitted only one. The run failed closed on that bounded terminal-grammar defect before either positive role.",
       "status": "Tasks 1-4 are accepted. Task 5 has twelve preserved failed executions and no published identity claim. Retry 12 proves neither Q causality nor Transform/Morph/Move/JetPart identity; it exposed a repeated post-quit NatVis shutdown-grammar defect. Another live run requires an integrated strict path-bound correction and wholly fresh controls."
     },
-    "walkerTrajectoryMeasurement": {
-      "tooling": "Lifecycle e04cce2e plus tick-aware estimator 58d8b5e5 and source-reference d4b9f83e are on main. Focused suites: sampler 27/27, orchestrator 31/31, source-reference 20/20. No accepted live measurement exists.",
-      "claimBoundary": "The future measurement is scalar motion response in declared retail world-coordinate units only. It does not establish physical distance, a retail-coordinate-to-Core scale, actor- or camera-relative direction, grounded or terrain state, turning, morph, handling, timing below the 10 ms cadence, parity, or Core acceptance. Physics-update period and velocity units in the estimator remain hypothesized.",
-      "executionBoundary": "Prior live pair walker-trajectory-live-20260713-pair-01 failed attempt 1 (null runtime-chain / lifecycle deadline); attempt 2 absent; no contract. Fresh exactly-two-attempt run is authorized under campaign runtime policy with copied targets only.",
-      "sourceReference": "tools/battleengine_walker_source_reference.py on main at d4b9f83e. Core translation blocked until measured contract + translation policy."
+    "walkerForwardScalarContract": {
+      "status": "Accepted and closed: copied-runtime pair p27 supports walker-forward-scalar-response-v2; the accepted translation policy maps it to Core WalkerSpeedPerTick=100.",
+      "tooling": "Lifecycle e04cce2e plus tick-aware estimator 58d8b5e5 and source-reference d4b9f83e are on main. Focused suites: sampler 27/27, orchestrator 31/31, source-reference 20/20.",
+      "claimBoundary": "The p27 contract is bounded scalar motion response in declared retail world-coordinate units. It does not establish physical distance, a universal coordinate scale, actor- or camera-relative direction, grounded or terrain state, turning, morph, handling, sub-cadence timing, gameplay parity, or visual parity.",
+      "remeasurementBoundary": "Do not reopen walker-forward measurement or Core translation without new evidence that specifically overturns the accepted p27/v2 contract or its translation policy.",
+      "sourceReference": "tools/battleengine_walker_source_reference.py on main at d4b9f83e remains source-shaped corroboration, not independent retail behavior proof."
     },
     "agentGuidanceAudit": {
       "integrated": "56738f9b",
@@ -153,21 +154,20 @@
     },
     "boundaries": [
       "No installed-game or original BEA.exe mutation.",
-      "No release, signing, installer/MSIX/Store, Host/Join, online-ready, gameplay-parity, visual-parity, or rebuild-parity claim.",
+      "No release occurred in the foundation slice. Configured-project release/publication creation is standing-authorized but remains exact-target, evidence, artifact, and readiness gated; destructive replacement/withdrawal and spending need fresh authority.",
+      "No Host/Join, online-ready, gameplay-parity, visual-parity, or rebuild-parity claim.",
       "Current rebuild implementation must be labeled RE-informed unless a separately staffed sealed-spec process and license review support a stronger clean-room claim."
     ]
   },
   "activeBlockers": [
-    "The shield live dual-accept remains blocked by BLOCKED_SHIELD_LIVE_AUTHORITY_20260714-2317: no complete runtime lease is present, so no launch or repeat authority audit is allowed until the baton materially changes.",
-    "No accepted two-attempt copied-runtime walker measurement exists; therefore no measured walker scalar-response contract exists. Even after two passing attempts, deterministic Core remains blocked until a retail-coordinate-to-Core scale, tick-response, rounding, quantization-error, and overflow policy is accepted.",
+    "No accepted two-attempt copied-runtime shield measurement exists; therefore no shield regeneration behavior contract or retail-derived Core shield constant exists.",
     "Complete private-corpus extraction/export coverage is not yet executed. The 301-archive observation census and bounded surface-reconciliation producer are prerequisites only; the full export is blocked by absent legacy native extractor DLLs and missing Visual Studio C++ targets (MSB4278)."
   ],
   "openQuestions": [],
   "nextSteps": [
     "Consolidate existing pinned-source and Steam-static player target-selection evidence into one public-safe machine-readable M2.3 contract and regression checker, preserving runtime non-claims.",
-    "Authorize and execute one fresh exactly-two-attempt copied-runtime walker measurement with the integrated e04cce2e tooling only when a complete current lease exists; publish nothing if either attempt fails.",
-    "If both attempts pass, derive one bounded v2 scalar-response contract in declared retail coordinate units; do not infer physical distance or Core units.",
-    "Accept an explicit retail-coordinate-to-Core translation contract covering scale, tick response, rounding, maximum quantization error, and overflow bounds before implementing Forward/Move/UpdateWalkCycle behavior in deterministic Core with headless and Godot verification.",
+    "When selected by campaign priority, execute exactly two copied-runtime walker shield attempts under standing campaign authority; if either attempt fails, publish no behavior contract.",
+    "Only if both shield attempts pass, derive the bounded shield behavior contract and translation policy before any deterministic Core shield change.",
     "Restore the legacy native extractor runtime through an authorized supported toolchain path, then produce real six-lane terminal outcomes and run the bounded ignored/local reconciliation; do not promote surface accounting into exhaustive-target or successful-extraction claims."
   ]
 }

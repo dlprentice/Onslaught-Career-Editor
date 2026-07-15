@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-07-12",
-  "currentFocus": "Crosswalk one authentic subsystem across the Steam binary, pinned Stuart source, pinned AYA exporter, and rebuild, then implement only the accepted behavior contract.",
+  "lastUpdated": "2026-07-15",
+  "currentFocus": "M2.3 target-acquisition static contract under the single-root campaign foundation; crosswalk Steam static evidence and pinned source into a bounded contract before runtime or Core claims.",
   "currentCounters": {
     "visiblePatchRows": "20 visible options: 9 stable, 11 experimental",
     "catalogRows": "29/29 target specimen identity and policy metadata rows"
@@ -37,12 +37,12 @@
     "Stuart's Onslaught source is architecture and naming evidence; Steam retail binary, real files, and runtime read-back remain higher authority.",
     "references/Onslaught is pinned at 792545b996365f383781c666d145ea6cbda83f3a and references/AYAResourceExtractor at 6f3df296201ecc62bc09c39f7a93d8a4fb2f1638; provenance, licenses, build posture, and capability gaps require a fresh inventory.",
     "Binary review, source crosswalk, and exporter coverage may proceed in parallel; rebuild implementation consumes only a separately accepted evidence contract and feeds ambiguities back to RE.",
-    "No live Ghidra mutation or copied-runtime proof is authorized by the current baseline slice."
+    "Live Ghidra mutation and copied-runtime proof are standing-authorized for the current root when exact target, copy identity, backup/read-back, attempt, evidence, and cleanup gates pass; this foundation slice performed neither."
   ],
   "boundaries": [
     "Keep the installed game and original BEA.exe read-only.",
     "Do not commit copied executable bytes, extracted assets, full Ghidra databases, raw debugger logs, screenshots/frame dumps, or private proof roots.",
-    "Ghidra mutation requires a separate structured baton, exclusive lease, backup, dry run, serialized write/read-back, and ledger update.",
+    "Ghidra mutation is root-serialized under standing campaign authority and still requires exact project identity, complete verified backup, dry run, stop-on-first-mismatch serialized write/read-back, rollback, and ledger update.",
     "Any future strict clean-room lane must not expose implementation agents to source or decompilation material; all rebuild code must avoid proprietary code and payloads and carry explicit provenance."
   ],
   "activeBlockers": [
@@ -52,9 +52,9 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Inventory the two pinned reference submodules: fork/upstream provenance, license, build/test posture, source ownership, exporter format coverage, and known gaps.",
-    "Select one recognizable subsystem and review its 5-20-function Steam call-chain cluster under the measured quality rubric.",
-    "Crosswalk source owners and exporter/asset dependencies against Steam static/runtime evidence, recording every disagreement instead of choosing by intuition.",
-    "Freeze an accepted public-safe behavior contract and implement that authentic slice in deterministic Core plus the Godot adapter with headless and native evidence."
+    "Complete the current M2.3 target-acquisition static contract and checker from pinned-source plus Steam-static evidence without promoting runtime semantics.",
+    "If M2.3 static alignment is insufficient, record the exact gap rather than inventing target angle, distance, ordering, or causality behavior.",
+    "When campaign priority selects it, execute exactly two copied-target walker shield attempts under standing campaign authority; if either attempt fails, publish no behavior contract.",
+    "Translate only an accepted public-safe behavior contract into deterministic Core; keep Godot and WinUI as consumers rather than retail evidence."
   ]
 }

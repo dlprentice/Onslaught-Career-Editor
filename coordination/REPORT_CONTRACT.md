@@ -1,167 +1,93 @@
-# Report Contract
+# Coordinated Report Contract
 
-Status: active
-Last updated: 2026-07-11
+Status: optional concurrency overlay
+Last updated: 2026-07-15
 
-Worker, review, integration, and acceptance reports are campaign-control
-artifacts first. Write them to the local campaign root unless an integration
-owner sanitizes a durable finding into ordinary repo docs, state batons, or
-readiness notes.
+This contract applies to an explicitly activated multi-writer, automation, or
+separate-acceptance wave. Ordinary single-root work does not require a worker
+report, local campaign report tree, fixed review roster, or acceptance role.
+Root records verified truth directly in the normal source, tests, state baton,
+commit, and user handoff.
 
-## Worker Report Fields
+Reports are useful only when another active role needs a durable handoff. Keep
+them ignored/local unless a sanitized conclusion belongs in ordinary tracked
+project material.
 
-A write worker report must include:
+## Writer Report
 
-- worker ID
-- thread/session ID if known for local campaign coordination only
-- persistent goal
-- slice and claim boundary
-- base commit
-- branch and worktree
-- allowed paths and forbidden paths
-- resource leases used
-- files changed
-- commit, patch/diff handoff, or no-commit authorization status
-- specialist consults
-- adversarial review
-- findings accepted
-- findings rejected with reason
-- exact validation commands and results
-- claims proven
-- explicit non-claims
-- hard-payload boundary confirmation
-- installed-game/original-`BEA.exe` mutation confirmation
-- process cleanup result
-- remaining risks
-- integration notes
-- state/docs updates recommended to the integrator
-- terminal status
-- lease-release confirmation
-- terminal classification: exactly one of `ADVANCEMENT` or `BLOCKED_*`
-- advancement classification: real project advancement or hygiene-only, with
-  named evidence class when advancement is claimed
-- primary deliverable: accepted artifact/change id or well-formed `BLOCKED_*`
-- `ACCEPTED_BY` and one-line `GOAL_DELTA` when claiming advancement
+A concurrent writer reports the minimum information needed to integrate safely:
 
-### Consult Evidence
+- objective, write set, base, and branch/worktree when used;
+- resource claims and release state;
+- files changed and commit/diff status;
+- exact validation and results;
+- accepted claims and explicit non-claims;
+- review findings that materially changed the result;
+- hard-payload, installed-game/original-executable, process-cleanup, and dirty-
+  worktree confirmation as applicable;
+- remaining risk and proposed canonical-state delta; and
+- terminal result: advancement, exact blocker, or no accepted change.
 
-Every worker report must include a `Consult Evidence` entry. For substantive
-objectives or related release batches, name the active review envelope and list
-its lanes separately: Codex normal, Codex adversarial, Cursor/Grok normal, and
-Cursor/Grok adversarial. Under the current direct user policy, new or resumed
-Codex-owned lanes use `gpt-5.6-sol` at medium effort by default, with higher Sol
-effort allowed for harder work; Terra/Luna fallback or lower effort requires a
-newer direct user instruction. External lanes use the
-canonical global command binding from bounded,
-non-secret context when the required read-only sandbox and authentication are
-available. Routine follow-through may reference the existing envelope instead
-of launching another review. Refresh it only when target, material scope,
-mutation class, authority, trust boundary, or acceptance evidence changes.
+Do not copy active thread IDs, raw prompts/logs, secrets, private roots, hard
+payloads, screenshots, raw debugger evidence, or full Ghidra paths into tracked
+summaries.
 
-The consult entry must include a brief non-sensitive task-scope summary,
-accepted consult findings, rejected consult findings with reasons, unresolved
-dissent, and any `CONSULT_UNAVAILABLE` reason when a required consult tool,
-model, authentication state, or safety boundary prevents the consult. Unresolved
-blocking dissent prevents terminal success unless the report records the
-coordinator or integration-owner override rationale. Do not paste raw prompts,
-raw logs, local paths, active campaign IDs, secrets, private proof artifacts, or
-full local campaign reports into tracked docs or public summaries.
+## Blocker Record
 
-When a required lane is unavailable, a `CONSULT_UNAVAILABLE` entry must
-identify the exact command, tool, model, authentication state, sandbox or
-safety boundary, or usage limit, plus the focused Codex-root verification or
-coordinator/integration-owner override used to continue.
+An exact blocker normally includes:
 
-A worker cannot claim complete while validation failures are hidden, a required
-report is missing, a forbidden path changed, a resource lease remains active,
-the commit/diff/no-commit status is unidentified, a hard payload or secret was
-added, or its claim exceeds its evidence.
+- specific code/root cause;
+- bounded evidence;
+- prior attempt or why none was safe;
+- owner or external state that can clear it; and
+- next safe action.
 
-Local campaign reports may include active thread or session IDs when needed for
-coordination. Tracked repo summaries and readiness notes should not copy those
-reports wholesale. Sanitize out active IDs, raw prompts, raw logs, private proof
-paths, local payload paths, secrets, credentials, screenshots/frame dumps, raw
-CDB logs, copied executable output, and full Ghidra database paths unless an
-existing public policy explicitly allows the specific non-secret reference.
+Add a retry time only when time or external state can change the result. One
+blocked worker does not block the campaign while root has another safe,
+material slice.
 
-For automation, storage, Ghidra/headless, or proof-retention work, also record
-whether [AUTOMATION_STORAGE_GHIDRA_POSTURE.md](AUTOMATION_STORAGE_GHIDRA_POSTURE.md)
-was followed, which storage/cleanup/Ghidra/proof leases were used, whether the
-storage sentinel remained read-only, and whether any cleanup or mutation was
-explicitly authorized.
+## Review Finding
 
-Required closeout markers for coordinated automation reports:
+Read-only reviewers report:
 
-```text
-ADVANCEMENT: 0|1
-BLOCKED_ITEMS_ADDRESSED: <n>
-PRIMARY_DELIVERABLE: <artifact-id|BLOCKED_*-id>
-ACCEPTED_BY: <lane|integration-owner|acceptance-owner|human|n/a>
-CONSULTS_USED: codex=<normal/adversarial/unavailable>; composer=<normal/adversarial/unavailable>; grok=<normal/adversarial/unavailable>
-SAFETY: clean | baton <id> | SAFETY_GATE_FAILED
-GOAL_DELTA: <one measurable line>|blocked
-```
+- severity and owner;
+- exact public-safe file/evidence reference;
+- why the finding matters;
+- required correction; and
+- acceptance criterion.
 
-`PRIMARY_DELIVERABLE` is either an accepted artifact/change id or a `BLOCKED_*`
-id. Storage sentinel passes with no safe concrete work use a
-`BLOCKED_NO_CONCRETE_WORK_AVAILABLE_<yyyymmdd-hhmm>` id.
+Separate blockers from improvements. A reviewer does not become a competing
+writer or grant action authority.
 
-### Blocked Records
+## Integration Report
 
-A `BLOCKED_*` terminal record must include:
+When root designates a separate integration owner, that owner records:
 
-- `code`: specific code such as `BLOCKED_AUTHORITY`, `BLOCKED_LEASE`,
-  `BLOCKED_VALIDATION`, `BLOCKED_CONSULT`, `BLOCKED_STORAGE`,
-  `BLOCKED_GHIDRA`, `BLOCKED_DIRTY_STATE`, or `BLOCKED_NO_SAFE_SLICE`;
-- `evidence`: bounded evidence proving the block;
-- `prior_attempt`: the relevant preceding attempt or why there was none;
-- `owner`: person/thread/lane that can clear the block;
-- `next_action`: next concrete safe action;
-- `retry_after`: absolute or relative retry window no later than 24 hours;
-- `duplicate_check`: state, lease, report, or blocker record checked to avoid a
-  duplicate.
+- accepted/rejected worker diffs and proposed integration order;
+- conflicts and resolutions;
+- canonical state and claim reconciliation;
+- validation and process cleanup;
+- remaining risk and next executable slice; and
+- proposed integrated diff and released resource claims.
 
-## Review Finding Fields
+The current root reviews that proposal, writes the final integration/state
+commit, and normally performs these duties directly without a separate report.
 
-Read-only reviewers report findings with:
+## Acceptance Report
 
-- severity
-- owner
-- exact file, path, or evidence reference
-- why it matters
-- required correction
-- acceptance criterion
+When consequence or uncertainty warrants an independent acceptance role, it
+returns accepted, accepted with explicit limitations, or rejected with a finite
+correction list. It checks ownership, payload/security boundaries, evidence,
+validation, state freshness, and cleanup. It does not publish, mutate shared
+state, or exceed the assignment.
 
-Reviewers should separate blockers from non-blocking improvements. A reviewer
-does not become a competing writer.
+## Consult Evidence
 
-## Integration Report Fields
+Subagents and external consults are need-shaped, sanitized, read-only advisers
+unless root explicitly assigns a non-overlapping write set. Record material
+accepted/rejected findings and unavailable evidence in the normal handoff; do
+not require empty placeholders for consults that were not useful.
 
-The integration thread reports:
-
-- accepted and rejected worker commits
-- merge or rebase order
-- conflicts and resolutions
-- canonical state/docs updates
-- cross-slice claim reconciliation
-- validation commands and results
-- process cleanup result when relevant
-- remaining risks and next executable slice
-- final integrated commit
-- lease-release confirmation
-
-## Acceptance Report Fields
-
-The fresh read-only acceptance thread reports:
-
-- decision: accepted, accepted with explicit blockers, or rejected
-- evidence reviewed
-- ownership and resource-collision checks
-- payload/security boundary checks
-- installed-game/original-`BEA.exe` mutation check
-- validation evidence check
-- stale state/docs check
-- finite correction list if rejected
-
-Acceptance does not publish releases, enable Host/Join, promote runtime claims,
-or mutate repo state.
+Review quantity is not proof. The current root alone owns final acceptance under
+`goal.policy.md`; a different task gains that role only through explicit root
+succession and the required handoff checks.

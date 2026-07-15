@@ -1,10 +1,10 @@
 # Active Goal Baton
 
-Status: **ACTIVE** (full reconstruction campaign)  
+Status: **ACTIVE** (full reconstruction campaign)
 Last updated: 2026-07-15
-Integration tip: `034f01c1`
+Integration tip: `796edad4`
 
-## Recent ledger
+## Recent Ledger
 
 | Slice | Result |
 |-------|--------|
@@ -13,29 +13,26 @@ Integration tip: `034f01c1`
 | **M5.3-home-native-visual-focus-harness** | **ADVANCEMENT** fail-closed repo-build native gate; first-run Setup and ready Patch Bench owner-bound focus; 1100/760 captures; schema-3 receipts; exact 1/1 TRX; zero process census |
 | **M5.4-save-lab-native-workflow-harness** | **ADVANCEMENT** exact repo-build UIA-only gate; immutable save-copy and synthetic-options workflows; 8 normal/compact captures; independent retained-byte reparse; exact 1/1 TRX; receipt-bound cleanup; zero process census |
 | **M5.5-media-catalog-native-workflow-harness** | **ADVANCEMENT** exact repo-build UIA-only generated-fixture gate; 3 distinct launches; 8 normal/compact captures; independent catalog, FBX, and PNG reconciliation; exact 1/1 TRX; receipt-bound cleanup; zero process census |
+| **M0.6-single-root-operating-foundation** | **ADVANCEMENT** root-owned campaign default, standing authority, optional concurrency overlay, corrected blocker semantics, canonical durable goal, and policy consistency harness |
 
-## Active skipped blocker
+## Resolved skipped blocker
 
-**BLOCKED_SHIELD_LIVE_AUTHORITY_20260714-2317**
+**Shield live authority — resolved 2026-07-15**
 
-- **code:** `MISSING_COMPLETE_LIVE_RUNTIME_LEASE`
-- **evidence:** The current baton/handoff bounds the intent to two copied-runtime
-  shield attempts, but it does not supply the complete resource lease, exact
-  private proof/storage root policy, validation/cleanup/rollback block, and
-  expiration required together by `goal.policy.md`. Absence of any field means
-  no live authority.
-- **prior_attempt:** No BEA launch or runtime attempt occurred; the pre-launch
-  authority audit stopped before profile creation or process start.
-- **owner:** Maintainer/integration owner.
-- **next_action:** Issue one complete shield-live authority block naming the
-  action family, exact allowed and forbidden commands, copied executable/profile
-  lease, fresh private pair root, gates, cleanup/rollback, and expiration. Then
-  run the existing `--measure shield --vehicle walker` pair once; never add a
-  third attempt.
-- **retry_after:** `2026-07-15T09:00:00-04:00`
-- **duplicate_check:** Do not repeat the authority audit or launch attempt until
-  the baton materially adds the missing fields. No earlier active shield-live
-  blocker exists in this baton.
+- **prior cause:** Legacy policy required a separately enumerated runtime baton
+  and worker/resource lease even though the active root task was the sole
+  operator and the maintainer had authorized the bounded copied-runtime work.
+- **resolution:** `goal.policy.md` now records standing campaign authority for
+  copied-runtime observation/mutation, live Ghidra, normal cleanup, version
+  control, release/publication, and project-scoped external actions. Resource
+  ownership remains serialized and receipt-bound but is not a permission gate.
+- **evidence boundary:** No shield attempt, BEA launch, runtime memory access,
+  debugger action, game input, retail value, behavior contract, or Core change
+  occurred while resolving the procedural blocker.
+- **remaining work:** The shield measurement itself remains pending. When
+  selected by campaign priority, use the existing walker shield runner for
+  exactly two copied-target attempts, never a third. If either attempt fails,
+  publish no behavior contract.
 
 ## Current Slice
 
@@ -53,40 +50,32 @@ exact blocker rather than inventing behavior. Campaign ACTIVE.
 
 ## Resume (Codex handoff)
 
-- **Tip SHA:** `034f01c1`
-- **Closed:** M5.5 Media/Asset native workflow ADVANCEMENT. The exact repository
-  Debug/win-x64 build passed three distinct UIA-only launches over a generated
-  13-file public fixture and an exact 18-file application payload closure. The
-  shield live pair remains skipped on
-  `BLOCKED_SHIELD_LIVE_AUTHORITY_20260714-2317`; no retail shield value or Core
-  behavior was invented.
-- **Validation:** `npm run test:winui-media-asset-native-workflow` PASS with
-  runner 22/22, exact native TRX 1/1, eight receipt-bound 1100x900/760x820
-  captures, three workflow receipts, three distinct `(PID,start)` identities,
-  retained manifest/capture digest rechecks, independent catalog/FBX/PNG
-  reconciliation, unchanged input epoch, and final relevant-process zero.
-  Shared native support 13/13, Home runner 10/10 and native 1/1, Save Lab runner
-  26/26 and native 1/1, Python compile, validation inventory, doc commands,
-  public-core links, repo hygiene, hard-payload safety, and diff checks PASS.
-  The primary WinUI lane passed after one isolated transient Windows rename-lock
-  rerun: build 0 warnings/errors, AppCore 1320/1320, WinUI 297 passed with two
-  expected private-corpus skips. `test:public-allowlist` remains unavailable
-  because the two reference submodules are intentionally uninitialized; no
-  release was authorized to initialize them for this slice.
-- **Paths:** Media/Asset native fixture, payload/evidence/session/capture and
-  owned-path guards; UIA workflow; outer producer/orchestrator and shared PNG
-  acceptance support; Media/Asset XAML and catalog handle correction; focused
-  package command; validation/contributor docs; design and implementation plan.
-  Screenshots, TRX, app data, manifests, and generated fixture/output files
-  remain ignored/local.
-- **Review:** normal/adversarial Codex re-review GO with no findings. Sanitized
-  normal/adversarial Cursor consults using `cursor-grok-4.5-high-fast` exited 0;
-  accepted findings on application-payload closure, bounded PNG parsing,
-  snapshot/digest binding, distinct process identity, and cleanup authority are
-  resolved.
-- **Codex owns next:** `M2.3-target-acquisition-static-contract`; consolidate
-  existing source/static target-selection evidence into a bounded contract and
-  checker before any runtime or Core claim.
-- **Confirm:** Relevant process census zero; no Explorer/browser/VLC/BEA
-  launch, live RPM, debugger, game input, or retail measurement; installed
-  game/original BEA untouched; no release/tag/Host/Join.
+- **Tip SHA:** `796edad4` design baseline; the foundation implementation is the
+  next path-scoped commit and will receive a tip-alignment baton.
+- **Closed:** M0.6 single-root operating-foundation ADVANCEMENT. The durable
+  reconstruction objective remains unchanged. Legacy coordinator/worktree/
+  lease ceremony now activates only for deliberate concurrency; it no longer
+  blocks root-owned copied-runtime or Ghidra work covered by standing authority.
+- **Validation:** Policy consistency 11/11 PASS after its intentional legacy
+  RED and closeout-placeholder RED phases; Python compile PASS; documented npm
+  commands PASS (19 active docs / 287 commands); public-core Markdown links
+  PASS (19 files / 64 links); hard-payload safety PASS (19,739 candidates);
+  repository text/line-ending hygiene PASS (18,871 explicit text files); scoped
+  and cached foundation diff checks PASS.
+- **Paths:** `goal.policy.md`, `goal.campaign.md`, `goal.md`, canonical slash
+  goal, optional `coordination/` contracts, contributor routing, design/plan,
+  canonical state batons, and the focused policy consistency test. Existing
+  M2.3 changes remain preserved and unstaged for their own slice.
+- **Review:** Codex normal/adversarial re-review GO after corrections. Sanitized
+  Cursor/Grok normal/adversarial consults exited 0; accepted findings on sole-
+  root succession, section-aware authority tests, all-item cleanup provenance,
+  campaign blocker semantics, closed external targets, create-vs-replace
+  publication, copy identity, Ghidra hard stops, and root-only final acceptance
+  are resolved. The explicit standing release/publication decision remains the
+  maintainer's authority and was not silently re-gated.
+- **Codex owns next:** Resume `M2.3-target-acquisition-static-contract` from the
+  preserved worktree after the user resumes the durable goal. The shield live
+  pair is standing-authorized but is not the active slice.
+- **Confirm:** No BEA, debugger, live Ghidra, release, publication, or external
+  action occurred; installed game/original `BEA.exe` untouched; Host/Join
+  remains disabled.

@@ -186,12 +186,14 @@ to satisfy the rule; report the needed state update in the audit result.
 External contributors may instead explain that no baton update was made; a
 maintainer can fold their PR into the current state files during review.
 
-During coordinated multi-thread campaigns, follow
-[coordination/README.md](coordination/README.md). Worker branches do not all edit
-canonical state batons; the integration owner reconciles `goal.md`,
-`developer_agent_state.json`, `documentation_agent_state.json`, and shared
-readiness/front-door docs after write leases are released. Review and acceptance
-threads stay read-only.
+The active root task normally owns source integration and canonical state.
+Follow the [optional coordination overlay](coordination/README.md) only when
+root explicitly activates concurrent writers, recurring automation, or
+separate integration/acceptance roles. During such a wave, worker branches do
+not all edit canonical state; an integration preparer may propose reconciliation
+for `goal.md`, the state JSON files, and shared readiness/front-door docs after
+competing write/resource claims end, but the current root writes and accepts the
+final state. Read-only review roles remain read-only.
 
 ## WinUI UI/UX Contributions
 

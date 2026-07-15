@@ -27,6 +27,12 @@ specialization adds value. A subagent may receive a non-overlapping write task
 only through an explicit root assignment. Persistent coordinator, worker,
 integration, acceptance, worktree, and lease roles activate only when root
 deliberately creates genuinely concurrent writers or a shared-resource wave.
+Only the current root exercises consequential standing mutation, publication,
+external-action, and acceptance authority; an assigned writer receives only
+its explicit write scope.
+Exactly one task may claim root. Ambiguous dual-root state makes consequential
+mutation/publication read-only until the baton and current task ownership name
+one root.
 
 Machine-resource ownership is an execution-safety mechanism, not a human
 permission gate. Root serializes BEA, debugger, Ghidra, native desktop, build,
@@ -34,6 +40,10 @@ and publication actions; verifies process/path/hash/start/window/module or
 project/backup identity as applicable; uses invocation-owned ignored roots;
 and proves cleanup. An unknown competing owner is not terminated. Root either
 waits, safely disambiguates, or advances an independent slice.
+After a crash or handoff, a successor root verifies the baton, prior-owner
+absence, and relevant process/project/publication state before reclaiming a
+resource; claims never expire merely because time passed. Push/publication
+succession also re-reads exact remote identities before acting.
 
 ## Standing Campaign Authority
 
@@ -46,16 +56,32 @@ The maintainer has supplied standing authority for in-scope campaign work:
 - patching and mutation of copied executables and copied profiles;
 - live Ghidra inspection, mutation, save, and read-back with verified complete
   backup and rollback discipline;
-- bounded cleanup of invocation-owned processes, copied profiles, build/test
-  output, and ignored disposable proof roots;
+- bounded cleanup of processes, copied profiles, build/test output, and ignored
+  proof roots created and owned by the current action or separately verified as
+  disposable before that action through an action receipt/provenance identifier
+  and exact allowed path class; unknown crash debris remains retained;
 - tags, releases, publication, and project-scoped external actions when a
   campaign slice calls for them, the exact target/artifact is known, applicable
   gates pass, and evidence supports the published claim.
+
+Copied-runtime/executable/process mutation proves path/hash/process-image copy
+identity before action. Standing external actions are closed to configured
+repository/project surfaces and a slice-named exact target: non-force Git,
+issue/PR/project metadata, unused tag/release/publication identity creation,
+additive verified-artifact publication, and established project-channel
+announcements. Billing/spend, credentials, account/provider administration,
+unrelated deployment, and novel audiences are not aliases for this authority.
 
 Standing authority removes repeated approval requests. It does not remove
 preflight identity, attempt caps, arm gates, backups, validation, rollback,
 evidence boundaries, or cleanup receipts. It also does not require a release
 or external action when that action has no objective-aligned value.
+The maintainer intentionally classifies evidence-gated creation of configured-
+project tags, releases, publications, and project-scoped external actions as
+standing-authorized rather than fresh destructive actions; later deletion,
+replacement, history rewriting, or withdrawal is evaluated separately.
+Standing creation requires an unused identity and never moves a tag, replaces
+an existing artifact, retargets published identity, or withdraws prior truth.
 
 ## Fresh Authorization Boundaries
 

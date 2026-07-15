@@ -1,7 +1,7 @@
 # Full Reconstruction Campaign
 
 Status: **ACTIVE durable campaign**  
-Last updated: 2026-07-15 (Media/Asset unattended native workflow acceptance landed; target-acquisition static contract next)
+Last updated: 2026-07-15 (single-root campaign foundation landed; target-acquisition static contract remains current)
 
 Policy: [`goal.policy.md`](goal.policy.md)  
 Mutable baton: [`goal.md`](goal.md)  
@@ -32,19 +32,24 @@ known hard blockers (e.g. MSB4278 native AYA DLLs) without new evidence.
 
 Full loop contract lives in `goal.policy.md`. Campaign-specific:
 
-1. **One active slice at a time** in `goal.md`, but the campaign runs **many
-   slices in sequence** until exit or a well-formed `BLOCKED_*` record.
-2. **Agent chooses the next slice** using the priority order below after each
+1. **Single-root default:** the active root task owns implementation,
+   integration, validation, state, and acceptance. `coordination/` is optional
+   and activates only for deliberately concurrent writers or resource waves.
+2. **One active slice at a time** in `goal.md`. Each slice closes with a
+   verified advancement or exact skipped blocker, while the campaign continues
+   until accepted exit criteria, a human pause, or no meaningful authorized
+   work remains.
+3. **Agent chooses the next slice** using the priority order below after each
    `ADVANCEMENT` or resolved blocker—not only when a human rewrites the slice.
-3. **Measurement before Core** for retail-derived scalars/behavior: dual-accept
+4. **Measurement before Core** for retail-derived scalars/behavior: dual-accept
    copied-runtime (or equivalent named gate) → public contract → translation
    policy → Core/goldens/tests.
-4. **Harness with the work:** every new behavior path gets the smallest durable
+5. **Harness with the work:** every new behavior path gets the smallest durable
    test/checker that would catch regression; prefer `tools/*_test.py`, AppCore
    tests, `npm run test:rebuild`, focused WinUI gates.
-5. **Lab hygiene:** safe-copy while running; strip bulky trees after closeout;
+6. **Lab hygiene:** safe-copy while running; strip bulky trees after closeout;
    keep compact evidence only (`runtime-proof-lab-retention.md`).
-6. **Lane balance:** do not starve WinUI or lore for rebuild-only sprints, or
+7. **Surface balance:** do not starve WinUI or lore for rebuild-only sprints, or
    the reverse, for more than ~3 consecutive slices unless a hard dependency
    forces it—record the bias in `goal.md`.
 
@@ -81,6 +86,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 | M0.3 | Rebuild Core + Headless goldens + Godot First Flight | landed |
 | M0.4 | `/goal` policy + mutable baton + lab retention hygiene | landed |
 | M0.5 | Walker + jet scalar contracts → Core speeds | landed |
+| M0.6 | Single-root operating foundation + optional coordination overlay | landed |
 
 ### M1 — Motion & vehicle fidelity (rebuild-grade)
 
@@ -98,7 +104,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 | ID | Milestone | Status |
 |----|-----------|--------|
 | M2.1 | Fire cooldown / projectile speed retail contracts | in_progress | scaffolds + pair envelopes + draft policies; live dual-accept pending |
-| M2.2 | Damage / hull / shield regeneration contracts | in_progress | **jet energy drain dual-accepted energy-p02 → JetEnergyDrainPerTick=17**; shield BE+0x100 neutral-control/input-free runner and symmetric correlation gate landed, live pair authority-blocked; walker regen provisional |
+| M2.2 | Damage / hull / shield regeneration contracts | in_progress | **jet energy drain dual-accepted energy-p02 → JetEnergyDrainPerTick=17**; shield BE+0x100 neutral-control/input-free runner and symmetric correlation gate landed; live pair pending and covered by standing campaign authority; walker regen provisional |
 | M2.3 | Target / lock behavior (bounded, evidence-first) | open |
 | M2.4 | Core combat goldens + harness expansion | open |
 
@@ -170,7 +176,8 @@ when **all** hold:
    touched product surfaces.
 4. No multi-GB unmanaged proof trees under active lab roots (hygiene policy).
 5. `goal.md` lists remaining open milestones as a **backlog**, not a silent stop.
-6. Human or integration owner accepts campaign pause/complete.
+6. Human or the current root accepts campaign pause/phase-complete; another
+   task gains that authority only through explicit root succession.
 
 **Never** auto-claim: retail parity, clean-room purity, online play-ready, or
 public release.

@@ -1,82 +1,88 @@
-# Resource Leases
+# Shared Resource Claims
 
-Status: active
-Last updated: 2026-07-03
+Status: optional concurrency overlay
+Last updated: 2026-07-15
 
-Path isolation is not enough. Coordinated campaigns also require exclusive
-leases for shared machine resources that can corrupt evidence, collide on the
-desktop, or mutate local proof state.
+This file retains its historical name for links, but a “lease” is now a local
+resource claim used only to prevent concurrent collisions. It does not grant or
+withhold action authority.
 
-## Exclusive Resources
+In normal single-root operation, the active root action owns the resource it is
+using and records enough process/project/artifact identity to prove ownership
+and cleanup. No separate lease form, coordinator approval, expiration block, or
+worker lane is required.
 
-Only one owner may hold each resource at a time:
+A claim has no automatic time-based expiry. After a crash or root handoff, a
+successor verifies the repository baton, prior owner absence, resource identity,
+and relevant process/project/publication state before reclaiming it. Ambiguous
+ownership remains read-only. Push/publication succession also requires exact
+remote branch/tag/release/artifact read-back so a vanished local process cannot
+hide an in-flight external completion.
 
-- `interactive-winui-desktop`
-- `native-uia`
-- `bea-runtime`
-- `cdb-debugger`
-- `audio-loopback`
-- `live-ghidra-project`
-- `local-proof-archive-write`
-- `storage-retention-or-cleanup`
-- `release-package-build`
-- `release-publication-or-account-action`
-- `spend-action`
-- `canonical-state-update`
-- `main-branch-integration`
+When root deliberately activates concurrent work, only one operation may claim
+each collision-prone resource at a time:
 
-Unknown process or lease ownership means stop and escalate. No worker may kill
-another worker's process or reuse another worker's proof root.
+- `interactive-winui-desktop`;
+- `native-uia`;
+- `bea-runtime`;
+- `cdb-debugger`;
+- `audio-loopback`;
+- `live-ghidra-project`;
+- `local-proof-archive-write`;
+- `storage-retention-or-cleanup`;
+- `release-package-build`;
+- `release-publication-or-account-action`;
+- `spend-action`;
+- `canonical-state-update`; and
+- `main-branch-integration`.
 
-## Lease Record
+Unknown process or resource ownership means do not mutate, reuse, terminate, or
+delete it. Root may identify the owner safely, wait, or choose an independent
+slice.
 
-The local campaign lease record should capture:
+## Optional Claim Record
 
-- campaign ID
-- resource name
-- owner worker/thread ID
-- branch and worktree
-- purpose
-- acquired time
-- expected release condition
-- validation or cleanup command
-- released time and terminal state
+For an activated multi-writer wave, a short ignored/local activation record is
+required and captures:
 
-Keep the active lease record local/ignored. Fold only sanitized durable lessons
-into repo docs or readiness notes.
+- campaign or wave label;
+- resource and owner;
+- repository/worktree when relevant;
+- purpose and acquisition time;
+- identity receipt or proof root;
+- expected release/cleanup check; and
+- release time and terminal state.
 
-## Cleanup Expectations
+The record is collision control, not an authority baton. Exact local process,
+project, proof, and storage paths remain private.
 
-- BEA/CDB/audio proof work is serialized and must verify process cleanup.
-- Native UIA and visual-smoke work is serialized when it shares the interactive
-  desktop.
-- Live Ghidra mutation or read-back is serialized.
-- Storage retention, cleanup, and backup-producing work is serialized when it
-  can move or delete Ghidra/proof material. Any recurring storage sentinel is
-  read-only unless a separate owner holds the cleanup lease and explicit
-  authority.
-- During a future explicitly reauthorized active campaign, the storage/Ghidra
-  sentinel cadence is every two hours. Each pass must verify or unblock one
-  concrete storage posture item, or record
-  `BLOCKED_NO_CONCRETE_WORK_AVAILABLE_<yyyymmdd-hhmm>` with checked roots,
-  blockers, and next eligible action. A pass that only says "no change" is
-  incomplete unless it records that blocker-style evidence. Under the current
-  shutdown override, no recurring sentinel is active.
-- Release package builds are serialized when they share output folders or
-  package names.
-- Broad .NET build/test gates should run serially when contention can produce
-  false failures.
-- Workers do not terminate unknown processes. If a process blocks work and
-  ownership is unclear, stop and ask the coordinator.
+## Cleanup And Serialization
 
-Publication remains a separate authority boundary, not a normal resource lease.
-No lease authorizes GitHub Release publication, binary ZIP publication, signing,
-installer release, Store publication, announcement, push, or capability
-promotion. Those actions require separate explicit maintainer authorization.
+- BEA, debugger, and audio work is serialized and ends with an identity-bound
+  relevant-process census.
+- Native UIA/visual work is serialized when it shares the interactive desktop.
+- Live Ghidra writes are serialized and retain complete backup, read-back, and
+  rollback evidence.
+- Storage cleanup never deletes ambiguous or irreplaceable evidence under a
+  normal-cleanup claim.
+- Broad .NET builds/tests run serially when contention can create false
+  failures.
+- Release package builds and publication actions confirm exact artifact,
+  commit, repository/account, and output identity before mutation.
+- No operation terminates an unknown process or reuses another operation's
+  proof root.
 
-Runtime proof, live Ghidra mutation/read-back, destructive cleanup,
-release/publication, account/provider action, and paid spend require structured
-baton authority in addition to any lease. The baton must name action family,
-allowed commands, forbidden commands, affected resources, proof/storage root
-policy, validation gates, cleanup or rollback plan, expiration, and spend cap
-when relevant. A lease without that authority is read-only or no-op.
+Normal cleanup covers only processes, copied profiles, build/test output, and
+ignored evidence roots created and owned by the current action or separately
+verified as disposable before the action through an action receipt/provenance
+identifier and exact allowed path class. Pre-existing, unknown, retained, or
+shared profiles, artifacts, proof, Ghidra material, crash debris, and output are
+never normal-cleanup targets. A successor does not inherit a prior action's
+disposable set merely by reclaiming the resource. Spending and genuinely
+destructive operations remain fresh-authorization boundaries under
+`goal.policy.md`.
+
+Publication authority, release readiness, evidence acceptance, and destructive
+authority do not come from a resource claim. Conversely, standing authority in
+`goal.policy.md` does not allow two owners to mutate the same resource
+concurrently.

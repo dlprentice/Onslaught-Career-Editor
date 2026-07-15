@@ -1,158 +1,114 @@
 # Workstream Contract
 
-Status: active
-Last updated: 2026-07-11
+Status: optional concurrency overlay
+Last updated: 2026-07-15
 
-This contract applies when a coordinator assigns independent workers,
-reviewers, an integration owner, and an acceptance reviewer across one campaign.
-It supplements normal repo guidance; it does not relax payload, safety, release,
-or installed-game rules.
+## Applicability
+
+This contract applies only after root explicitly activates a coordinated wave
+with concurrent writers, recurring automation, or separate integration and
+acceptance roles. It does not apply to ordinary single-root work, bounded
+read-only subagents, or consults.
+
+Activation names the owner of each write set and shared resource, the
+integration owner, stop conditions, and the expected handoff. It supplements
+normal repository guidance and never relaxes payload, evidence, installed-game,
+destructive-action, spending, or release-quality boundaries.
 
 ## Ownership Rules
 
 - One path family has one active write owner.
 - One shared machine resource has one active owner.
-- Unknown ownership means read-only.
-- A worker must verify branch, worktree, base commit, allowed paths, forbidden
+- Unknown or contested ownership means read-only.
+- A writer verifies repository, branch/worktree, base, allowed paths, forbidden
   paths, and dirty state before editing.
-- A worker must not reset, clean, stash, discard, or overwrite work it did not
-  create.
-- A worker must not write directly to the coordinator checkout.
-- A worker must not broaden scope because a nearby file is convenient.
-- A review or acceptance thread must not edit tracked files.
+- A writer never resets, cleans, stashes, discards, or overwrites work it did
+  not create.
+- Review-only roles do not edit tracked files.
+- The integration owner serializes overlapping commits and canonical state.
 
-High-collision path families are exclusive by default:
+High-collision families are exclusive when multiple writers are active:
 
-- `goal.md`, `goal.policy.md`, `AGENTS.md`, `CONTRIBUTING.md`, and this
-  `coordination/` contract
-- `developer_agent_state.json`, `documentation_agent_state.json`, and
-  `re_orchestrator_state.json`
-- `CURRENT_CAPABILITIES.md`, shared release/readiness indexes, and release
-  front-door docs
-- `package.json` and central validation scripts
-- `patches/` catalogs and profile catalogs
-- `OnslaughtCareerEditor.WinUI/Pages/BinaryPatchesPage.xaml*`
-- `OnslaughtCareerEditor.WinUI/Helpers/PatchBench*.cs` and related
-  presentation models
-- shared `OnslaughtCareerEditor.AppCore/` services
-- shared `OnslaughtCareerEditor.UiTests/` files
-- release packaging/probe scripts
+- `goal.md`, `goal.policy.md`, `AGENTS.md`, `CONTRIBUTING.md`, and
+  `coordination/`;
+- canonical state JSON and shared readiness/front-door documents;
+- `package.json` and central validation scripts;
+- patch/profile catalogs and shared AppCore services;
+- shared WinUI pages, helpers, and UI tests; and
+- release packaging, publication, and proof tooling.
 
-Do not assume two tasks are independent merely because their intended product
-outcomes differ. If they need the same large file or semantic owner, serialize
-them.
+Different intended outcomes do not make overlapping semantic owners safe to
+edit concurrently. Serialize the work or assign one writer.
 
-## Worker Duties
+## Assignment Shape
 
-Each write worker receives a self-contained assignment that names:
+A concurrent write assignment should name only what another role needs to
+avoid collisions and accept the result:
 
-- worker ID and concise persistent goal
-- base commit, branch, and worktree
-- allowed and forbidden paths
-- claimed path and resource leases
-- current repo truth relevant to the slice
-- required files to read before editing
-- claim boundary and explicit non-claims
-- focused and broad-enough validation gates
-- review-envelope reference and any required refresh trigger, or explicit
-  `CONSULT_UNAVAILABLE` / `CONSULT_BOUNDARY` records for missing lanes
-- report paths and commit authority
-- stop conditions and integration dependencies
-- terminal record: exactly one of `ADVANCEMENT` or `BLOCKED_*`
-- acceptance owner or review lane separate from the producing worker
+- concise objective and claim boundary;
+- base, branch/worktree when used, allowed paths, and forbidden paths;
+- path/resource claims and expected release condition;
+- directly relevant repository truth and required files;
+- focused validation and stop conditions;
+- required diff/patch handoff; a non-root writer does not commit under ambient
+  campaign authority;
+- integration owner and any risk-shaped independent review; and
+- terminal result: advancement, exact blocker, or no accepted change.
 
-For automation, storage, Ghidra/headless, proof-retention, or campaign-posture
-work, the assignment must also cite
-[AUTOMATION_STORAGE_GHIDRA_POSTURE.md](AUTOMATION_STORAGE_GHIDRA_POSTURE.md)
-and say whether the slice is real project advancement or hygiene-only.
-
-The worker parent thread is the writer. Subagents advise unless explicitly
-assigned an isolated non-overlapping write task.
+Subagents advise unless root explicitly assigns a bounded non-overlapping write
+set. No persistent lane is created for routine formatting, validation, review,
+or follow-through.
 
 ## Canonical State
 
-Workers do not all edit canonical state batons during a campaign wave. They
-record recommended state/docs updates in their local reports. The integration
-thread owns one coherent reconciliation pass for:
+While multiple writers are active, the integration owner alone prepares the
+proposed reconciliation for:
 
-- `goal.md`
-- `developer_agent_state.json`
-- `documentation_agent_state.json`
-- shared readiness/front-door docs
-- cross-slice claim boundaries and next work
+- `goal.md` and campaign priorities;
+- canonical implementation/documentation state;
+- shared readiness/front-door claims; and
+- cross-slice evidence boundaries.
 
-Non-integration workers may recommend these updates in local reports, but do
-not write or commit them. Only the integration owner writes canonical state for
-the campaign wave.
-
-Recurring automation writers must re-read canonical state and leases immediately
-before editing or committing if another active lane may have changed them. If
-the state epoch, base commit, lease owner, or active slice changed since the
-assignment was read, stop and route to the coordinator or integration owner.
+Other writers report proposed deltas. The current root reviews and writes the
+final integration/state commit. After the wave ends, normal single-root
+ownership resumes and no lease-release ceremony is required beyond confirming
+that no competing writer or owned process remains.
 
 ## Stop Conditions
 
-Stop and escalate when:
+A coordinated writer stops and routes to root/integration when:
 
-- target branch/worktree/base commit does not match assignment
-- target paths are dirty with changes the worker did not make
-- ownership is unclear or contested
-- a needed resource lease is unavailable
-- a change would mutate the installed Steam folder or original `BEA.exe`
-- a change would add hard payloads, arbitrary saves/options, raw proof logs,
-  screenshots/frame dumps, copied executables, full Ghidra databases, secrets,
-  `.env*`, build output, or local runtime caches
-- a claim would exceed evidence, especially around online readiness, runtime
-  audio, gameplay parity, release packaging, or static RE proof
-- validation cannot be run and no bounded fallback evidence is available
-- a lane cannot produce an accepted `ADVANCEMENT` or well-formed `BLOCKED_*`
-  closeout record
-- required consults are unavailable for privileged, release, runtime, live
-  Ghidra mutation, destructive cleanup, account/provider, or paid-spend work
+- base, target, write set, or resource ownership does not match the assignment;
+- target paths contain unknown overlapping changes;
+- a shared resource is owned by another operation;
+- installed Steam/original `BEA.exe` mutation would be required;
+- a hard payload, secret, private evidence, or generated output would enter
+  tracked source;
+- a claim would exceed its static, runtime, visual, rebuild, online, or release
+  evidence;
+- validation cannot establish the assigned contract; or
+- the required operation needs spending or genuinely destructive authority not
+  granted under `goal.policy.md`.
 
-## Advancement Boundary
+An unknown process is never killed merely to free a resource claim.
 
-A worker cycle must end in exactly one of `ADVANCEMENT` or a well-formed
-`BLOCKED_*` record. A worker may report real project advancement only when a
-bounded source, docs, checker, proof-plan, policy, or state change has been
-accepted under a named evidence class. Hygiene-only work such as status checks,
-storage inventory, re-reading, mirror refresh, or passing validation gates is
-useful but must be labeled as hygiene-only unless it removes a named blocker
-and names the next advancement slice.
+## Review And Acceptance
 
-Hygiene-only slices may run only to clear a named blocker or preserve an active
-claim boundary. They must name the blocked lane or next executable advancement
-slice they unblock. The producing lane cannot self-accept its own advancement
-claim.
+Root chooses review proportional to consequence, uncertainty, scope, and claim
+risk. Independent normal/adversarial review is especially useful for broad
+policy, security, destructive, release, runtime-mutation, or contested work.
+External consults remain sanitized, read-only, and advisory.
 
-A `BLOCKED_*` record must include `code`, `evidence`, `prior_attempt`, `owner`,
-`next_action`, `retry_after` no later than 24 hours, and `duplicate_check`.
-Unresolved adversarial blocker findings also force a blocked terminal record
-unless the coordinator or integration owner records an explicit override.
+The number of reviewers or consults is not itself acceptance evidence. A named
+integration owner may prepare reconciliation, but the current root alone owns
+final judgment, commits/pushes, resolves material findings, and records
+unavailable evidence honestly. Transferring those powers requires an explicit
+root handoff followed by the successor checks in `goal.policy.md`.
 
-## Substantive Work And Authority
+## Authority
 
-Treat a coherent product, source, test, tooling, docs, state, or policy
-objective as substantive when its scope, behavior, authority, trust boundary,
-or acceptance evidence needs independent judgment. RE maps, Ghidra/headless,
-proof, storage, release, runtime, account, spend, disputed, broad, or
-high-collision work is substantive.
-
-Each substantive objective or related release batch gets one review envelope
-under the global Codex multi-agent lane contract. Under the current direct user
-policy, new or resumed Codex-owned normal/adversarial subagents use
-`gpt-5.6-sol` at medium effort by default; harder work may raise the supported
-Sol effort. Terra/Luna fallback or lower effort requires a newer direct user
-instruction. The envelope also includes bounded external
-normal/adversarial consults when the required read-only
-sandbox and authentication are available. Routine implementation, validation,
-formatting, and state follow-through inside that envelope do not recursively
-launch new reviews. If a lane is unavailable or unsafe to brief, record the
-exact reason and the focused Codex-root verification or
-coordinator/integration-owner override used to continue.
-
-Runtime proof, live Ghidra mutation, destructive cleanup, release,
-external-account action, and spend require a structured baton authority naming
-the action family, allowed and forbidden commands, leases, proof/storage root
-policy, validation gates, cleanup/rollback, expiration, and spend cap when
-applicable.
+This contract allocates concurrent ownership; it does not grant action
+authority. Standing campaign authority and fresh-authorization boundaries come
+from `goal.policy.md` and newer direct maintainer instructions. Resource claims,
+worktrees, worker assignments, and review output cannot expand those
+boundaries.
