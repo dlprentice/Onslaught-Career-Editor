@@ -5,8 +5,8 @@ Last updated: 2026-07-15
 Policy: [`goal.policy.md`](goal.policy.md)  
 Campaign map: [`goal.campaign.md`](goal.campaign.md)  
 Slash prompt: [`roadmap/goals/full-rebuild-campaign-slash-goal.md`](roadmap/goals/full-rebuild-campaign-slash-goal.md)  
-Integration baseline: pending multi-slice marathon push (builds on `d336d861`)  
-Session quota: **≥5 slice closeouts** (this marathon)
+Integration baseline: `3a4e4f3a` (marathon: strafe dual-accept + harnesses)  
+Session quota: **≥5 slice closeouts** (this marathon — **met**)
 
 ## Closed ledger
 
