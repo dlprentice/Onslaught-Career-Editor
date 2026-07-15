@@ -3,7 +3,7 @@
 Status: **ACTIVE** (time-boxed marathon)  
 Last updated: 2026-07-14  
 **STOP wall clock:** 2026-07-15 10:00 local  
-Integration tip: `9ce5d3b6`  
+Integration tip: `6f7cf01b`  
 30m durable re-entry: **armed** `019f633f58c2`
 
 ## Current Slice
@@ -11,6 +11,10 @@ Integration tip: `9ce5d3b6`
 **ID:** `M2-energy-live-or-continue`  
 **Objective:** Live jet energy dual-accept when mission+receipt ready; else
 offline harness / product honesty until STOP.
+
+Reports:
+- `npm run report:battleengine-campaign-scalar-status`
+- `npm run report:battleengine-measure-mode-catalog`
 
 ## Resume
 
