@@ -3,12 +3,47 @@
 
 from __future__ import annotations
 
+import inspect
+import math
 import unittest
 
 import battleengine_shield_scaffold as shield
 
 
 class ShieldScaffoldTests(unittest.TestCase):
+    def test_shield_sample_carries_paired_energy(self) -> None:
+        self.assertEqual(
+            ["tick", "shield", "energy"],
+            list(inspect.signature(shield.ShieldSample).parameters),
+        )
+
+    def test_metrics_expose_energy_correlation(self) -> None:
+        self.assertEqual(
+            [
+                "attempt",
+                "accepted",
+                "steady_rate_per_sec",
+                "steady_energy_rate_per_sec",
+                "paired_active_edge_fraction",
+                "relative_rate_delta",
+                "sample_count",
+            ],
+            list(inspect.signature(shield.ShieldRateMetrics).parameters),
+        )
+
+    def test_synthetic_series_can_vary_energy_independently(self) -> None:
+        self.assertEqual(
+            [
+                "start",
+                "rate_per_sec",
+                "energy_start",
+                "energy_rate_per_sec",
+                "n",
+                "frequency",
+            ],
+            list(inspect.signature(shield.synthetic_shield_series).parameters),
+        )
+
     def test_regen(self) -> None:
         samples = shield.synthetic_shield_series(rate_per_sec=2.0)
         m = shield.analyze_shield_rate(
@@ -16,10 +51,86 @@ class ShieldScaffoldTests(unittest.TestCase):
         )
         self.assertTrue(m.accepted)
         self.assertGreater(m.steady_rate_per_sec, 1.0)
+        self.assertGreater(m.steady_energy_rate_per_sec, 1.0)
+        self.assertEqual(1.0, m.paired_active_edge_fraction)
+        self.assertAlmostEqual(0.0, m.relative_rate_delta)
 
     def test_rejects_drain_when_expecting_regen(self) -> None:
         samples = shield.synthetic_shield_series(rate_per_sec=-1.0)
         with self.assertRaisesRegex(shield.ShieldScaffoldError, "positive"):
+            shield.analyze_shield_rate(
+                attempt=1,
+                samples=samples,
+                frequency=10_000_000,
+                expect_positive=True,
+            )
+
+    def test_rejects_shield_regen_when_energy_is_static(self) -> None:
+        samples = shield.synthetic_shield_series(
+            rate_per_sec=2.0,
+            energy_rate_per_sec=0.0,
+        )
+        with self.assertRaisesRegex(shield.ShieldScaffoldError, "energy.*track"):
+            shield.analyze_shield_rate(
+                attempt=1,
+                samples=samples,
+                frequency=10_000_000,
+                expect_positive=True,
+            )
+
+    def test_rejects_opposite_energy_direction(self) -> None:
+        samples = shield.synthetic_shield_series(
+            rate_per_sec=2.0,
+            energy_rate_per_sec=-2.0,
+        )
+        with self.assertRaisesRegex(shield.ShieldScaffoldError, "opposite direction"):
+            shield.analyze_shield_rate(
+                attempt=1,
+                samples=samples,
+                frequency=10_000_000,
+                expect_positive=True,
+            )
+
+    def test_rejects_excessive_energy_shield_rate_delta(self) -> None:
+        samples = shield.synthetic_shield_series(
+            rate_per_sec=2.0,
+            energy_rate_per_sec=4.0,
+        )
+        with self.assertRaisesRegex(shield.ShieldScaffoldError, "rate correlation"):
+            shield.analyze_shield_rate(
+                attempt=1,
+                samples=samples,
+                frequency=10_000_000,
+                expect_positive=True,
+            )
+
+    def test_rejects_nonfinite_paired_samples(self) -> None:
+        for field in ("shield", "energy"):
+            samples = shield.synthetic_shield_series(rate_per_sec=2.0)
+            first = samples[0]
+            samples[0] = shield.ShieldSample(
+                tick=first.tick,
+                shield=math.nan if field == "shield" else first.shield,
+                energy=math.nan if field == "energy" else first.energy,
+            )
+            with self.subTest(field=field), self.assertRaisesRegex(
+                shield.ShieldScaffoldError, "finite"
+            ):
+                shield.analyze_shield_rate(
+                    attempt=1,
+                    samples=samples,
+                    frequency=10_000_000,
+                    expect_positive=True,
+                )
+
+    def test_rejects_nonmonotonic_ticks(self) -> None:
+        samples = shield.synthetic_shield_series(rate_per_sec=2.0)
+        samples[1] = shield.ShieldSample(
+            tick=samples[0].tick,
+            shield=samples[1].shield,
+            energy=samples[1].energy,
+        )
+        with self.assertRaisesRegex(shield.ShieldScaffoldError, "non-monotonic"):
             shield.analyze_shield_rate(
                 attempt=1,
                 samples=samples,
@@ -44,6 +155,23 @@ class ShieldScaffoldTests(unittest.TestCase):
             "battleengine-shield-rate-scalar-response.v0-scaffold",
             envelope["schemaVersion"],
         )
+        self.assertEqual(
+            {
+                "steadyShieldRatePerSec",
+                "steadyEnergyRatePerSec",
+                "pairedActiveEdgeFraction",
+                "rateRelativeDelta",
+            },
+            set(envelope["envelope"]),
+        )
+        self.assertGreater(
+            envelope["envelope"]["pairedActiveEdgeFraction"]["lower"],
+            0.79,
+        )
+        self.assertLessEqual(
+            envelope["envelope"]["rateRelativeDelta"]["upper"],
+            0.25,
+        )
         self.assertEqual("0x100", envelope["offsetHypothesis"]["battleEngineShields"])
 
     def test_pair_envelope_rejects_unstable(self) -> None:
@@ -59,6 +187,27 @@ class ShieldScaffoldTests(unittest.TestCase):
             frequency=frequency,
         )
         with self.assertRaisesRegex(shield.ShieldScaffoldError, "not stable"):
+            shield.materialize_shield_pair_envelope(m1, m2)
+
+    def test_pair_envelope_rejects_unstable_energy_rates(self) -> None:
+        frequency = 10_000_000
+        m1 = shield.analyze_shield_rate(
+            attempt=1,
+            samples=shield.synthetic_shield_series(
+                rate_per_sec=1.0,
+                energy_rate_per_sec=0.8,
+            ),
+            frequency=frequency,
+        )
+        m2 = shield.analyze_shield_rate(
+            attempt=2,
+            samples=shield.synthetic_shield_series(
+                rate_per_sec=1.2,
+                energy_rate_per_sec=1.5,
+            ),
+            frequency=frequency,
+        )
+        with self.assertRaisesRegex(shield.ShieldScaffoldError, "energy rates not stable"):
             shield.materialize_shield_pair_envelope(m1, m2)
 
 
