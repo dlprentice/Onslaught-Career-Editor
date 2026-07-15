@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-14",
   "routingPolicy": "Follow the global Codex multi-agent lane contract. Under current direct user policy, every new or resumed Codex-owned worker uses gpt-5.6-sol at medium effort by default; harder work may raise Sol effort, and Terra/Luna fallback or lower effort requires a newer direct user instruction.",
-  "currentFocus": "Full reconstruction campaign: mutate goal.md each cycle; pick next slice from goal.campaign.md; RE + rebuild + WinUI + lore + harnesses. Walker/jet scalars landed; next default M1.3 turn/yaw or documented fallback. Jet-p06 / hygiene may still need commit.",
+  "currentFocus": "Full reconstruction campaign; M5.3 unattended Home native focus/visual acceptance landed at f8f6bef8; current slice M5.4 Save Lab native workflow harness; shield live pair remains authority-blocked.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -23,7 +23,7 @@
       "worktreeOwnership": "Main is the sole registered active Owner/integration worktree. The previously reported Coordinator 8fe5 and Steward 95e2 registrations are absent. No persistent worker lane was created for the walker source-reference repair.",
       "emptyCodexWorktreeShellsRemoved": 7,
       "historicalBranchBundle": "61 obsolete campaign/codex tips plus 24 otherwise unreachable commits and 3 stashes were preserved and restore-drilled before cleanup",
-      "lastPushedBeforeCurrentSlice": "d4b9f83e on main/origin-main after estimator 58d8b5e5 and source-reference landings; corpus-reconciliation + goal/state baton pending this commit.",
+      "lastPushedBeforeCurrentSlice": "f8f6bef8 contains the accepted Home native visual/focus harness; this goal/state baton is the pending follow-up before push.",
       "acceptedFirstFlightSourceCommit": "0ed4e706753c350ae1ec835d6dd466feddd587c7"
     },
     "product": {
@@ -67,6 +67,11 @@
         "independent Cursor/Grok normal and adversarial closeout reviews accepted the slice with no commit blockers",
         "controller-guidance source contract and clean hands-off native UIA passed with zero post-run WinUI/test processes"
       ]
+    },
+    "homeNativeVisualFocus": {
+      "status": "accepted at f8f6bef8",
+      "scope": "The exact repository-built Debug/win-x64 WinUI app passed unattended first-run Setup and ready-state Patch Bench focus acceptance at 1100x900 and 760x820. The fail-closed schema-3 evidence set contains four capture receipts, two owner-bound focus receipts, an unchanged input epoch, an exact 1/1 native TRX result, and zero relevant processes after cleanup.",
+      "boundary": "This is Toolkit evidence for the tested Home states and sizes only; it is not retail-game evidence, release acceptance, general accessibility certification, or visual parity proof."
     },
     "filesystemSafety": {
       "status": "accepted",
@@ -144,8 +149,7 @@
   },
   "activeBlockers": [
     "No accepted two-attempt copied-runtime walker measurement exists; therefore no measured walker scalar-response contract exists. Even after two passing attempts, deterministic Core remains blocked until a retail-coordinate-to-Core scale, tick-response, rounding, quantization-error, and overflow policy is accepted.",
-    "Complete private-corpus extraction/export coverage is not yet executed. The 301-archive observation census and bounded surface-reconciliation producer are prerequisites only; the full export is blocked by absent legacy native extractor DLLs and missing Visual Studio C++ targets (MSB4278).",
-    "Home source policy is integrated, but native first-run arrival focus and normal/760 visual acceptance remain unproven."
+    "Complete private-corpus extraction/export coverage is not yet executed. The 301-archive observation census and bounded surface-reconciliation producer are prerequisites only; the full export is blocked by absent legacy native extractor DLLs and missing Visual Studio C++ targets (MSB4278)."
   ],
   "openQuestions": [],
   "nextSteps": [
@@ -153,6 +157,6 @@
     "If both attempts pass, derive one bounded v2 scalar-response contract in declared retail coordinate units; do not infer physical distance or Core units.",
     "Accept an explicit retail-coordinate-to-Core translation contract covering scale, tick response, rounding, maximum quantization error, and overflow bounds before implementing Forward/Move/UpdateWalkCycle behavior in deterministic Core with headless and Godot verification.",
     "Restore the legacy native extractor runtime through an authorized supported toolchain path, then produce real six-lane terminal outcomes and run the bounded ignored/local reconciliation; do not promote surface accounting into exhaustive-target or successful-extraction claims.",
-    "Run a fresh native Home acceptance only when it does not delay reconstruction work."
+    "Build the M5.4 unattended native Save Lab first-use and Game Options workflow harness with exact build/process/input identity, deterministic local fixtures, normal/compact captures, fail-closed receipts, and zero-process cleanup."
   ]
 }

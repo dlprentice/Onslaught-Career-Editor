@@ -1,7 +1,7 @@
 {
-  "lastUpdated": "2026-07-13",
+  "lastUpdated": "2026-07-14",
   "routingPolicy": "Active docs consume the global Codex multi-agent lane contract. Current direct user policy routes every new or resumed Codex-owned worker to gpt-5.6-sol at medium effort by default, permits higher Sol effort for harder work, and forbids Terra/Luna fallback or lower effort without a newer direct user instruction.",
-  "currentFocus": "Document the integrated extraction/runtime foundations truthfully and hand off the remaining executable path: complete local corpus extraction, two accepted copied-runtime walker measurements, a bounded behavior contract, and deterministic Core implementation. WinUI/Godot remain consumers, not retail proof.",
+  "currentFocus": "Full reconstruction campaign; M5.3 unattended Home native focus/visual acceptance landed at f8f6bef8; current slice M5.4 Save Lab native workflow harness; shield live pair remains authority-blocked.",
   "sourceOfTruth": {
     "readme": "README.MD",
     "contributorGuide": "CONTRIBUTING.md",
@@ -18,7 +18,7 @@
   "currentDocsTruth": {
     "release": "v1.0.9 remains the latest published unsigned portable WinUI ZIP with 949 packaged Lore documents; this source slice does not publish a release.",
     "product": "WinUI 3 is the primary preservation/modding GUI. The separate GPL rebuild has a deterministic Core/headless verifier and one playable procedural Godot .NET First Flight client; Electron, WPF, and the old Python GUI/CLI remain archived references.",
-    "winUiFirstUse": "CURRENT_CAPABILITIES.md and its byte-identical Lore mirror record the verified three-state setup hierarchy, preservation of temporarily unavailable remembered folders, manual Save Lab availability, shell status/focus ownership, Level 1 headings, compact wrapped source actions, truthful launch/Admin Level preset state, and demand-loaded Media VLC behavior. Save Lab Game Options gives the official Steam Input modern-controller setup path and copied-options-only boundary. The integrated guided first-save journey starts empty, presents four explicit steps, preserves app-owned output provenance, collapses advanced overrides, and enables Explorer reveal only for the current successful write. Exact native behavior and normal/760 Toolkit captures passed; the ad-hoc outer polling wrapper did not supervise the whole run and is not accepted evidence.",
+    "winUiFirstUse": "CURRENT_CAPABILITIES.md and its byte-identical Lore mirror record the verified three-state setup hierarchy, preservation of temporarily unavailable remembered folders, manual Save Lab availability, shell status/focus ownership, Level 1 headings, compact wrapped source actions, truthful launch/Admin Level preset state, and demand-loaded Media VLC behavior. Save Lab Game Options gives the official Steam Input modern-controller setup path and copied-options-only boundary. The integrated guided first-save journey starts empty, presents four explicit steps, preserves app-owned output provenance, collapses advanced overrides, and enables Explorer reveal only for the current successful write. The exact repository-built Debug/win-x64 Home gate now passes unattended first-run Setup and ready-state Patch Bench focus at 1100x900 and 760x820, with owner-bound focus plus unchanged input epoch, four capture receipts, two focus receipts, a schema-3 manifest, exact 1/1 native TRX, and zero relevant processes after cleanup.",
     "filesystemSafety": "Save/options, AppCore copied-executable patching, and generated asset/package outputs use bounded roots, guarded or staged writes, final verification, recoverable full-file backups, and explicit same-user post-finalization limits.",
     "patchContract": "The normative contract accounts for 29 catalog rows, 20 visible options, 9 hidden companions, 17 dependency edges, and 118 conflict edges. AppCore accepts only exact pinned mutation rows and preserves atomic backup/checksum/apply/restore behavior. The normal Windowed & Mods journey keeps compatibility, two bounded player mods, source/Create/receipt/Play/Stop, and local split-screen. A full-width collapsed Lab owns five purpose groups for patch experiments, launch/control, online research, music experiments, and BEA-only diagnostics. Visible status and confirmation count only next-copy inputs; copied-options values are immutable pre-confirm snapshots. Required compatibility rows remain checked/locked, ten constrained two-column actions wrap fully at 760px, and the native smoke rejects stale default-path builds. No patch bytes or AppCore injection semantics changed.",
     "re": "reverse-engineering/ is canonical. The integrated Ghidra closeout verifies the stable 6,411-function inventory and 459-address endpoint delta, reviews 92 unique proposed corrections, applies and exactly reads back 91 confirmed rows, rejects the erroneous 0x004dac90 manifest row, applies the separately leased 0x0050b9c0 structured prototype correction, and verifies complete pre/post stores. The recovered Cursor ledger remains incomplete, static metadata is not runtime/parity proof, and 0x004dac90 remains bounded metadata debt. The camera/movement/morph candidate is explicitly runtime-required and orders four cheaper observations before implementation. Exact stale CMonitor pairs at 0x00411630 and 0x00411aa0 are removed from active mixed mutators and guarded without retiring unrelated operations.",
@@ -31,14 +31,13 @@
   "activeBlockers": [
     "The walker slice still lacks two accepted copied-runtime measurements and a bounded deterministic Core implementation.",
     "Complete private-corpus extraction/export coverage has not yet executed across every observed tag, extension, dependency, unsupported family, and deterministic output.",
-    "The isolated walkerref draft failed provenance, validator-reuse, branch-model, measurement-partition, and concrete-Core-target review and is intentionally not integrated.",
-    "The integrated Home policy remains native-unproven after the earlier first-run focus failure."
+    "The isolated walkerref draft failed provenance, validator-reuse, branch-model, measurement-partition, and concrete-Core-target review and is intentionally not integrated."
   ],
   "openQuestions": [],
   "nextSteps": [
     "Document only accepted executable outcomes from the next exactly-two-attempt walker run and reject partial/invalid pairs.",
     "After a valid pair, publish the narrow source/Steam/runtime/rebuild contract and its deterministic Core consumer.",
     "Document corpus-wide extractor coverage from executable producer/consumer reports, never inferred archive counts.",
-    "Keep Home native-focus and selected-0003 identity/texture/articulation claims explicitly unresolved."
+    "Treat Home native focus as resolved only for the exact accepted states and sizes; keep selected-0003 identity, texture, and articulation claims unresolved, and build the unattended Save Lab workflow harness next."
   ]
 }

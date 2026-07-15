@@ -98,10 +98,10 @@
 - Modify only truthful current capability/state mirrors affected by the native
   result.
 
-- [ ] Run focused visual-capture tests, the primary WinUI lane, docs/link checks,
+- [x] Run focused visual-capture tests, the primary WinUI lane, docs/link checks,
   hard-payload safety, `git diff --check`, and a final relevant-process census.
-- [ ] Complete one normal/adversarial Codex review and one normal/adversarial
+- [x] Complete one normal/adversarial Codex review and one normal/adversarial
   sanitized Cursor consult for this substantive objective; resolve material
   findings.
-- [ ] Record the exact native acceptance scope and non-claims, advance to the
+- [x] Record the exact native acceptance scope and non-claims, advance to the
   next actionable campaign slice, commit, and push green. No release or tag.

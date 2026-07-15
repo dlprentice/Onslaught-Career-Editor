@@ -2,7 +2,7 @@
 
 Status: **ACTIVE** (full reconstruction campaign)  
 Last updated: 2026-07-14  
-Integration tip: `0777e10b`
+Integration tip: `f8f6bef8`
 
 ## Recent ledger
 
@@ -10,6 +10,7 @@ Integration tip: `0777e10b`
 |-------|--------|
 | **M2-energy-live-dual-accept** | **ADVANCEMENT** pair `energy-p02`; v1 contract; policy accepted; `JetEnergyDrainPerTick=17` |
 | **M2-shield-live-measurement-readiness** | **ADVANCEMENT** input-free neutral-control sampler, symmetric paired energy/shield analysis, failure-safe input-not-owned cleanup, exact pair identities, focused gate; no live attempt or retail value |
+| **M5.3-home-native-visual-focus-harness** | **ADVANCEMENT** fail-closed repo-build native gate; first-run Setup and ready Patch Bench owner-bound focus; 1100/760 captures; schema-3 receipts; exact 1/1 TRX; zero process census |
 
 ## Active skipped blocker
 
@@ -36,30 +37,40 @@ Integration tip: `0777e10b`
 
 ## Current Slice
 
-**ID:** `M5.3-home-native-visual-focus-harness`
+**ID:** `M5.4-save-lab-native-workflow-harness`
 
-**Objective:** Build an unattended native WinUI first-run Home verification
-harness that launches only the repo-built app, binds the exact window/process,
-captures deterministic UIA and visual evidence, and asserts focus reaches the
-visible setup action. Preserve the existing non-claim until a fresh native run
-passes; no BEA, release, Host/Join, or human interaction required. Campaign
-ACTIVE.
+**Objective:** Build a fail-closed unattended native WinUI Save Lab first-use
+and Game Options workflow harness. Use only the repository build, the tracked
+immutable save fixture copied into app-owned local staging, and synthetic
+options buffers; bind exact process/window/input state, verify behavior plus
+normal/760 visual evidence, and publish only complete ignored/local receipts.
+Do not launch Explorer/browser/BEA, touch an installed game, synthesize a new
+`.bes` baseline, authorize release/Host/Join, or require human judgment.
+Campaign ACTIVE.
 
 ## Resume (Codex handoff)
 
-- **Tip SHA:** `0777e10b`
-- **Closed:** M2 shield offline live-readiness ADVANCEMENT; live dual-accept is
-  skipped on `BLOCKED_SHIELD_LIVE_AUTHORITY_20260714-2317`, not falsely closed.
-- **Validation:** walker measurement contract PASS (sampler 30, orchestrator 45,
-  shield 18, catalog 5, generated smoke 61); shared runtime-tooling safety PASS
-  (including smoke 61 and cleanup 55); generated AppCore runner restore/build
-  PASS (`buildInvocationCount=1`, owned compiler processes 0); M2/M3 scalar
-  regressions, scalar status, doc commands, docsync, validation inventory,
-  public-core links, hard-payload safety, Python compile, and diff check PASS.
-- **Paths:** shield scaffold/sampler/orchestrator; generated runtime cleanup;
-  focused package gate; scalar catalog/status; public/lore shield docs; design
-  and implementation plan.
-- **Codex owns next:** `M5.3-home-native-visual-focus-harness`; automate native
-  capture/focus evidence before making any Home acceptance claim.
-- **Confirm:** Relevant process census zero; no BEA launch, live RPM, input, or
-  measurement; Steam/original BEA untouched; no release/tag/Host/Join.
+- **Tip SHA:** `f8f6bef8`
+- **Closed:** M5.3 Home native visual/focus ADVANCEMENT. The shield live pair
+  remains skipped on `BLOCKED_SHIELD_LIVE_AUTHORITY_20260714-2317`; no retail
+  shield value or Core behavior was invented.
+- **Validation:** named native gate PASS with pinned Debug/win-x64 build, exact
+  TRX 1/1, four capture and two focus receipts, schema 3, invocation/hash/full
+  identity binding, and final process zero; focused Home/receipt/cleanup tests
+  50/50; primary WinUI lane PASS (zero-warning build, AppCore 1319, WinUI 245
+  plus two expected private-catalog skips); validation inventory, docsync,
+  documented commands, public-core links, generated-output safety, repo hygiene
+  (18,822 files), hard-payload safety (19,690 files), Python compile, and diff
+  checks PASS.
+- **Paths:** Home app-side focus endpoint; terminal diagnostic, UIA ownership,
+  pixel-coverage, lifecycle, capture/publication, TRX and manifest validators;
+  focused package command; contributor/validation/capability docs; design and
+  implementation plan. Native screenshots, app data, TRX, and manifests remain
+  ignored/local.
+- **Review:** normal/adversarial Codex and sanitized normal/adversarial Cursor
+  review envelope complete; all Critical/Important findings resolved.
+- **Codex owns next:** `M5.4-save-lab-native-workflow-harness`; automate Save
+  Lab first-use/options behavior and visuals without subjective acceptance.
+- **Confirm:** Relevant process census zero; no BEA launch, live RPM, debugger,
+  game input, or retail measurement; installed game/original BEA untouched; no
+  release/tag/Host/Join.

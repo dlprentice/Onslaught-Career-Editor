@@ -1,7 +1,7 @@
 # Full Reconstruction Campaign
 
 Status: **ACTIVE durable campaign**  
-Last updated: 2026-07-14 (shield input-free live readiness; native visual harness next)
+Last updated: 2026-07-14 (Home native focus/visual acceptance landed; Save Lab workflow harness next)
 
 Policy: [`goal.policy.md`](goal.policy.md)  
 Mutable baton: [`goal.md`](goal.md)  
@@ -126,7 +126,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 |----|-----------|--------|
 | M5.1 | Safe-copy launch / stop / patch apply-restore | landed foundation |
 | M5.2 | Patch catalog honesty + Lab UX | landed foundation |
-| M5.3 | Home native-focus acceptance | open | needs native proof |
+| M5.3 | Home native-focus acceptance | landed | unattended exact-build first-run/ready focus plus normal/760 schema-3 visual receipts |
 | M5.4 | Save Lab / options workflows polish + tests | open |
 | M5.5 | Media library + catalog workflows | open |
 | M5.6 | Release hygiene (no auto-release from campaign) | open |
