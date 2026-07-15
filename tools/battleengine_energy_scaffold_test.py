@@ -37,6 +37,16 @@ class EnergyScaffoldTests(unittest.TestCase):
         self.assertTrue(m.accepted)
         self.assertGreater(m.steady_rate_per_sec, 1.0)
 
+    def test_rejects_regen_when_expecting_drain(self) -> None:
+        samples = energy.synthetic_energy_series(rate_per_sec=2.0)
+        with self.assertRaisesRegex(energy.EnergyScaffoldError, "drain"):
+            energy.analyze_energy_rate(
+                attempt=1,
+                samples=samples,
+                frequency=10_000_000,
+                expect_negative=True,
+            )
+
     def test_pair_envelope_for_drain(self) -> None:
         frequency = 10_000_000
         m1 = energy.analyze_energy_rate(
