@@ -30,6 +30,9 @@ class CampaignScalarStatusTests(unittest.TestCase):
         dual = [r for r in payload["scalars"] if r["status"] == "dual-accepted"]
         self.assertEqual(5, len(dual))
         self.assertTrue(all(r.get("present") for r in dual))
+        offline = payload.get("offlineHarnesses") or []
+        self.assertEqual(5, len(offline))
+        self.assertIn("coast", {row["mode"] for row in offline})
 
 
 if __name__ == "__main__":
