@@ -1745,7 +1745,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--measure",
         choices=sampler.MEASURE_MODES,
         default=sampler.MEASURE_FORWARD,
-        help="Scalar channel: forward, turn, strafe, or transform morph timing.",
+        help=(
+            "Scalar channel: forward, turn, strafe, transform morph timing, "
+            "or energy (jet thrust-hold drain; requires --vehicle jet)."
+        ),
     )
     pair = sub.add_parser("run-two", allow_abbrev=False)
     pair.add_argument("--source-root", required=True)
@@ -1763,7 +1766,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--measure",
         choices=sampler.MEASURE_MODES,
         default=sampler.MEASURE_FORWARD,
-        help="Scalar channel: forward, turn, strafe, or transform morph timing.",
+        help=(
+            "Scalar channel: forward, turn, strafe, transform morph timing, "
+            "or energy (jet thrust-hold drain; requires --vehicle jet)."
+        ),
     )
     return parser
 
