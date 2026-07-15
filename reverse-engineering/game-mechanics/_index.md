@@ -32,6 +32,7 @@ After Ghidra function-quality closure (`6113/6113 = 100.00%`, Wave900), **Wave90
 | [fire-cooldown-scalar-measurement-plan.md](fire-cooldown-scalar-measurement-plan.md) | scaffold + energy-drop edges |
 | [fire-cooldown-retail-to-core-translation-policy.md](fire-cooldown-retail-to-core-translation-policy.md) | draft blocked on dual-accept |
 | [projectile-speed-scalar-measurement-plan.md](projectile-speed-scalar-measurement-plan.md) | scaffold |
+| [projectile-speed-retail-to-core-translation-policy.md](projectile-speed-retail-to-core-translation-policy.md) | draft blocked on dual-accept |
 | [coast-friction-release-measurement-plan.md](coast-friction-release-measurement-plan.md) | scaffold M1.6 |
 | [coast-friction-retail-to-core-translation-policy.md](coast-friction-retail-to-core-translation-policy.md) | draft blocked on dual-accept |
 | [runtime-proof-lab-retention.md](runtime-proof-lab-retention.md) | lab hygiene |
