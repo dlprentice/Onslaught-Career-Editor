@@ -48,6 +48,13 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void LookX_OutsideUnitRange_IsRejected()
+    {
+        var input = new SimInput(0, 0, LookX: 2);
+        Assert.Throws<ArgumentOutOfRangeException>(input.Validate);
+    }
+
+    [Fact]
     public void WalkerStrafeSpeed_MatchesAcceptedStrafeP02Translation()
     {
         // Dual-accept steady ≈ 3.015 u/s → round(v * 1000 / 30) = 101.
