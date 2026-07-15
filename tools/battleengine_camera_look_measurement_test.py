@@ -77,6 +77,19 @@ class CameraLookHarnessTests(unittest.TestCase):
     def test_yaw_axis_offset_hypothesis_is_explicit(self) -> None:
         self.assertEqual(0x278, cam.BATTLE_ENGINE_YAW_AXIS_OFFSET)
 
+    def test_pair_envelope_rejects_unstable_rates(self) -> None:
+        frequency = 10_000_000
+        b1, h1, r1 = cam.synthetic_camera_look_attempt(attempt=1, steady_rate=0.05)
+        b2, h2, r2 = cam.synthetic_camera_look_attempt(attempt=2, steady_rate=0.20)
+        m1 = cam.analyze_camera_look_attempt(
+            attempt=1, baseline=b1, hold=h1, release=r1, frequency=frequency
+        )
+        m2 = cam.analyze_camera_look_attempt(
+            attempt=2, baseline=b2, hold=h2, release=r2, frequency=frequency
+        )
+        with self.assertRaisesRegex(cam.CameraLookError, "not stable"):
+            cam.materialize_camera_look_pair_envelope(m1, m2)
+
 
 if __name__ == "__main__":
     unittest.main()
