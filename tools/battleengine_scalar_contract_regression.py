@@ -21,6 +21,7 @@ CONTRACTS = (
     MECH / "jet-forward-scalar-response-v1.json",
     MECH / "walker-turn-yaw-scalar-response-v1.json",
     MECH / "walker-strafe-lateral-scalar-response-v1.json",
+    MECH / "walker-transform-morph-timing-v1.json",
 )
 
 
@@ -63,6 +64,39 @@ def _steady_key(envelope: Mapping[str, Any], metrics: Mapping[str, Any]) -> tupl
     raise ContractRegressionError("unsupported steady metric shape")
 
 
+def _validate_latency_pair_contract(path: Path, root: Mapping[str, Any]) -> dict[str, object]:
+    """Transform-style contracts: envelope.morphLatencyMs + attempt morphLatencyMs."""
+
+    envelope = _require_mapping(root["envelope"], "envelope")
+    if "morphLatencyMs" not in envelope:
+        raise ContractRegressionError(f"{path.name} missing envelope.morphLatencyMs")
+    env_lo, env_hi = _require_range(envelope["morphLatencyMs"], "envelope.morphLatencyMs")
+    attempts = root["attempts"]
+    mids: list[float] = []
+    for index, attempt in enumerate(attempts, start=1):
+        row = _require_mapping(attempt, f"attempt[{index}]")
+        metrics = _require_mapping(row.get("metrics"), f"attempt[{index}].metrics")
+        lo, hi = _require_range(metrics.get("morphLatencyMs"), f"attempt[{index}].morphLatencyMs")
+        if lo < env_lo * 0.99 or hi > env_hi * 1.01:
+            raise ContractRegressionError(
+                f"{path.name} attempt latency [{lo},{hi}] outside envelope [{env_lo},{env_hi}]"
+            )
+        mids.append((lo + hi) / 2.0)
+    relative = abs(mids[0] - mids[1]) / min(mids)
+    if relative > 0.25:
+        raise ContractRegressionError(f"{path.name} morph mid relative delta {relative:.4f} too large")
+    nonclaims = root["nonclaims"]
+    if not isinstance(nonclaims, list) or not nonclaims:
+        raise ContractRegressionError(f"{path.name} nonclaims must be a non-empty list")
+    return {
+        "path": str(path.relative_to(ROOT)).replace("\\", "/"),
+        "schemaVersion": root["schemaVersion"],
+        "steadyValues": mids,
+        "envelope": {"lower": env_lo, "upper": env_hi, "key": "morphLatencyMs"},
+        "relativeDelta": relative,
+    }
+
+
 def validate_landed_scalar_contract(path: Path) -> dict[str, object]:
     if not path.is_file():
         raise ContractRegressionError(f"missing contract: {path}")
@@ -77,6 +111,8 @@ def validate_landed_scalar_contract(path: Path) -> dict[str, object]:
     if not isinstance(attempts, list) or len(attempts) != 2:
         raise ContractRegressionError(f"{path.name} must have exactly two attempts")
     envelope = _require_mapping(root["envelope"], "envelope")
+    if "morphLatencyMs" in envelope:
+        return _validate_latency_pair_contract(path, root)
     # Probe first metrics for shape.
     first_metrics = _require_mapping(attempts[0].get("metrics"), "attempt[1].metrics")
     env_key, met_key = _steady_key(envelope, first_metrics)
