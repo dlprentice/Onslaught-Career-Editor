@@ -60,6 +60,23 @@ class EnergyScaffoldTests(unittest.TestCase):
         self.assertLess(band["lower"], band["upper"])
         self.assertEqual("0xfc", envelope["offsetHypothesis"]["battleEngineEnergy"])
 
+    def test_pair_envelope_rejects_unstable_rates(self) -> None:
+        frequency = 10_000_000
+        m1 = energy.analyze_energy_rate(
+            attempt=1,
+            samples=energy.synthetic_energy_series(rate_per_sec=-2.0),
+            frequency=frequency,
+            expect_negative=True,
+        )
+        m2 = energy.analyze_energy_rate(
+            attempt=2,
+            samples=energy.synthetic_energy_series(rate_per_sec=-4.0),
+            frequency=frequency,
+            expect_negative=True,
+        )
+        with self.assertRaisesRegex(energy.EnergyScaffoldError, "not stable"):
+            energy.materialize_energy_pair_envelope(m1, m2)
+
 
 if __name__ == "__main__":
     unittest.main()
