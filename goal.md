@@ -3,38 +3,26 @@
 Status: **ACTIVE** (time-boxed marathon)  
 Last updated: 2026-07-14  
 **STOP wall clock:** 2026-07-15 10:00 local  
-Integration tip: `deafc99e`  
-30m durable re-entry: 019f633f58c2 (verify still armed)
+Integration tip: `eb5e6632`  
+30m durable re-entry: **armed** `019f633f58c2` (every 30m)
 
 ## Closed ledger (session)
 
-| Slice | Tip |
-|-------|-----|
-| Camera look + Core LookX | `83c33e0d` |
-| Energy/shield offsets + measure=energy | `0f4af824` |
-| M1.6 coast scaffold | `3420588f` |
-| Client/Godot LookX | `1f485af1` |
-| Fire energy-drop edges | `caca66d8` |
-| CommandTape LookX + index | `0f13a6e6` |
-| Lore docsync mirrors | `6acb4f43` |
-| LookX replay test | `edf70fcc` |
-| Energy pair envelope | `3f679a1c` |
-| Shield pair envelope + README look | `deafc99e` |
+Camera look + Core LookX · energy/shield offsets · measure=energy · M1.6 coast ·
+Client/Godot LookX · fire energy-drop edges · CommandTape LookX · lore docsync ·
+pair envelopes · measure mode catalog · First Flight look HUD (this)
 
 ## Current Slice
 
-**ID:** `M2-energy-live-dual-accept-or-projectile-or-WinUI`  
-**Objective:** Live jet energy dual-accept when GameProfiles ready; else
-projectile speed scaffold pair envelope / WinUI honesty. No reopen closed
-motion dual-accepts. Energy BE+0xFC / shields BE+0x100 are hypotheses until
-dual-accept.
+**ID:** `M2-energy-live-or-WinUI-or-continue-scaffolds`  
+**Objective:** Live jet energy dual-accept when GameProfiles ready; else continue
+harness/WinUI honesty. Offsets BE+0xFC/+0x100 hypotheses until dual-accept.
 
 ## Blockers (non-terminal)
 
-- No active `GameProfiles/` copy for live pair right now; live dual-accept needs
-  safe-copy preflight + mission control + receipt.
+- No `GameProfiles/` for live pair; needs safe-copy + mission + receipt.
 
 ## Resume
 
-Continue while `Get-Date` < 2026-07-15 10:00 local. At STOP: finalize baton;
-do **not** `update_goal(completed)` early.
+`Get-Date` < 2026-07-15 10:00 → continue. At STOP: resume-ready baton only;
+do **not** complete goal early.

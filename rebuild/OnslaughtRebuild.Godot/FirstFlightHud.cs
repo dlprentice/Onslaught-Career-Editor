@@ -185,7 +185,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         root.AddChild(_controlsPanel);
 
         var controls = CreateLabel(
-            "WASD  MOVE     SPACE  FIRE     Q  TRANSFORM     R  RESET     ESC  EXIT",
+            "WASD  MOVE     ←→  LOOK     SPACE  FIRE     Q  TRANSFORM     R  RESET     ESC  EXIT",
             15,
             TextPrimary);
         controls.HorizontalAlignment = HorizontalAlignment.Center;
