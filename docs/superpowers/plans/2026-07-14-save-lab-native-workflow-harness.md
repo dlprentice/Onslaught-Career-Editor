@@ -590,8 +590,10 @@ dimensions. Owned discovery accepts only
 Require both ignored roots to be exact repository `local-lab` children before
 writes or recursive cleanup, and refuse any nested reparse point in a cleanup
 tree. Validate the canonical manifest/tree before and after artifact parsing
-and again immediately before receipt-authorized survivor cleanup. Revalidate
-PID/start/path before bounded close/process-tree kill and require observed exit
+and again immediately before receipt-authorized survivor cleanup; require the
+receipt tree and regular manifest to exist and retain the validated manifest
+hash. Revalidate PID/start/path before bounded close/process-tree kill and
+require observed exit
 for every exact owned WinUI launch. Apply the same recursive reparse guard to
 the shared Home runner.
 

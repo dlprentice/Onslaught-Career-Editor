@@ -310,6 +310,24 @@ class SaveLabNativeWorkflowRunnerTests(unittest.TestCase):
                 if run_directory.exists():
                     run_directory.rmdir()
 
+    def test_owned_manifest_guard_rejects_missing_manifest_and_receipt_tree(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo = Path(temp_dir) / "repo"
+            manifest = self._write_valid_manifest(repo)
+            evidence_root = repo / "local-lab" / "winui-save-lab-native-workflow"
+            receipt_tree = manifest.parent
+
+            manifest.unlink()
+            with self.assertRaisesRegex(harness.NativeAcceptanceError, "regular file"):
+                harness.verify_owned_manifest_path(manifest, evidence_root)
+
+            harness.native_support.remove_reparse_free_tree(
+                receipt_tree,
+                label="test receipt tree",
+            )
+            with self.assertRaisesRegex(harness.NativeAcceptanceError, "directory"):
+                harness.verify_owned_manifest_path(manifest, evidence_root)
+
     def test_failed_invocation_cleanup_rejects_nested_junction(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -409,12 +427,62 @@ class SaveLabNativeWorkflowRunnerTests(unittest.TestCase):
                             census,
                             owned_identities,
                             receipt_path=manifest,
+                            receipt_sha256=harness.sha256(outside / manifest.name),
                             evidence_root=repo / "local-lab" / "winui-save-lab-native-workflow",
                             repo_root=repo,
                         )
                 terminate.assert_not_called()
             finally:
                 run_directory.rmdir()
+
+    def test_survivor_remediation_rejects_changed_or_missing_validated_receipt(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo = Path(temp_dir) / "repo"
+            manifest = self._write_valid_manifest(repo)
+            evidence_root = repo / "local-lab" / "winui-save-lab-native-workflow"
+            summary = harness.validate_owned_manifest_receipt(
+                manifest,
+                evidence_root=evidence_root,
+                repo_root=repo,
+                expected_harness_run_id=self.RUN_ID,
+            )
+            receipt_hash = summary["_validatedReceiptSha256"]
+            owned_identities = harness.owned_process_identity_set(summary)
+            identity = summary["ownedProcessIdentities"][0]
+            census = {
+                identity["processId"]: {
+                    "Id": identity["processId"],
+                    "ProcessName": "OnslaughtCareerEditor.WinUI",
+                    "Path": identity["executablePath"],
+                    "StartTimeUtcTicks": identity["startTimeUtcTicks"],
+                }
+            }
+
+            manifest.write_text(manifest.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+            with mock.patch.object(harness, "terminate_exact_owned_winui_process") as terminate:
+                with self.assertRaisesRegex(harness.NativeAcceptanceError, "hash changed"):
+                    harness.remediate_final_process_census(
+                        census,
+                        owned_identities,
+                        receipt_path=manifest,
+                        receipt_sha256=receipt_hash,
+                        evidence_root=evidence_root,
+                        repo_root=repo,
+                    )
+            terminate.assert_not_called()
+
+            manifest.unlink()
+            with mock.patch.object(harness, "terminate_exact_owned_winui_process") as terminate:
+                with self.assertRaisesRegex(harness.NativeAcceptanceError, "regular file"):
+                    harness.remediate_final_process_census(
+                        census,
+                        owned_identities,
+                        receipt_path=manifest,
+                        receipt_sha256=receipt_hash,
+                        evidence_root=evidence_root,
+                        repo_root=repo,
+                    )
+            terminate.assert_not_called()
 
     def _write_valid_manifest(self, root: Path) -> Path:
         build = root / "OnslaughtCareerEditor.WinUI" / "bin" / "Debug" / "net10.0-windows10.0.19041.0" / "win-x64"

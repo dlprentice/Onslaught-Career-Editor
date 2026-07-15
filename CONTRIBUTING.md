@@ -245,7 +245,8 @@ independently parsed from retained bytes, stable owner-bound focus and marker
 geometry, one fresh schema-1 manifest, and a zero final process census. Its
 ignored roots are exact repository `local-lab` children, and recursive cleanup
 refuses any nested reparse point. Manifest ownership is rechecked after full
-artifact validation and immediately before receipt-authorized process cleanup.
+artifact validation and immediately before receipt-authorized process cleanup;
+the existing regular manifest file must retain its validated hash.
 Owned WinUI cleanup revalidates PID/start/path before bounded close or
 process-tree kill.
 A final survivor is force-cleaned only when it matches this invocation's

@@ -154,7 +154,8 @@ Both ignored roots must be their exact repository `local-lab` children; any
 reparse point anywhere in an owned recursive-cleanup tree fails before removal.
 Receipt validation checks the canonical manifest and reparse-free artifact tree
 both before and after parsing, then checks them again immediately before any
-receipt-authorized survivor kill.
+receipt-authorized survivor kill. The receipt directory and regular manifest
+must still exist, and the manifest must retain its pre-validation SHA-256.
 Each exact WinUI launch revalidates PID/start/path before bounded graceful close
 and again before process-tree kill, propagating failure if exit is not observed.
 An unreceipted survivor is reported but never mutated. The shared build/test

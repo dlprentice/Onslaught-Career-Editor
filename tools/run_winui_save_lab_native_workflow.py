@@ -505,6 +505,8 @@ def verify_owned_evidence_directory(path: Path, evidence_root: Path) -> Path:
     root = evidence_root.absolute()
     child = path.absolute()
     require(child.parent == root, f"Save Lab evidence path is not a direct owned child: {child}")
+    require(root.is_dir(), f"Save Lab evidence root must be an existing directory: {root}")
+    require(child.is_dir(), f"Save Lab receipt must be an existing directory: {child}")
     _require_not_reparse_point(root, "Save Lab evidence root")
     _require_not_reparse_point(child, "Save Lab evidence child")
     return child
@@ -517,7 +519,12 @@ def verify_owned_manifest_path(manifest_path: Path, evidence_root: Path) -> Path
         manifest.parent == parent and manifest.name == "save-lab-acceptance-manifest.json",
         f"Save Lab manifest is not the canonical file in its direct owned child: {manifest}",
     )
+    require(manifest.is_file(), f"Save Lab manifest must be an existing regular file: {manifest}")
     _require_not_reparse_point(manifest, "Save Lab manifest")
+    require(
+        stat.S_ISREG(os.lstat(manifest).st_mode),
+        f"Save Lab manifest must be an existing regular file: {manifest}",
+    )
     native_support.require_reparse_free_tree(parent, label="Save Lab receipt tree")
     return manifest
 
@@ -531,6 +538,7 @@ def validate_owned_manifest_receipt(
 ) -> dict[str, Any]:
     root = verify_evidence_root(evidence_root, repo_root=repo_root)
     manifest = verify_owned_manifest_path(manifest_path, root)
+    receipt_sha256 = sha256(manifest)
     summary = validate_manifest(
         manifest,
         repo_root,
@@ -538,7 +546,26 @@ def validate_owned_manifest_receipt(
     )
     root = verify_evidence_root(evidence_root, repo_root=repo_root)
     verify_owned_manifest_path(manifest, root)
-    return summary
+    require(
+        sha256(manifest) == receipt_sha256,
+        "Save Lab validated receipt hash changed during manifest reconciliation",
+    )
+    return {**summary, "_validatedReceiptSha256": receipt_sha256}
+
+
+def verify_validated_receipt_authority(
+    receipt_path: Path,
+    receipt_sha256: str,
+    *,
+    evidence_root: Path,
+    repo_root: Path,
+) -> None:
+    root = verify_evidence_root(evidence_root, repo_root=repo_root)
+    manifest = verify_owned_manifest_path(receipt_path, root)
+    require(
+        sha256(manifest) == receipt_sha256,
+        "Save Lab validated receipt hash changed before process cleanup",
+    )
 
 
 def remove_failed_invocation_evidence(
@@ -617,13 +644,19 @@ def remediate_final_process_census(
     owned_process_identities: set[tuple[int, int, str]],
     *,
     receipt_path: Path | None = None,
+    receipt_sha256: str | None = None,
     evidence_root: Path = EVIDENCE_ROOT,
     repo_root: Path = REPO_ROOT,
 ) -> None:
     if owned_process_identities:
         require(receipt_path is not None, "owned WinUI cleanup identities lack a validated receipt path")
-        root = verify_evidence_root(evidence_root, repo_root=repo_root)
-        verify_owned_manifest_path(receipt_path, root)
+        require(receipt_sha256 is not None, "owned WinUI cleanup identities lack a validated receipt hash")
+        verify_validated_receipt_authority(
+            receipt_path,
+            receipt_sha256,
+            evidence_root=evidence_root,
+            repo_root=repo_root,
+        )
     expected_executable = BUILT_APP_ROOT / "OnslaughtCareerEditor.WinUI.exe"
     survivors = select_owned_repo_winui_survivors(
         census,
@@ -633,8 +666,12 @@ def remediate_final_process_census(
     termination_errors: list[str] = []
     for process_id, row in survivors:
         try:
-            root = verify_evidence_root(evidence_root, repo_root=repo_root)
-            verify_owned_manifest_path(receipt_path, root)
+            verify_validated_receipt_authority(
+                receipt_path,
+                receipt_sha256,
+                evidence_root=evidence_root,
+                repo_root=repo_root,
+            )
             terminate_exact_owned_winui_process(process_id, row, expected_executable)
         except Exception as exc:
             termination_errors.append(str(exc))
@@ -692,11 +729,11 @@ def recover_validated_owned_process_receipt(
     *,
     evidence_root: Path = EVIDENCE_ROOT,
     repo_root: Path = REPO_ROOT,
-) -> tuple[set[tuple[int, int, str]], Path | None]:
+) -> tuple[set[tuple[int, int, str]], Path | None, str | None]:
     root = verify_evidence_root(evidence_root, repo_root=repo_root)
     manifests = invocation_manifests(invocation_id, root)
     if len(manifests) != 1:
-        return set(), None
+        return set(), None, None
     manifest = next(iter(manifests))
     summary = validate_owned_manifest_receipt(
         manifest,
@@ -704,7 +741,7 @@ def recover_validated_owned_process_receipt(
         repo_root=repo_root,
         expected_harness_run_id=invocation_id,
     )
-    return owned_process_identity_set(summary), manifest
+    return owned_process_identity_set(summary), manifest, summary["_validatedReceiptSha256"]
 
 
 def run_acceptance() -> dict[str, Any]:
@@ -724,6 +761,7 @@ def run_acceptance() -> dict[str, Any]:
     result: dict[str, Any] | None = None
     owned_process_identities: set[tuple[int, int, str]] = set()
     owned_identity_receipt_path: Path | None = None
+    owned_identity_receipt_sha256: str | None = None
     try:
         run_command(WINUI_BUILD_COMMAND, timeout=180)
         executable = BUILT_APP_ROOT / "OnslaughtCareerEditor.WinUI.exe"
@@ -759,6 +797,7 @@ def run_acceptance() -> dict[str, Any]:
         )
         owned_process_identities = owned_process_identity_set(manifest_summary)
         owned_identity_receipt_path = manifest_path
+        owned_identity_receipt_sha256 = manifest_summary.pop("_validatedReceiptSha256")
         time.sleep(0.5)
         post = process_census()
         require(not post, f"post-run relevant-process census must be zero, found: {describe_processes(post)}")
@@ -775,6 +814,7 @@ def run_acceptance() -> dict[str, Any]:
                 (
                     owned_process_identities,
                     owned_identity_receipt_path,
+                    owned_identity_receipt_sha256,
                 ) = recover_validated_owned_process_receipt(invocation_id)
             except Exception:
                 # Without one fully validated receipt, survivor mutation is not authorized.
@@ -786,6 +826,7 @@ def run_acceptance() -> dict[str, Any]:
                     final_census,
                     owned_process_identities,
                     receipt_path=owned_identity_receipt_path,
+                    receipt_sha256=owned_identity_receipt_sha256,
                 )
         except Exception as cleanup_error:
             error = append_cleanup_error(error, "final relevant-process census", cleanup_error)
