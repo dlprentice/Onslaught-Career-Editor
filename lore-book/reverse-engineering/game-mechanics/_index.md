@@ -17,6 +17,8 @@ After Ghidra function-quality closure (`6113/6113 = 100.00%`, Wave900), **Wave90
 
 ## Rebuild-grade motion / combat measurement (active)
 
+Human front door: [campaign-scalar-status.md](campaign-scalar-status.md).
+
 | Document | Status |
 |----------|--------|
 | [walker-forward-scalar-response-v2.md](walker-forward-scalar-response-v2.md) | dual-accepted → Core |
