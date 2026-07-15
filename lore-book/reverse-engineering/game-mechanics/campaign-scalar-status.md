@@ -23,6 +23,18 @@ Machine report: `npm run report:battleengine-campaign-scalar-status`
 | Coast / friction | path release half-life | coast scaffold |
 | Camera look | body/camera orientation | camera look scaffold |
 
+## Offline harness catalog (not MEASURE_MODES yet)
+
+Machine: `tools/battleengine_measure_mode_catalog.py` → `OFFLINE_HARNESS_ROWS`
+
+| Mode | Module |
+|------|--------|
+| coast | `battleengine_coast_friction_measurement` |
+| camera-look | `battleengine_camera_look_measurement` |
+| fire-cooldown | `battleengine_fire_cooldown_scaffold` |
+| projectile-speed | `battleengine_projectile_speed_scaffold` |
+| shield-rate | `battleengine_shield_scaffold` |
+
 ## Live prep
 
 - Copied profile (ignored): `GameProfiles/marathon-energy-jet-01`
