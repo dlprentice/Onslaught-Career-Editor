@@ -57,12 +57,12 @@ hash or explicit no-verification mode. `OnslaughtRebuild.Client` adds exact
 rational 30 Hz real-time scheduling, bounded catch-up, held input, press-edge
 latching, and one-tick quick-tap preservation without moving simulation truth
 out of Core. The playable Godot 4.7 First Flight client renders an original
-procedural arena, craft, sentries, projectiles, and HUD; WASD moves, Space
-fires, Q transforms, R resets, and Esc exits. Its pinned engine setup verifies
-the exact tracked manifest, official archive, and complete extracted tree,
-rejects reparse-point cache paths, and holds verified files plus the setup lock
-through each consumer. The native scripted smoke reaches tick 120 at 1280x720
-and the supported 1200x675 minimum with final state hash
+procedural arena, craft, sentries, projectiles, and HUD; WASD moves, ←→ look
+(body yaw), Space fires, Q transforms, R resets, and Esc exits. Its pinned
+engine setup verifies the exact tracked manifest, official archive, and complete
+extracted tree, rejects reparse-point cache paths, and holds verified files plus
+the setup lock through each consumer. The native scripted smoke reaches tick 120
+at 1280x720 and the supported 1200x675 minimum with final state hash
 `87b9d09a3afec0bebd97f06793b83baabe3ff330b2378ff149194d6d6a4f779d`,
 validates heuristic semantic HUD/player/sentry/world color anchors,
 synthetically exercises the Godot focus-notification handler's
@@ -76,12 +76,14 @@ submodule, or proprietary assets, and it is not included in the published
 v1.0.9 WinUI app ZIP. It is not a strict clean-room implementation and does not
 prove retail gameplay parity, visual parity, retail content, missions,
 persistence, audio, or online play.
-Its current transform timing, energy costs/drain, shield behavior, movement
-values, arena, and presentation are synthetic architecture-prototype choices.
-The 2026-07-12 BattleEngine movement crosswalk identifies the next authentic
-subsystem statically, but copied-runtime measurement and an accepted behavior
-contract are still required before those rebuild values should be promoted as
-retail-informed.
+Walker/jet forward, walker strafe, Look/Left yaw rate, and walker→jet morph
+settle ticks are dual-accepted copied-runtime contracts mapped into Core
+constants (`WalkerSpeedPerTick`, `JetSpeedPerTick`, `WalkerStrafeSpeedPerTick`,
+`WalkerLookYawRateMilliRadPerTick`, `MorphToJetSettleTicks`); Core agreement
+does not re-prove retail. Energy drain/regen, shield rates, fire cooldown,
+projectile speed, coast/friction, and camera presentation rates remain
+scaffold or provisional until dual-accept. Arena layout and presentation remain
+synthetic architecture-prototype choices.
 
 Music audible-output proof now has complete producer coverage for the next
 private live raw-bundle attempt:
