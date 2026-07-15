@@ -11,6 +11,13 @@
 > [battleengine-movement-static-crosswalk-2026-07-12.md](battleengine-movement-static-crosswalk-2026-07-12.md).
 > Older wave names below are historical, and runtime behavior remains pending.
 
+> **Current target-acquisition contract (2026-07-15):**
+> `reverse-engineering/game-mechanics/battleengine-target-acquisition-static-contract-v1.json`
+> fixes `0x00406560` as `CBattleEngine__HandleLocks`, preserves the saved
+> descriptive `0x00406da0` name, and classifies the stronger
+> `CBattleEngine::GetClosestLockableUnit` / `CBattleEngine::StartLock` names as
+> source hypotheses only. It is static structure, not runtime target choice.
+
 Wave1220 static closeout acceptance: active current-risk focused accounting is `1179/1179 = 100.00%`; remaining active focused work: 0. This is static Ghidra/read-back/system-map acceptance for the current-risk lane, not runtime gameplay proof, exact layout proof, exact source-body identity, BEA patching proof, rebuild parity, or no-noticeable-difference parity.
 
 MissionScript Player-State / Score Command-Effect static proof (`missionscript-player-state-score-command-effect-static-proof.md` and `missionscript-player-state-score-command-effect.v1.json`) records `AddScore`, `ToggleCockpit`, and `SetStealth` as descriptor/corpus/source-context evidence only: descriptor rows `84/136/137`, raw entries `IScript__Unk_00534410` / `&LAB_00533950` / `&LAB_00533980`, the `0x00534410 IScript__SecondaryObjectiveComplete` alias boundary, loose-MSL counts `15 / 0 / 10`, file counts `12 / 0 / 4`, `CGame::IncScore`, `CBattleEngine::ToggleCockpit`, and `CBattleEngine__HandleCloak`. Runtime score behavior, cockpit behavior, stealth behavior, `weapon_fire_breaks_stealth`, exact player-state layouts, patch behavior, visual QA, Godot, rebuild parity, and no-noticeable-difference parity remain separate proof.
@@ -93,7 +100,7 @@ Static evidence supports the BattleEngine player-state surface as a coherent mod
 - `0x00404dd0 CBattleEngine__Init` initializes walker/jet part groups at observed `+0x578` and `+0x57c`, writes state `+0x260`, initializes stealth-adjacent fields, and calls `CBattleEngine__SwapPrimarySecondaryPartReadersForState`.
 - `0x004074d0 CBattleEngine__Gravity` was recovered by Wave1139 from the no-function gap before `CGame__UpdateMouseLookAngles`. Static evidence ties it to source `CBattleEngine::Gravity`, DATA xref `0x005d8a78`, state-switch reads at `this+0x260`, dying-state gate at `this+0x2c`, and two jet-state tail jumps through `this+0x57c` to `CBattleEngineJetPart__Gravity`.
 - `0x00406560 CBattleEngine__HandleLocks` is the source-aligned lock-maintenance and acquisition helper reached from `CBattleEngine__Move`; its older projectile-helper identity is superseded. Runtime targeting and firing behavior remain unproven.
-- `0x00406da0 CBattleEngine__SelectNearestForwardTargetFromGlobalSet` walks global candidate set `DAT_008550d0`, filters by profile/mask/range/forward-facing checks, and is called from the lock-acquisition path.
+- `0x00406da0 CBattleEngine__SelectNearestForwardTargetFromGlobalSet` walks global candidate set `DAT_008550d0`, filters by side/profile, distance, nearest-so-far, forward-deflection, and existing-lock checks, and is called from `CBattleEngine__HandleLocks`. Pinned-source `CBattleEngine::GetClosestLockableUnit` remains a hypothesis-only stronger name.
 - `0x0040d0f0 CWeaponStatement__UsesBallisticArcNoLocks` bridges CUnit/OID ballistic distance and aim/fire paths to projectile-gravity context.
 - `0x0040dc30 CBattleEngine__EnableVolumeEntryGroupsByName`, `0x0040dc60 CBattleEngine__DisableVolumeEntryGroupsByNameAndReselect`, `0x0040dcc0 CBattleEngine__ClearFlag58CAndMorphIfState3`, `0x0040dcb0 CBattleEngine__SetFlag58CEnabled`, and `0x0040dc90 CBattleEngine__CountFlag9CBySelectionMode` tie state/morph/volume/HUD context together.
 - `0x0040de40 CBattleEngine__AugmentWeapon` remains the static Stuart-source bridge for augmented-weapon activation.

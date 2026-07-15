@@ -328,7 +328,10 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
             "no shield retail behavior contract",
             normalized_words(baton).casefold(),
         )
-        self.assertIn("dangerous-misinterpretation exception", baton)
+        self.assertIn(
+            "not a completed playable-targeting milestone",
+            normalized_words(baton),
+        )
         self.assertNotIn("MISSING_COMPLETE_LIVE_RUNTIME_LEASE", baton)
         self.assertNotIn("BLOCKED_SHIELD_LIVE_AUTHORITY", baton)
         self.assertNotIn("## Active skipped blocker", baton)
@@ -389,7 +392,8 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
                 self.assertIn("m2.3", state["currentFocus"].casefold())
                 self.assertIn("active", state["currentFocus"].casefold())
         self.assertIn(
-            "standing-authorized", orchestrator["currentTruth"][-1].casefold()
+            "standing-authorized",
+            " ".join(orchestrator["currentTruth"]).casefold(),
         )
         combined = normalized_words(
             json.dumps(

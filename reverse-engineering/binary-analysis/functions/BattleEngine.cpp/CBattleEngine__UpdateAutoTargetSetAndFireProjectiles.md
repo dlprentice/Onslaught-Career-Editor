@@ -34,6 +34,12 @@ and the surrounding source order identify that callee as lock-entry creation in
 this context. The direct caller position and full body align with
 `CBattleEngine::HandleLocks` in Stuart's source.
 
+The bounded public contract is
+[`battleengine-target-acquisition-static-contract-v1`](../../../game-mechanics/battleengine-target-acquisition-static-contract-v1.md).
+It keeps the candidate helper at `0x00406da0` and the lock-entry creation helper
+at `0x00406fc0` address-bound, with their stronger source names explicitly
+hypothesis-only.
+
 ## Boundaries
 
 - Static identity and ABI evidence only.

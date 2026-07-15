@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-15",
   "routingPolicy": "Single-writer default: one active implementation owner holds integration, validation, state, commits/pushes, consequential actions, and acceptance. It may be the root or one explicitly designated sole sequential worker whose parent only supervises and reports; coordination activates only for genuine concurrency.",
-  "currentFocus": "Product-coupled reconstruction campaign is active under one designated implementation worker; preserved M2.3 target-acquisition static-contract work is adopted in place as evidence debt for a named Playable Reconstruction consumer.",
+  "currentFocus": "Product-coupled reconstruction campaign is active under one designated implementation worker; M2.3 static target-acquisition evidence is accepted, and the current slice is the copied-runtime shield-to-Core/Godot resource vertical.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -130,6 +130,11 @@
       "task5Preflight": "Preflight corrected ambient-versus-effective executable identity and private AppConfig routing. Retries 1-10 exposed and bounded path-budget, CDB identity/null, MASM/module syntax, private-diagnostic, active-log sharing, native INPUT-layout, exact-input, target/debugger teardown, process-handle, and invalid cross-process timestamp-order defects. The correction integrated through f74ac902 retains the exact no-delete CDB log stream, strictly parses one bounded global `.lastevent` target process-exit event for the exact receipt-owned PID and nonzero thread, and preserves every process/module/receipt, marker, hash, managed-stop, finalized-log, and census guard. Retry 11 exposed the exceptional CDB -1/forced-target 0xFFFFFFFF relationship; the accepted correction through 647bbaa4 preserves normal exit zero and requires the exact target status, ForceRequested plus ExitObserved, and a semantically valid retained transcript. Retry 12 used wholly fresh controls and again stopped in noInputControl with no published matrix. All identity, fingerprint, stop, hash, and zero-process checks passed, but its WinDbg build emitted eleven legitimate post-quit NatVis unload lines while the parser admitted only one. The run failed closed on that bounded terminal-grammar defect before either positive role.",
       "status": "Tasks 1-4 are accepted. Task 5 has twelve preserved failed executions and no published identity claim. Retry 12 proves neither Q causality nor Transform/Morph/Move/JetPart identity; it exposed a repeated post-quit NatVis shutdown-grammar defect. Another live run requires an integrated strict path-bound correction and wholly fresh controls."
     },
+    "targetAcquisitionStaticContract": {
+      "status": "Accepted static-only M2.3 contract; not a landed targeting consumer.",
+      "scope": "0x00406560 is the reviewed CBattleEngine__HandleLocks root; 0x00406da0 candidate ordering and 0x00406fc0 lock-entry call shape remain address-bound, while stronger helper source identities remain hypotheses.",
+      "consumerBoundary": "Runtime target choice and lock timing are still required before deterministic Core target selection and Godot lock feedback may claim retail derivation."
+    },
     "walkerForwardScalarContract": {
       "status": "Accepted and closed: copied-runtime pair p27 supports walker-forward-scalar-response-v2; the accepted translation policy maps it to Core WalkerSpeedPerTick=100.",
       "tooling": "Lifecycle e04cce2e plus tick-aware estimator 58d8b5e5 and source-reference d4b9f83e are on main. Focused suites: sampler 27/27, orchestrator 31/31, source-reference 20/20.",
@@ -165,8 +170,7 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Finish or exactly block preserved M2.3 as a dangerous-misinterpretation exception and queue its deterministic target/lock consumer rather than claiming targeting landed.",
-    "Then run exactly two copied-runtime shield attempts; if either attempt fails, publish no behavior contract, while only a valid pair may reach the shield consumer in deterministic Core and Godot.",
+    "Run exactly two copied-runtime shield attempts; if either attempt fails, publish no behavior contract, while only a valid pair may reach the shield consumer in deterministic Core and Godot.",
     "Deliver a WinUI Reconstruction community surface that truthfully discovers, configures, verifies, and launches the playable companion.",
     "Run the bounded P1/P2 viewport and command-ownership experiment as the first original-game multiplayer epic gate, without enabling Host/Join."
   ]

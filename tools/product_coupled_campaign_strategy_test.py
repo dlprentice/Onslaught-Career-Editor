@@ -140,21 +140,23 @@ class ProductCoupledCampaignStrategyTests(unittest.TestCase):
 
     def test_active_baton_preserves_m23_and_names_consumers(self) -> None:
         baton = read_text("goal.md")
+        normalized_baton = normalize(baton).casefold()
         required = (
             "Status: **ACTIVE**",
             "sole sequential implementation worker",
             "M2.3-target-acquisition-static-contract",
+            "M2-shield-live-dual-accept",
             "Primary outcome: **Playable Reconstruction**",
             "OnslaughtRebuild.Core",
-            "dangerous-misinterpretation exception",
+            "not a completed playable-targeting milestone",
             "shield",
-            "Core and Godot",
+            "Core/Godot",
             "WinUI Reconstruction",
             "No P1/P2 runtime retest occurred",
         )
         for phrase in required:
             with self.subTest(phrase=phrase):
-                self.assertIn(phrase.casefold(), baton.casefold())
+                self.assertIn(normalize(phrase).casefold(), normalized_baton)
         self.assertNotIn("Status: **PAUSED**", baton)
 
     def test_public_front_doors_connect_all_three_products(self) -> None:
@@ -186,8 +188,8 @@ class ProductCoupledCampaignStrategyTests(unittest.TestCase):
             with self.subTest(state=name):
                 self.assertIn("product-coupled", state["currentFocus"].casefold())
                 self.assertIn("active", state["currentFocus"].casefold())
+                self.assertIn("m2.3", state["currentFocus"].casefold())
                 next_steps = normalize(" ".join(state["nextSteps"])).casefold()
-                self.assertIn("m2.3", next_steps)
                 self.assertIn("shield", next_steps)
                 self.assertIn("winui reconstruction", next_steps)
 

@@ -56,6 +56,7 @@ two test projects from that same build, shut down build servers, and passed in
 | Minor docs/state | `npm run test:doc-commands`, `npm run test:md-links:public-core` | `npm run test:docsync` for canonical/mirror inputs; `npm run test:doc-commands-all` and `npm run test:md-links` for broad historical/tree changes | current command truth, navigable front doors, mirror integrity |
 | AppCore/WinUI | focused project test while editing; `npm run test:winui-primary-lane` before handoff | `npm run test:winui-safe-copy-preflight` for copied-profile setup; `npm run test:winui-patch-engine-safety` for patch/catalog/mutation paths | data/API behavior, accessibility, primary UI, copied-target and patch safety |
 | Runtime tooling | changed helper's self-tests and `npm run test:runtime-tooling-safety` | the owning runtime-proof checker only when its evidence/schema changes | app-owned profile prep, exact PID/executable/working-directory identity, input receipt/HWND binding, finally-based key release, bounded CDB commands, cleanup |
+| Retail/static RE contract | the contract's named focused package gate | source/read-back or subsystem mirror gate when those inputs change | evidence hierarchy, address-bound structure, explicit runtime/Core non-claims |
 | Rebuild | `npm run test:rebuild` | `npm run test:rebuild-godot-smoke` only for engine setup, rendering, native input, launch, or clean-exit changes | deterministic Core/client, frozen trace/final-state contracts, owned-process cleanup |
 | Payload/provenance | focused scanner self-test while editing | `npm run test:public-allowlist` for repo shape, submodules, fixture/hash, ignore, export, or boundary changes | hard-payload and secret exclusion, exact exceptions, submodule and migration provenance |
 | Release/publication | affected build/accounting gate | the complete commands in [Public Sign-Off Commands](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md), including ZIP candidate proof before publication | notices, package contents/layout, extracted smoke, release accounting |
@@ -111,6 +112,14 @@ generated walker cleanup/input-ownership proof, and live-mode catalog. It is
 intentionally separate from
 `test:runtime-tooling-safety`; run the broader gate only when its shared
 profile/CDB/input/smoke helpers change.
+
+BattleEngine player-lock static-contract changes use
+`npm run test:battleengine-target-acquisition-static-contract`. The gate checks
+the canonical JSON/Markdown evidence hierarchy, reviewed `0x00406560`
+correction, address-bound helper notes, the required initialized pinned source
+revision and committed source blob, the subsystem lore mirror, and the
+explicit runtime/Core non-claims. It performs no BEA launch, debugger, or Ghidra
+mutation and produces only an ignored `local-lab/` bridge report.
 
 ## Retained Protections
 

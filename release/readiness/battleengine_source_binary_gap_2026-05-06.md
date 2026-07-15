@@ -116,7 +116,8 @@ Source-only anchors pending binary identity: 11
 
 The committed evidence is public-safe. It does not include binaries, private absolute paths, source excerpts, runtime captures, screenshots, private assets, or Ghidra mutation logs.
 
-The raw JSON report remains ignored local evidence under `subagents/battleengine-source-binary-gap/`.
+The raw JSON report remains ignored local evidence under
+`local-lab/battleengine-source-binary-gap/`.
 
 ## Recommended Next Step
 

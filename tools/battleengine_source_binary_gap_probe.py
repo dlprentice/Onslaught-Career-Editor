@@ -21,7 +21,7 @@ sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[1]
 FUNCTIONS_ROOT = ROOT / "reverse-engineering" / "binary-analysis" / "functions"
 LOGIC_PROBE = ROOT / "tools" / "battleengine_logic_coverage_probe.py"
-DEFAULT_OUT = ROOT / "subagents" / "battleengine-source-binary-gap" / "current" / "battleengine-source-binary-gap.json"
+DEFAULT_OUT = ROOT / "local-lab" / "battleengine-source-binary-gap" / "current" / "battleengine-source-binary-gap.json"
 
 
 @dataclass(frozen=True)
@@ -36,6 +36,7 @@ class PartialCandidateExpectation:
     evidence_file: str
     tokens: tuple[str, ...]
     summary: str
+    status: str = "PARTIAL_RETAIL_CANDIDATE_PENDING_EXACT_IDENTITY"
 
 
 EXPECTED_BINARY_FAMILIES: tuple[BinaryFamilyExpectation, ...] = (
@@ -227,14 +228,17 @@ PARTIAL_RETAIL_CANDIDATE_ANCHORS: tuple[PartialCandidateExpectation, ...] = (
     ),
     PartialCandidateExpectation(
         "target_lock_modes_and_stealth_range",
-        "release/readiness/battleengine_targeting_source_readback_bridge_2026-05-07.md",
+        "reverse-engineering/game-mechanics/battleengine-target-acquisition-static-contract-v1.md",
         (
-            "CBattleEngine__UpdateAutoTargetSetAndFireProjectiles",
-            "CBattleEngine__SelectNearestForwardTargetFromGlobalSet",
-            "target/projectile helper tokens",
-            "does not prove exact `CBattleEngine::HandleLocks` to retail helper control-flow identity",
+            "accepted static contract; not runtime proof",
+            "`0x00406560` | `CBattleEngine__HandleLocks`",
+            "`CBattleEngine::GetClosestLockableUnit`",
+            "`CBattleEngine::StartLock`",
+            "`runtime target choice`",
+            "`the retail semantic meaning of the source stealth expression`",
         ),
-        "Target-lock behavior has partial retail helper bridge evidence through target/projectile helper read-back, but exact HandleLocks control-flow identity remains unresolved.",
+        "The 0x00406560 CBattleEngine__HandleLocks retail-static root identity is accepted; exact source identities for the two dependent helpers, retail stealth-expression semantics, and runtime target choice remain unresolved.",
+        "RETAIL_STATIC_ROOT_IDENTITY_ACCEPTED_DEPENDENT_HYPOTHESES_PENDING",
     ),
     PartialCandidateExpectation(
         "augmented_weapon_charge_decay_and_reset",
@@ -325,7 +329,7 @@ def summarize_partial_candidate(expectation: PartialCandidateExpectation, tracke
     return {
         "key": expectation.key,
         "evidenceFile": expectation.evidence_file,
-        "status": "PARTIAL_RETAIL_CANDIDATE_PENDING_EXACT_IDENTITY" if not failures else "GAP",
+        "status": expectation.status if not failures else "GAP",
         "summary": expectation.summary,
         "tokenLineHits": hits,
         "failures": failures,
@@ -369,12 +373,12 @@ def build_report() -> dict[str, object]:
         "partialRetailCandidates": partial_retail_candidates,
         "unexpectedMissingAnchorKeys": unexpected_missing,
         "whatIsMapped": "Current binary docs include named BattleEngine.cpp, BattleEngineDataManager.cpp, and Player.cpp function families.",
-        "whatRemainsSourceOnly": "Selected weapon-fired stealth remains source-only until retail-binary/Ghidra read-back identifies its exact function body. Selected damage anchors, transform special-move lockout, Morph event/energy-gate anchors, jet energy/stall anchors, walker recharge, cloak behavior, player god-mode toggles, configuration defaults, target-lock behavior, and augmented-weapon activation/depletion now have partial retail candidate evidence, but exact source method/control-flow/function-body boundaries remain unproven.",
+        "whatRemainsSourceOnly": "Selected weapon-fired stealth remains source-only until retail-binary/Ghidra read-back identifies its exact function body. Selected damage anchors, transform special-move lockout, Morph event/energy-gate anchors, jet energy/stall anchors, walker recharge, cloak behavior, player god-mode toggles, configuration defaults, and augmented-weapon activation/depletion have partial retail candidate evidence, but exact source method/control-flow/function-body boundaries remain unproven. Target locking now has accepted 0x00406560 CBattleEngine__HandleLocks retail-static root identity while dependent helper source identities, retail stealth-expression semantics, and runtime target choice remain hypotheses or runtime-required.",
         "privacy": "Report stores repo-relative doc/source filenames, function names, addresses already present in public-safe docs, and gap labels only; no binaries, private paths, source excerpts, runtime captures, or Ghidra mutation logs.",
         "notProven": [
-            "Steam retail binary identity for each individual source anchor",
+            "Steam retail binary identity for every remaining source anchor",
             "Exact source-method boundaries for partial retail candidates",
-            "Ghidra rename-map mutation or read-back for these anchors",
+            "No new Ghidra rename-map mutation or live read-back is performed by this probe",
             "Runtime gameplay-state interpretation",
             "Continuous frame streaming",
             "Rebuildable open-source gameplay implementation",
@@ -392,9 +396,9 @@ def main() -> int:
         parser.error("expected --check")
     out = args.out if args.out.is_absolute() else ROOT / args.out
     try:
-        out.resolve().relative_to((ROOT / "subagents").resolve())
+        out.resolve().relative_to((ROOT / "local-lab").resolve())
     except ValueError:
-        print(f"Refusing to write report outside subagents/: {out}")
+        print(f"Refusing to write report outside local-lab/: {out}")
         return 1
     report = build_report()
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -409,7 +413,7 @@ def main() -> int:
         for item in report["binaryFamilies"]:
             print(f"- {item['status']}: {item['sourceFile']}: named functions {item['namedFunctions']}")
         print(f"Source-only anchors pending binary identity: {len(report['sourceOnlyAnchors'])}")
-        print(f"Partial retail candidates pending exact identity: {len(report['partialRetailCandidates'])}")
+        print(f"Composite partial-retail rows: {len(report['partialRetailCandidates'])}")
     return 0 if report["status"] == "pass" else 1
 
 

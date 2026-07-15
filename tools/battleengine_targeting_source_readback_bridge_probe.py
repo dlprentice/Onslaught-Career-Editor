@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""Validate a public-safe bridge between BattleEngine targeting source anchors and retail helper read-back.
+"""Validate the public-safe BattleEngine target-acquisition static bridge.
 
-This probe checks selected Stuart source targeting/stealth-lock anchors and the
-existing retail helper read-back/function notes. It deliberately keeps the claim
-bounded: related target-selection and projectile helper evidence exists, but
-exact source-to-retail control-flow identity and runtime target choice remain
-unproven.
+The probe binds pinned-source vocabulary to the reviewed retail correction and
+the address-bound helper notes without promoting source-only helper names or
+runtime behavior into accepted retail claims.
 """
 
 from __future__ import annotations
@@ -16,12 +14,14 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+import battleengine_target_acquisition_static_contract as static_contract
+
 sys.dont_write_bytecode = True
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = (
     ROOT
-    / "subagents"
+    / "local-lab"
     / "battleengine-targeting-source-readback-bridge"
     / "current"
     / "battleengine-targeting-source-readback-bridge.json"
@@ -53,50 +53,67 @@ CHECKS: tuple[Check, ...] = (
         "Stuart source target-lock logic checks readiness, lock caps, lock modes, stealth-adjusted range, and direct-lock starts.",
     ),
     Check(
-        "source_coverage_and_gap_evidence",
-        "release/readiness/battleengine_locking_source_anchor_2026-05-07.md",
+        "reviewed_handle_locks_correction",
+        "reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json",
         (
-            "target_lock_modes_and_stealth_range",
-            "partial retail candidate pending exact identity",
-            "source anchors `17/17`",
-            "source-only pending binary identity `15`",
+            '"address": "0x00406560"',
+            '"classification": "confirmed-apply"',
+            '"correctedName": "CBattleEngine__HandleLocks"',
+            '"correctedSignature": "void __fastcall CBattleEngine__HandleLocks(void * this)"',
         ),
-        "Source-anchor evidence records target locking as a partial retail candidate while keeping exact identity unresolved.",
+        "The reviewed correction plan establishes the current 0x00406560 retail-static identity.",
     ),
     Check(
-        "helper_readback_evidence",
-        "release/readiness/battleengine_helper_ghidra_readback_2026-05-06.md",
-        (
-            "`CBattleEngine__UpdateAutoTargetSetAndFireProjectiles`",
-            "`CBattleEngine__SelectNearestForwardTargetFromGlobalSet`",
-            "target-resolution and projectile emission call-chain",
-            "profile/list traversal and target-mask tokens",
-        ),
-        "Fresh helper read-back evidence records target/projectile and forward-target helper tokens.",
-    ),
-    Check(
-        "auto_target_function_note",
+        "handle_locks_function_note",
         "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__UpdateAutoTargetSetAndFireProjectiles.md",
         (
-            "CBattleEngine__SelectNearestForwardTargetFromGlobalSet",
-            "CBattleEngine__AddProjectile",
-            "target-selection state",
-            "projectile emission",
-            "does not prove the full runtime firing model",
+            "CBattleEngine__HandleLocks",
+            "lock-entry creation",
+            "0x00406da0",
+            "0x00406fc0",
+            "hypothesis-only",
         ),
-        "Function note documents the auto-target/projectile helper without overclaiming runtime firing behavior.",
+        "The retained legacy-path note documents current HandleLocks structure and dependent-helper boundaries.",
     ),
     Check(
-        "forward_target_function_note",
+        "forward_candidate_function_note",
         "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__SelectNearestForwardTargetFromGlobalSet.md",
         (
-            "Target-selection helper",
-            "profile/mode/mask checks",
-            "CSPtrSet__First",
-            "CSPtrSet__Next",
-            "runtime target-choice behavior remains unproven",
+            "CBattleEngine::GetClosestLockableUnit",
+            "hypothesis-only",
+            "global candidate set",
+            "nearest retained candidate",
+            "forward-deflection",
         ),
-        "Function note documents the forward-target helper while keeping runtime semantic target choice unproven.",
+        "The forward-candidate note preserves retail structure while keeping the stronger source name hypothetical.",
+    ),
+    Check(
+        "lock_entry_function_note",
+        "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__AddProjectile.md",
+        (
+            "Saved Ghidra name",
+            "lock-entry creation",
+            "CBattleEngine::StartLock",
+            "hypothesis-only",
+        ),
+        "The dependent-helper note records lock-entry structure without accepting its source name or old projectile semantics.",
+    ),
+    Check(
+        "target_acquisition_static_contract",
+        "reverse-engineering/game-mechanics/battleengine-target-acquisition-static-contract-v1.md",
+        (
+            "battleengine-target-acquisition-static-contract.v1",
+            "reviewed-retail-static",
+            "saved-retail-structure",
+            "pinned-source-hypothesis",
+            "runtime-required",
+            "CBattleEngine__HandleLocks",
+            "CBattleEngine__SelectNearestForwardTargetFromGlobalSet",
+            "CBattleEngine__AddProjectile",
+            "runtime target choice",
+            "Core behavior",
+        ),
+        "The accepted static contract records evidence classes, current address anchors, and explicit runtime/Core non-claims.",
     ),
 )
 
@@ -108,12 +125,16 @@ def relative(path: Path) -> str:
         return path.as_posix()
 
 
-def line_hits(path: Path, tokens: tuple[str, ...]) -> dict[str, list[int]]:
-    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+def text_hits(text: str, tokens: tuple[str, ...]) -> dict[str, list[int]]:
+    lines = text.splitlines()
     return {
         token: [index + 1 for index, line in enumerate(lines) if token in line]
         for token in tokens
     }
+
+
+def line_hits(path: Path, tokens: tuple[str, ...]) -> dict[str, list[int]]:
+    return text_hits(path.read_text(encoding="utf-8", errors="replace"), tokens)
 
 
 def summarize(check: Check) -> dict[str, object]:
@@ -128,7 +149,28 @@ def summarize(check: Check) -> dict[str, object]:
             "missingTokens": list(check.tokens),
         }
 
-    hits = line_hits(path, check.tokens)
+    if check.key == "source_target_lock_anchor":
+        try:
+            revision = static_contract._source_revision(path.parent)
+            if revision != static_contract.SOURCE_PIN:
+                raise static_contract.ContractError(
+                    f"source revision mismatch: expected {static_contract.SOURCE_PIN}, got {revision}"
+                )
+            source_text = static_contract._source_text_at_revision(
+                path.parent, static_contract.SOURCE_PIN, "BattleEngine.cpp"
+            )
+        except static_contract.ContractError as exc:
+            return {
+                "key": check.key,
+                "status": "FAIL",
+                "file": relative(path),
+                "summary": f"{check.summary} Pinned source check failed: {exc}",
+                "tokenLineHits": {token: [] for token in check.tokens},
+                "missingTokens": list(check.tokens),
+            }
+        hits = text_hits(source_text, check.tokens)
+    else:
+        hits = line_hits(path, check.tokens)
     missing = [token for token, token_hits in hits.items() if not token_hits]
     return {
         "key": check.key,
@@ -149,19 +191,18 @@ def build_report() -> dict[str, object]:
         "checksPassed": len(results) - len(failures),
         "checksTotal": len(results),
         "results": results,
-        "privacy": "Report stores repo-relative filenames, token names, and line numbers only; no source excerpts, binaries, private paths, runtime captures, screenshots, or Ghidra mutation logs.",
+        "privacy": "Report stores repo-relative filenames, selected public source-anchor expressions, token names, and line numbers only; no bulk source excerpts, binaries, private paths, runtime captures, screenshots, or Ghidra mutation logs.",
         "whatIsProven": [
             "Selected Stuart source target-lock anchors are present.",
-            "Public source-anchor evidence records target locking as source-only pending binary identity.",
-            "Existing retail helper read-back evidence records selected target/projectile helper tokens.",
-            "The current function notes document related target/projectile helpers without claiming runtime target choice.",
+            "The reviewed correction establishes CBattleEngine__HandleLocks at 0x00406560.",
+            "The address-bound candidate and lock-entry helper roles and ordering are documented.",
+            "The stronger helper source names remain pinned-source hypotheses.",
         ],
         "notProven": [
-            "Exact `CBattleEngine::HandleLocks` to retail helper control-flow identity.",
-            "Target choice, lock acquisition, or projectile behavior in a running copied-profile mission.",
-            "Runtime gameplay-state interpretation.",
+            "Runtime target choice, lock timing, or gameplay outcomes.",
+            "Exact source identity for the helpers at 0x00406da0 and 0x00406fc0.",
             "Ghidra rename-map mutation or read-back.",
-            "Rebuildable open-source gameplay implementation.",
+            "Core or Godot gameplay implementation.",
         ],
     }
 
@@ -177,9 +218,9 @@ def main() -> int:
 
     out = args.out if args.out.is_absolute() else ROOT / args.out
     try:
-        out.resolve().relative_to((ROOT / "subagents").resolve())
+        out.resolve().relative_to((ROOT / "local-lab").resolve())
     except ValueError:
-        print(f"Refusing to write report outside subagents/: {out}")
+        print(f"Refusing to write report outside local-lab/: {out}")
         return 1
 
     report = build_report()

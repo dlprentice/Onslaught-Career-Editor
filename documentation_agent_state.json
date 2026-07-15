@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-15",
   "routingPolicy": "Active docs use the single-writer default in goal.policy.md. One active implementation owner integrates, validates, updates state, commits/pushes, and accepts; it may be a designated sole worker while its parent only supervises and reports.",
-  "currentFocus": "Product-coupled reconstruction campaign is active under one designated implementation worker; preserved M2.3 target-acquisition static-contract work is adopted in place and names Playable Reconstruction as its consumer outcome.",
+  "currentFocus": "Product-coupled reconstruction campaign is active under one designated implementation worker; M2.3 static target-acquisition evidence is accepted, and the current slice is the copied-runtime shield-to-Core/Godot resource vertical.",
   "sourceOfTruth": {
     "readme": "README.MD",
     "contributorGuide": "CONTRIBUTING.md",
@@ -35,7 +35,6 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Finish or exactly block preserved M2.3 and retain its runtime non-claims and exact deterministic target/lock consumer.",
     "Use exactly two copied-runtime shield attempts; if either attempt fails, publish no behavior contract, while only a valid pair may reach the shield consumer in Core and Godot.",
     "Document and verify the WinUI Reconstruction community surface when it truthfully discovers, configures, verifies, and launches the playable companion.",
     "Keep the queued P1/P2 viewport/command-ownership experiment bounded to the original-game multiplayer epic and do not enable Host/Join."

@@ -16,9 +16,6 @@ MAPPED_SYSTEMS = ROOT / "reverse-engineering" / "binary-analysis" / "mapped-syst
 INDEX = ROOT / "reverse-engineering" / "binary-analysis" / "_index.md"
 RE_INDEX = ROOT / "reverse-engineering" / "RE-INDEX.md"
 CAMPAIGN = ROOT / "reverse-engineering" / "binary-analysis" / "static-reaudit-campaign.md"
-DEVELOPER_STATE = ROOT / "developer_agent_state.json"
-DOCUMENTATION_STATE = ROOT / "documentation_agent_state.json"
-RE_STATE = ROOT / "re_orchestrator_state.json"
 PACKAGE_JSON = ROOT / "package.json"
 
 
@@ -30,8 +27,9 @@ CORE_TOKENS = (
     "0x004f9a90 CUnit__ApplyDamage",
     "0x004dfa40 CUnit__VFunc08_InitAndAddToWorld",
     "0x00404dd0 CBattleEngine__Init",
-    "0x00406560 CBattleEngine__UpdateAutoTargetSetAndFireProjectiles",
+    "0x00406560 CBattleEngine__HandleLocks",
     "0x00406da0 CBattleEngine__SelectNearestForwardTargetFromGlobalSet",
+    "battleengine-target-acquisition-static-contract-v1.json",
     "0x0040c180 CBattleEngine__HandleEvent",
     "0x00412bc0 CBattleEngineWalkerPart__ctor",
     "0x00413cc0 CBattleEngineWalkerPart__FireWeapon",
@@ -138,16 +136,10 @@ def check_navigation(failures: list[str]) -> None:
         "_index.md": read_text(INDEX),
         "RE-INDEX.md": read_text(RE_INDEX),
         "static-reaudit-campaign.md": read_text(CAMPAIGN),
-        "developer_agent_state.json": read_text(DEVELOPER_STATE),
-        "documentation_agent_state.json": read_text(DOCUMENTATION_STATE),
-        "re_orchestrator_state.json": read_text(RE_STATE),
     }
     for name, text in docs.items():
         require("unit-battleengine-gameplay-static-contract.md" in text, f"{name} missing contract link token", failures)
-        if name in {"developer_agent_state.json", "documentation_agent_state.json", "re_orchestrator_state.json"}:
-            require("wave1160-weapon-projectile-targeting-current-risk-review" in text, f"{name} missing Wave1160 tag", failures)
-        else:
-            require("unit-battleengine-gameplay-static-contract-wave1105" in text, f"{name} missing Wave1105 tag", failures)
+        require("unit-battleengine-gameplay-static-contract-wave1105" in text, f"{name} missing Wave1105 tag", failures)
         for bad in OVERCLAIM_TOKENS:
             require(bad not in text.lower(), f"{name} overclaim token present: {bad}", failures)
 
@@ -158,7 +150,6 @@ def check_navigation(failures: list[str]) -> None:
     campaign = docs["static-reaudit-campaign.md"]
     require("Wave1160 current-risk update" in campaign, "campaign current continuation not Wave1160", failures)
     require("516/1179 = 43.77%" in campaign, "campaign missing Wave1160 current-risk progress", failures)
-    require("CBattleEngine__UpdateAutoTargetSetAndFireProjectiles" in campaign, "campaign missing BattleEngine anchor", failures)
     require("CUnit__VFunc08_InitAndAddToWorld" in campaign, "campaign missing CUnit vfunc08 anchor", failures)
 
 

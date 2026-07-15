@@ -115,7 +115,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 | P1.1 | Procedural First Flight movement/transform vertical | landed | Playable Core/Godot foundation with bounded measured motion constants. |
 | P1.2 | Coherent energy + shield resource loop | in_progress | Energy drain is consumed; shield copied-runtime pair and Core/Godot consumer remain. |
 | P1.3 | Firing, projectile, damage, and destruction loop | in_progress | Current behavior is synthetic/provisional; retail evidence and consumer goldens remain. |
-| P1.4 | Deterministic target selection and lock feedback | in_progress | M2.3 static contract may prevent a dangerous misimplementation; runtime-required behavior and Core/Godot consumer remain. |
+| P1.4 | Deterministic target selection and lock feedback | in_progress | M2.3 static contract now prevents the projectile-shaped misinterpretation; runtime target choice/lock timing and the Core/Godot consumer remain. |
 | P1.5 | Camera, world, mission, enemy, and progression verticals | open | Select the smallest playable loop after resources/combat/targeting. |
 | P1.6 | Automated playable acceptance | in_progress | Headless hashes and native Godot smoke exist; grow with each vertical. |
 

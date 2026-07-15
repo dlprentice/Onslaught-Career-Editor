@@ -212,6 +212,7 @@
     "test:battleengine-hud-warning-source-xrefs": "py -3 tools\\battleengine_hud_warning_source_xref_probe.py --check",
     "test:battleengine-damage-source-readback-bridge": "py -3 tools\\battleengine_damage_source_readback_bridge_probe.py --check",
     "test:battleengine-targeting-source-readback-bridge": "py -3 tools\\battleengine_targeting_source_readback_bridge_probe.py --check",
+    "test:battleengine-target-acquisition-static-contract": "py -3 tools\\battleengine_target_acquisition_static_contract_test.py && py -3 tools\\battleengine_target_acquisition_static_contract.py --check && py -3 tools\\battleengine_targeting_source_readback_bridge_probe_test.py && py -3 tools\\battleengine_targeting_source_readback_bridge_probe.py --check && py -3 tools\\battleengine_source_binary_gap_probe_test.py && py -3 tools\\battleengine_source_binary_gap_probe.py --check && py -3 tools\\unit_battleengine_gameplay_static_contract_probe.py --check",
     "test:battleengine-weapon-source-readback-bridge": "py -3 tools\\battleengine_weapon_source_readback_bridge_probe.py --check",
     "test:battleengine-augmented-weapon-candidate-readback": "py -3 tools\\battleengine_augmented_weapon_candidate_readback_probe.py --check",
     "test:battleengine-god-mode-source-bridge": "py -3 tools\\battleengine_god_mode_source_bridge_probe.py --check",

@@ -1,0 +1,185 @@
+{
+  "schemaVersion": "battleengine-target-acquisition-static-contract.v1",
+  "contractId": "M2.3-target-acquisition-static-contract",
+  "status": "accepted-static-contract-not-runtime-proof",
+  "evidenceHierarchy": [
+    "reviewed-retail-static",
+    "saved-retail-structure",
+    "pinned-source-hypothesis",
+    "runtime-required"
+  ],
+  "sourceReference": {
+    "repository": "dlprentice/Onslaught",
+    "commit": "5352a81cdb838b145a57f7febc5d9fc4b0129ebb",
+    "path": "BattleEngine.cpp",
+    "role": "pinned-source-hypothesis-only"
+  },
+  "anchors": [
+    {
+      "address": "0x00406560",
+      "currentRetailName": "CBattleEngine__HandleLocks",
+      "retailNameStatus": "reviewed-current",
+      "sourceCandidate": "CBattleEngine::HandleLocks",
+      "sourceCandidateStatus": "reviewed-source-aligned-retail-static"
+    },
+    {
+      "address": "0x00406da0",
+      "currentRetailName": "CBattleEngine__SelectNearestForwardTargetFromGlobalSet",
+      "retailNameStatus": "saved-descriptive",
+      "sourceCandidate": "CBattleEngine::GetClosestLockableUnit",
+      "sourceCandidateStatus": "hypothesis-only"
+    },
+    {
+      "address": "0x00406fc0",
+      "currentRetailName": "CBattleEngine__AddProjectile",
+      "retailNameStatus": "saved-dependent-name-semantic-role-superseded",
+      "sourceCandidate": "CBattleEngine::StartLock",
+      "sourceCandidateStatus": "hypothesis-only"
+    }
+  ],
+  "lockPathRows": [
+    {
+      "ordinal": 1,
+      "id": "move-calls-handle-locks",
+      "evidenceTier": "reviewed-retail-static",
+      "claim": "The sole reviewed caller is CBattleEngine__Move, which enters 0x00406560 with the BattleEngine pointer and no explicit stack arguments."
+    },
+    {
+      "ordinal": 2,
+      "id": "active-part-weapon-selection",
+      "evidenceTier": "reviewed-retail-static",
+      "claim": "The helper selects the current JetPart or WalkerPart weapon from the BattleEngine state before maintaining or acquiring locks."
+    },
+    {
+      "ordinal": 3,
+      "id": "existing-lock-pruning",
+      "evidenceTier": "reviewed-retail-static",
+      "claim": "The helper removes null, dying, or out-of-deflection entries from the tracked lock set at BattleEngine +0x294."
+    },
+    {
+      "ordinal": 4,
+      "id": "maximum-lock-and-readiness-gates",
+      "evidenceTier": "reviewed-retail-static",
+      "claim": "New acquisition is bounded by current-weapon fire readiness and maximum-lock gates; numeric thresholds and runtime timing remain unproven."
+    },
+    {
+      "ordinal": 5,
+      "id": "direct-proximity-sequence-modes",
+      "evidenceTier": "reviewed-retail-static",
+      "claim": "The body contains distinct direct, proximity, and sequence lock-mode paths without establishing their live selection or gameplay outcomes."
+    },
+    {
+      "ordinal": 6,
+      "id": "lock-entry-creation-call-shape",
+      "evidenceTier": "saved-retail-structure",
+      "claim": "Four calls from HandleLocks pass a target, lock-time value, and direct-lock flag to 0x00406fc0; this is lock-entry creation structure, not projectile emission proof."
+    }
+  ],
+  "candidateOrder": [
+    {
+      "ordinal": 1,
+      "id": "global-candidate-set-traversal",
+      "evidenceTier": "saved-retail-structure",
+      "claim": "0x00406da0 traverses the global candidate set rooted at DAT_008550d0."
+    },
+    {
+      "ordinal": 2,
+      "id": "side-compatibility-gate",
+      "evidenceTier": "saved-retail-structure",
+      "claim": "Each candidate first passes an address-bound side/team compatibility helper."
+    },
+    {
+      "ordinal": 3,
+      "id": "weapon-profile-eligibility-gate",
+      "evidenceTier": "saved-retail-structure",
+      "claim": "The candidate then passes the saved weapon/profile target-mask eligibility helper."
+    },
+    {
+      "ordinal": 4,
+      "id": "distance-and-nearest-so-far-gate",
+      "evidenceTier": "saved-retail-structure",
+      "claim": "Squared distance from the caller-supplied origin is checked against a scaled range and the current nearest-so-far value."
+    },
+    {
+      "ordinal": 5,
+      "id": "forward-deflection-gate",
+      "evidenceTier": "saved-retail-structure",
+      "claim": "A BattleEngine-relative normalized direction is compared with a cosine-derived deflection threshold."
+    },
+    {
+      "ordinal": 6,
+      "id": "existing-lock-exclusion",
+      "evidenceTier": "saved-retail-structure",
+      "claim": "The candidate is excluded when it already appears in the tracked set at BattleEngine +0x294."
+    },
+    {
+      "ordinal": 7,
+      "id": "candidate-return-or-null",
+      "evidenceTier": "saved-retail-structure",
+      "claim": "The helper returns the best retained candidate pointer or null when none survives."
+    }
+  ],
+  "sourceHypotheses": [
+    {
+      "id": "stealth-adjusted-effective-lock-range",
+      "evidenceTier": "pinned-source-hypothesis",
+      "retailRuntimeAccepted": false
+    },
+    {
+      "id": "helper-00406da0-is-get-closest-lockable-unit",
+      "evidenceTier": "pinned-source-hypothesis",
+      "retailRuntimeAccepted": false
+    },
+    {
+      "id": "helper-00406fc0-is-start-lock",
+      "evidenceTier": "pinned-source-hypothesis",
+      "retailRuntimeAccepted": false
+    }
+  ],
+  "evidencePaths": [
+    "reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json",
+    "reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl",
+    "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__UpdateAutoTargetSetAndFireProjectiles.md",
+    "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__SelectNearestForwardTargetFromGlobalSet.md",
+    "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__AddProjectile.md",
+    "reverse-engineering/binary-analysis/unit-battleengine-gameplay-static-contract.md",
+    "reverse-engineering/source-code/reference-submodule-audit-2026-07-12.md"
+  ],
+  "guardSummary": {
+    "runtimeObservation": false,
+    "beaLaunch": false,
+    "debuggerAttachment": false,
+    "ghidraMutation": false,
+    "executablePatching": false,
+    "targetChoiceCausalityProven": false,
+    "lockTimingProven": false,
+    "exactLayoutProven": false,
+    "exactHelperSourceIdentityProven": false,
+    "coreImplementation": false,
+    "godotImplementation": false,
+    "visualProof": false,
+    "rebuildParityProven": false,
+    "releasePublicationOccurred": false,
+    "runtimeObservationRows": 0,
+    "coreImplementationRows": 0
+  },
+  "claimBoundary": {
+    "proves": [
+      "the reviewed retail-static identity and bounded lock-maintenance phases of CBattleEngine__HandleLocks at 0x00406560",
+      "the address-bound candidate-filter ordering retained by the saved 0x00406da0 helper body",
+      "the target, lock-time, and direct-lock call shape of the saved 0x00406fc0 dependent helper"
+    ],
+    "doesNotProve": [
+      "runtime target choice",
+      "lock timing",
+      "Core behavior",
+      "exact helper source identity",
+      "the retail semantic meaning of the source stealth expression",
+      "projectile emission or weapon firing",
+      "exact object or field layouts",
+      "gameplay outcomes",
+      "visual behavior",
+      "rebuild parity"
+    ]
+  }
+}
