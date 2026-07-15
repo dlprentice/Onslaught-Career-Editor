@@ -3,7 +3,7 @@
 Status: **ACTIVE** (time-boxed marathon)  
 Last updated: 2026-07-14  
 **STOP wall clock:** 2026-07-15 10:00 local  
-Integration tip: `250a56cf`  
+Integration tip: `4070fcec`  
 30m durable re-entry: **armed** `019f633f58c2`
 
 ## Current Slice
@@ -18,7 +18,7 @@ product honesty until STOP.
 - `test:winui-primary-lane` PASS
 - rebuild Core **50** / Client 73 PASS
 - hard-payload PASS; m2-m3 scaffolds PASS
-- validation-inventory PASS (1534 scripts)
+- validation-inventory PASS
 
 ## Resume
 
