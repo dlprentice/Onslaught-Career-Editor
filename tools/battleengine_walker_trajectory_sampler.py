@@ -1433,6 +1433,13 @@ def synthetic_attempt_trace(
                 velocity_step = wall_speed * PHYSICS_TICK_SECONDS
                 position += velocity_step
             stored_velocity = 0.0 if weak_velocity else velocity_step * (2.0 if contradictory_velocity else 1.0)
+            # Synthetic jet energy drain during hold (for measure=energy offline tests).
+            if vehicle == VEHICLE_JET:
+                energy = max(0.1, 2.5 - (0.02 * global_slot if phase == "hold" else 0.0))
+                shields = 0.0
+            else:
+                energy = 2.5
+                shields = 2.5
             samples[phase].append(
                 RawSample(
                     tick=tick,
@@ -1442,6 +1449,8 @@ def synthetic_attempt_trace(
                     velocity=(stored_velocity, 0.0, 0.0),
                     state_raw=state_raw,
                     control_raw=control,
+                    energy=energy,
+                    shields=shields,
                 )
             )
             global_slot += 1

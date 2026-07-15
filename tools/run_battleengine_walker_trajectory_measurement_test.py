@@ -411,6 +411,25 @@ class MeasurementTests(unittest.TestCase):
         with self.assertRaises(self.m.sampler.AttemptError):
             self.m.analyze_provisional_trace(trace)
 
+    def test_energy_measure_analyzes_jet_hold_drain(self):
+        trace = self.m.sampler.synthetic_attempt_trace(
+            attempt=1, vehicle=self.m.sampler.VEHICLE_JET
+        )
+        metrics = self.m.analyze_provisional_trace(
+            trace,
+            measure=self.m.sampler.MEASURE_ENERGY,
+            vehicle=self.m.sampler.VEHICLE_JET,
+        )
+        self.assertTrue(metrics.accepted)
+        self.assertLess(metrics.steady_rate_per_sec, 0.0)
+        payload = self.m._metrics_payload(
+            metrics, measure=self.m.sampler.MEASURE_ENERGY
+        )
+        self.assertEqual(
+            "battleengine-energy-rate-private-metrics.v1", payload["schemaVersion"]
+        )
+        self.assertEqual(self.m.sampler.MEASURE_ENERGY, payload["measure"])
+
     def test_source_has_no_outer_hard_timeout_for_lifecycle_owner(self):
         source = self.m.MODULE_PATH.read_text(encoding="utf-8")
         self.assertNotIn("timeout=ATTEMPT_DEADLINE_SECONDS", source)
