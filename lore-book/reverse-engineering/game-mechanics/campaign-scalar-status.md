@@ -37,5 +37,6 @@ Machine: `tools/battleengine_measure_mode_catalog.py` → `OFFLINE_HARNESS_ROWS`
 
 ## Live prep
 
+- Public checklist: [energy-live-dual-accept-checklist.md](energy-live-dual-accept-checklist.md)
 - Copied profile (ignored): `GameProfiles/marathon-energy-jet-01`
 - Private readiness: `local-proofs/wt/energy-live-readiness.md`
