@@ -1,45 +1,33 @@
 # Active Goal Baton
 
-Status: **ACTIVE** (time-boxed marathon until local 10:00 tomorrow)  
+Status: **ACTIVE** (time-boxed marathon)  
 Last updated: 2026-07-15  
-Policy: [`goal.policy.md`](goal.policy.md)  
-Campaign map: [`goal.campaign.md`](goal.campaign.md)  
-Slash prompt: [`roadmap/goals/full-rebuild-campaign-slash-goal.md`](roadmap/goals/full-rebuild-campaign-slash-goal.md)  
-Integration baseline: pending push (builds on `23f8cd02`)  
-**STOP:** local 2026-07-15 10:00 (see implementer stop-datetime.txt)
+**STOP wall clock:** 2026-07-15 10:00 local (STOP_LOCAL=10:00 STOP_DATE=tomorrow from session start)  
+Integration tip: `1b4849c3`+  
+30m durable re-entry scheduled until STOP (task 019f633f58c2)
 
-## Closed ledger
+## Closed ledger (selected)
 
-| Slice | Result | Artifacts |
-|-------|--------|-----------|
-| Walker forward | landed | v2; `WalkerSpeedPerTick=100` |
-| Jet thrust | landed | v1; `JetSpeedPerTick=381` |
-| Look/Left yaw | landed | v1; `WalkerLookYawRateMilliRadPerTick=3` |
-| Strafe Movement/Left | landed | v1; `WalkerStrafeSpeedPerTick=101` |
-| **M1.5 transform morph settle dual-accept** | **landed** | xform-p03; v1; `MorphToJetSettleTicks=148` |
-| Energy rate scaffold | landed (offline) | `battleengine_energy_scaffold.py` |
-| Projectile speed scaffold | landed (offline) | `battleengine_projectile_speed_scaffold.py` |
+| Slice | Result |
+|-------|--------|
+| Walker/jet/yaw/strafe dual-accepts | landed (prior) |
+| **M1.5 transform morph settle** | landed xform-p03; `MorphToJetSettleTicks=148` |
+| Energy / projectile / shield scaffolds | offline harnesses landed |
+| Camera look plan | plan only |
 
 ## Current Slice
 
-**ID:** `M2.2-shield-or-energy-live-or-M3-camera`  
-**Lane:** RE measurement or harness  
-**Objective:** Prefer live energy drain dual-accept if energy offset is
-discoverable quickly; else offline shield scaffold + WinUI honesty docs, or
-camera/look contract candidate from existing RE notes. No reopen closed scalars.
+**ID:** `M2-combat-or-M3-camera-live-or-harness`  
+**Objective:** Prefer discoverable energy/shield live dual-accept if offsets
+found; else camera look harness scaffolding; else WinUI product honesty tests.
+No reopen closed motion dual-accepts.
 
-## Progress — time-box marathon (this session)
+## Progress (time-box session)
 
-### ADVANCEMENT M1.5 live transform xform-p03
-`--measure transform`; morph request stamp before handshake; dual-accept
-latency envelope **[4670, 5170] ms**; Core `MorphToJetSettleTicks=148`.
+- Wired `--measure transform`; dual-accept morph settle; Core 148 ticks.
+- Energy/projectile/shield pure scaffolds + plans.
+- Marathon continues until wall-clock STOP; 30m scheduler re-entry armed.
 
-### ADVANCEMENT energy scaffold
-Pure drain/regen rate analyzer + unit tests.
+## Resume
 
-### ADVANCEMENT projectile speed scaffold
-Pure projectile path-speed analyzer + unit tests.
-
-## Resume checklist
-- [ ] Continue until STOP wall clock  
-- [ ] Next: energy live or shield/camera harness  
+Continue Current Slice if `Get-Date` < STOP; else finalize and stop.
