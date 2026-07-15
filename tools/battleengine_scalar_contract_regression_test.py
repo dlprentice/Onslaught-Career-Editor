@@ -14,17 +14,24 @@ import battleengine_scalar_contract_regression as reg
 class LandedContractRegressionTests(unittest.TestCase):
     def test_real_walker_and_jet_contracts_pass(self) -> None:
         reports = reg.validate_all_landed_contracts()
-        self.assertGreaterEqual(len(reports), 5)
+        self.assertGreaterEqual(len(reports), 6)
         schemas = {row["schemaVersion"] for row in reports}
         self.assertIn("battleengine-walker-forward-scalar-response.v2", schemas)
         self.assertIn("battleengine-jet-forward-scalar-response.v1", schemas)
         self.assertIn("battleengine-walker-turn-yaw-scalar-response.v1", schemas)
         self.assertIn("battleengine-walker-strafe-lateral-scalar-response.v1", schemas)
         self.assertIn("battleengine-walker-transform-morph-timing.v1", schemas)
+        self.assertIn("battleengine-jet-energy-drain-scalar-response.v1", schemas)
         for row in reports:
             values = row["steadyValues"]
             self.assertEqual(2, len(values))
-            self.assertTrue(all(speed > 0 for speed in values))
+            # Motion/latency contracts use positive steady values; jet energy
+            # drain is signed negative (retail energy units/s).
+            if row["schemaVersion"] == "battleengine-jet-energy-drain-scalar-response.v1":
+                self.assertTrue(all(v < 0 for v in values))
+                self.assertTrue(all(abs(v) > 0 for v in values))
+            else:
+                self.assertTrue(all(speed > 0 for speed in values))
 
     def test_cli_main_passes_on_real_contracts(self) -> None:
         code = reg.main([])
