@@ -311,7 +311,11 @@ public class HomeArrivalFocusPolicyTests
             Assert.That(smoke, Does.Contain("home-arrival-focus.jsonl"));
             Assert.That(smoke, Does.Contain("ONSLAUGHT_WINUI_TEST_FOCUS_RUN_ID"));
             Assert.That(smoke, Does.Contain("FocusVerified"));
+            Assert.That(smoke, Does.Contain("FocusedAutomationIdAtSample"));
+            Assert.That(smoke, Does.Contain("InputEpochAtSample"));
             Assert.That(smoke, Does.Contain("FinalXamlFocusedAutomationId"));
+            Assert.That(smoke, Does.Contain("HomeFocusEvidenceAcceptance.TryReadEndpointStatus"));
+            Assert.That(smoke, Does.Contain("ExactWindowScopedMatch"));
         });
     }
 
@@ -343,10 +347,16 @@ public class HomeArrivalFocusPolicyTests
             Assert.That(shell, Does.Contain("IsNavigationFallbackVerified"));
             Assert.That(shell, Does.Contain("Environment.ProcessId"));
             Assert.That(shell, Does.Contain("ONSLAUGHT_WINUI_TEST_FOCUS_RUN_ID"));
+            Assert.That(shell, Does.Contain("HomeArrivalFocusDiagnosticSample"));
+            Assert.That(shell, Does.Contain("FocusedAutomationIdAtSample"));
+            Assert.That(shell, Does.Contain("InputEpochAtSample"));
+            Assert.That(shell, Does.Contain("WriteHomeArrivalFocusEndpointStatus"));
+            Assert.That(shell, Does.Contain("ONSLAUGHT_HOME_FOCUS_ENDPOINT:"));
+            Assert.That(shell, Does.Contain("homeArrivalInputRoot.GotFocus += HomeArrivalFocusEndpointChanged"));
             Assert.That(shell, Does.Contain("bool enqueued = DispatcherQueue.TryEnqueue"));
             Assert.That(shell, Does.Contain("catch (Exception)\n            {"));
             Assert.That(shell, Does.Not.Contain("catch (Exception) when (!cancellation.IsCancellationRequested)"));
-            Assert.That(shell, Does.Contain("focusDiagnostics.Add(diagnostic)"));
+            Assert.That(shell, Does.Contain("focusDiagnostics.Add(new HomeArrivalFocusDiagnosticSample("));
             Assert.That(shell, Does.Contain("WriteHomeArrivalFocusDiagnostics("));
         });
     }

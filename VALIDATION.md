@@ -61,6 +61,18 @@ two test projects from that same build, shut down build servers, and passed in
 | Release/publication | affected build/accounting gate | the complete commands in [Public Sign-Off Commands](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md), including ZIP candidate proof before publication | notices, package contents/layout, extracted smoke, release accounting |
 | Historical proof/checker | the specific checker whose evidence changed | `npm run test:doc-commands-all` if command history changed | reproducibility and bounded historical claims, not current product acceptance |
 
+Home newcomer hierarchy, arrival-focus, or compact-layout changes use
+`npm run test:winui-home-native-visual-focus` after focused non-native tests.
+That opt-in gate rebuilds the repository WinUI executable, binds the exact
+process/start/hash/product assembly/HWND, cross-checks UIA and app-side focus,
+checks unchanged input epochs immediately around each capture, and validates
+normal plus 760px HWND captures before one-rename publication of an ignored
+local manifest. Its wrapper additionally requires an exact 1/1 passed TRX, one
+fresh schema-3 manifest with full identity mappings and hashes, and a zero
+relevant-process census. Debug/win-x64 is explicit, and an invocation token plus
+post-build hashes prevent stale-build acceptance or cleanup of another run's
+evidence. It is native Toolkit evidence, not BEA runtime or release evidence.
+
 `npm test` is a common active-product check, not public release signoff. It runs
 inventory/profile contracts, active docs and public-core links, generated-output
 safety, the primary WinUI lane, and deterministic rebuild tests. Whole-tree

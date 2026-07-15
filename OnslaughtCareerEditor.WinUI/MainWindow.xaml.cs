@@ -28,6 +28,11 @@ namespace OnslaughtCareerEditor.WinUI
             Programmatic,
         }
 
+        private sealed record HomeArrivalFocusDiagnosticSample(
+            HomeArrivalFocusDiagnostic Diagnostic,
+            string? FocusedAutomationIdAtSample,
+            int InputEpochAtSample);
+
         private readonly Dictionary<string, NavigationViewItem> _itemByTag;
         private readonly Dictionary<string, Type> _pageByTag;
         private readonly Dictionary<Type, object> _pageCache = new();
@@ -37,6 +42,7 @@ namespace OnslaughtCareerEditor.WinUI
         private bool _navigationInProgress;
         private int _navigationGeneration;
         private int _homeArrivalInputEpoch;
+        private long _homeArrivalEndpointSequence;
         private bool _isWindowActive;
         private CancellationTokenSource? _homeArrivalFocusCancellation;
         private string _activeTag = "home";
@@ -299,6 +305,7 @@ namespace OnslaughtCareerEditor.WinUI
                     UIElement.KeyDownEvent,
                     new KeyEventHandler(ShellNavigationView_UserInput),
                     handledEventsToo: true);
+                homeArrivalInputRoot.GotFocus += HomeArrivalFocusEndpointChanged;
             }
         }
 
@@ -311,6 +318,12 @@ namespace OnslaughtCareerEditor.WinUI
         {
             _homeArrivalInputEpoch++;
             CancelHomeArrivalFocus();
+            WriteHomeArrivalFocusEndpointStatus();
+        }
+
+        private void HomeArrivalFocusEndpointChanged(object sender, RoutedEventArgs args)
+        {
+            WriteHomeArrivalFocusEndpointStatus();
         }
 
         private void ScheduleHomeArrivalFocus(
@@ -352,7 +365,7 @@ namespace OnslaughtCareerEditor.WinUI
             DependencyObject? initialFocusedElement,
             CancellationTokenSource cancellation)
         {
-            var focusDiagnostics = new List<HomeArrivalFocusDiagnostic>();
+            var focusDiagnostics = new List<HomeArrivalFocusDiagnosticSample>();
             try
             {
                 HomeArrivalFocusPolicyOperations operations = new(
@@ -379,25 +392,32 @@ namespace OnslaughtCareerEditor.WinUI
                     },
                     () => IsNavigationFallbackVerified(navItem),
                     (delay, token) => Task.Delay(delay, token),
-                    diagnostic => focusDiagnostics.Add(diagnostic));
+                    diagnostic => focusDiagnostics.Add(new HomeArrivalFocusDiagnosticSample(
+                        diagnostic,
+                        ReadFocusedAutomationId(pageRoot),
+                        _homeArrivalInputEpoch)));
 
                 await HomeArrivalFocusPolicy.RunAsync(operations, cancellation.Token);
             }
             catch (Exception)
             {
-                focusDiagnostics.Add(new HomeArrivalFocusDiagnostic(
-                    "integration-exception",
-                    0,
-                    null,
-                    HomeSetupApplicability.Pending,
-                    null,
-                    null,
-                    null,
-                    HomeArrivalFocusOutcome.ContextChanged));
+                focusDiagnostics.Add(new HomeArrivalFocusDiagnosticSample(
+                    new HomeArrivalFocusDiagnostic(
+                        "integration-exception",
+                        0,
+                        null,
+                        HomeSetupApplicability.Pending,
+                        null,
+                        null,
+                        null,
+                        HomeArrivalFocusOutcome.ContextChanged),
+                    ReadFocusedAutomationId(pageRoot),
+                    _homeArrivalInputEpoch));
             }
             finally
             {
                 WriteHomeArrivalFocusDiagnostics(pageRoot, navigationGeneration, focusDiagnostics);
+                WriteHomeArrivalFocusEndpointStatus(pageRoot);
                 if (ReferenceEquals(_homeArrivalFocusCancellation, cancellation))
                 {
                     _homeArrivalFocusCancellation = null;
@@ -485,6 +505,49 @@ namespace OnslaughtCareerEditor.WinUI
                 && ReferenceEquals(FocusManager.GetFocusedElement(navItem.XamlRoot), navItem);
         }
 
+        private static string? ReadFocusedAutomationId(FrameworkElement pageRoot)
+        {
+            return pageRoot.XamlRoot is not null &&
+                FocusManager.GetFocusedElement(pageRoot.XamlRoot) is DependencyObject focused
+                    ? AutomationProperties.GetAutomationId(focused)
+                    : null;
+        }
+
+        private void WriteHomeArrivalFocusEndpointStatus(FrameworkElement? pageRoot = null)
+        {
+            if (!string.Equals(
+                    Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_TEST_FOCUS_DIAGNOSTICS"),
+                    "1",
+                    StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            try
+            {
+                pageRoot ??= ContentFrame.Content as FrameworkElement;
+                string? focusedAutomationId = pageRoot is null ? null : ReadFocusedAutomationId(pageRoot);
+                long sequence = ++_homeArrivalEndpointSequence;
+                string payload = JsonSerializer.Serialize(new
+                {
+                    ProcessId = Environment.ProcessId,
+                    RunId = Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_TEST_FOCUS_RUN_ID"),
+                    NavigationGeneration = _navigationGeneration,
+                    Sequence = sequence,
+                    InputEpoch = _homeArrivalInputEpoch,
+                    ActiveTag = _activeTag,
+                    FocusedAutomationId = focusedAutomationId,
+                });
+                AutomationProperties.SetHelpText(
+                    StatusTextBlock,
+                    $"ONSLAUGHT_HOME_FOCUS_ENDPOINT:{payload}");
+            }
+            catch
+            {
+                // Test-only endpoint diagnostics are best effort and must not affect focus behavior.
+            }
+        }
+
         private static bool HasToolkitUserEstablishedFocus(
             FrameworkElement pageRoot,
             DependencyObject? initialFocusedElement)
@@ -509,7 +572,7 @@ namespace OnslaughtCareerEditor.WinUI
         private static void WriteHomeArrivalFocusDiagnostics(
             FrameworkElement pageRoot,
             int navigationGeneration,
-            IReadOnlyList<HomeArrivalFocusDiagnostic> diagnostics)
+            IReadOnlyList<HomeArrivalFocusDiagnosticSample> diagnostics)
         {
             if (!string.Equals(
                     Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_TEST_FOCUS_DIAGNOSTICS"),
@@ -526,7 +589,10 @@ namespace OnslaughtCareerEditor.WinUI
                     : FocusManager.GetFocusedElement(pageRoot.XamlRoot) is DependencyObject focused
                         ? AutomationProperties.GetAutomationId(focused)
                         : null;
-                IEnumerable<string> lines = diagnostics.Select(diagnostic => JsonSerializer.Serialize(new
+                IEnumerable<string> lines = diagnostics.Select(sample =>
+                {
+                    HomeArrivalFocusDiagnostic diagnostic = sample.Diagnostic;
+                    return JsonSerializer.Serialize(new
                     {
                         ProcessId = Environment.ProcessId,
                         RunId = Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_TEST_FOCUS_RUN_ID"),
@@ -539,8 +605,11 @@ namespace OnslaughtCareerEditor.WinUI
                         diagnostic.TryFocusSucceeded,
                         diagnostic.FocusVerified,
                         Outcome = diagnostic.Outcome?.ToString(),
+                        sample.FocusedAutomationIdAtSample,
+                        sample.InputEpochAtSample,
                         FinalXamlFocusedAutomationId = finalFocusedAutomationId,
-                    }));
+                    });
+                });
                 File.AppendAllLines(
                     Path.Combine(AppConfig.GetConfigDir(), "home-arrival-focus.jsonl"),
                     lines);

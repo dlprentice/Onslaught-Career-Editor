@@ -20,13 +20,7 @@ namespace OnslaughtCareerEditor.UiTests;
 [NonParallelizable]
 public class WinUiHomeNavigationSmokeTests
 {
-    private sealed record HomeCaptureEvidence(
-        string RelativeFileName,
-        string Sha256,
-        int X,
-        int Y,
-        int Width,
-        int Height,
+    private sealed record HomeAppIdentityEvidence(
         int ProcessId,
         DateTime ProcessStartTimeUtc,
         string ExecutablePath,
@@ -37,7 +31,64 @@ public class WinUiHomeNavigationSmokeTests
         long UiaNativeWindowHandle,
         int WindowOwnerProcessId);
 
-    private sealed record FocusedAutomationProbe(string? AutomationId, string? ExceptionType);
+    private sealed record BoundHomeFocusObservation(
+        string AutomationId,
+        int ProcessId,
+        long NativeWindowHandle,
+        int X,
+        int Y,
+        int Width,
+        int Height,
+        bool HasKeyboardFocus,
+        long EndpointSequence,
+        int EndpointInputEpoch,
+        string EndpointFocusedAutomationId);
+
+    private sealed record HomeCaptureEvidence(
+        string State,
+        string ExpectedAutomationId,
+        string RunId,
+        string DiagnosticOutcome,
+        string RelativeFileName,
+        string Sha256,
+        int X,
+        int Y,
+        int Width,
+        int Height,
+        HomeAppIdentityEvidence Identity,
+        IReadOnlyList<GuidedSaveVisualMarker> Markers,
+        BoundHomeFocusObservation FocusBeforeCapture,
+        BoundHomeFocusObservation FocusAfterCapture);
+
+    private sealed record HomeFocusEvidence(
+        string State,
+        string ExpectedAutomationId,
+        string ObservedAutomationId,
+        string RunId,
+        int ProcessId,
+        string DiagnosticStage,
+        string? DiagnosticTarget,
+        string DiagnosticOutcome,
+        bool? FocusVerified,
+        string? FocusedAutomationIdAtSample,
+        string FinalXamlFocusedAutomationId,
+        int InputEpochAtSample,
+        HomeAppIdentityEvidence Identity,
+        BoundHomeFocusObservation FinalEndpoint);
+
+    private sealed record FocusedAutomationProbe(
+        string? AutomationId,
+        int ProcessId,
+        long NativeWindowHandle,
+        Rectangle Bounds,
+        bool HasKeyboardFocus,
+        string? ScopedAutomationId,
+        int ScopedProcessId,
+        long ScopedNativeWindowHandle,
+        Rectangle ScopedBounds,
+        bool ScopedHasKeyboardFocus,
+        bool ExactWindowScopedMatch,
+        string? ExceptionType);
 
     [Test]
     [Category("WinUIRuntime")]
@@ -198,18 +249,23 @@ public class WinUiHomeNavigationSmokeTests
     {
         string evidenceRoot = Path.Combine(
             ResolveRepoRoot(),
-            "subagents",
-            "winui-home-navigation",
-            "2026-05-27");
-        string runName = $"home-newcomer-{DateTime.UtcNow:yyyyMMddTHHmmssfffZ}-{Guid.NewGuid():N}";
+            "local-lab",
+            "winui-home-native-visual-focus");
+        string? harnessRunId = Environment.GetEnvironmentVariable("ONSLAUGHT_HOME_NATIVE_ACCEPTANCE_RUN_ID");
+        Assert.That(
+            Guid.TryParseExact(harnessRunId, "N", out _),
+            Is.True,
+            "Native Home acceptance requires the fail-closed runner invocation token.");
+        string runName = $"home-newcomer-{DateTime.UtcNow:yyyyMMddTHHmmssfffZ}-{harnessRunId}";
         string stagingDirectory = Path.Combine(evidenceRoot, $".{runName}.partial");
         string acceptedDirectory = Path.Combine(evidenceRoot, runName);
         Directory.CreateDirectory(stagingDirectory);
         var captures = new List<HomeCaptureEvidence>();
+        var focusReceipts = new List<HomeFocusEvidence>();
         Rectangle normalBounds = new(16, 16, 1100, 900);
         try
         {
-            using (HomeNavigationSession firstRunSession = LaunchHomeSession())
+            using (HomeNavigationSession firstRunSession = LaunchHomeSession(stagingDirectory, requireRepoBuild: true))
             {
                 Window firstRunWindow = firstRunSession.Window;
                 WaitForText(firstRunWindow, "Start Here", TimeSpan.FromSeconds(20));
@@ -221,24 +277,59 @@ public class WinUiHomeNavigationSmokeTests
                     setupAction.BoundingRectangle.Top,
                     Is.LessThan(primaryTasksHeading.BoundingRectangle.Top),
                     "Visible first-run setup guidance must precede the task hierarchy.");
-                AssertHomeArrivalFocus(
+                HomeFocusDiagnosticEvidence firstRunDiagnostic = AssertHomeArrivalFocus(
                     firstRunSession,
+                    "first-run",
                     "HomeSetupActionButton",
                     TimeSpan.FromSeconds(10),
                     "A true first run must focus the visible setup action first.");
 
+                string[] firstRunMarkers =
+                [
+                    "HomeSetupActionButton",
+                    "HomePrimaryTasksTitle",
+                    "HomeOpenPatchBenchButton",
+                ];
                 captures.Add(CaptureReceiptBoundHomeWindow(
                     firstRunSession,
+                    "first-run",
+                    "HomeSetupActionButton",
+                    firstRunDiagnostic,
                     normalBounds,
                     Path.Combine(stagingDirectory, "first-run-normal.png"),
-                    ["HomeSetupActionButton", "HomePrimaryTasksTitle", "HomeOpenPatchBenchButton"]));
+                    firstRunMarkers));
+                AssertHomeFocusRemains(firstRunSession, "HomeSetupActionButton");
+
+                Rectangle compactBounds = new Rectangle(16, 16, 760, 820);
+                captures.Add(CaptureReceiptBoundHomeWindow(
+                    firstRunSession,
+                    "first-run",
+                    "HomeSetupActionButton",
+                    firstRunDiagnostic,
+                    compactBounds,
+                    Path.Combine(stagingDirectory, "first-run-760.png"),
+                    firstRunMarkers,
+                    () =>
+                    {
+                        ScrollIntoView(FindByAutomationId(firstRunWindow, "HomeSetupActionButton"));
+                        WaitForHomeLayout(firstRunWindow, firstRunMarkers, TimeSpan.FromSeconds(5));
+                        AssertHomeElementsInsideWindow(firstRunWindow, compactBounds, firstRunMarkers);
+                        AssertHomeHasNoHorizontalOverflow(firstRunWindow);
+                    }));
+                BoundHomeFocusObservation firstRunEndpoint = AssertHomeFocusRemains(firstRunSession, "HomeSetupActionButton");
+                focusReceipts.Add(CreateHomeFocusEvidence(
+                    firstRunSession,
+                    "first-run",
+                    "HomeSetupActionButton",
+                    firstRunDiagnostic,
+                    firstRunEndpoint));
             }
 
-            string readyGameDirectory = Path.Combine(evidenceRoot, "fixtures", "full-game");
+            string readyGameDirectory = Path.Combine(stagingDirectory, "fixtures", "full-game");
             Directory.CreateDirectory(Path.Combine(readyGameDirectory, "data"));
             File.WriteAllBytes(Path.Combine(readyGameDirectory, "BEA.exe"), new byte[] { 0 });
 
-            using (HomeNavigationSession readySession = LaunchHomeSession(readyGameDirectory, "ready"))
+            using (HomeNavigationSession readySession = LaunchHomeSession(stagingDirectory, readyGameDirectory, "ready", requireRepoBuild: true))
             {
                 Window window = readySession.Window;
                 WaitForText(window, "Game directory configured: full-game.", TimeSpan.FromSeconds(20));
@@ -258,8 +349,9 @@ public class WinUiHomeNavigationSmokeTests
                     Is.True,
                     "The safe-copy task should precede Save Lab in the rendered Home reading order.");
                 Assert.That(FindByAutomationId(window, "ShellGameDirectoryStatus").Name, Is.EqualTo("Game folder: full-game"));
-                AssertHomeArrivalFocus(
+                HomeFocusDiagnosticEvidence readyDiagnostic = AssertHomeArrivalFocus(
                     readySession,
+                    "ready",
                     "HomeOpenPatchBenchButton",
                     TimeSpan.FromSeconds(10),
                     "A ready Home arrival should focus the first usable task instead of the closed setup prompt.");
@@ -275,13 +367,20 @@ public class WinUiHomeNavigationSmokeTests
                 ];
                 captures.Add(CaptureReceiptBoundHomeWindow(
                     readySession,
+                    "ready",
+                    "HomeOpenPatchBenchButton",
+                    readyDiagnostic,
                     normalBounds,
                     Path.Combine(stagingDirectory, "ready-normal.png"),
                     readyMarkers));
+                AssertHomeFocusRemains(readySession, "HomeOpenPatchBenchButton");
 
                 Rectangle compactBounds = new Rectangle(16, 16, 760, 820);
                 captures.Add(CaptureReceiptBoundHomeWindow(
                     readySession,
+                    "ready",
+                    "HomeOpenPatchBenchButton",
+                    readyDiagnostic,
                     compactBounds,
                     Path.Combine(stagingDirectory, "ready-760.png"),
                     readyMarkers,
@@ -292,9 +391,16 @@ public class WinUiHomeNavigationSmokeTests
                         AssertHomeElementsInsideWindow(window, compactBounds, readyMarkers);
                         AssertHomeHasNoHorizontalOverflow(window);
                     }));
+                BoundHomeFocusObservation readyEndpoint = AssertHomeFocusRemains(readySession, "HomeOpenPatchBenchButton");
+                focusReceipts.Add(CreateHomeFocusEvidence(
+                    readySession,
+                    "ready",
+                    "HomeOpenPatchBenchButton",
+                    readyDiagnostic,
+                    readyEndpoint));
             }
 
-            PublishHomeAcceptanceRun(stagingDirectory, acceptedDirectory, captures);
+            PublishHomeAcceptanceRun(stagingDirectory, acceptedDirectory, harnessRunId!, captures, focusReceipts);
         }
         catch
         {
@@ -339,7 +445,15 @@ public class WinUiHomeNavigationSmokeTests
 
     private sealed class HomeNavigationSession : IDisposable
     {
-        public HomeNavigationSession(Application app, UIA3Automation automation, Window window, string evidenceDir, string configPath, string executablePath, string focusRunId)
+        public HomeNavigationSession(
+            Application app,
+            UIA3Automation automation,
+            Window window,
+            string evidenceDir,
+            string configPath,
+            string executablePath,
+            string focusRunId,
+            ReceiptBoundAppIdentity identity)
         {
             App = app;
             Automation = automation;
@@ -348,6 +462,7 @@ public class WinUiHomeNavigationSmokeTests
             ConfigPath = configPath;
             ExecutablePath = executablePath;
             FocusRunId = focusRunId;
+            Identity = identity;
         }
 
         public Application App { get; }
@@ -364,34 +479,41 @@ public class WinUiHomeNavigationSmokeTests
 
         public string FocusRunId { get; }
 
+        public ReceiptBoundAppIdentity Identity { get; }
+
         public void Dispose()
         {
-            Automation.Dispose();
-            try
-            {
-                App.Close();
-            }
-            catch
-            {
-                // Fall through to process termination below.
-            }
-
-            if (!App.HasExited)
-            {
-                App.Kill();
-            }
+            HomeSessionResourceCleanup.Run(
+                Automation.Dispose,
+                () => CloseLaunchedHomeApp(App));
         }
     }
 
     private static HomeNavigationSession LaunchHomeSession(string? gameDirectory = null, string stateName = "unset")
     {
-        string exePath = ResolveWinUiAppPath();
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-home-navigation", "2026-05-27");
+        return LaunchHomeSession(evidenceDir, gameDirectory, stateName, requireRepoBuild: false);
+    }
+
+    private static HomeNavigationSession LaunchHomeSession(
+        string evidenceDir,
+        string? gameDirectory = null,
+        string stateName = "unset",
+        bool requireRepoBuild = false)
+    {
+        string exePath = requireRepoBuild
+            ? ResolveRepoBuiltWinUiAppPath()
+            : ResolveWinUiAppPath();
         if (!File.Exists(exePath))
         {
+            if (requireRepoBuild)
+            {
+                Assert.Fail($"Repository WinUI build output not found at: {exePath}. The native Home command must build it first.");
+            }
+
             Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-home-navigation", "2026-05-27");
         Directory.CreateDirectory(evidenceDir);
         string appDataDir = PrepareIsolatedAppData(evidenceDir, gameDirectory, stateName);
         string configPath = Path.Combine(appDataDir, "OnslaughtCareerEditor", "config.json");
@@ -408,23 +530,107 @@ public class WinUiHomeNavigationSmokeTests
         startInfo.Environment["ONSLAUGHT_GAME_DIR_CANDIDATES"] = string.Empty;
         startInfo.Environment["ONSLAUGHT_STEAM_ROOT_CANDIDATES"] = Path.Combine(appDataDir, "empty-steam-root");
 
-        Application app = Application.Launch(startInfo);
-        var automation = new UIA3Automation();
-        Window window = WaitForMainWindow(app, automation);
-        return new HomeNavigationSession(app, automation, window, evidenceDir, configPath, exePath, focusRunId);
+        string productAssemblyPath = Path.Combine(Path.GetDirectoryName(exePath)!, "OnslaughtCareerEditor.WinUI.dll");
+        if (!File.Exists(productAssemblyPath))
+        {
+            if (requireRepoBuild)
+            {
+                Assert.Fail($"Repository WinUI product assembly not found at: {productAssemblyPath}. The native Home command must build it first.");
+            }
+
+            Assert.Ignore($"Product assembly not found at: {productAssemblyPath}. Run the WinUI build first.");
+        }
+
+        string preLaunchExecutableSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(exePath)));
+        string preLaunchProductAssemblySha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(productAssemblyPath)));
+        if (requireRepoBuild)
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(
+                    preLaunchExecutableSha256,
+                    Is.EqualTo(Environment.GetEnvironmentVariable("ONSLAUGHT_HOME_NATIVE_EXPECTED_EXE_SHA256")),
+                    "Repository WinUI executable must match the runner's post-build hash.");
+                Assert.That(
+                    preLaunchProductAssemblySha256,
+                    Is.EqualTo(Environment.GetEnvironmentVariable("ONSLAUGHT_HOME_NATIVE_EXPECTED_DLL_SHA256")),
+                    "Repository WinUI product DLL must match the runner's post-build hash.");
+            });
+        }
+        Application? app = null;
+        UIA3Automation? automation = null;
+        try
+        {
+            app = Application.Launch(startInfo);
+            automation = new UIA3Automation();
+            Window window = WaitForMainWindow(app, automation, failIfUnavailable: requireRepoBuild);
+            var operations = new FlaUiReceiptBoundVisualCaptureOperations(app, window, exePath);
+            ReceiptBoundAppIdentity identity = operations.ReadIdentity();
+            Assert.Multiple(() =>
+            {
+                Assert.That(identity.ExecutableSha256, Is.EqualTo(preLaunchExecutableSha256), "The launched Toolkit executable must match its pre-launch repository-build hash.");
+                Assert.That(identity.ProductAssemblySha256, Is.EqualTo(preLaunchProductAssemblySha256), "The loaded Toolkit product DLL must match its pre-launch repository-build hash.");
+                Assert.That(identity.MainWindowHandle, Is.Not.EqualTo(IntPtr.Zero));
+                Assert.That(identity.UiaNativeWindowHandle, Is.EqualTo(identity.MainWindowHandle));
+            });
+            return new HomeNavigationSession(app, automation, window, evidenceDir, configPath, exePath, focusRunId, identity);
+        }
+        catch
+        {
+            HomeSessionResourceCleanup.Run(
+                () => automation?.Dispose(),
+                () => CloseLaunchedHomeApp(app));
+            throw;
+        }
+    }
+
+    private static void CloseLaunchedHomeApp(Application? app)
+    {
+        if (app is null)
+        {
+            return;
+        }
+
+        try
+        {
+            app.Close();
+        }
+        catch
+        {
+            // Fall through to termination of this harness-owned launch.
+        }
+
+        try
+        {
+            if (!app.HasExited)
+            {
+                app.Kill();
+            }
+        }
+        catch
+        {
+            // The outer runner's exact process census remains the final cleanup guard.
+        }
     }
 
     private static HomeCaptureEvidence CaptureReceiptBoundHomeWindow(
         HomeNavigationSession session,
+        string state,
+        string expectedAutomationId,
+        HomeFocusDiagnosticEvidence diagnostic,
         Rectangle targetBounds,
         string outputPath,
         IReadOnlyList<string> markerAutomationIds,
         Action? postResizeRealization = null)
     {
         var operations = new FlaUiReceiptBoundVisualCaptureOperations(session.App, session.Window, session.ExecutablePath);
-        ReceiptBoundAppIdentity expectedIdentity = operations.ReadIdentity();
+        ReceiptBoundAppIdentity expectedIdentity = session.Identity;
+        Assert.That(operations.ReadIdentity(), Is.EqualTo(expectedIdentity), "Toolkit identity changed after launch receipt acquisition.");
         ReceiptBoundWindowState originalState = operations.ReadWindowState();
         Bitmap? bitmap = null;
+        IReadOnlyList<GuidedSaveVisualMarker>? capturedMarkers = null;
+        BoundHomeFocusObservation? focusBeforeCapture = null;
+        BoundHomeFocusObservation? focusAfterCapture = null;
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
         Assert.That(File.Exists(outputPath), Is.False, $"Home acceptance evidence destination must be fresh: {outputPath}");
         string temporaryPath = $"{outputPath}.{Guid.NewGuid():N}.tmp";
@@ -448,11 +654,14 @@ public class WinUiHomeNavigationSmokeTests
                 operations.SetForeground();
                 operations.WaitForForegroundAndBounds(targetBounds, TimeSpan.FromSeconds(5));
                 Assert.That(operations.ReadIdentity(), Is.EqualTo(expectedIdentity), "Toolkit identity changed immediately before Home capture.");
+                focusBeforeCapture = AssertBoundHomeFocusAndEndpoint(session, expectedAutomationId);
                 bitmap = operations.CaptureBoundWindow(expectedIdentity.MainWindowHandle, targetBounds);
                 IReadOnlyList<GuidedSaveVisualMarker> afterMarkers = markerAutomationIds.Select(operations.ReadMarker).ToArray();
                 Assert.That(afterMarkers, Is.EqualTo(beforeMarkers), "Home marker bounds changed during receipt-bound capture.");
                 Assert.That(operations.ReadIdentity(), Is.EqualTo(expectedIdentity), "Toolkit identity changed immediately after Home capture.");
+                focusAfterCapture = AssertBoundHomeFocusAndEndpoint(session, expectedAutomationId);
                 AssertHomeToolkitImage(bitmap, beforeMarkers);
+                capturedMarkers = beforeMarkers;
 
                 using (FileStream encoded = new(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                 {
@@ -477,21 +686,20 @@ public class WinUiHomeNavigationSmokeTests
             File.Move(temporaryPath, outputPath);
             TestContext.Progress.WriteLine($"Home Toolkit capture: {outputPath}; Bounds={targetBounds}; PID={expectedIdentity.ProcessId}; HWND=0x{expectedIdentity.MainWindowHandle.ToInt64():X}");
             return new HomeCaptureEvidence(
+                state,
+                expectedAutomationId,
+                session.FocusRunId,
+                diagnostic.Outcome,
                 Path.GetFileName(outputPath),
                 Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(outputPath))),
                 targetBounds.X,
                 targetBounds.Y,
                 targetBounds.Width,
                 targetBounds.Height,
-                expectedIdentity.ProcessId,
-                expectedIdentity.ProcessStartTimeUtc,
-                expectedIdentity.ExecutablePath,
-                expectedIdentity.ExecutableSha256,
-                expectedIdentity.ProductAssemblyPath,
-                expectedIdentity.ProductAssemblySha256,
-                expectedIdentity.MainWindowHandle.ToInt64(),
-                expectedIdentity.UiaNativeWindowHandle.ToInt64(),
-                expectedIdentity.WindowOwnerProcessId);
+                ToEvidence(expectedIdentity),
+                capturedMarkers!,
+                focusBeforeCapture!,
+                focusAfterCapture!);
         }
         catch
         {
@@ -508,13 +716,59 @@ public class WinUiHomeNavigationSmokeTests
     private static void PublishHomeAcceptanceRun(
         string stagingDirectory,
         string acceptedDirectory,
-        IReadOnlyList<HomeCaptureEvidence> captures)
+        string harnessRunId,
+        IReadOnlyList<HomeCaptureEvidence> captures,
+        IReadOnlyList<HomeFocusEvidence> focusReceipts)
     {
-        Assert.That(captures, Has.Count.EqualTo(3), "Home acceptance requires exactly three validated captures.");
+        Assert.That(captures, Has.Count.EqualTo(4), "Home acceptance requires exactly four validated captures.");
+        Assert.That(focusReceipts, Has.Count.EqualTo(2), "Home acceptance requires exactly two focus receipts.");
+        Assert.That(captures.Select(capture => capture.RelativeFileName).Distinct().Count(), Is.EqualTo(4));
+        Assert.That(focusReceipts.Select(receipt => receipt.State).Distinct(), Is.EquivalentTo(new[] { "first-run", "ready" }));
+        Assert.That(focusReceipts.Select(receipt => receipt.RunId).Distinct().Count(), Is.EqualTo(2));
+        var expectedCaptures = new Dictionary<string, (string State, int Width, int Height)>(StringComparer.Ordinal)
+        {
+            ["first-run-normal.png"] = ("first-run", 1100, 900),
+            ["first-run-760.png"] = ("first-run", 760, 820),
+            ["ready-normal.png"] = ("ready", 1100, 900),
+            ["ready-760.png"] = ("ready", 760, 820),
+        };
+        Assert.That(captures.Select(capture => capture.RelativeFileName), Is.EquivalentTo(expectedCaptures.Keys));
+        foreach (HomeFocusEvidence receipt in focusReceipts)
+        {
+            HomeCaptureEvidence[] matching = captures.Where(capture =>
+                string.Equals(capture.State, receipt.State, StringComparison.Ordinal)
+                && string.Equals(capture.ExpectedAutomationId, receipt.ExpectedAutomationId, StringComparison.Ordinal)
+                && string.Equals(capture.RunId, receipt.RunId, StringComparison.Ordinal)
+                && string.Equals(capture.DiagnosticOutcome, receipt.DiagnosticOutcome, StringComparison.Ordinal)
+                && capture.Identity == receipt.Identity).ToArray();
+            Assert.That(matching, Has.Length.EqualTo(2), $"Home state {receipt.State} must map bijectively to two captures through the full launch identity and focus run.");
+            Assert.That(receipt.FinalEndpoint.ProcessId, Is.EqualTo(receipt.Identity.ProcessId));
+            Assert.That(receipt.FinalEndpoint.EndpointInputEpoch, Is.Zero);
+            Assert.That(receipt.FinalEndpoint.AutomationId, Is.EqualTo(receipt.ExpectedAutomationId));
+        }
+
         Assert.That(Directory.Exists(stagingDirectory), Is.True);
         Assert.That(Directory.Exists(acceptedDirectory), Is.False, "The unique Home acceptance destination must be fresh.");
+        Assert.That(
+            Path.GetFullPath(Path.GetDirectoryName(stagingDirectory)!),
+            Is.EqualTo(Path.GetFullPath(Path.GetDirectoryName(acceptedDirectory)!)).IgnoreCase,
+            "Home acceptance staging and final directories must be siblings for one same-volume publication rename.");
         foreach (HomeCaptureEvidence capture in captures)
         {
+            (string expectedState, int expectedWidth, int expectedHeight) = expectedCaptures[capture.RelativeFileName];
+            Assert.Multiple(() =>
+            {
+                Assert.That(capture.State, Is.EqualTo(expectedState));
+                Assert.That(capture.Width, Is.EqualTo(expectedWidth));
+                Assert.That(capture.Height, Is.EqualTo(expectedHeight));
+                Assert.That(capture.Markers, Is.Not.Empty);
+                Assert.That(capture.FocusBeforeCapture.ProcessId, Is.EqualTo(capture.Identity.ProcessId));
+                Assert.That(capture.FocusAfterCapture.ProcessId, Is.EqualTo(capture.Identity.ProcessId));
+                Assert.That(capture.FocusBeforeCapture.AutomationId, Is.EqualTo(capture.ExpectedAutomationId));
+                Assert.That(capture.FocusAfterCapture.AutomationId, Is.EqualTo(capture.ExpectedAutomationId));
+                Assert.That(capture.FocusBeforeCapture.EndpointInputEpoch, Is.Zero);
+                Assert.That(capture.FocusAfterCapture.EndpointInputEpoch, Is.Zero);
+            });
             string capturePath = Path.Combine(stagingDirectory, capture.RelativeFileName);
             Assert.That(File.Exists(capturePath), Is.True, $"Missing staged Home capture: {capture.RelativeFileName}");
             Assert.That(
@@ -526,14 +780,15 @@ public class WinUiHomeNavigationSmokeTests
         const string manifestFileName = "home-acceptance-manifest.json";
         string temporaryManifestName = $".{manifestFileName}.{Guid.NewGuid():N}.tmp";
         string temporaryManifestPath = Path.Combine(stagingDirectory, temporaryManifestName);
-        string acceptedTemporaryManifestPath = Path.Combine(acceptedDirectory, temporaryManifestName);
-        string acceptedManifestPath = Path.Combine(acceptedDirectory, manifestFileName);
+        string stagedManifestPath = Path.Combine(stagingDirectory, manifestFileName);
         try
         {
             var manifest = new
             {
-                SchemaVersion = 1,
+                SchemaVersion = 3,
+                HarnessRunId = harnessRunId,
                 Captures = captures,
+                FocusReceipts = focusReceipts,
             };
             using (FileStream stream = new(temporaryManifestPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             {
@@ -542,24 +797,19 @@ public class WinUiHomeNavigationSmokeTests
             }
             using (JsonDocument document = JsonDocument.Parse(File.ReadAllText(temporaryManifestPath)))
             {
-                Assert.That(document.RootElement.GetProperty("SchemaVersion").GetInt32(), Is.EqualTo(1));
-                Assert.That(document.RootElement.GetProperty("Captures").GetArrayLength(), Is.EqualTo(3));
+                Assert.That(document.RootElement.GetProperty("SchemaVersion").GetInt32(), Is.EqualTo(3));
+                Assert.That(document.RootElement.GetProperty("Captures").GetArrayLength(), Is.EqualTo(4));
+                Assert.That(document.RootElement.GetProperty("FocusReceipts").GetArrayLength(), Is.EqualTo(2));
             }
+            File.Move(temporaryManifestPath, stagedManifestPath);
             Directory.Move(stagingDirectory, acceptedDirectory);
-            File.Move(acceptedTemporaryManifestPath, acceptedManifestPath);
-        }
-        catch
-        {
-            if (Directory.Exists(acceptedDirectory) && !File.Exists(acceptedManifestPath))
-            {
-                TryDeleteDirectory(acceptedDirectory);
-            }
-            throw;
         }
         finally
         {
-            File.Delete(temporaryManifestPath);
-            File.Delete(acceptedTemporaryManifestPath);
+            if (Directory.Exists(stagingDirectory))
+            {
+                File.Delete(temporaryManifestPath);
+            }
         }
     }
 
@@ -642,36 +892,15 @@ public class WinUiHomeNavigationSmokeTests
     private static void AssertHomeToolkitImage(Bitmap bitmap, IReadOnlyList<GuidedSaveVisualMarker> markers)
     {
         Assert.That(HasKnownCodexDesktopSignature(bitmap), Is.False, "Home screenshot matches the known Codex Desktop signature.");
-        Assert.That(HasRenderedToolkitHeader(bitmap), Is.True, "Home screenshot does not contain the rendered Toolkit blue header signature.");
+        Assert.That(HomeVisualEvidenceAcceptance.HasMeaningfulFrameCoverage(bitmap), Is.True, "Home screenshot does not contain meaningful opaque Toolkit frame coverage.");
+        Assert.That(HomeVisualEvidenceAcceptance.HasRenderedToolkitHeader(bitmap), Is.True, "Home screenshot does not contain the rendered Toolkit blue header region.");
         foreach (GuidedSaveVisualMarker marker in markers)
         {
             Assert.That(
-                HasRenderedActivity(bitmap, marker.Bounds),
+                HomeVisualEvidenceAcceptance.HasRenderedActivity(bitmap, marker.Bounds),
                 Is.True,
                 $"Home marker {marker.Name} is not visibly rendered in the captured Toolkit image.");
         }
-    }
-
-    private static bool HasRenderedToolkitHeader(Bitmap bitmap)
-    {
-        if (bitmap.Width < 4 || bitmap.Height < 117)
-        {
-            return false;
-        }
-
-        int renderedSamples = 0;
-        foreach (int x in new[] { bitmap.Width / 4, bitmap.Width / 2, bitmap.Width * 3 / 4 })
-        {
-            foreach (int y in new[] { 50, 70, 90 })
-            {
-                Color pixel = bitmap.GetPixel(x, y);
-                if (pixel.A > 240 && pixel.B > pixel.R && pixel.R + pixel.G + pixel.B > 100)
-                {
-                    renderedSamples++;
-                }
-            }
-        }
-        return renderedSamples >= 6;
     }
 
     private static bool HasKnownCodexDesktopSignature(Bitmap bitmap)
@@ -704,26 +933,6 @@ public class WinUiHomeNavigationSmokeTests
         return magentaSamples >= 4 && darkChromeSamples >= chromeSampleCount * 3 / 4;
     }
 
-    private static bool HasRenderedActivity(Bitmap bitmap, Rectangle bounds)
-    {
-        int left = Math.Clamp(bounds.Left, 0, bitmap.Width - 1);
-        int top = Math.Clamp(bounds.Top, 0, bitmap.Height - 1);
-        int right = Math.Clamp(bounds.Right - 1, left, bitmap.Width - 1);
-        int bottom = Math.Clamp(bounds.Bottom - 1, top, bitmap.Height - 1);
-        Color first = bitmap.GetPixel(left, top);
-        for (int y = top; y <= bottom; y += Math.Max(1, (bottom - top + 1) / 8))
-        {
-            for (int x = left; x <= right; x += Math.Max(1, (right - left + 1) / 8))
-            {
-                Color pixel = bitmap.GetPixel(x, y);
-                if (Math.Abs(pixel.R - first.R) + Math.Abs(pixel.G - first.G) + Math.Abs(pixel.B - first.B) >= 24)
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
 
     private static void ToggleByAutomationId(Window window, string automationId)
     {
@@ -871,23 +1080,90 @@ public class WinUiHomeNavigationSmokeTests
 
     private static string? TryGetFocusedAutomationId(UIA3Automation automation)
     {
-        return ProbeFocusedAutomation(automation).AutomationId;
+        try
+        {
+            return automation.FocusedElement()?.AutomationId;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
-    private static FocusedAutomationProbe ProbeFocusedAutomation(UIA3Automation automation)
+    private static FocusedAutomationProbe ProbeFocusedAutomation(
+        HomeNavigationSession session,
+        string expectedAutomationId)
     {
         try
         {
-            return new FocusedAutomationProbe(automation.FocusedElement()?.AutomationId, null);
+            AutomationElement? focused = session.Automation.FocusedElement();
+            AutomationElement? scoped = TryFindByAutomationId(session.Window, expectedAutomationId);
+            if (focused is null || scoped is null)
+            {
+                return new FocusedAutomationProbe(
+                    focused?.AutomationId,
+                    focused?.Properties.ProcessId.ValueOrDefault ?? 0,
+                    focused?.Properties.NativeWindowHandle.ValueOrDefault ?? 0,
+                    focused?.BoundingRectangle ?? Rectangle.Empty,
+                    focused?.Properties.HasKeyboardFocus.ValueOrDefault ?? false,
+                    scoped?.AutomationId,
+                    scoped?.Properties.ProcessId.ValueOrDefault ?? 0,
+                    scoped?.Properties.NativeWindowHandle.ValueOrDefault ?? 0,
+                    scoped?.BoundingRectangle ?? Rectangle.Empty,
+                    scoped?.Properties.HasKeyboardFocus.ValueOrDefault ?? false,
+                    false,
+                    null);
+            }
+
+            int focusedProcessId = focused.Properties.ProcessId.ValueOrDefault;
+            int scopedProcessId = scoped.Properties.ProcessId.ValueOrDefault;
+            Rectangle focusedBounds = focused.BoundingRectangle;
+            Rectangle scopedBounds = scoped.BoundingRectangle;
+            bool focusedHasKeyboardFocus = focused.Properties.HasKeyboardFocus.ValueOrDefault;
+            bool scopedHasKeyboardFocus = scoped.Properties.HasKeyboardFocus.ValueOrDefault;
+            bool exactWindowScopedMatch =
+                string.Equals(focused.AutomationId, expectedAutomationId, StringComparison.Ordinal)
+                && string.Equals(scoped.AutomationId, expectedAutomationId, StringComparison.Ordinal)
+                && focusedProcessId == session.Identity.ProcessId
+                && scopedProcessId == session.Identity.ProcessId
+                && focusedBounds == scopedBounds
+                && focusedHasKeyboardFocus
+                && scopedHasKeyboardFocus;
+            return new FocusedAutomationProbe(
+                focused.AutomationId,
+                focusedProcessId,
+                focused.Properties.NativeWindowHandle.ValueOrDefault,
+                focusedBounds,
+                focusedHasKeyboardFocus,
+                scoped.AutomationId,
+                scopedProcessId,
+                scoped.Properties.NativeWindowHandle.ValueOrDefault,
+                scopedBounds,
+                scopedHasKeyboardFocus,
+                exactWindowScopedMatch,
+                null);
         }
         catch (Exception ex)
         {
-            return new FocusedAutomationProbe(null, ex.GetType().Name);
+            return new FocusedAutomationProbe(
+                null,
+                0,
+                0,
+                Rectangle.Empty,
+                false,
+                null,
+                0,
+                0,
+                Rectangle.Empty,
+                false,
+                false,
+                ex.GetType().Name);
         }
     }
 
-    private static void AssertHomeArrivalFocus(
+    private static HomeFocusDiagnosticEvidence AssertHomeArrivalFocus(
         HomeNavigationSession session,
+        string state,
         string expectedAutomationId,
         TimeSpan timeout,
         string failureMessage)
@@ -896,24 +1172,31 @@ public class WinUiHomeNavigationSmokeTests
         bool focused = Retry.WhileFalse(
             () =>
             {
-                FocusedAutomationProbe probe = ProbeFocusedAutomation(session.Automation);
+                BoundHomeFocusObservation? observation = TryReadBoundHomeFocusAndEndpoint(
+                    session,
+                    expectedAutomationId,
+                    out FocusedAutomationProbe probe);
                 if (samples.Count >= 12)
                 {
                     samples.Dequeue();
                 }
 
-                samples.Enqueue($"AutomationId={probe.AutomationId ?? "<none>"};ExceptionType={probe.ExceptionType ?? "<none>"}");
-                return string.Equals(probe.AutomationId, expectedAutomationId, StringComparison.Ordinal);
+                samples.Enqueue(
+                    $"AutomationId={probe.AutomationId ?? "<none>"};ProcessId={probe.ProcessId};" +
+                    $"ScopedAutomationId={probe.ScopedAutomationId ?? "<none>"};ScopedProcessId={probe.ScopedProcessId};" +
+                    $"ExactWindowScopedMatch={probe.ExactWindowScopedMatch};ExceptionType={probe.ExceptionType ?? "<none>"}");
+                return observation is not null;
             },
             timeout).Success;
         if (focused)
         {
+            HomeFocusDiagnosticEvidence? evidence = null;
             bool diagnosticConfirmed = Retry.WhileFalse(
-                () => HasCurrentHomeFocusDiagnostic(session, expectedAutomationId),
+                () => (evidence = TryReadCurrentHomeDiagnosticEvidence(session, state, expectedAutomationId)) is not null,
                 TimeSpan.FromSeconds(2)).Success;
             if (diagnosticConfirmed)
             {
-                return;
+                return evidence!;
             }
         }
 
@@ -924,16 +1207,100 @@ public class WinUiHomeNavigationSmokeTests
             ? string.Join(" | ", File.ReadLines(diagnosticPath).TakeLast(12))
             : "<none>";
         Assert.Fail($"{failureMessage} Global UIA samples: {string.Join(" | ", samples)}. App XAML diagnostics: {diagnostics}");
+        throw new InvalidOperationException("Unreachable after failed Home arrival focus assertion.");
     }
 
-    private static bool HasCurrentHomeFocusDiagnostic(HomeNavigationSession session, string expectedAutomationId)
+    private static BoundHomeFocusObservation AssertHomeFocusRemains(
+        HomeNavigationSession session,
+        string expectedAutomationId)
+    {
+        BoundHomeFocusObservation first = AssertBoundHomeFocusAndEndpoint(session, expectedAutomationId);
+        Thread.Sleep(100);
+        BoundHomeFocusObservation second = AssertBoundHomeFocusAndEndpoint(session, expectedAutomationId);
+        Assert.Multiple(() =>
+        {
+            Assert.That(second.AutomationId, Is.EqualTo(first.AutomationId));
+            Assert.That(second.ProcessId, Is.EqualTo(first.ProcessId));
+            Assert.That(second.EndpointInputEpoch, Is.EqualTo(first.EndpointInputEpoch));
+            Assert.That(second.EndpointSequence, Is.GreaterThanOrEqualTo(first.EndpointSequence));
+        });
+        return second;
+    }
+
+    private static BoundHomeFocusObservation AssertBoundHomeFocusAndEndpoint(
+        HomeNavigationSession session,
+        string expectedAutomationId)
+    {
+        BoundHomeFocusObservation? observation = TryReadBoundHomeFocusAndEndpoint(
+            session,
+            expectedAutomationId,
+            out FocusedAutomationProbe probe);
+        if (observation is null)
+        {
+            AutomationElement? status = TryFindByAutomationId(session.Window, "AppStatusText");
+            string endpoint = status?.Properties.HelpText.ValueOrDefault ?? "<none>";
+            Assert.Fail(
+                $"Home focus endpoint is not bound to the launched Toolkit HWND. Expected={expectedAutomationId}; " +
+                $"Global={probe.AutomationId ?? "<none>"}; GlobalPid={probe.ProcessId}; GlobalBounds={probe.Bounds}; " +
+                $"Scoped={probe.ScopedAutomationId ?? "<none>"}; ScopedPid={probe.ScopedProcessId}; ScopedBounds={probe.ScopedBounds}; " +
+                $"GlobalHasFocus={probe.HasKeyboardFocus}; ScopedHasFocus={probe.ScopedHasKeyboardFocus}; " +
+                $"ExactWindowScopedMatch={probe.ExactWindowScopedMatch}; Exception={probe.ExceptionType ?? "<none>"}; Endpoint={endpoint}");
+        }
+
+        var operations = new FlaUiReceiptBoundVisualCaptureOperations(session.App, session.Window, session.ExecutablePath);
+        Assert.That(operations.ReadIdentity(), Is.EqualTo(session.Identity), "Toolkit launch identity changed at a Home focus endpoint.");
+        return observation!;
+    }
+
+    private static BoundHomeFocusObservation? TryReadBoundHomeFocusAndEndpoint(
+        HomeNavigationSession session,
+        string expectedAutomationId,
+        out FocusedAutomationProbe probe)
+    {
+        probe = ProbeFocusedAutomation(session, expectedAutomationId);
+        if (!probe.ExactWindowScopedMatch)
+        {
+            return null;
+        }
+
+        AutomationElement? status = TryFindByAutomationId(session.Window, "AppStatusText");
+        if (status is null
+            || status.Properties.ProcessId.ValueOrDefault != session.Identity.ProcessId
+            || !HomeFocusEvidenceAcceptance.TryReadEndpointStatus(
+                status.Properties.HelpText.ValueOrDefault,
+                session.Identity.ProcessId,
+                session.FocusRunId,
+                expectedAutomationId,
+                out HomeFocusEndpointObservation? endpoint))
+        {
+            return null;
+        }
+
+        return new BoundHomeFocusObservation(
+            probe.AutomationId!,
+            probe.ProcessId,
+            probe.NativeWindowHandle,
+            probe.Bounds.X,
+            probe.Bounds.Y,
+            probe.Bounds.Width,
+            probe.Bounds.Height,
+            probe.HasKeyboardFocus,
+            endpoint!.Sequence,
+            endpoint.InputEpoch,
+            endpoint.FocusedAutomationId);
+    }
+
+    private static HomeFocusDiagnosticEvidence? TryReadCurrentHomeDiagnosticEvidence(
+        HomeNavigationSession session,
+        string state,
+        string expectedAutomationId)
     {
         string diagnosticPath = Path.Combine(
             Path.GetDirectoryName(session.ConfigPath)!,
             "home-arrival-focus.jsonl");
         if (!File.Exists(diagnosticPath))
         {
-            return false;
+            return null;
         }
 
         string expectedTarget = expectedAutomationId switch
@@ -943,35 +1310,64 @@ public class WinUiHomeNavigationSmokeTests
             "HomeOpenSaveLabButton" => "SaveLab",
             _ => string.Empty,
         };
-        foreach (string line in File.ReadLines(diagnosticPath).Reverse().Take(32))
+        try
         {
-            try
-            {
-                using JsonDocument document = JsonDocument.Parse(line);
-                JsonElement root = document.RootElement;
-                if (root.GetProperty("ProcessId").GetInt32() == session.App.ProcessId
-                    && string.Equals(root.GetProperty("RunId").GetString(), session.FocusRunId, StringComparison.Ordinal)
-                    && string.Equals(root.GetProperty("Target").GetString(), expectedTarget, StringComparison.Ordinal)
-                    && root.GetProperty("FocusVerified").ValueKind == JsonValueKind.True
-                    && string.Equals(root.GetProperty("FinalXamlFocusedAutomationId").GetString(), expectedAutomationId, StringComparison.Ordinal))
-                {
-                    return true;
-                }
-            }
-            catch (IOException)
-            {
-                return false;
-            }
-            catch (JsonException)
-            {
-                continue;
-            }
+            return HomeFocusEvidenceAcceptance.TryReadTerminalDiagnostic(
+                File.ReadLines(diagnosticPath),
+                session.Identity.ProcessId,
+                session.FocusRunId,
+                state,
+                expectedTarget,
+                expectedAutomationId,
+                out HomeFocusDiagnosticEvidence? evidence)
+                    ? evidence
+                    : null;
         }
-
-        return false;
+        catch (IOException)
+        {
+            return null;
+        }
     }
 
-    private static Window WaitForMainWindow(Application app, UIA3Automation automation)
+    private static HomeFocusEvidence CreateHomeFocusEvidence(
+        HomeNavigationSession session,
+        string state,
+        string expectedAutomationId,
+        HomeFocusDiagnosticEvidence diagnostic,
+        BoundHomeFocusObservation finalEndpoint)
+    {
+        return new HomeFocusEvidence(
+            state,
+            expectedAutomationId,
+            finalEndpoint.AutomationId,
+            session.FocusRunId,
+            session.Identity.ProcessId,
+            diagnostic.Stage,
+            diagnostic.Target,
+            diagnostic.Outcome,
+            diagnostic.FocusVerified,
+            diagnostic.FocusedAutomationIdAtSample,
+            diagnostic.FinalXamlFocusedAutomationId,
+            diagnostic.InputEpochAtSample,
+            ToEvidence(session.Identity),
+            finalEndpoint);
+    }
+
+    private static HomeAppIdentityEvidence ToEvidence(ReceiptBoundAppIdentity identity) => new(
+        identity.ProcessId,
+        identity.ProcessStartTimeUtc,
+        identity.ExecutablePath,
+        identity.ExecutableSha256,
+        identity.ProductAssemblyPath,
+        identity.ProductAssemblySha256,
+        identity.MainWindowHandle.ToInt64(),
+        identity.UiaNativeWindowHandle.ToInt64(),
+        identity.WindowOwnerProcessId);
+
+    private static Window WaitForMainWindow(
+        Application app,
+        UIA3Automation automation,
+        bool failIfUnavailable = false)
     {
         bool handleReady = Retry.WhileFalse(
             () => app.MainWindowHandle != IntPtr.Zero,
@@ -979,6 +1375,11 @@ public class WinUiHomeNavigationSmokeTests
 
         if (!handleReady)
         {
+            if (failIfUnavailable)
+            {
+                Assert.Fail("Repository-built WinUI main window handle was not available; native Home acceptance cannot skip.");
+            }
+
             Assert.Ignore("Main window handle not available; ensure the app can launch in this desktop session.");
         }
 
@@ -995,6 +1396,11 @@ public class WinUiHomeNavigationSmokeTests
                 }
             },
             TimeSpan.FromSeconds(30)).Result;
+
+        if (window is null && failIfUnavailable)
+        {
+            Assert.Fail("Repository-built WinUI main window could not be acquired through UIA; native Home acceptance cannot skip.");
+        }
 
         Assert.That(window, Is.Not.Null);
         return window!;
@@ -1037,6 +1443,11 @@ public class WinUiHomeNavigationSmokeTests
             return explicitExePath;
         }
 
+        return ResolveRepoBuiltWinUiAppPath();
+    }
+
+    private static string ResolveRepoBuiltWinUiAppPath()
+    {
         return Path.Combine(
             ResolveRepoRoot(),
             "OnslaughtCareerEditor.WinUI",
@@ -1049,7 +1460,18 @@ public class WinUiHomeNavigationSmokeTests
 
     private static string ResolveRepoRoot()
     {
-        return Path.GetFullPath(
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        DirectoryInfo? candidate = new DirectoryInfo(AppContext.BaseDirectory);
+        for (int depth = 0; candidate is not null && depth < 10; depth++, candidate = candidate.Parent)
+        {
+            if (File.Exists(Path.Combine(candidate.FullName, "package.json"))
+                && Directory.Exists(Path.Combine(candidate.FullName, "OnslaughtCareerEditor.WinUI"))
+                && Directory.Exists(Path.Combine(candidate.FullName, "OnslaughtCareerEditor.UiTests")))
+            {
+                return candidate.FullName;
+            }
+        }
+
+        Assert.Fail($"Could not resolve the repository root from test output: {AppContext.BaseDirectory}");
+        throw new InvalidOperationException("Unreachable after repository-root resolution failure.");
     }
 }

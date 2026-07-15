@@ -202,6 +202,27 @@ threads stay read-only.
 - Useful public direction docs: `roadmap/winui-toolchain-and-qa-direction.md`, `roadmap/winui-ui-ux-redesign-radar.md`, `COLLABORATION.md`, and `AGENTS.md`.
 - For the large `tools/` folder, start with `tools/README.md` before treating an individual helper as a public PR gate.
 
+The opt-in unattended Home arrival-focus and visual acceptance gate rebuilds
+the repository WinUI app, launches isolated first-run and synthetic-ready
+states, and publishes receipt-bound normal/760 evidence under ignored
+`local-lab/winui-home-native-visual-focus/`:
+
+```powershell
+npm run test:winui-home-native-visual-focus
+```
+
+The command fails unless its TRX contains exactly one executed passing native
+test and that test publishes exactly one fresh schema-3 manifest. Each capture
+is linked to full process/start/hash/HWND identity, owner-bound UIA plus
+app-side focus/input endpoints, stable visual markers, and meaningful opaque
+pixel coverage. Build and test are pinned to Debug/win-x64; one invocation ID
+and the runner's post-build executable/DLL hashes bind the child test and its
+owned accepted/partial evidence. Partial publication, skipped/zero tests, stale
+artifacts, or a nonzero Toolkit/testhost/vstest/BEA/debugger process census
+fail the gate. This
+native command is not part of ordinary non-runtime UI tests or release signoff;
+its screenshots, app data, TRX, and manifests remain local evidence.
+
 ## Patch And Mod Work
 
 Executable patch work must be byte-verified and specimen-specific:

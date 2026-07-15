@@ -126,6 +126,7 @@ public class WinUiProductLaneTests
     public void HomeNativeAcceptance_CoversFirstRunReadyAndCompactWithoutNavigation()
     {
         string smoke = ReadRepoFile("OnslaughtCareerEditor.UiTests", "WinUiHomeNavigationSmokeTests.cs");
+        string packageJson = ReadRepoFile("package.json");
         string acceptance = ExtractCodeSlice(
             smoke,
             "public void Home_NewcomerHierarchy_CapturesFirstRunReadyAndCompactWithoutNavigation()",
@@ -142,8 +143,8 @@ public class WinUiProductLaneTests
         Assert.Multiple(() =>
         {
             Assert.That(Regex.Matches(acceptance, "LaunchHomeSession\\(").Count, Is.EqualTo(2));
-            Assert.That(acceptance, Does.Contain("LaunchHomeSession()"));
-            Assert.That(acceptance, Does.Contain("LaunchHomeSession(readyGameDirectory, \"ready\")"));
+            Assert.That(acceptance, Does.Contain("LaunchHomeSession(stagingDirectory, requireRepoBuild: true)"));
+            Assert.That(acceptance, Does.Contain("LaunchHomeSession(stagingDirectory, readyGameDirectory, \"ready\", requireRepoBuild: true)"));
             Assert.That(acceptance, Does.Contain("HomeSetupActionButton"));
             Assert.That(acceptance, Does.Contain("HomeOpenPatchBenchButton"));
             Assert.That(acceptance, Does.Contain("HomePatchModsTitle"));
@@ -151,7 +152,12 @@ public class WinUiProductLaneTests
             Assert.That(acceptance, Does.Contain("HomeOpenConfigurationEditorButton"));
             Assert.That(acceptance, Does.Contain("new Rectangle(16, 16, 760, 820)"));
             Assert.That(acceptance, Does.Contain("CaptureReceiptBoundHomeWindow("));
-            Assert.That(Regex.Matches(acceptance, "CaptureReceiptBoundHomeWindow\\(").Count, Is.EqualTo(3));
+            Assert.That(Regex.Matches(acceptance, "CaptureReceiptBoundHomeWindow\\(").Count, Is.EqualTo(4));
+            Assert.That(acceptance, Does.Contain("HomeFocusEvidence"));
+            Assert.That(acceptance, Does.Contain("focusReceipts"));
+            Assert.That(acceptance, Does.Contain("AssertHomeFocusRemains("));
+            Assert.That(acceptance, Does.Contain("local-lab"));
+            Assert.That(acceptance, Does.Contain("winui-home-native-visual-focus"));
             Assert.That(acceptance, Does.Contain(".partial"));
             Assert.That(acceptance, Does.Contain("PublishHomeAcceptanceRun("));
             Assert.That(acceptance, Does.Contain("WaitForHomeLayout("));
@@ -159,7 +165,13 @@ public class WinUiProductLaneTests
             Assert.That(acceptance, Does.Not.Contain("ActivateAndWait("));
             Assert.That(acceptance, Does.Not.Contain(".Click("));
             Assert.That(acceptance, Does.Not.Contain(".Invoke("));
-            Assert.That(smoke, Does.Contain("return renderedSamples >= 6;"));
+            Assert.That(smoke, Does.Contain("HomeVisualEvidenceAcceptance.HasMeaningfulFrameCoverage"));
+            Assert.That(smoke, Does.Contain("HomeFocusEvidenceAcceptance.TryReadTerminalDiagnostic"));
+            Assert.That(smoke, Does.Contain("HomeFocusEvidenceAcceptance.TryReadEndpointStatus"));
+            Assert.That(smoke, Does.Contain("ExactWindowScopedMatch"));
+            Assert.That(smoke, Does.Contain("failIfUnavailable: requireRepoBuild"));
+            Assert.That(smoke, Does.Contain("preLaunchExecutableSha256"));
+            Assert.That(smoke, Does.Contain("CloseLaunchedHomeApp(app)"));
             Assert.That(
                 captureHelper.IndexOf("operations.RestoreWindowState(originalState);", StringComparison.Ordinal),
                 Is.LessThan(captureHelper.IndexOf("File.Move(temporaryPath, outputPath);", StringComparison.Ordinal)),
@@ -168,10 +180,20 @@ public class WinUiProductLaneTests
             Assert.That(captureHelper, Does.Not.Contain("overwrite: true"));
             Assert.That(smoke, Does.Contain("Directory.Move(stagingDirectory, acceptedDirectory);"));
             Assert.That(smoke, Does.Contain("home-acceptance-manifest.json"));
+            Assert.That(manifestPublisher, Does.Contain("focusReceipts"));
+            Assert.That(manifestPublisher, Does.Contain("Has.Count.EqualTo(4)"));
+            Assert.That(manifestPublisher, Does.Contain("Has.Count.EqualTo(2)"));
+            Assert.That(manifestPublisher, Does.Contain("if (Directory.Exists(stagingDirectory))"));
+            Assert.That(manifestPublisher, Does.Contain("capture.Identity == receipt.Identity"));
+            Assert.That(manifestPublisher, Does.Not.Contain("acceptedTemporaryManifestPath"));
+            Assert.That(smoke, Does.Contain("ResolveRepoBuiltWinUiAppPath"));
+            Assert.That(packageJson, Does.Contain("test:winui-home-native-visual-focus"));
+            Assert.That(packageJson, Does.Contain("run_winui_home_native_visual_focus_test.py"));
+            Assert.That(packageJson, Does.Contain("run_winui_home_native_visual_focus.py"));
             Assert.That(
-                manifestPublisher.IndexOf("Directory.Move(stagingDirectory, acceptedDirectory);", StringComparison.Ordinal),
-                Is.LessThan(manifestPublisher.IndexOf("File.Move(acceptedTemporaryManifestPath, acceptedManifestPath);", StringComparison.Ordinal)),
-                "The final acceptance manifest must be published only after the run directory transition succeeds.");
+                manifestPublisher.IndexOf("File.Move(temporaryManifestPath, stagedManifestPath);", StringComparison.Ordinal),
+                Is.LessThan(manifestPublisher.IndexOf("Directory.Move(stagingDirectory, acceptedDirectory);", StringComparison.Ordinal)),
+                "The final acceptance manifest must be complete inside staging before the one directory publication rename.");
         });
     }
 
