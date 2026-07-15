@@ -48,7 +48,10 @@ public class WinUiSaveLabNativeWorkflowTests
         string runName = $"save-lab-x-{runId}";
         string stagingDirectory = Path.Combine(evidenceRoot, $".{runName}.partial");
         string acceptedDirectory = Path.Combine(evidenceRoot, runName);
+        SaveLabOwnedPathGuard.RequireEvidenceRoot(repoRoot, evidenceRoot);
         Directory.CreateDirectory(stagingDirectory);
+        SaveLabOwnedPathGuard.RequireEvidenceRoot(repoRoot, evidenceRoot);
+        SaveLabOwnedPathGuard.RequireDirectChild(evidenceRoot, stagingDirectory);
 
         try
         {
@@ -84,11 +87,12 @@ public class WinUiSaveLabNativeWorkflowTests
                     SaveLabNativeEvidenceContract.SyntheticOptionsSha256),
                 captures,
                 workflows);
+            SaveLabOwnedPathGuard.RequireEvidenceRoot(repoRoot, evidenceRoot);
+            SaveLabOwnedPathGuard.RequireDirectChild(evidenceRoot, stagingDirectory);
             SaveLabNativeEvidenceAcceptance.Publish(stagingDirectory, acceptedDirectory, manifest);
         }
         catch
         {
-            TryDeleteDirectory(stagingDirectory);
             throw;
         }
     }
@@ -190,7 +194,13 @@ public class WinUiSaveLabNativeWorkflowTests
             Assert.That(outputHash, Is.Not.EqualTo(inputHashBefore), "Save Editor output must differ from its input.");
             Assert.That(new FileInfo(outputPath).Length, Is.EqualTo(SaveLabNativeEvidenceContract.ArtifactLength));
             Assert.That(analysis.IsValid, Is.True, analysis.ErrorMessage);
-            Assert.That(analysis.GoodieStates.Where(row => row.IsDisplayable).Select(row => row.RawState), Has.All.EqualTo(3u));
+            GoodieStateDetail[] displayableGoodies = analysis.GoodieStates
+                .Where(row => row.IsDisplayable)
+                .ToArray();
+            Assert.That(
+                displayableGoodies,
+                Has.Length.EqualTo(SaveLabNativeEvidenceContract.DisplayableGoodieCount));
+            Assert.That(displayableGoodies.Select(row => row.RawState), Has.All.EqualTo(3u));
             Assert.That(outputLog, Does.Contain("selected output file"));
             Assert.That(outputLog, Does.Not.Contain(inputCopyPath));
             Assert.That(outputLog, Does.Not.Contain(outputPath));
@@ -552,11 +562,13 @@ public class WinUiSaveLabNativeWorkflowTests
     private static void SetTextBox(Window window, string automationId, string text)
     {
         TextBox textBox = FindByAutomationId(window, automationId).AsTextBox();
+        Assert.That(textBox.Patterns.Value.IsSupported, Is.True, $"{automationId} must expose ValuePattern.");
+        Assert.That(textBox.Patterns.Value.Pattern.IsReadOnly.Value, Is.False, $"{automationId} ValuePattern must be writable.");
         textBox.Focus();
-        textBox.Text = text;
+        textBox.Patterns.Value.Pattern.SetValue(text);
         Assert.That(
             Retry.WhileFalse(
-                () => string.Equals(textBox.Text, text, StringComparison.Ordinal),
+                () => string.Equals(textBox.Patterns.Value.Pattern.Value.Value, text, StringComparison.Ordinal),
                 TimeSpan.FromSeconds(5)).Success,
             Is.True,
             $"Expected {automationId} to accept the requested ValuePattern text.");
@@ -584,10 +596,12 @@ public class WinUiSaveLabNativeWorkflowTests
 
     private static void AssertComboBoxSelectedText(Window window, string automationId, string expected)
     {
+        ComboBox comboBox = FindByAutomationId(window, automationId).AsComboBox();
+        Assert.That(comboBox.Patterns.Selection.IsSupported, Is.True, $"{automationId} must expose SelectionPattern.");
         Assert.That(
             Retry.WhileFalse(
                 () => string.Equals(
-                    FindByAutomationId(window, automationId).AsComboBox().SelectedItem?.Text,
+                    comboBox.SelectedItem?.Text,
                     expected,
                     StringComparison.Ordinal),
                 TimeSpan.FromSeconds(10)).Success,
@@ -662,18 +676,4 @@ public class WinUiSaveLabNativeWorkflowTests
     private static string Relative(string root, string path) =>
         Path.GetRelativePath(root, path).Replace(Path.DirectorySeparatorChar, '/');
 
-    private static void TryDeleteDirectory(string path)
-    {
-        try
-        {
-            if (Directory.Exists(path))
-            {
-                Directory.Delete(path, recursive: true);
-            }
-        }
-        catch
-        {
-            // The outer runner owns bounded rollback and final process/file census.
-        }
-    }
 }

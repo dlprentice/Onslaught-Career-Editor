@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Security.Cryptography;
@@ -109,6 +110,40 @@ public class SaveLabNativeEvidenceAcceptanceTests
     }
 
     [Test]
+    public void Validate_RejectsForgedSaveEditorReadbackWhenOutputDoesNotContainAllDisplayableOldGoodies()
+    {
+        SaveLabAcceptanceManifest valid = SaveLabNativeEvidenceTestFactory.CreateValid(_staging);
+        SaveLabWorkflowEvidence workflow = valid.Workflows.Single(row => row.Workflow == "save-editor");
+        string outputPath = ResolveWorkflowPath(_staging, workflow.OutputRelativePath);
+        SaveAnalysis analysis = BesFilePatcher.AnalyzeSave(outputPath);
+        GoodieStateDetail firstDisplayable = analysis.GoodieStates.First(row => row.IsDisplayable);
+        byte[] bytes = File.ReadAllBytes(outputPath);
+        BinaryPrimitives.WriteUInt32LittleEndian(bytes.AsSpan(firstDisplayable.FileOffset, 4), 0u);
+        File.WriteAllBytes(outputPath, bytes);
+        SaveLabAcceptanceManifest forged = RefreshOutputReceipt(valid, "save-editor", outputPath);
+
+        Assert.That(
+            () => SaveLabNativeEvidenceAcceptance.Validate(_staging, forged),
+            Throws.Exception.With.Message.Contains("displayable Goodies"));
+    }
+
+    [Test]
+    public void Validate_RejectsForgedGameOptionsReadbackWhenControllerConfigP1IsNotOne()
+    {
+        SaveLabAcceptanceManifest valid = SaveLabNativeEvidenceTestFactory.CreateValid(_staging);
+        SaveLabWorkflowEvidence workflow = valid.Workflows.Single(row => row.Workflow == "game-options");
+        string outputPath = ResolveWorkflowPath(_staging, workflow.OutputRelativePath);
+        byte[] bytes = File.ReadAllBytes(outputPath);
+        BinaryPrimitives.WriteUInt32LittleEndian(bytes.AsSpan(0x24B6, 4), 2u);
+        File.WriteAllBytes(outputPath, bytes);
+        SaveLabAcceptanceManifest forged = RefreshOutputReceipt(valid, "game-options", outputPath);
+
+        Assert.That(
+            () => SaveLabNativeEvidenceAcceptance.Validate(_staging, forged),
+            Throws.TypeOf<AssertionException>().With.Message.Contains("ControllerConfigP1"));
+    }
+
+    [Test]
     public void Publish_RenamesOneCompleteSiblingAndLeavesCanonicalManifest()
     {
         SaveLabAcceptanceManifest manifest = SaveLabNativeEvidenceTestFactory.CreateValid(_staging);
@@ -149,9 +184,33 @@ public class SaveLabNativeEvidenceAcceptanceTests
             Is.Empty);
     }
 
+    private static SaveLabAcceptanceManifest RefreshOutputReceipt(
+        SaveLabAcceptanceManifest manifest,
+        string workflowName,
+        string outputPath)
+    {
+        string outputHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(outputPath)));
+        return manifest with
+        {
+            Workflows = manifest.Workflows
+                .Select(row => row.Workflow == workflowName
+                    ? row with
+                    {
+                        OutputSha256 = outputHash,
+                        OutputLength = checked((int)new FileInfo(outputPath).Length),
+                    }
+                    : row)
+                .ToArray(),
+        };
+    }
+
+    private static string ResolveWorkflowPath(string root, string relativePath) =>
+        Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar));
+
     private static class SaveLabNativeEvidenceTestFactory
     {
         private const string RunId = "0123456789abcdef0123456789abcdef";
+        private const int ControllerConfigP1FileOffset = 0x24B6;
 
         internal static SaveLabAcceptanceManifest CreateValid(string stagingDirectory)
         {
@@ -160,9 +219,25 @@ public class SaveLabNativeEvidenceAcceptanceTests
             string optionsInput = "fixtures/synthetic-options.bea";
             string optionsOutput = "options-session/appdata/OnslaughtCareerEditor/patched-output/synthetic-options_patched.bea";
 
-            CopyFile(TestFixturePaths.RequireGoldSavePath(), Resolve(stagingDirectory, saveInput));
-            byte[] saveOutputBytes = File.ReadAllBytes(Resolve(stagingDirectory, saveInput));
-            saveOutputBytes[^1] ^= 0x01;
+            string saveInputPath = Resolve(stagingDirectory, saveInput);
+            CopyFile(TestFixturePaths.RequireGoldSavePath(), saveInputPath);
+            SaveAnalysis saveInputAnalysis = BesFilePatcher.AnalyzeSave(saveInputPath);
+            if (!saveInputAnalysis.IsValid)
+            {
+                throw new InvalidDataException(saveInputAnalysis.ErrorMessage);
+            }
+            GoodieStateDetail[] displayableGoodies = saveInputAnalysis.GoodieStates
+                .Where(row => row.IsDisplayable)
+                .ToArray();
+            if (displayableGoodies.Length != 233)
+            {
+                throw new InvalidDataException($"Expected 233 displayable Goodies, got {displayableGoodies.Length}.");
+            }
+            byte[] saveOutputBytes = File.ReadAllBytes(saveInputPath);
+            foreach (GoodieStateDetail goodie in displayableGoodies)
+            {
+                BinaryPrimitives.WriteUInt32LittleEndian(saveOutputBytes.AsSpan(goodie.FileOffset, 4), 3u);
+            }
             WriteFile(Resolve(stagingDirectory, saveOutput), saveOutputBytes);
 
             byte[] optionsInputBytes = new byte[BesFilePatcher.EXPECTED_FILE_SIZE];
@@ -170,7 +245,9 @@ public class SaveLabNativeEvidenceAcceptanceTests
             optionsInputBytes[1] = 0x4B;
             WriteFile(Resolve(stagingDirectory, optionsInput), optionsInputBytes);
             byte[] optionsOutputBytes = (byte[])optionsInputBytes.Clone();
-            optionsOutputBytes[0x64] = 1;
+            BinaryPrimitives.WriteUInt32LittleEndian(
+                optionsOutputBytes.AsSpan(ControllerConfigP1FileOffset, 4),
+                1u);
             WriteFile(Resolve(stagingDirectory, optionsOutput), optionsOutputBytes);
 
             SaveLabAppIdentityEvidence saveIdentity = Identity(4101, 0x1101);

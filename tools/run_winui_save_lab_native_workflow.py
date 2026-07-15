@@ -13,10 +13,13 @@ import json
 import os
 import re
 import shutil
+import stat
+import struct
 import subprocess
 import sys
 import time
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -50,7 +53,12 @@ ARTIFACT_LENGTH = 10_004
 SYNTHETIC_VERSION_WORD = 0x4BD1
 TRACKED_FIXTURE_SHA256 = "0C17E47DB9D666E9B26EF88D43D0A25E7CBFBF4F88C8005CC748965050E506FB"
 SYNTHETIC_OPTIONS_SHA256 = "A922C6BCA412DB45AED3FCCBE926B6383C039CCF3778C4558D299D1D3C466D99"
-INTERACTION_MODE = "UIA Value/Toggle/ExpandCollapse/Scroll/Focus/Invoke; no keyboard or pointer synthesis"
+INTERACTION_MODE = "UIA Value/Toggle/ExpandCollapse/Scroll/ScrollItem/Selection/Focus/Invoke; no keyboard or pointer synthesis"
+GOODIE_BASE_OFFSET = 0x1F46
+DISPLAYABLE_GOODIE_COUNT = 233
+GOODIE_OLD_STATE = 3
+CONTROLLER_CONFIG_P1_OFFSET = 0x24B6
+DOTNET_TICKS_PER_SECOND = 10_000_000
 
 NativeAcceptanceError = native_support.NativeAcceptanceError
 HarnessError = NativeAcceptanceError
@@ -98,6 +106,30 @@ EXPECTED_CAPTURES: dict[str, tuple[str, str, str, int, int, frozenset[str]]] = {
 
 def validate_trx(path: Path) -> dict[str, int]:
     return native_support.validate_exact_trx(path, TEST_METHOD_NAME, "native Save Lab")
+
+
+def dotnet_utc_timestamp_ticks(value: Any) -> int:
+    require(isinstance(value, str), "native Save Lab process start UTC timestamp is invalid")
+    match = re.fullmatch(
+        r"(?P<base>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})"
+        r"(?:\.(?P<fraction>\d{1,7}))?"
+        r"(?P<offset>Z|[+-]\d{2}:\d{2})",
+        value,
+    )
+    require(match is not None, "native Save Lab process start UTC timestamp is invalid")
+    offset = "+00:00" if match.group("offset") == "Z" else match.group("offset")
+    try:
+        parsed = datetime.fromisoformat(match.group("base") + offset).astimezone(timezone.utc)
+    except ValueError as exc:
+        raise NativeAcceptanceError("native Save Lab process start UTC timestamp is invalid") from exc
+    whole_seconds = (
+        (parsed.toordinal() - 1) * 86_400
+        + parsed.hour * 3_600
+        + parsed.minute * 60
+        + parsed.second
+    )
+    fractional_ticks = int((match.group("fraction") or "0").ljust(7, "0"))
+    return whole_seconds * DOTNET_TICKS_PER_SECOND + fractional_ticks
 
 
 def validate_manifest(
@@ -180,10 +212,7 @@ def validate_manifest(
         )
         require(executable_hash == sha256(expected_exe), "native Save Lab executable hash no longer matches the repo build")
         require(product_hash == sha256(expected_dll), "native Save Lab product DLL hash no longer matches the repo build")
-        require(
-            isinstance(identity.get("ProcessStartTimeUtc"), str) and identity["ProcessStartTimeUtc"],
-            "native Save Lab process start time is missing",
-        )
+        dotnet_utc_timestamp_ticks(identity.get("ProcessStartTimeUtc"))
         return identity
 
     workflow_by_name: dict[str, dict[str, Any]] = {}
@@ -216,6 +245,23 @@ def validate_manifest(
             and output_hash != input_hash,
             f"native Save Lab {name} output validation changed",
         )
+        output_bytes = output_path.read_bytes()
+        if name == "save-editor":
+            displayable_goodies = [
+                struct.unpack_from("<I", output_bytes, GOODIE_BASE_OFFSET + index * 4)[0]
+                for index in range(DISPLAYABLE_GOODIE_COUNT)
+            ]
+            require(
+                len(displayable_goodies) == DISPLAYABLE_GOODIE_COUNT
+                and all(state == GOODIE_OLD_STATE for state in displayable_goodies),
+                "native Save Lab save-editor output does not prove exactly 233 displayable Goodies in OLD state",
+            )
+        else:
+            controller_config_p1 = struct.unpack_from("<I", output_bytes, CONTROLLER_CONFIG_P1_OFFSET)[0]
+            require(
+                controller_config_p1 == 1,
+                "native Save Lab game-options output ControllerConfigP1 does not parse as 1",
+            )
         expected_readback = "goodies-old-output-valid" if name == "save-editor" else "controller-config-p1=1"
         require(workflow.get("Readback") == expected_readback, f"native Save Lab {name} readback changed")
         if name == "game-options":
@@ -269,12 +315,21 @@ def validate_manifest(
         capture_by_name[name] = capture
 
     require(set(capture_by_name) == set(EXPECTED_CAPTURES), "native Save Lab capture file set is not exact")
+    owned_process_identities = [
+        {
+            "processId": row["Identity"]["ProcessId"],
+            "startTimeUtcTicks": dotnet_utc_timestamp_ticks(row["Identity"]["ProcessStartTimeUtc"]),
+            "executablePath": row["Identity"]["ExecutablePath"],
+        }
+        for row in sorted(workflow_by_name.values(), key=lambda item: item["Identity"]["ProcessId"])
+    ]
     return {
         "captureCount": len(captures),
         "workflowCount": len(workflows),
         "workflows": sorted(workflow_by_name),
         "manifest": str(path),
         "harnessRunId": harness_run_id,
+        "ownedProcessIdentities": owned_process_identities,
     }
 
 
@@ -368,7 +423,7 @@ def invocation_manifests(invocation_id: str, evidence_root: Path = EVIDENCE_ROOT
     if not evidence_root.exists():
         return set()
     return {
-        path.resolve()
+        path.absolute()
         for path in evidence_root.glob(f"save-lab-*-{invocation_id}/save-lab-acceptance-manifest.json")
         if path.is_file()
     }
@@ -380,7 +435,7 @@ def invocation_evidence_directories(invocation_id: str, evidence_root: Path = EV
         return set()
     matches = set(evidence_root.glob(f"save-lab-*-{invocation_id}"))
     matches.update(evidence_root.glob(f".save-lab-*-{invocation_id}.partial"))
-    return {path.resolve() for path in matches if path.is_dir()}
+    return {path.absolute() for path in matches if path.is_dir()}
 
 
 def partial_evidence_directories(evidence_root: Path = EVIDENCE_ROOT) -> list[Path]:
@@ -389,16 +444,84 @@ def partial_evidence_directories(evidence_root: Path = EVIDENCE_ROOT) -> list[Pa
     return sorted(path for path in evidence_root.iterdir() if path.is_dir() and path.name.endswith(".partial"))
 
 
-def verify_runner_path(path: Path) -> None:
+def _require_not_reparse_point(path: Path, label: str) -> None:
+    if not os.path.lexists(path):
+        return
+    attributes = getattr(os.lstat(path), "st_file_attributes", 0)
+    reparse_flag = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+    require(not (attributes & reparse_flag), f"{label} must not be a reparse point: {path}")
+
+
+def _resolve_owned_ignored_root(root: Path, expected_name: str, repo_root: Path) -> Path:
+    resolved_repo = repo_root.resolve()
+    lexical_local_lab = resolved_repo / "local-lab"
+    lexical_expected = lexical_local_lab / expected_name
+    require(
+        os.path.normcase(os.path.abspath(root)) == os.path.normcase(os.path.abspath(lexical_expected)),
+        f"{expected_name} ignored root is not the exact repository-owned path",
+    )
+    _require_not_reparse_point(lexical_local_lab, "repository local-lab")
+    _require_not_reparse_point(lexical_expected, f"{expected_name} ignored root")
+    resolved_local_lab = lexical_local_lab.resolve()
+    resolved = root.resolve()
+    require(
+        resolved_local_lab != resolved_repo
+        and resolved_repo in resolved_local_lab.parents
+        and resolved != resolved_local_lab
+        and resolved_repo in resolved.parents
+        and resolved_local_lab in resolved.parents,
+        f"{expected_name} ignored root escaped repository local-lab: {resolved}",
+    )
+    return resolved
+
+
+def verify_evidence_root(evidence_root: Path = EVIDENCE_ROOT, *, repo_root: Path = REPO_ROOT) -> Path:
+    return _resolve_owned_ignored_root(
+        evidence_root,
+        "winui-save-lab-native-workflow",
+        repo_root,
+    )
+
+
+def verify_runner_path(
+    path: Path,
+    *,
+    runner_root: Path = RUNNER_ROOT,
+    repo_root: Path = REPO_ROOT,
+) -> None:
     resolved = path.resolve()
-    root = RUNNER_ROOT.resolve()
-    require(resolved != root and root in resolved.parents, f"runner cleanup path escaped its ignored root: {resolved}")
+    root = _resolve_owned_ignored_root(
+        runner_root,
+        "winui-save-lab-native-workflow-runner",
+        repo_root,
+    )
+    _require_not_reparse_point(path, "runner-owned child")
+    require(
+        resolved != root and resolved.parent == root,
+        f"runner cleanup path escaped its ignored root: {resolved}",
+    )
 
 
-def remove_failed_invocation_evidence(invocation_id: str, evidence_root: Path = EVIDENCE_ROOT) -> None:
+def verify_owned_evidence_directory(path: Path, evidence_root: Path) -> Path:
+    root = evidence_root.absolute()
+    child = path.absolute()
+    require(child.parent == root, f"Save Lab evidence path is not a direct owned child: {child}")
+    _require_not_reparse_point(root, "Save Lab evidence root")
+    _require_not_reparse_point(child, "Save Lab evidence child")
+    return child
+
+
+def remove_failed_invocation_evidence(
+    invocation_id: str,
+    evidence_root: Path = EVIDENCE_ROOT,
+    *,
+    repo_root: Path = REPO_ROOT,
+) -> None:
     validate_invocation_id(invocation_id)
-    root = evidence_root.resolve()
-    for run_directory in invocation_evidence_directories(invocation_id, evidence_root):
+    root = verify_evidence_root(evidence_root, repo_root=repo_root)
+    for run_directory in invocation_evidence_directories(invocation_id, root):
+        root = verify_evidence_root(evidence_root, repo_root=repo_root)
+        run_directory = verify_owned_evidence_directory(run_directory, root)
         expected_accepted = run_directory.name.startswith("save-lab-") and run_directory.name.endswith(invocation_id)
         expected_partial = (
             run_directory.name.startswith(".save-lab-")
@@ -409,7 +532,106 @@ def remove_failed_invocation_evidence(invocation_id: str, evidence_root: Path = 
             f"refusing to remove unowned failed Save Lab evidence path: {run_directory}",
         )
         if run_directory.exists():
+            verify_evidence_root(evidence_root, repo_root=repo_root)
+            verify_owned_evidence_directory(run_directory, root)
             shutil.rmtree(run_directory)
+
+
+def select_owned_repo_winui_survivors(
+    census: dict[int, dict[str, Any]],
+    expected_executable: Path,
+    owned_process_identities: set[tuple[int, int, str]],
+) -> list[tuple[int, dict[str, Any]]]:
+    selected: list[tuple[int, dict[str, Any]]] = []
+    for process_id, row in sorted(census.items()):
+        if str(row.get("ProcessName", "")).lower() != "onslaughtcareereditor.winui":
+            continue
+        require(
+            row.get("Id") == process_id
+            and normalized(row.get("Path", "")) == normalized(expected_executable),
+            f"surviving WinUI process {process_id} is not the exact repo build",
+        )
+        require(
+            isinstance(row.get("StartTimeUtcTicks"), int) and row["StartTimeUtcTicks"] > 0,
+            f"surviving WinUI process {process_id} lacks exact start identity",
+        )
+        identity = (process_id, row["StartTimeUtcTicks"], normalized(row["Path"]))
+        require(
+            identity in owned_process_identities,
+            f"surviving WinUI process {process_id} is not bound to this invocation's validated launch receipt",
+        )
+        selected.append((process_id, row))
+    return selected
+
+
+def terminate_exact_owned_winui_process(
+    process_id: int,
+    row: dict[str, Any],
+    expected_executable: Path,
+) -> None:
+    script = (
+        "$expectedPid=[int]$env:ONSLAUGHT_SAVE_LAB_CLEANUP_PID;"
+        "$expectedPath=$env:ONSLAUGHT_SAVE_LAB_CLEANUP_PATH;"
+        "$expectedTicks=[long]$env:ONSLAUGHT_SAVE_LAB_CLEANUP_START_TICKS;"
+        "$p=Get-Process -Id $expectedPid -ErrorAction SilentlyContinue;"
+        "if($null -eq $p){exit 0};"
+        "if([IO.Path]::GetFullPath($p.Path) -ne [IO.Path]::GetFullPath($expectedPath)){exit 41};"
+        "if($p.StartTime.ToUniversalTime().Ticks -ne $expectedTicks){exit 42};"
+        "$p.Kill();if(-not $p.WaitForExit(10000)){exit 43}"
+    )
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "ONSLAUGHT_SAVE_LAB_CLEANUP_PID": str(process_id),
+            "ONSLAUGHT_SAVE_LAB_CLEANUP_PATH": str(expected_executable),
+            "ONSLAUGHT_SAVE_LAB_CLEANUP_START_TICKS": str(row["StartTimeUtcTicks"]),
+        }
+    )
+    completed = subprocess.run(
+        [
+            "powershell.exe",
+            "-NoLogo",
+            "-NoProfile",
+            "-Command",
+            script,
+        ],
+        cwd=REPO_ROOT,
+        env=environment,
+        text=True,
+        capture_output=True,
+        timeout=20,
+    )
+    require(
+        completed.returncode == 0,
+        f"exact owned WinUI termination failed for {process_id} with code {completed.returncode}: "
+        f"{completed.stderr.strip() or completed.stdout.strip()}",
+    )
+
+
+def remediate_final_process_census(
+    census: dict[int, dict[str, Any]],
+    owned_process_identities: set[tuple[int, int, str]],
+) -> None:
+    expected_executable = BUILT_APP_ROOT / "OnslaughtCareerEditor.WinUI.exe"
+    survivors = select_owned_repo_winui_survivors(
+        census,
+        expected_executable,
+        owned_process_identities,
+    )
+    termination_errors: list[str] = []
+    for process_id, row in survivors:
+        try:
+            terminate_exact_owned_winui_process(process_id, row, expected_executable)
+        except Exception as exc:
+            termination_errors.append(str(exc))
+    if survivors:
+        time.sleep(0.25)
+    remaining = process_census()
+    details = f"; termination errors: {termination_errors}" if termination_errors else ""
+    raise NativeAcceptanceError(
+        "final relevant-process census was nonzero and forced cleanup was required; "
+        f"initial: {describe_processes(census)}; remaining: {describe_processes(remaining)}{details}"
+    )
 
 
 def shutdown_build_servers() -> None:
@@ -420,7 +642,19 @@ def append_cleanup_error(error: Exception | None, phase: str, cleanup_error: Exc
     return native_support.append_cleanup_error(error, phase, cleanup_error)
 
 
+def owned_process_identity_set(summary: dict[str, Any]) -> set[tuple[int, int, str]]:
+    return {
+        (
+            row["processId"],
+            row["startTimeUtcTicks"],
+            normalized(row["executablePath"]),
+        )
+        for row in summary["ownedProcessIdentities"]
+    }
+
+
 def run_acceptance() -> dict[str, Any]:
+    evidence_root = verify_evidence_root()
     baseline = process_census()
     require(not baseline, f"pre-run relevant-process census must be zero, found: {describe_processes(baseline)}")
     partials = partial_evidence_directories()
@@ -434,6 +668,7 @@ def run_acceptance() -> dict[str, Any]:
     trx = run_root / "save-lab-native-workflow.trx"
     error: Exception | None = None
     result: dict[str, Any] | None = None
+    owned_process_identities: set[tuple[int, int, str]] = set()
     try:
         run_command(WINUI_BUILD_COMMAND, timeout=180)
         executable = BUILT_APP_ROOT / "OnslaughtCareerEditor.WinUI.exe"
@@ -451,15 +686,22 @@ def run_acceptance() -> dict[str, Any]:
             },
         )
         trx_summary = validate_trx(trx)
-        manifests = invocation_manifests(invocation_id)
+        evidence_root = verify_evidence_root()
+        manifests = invocation_manifests(invocation_id, evidence_root)
         require(len(manifests) == 1, f"native Save Lab invocation must publish exactly one owned manifest, found {len(manifests)}")
+        for manifest in manifests:
+            verify_owned_evidence_directory(manifest.parent, evidence_root)
         partials = partial_evidence_directories()
         require(not partials, f"native Save Lab run left partial evidence directories: {[path.name for path in partials]}")
+        evidence_root = verify_evidence_root()
+        manifest_path = next(iter(manifests))
+        verify_owned_evidence_directory(manifest_path.parent, evidence_root)
         manifest_summary = validate_manifest(
-            next(iter(manifests)),
+            manifest_path,
             REPO_ROOT,
             expected_harness_run_id=invocation_id,
         )
+        owned_process_identities = owned_process_identity_set(manifest_summary)
         time.sleep(0.5)
         post = process_census()
         require(not post, f"post-run relevant-process census must be zero, found: {describe_processes(post)}")
@@ -471,12 +713,24 @@ def run_acceptance() -> dict[str, Any]:
             shutdown_build_servers()
         except Exception as cleanup_error:
             error = append_cleanup_error(error, "build-server shutdown", cleanup_error)
+        if not owned_process_identities:
+            try:
+                cleanup_evidence_root = verify_evidence_root()
+                cleanup_manifests = invocation_manifests(invocation_id, cleanup_evidence_root)
+                if len(cleanup_manifests) == 1:
+                    cleanup_summary = validate_manifest(
+                        next(iter(cleanup_manifests)),
+                        REPO_ROOT,
+                        expected_harness_run_id=invocation_id,
+                    )
+                    owned_process_identities = owned_process_identity_set(cleanup_summary)
+            except Exception:
+                # Without one fully validated receipt, survivor mutation is not authorized.
+                pass
         try:
             final_census = process_census()
             if final_census:
-                raise NativeAcceptanceError(
-                    f"final relevant-process census must be zero, found: {describe_processes(final_census)}"
-                )
+                remediate_final_process_census(final_census, owned_process_identities)
         except Exception as cleanup_error:
             error = append_cleanup_error(error, "final relevant-process census", cleanup_error)
         try:

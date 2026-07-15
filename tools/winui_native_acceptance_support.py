@@ -124,7 +124,7 @@ def process_census(repo_root: Path) -> dict[int, dict[str, Any]]:
     command = (
         "$names=@('OnslaughtCareerEditor.WinUI','testhost','vstest.console','BEA','cdb','windbg','WinDbgX');"
         "@(Get-Process -ErrorAction SilentlyContinue | Where-Object { $names -contains $_.ProcessName } | "
-        "Select-Object Id,ProcessName,StartTime,Path) | ConvertTo-Json -Compress"
+        "Select-Object Id,ProcessName,StartTime,@{Name='StartTimeUtcTicks';Expression={$_.StartTime.ToUniversalTime().Ticks}},Path) | ConvertTo-Json -Compress"
     )
     completed = subprocess.run(
         ["powershell.exe", "-NoLogo", "-NoProfile", "-Command", command],

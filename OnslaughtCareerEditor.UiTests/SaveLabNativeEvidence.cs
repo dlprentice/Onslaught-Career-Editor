@@ -4,9 +4,10 @@ internal static class SaveLabNativeEvidenceContract
 {
     internal const int SchemaVersion = 1;
     internal const int ArtifactLength = 10_004;
+    internal const int DisplayableGoodieCount = 233;
     internal const int SyntheticOptionsVersionWord = 0x4BD1;
     internal const string InteractionMode =
-        "UIA Value/Toggle/ExpandCollapse/Scroll/Focus/Invoke; no keyboard or pointer synthesis";
+        "UIA Value/Toggle/ExpandCollapse/Scroll/ScrollItem/Selection/Focus/Invoke; no keyboard or pointer synthesis";
     internal const string TrackedSaveFixtureSha256 =
         "0C17E47DB9D666E9B26EF88D43D0A25E7CBFBF4F88C8005CC748965050E506FB";
     internal const string SyntheticOptionsSha256 =

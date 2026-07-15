@@ -226,8 +226,8 @@ its screenshots, app data, TRX, and manifests remain local evidence.
 Save Editor first-use or Game Options workflow/layout changes use the separate
 unattended native Save Lab gate. It copies the tracked immutable gold-save
 fixture into owned staging, constructs a deterministic 10,004-byte options
-buffer, and drives only UIA Value, Toggle, ExpandCollapse, Scroll, Focus, and
-Invoke patterns:
+buffer, and drives only UIA Value, Toggle, ExpandCollapse, Scroll, ScrollItem,
+Selection, Focus, and Invoke patterns:
 
 ```powershell
 npm run test:winui-save-lab-native-workflow
@@ -236,11 +236,16 @@ npm run test:winui-save-lab-native-workflow
 The command publishes eight receipt-bound normal/760 captures and two workflow
 receipts under ignored `local-lab/winui-save-lab-native-workflow/`. It requires
 an exact 1/1 native TRX, full repo-build process/start/hash/HWND identity,
-unchanged inputs, validated distinct app-owned outputs, stable owner-bound
-focus and marker geometry, one fresh schema-1 manifest, and a zero final
-process census. It never invokes File Explorer or the controller-guide browser
-action, never reads installed-game files, and is native Toolkit evidence—not
-retail behavior, save-format completeness, or release acceptance.
+unchanged inputs, distinct app-owned outputs whose Goodies/P1 semantics are
+independently parsed from retained bytes, stable owner-bound focus and marker
+geometry, one fresh schema-1 manifest, and a zero final process census. Its
+ignored roots are exact reparse-free repository `local-lab` children, and
+owned WinUI cleanup revalidates PID/start/path before bounded close or kill.
+A final survivor is force-cleaned only when it matches this invocation's
+validated launch receipt; remediation still fails the gate. It never invokes
+File Explorer or the controller-guide browser action, never reads
+installed-game files, and is native Toolkit evidence—not retail behavior,
+save-format completeness, or release acceptance.
 
 ## Patch And Mod Work
 

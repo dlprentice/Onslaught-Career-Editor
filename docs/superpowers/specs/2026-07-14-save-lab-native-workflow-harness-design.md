@@ -90,12 +90,13 @@ image path/hash, loaded product DLL path/hash, main HWND, UIA HWND, and HWND
 owner PID. Every capture revalidates the full receipt before and after the
 shutter.
 
-The harness uses UIA Value, Toggle, ExpandCollapse, Scroll, Focus, and Invoke
-patterns only. It does not synthesize keyboard or pointer input. Before each
-shutter it focuses a phase-specific element, samples the global UIA focused
-node under the exact launch HWND, and records the focused AutomationId, owner
-PID, HWND, and bounds on both sides of the capture. This proves deterministic
-Toolkit focus ownership for capture; it is not an arrival-focus policy claim.
+The harness uses UIA Value, Toggle, ExpandCollapse, Scroll, ScrollItem,
+Selection, Focus, and Invoke patterns only. It does not synthesize keyboard or
+pointer input. Before each shutter it focuses a phase-specific element, samples
+the global UIA focused node under the exact launch HWND, and records the focused
+AutomationId, owner PID, HWND, and bounds on both sides of the capture. This
+proves deterministic Toolkit focus ownership for capture; it is not an
+arrival-focus policy claim.
 
 Toolkit images must be fully opaque at sampled points, have meaningful
 luminance/color coverage, contain the rendered blue Toolkit header, reject the
@@ -118,16 +119,18 @@ manifest contains:
   marker bounds, full launch identity, and owner-bound focus observations;
 - exactly two workflow receipts with relative input/output paths and hashes,
   input-preservation result, output validation/readback, and full launch
-  identity; and
+  identity; acceptance independently reparses the retained output bytes to
+  require all 233 displayable Goodies in OLD state and controller config P1
+  equal to `1`; and
 - the tracked fixture hash plus the deterministic synthetic-options recipe.
 
 All artifact paths in the manifest are relative, normalized, and confined to
 the staging root. The child writes and flushes the canonical manifest inside
 staging, reopens and validates it, and then publishes with one same-volume
-sibling directory rename. It deletes its partial directory on child failure.
-The outer runner may remove only accepted or partial evidence bearing its exact
-invocation ID, and only when later TRX, manifest, artifact, or cleanup
-validation fails.
+sibling directory rename. On child failure it leaves the caller-owned partial
+directory intact. The outer runner may remove only accepted or partial evidence
+bearing its exact invocation ID, and only when later TRX, manifest, artifact,
+or cleanup validation fails.
 
 The outer runner:
 
@@ -142,7 +145,16 @@ The outer runner:
    PNG dimensions, fixture hash, synthetic recipe, workflow mappings, and
    exact capture set; and
 6. shuts down build servers, removes its runner scratch root, and requires
-   zero relevant processes even when the test or cleanup fails.
+   zero relevant processes even when the test or cleanup fails. If an exact
+   WinUI launch from the validated manifest survives, it revalidates
+   PID/start/path, performs bounded forced cleanup, recenses, and still fails
+   the gate because remediation was required.
+
+Both ignored roots must be their exact repository `local-lab` children; any
+reparse-point root or owned child fails before writes or recursive cleanup.
+Each exact WinUI launch revalidates PID/start/path before bounded graceful close
+and again before process-tree kill, propagating failure if exit is not observed.
+An unreceipted survivor is reported but never mutated.
 
 ## Shared Harness Boundary
 

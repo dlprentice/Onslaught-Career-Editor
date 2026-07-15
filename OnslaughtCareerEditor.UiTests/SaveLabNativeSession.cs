@@ -9,18 +9,23 @@ namespace OnslaughtCareerEditor.UiTests;
 
 internal sealed class SaveLabNativeSession : IDisposable
 {
+    private static readonly TimeSpan GracefulExitTimeout = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan KillExitTimeout = TimeSpan.FromSeconds(5);
+
     private SaveLabNativeSession(
         Application app,
         UIA3Automation automation,
         Window window,
         string executablePath,
-        ReceiptBoundAppIdentity identity)
+        ReceiptBoundAppIdentity identity,
+        NativeWinUiOwnedProcessIdentity ownedProcessIdentity)
     {
         App = app;
         Automation = automation;
         Window = window;
         ExecutablePath = executablePath;
         Identity = identity;
+        OwnedProcessIdentity = ownedProcessIdentity;
     }
 
     internal Application App { get; }
@@ -32,6 +37,8 @@ internal sealed class SaveLabNativeSession : IDisposable
     internal string ExecutablePath { get; }
 
     internal ReceiptBoundAppIdentity Identity { get; }
+
+    private NativeWinUiOwnedProcessIdentity OwnedProcessIdentity { get; }
 
     internal static SaveLabNativeSession Launch(
         string executablePath,
@@ -75,9 +82,15 @@ internal sealed class SaveLabNativeSession : IDisposable
 
         Application? app = null;
         UIA3Automation? automation = null;
+        NativeWinUiOwnedProcessIdentity? ownedProcessIdentity = null;
         try
         {
+            DateTime launchRequestedUtc = DateTime.UtcNow;
             app = Application.Launch(startInfo);
+            ownedProcessIdentity = NativeWinUiOwnedProcessIdentity.Capture(
+                app.ProcessId,
+                executable,
+                launchRequestedUtc);
             automation = new UIA3Automation();
             Window window = WaitForMainWindow(app, automation);
             var operations = new FlaUiReceiptBoundVisualCaptureOperations(app, window, executable);
@@ -89,14 +102,17 @@ internal sealed class SaveLabNativeSession : IDisposable
                 Assert.That(identity.MainWindowHandle, Is.Not.EqualTo(IntPtr.Zero));
                 Assert.That(identity.UiaNativeWindowHandle, Is.EqualTo(identity.MainWindowHandle));
                 Assert.That(identity.WindowOwnerProcessId, Is.EqualTo(identity.ProcessId));
+                Assert.That(identity.ProcessId, Is.EqualTo(ownedProcessIdentity.ProcessId));
+                Assert.That(identity.ProcessStartTimeUtc, Is.EqualTo(ownedProcessIdentity.ProcessStartTimeUtc));
+                Assert.That(identity.ExecutablePath, Is.EqualTo(ownedProcessIdentity.ExecutablePath).IgnoreCase);
             });
-            return new SaveLabNativeSession(app, automation, window, executable, identity);
+            return new SaveLabNativeSession(app, automation, window, executable, identity, ownedProcessIdentity);
         }
         catch
         {
             NativeWinUiSessionResourceCleanup.Run(
                 () => automation?.Dispose(),
-                () => CloseOwnedApp(app));
+                () => CloseOwnedApp(app, ownedProcessIdentity));
             throw;
         }
     }
@@ -105,7 +121,7 @@ internal sealed class SaveLabNativeSession : IDisposable
     {
         NativeWinUiSessionResourceCleanup.Run(
             Automation.Dispose,
-            () => CloseOwnedApp(App));
+            () => CloseOwnedApp(App, OwnedProcessIdentity));
     }
 
     private static Window WaitForMainWindow(Application app, UIA3Automation automation)
@@ -132,32 +148,61 @@ internal sealed class SaveLabNativeSession : IDisposable
         return window!;
     }
 
-    private static void CloseOwnedApp(Application? app)
+    private static void CloseOwnedApp(
+        Application? app,
+        NativeWinUiOwnedProcessIdentity? ownedProcessIdentity)
     {
         if (app is null)
         {
             return;
         }
 
-        try
+        if (app.HasExited)
         {
-            app.Close();
-        }
-        catch
-        {
-            // The harness owns this exact launch and may use the bounded kill fallback below.
+            return;
         }
 
-        try
+        if (ownedProcessIdentity is null)
         {
+            app.CloseTimeout = GracefulExitTimeout;
+            app.Close(killIfCloseFails: true);
             if (!app.HasExited)
             {
-                app.Kill();
+                throw new InvalidOperationException(
+                    "The exact FlaUI-bound WinUI process remained alive before a launch receipt could be established.");
             }
+            return;
         }
-        catch
+
+        Process? process = null;
+        try
         {
-            // The outer runner's exact process census is the final cleanup authority.
+            process = Process.GetProcessById(app.ProcessId);
+            NativeWinUiOwnedProcessCleanup.CloseOrKill(
+                () =>
+                {
+                    process.Refresh();
+                    string processPath = process.MainModule?.FileName
+                        ?? throw new InvalidOperationException("The owned WinUI executable path is unavailable during cleanup.");
+                    ownedProcessIdentity.Validate(
+                        process.Id,
+                        process.StartTime.ToUniversalTime(),
+                        processPath);
+                },
+                () => process.HasExited,
+                () => process.CloseMainWindow(),
+                timeout => process.WaitForExit(checked((int)Math.Ceiling(timeout.TotalMilliseconds))),
+                () => process.Kill(entireProcessTree: true),
+                GracefulExitTimeout,
+                KillExitTimeout);
+        }
+        catch (ArgumentException) when (app.HasExited)
+        {
+            // The exact FlaUI-owned process exited between the initial check and handle acquisition.
+        }
+        finally
+        {
+            process?.Dispose();
         }
     }
 }

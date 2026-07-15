@@ -456,6 +456,45 @@ public class SaveEditorFirstSaveJourneyTests
     }
 
     [Test]
+    public void NativeSaveLabHarness_UsesExplicitValuePatternWithoutTextBoxInputFallback()
+    {
+        string source = ReadRepoFile(
+            "OnslaughtCareerEditor.UiTests",
+            "WinUiSaveLabNativeWorkflowTests.cs");
+        string setTextBox = ExtractMethod(
+            source,
+            "private static void SetTextBox(",
+            "private static void SetCheckBox(");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(setTextBox, Does.Contain("textBox.Patterns.Value.IsSupported"));
+            Assert.That(setTextBox, Does.Contain("textBox.Patterns.Value.Pattern.SetValue(text)"));
+            Assert.That(setTextBox, Does.Contain("textBox.Patterns.Value.Pattern.Value.Value"));
+            Assert.That(setTextBox, Does.Not.Contain("textBox.Text = text"));
+        });
+    }
+
+    [Test]
+    public void NativeSaveLabHarness_DeclaresAndUsesSelectionPatternForPresetReadback()
+    {
+        string producer = ReadRepoFile(
+            "OnslaughtCareerEditor.UiTests",
+            "WinUiSaveLabNativeWorkflowTests.cs");
+        string selectionReadback = ExtractMethod(
+            producer,
+            "private static void AssertComboBoxSelectedText(",
+            "private static void InvokeButton(");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(SaveLabNativeEvidenceContract.InteractionMode, Does.Contain("/Selection/"));
+            Assert.That(selectionReadback, Does.Contain("comboBox.Patterns.Selection.IsSupported"));
+            Assert.That(selectionReadback, Does.Contain("comboBox.SelectedItem?.Text"));
+        });
+    }
+
+    [Test]
     public void NativeSaveLabHarness_UsesShortOwnedRootsForWindowsMutationGuardBudget()
     {
         string source = ReadRepoFile(

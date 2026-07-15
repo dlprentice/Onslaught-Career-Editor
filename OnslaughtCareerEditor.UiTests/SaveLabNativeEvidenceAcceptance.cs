@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using Onslaught___Career_Editor;
 
 namespace OnslaughtCareerEditor.UiTests;
 
@@ -107,6 +108,7 @@ internal static class SaveLabNativeEvidenceAcceptance
                 Assert.That(workflow.OutputValidated, Is.True, "Workflow output validation was not accepted.");
                 Assert.That(outputHash, Is.Not.EqualTo(inputHash), "Workflow output must differ from its input.");
             });
+            ValidateSemanticOutput(workflow.Workflow, outputPath);
             string expectedReadback = workflow.Workflow == "save-editor"
                 ? "goodies-old-output-valid"
                 : "controller-config-p1=1";
@@ -166,6 +168,36 @@ internal static class SaveLabNativeEvidenceAcceptance
         }
     }
 
+    private static void ValidateSemanticOutput(string workflow, string outputPath)
+    {
+        if (workflow == "save-editor")
+        {
+            SaveAnalysis analysis = BesFilePatcher.AnalyzeSave(outputPath);
+            GoodieStateDetail[] displayableGoodies = analysis.GoodieStates
+                .Where(row => row.IsDisplayable)
+                .ToArray();
+            Assert.Multiple(() =>
+            {
+                Assert.That(analysis.IsValid, Is.True, analysis.ErrorMessage);
+                Assert.That(
+                    displayableGoodies,
+                    Has.Length.EqualTo(SaveLabNativeEvidenceContract.DisplayableGoodieCount),
+                    "Save Editor output must independently expose exactly 233 displayable Goodies.");
+                Assert.That(
+                    displayableGoodies,
+                    Has.All.Property(nameof(GoodieStateDetail.RawState)).EqualTo(3u),
+                    "Every displayable Goodies state must independently parse as OLD (3).");
+            });
+            return;
+        }
+
+        ConfigurationSnapshot snapshot = ConfigurationEditorService.LoadConfigurationSnapshot(outputPath);
+        Assert.That(
+            snapshot.ControllerConfigP1,
+            Is.EqualTo(1u),
+            "Game Options output ControllerConfigP1 must independently parse as 1.");
+    }
+
     internal static void Publish(
         string stagingDirectory,
         string acceptedDirectory,
@@ -173,6 +205,9 @@ internal static class SaveLabNativeEvidenceAcceptance
     {
         string staging = Path.GetFullPath(stagingDirectory);
         string accepted = Path.GetFullPath(acceptedDirectory);
+        string ownedRoot = Path.GetDirectoryName(staging)!;
+        SaveLabOwnedPathGuard.RequireDirectChild(ownedRoot, staging);
+        SaveLabOwnedPathGuard.RequireDirectChild(ownedRoot, accepted);
         Assert.Multiple(() =>
         {
             Assert.That(Directory.Exists(staging), Is.True);
@@ -208,6 +243,8 @@ internal static class SaveLabNativeEvidenceAcceptance
                 });
             }
 
+            SaveLabOwnedPathGuard.RequireDirectChild(ownedRoot, staging);
+            SaveLabOwnedPathGuard.RequireDirectChild(ownedRoot, accepted);
             File.Move(temporaryPath, canonicalPath);
             Directory.Move(staging, accepted);
         }
@@ -215,6 +252,7 @@ internal static class SaveLabNativeEvidenceAcceptance
         {
             if (Directory.Exists(staging))
             {
+                SaveLabOwnedPathGuard.RequireDirectChild(ownedRoot, staging);
                 File.Delete(temporaryPath);
             }
         }

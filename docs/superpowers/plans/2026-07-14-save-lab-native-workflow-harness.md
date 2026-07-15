@@ -26,8 +26,8 @@ command authority.
 - Create synthetic options as exactly 10,004 zeroed bytes with little-endian
   word `0x4BD1` at offset zero; require SHA-256
   `A922C6BCA412DB45AED3FCCBE926B6383C039CCF3778C4558D299D1D3C466D99`.
-- Use UIA Value/Toggle/ExpandCollapse/Scroll/Focus/Invoke patterns only; do not
-  synthesize keyboard or pointer input.
+- Use UIA Value/Toggle/ExpandCollapse/Scroll/ScrollItem/Selection/Focus/Invoke
+  patterns only; do not synthesize keyboard or pointer input.
 - Never invoke the Save Editor reveal action or Game Options browser action.
 - Keep all `.bes`, `.bea`, app data, screenshots, TRX, and manifests under
   ignored `local-lab/`; track only source, tests, commands, and bounded docs.
@@ -373,8 +373,10 @@ Validation requires schema 1; lowercase 32-hex run ID; exact interaction mode;
 the exact fixture and synthetic hashes; exact eight-file workflow/phase/size
 map; two workflows named `save-editor` and `game-options`; full identity
 bijection; matching before/after input hashes; distinct output hashes; path
-confinement; exact artifact lengths; PNG dimensions/hashes; nonempty markers;
-and owner-bound before/after focus on the phase target.
+confinement; independently parsed retained-output semantics (233 displayable
+OLD Goodies and controller config P1 `1`); exact artifact lengths; PNG
+dimensions/hashes; nonempty markers; and owner-bound before/after focus on the
+phase target.
 
 Write the manifest to a unique temporary sibling inside staging with
 `FileMode.CreateNew`, flush to disk, reopen/parse/validate, move to the canonical
@@ -517,8 +519,9 @@ redacted success log. Completion focuses the patch button and marks
 - [ ] **Step 6: Publish one complete manifest and run non-native producer guards GREEN**
 
 Build two workflow receipts, eight capture receipts, and the fixed synthetic
-recipe; call `SaveLabNativeEvidenceAcceptance.Publish`. Delete the partial root
-on any test exception. Do not delete an accepted directory in the child.
+recipe; call `SaveLabNativeEvidenceAcceptance.Publish`. Leave the caller-owned
+partial root intact on any test exception. Do not delete an accepted directory
+in the child.
 
 ```powershell
 dotnet test .\OnslaughtCareerEditor.UiTests\OnslaughtCareerEditor.UiTests.csproj --nologo --configuration Debug --runtime win-x64 --filter "FullyQualifiedName~SaveEditorFirstSaveJourneyTests|FullyQualifiedName~SaveLabNativeEvidenceAcceptanceTests"
@@ -576,9 +579,14 @@ TEST_FQN = f"OnslaughtCareerEditor.UiTests.WinUiSaveLabNativeWorkflowTests.{TEST
 ```
 
 Validate exact schema/capture/workflow maps, full repo-build identities, safe
-relative artifact paths, hashes/lengths, input preservation, readbacks, marker
-sets, focus ownership, and PNG dimensions. Owned discovery accepts only
+relative artifact paths, hashes/lengths, input preservation, independently
+parsed retained-output readbacks, marker sets, focus ownership, and PNG
+dimensions. Owned discovery accepts only
 `save-lab-*-<runid>` and `.save-lab-*-<runid>.partial` direct children.
+Require both ignored roots to be exact reparse-free repository `local-lab`
+children before writes or recursive cleanup. Revalidate PID/start/path before
+bounded close/kill and require observed exit for every exact owned WinUI
+launch.
 
 - [ ] **Step 3: Implement runner lifecycle and fault-safe finalization**
 
@@ -586,7 +594,10 @@ Run pre-census/no-partials, build, hash, one filtered test, exact TRX, exactly
 one owned manifest, no partials, independent manifest reconciliation, post
 census, build-server shutdown, final census, and runner-root deletion. Accumulate
 all cleanup failures. On any error remove only this invocation's accepted or
-partial evidence, then fail nonzero.
+partial evidence, then fail nonzero. Force-clean a surviving WinUI process only
+when PID/start/path matches this invocation's validated manifest, re-census,
+and still fail because remediation was required; never mutate an unreceipted
+survivor.
 
 Pass only:
 

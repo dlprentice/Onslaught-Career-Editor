@@ -6,17 +6,22 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import subprocess
 import struct
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 import zlib
 from pathlib import Path
+from unittest import mock
 
 import run_winui_save_lab_native_workflow as harness
 
 
 PNG_SIGNATURE = bytes((137, 80, 78, 71, 13, 10, 26, 10))
+GOODIE_BASE_OFFSET = 0x1F46
+DISPLAYABLE_GOODIE_COUNT = 233
+CONTROLLER_CONFIG_P1_OFFSET = 0x24B6
 
 
 def write_png(path: Path, width: int, height: int) -> None:
@@ -75,6 +80,12 @@ class SaveLabNativeWorkflowRunnerTests(unittest.TestCase):
             summary = harness.validate_manifest(manifest, root, self.RUN_ID)
         self.assertEqual(8, summary["captureCount"])
         self.assertEqual(2, summary["workflowCount"])
+
+    def test_interaction_contract_names_scroll_item_and_excludes_os_input(self) -> None:
+        self.assertEqual(
+            "UIA Value/Toggle/ExpandCollapse/Scroll/ScrollItem/Selection/Focus/Invoke; no keyboard or pointer synthesis",
+            harness.INTERACTION_MODE,
+        )
 
     def test_validate_manifest_rejects_another_invocation(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -147,6 +158,38 @@ class SaveLabNativeWorkflowRunnerTests(unittest.TestCase):
             with self.assertRaisesRegex(harness.NativeAcceptanceError, "input preservation"):
                 harness.validate_manifest(manifest, root)
 
+    def test_validate_manifest_rejects_forged_save_readback_with_wrong_goodie_bytes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            manifest = self._write_valid_manifest(root)
+            payload = json.loads(manifest.read_text(encoding="utf-8"))
+            workflow = next(row for row in payload["Workflows"] if row["Workflow"] == "save-editor")
+            output = manifest.parent / Path(workflow["OutputRelativePath"])
+            changed = bytearray(output.read_bytes())
+            struct.pack_into("<I", changed, GOODIE_BASE_OFFSET, 0)
+            output.write_bytes(changed)
+            workflow["OutputSha256"] = harness.sha256(output)
+            manifest.write_text(json.dumps(payload), encoding="utf-8")
+
+            with self.assertRaisesRegex(harness.NativeAcceptanceError, "displayable Goodies"):
+                harness.validate_manifest(manifest, root)
+
+    def test_validate_manifest_rejects_forged_options_readback_with_wrong_controller_config(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            manifest = self._write_valid_manifest(root)
+            payload = json.loads(manifest.read_text(encoding="utf-8"))
+            workflow = next(row for row in payload["Workflows"] if row["Workflow"] == "game-options")
+            output = manifest.parent / Path(workflow["OutputRelativePath"])
+            changed = bytearray(output.read_bytes())
+            struct.pack_into("<I", changed, CONTROLLER_CONFIG_P1_OFFSET, 2)
+            output.write_bytes(changed)
+            workflow["OutputSha256"] = harness.sha256(output)
+            manifest.write_text(json.dumps(payload), encoding="utf-8")
+
+            with self.assertRaisesRegex(harness.NativeAcceptanceError, "ControllerConfigP1"):
+                harness.validate_manifest(manifest, root)
+
     def test_validate_trx_rejects_skipped_test(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             trx = Path(temp_dir) / "result.trx"
@@ -162,17 +205,114 @@ class SaveLabNativeWorkflowRunnerTests(unittest.TestCase):
 
     def test_failed_invocation_cleanup_removes_only_owned_runs(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            evidence = Path(temp_dir)
+            repo = Path(temp_dir) / "repo"
+            evidence = repo / "local-lab" / "winui-save-lab-native-workflow"
+            evidence.mkdir(parents=True)
             owned = evidence / f"save-lab-date-{self.RUN_ID}"
             owned_partial = evidence / f".save-lab-date-{self.RUN_ID}.partial"
             other = evidence / f"save-lab-date-{self.OTHER_ID}"
             owned.mkdir()
             owned_partial.mkdir()
             other.mkdir()
-            harness.remove_failed_invocation_evidence(self.RUN_ID, evidence)
+            harness.remove_failed_invocation_evidence(self.RUN_ID, evidence, repo_root=repo)
             self.assertFalse(owned.exists())
             self.assertFalse(owned_partial.exists())
             self.assertTrue(other.is_dir())
+
+    def test_runner_and_evidence_roots_reject_junction_escape(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            repo = root / "repo"
+            local_lab = repo / "local-lab"
+            local_lab.mkdir(parents=True)
+            outside_runner = root / "outside-runner"
+            outside_evidence = root / "outside-evidence"
+            outside_runner.mkdir()
+            outside_evidence.mkdir()
+            runner_root = local_lab / "winui-save-lab-native-workflow-runner"
+            evidence_root = local_lab / "winui-save-lab-native-workflow"
+            self._create_junction(runner_root, outside_runner)
+            self._create_junction(evidence_root, outside_evidence)
+            try:
+                with self.assertRaisesRegex(harness.NativeAcceptanceError, "reparse point"):
+                    harness.verify_runner_path(
+                        runner_root / f".{self.RUN_ID}.partial",
+                        runner_root=runner_root,
+                        repo_root=repo,
+                    )
+                with self.assertRaisesRegex(harness.NativeAcceptanceError, "reparse point"):
+                    harness.verify_evidence_root(evidence_root, repo_root=repo)
+            finally:
+                evidence_root.rmdir()
+                runner_root.rmdir()
+
+    def test_owned_roots_reject_junction_targeting_another_local_lab_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            repo = root / "repo"
+            local_lab = repo / "local-lab"
+            local_lab.mkdir(parents=True)
+            other_owned_root = local_lab / "other-owned-root"
+            other_owned_root.mkdir()
+            evidence_root = local_lab / "winui-save-lab-native-workflow"
+            self._create_junction(evidence_root, other_owned_root)
+            try:
+                with self.assertRaisesRegex(harness.NativeAcceptanceError, "reparse point"):
+                    harness.verify_evidence_root(evidence_root, repo_root=repo)
+            finally:
+                evidence_root.rmdir()
+
+    def test_owned_repo_winui_survivors_require_exact_path_and_start_identity(self) -> None:
+        expected = Path(r"C:\repo\OnslaughtCareerEditor.WinUI.exe")
+        row = {
+            "Id": 4101,
+            "ProcessName": "OnslaughtCareerEditor.WinUI",
+            "Path": str(expected),
+            "StartTimeUtcTicks": 638881920000000000,
+        }
+        owned = {(4101, row["StartTimeUtcTicks"], harness.normalized(expected))}
+        selected = harness.select_owned_repo_winui_survivors({4101: row}, expected, owned)
+        self.assertEqual([(4101, row)], selected)
+
+        forged = dict(row, Path=r"C:\other\OnslaughtCareerEditor.WinUI.exe")
+        with self.assertRaisesRegex(harness.NativeAcceptanceError, "not the exact repo build"):
+            harness.select_owned_repo_winui_survivors({4101: forged}, expected, owned)
+
+        missing_start = dict(row)
+        del missing_start["StartTimeUtcTicks"]
+        with self.assertRaisesRegex(harness.NativeAcceptanceError, "start identity"):
+            harness.select_owned_repo_winui_survivors({4101: missing_start}, expected, owned)
+
+        wrong_start = dict(row, StartTimeUtcTicks=row["StartTimeUtcTicks"] + 1)
+        with self.assertRaisesRegex(harness.NativeAcceptanceError, "validated launch receipt"):
+            harness.select_owned_repo_winui_survivors({4101: wrong_start}, expected, owned)
+
+    def test_dotnet_utc_timestamp_ticks_preserves_100ns_precision_and_offsets(self) -> None:
+        earlier = harness.dotnet_utc_timestamp_ticks("2026-07-14T04:10:00.1234566Z")
+        later = harness.dotnet_utc_timestamp_ticks("2026-07-14T04:10:00.1234567Z")
+        equivalent_offset = harness.dotnet_utc_timestamp_ticks("2026-07-14T00:10:00.1234567-04:00")
+
+        self.assertEqual(later - earlier, 1)
+        self.assertEqual(equivalent_offset, later)
+        with self.assertRaisesRegex(harness.NativeAcceptanceError, "UTC timestamp"):
+            harness.dotnet_utc_timestamp_ticks("2026-07-14")
+
+    def test_exact_owned_winui_termination_binds_identity_outside_command_source(self) -> None:
+        expected = Path(r"C:\repo path\OnslaughtCareerEditor.WinUI.exe")
+        row = {"StartTimeUtcTicks": 638881920000000000}
+        completed = subprocess.CompletedProcess([], 0, "", "")
+
+        with mock.patch.object(harness.subprocess, "run", return_value=completed) as run:
+            harness.terminate_exact_owned_winui_process(4101, row, expected)
+
+        command = run.call_args.args[0]
+        environment = run.call_args.kwargs["env"]
+        self.assertEqual(command[:4], ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"])
+        self.assertEqual(len(command), 5)
+        self.assertNotIn(str(expected), command[-1])
+        self.assertEqual(environment["ONSLAUGHT_SAVE_LAB_CLEANUP_PID"], "4101")
+        self.assertEqual(environment["ONSLAUGHT_SAVE_LAB_CLEANUP_PATH"], str(expected))
+        self.assertEqual(environment["ONSLAUGHT_SAVE_LAB_CLEANUP_START_TICKS"], str(row["StartTimeUtcTicks"]))
 
     def _write_valid_manifest(self, root: Path) -> Path:
         build = root / "OnslaughtCareerEditor.WinUI" / "bin" / "Debug" / "net10.0-windows10.0.19041.0" / "win-x64"
@@ -198,10 +338,11 @@ class SaveLabNativeWorkflowRunnerTests(unittest.TestCase):
         save_output.parent.mkdir(parents=True)
         options_output.parent.mkdir(parents=True)
         changed_save = bytearray(save_input.read_bytes())
-        changed_save[-1] ^= 1
+        for index in range(DISPLAYABLE_GOODIE_COUNT):
+            struct.pack_into("<I", changed_save, GOODIE_BASE_OFFSET + index * 4, 3)
         save_output.write_bytes(changed_save)
         changed_options = bytearray(options_input.read_bytes())
-        changed_options[-1] = 1
+        struct.pack_into("<I", changed_options, CONTROLLER_CONFIG_P1_OFFSET, 1)
         options_output.write_bytes(changed_options)
 
         identities = {
@@ -324,6 +465,17 @@ class SaveLabNativeWorkflowRunnerTests(unittest.TestCase):
             "OutputValidated": True,
             "Readback": readback,
         }
+
+    @staticmethod
+    def _create_junction(link: Path, target: Path) -> None:
+        completed = subprocess.run(
+            ["cmd.exe", "/d", "/c", "mklink", "/J", str(link), str(target)],
+            text=True,
+            capture_output=True,
+            timeout=10,
+        )
+        if completed.returncode != 0:
+            raise AssertionError(completed.stderr or completed.stdout)
 
 
 if __name__ == "__main__":
