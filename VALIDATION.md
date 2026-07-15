@@ -73,6 +73,18 @@ relevant-process census. Debug/win-x64 is explicit, and an invocation token plus
 post-build hashes prevent stale-build acceptance or cleanup of another run's
 evidence. It is native Toolkit evidence, not BEA runtime or release evidence.
 
+Save Editor first-use, Game Options workflow, or their compact-layout changes
+use `npm run test:winui-save-lab-native-workflow` after focused non-native
+tests. This opt-in gate owns two isolated launches, copies the immutable tracked
+save fixture, constructs the fixed synthetic options buffer, and uses UIA
+patterns without OS input synthesis. Acceptance requires an exact 1/1 TRX,
+eight normal/760 receipt-bound captures, two unchanged-input/validated-output
+workflow receipts, one fresh schema-1 manifest, full repo-build identity and
+hash reconciliation, and zero relevant processes. All `.bes`, `.bea`, app
+data, PNG, TRX, and manifest artifacts remain ignored/local. The gate does not
+open Explorer or a browser and does not establish retail behavior or format
+completeness.
+
 `npm test` is a common active-product check, not public release signoff. It runs
 inventory/profile contracts, active docs and public-core links, generated-output
 safety, the primary WinUI lane, and deterministic rebuild tests. Whole-tree

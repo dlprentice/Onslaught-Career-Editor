@@ -223,6 +223,25 @@ fail the gate. This
 native command is not part of ordinary non-runtime UI tests or release signoff;
 its screenshots, app data, TRX, and manifests remain local evidence.
 
+Save Editor first-use or Game Options workflow/layout changes use the separate
+unattended native Save Lab gate. It copies the tracked immutable gold-save
+fixture into owned staging, constructs a deterministic 10,004-byte options
+buffer, and drives only UIA Value, Toggle, ExpandCollapse, Scroll, Focus, and
+Invoke patterns:
+
+```powershell
+npm run test:winui-save-lab-native-workflow
+```
+
+The command publishes eight receipt-bound normal/760 captures and two workflow
+receipts under ignored `local-lab/winui-save-lab-native-workflow/`. It requires
+an exact 1/1 native TRX, full repo-build process/start/hash/HWND identity,
+unchanged inputs, validated distinct app-owned outputs, stable owner-bound
+focus and marker geometry, one fresh schema-1 manifest, and a zero final
+process census. It never invokes File Explorer or the controller-guide browser
+action, never reads installed-game files, and is native Toolkit evidence—not
+retail behavior, save-format completeness, or release acceptance.
+
 ## Patch And Mod Work
 
 Executable patch work must be byte-verified and specimen-specific:

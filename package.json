@@ -44,6 +44,7 @@
     "test:appcore": "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo",
     "test:winui": "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName!~LegacyWpf\"",
     "test:winui-home-native-visual-focus": "py -3 tools\\run_winui_home_native_visual_focus_test.py && py -3 tools\\run_winui_home_native_visual_focus.py",
+    "test:winui-save-lab-native-workflow": "py -3 tools\\run_winui_save_lab_native_workflow_test.py && py -3 tools\\run_winui_save_lab_native_workflow.py",
     "test:winui-agentic-ui-snapshot": "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~WinUiAgenticSnapshotSmokeTests\"",
     "test:winui-agentic-ui-hardening-metrics": "py -3 tools\\winui_agentic_ui_hardening_metrics.py --self-test && py -3 tools\\winui_agentic_ui_hardening_metrics.py --check",
     "report:winui-agentic-ui-hardening-metrics": "py -3 tools\\winui_agentic_ui_hardening_metrics.py --check --write-report",
