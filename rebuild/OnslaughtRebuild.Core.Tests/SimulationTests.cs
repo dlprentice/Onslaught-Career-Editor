@@ -55,6 +55,20 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void LookX_Negative_SnapsFacingLeftQuadrant()
+    {
+        var simulation = new Simulation(1);
+        for (int tick = 0; tick < 262; tick++)
+        {
+            simulation.Step(new SimInput(0, 0, LookX: -1));
+        }
+
+        WorldSnapshot state = simulation.Snapshot;
+        Assert.Equal(-1, state.FacingX);
+        Assert.Equal(1, state.FacingZ);
+    }
+
+    [Fact]
     public void WalkerStrafeSpeed_MatchesAcceptedStrafeP02Translation()
     {
         // Dual-accept steady ≈ 3.015 u/s → round(v * 1000 / 30) = 101.
