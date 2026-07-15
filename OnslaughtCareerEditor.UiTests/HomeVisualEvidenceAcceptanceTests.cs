@@ -5,6 +5,37 @@ namespace OnslaughtCareerEditor.UiTests;
 public class HomeVisualEvidenceAcceptanceTests
 {
     [Test]
+    public void GenericToolkitChecks_MatchHomeCompatibilityWrapper()
+    {
+        using var bitmap = new Bitmap(760, 820);
+        using (Graphics graphics = Graphics.FromImage(bitmap))
+        {
+            graphics.Clear(Color.FromArgb(255, 244, 246, 252));
+            using var headerBrush = new SolidBrush(Color.FromArgb(255, 32, 52, 154));
+            graphics.FillRectangle(headerBrush, 0, 36, bitmap.Width, 90);
+            using var cardBrush = new SolidBrush(Color.White);
+            graphics.FillRectangle(cardBrush, 64, 170, 632, 72);
+            using var textBrush = new SolidBrush(Color.FromArgb(255, 28, 35, 55));
+            graphics.FillRectangle(textBrush, 84, 190, 420, 12);
+            graphics.FillRectangle(textBrush, 84, 216, 260, 8);
+        }
+
+        var marker = new Rectangle(64, 170, 632, 72);
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                ToolkitVisualEvidenceAcceptance.HasMeaningfulFrameCoverage(bitmap),
+                Is.EqualTo(HomeVisualEvidenceAcceptance.HasMeaningfulFrameCoverage(bitmap)));
+            Assert.That(
+                ToolkitVisualEvidenceAcceptance.HasRenderedToolkitHeader(bitmap),
+                Is.EqualTo(HomeVisualEvidenceAcceptance.HasRenderedToolkitHeader(bitmap)));
+            Assert.That(
+                ToolkitVisualEvidenceAcceptance.HasRenderedActivity(bitmap, marker),
+                Is.EqualTo(HomeVisualEvidenceAcceptance.HasRenderedActivity(bitmap, marker)));
+        });
+    }
+
+    [Test]
     public void NearBlackBitmapWithLegacyProbePixels_IsRejected()
     {
         using var bitmap = new Bitmap(760, 820);

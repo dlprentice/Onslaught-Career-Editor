@@ -9,19 +9,17 @@ Aquila and never consumes an external WinUI executable override.
 
 from __future__ import annotations
 
-import hashlib
 import json
-import os
 import re
 import shutil
-import struct
 import subprocess
 import sys
 import time
 import uuid
-import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
+
+import winui_native_acceptance_support as native_support
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -47,97 +45,15 @@ WINUI_BUILD_COMMAND = [
     "--runtime",
     "win-x64",
 ]
-RELEVANT_PROCESS_NAMES = {
-    "onslaughtcareereditor.winui",
-    "testhost",
-    "vstest.console",
-    "bea",
-    "cdb",
-    "windbg",
-    "windbgx",
-}
-PNG_SIGNATURE = bytes((137, 80, 78, 71, 13, 10, 26, 10))
-
-
-class HarnessError(RuntimeError):
-    pass
-
-
-def require(condition: bool, message: str) -> None:
-    if not condition:
-        raise HarnessError(message)
-
-
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for block in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(block)
-    return digest.hexdigest().upper()
-
-
-def normalized(path: str | Path) -> str:
-    return os.path.normcase(str(Path(path).resolve()))
-
-
-def png_dimensions(path: Path) -> tuple[int, int]:
-    with path.open("rb") as stream:
-        header = stream.read(24)
-    require(header[:8] == PNG_SIGNATURE, f"capture is not PNG: {path.name}")
-    require(header[12:16] == b"IHDR" and len(header) == 24, f"capture PNG lacks IHDR: {path.name}")
-    return struct.unpack(">II", header[16:24])
+HarnessError = native_support.NativeAcceptanceError
+require = native_support.require
+sha256 = native_support.sha256
+normalized = native_support.normalized
+png_dimensions = native_support.png_dimensions
 
 
 def validate_trx(path: Path) -> dict[str, int]:
-    require(path.is_file(), f"native Home TRX is missing: {path}")
-    try:
-        root = ET.parse(path).getroot()
-    except ET.ParseError as exc:
-        raise HarnessError(f"native Home TRX is malformed: {exc}") from exc
-
-    def local_name(element: ET.Element) -> str:
-        return element.tag.rsplit("}", 1)[-1]
-
-    counters = next((element for element in root.iter() if local_name(element) == "Counters"), None)
-    results = [element for element in root.iter() if local_name(element) == "UnitTestResult"]
-    require(counters is not None, "native Home TRX has no result counters")
-
-    def count(name: str) -> int:
-        value = counters.attrib.get(name, "0")
-        try:
-            return int(value)
-        except ValueError as exc:
-            raise HarnessError(f"native Home TRX counter {name} is invalid: {value}") from exc
-
-    summary = {name: count(name) for name in (
-        "total",
-        "executed",
-        "passed",
-        "failed",
-        "error",
-        "timeout",
-        "aborted",
-        "inconclusive",
-        "notExecuted",
-    )}
-    exact_pass = (
-        summary["total"] == 1
-        and summary["executed"] == 1
-        and summary["passed"] == 1
-        and all(summary[name] == 0 for name in (
-            "failed",
-            "error",
-            "timeout",
-            "aborted",
-            "inconclusive",
-            "notExecuted",
-        ))
-        and len(results) == 1
-        and results[0].attrib.get("testName") == TEST_METHOD_NAME
-        and results[0].attrib.get("outcome") == "Passed"
-    )
-    require(exact_pass, f"native Home TRX must contain exactly one executed passing test: {summary}")
-    return summary
+    return native_support.validate_exact_trx(path, TEST_METHOD_NAME, "native Home")
 
 
 def validate_manifest(
@@ -275,40 +191,11 @@ def validate_manifest(
 
 
 def process_census() -> dict[int, dict[str, Any]]:
-    command = (
-        "$names=@('OnslaughtCareerEditor.WinUI','testhost','vstest.console','BEA','cdb','windbg','WinDbgX');"
-        "@(Get-Process -ErrorAction SilentlyContinue | Where-Object { $names -contains $_.ProcessName } | "
-        "Select-Object Id,ProcessName,StartTime,Path) | ConvertTo-Json -Compress"
-    )
-    completed = subprocess.run(
-        ["powershell.exe", "-NoLogo", "-NoProfile", "-Command", command],
-        cwd=REPO_ROOT,
-        text=True,
-        capture_output=True,
-        timeout=20,
-    )
-    require(completed.returncode == 0, f"relevant-process census failed: {completed.stderr.strip()}")
-    raw = completed.stdout.strip()
-    if not raw:
-        return {}
-    parsed = json.loads(raw)
-    rows = parsed if isinstance(parsed, list) else [parsed]
-    census: dict[int, dict[str, Any]] = {}
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        name = str(row.get("ProcessName", "")).lower()
-        process_id = row.get("Id")
-        if name in RELEVANT_PROCESS_NAMES and isinstance(process_id, int):
-            census[process_id] = row
-    return census
+    return native_support.process_census(REPO_ROOT)
 
 
 def describe_processes(census: dict[int, dict[str, Any]]) -> str:
-    return ", ".join(
-        f"{row.get('ProcessName')}[{process_id}]"
-        for process_id, row in sorted(census.items())
-    ) or "zero"
+    return native_support.describe_processes(census)
 
 
 def run_command(
@@ -317,42 +204,20 @@ def run_command(
     timeout: int,
     env_overrides: dict[str, str] | None = None,
 ) -> None:
-    print(f"\n$ {' '.join(command)}", flush=True)
-    env = os.environ.copy()
-    env["MSBUILDDISABLENODEREUSE"] = "1"
-    if env_overrides:
-        env.update(env_overrides)
-    process = subprocess.Popen(command, cwd=REPO_ROOT, env=env)
-    try:
-        return_code = process.wait(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        terminate_owned_process_tree(process.pid)
-        try:
-            process.wait(timeout=20)
-        except subprocess.TimeoutExpired:
-            process.kill()
-            process.wait(timeout=10)
-        raise
-    require(return_code == 0, f"command exited {return_code}: {' '.join(command)}")
+    native_support.run_command(
+        command,
+        repo_root=REPO_ROOT,
+        timeout=timeout,
+        env_overrides=env_overrides,
+    )
 
 
 def terminate_owned_process_tree(root_process_id: int) -> None:
-    """Terminate only the exact command process spawned by this runner and its children."""
-    completed = subprocess.run(
-        ["taskkill.exe", "/PID", str(root_process_id), "/T", "/F"],
-        cwd=REPO_ROOT,
-        text=True,
-        capture_output=True,
-        timeout=20,
-    )
-    require(
-        completed.returncode in {0, 128},
-        f"failed to terminate owned process tree {root_process_id}: {completed.stderr.strip() or completed.stdout.strip()}",
-    )
+    native_support.terminate_owned_process_tree(root_process_id, repo_root=REPO_ROOT)
 
 
 def validate_invocation_id(invocation_id: str) -> None:
-    require(re.fullmatch(r"[0-9a-f]{32}", invocation_id) is not None, "runner invocation ID is invalid")
+    native_support.validate_invocation_id(invocation_id)
 
 
 def native_test_command(run_root: Path, trx: Path) -> list[str]:
@@ -424,19 +289,11 @@ def remove_failed_invocation_evidence(invocation_id: str, evidence_root: Path = 
 
 
 def shutdown_build_servers() -> None:
-    completed = subprocess.run(
-        ["dotnet", "build-server", "shutdown"],
-        cwd=REPO_ROOT,
-        text=True,
-        capture_output=True,
-        timeout=30,
-    )
-    require(completed.returncode == 0, f"dotnet build-server shutdown exited {completed.returncode}")
+    native_support.shutdown_build_servers(REPO_ROOT)
 
 
 def append_cleanup_error(error: Exception | None, phase: str, cleanup_error: Exception) -> HarnessError:
-    prefix = f"{error}; " if error is not None else ""
-    return HarnessError(f"{prefix}{phase} failed: {cleanup_error}")
+    return native_support.append_cleanup_error(error, phase, cleanup_error)
 
 
 def run_acceptance() -> dict[str, Any]:
