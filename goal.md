@@ -2,7 +2,7 @@
 
 Status: **ACTIVE** (full reconstruction campaign)
 Last updated: 2026-07-15
-Integration tip: `796edad4`
+Integration tip: `0b23fbd4`
 
 ## Recent Ledger
 
@@ -50,8 +50,7 @@ exact blocker rather than inventing behavior. Campaign ACTIVE.
 
 ## Resume (Codex handoff)
 
-- **Tip SHA:** `796edad4` design baseline; the foundation implementation is the
-  next path-scoped commit and will receive a tip-alignment baton.
+- **Tip SHA:** `0b23fbd4` single-root operating-foundation implementation.
 - **Closed:** M0.6 single-root operating-foundation ADVANCEMENT. The durable
   reconstruction objective remains unchanged. Legacy coordinator/worktree/
   lease ceremony now activates only for deliberate concurrency; it no longer
