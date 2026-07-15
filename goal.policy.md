@@ -51,48 +51,66 @@ source and decompilation-derived material. A separately staffed unexposed
 specification/implementation/acceptance process may pursue that narrower label
 later; it is not required to keep building this reconstruction now.
 
-## Single-Root Default
+## Single-Writer Default
 
-The active Codex root task is the normal owner of implementation, integration,
-validation, state updates, version control, and final acceptance. It works in
-the active repository checkout, preserves unrelated dirty work, and serializes
-overlapping mutations.
+Exactly one task is the active implementation owner and repository writer. The
+normal compact form is one Codex task owning implementation, integration,
+validation, state updates, version control, consequential campaign actions,
+and acceptance in the active checkout.
 
-Exactly one task is the current root. If two tasks could plausibly claim root
-ownership, neither performs a consequential mutation, push, publication, or
-external action until the repository baton and current user/task ownership
-identify one root; safe read-only work may continue.
+For a long-running campaign, the user or current campaign owner may instead
+designate one **sole sequential implementation worker** while the parent task
+only supervises, steers, interrupts, and reports. That explicit delegation
+transfers the named campaign execution scope and its standing authority to the
+worker for the life of the assignment. The supervising task does not edit,
+validate, commit, push, launch, mutate, publish, or separately accept campaign
+work while the worker is active. This topology is still single-writer work; it
+does not activate the coordination overlay, require a worktree, lease, worker
+report, or separate integration pass.
 
-Only the currently active root task exercises standing campaign authority for
+The active implementation owner works in the active repository checkout,
+preserves unrelated dirty work, serializes overlapping mutations, integrates
+its own accepted increments, and leaves canonical state resume-ready. If two
+tasks could plausibly claim implementation ownership, neither performs a
+consequential mutation, push, publication, or external action until the current
+user instruction and repository baton identify one writer; safe read-only work
+may continue.
+
+Only the active implementation owner exercises standing campaign authority for
 consequential runtime, Ghidra, version-control, release/publication, or external
-actions. A root-created writer receives only its explicit bounded write scope;
-it does not inherit ambient mutation, publication, account, or acceptance
-authority.
+actions. A supervising task or bounded adviser does not share that authority
+while the sole worker owns execution. Delegation ends when the worker finishes,
+is interrupted, or explicitly hands back a resume-ready baton; the supervisor
+reclaims execution only after verifying that no worker-owned mutation,
+process, publication, or external action remains in flight.
 
-Subagents and external consults are bounded advisers by default. Root uses them
-when independent judgment, adversarial review, or domain specialization adds
-material value. Root may explicitly assign a bounded non-overlapping write task
-to a subagent, but does not create persistent worker lanes merely to satisfy
-ceremony.
+Other subagents and external consults are bounded advisers by default. The
+active implementation owner uses them only when independent judgment,
+adversarial review, or domain specialization materially improves confidence.
+It does not create persistent lanes or fixed review envelopes merely to satisfy
+ceremony, and a sole implementation worker does not recursively delegate.
 
 Shared-machine ownership is an execution-safety mechanism, not a permission
-gate. Root serializes BEA, debugger, live Ghidra, native desktop, broad build,
+gate. The active implementation owner serializes BEA, debugger, live Ghidra,
+native desktop, broad build,
 and publication actions; verifies the exact process, path, hash, start time,
 window/module, project, backup, artifact, or external target as applicable; and
-records bounded cleanup. Root never terminates an unknown process or overwrites
+records bounded cleanup. It never terminates an unknown process or overwrites
 unknown work. It can wait, disambiguate safely, or advance another independent
 slice.
 
 The contracts under [`coordination/`](coordination/README.md) are an optional
-coordination overlay. Root activates them only for deliberately concurrent
+coordination overlay. The active implementation owner activates them only for
+deliberately concurrent
 writers, recurring automation, independent acceptance roles, or a shared-
-resource wave that needs durable handoffs. Ordinary single-root work does not
+resource wave that needs durable handoffs. Ordinary single-writer work does not
 require a coordinator, isolated worker worktree, resource lease, worker report,
 or separate integration owner.
 
 Resource claims do not expire merely because time passes. After a crash or task
-handoff, a successor root re-reads the repository baton and verifies that the
-prior root no longer owns a relevant process, project write, proof publication,
+handoff, a successor implementation owner re-reads the repository baton and
+verifies that the
+prior owner no longer owns a relevant process, project write, proof publication,
 or external action before reclaiming it. Unknown ownership remains read-only;
 the successor advances another slice rather than guessing or killing an
 unknown process. Before a successor pushes or publishes, it also reads back the
@@ -101,7 +119,8 @@ an absent-owner-but-still-completing prior action.
 
 ## Multi-Slice Campaign Mode
 
-The durable reconstruction campaign is not one slice. Root:
+The durable reconstruction campaign is not one slice. The active
+implementation owner:
 
 1. Executes one bounded Current Slice from `goal.md`.
 2. Closes it with a verified advancement or an exact skipped blocker.
@@ -192,7 +211,8 @@ Classify local material before cleanup:
 Normal cleanup applies only to action-owned disposable material. It never
 deletes an unknown, pre-existing, retained, shared, or immutable item.
 Crash debris without a valid action receipt/provenance record is retained until
-classified; a successor root does not inherit the prior action's disposable set
+classified; a successor implementation owner does not inherit the prior
+action's disposable set
 merely by taking over the baton.
 
 ## Standing Campaign Authority
@@ -221,7 +241,8 @@ and the exact verified target. A later user instruction can narrow, revoke, or
 supersede that standing authority.
 
 Before any copied-runtime, copied-executable, copied-profile, debugger, input,
-or process-memory mutation, root resolves path/hash/process-image identity and
+or process-memory mutation, the active implementation owner resolves
+path/hash/process-image identity and
 proves the target is the intended copy rather than the installed game or
 original executable. Identity ambiguity fails closed.
 
@@ -250,7 +271,7 @@ moving an existing tag, overwriting/replacing an existing release artifact,
 retargeting published identity, or withdrawing published truth requires fresh
 destructive authority.
 
-Before an external action, root confirms the configured repository, account,
+Before an external action, the active implementation owner confirms the configured repository, account,
 channel, audience, artifact, commit, or host and the intended action. A novel or
 ambiguous external target is clarified before use; target verification is not a
 return to coordinator or lease ceremony.
@@ -331,10 +352,11 @@ independent advancement remains.
 
 Do not mark the campaign complete merely because one or several slices landed.
 Completion requires the exit criteria in `goal.campaign.md`, verified green
-state, a resume-ready backlog/non-claim record, and human or root integration
-acceptance.
+state, a resume-ready backlog/non-claim record, and human or current campaign-
+owner acceptance.
 
-“No meaningful authorized product work remains” is true only after root has
+“No meaningful authorized product work remains” is true only after the active
+implementation owner has
 walked every tier of the consumer-first picker and recorded an exact blocker,
 owner, next action, and reopen condition for every remaining material item.
 One blocked slice, one unavailable runtime, or one exhausted evidence path is

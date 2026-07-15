@@ -99,8 +99,10 @@ gates in the handoff.
   and `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`.
 - Explicit `/goal`: read `goal.policy.md`, then `goal.campaign.md`, then
   `goal.md`. For the durable full-reconstruction campaign use the slash text in
-  `roadmap/goals/full-rebuild-campaign-slash-goal.md`. Coordinated workers leave
-  canonical goal/state reconciliation to integration.
+  `roadmap/goals/full-rebuild-campaign-slash-goal.md`. One explicitly designated
+  sole sequential worker may own implementation, integration, canonical state,
+  validation, and version control while its parent only supervises and reports;
+  this compact topology does not activate the coordination overlay.
 
 ## Setup
 
@@ -182,11 +184,12 @@ not need them. If a skill conflicts with current repo evidence, preserve the
 repo truth and report the drift; maintainers correct the skill in its separate
 durable source. Never commit runtime skill/plugin/auth/session/cache/log state.
 
-For coordinated multi-thread campaigns, read
+For genuinely concurrent multi-writer campaigns, read
 [coordination/README.md](coordination/README.md) before assigning or accepting
-worker changes. Unknown ownership is read-only. The integration owner alone
-reconciles `goal.md`, canonical state batons, and shared front-door truth after
-worker leases release.
+worker changes. Unknown ownership is read-only. A supervising parent plus one
+sole sequential implementation worker remains single-writer work: the worker
+reconciles `goal.md`, canonical state batons, and shared front-door truth, while
+the parent does not make competing repository or campaign mutations.
 
 ## WinUI Rules
 

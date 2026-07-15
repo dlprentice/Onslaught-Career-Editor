@@ -186,14 +186,16 @@ to satisfy the rule; report the needed state update in the audit result.
 External contributors may instead explain that no baton update was made; a
 maintainer can fold their PR into the current state files during review.
 
-The active root task normally owns source integration and canonical state.
-Follow the [optional coordination overlay](coordination/README.md) only when
-root explicitly activates concurrent writers, recurring automation, or
-separate integration/acceptance roles. During such a wave, worker branches do
-not all edit canonical state; an integration preparer may propose reconciliation
-for `goal.md`, the state JSON files, and shared readiness/front-door docs after
-competing write/resource claims end, but the current root writes and accepts the
-final state. Read-only review roles remain read-only.
+The active implementation owner normally owns source integration and canonical
+state. It may be the root task or one explicitly designated sole sequential
+worker whose parent only supervises and reports. Follow the
+[optional coordination overlay](coordination/README.md) only for concurrent
+writers, recurring automation, or separate integration/acceptance roles. During
+such a wave, worker branches do not all edit canonical state; an integration
+preparer may propose reconciliation for `goal.md`, the state JSON files, and
+shared readiness/front-door docs after competing write/resource claims end, but
+the active implementation owner writes and accepts the final state. Read-only
+review roles remain read-only.
 
 ## WinUI UI/UX Contributions
 

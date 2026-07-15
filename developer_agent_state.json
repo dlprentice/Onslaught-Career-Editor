@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-15",
-  "routingPolicy": "Single-root default: the current root owns integration, validation, state, commits/pushes, consequential actions, and final acceptance. Subagents/consults are bounded advisers unless root explicitly assigns a non-overlapping write set; coordination/worktrees/resource claims activate only for deliberate concurrency.",
-  "currentFocus": "Product-coupled reconstruction campaign is paused awaiting user goal resume; preserved M2.3 target-acquisition static-contract work remains the resume target and is evidence debt for a named Playable Reconstruction consumer.",
+  "routingPolicy": "Single-writer default: one active implementation owner holds integration, validation, state, commits/pushes, consequential actions, and acceptance. It may be the root or one explicitly designated sole sequential worker whose parent only supervises and reports; coordination activates only for genuine concurrency.",
+  "currentFocus": "Product-coupled reconstruction campaign is active under one designated implementation worker; preserved M2.3 target-acquisition static-contract work is adopted in place as evidence debt for a named Playable Reconstruction consumer.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -165,7 +165,7 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "After the user resumes the goal, finish or exactly block preserved M2.3 as a dangerous-misinterpretation exception and queue its deterministic target/lock consumer rather than claiming targeting landed.",
+    "Finish or exactly block preserved M2.3 as a dangerous-misinterpretation exception and queue its deterministic target/lock consumer rather than claiming targeting landed.",
     "Then run exactly two copied-runtime shield attempts; if either attempt fails, publish no behavior contract, while only a valid pair may reach the shield consumer in deterministic Core and Godot.",
     "Deliver a WinUI Reconstruction community surface that truthfully discovers, configures, verifies, and launches the playable companion.",
     "Run the bounded P1/P2 viewport and command-ownership experiment as the first original-game multiplayer epic gate, without enabling Host/Join."

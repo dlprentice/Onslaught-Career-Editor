@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regression tests for the durable single-root campaign foundation."""
+"""Regression tests for the durable single-writer campaign foundation."""
 
 from __future__ import annotations
 
@@ -60,22 +60,24 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
             with self.subTest(phrase=phrase):
                 self.assertIn(normalized_words(phrase).casefold(), normalized_text)
 
-    def test_goal_policy_uses_single_root_default(self) -> None:
+    def test_goal_policy_uses_single_writer_default(self) -> None:
         policy = read_repo_text("goal.policy.md")
 
         self.assert_contains_all(
             policy,
             (
-                "## Single-Root Default",
+                "## Single-Writer Default",
                 "optional coordination overlay",
                 "implementation, integration, validation, state",
-                "Subagents and external consults are bounded advisers by default",
+                "sole sequential implementation worker",
+                "supervises, steers, interrupts, and reports",
+                "supervising task does not edit, validate, commit, push, launch, mutate, publish",
                 "execution-safety mechanism, not a permission gate",
-                "Exactly one task is the current root",
-                "If two tasks could plausibly claim root ownership",
-                "Only the currently active root task exercises standing campaign authority",
+                "Exactly one task is the active implementation owner",
+                "If two tasks could plausibly claim implementation ownership",
+                "Only the active implementation owner exercises standing campaign authority",
                 "Resource claims do not expire merely because time passes",
-                "a successor root re-reads the repository baton",
+                "a successor implementation owner re-reads the repository baton",
                 "Before a successor pushes or publishes",
                 "exact remote branch, tag, release, artifact, and publication identity",
             ),
@@ -136,7 +138,7 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
             ),
         )
 
-    def test_external_authority_is_root_only_and_closed_to_project_surfaces(
+    def test_external_authority_is_owner_only_and_closed_to_project_surfaces(
         self,
     ) -> None:
         policy = read_repo_text("goal.policy.md")
@@ -145,8 +147,8 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
         self.assert_contains_all(
             policy,
             (
-                "Only the currently active root task exercises standing campaign authority",
-                "A root-created writer receives only its explicit bounded write scope",
+                "Only the active implementation owner exercises standing campaign authority",
+                "A supervising task or bounded adviser does not share that authority",
             ),
         )
         self.assert_contains_all(
@@ -214,9 +216,10 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
             coordination,
             (
                 "optional concurrency overlay",
-                "Single-root work does not require",
+                "Single-writer work does not require",
+                "sole implementation worker is single-writer work",
                 "explicitly activates this overlay",
-                "ignored/local activation record before a non-root writer edits",
+                "ignored/local activation record before an additional writer edits",
             ),
         )
         self.assertIn("## Applicability", workstreams)
@@ -235,9 +238,9 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
         self.assert_contains_all(
             contributing,
             (
-                "active root task normally owns source integration and canonical state",
+                "active implementation owner normally owns source integration and canonical state",
                 "optional coordination overlay",
-                "only when root explicitly activates concurrent writers",
+                "only for concurrent writers",
             ),
         )
 
@@ -274,15 +277,15 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
             ),
         )
         self.assertIn(
-            "the current root writes and accepts the final commit",
+            "the active implementation owner writes and accepts the final commit",
             normalized_words(coordination).casefold(),
         )
         self.assertIn(
-            "the current root writes and accepts the final state",
+            "the active implementation owner writes and accepts the final state",
             normalized_words(contributing).casefold(),
         )
         self.assertIn(
-            "the current root or maintainer accepts the phase boundary",
+            "the active campaign owner or maintainer accepts the phase boundary",
             normalized_words(campaign).casefold(),
         )
         for stale_phrase in (
@@ -310,14 +313,15 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
         self.assertNotIn("STOP_LOCAL", slash_goal)
         self.assertNotIn("TIME-BOXED MARATHON", slash_goal)
 
-    def test_paused_product_baton_keeps_shield_authorized_but_unmeasured(
+    def test_active_product_baton_keeps_shield_authorized_but_unmeasured(
         self,
     ) -> None:
         baton = read_repo_text("goal.md")
         campaign = read_repo_text("goal.campaign.md")
 
         self.assertIn("M2.3-target-acquisition-static-contract", baton)
-        self.assertIn("Status: **PAUSED**", baton)
+        self.assertIn("Status: **ACTIVE**", baton)
+        self.assertIn("sole sequential implementation worker", baton)
         self.assertIn("standing-authorized", baton)
         self.assertIn("No accepted two-attempt shield measurement exists", baton)
         self.assertIn(
@@ -328,7 +332,7 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
         self.assertNotIn("MISSING_COMPLETE_LIVE_RUNTIME_LEASE", baton)
         self.assertNotIn("BLOCKED_SHIELD_LIVE_AUTHORITY", baton)
         self.assertNotIn("## Active skipped blocker", baton)
-        self.assertIn("single-root", campaign.casefold())
+        self.assertIn("single-writer", campaign.casefold())
         normalized_campaign = normalized_words(campaign).casefold()
         self.assertIn(
             "exactly two authorized copied-runtime shield attempts",
@@ -353,7 +357,7 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
         campaign = read_repo_text("goal.campaign.md")
         normalized_baton = normalized_words(baton).casefold()
 
-        self.assertIn("m0.6-single-root-operating-foundation", normalized_baton)
+        self.assertIn("m0.6-single-writer-operating-foundation", normalized_baton)
         self.assertIn("| p0.1 |", campaign.casefold())
         for placeholder in (
             "pending foundation implementation commit",
@@ -368,13 +372,13 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
         documentation = json.loads(read_repo_text("documentation_agent_state.json"))
         orchestrator = json.loads(read_repo_text("re_orchestrator_state.json"))
 
-        self.assertIn("Single-root default", developer["routingPolicy"])
+        self.assertIn("Single-writer default", developer["routingPolicy"])
         self.assertTrue(developer["verifiedTruth"]["release"]["newReleaseAuthorized"])
-        self.assertIn("single-root default", documentation["routingPolicy"].casefold())
+        self.assertIn("single-writer default", documentation["routingPolicy"].casefold())
         self.assertIn("product-coupled", developer["currentFocus"].casefold())
-        self.assertIn("paused", developer["currentFocus"].casefold())
+        self.assertIn("active", developer["currentFocus"].casefold())
         self.assertIn("product-coupled", documentation["currentFocus"].casefold())
-        self.assertIn("paused", documentation["currentFocus"].casefold())
+        self.assertIn("active", documentation["currentFocus"].casefold())
         for label, state in (
             ("developer", developer),
             ("documentation", documentation),
@@ -383,7 +387,7 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
             with self.subTest(state=label):
                 self.assertEqual("2026-07-15", state["lastUpdated"])
                 self.assertIn("m2.3", state["currentFocus"].casefold())
-                self.assertIn("paused", state["currentFocus"].casefold())
+                self.assertIn("active", state["currentFocus"].casefold())
         self.assertIn(
             "standing-authorized", orchestrator["currentTruth"][-1].casefold()
         )

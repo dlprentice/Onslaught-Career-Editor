@@ -26,9 +26,11 @@ Continuously reconstruct and enhance Battle Engine Aquila through an evidence-ba
 
 - Authority order is `goal.policy.md` → `goal.campaign.md` → `goal.md` → the
   applicable `AGENTS.md` → slice-local evidence.
-- The active root task is the normal implementation and integration owner.
-  `coordination/` activates only when root deliberately creates concurrent
-  writers or a shared-resource wave.
+- Exactly one task is the active implementation and integration owner. It may
+  be the root or one explicitly designated sole sequential worker whose parent
+  only supervises, steers, interrupts, and reports. This compact topology does
+  not activate `coordination/`; that overlay is for genuine concurrency or a
+  shared-resource wave.
 - A slice advancement is not campaign completion. After closeout, select and
   execute the next safe product-coupled slice.
 - A blocked slice is recorded and skipped while another authorized independent

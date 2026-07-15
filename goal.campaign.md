@@ -1,7 +1,7 @@
 # Product-Coupled Battle Engine Aquila Campaign
 
-Status: **PAUSED durable campaign — awaiting user goal resume**
-Last updated: 2026-07-15 (product-coupled portfolio installed; M2.3 work preserved)
+Status: **ACTIVE durable campaign — sole implementation worker assigned**
+Last updated: 2026-07-15 (product-coupled portfolio active; M2.3 work adopted in place)
 
 Policy: [`goal.policy.md`](goal.policy.md)
 Mutable baton: [`goal.md`](goal.md)
@@ -43,7 +43,7 @@ priority, milestone state, or an exit criterion materially changes.
 
 ## Campaign operating rules
 
-1. One Current Slice is active after resume. It names a primary outcome, user
+1. One Current Slice is active. It names a primary outcome, user
    outcome, evidence question, exact consumer, acceptance, non-claims, and
    next link.
 2. Retail-derived behavior reaches Core, Godot, WinUI, or a retail patch only
@@ -103,8 +103,8 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 
 | ID | Consumer-complete increment | Status | Current boundary |
 |---|---|---|---|
-| P0.1 | Single-root authority, safe copied-target boundary, mutable baton | landed | Coordination is optional and need-shaped. |
-| P0.2 | Product-coupled slice contract and regression guard | landed | Canonical authorities and both focused strategy/foundation guards are aligned; campaign remains paused. |
+| P0.1 | Single-writer authority, safe copied-target boundary, mutable baton | landed | One root or designated sole worker owns execution; coordination is optional and need-shaped. |
+| P0.2 | Product-coupled slice contract and regression guard | landed | Canonical authorities and both focused strategy/foundation guards are aligned. |
 | P0.3 | Deterministic Core/client/headless architecture and First Flight | landed | Foundation only, not retail parity. |
 | P0.4 | WinUI/AppCore safe-copy and community release foundation | landed | Latest published app is `v1.0.9`. |
 
@@ -165,7 +165,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 | P6.3 | Player/modder guides tied to shipped workflows | open | Couple guides to WinUI, reconstruction, mod, or multiplayer consumers. |
 | P6.4 | Rights and non-claim clarity | continuous | Repository licenses cover only their named material. |
 
-## Immediate product-coupled sequence after resume
+## Immediate product-coupled sequence
 
 1. **Finish M2.3 narrowly:** accept or block the preserved target-acquisition
    static contract as a **dangerous-misinterpretation exception**. It does not
@@ -220,7 +220,7 @@ The campaign may pause at an accepted phase boundary only when all hold:
 5. Touched product gates are green, proprietary payloads remain local, the
    installed game/original executable remain immutable, and `goal.md` is
    resume-ready.
-6. The current root or maintainer accepts the phase boundary. Full retail
+6. The active campaign owner or maintainer accepts the phase boundary. Full retail
    parity, strict clean-room status, player-ready online play, or exhaustive
    extraction are never inferred from phase completion.
 

@@ -105,7 +105,7 @@ class ProductCoupledCampaignStrategyTests(unittest.TestCase):
                 self.assertIn(normalize(phrase).casefold(), normalized_policy)
 
         for preserved_boundary in (
-            "Single-Root Default",
+            "Single-Writer Default",
             "Standing Campaign Authority",
             "Fresh Authorization Required",
             "installed Steam game and original `BEA.exe` remain immutable",
@@ -138,10 +138,11 @@ class ProductCoupledCampaignStrategyTests(unittest.TestCase):
         self.assertIn("Closed measurement ledger", campaign)
         self.assertNotIn("| **RE** |", campaign)
 
-    def test_paused_baton_preserves_m23_and_names_consumers(self) -> None:
+    def test_active_baton_preserves_m23_and_names_consumers(self) -> None:
         baton = read_text("goal.md")
         required = (
-            "Status: **PAUSED** (awaiting user goal resume)",
+            "Status: **ACTIVE**",
+            "sole sequential implementation worker",
             "M2.3-target-acquisition-static-contract",
             "Primary outcome: **Playable Reconstruction**",
             "OnslaughtRebuild.Core",
@@ -154,7 +155,7 @@ class ProductCoupledCampaignStrategyTests(unittest.TestCase):
         for phrase in required:
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase.casefold(), baton.casefold())
-        self.assertNotIn("Status: **ACTIVE**", baton)
+        self.assertNotIn("Status: **PAUSED**", baton)
 
     def test_public_front_doors_connect_all_three_products(self) -> None:
         readme = read_text("README.MD")
@@ -184,7 +185,7 @@ class ProductCoupledCampaignStrategyTests(unittest.TestCase):
         for name, state in states.items():
             with self.subTest(state=name):
                 self.assertIn("product-coupled", state["currentFocus"].casefold())
-                self.assertIn("paused", state["currentFocus"].casefold())
+                self.assertIn("active", state["currentFocus"].casefold())
                 next_steps = normalize(" ".join(state["nextSteps"])).casefold()
                 self.assertIn("m2.3", next_steps)
                 self.assertIn("shield", next_steps)

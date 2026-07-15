@@ -1,9 +1,8 @@
 # Reconstruction Campaign Baton
 
-Status: **PAUSED** (awaiting user goal resume)
+Status: **ACTIVE** (sole sequential implementation worker assigned; parent task supervises and reports)
 Last updated: 2026-07-15
-Integration tip: `580965e3` (product-coupled strategy implementation; campaign
-remains paused)
+Activation baseline: `a77ddb48` (product-coupled strategy and prior tip alignment)
 
 ## Portfolio state
 
@@ -12,10 +11,12 @@ The durable campaign now targets three shipping outcomes: **WinUI Community**,
 runtime, assets, lore, documentation, and harnesses support those products; a
 proof artifact is not itself a landed product increment.
 
-The campaign is intentionally paused while this strategy rewrite is integrated
-and the maintainer installs/resumes the new durable goal. No campaign slice,
-copied-runtime attempt, P1/P2 experiment, native application test, or game
-launch is authorized by this paused baton alone.
+The campaign is active under one designated implementation owner working
+sequentially in the main checkout. Its parent task is monitor-only: it may
+steer, interrupt, and report, but it does not make competing repository,
+runtime, publication, or acceptance mutations while the worker is active.
+The existing dirty M2.3 packet is adopted in place and must not be recreated or
+discarded.
 
 ## Preserved recent ledger
 
@@ -26,9 +27,9 @@ launch is authorized by this paused baton alone.
 | `M5.3-home-native-visual-focus-harness` | ADVANCEMENT: bounded first-run/ready native focus and visual receipts | Protects the WinUI Community front door. |
 | `M5.4-save-lab-native-workflow-harness` | ADVANCEMENT: native UIA save/options workflows and retained-byte checks | Protects a WinUI Community workflow. |
 | `M5.5-media-catalog-native-workflow-harness` | ADVANCEMENT: native generated-fixture catalog/media workflow | Protects a WinUI Community workflow. |
-| `M0.6-single-root-operating-foundation` | ADVANCEMENT: root-owned campaign, standing authority, optional coordination | Enables unattended product work without lease ceremony. |
+| `M0.6-single-writer-operating-foundation` | ADVANCEMENT: root-or-designated-worker execution ownership, standing authority, optional coordination | Enables unattended product work without lease ceremony. |
 
-## Current Slice (resume target)
+## Current Slice
 
 **ID:** `M2.3-target-acquisition-static-contract`
 Primary outcome: **Playable Reconstruction**
@@ -58,7 +59,7 @@ target selection from unbounded source assumptions would be actively
 misleading. Its closeout must queue the missing runtime question and exact Core
 consumer; it must not mark targeting landed.
 
-## Resume instructions
+## Execution instructions
 
 1. Re-read `goal.policy.md`, `goal.campaign.md`, this baton, and the preserved
    M2.3 design/plan/contract work before editing.
@@ -76,7 +77,7 @@ consumer; it must not mark targeting landed.
 ## Handoff boundary
 
 - The prior procedural shield-authority blocker is resolved: copied-target
-  runtime work is standing-authorized after resume and remains receipt-bound,
+  runtime work is standing-authorized and remains receipt-bound,
   identity-bound, attempt-capped, and fail-closed.
 - No accepted two-attempt shield measurement exists. No shield retail behavior
   contract or retail-derived Core shield constant may be invented.
