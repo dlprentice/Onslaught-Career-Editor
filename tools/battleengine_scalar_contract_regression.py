@@ -22,6 +22,7 @@ CONTRACTS = (
     MECH / "walker-turn-yaw-scalar-response-v1.json",
     MECH / "walker-strafe-lateral-scalar-response-v1.json",
     MECH / "walker-transform-morph-timing-v1.json",
+    MECH / "jet-energy-drain-scalar-response-v1.json",
 )
 
 
@@ -61,6 +62,8 @@ def _steady_key(envelope: Mapping[str, Any], metrics: Mapping[str, Any]) -> tupl
         return "steadyYawRateRadPerSec", "steadyYawRateRadPerSec"
     if "steadyLateralSpeed" in envelope and "steadyLateralSpeed" in metrics:
         return "steadyLateralSpeed", "steadyLateralSpeed"
+    if "steadyEnergyRatePerSec" in envelope and "steadyEnergyRatePerSec" in metrics:
+        return "steadyEnergyRatePerSec", "steadyEnergyRatePerSec"
     raise ContractRegressionError("unsupported steady metric shape")
 
 
@@ -117,12 +120,18 @@ def validate_landed_scalar_contract(path: Path) -> dict[str, object]:
     first_metrics = _require_mapping(attempts[0].get("metrics"), "attempt[1].metrics")
     env_key, met_key = _steady_key(envelope, first_metrics)
     lower, upper = _require_range(envelope.get(env_key), f"envelope.{env_key}")
+    energy_drain = env_key == "steadyEnergyRatePerSec"
     values: list[float] = []
     for index, attempt in enumerate(attempts, start=1):
         row = _require_mapping(attempt, f"attempt[{index}]")
         metrics = _require_mapping(row.get("metrics"), f"attempt[{index}].metrics")
         speed = _require_finite(metrics.get(met_key), f"attempt[{index}].{met_key}")
-        if speed <= 0:
+        if energy_drain:
+            if speed >= 0:
+                raise ContractRegressionError(
+                    f"attempt[{index}] {met_key} must be negative drain"
+                )
+        elif speed <= 0:
             raise ContractRegressionError(f"attempt[{index}] {met_key} must be positive")
         values.append(speed)
         if speed < lower * 0.99 or speed > upper * 1.01:
@@ -133,7 +142,8 @@ def validate_landed_scalar_contract(path: Path) -> dict[str, object]:
         for lat_key in ("responseLatencyMs",):
             if lat_key in metrics:
                 _require_range(metrics[lat_key], f"attempt[{index}].{lat_key}")
-    relative = abs(values[0] - values[1]) / min(values)
+    magnitudes = [abs(v) for v in values]
+    relative = abs(magnitudes[0] - magnitudes[1]) / min(magnitudes)
     if relative > 0.12:
         raise ContractRegressionError(
             f"{path.name} pair relative delta {relative:.4f} too large"

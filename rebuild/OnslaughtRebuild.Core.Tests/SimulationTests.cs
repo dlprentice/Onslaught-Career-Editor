@@ -117,6 +117,17 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void JetEnergyDrain_MatchesAcceptedEnergyP02Translation()
+    {
+        // Dual-accept mid |rate| ≈ 0.5169 energy units/s → round(|r|*1000/30)=17.
+        // Policy: jet-energy-drain-retail-to-core-translation-policy.md
+        Assert.Equal(17, SimulationConstants.JetEnergyDrainPerTick);
+        const double midAbsRate = 0.5169068149241056;
+        int mapped = (int)Math.Round(midAbsRate * 1000.0 / SimulationConstants.TicksPerSecond);
+        Assert.Equal(SimulationConstants.JetEnergyDrainPerTick, mapped);
+    }
+
+    [Fact]
     public void MorphSettle_IsDistinctFromShortTransformLock()
     {
         // Policy: MorphToJetSettleTicks is settle latency; TransformDurationTicks

@@ -16,7 +16,7 @@ ROWS = (
     ("walker-turn-yaw", "walker-turn-yaw-scalar-response-v1.json", "dual-accepted"),
     ("walker-strafe", "walker-strafe-lateral-scalar-response-v1.json", "dual-accepted"),
     ("transform-morph", "walker-transform-morph-timing-v1.json", "dual-accepted"),
-    ("energy-rate", None, "scaffold+offset; live pending"),
+    ("energy-rate", "jet-energy-drain-scalar-response-v1.json", "dual-accepted"),
     ("shield-rate", None, "scaffold+offset; live pending"),
     ("fire-cooldown", None, "scaffold; live pending"),
     ("projectile-speed", None, "scaffold; live pending"),

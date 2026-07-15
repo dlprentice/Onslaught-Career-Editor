@@ -6,10 +6,9 @@ namespace OnslaughtRebuild.Core.Tests;
 
 public sealed class ReplayTests
 {
-    // jet-p06 / JetSpeedPerTick=381 (battleengine-jet-forward-scalar-response.v1)
-    // WalkerStrafeSpeedPerTick=101 on MoveX (strafe-p02); forward Z stays 100.
-    private const string GoldenFinalStateHash = "33108ac28fd22b00ac915af1b2ccce80aa6421aa25183f60eb72e7a503dcabfd";
-    private const string GoldenTraceHash = "fb707bf121ffa593d92a38808d6f90be4b2771285ed3794e62a94a44c24d24c6";
+    // jet-p06 / JetSpeedPerTick=381; strafe-p02 MoveX=101; energy-p02 JetEnergyDrain=17.
+    private const string GoldenFinalStateHash = "0344451c194de4cd84bd6fd16d6f4d36a1421a7f03c677888da7b5beddd02509";
+    private const string GoldenTraceHash = "7517ecf40d285ca0d674a3cc8d0fd1e5651f22111f44aab44cb9f436e6334fca";
 
     [Fact]
     public void FirstFlightReplay_IsDeterministicAndMatchesGoldenHash()

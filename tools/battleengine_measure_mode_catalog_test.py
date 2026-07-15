@@ -37,6 +37,8 @@ class MeasureModeCatalogTests(unittest.TestCase):
         report = catalog.full_catalog_report()
         self.assertEqual(5, len(report["liveMeasureModes"]))
         self.assertEqual(5, len(report["offlineHarnesses"]))
+        energy = next(r for r in report["liveMeasureModes"] if r["mode"] == "energy")
+        self.assertIn("dual-accepted", energy["liveStatus"])
 
 
 if __name__ == "__main__":

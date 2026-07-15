@@ -1,30 +1,23 @@
 # Retail → Core translation policy (energy drain/regen)
 
-Status: **draft — blocked on dual-accept**  
-Depends on: energy rate dual-accept (not landed)
+Status: **partial — jet drain accepted; walker regen still provisional**  
+Jet drain: see [jet-energy-drain-retail-to-core-translation-policy.md](jet-energy-drain-retail-to-core-translation-policy.md)  
+Depends on: [jet-energy-drain-scalar-response-v1.md](jet-energy-drain-scalar-response-v1.md)
 
-## Measured retail input (pending)
+## Jet drain (accepted)
 
-Jet thrust-hold drain and/or walker ground regen rates from receipt-bound
-`--measure energy` pairs. Offset hypothesis: `BattleEngine+0xFC` float.
+| Parameter | Value |
+|-----------|-------|
+| Dual-accept | pair `energy-p02` |
+| Mid rate | ≈ −0.5169 retail energy units/s |
+| Core | `JetEnergyDrainPerTick = 17` (milli-energy @ 30 Hz) |
 
-## Planned translation (not yet authorized)
+## Walker regen (provisional)
 
-| Parameter | Planned default |
-|-----------|-----------------|
-| Tick model | Core fixed 30 Hz |
-| Map | \( e_\mathrm{tick} = \mathrm{round}(r_\mathrm{retail} \cdot s / 30) \) with scale \(s\) TBD |
-| Core candidates | `JetEnergyDrainPerTick`, `WalkerEnergyRegenerationPerTick` |
+Not measured by energy-p02. `WalkerEnergyRegenerationPerTick` stays provisional.
+Do **not** invent from source `mGroundEnergyIncrease=0.01`.
 
-## Explicit non-claims
+## Offset
 
-- This draft does **not** authorize changing Core energy constants.
-- Source config defaults (`mEnergy=2.5`, regen `0.01`, air costs) are not dual-accepted retail rates.
-- Offset `0xFC` is steam-static hypothesis until live drain/regen correlation.
-
-## Checklist
-
-1. [ ] Live dual-accept pair (jet drain preferred)
-2. [ ] Public v1 JSON contract
-3. [ ] Accept this policy
-4. [ ] Map Core constants + goldens/tests
+`BattleEngine+0xFC` remains the working energy float hypothesis, now
+dual-accept-correlated for jet thrust drain only.

@@ -39,11 +39,14 @@ public static class SimulationConstants
     // reverse-engineering/game-mechanics/walker-transform-morph-retail-to-core-translation-policy.md
     // Distinct from TransformDurationTicks (short lock, not morph settle).
     public const int MorphToJetSettleTicks = 148;
-    // Provisional combat/resource rates until energy/shield/fire dual-accepts land.
-    // See reverse-engineering/game-mechanics/*-retail-to-core-translation-policy.md drafts.
+    // Walker regen still provisional (no dual-accept yet).
     public const int WalkerEnergyRegenerationPerTick = 4;
     public const int WalkerShieldRegenerationPerTick = 2;
-    public const int JetEnergyDrainPerTick = 3;
+    // Milli-energy units/tick at 30 Hz ≈ 0.51 retail energy units/s drain
+    // (pair energy-p02 envelope |r| ∈ [0.471, 0.562]). Policy:
+    // reverse-engineering/game-mechanics/jet-energy-drain-retail-to-core-translation-policy.md
+    // Schema: battleengine-jet-energy-drain-scalar-response.v1
+    public const int JetEnergyDrainPerTick = 17;
     public const int FireEnergyCost = 30;
     public const int FireCooldownTicks = 6;
     public const int ProjectileSpeedPerTick = 1_200;

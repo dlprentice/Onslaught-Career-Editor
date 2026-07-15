@@ -51,8 +51,8 @@ MEASURE_MODE_CATALOG: tuple[MeasureModeRow, ...] = (
         mode="energy",
         vehicle="jet",
         analysis_module="battleengine_energy_scaffold",
-        live_status="sampler-wired; dual-accept pending",
-        notes="BE+0xFC hypothesis; --measure energy --vehicle jet",
+        live_status="dual-accepted energy-p02",
+        notes="BE+0xFC; JetEnergyDrainPerTick=17; walker regen still provisional",
     ),
 )
 

@@ -28,8 +28,9 @@ class CampaignScalarStatusTests(unittest.TestCase):
         self.assertIn("walker-forward", names)
         self.assertIn("energy-rate", names)
         dual = [r for r in payload["scalars"] if r["status"] == "dual-accepted"]
-        self.assertEqual(5, len(dual))
+        self.assertEqual(6, len(dual))
         self.assertTrue(all(r.get("present") for r in dual))
+        self.assertIn("energy-rate", {r["name"] for r in dual})
         offline = payload.get("offlineHarnesses") or []
         self.assertEqual(5, len(offline))
         self.assertIn("coast", {row["mode"] for row in offline})

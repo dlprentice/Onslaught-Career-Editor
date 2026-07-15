@@ -1,7 +1,7 @@
 # Energy live dual-accept checklist (public)
 
-Status: **checklist only** — not dual-accepted  
-Related: [energy-rate-scalar-measurement-plan.md](energy-rate-scalar-measurement-plan.md)
+Status: **closed ADVANCEMENT** (pair `energy-p02`, 2026-07-14)  
+Related: [jet-energy-drain-scalar-response-v1.md](jet-energy-drain-scalar-response-v1.md)
 
 ## Preconditions
 

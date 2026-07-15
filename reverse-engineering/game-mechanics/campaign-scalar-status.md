@@ -11,12 +11,13 @@ Machine report: `npm run report:battleengine-campaign-scalar-status`
 | Walker Look/Left yaw | `WalkerLookYawRateMilliRadPerTick=3` | turn-p02 |
 | Walker strafe | `WalkerStrafeSpeedPerTick=101` | strafe-p02 |
 | Walker→jet morph settle | `MorphToJetSettleTicks=148` | xform-p03 |
+| Jet energy drain | `JetEnergyDrainPerTick=17` | energy-p02 |
 
 ## Scaffold / offset / draft (live dual-accept pending)
 
 | System | Offset hyp | Harness |
 |--------|------------|---------|
-| Energy drain/regen | BE+0xFC | `measure=energy` + energy scaffold |
+| Walker energy regen | BE+0xFC | not dual-accepted yet (provisional Core) |
 | Shield regen/drain | BE+0x100 | shield scaffold |
 | Fire cooldown | energy-drop edges | fire scaffold |
 | Projectile speed | entity TBD | projectile scaffold |
@@ -35,8 +36,7 @@ Machine: `tools/battleengine_measure_mode_catalog.py` → `OFFLINE_HARNESS_ROWS`
 | projectile-speed | `battleengine_projectile_speed_scaffold` |
 | shield-rate | `battleengine_shield_scaffold` |
 
-## Live prep
+## Live prep (shield next)
 
-- Public checklist: [energy-live-dual-accept-checklist.md](energy-live-dual-accept-checklist.md)
-- Copied profile (ignored): `GameProfiles/marathon-energy-jet-01`
-- Private readiness: `local-proofs/wt/energy-live-readiness.md`
+- Jet energy live checklist closed (energy-p02 dual-accept).
+- Next: shield dual-accept at BE+0x100 (walker).

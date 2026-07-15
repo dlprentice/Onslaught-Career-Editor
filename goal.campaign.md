@@ -97,7 +97,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 | ID | Milestone | Status |
 |----|-----------|--------|
 | M2.1 | Fire cooldown / projectile speed retail contracts | in_progress | scaffolds + pair envelopes + draft policies; live dual-accept pending |
-| M2.2 | Damage / hull / shield regeneration contracts | in_progress | energy BE+0xFC / shields BE+0x100 hyp + measure=energy; live dual-accept pending |
+| M2.2 | Damage / hull / shield regeneration contracts | in_progress | **jet energy drain dual-accepted energy-p02 → JetEnergyDrainPerTick=17**; shield BE+0x100 live pending; walker regen provisional |
 | M2.3 | Target / lock behavior (bounded, evidence-first) | open |
 | M2.4 | Core combat goldens + harness expansion | open |
 
