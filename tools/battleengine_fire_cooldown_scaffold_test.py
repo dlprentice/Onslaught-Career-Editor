@@ -31,6 +31,24 @@ class FireScaffoldTests(unittest.TestCase):
         self.assertTrue(metrics.accepted)
         self.assertAlmostEqual(200.0, metrics.median_cooldown_ms, delta=1.0)
 
+    def test_pair_envelope(self) -> None:
+        frequency = 10_000_000
+        m1 = fire.analyze_fire_cooldown(
+            attempt=1,
+            events=fire.synthetic_fire_events(count=5, cooldown_ms=200.0),
+            frequency=frequency,
+        )
+        m2 = fire.analyze_fire_cooldown(
+            attempt=2,
+            events=fire.synthetic_fire_events(count=5, cooldown_ms=210.0),
+            frequency=frequency,
+        )
+        envelope = fire.materialize_fire_pair_envelope(m1, m2)
+        self.assertEqual(
+            "battleengine-fire-cooldown-scalar-response.v0-scaffold",
+            envelope["schemaVersion"],
+        )
+
     def test_rejects_too_few_events(self) -> None:
         events = fire.synthetic_fire_events(count=2)
         with self.assertRaisesRegex(fire.FireScaffoldError, "at least"):

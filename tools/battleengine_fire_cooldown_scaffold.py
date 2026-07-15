@@ -88,6 +88,37 @@ def synthetic_fire_events(
     return [FireEvent(tick=i * step, label=f"fire-{i}") for i in range(count)]
 
 
+def materialize_fire_pair_envelope(
+    first: FireCooldownMetrics,
+    second: FireCooldownMetrics,
+    *,
+    relative_spread: float = 0.25,
+) -> dict[str, object]:
+    if not (first.accepted and second.accepted):
+        raise FireScaffoldError("both attempts must be accepted")
+    medians = sorted((first.median_cooldown_ms, second.median_cooldown_ms))
+    mid = (medians[0] + medians[1]) / 2.0
+    if mid <= 0:
+        raise FireScaffoldError("pair mid cooldown not positive")
+    if (medians[1] - medians[0]) / mid > relative_spread:
+        raise FireScaffoldError("pair fire cooldowns not stable")
+    pad = max(mid * 0.05, (medians[1] - medians[0]) / 2.0)
+    return {
+        "schemaVersion": "battleengine-fire-cooldown-scalar-response.v0-scaffold",
+        "envelope": {
+            "medianCooldownMs": {
+                "lower": medians[0] - pad,
+                "upper": medians[1] + pad,
+            }
+        },
+        "nonclaims": [
+            "Scaffold envelope is not dual-accepted retail authority for Core.",
+            "Energy-drop edges need live fire-hold samples before dual-accept.",
+            "Source FireCooldownTicks is not Core authority from this scaffold alone.",
+        ],
+    }
+
+
 def fire_edges_from_energy_drops(
     samples: Sequence[tuple[int, float]],
     *,

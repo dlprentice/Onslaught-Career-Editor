@@ -68,6 +68,17 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void MorphSettle_IsDistinctFromShortTransformLock()
+    {
+        // Policy: MorphToJetSettleTicks is settle latency; TransformDurationTicks
+        // remains the short mode-toggle lock used by TryToggleMode.
+        Assert.True(
+            SimulationConstants.MorphToJetSettleTicks >
+            SimulationConstants.TransformDurationTicks);
+        Assert.Equal(15, SimulationConstants.TransformDurationTicks);
+    }
+
+    [Fact]
     public void ToggleMode_UsesEnergyAndDisablesJetShield()
     {
         var simulation = new Simulation(1);
