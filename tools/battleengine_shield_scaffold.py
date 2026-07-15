@@ -82,3 +82,42 @@ def synthetic_shield_series(
         out.append(ShieldSample(tick=i * step, shield=s))
         s += rate_per_sec * 0.01
     return out
+
+
+# Steam-static hypothesis (paired with energy scaffold).
+BATTLE_ENGINE_SHIELDS_OFFSET = 0x100
+BATTLE_ENGINE_ENERGY_OFFSET = 0xFC
+
+
+def materialize_shield_pair_envelope(
+    first: ShieldRateMetrics,
+    second: ShieldRateMetrics,
+    *,
+    relative_spread: float = 0.25,
+) -> dict[str, object]:
+    if not (first.accepted and second.accepted):
+        raise ShieldScaffoldError("both attempts must be accepted")
+    rates = sorted((first.steady_rate_per_sec, second.steady_rate_per_sec))
+    mid = (rates[0] + rates[1]) / 2.0
+    if mid == 0:
+        raise ShieldScaffoldError("pair mid rate is zero")
+    if abs(rates[1] - rates[0]) / abs(mid) > relative_spread:
+        raise ShieldScaffoldError("pair shield rates not stable")
+    pad = max(abs(mid) * 0.05, abs(rates[1] - rates[0]) / 2.0)
+    return {
+        "schemaVersion": "battleengine-shield-rate-scalar-response.v0-scaffold",
+        "envelope": {
+            "steadyShieldRatePerSec": {
+                "lower": rates[0] - pad,
+                "upper": rates[1] + pad,
+            }
+        },
+        "offsetHypothesis": {
+            "battleEngineShields": hex(BATTLE_ENGINE_SHIELDS_OFFSET),
+            "battleEngineEnergy": hex(BATTLE_ENGINE_ENERGY_OFFSET),
+        },
+        "nonclaims": [
+            "Scaffold envelope is not dual-accepted retail authority for Core.",
+            "Offsets are steam-static hypotheses until live dual-accept.",
+        ],
+    }

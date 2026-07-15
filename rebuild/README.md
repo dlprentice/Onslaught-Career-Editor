@@ -46,13 +46,15 @@ First Flight starts in a resizable 1280x720 window with a supported minimum of
 | Input | Action |
 | --- | --- |
 | `W`, `A`, `S`, `D` | Move |
+| `←`, `→` | Look left/right (body yaw; dual-accepted turn-p02 rate) |
 | `Space` | Fire |
 | `Q` | Toggle walker/jet mode |
 | `R` | Reset the arena |
 | `Esc` | Exit |
 
 Destroy the three procedural sentries. The HUD reports mode, objective, energy,
-shield, and hull.
+shield, and hull. Look rate uses `WalkerLookYawRateMilliRadPerTick` (retail
+Look/Left dual-accept); free-camera patch proofs are not Core authority.
 
 ## Optional user-supplied local mesh presentation
 
