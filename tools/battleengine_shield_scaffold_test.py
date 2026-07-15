@@ -36,6 +36,21 @@ class ShieldScaffoldTests(unittest.TestCase):
         )
         self.assertEqual("0x100", envelope["offsetHypothesis"]["battleEngineShields"])
 
+    def test_pair_envelope_rejects_unstable(self) -> None:
+        frequency = 10_000_000
+        m1 = shield.analyze_shield_rate(
+            attempt=1,
+            samples=shield.synthetic_shield_series(rate_per_sec=1.0),
+            frequency=frequency,
+        )
+        m2 = shield.analyze_shield_rate(
+            attempt=2,
+            samples=shield.synthetic_shield_series(rate_per_sec=3.0),
+            frequency=frequency,
+        )
+        with self.assertRaisesRegex(shield.ShieldScaffoldError, "not stable"):
+            shield.materialize_shield_pair_envelope(m1, m2)
+
 
 if __name__ == "__main__":
     unittest.main()
