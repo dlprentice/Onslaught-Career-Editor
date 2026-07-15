@@ -28,6 +28,7 @@ Human front door: [campaign-scalar-status.md](campaign-scalar-status.md).
 | [walker-transform-morph-timing-v1.md](walker-transform-morph-timing-v1.md) | dual-accepted → Core |
 | [camera-look-rate-measurement-plan.md](camera-look-rate-measurement-plan.md) | scaffold |
 | [energy-rate-scalar-measurement-plan.md](energy-rate-scalar-measurement-plan.md) | offset hyp BE+0xFC; live pending |
+| [energy-live-dual-accept-checklist.md](energy-live-dual-accept-checklist.md) | live dual-accept operator checklist |
 | [energy-retail-to-core-translation-policy.md](energy-retail-to-core-translation-policy.md) | draft blocked on dual-accept |
 | [shield-rate-scalar-measurement-plan.md](shield-rate-scalar-measurement-plan.md) | offset hyp BE+0x100; live pending |
 | [shield-retail-to-core-translation-policy.md](shield-retail-to-core-translation-policy.md) | draft blocked on dual-accept |
