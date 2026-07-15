@@ -18,6 +18,7 @@ internal sealed class MediaAssetNativeSession : IDisposable
         Window window,
         string executablePath,
         ReceiptBoundAppIdentity identity,
+        string applicationPayloadSha256,
         NativeWinUiOwnedProcessIdentity ownedProcessIdentity)
     {
         App = app;
@@ -25,6 +26,7 @@ internal sealed class MediaAssetNativeSession : IDisposable
         Window = window;
         ExecutablePath = executablePath;
         Identity = identity;
+        ApplicationPayloadSha256 = applicationPayloadSha256;
         OwnedProcessIdentity = ownedProcessIdentity;
     }
 
@@ -38,6 +40,8 @@ internal sealed class MediaAssetNativeSession : IDisposable
 
     internal ReceiptBoundAppIdentity Identity { get; }
 
+    internal string ApplicationPayloadSha256 { get; }
+
     private NativeWinUiOwnedProcessIdentity OwnedProcessIdentity { get; }
 
     internal static MediaAssetNativeSession Launch(
@@ -46,6 +50,7 @@ internal sealed class MediaAssetNativeSession : IDisposable
         string initialTag,
         string expectedExecutableSha256,
         string expectedProductAssemblySha256,
+        string expectedApplicationPayloadSha256,
         IReadOnlyDictionary<string, string> additionalEnvironment)
     {
         string executable = Path.GetFullPath(executablePath);
@@ -61,10 +66,12 @@ internal sealed class MediaAssetNativeSession : IDisposable
 
         string executableHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(executable)));
         string productAssemblyHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(productAssembly)));
+        string applicationPayloadHash = MediaAssetNativeApplicationPayload.Compute(Path.GetDirectoryName(executable)!);
         Assert.Multiple(() =>
         {
             Assert.That(executableHash, Is.EqualTo(expectedExecutableSha256));
             Assert.That(productAssemblyHash, Is.EqualTo(expectedProductAssemblySha256));
+            Assert.That(applicationPayloadHash, Is.EqualTo(expectedApplicationPayloadSha256));
         });
 
         Directory.CreateDirectory(appDataDirectory);
@@ -99,6 +106,9 @@ internal sealed class MediaAssetNativeSession : IDisposable
             {
                 Assert.That(identity.ExecutableSha256, Is.EqualTo(executableHash));
                 Assert.That(identity.ProductAssemblySha256, Is.EqualTo(productAssemblyHash));
+                Assert.That(
+                    MediaAssetNativeApplicationPayload.Compute(Path.GetDirectoryName(executable)!),
+                    Is.EqualTo(applicationPayloadHash));
                 Assert.That(identity.MainWindowHandle, Is.Not.EqualTo(IntPtr.Zero));
                 Assert.That(identity.UiaNativeWindowHandle, Is.EqualTo(identity.MainWindowHandle));
                 Assert.That(identity.WindowOwnerProcessId, Is.EqualTo(identity.ProcessId));
@@ -106,7 +116,14 @@ internal sealed class MediaAssetNativeSession : IDisposable
                 Assert.That(identity.ProcessStartTimeUtc, Is.EqualTo(ownedProcessIdentity.ProcessStartTimeUtc));
                 Assert.That(identity.ExecutablePath, Is.EqualTo(ownedProcessIdentity.ExecutablePath).IgnoreCase);
             });
-            return new MediaAssetNativeSession(app, automation, window, executable, identity, ownedProcessIdentity);
+            return new MediaAssetNativeSession(
+                app,
+                automation,
+                window,
+                executable,
+                identity,
+                applicationPayloadHash,
+                ownedProcessIdentity);
         }
         catch
         {
@@ -122,6 +139,14 @@ internal sealed class MediaAssetNativeSession : IDisposable
         NativeWinUiSessionResourceCleanup.Run(
             Automation.Dispose,
             () => CloseOwnedApp(App, OwnedProcessIdentity));
+    }
+
+    internal void ValidateApplicationPayload()
+    {
+        Assert.That(
+            MediaAssetNativeApplicationPayload.Compute(Path.GetDirectoryName(ExecutablePath)!),
+            Is.EqualTo(ApplicationPayloadSha256),
+            "The Toolkit-owned native application payload changed during Media/Asset acceptance.");
     }
 
     private static Window WaitForMainWindow(Application app, UIA3Automation automation)

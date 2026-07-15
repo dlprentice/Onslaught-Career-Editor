@@ -7,6 +7,7 @@ import struct
 import subprocess
 import tempfile
 import unittest
+import zlib
 from pathlib import Path
 from unittest import mock
 
@@ -81,6 +82,70 @@ class NativeAcceptanceSupportTests(unittest.TestCase):
             path.write_bytes(bytes(24))
             with self.assertRaisesRegex(support.NativeAcceptanceError, "not PNG"):
                 support.png_dimensions(path)
+
+    def test_decode_png_rgba_reconstructs_filtered_rows(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "capture.png"
+            expected = self._write_rgba_png(path, 8, 6, toolkit_frame=False)
+
+            decoded = support.decode_png_rgba(path)
+
+        self.assertEqual((8, 6), (decoded.width, decoded.height))
+        self.assertEqual(expected, decoded.pixels)
+
+    def test_decode_png_rgba_reconstructs_all_standard_filter_types(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "filters.png"
+            expected = self._write_filtered_rgba_png(path)
+
+            decoded = support.decode_png_rgba(path)
+
+        self.assertEqual((8, 5), (decoded.width, decoded.height))
+        self.assertEqual(expected, decoded.pixels)
+
+    def test_decode_png_rgba_rejects_oversized_dimensions_before_inflate(self) -> None:
+        def chunk(kind: bytes, payload: bytes) -> bytes:
+            return (
+                struct.pack(">I", len(payload))
+                + kind
+                + payload
+                + struct.pack(">I", zlib.crc32(kind + payload) & 0xFFFFFFFF)
+            )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "oversized.png"
+            path.write_bytes(
+                support.PNG_SIGNATURE
+                + chunk(b"IHDR", struct.pack(">IIBBBBB", 100_000, 100_000, 8, 6, 0, 0, 0))
+                + chunk(b"IDAT", zlib.compress(b""))
+                + chunk(b"IEND", b"")
+            )
+
+            with self.assertRaisesRegex(support.NativeAcceptanceError, "safety limits"):
+                support.decode_png_rgba(path)
+
+    def test_require_toolkit_visual_evidence_accepts_frame_and_marker_activity(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "capture.png"
+            self._write_rgba_png(path, 760, 820, toolkit_frame=True)
+
+            support.require_toolkit_visual_evidence(
+                path,
+                [(48, 210, 180, 80), (330, 500, 190, 120)],
+                label="native fixture",
+            )
+
+    def test_require_toolkit_visual_evidence_rejects_flat_or_inactive_raster(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "capture.png"
+            self._write_rgba_png(path, 760, 820, toolkit_frame=False, flat=True)
+
+            with self.assertRaisesRegex(support.NativeAcceptanceError, "visual coverage"):
+                support.require_toolkit_visual_evidence(
+                    path,
+                    [(48, 210, 180, 80)],
+                    label="native fixture",
+                )
 
     def test_validate_invocation_id_requires_lowercase_32_hex(self) -> None:
         support.validate_invocation_id("0123456789abcdef0123456789abcdef")
@@ -183,6 +248,108 @@ class NativeAcceptanceSupportTests(unittest.TestCase):
         )
         if completed.returncode != 0:
             raise AssertionError(completed.stderr or completed.stdout)
+
+    @staticmethod
+    def _write_rgba_png(
+        path: Path,
+        width: int,
+        height: int,
+        *,
+        toolkit_frame: bool,
+        flat: bool = False,
+    ) -> bytes:
+        def pixel(x: int, y: int) -> tuple[int, int, int, int]:
+            if flat:
+                return (245, 245, 245, 255)
+            if toolkit_frame and 40 <= y <= 115:
+                return (32, 52, 154, 255)
+            shade = ((x // 8) + (y // 8)) % 10
+            return (250 - shade * 18, 250 - shade * 16, 250 - shade * 13, 255)
+
+        rows = []
+        pixels = bytearray()
+        for y in range(height):
+            row = bytearray()
+            for x in range(width):
+                rgba = pixel(x, y)
+                row.extend(rgba)
+                pixels.extend(rgba)
+            rows.append(b"\x00" + bytes(row))
+
+        def chunk(kind: bytes, payload: bytes) -> bytes:
+            return (
+                struct.pack(">I", len(payload))
+                + kind
+                + payload
+                + struct.pack(">I", zlib.crc32(kind + payload) & 0xFFFFFFFF)
+            )
+
+        path.write_bytes(
+            support.PNG_SIGNATURE
+            + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(b"".join(rows)))
+            + chunk(b"IEND", b"")
+        )
+        return bytes(pixels)
+
+    @staticmethod
+    def _write_filtered_rgba_png(path: Path) -> bytes:
+        width = 8
+        height = 5
+        bytes_per_pixel = 4
+        raw_rows = []
+        expected = bytearray()
+        for y in range(height):
+            row = bytearray()
+            for x in range(width):
+                rgba = ((x * 31 + y * 17) % 256, (x * 19 + y * 41) % 256, (x * 47 + y * 13) % 256, 255)
+                row.extend(rgba)
+                expected.extend(rgba)
+            raw_rows.append(row)
+
+        def paeth(left: int, above: int, upper_left: int) -> int:
+            estimate = left + above - upper_left
+            distances = (abs(estimate - left), abs(estimate - above), abs(estimate - upper_left))
+            return (left, above, upper_left)[distances.index(min(distances))]
+
+        filtered_rows = []
+        for y, row in enumerate(raw_rows):
+            filter_type = y
+            prior = raw_rows[y - 1] if y > 0 else bytearray(len(row))
+            encoded = bytearray()
+            for index, value in enumerate(row):
+                left = row[index - bytes_per_pixel] if index >= bytes_per_pixel else 0
+                above = prior[index]
+                upper_left = prior[index - bytes_per_pixel] if index >= bytes_per_pixel else 0
+                predictor = (
+                    0
+                    if filter_type == 0
+                    else left
+                    if filter_type == 1
+                    else above
+                    if filter_type == 2
+                    else (left + above) // 2
+                    if filter_type == 3
+                    else paeth(left, above, upper_left)
+                )
+                encoded.append((value - predictor) & 0xFF)
+            filtered_rows.append(bytes((filter_type,)) + bytes(encoded))
+
+        def chunk(kind: bytes, payload: bytes) -> bytes:
+            return (
+                struct.pack(">I", len(payload))
+                + kind
+                + payload
+                + struct.pack(">I", zlib.crc32(kind + payload) & 0xFFFFFFFF)
+            )
+
+        path.write_bytes(
+            support.PNG_SIGNATURE
+            + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(b"".join(filtered_rows)))
+            + chunk(b"IEND", b"")
+        )
+        return bytes(expected)
 
 
 if __name__ == "__main__":

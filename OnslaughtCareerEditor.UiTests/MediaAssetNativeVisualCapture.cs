@@ -22,6 +22,7 @@ internal static class MediaAssetNativeVisualCapture
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(postResizeRealization);
         Assert.That(markerAutomationIds, Is.Not.Empty);
+        session.ValidateApplicationPayload();
 
         var operations = new FlaUiReceiptBoundVisualCaptureOperations(
             session.App,
@@ -68,6 +69,7 @@ internal static class MediaAssetNativeVisualCapture
                 Assert.That(afterMarkers, Is.EqualTo(beforeMarkers));
                 Assert.That(operations.ReadIdentity(), Is.EqualTo(session.Identity));
                 focusAfter = ReadExactFocus(session, focusAutomationId, targetBounds);
+                session.ValidateApplicationPayload();
                 try
                 {
                     AssertToolkitImage(bitmap, beforeMarkers);
@@ -112,7 +114,7 @@ internal static class MediaAssetNativeVisualCapture
                 Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(outputPath))),
                 targetBounds.Width,
                 targetBounds.Height,
-                ToEvidence(session.Identity),
+                ToEvidence(session),
                 capturedMarkers!,
                 focusBefore!,
                 focusAfter!);
@@ -129,16 +131,17 @@ internal static class MediaAssetNativeVisualCapture
         }
     }
 
-    internal static MediaAssetAppIdentityEvidence ToEvidence(ReceiptBoundAppIdentity identity) => new(
-        identity.ProcessId,
-        identity.ProcessStartTimeUtc,
-        identity.ExecutablePath,
-        identity.ExecutableSha256,
-        identity.ProductAssemblyPath,
-        identity.ProductAssemblySha256,
-        identity.MainWindowHandle.ToInt64(),
-        identity.UiaNativeWindowHandle.ToInt64(),
-        identity.WindowOwnerProcessId);
+    internal static MediaAssetAppIdentityEvidence ToEvidence(MediaAssetNativeSession session) => new(
+        session.Identity.ProcessId,
+        session.Identity.ProcessStartTimeUtc,
+        session.Identity.ExecutablePath,
+        session.Identity.ExecutableSha256,
+        session.Identity.ProductAssemblyPath,
+        session.Identity.ProductAssemblySha256,
+        session.ApplicationPayloadSha256,
+        session.Identity.MainWindowHandle.ToInt64(),
+        session.Identity.UiaNativeWindowHandle.ToInt64(),
+        session.Identity.WindowOwnerProcessId);
 
     private static void FocusExactTarget(MediaAssetNativeSession session, string automationId)
     {

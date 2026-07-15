@@ -147,6 +147,44 @@ public class MediaAssetNativeEvidenceAcceptanceTests
     }
 
     [Test]
+    public void Validate_RejectsSingleProcessWithDistinctWindowHandles()
+    {
+        using var fixture = ValidEvidence.Create();
+        MediaAssetAppIdentityEvidence audio = fixture.Manifest.Workflows
+            .Single(row => row.Workflow == "media-audio")
+            .Identity;
+        MediaAssetAppIdentityEvidence video = fixture.Manifest.Workflows
+            .Single(row => row.Workflow == "media-video")
+            .Identity;
+        MediaAssetAppIdentityEvidence reusedProcess = video with
+        {
+            ProcessId = audio.ProcessId,
+            ProcessStartTimeUtc = audio.ProcessStartTimeUtc,
+            WindowOwnerProcessId = audio.ProcessId,
+        };
+        MediaAssetAcceptanceManifest manifest = fixture.Manifest with
+        {
+            Workflows = fixture.Manifest.Workflows
+                .Select(row => row.Workflow == "media-video" ? row with { Identity = reusedProcess } : row)
+                .ToArray(),
+            Captures = fixture.Manifest.Captures
+                .Select(row => row.Workflow == "media-video"
+                    ? row with
+                    {
+                        Identity = reusedProcess,
+                        FocusBeforeCapture = row.FocusBeforeCapture with { ProcessId = audio.ProcessId },
+                        FocusAfterCapture = row.FocusAfterCapture with { ProcessId = audio.ProcessId },
+                    }
+                    : row)
+                .ToArray(),
+        };
+
+        Assert.That(
+            () => MediaAssetNativeEvidenceAcceptance.Validate(fixture.StagingDirectory, manifest),
+            Throws.Exception.With.Message.Contains("distinct process launch identities"));
+    }
+
+    [Test]
     public void Validate_RejectsWrongSemanticReadback()
     {
         using var fixture = ValidEvidence.Create();
@@ -357,6 +395,7 @@ public class MediaAssetNativeEvidenceAcceptanceTests
                 $@"C:\repo\{processId}\OnslaughtCareerEditor.WinUI.exe",
                 new string(hash, 64),
                 $@"C:\repo\{processId}\OnslaughtCareerEditor.WinUI.dll",
+                new string(hash, 64),
                 new string(hash, 64),
                 hwnd,
                 hwnd,

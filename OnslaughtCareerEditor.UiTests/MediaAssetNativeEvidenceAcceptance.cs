@@ -42,12 +42,11 @@ internal static class MediaAssetNativeEvidenceAcceptance
         Assert.That(workflows.Keys, Is.EquivalentTo(MediaAssetNativeEvidenceContract.ExpectedSelections.Keys));
         Assert.That(
             workflows.Values
-                .Select(row => (row.Identity.ProcessId, row.Identity.ProcessStartTimeUtc, row.Identity.MainWindowHandle))
+                .Select(row => (row.Identity.ProcessId, row.Identity.ProcessStartTimeUtc))
                 .Distinct()
                 .Count(),
             Is.EqualTo(3),
-            "Media audio, Media video, and Asset Library require distinct launch identities.");
-
+            "Media audio, Media video, and Asset Library require distinct process launch identities.");
         foreach ((string workflowName, IReadOnlyList<MediaAssetSelectionEvidence> expectedSelections) in
             MediaAssetNativeEvidenceContract.ExpectedSelections)
         {
@@ -167,6 +166,7 @@ internal static class MediaAssetNativeEvidenceAcceptance
             Assert.That(identity.ProductAssemblyPath, Is.Not.Empty);
             Assert.That(IsUpperHexSha256(identity.ExecutableSha256), Is.True);
             Assert.That(IsUpperHexSha256(identity.ProductAssemblySha256), Is.True);
+            Assert.That(IsUpperHexSha256(identity.ApplicationPayloadSha256), Is.True);
             Assert.That(identity.MainWindowHandle, Is.Not.Zero);
             Assert.That(identity.UiaNativeWindowHandle, Is.EqualTo(identity.MainWindowHandle));
             Assert.That(identity.WindowOwnerProcessId, Is.EqualTo(identity.ProcessId));

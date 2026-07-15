@@ -12,6 +12,7 @@ import stat
 import struct
 import subprocess
 import xml.etree.ElementTree as ET
+import zlib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -27,6 +28,10 @@ RELEVANT_PROCESS_NAMES = {
     "windbgx",
 }
 PNG_SIGNATURE = bytes((137, 80, 78, 71, 13, 10, 26, 10))
+MAX_PNG_FILE_BYTES = 64 * 1024 * 1024
+MAX_PNG_DIMENSION = 4096
+MAX_PNG_PIXELS = 16_000_000
+MAX_PNG_INFLATED_BYTES = 64 * 1024 * 1024
 
 
 class NativeAcceptanceError(RuntimeError):
@@ -38,6 +43,17 @@ class OwnedProcessIdentity:
     process_id: int
     start_time_utc_ticks: int
     executable_path: Path
+
+
+@dataclass(frozen=True)
+class PngRgba:
+    width: int
+    height: int
+    pixels: bytes
+
+    def pixel(self, x: int, y: int) -> tuple[int, int, int, int]:
+        offset = (y * self.width + x) * 4
+        return tuple(self.pixels[offset : offset + 4])  # type: ignore[return-value]
 
 
 def require(condition: bool, message: str) -> None:
@@ -63,6 +79,262 @@ def png_dimensions(path: Path) -> tuple[int, int]:
     require(header[:8] == PNG_SIGNATURE, f"capture is not PNG: {path.name}")
     require(header[12:16] == b"IHDR" and len(header) == 24, f"capture PNG lacks IHDR: {path.name}")
     return struct.unpack(">II", header[16:24])
+
+
+def decode_png_rgba(path: Path) -> PngRgba:
+    """Decode a non-interlaced 8-bit RGB/RGBA PNG using only the stdlib."""
+    file_size = path.stat().st_size
+    require(
+        0 < file_size <= MAX_PNG_FILE_BYTES,
+        f"capture PNG exceeds safety limits: {path.name}",
+    )
+    data = path.read_bytes()
+    require(len(data) == file_size, f"capture PNG changed while reading: {path.name}")
+    return decode_png_rgba_bytes(data, name=path.name)
+
+
+def decode_png_rgba_bytes(data: bytes, *, name: str = "capture.png") -> PngRgba:
+    """Decode one bounded PNG byte snapshot without reopening its source path."""
+    require(0 < len(data) <= MAX_PNG_FILE_BYTES, f"capture PNG exceeds safety limits: {name}")
+    require(data[:8] == PNG_SIGNATURE, f"capture is not PNG: {name}")
+    position = 8
+    ihdr: bytes | None = None
+    compressed = bytearray()
+    saw_iend = False
+    while position < len(data):
+        require(position + 12 <= len(data), f"capture PNG chunk is truncated: {name}")
+        length = struct.unpack_from(">I", data, position)[0]
+        chunk_type = data[position + 4 : position + 8]
+        payload_start = position + 8
+        payload_end = payload_start + length
+        crc_end = payload_end + 4
+        require(crc_end <= len(data), f"capture PNG chunk is truncated: {name}")
+        payload = data[payload_start:payload_end]
+        expected_crc = struct.unpack_from(">I", data, payload_end)[0]
+        require(
+            zlib.crc32(chunk_type + payload) & 0xFFFFFFFF == expected_crc,
+            f"capture PNG chunk CRC changed: {name}",
+        )
+        if chunk_type == b"IHDR":
+            require(ihdr is None and position == 8, f"capture PNG IHDR is not canonical: {name}")
+            ihdr = payload
+        elif chunk_type == b"IDAT":
+            compressed.extend(payload)
+        elif chunk_type == b"IEND":
+            require(length == 0, f"capture PNG IEND is malformed: {name}")
+            saw_iend = True
+            position = crc_end
+            break
+        position = crc_end
+
+    require(ihdr is not None and len(ihdr) == 13, f"capture PNG lacks IHDR: {name}")
+    require(saw_iend and position == len(data), f"capture PNG lacks canonical IEND: {name}")
+    width, height, bit_depth, color_type, compression, filtering, interlace = struct.unpack(">IIBBBBB", ihdr)
+    require(width > 0 and height > 0, f"capture PNG dimensions are invalid: {name}")
+    require(
+        bit_depth == 8 and color_type in {2, 6} and compression == 0 and filtering == 0 and interlace == 0,
+        f"capture PNG format is unsupported: {name}",
+    )
+    require(
+        width <= MAX_PNG_DIMENSION
+        and height <= MAX_PNG_DIMENSION
+        and width * height <= MAX_PNG_PIXELS,
+        f"capture PNG exceeds safety limits: {name}",
+    )
+    bytes_per_pixel = 4 if color_type == 6 else 3
+    stride = width * bytes_per_pixel
+    expected_inflated_length = (stride + 1) * height
+    require(
+        len(compressed) <= MAX_PNG_FILE_BYTES
+        and expected_inflated_length <= MAX_PNG_INFLATED_BYTES,
+        f"capture PNG exceeds safety limits: {name}",
+    )
+    try:
+        decoder = zlib.decompressobj()
+        filtered = decoder.decompress(bytes(compressed), expected_inflated_length + 1)
+    except zlib.error as exc:
+        raise NativeAcceptanceError(f"capture PNG IDAT is invalid: {name}") from exc
+    require(
+        decoder.eof
+        and not decoder.unconsumed_tail
+        and not decoder.unused_data
+        and len(filtered) == expected_inflated_length,
+        f"capture PNG scanline length changed: {name}",
+    )
+
+    reconstructed = bytearray()
+    prior = bytearray(stride)
+    offset = 0
+    for _ in range(height):
+        filter_type = filtered[offset]
+        scanline = filtered[offset + 1 : offset + 1 + stride]
+        offset += stride + 1
+        row = bytearray(stride)
+        for index, value in enumerate(scanline):
+            left = row[index - bytes_per_pixel] if index >= bytes_per_pixel else 0
+            above = prior[index]
+            upper_left = prior[index - bytes_per_pixel] if index >= bytes_per_pixel else 0
+            if filter_type == 0:
+                predictor = 0
+            elif filter_type == 1:
+                predictor = left
+            elif filter_type == 2:
+                predictor = above
+            elif filter_type == 3:
+                predictor = (left + above) // 2
+            elif filter_type == 4:
+                predictor = _paeth(left, above, upper_left)
+            else:
+                raise NativeAcceptanceError(f"capture PNG filter is unsupported: {name}")
+            row[index] = (value + predictor) & 0xFF
+        if color_type == 6:
+            reconstructed.extend(row)
+        else:
+            for index in range(0, len(row), 3):
+                reconstructed.extend(row[index : index + 3])
+                reconstructed.append(255)
+        prior = row
+    return PngRgba(width, height, bytes(reconstructed))
+
+
+def require_toolkit_visual_evidence(
+    path: Path,
+    marker_bounds: list[tuple[int, int, int, int]],
+    *,
+    label: str,
+) -> None:
+    image = decode_png_rgba(path)
+    require_toolkit_visual_evidence_image(image, marker_bounds, label=label, name=path.name)
+
+
+def require_toolkit_visual_evidence_image(
+    image: PngRgba,
+    marker_bounds: list[tuple[int, int, int, int]],
+    *,
+    label: str,
+    name: str = "capture.png",
+) -> None:
+    """Validate visual semantics for a previously decoded immutable PNG snapshot."""
+    require(_has_meaningful_frame_coverage(image), f"{label} lacks meaningful visual coverage: {name}")
+    require(_has_rendered_toolkit_header(image), f"{label} lacks the rendered Toolkit header: {name}")
+    for bounds in marker_bounds:
+        x, y, width, height = bounds
+        require(
+            width > 0
+            and height > 0
+            and x >= 0
+            and y >= 0
+            and x + width <= image.width
+            and y + height <= image.height,
+            f"{label} marker bounds escape the PNG: {name}",
+        )
+        require(
+            _has_rendered_activity(image, bounds),
+            f"{label} marker lacks rendered activity at {bounds}: {name}",
+        )
+
+
+def _paeth(left: int, above: int, upper_left: int) -> int:
+    estimate = left + above - upper_left
+    left_distance = abs(estimate - left)
+    above_distance = abs(estimate - above)
+    upper_left_distance = abs(estimate - upper_left)
+    if left_distance <= above_distance and left_distance <= upper_left_distance:
+        return left
+    if above_distance <= upper_left_distance:
+        return above
+    return upper_left
+
+
+def _luminance(pixel: tuple[int, int, int, int]) -> int:
+    red, green, blue, _ = pixel
+    return (red * 299 + green * 587 + blue * 114) // 1000
+
+
+def _quantize(pixel: tuple[int, int, int, int]) -> int:
+    red, green, blue, _ = pixel
+    return ((red >> 4) << 8) | ((green >> 4) << 4) | (blue >> 4)
+
+
+def _color_distance(
+    left: tuple[int, int, int, int],
+    right: tuple[int, int, int, int],
+) -> int:
+    return sum(abs(left[index] - right[index]) for index in range(3))
+
+
+def _has_meaningful_frame_coverage(image: PngRgba) -> bool:
+    if image.width < 320 or image.height < 320:
+        return False
+    samples = opaque = non_dark = 0
+    minimum_luminance = 255
+    maximum_luminance = 0
+    colors: set[int] = set()
+    for y in range(0, image.height, 4):
+        for x in range(0, image.width, 4):
+            pixel = image.pixel(x, y)
+            samples += 1
+            opaque += int(pixel[3] >= 250)
+            luminance = _luminance(pixel)
+            non_dark += int(luminance >= 32)
+            minimum_luminance = min(minimum_luminance, luminance)
+            maximum_luminance = max(maximum_luminance, luminance)
+            colors.add(_quantize(pixel))
+    return (
+        samples > 0
+        and opaque >= samples * 99 // 100
+        and non_dark >= samples * 7 // 10
+        and len(colors) >= 8
+        and maximum_luminance - minimum_luminance >= 80
+    )
+
+
+def _has_rendered_toolkit_header(image: PngRgba) -> bool:
+    if image.width < 320 or image.height < 117:
+        return False
+    samples = blue_opaque = 0
+    for y in range(40, 116, 4):
+        for x in range(0, image.width, 4):
+            red, green, blue, alpha = image.pixel(x, y)
+            samples += 1
+            blue_opaque += int(alpha >= 250 and blue >= red + 40 and blue >= green + 30)
+    return samples > 0 and blue_opaque >= samples * 7 // 10
+
+
+def _has_rendered_activity(image: PngRgba, bounds: tuple[int, int, int, int]) -> bool:
+    left, top, width, height = bounds
+    right = left + width - 1
+    bottom = top + height - 1
+    if right - left < 3 or bottom - top < 3:
+        return False
+    samples = opaque = transitions = 0
+    minimum_luminance = 255
+    maximum_luminance = 0
+    colors: set[int] = set()
+    prior_rows: dict[int, tuple[int, int, int, int]] = {}
+    for y in range(top, bottom + 1, 2):
+        prior: tuple[int, int, int, int] | None = None
+        for x in range(left, right + 1, 2):
+            pixel = image.pixel(x, y)
+            samples += 1
+            opaque += int(pixel[3] >= 250)
+            luminance = _luminance(pixel)
+            minimum_luminance = min(minimum_luminance, luminance)
+            maximum_luminance = max(maximum_luminance, luminance)
+            colors.add(_quantize(pixel))
+            if prior is not None and _color_distance(pixel, prior) >= 24:
+                transitions += 1
+            if x in prior_rows and _color_distance(pixel, prior_rows[x]) >= 24:
+                transitions += 1
+            prior = pixel
+            prior_rows[x] = pixel
+    return (
+        samples > 0
+        and opaque >= samples * 98 // 100
+        and len(colors) >= 3
+        and maximum_luminance - minimum_luminance >= 20
+        and transitions >= max(8, samples // 100)
+    )
 
 
 def validate_exact_trx(

@@ -14,10 +14,12 @@ public class MediaAssetNativeProducerSourceTests
         Assert.Multiple(() =>
         {
             Assert.That(source, Does.Contain("ONSLAUGHT_MEDIA_ASSET_NATIVE_ACCEPTANCE_RUN_ID"));
+            Assert.That(source, Does.Contain("ONSLAUGHT_MEDIA_ASSET_NATIVE_EXPECTED_PAYLOAD_SHA256"));
             Assert.That(source, Does.Contain("ONSLAUGHT_WINUI_TEST_INITIAL_MEDIA_TAB"));
             Assert.That(source, Does.Contain("HasPlaybackModulesLoaded"));
             Assert.That(source, Does.Contain("SelectionItem.Pattern.Select"));
             Assert.That(source, Does.Contain("MediaAssetNativeEvidenceAcceptance.Publish"));
+            Assert.That(source, Does.Contain("ValidateApplicationPayload"));
             foreach (MediaAssetExpectedCapture capture in MediaAssetNativeEvidenceContract.ExpectedCaptures)
             {
                 Assert.That(source, Does.Contain(capture.RelativeFileName));

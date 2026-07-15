@@ -168,6 +168,7 @@ internal sealed record MediaAssetAppIdentityEvidence(
     string ExecutableSha256,
     string ProductAssemblyPath,
     string ProductAssemblySha256,
+    string ApplicationPayloadSha256,
     long MainWindowHandle,
     long UiaNativeWindowHandle,
     int WindowOwnerProcessId);

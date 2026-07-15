@@ -255,6 +255,30 @@ File Explorer or the controller-guide browser action, never reads
 installed-game files, and is native Toolkit evidence—not retail behavior,
 save-format completeness, or release acceptance.
 
+Media catalog or Asset Library workflow/layout changes use a third unattended
+native gate. It creates an exact zero-payload game-shaped Media tree, a
+schema-2 Asset catalog, one contrast texture, and one minimal binary-FBX
+triangle; the zero-byte synthetic `BEA.exe` is only a directory marker and is
+never launched:
+
+```powershell
+npm run test:winui-media-asset-native-workflow
+```
+
+The command owns three isolated WinUI launches for audio selection, deferred
+video selection, and texture/model inspection. It performs no Play, reveal,
+browse, clipboard, export, or package action and rejects any loaded LibVLC
+module. Acceptance requires an exact 1/1 native TRX, the canonical thirteen
+fixture records, eight normal/760 receipt-bound captures, distinct
+process/start launches, per-launch hash/HWND ownership, the exact Toolkit-owned
+application payload closure, exact semantic readbacks, marker-level raster
+activity, independently reparsed catalog/FBX/PNG content, and a zero final
+process census. Its accepted evidence and runner scratch remain below
+the exact ignored `local-lab/winui-media-asset-native-workflow/` and
+`local-lab/winui-media-asset-native-workflow-runner/` roots. This is native
+Toolkit evidence, not retail behavior, asset-format completeness, playback
+acceptance, or release evidence.
+
 ## Patch And Mod Work
 
 Executable patch work must be byte-verified and specimen-specific:

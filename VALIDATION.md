@@ -85,6 +85,19 @@ data, PNG, TRX, and manifest artifacts remain ignored/local. The gate does not
 open Explorer or a browser and does not establish retail behavior or format
 completeness.
 
+Media or Asset Library selection, preview, and compact-layout changes use
+`npm run test:winui-media-asset-native-workflow` after focused non-native
+tests. The opt-in gate generates all inputs, owns three isolated WinUI
+launches, and deliberately performs no playback, reveal, browse, clipboard,
+export, or package action. Acceptance requires an exact 1/1 TRX, thirteen
+canonical fixture receipts, eight normal/760 captures with independently
+decoded marker-level pixel activity, exact selection readbacks, full
+Toolkit-owned application-payload identity, distinct process/start launches,
+receipt-bound HWND ownership, no LibVLC modules, and zero relevant processes.
+The ignored/local manifest and screenshots prove only the generated
+native Toolkit workflows; they do not prove retail behavior or complete asset
+coverage.
+
 `npm test` is a common active-product check, not public release signoff. It runs
 inventory/profile contracts, active docs and public-core links, generated-output
 safety, the primary WinUI lane, and deterministic rebuild tests. Whole-tree

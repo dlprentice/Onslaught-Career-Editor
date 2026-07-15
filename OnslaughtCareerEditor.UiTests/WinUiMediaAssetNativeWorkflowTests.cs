@@ -15,6 +15,7 @@ public class WinUiMediaAssetNativeWorkflowTests
     private const string RunIdEnvironment = "ONSLAUGHT_MEDIA_ASSET_NATIVE_ACCEPTANCE_RUN_ID";
     private const string ExpectedExecutableHashEnvironment = "ONSLAUGHT_MEDIA_ASSET_NATIVE_EXPECTED_EXE_SHA256";
     private const string ExpectedProductHashEnvironment = "ONSLAUGHT_MEDIA_ASSET_NATIVE_EXPECTED_DLL_SHA256";
+    private const string ExpectedPayloadHashEnvironment = "ONSLAUGHT_MEDIA_ASSET_NATIVE_EXPECTED_PAYLOAD_SHA256";
     private const string GameDirectoryCandidatesEnvironment = "ONSLAUGHT_GAME_DIR_CANDIDATES";
     private const string SteamRootCandidatesEnvironment = "ONSLAUGHT_STEAM_ROOT_CANDIDATES";
     private static readonly Rectangle NormalBounds = new(16, 16, 1100, 900);
@@ -31,6 +32,7 @@ public class WinUiMediaAssetNativeWorkflowTests
         Assert.That(runId, Is.EqualTo(runId!.ToLowerInvariant()));
         string expectedExecutableHash = RequireUpperSha256(ExpectedExecutableHashEnvironment);
         string expectedProductHash = RequireUpperSha256(ExpectedProductHashEnvironment);
+        string expectedPayloadHash = RequireUpperSha256(ExpectedPayloadHashEnvironment);
 
         string repoRoot = TestFixturePaths.RepoRoot;
         string executablePath = Path.Combine(
@@ -41,6 +43,7 @@ public class WinUiMediaAssetNativeWorkflowTests
             "net10.0-windows10.0.19041.0",
             "win-x64",
             "OnslaughtCareerEditor.WinUI.exe");
+        ValidateApplicationPayload(executablePath, expectedPayloadHash);
         string evidenceRoot = Path.Combine(repoRoot, "local-lab", "winui-media-asset-native-workflow");
         string runName = $"media-asset-x-{runId}";
         string stagingDirectory = Path.Combine(evidenceRoot, $".{runName}.partial");
@@ -62,6 +65,7 @@ public class WinUiMediaAssetNativeWorkflowTests
             fixture,
             expectedExecutableHash,
             expectedProductHash,
+            expectedPayloadHash,
             captures,
             workflows);
         RunMediaVideoWorkflow(
@@ -70,6 +74,7 @@ public class WinUiMediaAssetNativeWorkflowTests
             fixture,
             expectedExecutableHash,
             expectedProductHash,
+            expectedPayloadHash,
             captures,
             workflows);
         RunAssetLibraryWorkflow(
@@ -78,8 +83,10 @@ public class WinUiMediaAssetNativeWorkflowTests
             fixture,
             expectedExecutableHash,
             expectedProductHash,
+            expectedPayloadHash,
             captures,
             workflows);
+        ValidateApplicationPayload(executablePath, expectedPayloadHash);
 
         var manifest = new MediaAssetAcceptanceManifest(
             MediaAssetNativeEvidenceContract.SchemaVersion,
@@ -100,6 +107,7 @@ public class WinUiMediaAssetNativeWorkflowTests
         MediaAssetNativeFixture fixture,
         string expectedExecutableHash,
         string expectedProductHash,
+        string expectedPayloadHash,
         ICollection<MediaAssetCaptureEvidence> captures,
         ICollection<MediaAssetWorkflowEvidence> workflows)
     {
@@ -116,6 +124,7 @@ public class WinUiMediaAssetNativeWorkflowTests
             "media",
             expectedExecutableHash,
             expectedProductHash,
+            expectedPayloadHash,
             environment);
         Window window = session.Window;
         WaitForName(window, "MediaAudioGameDirectorySummary", "media-game");
@@ -144,7 +153,7 @@ public class WinUiMediaAssetNativeWorkflowTests
             "media-audio-selected-760.png");
         workflows.Add(new MediaAssetWorkflowEvidence(
             "media-audio",
-            MediaAssetNativeVisualCapture.ToEvidence(session.Identity),
+            MediaAssetNativeVisualCapture.ToEvidence(session),
             PlaybackModulesLoaded: false,
             [
                 new MediaAssetSelectionEvidence(
@@ -161,6 +170,7 @@ public class WinUiMediaAssetNativeWorkflowTests
         MediaAssetNativeFixture fixture,
         string expectedExecutableHash,
         string expectedProductHash,
+        string expectedPayloadHash,
         ICollection<MediaAssetCaptureEvidence> captures,
         ICollection<MediaAssetWorkflowEvidence> workflows)
     {
@@ -177,6 +187,7 @@ public class WinUiMediaAssetNativeWorkflowTests
             "media",
             expectedExecutableHash,
             expectedProductHash,
+            expectedPayloadHash,
             environment);
         Window window = session.Window;
         FindByAutomationId(window, "MediaVideoSearchBox");
@@ -208,7 +219,7 @@ public class WinUiMediaAssetNativeWorkflowTests
         Assert.That(playbackModulesLoaded, Is.False);
         workflows.Add(new MediaAssetWorkflowEvidence(
             "media-video",
-            MediaAssetNativeVisualCapture.ToEvidence(session.Identity),
+            MediaAssetNativeVisualCapture.ToEvidence(session),
             playbackModulesLoaded,
             [
                 new MediaAssetSelectionEvidence(
@@ -225,6 +236,7 @@ public class WinUiMediaAssetNativeWorkflowTests
         MediaAssetNativeFixture fixture,
         string expectedExecutableHash,
         string expectedProductHash,
+        string expectedPayloadHash,
         ICollection<MediaAssetCaptureEvidence> captures,
         ICollection<MediaAssetWorkflowEvidence> workflows)
     {
@@ -243,6 +255,7 @@ public class WinUiMediaAssetNativeWorkflowTests
             "assets",
             expectedExecutableHash,
             expectedProductHash,
+            expectedPayloadHash,
             environment);
         Window window = session.Window;
         WaitForName(window, "AssetCatalogSummary", "1 textures, 1 loose meshes, 1 embedded meshes, 1 goodies");
@@ -297,7 +310,7 @@ public class WinUiMediaAssetNativeWorkflowTests
             previewScrollHostAutomationId: "AssetPreviewScrollViewer");
         workflows.Add(new MediaAssetWorkflowEvidence(
             "asset-library",
-            MediaAssetNativeVisualCapture.ToEvidence(session.Identity),
+            MediaAssetNativeVisualCapture.ToEvidence(session),
             PlaybackModulesLoaded: false,
             [
                 new MediaAssetSelectionEvidence(
@@ -561,5 +574,14 @@ public class WinUiMediaAssetNativeWorkflowTests
         string? value = Environment.GetEnvironmentVariable(environmentName);
         Assert.That(value, Does.Match("^[0-9A-F]{64}$"), $"Missing or malformed {environmentName}.");
         return value!;
+    }
+
+    private static void ValidateApplicationPayload(string executablePath, string expectedPayloadHash)
+    {
+        string applicationRoot = Path.GetDirectoryName(Path.GetFullPath(executablePath))!;
+        Assert.That(
+            MediaAssetNativeApplicationPayload.Compute(applicationRoot),
+            Is.EqualTo(expectedPayloadHash),
+            "The Toolkit-owned native application payload changed during Media/Asset acceptance.");
     }
 }
