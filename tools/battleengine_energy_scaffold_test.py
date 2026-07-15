@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+"""Tests for energy rate scaffold."""
+
+from __future__ import annotations
+
+import unittest
+
+import battleengine_energy_scaffold as energy
+
+
+class EnergyScaffoldTests(unittest.TestCase):
+    def test_drain_accepts(self) -> None:
+        samples = energy.synthetic_energy_series(rate_per_sec=-3.0)
+        m = energy.analyze_energy_rate(
+            attempt=1, samples=samples, frequency=10_000_000, expect_negative=True
+        )
+        self.assertTrue(m.accepted)
+        self.assertLess(m.steady_rate_per_sec, -1.0)
+
+    def test_regen_accepts(self) -> None:
+        samples = energy.synthetic_energy_series(rate_per_sec=4.0)
+        m = energy.analyze_energy_rate(
+            attempt=1, samples=samples, frequency=10_000_000, expect_negative=False
+        )
+        self.assertTrue(m.accepted)
+        self.assertGreater(m.steady_rate_per_sec, 1.0)
+
+
+if __name__ == "__main__":
+    unittest.main()

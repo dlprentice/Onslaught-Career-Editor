@@ -89,7 +89,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 | M1.2 | Jet forward/thrust scalar | landed | v1 + `JetSpeedPerTick=381` |
 | M1.3 | Turn / yaw rate scalar | landed | turn-p02 dual-accept; v1 + policy; `WalkerLookYawRateMilliRadPerTick=3` |
 | M1.4 | Strafe / lateral scalar | landed | strafe-p02 dual-accept; v1 + policy; `WalkerStrafeSpeedPerTick=101` |
-| M1.5 | Transform morph timing + energy gate | in_progress | offline harness landed; live dual-accept pending |
+| M1.5 | Transform morph timing + energy gate | landed | xform-p03 dual-accept; `MorphToJetSettleTicks=148` |
 | M1.6 | Friction / coast / release models beyond scalar speed | open | may share harnesses |
 
 ### M2 — Combat & resources
@@ -182,6 +182,7 @@ public release.
 | Jet thrust | `jet-forward-scalar-response-v1` | `JetSpeedPerTick=381` | jet-p06 |
 | Walker Look/Left yaw | `walker-turn-yaw-scalar-response.v1` | `WalkerLookYawRateMilliRadPerTick=3` | turn-p02 |
 | Walker Movement/Left path | `walker-strafe-lateral-scalar-response.v1` | `WalkerStrafeSpeedPerTick=101` | strafe-p02 |
+| Walker morph→jet settle | `walker-transform-morph-timing.v1` | `MorphToJetSettleTicks=148` | xform-p03 |
 
 ## How agents update this file
 

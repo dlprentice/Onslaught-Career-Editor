@@ -1,0 +1,70 @@
+{
+  "attempts": [
+    {
+      "attempt": 1,
+      "integrity": {
+        "cleanupConfirmed": true,
+        "foregroundMaintained": true,
+        "keyUpConfirmed": true,
+        "receiptRevalidated": true
+      },
+      "metrics": {
+        "morphLatencyMs": {
+          "lower": 4670,
+          "upper": 4840
+        },
+        "statesSeen": [
+          1,
+          2,
+          3
+        ]
+      },
+      "receiptSha256": "94c847f7000e4d8ffd13b1bcea7a25b1056267a04ce554da969051f9abc7ccda",
+      "runDigest": "94c847f7000e4d8ffd13b1bcea7a25b1056267a04ce554da969051f9abc7ccda"
+    },
+    {
+      "attempt": 2,
+      "integrity": {
+        "cleanupConfirmed": true,
+        "foregroundMaintained": true,
+        "keyUpConfirmed": true,
+        "receiptRevalidated": true
+      },
+      "metrics": {
+        "morphLatencyMs": {
+          "lower": 5010,
+          "upper": 5170
+        },
+        "statesSeen": [
+          1,
+          2,
+          3
+        ]
+      },
+      "receiptSha256": "aff45536d05533870d37b0040da85bd55bc9551bdc23be0465059ccadd1bae2d",
+      "runDigest": "aff45536d05533870d37b0040da85bd55bc9551bdc23be0465059ccadd1bae2d"
+    }
+  ],
+  "claim": "walker-transform-to-jet-settle-latency",
+  "envelope": {
+    "morphLatencyMs": {
+      "lower": 4670,
+      "upper": 5170
+    }
+  },
+  "metricUnits": {
+    "latency": "milliseconds"
+  },
+  "nonclaims": [
+    "Latency includes harness T delivery and observer poll cadence.",
+    "Not energy-cost or transform-animation identity.",
+    "Not Core TransformDurationTicks (animation hold) identity."
+  ],
+  "privateEvidenceLabel": "xform-p03",
+  "sampling": {
+    "clock": "query-performance-counter",
+    "pollApproxMs": 20
+  },
+  "schemaVersion": "battleengine-walker-transform-morph-timing.v1",
+  "status": "two-accepted-fresh-attempts"
+}

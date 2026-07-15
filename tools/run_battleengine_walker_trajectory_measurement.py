@@ -32,6 +32,7 @@ import battleengine_walker_trajectory_sampler as sampler
 import runtime_proof_lab_hygiene as proof_hygiene
 import battleengine_turn_yaw_measurement as turn_yaw
 import battleengine_strafe_measurement as strafe
+import battleengine_transform_timing_measurement as morph_timing
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -1112,6 +1113,108 @@ def _sample_batches(reader: ReceiptPinnedReader, guard: ReceiptRuntimeGuard,
     return rows
 
 
+def collect_transform_attempt(
+    attempt: int,
+    receipt: sampler.ReceiptIdentity,
+    receipt_path: Path,
+    reader: ReceiptPinnedReader,
+    native: NativeApi,
+    clock: QpcClock,
+    deadline: Deadline,
+    authorized_private_root: Path,
+) -> tuple[morph_timing.TransformTimingMetrics, dict[str, object], dict[str, object]]:
+    """Morph-only attempt: state series from walker → jet after Transform (T)."""
+
+    if reader.handle is None:
+        raise RuntimeError("observer handle is not open")
+    guard = ReceiptRuntimeGuard(
+        receipt, receipt_path, receipt.receipt_sha256, native, reader.handle,
+        authorized_private_root,
+    )
+    readiness_deadline = Deadline(READINESS_DEADLINE_SECONDS)
+    if not native.force_foreground(receipt.window_handle):
+        raise sampler.AttemptError("could not foreground BEA before readiness")
+    readiness = wait_for_runtime_readiness(
+        lambda: sampler.read_readiness_probe(reader, receipt.module_base),
+        guard,
+        deadline_check=lambda: (
+            deadline.check("observer readiness"),
+            readiness_deadline.check("readiness"),
+        ),
+    )
+    state_series: list[morph_timing.StateSample] = []
+    # Pre-morph walker samples for evidence.
+    for _ in range(10):
+        deadline.check("transform pre-morph")
+        if not guard.revalidate_receipt() or not guard.foreground_matches():
+            raise sampler.AttemptError("receipt or foreground changed pre-morph")
+        probe = sampler.read_coherent_sample(
+            reader, receipt.module_base, tick=clock.now(), phase="baseline",
+            slot=0, vehicle=sampler.VEHICLE_WALKER, require_walker_state=False,
+        )
+        state_series.append(
+            morph_timing.StateSample(tick=probe.tick, state_raw=int(probe.state_raw))
+        )
+        time.sleep(0.02)
+    # Stamp request before handshake so morph latency includes T delivery + settle.
+    # Re-stamping after handshake (older bug) placed the edge after jet already
+    # appeared, so analyze_transform_timing skipped all jet samples.
+    morph_request_tick = clock.now()
+    if not _marker_handshake(authorized_private_root, "morph", timeout_seconds=8.0):
+        raise sampler.AttemptError("morph Transform handshake was not confirmed")
+    morph_deadline = time.time() + 25.0
+    seen_states: set[int] = set()
+    consecutive_jet = 0
+    while time.time() < morph_deadline:
+        deadline.check("transform morph")
+        if not guard.revalidate_receipt() or not guard.foreground_matches():
+            raise sampler.AttemptError("receipt or foreground changed during morph")
+        try:
+            probe = sampler.read_coherent_sample(
+                reader, receipt.module_base, tick=clock.now(), phase="hold",
+                slot=0, vehicle=sampler.VEHICLE_WALKER, require_walker_state=False,
+            )
+            state_series.append(
+                morph_timing.StateSample(tick=probe.tick, state_raw=int(probe.state_raw))
+            )
+            seen_states.add(int(probe.state_raw))
+            if probe.state_raw == sampler.JET_STATE_RAW:
+                consecutive_jet += 1
+            else:
+                consecutive_jet = 0
+            if consecutive_jet >= 8:
+                break
+        except sampler.SampleError:
+            consecutive_jet = 0
+        time.sleep(0.02)
+    else:
+        raise sampler.AttemptError(
+            "battle engine did not enter jet state after morph; "
+            f"states_seen={sorted(seen_states)}"
+        )
+    metrics = morph_timing.analyze_transform_timing(
+        attempt=attempt,
+        samples=state_series,
+        frequency=clock.frequency,
+        morph_request_tick=morph_request_tick,
+    )
+    readiness = dict(readiness)
+    readiness["vehicle"] = "jet"
+    readiness["morphStatesSeen"] = sorted(seen_states)
+    readiness["measure"] = sampler.MEASURE_TRANSFORM
+    raw_payload = {
+        "schemaVersion": "battleengine-walker-transform-private-raw.v1",
+        "attempt": attempt,
+        "receiptSha256": receipt.receipt_sha256,
+        "measure": sampler.MEASURE_TRANSFORM,
+        "qpcFrequency": clock.frequency,
+        "morphRequestTick": morph_request_tick,
+        "states": [{"tick": s.tick, "stateRaw": s.state_raw} for s in state_series],
+        "interferenceNonclaim": INTERFERENCE_NONCLAIM,
+    }
+    return metrics, readiness, raw_payload
+
+
 def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: Path,
                   reader: ReceiptPinnedReader, native: NativeApi, clock: QpcClock,
                   deadline: Deadline, authorized_private_root: Path,
@@ -1431,6 +1534,23 @@ def _metrics_payload(
             },
             "publicProjectionWritten": False,
         }
+    if measure == sampler.MEASURE_TRANSFORM and isinstance(
+        metrics, morph_timing.TransformTimingMetrics
+    ):
+        return {
+            "schemaVersion": "battleengine-walker-transform-private-metrics.v1",
+            "attempt": metrics.attempt,
+            "acceptedBySamplerBeforeAppCoreCleanup": metrics.accepted,
+            "measure": sampler.MEASURE_TRANSFORM,
+            "metrics": asdict(metrics),
+            "calibrationTarget": {
+                "sourceNamedPath": "walker Transform morph → sustained jet state latency",
+                "steamLinkedObservation": "receipt-bound state series after T morph handshake",
+                "scope": "morph request to 5-sample jet settle latency",
+                "nonclaim": "not Core authority until dual-accept public contract",
+            },
+            "publicProjectionWritten": False,
+        }
     return {
         "schemaVersion": "battleengine-walker-trajectory-private-metrics.v1",
         "attempt": metrics.attempt,
@@ -1493,25 +1613,33 @@ def run_observer(args: argparse.Namespace) -> int:
             raise ValueError("vehicle must be walker or jet")
         measure = getattr(args, "measure", sampler.MEASURE_FORWARD) or sampler.MEASURE_FORWARD
         if measure not in sampler.MEASURE_MODES:
-            raise ValueError("measure must be forward, turn, or strafe")
+            raise ValueError("measure must be forward, turn, strafe, or transform")
         if measure in (sampler.MEASURE_TURN, sampler.MEASURE_STRAFE) and vehicle != sampler.VEHICLE_WALKER:
             raise ValueError("turn/strafe measure currently requires walker vehicle mode")
-        trace, readiness = collect_trace(
-            args.attempt, receipt, receipt_path, reader, native, QpcClock(), deadline,
-            authorized_root, vehicle=vehicle, measure=measure,
-        )
-        deadline.check()
-        # collect_trace only returns after execute_owned_q_window confirms key-up.
-        # Analysis acceptance is independent; cleanup must still see observer Q-up
-        # so a failed attempt can free the pair for attempt two.
-        q_up_confirmed = True
-        # Persist raw samples before analysis so failed control/schedule gates
-        # still leave private evidence for the next tooling fix.
-        payload = _trace_payload(trace, INTERFERENCE_NONCLAIM)
-        payload["measure"] = measure
-        _write_new_json(raw_path, payload)
-        metrics = analyze_provisional_trace(trace, measure=measure)
-        _write_new_json(metrics_path, _metrics_payload(metrics, measure=measure))
+        clock = QpcClock()
+        if measure == sampler.MEASURE_TRANSFORM:
+            metrics, readiness, payload = collect_transform_attempt(
+                args.attempt, receipt, receipt_path, reader, native, clock, deadline,
+                authorized_root,
+            )
+            deadline.check()
+            # Transform path does not hold Q; harness may still ack Q-up for cleanup.
+            q_up_confirmed = True
+            _write_new_json(raw_path, payload)
+            _write_new_json(metrics_path, _metrics_payload(metrics, measure=measure))
+        else:
+            trace, readiness = collect_trace(
+                args.attempt, receipt, receipt_path, reader, native, clock, deadline,
+                authorized_root, vehicle=vehicle, measure=measure,
+            )
+            deadline.check()
+            # collect_trace only returns after execute_owned_q_window confirms key-up.
+            q_up_confirmed = True
+            payload = _trace_payload(trace, INTERFERENCE_NONCLAIM)
+            payload["measure"] = measure
+            _write_new_json(raw_path, payload)
+            metrics = analyze_provisional_trace(trace, measure=measure)
+            _write_new_json(metrics_path, _metrics_payload(metrics, measure=measure))
     except BaseException as exc:
         failure = f"{type(exc).__name__}: {exc}"
     finally:
@@ -1535,7 +1663,11 @@ def run_observer(args: argparse.Namespace) -> int:
         "publicProjectionWritten": False,
         "interferenceNonclaim": INTERFERENCE_NONCLAIM,
     })
-    return 0 if not failure and trace is not None and metrics is not None and reader.closed else 2
+    # Transform measure has no AttemptTrace (state series only); metrics are enough.
+    sample_ok = metrics is not None and (
+        trace is not None or getattr(args, "measure", "") == sampler.MEASURE_TRANSFORM
+    )
+    return 0 if not failure and sample_ok and reader.closed else 2
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -1559,7 +1691,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--measure",
         choices=sampler.MEASURE_MODES,
         default=sampler.MEASURE_FORWARD,
-        help="Scalar channel: forward/thrust (default), turn/yaw, or strafe.",
+        help="Scalar channel: forward, turn, strafe, or transform morph timing.",
     )
     pair = sub.add_parser("run-two", allow_abbrev=False)
     pair.add_argument("--source-root", required=True)
@@ -1577,7 +1709,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--measure",
         choices=sampler.MEASURE_MODES,
         default=sampler.MEASURE_FORWARD,
-        help="Scalar channel: forward/thrust (default), turn/yaw, or strafe.",
+        help="Scalar channel: forward, turn, strafe, or transform morph timing.",
     )
     return parser
 

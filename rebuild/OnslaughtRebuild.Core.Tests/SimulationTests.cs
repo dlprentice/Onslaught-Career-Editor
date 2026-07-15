@@ -34,6 +34,16 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void MorphToJetSettle_MatchesAcceptedXformP03Translation()
+    {
+        // Mid latency ~4.92 s → round(s * 30) = 148.
+        Assert.Equal(148, SimulationConstants.MorphToJetSettleTicks);
+        const double midSeconds = 4.9225;
+        int mapped = (int)Math.Round(midSeconds * SimulationConstants.TicksPerSecond);
+        Assert.Equal(SimulationConstants.MorphToJetSettleTicks, mapped);
+    }
+
+    [Fact]
     public void ToggleMode_UsesEnergyAndDisablesJetShield()
     {
         var simulation = new Simulation(1);
