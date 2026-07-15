@@ -434,6 +434,60 @@ public class SaveEditorFirstSaveJourneyTests
     }
 
     [Test]
+    public void NativeSaveLabHarness_UsesScrollItemToRealizeZeroBoundMarkersBeforeDirectionalFallback()
+    {
+        string source = ReadRepoFile(
+            "OnslaughtCareerEditor.UiTests",
+            "WinUiSaveLabNativeWorkflowTests.cs");
+        string realization = ExtractMethod(
+            source,
+            "private static void RealizeNamedRegion(",
+            "private static string DescribeScrollState(");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(realization, Does.Contain("current.Any(bounds => bounds.Width <= 0 || bounds.Height <= 0)"));
+            Assert.That(realization, Does.Contain("element.Patterns.ScrollItem.IsSupported"));
+            Assert.That(realization, Does.Contain("element.Patterns.ScrollItem.Pattern.ScrollIntoView()"));
+            Assert.That(
+                realization.IndexOf("element.Patterns.ScrollItem.Pattern.ScrollIntoView()", StringComparison.Ordinal),
+                Is.LessThan(realization.IndexOf("bool above =", StringComparison.Ordinal)));
+        });
+    }
+
+    [Test]
+    public void NativeSaveLabHarness_UsesShortOwnedRootsForWindowsMutationGuardBudget()
+    {
+        string source = ReadRepoFile(
+            "OnslaughtCareerEditor.UiTests",
+            "WinUiSaveLabNativeWorkflowTests.cs");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(source, Does.Contain("runName = $\"save-lab-x-{runId}\""));
+            Assert.That(source, Does.Contain("Path.Combine(stagingDirectory, \"s\")"));
+            Assert.That(source, Does.Contain("Path.Combine(stagingDirectory, \"o\")"));
+            Assert.That(source, Does.Not.Contain("Path.Combine(stagingDirectory, \"save-session\")"));
+            Assert.That(source, Does.Not.Contain("Path.Combine(stagingDirectory, \"options-session\")"));
+        });
+    }
+
+    [Test]
+    public void NativeSaveLabHarness_UsesExposedSafetyHintForInitialOptionsState()
+    {
+        string source = ReadRepoFile(
+            "OnslaughtCareerEditor.UiTests",
+            "WinUiSaveLabNativeWorkflowTests.cs");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(source, Does.Not.Contain("\"ConfigurationPendingChanges\""));
+            Assert.That(source, Does.Contain("Choose at least one settings override"));
+            Assert.That(source, Does.Contain("!patchButton.IsEnabled"));
+        });
+    }
+
+    [Test]
     public void CodeBehind_UpdatesLiveAndAdvancedAccessibilityWithoutResettingCollapsedValues()
     {
         string code = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.xaml.cs");

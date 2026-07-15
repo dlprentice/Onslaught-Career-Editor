@@ -461,13 +461,17 @@ The test creates:
 
 ```text
 local-lab/winui-save-lab-native-workflow/
-  .save-lab-<UTC>-<runid>.partial/
+  .save-lab-x-<runid>.partial/
     fixtures/first-save-input.bes
     fixtures/synthetic-options.bea
-    save-session/appdata/OnslaughtCareerEditor/patched-output/first-save-input_patched.bes
-    options-session/appdata/OnslaughtCareerEditor/patched-output/synthetic-options_patched.bea
+    s/OnslaughtCareerEditor/patched-output/first-save-input_patched.bes
+    o/OnslaughtCareerEditor/patched-output/synthetic-options_patched.bea
     <eight PNGs>
 ```
+
+The invocation token already provides uniqueness. The short run/session names
+keep the hardened Windows directory-mutation sentinel below the legacy path
+budget while every artifact remains confined to the same ignored staging root.
 
 Each launch sets `APPDATA`, `ONSLAUGHT_APP_CONFIG_ROOT`, initial Save tab,
 `ONSLAUGHT_GAME_DIR_CANDIDATES=""`, and an isolated empty Steam root. It reads

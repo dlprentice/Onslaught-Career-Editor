@@ -45,7 +45,7 @@ public class WinUiSaveLabNativeWorkflowTests
             "win-x64",
             "OnslaughtCareerEditor.WinUI.exe");
         string evidenceRoot = Path.Combine(repoRoot, "local-lab", "winui-save-lab-native-workflow");
-        string runName = $"save-lab-{DateTime.UtcNow:yyyyMMddTHHmmssfffZ}-{runId}";
+        string runName = $"save-lab-x-{runId}";
         string stagingDirectory = Path.Combine(evidenceRoot, $".{runName}.partial");
         string acceptedDirectory = Path.Combine(evidenceRoot, runName);
         Directory.CreateDirectory(stagingDirectory);
@@ -102,9 +102,9 @@ public class WinUiSaveLabNativeWorkflowTests
         ICollection<SaveLabCaptureEvidence> captures,
         ICollection<SaveLabWorkflowEvidence> workflows)
     {
-        string sessionRoot = Path.Combine(stagingDirectory, "save-session");
-        string appDataDirectory = Path.Combine(sessionRoot, "appdata");
-        string emptySteamRoot = Path.Combine(sessionRoot, "empty-steam-root");
+        // Keep mutation-guard sentinel paths below the legacy Windows path budget.
+        string appDataDirectory = Path.Combine(stagingDirectory, "s");
+        string emptySteamRoot = Path.Combine(stagingDirectory, "se");
         Directory.CreateDirectory(emptySteamRoot);
         string outputPath = Path.Combine(
             appDataDirectory,
@@ -171,7 +171,15 @@ public class WinUiSaveLabNativeWorkflowTests
                   (TryGetTextBoxText(window, "SaveEditorOutputLog") ?? string.Empty)
                       .Contains("Successfully patched", StringComparison.OrdinalIgnoreCase),
             TimeSpan.FromSeconds(15)).Success;
-        Assert.That(outputReady, Is.True, "Save Editor did not write and report its deterministic copied output.");
+        Assert.That(
+            outputReady,
+            Is.True,
+            "Save Editor did not write and report its deterministic copied output. " +
+            $"FileExists={File.Exists(outputPath)}; ButtonEnabled={patchButton.IsEnabled}; " +
+            $"AppStatus='{TryGetName(window, "AppStatusText")}'; " +
+            $"Pending='{TryGetName(window, "SaveEditorPendingChanges")}'; " +
+            $"Safety='{TryGetName(window, "SaveEditorSafetyHint")}'; " +
+            $"Log='{TryGetTextBoxText(window, "SaveEditorOutputLog")}'.");
         string outputLog = TryGetTextBoxText(window, "SaveEditorOutputLog") ?? string.Empty;
         string inputHashAfter = Hash(inputCopyPath);
         string outputHash = Hash(outputPath);
@@ -226,9 +234,9 @@ public class WinUiSaveLabNativeWorkflowTests
         ICollection<SaveLabCaptureEvidence> captures,
         ICollection<SaveLabWorkflowEvidence> workflows)
     {
-        string sessionRoot = Path.Combine(stagingDirectory, "options-session");
-        string appDataDirectory = Path.Combine(sessionRoot, "appdata");
-        string emptySteamRoot = Path.Combine(sessionRoot, "empty-steam-root");
+        // Keep mutation-guard sentinel paths below the legacy Windows path budget.
+        string appDataDirectory = Path.Combine(stagingDirectory, "o");
+        string emptySteamRoot = Path.Combine(stagingDirectory, "oe");
         Directory.CreateDirectory(emptySteamRoot);
         string outputPath = Path.Combine(
             appDataDirectory,
@@ -271,8 +279,8 @@ public class WinUiSaveLabNativeWorkflowTests
         AutomationElement patchButton = FindByAutomationId(window, "ConfigurationPatchButton");
         bool inputLoaded = Retry.WhileFalse(
             () => string.Equals(TryGetTextBoxText(window, "ConfigurationOutputFile"), outputPath, StringComparison.OrdinalIgnoreCase) &&
-                  (TryGetName(window, "ConfigurationPendingChanges") ?? string.Empty)
-                      .Contains("No pending configuration changes", StringComparison.Ordinal) &&
+                  (TryGetName(window, "ConfigurationSafetyHint") ?? string.Empty)
+                      .Contains("Choose at least one settings override", StringComparison.Ordinal) &&
                   !patchButton.IsEnabled,
             TimeSpan.FromSeconds(10)).Success;
         Assert.That(inputLoaded, Is.True, "Game Options did not load its deterministic input with an app-owned separate output and no pending changes.");
@@ -434,17 +442,27 @@ public class WinUiSaveLabNativeWorkflowTests
 
         IReadOnlyList<Rectangle>? previous = null;
         int stableSamples = 0;
+        Rectangle lastWindowBounds = Rectangle.Empty;
+        string lastMarkerState = "not sampled";
+        string lastScrollState = "not sampled";
         bool realized = Retry.WhileFalse(
             () =>
             {
                 Rectangle windowBounds = window.BoundingRectangle;
-                AutomationElement[] elements = markerAutomationIds
-                    .Select(id => TryFindByAutomationId(window, id))
-                    .Where(element => element is not null)
-                    .Cast<AutomationElement>()
+                lastWindowBounds = windowBounds;
+                (string Id, AutomationElement? Element)[] rows = markerAutomationIds
+                    .Select(id => (id, TryFindByAutomationId(window, id)))
+                    .ToArray();
+                AutomationElement[] elements = rows
+                    .Where(row => row.Element is not null)
+                    .Select(row => row.Element!)
                     .ToArray();
                 if (elements.Length != markerAutomationIds.Count)
                 {
+                    lastMarkerState = string.Join(
+                        "; ",
+                        rows.Select(row => $"{row.Id}={(row.Element is null ? "missing" : row.Element.BoundingRectangle.ToString())}"));
+                    lastScrollState = DescribeScrollState(scrollHost);
                     Scroll(scrollHost, ScrollAmount.LargeIncrement);
                     stableSamples = 0;
                     previous = null;
@@ -452,6 +470,24 @@ public class WinUiSaveLabNativeWorkflowTests
                 }
 
                 Rectangle[] current = elements.Select(element => element.BoundingRectangle).ToArray();
+                lastMarkerState = string.Join(
+                    "; ",
+                    markerAutomationIds.Zip(current, (id, bounds) => $"{id}={bounds}"));
+                lastScrollState = DescribeScrollState(scrollHost);
+                if (current.Any(bounds => bounds.Width <= 0 || bounds.Height <= 0))
+                {
+                    foreach ((AutomationElement element, Rectangle bounds) in elements.Zip(current))
+                    {
+                        if ((bounds.Width <= 0 || bounds.Height <= 0) && element.Patterns.ScrollItem.IsSupported)
+                        {
+                            element.Patterns.ScrollItem.Pattern.ScrollIntoView();
+                            break;
+                        }
+                    }
+                    stableSamples = 0;
+                    previous = null;
+                    return false;
+                }
                 bool allInside = current.All(bounds => Contains(windowBounds, bounds));
                 if (!allInside)
                 {
@@ -478,7 +514,22 @@ public class WinUiSaveLabNativeWorkflowTests
         Assert.That(
             realized,
             Is.True,
-            $"Markers for {scrollHostAutomationId} were not simultaneously visible and stable in the exact Toolkit HWND.");
+            $"Markers for {scrollHostAutomationId} were not simultaneously visible and stable in the exact Toolkit HWND. " +
+            $"Window={lastWindowBounds}; Markers={lastMarkerState}; Scroll={lastScrollState}.");
+    }
+
+    private static string DescribeScrollState(AutomationElement scrollHost)
+    {
+        try
+        {
+            return $"VerticalPercent={scrollHost.Patterns.Scroll.Pattern.VerticalScrollPercent.Value:0.###}; " +
+                   $"ViewSize={scrollHost.Patterns.Scroll.Pattern.VerticalViewSize.Value:0.###}; " +
+                   $"VerticallyScrollable={scrollHost.Patterns.Scroll.Pattern.VerticallyScrollable.Value}";
+        }
+        catch (Exception ex)
+        {
+            return $"unavailable:{ex.GetType().Name}";
+        }
     }
 
     private static void Scroll(AutomationElement scrollHost, ScrollAmount amount)
