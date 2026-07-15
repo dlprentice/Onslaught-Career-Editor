@@ -120,6 +120,10 @@ def metrics(
 
 
 class CoherentReadTests(unittest.TestCase):
+    def test_measure_modes_include_walker_shield(self) -> None:
+        self.assertEqual("shield", getattr(sampler, "MEASURE_SHIELD", None))
+        self.assertIn("shield", sampler.MEASURE_MODES)
+
     def test_cgame_readiness_layout_has_exact_tracked_bounded_provenance(self) -> None:
         self.assertEqual(
             (

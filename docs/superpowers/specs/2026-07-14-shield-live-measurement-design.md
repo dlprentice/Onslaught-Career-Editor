@@ -17,21 +17,28 @@ Add `shield` to the existing walker sampler's live measure-mode catalog and
 route it through the established observer, receipt revalidation, foreground
 guard, cleanup owner, and two-attempt lifecycle. Unlike forward, turn, strafe,
 and jet-energy modes, shield collection owns no Q input. It records the normal
-baseline/observation/release sample windows while the walker remains idle and
-analyzes the paired `BattleEngine+0xFC` energy and `BattleEngine+0x100` shield
-floats.
+baseline/observation/release trace shape while every sampled control field is
+neutral and analyzes the paired `BattleEngine+0xFC` energy and
+`BattleEngine+0x100` shield floats. Position and velocity remain deliberately
+outside resource-rate acceptance.
 
 The private analysis accepts an attempt only when:
 
 - the vehicle is the walker;
+- every phase satisfies the existing QPC count, slot, cadence, and boundary
+  gates and every sample retains walker state plus neutral control;
 - at least five shield-update edges show positive regeneration;
-- energy changes positively on the same sampled update edges often enough to
-  establish correlation;
+- positive energy and shield changes overlap on at least 80 percent of the
+  union of their active sampled edges, so energy-only motion cannot be hidden;
+- any material wrong-direction shield or energy edge rejects the no-damage
+  regeneration observation;
 - the steady shield and energy rates agree within a bounded scaffold tolerance;
+- the pair is exactly attempts 1 and 2 with distinct receipt and run digests;
 - all values and timestamps are finite and monotonic; and
 - receipt identity, foreground ownership, observer-handle closure, process
   cleanup, copied-source immutability, and lab hygiene retain their existing
-  fail-closed behavior.
+  fail-closed behavior. Shield cleanup records input as not owned and never
+  sends a backup Q release, including after collection failure.
 
 The rate/correlation thresholds are sampler acceptance tolerances, not retail
 constants and not deterministic-Core authority. The pair envelope remains a
@@ -60,16 +67,19 @@ enforcement already hardened in the walker measurement runner.
 `tools/battleengine_shield_scaffold.py` consumes timestamped energy/shield
 samples, computes update-edge rates, verifies positive paired regeneration, and
 materializes a two-attempt provisional envelope. Synthetic fixtures cover
-valid correlation, inactive energy, opposite direction, excessive rate spread,
-non-monotonic timestamps, and unstable attempt pairs.
+valid correlation, inactive energy, energy-only edges, opposite direction,
+excessive rate spread, non-monotonic timestamps, reused attempt identities,
+and unstable attempt pairs.
 
 ### Receipt-bound input-free collection
 
 `tools/run_battleengine_walker_trajectory_measurement.py` adds the `shield`
-mode, validates walker-only use, collects three guarded idle phases without
+mode, validates walker-only use, collects three guarded neutral-control phases without
 creating Q request markers, and emits a private shield metrics payload with an
-explicit `none-idle-observation` input protocol. Other measure modes retain
-their existing input and motion semantics.
+explicit `none-neutral-control-observation` input protocol. It validates the trace schedule
+and neutral control without consulting motion acceptance. The generated cleanup
+owner suppresses backup Q release for this input-free protocol. Other measure
+modes retain their existing input and motion semantics.
 
 ### Catalog and command authority
 
@@ -92,6 +102,7 @@ Focused validation is:
 - shield scaffold tests;
 - walker sampler tests;
 - measurement orchestrator tests;
+- generated runtime-harness cleanup tests;
 - measure-mode catalog tests;
 - the new focused package composite;
 - Python compilation and `git diff --check`; and

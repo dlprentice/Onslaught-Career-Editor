@@ -19,8 +19,11 @@ class MeasureModeCatalogTests(unittest.TestCase):
 
     def test_catalog_rows_nonempty(self) -> None:
         rows = catalog.catalog_as_dicts()
-        self.assertGreaterEqual(len(rows), 5)
+        self.assertEqual(6, len(rows))
         self.assertTrue(any(r["mode"] == "energy" for r in rows))
+        shield = next(r for r in rows if r["mode"] == "shield")
+        self.assertEqual("walker", shield["vehicle"])
+        self.assertIn("live dual-accept pending", shield["liveStatus"])
 
     def test_offline_harness_rows_named(self) -> None:
         offline = catalog.offline_harness_dicts()
@@ -29,14 +32,14 @@ class MeasureModeCatalogTests(unittest.TestCase):
         self.assertIn("camera-look", names)
         self.assertIn("fire-cooldown", names)
         self.assertIn("projectile-speed", names)
-        self.assertIn("shield-rate", names)
+        self.assertNotIn("shield-rate", names)
         # Offline modes must not collide with live MEASURE_MODES.
         self.assertTrue(names.isdisjoint(catalog.mode_names()))
 
     def test_full_catalog_report_shape(self) -> None:
         report = catalog.full_catalog_report()
-        self.assertEqual(5, len(report["liveMeasureModes"]))
-        self.assertEqual(5, len(report["offlineHarnesses"]))
+        self.assertEqual(6, len(report["liveMeasureModes"]))
+        self.assertEqual(4, len(report["offlineHarnesses"]))
         energy = next(r for r in report["liveMeasureModes"] if r["mode"] == "energy")
         self.assertIn("dual-accepted", energy["liveStatus"])
 

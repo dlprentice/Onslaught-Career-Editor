@@ -34,6 +34,7 @@ import battleengine_turn_yaw_measurement as turn_yaw
 import battleengine_strafe_measurement as strafe
 import battleengine_transform_timing_measurement as morph_timing
 import battleengine_energy_scaffold as energy_scaffold
+import battleengine_shield_scaffold as shield_scaffold
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -563,12 +564,23 @@ def _validate_closeout(row: dict[str, object], attempt: int, evidence_root: Path
     # Q via harness backup; that is enough to free attempt two safely.
     if not isinstance(cleanup, dict):
         raise RuntimeError("attempt cleanup gate failed: cleanup receipt missing")
-    if cleanup.get("observerQUp") is not True and cleanup.get("backupQUp") is not True:
+    input_protocol = row.get("inputProtocol")
+    if input_protocol not in (
+        "external-q-hold",
+        "none-neutral-control-observation",
+    ):
+        raise RuntimeError("attempt cleanup gate failed: input protocol is absent")
+    if cleanup.get("backupQUp") not in (True, False):
+        raise RuntimeError("backup Q-up truth is absent")
+    if input_protocol == "none-neutral-control-observation":
+        if cleanup.get("backupQUp") is not False:
+            raise RuntimeError(
+                "attempt cleanup gate failed: input-free measure used backup Q-up"
+            )
+    elif cleanup.get("observerQUp") is not True and cleanup.get("backupQUp") is not True:
         raise RuntimeError(
             "attempt cleanup gate failed: neither observer nor backup Q-up confirmed"
         )
-    if cleanup.get("backupQUp") not in (True, False):
-        raise RuntimeError("backup Q-up truth is absent")
     cleanup_ok = (
         row.get("qUpConfirmed") is True
         and row.get("observerHandleClosed") is True
@@ -1227,9 +1239,6 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
         receipt, receipt_path, receipt.receipt_sha256, native, reader.handle,
         authorized_private_root,
     )
-    # Live Q is owned by the C# harness (ExternalHarnessQInput). Direct Python
-    # SendInput left control==0 and static positions on pairs 09-12.
-    q_input = ExternalHarnessQInput(authorized_private_root)
     readiness_deadline = Deadline(READINESS_DEADLINE_SECONDS)
     if not native.force_foreground(receipt.window_handle):
         raise sampler.AttemptError("could not foreground BEA before readiness")
@@ -1279,7 +1288,7 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
                 f"states_seen={sorted(seen_states)}"
             )
     if not native.force_foreground(receipt.window_handle):
-        raise sampler.AttemptError("could not foreground BEA before Q sampling")
+        raise sampler.AttemptError("could not foreground BEA before sampling")
     # Each phase uses a fresh origin. External Q handshakes take seconds; if hold
     # targets stay anchored to pre-Q origin every wait_until returns immediately
     # and the hold window collapses to a few hundred ms with control still 0.
@@ -1289,6 +1298,37 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
         reader, guard, clock, receipt.module_base, "baseline", baseline_origin, 0, deadline,
         vehicle=vehicle,
     )
+    if measure == sampler.MEASURE_SHIELD:
+        hold_origin = clock.now()
+        hold_rows = _sample_batches(
+            reader, guard, clock, receipt.module_base, "hold", hold_origin, 0, deadline,
+            vehicle=vehicle,
+        )
+        release_origin = clock.now()
+        release = _sample_batches(
+            reader, guard, clock, receipt.module_base, "release", release_origin, 0, deadline,
+            vehicle=vehicle,
+        )
+        run_digest = hashlib.sha256(
+            (receipt.receipt_sha256 + str(attempt) + str(baseline_origin)).encode("ascii")
+        ).hexdigest()
+        readiness = dict(readiness)
+        readiness["measure"] = sampler.MEASURE_SHIELD
+        readiness["inputProtocol"] = "none-neutral-control-observation"
+        return sampler.AttemptTrace(
+            attempt=attempt,
+            receipt_sha256=receipt.receipt_sha256,
+            run_digest=run_digest,
+            frequency=clock.frequency,
+            samples={"baseline": baseline, "hold": hold_rows, "release": release},
+            down_bracket=(hold_origin, hold_origin),
+            up_bracket=(release_origin, release_origin),
+            integrity=sampler.AttemptIntegrity(cleanup_confirmed=False),
+        ), readiness
+
+    # Live Q is owned by the C# harness (ExternalHarnessQInput). Direct Python
+    # SendInput left control==0 and static positions on pairs 09-12.
+    q_input = ExternalHarnessQInput(authorized_private_root)
     hold_callbacks = []
     hold_rows: list[sampler.RawSample] = []
     step = sampler.cadence_step_qpc(clock.frequency)
@@ -1477,6 +1517,7 @@ def analyze_provisional_trace(
     | turn_yaw.TurnAttemptMetrics
     | strafe.StrafeAttemptMetrics
     | energy_scaffold.EnergyRateMetrics
+    | shield_scaffold.ShieldRateMetrics
 ):
     """Run the integrated sampler; AppCore cleanup remains a separate final gate."""
     provisional = replace(
@@ -1519,7 +1560,66 @@ def analyze_provisional_trace(
             frequency=provisional.frequency,
             expect_negative=expect_negative,
         )
+    if measure == sampler.MEASURE_SHIELD:
+        sampler.validate_schedule(
+            {
+                phase: [row.tick for row in rows]
+                for phase, rows in provisional.samples.items()
+            },
+            frequency=provisional.frequency,
+            declared_slots={
+                phase: [row.slot for row in rows]
+                for phase, rows in provisional.samples.items()
+            },
+        )
+        for phase in ("baseline", "hold", "release"):
+            for row in provisional.samples[phase]:
+                if row.phase != phase:
+                    raise sampler.AttemptError(
+                        "shield sample phase label does not match its phase"
+                    )
+                if row.state_raw != sampler.WALKER_STATE_RAW:
+                    raise sampler.AttemptError(
+                        "shield observation requires a stable walker state"
+                    )
+                if row.control_raw != sampler.NEUTRAL_CONTROL_RAW:
+                    raise sampler.AttemptError(
+                        "shield observation requires neutral control"
+                    )
+        max_gap = sampler.schedule_max_gap_qpc(provisional.frequency)
+        for before, after in (("baseline", "hold"), ("hold", "release")):
+            if (
+                provisional.samples[after][0].tick
+                - provisional.samples[before][-1].tick
+                > max_gap
+            ):
+                raise sampler.AttemptError(
+                    "shield observation phase boundary exceeded the bounded schedule gap"
+                )
+        samples = [
+            shield_scaffold.ShieldSample(
+                tick=row.tick,
+                shield=float(row.shields),
+                energy=float(row.energy),
+            )
+            for phase in ("baseline", "hold", "release")
+            for row in provisional.samples[phase]
+        ]
+        return shield_scaffold.analyze_shield_rate(
+            attempt=provisional.attempt,
+            samples=samples,
+            frequency=provisional.frequency,
+            expect_positive=True,
+        )
     return sampler.analyze_attempt(provisional)
+
+
+def input_protocol_for_measure(measure: str) -> str:
+    return (
+        "none-neutral-control-observation"
+        if measure == sampler.MEASURE_SHIELD
+        else "external-q-hold"
+    )
 
 
 def _metrics_payload(
@@ -1529,6 +1629,7 @@ def _metrics_payload(
         | strafe.StrafeAttemptMetrics
         | morph_timing.TransformTimingMetrics
         | energy_scaffold.EnergyRateMetrics
+        | shield_scaffold.ShieldRateMetrics
     ),
     *,
     measure: str = sampler.MEASURE_FORWARD,
@@ -1597,6 +1698,33 @@ def _metrics_payload(
             },
             "publicProjectionWritten": False,
         }
+    if measure == sampler.MEASURE_SHIELD and isinstance(
+        metrics, shield_scaffold.ShieldRateMetrics
+    ):
+        return {
+            "schemaVersion": "battleengine-shield-rate-private-metrics.v1",
+            "attempt": metrics.attempt,
+            "acceptedBySamplerBeforeAppCoreCleanup": metrics.accepted,
+            "measure": sampler.MEASURE_SHIELD,
+            "inputProtocol": input_protocol_for_measure(measure),
+            "metrics": asdict(metrics),
+            "calibrationTarget": {
+                "sourceNamedPath": (
+                    "walker neutral-control energy-to-shields recharge mirror"
+                ),
+                "steamLinkedObservation": (
+                    "receipt-bound player-0 BattleEngine energy and shields samples"
+                ),
+                "scope": (
+                    "paired positive walker energy/shield rate under neutral control"
+                ),
+                "nonclaim": (
+                    "offsets remain steam-static hypotheses; no Core authority "
+                    "until copied-runtime dual-accept"
+                ),
+            },
+            "publicProjectionWritten": False,
+        }
     return {
         "schemaVersion": "battleengine-walker-trajectory-private-metrics.v1",
         "attempt": metrics.attempt,
@@ -1628,7 +1756,7 @@ def validate_measure_vehicle(measure: str, vehicle: str) -> None:
 
     if measure not in sampler.MEASURE_MODES:
         raise ValueError(
-            "measure must be forward, turn, strafe, transform, or energy"
+            "measure must be forward, turn, strafe, transform, energy, or shield"
         )
     if vehicle not in (sampler.VEHICLE_WALKER, sampler.VEHICLE_JET):
         raise ValueError("vehicle must be walker or jet")
@@ -1637,6 +1765,11 @@ def validate_measure_vehicle(measure: str, vehicle: str) -> None:
     if measure == sampler.MEASURE_ENERGY and vehicle != sampler.VEHICLE_JET:
         raise ValueError(
             "energy measure currently requires jet vehicle (drain under thrust hold)"
+        )
+    if measure == sampler.MEASURE_SHIELD and vehicle != sampler.VEHICLE_WALKER:
+        raise ValueError(
+            "shield measure currently requires walker vehicle "
+            "(neutral-control regeneration)"
         )
 
 
@@ -1693,10 +1826,11 @@ def run_observer(args: argparse.Namespace) -> int:
                 authorized_root, vehicle=vehicle, measure=measure,
             )
             deadline.check()
-            # collect_trace only returns after execute_owned_q_window confirms key-up.
+            # Input-owning traces return only after confirmed key-up; shield owns no input.
             q_up_confirmed = True
             payload = _trace_payload(trace, INTERFERENCE_NONCLAIM)
             payload["measure"] = measure
+            payload["inputProtocol"] = input_protocol_for_measure(measure)
             _write_new_json(raw_path, payload)
             metrics = analyze_provisional_trace(
                 trace, measure=measure, vehicle=vehicle
@@ -1755,7 +1889,8 @@ def build_parser() -> argparse.ArgumentParser:
         default=sampler.MEASURE_FORWARD,
         help=(
             "Scalar channel: forward, turn, strafe, transform morph timing, "
-            "or energy (jet thrust-hold drain; requires --vehicle jet)."
+            "energy (jet thrust-hold drain; requires --vehicle jet), or shield "
+            "(input-free walker neutral-control regeneration)."
         ),
     )
     pair = sub.add_parser("run-two", allow_abbrev=False)
@@ -1776,7 +1911,8 @@ def build_parser() -> argparse.ArgumentParser:
         default=sampler.MEASURE_FORWARD,
         help=(
             "Scalar channel: forward, turn, strafe, transform morph timing, "
-            "or energy (jet thrust-hold drain; requires --vehicle jet)."
+            "energy (jet thrust-hold drain; requires --vehicle jet), or shield "
+            "(input-free walker neutral-control regeneration)."
         ),
     )
     return parser
@@ -1897,6 +2033,7 @@ def _invoke_smoke(args: argparse.Namespace, attempt: int, profile_root: Path,
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    validate_measure_vehicle(args.measure, args.vehicle)
     if args.mode == "observe-one":
         return run_observer(args)
     result = run_two_attempts(

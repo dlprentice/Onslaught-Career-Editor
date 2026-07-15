@@ -9,6 +9,12 @@ from dataclasses import dataclass
 from typing import Sequence
 
 
+ACTIVE_EDGE_EPSILON = 1e-6
+MIN_ACTIVE_EDGE_COUNT = 5
+MIN_PAIRED_ACTIVE_EDGE_FRACTION = 0.80
+MAX_STEADY_RATE_RELATIVE_DELTA = 0.25
+
+
 class ShieldScaffoldError(ValueError):
     pass
 
@@ -71,34 +77,66 @@ def analyze_shield_rate(
 ) -> ShieldRateMetrics:
     if attempt not in (1, 2):
         raise ShieldScaffoldError("attempt must be 1 or 2")
-    active = [pair for pair in _paired_rates(samples, frequency) if abs(pair[0]) > 1e-6]
-    if len(active) < 5:
+    rates = _paired_rates(samples, frequency)
+    wrong_direction = [
+        pair
+        for pair in rates
+        if (
+            pair[0] < -ACTIVE_EDGE_EPSILON
+            or pair[1] < -ACTIVE_EDGE_EPSILON
+            if expect_positive
+            else pair[0] > ACTIVE_EDGE_EPSILON
+            or pair[1] > ACTIVE_EDGE_EPSILON
+        )
+    ]
+    if wrong_direction:
+        raise ShieldScaffoldError(
+            "shield or energy direction reversed during the observation"
+        )
+    shield_active = [pair for pair in rates if abs(pair[0]) > ACTIVE_EDGE_EPSILON]
+    if len(shield_active) < MIN_ACTIVE_EDGE_COUNT:
         raise ShieldScaffoldError("too few active shield edges")
     steady = statistics.median(
-        pair[0] for pair in active[-max(5, len(active) // 3) :]
+        pair[0]
+        for pair in shield_active[
+            -max(MIN_ACTIVE_EDGE_COUNT, len(shield_active) // 3) :
+        ]
     )
     if expect_positive and steady <= 0:
         raise ShieldScaffoldError("expected positive regen rate")
     if not expect_positive and steady >= 0:
         raise ShieldScaffoldError("expected negative drain rate")
-    opposite = [pair for pair in active if pair[0] * pair[1] < 0]
-    if len(opposite) / len(active) > 0.20:
-        raise ShieldScaffoldError("energy moved in the opposite direction from shields")
+    active_union = [
+        pair
+        for pair in rates
+        if abs(pair[0]) > ACTIVE_EDGE_EPSILON
+        or abs(pair[1]) > ACTIVE_EDGE_EPSILON
+    ]
     paired = [
         pair
-        for pair in active
-        if (pair[1] > 1e-6 if expect_positive else pair[1] < -1e-6)
+        for pair in active_union
+        if (
+            pair[0] > ACTIVE_EDGE_EPSILON
+            and pair[1] > ACTIVE_EDGE_EPSILON
+            if expect_positive
+            else pair[0] < -ACTIVE_EDGE_EPSILON
+            and pair[1] < -ACTIVE_EDGE_EPSILON
+        )
     ]
-    paired_fraction = len(paired) / len(active)
-    if paired_fraction < 0.80:
+    paired_fraction = len(paired) / len(active_union)
+    if (
+        len(paired) < MIN_ACTIVE_EDGE_COUNT
+        or paired_fraction < MIN_PAIRED_ACTIVE_EDGE_FRACTION
+    ):
         raise ShieldScaffoldError("energy did not track enough active shield edges")
-    steady_pairs = paired[-max(5, len(paired) // 3) :]
+    steady_pairs = paired[-max(MIN_ACTIVE_EDGE_COUNT, len(paired) // 3) :]
+    steady = statistics.median(pair[0] for pair in steady_pairs)
     steady_energy = statistics.median(pair[1] for pair in steady_pairs)
     if not math.isfinite(steady):
         raise ShieldScaffoldError("non-finite rate")
     rate_mid = (abs(steady) + abs(steady_energy)) / 2.0
     relative_rate_delta = abs(steady - steady_energy) / max(rate_mid, 1e-12)
-    if relative_rate_delta > 0.25:
+    if relative_rate_delta > MAX_STEADY_RATE_RELATIVE_DELTA:
         raise ShieldScaffoldError("energy/shield steady-rate correlation exceeded tolerance")
     return ShieldRateMetrics(
         attempt=attempt,
@@ -141,10 +179,34 @@ def materialize_shield_pair_envelope(
     first: ShieldRateMetrics,
     second: ShieldRateMetrics,
     *,
+    first_receipt_sha256: str,
+    second_receipt_sha256: str,
+    first_run_digest: str,
+    second_run_digest: str,
     relative_spread: float = 0.25,
 ) -> dict[str, object]:
     if not (first.accepted and second.accepted):
         raise ShieldScaffoldError("both attempts must be accepted")
+    if (first.attempt, second.attempt) != (1, 2):
+        raise ShieldScaffoldError("attempt order must be 1 then 2")
+    private_identities = (
+        first_receipt_sha256,
+        second_receipt_sha256,
+        first_run_digest,
+        second_run_digest,
+    )
+    if any(
+        not isinstance(value, str)
+        or len(value) != 64
+        or any(character not in "0123456789abcdefABCDEF" for character in value)
+        for value in private_identities
+    ):
+        raise ShieldScaffoldError("attempt identities must be 64-character hex digests")
+    if (
+        first_receipt_sha256.casefold() == second_receipt_sha256.casefold()
+        or first_run_digest.casefold() == second_run_digest.casefold()
+    ):
+        raise ShieldScaffoldError("attempt identities are not fresh")
     rates = sorted((first.steady_rate_per_sec, second.steady_rate_per_sec))
     mid = (rates[0] + rates[1]) / 2.0
     if mid == 0:

@@ -1218,6 +1218,8 @@
     "test:battleengine-transform-special-move-candidate": "py -3 tools\\battleengine_transform_special_move_candidate_probe.py --check",
     "test:battleengine-walker-recharge-candidate": "py -3 tools\\battleengine_walker_recharge_candidate_probe.py --check",
     "test:battleengine-walker-trajectory-sampler": "py -3 tools\\battleengine_walker_trajectory_sampler_test.py",
+    "test:battleengine-walker-trajectory-measurement": "py -3 tools\\run_battleengine_walker_trajectory_measurement_test.py",
+    "test:battleengine-walker-measurement-contract": "npm run test:battleengine-walker-trajectory-sampler && npm run test:battleengine-walker-trajectory-measurement && npm run test:battleengine-shield-scaffold && npm run test:battleengine-measure-mode-catalog && npm run test:winui-safe-copy-live-runtime-smoke-helper",
     "test:battleengine-camera-look-measurement": "py -3 tools\\battleengine_camera_look_measurement_test.py",
     "test:battleengine-energy-scaffold": "py -3 tools\\battleengine_energy_scaffold_test.py",
     "test:battleengine-energy-live-checklist": "py -3 tools\\battleengine_energy_live_checklist_test.py",

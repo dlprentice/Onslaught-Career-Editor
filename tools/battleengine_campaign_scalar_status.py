@@ -17,7 +17,11 @@ ROWS = (
     ("walker-strafe", "walker-strafe-lateral-scalar-response-v1.json", "dual-accepted"),
     ("transform-morph", "walker-transform-morph-timing-v1.json", "dual-accepted"),
     ("energy-rate", "jet-energy-drain-scalar-response-v1.json", "dual-accepted"),
-    ("shield-rate", None, "scaffold+offset; live pending"),
+    (
+        "shield-rate",
+        None,
+        "sampler-wired+neutral-control-correlation+offset; live pair pending",
+    ),
     ("fire-cooldown", None, "scaffold; live pending"),
     ("projectile-speed", None, "scaffold; live pending"),
     ("coast-friction", None, "scaffold; live pending"),
@@ -40,10 +44,20 @@ def main() -> int:
     try:
         import battleengine_measure_mode_catalog as modes
 
+        live = modes.catalog_as_dicts()
         offline = modes.offline_harness_dicts()
     except Exception:
+        live = []
         offline = []
-    json.dump({"scalars": out, "offlineHarnesses": offline}, sys.stdout, indent=2)
+    json.dump(
+        {
+            "scalars": out,
+            "liveMeasureModes": live,
+            "offlineHarnesses": offline,
+        },
+        sys.stdout,
+        indent=2,
+    )
     sys.stdout.write("\n")
     missing = [r for r in out if r.get("present") is False]
     return 1 if missing else 0

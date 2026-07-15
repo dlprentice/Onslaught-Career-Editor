@@ -205,8 +205,8 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn("QueryFullProcessImageNameW", generated)
         self.assertIn("CreateNoWindow = true", generated)
         self.assertIn("request-q-down.marker", generated)
-        self.assertIn("down:Q,down:W", generated)
-        self.assertIn("up:Q,up:W", generated)
+        self.assertIn("down:Q,down:UP", generated)
+        self.assertIn("up:Q,up:UP", generated)
         # Copied defaultoptions must bind Movement/Forward to Q for the adapter.
         self.assertIn('ActionLabel = "Forward"', generated)
         self.assertIn('Player1Token = "Q"', generated)
@@ -228,6 +228,24 @@ class WinUiSafeCopyLiveRuntimeSmokeTests(unittest.TestCase):
         self.assertIn("publicProjectionWritten = false", generated)
         self.assertNotIn("PROCESS_VM_WRITE", generated)
         self.assertNotIn("DebugActiveProcess", generated)
+
+    def test_shield_failure_cleanup_never_sends_backup_q_input(self) -> None:
+        module = self.live_smoke_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = module.write_runner(Path(tmp) / "runner")
+            generated = project.with_name("Program.cs").read_text(encoding="utf-8")
+        cleanup = generated[
+            generated.index("WALKER_CLEANUP_PHASE: release_q"):
+            generated.index("WALKER_CLEANUP_PHASE: close_adapter")
+        ]
+        self.assertIn("if (inputFreeMeasure)", cleanup)
+        self.assertIn('status = "not-owned-input-free"', cleanup)
+        self.assertLess(
+            cleanup.index("if (inputFreeMeasure)"),
+            cleanup.index("SendInputSequence("),
+        )
+        self.assertIn("inputProtocol", generated)
+        self.assertIn("inputFreeMeasure || observerQUp || backupQUp", generated)
 
     def test_walker_runner_has_phase_timestamps_and_observer_only_deadline(self) -> None:
         module = self.live_smoke_module()

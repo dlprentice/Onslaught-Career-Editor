@@ -10,6 +10,15 @@ import unittest
 import battleengine_shield_scaffold as shield
 
 
+def pair_identity_kwargs() -> dict[str, str]:
+    return {
+        "first_receipt_sha256": "1" * 64,
+        "second_receipt_sha256": "2" * 64,
+        "first_run_digest": "3" * 64,
+        "second_run_digest": "4" * 64,
+    }
+
+
 class ShieldScaffoldTests(unittest.TestCase):
     def test_shield_sample_carries_paired_energy(self) -> None:
         self.assertEqual(
@@ -57,13 +66,23 @@ class ShieldScaffoldTests(unittest.TestCase):
 
     def test_rejects_drain_when_expecting_regen(self) -> None:
         samples = shield.synthetic_shield_series(rate_per_sec=-1.0)
-        with self.assertRaisesRegex(shield.ShieldScaffoldError, "positive"):
+        with self.assertRaisesRegex(shield.ShieldScaffoldError, "direction reversed"):
             shield.analyze_shield_rate(
                 attempt=1,
                 samples=samples,
                 frequency=10_000_000,
                 expect_positive=True,
             )
+
+    def test_accepts_paired_drain_when_negative_is_expected(self) -> None:
+        metrics = shield.analyze_shield_rate(
+            attempt=1,
+            samples=shield.synthetic_shield_series(rate_per_sec=-2.0),
+            frequency=10_000_000,
+            expect_positive=False,
+        )
+        self.assertLess(metrics.steady_rate_per_sec, 0.0)
+        self.assertLess(metrics.steady_energy_rate_per_sec, 0.0)
 
     def test_rejects_shield_regen_when_energy_is_static(self) -> None:
         samples = shield.synthetic_shield_series(
@@ -83,7 +102,7 @@ class ShieldScaffoldTests(unittest.TestCase):
             rate_per_sec=2.0,
             energy_rate_per_sec=-2.0,
         )
-        with self.assertRaisesRegex(shield.ShieldScaffoldError, "opposite direction"):
+        with self.assertRaisesRegex(shield.ShieldScaffoldError, "direction reversed"):
             shield.analyze_shield_rate(
                 attempt=1,
                 samples=samples,
@@ -103,6 +122,64 @@ class ShieldScaffoldTests(unittest.TestCase):
                 frequency=10_000_000,
                 expect_positive=True,
             )
+
+    def test_rejects_energy_only_edges_outside_the_shield_mirror(self) -> None:
+        frequency = 10_000_000
+        step = frequency // 100
+        shield_value = 50.0
+        energy_value = 50.0
+        samples = []
+        for index in range(40):
+            samples.append(
+                shield.ShieldSample(
+                    tick=index * step,
+                    shield=shield_value,
+                    energy=energy_value,
+                )
+            )
+            energy_value += 0.01
+            if index % 5 == 0:
+                shield_value += 0.01
+        with self.assertRaisesRegex(shield.ShieldScaffoldError, "track enough"):
+            shield.analyze_shield_rate(
+                attempt=1,
+                samples=samples,
+                frequency=frequency,
+                expect_positive=True,
+            )
+
+    def test_rejects_material_wrong_direction_disturbance_during_regen(self) -> None:
+        frequency = 10_000_000
+        step = frequency // 100
+        for disturbed_field in ("shield", "energy"):
+            shield_value = 50.0
+            energy_value = 50.0
+            samples = []
+            for index in range(40):
+                samples.append(
+                    shield.ShieldSample(
+                        tick=index * step,
+                        shield=shield_value,
+                        energy=energy_value,
+                    )
+                )
+                if index < 7 and disturbed_field == "shield":
+                    shield_value -= 1.0
+                elif index < 7:
+                    energy_value -= 1.0
+                else:
+                    shield_value += 0.02
+                    energy_value += 0.02
+            with self.subTest(disturbed_field=disturbed_field), self.assertRaisesRegex(
+                shield.ShieldScaffoldError,
+                "direction reversed",
+            ):
+                shield.analyze_shield_rate(
+                    attempt=1,
+                    samples=samples,
+                    frequency=frequency,
+                    expect_positive=True,
+                )
 
     def test_rejects_nonfinite_paired_samples(self) -> None:
         for field in ("shield", "energy"):
@@ -150,7 +227,11 @@ class ShieldScaffoldTests(unittest.TestCase):
             samples=shield.synthetic_shield_series(rate_per_sec=2.1),
             frequency=frequency,
         )
-        envelope = shield.materialize_shield_pair_envelope(m1, m2)
+        envelope = shield.materialize_shield_pair_envelope(
+            m1,
+            m2,
+            **pair_identity_kwargs(),
+        )
         self.assertEqual(
             "battleengine-shield-rate-scalar-response.v0-scaffold",
             envelope["schemaVersion"],
@@ -187,7 +268,11 @@ class ShieldScaffoldTests(unittest.TestCase):
             frequency=frequency,
         )
         with self.assertRaisesRegex(shield.ShieldScaffoldError, "not stable"):
-            shield.materialize_shield_pair_envelope(m1, m2)
+            shield.materialize_shield_pair_envelope(
+                m1,
+                m2,
+                **pair_identity_kwargs(),
+            )
 
     def test_pair_envelope_rejects_unstable_energy_rates(self) -> None:
         frequency = 10_000_000
@@ -208,7 +293,52 @@ class ShieldScaffoldTests(unittest.TestCase):
             frequency=frequency,
         )
         with self.assertRaisesRegex(shield.ShieldScaffoldError, "energy rates not stable"):
-            shield.materialize_shield_pair_envelope(m1, m2)
+            shield.materialize_shield_pair_envelope(
+                m1,
+                m2,
+                **pair_identity_kwargs(),
+            )
+
+    def test_pair_envelope_requires_attempts_one_and_two(self) -> None:
+        metrics = shield.analyze_shield_rate(
+            attempt=1,
+            samples=shield.synthetic_shield_series(rate_per_sec=1.0),
+            frequency=10_000_000,
+        )
+        with self.assertRaisesRegex(shield.ShieldScaffoldError, "order"):
+            shield.materialize_shield_pair_envelope(
+                metrics,
+                metrics,
+                **pair_identity_kwargs(),
+            )
+
+    def test_pair_envelope_requires_fresh_receipt_and_run_identities(self) -> None:
+        first = shield.analyze_shield_rate(
+            attempt=1,
+            samples=shield.synthetic_shield_series(rate_per_sec=1.0),
+            frequency=10_000_000,
+        )
+        second = shield.analyze_shield_rate(
+            attempt=2,
+            samples=shield.synthetic_shield_series(rate_per_sec=1.0),
+            frequency=10_000_000,
+        )
+        identities = pair_identity_kwargs()
+        for duplicate_key, source_key in (
+            ("second_receipt_sha256", "first_receipt_sha256"),
+            ("second_run_digest", "first_run_digest"),
+        ):
+            duplicate = dict(identities)
+            duplicate[duplicate_key] = duplicate[source_key]
+            with self.subTest(duplicate_key=duplicate_key), self.assertRaisesRegex(
+                shield.ShieldScaffoldError,
+                "identities are not fresh",
+            ):
+                shield.materialize_shield_pair_envelope(
+                    first,
+                    second,
+                    **duplicate,
+                )
 
 
 if __name__ == "__main__":

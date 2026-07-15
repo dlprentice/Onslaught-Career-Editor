@@ -148,7 +148,10 @@ For minor current-doc changes use `npm run test:doc-commands` and
 all-tree `test:md-links` only when historical or broad tree documentation
 changes. Runtime-helper changes use `npm run test:runtime-tooling-safety`; the
 copied-runtime proof sweep is maintainer research, not ordinary AppCore
-acceptance. `npm run test:md-links` writes ignored reports under
+acceptance. Receipt-bound walker measurement changes use the focused
+`npm run test:battleengine-walker-measurement-contract` gate; add the broad
+runtime-tooling gate only when shared profile, CDB, input, or smoke helpers also
+change. `npm run test:md-links` writes ignored reports under
 `subagents/md-link-check`; do not commit those reports.
 
 ## Change Expectations

@@ -18,13 +18,23 @@ Machine report: `npm run report:battleengine-campaign-scalar-status`
 | System | Offset hyp | Harness |
 |--------|------------|---------|
 | Walker energy regen | BE+0xFC | not dual-accepted yet (provisional Core) |
-| Shield regen/drain | BE+0x100 | shield scaffold |
+| Shield regen/drain | BE+0x100 | input-free live sampler + paired scaffold; no live pair yet |
 | Fire cooldown | energy-drop edges | fire scaffold |
 | Projectile speed | entity TBD | projectile scaffold |
 | Coast / friction | path release half-life | coast scaffold |
 | Camera look | body/camera orientation | camera look scaffold |
 
-## Offline harness catalog (not MEASURE_MODES yet)
+## Live measure modes pending dual-accept
+
+| Mode | Vehicle | Module |
+|------|---------|--------|
+| shield | walker | `battleengine_shield_scaffold` |
+
+The shield mode is wired for receipt-bound, neutral-control, input-free
+observation with symmetric energy/shield correlation and input-not-owned
+cleanup. This is runner readiness only, not a retail shield-rate claim.
+
+## Offline-only harness catalog
 
 Machine: `tools/battleengine_measure_mode_catalog.py` → `OFFLINE_HARNESS_ROWS`
 
@@ -34,7 +44,6 @@ Machine: `tools/battleengine_measure_mode_catalog.py` → `OFFLINE_HARNESS_ROWS`
 | camera-look | `battleengine_camera_look_measurement` |
 | fire-cooldown | `battleengine_fire_cooldown_scaffold` |
 | projectile-speed | `battleengine_projectile_speed_scaffold` |
-| shield-rate | `battleengine_shield_scaffold` |
 
 ## Live prep (shield next)
 

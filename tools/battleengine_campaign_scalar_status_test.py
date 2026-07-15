@@ -31,9 +31,18 @@ class CampaignScalarStatusTests(unittest.TestCase):
         self.assertEqual(6, len(dual))
         self.assertTrue(all(r.get("present") for r in dual))
         self.assertIn("energy-rate", {r["name"] for r in dual})
+        shield_scalar = next(r for r in payload["scalars"] if r["name"] == "shield-rate")
+        self.assertEqual(
+            "sampler-wired+neutral-control-correlation+offset; live pair pending",
+            shield_scalar["status"],
+        )
         offline = payload.get("offlineHarnesses") or []
-        self.assertEqual(5, len(offline))
+        self.assertEqual(4, len(offline))
         self.assertIn("coast", {row["mode"] for row in offline})
+        live = payload.get("liveMeasureModes") or []
+        self.assertEqual(6, len(live))
+        shield = next(row for row in live if row["mode"] == "shield")
+        self.assertIn("live dual-accept pending", shield["liveStatus"])
 
 
 if __name__ == "__main__":

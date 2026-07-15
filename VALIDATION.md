@@ -67,6 +67,14 @@ safety, the primary WinUI lane, and deterministic rebuild tests. Whole-tree
 payload/hygiene scans, native Godot smoke, copied-runtime proof sweeps, Ghidra,
 installer probes, and ZIP publication remain separately triggered.
 
+Receipt-bound walker scalar/resource measurement changes use
+`npm run test:battleengine-walker-measurement-contract`. That focused gate owns
+the tick-aware sampler, measurement orchestrator, shield correlation scaffold,
+generated walker cleanup/input-ownership proof, and live-mode catalog. It is
+intentionally separate from
+`test:runtime-tooling-safety`; run the broader gate only when its shared
+profile/CDB/input/smoke helpers change.
+
 ## Retained Protections
 
 - Installed game and original `BEA.exe` remain read-only; patch tests still

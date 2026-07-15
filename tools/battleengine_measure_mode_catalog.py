@@ -54,6 +54,16 @@ MEASURE_MODE_CATALOG: tuple[MeasureModeRow, ...] = (
         live_status="dual-accepted energy-p02",
         notes="BE+0xFC; JetEnergyDrainPerTick=17; walker regen still provisional",
     ),
+    MeasureModeRow(
+        mode="shield",
+        vehicle="walker",
+        analysis_module="battleengine_shield_scaffold",
+        live_status="sampler-wired; live dual-accept pending",
+        notes=(
+            "BE+0x100 paired with energy BE+0xFC; neutral-control, "
+            "input-free observation"
+        ),
+    ),
 )
 
 
@@ -103,13 +113,6 @@ OFFLINE_HARNESS_ROWS: tuple[MeasureModeRow, ...] = (
         analysis_module="battleengine_projectile_speed_scaffold",
         live_status="scaffold; entity tracking pending",
         notes="Pair envelope ready; Core ProjectileSpeedPerTick provisional",
-    ),
-    MeasureModeRow(
-        mode="shield-rate",
-        vehicle="walker",
-        analysis_module="battleengine_shield_scaffold",
-        live_status="scaffold+offset BE+0x100; live pending",
-        notes="Paired with energy BE+0xFC",
     ),
 )
 

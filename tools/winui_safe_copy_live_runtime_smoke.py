@@ -3147,6 +3147,10 @@ static int RunWalkerTrajectoryAttempt()
     string adapterPath = RequiredEnv("ONSLAUGHT_LIVE_WALKER_ADAPTER_PATH");
     string expectedAdapterSha256 = RequiredEnv("ONSLAUGHT_LIVE_WALKER_ADAPTER_SHA256");
     string pythonExe = RequiredEnv("ONSLAUGHT_LIVE_PYTHON_EXE");
+    string measureMode = (Environment.GetEnvironmentVariable("ONSLAUGHT_LIVE_WALKER_MEASURE") ?? "forward")
+        .Trim().ToLowerInvariant();
+    bool inputFreeMeasure = measureMode == "shield";
+    string inputProtocol = inputFreeMeasure ? "none-neutral-control-observation" : "external-q-hold";
     int attempt = BoundedIntEnv("ONSLAUGHT_LIVE_WALKER_ATTEMPT", 0, 1, 2);
     int lifecycleDeadlineSeconds = BoundedIntEnv("ONSLAUGHT_LIVE_WALKER_DEADLINE_SECONDS", 90, 45, 90);
     int attemptBudgetSeconds = BoundedIntEnv("ONSLAUGHT_LIVE_WALKER_ATTEMPT_BUDGET_SECONDS", 215, 215, 215);
@@ -3349,7 +3353,7 @@ static int RunWalkerTrajectoryAttempt()
             WorkingDirectory = Path.GetDirectoryName(adapterPath)!,
         };
         string vehicleMode = Environment.GetEnvironmentVariable("ONSLAUGHT_LIVE_WALKER_VEHICLE") ?? "walker";
-        string measureModeAdapter = Environment.GetEnvironmentVariable("ONSLAUGHT_LIVE_WALKER_MEASURE") ?? "forward";
+        string measureModeAdapter = measureMode;
         adapterCommand = new[] {
             adapterPath, "observe-one", "--attempt", attempt.ToString(System.Globalization.CultureInfo.InvariantCulture),
             "--receipt", runtimeReceiptPath, "--expected-receipt-sha256", receiptSha256,
@@ -3551,7 +3555,15 @@ static int RunWalkerTrajectoryAttempt()
                 observerUpBeforeCleanup = JsonBool(preCleanupStatus.RootElement, "qUpConfirmed") &&
                     JsonBool(preCleanupStatus.RootElement, "observerHandleClosed");
             }
-            if (observerUpBeforeCleanup)
+            if (inputFreeMeasure)
+            {
+                qReleaseResult = JsonPayload(new {
+                    status = "not-owned-input-free",
+                    focused = true,
+                    sendInputEventsSent = 0,
+                });
+            }
+            else if (observerUpBeforeCleanup)
             {
                 qReleaseResult = JsonPayload(new {
                     status = "observer-confirmed-up",
@@ -3698,7 +3710,8 @@ static int RunWalkerTrajectoryAttempt()
         receiptSha256,
         sourceUnchanged,
         copyUnchanged,
-        qUpConfirmed = observerQUp || backupQUp,
+        qUpConfirmed = inputFreeMeasure || observerQUp || backupQUp,
+        inputProtocol,
         observerHandleClosed,
         managedProcessStopped = managedStopped,
         ownedProcessCount,

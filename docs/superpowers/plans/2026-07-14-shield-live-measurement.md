@@ -4,7 +4,7 @@
 
 **Goal:** Add a receipt-bound, input-free walker shield measurement mode with paired energy/shield correlation checks and a focused deterministic contract gate.
 
-**Architecture:** The existing walker runtime runner retains ownership of receipt identity, sampling, deadlines, cleanup, and two-attempt lifecycle. A strengthened pure-Python shield scaffold analyzes paired fields, while the runner dispatches `--measure shield` to an idle observation branch that never creates Q-input markers or calls motion acceptance. Catalog/reporting and package scripts expose the new readiness without claiming a live result or changing Core.
+**Architecture:** The existing walker runtime runner retains ownership of receipt identity, sampling, deadlines, cleanup, and two-attempt lifecycle. A strengthened pure-Python shield scaffold analyzes paired fields, while the runner dispatches `--measure shield` to a neutral-control observation branch that never creates Q-input markers or calls motion acceptance. The shared cleanup owner records input as not owned and suppresses backup Q release for shield failures. Catalog/reporting and package scripts expose the new readiness without claiming a live result or changing Core.
 
 **Tech Stack:** Python 3 standard library and `unittest`, existing C#/AppCore-generated runtime harness consumed read-only, npm script routing, Markdown documentation.
 
@@ -13,9 +13,13 @@
 - Never read from, write to, patch, launch, or mutate the installed Steam game or original `BEA.exe` during offline readiness work.
 - Do not launch BEA, attach CDB, send input, read live memory, or create runtime proof without a complete explicit live lease under `goal.policy.md`.
 - Keep shield acceptance independent of motion, velocity, steady-speed, and Q-input acceptance.
-- Require walker vehicle mode and correlated positive energy/shield update edges.
+- Require walker vehicle mode, full QPC schedule integrity, neutral control on
+  every sample, and symmetric correlated positive energy/shield update edges.
 - Keep the shield envelope `v0-scaffold`; do not publish a v1 retail contract or change deterministic Core without two accepted live attempts.
-- Add the orchestrator to a focused walker-specific gate; do not expand `test:runtime-tooling-safety`.
+- Add the orchestrator and generated walker cleanup proof to a focused
+  walker-specific gate. Do not add another child to
+  `test:runtime-tooling-safety`; run that existing gate when the shared smoke
+  helper changes.
 - Preserve the unrelated untracked `terminals/` directory.
 
 ---
@@ -66,7 +70,16 @@
       sample_count: int
   ```
 
-  Validate finite values before calculating adjacent rates. Treat shield edges above `1e-6` as active, require at least five, require at least `0.80` of active shield edges to have positive energy movement, and require the paired steady-rate relative delta to be no greater than `0.25`. Extend `synthetic_shield_series` with optional `energy_start` and `energy_rate_per_sec`, defaulting to the shield start/rate. Build exact two-attempt bands for both rates and conservative correlation bounds without promoting them beyond `v0-scaffold`.
+  Validate finite values before calculating adjacent rates. Treat shield or
+  energy edges above `1e-6` as active, require at least five paired edges,
+  require positive overlap on at least `0.80` of the union of active edges, and
+  reject any material wrong-direction energy or shield edge before requiring
+  the paired steady-rate relative delta to be no greater than `0.25`.
+  Extend `synthetic_shield_series` with optional `energy_start` and
+  `energy_rate_per_sec`, defaulting to the shield start/rate. Build exact
+  attempt-1/attempt-2 bands only after validating distinct receipt and run
+  digests, without emitting those private identities or promoting the result
+  beyond `v0-scaffold`.
 
 - [ ] **Step 4: Run GREEN**
 
@@ -79,6 +92,8 @@
 - Modify: `tools/run_battleengine_walker_trajectory_measurement.py`
 - Modify: `tools/run_battleengine_walker_trajectory_measurement_test.py`
 - Modify: `tools/battleengine_walker_trajectory_sampler_test.py`
+- Modify: `tools/winui_safe_copy_live_runtime_smoke.py`
+- Modify: `tools/winui_safe_copy_live_runtime_smoke_test.py`
 
 **Interfaces:**
 - Consumes: sampler `RawSample.energy` / `.shields` at BE+0xFC / +0x100.
@@ -93,7 +108,15 @@
   self.m.validate_measure_vehicle(self.m.sampler.MEASURE_SHIELD, self.m.sampler.VEHICLE_WALKER)
   ```
 
-  Require shield+jet validation to fail, parser choices to accept `shield`, correlated synthetic trace rows to produce accepted shield metrics, the private payload to name `none-idle-observation`, and `sampler.analyze_attempt` not to be called for shield. Add a collection test that replaces `ExternalHarnessQInput` and `execute_deadlined_q_batches` with fail-on-call sentinels while patched guarded phase sampling returns baseline/hold/release rows.
+  Require shield+jet validation to fail before live orchestration, parser choices
+  to accept `shield`, correlated neutral-control synthetic trace rows to produce
+  accepted shield metrics, and the private payload to name
+  `none-neutral-control-observation`. Add negative schedule, phase, state, control, and
+  boundary fixtures. Add a collection test that replaces
+  `ExternalHarnessQInput` and `execute_deadlined_q_batches` with fail-on-call
+  sentinels while patched guarded phase sampling returns
+  baseline/hold/release rows. Require generated cleanup to skip backup Q input
+  on shield success and failure.
 
 - [ ] **Step 2: Run RED**
 
@@ -108,9 +131,11 @@
 
 - [ ] **Step 3: Implement minimal runner wiring**
 
-  Add `MEASURE_SHIELD` after `MEASURE_ENERGY` in the sampler catalog. Import the shield scaffold in the runner and extend metric unions. In `collect_trace`, complete readiness and guarded baseline sampling, then for shield collect hold and release through `_sample_batches` with fresh QPC origins and return without constructing `ExternalHarnessQInput` or calling `execute_deadlined_q_batches`. Set readiness and raw payload input protocol to `none-idle-observation`.
+  Add `MEASURE_SHIELD` after `MEASURE_ENERGY` in the sampler catalog. Import the shield scaffold in the runner and extend metric unions. In `collect_trace`, complete readiness and guarded baseline sampling, then for shield collect hold and release through `_sample_batches` with fresh QPC origins and return without constructing `ExternalHarnessQInput` or calling `execute_deadlined_q_batches`. Set readiness and raw payload input protocol to `none-neutral-control-observation`.
 
-  Analyze all three ordered phases as:
+  Validate all three ordered phases through the existing QPC count/cadence/slot
+  contract, require walker state plus neutral control on every row, and then
+  analyze them as:
 
   ```python
   samples = [
@@ -124,7 +149,10 @@
   ]
   ```
 
-  Require walker vehicle mode, emit the bounded private metrics schema, update CLI help, and preserve every other mode's existing Q/morph/motion path.
+  Require walker vehicle mode before prebuild or launch, emit the bounded
+  private metrics schema, update CLI help, and preserve every other mode's
+  existing Q/morph/motion path. Give the generated cleanup owner an explicit
+  input-not-owned branch so shield failure never sends backup Q.
 
 - [ ] **Step 4: Run GREEN and refactor only while green**
 
@@ -170,7 +198,7 @@
 
   ```json
   "test:battleengine-walker-trajectory-measurement": "py -3 tools\\run_battleengine_walker_trajectory_measurement_test.py",
-  "test:battleengine-walker-measurement-contract": "npm run test:battleengine-walker-trajectory-sampler && npm run test:battleengine-walker-trajectory-measurement && npm run test:battleengine-shield-scaffold && npm run test:battleengine-measure-mode-catalog"
+  "test:battleengine-walker-measurement-contract": "npm run test:battleengine-walker-trajectory-sampler && npm run test:battleengine-walker-trajectory-measurement && npm run test:battleengine-shield-scaffold && npm run test:battleengine-measure-mode-catalog && npm run test:winui-safe-copy-live-runtime-smoke-helper"
   ```
 
   Document this focused gate in the existing runtime-helper command guidance without adding it to `test:runtime-tooling-safety`.
@@ -180,8 +208,8 @@
   Run:
 
   ```powershell
-  C:\Users\david\AppData\Roaming\npm\npm.cmd run test:battleengine-walker-measurement-contract
-  C:\Users\david\AppData\Roaming\npm\npm.cmd run test:battleengine-campaign-scalar-status
+  & "$env:APPDATA\npm\npm.cmd" run test:battleengine-walker-measurement-contract
+  & "$env:APPDATA\npm\npm.cmd" run test:battleengine-campaign-scalar-status
   ```
 
   Expected: all focused suites pass and the status reporter exits zero.
@@ -201,9 +229,10 @@
 
   ```powershell
   py -3 -m py_compile tools\battleengine_shield_scaffold.py tools\battleengine_walker_trajectory_sampler.py tools\run_battleengine_walker_trajectory_measurement.py tools\battleengine_measure_mode_catalog.py tools\battleengine_campaign_scalar_status.py
-  C:\Users\david\AppData\Roaming\npm\npm.cmd run test:battleengine-walker-measurement-contract
-  C:\Users\david\AppData\Roaming\npm\npm.cmd run test:battleengine-campaign-scalar-status
-  C:\Users\david\AppData\Roaming\npm\npm.cmd run test:doc-commands
+  & "$env:APPDATA\npm\npm.cmd" run test:battleengine-walker-measurement-contract
+  & "$env:APPDATA\npm\npm.cmd" run test:battleengine-campaign-scalar-status
+  & "$env:APPDATA\npm\npm.cmd" run test:runtime-tooling-safety
+  & "$env:APPDATA\npm\npm.cmd" run test:doc-commands
   git diff --check
   ```
 

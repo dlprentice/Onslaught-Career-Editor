@@ -32,7 +32,7 @@ Human front door: [campaign-scalar-status.md](campaign-scalar-status.md).
 | [jet-energy-drain-retail-to-core-translation-policy.md](jet-energy-drain-retail-to-core-translation-policy.md) | accepted |
 | [energy-live-dual-accept-checklist.md](energy-live-dual-accept-checklist.md) | live dual-accept operator checklist |
 | [energy-retail-to-core-translation-policy.md](energy-retail-to-core-translation-policy.md) | partial — jet drain accepted; walker regen provisional |
-| [shield-rate-scalar-measurement-plan.md](shield-rate-scalar-measurement-plan.md) | offset hyp BE+0x100; live pending |
+| [shield-rate-scalar-measurement-plan.md](shield-rate-scalar-measurement-plan.md) | input-free sampler wired at BE+0x100; live pair pending |
 | [shield-retail-to-core-translation-policy.md](shield-retail-to-core-translation-policy.md) | draft blocked on dual-accept |
 | [fire-cooldown-scalar-measurement-plan.md](fire-cooldown-scalar-measurement-plan.md) | scaffold + energy-drop edges |
 | [fire-cooldown-retail-to-core-translation-policy.md](fire-cooldown-retail-to-core-translation-policy.md) | draft blocked on dual-accept |

@@ -80,6 +80,19 @@ class MeasurementTests(unittest.TestCase):
     def setUp(self):
         self.m = load_module()
 
+    def paired_neutral_shield_trace(self, attempt=1):
+        trace = self.m.sampler.synthetic_attempt_trace(attempt=attempt)
+        for rows in trace.samples.values():
+            for index, row in enumerate(rows):
+                value = 50.0 + 2.0 * (row.tick / trace.frequency)
+                rows[index] = self.m.sampler.replace_sample(
+                    row,
+                    control_raw=self.m.sampler.NEUTRAL_CONTROL_RAW,
+                    energy=value,
+                    shields=value,
+                )
+        return trace
+
     def receipt(self, root: Path):
         exe = root / "profile" / "BEA.exe"
         manifest = root / "profile" / "profile-manifest.json"
@@ -213,6 +226,61 @@ class MeasurementTests(unittest.TestCase):
     def test_no_q_down_before_readiness(self):
         source = inspect.getsource(self.m.collect_trace)
         self.assertLess(source.index("wait_for_runtime_readiness("), source.index("origin = clock.now()"))
+
+    def test_shield_collection_never_owns_q_or_motion_window(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            receipt_path, digest = self.receipt(root)
+            receipt = self.m.load_receipt(
+                receipt_path,
+                digest,
+                authorized_private_root=root,
+            )
+            synthetic = self.m.sampler.synthetic_attempt_trace(attempt=1)
+            sampled_phases = []
+
+            def sample_phase(*_args, **kwargs):
+                phase = _args[4]
+                sampled_phases.append(phase)
+                return list(synthetic.samples[phase])
+
+            with (
+                patch.object(
+                    self.m,
+                    "wait_for_runtime_readiness",
+                    return_value={"status": "ready"},
+                ),
+                patch.object(self.m, "_sample_batches", side_effect=sample_phase),
+                patch.object(
+                    self.m,
+                    "ExternalHarnessQInput",
+                    side_effect=AssertionError("shield must not own Q"),
+                ),
+                patch.object(
+                    self.m,
+                    "execute_deadlined_q_batches",
+                    side_effect=AssertionError("shield must not run a Q window"),
+                ),
+            ):
+                try:
+                    trace, readiness = self.m.collect_trace(
+                        1,
+                        receipt,
+                        receipt_path,
+                        SimpleNamespace(handle=99),
+                        FakeNative(receipt),
+                        FakeClock(),
+                        SimpleNamespace(check=lambda *_args: None),
+                        root,
+                        vehicle=self.m.sampler.VEHICLE_WALKER,
+                        measure=self.m.sampler.MEASURE_SHIELD,
+                    )
+                except AssertionError as exc:
+                    self.fail(str(exc))
+
+        self.assertEqual(["baseline", "hold", "release"], sampled_phases)
+        self.assertEqual("none-neutral-control-observation", readiness["inputProtocol"])
+        self.assertEqual(set(self.m.sampler.PHASE_TARGETS), set(trace.samples))
 
     def test_receipt_byte_drift_and_stale_output_fail_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -430,6 +498,110 @@ class MeasurementTests(unittest.TestCase):
         )
         self.assertEqual(self.m.sampler.MEASURE_ENERGY, payload["measure"])
 
+    def test_shield_measure_analyzes_paired_idle_regen(self):
+        trace = self.paired_neutral_shield_trace()
+        self.assertNotEqual(
+            trace.samples["baseline"][0].position,
+            trace.samples["release"][-1].position,
+            "fixture must retain motion so shield acceptance proves motion-independence",
+        )
+        metrics = self.m.analyze_provisional_trace(
+            trace,
+            measure=self.m.sampler.MEASURE_SHIELD,
+            vehicle=self.m.sampler.VEHICLE_WALKER,
+        )
+        self.assertEqual("ShieldRateMetrics", type(metrics).__name__)
+        self.assertTrue(metrics.accepted)
+        self.assertGreater(metrics.steady_rate_per_sec, 0.0)
+        self.assertGreater(metrics.steady_energy_rate_per_sec, 0.0)
+        payload = self.m._metrics_payload(
+            metrics,
+            measure=self.m.sampler.MEASURE_SHIELD,
+        )
+        self.assertEqual(
+            "battleengine-shield-rate-private-metrics.v1",
+            payload["schemaVersion"],
+        )
+        self.assertEqual(self.m.sampler.MEASURE_SHIELD, payload["measure"])
+        self.assertEqual("none-neutral-control-observation", payload["inputProtocol"])
+
+    def test_shield_measure_rejects_non_neutral_control_during_observation(self):
+        trace = self.paired_neutral_shield_trace()
+        row = trace.samples["hold"][10]
+        trace.samples["hold"][10] = self.m.sampler.replace_sample(
+            row,
+            control_raw=self.m.sampler.FORWARD_CONTROL_RAW,
+        )
+        with self.assertRaisesRegex(
+            self.m.sampler.AttemptError,
+            "neutral control",
+        ):
+            self.m.analyze_provisional_trace(
+                trace,
+                measure=self.m.sampler.MEASURE_SHIELD,
+                vehicle=self.m.sampler.VEHICLE_WALKER,
+            )
+
+    def test_shield_measure_rejects_undersampled_phase_schedule(self):
+        trace = self.paired_neutral_shield_trace()
+        trace.samples["hold"] = trace.samples["hold"][:5]
+        with self.assertRaisesRegex(
+            self.m.sampler.AttemptError,
+            "hold phase undersampled",
+        ):
+            self.m.analyze_provisional_trace(
+                trace,
+                measure=self.m.sampler.MEASURE_SHIELD,
+                vehicle=self.m.sampler.VEHICLE_WALKER,
+            )
+
+    def test_shield_measure_rejects_phase_state_and_boundary_drift(self):
+        cases = ("phase", "state", "boundary")
+        for case in cases:
+            trace = self.paired_neutral_shield_trace()
+            if case == "phase":
+                row = trace.samples["hold"][0]
+                trace.samples["hold"][0] = self.m.sampler.replace_sample(
+                    row,
+                    phase="baseline",
+                )
+                expected = "phase label"
+            elif case == "state":
+                row = trace.samples["hold"][0]
+                trace.samples["hold"][0] = self.m.sampler.replace_sample(
+                    row,
+                    state_raw=self.m.sampler.JET_STATE_RAW,
+                )
+                expected = "stable walker state"
+            else:
+                shift = self.m.sampler.schedule_max_gap_qpc(trace.frequency) + 1
+                for phase in ("hold", "release"):
+                    trace.samples[phase] = [
+                        self.m.sampler.replace_sample(row, tick=row.tick + shift)
+                        for row in trace.samples[phase]
+                    ]
+                expected = "phase boundary"
+            with self.subTest(case=case), self.assertRaisesRegex(
+                self.m.sampler.AttemptError,
+                expected,
+            ):
+                self.m.analyze_provisional_trace(
+                    trace,
+                    measure=self.m.sampler.MEASURE_SHIELD,
+                    vehicle=self.m.sampler.VEHICLE_WALKER,
+                )
+
+    def test_measure_input_protocol_names_shield_as_input_free(self):
+        protocol_for = getattr(self.m, "input_protocol_for_measure", lambda _measure: None)
+        self.assertEqual(
+            "none-neutral-control-observation",
+            protocol_for(self.m.sampler.MEASURE_SHIELD),
+        )
+        self.assertEqual(
+            "external-q-hold",
+            protocol_for(self.m.sampler.MEASURE_ENERGY),
+        )
+
     def test_energy_measure_requires_jet_vehicle(self):
         with self.assertRaisesRegex(ValueError, "requires jet"):
             self.m.validate_measure_vehicle(
@@ -438,6 +610,44 @@ class MeasurementTests(unittest.TestCase):
         self.m.validate_measure_vehicle(
             self.m.sampler.MEASURE_ENERGY, self.m.sampler.VEHICLE_JET
         )
+
+    def test_shield_measure_requires_walker_vehicle(self):
+        self.m.validate_measure_vehicle(
+            self.m.sampler.MEASURE_SHIELD,
+            self.m.sampler.VEHICLE_WALKER,
+        )
+        with self.assertRaisesRegex(ValueError, "requires walker"):
+            self.m.validate_measure_vehicle(
+                self.m.sampler.MEASURE_SHIELD,
+                self.m.sampler.VEHICLE_JET,
+            )
+
+    def test_run_two_rejects_shield_jet_before_live_orchestration(self):
+        with patch.object(
+            self.m,
+            "run_two_attempts",
+            side_effect=AssertionError("invalid mode reached live orchestration"),
+        ):
+            with self.assertRaisesRegex(ValueError, "requires walker"):
+                self.m.main(
+                    [
+                        "run-two",
+                        "--source-root",
+                        "source",
+                        "--exe-override",
+                        "copy.exe",
+                        "--private-root",
+                        "private",
+                        "--authorized-private-root",
+                        "authorized",
+                        "--arm-live-bea",
+                        "test-arm",
+                        "--vehicle",
+                        self.m.sampler.VEHICLE_JET,
+                        "--measure",
+                        self.m.sampler.MEASURE_SHIELD,
+                    ]
+                )
 
     def test_turn_and_strafe_require_walker_vehicle(self):
         with self.assertRaisesRegex(ValueError, "requires walker"):
@@ -552,6 +762,7 @@ class MeasurementTests(unittest.TestCase):
             "receiptPath": str(receipt),
             "receiptSha256": hashlib.sha256(receipt.read_bytes()).hexdigest(),
             "qUpConfirmed": q_up,
+            "inputProtocol": "external-q-hold",
             "observerHandleClosed": handle,
             "managedProcessStopped": stopped,
             "ownedProcessCount": 0 if zero else 1,
@@ -772,6 +983,45 @@ class MeasurementTests(unittest.TestCase):
             result = self.run_pair(root, invoke)
         self.assertEqual([1], calls)
         self.assertFalse(result["pairEligible"])
+
+    def test_input_free_shield_failure_needs_no_backup_q_release(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "pair"
+            calls = []
+
+            def invoke(attempt, profile_root, evidence_root):
+                calls.append(attempt)
+                row = self.closeout(root, attempt, accepted=False, q_up=False)
+                row["qUpConfirmed"] = True
+                row["inputProtocol"] = "none-neutral-control-observation"
+                row["cleanup"] = {
+                    "observerQUp": False,
+                    "backupQUp": False,
+                    "phaseJobsClosed": True,
+                }
+                return row
+
+            result = self.run_pair(root, invoke)
+        self.assertEqual([1], calls)
+        self.assertFalse(result["pairEligible"])
+
+    def test_input_free_shield_closeout_rejects_backup_q_release(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "pair"
+
+            def invoke(attempt, profile_root, evidence_root):
+                row = self.closeout(root, attempt, accepted=False, q_up=False)
+                row["qUpConfirmed"] = True
+                row["inputProtocol"] = "none-neutral-control-observation"
+                row["cleanup"] = {
+                    "observerQUp": False,
+                    "backupQUp": True,
+                    "phaseJobsClosed": True,
+                }
+                return row
+
+            with self.assertRaisesRegex(RuntimeError, "input-free.*backup"):
+                self.run_pair(root, invoke)
 
     def test_remaining_budget_refuses_attempt_two_after_clean_attempt_one(self):
         with tempfile.TemporaryDirectory() as tmp:
