@@ -22,6 +22,12 @@ public static class SimulationConstants
     // Schema: battleengine-walker-turn-yaw-scalar-response.v1
     // Not yet wired into continuous facing integration (facing still snaps).
     public const int WalkerLookYawRateMilliRadPerTick = 3;
+    // Milli-retail units/tick at 30 Hz ≈ 3.015 u/s Movement/Left path speed
+    // (pair strafe-p02). Policy:
+    // reverse-engineering/game-mechanics/walker-strafe-retail-to-core-translation-policy.md
+    // Schema: battleengine-walker-strafe-lateral-scalar-response.v1
+    // Not yet wired as a separate strafe axis in UpdateMovement (uses MoveX*speed).
+    public const int WalkerStrafeSpeedPerTick = 101;
     public const int MaximumEnergy = 1_000;
     public const int MaximumShield = 1_000;
     public const int MaximumHull = 1_000;

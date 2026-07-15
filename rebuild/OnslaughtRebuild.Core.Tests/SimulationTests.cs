@@ -24,6 +24,16 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void WalkerStrafeSpeed_MatchesAcceptedStrafeP02Translation()
+    {
+        // Dual-accept steady ≈ 3.015 u/s → round(v * 1000 / 30) = 101.
+        Assert.Equal(101, SimulationConstants.WalkerStrafeSpeedPerTick);
+        const double measured = 3.015197590944186;
+        int mapped = (int)Math.Round(measured * 1000.0 / SimulationConstants.TicksPerSecond);
+        Assert.Equal(SimulationConstants.WalkerStrafeSpeedPerTick, mapped);
+    }
+
+    [Fact]
     public void ToggleMode_UsesEnergyAndDisablesJetShield()
     {
         var simulation = new Simulation(1);

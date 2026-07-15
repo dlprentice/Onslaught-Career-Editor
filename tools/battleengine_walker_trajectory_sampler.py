@@ -119,6 +119,8 @@ VEHICLE_WALKER = "walker"
 VEHICLE_JET = "jet"
 MEASURE_FORWARD = "forward"
 MEASURE_TURN = "turn"
+MEASURE_STRAFE = "strafe"
+MEASURE_MODES = (MEASURE_FORWARD, MEASURE_TURN, MEASURE_STRAFE)
 MAX_COHERENCE_PAIRS = 3
 CADENCE_MS = 10
 # Source/Steam-static hypothesis for actor integration (CLOCK_TICK / GAME_FR).

@@ -88,15 +88,15 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 | M1.1 | Walker forward scalar | landed | v2 + `WalkerSpeedPerTick=100` |
 | M1.2 | Jet forward/thrust scalar | landed | v1 + `JetSpeedPerTick=381` |
 | M1.3 | Turn / yaw rate scalar | landed | turn-p02 dual-accept; v1 + policy; `WalkerLookYawRateMilliRadPerTick=3` |
-| M1.4 | Strafe / lateral scalar | open | |
-| M1.5 | Transform morph timing + energy gate | open | harness + Core |
+| M1.4 | Strafe / lateral scalar | landed | strafe-p02 dual-accept; v1 + policy; `WalkerStrafeSpeedPerTick=101` |
+| M1.5 | Transform morph timing + energy gate | in_progress | offline harness landed; live dual-accept pending |
 | M1.6 | Friction / coast / release models beyond scalar speed | open | may share harnesses |
 
 ### M2 — Combat & resources
 
 | ID | Milestone | Status |
 |----|-----------|--------|
-| M2.1 | Fire cooldown / projectile speed retail contracts | open |
+| M2.1 | Fire cooldown / projectile speed retail contracts | in_progress | offline scaffold landed; live dual-accept pending |
 | M2.2 | Damage / hull / shield regeneration contracts | open |
 | M2.3 | Target / lock behavior (bounded, evidence-first) | open |
 | M2.4 | Core combat goldens + harness expansion | open |
@@ -153,7 +153,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 |----|-----------|--------|
 | M8.1 | Runtime pair runners + unit tests (no live BEA for unit) | landed foundation |
 | M8.2 | Lab strip after closeout | landed |
-| M8.3 | Per-system regression checkers for each landed contract | landed | walker+jet JSON regression CLI + tests (2026-07-14) |
+| M8.3 | Per-system regression checkers for each landed contract | landed | walker+jet+yaw+strafe JSON regression CLI (2026-07-15) |
 | M8.4 | Expand `npm` scripts only when a gate is re-run often | open |
 
 ## Campaign exit criteria (when `/goal` may stop)
@@ -181,6 +181,7 @@ public release.
 | Walker forward | `walker-forward-scalar-response-v2` | `WalkerSpeedPerTick=100` | p27 |
 | Jet thrust | `jet-forward-scalar-response-v1` | `JetSpeedPerTick=381` | jet-p06 |
 | Walker Look/Left yaw | `walker-turn-yaw-scalar-response.v1` | `WalkerLookYawRateMilliRadPerTick=3` | turn-p02 |
+| Walker Movement/Left path | `walker-strafe-lateral-scalar-response.v1` | `WalkerStrafeSpeedPerTick=101` | strafe-p02 |
 
 ## How agents update this file
 

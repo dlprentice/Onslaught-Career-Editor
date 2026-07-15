@@ -1095,7 +1095,8 @@ static void PokeWalkerForwardKeys(int processId, long moduleBase, byte value)
         .Trim().ToLowerInvariant();
     PokeWalkerKeyDown(processId, moduleBase, WalkerForwardVirtualKey, value);
     PokeWalkerKeyDown(processId, moduleBase, WalkerForwardScanCode, value);
-    if (measureMode != "turn")
+    // Forward measure re-latches Up; turn/strafe must not force Forward.
+    if (measureMode != "turn" && measureMode != "strafe")
         PokeWalkerKeyDown(processId, moduleBase, WalkerForwardArrowVk, value);
 }
 
@@ -3006,6 +3007,7 @@ static int RunWalkerProfilePreparationPhase()
         string measureMode = (Environment.GetEnvironmentVariable("ONSLAUGHT_LIVE_WALKER_MEASURE") ?? "forward")
             .Trim().ToLowerInvariant();
         bool turnMeasure = measureMode == "turn";
+        bool strafeMeasure = measureMode == "strafe";
         ConfigurationKeybindRow measureRow = turnMeasure
             ? new ConfigurationKeybindRow
             {
@@ -3015,6 +3017,19 @@ static int RunWalkerProfilePreparationPhase()
                 EntryId = 0x19,
                 KeyboardDeviceCode = 9u,
                 AllowLookMouse = true,
+                CurrentPlayer1Token = "",
+                CurrentPlayer2Token = "",
+                Player1Token = "Q",
+                Player2Token = "E",
+            }
+            : strafeMeasure
+            ? new ConfigurationKeybindRow
+            {
+                // Movement/Left entry 0x1d — strafe/lateral path measure.
+                GroupLabel = "Movement",
+                ActionLabel = "Left",
+                EntryId = 0x1d,
+                KeyboardDeviceCode = 9u,
                 CurrentPlayer1Token = "",
                 CurrentPlayer2Token = "",
                 Player1Token = "Q",
@@ -3055,8 +3070,9 @@ static int RunWalkerProfilePreparationPhase()
         WriteNewCanaryText(receiptPath, artifactRoot, JsonSerializer.Serialize(new {
             passed = true, prepared.TargetGameRoot, prepared.ExecutablePath, prepared.ManifestPath,
             measureMode,
-            forwardBoundToQ = !turnMeasure,
+            forwardBoundToQ = !turnMeasure && !strafeMeasure,
             lookLeftBoundToQ = turnMeasure,
+            movementLeftBoundToQ = strafeMeasure,
             transformBoundToT = true,
         }, new JsonSerializerOptions { WriteIndented = true }));
         return 0;

@@ -14,14 +14,16 @@ import battleengine_scalar_contract_regression as reg
 class LandedContractRegressionTests(unittest.TestCase):
     def test_real_walker_and_jet_contracts_pass(self) -> None:
         reports = reg.validate_all_landed_contracts()
-        self.assertEqual(2, len(reports))
+        self.assertGreaterEqual(len(reports), 4)
         schemas = {row["schemaVersion"] for row in reports}
         self.assertIn("battleengine-walker-forward-scalar-response.v2", schemas)
         self.assertIn("battleengine-jet-forward-scalar-response.v1", schemas)
+        self.assertIn("battleengine-walker-turn-yaw-scalar-response.v1", schemas)
+        self.assertIn("battleengine-walker-strafe-lateral-scalar-response.v1", schemas)
         for row in reports:
-            speeds = row["steadySpeeds"]
-            self.assertEqual(2, len(speeds))
-            self.assertTrue(all(speed > 0 for speed in speeds))
+            values = row["steadyValues"]
+            self.assertEqual(2, len(values))
+            self.assertTrue(all(speed > 0 for speed in values))
 
     def test_cli_main_passes_on_real_contracts(self) -> None:
         code = reg.main([])

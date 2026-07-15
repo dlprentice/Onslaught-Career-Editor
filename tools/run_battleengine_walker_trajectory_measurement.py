@@ -31,6 +31,7 @@ from typing import Callable, Protocol, Sequence
 import battleengine_walker_trajectory_sampler as sampler
 import runtime_proof_lab_hygiene as proof_hygiene
 import battleengine_turn_yaw_measurement as turn_yaw
+import battleengine_strafe_measurement as strafe
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -1191,7 +1192,8 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
     # Effective key-down edge is when the measure-mode store proves, not when
     # the external handshake finished (handshake + prove wait can exceed 250 ms).
     control_edge_box: list[int] = []
-    measure_mode = measure if measure in (sampler.MEASURE_FORWARD, sampler.MEASURE_TURN) else sampler.MEASURE_FORWARD
+    measure_mode = measure if measure in sampler.MEASURE_MODES else sampler.MEASURE_FORWARD
+    strafe_anchor: list[sampler.RawSample] = []
     for batch_start in range(0, sampler.PHASE_TARGETS["hold"], BATCH_SIZE):
         def batch(start=batch_start):
             deadline.check("hold")
@@ -1211,12 +1213,25 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
                         vehicle=vehicle,
                     )
                     if measure_mode == sampler.MEASURE_TURN:
-                        # Look/Left or Movement/Left may not write walker mLastMoveY.
-                        # Prove on hypothesized yaw-axis store (BE+0x278) magnitude.
                         if abs(float(probe.yaw_axis)) >= 0.05:
                             proved = True
                             control_edge_box.append(probe_tick)
                             break
+                    elif measure_mode == sampler.MEASURE_STRAFE:
+                        # Movement/Left may not write mLastMoveY. Prove path motion.
+                        if not strafe_anchor:
+                            strafe_anchor.append(probe)
+                        else:
+                            disp = math.sqrt(
+                                sum(
+                                    (probe.position[i] - strafe_anchor[0].position[i]) ** 2
+                                    for i in range(3)
+                                )
+                            )
+                            if disp >= 0.05:
+                                proved = True
+                                control_edge_box.append(probe_tick)
+                                break
                     elif probe.control_raw == sampler.FORWARD_CONTROL_RAW:
                         proved = True
                         control_edge_box.append(probe_tick)
@@ -1226,6 +1241,10 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
                     if measure_mode == sampler.MEASURE_TURN:
                         raise sampler.AttemptError(
                             "yaw-axis field did not leave neutral after Q-down (turn measure)"
+                        )
+                    if measure_mode == sampler.MEASURE_STRAFE:
+                        raise sampler.AttemptError(
+                            "path did not move after Q-down (strafe measure)"
                         )
                     raise sampler.AttemptError(
                         "control field did not enter forward/thrust state after Q-down"
@@ -1359,15 +1378,26 @@ def analyze_provisional_trace(
             hold=_yaw_samples_from_trace(provisional.samples["hold"], "hold"),
             release=_yaw_samples_from_trace(provisional.samples["release"], "release"),
             frequency=provisional.frequency,
-            # Live turn-p01: BE+0x278 holds a near-steady magnitude during Look/Left
-            # hold; differentiate-as-heading reads ~0. Use store as rad/s proxy.
             rate_source="yaw_axis_store",
+        )
+    if measure == sampler.MEASURE_STRAFE:
+        def path_rows(phase: str) -> list[strafe.PathSample]:
+            return [
+                strafe.PathSample(tick=r.tick, phase=phase, position=r.position)
+                for r in provisional.samples[phase]
+            ]
+        return strafe.analyze_strafe_attempt(
+            attempt=provisional.attempt,
+            baseline=path_rows("baseline"),
+            hold=path_rows("hold"),
+            release=path_rows("release"),
+            frequency=provisional.frequency,
         )
     return sampler.analyze_attempt(provisional)
 
 
 def _metrics_payload(
-    metrics: sampler.AttemptMetrics | turn_yaw.TurnAttemptMetrics,
+    metrics: sampler.AttemptMetrics | turn_yaw.TurnAttemptMetrics | strafe.StrafeAttemptMetrics,
     *,
     measure: str = sampler.MEASURE_FORWARD,
 ) -> dict[str, object]:
@@ -1383,6 +1413,21 @@ def _metrics_payload(
                 "steamLinkedObservation": "receipt-bound player-0 BattleEngine yaw-axis + path heading",
                 "scope": "steady yaw rate, baseline dominate, response/release latency",
                 "nonclaim": "scaffold live path; not Core authority until dual-accept public contract",
+            },
+            "publicProjectionWritten": False,
+        }
+    if measure == sampler.MEASURE_STRAFE and isinstance(metrics, strafe.StrafeAttemptMetrics):
+        return {
+            "schemaVersion": "battleengine-walker-strafe-private-metrics.v1",
+            "attempt": metrics.attempt,
+            "acceptedBySamplerBeforeAppCoreCleanup": metrics.accepted,
+            "measure": sampler.MEASURE_STRAFE,
+            "metrics": asdict(metrics),
+            "calibrationTarget": {
+                "sourceNamedPath": "CBattleEngineWalkerPart::StrafeLeft path-speed response",
+                "steamLinkedObservation": "receipt-bound player-0 path lateral speed under Movement/Left=Q",
+                "scope": "steady lateral path speed, baseline dominate, response/release",
+                "nonclaim": "not Core authority until dual-accept public contract",
             },
             "publicProjectionWritten": False,
         }
@@ -1447,10 +1492,10 @@ def run_observer(args: argparse.Namespace) -> int:
         if vehicle not in (sampler.VEHICLE_WALKER, sampler.VEHICLE_JET):
             raise ValueError("vehicle must be walker or jet")
         measure = getattr(args, "measure", sampler.MEASURE_FORWARD) or sampler.MEASURE_FORWARD
-        if measure not in (sampler.MEASURE_FORWARD, sampler.MEASURE_TURN):
-            raise ValueError("measure must be forward or turn")
-        if measure == sampler.MEASURE_TURN and vehicle != sampler.VEHICLE_WALKER:
-            raise ValueError("turn measure currently requires walker vehicle mode")
+        if measure not in sampler.MEASURE_MODES:
+            raise ValueError("measure must be forward, turn, or strafe")
+        if measure in (sampler.MEASURE_TURN, sampler.MEASURE_STRAFE) and vehicle != sampler.VEHICLE_WALKER:
+            raise ValueError("turn/strafe measure currently requires walker vehicle mode")
         trace, readiness = collect_trace(
             args.attempt, receipt, receipt_path, reader, native, QpcClock(), deadline,
             authorized_root, vehicle=vehicle, measure=measure,
@@ -1512,9 +1557,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     observer.add_argument(
         "--measure",
-        choices=(sampler.MEASURE_FORWARD, sampler.MEASURE_TURN),
+        choices=sampler.MEASURE_MODES,
         default=sampler.MEASURE_FORWARD,
-        help="Scalar channel: forward/thrust (default) or turn/yaw.",
+        help="Scalar channel: forward/thrust (default), turn/yaw, or strafe.",
     )
     pair = sub.add_parser("run-two", allow_abbrev=False)
     pair.add_argument("--source-root", required=True)
@@ -1530,9 +1575,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     pair.add_argument(
         "--measure",
-        choices=(sampler.MEASURE_FORWARD, sampler.MEASURE_TURN),
+        choices=sampler.MEASURE_MODES,
         default=sampler.MEASURE_FORWARD,
-        help="Scalar channel: forward/thrust (default) or turn/yaw.",
+        help="Scalar channel: forward/thrust (default), turn/yaw, or strafe.",
     )
     return parser
 

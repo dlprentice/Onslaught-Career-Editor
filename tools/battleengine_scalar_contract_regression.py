@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Regression checker for landed public scalar motion contracts.
 
-Drives the real tracked JSON contracts (walker v2, jet v1) and fails if the
-files are missing, schema-broken, or envelope-incoherent. No live BEA.
+Drives real tracked JSON contracts and fails if missing, schema-broken, or
+envelope-incoherent. No live BEA.
 """
 
 from __future__ import annotations
@@ -15,15 +15,12 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 ROOT = Path(__file__).resolve().parents[1]
+MECH = ROOT / "reverse-engineering" / "game-mechanics"
 CONTRACTS = (
-    ROOT
-    / "reverse-engineering"
-    / "game-mechanics"
-    / "walker-forward-scalar-response-v2.json",
-    ROOT
-    / "reverse-engineering"
-    / "game-mechanics"
-    / "jet-forward-scalar-response-v1.json",
+    MECH / "walker-forward-scalar-response-v2.json",
+    MECH / "jet-forward-scalar-response-v1.json",
+    MECH / "walker-turn-yaw-scalar-response-v1.json",
+    MECH / "walker-strafe-lateral-scalar-response-v1.json",
 )
 
 
@@ -54,9 +51,19 @@ def _require_range(value: Any, label: str) -> tuple[float, float]:
     return lower, upper
 
 
-def validate_landed_scalar_contract(path: Path) -> dict[str, object]:
-    """Validate one tracked public scalar contract file on the real path."""
+def _steady_key(envelope: Mapping[str, Any], metrics: Mapping[str, Any]) -> tuple[str, str]:
+    """Return (envelope_key, metrics_key) for the steady scalar of this contract."""
 
+    if "steadySpeed" in envelope and "steadySpeed" in metrics:
+        return "steadySpeed", "steadySpeed"
+    if "steadyYawRateRadPerSec" in envelope and "steadyYawRateRadPerSec" in metrics:
+        return "steadyYawRateRadPerSec", "steadyYawRateRadPerSec"
+    if "steadyLateralSpeed" in envelope and "steadyLateralSpeed" in metrics:
+        return "steadyLateralSpeed", "steadyLateralSpeed"
+    raise ContractRegressionError("unsupported steady metric shape")
+
+
+def validate_landed_scalar_contract(path: Path) -> dict[str, object]:
     if not path.is_file():
         raise ContractRegressionError(f"missing contract: {path}")
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -69,29 +76,31 @@ def validate_landed_scalar_contract(path: Path) -> dict[str, object]:
     attempts = root["attempts"]
     if not isinstance(attempts, list) or len(attempts) != 2:
         raise ContractRegressionError(f"{path.name} must have exactly two attempts")
-    speeds: list[float] = []
+    envelope = _require_mapping(root["envelope"], "envelope")
+    # Probe first metrics for shape.
+    first_metrics = _require_mapping(attempts[0].get("metrics"), "attempt[1].metrics")
+    env_key, met_key = _steady_key(envelope, first_metrics)
+    lower, upper = _require_range(envelope.get(env_key), f"envelope.{env_key}")
+    values: list[float] = []
     for index, attempt in enumerate(attempts, start=1):
         row = _require_mapping(attempt, f"attempt[{index}]")
         metrics = _require_mapping(row.get("metrics"), f"attempt[{index}].metrics")
-        speed = _require_finite(metrics.get("steadySpeed"), f"attempt[{index}].steadySpeed")
+        speed = _require_finite(metrics.get(met_key), f"attempt[{index}].{met_key}")
         if speed <= 0:
-            raise ContractRegressionError(f"attempt[{index}] steadySpeed must be positive")
-        speeds.append(speed)
-        latency = _require_mapping(
-            metrics.get("responseLatencyMs"), f"attempt[{index}].responseLatencyMs"
-        )
-        _require_range(latency, f"attempt[{index}].responseLatencyMs")
-    envelope = _require_mapping(root["envelope"], "envelope")
-    lower, upper = _require_range(envelope.get("steadySpeed"), "envelope.steadySpeed")
-    for speed in speeds:
+            raise ContractRegressionError(f"attempt[{index}] {met_key} must be positive")
+        values.append(speed)
         if speed < lower * 0.99 or speed > upper * 1.01:
             raise ContractRegressionError(
-                f"{path.name} attempt steadySpeed {speed} outside envelope [{lower}, {upper}]"
+                f"{path.name} attempt {met_key} {speed} outside envelope [{lower}, {upper}]"
             )
-    relative = abs(speeds[0] - speeds[1]) / min(speeds)
+        # Latency object if present (forward/jet/strafe/turn all have some form).
+        for lat_key in ("responseLatencyMs",):
+            if lat_key in metrics:
+                _require_range(metrics[lat_key], f"attempt[{index}].{lat_key}")
+    relative = abs(values[0] - values[1]) / min(values)
     if relative > 0.12:
         raise ContractRegressionError(
-            f"{path.name} pair steadySpeed relative delta {relative:.4f} too large"
+            f"{path.name} pair relative delta {relative:.4f} too large"
         )
     nonclaims = root["nonclaims"]
     if not isinstance(nonclaims, list) or not nonclaims:
@@ -99,8 +108,8 @@ def validate_landed_scalar_contract(path: Path) -> dict[str, object]:
     return {
         "path": str(path.relative_to(ROOT)).replace("\\", "/"),
         "schemaVersion": root["schemaVersion"],
-        "steadySpeeds": speeds,
-        "envelopeSteadySpeed": {"lower": lower, "upper": upper},
+        "steadyValues": values,
+        "envelope": {"lower": lower, "upper": upper, "key": env_key},
         "relativeDelta": relative,
     }
 
@@ -114,13 +123,7 @@ def validate_all_landed_contracts(
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
-    parser.add_argument(
-        "--contract",
-        action="append",
-        type=Path,
-        default=None,
-        help="Optional explicit contract path (repeatable); default = landed walker+jet",
-    )
+    parser.add_argument("--contract", action="append", type=Path, default=None)
     args = parser.parse_args(argv)
     try:
         reports = validate_all_landed_contracts(args.contract)
