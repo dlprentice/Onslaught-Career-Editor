@@ -17,6 +17,24 @@ class ProjectileScaffoldTests(unittest.TestCase):
         self.assertTrue(m.accepted)
         self.assertAlmostEqual(40.0, m.steady_speed, delta=1.0)
 
+    def test_pair_envelope(self) -> None:
+        frequency = 10_000_000
+        m1 = proj.analyze_projectile_speed(
+            attempt=1,
+            samples=proj.synthetic_projectile_series(speed=40.0),
+            frequency=frequency,
+        )
+        m2 = proj.analyze_projectile_speed(
+            attempt=2,
+            samples=proj.synthetic_projectile_series(speed=41.0),
+            frequency=frequency,
+        )
+        envelope = proj.materialize_projectile_pair_envelope(m1, m2)
+        self.assertEqual(
+            "battleengine-projectile-speed-scalar-response.v0-scaffold",
+            envelope["schemaVersion"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

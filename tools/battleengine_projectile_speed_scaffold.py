@@ -74,3 +74,34 @@ def synthetic_projectile_series(
         out.append(ProjectileSample(tick=i * step, position=(0.0, 0.0, z)))
         z += speed * 0.01
     return out
+
+
+def materialize_projectile_pair_envelope(
+    first: ProjectileSpeedMetrics,
+    second: ProjectileSpeedMetrics,
+    *,
+    relative_spread: float = 0.20,
+) -> dict[str, object]:
+    if not (first.accepted and second.accepted):
+        raise ProjectileScaffoldError("both attempts must be accepted")
+    speeds = sorted((first.steady_speed, second.steady_speed))
+    mid = (speeds[0] + speeds[1]) / 2.0
+    if mid <= 0:
+        raise ProjectileScaffoldError("pair mid speed not positive")
+    if (speeds[1] - speeds[0]) / mid > relative_spread:
+        raise ProjectileScaffoldError("pair projectile speeds not stable")
+    pad = max(mid * 0.05, (speeds[1] - speeds[0]) / 2.0)
+    return {
+        "schemaVersion": "battleengine-projectile-speed-scalar-response.v0-scaffold",
+        "envelope": {
+            "steadyProjectileSpeed": {
+                "lower": speeds[0] - pad,
+                "upper": speeds[1] + pad,
+            }
+        },
+        "nonclaims": [
+            "Scaffold envelope is not dual-accepted retail authority for Core.",
+            "Projectile entity tracking is required before live dual-accept.",
+            "Source ProjectileSpeedPerTick is not Core authority from this scaffold alone.",
+        ],
+    }
