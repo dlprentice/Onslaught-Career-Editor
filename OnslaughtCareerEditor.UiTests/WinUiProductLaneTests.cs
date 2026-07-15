@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using NUnit.Framework;
 
 namespace OnslaughtCareerEditor.UiTests;
@@ -300,6 +301,7 @@ public class WinUiProductLaneTests
         string assetXaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "AssetLibraryPage.xaml");
         string assetCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "AssetLibraryPage.xaml.cs");
         string assetStatusText = ReadRepoFile("OnslaughtCareerEditor.AppCore", "AssetCatalogLoadStatusText.cs");
+        XDocument assetDocument = XDocument.Parse(assetXaml);
 
         Assert.That(shellXaml, Does.Contain("AssetLibraryNavigationItem"));
         Assert.That(shellXaml, Does.Contain("Asset Library"));
@@ -307,6 +309,7 @@ public class WinUiProductLaneTests
         Assert.That(assetXaml, Does.Contain("Asset Library"));
         Assert.That(assetXaml, Does.Contain("Load generated catalog"));
         Assert.That(assetXaml, Does.Contain("AssetCatalogFirstRunGuide"));
+        Assert.That(assetXaml, Does.Contain("x:Name=\"CatalogFirstRunGuideBorder\""));
         Assert.That(assetXaml, Does.Contain("First run"));
         Assert.That(assetXaml, Does.Contain("Generate a catalog from your own game install outside the app."));
         Assert.That(assetXaml, Does.Contain("not the game install folder"));
@@ -318,6 +321,30 @@ public class WinUiProductLaneTests
         Assert.That(assetXaml, Does.Contain("AssetCatalogProvenanceSummary"));
         Assert.That(assetXaml, Does.Contain("Texture preview"));
         Assert.That(assetXaml, Does.Contain("AssetPreviewTitle"));
+        Assert.That(assetCode, Does.Contain("CatalogFirstRunGuideBorder.Visibility = Visibility.Visible;"));
+        Assert.That(assetCode, Does.Contain("CatalogFirstRunGuideBorder.Visibility = Visibility.Collapsed;"));
+        foreach (string automationId in new[] { "AssetCatalogCoverageSummary", "AssetCatalogProvenanceSummary" })
+        {
+            XElement summary = assetDocument.Descendants().Single(element =>
+                element.Attributes().Any(attribute =>
+                    attribute.Value == automationId));
+            Assert.That((string?)summary.Attribute("MaxLines"), Is.EqualTo("3"), automationId);
+            Assert.That((string?)summary.Attribute("TextTrimming"), Is.EqualTo("CharacterEllipsis"), automationId);
+        }
+        XElement texturePreview = assetDocument.Descendants().Single(element =>
+            element.Attributes().Any(attribute => attribute.Value == "TexturePreviewPanel"));
+        Assert.That((string?)texturePreview.Attribute("Height"), Is.EqualTo("240"));
+        Assert.That(texturePreview.Attribute("MinHeight"), Is.Null);
+        XElement wireframeVisualMarker = assetDocument.Descendants().Single(element =>
+            element.Attributes().Any(attribute => attribute.Value == "AssetModelWireframePanel"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(wireframeVisualMarker.Name.LocalName, Is.EqualTo("TextBlock"));
+            Assert.That(
+                wireframeVisualMarker.Attributes().Single(attribute => attribute.Value == "Model wireframe preview").Value,
+                Is.EqualTo("Model wireframe preview"));
+            Assert.That((string?)wireframeVisualMarker.Attribute("IsHitTestVisible"), Is.EqualTo("False"));
+        });
         Assert.That(assetXaml, Does.Contain("AssetGoodiesTabButton"));
         Assert.That(assetXaml, Does.Contain("Goodies"));
         Assert.That(assetXaml, Does.Contain("Save state for Goodies"));
@@ -2262,6 +2289,32 @@ public class WinUiProductLaneTests
         Assert.That(code, Does.Contain("BuildVideoSelectionSummary"));
         Assert.That(code, Does.Not.Contain("AudioPathTextBlock.Text = item?.FilePath"));
         Assert.That(code, Does.Not.Contain("VideoPathTextBlock.Text = item?.FilePath"));
+    }
+
+    [Test]
+    public void MediaPage_ReflowsPlaybackCardsAtCompactWidths()
+    {
+        string xaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "MediaPage.xaml");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(xaml, Does.Contain("x:Name=\"MediaCompactLayout\""));
+            Assert.That(xaml, Does.Contain("<AdaptiveTrigger MinWindowWidth=\"0\" />"));
+            Assert.That(xaml, Does.Contain("x:Name=\"MediaWideLayout\""));
+            Assert.That(xaml, Does.Contain("<AdaptiveTrigger MinWindowWidth=\"900\" />"));
+            Assert.That(xaml, Does.Contain("Target=\"AudioSourceCard.Visibility\""));
+            Assert.That(xaml, Does.Contain("Target=\"AudioSourceColumn.Width\""));
+            Assert.That(xaml, Does.Contain("Target=\"AudioVisualizerBorder.MinHeight\""));
+            Assert.That(xaml, Does.Contain("Target=\"AudioVolumeSlider.Width\""));
+            Assert.That(xaml, Does.Contain("Target=\"VideoSurfaceBorder.MinHeight\""));
+            Assert.That(xaml, Does.Contain("Target=\"VideoVolumeSlider.Width\""));
+            Assert.That(xaml, Does.Contain("Target=\"RevealVideoButton.Content\""));
+            Assert.That(xaml, Does.Contain("Target=\"VideoSourceFolderExpander.Visibility\""));
+            Assert.That(xaml, Does.Contain("x:Name=\"AudioSourceCard\""));
+            Assert.That(xaml, Does.Contain("x:Name=\"VideoUnusedColumn\""));
+            Assert.That(xaml, Does.Contain("x:Name=\"VideoSourceFolderExpander\""));
+            Assert.That(xaml, Does.Contain("Visibility=\"Collapsed\""));
+        });
     }
 
     [Test]

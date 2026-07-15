@@ -84,8 +84,7 @@ internal static class MediaAssetNativeEvidenceContract
             1100,
             900,
             "AssetItemsList",
-            "AssetSelectedTitle",
-            "AssetModelMetadataInline",
+            "AssetPreviewTitle",
             "AssetModelWireframeStatus",
             "AssetModelWireframePanel"),
         Expected(
@@ -96,8 +95,7 @@ internal static class MediaAssetNativeEvidenceContract
             760,
             820,
             "AssetItemsList",
-            "AssetSelectedTitle",
-            "AssetModelMetadataInline",
+            "AssetPreviewTitle",
             "AssetModelWireframeStatus",
             "AssetModelWireframePanel"),
     ];
@@ -132,7 +130,7 @@ internal static class MediaAssetNativeEvidenceContract
                     "model-wireframe",
                     "fixture_mesh.msh",
                     "1 packed references; FBX export available. Use the in-app wireframe for a quick geometry check, then open the FBX for full material review.",
-                    "FBX 7400; 3 vertices; 3 polygon index entries; UV mapping: no coordinate data recorded."),
+                    "Binary FBX 7400; 3 vertices; 3 polygon index entries; UV mapping: no coordinate data recorded."),
             ],
         };
 

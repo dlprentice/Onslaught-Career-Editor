@@ -95,4 +95,68 @@ public class NativeWinUiOwnedProcessCleanupTests
             () => identity.Validate(42, start, @"C:\other\OnslaughtCareerEditor.WinUI.exe"),
             Throws.TypeOf<InvalidOperationException>().With.Message.Contains("executable path"));
     }
+
+    [Test]
+    public void OwnedProcessIdentity_WaitsForTemporarilyUnavailableExecutablePath()
+    {
+        int observations = 0;
+
+        string executablePath = NativeWinUiOwnedProcessIdentity.WaitForExecutablePath(
+            () =>
+            {
+                observations++;
+                return observations < 3
+                    ? new NativeWinUiExecutablePathObservation(ProcessExited: false, ExecutablePath: null)
+                    : new NativeWinUiExecutablePathObservation(
+                        ProcessExited: false,
+                        ExecutablePath: @"C:\repo\OnslaughtCareerEditor.WinUI.exe");
+            },
+            maxAttempts: 3,
+            waitBetweenAttempts: () => { });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(executablePath, Is.EqualTo(@"C:\repo\OnslaughtCareerEditor.WinUI.exe"));
+            Assert.That(observations, Is.EqualTo(3));
+        });
+    }
+
+    [Test]
+    public void OwnedProcessIdentity_FailsImmediatelyWhenProcessExitsBeforePathIsAvailable()
+    {
+        int waits = 0;
+
+        Assert.That(
+            () => NativeWinUiOwnedProcessIdentity.WaitForExecutablePath(
+                () => new NativeWinUiExecutablePathObservation(ProcessExited: true, ExecutablePath: null),
+                maxAttempts: 3,
+                waitBetweenAttempts: () => waits++),
+            Throws.TypeOf<InvalidOperationException>()
+                .With.Message.Contains("exited before its executable path became available"));
+        Assert.That(waits, Is.Zero);
+    }
+
+    [Test]
+    public void OwnedProcessIdentity_FailsClosedAfterBoundedPathReadinessAttempts()
+    {
+        int observations = 0;
+        int waits = 0;
+
+        Assert.That(
+            () => NativeWinUiOwnedProcessIdentity.WaitForExecutablePath(
+                () =>
+                {
+                    observations++;
+                    return new NativeWinUiExecutablePathObservation(ProcessExited: false, ExecutablePath: null);
+                },
+                maxAttempts: 3,
+                waitBetweenAttempts: () => waits++),
+            Throws.TypeOf<InvalidOperationException>()
+                .With.Message.Contains("unavailable after 3 bounded readiness attempts"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(observations, Is.EqualTo(3));
+            Assert.That(waits, Is.EqualTo(2));
+        });
+    }
 }

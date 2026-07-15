@@ -55,7 +55,17 @@ public class MediaAssetNativeFixtureTests
         });
 
         using var texture = new Bitmap(assets.Textures.Single().ExportPath);
-        Assert.That(texture.Size, Is.EqualTo(new Size(1, 1)));
+        Assert.Multiple(() =>
+        {
+            Assert.That(texture.Size, Is.EqualTo(new Size(8, 8)));
+            Assert.That(
+                Enumerable.Range(0, texture.Width)
+                    .SelectMany(x => Enumerable.Range(0, texture.Height).Select(y => texture.GetPixel(x, y).ToArgb()))
+                    .Distinct()
+                    .Count(),
+                Is.GreaterThanOrEqualTo(4),
+                "The synthetic texture must expose enough contrast for pixel-level native preview verification.");
+        });
         MediaAssetNativeFixtureBuilder.Validate(fixture);
     }
 

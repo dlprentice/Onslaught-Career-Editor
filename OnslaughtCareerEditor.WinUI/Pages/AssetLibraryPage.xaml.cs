@@ -122,6 +122,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _materialDryRunPlan = null;
                 _materialPackagePlan = null;
                 _materialPackageOutputRoot = string.Empty;
+                CatalogFirstRunGuideBorder.Visibility = Visibility.Visible;
                 CatalogInputGrid.Visibility = Visibility.Visible;
                 ChangeCatalogButton.Visibility = Visibility.Collapsed;
                 CatalogStatusTextBlock.Text = BuildMissingCatalogStatus(path);
@@ -135,6 +136,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 return;
             }
 
+            CatalogFirstRunGuideBorder.Visibility = Visibility.Collapsed;
             CatalogInputGrid.Visibility = Visibility.Collapsed;
             ChangeCatalogButton.Visibility = Visibility.Visible;
             CatalogPathTextBox.Text = string.Empty;

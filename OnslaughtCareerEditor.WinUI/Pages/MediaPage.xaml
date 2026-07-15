@@ -20,6 +20,46 @@
     </Page.Resources>
     <Grid Padding="20,18,20,20"
           RowSpacing="14">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="MediaLayoutStates">
+                <VisualState x:Name="MediaCompactLayout">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+                <VisualState x:Name="MediaWideLayout">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="900" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="AudioNowPlayingColumn.Width"
+                                Value="1.15*" />
+                        <Setter Target="AudioTransportColumn.Width"
+                                Value="1.45*" />
+                        <Setter Target="AudioSourceColumn.Width"
+                                Value="1.2*" />
+                        <Setter Target="AudioSourceCard.Visibility"
+                                Value="Visible" />
+                        <Setter Target="AudioVisualizerBorder.MinHeight"
+                                Value="360" />
+                        <Setter Target="AudioVolumeSlider.Width"
+                                Value="180" />
+                        <Setter Target="VideoNowPlayingColumn.Width"
+                                Value="1.15*" />
+                        <Setter Target="VideoTransportColumn.Width"
+                                Value="1.45*" />
+                        <Setter Target="VideoSurfaceBorder.MinHeight"
+                                Value="360" />
+                        <Setter Target="VideoVolumeSlider.Width"
+                                Value="180" />
+                        <Setter Target="RevealVideoButton.Content"
+                                Value="Show in Explorer" />
+                        <Setter Target="VideoSourceFolderExpander.Visibility"
+                                Value="Visible" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -125,12 +165,13 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <Border Grid.Row="0"
+                        <Border x:Name="AudioVisualizerBorder"
+                                Grid.Row="0"
                                 Background="{ThemeResource MediaVisualizerSurfaceBrush}"
                                 BorderBrush="{ThemeResource ShellBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="16"
-                                MinHeight="360"
+                                MinHeight="220"
                                 VerticalAlignment="Stretch">
                             <Grid>
                                 <Grid Margin="20,20,20,16">
@@ -154,10 +195,10 @@
                                 <Border x:Name="AudioVisualizerPlaceholderBorder"
                                         Background="{ThemeResource MediaOverlaySoftBrush}"
                                         CornerRadius="16">
-                                    <StackPanel Width="420"
-                                                HorizontalAlignment="Center"
+                                    <StackPanel MaxWidth="420"
+                                                HorizontalAlignment="Stretch"
                                                 VerticalAlignment="Top"
-                                                Margin="0,10,0,0"
+                                                Margin="16,10,16,0"
                                                 Spacing="4">
                                         <TextBlock x:Name="AudioVisualizerStatusTextBlock"
                                                    FontSize="24"
@@ -181,9 +222,12 @@
                         <Grid Grid.Row="1"
                               ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="1.15*" />
-                                <ColumnDefinition Width="1.45*" />
-                                <ColumnDefinition Width="1.2*" />
+                                <ColumnDefinition x:Name="AudioNowPlayingColumn"
+                                                  Width="1.15*" />
+                                <ColumnDefinition x:Name="AudioTransportColumn"
+                                                  Width="1.85*" />
+                                <ColumnDefinition x:Name="AudioSourceColumn"
+                                                  Width="0" />
                             </Grid.ColumnDefinitions>
 
                             <Border Grid.Column="0"
@@ -268,7 +312,7 @@
                                         <Slider x:Name="AudioVolumeSlider"
                                                 AutomationProperties.AutomationId="MediaAudioVolumeSlider"
                                                 AutomationProperties.Name="Audio volume"
-                                                Width="180"
+                                                Width="90"
                                                 Minimum="0"
                                                 Maximum="100"
                                                 ValueChanged="AudioVolumeSlider_ValueChanged" />
@@ -279,10 +323,12 @@
                                 </StackPanel>
                             </Border>
 
-                            <Border Grid.Column="2"
+                            <Border x:Name="AudioSourceCard"
+                                    Grid.Column="2"
                                     Style="{StaticResource SectionCardStyle}"
                                     Margin="0"
-                                    MinHeight="156">
+                                    MinHeight="156"
+                                    Visibility="Collapsed">
                                 <StackPanel Spacing="10">
                                     <TextBlock Text="Source folder"
                                                FontSize="16"
@@ -386,12 +432,13 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <Border Grid.Row="0"
+                        <Border x:Name="VideoSurfaceBorder"
+                                Grid.Row="0"
                                 Background="Black"
                                 BorderBrush="{ThemeResource ShellBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="16"
-                                MinHeight="360"
+                                MinHeight="220"
                                 VerticalAlignment="Stretch">
                             <Grid>
                                 <Grid Margin="20,20,20,16">
@@ -419,10 +466,10 @@
                                 <Border x:Name="VideoPlaceholderBorder"
                                         Background="{ThemeResource MediaOverlayStrongBrush}"
                                         CornerRadius="16">
-                                    <StackPanel Width="460"
-                                                HorizontalAlignment="Center"
+                                    <StackPanel MaxWidth="460"
+                                                HorizontalAlignment="Stretch"
                                                 VerticalAlignment="Top"
-                                                Margin="0,10,0,0"
+                                                Margin="16,10,16,0"
                                                 Spacing="4">
                                         <TextBlock x:Name="VideoPlayerStatusTextBlock"
                                                    AutomationProperties.AutomationId="MediaVideoPlayerStatus"
@@ -448,9 +495,12 @@
                         <Grid Grid.Row="1"
                               ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="1.15*" />
-                                <ColumnDefinition Width="1.45*" />
-                                <ColumnDefinition Width="1.2*" />
+                                <ColumnDefinition x:Name="VideoNowPlayingColumn"
+                                                  Width="1.15*" />
+                                <ColumnDefinition x:Name="VideoTransportColumn"
+                                                  Width="1.85*" />
+                                <ColumnDefinition x:Name="VideoUnusedColumn"
+                                                  Width="0" />
                             </Grid.ColumnDefinitions>
 
                             <Border Grid.Column="0"
@@ -475,11 +525,13 @@
                                                TextWrapping="NoWrap" />
                                     <Button x:Name="RevealVideoButton"
                                             AutomationProperties.AutomationId="MediaRevealVideoButton"
-                                            Content="Show in Explorer"
+                                            Content="Show file"
                                             Click="RevealVideoButton_Click"
                                             IsEnabled="False"
                                             HorizontalAlignment="Left" />
-                                    <controls:Expander Header="Source folder"
+                                    <controls:Expander x:Name="VideoSourceFolderExpander"
+                                                       Header="Source folder"
+                                                       Visibility="Collapsed"
                                                        IsExpanded="False">
                                         <StackPanel Spacing="10">
                                             <TextBlock Text="Video discovery uses the configured install as read-only source material. Browse here to switch immediately, then reload if files changed."
@@ -577,7 +629,7 @@
                                         <Slider x:Name="VideoVolumeSlider"
                                                 AutomationProperties.AutomationId="MediaVideoVolumeSlider"
                                                 AutomationProperties.Name="Video volume"
-                                                Width="180"
+                                                Width="90"
                                                 Minimum="0"
                                                 Maximum="100"
                                                 ValueChanged="VideoVolumeSlider_ValueChanged" />

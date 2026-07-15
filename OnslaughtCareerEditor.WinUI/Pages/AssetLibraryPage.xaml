@@ -46,7 +46,8 @@
                                AutomationProperties.AutomationId="AssetCatalogStatus"
                                Style="{StaticResource SectionBodyTextStyle}"
                                Text="No generated catalog is loaded yet." />
-                    <Border Background="{ThemeResource ShellMutedSurfaceBrush}"
+                    <Border x:Name="CatalogFirstRunGuideBorder"
+                            Background="{ThemeResource ShellMutedSurfaceBrush}"
                             BorderBrush="{ThemeResource ShellBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="8"
@@ -185,11 +186,15 @@
                                    AutomationProperties.AutomationId="AssetCatalogCoverageSummary"
                                    Style="{StaticResource SectionBodyTextStyle}"
                                    Text="Coverage summary appears after a generated catalog loads."
+                                   MaxLines="3"
+                                   TextTrimming="CharacterEllipsis"
                                    TextWrapping="WrapWholeWords" />
                         <TextBlock x:Name="CatalogProvenanceTextBlock"
                                    AutomationProperties.AutomationId="AssetCatalogProvenanceSummary"
                                    Style="{StaticResource SectionBodyTextStyle}"
                                    Text="Catalog provenance appears after a generated catalog loads."
+                                   MaxLines="3"
+                                   TextTrimming="CharacterEllipsis"
                                    TextWrapping="WrapWholeWords" />
                     </StackPanel>
 
@@ -353,7 +358,6 @@
                                    Visibility="Collapsed"
                                    Text="Wireframe preview status appears here for assistive technology." />
                         <Border x:Name="ModelWireframePreviewPanel"
-                                AutomationProperties.AutomationId="AssetModelWireframePanel"
                                 Background="{ThemeResource ShellStatusBrush}"
                                 BorderBrush="{ThemeResource ShellBorderBrush}"
                                 BorderThickness="1"
@@ -362,6 +366,11 @@
                                 MinHeight="128"
                                 Visibility="Collapsed">
                             <Grid>
+                                <TextBlock AutomationProperties.AutomationId="AssetModelWireframePanel"
+                                           AutomationProperties.Name="Model wireframe preview"
+                                           HorizontalAlignment="Stretch"
+                                           VerticalAlignment="Stretch"
+                                           IsHitTestVisible="False" />
                                 <Canvas x:Name="ModelWireframeCanvas"
                                         AutomationProperties.AutomationId="AssetModelWireframeCanvas"
                                         Width="360"
@@ -384,7 +393,7 @@
                                 BorderThickness="1"
                                 CornerRadius="12"
                                 Padding="12"
-                                MinHeight="240">
+                                Height="240">
                             <Grid>
                                 <Image x:Name="TexturePreviewImage"
                                        AutomationProperties.AutomationId="AssetTexturePreviewImage"

@@ -44,13 +44,24 @@ internal static class MediaAssetNativeFixtureBuilder
     [
         137, 80, 78, 71, 13, 10, 26, 10,
         0, 0, 0, 13, 73, 72, 68, 82,
-        0, 0, 0, 1, 0, 0, 0, 1,
-        8, 6, 0, 0, 0, 31, 21, 196,
-        137, 0, 0, 0, 13, 73, 68, 65,
-        84, 120, 156, 99, 248, 207, 192,
-        240, 31, 0, 5, 0, 1, 255, 137,
-        153, 61, 29, 0, 0, 0, 0, 73,
-        69, 78, 68, 174, 66, 96, 130,
+        0, 0, 0, 8, 0, 0, 0, 8,
+        8, 6, 0, 0, 0, 196, 15, 190,
+        139, 0, 0, 0, 1, 115, 82, 71,
+        66, 0, 174, 206, 28, 233, 0, 0,
+        0, 4, 103, 65, 77, 65, 0, 0,
+        177, 143, 11, 252, 97, 5, 0, 0,
+        0, 9, 112, 72, 89, 115, 0, 0,
+        14, 195, 0, 0, 14, 195, 1, 199,
+        111, 168, 100, 0, 0, 0, 51, 73,
+        68, 65, 84, 40, 83, 99, 248, 24,
+        165, 242, 31, 132, 245, 27, 222, 130,
+        241, 175, 95, 191, 192, 88, 66, 66,
+        26, 140, 25, 8, 42, 192, 37, 1,
+        211, 72, 88, 1, 46, 9, 152, 70,
+        194, 10, 112, 73, 192, 52, 18, 84,
+        0, 0, 105, 52, 164, 1, 119, 41,
+        241, 130, 0, 0, 0, 0, 73, 69,
+        78, 68, 174, 66, 96, 130,
     ];
 
     private const string CatalogJson = """
@@ -244,9 +255,13 @@ internal static class MediaAssetNativeFixtureBuilder
         }
 
         using var texture = new Bitmap(assets.Textures.Single().ExportPath);
-        if (texture.Size != new Size(1, 1))
+        int distinctColors = Enumerable.Range(0, texture.Width)
+            .SelectMany(x => Enumerable.Range(0, texture.Height).Select(y => texture.GetPixel(x, y).ToArgb()))
+            .Distinct()
+            .Count();
+        if (texture.Size != new Size(8, 8) || distinctColors < 4)
         {
-            throw new InvalidOperationException("Synthetic Asset fixture PNG dimensions changed.");
+            throw new InvalidOperationException("Synthetic Asset fixture PNG contrast contract changed.");
         }
     }
 
