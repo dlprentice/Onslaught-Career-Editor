@@ -33,6 +33,7 @@ After Ghidra function-quality closure (`6113/6113 = 100.00%`, Wave900), **Wave90
 | [fire-cooldown-retail-to-core-translation-policy.md](fire-cooldown-retail-to-core-translation-policy.md) | draft blocked on dual-accept |
 | [projectile-speed-scalar-measurement-plan.md](projectile-speed-scalar-measurement-plan.md) | scaffold |
 | [coast-friction-release-measurement-plan.md](coast-friction-release-measurement-plan.md) | scaffold M1.6 |
+| [coast-friction-retail-to-core-translation-policy.md](coast-friction-retail-to-core-translation-policy.md) | draft blocked on dual-accept |
 | [runtime-proof-lab-retention.md](runtime-proof-lab-retention.md) | lab hygiene |
 
 Machine-checkable public-safe BattleEngine source-anchor coverage is recorded at `release/readiness/battleengine_logic_coverage_2026-05-06.md`. It is read-only source/docs evidence, not Steam retail binary identity proof.
