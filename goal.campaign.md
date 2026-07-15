@@ -96,8 +96,8 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 
 | ID | Milestone | Status |
 |----|-----------|--------|
-| M2.1 | Fire cooldown / projectile speed retail contracts | in_progress | offline scaffold landed; live dual-accept pending |
-| M2.2 | Damage / hull / shield regeneration contracts | in_progress | energy BE+0xFC / shields BE+0x100 hyp + sampler; live dual-accept pending |
+| M2.1 | Fire cooldown / projectile speed retail contracts | in_progress | scaffolds + pair envelopes + draft policies; live dual-accept pending |
+| M2.2 | Damage / hull / shield regeneration contracts | in_progress | energy BE+0xFC / shields BE+0x100 hyp + measure=energy; live dual-accept pending |
 | M2.3 | Target / lock behavior (bounded, evidence-first) | open |
 | M2.4 | Core combat goldens + harness expansion | open |
 
@@ -105,7 +105,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 
 | ID | Milestone | Status |
 |----|-----------|--------|
-| M3.1 | Camera / look contracts (retail → Core/Client) | in_progress | offline harness landed; live dual-accept pending; body LookX wired from turn-p02 |
+| M3.1 | Camera / look contracts (retail → Core/Client) | in_progress | body LookX Core/Client/Godot from turn-p02; camera scaffold offline; free-cam not Core authority |
 | M3.2 | Level load readiness gates (850-class smoke stays) | open |
 | M3.3 | Mission/script hooks as public-safe behavior contracts | open |
 | M3.4 | Godot presentation upgrades driven by Core truth only | open |
