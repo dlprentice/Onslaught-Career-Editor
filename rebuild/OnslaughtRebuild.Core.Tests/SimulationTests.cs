@@ -55,9 +55,10 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void LookX_Negative_SnapsFacingLeftQuadrant()
+    public void LookX_Negative_SnapsFacingLeftCardinal()
     {
         var simulation = new Simulation(1);
+        // 262 * (-3 mrad) ≈ −786 mrad → eight-way sector 6 → (−1, 0).
         for (int tick = 0; tick < 262; tick++)
         {
             simulation.Step(new SimInput(0, 0, LookX: -1));
@@ -65,7 +66,7 @@ public sealed class SimulationTests
 
         WorldSnapshot state = simulation.Snapshot;
         Assert.Equal(-1, state.FacingX);
-        Assert.Equal(1, state.FacingZ);
+        Assert.Equal(0, state.FacingZ);
     }
 
     [Fact]
