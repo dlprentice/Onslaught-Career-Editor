@@ -2,8 +2,8 @@
 
 Status: **PAUSED** (awaiting user goal resume)
 Last updated: 2026-07-15
-Integration tip: `1073ff72` (approved product-coupled implementation plan;
-implementation tip will be aligned after the scoped strategy commit)
+Integration tip: `580965e3` (product-coupled strategy implementation; campaign
+remains paused)
 
 ## Portfolio state
 
