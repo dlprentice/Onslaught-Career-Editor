@@ -37,6 +37,29 @@ class EnergyScaffoldTests(unittest.TestCase):
         self.assertTrue(m.accepted)
         self.assertGreater(m.steady_rate_per_sec, 1.0)
 
+    def test_pair_envelope_for_drain(self) -> None:
+        frequency = 10_000_000
+        m1 = energy.analyze_energy_rate(
+            attempt=1,
+            samples=energy.synthetic_energy_series(rate_per_sec=-3.0),
+            frequency=frequency,
+            expect_negative=True,
+        )
+        m2 = energy.analyze_energy_rate(
+            attempt=2,
+            samples=energy.synthetic_energy_series(rate_per_sec=-3.1),
+            frequency=frequency,
+            expect_negative=True,
+        )
+        envelope = energy.materialize_energy_pair_envelope(m1, m2)
+        self.assertEqual(
+            "battleengine-energy-rate-scalar-response.v0-scaffold",
+            envelope["schemaVersion"],
+        )
+        band = envelope["envelope"]["steadyEnergyRatePerSec"]
+        self.assertLess(band["lower"], band["upper"])
+        self.assertEqual("0xfc", envelope["offsetHypothesis"]["battleEngineEnergy"])
+
 
 if __name__ == "__main__":
     unittest.main()

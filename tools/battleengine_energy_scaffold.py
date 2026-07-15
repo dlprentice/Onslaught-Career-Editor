@@ -87,3 +87,43 @@ def synthetic_energy_series(
         out.append(EnergySample(tick=i * step, energy=e))
         e += rate_per_sec * 0.01
     return out
+
+
+def materialize_energy_pair_envelope(
+    first: EnergyRateMetrics,
+    second: EnergyRateMetrics,
+    *,
+    relative_spread: float = 0.20,
+) -> dict[str, object]:
+    """Build a provisional public envelope from two accepted attempts."""
+
+    if not (first.accepted and second.accepted):
+        raise EnergyScaffoldError("both attempts must be accepted")
+    rates = sorted((first.steady_rate_per_sec, second.steady_rate_per_sec))
+    mid = (rates[0] + rates[1]) / 2.0
+    if mid == 0:
+        raise EnergyScaffoldError("pair mid rate is zero")
+    if abs(rates[1] - rates[0]) / abs(mid) > relative_spread:
+        raise EnergyScaffoldError("pair energy rates not stable")
+    pad = max(abs(mid) * 0.05, abs(rates[1] - rates[0]) / 2.0)
+    lower, upper = rates[0] - pad, rates[1] + pad
+    if lower > upper:
+        lower, upper = upper, lower
+    return {
+        "schemaVersion": "battleengine-energy-rate-scalar-response.v0-scaffold",
+        "envelope": {
+            "steadyEnergyRatePerSec": {
+                "lower": lower,
+                "upper": upper,
+            }
+        },
+        "offsetHypothesis": {
+            "battleEngineEnergy": hex(BATTLE_ENGINE_ENERGY_OFFSET),
+            "battleEngineShields": hex(BATTLE_ENGINE_SHIELDS_OFFSET),
+        },
+        "nonclaims": [
+            "Scaffold envelope is not dual-accepted retail authority for Core.",
+            "Offsets are steam-static hypotheses until live dual-accept.",
+            "Source energy defaults are not Core authority.",
+        ],
+    }
