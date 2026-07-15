@@ -86,3 +86,33 @@ def synthetic_fire_events(
 ) -> list[FireEvent]:
     step = max(1, int(round(frequency * cooldown_ms / 1000.0)))
     return [FireEvent(tick=i * step, label=f"fire-{i}") for i in range(count)]
+
+
+def fire_edges_from_energy_drops(
+    samples: Sequence[tuple[int, float]],
+    *,
+    min_drop: float = 0.05,
+) -> list[FireEvent]:
+    """Infer fire edges from stepwise energy drops (live BE+0xFC series).
+
+    ``samples`` are ``(tick, energy)`` ordered by time. A drop of at least
+    ``min_drop`` between consecutive samples becomes one fire edge at the
+    later tick. Not Core authority by itself.
+    """
+
+    if len(samples) < 2:
+        raise FireScaffoldError("need energy series for fire edges")
+    events: list[FireEvent] = []
+    previous_tick, previous_energy = samples[0]
+    for tick, energy in samples[1:]:
+        if tick <= previous_tick:
+            raise FireScaffoldError("energy series must be strictly increasing in tick")
+        if not (math.isfinite(previous_energy) and math.isfinite(energy)):
+            raise FireScaffoldError("energy values must be finite")
+        drop = previous_energy - energy
+        if drop >= min_drop:
+            events.append(FireEvent(tick=tick, label=f"energy-drop-{len(events)}"))
+        previous_tick, previous_energy = tick, energy
+    if len(events) < 2:
+        raise FireScaffoldError("need at least two energy-drop fire edges")
+    return events
