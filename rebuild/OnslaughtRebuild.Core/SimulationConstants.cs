@@ -20,7 +20,7 @@ public static class SimulationConstants
     // envelope [0.0816, 0.0997]). Policy:
     // reverse-engineering/game-mechanics/walker-turn-yaw-retail-to-core-translation-policy.md
     // Schema: battleengine-walker-turn-yaw-scalar-response.v1
-    // Not yet wired into continuous facing integration (facing still snaps).
+    // Wired: LookX integrates continuous milli-rad yaw; FacingX/Z eight-way snap.
     public const int WalkerLookYawRateMilliRadPerTick = 3;
     // Milli-retail units/tick at 30 Hz ≈ 3.015 u/s Movement/Left path speed
     // (pair strafe-p02). Policy:

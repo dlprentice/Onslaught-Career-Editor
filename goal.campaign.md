@@ -87,7 +87,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 |----|-----------|--------|-------|
 | M1.1 | Walker forward scalar | landed | v2 + `WalkerSpeedPerTick=100` |
 | M1.2 | Jet forward/thrust scalar | landed | v1 + `JetSpeedPerTick=381` |
-| M1.3 | Turn / yaw rate scalar | landed | turn-p02 dual-accept; v1 + policy; `WalkerLookYawRateMilliRadPerTick=3` |
+| M1.3 | Turn / yaw rate scalar | landed | turn-p02 dual-accept; v1 + policy; `WalkerLookYawRateMilliRadPerTick=3`; Core LookX integrate |
 | M1.4 | Strafe / lateral scalar | landed | strafe-p02 dual-accept; v1 + policy; `WalkerStrafeSpeedPerTick=101` |
 | M1.5 | Transform morph timing + energy gate | landed | xform-p03 dual-accept; `MorphToJetSettleTicks=148` |
 | M1.6 | Friction / coast / release models beyond scalar speed | open | may share harnesses |
@@ -105,7 +105,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 
 | ID | Milestone | Status |
 |----|-----------|--------|
-| M3.1 | Camera / look contracts (retail → Core/Client) | open |
+| M3.1 | Camera / look contracts (retail → Core/Client) | in_progress | offline harness landed; live dual-accept pending; body LookX wired from turn-p02 |
 | M3.2 | Level load readiness gates (850-class smoke stays) | open |
 | M3.3 | Mission/script hooks as public-safe behavior contracts | open |
 | M3.4 | Godot presentation upgrades driven by Core truth only | open |

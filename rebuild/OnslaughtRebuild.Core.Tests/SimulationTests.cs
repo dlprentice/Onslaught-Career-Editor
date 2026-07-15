@@ -24,6 +24,30 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void LookX_IntegratesWalkerLookYawRateAndSnapsFacing()
+    {
+        var simulation = new Simulation(1);
+        // Sector boundary ~785 milli-rad; rate is 3 mrad/tick → 262 ticks to sector 1.
+        for (int tick = 0; tick < 262; tick++)
+        {
+            simulation.Step(new SimInput(0, 0, LookX: 1));
+        }
+
+        WorldSnapshot state = simulation.Snapshot;
+        Assert.Equal(1, state.FacingX);
+        Assert.Equal(1, state.FacingZ);
+    }
+
+    [Fact]
+    public void LookX_IdlePreservesMoveSnapFacingForExistingTapes()
+    {
+        var simulation = new Simulation(1);
+        WorldSnapshot state = simulation.Step(new SimInput(1, 0));
+        Assert.Equal(1, state.FacingX);
+        Assert.Equal(0, state.FacingZ);
+    }
+
+    [Fact]
     public void WalkerStrafeSpeed_MatchesAcceptedStrafeP02Translation()
     {
         // Dual-accept steady ≈ 3.015 u/s → round(v * 1000 / 30) = 101.

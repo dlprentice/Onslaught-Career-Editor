@@ -23,9 +23,10 @@ From `battleengine-walker-turn-yaw-scalar-response.v1` (pair `turn-p02`):
 ## Core use
 
 This constant **authorizes** a milli-radian-per-tick Look/Left scale in Core.
-It does **not** by itself require continuous body-yaw integration; facing may
-still snap to movement axes until a later facing-model slice consumes this
-constant. Core agreement does not re-prove retail.
+`SimInput.LookX` integrates `WalkerLookYawRateMilliRadPerTick` into continuous
+milli-rad yaw and eight-way snaps `FacingX`/`FacingZ` for fire aim. Idle
+`LookX` preserves move-axis facing snaps so existing tapes/goldens stay
+stable. Core agreement does not re-prove retail.
 
 ## Checklist
 

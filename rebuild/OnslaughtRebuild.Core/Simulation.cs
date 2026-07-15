@@ -30,6 +30,9 @@ public sealed class Simulation
     private SimVector2 _playerVelocity;
     private sbyte _facingX;
     private sbyte _facingZ;
+    // Continuous body yaw in milli-radians (0 = +Z). LookX integrates this;
+    // discrete Move still snaps facing when LookX is idle.
+    private int _facingYawMilliRad;
     private int _energy;
     private int _shield;
     private int _hull;
@@ -100,10 +103,17 @@ public sealed class Simulation
 
     private void UpdateMovement(SimInput input)
     {
-        if (input.MoveX != 0 || input.MoveZ != 0)
+        if (input.LookX != 0)
+        {
+            _facingYawMilliRad += input.LookX * SimulationConstants.WalkerLookYawRateMilliRadPerTick;
+            _facingYawMilliRad = NormalizeMilliRad(_facingYawMilliRad);
+            QuantizeFacingFromYaw();
+        }
+        else if (input.MoveX != 0 || input.MoveZ != 0)
         {
             _facingX = input.MoveX;
             _facingZ = input.MoveZ;
+            _facingYawMilliRad = YawMilliRadFromFacing(_facingX, _facingZ);
         }
 
         if (_transformTicksRemaining != 0)
@@ -141,6 +151,61 @@ public sealed class Simulation
             nextPosition.X - _playerPosition.X,
             nextPosition.Z - _playerPosition.Z);
         _playerPosition = nextPosition;
+    }
+
+    /// <summary>
+    /// Full turn ≈ 2π rad ≈ 6283 milli-rad. Keeps yaw in (−half, half].
+    /// </summary>
+    private const int TwoPiMilliRad = 6283;
+
+    private static int NormalizeMilliRad(int milliRad)
+    {
+        int wrapped = milliRad % TwoPiMilliRad;
+        if (wrapped > TwoPiMilliRad / 2)
+        {
+            wrapped -= TwoPiMilliRad;
+        }
+        else if (wrapped <= -(TwoPiMilliRad / 2))
+        {
+            wrapped += TwoPiMilliRad;
+        }
+
+        return wrapped;
+    }
+
+    private static int YawMilliRadFromFacing(sbyte facingX, sbyte facingZ)
+    {
+        // atan2(x, z) in milli-rad for the eight discrete facing vectors.
+        return (facingX, facingZ) switch
+        {
+            (0, 1) => 0,
+            (1, 1) => 785,
+            (1, 0) => 1571,
+            (1, -1) => 2356,
+            (0, -1) => 3142,
+            (-1, -1) => -2356,
+            (-1, 0) => -1571,
+            (-1, 1) => -785,
+            _ => 0,
+        };
+    }
+
+    private void QuantizeFacingFromYaw()
+    {
+        // Eight-way snap from continuous yaw for FacingX/Z and fire aim.
+        int yaw = NormalizeMilliRad(_facingYawMilliRad);
+        int sector = ((yaw + TwoPiMilliRad) % TwoPiMilliRad) * 8 / TwoPiMilliRad;
+        (_facingX, _facingZ) = sector switch
+        {
+            0 => ((sbyte)0, (sbyte)1),
+            1 => ((sbyte)1, (sbyte)1),
+            2 => ((sbyte)1, (sbyte)0),
+            3 => ((sbyte)1, (sbyte)-1),
+            4 => ((sbyte)0, (sbyte)-1),
+            5 => ((sbyte)-1, (sbyte)-1),
+            6 => ((sbyte)-1, (sbyte)0),
+            _ => ((sbyte)-1, (sbyte)1),
+        };
     }
 
     private void UpdateResources()
@@ -256,6 +321,7 @@ public sealed class Simulation
         _playerVelocity = SimVector2.Zero;
         _facingX = 0;
         _facingZ = 1;
+        _facingYawMilliRad = 0;
         _energy = SimulationConstants.MaximumEnergy;
         _shield = SimulationConstants.MaximumShield;
         _hull = SimulationConstants.MaximumHull;
