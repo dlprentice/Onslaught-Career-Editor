@@ -313,7 +313,14 @@ namespace Onslaught___Career_Editor
         {
             try
             {
-                using VorbisWaveReader reader = new(filePath);
+                // Own the stream outside VorbisWaveReader so a constructor failure
+                // cannot strand the library's internally opened file handle.
+                using FileStream stream = new(
+                    filePath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.Read);
+                using VorbisWaveReader reader = new(stream, closeOnDispose: false);
                 return reader.TotalTime.TotalSeconds <= 0
                     ? string.Empty
                     : FormatDuration(reader.TotalTime);

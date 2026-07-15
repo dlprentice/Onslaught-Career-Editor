@@ -57,6 +57,23 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void Load_InvalidOgg_ReleasesTheCatalogFileHandle()
+        {
+            using TempGameDirectory temp = TempGameDirectory.Create();
+            string filePath = temp.WriteFile(@"data\Music\invalid.ogg");
+
+            MediaCatalogSnapshot snapshot = new MediaCatalogService().Load(temp.RootPath);
+
+            Assert.Single(snapshot.AudioItems);
+            using FileStream exclusive = new(
+                filePath,
+                FileMode.Open,
+                FileAccess.ReadWrite,
+                FileShare.None);
+            Assert.True(exclusive.CanRead);
+        }
+
+        [Fact]
         public void Load_BuildsExpectedVideoSectionsWithoutDuplicates()
         {
             using TempGameDirectory temp = TempGameDirectory.Create();
@@ -101,7 +118,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 return new TempGameDirectory(rootPath);
             }
 
-            public void WriteFile(string relativePath)
+            public string WriteFile(string relativePath)
             {
                 string fullPath = Path.Combine(RootPath, relativePath);
                 string? directory = Path.GetDirectoryName(fullPath);
@@ -111,6 +128,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 }
 
                 File.WriteAllText(fullPath, string.Empty);
+                return fullPath;
             }
 
             public void Dispose()
