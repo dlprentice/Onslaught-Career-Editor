@@ -22,6 +22,17 @@ class MeasureModeCatalogTests(unittest.TestCase):
         self.assertGreaterEqual(len(rows), 5)
         self.assertTrue(any(r["mode"] == "energy" for r in rows))
 
+    def test_offline_harness_rows_named(self) -> None:
+        offline = catalog.offline_harness_dicts()
+        names = {row["mode"] for row in offline}
+        self.assertIn("coast", names)
+        self.assertIn("camera-look", names)
+        self.assertIn("fire-cooldown", names)
+        self.assertIn("projectile-speed", names)
+        self.assertIn("shield-rate", names)
+        # Offline modes must not collide with live MEASURE_MODES.
+        self.assertTrue(names.isdisjoint(catalog.mode_names()))
+
 
 if __name__ == "__main__":
     unittest.main()
